@@ -174,12 +174,12 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		t.Fatal(err)
 	}
 	roomSent := gw.Tags.Find("p")[1]
-	_, pairPk, err := pairCodeKeys("482913")
+	_, pairPk, err := pairBoxKeys("48", 2950000)
 	if err != nil {
 		t.Fatal(err)
 	}
 	qctx, qcancel := context.WithTimeout(ctx, 2*time.Second)
-	pairCodeQuery(qctx, pairPk)
+	pairCodeQuery(qctx, pairLane(pairPk), []string{pairPk})
 	qcancel()
 	waitFor(t, "both sends on both relays", 15*time.Second, func() bool {
 		for _, r := range []*relayStandIn{a, b} {

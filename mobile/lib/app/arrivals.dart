@@ -69,6 +69,14 @@ class AppIo {
   Future<void> dropSession(String peer) =>
       signalSession.sessionStore.delete(peer);
 
+  // the x key [peer]'s session runs on, as hex
+  Future<String?> sessionXPub(String peer) async {
+    final raw = await (await signalFor(peer))?.sessionIdentity(peer);
+    if (raw == null) return null;
+    final pub = raw.length == 33 ? raw.sublist(1) : raw;
+    return pub.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
   // a first message from someone with no session yet: opened under a
   // placeholder, the sender's claim checked against their key, and the
   // session moved to them. a name bound here to another key keeps it: the
@@ -116,7 +124,7 @@ class AppIo {
     String xPub,
     String fc,
     String cipher,
-  ) => engine.sendFirstContact(ident, xPub, fc, cipher);
+  ) => sendFirstContactNoted(ident, xPub, fc, cipher);
 
   // [payload] names the chat here only: android gets the tag [on] keeps
   // for it
@@ -136,6 +144,7 @@ class AppIo {
       tag: await on.notifTag(payload),
       msgUid: msgUid,
       burnAt: burnAt,
+      hidden: on.container.wrapped,
     );
     if (id == null || msgUid == null) return;
     try {

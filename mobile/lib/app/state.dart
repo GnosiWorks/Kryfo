@@ -27,12 +27,15 @@ class QuietIdentity {
     required this.xPub,
     required this.onion,
     required this.invite,
+    this.qr,
   });
   final String id;
   final String edPub;
   final String xPub;
   final String onion;
   final String invite;
+  // the qr form of its v4 invite, without the bundle
+  final String? qr;
 }
 
 // what home shows of a session: its chats, requests, groups, avatar and
@@ -115,8 +118,18 @@ class AppState extends ChangeNotifier {
     // a frame too big for an opener on a session nothing went out on yet:
     // the empty envelope goes first, so they hear of it and can answer
     signalSession.onStarterNeeded = (peer) => unawaited(_sendStarter(peer));
-    // their session started again (a heal, a restore): answered at once
-    signalSession.onNewSession = (peer) => unawaited(_answerNewSession(peer));
+    // their session started again (a heal, a restore): answered at once,
+    // and what waited on it goes
+    signalSession.onNewSession = (peer) {
+      _cardCame(peer);
+      unawaited(_answerNewSession(peer));
+    };
+    // their side of a pq restart is done: the 16 days begin, the line shows.
+    // the dev chat's own seats say so too
+    signalSession.onPqOver = (peer) => unawaited(notePqOver(peer));
+    devLane.onPqOver = (peer) => unawaited(notePqOver(peer));
+    // the opener to a one-time invite went: the rest waits for the answer
+    signalSession.holdOpener = _onceOpenerWent;
   }
 
   // signal, the engine and android, as the receive side reaches them
@@ -731,6 +744,11 @@ class AppState extends ChangeNotifier {
   // support chats with no answer yet, for the home pin
   int supportWaiting = 0;
 
+  // the main identity's private keys as the database gave them, or as the
+  // engine gave them once after making them: the one copy here, never
+  // pulled from the engine again
+  ({String ed, String x})? _mainKeys;
+
   // the support inbox and its notifications
   final SupportBell _bell;
   final Map<String, String> _xPubToHaloId = {};
@@ -743,6 +761,11 @@ class AppState extends ChangeNotifier {
   // each. both forget anything older than an hour so they cannot grow with
   // every peer ever seen
   final Map<String, int> _healPending = {};
+  // when a heal last rebuilt each contact's session: one per 10 minutes
+  final Map<String, int> _healBuiltAt = {};
+  // people a seal on a restored session waits on: the next pass heals them
+  // first
+  final Set<String> _healWanted = {};
   final Map<String, int> _bundleCtlSentAt = {};
   final Map<String, int> _resentAt = {};
   // the same for group texts, per container and member
@@ -892,13 +915,13 @@ class AppState extends ChangeNotifier {
   // when a copy of a text opened before last asked someone to start afresh
   final Map<String, int> _copyAskedAt = {};
 
-  // when a pass last looked for people to ask to start afresh with us. a
-  // restore brought back sessions their side has gone past: ours is not
-  // sealed on again, and what they seal on theirs may not open here. the
-  // ask hands them our card, they start a session from it, send back
-  // theirs and put again what of theirs never came back delivered. who was
-  // asked when is kept with the sessions (askDue), so a start does not ask
-  // again, and the marks go once every session has started afresh
+  // when the next pass may look for people to send a heal to. a restore
+  // brought back sessions their side has gone past: ours is not sealed on
+  // again, and what they seal on theirs may not open here. the heal hands
+  // them our bundle, they build a session from it, answer on it and put
+  // again what of theirs never came back delivered. who was asked when is
+  // kept with the sessions (askDue), so a start does not ask again, and
+  // the marks go once every session has started afresh
   int _afreshLookedAt = 0;
   Future<void>? _afreshPass;
 

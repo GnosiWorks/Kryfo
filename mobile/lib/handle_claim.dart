@@ -84,12 +84,15 @@ class HandleClaimer extends ChangeNotifier {
     _changed();
     // wait for typing to stop before asking the registry
     _debounce = Timer(const Duration(milliseconds: 500), () async {
-      // a quiet session never reaches the registry: it answers as an
-      // unreachable one would
+      // a quiet session checks on a lane of its own (kDecoyLooksUp), as
+      // its lookups do, or answers as an unreachable registry would. its
+      // claim never goes
       asking(true);
-      final r = sessionQuiet
-          ? await unreachedLater(_unreached)
-          : await engine.handleCheck(h);
+      final r = !sessionQuiet
+          ? await engine.handleCheck(h)
+          : kDecoyLooksUp
+          ? await engine.decoyHandleCheck(h)
+          : await unreachedLater(_unreached);
       if (_gone) return;
       // typed on since: the answer is for a name no longer in the field
       if (typed != h) return;

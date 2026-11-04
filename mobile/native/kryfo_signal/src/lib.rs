@@ -203,6 +203,8 @@ export! {
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
+mod tests_fanout;
+#[cfg(test)]
 mod tests_formats;
 #[cfg(test)]
 mod tests_sig;

@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what shared code asks of the desktop, kept small: the phone's build
-// reaches this file and nothing else of lib/desktop
+// reaches this file and the seal (sealed_*.dart, phone_seal.dart) and
+// nothing else of lib/desktop
 import 'dart:async';
 import 'dart:isolate';
 
 import 'package:flutter/widgets.dart';
 
+import '../container.dart' show HaloContainer;
+
 /// true in the linux and windows app (main_desktop.dart sets it before
 /// anything runs). a plain flag, not Platform: the tests run on linux too
 /// and test the phone's behaviour there
 bool onDesktop = false;
+
+/// this app keeps its window out of screenshots, and so may say it blocks
+/// them: a chat's 'ss', a group's 'gs'. a computer cannot yet
+bool get shotsHonouredHere => !onDesktop;
 
 /// a share sheet to hand things to other apps. linux has none: share_plus
 /// there turns text into a mailto link for the mail client, which writes it
@@ -55,6 +62,14 @@ void Function(String id, String suffix, String key)? containerOpened;
 /// the database of container [id] closed
 void Function(String id)? containerClosed;
 
+/// container [c]'s database is open and its files are where its rows say:
+/// the phone seals what an older version left plain
+void Function(HaloContainer c)? containerSettled;
+
+/// true once a seal is over kryfo's files: the desktop's, or the phone's
+/// over its media folders
+bool filesSealed = false;
+
 /// the start's sweep of half-made containers is done: the desktop puts its
 /// numbered placeholders back
 void Function()? containersSwept;
@@ -64,9 +79,10 @@ void Function()? containersSwept;
 const rawFilesZoneKey = #kryfoRawFiles;
 
 /// [f] with File(path) as the disk holds it: a shred overwrites what is
-/// there, sealed or not. the same as [f] on the phone
-R rawFiles<R>(R Function() f) =>
-    onDesktop ? runZoned(f, zoneValues: {rawFilesZoneKey: true}) : f();
+/// there, sealed or not. the same as [f] where nothing is sealed
+R rawFiles<R>(R Function() f) => onDesktop || filesSealed
+    ? runZoned(f, zoneValues: {rawFilesZoneKey: true})
+    : f();
 
 /// the engine's own folder for a start in [docs]: on desktop one in memory,
 /// whose files are kept sealed between runs
@@ -121,3 +137,43 @@ const kComputerDecoyNote = 'computer_lock';
 
 /// writes the decoy's note into the open decoy's database, set by the app
 Future<void> Function(String note)? keepComputerDecoyNote;
+
+/// keep running in the tray and start with the computer, for the
+/// notifications page. set by the desktop start; null on the phone
+DesktopRunView? desktopRun;
+
+/// what the computer says of starting kryfo with it
+enum StartAnswer {
+  on,
+  off,
+
+  /// kryfo is listed, and the user switched it off in windows' startup apps
+  heldOff,
+
+  /// the computer would not take the change
+  refused,
+}
+
+abstract class DesktopRunView implements Listenable {
+  /// closing the window hides kryfo to the tray. on unless turned off
+  bool get trayOn;
+
+  /// the desktop shows the tray icon; null when unknown
+  bool? get trayShown;
+
+  Future<void> setTray(bool on);
+
+  /// this computer has a place for things that start with it
+  bool get canStart;
+
+  /// null until read
+  StartAnswer? get start;
+
+  /// the last change was refused
+  bool get startRefused;
+
+  Future<StartAnswer> setStart(bool on);
+
+  /// what the computer says now, as the page opens
+  Future<void> refresh();
+}

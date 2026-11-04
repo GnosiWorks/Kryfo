@@ -495,9 +495,9 @@ func catchupHoldOf(key string) catchup.Hold {
 
 // our relay's clearnet name. the app puts our relay first in every list: in
 // private mode its onion, with this name right after it, and in the other
-// modes this name (relaysFor in app/state.dart). a var so tests can point
-// it at a stand-in.
-var ownRelayHost = "relay.kryfo.app"
+// modes this name (relaysFor in app/state.dart). tests point it at a
+// stand-in.
+var ownRelayHost = &hostSeam{app: "relay.kryfo.app"}
 
 // the entries of a relay list that reach our stores: the first, and any on
 // one of their clearnet names. each store holds its own anchor, see
@@ -1389,7 +1389,7 @@ var torRetryWait = 10 * time.Second
 // lands on pair c's receive address rcvPk, tagged [tag] (its subscription
 // key). dedupes across relays. exits when ctx is cancelled.
 func nostrSubscribeRunner(ctx context.Context, tag string, c convPair, rcvPk string) {
-	nostrSubscribeRunnerAt(ctx, receiveLane(rcvPk), tag, rcvPk, c.unwrapStamped)
+	nostrSubscribeRunnerAt(ctx, c.listenLane(rcvPk), tag, rcvPk, c.unwrapStamped)
 }
 
 // a first-contact address: what lands on it is opened with its key alone
@@ -2531,7 +2531,14 @@ func nostrSend(ident int, peerArg, msg string) string {
 		}
 		return fmt.Sprintf("error: wrap: %v", err)
 	}
+	// an opener address only listens: the opener goes with its seed
+	if c.dev != nil && c.dev.opener {
+		return "error: wrap: a device pair sends with its seed"
+	}
+	return nostrSendOn(c, msg)
+}
 
+func nostrSendOn(c convPair, msg string) string {
 	gw, err := c.wrap(msg)
 	if err != nil {
 		return fmt.Sprintf("error: wrap: %v", err)
@@ -2601,10 +2608,10 @@ func nostrSubscribe(ident int, peerArg string, fresh bool) string {
 // identity's go by the peer's key, as before; another's say whose they are,
 // and the knocks take their address as noted
 func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh bool) {
-	key := subKey(c.ident, peerHex)
+	key := c.subKey(peerHex)
 	// every identity's, the main one's too: the knocks take the address
 	// the subscription was made on, never one derived again
-	lane := receiveLane(rcvPk)
+	lane := c.listenLane(rcvPk)
 	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, strings.ToLower(peerHex)})
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[key]; exists {
@@ -2616,6 +2623,10 @@ func nostrSubscribeAt(c convPair, peerHex, rcvSk, rcvPk string, fresh bool) {
 	nostrMu.Unlock()
 	if fresh {
 		ctx = asFresh(ctx)
+	}
+	if c.dev != nil {
+		their, _ := c.theirAddress()
+		noteDevListen(key, devListen{rcv: rcvPk, their: their, opener: c.dev.opener})
 	}
 
 	go nostrSubscribeRunner(ctx, key, c, rcvPk)
@@ -2724,8 +2735,10 @@ func nostrLetHeld(ident int, peerArg, how string) error {
 		return nil
 	}
 	nostrMu.Lock()
-	_, on := nostrSubs[subKey(ident, peerHex)]
+	_, on := nostrSubs[c.subKey(peerHex)]
+	// a device pair never came through a first-contact address
 	_, fcOn := nostrSubs["firstcontact"]
+	fcOn = fcOn && c.dev == nil
 	fc := fcCounterNow
 	nostrMu.Unlock()
 	fcPath := ""
@@ -2781,11 +2794,14 @@ func HaloNostrUnsubscribe(cIdent C.int, cPeerXPubHex *C.char) *C.char {
 }
 
 func nostrUnsubscribe(ident int, peerArg string) error {
+	if base, _, _ := strings.Cut(peerArg, "."); strings.Contains(base, "/") {
+		return devUnsubscribe(ident, peerArg)
+	}
 	c, peerHex, err := pairArg(ident, peerArg)
 	if err != nil {
 		return err
 	}
-	key := subKey(ident, peerHex)
+	key := c.subKey(peerHex)
 	nostrMu.Lock()
 	if cancel, exists := nostrSubs[key]; exists {
 		cancel()
@@ -3504,14 +3520,16 @@ func HaloTorPost(cUrl *C.char, cBody *C.char) *C.char {
 
 // the app's only callers are people search and the badge service, so the
 // services lane carries it, over tor on every route
-func torPost(url, body string) string {
+func torPost(url, body string) string { return torPostOn(url, body, servicesClient) }
+
+func torPostOn(url, body string, clientOf func(context.Context) (*http.Client, error)) string {
 	if url == "" {
 		return "error: empty url"
 	}
 	// one bound for the wait on tor and the request
 	ctx, cancel := context.WithTimeout(context.Background(), servicesWait)
 	defer cancel()
-	client, err := servicesClient(ctx)
+	client, err := clientOf(ctx)
 	if err != nil {
 		return fmt.Sprintf("error: tor client: %v", err)
 	}
@@ -3544,13 +3562,15 @@ func HaloTorGetJSON(cUrl *C.char) *C.char {
 }
 
 // handle lookups and badge receipts: the services lane, as above
-func torGetJSON(url string) string {
+func torGetJSON(url string) string { return torGetJSONOn(url, servicesClient) }
+
+func torGetJSONOn(url string, clientOf func(context.Context) (*http.Client, error)) string {
 	if url == "" {
 		return "error: empty url"
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), servicesWait)
 	defer cancel()
-	client, err := servicesClient(ctx)
+	client, err := clientOf(ctx)
 	if err != nil {
 		return fmt.Sprintf("error: tor client: %v", err)
 	}

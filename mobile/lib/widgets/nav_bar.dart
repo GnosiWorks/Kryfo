@@ -41,6 +41,9 @@ const _icons = {
 // a tab's glyph, for a drawing of the bar elsewhere
 String navTabIcon(HaloTab t) => _icons[t]!;
 
+// a tab's word, for the desktop rail's tooltips
+String navTabLabel(HaloTab t) => _labels[t]!;
+
 class HaloNavBar extends StatelessWidget {
   final HaloTab active;
   final ValueChanged<HaloTab> onPick;
@@ -64,7 +67,7 @@ class HaloNavBar extends StatelessWidget {
         children: [
           for (final t in shownTabs)
             Expanded(
-              child: _NavTab(
+              child: NavTab(
                 tab: t,
                 on: t == active,
                 onTap: () => onPick(t),
@@ -77,22 +80,24 @@ class HaloNavBar extends StatelessWidget {
   }
 }
 
-class _NavTab extends StatefulWidget {
+// one tab: the bar's, and the desktop rail's
+class NavTab extends StatefulWidget {
   final HaloTab tab;
   final bool on;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  const _NavTab({
+  const NavTab({
+    super.key,
     required this.tab,
     required this.on,
     required this.onTap,
     this.onLongPress,
   });
   @override
-  State<_NavTab> createState() => _NavTabState();
+  State<NavTab> createState() => _NavTabState();
 }
 
-class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
+class _NavTabState extends State<NavTab> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 280),
@@ -100,7 +105,7 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
   );
 
   @override
-  void didUpdateWidget(_NavTab old) {
+  void didUpdateWidget(NavTab old) {
     super.didUpdateWidget(old);
     if (widget.on == old.on) return;
     final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;

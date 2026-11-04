@@ -21,7 +21,10 @@ extension AppStateSession on AppState {
   /// what the own qr code shows: the main v4 invite without its bundle
   /// (288 bytes; a reader answers it with a hello), else the link
   Future<String> sessionInviteQr() async {
-    if (!sessionQuiet) {
+    if (sessionQuiet) {
+      final qr = _quiet?.qr;
+      if (qr != null) return qr;
+    } else {
       try {
         final qr = await myV4Invite(qr: true);
         if (qr != null) return qr;
@@ -106,8 +109,9 @@ extension AppStateSession on AppState {
   }
 
   // what the decoy's identity shows, from its own keys, with an invite on
-  // its own signal store. nothing here touches the engine's identity
-  Future<QuietIdentity?> _quietOf(HaloDb d) async {
+  // its own signal store. nothing here touches the engine's identity.
+  // [freshInvite]: its main invite made again now, as a reset does
+  Future<QuietIdentity?> _quietOf(HaloDb d, {bool freshInvite = false}) async {
     final raw = await d.open();
     final saved = await d.loadIdentity();
     // a restore made in the decoy leaves its onion key beside the database
@@ -151,15 +155,159 @@ extension AppStateSession on AppState {
     _zeroBytes(xb);
     final id = q['id'] as String;
     final onion = q['onion'] as String;
-    final bundle = await makePreKeyBundleB64(ss);
-    final fc = engine.quietFirstContactPk(x, 0);
+    String invite;
+    String? qr;
+    try {
+      final row = await _decoyInvite(
+        raw,
+        ss,
+        edPriv: saved['ed_priv']!,
+        edPub: q['ed_pub'] as String,
+        onion: onion,
+        fresh: freshInvite,
+      );
+      invite = inviteLink(row.link);
+      qr = inviteLink(row.qr!);
+    } catch (e) {
+      dlog('decoy: no v4 invite (${e.runtimeType})');
+      final bundle = await makePreKeyBundleB64(ss);
+      final fc = engine.quietFirstContactPk(x, 0);
+      invite = quietInviteUri(id, onion, bundle, fc);
+    }
     return QuietIdentity(
       id: id,
       edPub: q['ed_pub'] as String,
       xPub: q['x_pub'] as String,
       onion: onion,
-      invite: quietInviteUri(id, onion, bundle, fc),
+      invite: invite,
+      qr: qr,
     );
+  }
+
+  // the decoy's main v4 invite kept on its own store (identity v4 10, R17),
+  // signed with its own face key. read from the everyday side: only when
+  // this phone was set up and first ran v4, so its times fit the app's
+  Future<InviteRow> _decoyInvite(
+    Database raw,
+    SignalSession ss, {
+    required String edPriv,
+    required String edPub,
+    required String onion,
+    bool fresh = false,
+  }) async {
+    final onionKey = onionKeyOf(onion);
+    if (onionKey == null) throw StateError('no onion key');
+    final born = await _decoyBorn(raw);
+    final priv = _hexDecode(edPriv);
+    try {
+      return await keepDecoyInvite(
+        raw,
+        ss,
+        fcPkOf: _fcPkOfKey,
+        face: InviteFace(
+          onionKey: onionKey,
+          face: _hexDecode(edPub),
+          sign: (m) => Uint8List.fromList(ed.sign(ed.PrivateKey(priv), m)),
+        ),
+        bornMs: born,
+        v4SinceMs: await _everydayMeta(kMainMadeMeta),
+        fresh: fresh,
+      );
+    } finally {
+      _zeroBytes(priv);
+    }
+  }
+
+  // when the decoy's identity says it was made (R17): once, a random point
+  // between when this phone was set up and the decoy's oldest message or
+  // its own making, then kept. its identity rows carry it
+  Future<int> _decoyBorn(Database raw) async {
+    final kept = await raw.query(
+      'signal_meta',
+      where: 'k = ?',
+      whereArgs: [kDecoyBornMeta],
+      limit: 1,
+    );
+    final had = kept.isEmpty ? null : int.tryParse('${kept.first['v']}');
+    if (had != null) return had;
+    // no later than its own making, nor its oldest message
+    final made = await raw.query('identity', columns: ['created_at'], limit: 1);
+    var hi = made.isEmpty
+        ? DateTime.now().millisecondsSinceEpoch
+        : made.first['created_at'] as int;
+    final first = await raw.query(
+      'messages',
+      columns: ['sent_at'],
+      orderBy: 'sent_at',
+      limit: 1,
+    );
+    if (first.isNotEmpty) hi = min(hi, first.first['sent_at'] as int);
+    final set = await _everydaySetUp() ?? hi;
+    final lo = min(set, hi);
+    final born = lo + (Random.secure().nextDouble() * (hi - lo)).floor();
+    await raw.transaction((t) async {
+      await t.update('identity', {'created_at': born});
+      await t.update(
+        'identities',
+        {'created_at': born},
+        where: 'id = ?',
+        whereArgs: [kMainIdent],
+      );
+      // the prekeys its store was set up with show the same time; an
+      // invite's carry the invite's
+      for (final table in const ['signed_prekeys', 'kyber_prekeys']) {
+        await t.update(
+          table,
+          {'created_at': born},
+          where: 'invite_id = ?',
+          whereArgs: [''],
+        );
+      }
+      await t.insert('signal_meta', {
+        'k': kDecoyBornMeta,
+        'v': '$born',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+    return born;
+  }
+
+  // when the everyday identity was made on this phone, null unread
+  Future<int?> _everydaySetUp() async {
+    try {
+      final r = await (await live.open()).query(
+        'identity',
+        columns: ['created_at'],
+        limit: 1,
+      );
+      return r.isEmpty ? null : r.first['created_at'] as int?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // a value of the everyday signal store's meta as a number, null unread
+  Future<int?> _everydayMeta(String k) async {
+    try {
+      final r = await (await live.open()).query(
+        'signal_meta',
+        where: 'k = ?',
+        whereArgs: [k],
+        limit: 1,
+      );
+      return r.isEmpty ? null : int.tryParse('${r.first['v']}');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // "reset my invite link" in the decoy: its own invite made again now
+  Future<void> _resetDecoyInvite() async {
+    final d = _decoyDb;
+    if (d == null) return;
+    final q = await _quietOf(d, freshInvite: true);
+    if (q == null) return;
+    _decoyId = q;
+    if (sessionQuiet) _quiet = q;
   }
 
   // from the everyday session: a decoy that exists gets the new pin on its
@@ -237,6 +385,18 @@ extension AppStateSession on AppState {
     await _host.wipeVault(HaloContainer.decoyVault);
   }
 
+  // the decoy's identity as a start reads it, for the tests
+  @visibleForTesting
+  Future<QuietIdentity?> quietOfForTest(HaloDb d) => _quietOf(d);
+
+  // the decoy [d] open as the session, with [id], and nothing read ahead
+  @visibleForTesting
+  void decoyOpenForTest(HaloDb d, QuietIdentity id) {
+    _decoyDb = d;
+    _decoyId = id;
+    _quiet = id;
+  }
+
   // tests stand a fake in for the decoy container and its identity
   @visibleForTesting
   Future<void> useDecoyForTest(HaloDb d, QuietIdentity id) async {
@@ -253,6 +413,14 @@ extension AppStateSession on AppState {
     _pinOpened = true;
     _markKnown = true;
     if (r != PinResult.decoy) _quietMarked = false;
+    // each decoy session looks up under a socks name of its own
+    if (r == PinResult.decoy && kDecoyLooksUp) {
+      try {
+        engine.decoyLaneNew();
+      } catch (e) {
+        dlog('decoy: no new lane (${e.runtimeType})');
+      }
+    }
     try {
       await _sessionFor(r, vaultKey: vaultKey);
     } finally {
@@ -264,9 +432,13 @@ extension AppStateSession on AppState {
     // nothing opened under one pin is left for another, not even unlinked
     final from = _lockedIn;
     _lockedIn = null;
-    await dropOpenCopies(
-      all: from != null && from != containerFor(r, vaultKey: vaultKey),
-    );
+    // a copy of ours from before a restart is known only by its label
+    if (r == PinResult.decoy) await dropLabelledClip();
+    final switched =
+        from != null && from != containerFor(r, vaultKey: vaultKey);
+    await dropOpenCopies(all: switched);
+    // what was copied under the other pin leaves the clipboard
+    if (switched) await dropOurClip();
     // an export's files go with the session that made them
     await dropNotesExports();
     // a vault left open by a lock that never reached the screen shuts first
@@ -513,6 +685,13 @@ extension AppStateSession on AppState {
     // decoy, goes with the session that handed it
     _lockedIn = (_session.vault ?? _session.primary).container;
     unawaited(dropOpenCopies());
+    // in hidden chats or the decoy whatever is on the clipboard goes, a
+    // field's own copy too; an everyday copy stays for another app
+    unawaited(
+      clipGoesWithLock()
+          ? dropOurClip(all: true)
+          : dropOurClip(quietOnly: true),
+    );
     unawaited(dropNotesExports());
     unawaited(
       vaultSetupDone().catchError((Object e) {
@@ -529,6 +708,8 @@ extension AppStateSession on AppState {
     final was = _session;
     final v = was.vault;
     if (v == null) return;
+    // what was copied in its chats goes with them, a field's own copy too
+    unawaited(dropOurClip(all: true));
     final everyday = AppState._everyday(v);
     final done = Completer<void>();
     if (everyday) _closeDone = done;

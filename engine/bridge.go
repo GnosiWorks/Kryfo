@@ -138,6 +138,8 @@ func HaloGenerateIdentity() *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: ed keygen: %v", err))
 	}
+	// the key it replaces goes from memory
+	clear(myEdPriv)
 	myEdPub = pub
 	myEdPriv = priv
 
@@ -160,18 +162,24 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 	mu.Lock()
 	defer mu.Unlock()
 
-	edPrivHex := goStr(cEdPriv)
-	xPrivHex := goStr(cXPriv)
+	// as bytes, cleared once decoded: a go string of a key never goes
+	edPrivHex := goSecret(cEdPriv)
+	xPrivHex := goSecret(cXPriv)
+	defer clear(edPrivHex)
+	defer clear(xPrivHex)
 
-	edPrivBytes, err := hex.DecodeString(edPrivHex)
-	if err != nil || len(edPrivBytes) != ed25519.PrivateKeySize {
+	edPrivBytes, ok := hexSecret(edPrivHex, ed25519.PrivateKeySize)
+	if !ok {
 		return C.CString("error: bad ed priv hex")
 	}
-	xPrivBytes, err := hex.DecodeString(xPrivHex)
-	if err != nil || len(xPrivBytes) != 32 {
+	xPrivBytes, ok := hexSecret(xPrivHex, 32)
+	if !ok {
+		clear(edPrivBytes)
 		return C.CString("error: bad x priv hex")
 	}
+	defer clear(xPrivBytes)
 
+	clear(myEdPriv)
 	myEdPriv = ed25519.PrivateKey(edPrivBytes)
 	myEdPub = myEdPriv.Public().(ed25519.PublicKey)
 
@@ -1583,21 +1591,23 @@ func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
 // a chunk is not copied through a c string.
 
 // derives the backup key. salt is exactly 16 bytes. returns the key as
-// hex, or "error: ...".
+// hex, or "error: ...". the passphrase and the key are cleared here
 //
 //export HaloBackupKey
 func HaloBackupKey(cPassphrase *C.char, cSalt *C.uchar) *C.char {
 	salt := C.GoBytes(unsafe.Pointer(cSalt), 16)
-	key, err := scrypt.Key([]byte(goStr(cPassphrase)), salt, 32768, 8, 1, 32)
+	pass := goSecret(cPassphrase)
+	key, err := scrypt.Key(pass, salt, 32768, 8, 1, 32)
+	clear(pass)
 	if err != nil {
 		return C.CString("error: scrypt: " + err.Error())
 	}
-	return C.CString(hex.EncodeToString(key))
+	defer clear(key)
+	return cHexSecret(key)
 }
 
-func backupGCM(keyHex string) (cipher.AEAD, error) {
-	key, err := hex.DecodeString(keyHex)
-	if err != nil || len(key) != 32 {
+func backupGCM(key []byte) (cipher.AEAD, error) {
+	if len(key) != 32 {
 		return nil, fmt.Errorf("bad key")
 	}
 	block, err := aes.NewCipher(key)
@@ -1618,40 +1628,58 @@ func backupNonce(index uint64) []byte {
 	return n
 }
 
-// seals inLen bytes at in into out, which must have room for inLen+16.
-// returns the sealed length, or -1.
+// seals inLen bytes at in into out, which must have room for inLen+16,
+// under the key handle [h] (HaloChunkKeyOpen). the bytes are read and
+// written in place: no go copy of the plaintext is made. returns the
+// sealed length, or -1.
 //
 //export HaloSealChunk
-func HaloSealChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
-	gcm, err := backupGCM(goStr(cKey))
-	if err != nil || inLen < 0 {
+func HaloSealChunk(h C.longlong, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
+	if inLen < 0 || in == nil || out == nil {
 		return -1
 	}
-	plain := C.GoBytes(unsafe.Pointer(in), inLen)
-	ct := gcm.Seal(nil, backupNonce(uint64(index)), plain, []byte{byte(typ)})
-	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), len(ct))
-	copy(dst, ct)
-	return C.int(len(ct))
+	n := int(inLen)
+	plain := unsafe.Slice((*byte)(unsafe.Pointer(in)), n)
+	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), n+16)
+	return C.int(sealChunkAt(int64(h), uint64(index), byte(typ), plain, dst))
 }
 
-// opens inLen sealed bytes at in into out, which must have room for inLen.
-// returns the plaintext length, or -1 when the passphrase is wrong, the
-// record was moved, or the bytes were changed.
-//
-//export HaloOpenChunk
-func HaloOpenChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
-	gcm, err := backupGCM(goStr(cKey))
-	if err != nil || inLen < 16 {
+// [plain] sealed into [dst], which has room for it and the tag: the
+// sealed length, or -1
+func sealChunkAt(h int64, index uint64, typ byte, plain, dst []byte) int {
+	gcm := chunkKeyOf(h)
+	if gcm == nil || cap(dst) < len(plain)+gcm.Overhead() {
 		return -1
 	}
-	ct := C.GoBytes(unsafe.Pointer(in), inLen)
-	plain, err := gcm.Open(nil, backupNonce(uint64(index)), ct, []byte{byte(typ)})
+	return len(gcm.Seal(dst[:0], backupNonce(index), plain, []byte{typ}))
+}
+
+// opens inLen sealed bytes at in into out, which must have room for inLen,
+// under the key handle [h]. returns the plaintext length, or -1 when the
+// key is wrong, the record was moved, or the bytes were changed.
+//
+//export HaloOpenChunk
+func HaloOpenChunk(h C.longlong, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
+	if inLen < 16 || in == nil || out == nil {
+		return -1
+	}
+	n := int(inLen)
+	ct := unsafe.Slice((*byte)(unsafe.Pointer(in)), n)
+	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), n)
+	return C.int(openChunkAt(int64(h), uint64(index), byte(typ), ct, dst))
+}
+
+// [sealed] opened into [dst]: the plaintext length, or -1
+func openChunkAt(h int64, index uint64, typ byte, sealed, dst []byte) int {
+	gcm := chunkKeyOf(h)
+	if gcm == nil || len(sealed) < gcm.Overhead() || cap(dst) < len(sealed) {
+		return -1
+	}
+	plain, err := gcm.Open(dst[:0], backupNonce(index), sealed, []byte{typ})
 	if err != nil {
 		return -1
 	}
-	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), len(plain))
-	copy(dst, plain)
-	return C.int(len(plain))
+	return len(plain)
 }
 
 // watchHSDirUpload reads tor's HS_DESC events and returns true as soon as

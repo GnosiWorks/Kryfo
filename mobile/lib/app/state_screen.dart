@@ -173,6 +173,9 @@ extension AppStateScreen on AppState {
     // and what this phone understands, on every 1:1 frame (typing.dart)
     capsPut(body);
     _toldCaps(peer);
+    // an app that cannot block says nothing of the block: the other phone
+    // then claims it for neither
+    if (!shotsHonouredHere) return shotsLeft(body);
     return shotsPut(body, word);
   }
 

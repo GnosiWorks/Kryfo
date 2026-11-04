@@ -170,7 +170,8 @@ extension AppStateDelivery on AppState {
     return at;
   }
 
-  bool get nudgeDue => !sessionQuiet && _nudgeDue;
+  // a computer is quit, not killed: the card names a phone
+  bool get nudgeDue => !onDesktop && !sessionQuiet && _nudgeDue;
 
   Future<void> _judgeLastRun() async {
     try {

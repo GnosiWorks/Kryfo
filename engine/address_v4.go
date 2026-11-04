@@ -173,6 +173,9 @@ type convPair struct {
 	me    xid
 	peer  [32]byte
 	seed  *[32]byte
+	// one device of mine with one of theirs, nil on the identity pair
+	// (address_device.go)
+	dev *devPair
 }
 
 // the v3 pair of my [ident] with [peer]: the two keys alone. a pair the
@@ -204,15 +207,38 @@ func seededPairOf(ident int, peer [32]byte, seed [32]byte) (convPair, error) {
 
 // the pair a call names. [arg] is the peer's x key in hex (a v3 pair), or
 // the key, a dot and the pair's seed in hex (a pair made by a v4 first
-// contact). the mode comes from the call alone, never from what the engine
-// holds; the peer's key in hex comes back as the subscription names it
+// contact), or a device pair (address_device.go). the mode comes from the
+// call alone, never from what the engine holds; the peer's key in hex
+// comes back as the subscription names it
 func pairArg(ident int, arg string) (convPair, string, error) {
-	x, seedHex, seeded := strings.Cut(arg, ".")
+	base, seedHex, seeded := strings.Cut(arg, ".")
+	if strings.Contains(base, "/") && !devicePairsOn.Load() {
+		return convPair{}, "", errDevicePairsOff
+	}
+	x, their, my, dev, err := splitDeviceArg(base)
+	if err != nil {
+		return convPair{}, "", err
+	}
 	peer, err := peerArr(x)
 	if err != nil {
 		return convPair{}, "", err
 	}
 	x = strings.ToLower(x)
+	// the identity pair named by its devices is the identity pair
+	if dev && their == phoneDevice && my == phoneDevice && !isLinked(ident) {
+		if !seeded {
+			return convPair{}, "", errors.New("device 1 to device 1 is the identity pair")
+		}
+		dev = false
+	}
+	if dev {
+		c, err := devicePairArg(ident, peer, their, my, seedHex, seeded)
+		return c, x, err
+	}
+	// a linked device has no identity pair: its device key is not I
+	if isLinked(ident) {
+		return convPair{}, "", errors.New("a linked device names its device pair")
+	}
 	if !seeded {
 		c, err := pairOf(ident, peer)
 		return c, x, err
@@ -227,9 +253,17 @@ func pairArg(ident int, arg string) (convPair, string, error) {
 	return c, x, err
 }
 
-func (c convPair) v4() v4Pair { return phonePair(c.me, c.peer, c.seed[:]) }
+func (c convPair) v4() v4Pair {
+	if c.dev != nil {
+		return c.devV4()
+	}
+	return phonePair(c.me, c.peer, c.seed[:])
+}
 
 func (c convPair) rcvAddress() (sk, pk string, err error) {
+	if c.dev != nil && c.dev.opener {
+		return devOpenerRcv(c.v4())
+	}
 	if c.seed != nil {
 		return v4RcvAddress(c.v4())
 	}
@@ -238,6 +272,11 @@ func (c convPair) rcvAddress() (sk, pk string, err error) {
 
 // their receive address: where what I send them lands
 func (c convPair) theirAddress() (string, error) {
+	if c.dev != nil && c.dev.opener {
+		p := c.v4()
+		_, pk, err := p.role(roleOpn, false)
+		return pk, err
+	}
 	if c.seed != nil {
 		_, pk, err := c.v4().role(roleRcv, false)
 		return pk, err
@@ -247,6 +286,9 @@ func (c convPair) theirAddress() (string, error) {
 }
 
 func (c convPair) wrap(msg string) (nostr2.Event, error) {
+	if c.dev != nil && c.dev.opener {
+		return devOpenerWrap(c.v4(), msg)
+	}
 	if c.seed != nil {
 		return v4Wrap(c.v4(), msg)
 	}
@@ -254,6 +296,9 @@ func (c convPair) wrap(msg string) (nostr2.Event, error) {
 }
 
 func (c convPair) unwrapStamped(gw nostr2.Event) (string, nostr2.Timestamp, error) {
+	if c.dev != nil && c.dev.opener {
+		return devOpenerUnwrapStamped(c.v4(), gw)
+	}
 	if c.seed != nil {
 		return v4UnwrapStamped(c.v4(), gw)
 	}
@@ -265,6 +310,9 @@ func (c convPair) unwrapStamped(gw nostr2.Event) (string, nostr2.Timestamp, erro
 // a seeded pair (a v4 first contact) and any other identity with the hello
 // seal key, which needs no seed
 func (c convPair) wrapFirstContact(fcPk, msg string) (nostr2.Event, error) {
+	if c.dev != nil {
+		return nostr2.Event{}, errors.New("a device pair has no first contact")
+	}
 	if c.ident == mainIdent && c.seed == nil {
 		return nip17WrapFirstContactAs(c.me, c.peer, fcPk, msg)
 	}

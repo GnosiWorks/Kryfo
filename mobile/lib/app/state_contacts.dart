@@ -98,6 +98,8 @@ extension AppStateContacts on AppState {
     // only to an add the person makes, and asks (NameHold.ask)
     await dropChatDraft(haloId);
     final hellos = await hellosKeysOf(haloId);
+    // linked devices: their devices get nothing more (read before the row)
+    await _devForget(haloId);
     await session.deleteConversation(haloId);
     // their photo and the one set for them go; ours is taken back
     try {
@@ -203,6 +205,9 @@ extension AppStateContacts on AppState {
     try {
       Future<List<String>?> run() async {
         if (await s.heldKey(haloId) != key) return null;
+        // linked devices: their devices get nothing more, and their
+        // device sessions go with the phone's
+        await _devForget(haloId, sessions: true);
         final went = await s.removeAndBlockKey(haloId, key);
         // the everyday store holds every session, a hidden chat's too
         if (!quiet && signalSession.ready) {

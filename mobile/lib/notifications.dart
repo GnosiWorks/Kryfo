@@ -567,6 +567,7 @@ Future<int?> showMessageNotification({
   required String tag,
   String? msgUid,
   int? burnAt,
+  bool hidden = false,
 }) async {
   // a decoy session is open: no notification at all
   if (await quietNow()) return null;
@@ -575,7 +576,9 @@ Future<int?> showMessageNotification({
   if (await loadNotifPlain()) {
     return _showPlain(chat: chat, tag: tag, msgUid: msgUid);
   }
-  final hidden = await loadHideNotifContent();
+  // a hidden chat's never says whose or what, whatever the preview setting:
+  // android's history and watches keep what a notification said
+  hidden = hidden || await loadHideNotifContent();
   if (hidden) {
     title = 'Kryfo';
     body = l10n.notificationsNewMessage;

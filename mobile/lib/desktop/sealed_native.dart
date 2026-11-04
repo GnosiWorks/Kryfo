@@ -3,11 +3,16 @@
 // path. a sealed file reaches it as an anonymous file in memory
 // (memfd_create): its plaintext is copied in, the code gets
 // /proc/self/fd/<n>, and what the code wrote there is sealed into place
-// after. nothing plain touches the disk
+// after. nothing plain touches the disk, but on windows, which has no
+// memfd: there the copy is a file that goes when the code is done
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:path/path.dart' as p;
 
 import 'sealed_io.dart';
 
@@ -18,17 +23,29 @@ typedef _Close = int Function(int);
 
 const _mfdCloexec = 1;
 
+/// a file code outside dart reads or writes by [path], gone at [close]
+abstract interface class NativeCopy {
+  String get path;
+  void close();
+}
+
+/// stands in for a system without memfd_create (windows) in tests
+@visibleForTesting
+bool noMemfdForTest = false;
+
 /// an anonymous file in memory, open until [close]
-class MemFile {
+class MemFile implements NativeCopy {
   MemFile._(this.fd);
 
   final int fd;
   bool _closed = false;
 
   /// the path code outside dart opens it by
+  @override
   String get path => '/proc/self/fd/$fd';
 
   static MemFile create() {
+    if (noMemfdForTest) throw const FileSystemException('no memfd');
     final libc = DynamicLibrary.process();
     final f = libc.lookupFunction<_MemfdC, _Memfd>('memfd_create');
     final n = 'kryfo'.toNativeUtf8();
@@ -42,6 +59,7 @@ class MemFile {
   }
 
   /// its bytes zeroed, then let go
+  @override
   void close() {
     if (_closed) return;
     _closed = true;
@@ -59,24 +77,93 @@ class MemFile {
   }
 }
 
+/// where there is no memfd (windows): a plain copy under a random name in
+/// [dir], zeroed and deleted the moment the reader is done
+class DiskCopy implements NativeCopy {
+  DiskCopy._(this.path);
+  @override
+  final String path;
+
+  static final _rnd = Random.secure();
+
+  static DiskCopy create(String dir) {
+    rawFileAccess(() => Directory(dir).createSync(recursive: true));
+    final leaf = [
+      for (var i = 0; i < 16; i++)
+        _rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ].join();
+    final c = DiskCopy._(p.join(dir, leaf));
+    rawFileAccess(() => File(c.path).writeAsBytesSync(const []));
+    return c;
+  }
+
+  @override
+  void close() => _zeroAndDelete(path);
+}
+
+// zeroed in place, then deleted even when the zeroing fails
+void _zeroAndDelete(String path) {
+  rawFileAccess(() {
+    final f = File(path);
+    try {
+      if (!f.existsSync()) return;
+      final n = f.lengthSync();
+      final r = f.openSync(mode: FileMode.writeOnlyAppend);
+      try {
+        r.setPositionSync(0);
+        final z = Uint8List(1 << 16);
+        for (var left = n; left > 0; left -= z.length) {
+          r.writeFromSync(z, 0, left < z.length ? left : z.length);
+        }
+        r.flushSync();
+      } finally {
+        r.closeSync();
+      }
+    } catch (_) {}
+    try {
+      f.deleteSync();
+    } catch (_) {}
+  });
+}
+
+/// at start: what a crash left in the spill folder [dir], zeroed and
+/// deleted, best effort
+void sweepNativeCopies(String dir) {
+  final List<FileSystemEntity> left;
+  try {
+    left = rawFileAccess(() {
+      final d = Directory(dir);
+      return d.existsSync() ? d.listSync() : const <FileSystemEntity>[];
+    });
+  } catch (_) {
+    return;
+  }
+  for (final e in left) {
+    if (e is File) {
+      _zeroAndDelete(e.path);
+    } else {
+      try {
+        rawFileAccess(() => e.deleteSync(recursive: true));
+      } catch (_) {}
+    }
+  }
+}
+
+/// memory where the system has memfd, else a copy in [spill]
+NativeCopy _newCopy(String? spill) {
+  try {
+    return MemFile.create();
+  } catch (_) {
+    if (spill == null) rethrow;
+    return DiskCopy.create(spill);
+  }
+}
+
 /// [sealed] read through the seam into memory, a block at a time
 MemFile memCopyOf(String sealed) {
   final m = MemFile.create();
   try {
-    final src = File(sealed).openSync();
-    final dst = rawFileAccess(
-      () => File(m.path).openSync(mode: FileMode.writeOnly),
-    );
-    try {
-      while (true) {
-        final b = src.readSync(1 << 16);
-        if (b.isEmpty) break;
-        dst.writeFromSync(b);
-      }
-    } finally {
-      src.closeSync();
-      dst.closeSync();
-    }
+    _fill(m, sealed);
     return m;
   } catch (_) {
     m.close();
@@ -84,8 +171,27 @@ MemFile memCopyOf(String sealed) {
   }
 }
 
+// [sealed]'s plaintext into [c]
+void _fill(NativeCopy c, String sealed) {
+  final src = File(sealed).openSync();
+  final dst = rawFileAccess(
+    () => File(c.path).openSync(mode: FileMode.writeOnly),
+  );
+  try {
+    while (true) {
+      final b = src.readSync(1 << 16);
+      if (b.isEmpty) break;
+      dst.writeFromSync(b);
+      b.fillRange(0, b.length, 0);
+    }
+  } finally {
+    src.closeSync();
+    dst.closeSync();
+  }
+}
+
 /// what code outside dart wrote into [m], sealed at [to]
-void sealFromMem(MemFile m, String to) {
+void sealFromMem(NativeCopy m, String to) {
   final src = rawFileAccess(() => File(m.path).openSync());
   final dst = File(to).openSync(mode: FileMode.write);
   try {
@@ -93,6 +199,7 @@ void sealFromMem(MemFile m, String to) {
       final b = src.readSync(1 << 16);
       if (b.isEmpty) break;
       dst.writeFromSync(b);
+      b.fillRange(0, b.length, 0);
     }
   } finally {
     src.closeSync();
@@ -102,31 +209,34 @@ void sealFromMem(MemFile m, String to) {
 
 /// the desktop's withNativeFiles: a sealed input goes in as memory, a
 /// sealed output comes back from memory into place. a plain one is passed
-/// as it is
+/// as it is. without memfd (windows) the copies are plain files in [spill]
+/// that go when the code is done
 Future<T> nativeFilesSealed<T>(
   SealedAreas areas,
   List<String> ins,
   List<String> outs,
   Future<T> Function(List<String> ins, List<String> outs) run, [
   bool Function(T answer)? ok,
+  String? spill,
 ]) async {
-  final mems = <MemFile>[];
+  final mems = <NativeCopy>[];
   try {
     final i = <String>[];
     for (final path in ins) {
       if (areas.sealedPlace(path) && File(path).existsSync()) {
-        final m = memCopyOf(path);
+        final m = _newCopy(spill);
         mems.add(m);
+        _fill(m, path);
         i.add(m.path);
       } else {
         i.add(path);
       }
     }
     final o = <String>[];
-    final back = <(MemFile, String)>[];
+    final back = <(NativeCopy, String)>[];
     for (final path in outs) {
       if (areas.sealedPlace(path)) {
-        final m = MemFile.create();
+        final m = _newCopy(spill);
         mems.add(m);
         back.add((m, path));
         o.add(m.path);

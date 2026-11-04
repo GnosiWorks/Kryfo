@@ -13,6 +13,7 @@ import 'package:path/path.dart' as p;
 
 import '../dlog.dart';
 
+import 'desktop_posix.dart' show syncFolder;
 import 'desktop_vault.dart';
 import 'sealed_file.dart';
 import 'sealed_format.dart';
@@ -90,71 +91,121 @@ class ContainerKeys {
   }
 }
 
+/// a folder synced before a plain file in it is zeroed, so the sealed
+/// copy's new name is on the disk first
+@visibleForTesting
+void Function(String dir) folderSync = syncFolder;
+
 /// what the sweep did, for its tests
 class SealSweep {
   int sealed = 0;
   int resumed = 0;
+  int stayed = 0;
 }
 
 /// every plain file under [dir] sealed in place, the plain bytes zeroed
 /// before the sealed copy takes the name. a sweep cut short is picked up:
-/// a whole sealed copy beside its file wins, a broken one goes
+/// a whole sealed copy beside its file wins, a broken one goes. a file the
+/// seal leaves plain (the engine's own) is passed over, and one that will
+/// not seal now stays as it is for the next sweep
 SealSweep sealPlainUnder(String dir) {
   final out = SealSweep();
   final d = rawFileAccess(() => Directory(dir));
   if (!d.existsSync()) return out;
+  final io = IOOverrides.current;
+  final areas = io is SealedIO ? io.areas : null;
   final files = rawFileAccess(
     () => d
         .listSync(recursive: true, followLinks: false)
         .whereType<File>()
         .toList(),
   );
-  final names = {for (final f in files) f.path};
+  // the copies a sweep cut short left first: what stands in is settled
+  // before its file is looked at
+  files.sort(
+    (a, b) =>
+        (b.path.endsWith('.sealing') ? 1 : 0) -
+        (a.path.endsWith('.sealing') ? 1 : 0),
+  );
   for (final f in files) {
     final path = f.path;
-    if (path.endsWith('.sealing')) {
-      final orig = path.substring(0, path.length - '.sealing'.length);
-      if (_opens(path)) {
-        rawFileAccess(() {
-          _zero(orig);
-          File(path).renameSync(orig);
-        });
-        out.resumed++;
-      } else {
-        rawFileAccess(() => File(path).deleteSync());
-      }
-      continue;
-    }
-    if (names.contains('$path.sealing')) continue;
-    if (!_plain(path)) continue;
-    final tmp = '$path.sealing';
-    // the copy through the seam is sealed: same folder, same key
-    final src = rawFileAccess(() => File(path).openSync());
-    final dst = File(tmp).openSync(mode: FileMode.write);
+    if (areas != null && !areas.sealedPlace(path)) continue;
     try {
-      while (true) {
-        final b = src.readSync(chunkPlain);
-        if (b.isEmpty) break;
-        dst.writeFromSync(b);
-        b.fillRange(0, b.length, 0);
+      if (path.endsWith('.sealing')) {
+        final orig = path.substring(0, path.length - '.sealing'.length);
+        if (_opens(path)) {
+          folderSync(p.dirname(path));
+          rawFileAccess(() {
+            _zero(orig);
+            File(path).renameSync(orig);
+          });
+          out.resumed++;
+        } else {
+          rawFileAccess(() => File(path).deleteSync());
+        }
+        continue;
       }
-      dst.flushSync();
-    } finally {
-      src.closeSync();
-      dst.closeSync();
+      if (!rawFileAccess(() => File(path).existsSync())) continue;
+      if (!_plain(path)) continue;
+      _sealOne(path);
+      out.sealed++;
+    } on FileSystemException {
+      // gone meanwhile, or no room for the copy: the rest go on
+      out.stayed++;
     }
-    // the copy is read back whole before the plain one is touched
-    if (!_opens(tmp)) {
-      rawFileAccess(() => File(tmp).deleteSync());
-      continue;
-    }
-    rawFileAccess(() {
-      _zero(path);
-      File(tmp).renameSync(path);
-    });
-    out.sealed++;
+  }
+  // the sweep is not done until all are: the next one tries again
+  if (out.stayed > 0) {
+    throw FileSystemException('${out.stayed} stayed plain', dir);
   }
   return out;
+}
+
+// [path] sealed beside itself, read back whole, the plain bytes zeroed and
+// the copy put in its place
+void _sealOne(String path) {
+  final tmp = '$path.sealing';
+  // the copy through the seam is sealed: same folder, same key
+  try {
+    final src = rawFileAccess(() => File(path).openSync());
+    try {
+      final dst = File(tmp).openSync(mode: FileMode.write);
+      try {
+        while (true) {
+          final b = src.readSync(chunkPlain);
+          if (b.isEmpty) break;
+          dst.writeFromSync(b);
+          b.fillRange(0, b.length, 0);
+        }
+        dst.flushSync();
+      } finally {
+        dst.closeSync();
+      }
+    } finally {
+      src.closeSync();
+    }
+  } catch (_) {
+    _dropTmp(tmp);
+    rethrow;
+  }
+  // the copy is read back whole before the plain one is touched
+  if (!_opens(tmp)) {
+    _dropTmp(tmp);
+    throw FileSystemException('not sealed whole', tmp);
+  }
+  folderSync(p.dirname(path));
+  rawFileAccess(() {
+    _zero(path);
+    File(tmp).renameSync(path);
+  });
+}
+
+void _dropTmp(String tmp) {
+  try {
+    rawFileAccess(() {
+      if (File(tmp).existsSync()) File(tmp).deleteSync();
+    });
+  } catch (_) {}
 }
 
 bool _plain(String path) => rawFileAccess(() {
@@ -328,16 +379,18 @@ class EngineFiles {
     if (old.isEmpty) return;
     final m = readMarkState(_state) ?? {};
     for (final f in old) {
-      final name = p.basename(f.path);
-      m[name] = base64.encode(
+      m[p.basename(f.path)] = base64.encode(
         rawFileAccess(() => File(f.path).readAsBytesSync()),
       );
+    }
+    // sealed before any is zeroed: a cut in between loses none
+    writeMarkState(_state, m);
+    for (final f in old) {
       rawFileAccess(() {
         _zero(f.path);
         File(f.path).deleteSync();
       });
     }
-    writeMarkState(_state, m);
   }
 
   // what an engine started in docs left there besides the key and the
@@ -362,25 +415,42 @@ class EngineFiles {
   // a plain docs/onion.key sealed where it lies: the sealed copy is written
   // and read back whole, the plain bytes zeroed, then the copy takes the
   // name. nothing is held open over the rename, which windows refuses. a
-  // whole copy found beside it is such a run cut short, and wins
+  // whole copy found beside it is such a run cut short, and wins over a
+  // zeroed key, never over another key written since
   void _sealPlainKey() {
     final fresh = '$_sealedKey.new';
-    if (!rawFileAccess(() => File(fresh).existsSync()) || !_opens(fresh)) {
-      final k = rawFileAccess(() => File(_sealedKey).readAsBytesSync());
-      try {
+    final k = rawFileAccess(() => File(_sealedKey).readAsBytesSync());
+    try {
+      if (!_keepsCopy(fresh, k)) {
         File(fresh).writeAsBytesSync(k, flush: true);
         final back = File(fresh).readAsBytesSync();
         final same = listEquals(back, k);
         back.fillRange(0, back.length, 0);
         if (!same) throw FileSystemException('not sealed whole', fresh);
-      } finally {
-        k.fillRange(0, k.length, 0);
       }
+    } finally {
+      k.fillRange(0, k.length, 0);
     }
+    folderSync(docs);
     rawFileAccess(() {
       _zero(_sealedKey);
       File(fresh).renameSync(_sealedKey);
     });
+  }
+
+  // the whole copy at [fresh] stands: it holds [k], or k was zeroed, all
+  // or a block of it, by the run cut short
+  bool _keepsCopy(String fresh, Uint8List k) {
+    if (!rawFileAccess(() => File(fresh).existsSync()) || !_opens(fresh)) {
+      return false;
+    }
+    if (_zeroBlock(k)) return true;
+    final c = File(fresh).readAsBytesSync();
+    try {
+      return listEquals(c, k);
+    } finally {
+      c.fillRange(0, c.length, 0);
+    }
   }
 
   void _restoreMarks(DesktopVault vault) {
@@ -545,6 +615,16 @@ class EngineFiles {
   }
 }
 
+// a zero cut short leaves whole blocks of zeros; a real key has none
+bool _zeroBlock(Uint8List k) {
+  if (k.isEmpty) return true;
+  for (var i = 0; i < k.length; i += 16) {
+    final block = Uint8List.sublistView(k, i, min(i + 16, k.length));
+    if (block.every((b) => b == 0)) return true;
+  }
+  return false;
+}
+
 /// the marks' sealed copy at [state], or its previous one when the newest
 /// does not read (a write cut short). null when neither reads but one is
 /// there; an empty map when there are none yet
@@ -585,7 +665,8 @@ Map<String, String> keepMarksIn(
   String state, {
   String writer = 'new',
 }) {
-  final marks = RegExp(r'^nostr_(seen|last|heard)_[0-9a-f]+$');
+  // a store after the first keeps its anchor under .<store>
+  final marks = RegExp(r'^nostr_(seen|last|heard)_[0-9a-f]+(\.[0-9])?$');
   final files = rawFileAccess(() {
     final d = Directory(dir);
     if (!d.existsSync()) return <File>[];

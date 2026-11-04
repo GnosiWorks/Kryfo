@@ -95,6 +95,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'A chat\'s own wallpaper, set from its menu, comes first. Photos stay on this phone, encrypted with your chats.';
 
   @override
+  String get appearanceWallpaperHintDesk =>
+      'A chat\'s own wallpaper, set from its menu, comes first. Photos stay on this computer, encrypted with your chats.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'That passphrase does not open this file';
 
@@ -422,6 +426,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'An attachment could not be saved on this phone';
 
   @override
+  String get appAnAttachmentCouldNotDesk =>
+      'An attachment could not be saved on this computer';
+
+  @override
   String get appGroup2 => 'Group';
 
   @override
@@ -513,6 +521,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appScanTheirCodeOr =>
       'Scan their code, or paste what they gave you: a link, an @handle, or a room link.';
+
+  @override
+  String get appScanTheirCodeOrDesk =>
+      'Paste what they gave you: a link, an @handle, or a room link.';
 
   @override
   String get appScanTheirCode => 'Scan their code';
@@ -1070,11 +1082,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'A copy to keep. This phone carries on as it is.';
 
   @override
+  String get backupACopyToKeepDesk =>
+      'A copy to keep. This computer carries on as it is.';
+
+  @override
   String get backupMoveToAnotherDevice => 'Move to another device';
 
   @override
   String get backupTheFileTakesThis =>
       'The file takes this identity with it. Once it is made, this phone stops: nothing new arrives here, and nothing sent from here reaches anyone.';
+
+  @override
+  String get backupTheFileTakesThisDesk =>
+      'The file takes this identity with it. Once it is made, this computer stops: nothing new arrives here, and nothing sent from here reaches anyone.';
 
   @override
   String get backupOneEncryptedFileYour =>
@@ -1083,6 +1103,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
       'One encrypted file: your identity, your contacts, every message, and every photo, voice note and file on this phone right now. Anything said after today is not in it, so make another when it matters. To restore you need the file and the passphrase, both.';
+
+  @override
+  String get backupOneEncryptedFileYourIdentityYourDesk =>
+      'One encrypted file: your identity, your contacts, every message, and every photo, voice note and file on this computer right now. Anything said after today is not in it, so make another when it matters. To restore you need the file and the passphrase, both.';
 
   @override
   String get backupPassphrase => 'Passphrase';
@@ -1130,8 +1154,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupMoveReachedTitle => 'Did the file reach your new phone?';
 
   @override
+  String get backupMoveReachedTitleDesk =>
+      'Did the file reach your new device?';
+
+  @override
   String get backupMoveReachedLine =>
       'Keep this phone until you\'ve opened it there.';
+
+  @override
+  String get backupMoveReachedLineDesk =>
+      'Keep this computer until you\'ve opened it there.';
 
   @override
   String get backupFinishTheMove => 'Finish the move';
@@ -1156,6 +1188,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'There isn\'t enough free space on this phone to make the backup. Free up some space and try again.';
 
   @override
+  String get backupNoSpaceDesk =>
+      'There isn\'t enough free space on this computer to make the backup. Free up some space and try again.';
+
+  @override
   String get backupHiddenNotIn => 'Hidden chats are not in it.';
 
   @override
@@ -1164,6 +1200,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupMoveHiddenStay =>
       'Hidden chats stay on this phone and are wiped with it.';
+
+  @override
+  String get backupMoveHiddenStayDesk =>
+      'Hidden chats stay on this computer and are wiped with it.';
 
   @override
   String get backupHiddenGone =>
@@ -1375,6 +1415,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'It will be removed from both phones, unless it has already been saved. This can\'t be undone.';
 
   @override
+  String get chatItDisappearsWithNoDesk =>
+      'It will be removed from both devices, unless it has already been saved. This can\'t be undone.';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -1448,6 +1492,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatGifFromPhone => 'Gif from phone';
+
+  @override
+  String get chatGifFromPhoneDesk => 'Gif from computer';
 
   @override
   String get chatFile2 => 'File';
@@ -1604,6 +1651,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Just for you. Never sent, never leaves this phone.';
 
   @override
+  String get chatJustForYouNeverDesk =>
+      'Just for you. Never sent, never leaves this computer.';
+
+  @override
   String get chatAQuietReminder => 'A quiet reminder…';
 
   @override
@@ -1615,6 +1666,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatEveryMessageHereIs =>
       'Every message here is erased from this phone. This only clears your copy. It does not touch their device.';
+
+  @override
+  String get chatEveryMessageHereIsDesk =>
+      'Every message here is erased from this computer. This only clears your copy. It does not touch their device.';
 
   @override
   String get chatClear => 'Clear';
@@ -2050,6 +2105,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Stays on this phone. They never see it.';
 
   @override
+  String get contactStaysOnThisPhoneDesk =>
+      'Stays on this computer. They never see it.';
+
+  @override
   String get contactClear => 'Clear';
 
   @override
@@ -2099,11 +2158,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Messages and contact, gone from this phone';
 
   @override
+  String get contactMessagesAndContactGoneDesk =>
+      'Messages and contact, gone from this computer';
+
+  @override
   String get contactDeleteThisChat => 'Delete this chat?';
 
   @override
   String get contactEveryMessageAndThe =>
       'Every message and the contact, gone from this phone. Nothing is sent to them.';
+
+  @override
+  String get contactEveryMessageAndTheDesk =>
+      'Every message and the contact, gone from this computer. Nothing is sent to them.';
 
   @override
   String get commonDelete => 'Delete';
@@ -2290,6 +2357,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get donateGivesReceipt =>
       'A signed receipt kept on this phone. It proves the badge with no account.';
+
+  @override
+  String get donateGivesReceiptDesk =>
+      'A signed receipt kept on this computer. It proves the badge with no account.';
 
   @override
   String get donateGivesFree =>
@@ -2500,6 +2571,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupChatGifFromPhone => 'Gif from phone';
 
   @override
+  String get groupChatGifFromPhoneDesk => 'Gif from computer';
+
+  @override
   String get groupChatFile => 'File';
 
   @override
@@ -2608,6 +2682,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get groupChatItDisappearsWithNo =>
       'It will be removed from everyone\'s phones, unless it has already been saved. This can\'t be undone.';
+
+  @override
+  String get groupChatItDisappearsWithNoDesk =>
+      'It will be removed from everyone\'s devices, unless it has already been saved. This can\'t be undone.';
 
   @override
   String get groupChatUnsend => 'Unsend';
@@ -2846,6 +2924,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every message here is erased from this phone. This only clears your copy, other members keep theirs.';
 
   @override
+  String get groupInfoEveryMessageHereIsDesk =>
+      'Every message here is erased from this computer. This only clears your copy, other members keep theirs.';
+
+  @override
   String get groupInfoClear => 'Clear';
 
   @override
@@ -2862,6 +2944,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Everything in it is wiped from this phone now, and the key you used here is gone for good.';
 
   @override
+  String get groupInfoEverythingInItIsDesk =>
+      'Everything in it is wiped from this computer now, and the key you used here is gone for good.';
+
+  @override
   String groupChatYouWereRemovedFrom(Object name) {
     return 'You were removed from $name';
   }
@@ -2871,12 +2957,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'You will stop receiving its messages, and everything in it is wiped from this phone.';
 
   @override
+  String get groupInfoLeaveGroupLineDesk =>
+      'You will stop receiving its messages, and everything in it is wiped from this computer.';
+
+  @override
   String get groupInfoLeaveGroupAdmin =>
       'You will stop receiving its messages, and everything in it is wiped from this phone. You are its admin, so once you leave no one can change who is in it or rename it.';
 
   @override
+  String get groupInfoLeaveGroupAdminDesk =>
+      'You will stop receiving its messages, and everything in it is wiped from this computer. You are its admin, so once you leave no one can change who is in it or rename it.';
+
+  @override
   String get groupInfoLeaveRoomMaker =>
       'Everything in it is wiped from this phone now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.';
+
+  @override
+  String get groupInfoLeaveRoomMakerDesk =>
+      'Everything in it is wiped from this computer now, and the key you used here is gone for good. You made this room, so its link stops letting anyone in.';
 
   @override
   String get groupInfoLeave => 'Leave';
@@ -3017,12 +3115,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String handleIsNotYoursOnDesk(Object handle) {
+    return '@$handle is not yours on this computer';
+  }
+
+  @override
   String handleTheRegistryHoldsIt(Object handle) {
     return 'The registry holds it under a different key, most likely an identity this phone had before a restore. People who add @$handle are not reaching you. It cannot be released or updated from here. Pick another name.';
   }
 
   @override
+  String handleTheRegistryHoldsItDesk(Object handle) {
+    return 'The registry holds it under a different key, most likely an identity this computer had before a restore. People who add @$handle are not reaching you. It cannot be released or updated from here. Pick another name.';
+  }
+
+  @override
   String get handleForgetItOnThis => 'Forget it on this phone';
+
+  @override
+  String get handleForgetItOnThisDesk => 'Forget it on this computer';
 
   @override
   String get homeAddAContact => 'Add a contact';
@@ -3155,6 +3266,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Scan their code, send them a link, or type the @handle they gave you.';
 
   @override
+  String get homeScanTheirCodeSendDesk =>
+      'Send them a link, or type the @handle they gave you.';
+
+  @override
   String get homeAddSomeone => 'Add someone';
 
   @override
@@ -3227,11 +3342,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Messages and contact, gone from this phone';
 
   @override
+  String get homeMessagesAndContactGoneDesk =>
+      'Messages and contact, gone from this computer';
+
+  @override
   String get homeDeleteThisChat => 'Delete this chat?';
 
   @override
   String homeEveryMessageWithGoes(Object c) {
     return 'Every message with $c goes, and they stop being a contact. It only clears this phone. Their copy stays with them. If they message again it lands in requests.';
+  }
+
+  @override
+  String homeEveryMessageWithGoesDesk(Object c) {
+    return 'Every message with $c goes, and they stop being a contact. It only clears this computer. Their copy stays with them. If they message again it lands in requests.';
   }
 
   @override
@@ -3269,6 +3393,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeOnlyOnThisPhone => 'Only on this phone';
+
+  @override
+  String get homeOnlyOnThisPhoneDesk => 'Only on this computer';
 
   @override
   String get homeSaved => 'Saved';
@@ -3480,6 +3607,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkNoAppOpens => 'No app on this phone opens this link.';
 
   @override
+  String get linkNoAppOpensDesk => 'No app on this computer opens this link.';
+
+  @override
   String get placeStubLocation => 'Location';
 
   @override
@@ -3637,6 +3767,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get movedWipeThisPhone => 'Wipe Kryfo from this phone?';
 
   @override
+  String get movedWipeThisPhoneDesk => 'Wipe Kryfo from this computer?';
+
+  @override
   String get movedEverythingKryfoHoldsHere =>
       'Everything Kryfo holds here goes: the messages, the contacts, the keys. The other device keeps all of it. This cannot be undone.';
 
@@ -3662,6 +3795,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String movedKryfoWillCloseNowDesk(Object myId) {
+    return 'Kryfo will close now. Start it again to open as $myId.';
+  }
+
+  @override
   String get movedReopenKryfo => 'Reopen Kryfo';
 
   @override
@@ -3673,10 +3811,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String movedIsNowOnAnotherDesk(Object myId) {
+    return '$myId is now on another device. This computer can still show what was here, but nothing new will arrive on it, and anything you send from here won\'t reach anyone.';
+  }
+
+  @override
   String get movedKeepItToRead => 'Keep it to read';
 
   @override
   String get movedWipeThisPhone2 => 'Wipe Kryfo from this phone';
+
+  @override
+  String get movedWipeThisPhone2Desk => 'Wipe Kryfo from this computer';
 
   @override
   String get movedIMNotMoving => 'I\'m not moving after all';
@@ -3714,6 +3860,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get myKryfoPointYourPhonesAt =>
       'Point your phones at each other. Nothing goes through a server.';
+
+  @override
+  String get myKryfoPointYourPhonesAtDesk =>
+      'They scan this code with their phone. Nothing goes through a server.';
 
   @override
   String get myKryfoScanTheirsInstead => 'Scan theirs instead';
@@ -3848,6 +3998,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesDeleteAllLine => 'Every note on this phone goes, for good.';
 
   @override
+  String get notesDeleteAllLineDesk =>
+      'Every note on this computer goes, for good.';
+
+  @override
   String get notesDeleteAllYes => 'Delete all';
 
   @override
@@ -3863,10 +4017,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesGoneFromThisPhone => 'It is gone from this phone for good.';
 
   @override
+  String get notesGoneFromThisPhoneDesk =>
+      'It is gone from this computer for good.';
+
+  @override
   String get notesNoteToSelf => 'Note to self';
 
   @override
   String get notesOnlyOnThisPhone => 'Only on this phone';
+
+  @override
+  String get notesOnlyOnThisPhoneDesk => 'Only on this computer';
 
   @override
   String get notesAQuietPlace => 'A quiet place';
@@ -3874,6 +4035,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notesJotAnythingDownIt =>
       'Jot anything down. It stays on this phone and never leaves.';
+
+  @override
+  String get notesJotAnythingDownItDesk =>
+      'Jot anything down. It stays on this computer and never leaves.';
 
   @override
   String get notesJotSomethingDown => 'Jot something down…';
@@ -3950,6 +4115,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This export holds an app installer, so it can\'t be shared. Save it to your phone instead.';
 
   @override
+  String get notesExportHoldsInstallerDesk =>
+      'This export holds an app installer, so it can\'t be shared. Save it to this computer instead.';
+
+  @override
   String get notesExportSaved => 'Notes saved';
 
   @override
@@ -4008,6 +4177,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Generated from a key that lives only on this phone. *No one else has these words.*';
 
   @override
+  String get onboardingGeneratedFromAKeyDesk =>
+      'Generated from a key that lives only on this computer. *No one else has these words.*';
+
+  @override
   String get onboardingTryAnother => 'Try another';
 
   @override
@@ -4026,6 +4199,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingYourIdentityLivesOn =>
       'Your identity lives on this phone. Back it up from settings when you are ready.';
+
+  @override
+  String get onboardingYourIdentityLivesOnDesk =>
+      'Your identity lives on this computer. Back it up from settings when you are ready.';
 
   @override
   String get onboardingOneQuiet => 'One quiet *notification*.';
@@ -4119,9 +4296,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodeEnterOne => 'Enter one';
 
   @override
-  String get pairCodeSixDigits => 'Six digits';
-
-  @override
   String get pairCodeLooking => 'Looking…';
 
   @override
@@ -4140,31 +4314,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodeFailed => 'That didn\'t work. Try again.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Type the six digits they read out.';
-
-  @override
   String get pairCodeAddThem => 'Add them';
-
-  @override
-  String get pairCodeUsedTwice =>
-      'This code was used twice. Ask for a new one.';
 
   @override
   String get pairCodeKeyNumber => 'Key number';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Check all four groups match on both phones';
-
-  @override
-  String get pairCodeNumberDiffers => 'The number is different';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'No number on their screen? Add them, then compare the safety number in your chat.';
-
-  @override
   String get pairCodeNotAdded => 'Not added. Ask them for a new code.';
+
+  @override
+  String get pairCodeEightDigits => 'Eight digits';
+
+  @override
+  String get pairCodeTypeTheEightDigits =>
+      'Type the eight digits they read out.';
+
+  @override
+  String get pairCodeOldCode =>
+      'That code is from an older Kryfo. Both phones need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'That code is from an older Kryfo. Both devices need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeBothNeed06 => 'Both phones need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeBothNeed06Desk => 'Both devices need Kryfo 0.6 or newer.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Waiting for them…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Still waiting. If their screen says a wrong code was typed, check the digits together.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'No answer came. Check the code with them and type it again.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'This code was tried three times. Ask them for a new one.';
+
+  @override
+  String get pairCodeRanOut => 'That code ran out. Ask them for a new one.';
+
+  @override
+  String get pairCodeMatched => 'The code matched. Add each other?';
+
+  @override
+  String get pairCodeNotThem => 'Not them';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Read eight digits out loud and you add each other. Nothing else needs to change hands.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Or make a code to read out';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'They open Kryfo, tap add, choose pairing code and type these eight digits. Make a new one for the next person.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'A wrong code was typed. Read it out again, slowly.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'A wrong code was typed three times, so this one stopped. Make a new one.';
+
+  @override
+  String get pairCodePanelNotAdded =>
+      'Not added. Make a new code when they\'re ready.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -4261,6 +4485,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pinsThePinGoesAnd =>
       'The PIN goes, and the wipe PIN and any hidden chats with it. Anyone holding your phone opens Kryfo as you.';
+
+  @override
+  String get pinsThePinGoesAndDesk =>
+      'The PIN goes, and the wipe PIN and any hidden chats with it. Anyone at your computer opens Kryfo as you.';
 
   @override
   String get pinsUnlockWithFingerprint => 'Unlock with fingerprint';
@@ -4561,6 +4789,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreReplaceTheAccountOn => 'Replace the account on this phone?';
 
   @override
+  String get restoreReplaceTheAccountOnDesk =>
+      'Replace the account on this computer?';
+
+  @override
   String get restoreWhatIsHereNow =>
       'What is here now, its identity, contacts and messages, goes. The file takes its place. This cannot be undone.';
 
@@ -4578,6 +4810,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String restoreTheRegistryDidNotDesk(Object mine) {
+    return 'The registry did not answer. If you go on, @$mine stays pointed at the identity this computer is about to lose. Anyone who adds it will be writing to nobody, and the name cannot be claimed again. Better to get online and try once more.';
+  }
+
+  @override
   String get restoreRestoreAnyway => 'Restore anyway';
 
   @override
@@ -4589,6 +4826,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String restoreKryfoWillCloseNow(Object haloId) {
     return 'Kryfo will close now. Tap the icon to reopen as $haloId.';
+  }
+
+  @override
+  String restoreKryfoWillCloseNowDesk(Object haloId) {
+    return 'Kryfo will close now. Start it again to open as $haloId.';
   }
 
   @override
@@ -4669,6 +4911,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Anything sent to you while the old phone was off, for fourteen days after it was sent.';
 
   @override
+  String get restoreAnythingSentToYouDesk =>
+      'Anything sent to you while the old device was off, for fourteen days after it was sent.';
+
+  @override
   String get restoreYourSupporterBadgeIf =>
       'Your supporter badge, if you have one.';
 
@@ -4680,8 +4926,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'The old phone stops receiving the moment you send anything from here. The first message you send from this device is the last one the old phone can follow, and anything that reaches it after that is unreadable there and isn\'t waiting for you here either.';
 
   @override
+  String get restoreTheOldPhoneStopsDesk =>
+      'The old device stops receiving the moment you send anything from here. The first message you send from this computer is the last one the old device can follow, and anything that reaches it after that is unreadable there and isn\'t waiting for you here either.';
+
+  @override
   String get restoreIfThePhoneThis =>
       'If the phone this file came from is still in use, stop using Kryfo on it before you carry on. Two phones on one Kryfo lose messages on both.';
+
+  @override
+  String get restoreIfThePhoneThisDesk =>
+      'If the device this file came from is still in use, stop using Kryfo on it before you carry on. Two devices on one Kryfo lose messages on both.';
 
   @override
   String get restoreNotificationsNeedSettingUp =>
@@ -4702,6 +4956,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreABackupBringsBack =>
       'A backup brings back your identity and your contacts, and the messages that were on the phone when the file was made. Anything said since is not in it.';
+
+  @override
+  String get restoreABackupBringsBackDesk =>
+      'A backup brings back your identity and your contacts, and the messages that were on the device when the file was made. Anything said since is not in it.';
 
   @override
   String get restoreTheFile => 'The file';
@@ -4770,6 +5028,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get roomCreateARoomThatEnds =>
       'A room that ends. Everyone joins under a key made for it, and when it ends nothing is left on any phone.';
+
+  @override
+  String get roomCreateARoomThatEndsDesk =>
+      'A room that ends. Everyone joins under a key made for it, and when it ends nothing is left on any device.';
 
   @override
   String get roomCreateRoomName => 'Room name';
@@ -4863,6 +5125,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedChatGone => 'That chat is no longer on this phone';
 
   @override
+  String get savedChatGoneDesk => 'That chat is no longer on this computer';
+
+  @override
   String get savedLongPressAnyMessage =>
       'Long-press any message and tap save to keep it here.';
 
@@ -4895,6 +5160,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get seenHonestAboutTheLast =>
       'The last rows are what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone holding your open phone. The full threat model is in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so you can check all of this yourself.';
+
+  @override
+  String get seenHonestAboutTheLastDesk =>
+      'The last rows are what the app lock, the wipe PIN and encrypted storage are for, and no tool saves you from someone sitting at your unlocked computer. The full threat model is in THREAT_MODEL.md in the repo, written against LINDDUN. The code is open, so you can check all of this yourself.';
 
   @override
   String get seenHidden => 'Hidden';
@@ -4950,6 +5219,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Runs on your phone with rules that ship in the app. No network, no list downloads. It reads only message requests from strangers, never what a contact or a group sends you.';
 
   @override
+  String get seenScamShieldRequestsOnlyDesk =>
+      'Runs on your computer with rules that ship in the app. No network, no list downloads. It reads only message requests from strangers, never what a contact or a group sends you.';
+
+  @override
   String get seenBurnerRooms => 'Burner rooms';
 
   @override
@@ -4970,11 +5243,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'A preview is fetched by the sender, over Tor, and travels inside the encrypted message. The receiving phone makes no request. The website learns that someone using Tor asked for a page, and nothing else. No image is ever loaded, and a stranger\'s link stays plain text.';
 
   @override
+  String get seenAPreviewIsFetchedDesk =>
+      'A preview is fetched by the sender, over Tor, and travels inside the encrypted message. The receiving device makes no request. The website learns that someone using Tor asked for a page, and nothing else. No image is ever loaded, and a stranger\'s link stays plain text.';
+
+  @override
   String get seenASeizedUnlockedPhone => 'A seized unlocked phone';
+
+  @override
+  String get seenASeizedUnlockedPhoneDesk => 'A seized unlocked computer';
 
   @override
   String get seenIfSomeoneHoldsYour =>
       'If someone holds your phone open, they read your messages. The app lock, wipe PIN and encrypted storage help before that point, not after it.';
+
+  @override
+  String get seenIfSomeoneHoldsYourDesk =>
+      'If someone sits at your unlocked computer, they read your messages. The app lock, wipe PIN and encrypted storage help before that point, not after it.';
 
   @override
   String get seenTheCryptoItself => 'The crypto itself';
@@ -4992,6 +5276,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsIdentityMessagesContactsAnd =>
       'Identity, messages, contacts and settings on this phone. Gone for good unless you have a backup.';
+
+  @override
+  String get settingsIdentityMessagesContactsAndDesk =>
+      'Identity, messages, contacts and settings on this computer. Gone for good unless you have a backup.';
 
   @override
   String get commonContinue => 'Continue';
@@ -5073,6 +5361,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Checked only on your phone, nothing leaves it';
+
+  @override
+  String get settingsScamShieldHintDesk =>
+      'Checked only on your computer, nothing leaves it';
 
   @override
   String get typingNow => 'Typing';
@@ -5221,6 +5513,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsWipeKryfoFromThis => 'Wipe Kryfo from this phone';
 
   @override
+  String get settingsWipeKryfoFromThisDesk => 'Wipe Kryfo from this computer';
+
+  @override
   String get toolsMoreTools => 'More tools';
 
   @override
@@ -5280,6 +5575,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transportNothingHereLeavesThe =>
       'Nothing here leaves the phone. It is the same state the engine uses to decide what to do.';
+
+  @override
+  String get transportNothingHereLeavesTheDesk =>
+      'Nothing here leaves the computer. It is the same state the engine uses to decide what to do.';
 
   @override
   String get transportStayingAlive => 'Staying alive';
@@ -5363,6 +5662,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transportWithNoContactsThe =>
       'With no contacts the app subscribes to no relay addresses, so no message can reach you. Scan someone to fix it.';
+
+  @override
+  String get transportWithNoContactsTheDesk =>
+      'With no contacts the app subscribes to no relay addresses, so no message can reach you. Add someone to fix it.';
 
   @override
   String get transportSendAnythingWaitingNow => 'Send anything waiting, now';
@@ -5689,6 +5992,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get whyKryfoNoAccountNoPhone =>
       'No account, no phone number, no central server storing your chats. They live on this phone, encrypted at rest.';
+
+  @override
+  String get whyKryfoNoAccountNoPhoneDesk =>
+      'No account, no phone number, no central server storing your chats. They live on this computer, encrypted at rest.';
 
   @override
   String get whyKryfoNothingLeaks => 'Nothing leaks';
@@ -6203,6 +6510,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your phone\'s key storage stopped answering. Closing and reopening Kryfo usually fixes this.';
 
   @override
+  String get bootFailedKeysDidNotAnswerDesk =>
+      'This computer\'s key storage stopped answering. Closing and reopening Kryfo usually fixes this.';
+
+  @override
   String get bootFailedCloseAndReopen => 'Close and reopen Kryfo';
 
   @override
@@ -6222,10 +6533,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'This deletes everything Kryfo keeps on this phone: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.';
 
   @override
+  String get bootFailedStartFreshLineDesk =>
+      'This deletes everything Kryfo keeps on this computer: chats, contacts, media, hidden chats and your three words. A backup file saved somewhere else is not touched.';
+
+  @override
   String get bootFailedStartFreshNext => 'Continue';
 
   @override
   String get bootFailedStartFreshSure => 'Delete everything on this phone?';
+
+  @override
+  String get bootFailedStartFreshSureDesk =>
+      'Delete everything on this computer?';
 
   @override
   String get bootFailedStartFreshSureLine =>
@@ -6456,14 +6775,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Your invite is not ready yet';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Read six digits out loud and they can add you. Nothing else needs to change hands.';
-
-  @override
   String get pairCodePanelWorking => 'Working';
-
-  @override
-  String get pairCodePanelOrMakeASix => 'Or make a six digit code to read out';
 
   @override
   String get pairCodePanelBurned =>
@@ -6480,17 +6792,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'They tap add, choose code, and type these.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'They open Kryfo, tap add, choose pairing code and type these six digits. Make a new one for the next person.';
-
-  @override
-  String get pairCodePanelYourWords => 'Your three words';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Their request comes once they add you. Accept it only once they say all four groups matched.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -6571,6 +6872,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get torBootSplashMadeOnThisPhone =>
       'Made on this phone. Nothing is sent anywhere.';
+
+  @override
+  String get torBootSplashMadeOnThisPhoneDesk =>
+      'Made on this computer. Nothing is sent anywhere.';
 
   @override
   String get torBootSplashFirstLaunchTakesA =>
@@ -6885,6 +7190,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bridgesBuiltIn => 'built-in';
 
   @override
+  String get bridgesPasteOrScanALineDesk =>
+      'Paste a line someone you trust gave you.';
+
+  @override
   String get bridgesDetails => 'Details';
 
   @override
@@ -6906,6 +7215,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bridgesThisNetworkWantsA =>
       'This network wants a sign-in first. Once you\'re in, Kryfo connects.';
+
+  @override
+  String get bridgesThisNetworkWantsADesk =>
+      'This network wants a sign-in first. Sign in from your browser, or check the computer\'s network connection. Once you\'re in, Kryfo connects.';
 
   @override
   String get bridgesWaitingForWifiSignIn => 'Waiting for Wi-Fi sign-in';
@@ -7059,6 +7372,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bridgesSavedLines => 'Saved lines';
 
   @override
+  String get bridgesPasteTheLineTheyDesk =>
+      'Paste the line they sent you. Take bridge lines from people you know.';
+
+  @override
   String get bridgesFromAFriendLower => 'from a friend';
 
   @override
@@ -7161,8 +7478,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageMatchPhone => 'Match phone';
 
   @override
+  String get languageMatchPhoneDesk => 'Match system';
+
+  @override
   String languageMatchPhoneValue(Object language) {
     return 'Match phone ($language)';
+  }
+
+  @override
+  String languageMatchPhoneValueDesk(Object language) {
+    return 'Match system ($language)';
   }
 
   @override
@@ -7199,6 +7524,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoViewerCannotPlay => 'This phone can\'t play this video here.';
+
+  @override
+  String get videoViewerCannotPlayDesk =>
+      'This computer can\'t play this video here.';
 
   @override
   String get videoViewerOpenElsewhere => 'Open in another app';
@@ -7389,6 +7718,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Names, words, photos, files and links. The search runs on this phone and sends nothing anywhere.';
 
   @override
+  String get searchIntroLineDesk =>
+      'Names, words, photos, files and links. The search runs on this computer and sends nothing anywhere.';
+
+  @override
   String get searchNothing => 'Nothing found';
 
   @override
@@ -7474,6 +7807,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check the phone\'s date and time, then try again.';
 
   @override
+  String get handleCheckClockDesk =>
+      'Check the computer\'s date and time, then try again.';
+
+  @override
   String get searchPeople => 'People';
 
   @override
@@ -7555,8 +7892,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'For when someone makes you unlock your phone.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'For when someone makes you unlock your computer.';
+
+  @override
   String get pinsWipeLine =>
       'Typed on the lock screen, it wipes Kryfo from this phone.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Typed on the lock screen, it wipes Kryfo from this computer.';
 
   @override
   String get pinsDecoyPin => 'Decoy PIN';
@@ -7578,6 +7923,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone holding your phone opens Kryfo as you.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Every PIN goes, the decoy and its Kryfo and any hidden chats with them. Anyone at your computer opens Kryfo as you.';
+
+  @override
   String get pinsHowThisWorks => 'How this works';
 
   @override
@@ -7592,6 +7941,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Typed on the lock screen instead of your PIN, it wipes Kryfo from this phone and closes it. To whoever is watching, the app just stopped.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Typed on the lock screen instead of your PIN, it wipes Kryfo from this computer and closes it. To whoever is watching, the app just stopped.';
 
   @override
   String get flowWipe2 =>
@@ -7626,6 +7979,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notifications already in the shade were already seen. While the decoy is open, no new ones show.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'Notifications already on the screen were already seen. While the decoy is open, no new ones show.';
+
+  @override
   String get flowDecoyChoose => 'Choose a decoy PIN';
 
   @override
@@ -7638,6 +7995,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flowLaw =>
       'In some countries, refusing to unlock a phone or hiding data from officials is an offence in itself. Know the law where you travel.';
+
+  @override
+  String get flowLawDesk =>
+      'In some countries, refusing to unlock a device or hiding data from officials is an offence in itself. Know the law where you travel.';
 
   @override
   String get howWipe =>
@@ -7702,6 +8063,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'This replaces any hidden chats this phone already holds.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'This replaces any hidden chats this computer already holds.';
 
   @override
   String get flowVaultChoose => 'Choose a hidden chats PIN';
@@ -7778,6 +8143,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get howVault =>
       'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN and your fingerprint without them. Setting hidden chats up again replaces the ones this phone holds. Forget the hidden chats PIN and they are gone for good.';
+
+  @override
+  String get howVaultDesk =>
+      'Your hidden chats PIN opens Kryfo with your hidden chats, your PIN without them. Setting hidden chats up again replaces the ones this computer holds. Forget the hidden chats PIN and they are gone for good.';
 
   @override
   String get chatHide => 'Hide chat';
@@ -8030,8 +8399,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Anonymously, Kryfo makes a new name and keys for this chat only. They stay on this phone and are never used anywhere else.';
 
   @override
+  String get devWhoAnonDesk =>
+      'Anonymously, Kryfo makes a new name and keys for this chat only. They stay on this computer and are never used anywhere else.';
+
+  @override
   String get devWhoNothingYet =>
       'Nothing leaves your phone until you send your first message.';
+
+  @override
+  String get devWhoNothingYetDesk =>
+      'Nothing leaves your computer until you send your first message.';
 
   @override
   String get devWhoChoiceStays => 'Your choice stays with this chat.';
@@ -8060,6 +8437,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get devNamelessLine =>
       'The name made for this chat stays on the phone it was made on, so here it can only be read.';
+
+  @override
+  String get devNamelessLineDesk =>
+      'The name made for this chat stays on the device it was made on, so here it can only be read.';
 
   @override
   String get devStartNewLine =>
@@ -8092,6 +8473,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get nameTakenTombLine =>
       'You took someone off this phone under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.';
+
+  @override
+  String get nameTakenTombLineDesk =>
+      'You took someone off this computer under these words because they were not who they said. If this link came from the person you know, use it, then compare the safety number with them.';
 
   @override
   String get nameTakenUse => 'Use this link';
@@ -8141,6 +8526,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The chat, its messages and its files go from this phone. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.';
 
   @override
+  String get notThemSheetLineDesk =>
+      'The chat, its messages and its files go from this computer. Only a link or code you add takes their three words again. Compare the safety number with whoever you add.';
+
+  @override
   String get notThemRemove => 'Remove and block';
 
   @override
@@ -8149,6 +8538,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get groupAdminGoneLine =>
       'Its admin was removed from this phone. Group changes no longer reach you.';
+
+  @override
+  String get groupAdminGoneLineDesk =>
+      'Its admin was removed from this computer. Group changes no longer reach you.';
 
   @override
   String get blockedKey => 'Blocked key';
@@ -8204,6 +8597,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Settings, Privacy, GIF search. GIFs on your phone always work without it.';
 
   @override
+  String get gifOptInWhereToTurnOffDesk =>
+      'Settings, Privacy, GIF search. GIFs on your computer always work without it.';
+
+  @override
   String get gifTurnOn => 'Turn on GIF search';
 
   @override
@@ -8230,10 +8627,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'GIFs saved on your phone are in *On this phone*.';
 
   @override
+  String get gifSavedOnPhoneDesk =>
+      'GIFs saved on your computer are in *On this computer*.';
+
+  @override
   String get gifTab => 'GIFs';
 
   @override
   String get gifPhoneTab => 'On this phone';
+
+  @override
+  String get gifPhoneTabDesk => 'On this computer';
 
   @override
   String get gifSearchHint => 'Search GIFs';
@@ -8287,6 +8691,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gifPhoneLine => 'GIFs saved on this phone. Nothing goes online.';
 
   @override
+  String get gifPhoneLineDesk =>
+      'GIFs saved on this computer. Nothing goes online.';
+
+  @override
   String get gifPhoneChoose => 'Choose a GIF';
 
   @override
@@ -8338,7 +8746,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatBlockScreenshots => 'Block screenshots';
 
   @override
-  String get chatShotsWhenTheyUpdate => 'Available when they update';
+  String get chatShotsWhenTheyUpdate =>
+      'Available when they use the latest Kryfo on a phone';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Available in Kryfo for Android';
 
   @override
   String get chatShotsBothPhones =>
@@ -8394,6 +8806,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'You turned off screenshot blocking';
 
   @override
+  String get chatNowPostQuantum =>
+      'Messages in this chat now use post-quantum encryption';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name turned on screenshot blocking. Copying, forwarding and saving each other’s messages is off too.';
   }
@@ -8408,7 +8824,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo blocks screenshots and screen recording of this room on every phone in it, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Copying, forwarding and saving each other’s messages is off in this room. Kryfo for Android also blocks screenshots and screen recording of it.';
+
+  @override
   String get roomShotsAlwaysOn => 'Always on in a room, on every phone in it';
+
+  @override
+  String get roomShotsAlwaysOnDesk =>
+      'Always on in a room, in Kryfo for Android';
 
   @override
   String get settingsPerChat => 'Per chat';
@@ -8472,6 +8896,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voiceNoRoom =>
       'Not enough free space on this phone. Free up some space and try again.';
+
+  @override
+  String get voiceNoRoomDesk =>
+      'Not enough free space on this computer. Free up some space and try again.';
 
   @override
   String get voiceNoRoomNotSent =>
@@ -8687,6 +9115,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'It\'s deleted for everyone: its messages and media are removed from every updated member\'s phone.';
 
   @override
+  String get groupInfoEndGroupLineDesk =>
+      'It\'s deleted for everyone: its messages and media are removed from every updated member\'s device.';
+
+  @override
   String get groupInfoDeleteGroup => 'Delete group';
 
   @override
@@ -8705,6 +9137,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo removes it from every member\'s phone that has the update.';
 
   @override
+  String get groupInfoEndGroupDetailDesk =>
+      'Kryfo removes it from every member\'s device that has the update.';
+
+  @override
   String get translateAction => 'Translate';
 
   @override
@@ -8719,13 +9155,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get translateBarMore => 'Translation options';
 
   @override
-  String translateBarAlways(Object language) {
-    return 'Always translate $language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return 'Never translate $language';
+    return 'Never offer for $language';
   }
 
   @override
@@ -8751,12 +9182,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String translatePackTitleDesk(Object language) {
+    return 'Translate $language on this computer';
+  }
+
+  @override
   String translatePackLine(Object language, Object size) {
     return 'Messages are translated on this phone and never leave it. That needs the $language language pack, about $size, downloaded once over Tor.';
   }
 
   @override
+  String translatePackLineDesk(Object language, Object size) {
+    return 'Messages are translated on this computer and never leave it. That needs the $language language pack, about $size, downloaded once over Tor.';
+  }
+
+  @override
   String get translatePackNoLib => 'Translation doesn\'t work on this phone.';
+
+  @override
+  String get translatePackNoLibDesk =>
+      'Translation doesn\'t work on this computer.';
 
   @override
   String translateDownload(Object size) {
@@ -8783,8 +9228,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String translateInstalledDesk(Object size) {
+    return 'On this computer · $size';
+  }
+
+  @override
   String get translateNeedsWifi =>
       'Wi-Fi only is on, and this phone isn\'t on Wi-Fi.';
+
+  @override
+  String get translateNeedsWifiDesk =>
+      'Wi-Fi only is on, and this computer isn\'t on Wi-Fi.';
 
   @override
   String get translateFailNoTor =>
@@ -8803,6 +9257,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Language packs can\'t be downloaded on this phone.';
 
   @override
+  String get translateFailNoEngineDesk =>
+      'Language packs can\'t be downloaded on this computer.';
+
+  @override
   String translatePaused(Object size) {
     return 'Paused · $size so far';
   }
@@ -8815,6 +9273,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translateSettingsHint => 'On this phone, never on a server';
+
+  @override
+  String get translateSettingsHintDesk => 'On this computer, never on a server';
 
   @override
   String get translatePacksSection => 'Language packs';
@@ -8879,11 +9340,47 @@ class AppLocalizationsEn extends AppLocalizations {
       'Translation happens on this phone. No message is ever sent anywhere to be translated. Downloading a pack tells the host which pack it is. It comes over Tor, so the host doesn\'t learn who asked.';
 
   @override
+  String get translatePrivacyNoteDesk =>
+      'Translation happens on this computer. No message is ever sent anywhere to be translated. Downloading a pack tells the host which pack it is. It comes over Tor, so the host doesn\'t learn who asked.';
+
+  @override
   String get translateAutoInChat => 'Translate automatically';
 
   @override
   String get translateAutoInChatHint =>
       'Messages in other languages show translated. The original is one tap away.';
+
+  @override
+  String get translateAlwaysChat => 'Always translate this chat';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Messages in $language stay as they are';
+  }
+
+  @override
+  String get translateUndo => 'Undo';
+
+  @override
+  String get translateNeverSection => 'Never offered';
+
+  @override
+  String get translateOfferAgain => 'Offer again';
+
+  @override
+  String get translateOnHint => 'Offered under messages in other languages';
+
+  @override
+  String get translatePrivacyKept =>
+      'Translations are kept with their chat, encrypted on this phone, and deleted with it.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Translations are kept with their chat, encrypted on this computer, and deleted with it.';
+
+  @override
+  String get translateOffDeletes =>
+      'Turning this off deletes saved translations.';
 
   @override
   String get bridgesNoneUntilOnion => 'None until onion is on';
@@ -9144,6 +9641,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'How new messages reach this phone, how they sound and what they show. You can change it whenever you like.';
 
   @override
+  String get notificationsLeadDesk =>
+      'How new messages reach this computer, how they sound and what they show. You can change it whenever you like.';
+
+  @override
   String get notificationsHowTheyReachYou => 'How messages reach you';
 
   @override
@@ -9283,6 +9784,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'At least 12 characters. The phone\'s keyboard sees what you type, so use one that does not learn or sync words.';
 
   @override
+  String get flowVaultPassLineDesk =>
+      'At least 12 characters. Pick one you use nowhere else.';
+
+  @override
   String get flowVaultPassAgain => 'The same passphrase again';
 
   @override
@@ -9331,22 +9836,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.';
 
   @override
+  String get groupShotsBlocksAllDesk =>
+      'Turns off copying, forwarding and saving each other’s messages here. Kryfo for Android also blocks screenshots and screen recording.';
+
+  @override
   String get groupShotsStartsWhenAll =>
-      'Waiting for everyone here to update Kryfo';
+      'Waiting until everyone here can block screenshots on their device';
 
   @override
   String get groupShotsOnForAll => 'On for everyone here';
+
+  @override
+  String get groupShotsOnForAllDesk => 'On in Kryfo for Android';
 
   @override
   String get groupShotsOffAdminOnly => 'Off. Only the admin can change this';
 
   @override
   String get groupShotsWaitAdminOnly =>
-      'Waiting for everyone here to update Kryfo. Only the admin can change this';
+      'Waiting until everyone here can block screenshots on their device. Only the admin can change this';
 
   @override
   String get groupShotsOnAdminOnly =>
       'On for everyone here. Only the admin can change this';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'On in Kryfo for Android. Only the admin can change this';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -9364,26 +9880,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => 'Still to update';
+  String get groupShotsWaitingTitle => 'Not covered yet';
 
   @override
   String get groupShotsWaitingHint =>
-      'Screenshot blocking covers everyone once these people update Kryfo. Tap someone to remove them from the group.';
+      'Screenshot blocking covers everyone once these people’s devices can block screenshots. Tap someone to remove them from the group.';
 
   @override
   String get groupShotsNeedsUpdate =>
-      'Needs to update Kryfo, or hasn’t been online since';
+      'Can’t block screenshots on their device yet, or hasn’t been online since';
 
   @override
   String get groupShotsBlockedByYou => 'Blocked by you';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      'You turned on screenshot blocking. It covers everyone once all here have updated Kryfo.';
+      'You turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name turned on screenshot blocking. It covers everyone once all here have updated Kryfo.';
+    return '$name turned on screenshot blocking. It covers everyone once all here can block screenshots on their device.';
   }
 
   @override
@@ -9391,8 +9907,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Screenshot blocking is on for everyone here. Copying, forwarding and saving each other’s messages is off too.';
 
   @override
+  String get groupShotsStartedDesk =>
+      'Screenshot blocking is on in Kryfo for Android. Copying, forwarding and saving each other’s messages is off too.';
+
+  @override
   String get groupShotsPaused =>
-      'Someone here can’t block screenshots yet. It covers everyone again once they update Kryfo.';
+      'Someone here can’t block screenshots on their device yet. It covers everyone again once they can.';
 
   @override
   String get groupShotsCantYet => 'Can’t block screenshots yet';
@@ -9402,13 +9922,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupShotsAddPauses =>
-      'Screenshot blocking won’t cover everyone here until they update Kryfo.';
+      'Screenshot blocking won’t cover everyone here until they can block screenshots on their device.';
 
   @override
   String get groupShotsLeaveStays => 'Screenshot blocking stays as it is.';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo blocks screenshots in this group';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Copying, forwarding and saving is off in this group';
 
   @override
   String get groupShotsMenuNote =>
@@ -9659,6 +10183,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo is running and receiving messages';
 
   @override
+  String get desktopTrayLockedTip => 'Open Kryfo to start receiving messages';
+
+  @override
+  String get desktopRunSection => 'On this computer';
+
+  @override
+  String get desktopTrayRow => 'Keep running in the tray';
+
+  @override
+  String get desktopTrayHint =>
+      'Closing the window keeps Kryfo in the tray, so messages keep arriving.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Closing the window quits Kryfo. Messages arrive when you open it again.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'This desktop shows no tray icon, so closing the window quits Kryfo.';
+
+  @override
+  String get desktopStartRow => 'Start with my computer';
+
+  @override
+  String get desktopStartHint =>
+      'Kryfo starts in the tray when you sign in to this computer.';
+
+  @override
+  String get desktopStartRefused =>
+      'This computer did not let Kryfo start with it. Kryfo opens whenever you start it yourself.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo cannot use a camera on this computer yet. Use the link or the code instead.';
 
@@ -9684,6 +10244,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inviteNotYet =>
       'This invite isn\'t valid yet. Check the time on your phone.';
+
+  @override
+  String get inviteNotYetDesk =>
+      'This invite isn\'t valid yet. Check the time on your computer.';
 
   @override
   String get inviteExpired => 'This invite has expired. Ask for a new one.';
@@ -9848,8 +10412,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'This album will be removed from both phones, unless it has already been saved. This can\'t be undone.';
 
   @override
+  String get chatAlbumItDisappearsWithNoDesk =>
+      'This album will be removed from both devices, unless it has already been saved. This can\'t be undone.';
+
+  @override
   String get groupChatAlbumItDisappearsWithNo =>
       'This album will be removed from everyone\'s phones, unless it has already been saved. This can\'t be undone.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNoDesk =>
+      'This album will be removed from everyone\'s devices, unless it has already been saved. This can\'t be undone.';
 
   @override
   String get homeInviteSomeone => 'Invite someone';
@@ -9937,12 +10509,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoOnlyHere => 'Only on this phone';
 
   @override
+  String get photoOnlyHereDesk => 'Only on this computer';
+
+  @override
   String photoForThem(Object name) {
     return 'A photo for $name';
   }
 
   @override
   String get photoOnlyHereLine => 'Only you see it. It stays on this phone.';
+
+  @override
+  String get photoOnlyHereLineDesk =>
+      'Only you see it. It stays on this computer.';
 
   @override
   String photoOf(Object name) {
@@ -10043,6 +10622,16 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => 'Select a chat';
+
+  @override
+  String get wideSelectChatLine =>
+      'Pick a chat from the list to start writing.';
+
+  @override
+  String get wideListWidth => 'Chat list width';
 
   @override
   String transferDoneOf(String done, String total) {
@@ -10238,4 +10827,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopBackupHint =>
       'Brings everything back if this computer is ever reset.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name set up Kryfo again';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name\'s phone started a new secure session';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'You verified $name before. Nothing is sent until you check the number or keep chatting. Their messages still arrive.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Keep chatting';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name needs to update Kryfo to keep chatting.';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Some chats will pause';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name uses an older Kryfo. Your chat with them will pause until they update.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first and $second use an older Kryfo. Your chats with them will pause until they update.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count others',
+      one: '1 other',
+    );
+    return '$first, $second and $_temp0 use an older Kryfo. Your chats with them will pause until they update.';
+  }
 }

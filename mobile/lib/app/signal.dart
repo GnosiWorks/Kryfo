@@ -91,6 +91,9 @@ Future<({int ident, String cipher})> signalSeal(
   String peerId,
   String plaintext, {
   bool onlySettled = false,
+  // the empty answer to a heal: it carries nothing, and the session it
+  // opens is what a held contact's sends wait on
+  bool unheld = false,
 }) async {
   if (isDevId(peerId)) {
     if (onlySettled) throw NotSettled(peerId);
@@ -105,18 +108,41 @@ Future<({int ident, String cipher})> signalSeal(
   final (ident, framed) = await appState.doorFor(peerId, plaintext);
   final ss = await signalOfIdent(ident);
   final from = _afreshFrom;
-  final cipher = await ss.encryptTo(
+  Future<String> seal(String frame, int? size) => ss.encryptTo(
     peerId,
-    framed,
+    frame,
     onlySettled: onlySettled,
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
-    held: () => appState.keyHeld(peerId, strict: true),
+    held: unheld ? null : () => appState.keyHeld(peerId, strict: true),
     // a card naming another key: flagged as on an open, once out of the lane
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
+    size: size,
   );
-  return (ident: ident, cipher: cipher);
+  // linked devices: a copy to every device, the phone's back here. a typing
+  // frame is the phone's alone
+  if (linkedDevicesOn && !onlySettled) {
+    final phone = await _deviceSeal(ident, ss, peerId, framed, (
+      measure: (f) => ss.sealSize(peerId, f),
+      seal: seal,
+    ));
+    if (phone != null) return (ident: ident, cipher: phone);
+  }
+  return (ident: ident, cipher: await seal(framed, null));
 }
+
+// a list push's copy for [peer]'s phone (devices_send_app.dart), sealed
+// here at the door on the store of the identity they know, filled to the
+// push's burst. a key held for a check seals nothing
+DevPhone _devicePushPhone(int ident, String peer) => (
+  measure: (f) async => (await signalOfIdent(ident)).sealSize(peer, f),
+  seal: (f, size) async => (await signalOfIdent(ident)).encryptTo(
+    peer,
+    f,
+    held: () => appState.keyHeld(peer, strict: true),
+    size: size,
+  ),
+);
 
 // where a seal finds a peer's card to start a session afresh from, after a
 // restore: the app state's rows. set as it is made
@@ -238,6 +264,7 @@ Future<String?> signalDecrypt(
     final type = wire[0];
     final body = Uint8List.fromList(wire.sublist(1));
     var moved = false;
+    Uint8List? remote, record;
     final Uint8List? plain;
     try {
       plain = await _open(
@@ -248,6 +275,7 @@ Future<String?> signalDecrypt(
         check,
         flagKeyChange,
         () => moved = true,
+        (r, rec) => (remote, record) = (r, rec),
       );
     } finally {
       // a new key is saved only with a session that opened on it: flagged
@@ -257,6 +285,10 @@ Future<String?> signalDecrypt(
       }
     }
     if (plain == null) return null;
+    final (r, rec) = (remote, record);
+    if (r != null && rec != null && linkedDevicesOn) {
+      await _devOpened(ss, peerId, r, rec);
+    }
     final text = unpad(utf8.decode(plain));
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
     return text;
@@ -303,6 +335,7 @@ Future<Uint8List?> _open(
   void Function(Uint8List) check,
   bool flagKeyChange,
   void Function() moved,
+  void Function(Uint8List remote, Uint8List record) opened,
 ) async {
   if (type == kLsPreKey) {
     // trial decrypt: a prekey opens only under the name its identity is
@@ -319,7 +352,57 @@ Future<Uint8List?> _open(
   }
   // an opener on a session held opens on it; a new one builds the session
   // in front of it, the states before it kept behind
-  return ss.open(peerId, type, body, check: check, moved: moved);
+  return ss.open(
+    peerId,
+    type,
+    body,
+    check: check,
+    moved: moved,
+    opened: opened,
+  );
+}
+
+/// a message from [peer]'s phone opened on a session whose remote was
+/// [remote], as ks_decrypt_* returned it: the engine admits it and notes a
+/// post-quantum session for good. never stops the message
+Future<void> _devOpened(
+  SignalSession ss,
+  String peer,
+  Uint8List remote,
+  Uint8List record,
+) async {
+  final ds = _deviceState;
+  if (ds == null || isDevId(peer)) return;
+  try {
+    final db = await live.open();
+    final row = await db.query(
+      'contacts',
+      columns: ['ident', 'ikey'],
+      where: 'halo_id = ?',
+      whereArgs: [peer],
+      limit: 1,
+    );
+    final ikey = row.isEmpty ? null : row.first['ikey'] as String?;
+    if (ikey == null) return;
+    final info = ss.lib.sessionInfo(record);
+    final ident = row.first['ident'] as int? ?? kMainIdent;
+    await ds.session(db, 'opened', {
+      'ident': ident,
+      'identity': ikey,
+      'device': 1,
+      'pq': info.version >= 4 && info.pq,
+    }, SessionRemote.opened(remote));
+    // they answered: a list that went to them before is taken
+    await _deviceSend?.heard(
+      ident,
+      ikey,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  } on DevRefused catch (e) {
+    dlog('devices: an open not admitted (${e.why})');
+  } catch (e) {
+    dlog('devices: an open not noted (${e.runtimeType})');
+  }
 }
 
 // wires a decrypt found opened before: a copy is no sign the sessions went

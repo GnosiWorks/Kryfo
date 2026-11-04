@@ -14,13 +14,18 @@ import 'group_shots.dart' show GroupShotsWord, kGroupNudgeWire, kGroupShotsWire;
 import 'media_resend.dart';
 import 'profile_photo.dart' show PhotoFrame, kPhotoWire;
 import 'stickers/sticker_wire.dart' show StickerWire;
-import 'typing.dart' show capsFromWire, kCapsWire, kMyCaps, kTypingWire;
+import 'typing.dart' show capsFromWire, kCapsWire, kTypingWire, myGroupCaps;
 import 'voice_format.dart' show kOpusWire;
 
 const _envelopePrefix = kEnvelopePrefix;
 
 /// what every envelope starts with
 const kEnvelopePrefix = 'halo/1:';
+
+/// the envelope's word for a pq restart's KDB1 (pq_restart.dart), and the
+/// most base64 it may hold: a KDB1 is about 2,300 bytes
+const kPqRestartWire = 'rq';
+const kPqRestartMost = 4096;
 
 class UnwrappedMessage {
   final String message;
@@ -88,6 +93,10 @@ class UnwrappedMessage {
   final int? protoGen;
   final String? addrSeed;
   final String? faceSig;
+  // 'rq': a KDB1 of the sender's phone in base64, inside a held classic
+  // session: the pq restart (identity v4 11 step 5). nothing else in the
+  // frame counts
+  final String? pqRestart;
   // 'pp': a slice of the sender's profile photo, or its take-back
   // (profile_photo.dart). nothing else in the frame counts
   final PhotoFrame? photo;
@@ -154,6 +163,7 @@ class UnwrappedMessage {
     this.protoGen,
     this.addrSeed,
     this.faceSig,
+    this.pqRestart,
     this.photo,
   });
 }
@@ -493,7 +503,7 @@ Future<String> wrapMessage(
     body['g'] = groupId;
     // what this phone understands, inside the group's encryption. a room
     // frame loses it again (roomFrame)
-    body['cp'] = kMyCaps;
+    body['cp'] = myGroupCaps;
   }
   if (groupControl != null) body['gc'] = groupControl.toWire();
   return '$_envelopePrefix${jsonEncode(body)}';
@@ -655,6 +665,10 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       },
       faceSig: switch (json['fs']) {
         final String s => s,
+        _ => null,
+      },
+      pqRestart: switch (json[kPqRestartWire]) {
+        final String s when s.length <= kPqRestartMost => s,
         _ => null,
       },
       photo: PhotoFrame.fromWire(sent[kPhotoWire]),

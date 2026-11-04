@@ -1,30 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the key number on the pair-code screens: the sharer reads it off its own
-// identity key, the joiner off the invite it fetched, and both land on the
-// same 20 digits. another key, even under the same three words, gives
-// another number, and the number is the one of the key the session the add
-// builds really runs on. real libsignal over rows kept in maps
+// the key number a blocked key is listed by: 20 digits from the identity
+// key, and another key gives another number. real libsignal over rows kept
+// in maps
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/key_number.dart';
-import 'package:kryfo/main.dart'
-    show
-        buildHaloUri,
-        haloUriV3,
-        inviteKeyNumber,
-        inviteSessionKey,
-        makePreKeyBundleB64,
-        processPeerBundle;
 import 'package:kryfo/signal_session.dart';
 import 'signal_kit.dart';
 
 import 'mem_db.dart';
-
-const _words = 'thumb-behave-boring';
-
-String _hex(List<int> b) =>
-    [for (final x in b) x.toRadixString(16).padLeft(2, '0')].join();
 
 Future<SignalSession> _phone() async {
   final pair = testKeyPair();
@@ -38,14 +23,6 @@ Future<SignalSession> _phone() async {
 }
 
 List<int> _own(SignalSession ss) => ss.identity.public;
-
-Future<String> _inviteOf(SignalSession ss, {String id = _words}) async =>
-    haloUriV3(
-      id,
-      'o.onion',
-      Uri.encodeQueryComponent(await makePreKeyBundleB64(ss)),
-      'ab' * 32,
-    );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -65,49 +42,10 @@ void main() {
     expect(keyNumber(List.filled(33, 7)), isNull);
   });
 
-  test('both phones land on the same number', () async {
-    final alice = await _phone();
-    final invite = await _inviteOf(alice);
-    // the sharer, from its own key; the joiner, from what it fetched
-    expect(inviteKeyNumber(invite), keyNumber(_own(alice)));
-    expect(inviteKeyNumber(invite), isNotNull);
-  });
-
-  test('another key gives another number, under the same words too', () async {
+  test('another key gives another number', () async {
     final alice = await _phone();
     final mallory = await _phone();
-    final real = inviteKeyNumber(await _inviteOf(alice));
-    final swapped = inviteKeyNumber(await _inviteOf(mallory));
-    expect(swapped, isNotNull);
-    expect(swapped, isNot(real));
+    expect(keyNumber(_own(mallory)), isNotNull);
     expect(keyNumber(_own(mallory)), isNot(keyNumber(_own(alice))));
-  });
-
-  test('the number is the one of the key the session runs on', () async {
-    final alice = await _phone();
-    final bob = await _phone();
-    final invite = await _inviteOf(alice);
-    final bundle = Uri.parse(invite).queryParameters['bundle']!;
-    await processPeerBundle(_words, bundle, into: bob);
-    final used = (await bob.sessionIdentity(_words))!;
-    expect(inviteSessionKey(invite), used);
-    expect(inviteKeyNumber(invite), keyNumber(used));
-    expect(keyNumber(used), keyNumber(_own(alice)));
-  });
-
-  test('an old card is numbered from its x key', () async {
-    final alice = await _phone();
-    final x = _hex(_own(alice).sublist(1));
-    final card = buildHaloUri(_words, 'o.onion', x);
-    expect(inviteKeyNumber(card), keyNumber(_own(alice)));
-  });
-
-  test('an invite that does not read has no number', () {
-    expect(inviteKeyNumber('kryfo://share?id=$_words&onion=o&v=3'), isNull);
-    expect(
-      inviteKeyNumber('kryfo://share?id=$_words&onion=o&v=2&bundle=zz'),
-      isNull,
-    );
-    expect(inviteKeyNumber('https://example.com'), isNull);
   });
 }

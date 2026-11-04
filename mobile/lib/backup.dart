@@ -36,17 +36,27 @@ import 'main.dart'
         AppStateSession,
         AppStateIdentity;
 import 'router.dart' show scrubHidden;
+import 'heal.dart' show kRestoreAfterPref, kRestoreCutPref, olderContacts;
+import 'devchat/dev_gate.dart' show isDevId;
 import 'signal_session.dart' show kRestoredFromPref, kSessionsRestoredPref;
 import 'devchat/dev_chat.dart' show scrubDevAnon;
 import 'dlog.dart';
 import 'read_burn.dart' show burnStartBy;
+import 'chunk_keys.dart';
 import 'engine_strings.dart';
 import 'dart:typed_data';
 import 'backup_stream.dart';
 import 'dart:math';
 import 'l10n/l10n.dart';
 import 'desktop/desktop_mode.dart'
-    show containerClosed, containerOpened, engineDir, runIsolated;
+    show
+        containerClosed,
+        containerOpened,
+        engineDir,
+        filesSealed,
+        onDesktop,
+        rawFiles,
+        runIsolated;
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = secureStore;
@@ -158,6 +168,10 @@ class BackupSummary {
   // how many chats and groups it holds hidden, null when it holds none that
   // come back here
   final int? hiddenChats;
+  // the names of the contacts it holds who use an older Kryfo: their chats
+  // pause after the restore until they update (Q20). empty for a file from
+  // before 0.6, which cannot tell
+  final List<String> older;
   const BackupSummary({
     required this.when,
     required this.version,
@@ -168,7 +182,23 @@ class BackupSummary {
     this.files = 0,
     this.moved,
     this.hiddenChats,
+    this.older = const [],
   });
+}
+
+// the contacts in a backup's database who use an older Kryfo, by name. a
+// file whose contacts carry no capability list (before 0.6) says none
+Future<List<String>> _olderIn(Database db) async {
+  try {
+    final cols = {
+      for (final r in await db.rawQuery('PRAGMA table_info(contacts)'))
+        r['name'] as String,
+    };
+    if (!cols.contains('caps')) return const [];
+    return [for (final c in await olderContacts(db, isDev: isDevId)) c.name];
+  } catch (_) {
+    return const [];
+  }
 }
 
 // scrypt takes a good second on a phone. it runs on its own isolate so the
@@ -228,6 +258,7 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
   var contacts = 0;
   var messages = 0;
   var haloId = '';
+  var older = const <String>[];
   try {
     await peek.writeAsBytes(base64Decode(payload['db'] as String), flush: true);
     final db = await openDatabase(
@@ -244,6 +275,7 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
       messages = (m.first['c'] as int?) ?? 0;
       final i = await db.query('identity', columns: ['id'], limit: 1);
       if (i.isNotEmpty) haloId = (i.first['id'] as String?) ?? '';
+      older = await _olderIn(db);
     } finally {
       await db.close();
     }
@@ -259,6 +291,7 @@ Future<BackupSummary> inspectBackup(String blob, String passphrase) async {
     haloId: haloId,
     contacts: contacts,
     messages: messages,
+    older: older,
   );
 }
 
@@ -415,6 +448,10 @@ Future<void> _livesHereNow(Object? made) async {
   } else {
     await prefs.remove(kRestoredFromPref);
   }
+  // and what follows a restore runs once on the next start: invites and
+  // session prekeys made again, linked devices cut off, heals sent
+  await prefs.setInt(kRestoreAfterPref, made is int && made > 0 ? made : 0);
+  await prefs.setInt(kRestoreCutPref, DateTime.now().millisecondsSinceEpoch);
 }
 
 // what the shade holds came for the account just replaced. a decoy's
@@ -484,8 +521,16 @@ Future<void> _landV1InDecoy(
 
 // a file that carries hidden chats says 3, so an older Kryfo says it is from
 // a newer one instead of leaving them behind
-const kBackupVersion = 2;
-const kBackupVersionHidden = 3;
+// identity v4 (8): 4 everyday, 5 with hidden chats. a 0.5.x phone takes
+// up to 3 and says the file is from a newer version, before it touches
+// anything; it could not read v4 sessions anyway. 2 and 3 still restore
+// here: hidden chats are found by the manifest's vault key, never by the
+// number
+const kBackupVersion = 4;
+const kBackupVersionHidden = 5;
+// the newest a file may say, and the newest a 0.5.x phone takes
+const kBackupVersionMost = kBackupVersionHidden;
+const kBackupVersion05 = 3;
 
 // the hidden chats' files in a backup: their database and their folders
 const kHiddenDir = 'vault';
@@ -587,57 +632,52 @@ bool get sessionBackupHasHidden => session.vault != null;
 
 typedef _KeyFn = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
 typedef _KeyFnDart = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
-typedef _ChunkFn =
-    Int32 Function(
-      Pointer<Utf8>,
-      Uint64,
-      Uint8,
-      Pointer<Uint8>,
-      Int32,
-      Pointer<Uint8>,
-    );
-typedef _ChunkFnDart =
-    int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
 
 DynamicLibrary _engineLib() => Platform.isAndroid
     ? DynamicLibrary.open('libhalo.so')
     : DynamicLibrary.process();
 
-// derives the key. null when the engine refused, which it never should
-String? _backupKey(DynamicLibrary lib, String passphrase, Uint8List salt) {
+// derives the key, as bytes the caller zeroes. null when the engine
+// refused, which it never should
+Uint8List? _backupKey(DynamicLibrary lib, String passphrase, Uint8List salt) {
   final fn = lib.lookupFunction<_KeyFn, _KeyFnDart>('HaloBackupKey');
   final p1 = passphrase.toNativeUtf8();
   final ps = calloc<Uint8>(16);
   try {
     ps.asTypedList(16).setAll(0, salt);
-    final r = engineTakeSecret(fn(p1, ps));
-    return r.startsWith('error:') ? null : r;
+    return engineTakeSecretKey(fn(p1, ps));
   } finally {
     freeSecret(p1);
     calloc.free(ps);
   }
 }
 
+// the engine holds the key for the whole run, and every record names it by
+// its handle
 class _EngineCipher implements ChunkCipher {
-  final _ChunkFnDart _seal;
-  final _ChunkFnDart _open;
-  final Pointer<Utf8> _key;
+  final ChunkKeys _keys;
+  final int _key;
   final Pointer<Uint8> _in;
   final Pointer<Uint8> _out;
   final int _cap;
-  _EngineCipher(DynamicLibrary lib, String keyHex, int chunk)
-    : _seal = lib.lookupFunction<_ChunkFn, _ChunkFnDart>('HaloSealChunk'),
-      _open = lib.lookupFunction<_ChunkFn, _ChunkFnDart>('HaloOpenChunk'),
-      _key = keyHex.toNativeUtf8(),
-      _cap = chunk + 16 + 4096,
+  _EngineCipher._(this._keys, this._key, int chunk)
+    : _cap = chunk + 16 + 4096,
       _in = calloc<Uint8>(chunk + 16 + 4096),
       _out = calloc<Uint8>(chunk + 16 + 4096);
+
+  // null when the engine took no key. [key] is zeroed here
+  static _EngineCipher? of(DynamicLibrary lib, Uint8List key, int chunk) {
+    final keys = ChunkKeys(lib);
+    final h = keys.take(key);
+    key.fillRange(0, key.length, 0);
+    return h > 0 ? _EngineCipher._(keys, h, chunk) : null;
+  }
 
   @override
   Uint8List seal(int index, int type, Uint8List plain) {
     if (plain.length + 16 > _cap) throw ArgumentError('record too big');
     _in.asTypedList(_cap).setAll(0, plain);
-    final n = _seal(_key, index, type, _in, plain.length, _out);
+    final n = _keys.seal(_key, index, type, _in, plain.length, _out);
     if (n < 0 || n > _cap) throw const BackupDamaged('seal failed');
     return Uint8List.fromList(_out.asTypedList(n));
   }
@@ -646,19 +686,18 @@ class _EngineCipher implements ChunkCipher {
   Uint8List? open(int index, int type, Uint8List sealed) {
     if (sealed.length > _cap) return null;
     _in.asTypedList(_cap).setAll(0, sealed);
-    final n = _open(_key, index, type, _in, sealed.length, _out);
+    final n = _keys.open(_key, index, type, _in, sealed.length, _out);
     // never more than the buffer holds, whatever the engine says
     if (n < 0 || n > _cap) return null;
     return Uint8List.fromList(_out.asTypedList(n));
   }
 
-  // the key and the last records are zeroed before the memory goes back
+  // the key goes from the engine, and the last records are zeroed before
+  // the memory goes back
   void dispose() {
-    final k = _key.length;
-    _key.cast<Uint8>().asTypedList(k).fillRange(0, k, 0);
+    _keys.drop(_key);
     _in.asTypedList(_cap).fillRange(0, _cap, 0);
     _out.asTypedList(_cap).fillRange(0, _cap, 0);
-    calloc.free(_key);
     calloc.free(_in);
     calloc.free(_out);
   }
@@ -814,8 +853,10 @@ Future<void> _applyIdentitySecure(Object? carried) async {
 class BackupSide {
   const BackupSide();
 
-  ({String ed, String x, String id}) identity() =>
-      (ed: engine.myEdPrivkey(), x: engine.myXPrivkey(), id: appState.myId);
+  ({String ed, String x, String id}) identity() {
+    final k = appState.mainKeysForBackup;
+    return (ed: k.ed, x: k.x, id: appState.myId);
+  }
 
   Future<T> still<T>(
     Future<T> Function(HaloDb? vault) work, {
@@ -882,11 +923,18 @@ class BackupSide {
   }
 }
 
-/// a copy that leaves the phone: its search index merged into one, so no
-/// word of a message gone stays in it, then the file rebuilt without free
-/// pages, whose count would say how much was taken out. the rebuild's
-/// scratch stays in memory, as the library is built to keep it
+/// a copy that leaves the phone: its kept translations dropped, as they
+/// never leave it, its search index merged into one, so no word of a
+/// message gone stays in it, then the file rebuilt without free pages,
+/// whose count would say how much was taken out. the rebuild's scratch
+/// stays in memory, as the library is built to keep it
 Future<void> tidyCopy(Database db) async {
+  // emptied, not dropped: the triggers that keep it stay valid
+  final kept = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND "
+    "name = 'translate_kept'",
+  );
+  if (kept.isNotEmpty) await db.delete('translate_kept');
   final fts = await db.rawQuery(
     "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'msg_fts'",
   );
@@ -954,7 +1002,7 @@ Future<String> _carryHidden(
     files,
     sources,
     docs,
-    vault.container.suffix,
+    vault.container.folderSuffix,
     under: '$kHiddenDir/',
   );
   return key;
@@ -1241,7 +1289,7 @@ Future<BackupDraft> _draftQuiet(
     p.join(stage, 'onion.key'),
   ).writeAsBytes(_hex(onion.first['v'] as String), flush: true);
   for (final folder in _kCarried) {
-    final from = Directory(p.join(docs.path, '$folder${c.suffix}'));
+    final from = Directory(p.join(docs.path, '$folder${c.folderSuffix}'));
     if (!await from.exists()) continue;
     await for (final e in from.list(recursive: true, followLinks: false)) {
       if (e is! File) continue;
@@ -1329,8 +1377,8 @@ Future<Object?> _runJob(Future<Object?> Function(_Job) job, _Job j) =>
 Future<Object?> _exportJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
-  if (key == null) return l10n.backupCouldNotMakeThe;
-  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  final cipher = key == null ? null : _EngineCipher.of(lib, key, kBackupChunk);
+  if (cipher == null) return l10n.backupCouldNotMakeThe;
   final sources = j.sources!;
   try {
     await writeBackup(
@@ -1354,12 +1402,12 @@ Future<Object?> _exportJob(_Job j) async {
 Future<Object?> _inspectJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
-  if (key == null) throw const BackupLocked();
-  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  final cipher = key == null ? null : _EngineCipher.of(lib, key, kBackupChunk);
+  if (cipher == null) throw const BackupLocked();
   try {
     final m = await readBackupManifest(j.path, cipher);
     if (m['v'] is! int) throw const BackupDamaged('no version');
-    if ((m['v'] as int) > kBackupVersionHidden) {
+    if ((m['v'] as int) > kBackupVersionMost) {
       throw const RestoreError(RestoreFailure.newerVersion);
     }
     if (m['dbPassphrase'] is! String || m['edPriv'] is! String) {
@@ -1384,8 +1432,8 @@ Future<Object?> _inspectJob(_Job j) async {
 Future<Object?> _restoreJob(_Job j) async {
   final lib = _engineLib();
   final key = _backupKey(lib, j.passphrase, j.salt);
-  if (key == null) throw const BackupLocked();
-  final cipher = _EngineCipher(lib, key, kBackupChunk);
+  final cipher = key == null ? null : _EngineCipher.of(lib, key, kBackupChunk);
+  if (cipher == null) throw const BackupLocked();
   try {
     return await _unpackJob(j, cipher);
   } finally {
@@ -1430,7 +1478,7 @@ Future<Map<String, dynamic>> unpackBackup(
       await d.create(recursive: true);
     }
     final m = await readBackupManifest(path, cipher);
-    if ((m['v'] as int? ?? 99) > kBackupVersionHidden) {
+    if ((m['v'] as int? ?? 99) > kBackupVersionMost) {
       throw const RestoreError(RestoreFailure.newerVersion);
     }
     hiddenKeyOf(m);
@@ -1500,7 +1548,17 @@ Future<void> _landStaged(
     if (hiddenPart(f.name) != null || !restorableName(f.name)) continue;
     final dest = File(p.join(root, f.name));
     await dest.parent.create(recursive: true);
-    await File(p.join(stage.path, f.name)).rename(dest.path);
+    await _moveIn(File(p.join(stage.path, f.name)), dest.path);
+  }
+}
+
+// a restored file into place. on the phone it lands as staged, before its
+// database opens under the restored key, and that open seals it
+Future<void> _moveIn(File src, String dest) async {
+  if (filesSealed && !onDesktop) {
+    rawFiles(() => File(src.path).renameSync(dest));
+  } else {
+    await src.rename(dest);
   }
 }
 
@@ -1587,7 +1645,7 @@ Future<void> landHidden(
     final c = into;
     // on desktop the hidden chats' files are sealed under their own key on
     // the way in, before anything opens their database
-    containerOpened?.call(c.id, c.suffix, "x'$key'");
+    containerOpened?.call(c.id, c.folderSuffix, "x'$key'");
     keyed = c;
     for (final f in manifest['files'] as List) {
       final rest = hiddenPart((f as Map<String, dynamic>)['name'] as String);
@@ -1599,7 +1657,11 @@ Future<void> landHidden(
         final cut = rest.indexOf('/');
         final folder = cut <= 0 ? '' : rest.substring(0, cut);
         if (folder != 'media' && folder != 'wallpapers') continue;
-        dest = p.join(docs, '$folder${c.suffix}', rest.substring(cut + 1));
+        dest = p.join(
+          docs,
+          '$folder${c.folderSuffix}',
+          rest.substring(cut + 1),
+        );
       }
       await File(dest).parent.create(recursive: true);
       await File(p.join(from, rest)).rename(dest);
@@ -1638,9 +1700,8 @@ Future<void> _landInDecoy(
       // not there: nothing to drop
     }
   }
-  for (final folder in ['media', 'wallpapers']) {
-    final d = Directory(p.join(docs, '$folder${c.suffix}'));
-    await shredTree(d.path);
+  for (final name in c.folderNames) {
+    await shredTree(p.join(docs, name));
   }
   for (final f in manifest['files'] as List) {
     final name = (f as Map<String, dynamic>)['name'] as String;
@@ -1656,12 +1717,12 @@ Future<void> _landInDecoy(
       final slash = name.indexOf('/');
       dest = p.join(
         docs,
-        '${name.substring(0, slash)}${c.suffix}',
+        '${name.substring(0, slash)}${c.folderSuffix}',
         name.substring(slash + 1),
       );
     }
     await File(dest).parent.create(recursive: true);
-    await src.rename(dest);
+    await _moveIn(src, dest);
   }
   await _secureStorage.write(
     key: c.keyName!,
@@ -1741,6 +1802,7 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
   var contacts = 0;
   var messages = 0;
   int? hiddenChats;
+  var older = const <String>[];
   var haloId = manifest['haloId'] as String? ?? '';
   try {
     final db = await openDatabase(
@@ -1757,6 +1819,7 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
       messages = (m.first['c'] as int?) ?? 0;
       final i = await db.query('identity', columns: ['id'], limit: 1);
       if (i.isNotEmpty) haloId = (i.first['id'] as String?) ?? haloId;
+      older = await _olderIn(db);
     } finally {
       await db.close();
     }
@@ -1786,6 +1849,7 @@ Future<BackupSummary> inspectBackupFile(String path, String passphrase) async {
     files: files.where((f) => f.name.contains('/')).length,
     moved: manifest['moved'] as bool?,
     hiddenChats: hiddenChats,
+    older: older,
   );
 }
 

@@ -965,7 +965,9 @@ void main() {
         Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
         'ab' * 32,
       );
-      expect(await handleHaloUriAdded(card), ('', true));
+      // a v3 link with its first-contact address: the line an everyday
+      // hello gives, and nothing goes
+      expect(await handleHaloUriAdded(card), (l10n.helloSentOld, true));
       expect(opened, [fresh]);
       expect(decoy.people[fresh], containsPair('accepted', 1));
       expect(live.people.containsKey(fresh), isFalse);

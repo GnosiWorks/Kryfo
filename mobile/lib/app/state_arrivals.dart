@@ -317,7 +317,7 @@ extension AppStateArrivals on AppState {
     if (!await db.messageExists(uid) || !await db.isTheirs(uid, sender)) {
       return false;
     }
-    await db.deleteMessage(uid);
+    await db.deleteMessage(uid, from: sender);
     return true;
   }
 
@@ -414,6 +414,27 @@ extension AppStateArrivals on AppState {
     await _takeShots(senderHaloId, env, db);
     final capsMoved = await _takeCaps(senderHaloId, env, db);
     await _memberCaps(senderHaloId, env, db, oneToOneMoved: capsMoved);
+    // their phone takes a pq restart now: their held chat is looked at
+    if (capsMoved &&
+        (to == RouteTo.everyday || to == RouteTo.vault) &&
+        env.groupId == null &&
+        (env.caps?.contains(kCapPqRestart) ?? false)) {
+      unawaited(pqUpkeep(only: senderHaloId));
+    }
+    // a pq restart's KDB1: taken only inside a held 1:1 session, of the
+    // everyday side or the open vault (as a sealed one opens too), and
+    // never shown
+    final rq = env.pqRestart;
+    if (rq != null) {
+      if (!fromBackPair &&
+          (to == RouteTo.everyday || to == RouteTo.vault) &&
+          env.groupId == null) {
+        await takePqRestart(senderHaloId, rq, writtenAt: env.writtenAt, on: db);
+      } else {
+        dlog('pq restart: a bundle off a held chat, dropped');
+      }
+      return to;
+    }
     // delivery receipt, handled before the stranger gate and dedup so an ack
     // is never treated as a message or counted toward the cap. it leaves
     // back-paired alone: that flag lifts the sender-side cap, and a stranger
@@ -652,7 +673,11 @@ extension AppStateArrivals on AppState {
         )) {
           return to;
         }
-        await db.editMessage(env.edit!.targetUid, env.edit!.newText);
+        await db.editMessage(
+          env.edit!.targetUid,
+          env.edit!.newText,
+          from: senderHaloId,
+        );
         changed();
         // home's row shows the last line, and only a refresh rereads it
         await refreshContacts();
@@ -703,7 +728,7 @@ extension AppStateArrivals on AppState {
           env.unsend!,
         );
       }
-      await db.deleteMessage(env.unsend!);
+      await db.deleteMessage(env.unsend!, from: senderHaloId);
       changed();
       // the delete took its unread mark; its notification goes too
       unawaited(_io.unnotifyMessage(env.unsend!));
@@ -938,7 +963,7 @@ extension AppStateArrivals on AppState {
         goneKey(senderHaloId, group: env.groupId),
         mid,
       );
-      if (gone || await db.messageExists(mid)) {
+      if (gone || await db.messageFrom(mid, senderHaloId, env.groupId)) {
         if (!isGroup &&
             !unsealing &&
             (env.chunkIndex ?? 0) == 0 &&
@@ -1037,10 +1062,11 @@ extension AppStateArrivals on AppState {
       return to;
     } else if (uid != null) {
       // one that came and went here is known too, so a resend of it never
-      // shows again
+      // shows again. known is per sender and chat: a group's uid reaches
+      // every member, and one who sends it first must not hide the real one
       final known =
           _inflightUids.contains(uid) ||
-          await db.messageExists(uid) ||
+          await db.messageFrom(uid, senderHaloId, env.groupId) ||
           await db.goneFrom(goneKey(senderHaloId, group: env.groupId), uid);
       // a preview-only frame from an older client carries nothing we draw:
       // a sender never gets to put a title or an image on this screen
@@ -1126,7 +1152,7 @@ extension AppStateArrivals on AppState {
     final bodyText = unsaved
         ? [
             env.message,
-            l10n.appAnAttachmentCouldNot,
+            l10n.appAnAttachmentCouldNotShown,
           ].where((s) => s.trim().isNotEmpty).join('\n')
         : env.message;
     // a sticker is a message of its own: a frame with media, a file or a
@@ -1266,7 +1292,7 @@ extension AppStateArrivals on AppState {
       // their chat, and the message says how it came
       viaDev:
           _devIdentity &&
-          identical(db, live) &&
+          to == RouteTo.everyday &&
           viaDevChat(
             env,
             sender: senderHaloId,

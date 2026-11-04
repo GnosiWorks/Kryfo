@@ -1054,8 +1054,8 @@ void main() {
     },
   );
   test('the admin keeps a member\'s roster invite again only when it is '
-      'newer and a day on, and passes a new member every one, the others '
-      'only what is new', () async {
+      'newer and a day on, and passes every one to a new member or one '
+      'whose own was made again, the others only what is new', () async {
     final mine = await myRoster();
     final m1 = await _Phone.make('first-member-delta', seed++);
     final m2 = await _Phone.make('second-member-delta', seed++);
@@ -1118,7 +1118,12 @@ void main() {
     await ri(m1, newer);
     expect((await rosterInviteOf(db, _g, m1.words))!.id, newer.id);
     expect(rosterTo(m2.words), {m1.words: base64Encode(newer.link)});
-    expect(rosterTo(m1.words), {m1.words: base64Encode(newer.link)});
+    // m1 made theirs again, and may have lost the set: every one to them
+    expect(rosterTo(m1.words), {
+      _me: base64Encode(mine.link),
+      m1.words: base64Encode(newer.link),
+      m2.words: base64Encode(r2.link),
+    });
     expect(await rosterInvitesToPass(db), isEmpty);
   });
 
@@ -1232,5 +1237,165 @@ void main() {
     await app.receiveRelay([(peer: 'f0:${mine.id}', cipher: hl.line)]);
     await _settle();
     expect(await signalSession.sessionStore.load(down.words), isNull);
+  });
+
+  test('a member takes a newer roster invite from the admin within the '
+      'day: the day limit is the admin\'s alone', () async {
+    await myRoster();
+    final admin = await _Phone.make('admin-of-rone', seed++);
+    final up = await phone('above-me-rone', above: true);
+    const h = 3600 * 1000;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final first = await up.roster(nowMs: now - 5 * h);
+    await joinFrom(admin, [(up, first)]);
+    expect((await rosterInviteOf(db, _g, up.words))!.id, first.id);
+    final newer = await up.roster(nowMs: now);
+    await app.groupControlForTest(
+      admin.words,
+      await env(
+        admin,
+        GroupControl(type: 'roster', participants: [up.part(ri: newer)]),
+      ),
+      live,
+    );
+    await _settle();
+    expect((await rosterInviteOf(db, _g, up.words))!.id, newer.id);
+  });
+
+  test('a roster invite kept, or a roster hello taken, ahead of now (a '
+      'clock set back since) holds nothing back', () async {
+    final mine = await myRoster();
+    final admin = await _Phone.make('admin-of-rtwo', seed++);
+    final down = await phone('below-me-rtwo', above: false);
+    const h = 3600 * 1000;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final ahead = now + 30 * 24 * h;
+    await joinFrom(admin, [(down, await down.roster())]);
+    final m = await _Phone.make('member-of-rtwo', seed++);
+    final r1 = await m.roster(nowMs: now - 5 * h);
+    final r2 = await m.roster(nowMs: now);
+    Future<bool> keep(InviteRow r) => keepRosterInvite(
+      db,
+      'grp-r-two',
+      m.words,
+      r.link,
+      id: r.id,
+      issued: r.issued,
+      passOn: true,
+    );
+    expect(await keep(r1), isTrue);
+    await db.update(
+      'roster_invites',
+      {'kept': ahead},
+      where: 'member = ?',
+      whereArgs: [m.words],
+    );
+    expect(await keep(r2), isTrue);
+    expect((await rosterInviteOf(db, 'grp-r-two', m.words))!.id, r2.id);
+    // a hello of theirs taken ahead of now: theirs is taken today
+    await db.insert('hellos', {
+      'ident': kMainIdent,
+      'way': 'taken',
+      'peer': down.keyHex,
+      'invite_id': '0' * 32,
+      'at': ahead,
+    });
+    final hl = await down.helloTo(mine.id);
+    await app.receiveRelay([(peer: 'f0:${mine.id}', cipher: hl.line)]);
+    await _settle();
+    expect(firstFails.codes, isNot(contains('again')));
+    expect(await signalSession.sessionStore.load(down.words), isNotNull);
+    final taken = await hellosOf('taken', down.keyHex);
+    expect(taken.single['at'] as int, lessThan(ahead));
+  });
+
+  test('a member whose newest roster invite went past its life waits for '
+      'no hello: the old way runs', () async {
+    await myRoster();
+    final admin = await _Phone.make('admin-of-rthree', seed++);
+    final down = await phone('below-me-rthree', above: false);
+    await joinFrom(admin, [(down, await down.roster())]);
+    expect(await app.rosterPairWaitsForTest(down.words), isTrue);
+    const h = 3600 * 1000;
+    final old = await down.roster(
+      nowMs: DateTime.now().millisecondsSinceEpoch - 400 * 24 * h,
+    );
+    await db.update(
+      'roster_invites',
+      {'id': old.id, 'issued': old.issued, 'invite': old.link},
+      where: 'member = ?',
+      whereArgs: [down.words],
+    );
+    expect(await app.rosterPairWaitsForTest(down.words), isFalse);
+  });
+
+  test('a member removed after their roster invite went past its life: my '
+      'hello out to them is spent all the same', () async {
+    await myRoster();
+    final admin = await _Phone.make('admin-of-rfive', seed++);
+    final up = await phone('above-me-rfive', above: true);
+    await joinFrom(admin, [(up, await up.roster())]);
+    await app.sendHellosOwed();
+    await _settle();
+    final once =
+        (await hellosOf('out', up.keyHex)).single['invite_id'] as String;
+    const h = 3600 * 1000;
+    final old = await up.roster(
+      nowMs: DateTime.now().millisecondsSinceEpoch - 400 * 24 * h,
+    );
+    expect(
+      () => readInvite(signalSession.lib, old.link),
+      throwsA(isA<InviteRefused>()),
+    );
+    await db.update(
+      'roster_invites',
+      {'id': old.id, 'issued': old.issued, 'invite': old.link},
+      where: 'member = ?',
+      whereArgs: [up.words],
+    );
+    await db.update(
+      'hellos',
+      {'fc': _hex(signalSession.lib.parseInvite(old.link).firstContact)},
+      where: 'way = ? AND peer = ?',
+      whereArgs: ['out', up.keyHex],
+    );
+    await live.removeGroupMember(_g, up.words);
+    await _Halo(db).removeGroupMember(_g, up.words);
+    expect(await hellosOf('out', up.keyHex), isEmpty);
+    expect((await inviteOf(db, kMainIdent, once))!.usedAt, isNotNull);
+    expect(engine.unsubscribed, contains(once));
+  });
+
+  test('a pass waiting is not put off by more roster invites coming', () async {
+    await myRoster();
+    final ms = [
+      for (final c in 'abcdef'.split(''))
+        await _Phone.make('member-waits-$c', seed++),
+    ];
+    for (final p in ms) {
+      live.person(p.words, xpub: p.x, onion: p.onion);
+      await live.upsertContact(p.words, p.onion, p.x);
+    }
+    live.group(_g, [_me, for (final p in ms) p.words], admin: _me);
+    rosterPassWait = const Duration(milliseconds: 400);
+    final started = DateTime.now();
+    for (final p in ms) {
+      final r = await p.roster();
+      await app.groupControlForTest(
+        p.words,
+        await env(p, GroupControl(type: 'ri', invite: base64Encode(r.link))),
+        live,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+    expect(DateTime.now().difference(started), greaterThan(rosterPassWait));
+    // the first went within the wait of its own, more coming or not
+    expect(live.ctlTo(ms.first.words), contains('roster'));
+    await Future<void>.delayed(rosterPassWait * 2);
+    await _settle();
+    for (final p in ms) {
+      expect(live.ctlTo(p.words), contains('roster'));
+    }
+    expect(await rosterInvitesToPass(db), isEmpty);
   });
 }

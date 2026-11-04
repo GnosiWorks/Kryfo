@@ -9,6 +9,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_mode.dart';
+import 'package:kryfo/desktop/desktop_posix.dart' as posix;
 import 'package:kryfo/desktop/desktop_vault.dart';
 import 'package:kryfo/desktop/sealed_format.dart' show isSealedHead;
 import 'package:kryfo/desktop/sealed_io.dart';
@@ -130,7 +131,7 @@ void main() {
       put('onion.key', onion);
       put('nostr_seen_$id', utf8.encode('e1\ne2\n'));
       put('nostr_last_$id', utf8.encode('1700000000'));
-      put('nostr_last_$id.b', utf8.encode('1700000001'));
+      put('nostr_last_$id.2', utf8.encode('1700000001'));
       put('nostr_heard_$id', utf8.encode('h1 1700000000\n'));
       put('nostr_topup', [1, 2, 3, 4]);
       put('engine-debug.log', utf8.encode('halo: listening on abc.onion'));
@@ -208,7 +209,7 @@ void main() {
           utf8.decode(raw(p.join(ef.dir, n)), allowMalformed: true);
       expect(mark('nostr_seen_$id'), 'e1\ne2\n');
       expect(mark('nostr_last_$id'), '1700000000');
-      expect(mark('nostr_last_$id.b'), '1700000001');
+      expect(mark('nostr_last_$id.2'), '1700000001');
       expect(mark('nostr_heard_$id'), 'h1 1700000000\n');
       expect(mark('nostr_last_fedcba9876543210'), '1650000000');
       expect(raw(p.join(ef.dir, 'nostr_topup')), [1, 2, 3, 4]);
@@ -245,6 +246,64 @@ void main() {
       expect(raw(p.join(docs, 'onion.key')), key);
       expect(raw(p.join(support, 'engine.state')), state);
       expect(listing(), before);
+    });
+
+    test('its marks are sealed before the docs copies are zeroed', () async {
+      // the zeroing stops at the first mark, as a cut would
+      for (final f in io.rawDirectory(docs).listSync()) {
+        if (p.basename(f.path).startsWith('nostr_') &&
+            !p.basename(f.path).startsWith('nostr_topup')) {
+          expect(Process.runSync('chmod', ['0400', f.path]).exitCode, 0);
+        }
+      }
+      final ef = EngineFiles(docs: docs, support: support, runtime: run);
+      await expectLater(
+        sealed(() => ef.prepare(vault)),
+        throwsA(isA<FileSystemException>()),
+      );
+      final m = sealed(() => readMarkState(p.join(support, 'engine.state')))!;
+      String mark(String n) => utf8.decode(base64.decode(m[n]!));
+      expect(mark('nostr_seen_$id'), 'e1\ne2\n');
+      expect(mark('nostr_last_$id'), '1700000000');
+      expect(mark('nostr_last_$id.2'), '1700000001');
+      expect(mark('nostr_heard_$id'), 'h1 1700000000\n');
+      expect(mark('nostr_last_fedcba9876543210'), '1650000000');
+    });
+
+    test('the second store\'s anchor is kept between runs', () async {
+      await startOnce([]);
+      // the runtime folder is gone after a restart
+      final ef = EngineFiles(docs: docs, support: support, runtime: run);
+      io.rawDirectory(ef.dir).deleteSync(recursive: true);
+      await sealed(() => ef.prepare(vault));
+      expect(
+        raw(p.join(ef.dir, 'nostr_last_$id.2')),
+        utf8.encode('1700000001'),
+      );
+      // what the restore writes on its way in is not a mark
+      io.rawFile(p.join(ef.dir, 'nostr_last_$id.new')).writeAsStringSync('9');
+      final anchors = sealed(
+        () => keepMarksIn(ef.dir, p.join(support, 'engine.state')),
+      );
+      expect(anchors.keys.toSet(), {
+        'nostr_last_$id',
+        'nostr_last_$id.2',
+        'nostr_last_fedcba9876543210',
+      });
+    });
+
+    test('the sweep syncs the folder before it zeroes', () {
+      final a = p.join(docs, 'media', 'old.jpg');
+      io.rawFile(a).writeAsStringSync('an old photo');
+      final seen = <String>[];
+      folderSync = (d) {
+        expect(io.rawFile('$a.sealing').existsSync(), isTrue);
+        expect(io.rawFile(a).readAsStringSync(), 'an old photo');
+        seen.add(d);
+      };
+      addTearDown(() => folderSync = posix.syncFolder);
+      expect(sealed(() => sealPlainUnder(p.join(docs, 'media'))).sealed, 1);
+      expect(seen, [p.join(docs, 'media')]);
     });
   });
 
@@ -317,5 +376,43 @@ void main() {
         expect(isSealedHead(io.rawFile(key).readAsBytesSync()), isTrue);
       },
     );
+
+    Uint8List key64(int seed) {
+      final r = Random(seed);
+      return Uint8List.fromList(List.generate(64, (_) => r.nextInt(256)));
+    }
+
+    test('a newer plain key wins over a whole copy beside it', () async {
+      // the copy an older seal left, then a start in docs wrote its own key
+      sealed(() => File('$key.new').writeAsBytesSync(key64(1)));
+      io.rawFile(key).writeAsBytesSync(key64(2));
+      await sealed(() => ef.prepare(vault));
+      expect(io.rawFile('$key.new').existsSync(), isFalse);
+      sealed(() => expect(File(key).readAsBytesSync(), key64(2)));
+    });
+
+    test('a key zeroed in part leaves the copy beside it standing', () async {
+      for (final at in [0, 48]) {
+        sealed(() => File('$key.new').writeAsBytesSync(key64(1)));
+        io.rawFile(key).writeAsBytesSync(key64(1)..fillRange(at, at + 16, 0));
+        await sealed(() => ef.prepare(vault));
+        expect(io.rawFile('$key.new').existsSync(), isFalse);
+        sealed(() => expect(File(key).readAsBytesSync(), key64(1)));
+      }
+    });
+
+    test('the folder is synced before the plain key is zeroed', () async {
+      io.rawFile(key).writeAsBytesSync(key64(3));
+      final seen = <String>[];
+      folderSync = (d) {
+        expect(io.rawFile('$key.new').existsSync(), isTrue);
+        expect(io.rawFile(key).readAsBytesSync(), key64(3));
+        seen.add(d);
+      };
+      addTearDown(() => folderSync = posix.syncFolder);
+      await sealed(() => ef.prepare(vault));
+      expect(seen, [docs]);
+      sealed(() => expect(File(key).readAsBytesSync(), key64(3)));
+    });
   });
 }

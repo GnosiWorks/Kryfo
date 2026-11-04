@@ -42,10 +42,12 @@ const kInviteKyberId = 1;
 
 /// what a signed or kyber prekey is for: an invite's (its id beside it, ''
 /// for the main one), the identity's session prekeys (heals, device
-/// bundles), or one heal's one-time kyber key
+/// bundles), one heal's one-time kyber key, or the one-time kyber key of a
+/// device bundle the phone keeps in its pool
 const kUseInvite = 'invite';
 const kUseSession = 'session';
 const kUseHeal = 'heal';
+const kUsePool = 'pool';
 
 class LsIdentityStore {
   LsIdentityStore(
@@ -287,6 +289,19 @@ class LsKyberPreKeyStore extends _ById {
     'use': use,
     'invite_id': inviteId,
   });
+
+  /// what kyber key [id] is for (kUseInvite, kUseSession, ...), null when
+  /// it is not held
+  Future<String?> useOf(int id) async {
+    final rows = await _db.query(
+      _t,
+      columns: ['use'],
+      where: 'ident = ? AND id = ?',
+      whereArgs: [ident, id],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['use'] as String?;
+  }
 
   Future<bool> isLastResort(int id) async {
     final rows = await _db.query(

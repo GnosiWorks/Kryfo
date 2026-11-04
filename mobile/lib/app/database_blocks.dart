@@ -85,6 +85,9 @@ mixin _BlockRows {
         ('vouches', 'voucher_id'),
         ('block_spans', 'peer_id'),
         ('blocked_drops', 'peer_id'),
+        // where heals rebuilt their session, a hold on it, and their nonces
+        ('heal_lines', 'peer'),
+        ('heal_nonces', 'peer'),
         ('group_members', 'halo_id'),
         ('group_media_owed', 'member'),
         ('group_ctl_out', 'member'),
@@ -92,6 +95,8 @@ mixin _BlockRows {
         ('support_chats', 'halo_id'),
         ('sessions', 'address'),
         ('peer_identities', 'address'),
+        // their pq restart goes with the session it was of
+        ('pq_restarts', 'peer'),
         ('messages', 'peer_id'),
         ('contacts', 'halo_id'),
       ]) {

@@ -584,7 +584,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                               _gone
                                   ? l10n.notesExportGone
                                   : _installer
-                                  ? l10n.notesExportHoldsInstaller
+                                  ? l10n.notesExportHoldsInstallerShown
                                   : l10n.notesExportNotSaved,
                               textAlign: TextAlign.center,
                               style: HaloType.sans(

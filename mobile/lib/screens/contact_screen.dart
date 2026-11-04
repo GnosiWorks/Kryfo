@@ -18,6 +18,7 @@ import '../main.dart'
         session,
         sessionQuiet,
         AppStateOutbox,
+        AppStateHeal,
         AppStateMessages,
         AppStateScreen,
         AppStateContacts,
@@ -85,7 +86,7 @@ Future<String?> showRenameSheet(
               ),
               const SizedBox(height: 6),
               Text(
-                l10n.contactStaysOnThisPhone,
+                l10n.contactStaysOnThisPhoneShown,
                 style: HaloType.sans(size: 12.5, color: HaloColors.text2),
               ),
               const SizedBox(height: 14),
@@ -189,6 +190,8 @@ class _ContactScreenState extends State<ContactScreen> {
   bool? _pinnedNow;
   // verified under one key, holding another now: nothing goes to them
   bool _held = false;
+  // a heal holds them, not a new key (heal.dart's line kind)
+  int? _healHold;
   // a photo you set for them, on this phone only
   bool _mine = false;
   bool? _shotsNow;
@@ -256,6 +259,7 @@ class _ContactScreenState extends State<ContactScreen> {
       session.firstMessageAt(widget.haloId),
       keyHeldShown(widget.haloId),
       appState.photosOfContact(widget.haloId),
+      healHoldShown(widget.haloId),
     ]);
     final c = results[0] as Map<String, Object?>?;
     final since = results[3] as int?;
@@ -282,6 +286,7 @@ class _ContactScreenState extends State<ContactScreen> {
       _mediaCount = paths.length;
       _since = since;
       _held = held;
+      _healHold = held ? results[6] as int? : null;
       _mine = photos.mine != null;
       _loaded = true;
     });
@@ -294,7 +299,7 @@ class _ContactScreenState extends State<ContactScreen> {
     final c = await showPhotoSheet(
       context,
       title: l10n.photoForThem(_name),
-      line: l10n.photoOnlyHereLine,
+      line: l10n.photoOnlyHereLineShown,
       seed: widget.avatarSeed,
       choice: widget.face ?? (_c?['avatar'] as num?)?.toInt(),
       add: photoAddOffered(desktop: onDesktop),
@@ -400,12 +405,20 @@ class _ContactScreenState extends State<ContactScreen> {
         ),
       ),
     );
+    // a heal's hold ends once the number was looked at
+    if (_healHold != null) await appState.releaseHealHold(widget.haloId);
     await _load();
     if (!_held) unawaited(appState.drainOutbox());
   }
 
   Future<void> _acceptNewKey() async {
-    if (!await acceptNewKeyAsked(context, widget.haloId, _name)) return;
+    if (_healHold != null) {
+      // a heal's way out: the mark stays, sending goes on
+      HapticFeedback.mediumImpact();
+      await appState.releaseHealHold(widget.haloId);
+    } else if (!await acceptNewKeyAsked(context, widget.haloId, _name)) {
+      return;
+    }
     await _load();
   }
 
@@ -603,6 +616,7 @@ class _ContactScreenState extends State<ContactScreen> {
             child: _held && !blocked
                 ? KeyHeldCard(
                     peerName: _name,
+                    healKind: _healHold,
                     margin: const EdgeInsets.only(top: 18),
                     onCheck: () => _checkNumber(verified),
                     onAccept: _acceptNewKey,
@@ -680,7 +694,8 @@ class _ContactScreenState extends State<ContactScreen> {
                 toggled: pinned,
                 onTap: () => _setPinned(!pinned),
               ),
-              if (translationHubIfOn() case final hub?)
+              // the same switch as "always translate this chat" in a chat
+              if (translationHubIfOn() case final hub? when hub.on)
                 AutoTranslateRow(chatId: widget.haloId, hub: hub),
               // a photo of your own choosing for them, never sent
               if (accepted &&
@@ -690,7 +705,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 HaloRow(
                   icon: Icons.add_a_photo_outlined,
                   label: _mine ? l10n.photoChangeTheirs : l10n.photoSetTheirs,
-                  hint: l10n.photoOnlyHere,
+                  hint: l10n.photoOnlyHereShown,
                   onTap: _photoTapped,
                 ),
               // both phones or neither, once theirs knows how. the developer
@@ -703,7 +718,7 @@ class _ContactScreenState extends State<ContactScreen> {
                   icon: Icons.phonelink_lock_outlined,
                   label: l10n.chatBlockScreenshots,
                   hint: !_shots.peerCan
-                      ? l10n.chatShotsWhenTheyUpdate
+                      ? l10n.chatShotsWhenTheyUpdateShown
                       : (_shotsNow ?? _shots.on)
                       ? l10n.chatShotsBothPhones
                       : l10n.chatShotsBlocksBoth,
@@ -775,13 +790,13 @@ class _ContactScreenState extends State<ContactScreen> {
               HaloRow(
                 icon: Icons.delete_outline,
                 label: l10n.contactDeleteChat,
-                hint: l10n.contactMessagesAndContactGone,
+                hint: l10n.contactMessagesAndContactGoneShown,
                 rose: true,
                 onTap: () async {
                   final ok = await showConfirmSheet(
                     context,
                     title: l10n.contactDeleteThisChat,
-                    line: l10n.contactEveryMessageAndThe,
+                    line: l10n.contactEveryMessageAndTheShown,
                     yes: l10n.commonDelete,
                   );
                   if (!ok) return;

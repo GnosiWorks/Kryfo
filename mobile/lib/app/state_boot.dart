@@ -198,11 +198,13 @@ extension AppStateBoot on AppState {
     await _router.load();
     await tidyAtStart(bootAt);
     if (saved != null) {
-      myId = engine.restoreIdentity(saved['ed_priv']!, saved['x_priv']!);
+      _mainKeys = (ed: saved['ed_priv']!, x: saved['x_priv']!);
+      myId = engine.restoreIdentity(_mainKeys!.ed, _mainKeys!.x);
       restored = true;
     } else {
       myId = engine.generateIdentity();
-      await live.saveIdentity(myId, engine.myEdPrivkey(), engine.myXPrivkey());
+      _mainKeys = (ed: engine.myEdPrivkey(), x: engine.myXPrivkey());
+      await live.saveIdentity(myId, _mainKeys!.ed, _mainKeys!.x);
     }
     myXPub = engine.myXPubkey();
     dlog('boot identity +${bsw.elapsedMilliseconds}ms');
@@ -490,7 +492,17 @@ extension AppStateBoot on AppState {
   Future<void> _bootSignal() async {
     try {
       final database = await live.open();
-      final xpb = _hexDecode(engine.myXPrivkey());
+      final prefs = await SharedPreferences.getInstance();
+      final after = prefs.getInt(kRestoreAfterPref);
+      final from = after != null && after > 0 ? after : null;
+      // linked devices go before anything can seal to them, and every other
+      // identity's sessions are marked before the store is ready
+      var marked = true;
+      if (after != null) {
+        await restoreCutsLinkedDevices(database);
+        marked = await markRestoredIdentities(database, from: from);
+      }
+      final xpb = _hexDecode(_mainKeys!.x);
       await openSignalStore(
         signalSession,
         database: database,
@@ -498,6 +510,13 @@ extension AppStateBoot on AppState {
         xPrivBytes: xpb,
       );
       _zeroBytes(xpb); // priv bytes consumed by bootstrap, wipe from ram
+      // cleared only once every identity was done: a failure runs it all
+      // again on the next start
+      if (after != null && await afterRestore(database) && marked) {
+        await prefs.remove(kRestoreAfterPref);
+      }
+      // linked devices, before any message opens (switch off: nothing)
+      await bootDevices();
     } catch (e, st) {
       dlog('signal bootstrap failed: $e\n$st');
     }

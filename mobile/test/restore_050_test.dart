@@ -15,6 +15,7 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart';
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/heal.dart' show kRestoreAfterPref;
 import 'package:kryfo/signal_session.dart';
 import 'signal_kit.dart';
 import 'package:path/path.dart' as p;
@@ -239,7 +240,7 @@ void main() {
       final restart = HaloDb();
       useDatabasesForTest(restart, Session(restart));
       final raw = await restart.open();
-      expect(await raw.getVersion(), 94);
+      expect(await raw.getVersion(), 96);
       // the engine is handed the identity in the file
       final id = (await restart.loadIdentity())!;
       expect(id['id'], _me);
@@ -304,6 +305,8 @@ void main() {
       expect(prefs.getString('supporter_tier'), 'gold');
       expect(prefs.getBool('onboarding.complete'), isTrue);
       expect(prefs.getBool(kSessionsRestoredPref), isTrue);
+      // and what follows a restore runs on the next start
+      expect(prefs.getInt(kRestoreAfterPref), isNotNull);
 
       // what 0.5.0 never carried keeps the phone's own, or its default
       expect(restoredSettings, isFalse);
@@ -338,7 +341,7 @@ void main() {
         expect(await lock.verifyPin(_hiddenPin), PinResult.vault);
         final vault = HaloDb.withKey(HaloContainer.vault, key!);
         final v = await vault.open();
-        expect(await v.getVersion(), 94);
+        expect(await v.getVersion(), 96);
         final rows = await _rows(v, only: hiddenCols);
         for (final t in hiddenBefore.keys) {
           expect(rows[t], hiddenBefore[t], reason: 'hidden $t');
@@ -350,7 +353,7 @@ void main() {
           ['only here', 'and back'],
         );
         expect(
-          File(p.join(docs.path, 'media_v', 'h-1.jpg')).existsSync(),
+          File(p.join(docs.path, 'media_k3', 'h-1.jpg')).existsSync(),
           isTrue,
         );
         await vault.close();

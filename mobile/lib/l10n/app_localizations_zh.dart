@@ -94,6 +94,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '在聊天菜单里为它单独设置的壁纸优先。照片只留在这部手机上，和你的聊天一起加密。';
 
   @override
+  String get appearanceWallpaperHintDesk =>
+      '在聊天菜单里为它单独设置的壁纸优先。照片只留在这台电脑上，和你的聊天一起加密。';
+
+  @override
   String get backupThatPassphraseDoesNot => '这个密码短语打不开此文件';
 
   @override
@@ -408,6 +412,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appAnAttachmentCouldNot => '有个附件无法保存到这部手机上';
 
   @override
+  String get appAnAttachmentCouldNotDesk => '有个附件无法保存到这台电脑上';
+
+  @override
   String get appGroup2 => '群组';
 
   @override
@@ -496,6 +503,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appScanTheirCodeOr => '扫描对方的二维码，或粘贴对方给你的内容：链接、@用户名或聊天室链接。';
+
+  @override
+  String get appScanTheirCodeOrDesk => '粘贴对方给你的内容：链接、@用户名或聊天室链接。';
 
   @override
   String get appScanTheirCode => '扫描对方的二维码';
@@ -1027,11 +1037,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupACopyToKeep => '留一份副本。这部手机照常使用。';
 
   @override
+  String get backupACopyToKeepDesk => '留一份副本。这台电脑照常使用。';
+
+  @override
   String get backupMoveToAnotherDevice => '迁移到另一台设备';
 
   @override
   String get backupTheFileTakesThis =>
       '这个文件会带走这个身份。文件一旦生成，这部手机就停用了：新的东西不会再到这里，从这里发出的任何东西也送不到任何人。';
+
+  @override
+  String get backupTheFileTakesThisDesk =>
+      '这个文件会带走这个身份。文件一旦生成，这台电脑就停用了：新的东西不会再到这里，从这里发出的任何东西也送不到任何人。';
 
   @override
   String get backupOneEncryptedFileYour =>
@@ -1040,6 +1057,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
       '一个加密文件：你的身份、你的联系人、每一条消息，以及这部手机上此刻的每一张照片、每一条语音和每一个文件。今天之后说的内容不在里面，所以重要的时候请再做一份。恢复时，文件和密码短语两样都要有。';
+
+  @override
+  String get backupOneEncryptedFileYourIdentityYourDesk =>
+      '一个加密文件：你的身份、你的联系人、每一条消息，以及这台电脑上此刻的每一张照片、每一条语音和每一个文件。今天之后说的内容不在里面，所以重要的时候请再做一份。恢复时，文件和密码短语两样都要有。';
 
   @override
   String get backupPassphrase => '密码短语';
@@ -1082,7 +1103,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupMoveReachedTitle => '文件已经到新手机上了吗？';
 
   @override
+  String get backupMoveReachedTitleDesk => '文件已经到新设备上了吗？';
+
+  @override
   String get backupMoveReachedLine => '在新手机上打开它之前，请留着这部手机。';
+
+  @override
+  String get backupMoveReachedLineDesk => '在新设备上打开它之前，请留着这台电脑。';
 
   @override
   String get backupFinishTheMove => '完成迁移';
@@ -1106,6 +1133,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupNoSpace => '手机可用空间不足，无法完成备份。请清理一些空间后再试一次。';
 
   @override
+  String get backupNoSpaceDesk => '电脑可用空间不足，无法完成备份。请清理一些空间后再试一次。';
+
+  @override
   String get backupHiddenNotIn => '隐藏聊天不在其中。';
 
   @override
@@ -1113,6 +1143,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backupMoveHiddenStay => '隐藏聊天留在这部手机上，并随它一起抹除。';
+
+  @override
+  String get backupMoveHiddenStayDesk => '隐藏聊天留在这台电脑上，并随它一起抹除。';
 
   @override
   String get backupHiddenGone => 'Kryfo 锁定时，你的隐藏聊天已关闭。用隐藏聊天 PIN 打开它们，再从那里备份。';
@@ -1317,6 +1350,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatItDisappearsWithNo => '它会从双方的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
+  String get chatItDisappearsWithNoDesk => '它会从双方的设备上删除，除非已被保存。此操作无法撤销。';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -1386,6 +1422,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatGifFromPhone => '手机里的 GIF';
+
+  @override
+  String get chatGifFromPhoneDesk => '电脑里的 GIF';
 
   @override
   String get chatFile2 => '文件';
@@ -1538,6 +1577,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatJustForYouNever => '只给你自己看。绝不会发出，也绝不会离开这部手机。';
 
   @override
+  String get chatJustForYouNeverDesk => '只给你自己看。绝不会发出，也绝不会离开这台电脑。';
+
+  @override
   String get chatAQuietReminder => '一条悄悄的提醒…';
 
   @override
@@ -1549,6 +1591,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get chatEveryMessageHereIs =>
       '这里的每条消息都会从这部手机上清除。这只清除你这边的副本——不会动到对方的设备。';
+
+  @override
+  String get chatEveryMessageHereIsDesk =>
+      '这里的每条消息都会从这台电脑上清除。这只清除你这边的副本——不会动到对方的设备。';
 
   @override
   String get chatClear => '清空';
@@ -1968,6 +2014,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contactStaysOnThisPhone => '只保存在这部手机上。对方永远看不到。';
 
   @override
+  String get contactStaysOnThisPhoneDesk => '只保存在这台电脑上。对方永远看不到。';
+
+  @override
   String get contactClear => '清除';
 
   @override
@@ -2015,10 +2064,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contactMessagesAndContactGone => '消息和联系人都会从这部手机上消失';
 
   @override
+  String get contactMessagesAndContactGoneDesk => '消息和联系人都会从这台电脑上消失';
+
+  @override
   String get contactDeleteThisChat => '删除这个聊天？';
 
   @override
   String get contactEveryMessageAndThe => '每一条消息和这位联系人都会从这部手机上消失。不会向对方发送任何内容。';
+
+  @override
+  String get contactEveryMessageAndTheDesk =>
+      '每一条消息和这位联系人都会从这台电脑上消失。不会向对方发送任何内容。';
 
   @override
   String get commonDelete => '删除';
@@ -2194,6 +2250,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get donateGivesReceipt => '一张保存在这台手机上的签名收据。无需任何账号即可证明徽章。';
+
+  @override
+  String get donateGivesReceiptDesk => '一张保存在这台电脑上的签名收据。无需任何账号即可证明徽章。';
 
   @override
   String get donateGivesFree => '无论有没有徽章，所有隐私功能都一直免费。';
@@ -2385,6 +2444,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatGifFromPhone => '手机里的 GIF';
 
   @override
+  String get groupChatGifFromPhoneDesk => '电脑里的 GIF';
+
+  @override
   String get groupChatFile => '文件';
 
   @override
@@ -2488,6 +2550,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo => '它会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
+
+  @override
+  String get groupChatItDisappearsWithNoDesk => '它会从所有人的设备上删除，除非已被保存。此操作无法撤销。';
 
   @override
   String get groupChatUnsend => '撤回';
@@ -2718,6 +2783,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '这里的每条消息都会从这部手机上清除。这只清除你的副本，其他成员的还在。';
 
   @override
+  String get groupInfoEveryMessageHereIsDesk =>
+      '这里的每条消息都会从这台电脑上清除。这只清除你的副本，其他成员的还在。';
+
+  @override
   String get groupInfoClear => '清空';
 
   @override
@@ -2733,6 +2802,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoEverythingInItIs => '里面的一切会立即从这部手机上抹除，你在这里用过的密钥也会永久消失。';
 
   @override
+  String get groupInfoEverythingInItIsDesk =>
+      '里面的一切会立即从这台电脑上抹除，你在这里用过的密钥也会永久消失。';
+
+  @override
   String groupChatYouWereRemovedFrom(Object name) {
     return '你已被移出 $name';
   }
@@ -2741,12 +2814,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoLeaveGroupLine => '你将不再收到它的消息，里面的一切也会从这部手机上抹除。';
 
   @override
+  String get groupInfoLeaveGroupLineDesk => '你将不再收到它的消息，里面的一切也会从这台电脑上抹除。';
+
+  @override
   String get groupInfoLeaveGroupAdmin =>
       '你将不再收到它的消息，里面的一切也会从这部手机上抹除。你是管理员，退出后就没有人能再增减成员或重命名了。';
 
   @override
+  String get groupInfoLeaveGroupAdminDesk =>
+      '你将不再收到它的消息，里面的一切也会从这台电脑上抹除。你是管理员，退出后就没有人能再增减成员或重命名了。';
+
+  @override
   String get groupInfoLeaveRoomMaker =>
       '里面的一切会立即从这部手机上抹除，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
+
+  @override
+  String get groupInfoLeaveRoomMakerDesk =>
+      '里面的一切会立即从这台电脑上抹除，你在这里用过的密钥也会永久消失。这个聊天室是你创建的，你退出后它的链接就不能再让人加入了。';
 
   @override
   String get groupInfoLeave => '退出';
@@ -2883,12 +2967,25 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String handleIsNotYoursOnDesk(Object handle) {
+    return '在这台电脑上，@$handle 不属于你';
+  }
+
+  @override
   String handleTheRegistryHoldsIt(Object handle) {
     return '登记处用另一把密钥保存着它，很可能是这部手机在恢复之前的身份。添加 @$handle 的人联系不到你。在这里无法释放或更新它。请换一个名字。';
   }
 
   @override
+  String handleTheRegistryHoldsItDesk(Object handle) {
+    return '登记处用另一把密钥保存着它，很可能是这台电脑在恢复之前的身份。添加 @$handle 的人联系不到你。在这里无法释放或更新它。请换一个名字。';
+  }
+
+  @override
   String get handleForgetItOnThis => '在这部手机上忘掉它';
+
+  @override
+  String get handleForgetItOnThisDesk => '在这台电脑上忘掉它';
 
   @override
   String get homeAddAContact => '添加联系人';
@@ -3017,6 +3114,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeScanTheirCodeSend => '扫描对方的二维码、给对方发链接，或者输入对方给你的 @用户名。';
 
   @override
+  String get homeScanTheirCodeSendDesk => '给对方发链接，或者输入对方给你的 @用户名。';
+
+  @override
   String get homeAddSomeone => '添加联系人';
 
   @override
@@ -3086,11 +3186,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeMessagesAndContactGone => '消息和联系人都会从这部手机上消失';
 
   @override
+  String get homeMessagesAndContactGoneDesk => '消息和联系人都会从这台电脑上消失';
+
+  @override
   String get homeDeleteThisChat => '删除这个聊天？';
 
   @override
   String homeEveryMessageWithGoes(Object c) {
     return '和 $c 的每一条消息都会删除，对方也不再是你的联系人。这只清除这部手机上的内容——对方的副本还留在对方那里。如果对方再发消息，会进入请求列表。';
+  }
+
+  @override
+  String homeEveryMessageWithGoesDesk(Object c) {
+    return '和 $c 的每一条消息都会删除，对方也不再是你的联系人。这只清除这台电脑上的内容——对方的副本还留在对方那里。如果对方再发消息，会进入请求列表。';
   }
 
   @override
@@ -3128,6 +3236,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeOnlyOnThisPhone => '只在这部手机上';
+
+  @override
+  String get homeOnlyOnThisPhoneDesk => '只在这台电脑上';
 
   @override
   String get homeSaved => '收藏';
@@ -3324,6 +3435,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linkNoAppOpens => '这台手机上没有可以打开此链接的应用。';
 
   @override
+  String get linkNoAppOpensDesk => '这台电脑上没有可以打开此链接的应用。';
+
+  @override
   String get placeStubLocation => '位置';
 
   @override
@@ -3474,6 +3588,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get movedWipeThisPhone => '要从这部手机上抹除 Kryfo 吗？';
 
   @override
+  String get movedWipeThisPhoneDesk => '要从这台电脑上抹除 Kryfo 吗？';
+
+  @override
   String get movedEverythingKryfoHoldsHere =>
       'Kryfo 在这里保存的一切都会被抹除：消息、联系人、密钥。另一台设备保留着全部内容。此操作无法撤销。';
 
@@ -3499,6 +3616,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String movedKryfoWillCloseNowDesk(Object myId) {
+    return 'Kryfo 现在会关闭。再次启动它，以 $myId 的身份打开。';
+  }
+
+  @override
   String get movedReopenKryfo => '重新打开 Kryfo';
 
   @override
@@ -3510,10 +3632,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String movedIsNowOnAnotherDesk(Object myId) {
+    return '$myId 现在在另一台设备上。这台电脑仍能显示这里原有的内容，但不会再收到任何新东西，你从这里发出的任何东西也送不到任何人。';
+  }
+
+  @override
   String get movedKeepItToRead => '留着查看';
 
   @override
   String get movedWipeThisPhone2 => '从这部手机上抹除 Kryfo';
+
+  @override
+  String get movedWipeThisPhone2Desk => '从这台电脑上抹除 Kryfo';
 
   @override
   String get movedIMNotMoving => '我不迁移了';
@@ -3549,6 +3679,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get myKryfoPointYourPhonesAt => '把两部手机对准彼此。不经过任何服务器。';
+
+  @override
+  String get myKryfoPointYourPhonesAtDesk => '对方用手机扫描这个二维码。不经过任何服务器。';
 
   @override
   String get myKryfoScanTheirsInstead => '改为扫描对方的';
@@ -3675,6 +3808,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesDeleteAllLine => '这部手机上的所有笔记都会被永久删除。';
 
   @override
+  String get notesDeleteAllLineDesk => '这台电脑上的所有笔记都会被永久删除。';
+
+  @override
   String get notesDeleteAllYes => '全部删除';
 
   @override
@@ -3690,16 +3826,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesGoneFromThisPhone => '它会从这部手机上永久清除。';
 
   @override
+  String get notesGoneFromThisPhoneDesk => '它会从这台电脑上永久清除。';
+
+  @override
   String get notesNoteToSelf => '给自己的笔记';
 
   @override
   String get notesOnlyOnThisPhone => '只在这部手机上';
 
   @override
+  String get notesOnlyOnThisPhoneDesk => '只在这台电脑上';
+
+  @override
   String get notesAQuietPlace => '一个安静的角落';
 
   @override
   String get notesJotAnythingDownIt => '随手记下任何东西。它留在这部手机上，绝不会离开。';
+
+  @override
+  String get notesJotAnythingDownItDesk => '随手记下任何东西。它留在这台电脑上，绝不会离开。';
 
   @override
   String get notesJotSomethingDown => '记点什么…';
@@ -3770,6 +3915,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesExportHoldsInstaller => '这份导出里有一个应用安装包，所以不能分享。请改为保存到手机上。';
 
   @override
+  String get notesExportHoldsInstallerDesk =>
+      '这份导出里有一个应用安装包，所以不能分享。请改为保存到这台电脑上。';
+
+  @override
   String get notesExportSaved => '笔记已保存';
 
   @override
@@ -3822,6 +3971,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingGeneratedFromAKey => '由一把只存在于这部手机上的密钥生成。*别人都没有这组词。*';
 
   @override
+  String get onboardingGeneratedFromAKeyDesk => '由一把只存在于这台电脑上的密钥生成。*别人都没有这组词。*';
+
+  @override
   String get onboardingTryAnother => '换一个';
 
   @override
@@ -3839,6 +3991,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn => '你的身份保存在这部手机上。准备好后，可以在设置里备份它。';
+
+  @override
+  String get onboardingYourIdentityLivesOnDesk =>
+      '你的身份保存在这台电脑上。准备好后，可以在设置里备份它。';
 
   @override
   String get onboardingOneQuiet => '一条安静的*通知*。';
@@ -3929,9 +4085,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeEnterOne => '输入配对码';
 
   @override
-  String get pairCodeSixDigits => '六位数字';
-
-  @override
   String get pairCodeLooking => '正在查找…';
 
   @override
@@ -3947,28 +4100,71 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodeFailed => '没有成功。请再试一次。';
 
   @override
-  String get pairCodeTypeTheSixDigits => '输入对方念出的六位数字。';
-
-  @override
   String get pairCodeAddThem => '添加对方';
-
-  @override
-  String get pairCodeUsedTwice => '这个码被用了两次。请对方重新生成一个。';
 
   @override
   String get pairCodeKeyNumber => '密钥号码';
 
   @override
-  String get pairCodeNumberMatches => '核对两部手机上的四组数字是否全部一致';
-
-  @override
-  String get pairCodeNumberDiffers => '号码不一致';
-
-  @override
-  String get pairCodeNoNumberThere => '对方屏幕上没有号码？先添加，再在聊天里核对安全码。';
-
-  @override
   String get pairCodeNotAdded => '未添加。请对方重新生成一个码。';
+
+  @override
+  String get pairCodeEightDigits => '八位数字';
+
+  @override
+  String get pairCodeTypeTheEightDigits => '输入对方念出的八位数字。';
+
+  @override
+  String get pairCodeOldCode => '这个码来自较旧的 Kryfo。两部手机都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeOldCodeDesk => '这个码来自较旧的 Kryfo。两台设备都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06 => '两部手机都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06Desk => '两台设备都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeWaitingForThem => '正在等待对方…';
+
+  @override
+  String get pairCodeStillWaiting => '还在等待。如果对方屏幕显示输入了错误的码，请一起核对数字。';
+
+  @override
+  String get pairCodeUnanswered => '没有收到回应。请和对方核对码，然后重新输入。';
+
+  @override
+  String get pairCodeTooManyTries => '这个码已经试了三次。请对方重新生成一个。';
+
+  @override
+  String get pairCodeRanOut => '这个码已过期。请对方重新生成一个。';
+
+  @override
+  String get pairCodeMatched => '码已匹配。要互相添加吗？';
+
+  @override
+  String get pairCodeNotThem => '不是对方';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut => '把八位数字念出来，你们就能互相添加。其他什么都不需要交换。';
+
+  @override
+  String get pairCodePanelOrMakeACode => '或者生成一个码，念给对方';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      '对方打开 Kryfo，点“添加”，选择“配对码”，输入这八位数字。下一个人需要你再生成一个新的。';
+
+  @override
+  String get pairCodePanelWrongTyped => '对方输入了错误的码。请再慢慢念一遍。';
+
+  @override
+  String get pairCodePanelThreeWrong => '错误的码已输入三次，这个码已停止使用。请生成一个新的。';
+
+  @override
+  String get pairCodePanelNotAdded => '未添加。对方准备好时再生成一个新码。';
 
   @override
   String get panicSetupThoseWereDifferentFrom => '两次不一样。从头再来。';
@@ -4060,6 +4256,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get pinsThePinGoesAnd =>
       'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何拿着你手机的人都能以你的身份打开 Kryfo。';
+
+  @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN 码会被移除，抹除 PIN 和所有隐藏聊天也一起移除。任何用你电脑的人都能以你的身份打开 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指纹解锁';
@@ -4347,6 +4547,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreReplaceTheAccountOn => '替换这部手机上的账号？';
 
   @override
+  String get restoreReplaceTheAccountOnDesk => '替换这台电脑上的账号？';
+
+  @override
   String get restoreWhatIsHereNow =>
       '这里现有的一切，包括它的身份、联系人和消息，都会被清除。这个文件会取而代之。此操作无法撤销。';
 
@@ -4364,6 +4567,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String restoreTheRegistryDidNotDesk(Object mine) {
+    return '登记处没有响应。如果你继续，@$mine 仍会指向这台电脑即将失去的身份。任何添加它的人发出的消息都没有人会收到，而且这个名字无法再被认领。最好先联网，再试一次。';
+  }
+
+  @override
   String get restoreRestoreAnyway => '仍然恢复';
 
   @override
@@ -4375,6 +4583,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String restoreKryfoWillCloseNow(Object haloId) {
     return 'Kryfo 现在会关闭。点击图标，以 $haloId 的身份重新打开。';
+  }
+
+  @override
+  String restoreKryfoWillCloseNowDesk(Object haloId) {
+    return 'Kryfo 现在会关闭。再次启动它，以 $haloId 的身份打开。';
   }
 
   @override
@@ -4447,6 +4660,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get restoreAnythingSentToYou => '旧手机关机期间发给你的任何内容，只要是在十四天内发出的。';
 
   @override
+  String get restoreAnythingSentToYouDesk => '旧设备关机期间发给你的任何内容，只要是在十四天内发出的。';
+
+  @override
   String get restoreYourSupporterBadgeIf => '你的支持者徽章（如果有的话）。';
 
   @override
@@ -4457,8 +4673,16 @@ class AppLocalizationsZh extends AppLocalizations {
       '从你在这里发出任何内容的那一刻起，旧手机就不再接收消息。你从这台设备发出的第一条消息，是旧手机能跟上的最后一条；在那之后到达旧手机的任何内容，在那里都无法读取，在这里也不会等着你。';
 
   @override
+  String get restoreTheOldPhoneStopsDesk =>
+      '从你在这里发出任何内容的那一刻起，旧设备就不再接收消息。你从这台电脑发出的第一条消息，是旧设备能跟上的最后一条；在那之后到达旧设备的任何内容，在那里都无法读取，在这里也不会等着你。';
+
+  @override
   String get restoreIfThePhoneThis =>
       '如果这个文件来自的那部手机还在使用，请先在那部手机上停用 Kryfo，再继续。两部手机共用一个 Kryfo，两边都会丢消息。';
+
+  @override
+  String get restoreIfThePhoneThisDesk =>
+      '如果这个文件来自的那台设备还在使用，请先在那台设备上停用 Kryfo，再继续。两台设备共用一个 Kryfo，两边都会丢消息。';
 
   @override
   String get restoreNotificationsNeedSettingUp => '通知需要在这台设备上重新设置。';
@@ -4478,6 +4702,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get restoreABackupBringsBack =>
       '备份能找回你的身份和联系人，以及制作文件时手机上已有的消息。之后说的内容不在里面。';
+
+  @override
+  String get restoreABackupBringsBackDesk =>
+      '备份能找回你的身份和联系人，以及制作文件时设备上已有的消息。之后说的内容不在里面。';
 
   @override
   String get restoreTheFile => '文件';
@@ -4545,6 +4773,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get roomCreateARoomThatEnds =>
       '一个会结束的聊天室。每个人都用专为它生成的密钥加入，结束时任何手机上都不会留下任何东西。';
+
+  @override
+  String get roomCreateARoomThatEndsDesk =>
+      '一个会结束的聊天室。每个人都用专为它生成的密钥加入，结束时任何设备上都不会留下任何东西。';
 
   @override
   String get roomCreateRoomName => '聊天室名称';
@@ -4638,6 +4870,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get savedChatGone => '那个聊天已不在这部手机上';
 
   @override
+  String get savedChatGoneDesk => '那个聊天已不在这台电脑上';
+
+  @override
   String get savedLongPressAnyMessage => '长按任意消息，点“保存”，就能把它留在这里。';
 
   @override
@@ -4667,6 +4902,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get seenHonestAboutTheLast =>
       '最后几行正是应用锁、抹除 PIN 和加密存储要应对的，而当有人拿着你已解锁的手机时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
+
+  @override
+  String get seenHonestAboutTheLastDesk =>
+      '最后几行正是应用锁、抹除 PIN 和加密存储要应对的，而当有人坐在你已解锁的电脑前时，没有任何工具能救你。完整的威胁模型在代码仓库的 THREAT_MODEL.md 里，按 LINDDUN 编写。代码是开源的，你可以自己核实这些。';
 
   @override
   String get seenHidden => '已隐藏';
@@ -4721,6 +4960,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '在你的手机上运行，规则随应用一起提供。不联网，不下载任何名单。它只读取陌生人的消息请求，从不读取联系人或群组发给你的内容。';
 
   @override
+  String get seenScamShieldRequestsOnlyDesk =>
+      '在你的电脑上运行，规则随应用一起提供。不联网，不下载任何名单。它只读取陌生人的消息请求，从不读取联系人或群组发给你的内容。';
+
+  @override
   String get seenBurnerRooms => '临时聊天室';
 
   @override
@@ -4741,11 +4984,22 @@ class AppLocalizationsZh extends AppLocalizations {
       '预览由发送方经由 Tor 获取，并放在加密消息里一起传送。接收方的手机不会发出任何请求。网站只知道有个用 Tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
 
   @override
+  String get seenAPreviewIsFetchedDesk =>
+      '预览由发送方经由 Tor 获取，并放在加密消息里一起传送。接收方的设备不会发出任何请求。网站只知道有个用 Tor 的人请求了一个页面，别的都不知道。永远不会加载任何图片，陌生人发来的链接只显示为纯文本。';
+
+  @override
   String get seenASeizedUnlockedPhone => '被夺走的已解锁手机';
+
+  @override
+  String get seenASeizedUnlockedPhoneDesk => '被夺走的已解锁电脑';
 
   @override
   String get seenIfSomeoneHoldsYour =>
       '如果有人拿着你已解锁的手机，他们就能读你的消息。应用锁、抹除 PIN 和加密存储在那之前有用，在那之后就没用了。';
+
+  @override
+  String get seenIfSomeoneHoldsYourDesk =>
+      '如果有人坐在你已解锁的电脑前，他们就能读你的消息。应用锁、抹除 PIN 和加密存储在那之前有用，在那之后就没用了。';
 
   @override
   String get seenTheCryptoItself => '加密本身';
@@ -4763,6 +5017,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settingsIdentityMessagesContactsAnd =>
       '这部手机上的身份、消息、联系人和设置。除非你有备份，否则将永久消失。';
+
+  @override
+  String get settingsIdentityMessagesContactsAndDesk =>
+      '这台电脑上的身份、消息、联系人和设置。除非你有备份，否则将永久消失。';
 
   @override
   String get commonContinue => '继续';
@@ -4841,6 +5099,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsScamShieldHint => '只在你的手机上检查，什么都不会离开手机';
+
+  @override
+  String get settingsScamShieldHintDesk => '只在你的电脑上检查，什么都不会离开电脑';
 
   @override
   String get typingNow => '正在输入';
@@ -4985,6 +5246,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsWipeKryfoFromThis => '从这部手机上抹除 Kryfo';
 
   @override
+  String get settingsWipeKryfoFromThisDesk => '从这台电脑上抹除 Kryfo';
+
+  @override
   String get toolsMoreTools => '更多工具';
 
   @override
@@ -5040,6 +5304,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get transportNothingHereLeavesThe =>
       '这里的内容都不会离开手机。这就是引擎用来决定下一步做什么的状态。';
+
+  @override
+  String get transportNothingHereLeavesTheDesk =>
+      '这里的内容都不会离开电脑。这就是引擎用来决定下一步做什么的状态。';
 
   @override
   String get transportStayingAlive => '保持运行';
@@ -5122,6 +5390,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get transportWithNoContactsThe =>
       '没有联系人时，应用不会订阅任何中继地址，所以任何消息都到不了你这里。扫描一个人的二维码就能解决。';
+
+  @override
+  String get transportWithNoContactsTheDesk =>
+      '没有联系人时，应用不会订阅任何中继地址，所以任何消息都到不了你这里。添加一个人就能解决。';
 
   @override
   String get transportSendAnythingWaitingNow => '立即发送所有待发内容';
@@ -5445,6 +5717,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get whyKryfoNoAccountNoPhone =>
       '没有账号，没有手机号，没有保存你聊天记录的中央服务器。聊天记录保存在这部手机上，以加密形式存储。';
+
+  @override
+  String get whyKryfoNoAccountNoPhoneDesk =>
+      '没有账号，没有手机号，没有保存你聊天记录的中央服务器。聊天记录保存在这台电脑上，以加密形式存储。';
 
   @override
   String get whyKryfoNothingLeaks => '什么都不泄露';
@@ -5935,6 +6211,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bootFailedKeysDidNotAnswer => '手机的密钥存储没有响应。关闭并重新打开 Kryfo 通常可以解决。';
 
   @override
+  String get bootFailedKeysDidNotAnswerDesk =>
+      '这台电脑的密钥存储没有响应。关闭并重新打开 Kryfo 通常可以解决。';
+
+  @override
   String get bootFailedCloseAndReopen => '关闭并重新打开 Kryfo';
 
   @override
@@ -5954,10 +6234,17 @@ class AppLocalizationsZh extends AppLocalizations {
       '这会抹掉 Kryfo 在这台手机上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
 
   @override
+  String get bootFailedStartFreshLineDesk =>
+      '这会抹掉 Kryfo 在这台电脑上的一切：聊天、联系人、媒体、隐藏的聊天和你的三个词。保存在别处的备份文件不受影响。';
+
+  @override
   String get bootFailedStartFreshNext => '继续';
 
   @override
   String get bootFailedStartFreshSure => '抹掉这台手机上的一切？';
+
+  @override
+  String get bootFailedStartFreshSureDesk => '抹掉这台电脑上的一切？';
 
   @override
   String get bootFailedStartFreshSureLine => '此操作无法撤销。Kryfo 会关闭，再次打开时如同新安装。';
@@ -6178,13 +6465,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => '你的邀请还没准备好';
 
   @override
-  String get pairCodePanelReadSixDigitsOut => '把六位数字念出来，对方就能添加你。其他什么都不需要交换。';
-
-  @override
   String get pairCodePanelWorking => '处理中';
-
-  @override
-  String get pairCodePanelOrMakeASix => '或者生成一个六位数字的码，念给对方';
 
   @override
   String get pairCodePanelBurned => '这个码已经焚毁。对方准备好时再生成一个新的。';
@@ -6199,16 +6480,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairCodePanelTheyTapAddChoose => '对方点“添加”，选择“配对码”，然后输入这些数字。';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      '对方打开 Kryfo，点“添加”，选择“配对码”，输入这六位数字。下一个人需要你再生成一个新的。';
-
-  @override
-  String get pairCodePanelYourWords => '你的三个词';
-
-  @override
-  String get pairCodePanelAcceptOnce => '对方添加你后，你会收到请求。等对方说四组数字都一致，再接受。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -6287,6 +6558,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get torBootSplashMadeOnThisPhone => '在这部手机上生成。什么都不会发往任何地方。';
+
+  @override
+  String get torBootSplashMadeOnThisPhoneDesk => '在这台电脑上生成。什么都不会发往任何地方。';
 
   @override
   String get torBootSplashFirstLaunchTakesA => '首次启动需要一点时间 · 只在启动时';
@@ -6591,6 +6865,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesBuiltIn => '内置';
 
   @override
+  String get bridgesPasteOrScanALineDesk => '粘贴你信任的人给你的网桥配置。';
+
+  @override
   String get bridgesDetails => '详情';
 
   @override
@@ -6610,6 +6887,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesThisNetworkWantsA => '这个网络需要先登录。登录后，Kryfo 就会连接。';
+
+  @override
+  String get bridgesThisNetworkWantsADesk =>
+      '这个网络需要先登录。请在浏览器里登录，或检查电脑的网络连接。登录后，Kryfo 就会连接。';
 
   @override
   String get bridgesWaitingForWifiSignIn => '等待 Wi-Fi 登录';
@@ -6753,6 +7034,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesSavedLines => '已保存的地址';
 
   @override
+  String get bridgesPasteTheLineTheyDesk => '粘贴对方发给你的那一行配置。网桥配置要找你认识的人拿。';
+
+  @override
   String get bridgesFromAFriendLower => '来自朋友';
 
   @override
@@ -6852,8 +7136,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageMatchPhone => '跟随手机';
 
   @override
+  String get languageMatchPhoneDesk => '跟随系统';
+
+  @override
   String languageMatchPhoneValue(Object language) {
     return '跟随手机（$language）';
+  }
+
+  @override
+  String languageMatchPhoneValueDesk(Object language) {
+    return '跟随系统（$language）';
   }
 
   @override
@@ -6888,6 +7180,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoViewerCannotPlay => '这部手机无法在这里播放这个视频。';
+
+  @override
+  String get videoViewerCannotPlayDesk => '这台电脑无法在这里播放这个视频。';
 
   @override
   String get videoViewerOpenElsewhere => '用其他应用打开';
@@ -7075,6 +7370,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchIntroLine => '名字、词语、照片、文件和链接。搜索只在这台手机上进行，不会把任何东西发到别处。';
 
   @override
+  String get searchIntroLineDesk => '名字、词语、照片、文件和链接。搜索只在这台电脑上进行，不会把任何东西发到别处。';
+
+  @override
   String get searchNothing => '没有找到';
 
   @override
@@ -7153,6 +7451,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleCheckClock => '请检查手机的日期和时间，然后再试一次。';
 
   @override
+  String get handleCheckClockDesk => '请检查电脑的日期和时间，然后再试一次。';
+
+  @override
   String get searchPeople => '人';
 
   @override
@@ -7225,7 +7526,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pinsAdvancedLine => '用于有人强迫你解锁手机时。';
 
   @override
+  String get pinsAdvancedLineDesk => '用于有人强迫你解锁电脑时。';
+
+  @override
   String get pinsWipeLine => '在锁屏上输入它，会从这部手机上抹除 Kryfo。';
+
+  @override
+  String get pinsWipeLineDesk => '在锁屏上输入它，会从这台电脑上抹除 Kryfo。';
 
   @override
   String get pinsDecoyPin => '伪装 PIN';
@@ -7247,6 +7554,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何拿着你手机的人都能以你的身份打开 Kryfo。';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      '所有 PIN 都会被移除，伪装 PIN 和它的 Kryfo 以及所有隐藏聊天也一样。任何用你电脑的人都能以你的身份打开 Kryfo。';
+
+  @override
   String get pinsHowThisWorks => '工作原理';
 
   @override
@@ -7261,6 +7572,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get flowWipe1 =>
       '在锁屏上代替你的 PIN 码输入，它会从这部手机上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
+
+  @override
+  String get flowWipe1Desk =>
+      '在锁屏上代替你的 PIN 码输入，它会从这台电脑上抹除 Kryfo 并关闭应用。在旁人看来，应用只是停止了。';
 
   @override
   String get flowWipe2 => '所有聊天和你的身份都会一起抹除，有伪装的话也一样。';
@@ -7291,6 +7606,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowDecoyShade => '已经在通知栏里的通知被看到了。但伪装打开期间，不会出现新的通知。';
 
   @override
+  String get flowDecoyShadeDesk => '已经在屏幕上的通知被看到了。但伪装打开期间，不会出现新的通知。';
+
+  @override
   String get flowDecoyChoose => '选择一个伪装 PIN';
 
   @override
@@ -7302,6 +7620,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flowLaw => '在有些国家，拒绝解锁手机或向官方隐藏数据本身就是违法的。出行前了解当地的法律。';
+
+  @override
+  String get flowLawDesk => '在有些国家，拒绝解锁设备或向官方隐藏数据本身就是违法的。出行前了解当地的法律。';
 
   @override
   String get howWipe =>
@@ -7359,6 +7680,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get flowVaultReplace => '这会替换这部手机上已有的任何隐藏聊天。';
+
+  @override
+  String get flowVaultReplaceDesk => '这会替换这台电脑上已有的任何隐藏聊天。';
 
   @override
   String get flowVaultChoose => '选择一个隐藏聊天 PIN';
@@ -7430,6 +7754,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get howVault =>
       '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码和指纹打开的则没有。重新设置隐藏聊天，会替换这部手机上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
+
+  @override
+  String get howVaultDesk =>
+      '隐藏聊天 PIN 打开的 Kryfo 带着隐藏聊天，你的 PIN 码打开的则没有。重新设置隐藏聊天，会替换这台电脑上已有的。忘了隐藏聊天 PIN，它们就永远没了。';
 
   @override
   String get chatHide => '隐藏此聊天';
@@ -7675,7 +8003,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devWhoAnon => '匿名发送时，Kryfo 会专门为这个聊天生成新的名字和密钥。它们只留在这部手机上，绝不会在别处使用。';
 
   @override
+  String get devWhoAnonDesk =>
+      '匿名发送时，Kryfo 会专门为这个聊天生成新的名字和密钥。它们只留在这台电脑上，绝不会在别处使用。';
+
+  @override
   String get devWhoNothingYet => '在你发出第一条消息之前，什么都不会离开你的手机。';
+
+  @override
+  String get devWhoNothingYetDesk => '在你发出第一条消息之前，什么都不会离开你的电脑。';
 
   @override
   String get devWhoChoiceStays => '你的选择会一直跟着这个聊天。';
@@ -7700,6 +8035,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devNamelessLine => '为这个聊天生成的名字只留在生成它的手机上，所以这里只能阅读。';
+
+  @override
+  String get devNamelessLineDesk => '为这个聊天生成的名字只留在生成它的设备上，所以这里只能阅读。';
 
   @override
   String get devStartNewLine => '这里的每一条消息都会删除，并打开一个新的聊天。';
@@ -7731,6 +8069,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get nameTakenTombLine =>
       '你曾因为对方不是本人，从这部手机上移除了用这三个词的人。如果这个链接来自你认识的人，就使用这个链接，然后和对方核对安全码。';
+
+  @override
+  String get nameTakenTombLineDesk =>
+      '你曾因为对方不是本人，从这台电脑上移除了用这三个词的人。如果这个链接来自你认识的人，就使用这个链接，然后和对方核对安全码。';
 
   @override
   String get nameTakenUse => '使用这个链接';
@@ -7778,6 +8120,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '聊天及其中的消息和文件都会从这部手机上消失。只有你自己添加的链接或码才能再用这三个词。请和你添加的人核对安全码。';
 
   @override
+  String get notThemSheetLineDesk =>
+      '聊天及其中的消息和文件都会从这台电脑上消失。只有你自己添加的链接或码才能再用这三个词。请和你添加的人核对安全码。';
+
+  @override
   String get notThemRemove => '删除并屏蔽';
 
   @override
@@ -7785,6 +8131,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupAdminGoneLine => '这个群的管理员已从这部手机上移除。群组的变更不会再送达给你。';
+
+  @override
+  String get groupAdminGoneLineDesk => '这个群的管理员已从这台电脑上移除。群组的变更不会再送达给你。';
 
   @override
   String get blockedKey => '已屏蔽的密钥';
@@ -7835,6 +8184,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gifOptInWhereToTurnOff => '设置、隐私、GIF 搜索。手机里的 GIF 不开它也一直能用。';
 
   @override
+  String get gifOptInWhereToTurnOffDesk => '设置、隐私、GIF 搜索。电脑里的 GIF 不开它也一直能用。';
+
+  @override
   String get gifTurnOn => '开启 GIF 搜索';
 
   @override
@@ -7860,10 +8212,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gifSavedOnPhone => '手机上保存的 GIF 在*这台手机上*标签里。';
 
   @override
+  String get gifSavedOnPhoneDesk => '电脑上保存的 GIF 在*这台电脑上*标签里。';
+
+  @override
   String get gifTab => 'GIF';
 
   @override
   String get gifPhoneTab => '这台手机上';
+
+  @override
+  String get gifPhoneTabDesk => '这台电脑上';
 
   @override
   String get gifSearchHint => '搜索 GIF';
@@ -7917,6 +8275,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gifPhoneLine => '保存在这台手机上的 GIF。不会联网。';
 
   @override
+  String get gifPhoneLineDesk => '保存在这台电脑上的 GIF。不会联网。';
+
+  @override
   String get gifPhoneChoose => '选择 GIF';
 
   @override
@@ -7966,7 +8327,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatBlockScreenshots => '禁止截屏';
 
   @override
-  String get chatShotsWhenTheyUpdate => '对方更新后即可使用';
+  String get chatShotsWhenTheyUpdate => '对方在手机上使用最新版 Kryfo 后即可使用';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => '可在 Android 版 Kryfo 中使用';
 
   @override
   String get chatShotsBothPhones =>
@@ -8015,6 +8379,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatShotsYouTurnedOff => '你关闭了禁止截屏';
 
   @override
+  String get chatNowPostQuantum => '此聊天中的消息现已使用后量子加密';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name 开启了禁止截屏。复制、转发和保存彼此的消息也已关闭。';
   }
@@ -8029,7 +8396,14 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 在这个聊天室的每部手机上禁止截屏和录屏，也禁止复制、转发或保存别人的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
+  String get roomShotsBlockedDesk =>
+      '此聊天室中不能复制、转发或保存彼此的消息。Android 版 Kryfo 还会禁止截屏和录屏。';
+
+  @override
   String get roomShotsAlwaysOn => '聊天室里始终开启，每部手机都一样';
+
+  @override
+  String get roomShotsAlwaysOnDesk => '聊天室里始终开启，在 Android 版 Kryfo 中';
 
   @override
   String get settingsPerChat => '按聊天设置';
@@ -8090,6 +8464,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceNoRoom => '手机可用空间不足。请清理一些空间后再试。';
+
+  @override
+  String get voiceNoRoomDesk => '电脑可用空间不足。请清理一些空间后再试。';
 
   @override
   String get voiceNoRoomNotSent => '空间不足，无法为这条语音变声，所以没有发出';
@@ -8294,6 +8671,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupInfoEndGroupLine => '将为所有人删除：消息和媒体会从每位已更新成员的手机上移除。';
 
   @override
+  String get groupInfoEndGroupLineDesk => '将为所有人删除：消息和媒体会从每位已更新成员的设备上移除。';
+
+  @override
   String get groupInfoDeleteGroup => '删除群组';
 
   @override
@@ -8307,6 +8687,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupInfoEndGroupDetail => 'Kryfo 会从每位已更新的成员手机上移除它。';
+
+  @override
+  String get groupInfoEndGroupDetailDesk => 'Kryfo 会从每位已更新的成员设备上移除它。';
 
   @override
   String get translateAction => '翻译';
@@ -8323,13 +8706,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translateBarMore => '翻译选项';
 
   @override
-  String translateBarAlways(Object language) {
-    return '总是翻译$language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return '不再翻译$language';
+    return '不再为$language提供翻译';
   }
 
   @override
@@ -8355,12 +8733,25 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String translatePackTitleDesk(Object language) {
+    return '在这台电脑上翻译$language';
+  }
+
+  @override
   String translatePackLine(Object language, Object size) {
     return '消息在这部手机上翻译，从不离开手机。这需要$language语言包，约 $size，通过 Tor 下载一次。';
   }
 
   @override
+  String translatePackLineDesk(Object language, Object size) {
+    return '消息在这台电脑上翻译，从不离开电脑。这需要$language语言包，约 $size，通过 Tor 下载一次。';
+  }
+
+  @override
   String get translatePackNoLib => '翻译在这部手机上无法使用。';
+
+  @override
+  String get translatePackNoLibDesk => '翻译在这台电脑上无法使用。';
 
   @override
   String translateDownload(Object size) {
@@ -8387,7 +8778,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String translateInstalledDesk(Object size) {
+    return '已在这台电脑上 · $size';
+  }
+
+  @override
   String get translateNeedsWifi => '“仅限 Wi-Fi”已开启，而这部手机没有连接 Wi-Fi。';
+
+  @override
+  String get translateNeedsWifiDesk => '“仅限 Wi-Fi”已开启，而这台电脑没有连接 Wi-Fi。';
 
   @override
   String get translateFailNoTor => 'Tor 还没有连接。语言包只通过 Tor 下载，请在连接后重试。';
@@ -8402,6 +8801,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translateFailNoEngine => '这部手机无法下载语言包。';
 
   @override
+  String get translateFailNoEngineDesk => '这台电脑无法下载语言包。';
+
+  @override
   String translatePaused(Object size) {
     return '已暂停 · 已下载 $size';
   }
@@ -8414,6 +8816,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translateSettingsHint => '在这部手机上，从不经过服务器';
+
+  @override
+  String get translateSettingsHintDesk => '在这台电脑上，从不经过服务器';
 
   @override
   String get translatePacksSection => '语言包';
@@ -8476,10 +8881,43 @@ class AppLocalizationsZh extends AppLocalizations {
       '翻译在这部手机上完成。任何消息都不会被发送到别处去翻译。下载语言包会让服务器知道是哪个语言包。下载经由 Tor，所以服务器不知道是谁请求的。';
 
   @override
+  String get translatePrivacyNoteDesk =>
+      '翻译在这台电脑上完成。任何消息都不会被发送到别处去翻译。下载语言包会让服务器知道是哪个语言包。下载经由 Tor，所以服务器不知道是谁请求的。';
+
+  @override
   String get translateAutoInChat => '自动翻译';
 
   @override
   String get translateAutoInChatHint => '其他语言的消息会显示译文。点一下即可查看原文。';
+
+  @override
+  String get translateAlwaysChat => '总是翻译此聊天';
+
+  @override
+  String translateNeverDone(Object language) {
+    return '$language消息保持原样';
+  }
+
+  @override
+  String get translateUndo => '撤销';
+
+  @override
+  String get translateNeverSection => '不提供翻译的语言';
+
+  @override
+  String get translateOfferAgain => '重新提供';
+
+  @override
+  String get translateOnHint => '在其他语言的消息下方提供';
+
+  @override
+  String get translatePrivacyKept => '译文与所属聊天一起加密保存在这部手机上，并随聊天一起删除。';
+
+  @override
+  String get translatePrivacyKeptDesk => '译文与所属聊天一起加密保存在这台电脑上，并随聊天一起删除。';
+
+  @override
+  String get translateOffDeletes => '关闭后会删除已保存的译文。';
 
   @override
   String get bridgesNoneUntilOnion => '开启 Onion 前不使用';
@@ -8724,6 +9162,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationsLead => '新消息如何送达这部手机、提示音如何、显示什么。你可以随时更改。';
 
   @override
+  String get notificationsLeadDesk => '新消息如何送达这台电脑、提示音如何、显示什么。你可以随时更改。';
+
+  @override
   String get notificationsHowTheyReachYou => '消息如何送达';
 
   @override
@@ -8856,6 +9297,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowVaultPassLine => '至少 12 个字符。手机键盘能看到你输入的内容，所以请使用不会学习或同步词语的键盘。';
 
   @override
+  String get flowVaultPassLineDesk => '至少 12 个字符。请使用你在别处都没用过的。';
+
+  @override
   String get flowVaultPassAgain => '再输入一次同样的密码短语';
 
   @override
@@ -8900,19 +9344,29 @@ class AppLocalizationsZh extends AppLocalizations {
       '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
   @override
-  String get groupShotsStartsWhenAll => '等这里的所有人更新 Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      '在这里关闭复制、转发和保存彼此的消息。Android 版 Kryfo 还会禁止截屏和录屏。';
+
+  @override
+  String get groupShotsStartsWhenAll => '正在等待这里的所有人都能在自己的设备上禁止截屏';
 
   @override
   String get groupShotsOnForAll => '对这里的所有人开启';
 
   @override
+  String get groupShotsOnForAllDesk => '在 Android 版 Kryfo 中开启';
+
+  @override
   String get groupShotsOffAdminOnly => '已关闭。只有管理员能更改';
 
   @override
-  String get groupShotsWaitAdminOnly => '等这里的所有人更新 Kryfo。只有管理员能更改';
+  String get groupShotsWaitAdminOnly => '正在等待这里的所有人都能在自己的设备上禁止截屏。只有管理员能更改';
 
   @override
   String get groupShotsOnAdminOnly => '对这里的所有人开启。只有管理员能更改';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk => '在 Android 版 Kryfo 中开启。只有管理员能更改';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -8929,31 +9383,35 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get groupShotsWaitingTitle => '还没更新的人';
+  String get groupShotsWaitingTitle => '尚未覆盖';
 
   @override
-  String get groupShotsWaitingHint => '这些人更新 Kryfo 后，禁止截屏就对所有人生效。点一个人可以把他移出群组。';
+  String get groupShotsWaitingHint => '这些人的设备能禁止截屏后，禁止截屏就覆盖所有人。点按某人可将其移出群组。';
 
   @override
-  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之后一直没上线';
+  String get groupShotsNeedsUpdate => '其设备暂时无法禁止截屏，或之后一直未上线';
 
   @override
   String get groupShotsBlockedByYou => '已被你屏蔽';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      '你开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+      '你开启了禁止截屏。等这里的所有人都能在自己的设备上禁止截屏后，它会对所有人生效。';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name 开启了禁止截屏。等这里的所有人都更新 Kryfo 后，它会对所有人生效。';
+    return '$name 开启了禁止截屏。等这里的所有人都能在自己的设备上禁止截屏后，它会对所有人生效。';
   }
 
   @override
   String get groupShotsStarted => '禁止截屏已对这里的所有人开启。复制、转发和保存彼此的消息也已关闭。';
 
   @override
-  String get groupShotsPaused => '这里有人还不能禁止截屏。他更新 Kryfo 后，会再次对所有人生效。';
+  String get groupShotsStartedDesk =>
+      '禁止截屏已在 Android 版 Kryfo 中开启。复制、转发和保存彼此的消息也已关闭。';
+
+  @override
+  String get groupShotsPaused => '这里有人还不能在其设备上禁止截屏。等其可以后，会再次对所有人生效。';
 
   @override
   String get groupShotsCantYet => '还不能禁止截屏';
@@ -8962,13 +9420,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupShotsAddTitle => '仍要添加吗？';
 
   @override
-  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截屏不会对这里的所有人生效。';
+  String get groupShotsAddPauses => '在这些人能在自己的设备上禁止截屏之前，禁止截屏不会覆盖这里的所有人。';
 
   @override
   String get groupShotsLeaveStays => '禁止截屏会保持现状。';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo 已在此群组中禁止截屏';
+
+  @override
+  String get groupShotsBlockedHereDesk => '此群组中不能复制、转发或保存';
 
   @override
   String get groupShotsMenuNote => '此群组中不能复制、转发或保存别人的消息';
@@ -9201,6 +9662,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopTrayTip => 'Kryfo 正在运行并接收消息';
 
   @override
+  String get desktopTrayLockedTip => '打开 Kryfo 即可开始接收消息';
+
+  @override
+  String get desktopRunSection => '在这台电脑上';
+
+  @override
+  String get desktopTrayRow => '在系统托盘中保持运行';
+
+  @override
+  String get desktopTrayHint => '关闭窗口后，Kryfo 留在系统托盘中，消息照常到达。';
+
+  @override
+  String get desktopTrayOffLine => '关闭窗口会退出 Kryfo。再次打开时，消息就会到达。';
+
+  @override
+  String get desktopTrayNoneLine => '这个桌面不显示托盘图标，所以关闭窗口会退出 Kryfo。';
+
+  @override
+  String get desktopStartRow => '随电脑启动';
+
+  @override
+  String get desktopStartHint => '登录这台电脑时，Kryfo 会在系统托盘中启动。';
+
+  @override
+  String get desktopStartRefused => '这台电脑不允许 Kryfo 随它启动。你自己启动时，Kryfo 照常打开。';
+
+  @override
+  String get desktopStartHeldOff => 'Windows 在启动应用中关闭了 Kryfo。请到设置、应用、启动中打开它。';
+
+  @override
   String get desktopNoCamera => 'Kryfo 暂时还不能在这台电脑上使用摄像头。请改用链接或代码。';
 
   @override
@@ -9221,6 +9712,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get inviteNotYet => '此邀请尚未生效。请检查手机上的时间。';
+
+  @override
+  String get inviteNotYetDesk => '此邀请尚未生效。请检查电脑上的时间。';
 
   @override
   String get inviteExpired => '此邀请已过期。请索取新的邀请。';
@@ -9376,8 +9870,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatAlbumItDisappearsWithNo => '这个相册会从双方的手机上删除，除非已被保存。此操作无法撤销。';
 
   @override
+  String get chatAlbumItDisappearsWithNoDesk =>
+      '这个相册会从双方的设备上删除，除非已被保存。此操作无法撤销。';
+
+  @override
   String get groupChatAlbumItDisappearsWithNo =>
       '这个相册会从所有人的手机上删除，除非已被保存。此操作无法撤销。';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNoDesk =>
+      '这个相册会从所有人的设备上删除，除非已被保存。此操作无法撤销。';
 
   @override
   String get homeInviteSomeone => '邀请一个人';
@@ -9459,12 +9961,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photoOnlyHere => '只在这部手机上';
 
   @override
+  String get photoOnlyHereDesk => '只在这台电脑上';
+
+  @override
   String photoForThem(Object name) {
     return '给$name的照片';
   }
 
   @override
   String get photoOnlyHereLine => '只有你能看到。只保存在这部手机上。';
+
+  @override
+  String get photoOnlyHereLineDesk => '只有你能看到。只保存在这台电脑上。';
 
   @override
   String photoOf(Object name) {
@@ -9562,6 +10070,15 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => '选择一个聊天';
+
+  @override
+  String get wideSelectChatLine => '从列表中选择一个聊天，开始写消息。';
+
+  @override
+  String get wideListWidth => '聊天列表宽度';
 
   @override
   String transferDoneOf(String done, String total) {
@@ -9748,6 +10265,47 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopBackupHint => '如果这台电脑被重置，它能找回一切。';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name 重新设置了 Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name 的手机开始了新的安全会话';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return '你之前验证过 $name。在你核对安全码或继续聊天之前，什么都不会发出。对方的消息仍会收到。';
+  }
+
+  @override
+  String get chatKeepChatting => '继续聊天';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name 需要更新 Kryfo 才能继续聊天。';
+  }
+
+  @override
+  String get restoreOlderTitle => '部分聊天将暂停';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name 使用的是旧版 Kryfo。在对方更新前，你们的聊天会暂停。';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first 和 $second 使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first、$second 和另外 $count 人使用的是旧版 Kryfo。在他们更新前，你和他们的聊天会暂停。';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -9838,6 +10396,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get appearanceWallpaperHint =>
       '在聊天選單裡為它單獨設定的桌布優先。照片只留在這支手機上，和你的聊天一起加密。';
+
+  @override
+  String get appearanceWallpaperHintDesk =>
+      '在聊天選單裡為它單獨設定的桌布優先。照片只留在這台電腦上，和你的聊天一起加密。';
 
   @override
   String get backupThatPassphraseDoesNot => '這組密碼短語打不開這個檔案';
@@ -10154,6 +10716,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appAnAttachmentCouldNot => '有個附件無法儲存到這支手機';
 
   @override
+  String get appAnAttachmentCouldNotDesk => '有個附件無法儲存到這台電腦';
+
+  @override
   String get appGroup2 => '群組';
 
   @override
@@ -10242,6 +10807,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appScanTheirCodeOr => '掃描對方的 QR 碼，或貼上對方給你的內容：連結、@使用者名稱或聊天室連結。';
+
+  @override
+  String get appScanTheirCodeOrDesk => '貼上對方給你的內容：連結、@使用者名稱或聊天室連結。';
 
   @override
   String get appScanTheirCode => '掃描對方的 QR 碼';
@@ -10773,11 +11341,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupACopyToKeep => '留一份副本。這支手機照常使用。';
 
   @override
+  String get backupACopyToKeepDesk => '留一份副本。這台電腦照常使用。';
+
+  @override
   String get backupMoveToAnotherDevice => '移到另一台裝置';
 
   @override
   String get backupTheFileTakesThis =>
       '這個檔案會帶走這個身分。檔案一建立，這支手機就會停止：這裡不會再收到任何新內容，從這裡傳出的東西也不會送達任何人。';
+
+  @override
+  String get backupTheFileTakesThisDesk =>
+      '這個檔案會帶走這個身分。檔案一建立，這台電腦就會停止：這裡不會再收到任何新內容，從這裡傳出的東西也不會送達任何人。';
 
   @override
   String get backupOneEncryptedFileYour =>
@@ -10786,6 +11361,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
       '一個加密檔案：你的身分、聯絡人、每則訊息，以及此刻這支手機上的每張照片、每段語音和每個檔案。今天之後說的話都不在裡面，所以重要的時候請再做一份。還原時需要檔案和密碼短語，兩者缺一不可。';
+
+  @override
+  String get backupOneEncryptedFileYourIdentityYourDesk =>
+      '一個加密檔案：你的身分、聯絡人、每則訊息，以及此刻這台電腦上的每張照片、每段語音和每個檔案。今天之後說的話都不在裡面，所以重要的時候請再做一份。還原時需要檔案和密碼短語，兩者缺一不可。';
 
   @override
   String get backupPassphrase => '密碼短語';
@@ -10828,7 +11407,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupMoveReachedTitle => '檔案已經到新手機上了嗎？';
 
   @override
+  String get backupMoveReachedTitleDesk => '檔案已經到新裝置上了嗎？';
+
+  @override
   String get backupMoveReachedLine => '在新手機上打開它之前，請留著這支手機。';
+
+  @override
+  String get backupMoveReachedLineDesk => '在新裝置上打開它之前，請留著這台電腦。';
 
   @override
   String get backupFinishTheMove => '完成搬移';
@@ -10852,6 +11437,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get backupNoSpace => '手機可用空間不足，無法完成備份。請清理一些空間後再試一次。';
 
   @override
+  String get backupNoSpaceDesk => '電腦可用空間不足，無法完成備份。請清理一些空間後再試一次。';
+
+  @override
   String get backupHiddenNotIn => '隱藏聊天不在其中。';
 
   @override
@@ -10859,6 +11447,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupMoveHiddenStay => '隱藏聊天留在這支手機上，並隨它一起抹除。';
+
+  @override
+  String get backupMoveHiddenStayDesk => '隱藏聊天留在這台電腦上，並隨它一起抹除。';
 
   @override
   String get backupHiddenGone => 'Kryfo 鎖定時，你的隱藏聊天已關閉。用隱藏聊天 PIN 開啟它們，再從那裡備份。';
@@ -11063,6 +11654,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatItDisappearsWithNo => '訊息會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
+  String get chatItDisappearsWithNoDesk => '訊息會從雙方的裝置上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
   String chatThisChatHasPins(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11132,6 +11726,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatGifFromPhone => '手機裡的 GIF';
+
+  @override
+  String get chatGifFromPhoneDesk => '電腦裡的 GIF';
 
   @override
   String get chatFile2 => '檔案';
@@ -11284,6 +11881,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatJustForYouNever => '只有你看得到。不會傳送，也不會離開這支手機。';
 
   @override
+  String get chatJustForYouNeverDesk => '只有你看得到。不會傳送，也不會離開這台電腦。';
+
+  @override
   String get chatAQuietReminder => '給自己的小提醒…';
 
   @override
@@ -11294,6 +11894,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatEveryMessageHereIs => '這裡的每則訊息都會從這支手機上抹除。這只會清空你的副本，不會動到對方的裝置。';
+
+  @override
+  String get chatEveryMessageHereIsDesk =>
+      '這裡的每則訊息都會從這台電腦上抹除。這只會清空你的副本，不會動到對方的裝置。';
 
   @override
   String get chatClear => '清空';
@@ -11713,6 +12317,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get contactStaysOnThisPhone => '只存在這支手機上。對方永遠看不到。';
 
   @override
+  String get contactStaysOnThisPhoneDesk => '只存在這台電腦上。對方永遠看不到。';
+
+  @override
   String get contactClear => '清空';
 
   @override
@@ -11760,10 +12367,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get contactMessagesAndContactGone => '訊息和聯絡人都會從這支手機上消失';
 
   @override
+  String get contactMessagesAndContactGoneDesk => '訊息和聯絡人都會從這台電腦上消失';
+
+  @override
   String get contactDeleteThisChat => '要刪除這個聊天嗎？';
 
   @override
   String get contactEveryMessageAndThe => '每則訊息和這位聯絡人都會從這支手機上消失。不會傳送任何東西給對方。';
+
+  @override
+  String get contactEveryMessageAndTheDesk =>
+      '每則訊息和這位聯絡人都會從這台電腦上消失。不會傳送任何東西給對方。';
 
   @override
   String get commonDelete => '刪除';
@@ -11939,6 +12553,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get donateGivesReceipt => '一張保存在這支手機上的簽名收據。不需任何帳號就能證明徽章。';
+
+  @override
+  String get donateGivesReceiptDesk => '一張保存在這台電腦上的簽名收據。不需任何帳號就能證明徽章。';
 
   @override
   String get donateGivesFree => '無論有沒有徽章，所有隱私功能都一直免費。';
@@ -12131,6 +12748,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupChatGifFromPhone => '手機裡的 GIF';
 
   @override
+  String get groupChatGifFromPhoneDesk => '電腦裡的 GIF';
+
+  @override
   String get groupChatFile => '檔案';
 
   @override
@@ -12234,6 +12854,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatItDisappearsWithNo => '訊息會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
+  String get groupChatItDisappearsWithNoDesk =>
+      '訊息會從所有人的裝置上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
   String get groupChatUnsend => '收回';
@@ -12464,6 +13088,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '這裡的每則訊息都會從這支手機上抹除。這只會清空你的副本，其他成員的副本會保留。';
 
   @override
+  String get groupInfoEveryMessageHereIsDesk =>
+      '這裡的每則訊息都會從這台電腦上抹除。這只會清空你的副本，其他成員的副本會保留。';
+
+  @override
   String get groupInfoClear => '清空';
 
   @override
@@ -12479,6 +13107,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoEverythingInItIs => '裡面的一切會立即從這支手機上抹除，你在這裡使用的金鑰也會永久消失。';
 
   @override
+  String get groupInfoEverythingInItIsDesk =>
+      '裡面的一切會立即從這台電腦上抹除，你在這裡使用的金鑰也會永久消失。';
+
+  @override
   String groupChatYouWereRemovedFrom(Object name) {
     return '你已被移出 $name';
   }
@@ -12487,12 +13119,23 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoLeaveGroupLine => '你將不再收到它的訊息，裡面的一切也會從這支手機上抹除。';
 
   @override
+  String get groupInfoLeaveGroupLineDesk => '你將不再收到它的訊息，裡面的一切也會從這台電腦上抹除。';
+
+  @override
   String get groupInfoLeaveGroupAdmin =>
       '你將不再收到它的訊息，裡面的一切也會從這支手機上抹除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
 
   @override
+  String get groupInfoLeaveGroupAdminDesk =>
+      '你將不再收到它的訊息，裡面的一切也會從這台電腦上抹除。你是管理員，離開後就沒有人能再增減成員或重新命名了。';
+
+  @override
   String get groupInfoLeaveRoomMaker =>
       '裡面的一切會立即從這支手機上抹除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
+
+  @override
+  String get groupInfoLeaveRoomMakerDesk =>
+      '裡面的一切會立即從這台電腦上抹除，你在這裡使用的金鑰也會永久消失。這個聊天室是你建立的，你離開後它的連結就不能再讓人加入了。';
 
   @override
   String get groupInfoLeave => '離開';
@@ -12630,12 +13273,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String handleIsNotYoursOnDesk(Object handle) {
+    return '在這台電腦上，@$handle 不屬於你';
+  }
+
+  @override
   String handleTheRegistryHoldsIt(Object handle) {
     return '註冊處記錄它屬於另一把金鑰，很可能是這支手機還原之前的身分。新增 @$handle 的人聯絡不到你。它無法在這裡釋出或更新。請換一個名字。';
   }
 
   @override
+  String handleTheRegistryHoldsItDesk(Object handle) {
+    return '註冊處記錄它屬於另一把金鑰，很可能是這台電腦還原之前的身分。新增 @$handle 的人聯絡不到你。它無法在這裡釋出或更新。請換一個名字。';
+  }
+
+  @override
   String get handleForgetItOnThis => '在這支手機上忘記它';
+
+  @override
+  String get handleForgetItOnThisDesk => '在這台電腦上忘記它';
 
   @override
   String get homeAddAContact => '新增聯絡人';
@@ -12764,6 +13420,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeScanTheirCodeSend => '掃描對方的 QR 碼、傳連結給對方，或輸入對方給你的 @使用者名稱。';
 
   @override
+  String get homeScanTheirCodeSendDesk => '傳連結給對方，或輸入對方給你的 @使用者名稱。';
+
+  @override
   String get homeAddSomeone => '新增聯絡人';
 
   @override
@@ -12833,11 +13492,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get homeMessagesAndContactGone => '訊息和聯絡人都會從這支手機上消失';
 
   @override
+  String get homeMessagesAndContactGoneDesk => '訊息和聯絡人都會從這台電腦上消失';
+
+  @override
   String get homeDeleteThisChat => '要刪除這個聊天嗎？';
 
   @override
   String homeEveryMessageWithGoes(Object c) {
     return '和 $c 的每則訊息都會刪除，對方也不再是你的聯絡人。這只會清空這支手機，對方的副本仍留在對方那裡。如果對方再傳訊息，會出現在請求中。';
+  }
+
+  @override
+  String homeEveryMessageWithGoesDesk(Object c) {
+    return '和 $c 的每則訊息都會刪除，對方也不再是你的聯絡人。這只會清空這台電腦，對方的副本仍留在對方那裡。如果對方再傳訊息，會出現在請求中。';
   }
 
   @override
@@ -12875,6 +13542,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeOnlyOnThisPhone => '只在這支手機上';
+
+  @override
+  String get homeOnlyOnThisPhoneDesk => '只在這台電腦上';
 
   @override
   String get homeSaved => '收藏';
@@ -13071,6 +13741,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get linkNoAppOpens => '這支手機上沒有可以開啟此連結的應用程式。';
 
   @override
+  String get linkNoAppOpensDesk => '這台電腦上沒有可以開啟此連結的應用程式。';
+
+  @override
   String get placeStubLocation => '位置';
 
   @override
@@ -13221,6 +13894,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get movedWipeThisPhone => '要從這支手機抹除 Kryfo 嗎？';
 
   @override
+  String get movedWipeThisPhoneDesk => '要從這台電腦抹除 Kryfo 嗎？';
+
+  @override
   String get movedEverythingKryfoHoldsHere =>
       'Kryfo 在這裡保存的一切都會消失：訊息、聯絡人、金鑰。另一台裝置會保有這一切。這個動作無法復原。';
 
@@ -13246,6 +13922,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String movedKryfoWillCloseNowDesk(Object myId) {
+    return 'Kryfo 現在會關閉。再次啟動它，以 $myId 開啟。';
+  }
+
+  @override
   String get movedReopenKryfo => '重新開啟 Kryfo';
 
   @override
@@ -13257,10 +13938,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String movedIsNowOnAnotherDesk(Object myId) {
+    return '$myId 現在在另一台裝置上。這台電腦仍可顯示原本的內容，但不會再收到任何新東西，從這裡傳送的任何內容也不會送達任何人。';
+  }
+
+  @override
   String get movedKeepItToRead => '留著閱讀';
 
   @override
   String get movedWipeThisPhone2 => '從這支手機抹除 Kryfo';
+
+  @override
+  String get movedWipeThisPhone2Desk => '從這台電腦抹除 Kryfo';
 
   @override
   String get movedIMNotMoving => '我最後決定不搬了';
@@ -13296,6 +13985,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get myKryfoPointYourPhonesAt => '把你們的手機對準彼此。不會經過任何伺服器。';
+
+  @override
+  String get myKryfoPointYourPhonesAtDesk => '對方用手機掃描這個 QR 碼。不會經過任何伺服器。';
 
   @override
   String get myKryfoScanTheirsInstead => '改掃描對方的';
@@ -13422,6 +14114,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notesDeleteAllLine => '這支手機上的所有筆記都會被永久刪除。';
 
   @override
+  String get notesDeleteAllLineDesk => '這台電腦上的所有筆記都會被永久刪除。';
+
+  @override
   String get notesDeleteAllYes => '全部刪除';
 
   @override
@@ -13437,16 +14132,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notesGoneFromThisPhone => '它會從這支手機上永久抹除。';
 
   @override
+  String get notesGoneFromThisPhoneDesk => '它會從這台電腦上永久抹除。';
+
+  @override
   String get notesNoteToSelf => '給自己的筆記';
 
   @override
   String get notesOnlyOnThisPhone => '只在這支手機上';
 
   @override
+  String get notesOnlyOnThisPhoneDesk => '只在這台電腦上';
+
+  @override
   String get notesAQuietPlace => '一個安靜的角落';
 
   @override
   String get notesJotAnythingDownIt => '隨手記下任何事。它只留在這支手機上，永遠不會離開。';
+
+  @override
+  String get notesJotAnythingDownItDesk => '隨手記下任何事。它只留在這台電腦上，永遠不會離開。';
 
   @override
   String get notesJotSomethingDown => '記點什麼…';
@@ -13517,6 +14221,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notesExportHoldsInstaller => '這份匯出裡有一個應用程式安裝檔，所以不能分享。請改為儲存到手機上。';
 
   @override
+  String get notesExportHoldsInstallerDesk =>
+      '這份匯出裡有一個應用程式安裝檔，所以不能分享。請改為儲存到這台電腦上。';
+
+  @override
   String get notesExportSaved => '筆記已儲存';
 
   @override
@@ -13569,6 +14277,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingGeneratedFromAKey => '由只存在這支手機上的金鑰產生。*沒有其他人有這組詞。*';
 
   @override
+  String get onboardingGeneratedFromAKeyDesk => '由只存在這台電腦上的金鑰產生。*沒有其他人有這組詞。*';
+
+  @override
   String get onboardingTryAnother => '換一個';
 
   @override
@@ -13586,6 +14297,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingYourIdentityLivesOn => '你的身分存在這支手機上。準備好時，可以從設定中備份。';
+
+  @override
+  String get onboardingYourIdentityLivesOnDesk => '你的身分存在這台電腦上。準備好時，可以從設定中備份。';
 
   @override
   String get onboardingOneQuiet => '一則安靜的*通知*。';
@@ -13676,9 +14390,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeEnterOne => '輸入配對碼';
 
   @override
-  String get pairCodeSixDigits => '六位數字';
-
-  @override
   String get pairCodeLooking => '尋找中…';
 
   @override
@@ -13694,28 +14405,72 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodeFailed => '沒有成功。請再試一次。';
 
   @override
-  String get pairCodeTypeTheSixDigits => '輸入對方唸出的六位數字。';
-
-  @override
   String get pairCodeAddThem => '新增對方';
-
-  @override
-  String get pairCodeUsedTwice => '這組碼被用了兩次。請對方再產生一組新的。';
 
   @override
   String get pairCodeKeyNumber => '金鑰號碼';
 
   @override
-  String get pairCodeNumberMatches => '核對兩支手機上的四組數字是否全部一致';
-
-  @override
-  String get pairCodeNumberDiffers => '號碼不一致';
-
-  @override
-  String get pairCodeNoNumberThere => '對方螢幕上沒有號碼？先加入，再在聊天裡核對安全碼。';
-
-  @override
   String get pairCodeNotAdded => '未新增。請對方再產生一組新的碼。';
+
+  @override
+  String get pairCodeEightDigits => '八位數字';
+
+  @override
+  String get pairCodeTypeTheEightDigits => '輸入對方唸出的八位數字。';
+
+  @override
+  String get pairCodeOldCode => '這個碼來自較舊的 Kryfo。兩支手機都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeOldCodeDesk => '這個碼來自較舊的 Kryfo。兩台裝置都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06 => '兩支手機都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeBothNeed06Desk => '兩台裝置都需要 Kryfo 0.6 或更新版本。';
+
+  @override
+  String get pairCodeWaitingForThem => '正在等待對方…';
+
+  @override
+  String get pairCodeStillWaiting => '還在等待。如果對方螢幕顯示輸入了錯誤的碼，請一起核對數字。';
+
+  @override
+  String get pairCodeUnanswered => '沒有收到回應。請和對方核對碼，然後重新輸入。';
+
+  @override
+  String get pairCodeTooManyTries => '這個碼已經試了三次。請對方重新產生一個。';
+
+  @override
+  String get pairCodeRanOut => '這個碼已過期。請對方重新產生一個。';
+
+  @override
+  String get pairCodeMatched => '碼已相符。要互相新增嗎？';
+
+  @override
+  String get pairCodeNotThem => '不是對方';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      '大聲唸出八位數字，你們就能互相新增。不需要交換其他任何東西。';
+
+  @override
+  String get pairCodePanelOrMakeACode => '或產生一組配對碼唸給對方';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這八位數字。下一個人請再產生一組新的。';
+
+  @override
+  String get pairCodePanelWrongTyped => '對方輸入了錯誤的碼。請再慢慢唸一遍。';
+
+  @override
+  String get pairCodePanelThreeWrong => '錯誤的碼已輸入三次，這個碼已停止使用。請產生一個新的。';
+
+  @override
+  String get pairCodePanelNotAdded => '未新增。對方準備好時再產生一組新的碼。';
 
   @override
   String get panicSetupThoseWereDifferentFrom => '兩次不一樣。從頭再來。';
@@ -13807,6 +14562,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get pinsThePinGoesAnd =>
       'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
+
+  @override
+  String get pinsThePinGoesAndDesk =>
+      'PIN 碼會被移除，抹除 PIN 和所有隱藏聊天也會一起移除。任何用你電腦的人，都能以你的身分開啟 Kryfo。';
 
   @override
   String get pinsUnlockWithFingerprint => '用指紋解鎖';
@@ -14093,6 +14852,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreReplaceTheAccountOn => '要取代這支手機上的帳號嗎？';
 
   @override
+  String get restoreReplaceTheAccountOnDesk => '要取代這台電腦上的帳號嗎？';
+
+  @override
   String get restoreWhatIsHereNow =>
       '這裡現有的一切，包括身分、聯絡人和訊息，都會消失。檔案內容會取而代之。這個動作無法復原。';
 
@@ -14110,6 +14872,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String restoreTheRegistryDidNotDesk(Object mine) {
+    return '註冊處沒有回應。如果你繼續，@$mine 會一直指向這台電腦即將失去的身分。任何新增它的人，訊息都會傳給一個不存在的人，而且這個名稱無法再被認領。最好先連上網路，再試一次。';
+  }
+
+  @override
   String get restoreRestoreAnyway => '仍要還原';
 
   @override
@@ -14121,6 +14888,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String restoreKryfoWillCloseNow(Object haloId) {
     return 'Kryfo 現在會關閉。點一下圖示，以 $haloId 重新開啟。';
+  }
+
+  @override
+  String restoreKryfoWillCloseNowDesk(Object haloId) {
+    return 'Kryfo 現在會關閉。再次啟動它，以 $haloId 開啟。';
   }
 
   @override
@@ -14193,6 +14965,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get restoreAnythingSentToYou => '舊手機關機時傳給你的任何內容（傳送後十四天內）。';
 
   @override
+  String get restoreAnythingSentToYouDesk => '舊裝置關機時傳給你的任何內容（傳送後十四天內）。';
+
+  @override
   String get restoreYourSupporterBadgeIf => '你的支持者徽章（如果有的話）。';
 
   @override
@@ -14203,8 +14978,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '你一從這裡傳送任何東西，舊手機就會停止接收。你從這台裝置傳出的第一則訊息，就是舊手機最後能跟上的一則；之後送到舊手機的任何內容，在那裡都無法讀取，也不會在這裡等你。';
 
   @override
+  String get restoreTheOldPhoneStopsDesk =>
+      '你一從這裡傳送任何東西，舊裝置就會停止接收。你從這台電腦傳出的第一則訊息，就是舊裝置最後能跟上的一則；之後送到舊裝置的任何內容，在那裡都無法讀取，也不會在這裡等你。';
+
+  @override
   String get restoreIfThePhoneThis =>
       '如果這個檔案原本所在的手機還在使用，請先在那支手機上停止使用 Kryfo，再繼續。兩支手機共用一個 Kryfo，兩邊都會遺失訊息。';
+
+  @override
+  String get restoreIfThePhoneThisDesk =>
+      '如果這個檔案原本所在的裝置還在使用，請先在那台裝置上停止使用 Kryfo，再繼續。兩台裝置共用一個 Kryfo，兩邊都會遺失訊息。';
 
   @override
   String get restoreNotificationsNeedSettingUp => '需要在這台裝置上重新設定通知。';
@@ -14224,6 +15007,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get restoreABackupBringsBack =>
       '備份會找回你的身分和聯絡人，以及建立檔案時手機上的訊息。之後說的任何話都不在裡面。';
+
+  @override
+  String get restoreABackupBringsBackDesk =>
+      '備份會找回你的身分和聯絡人，以及建立檔案時裝置上的訊息。之後說的任何話都不在裡面。';
 
   @override
   String get restoreTheFile => '檔案';
@@ -14291,6 +15078,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get roomCreateARoomThatEnds =>
       '一個會結束的聊天室。每個人都用專為它產生的金鑰加入，結束時，任何手機上都不會留下任何東西。';
+
+  @override
+  String get roomCreateARoomThatEndsDesk =>
+      '一個會結束的聊天室。每個人都用專為它產生的金鑰加入，結束時，任何裝置上都不會留下任何東西。';
 
   @override
   String get roomCreateRoomName => '聊天室名稱';
@@ -14384,6 +15175,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get savedChatGone => '那個聊天已不在這支手機上';
 
   @override
+  String get savedChatGoneDesk => '那個聊天已不在這台電腦上';
+
+  @override
   String get savedLongPressAnyMessage => '長按任何訊息，再點「儲存」，就能收藏在這裡。';
 
   @override
@@ -14414,6 +15208,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get seenHonestAboutTheLast =>
       '最後幾列正是應用程式鎖、抹除 PIN 和加密儲存要應對的；如果有人拿著你已解鎖的手機，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
+
+  @override
+  String get seenHonestAboutTheLastDesk =>
+      '最後幾列正是應用程式鎖、抹除 PIN 和加密儲存要應對的；如果有人坐在你已解鎖的電腦前，沒有任何工具救得了你。完整的威脅模型在程式碼庫的 THREAT_MODEL.md 裡，依據 LINDDUN 撰寫。程式碼是公開的，你可以自己查證這些。';
 
   @override
   String get seenHidden => '隱藏';
@@ -14468,6 +15266,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '在你的手機上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的訊息請求，從不讀取聯絡人或群組傳給你的內容。';
 
   @override
+  String get seenScamShieldRequestsOnlyDesk =>
+      '在你的電腦上執行，使用應用程式內建的規則。不連網路，也不下載任何清單。它只會讀取陌生人的訊息請求，從不讀取聯絡人或群組傳給你的內容。';
+
+  @override
   String get seenBurnerRooms => '臨時聊天室';
 
   @override
@@ -14488,11 +15290,22 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '預覽由傳送者經由 Tor 擷取，並包在加密訊息中傳送。接收的手機不會發出任何請求。網站只會知道有個使用 Tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
 
   @override
+  String get seenAPreviewIsFetchedDesk =>
+      '預覽由傳送者經由 Tor 擷取，並包在加密訊息中傳送。接收的裝置不會發出任何請求。網站只會知道有個使用 Tor 的人要求了一個頁面，除此之外一無所知。永遠不會載入任何圖片，陌生人傳來的連結也只會顯示為純文字。';
+
+  @override
   String get seenASeizedUnlockedPhone => '被扣押的已解鎖手機';
+
+  @override
+  String get seenASeizedUnlockedPhoneDesk => '被扣押的已解鎖電腦';
 
   @override
   String get seenIfSomeoneHoldsYour =>
       '如果有人拿著你已解鎖的手機，他們就能讀你的訊息。應用程式鎖、抹除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
+
+  @override
+  String get seenIfSomeoneHoldsYourDesk =>
+      '如果有人坐在你已解鎖的電腦前，他們就能讀你的訊息。應用程式鎖、抹除 PIN 和加密儲存能在那之前幫上忙，在那之後就不行了。';
 
   @override
   String get seenTheCryptoItself => '加密技術本身';
@@ -14510,6 +15323,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get settingsIdentityMessagesContactsAnd =>
       '這支手機上的身分、訊息、聯絡人和設定。除非你有備份，否則會永久消失。';
+
+  @override
+  String get settingsIdentityMessagesContactsAndDesk =>
+      '這台電腦上的身分、訊息、聯絡人和設定。除非你有備份，否則會永久消失。';
 
   @override
   String get commonContinue => '繼續';
@@ -14588,6 +15405,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsScamShieldHint => '只在你的手機上檢查，不會有任何東西離開手機';
+
+  @override
+  String get settingsScamShieldHintDesk => '只在你的電腦上檢查，不會有任何東西離開電腦';
 
   @override
   String get typingNow => '正在輸入';
@@ -14732,6 +15552,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsWipeKryfoFromThis => '從這支手機抹除 Kryfo';
 
   @override
+  String get settingsWipeKryfoFromThisDesk => '從這台電腦抹除 Kryfo';
+
+  @override
   String get toolsMoreTools => '更多工具';
 
   @override
@@ -14787,6 +15610,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get transportNothingHereLeavesThe =>
       '這裡的任何內容都不會離開手機。這就是引擎用來決定下一步的同一份狀態。';
+
+  @override
+  String get transportNothingHereLeavesTheDesk =>
+      '這裡的任何內容都不會離開電腦。這就是引擎用來決定下一步的同一份狀態。';
 
   @override
   String get transportStayingAlive => '保持運作';
@@ -14869,6 +15696,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get transportWithNoContactsThe =>
       '沒有聯絡人時，應用程式不會訂閱任何中繼位址，所以任何訊息都無法送達你。掃描某人的 QR 碼就能解決。';
+
+  @override
+  String get transportWithNoContactsTheDesk =>
+      '沒有聯絡人時，應用程式不會訂閱任何中繼位址，所以任何訊息都無法送達你。新增一個人就能解決。';
 
   @override
   String get transportSendAnythingWaitingNow => '立即傳送所有等待中的內容';
@@ -15192,6 +16023,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get whyKryfoNoAccountNoPhone =>
       '沒有帳號，沒有手機號碼，也沒有儲存你聊天內容的中央伺服器。聊天內容存在這支手機上，並以加密方式存放。';
+
+  @override
+  String get whyKryfoNoAccountNoPhoneDesk =>
+      '沒有帳號，沒有手機號碼，也沒有儲存你聊天內容的中央伺服器。聊天內容存在這台電腦上，並以加密方式存放。';
 
   @override
   String get whyKryfoNothingLeaks => '什麼都不外洩';
@@ -15682,6 +16517,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bootFailedKeysDidNotAnswer => '手機的金鑰儲存區沒有回應。關閉並重新開啟 Kryfo 通常可以解決。';
 
   @override
+  String get bootFailedKeysDidNotAnswerDesk =>
+      '這台電腦的金鑰儲存區沒有回應。關閉並重新開啟 Kryfo 通常可以解決。';
+
+  @override
   String get bootFailedCloseAndReopen => '關閉並重新開啟 Kryfo';
 
   @override
@@ -15701,10 +16540,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '這會清除 Kryfo 在這支手機上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
 
   @override
+  String get bootFailedStartFreshLineDesk =>
+      '這會清除 Kryfo 在這台電腦上的一切：聊天、聯絡人、媒體、隱藏的聊天和你的三個詞。存在別處的備份檔案不受影響。';
+
+  @override
   String get bootFailedStartFreshNext => '繼續';
 
   @override
   String get bootFailedStartFreshSure => '清除這支手機上的一切？';
+
+  @override
+  String get bootFailedStartFreshSureDesk => '清除這台電腦上的一切？';
 
   @override
   String get bootFailedStartFreshSureLine => '此操作無法復原。Kryfo 會關閉，再次開啟時就像剛安裝。';
@@ -15925,13 +16771,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pairCodePanelYourInviteIsNot => '你的邀請還沒準備好';
 
   @override
-  String get pairCodePanelReadSixDigitsOut => '大聲唸出六位數字，對方就能新增你。不需要交換其他任何東西。';
-
-  @override
   String get pairCodePanelWorking => '處理中';
-
-  @override
-  String get pairCodePanelOrMakeASix => '或產生一組六位數的配對碼唸給對方';
 
   @override
   String get pairCodePanelBurned => '這個碼已經焚毀。對方準備好時再產生一個新的。';
@@ -15946,16 +16786,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get pairCodePanelTheyTapAddChoose => '對方點「新增」，選擇「配對碼」，然後輸入這些數字。';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      '對方開啟 Kryfo，點「新增」，選擇「配對碼」，再輸入這六位數字。下一個人請再產生一組新的。';
-
-  @override
-  String get pairCodePanelYourWords => '你的三個詞';
-
-  @override
-  String get pairCodePanelAcceptOnce => '對方加入你之後，你會收到請求。等對方說四組數字都一致，再接受。';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -16034,6 +16864,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get torBootSplashMadeOnThisPhone => '在這支手機上產生。不會傳送任何東西到任何地方。';
+
+  @override
+  String get torBootSplashMadeOnThisPhoneDesk => '在這台電腦上產生。不會傳送任何東西到任何地方。';
 
   @override
   String get torBootSplashFirstLaunchTakesA => '首次啟動需要一點時間 · 只在開啟時';
@@ -16338,6 +17171,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesBuiltIn => '內建';
 
   @override
+  String get bridgesPasteOrScanALineDesk => '貼上你信任的人給你的橋接設定。';
+
+  @override
   String get bridgesDetails => '詳情';
 
   @override
@@ -16357,6 +17193,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesThisNetworkWantsA => '這個網路需要先登入。登入後，Kryfo 就會連線。';
+
+  @override
+  String get bridgesThisNetworkWantsADesk =>
+      '這個網路需要先登入。請在瀏覽器裡登入，或檢查電腦的網路連線。登入後，Kryfo 就會連線。';
 
   @override
   String get bridgesWaitingForWifiSignIn => '等待 Wi-Fi 登入';
@@ -16500,6 +17340,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesSavedLines => '已儲存的設定';
 
   @override
+  String get bridgesPasteTheLineTheyDesk => '貼上對方傳給你的設定。橋接設定請向你認識的人拿。';
+
+  @override
   String get bridgesFromAFriendLower => '來自朋友';
 
   @override
@@ -16599,8 +17442,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get languageMatchPhone => '跟隨手機';
 
   @override
+  String get languageMatchPhoneDesk => '跟隨系統';
+
+  @override
   String languageMatchPhoneValue(Object language) {
     return '跟隨手機（$language）';
+  }
+
+  @override
+  String languageMatchPhoneValueDesk(Object language) {
+    return '跟隨系統（$language）';
   }
 
   @override
@@ -16635,6 +17486,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get videoViewerCannotPlay => '這支手機無法在這裡播放這部影片。';
+
+  @override
+  String get videoViewerCannotPlayDesk => '這台電腦無法在這裡播放這部影片。';
 
   @override
   String get videoViewerOpenElsewhere => '用其他應用程式開啟';
@@ -16822,6 +17676,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get searchIntroLine => '名字、詞語、照片、檔案和連結。搜尋只在這支手機上進行，不會把任何東西傳到別處。';
 
   @override
+  String get searchIntroLineDesk => '名字、詞語、照片、檔案和連結。搜尋只在這台電腦上進行，不會把任何東西傳到別處。';
+
+  @override
   String get searchNothing => '找不到結果';
 
   @override
@@ -16900,6 +17757,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleCheckClock => '請檢查手機的日期和時間，然後再試一次。';
 
   @override
+  String get handleCheckClockDesk => '請檢查電腦的日期和時間，然後再試一次。';
+
+  @override
   String get searchPeople => '人';
 
   @override
@@ -16973,7 +17833,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get pinsAdvancedLine => '用於有人強迫你解鎖手機時。';
 
   @override
+  String get pinsAdvancedLineDesk => '用於有人強迫你解鎖電腦時。';
+
+  @override
   String get pinsWipeLine => '在鎖定畫面輸入它，會從這支手機上抹除 Kryfo。';
+
+  @override
+  String get pinsWipeLineDesk => '在鎖定畫面輸入它，會從這台電腦上抹除 Kryfo。';
 
   @override
   String get pinsDecoyPin => '偽裝 PIN';
@@ -16995,6 +17861,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何拿著你手機的人，都能以你的身分開啟 Kryfo。';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      '所有 PIN 都會被移除，偽裝 PIN 和它的 Kryfo 以及所有隱藏聊天也一樣。任何用你電腦的人，都能以你的身分開啟 Kryfo。';
+
+  @override
   String get pinsHowThisWorks => '運作方式';
 
   @override
@@ -17009,6 +17879,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get flowWipe1 =>
       '在鎖定畫面代替你的 PIN 碼輸入，它會從這支手機上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
+
+  @override
+  String get flowWipe1Desk =>
+      '在鎖定畫面代替你的 PIN 碼輸入，它會從這台電腦上抹除 Kryfo 並關閉應用程式。在旁人看來，應用程式只是停止了。';
 
   @override
   String get flowWipe2 => '所有聊天和你的身分都會一起抹除，有偽裝的話也一樣。';
@@ -17039,6 +17913,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowDecoyShade => '已經在通知欄裡的通知被看到了。但偽裝開啟期間，不會出現新的通知。';
 
   @override
+  String get flowDecoyShadeDesk => '已經在螢幕上的通知被看到了。但偽裝開啟期間，不會出現新的通知。';
+
+  @override
   String get flowDecoyChoose => '選擇一組偽裝 PIN';
 
   @override
@@ -17050,6 +17927,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get flowLaw => '在有些國家，拒絕解鎖手機或向官方隱藏資料本身就是違法的。出門前先了解當地的法律。';
+
+  @override
+  String get flowLawDesk => '在有些國家，拒絕解鎖裝置或向官方隱藏資料本身就是違法的。出門前先了解當地的法律。';
 
   @override
   String get howWipe =>
@@ -17107,6 +17987,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get flowVaultReplace => '這會取代這支手機上已有的任何隱藏聊天。';
+
+  @override
+  String get flowVaultReplaceDesk => '這會取代這台電腦上已有的任何隱藏聊天。';
 
   @override
   String get flowVaultChoose => '選擇一組隱藏聊天 PIN';
@@ -17178,6 +18061,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get howVault =>
       '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼和指紋開啟的則沒有。重新設定隱藏聊天，會取代這支手機上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
+
+  @override
+  String get howVaultDesk =>
+      '隱藏聊天 PIN 開啟的 Kryfo 帶著隱藏聊天，你的 PIN 碼開啟的則沒有。重新設定隱藏聊天，會取代這台電腦上已有的。忘了隱藏聊天 PIN，它們就永遠沒了。';
 
   @override
   String get chatHide => '隱藏此聊天';
@@ -17303,7 +18190,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devWhoAnon => '匿名傳送時，Kryfo 會專門為這個聊天產生新的名字和金鑰。它們只留在這支手機上，絕不會在別處使用。';
 
   @override
+  String get devWhoAnonDesk =>
+      '匿名傳送時，Kryfo 會專門為這個聊天產生新的名字和金鑰。它們只留在這台電腦上，絕不會在別處使用。';
+
+  @override
   String get devWhoNothingYet => '在你傳出第一則訊息之前，什麼都不會離開你的手機。';
+
+  @override
+  String get devWhoNothingYetDesk => '在你傳出第一則訊息之前，什麼都不會離開你的電腦。';
 
   @override
   String get devWhoChoiceStays => '你的選擇會一直跟著這個聊天。';
@@ -17328,6 +18222,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devNamelessLine => '為這個聊天產生的名字只留在產生它的手機上，所以這裡只能閱讀。';
+
+  @override
+  String get devNamelessLineDesk => '為這個聊天產生的名字只留在產生它的裝置上，所以這裡只能閱讀。';
 
   @override
   String get devStartNewLine => '這裡的每則訊息都會刪除，並開啟一個新的聊天。';
@@ -17359,6 +18256,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get nameTakenTombLine =>
       '你曾因為對方不是本人，從這支手機上移除了用這三個詞的人。如果這個連結來自你認識的人，就使用這個連結，然後和對方核對安全碼。';
+
+  @override
+  String get nameTakenTombLineDesk =>
+      '你曾因為對方不是本人，從這台電腦上移除了用這三個詞的人。如果這個連結來自你認識的人，就使用這個連結，然後和對方核對安全碼。';
 
   @override
   String get nameTakenUse => '使用這個連結';
@@ -17406,6 +18307,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '聊天及其中的訊息和檔案都會從這支手機上消失。只有你自己新增的連結或碼才能再用這三個詞。請和你新增的人核對安全碼。';
 
   @override
+  String get notThemSheetLineDesk =>
+      '聊天及其中的訊息和檔案都會從這台電腦上消失。只有你自己新增的連結或碼才能再用這三個詞。請和你新增的人核對安全碼。';
+
+  @override
   String get notThemRemove => '刪除並封鎖';
 
   @override
@@ -17413,6 +18318,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupAdminGoneLine => '這個群組的管理員已從這支手機上移除。群組的變更不會再送達給你。';
+
+  @override
+  String get groupAdminGoneLineDesk => '這個群組的管理員已從這台電腦上移除。群組的變更不會再送達給你。';
 
   @override
   String get blockedKey => '已封鎖的金鑰';
@@ -17463,6 +18371,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gifOptInWhereToTurnOff => '設定、隱私、GIF 搜尋。手機裡的 GIF 不開它也一直能用。';
 
   @override
+  String get gifOptInWhereToTurnOffDesk => '設定、隱私、GIF 搜尋。電腦裡的 GIF 不開它也一直能用。';
+
+  @override
   String get gifTurnOn => '開啟 GIF 搜尋';
 
   @override
@@ -17488,10 +18399,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gifSavedOnPhone => '手機上儲存的 GIF 在*這支手機上*分頁裡。';
 
   @override
+  String get gifSavedOnPhoneDesk => '電腦上儲存的 GIF 在*這台電腦上*分頁裡。';
+
+  @override
   String get gifTab => 'GIF';
 
   @override
   String get gifPhoneTab => '這支手機上';
+
+  @override
+  String get gifPhoneTabDesk => '這台電腦上';
 
   @override
   String get gifSearchHint => '搜尋 GIF';
@@ -17545,6 +18462,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get gifPhoneLine => '儲存在這支手機上的 GIF。不會連網。';
 
   @override
+  String get gifPhoneLineDesk => '儲存在這台電腦上的 GIF。不會連網。';
+
+  @override
   String get gifPhoneChoose => '選擇 GIF';
 
   @override
@@ -17594,7 +18514,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatBlockScreenshots => '禁止截圖';
 
   @override
-  String get chatShotsWhenTheyUpdate => '對方更新後即可使用';
+  String get chatShotsWhenTheyUpdate => '對方在手機上使用最新版 Kryfo 後即可使用';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => '可在 Android 版 Kryfo 中使用';
 
   @override
   String get chatShotsBothPhones =>
@@ -17643,6 +18566,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatShotsYouTurnedOff => '你關閉了禁止截圖';
 
   @override
+  String get chatNowPostQuantum => '此聊天中的訊息現已使用後量子加密';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name 開啟了禁止截圖。複製、轉傳和儲存彼此的訊息也已關閉。';
   }
@@ -17657,7 +18583,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 在這個聊天室的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存別人的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
+  String get roomShotsBlockedDesk =>
+      '此聊天室中不能複製、轉傳或儲存彼此的訊息。Android 版 Kryfo 還會禁止截圖和螢幕錄影。';
+
+  @override
   String get roomShotsAlwaysOn => '聊天室裡一律開啟，每支手機都一樣';
+
+  @override
+  String get roomShotsAlwaysOnDesk => '聊天室裡一律開啟，在 Android 版 Kryfo 中';
 
   @override
   String get settingsPerChat => '依聊天設定';
@@ -17718,6 +18651,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceNoRoom => '手機可用空間不足。請清出一些空間後再試。';
+
+  @override
+  String get voiceNoRoomDesk => '電腦可用空間不足。請清出一些空間後再試。';
 
   @override
   String get voiceNoRoomNotSent => '空間不足，無法為這則語音變聲，所以沒有送出';
@@ -17922,6 +18858,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupInfoEndGroupLine => '將為所有人刪除：訊息和媒體會從每位已更新成員的手機上移除。';
 
   @override
+  String get groupInfoEndGroupLineDesk => '將為所有人刪除：訊息和媒體會從每位已更新成員的裝置上移除。';
+
+  @override
   String get groupInfoDeleteGroup => '刪除群組';
 
   @override
@@ -17935,6 +18874,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupInfoEndGroupDetail => 'Kryfo 會從每位已更新的成員手機上移除它。';
+
+  @override
+  String get groupInfoEndGroupDetailDesk => 'Kryfo 會從每位已更新的成員裝置上移除它。';
 
   @override
   String get translateAction => '翻譯';
@@ -17951,13 +18893,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get translateBarMore => '翻譯選項';
 
   @override
-  String translateBarAlways(Object language) {
-    return '總是翻譯$language';
-  }
-
-  @override
   String translateBarNever(Object language) {
-    return '不再翻譯$language';
+    return '不再為$language提供翻譯';
   }
 
   @override
@@ -17983,12 +18920,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String translatePackTitleDesk(Object language) {
+    return '在這台電腦上翻譯$language';
+  }
+
+  @override
   String translatePackLine(Object language, Object size) {
     return '訊息在這支手機上翻譯，從不離開手機。這需要$language語言包，約 $size，透過 Tor 下載一次。';
   }
 
   @override
+  String translatePackLineDesk(Object language, Object size) {
+    return '訊息在這台電腦上翻譯，從不離開電腦。這需要$language語言包，約 $size，透過 Tor 下載一次。';
+  }
+
+  @override
   String get translatePackNoLib => '翻譯在這支手機上無法使用。';
+
+  @override
+  String get translatePackNoLibDesk => '翻譯在這台電腦上無法使用。';
 
   @override
   String translateDownload(Object size) {
@@ -18015,7 +18965,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String translateInstalledDesk(Object size) {
+    return '已在這台電腦上 · $size';
+  }
+
+  @override
   String get translateNeedsWifi => '「僅限 Wi-Fi」已開啟，而這支手機沒有連上 Wi-Fi。';
+
+  @override
+  String get translateNeedsWifiDesk => '「僅限 Wi-Fi」已開啟，而這台電腦沒有連上 Wi-Fi。';
 
   @override
   String get translateFailNoTor => 'Tor 還沒有連線。語言包只透過 Tor 下載，請在連線後再試一次。';
@@ -18030,6 +18988,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get translateFailNoEngine => '這支手機無法下載語言包。';
 
   @override
+  String get translateFailNoEngineDesk => '這台電腦無法下載語言包。';
+
+  @override
   String translatePaused(Object size) {
     return '已暫停 · 已下載 $size';
   }
@@ -18042,6 +19003,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateSettingsHint => '在這支手機上，從不經過伺服器';
+
+  @override
+  String get translateSettingsHintDesk => '在這台電腦上，從不經過伺服器';
 
   @override
   String get translatePacksSection => '語言包';
@@ -18104,10 +19068,43 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '翻譯在這支手機上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。';
 
   @override
+  String get translatePrivacyNoteDesk =>
+      '翻譯在這台電腦上完成。任何訊息都不會被傳送到別處翻譯。下載語言包會讓伺服器知道是哪個語言包。下載經由 Tor，所以伺服器不知道是誰要求的。';
+
+  @override
   String get translateAutoInChat => '自動翻譯';
 
   @override
   String get translateAutoInChatHint => '其他語言的訊息會顯示譯文。點一下即可查看原文。';
+
+  @override
+  String get translateAlwaysChat => '總是翻譯此聊天';
+
+  @override
+  String translateNeverDone(Object language) {
+    return '$language訊息保持原樣';
+  }
+
+  @override
+  String get translateUndo => '復原';
+
+  @override
+  String get translateNeverSection => '不提供翻譯的語言';
+
+  @override
+  String get translateOfferAgain => '重新提供';
+
+  @override
+  String get translateOnHint => '在其他語言的訊息下方提供';
+
+  @override
+  String get translatePrivacyKept => '譯文與所屬聊天一起加密保存在這支手機上，並隨聊天一起刪除。';
+
+  @override
+  String get translatePrivacyKeptDesk => '譯文與所屬聊天一起加密保存在這台電腦上，並隨聊天一起刪除。';
+
+  @override
+  String get translateOffDeletes => '關閉後會刪除已儲存的譯文。';
 
   @override
   String get bridgesNoneUntilOnion => '開啟 Onion 前不使用';
@@ -18353,6 +19350,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notificationsLead => '新訊息如何送達這支手機、提示音如何、顯示什麼。你可以隨時更改。';
 
   @override
+  String get notificationsLeadDesk => '新訊息如何送達這台電腦、提示音如何、顯示什麼。你可以隨時更改。';
+
+  @override
   String get notificationsHowTheyReachYou => '訊息如何送達';
 
   @override
@@ -18485,6 +19485,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get flowVaultPassLine => '至少 12 個字元。手機鍵盤看得到你輸入的內容，所以請使用不會學習或同步字詞的鍵盤。';
 
   @override
+  String get flowVaultPassLineDesk => '至少 12 個字元。請使用你在別處都沒用過的。';
+
+  @override
   String get flowVaultPassAgain => '再輸入一次同樣的密碼短語';
 
   @override
@@ -18529,19 +19532,29 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '在這個群組的每支手機上禁止截圖和螢幕錄影，也禁止複製、轉傳或儲存彼此的訊息。它擋不住獲准讀取螢幕的應用程式，或經過改動來繞過它的手機和應用程式。';
 
   @override
-  String get groupShotsStartsWhenAll => '等這裡的所有人更新 Kryfo';
+  String get groupShotsBlocksAllDesk =>
+      '在這裡關閉複製、轉傳和儲存彼此的訊息。Android 版 Kryfo 還會禁止截圖和螢幕錄影。';
+
+  @override
+  String get groupShotsStartsWhenAll => '正在等待這裡的所有人都能在自己的裝置上禁止截圖';
 
   @override
   String get groupShotsOnForAll => '對這裡的所有人開啟';
 
   @override
+  String get groupShotsOnForAllDesk => '在 Android 版 Kryfo 中開啟';
+
+  @override
   String get groupShotsOffAdminOnly => '已關閉。只有管理員能變更';
 
   @override
-  String get groupShotsWaitAdminOnly => '等這裡的所有人更新 Kryfo。只有管理員能變更';
+  String get groupShotsWaitAdminOnly => '正在等待這裡的所有人都能在自己的裝置上禁止截圖。只有管理員能變更';
 
   @override
   String get groupShotsOnAdminOnly => '對這裡的所有人開啟。只有管理員能變更';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk => '在 Android 版 Kryfo 中開啟。只有管理員能變更';
 
   @override
   String groupShotsWaitingFor(int count) {
@@ -18558,31 +19571,35 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get groupShotsWaitingTitle => '還沒更新的人';
+  String get groupShotsWaitingTitle => '尚未涵蓋';
 
   @override
-  String get groupShotsWaitingHint => '這些人更新 Kryfo 後，禁止截圖就對所有人生效。點一個人可以把他移出群組。';
+  String get groupShotsWaitingHint => '這些人的裝置能禁止截圖後，禁止截圖就涵蓋所有人。點按某人可將其移出群組。';
 
   @override
-  String get groupShotsNeedsUpdate => '需要更新 Kryfo，或之後一直沒上線';
+  String get groupShotsNeedsUpdate => '其裝置暫時無法禁止截圖，或之後一直未上線';
 
   @override
   String get groupShotsBlockedByYou => '已被你封鎖';
 
   @override
   String get groupShotsYouTurnedOnWait =>
-      '你開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+      '你開啟了禁止截圖。等這裡的所有人都能在自己的裝置上禁止截圖後，它會對所有人生效。';
 
   @override
   String groupShotsTheyTurnedOnWait(String name) {
-    return '$name 開啟了禁止截圖。等這裡的所有人都更新 Kryfo 後，它會對所有人生效。';
+    return '$name 開啟了禁止截圖。等這裡的所有人都能在自己的裝置上禁止截圖後，它會對所有人生效。';
   }
 
   @override
   String get groupShotsStarted => '禁止截圖已對這裡的所有人開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
 
   @override
-  String get groupShotsPaused => '這裡有人還不能禁止截圖。他更新 Kryfo 後，會再次對所有人生效。';
+  String get groupShotsStartedDesk =>
+      '禁止截圖已在 Android 版 Kryfo 中開啟。複製、轉傳和儲存彼此的訊息也已關閉。';
+
+  @override
+  String get groupShotsPaused => '這裡有人還不能在其裝置上禁止截圖。等其可以後，會再次對所有人生效。';
 
   @override
   String get groupShotsCantYet => '還不能禁止截圖';
@@ -18591,13 +19608,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupShotsAddTitle => '仍要新增嗎？';
 
   @override
-  String get groupShotsAddPauses => '在他更新 Kryfo 之前，禁止截圖不會對這裡的所有人生效。';
+  String get groupShotsAddPauses => '在這些人能在自己的裝置上禁止截圖之前，禁止截圖不會涵蓋這裡的所有人。';
 
   @override
   String get groupShotsLeaveStays => '禁止截圖會維持現狀。';
 
   @override
   String get groupShotsBlockedHere => 'Kryfo 已在此群組中禁止截圖';
+
+  @override
+  String get groupShotsBlockedHereDesk => '此群組中不能複製、轉傳或儲存';
 
   @override
   String get groupShotsMenuNote => '此群組中不能複製、轉傳或儲存別人的訊息';
@@ -18830,6 +19850,37 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopTrayTip => 'Kryfo 正在執行並接收訊息';
 
   @override
+  String get desktopTrayLockedTip => '打開 Kryfo 即可開始接收訊息';
+
+  @override
+  String get desktopRunSection => '在這台電腦上';
+
+  @override
+  String get desktopTrayRow => '在系統匣中保持執行';
+
+  @override
+  String get desktopTrayHint => '關閉視窗後，Kryfo 留在系統匣中，訊息照常送達。';
+
+  @override
+  String get desktopTrayOffLine => '關閉視窗會結束 Kryfo。再次開啟時，訊息就會送達。';
+
+  @override
+  String get desktopTrayNoneLine => '這個桌面不顯示系統匣圖示，所以關閉視窗會結束 Kryfo。';
+
+  @override
+  String get desktopStartRow => '隨電腦啟動';
+
+  @override
+  String get desktopStartHint => '登入這台電腦時，Kryfo 會在系統匣中啟動。';
+
+  @override
+  String get desktopStartRefused => '這台電腦不允許 Kryfo 隨它啟動。你自己啟動時，Kryfo 照常開啟。';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows 在啟動應用程式中關閉了 Kryfo。請到設定、應用程式、啟動中開啟它。';
+
+  @override
   String get desktopNoCamera => 'Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。';
 
   @override
@@ -18850,6 +19901,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get inviteNotYet => '此邀請尚未生效。請檢查手機上的時間。';
+
+  @override
+  String get inviteNotYetDesk => '此邀請尚未生效。請檢查電腦上的時間。';
 
   @override
   String get inviteExpired => '此邀請已過期。請索取新的邀請。';
@@ -19005,8 +20059,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatAlbumItDisappearsWithNo => '這個相簿會從雙方的手機上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
+  String get chatAlbumItDisappearsWithNoDesk =>
+      '這個相簿會從雙方的裝置上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
   String get groupChatAlbumItDisappearsWithNo =>
       '這個相簿會從所有人的手機上刪除，除非已被儲存。這個動作無法復原。';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNoDesk =>
+      '這個相簿會從所有人的裝置上刪除，除非已被儲存。這個動作無法復原。';
 
   @override
   String get homeInviteSomeone => '邀請一個人';
@@ -19088,12 +20150,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get photoOnlyHere => '只在這支手機上';
 
   @override
+  String get photoOnlyHereDesk => '只在這台電腦上';
+
+  @override
   String photoForThem(Object name) {
     return '給$name的照片';
   }
 
   @override
   String get photoOnlyHereLine => '只有你看得到。只存在這支手機上。';
+
+  @override
+  String get photoOnlyHereLineDesk => '只有你看得到。只存在這台電腦上。';
 
   @override
   String photoOf(Object name) {
@@ -19191,6 +20259,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String get wideSelectChat => '選擇一個聊天';
+
+  @override
+  String get wideSelectChatLine => '從列表中選擇一個聊天，開始寫訊息。';
+
+  @override
+  String get wideListWidth => '聊天列表寬度';
 
   @override
   String transferDoneOf(String done, String total) {
@@ -19378,4 +20455,45 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopBackupHint => '如果這台電腦被重設，它能找回一切。';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name 重新設定了 Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return '$name 的手機開始了新的安全工作階段';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return '你之前驗證過 $name。在你核對安全碼或繼續聊天之前，什麼都不會送出。對方的訊息仍會收到。';
+  }
+
+  @override
+  String get chatKeepChatting => '繼續聊天';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name 需要更新 Kryfo 才能繼續聊天。';
+  }
+
+  @override
+  String get restoreOlderTitle => '部分聊天將暫停';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name 使用的是舊版 Kryfo。在對方更新前，你們的聊天會暫停。';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first 和 $second 使用的是舊版 Kryfo。在他們更新前，你和他們的聊天會暫停。';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first、$second 和另外 $count 人使用的是舊版 Kryfo。在他們更新前，你和他們的聊天會暫停。';
+  }
 }

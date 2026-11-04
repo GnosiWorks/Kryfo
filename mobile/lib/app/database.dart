@@ -149,14 +149,16 @@ class HaloDb
     final path = await container.dbPath();
     final pw = await _passphrase();
     // on desktop its files open from here on, the upgrade's own too
-    if (!_keyed) containerOpened?.call(container.id, container.suffix, pw);
+    if (!_keyed) {
+      containerOpened?.call(container.id, container.folderSuffix, pw);
+    }
     _keyed = true;
     // photo files an upgrade took in, shredded once it is written
     var adopted = const <String>[];
     _db = await openDatabase(
       path,
       password: pw,
-      version: 94,
+      version: 96,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -204,7 +206,8 @@ class HaloDb
             caps TEXT NOT NULL DEFAULT '',
             caps_at INTEGER NOT NULL DEFAULT 0,
             ident INTEGER NOT NULL DEFAULT 0,
-            ikey TEXT
+            ikey TEXT,
+            heal_last INTEGER
           )
         ''');
         await db.execute('''
@@ -336,6 +339,7 @@ class HaloDb
         await _signalTables(db);
         await identityTables(db);
         await inviteTables(db);
+        await pqRestartTables(db);
         await contactKeyIndex(db);
         await _pollTables(db);
         await searchTables(db, fresh: true);
@@ -358,6 +362,8 @@ class HaloDb
         await wallpaperTable(db);
         await draftsTable(db);
         await photoTables(db);
+        await healTables(db);
+        await deviceTables(db, addColumn);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -919,6 +925,16 @@ class HaloDb
           // (invites.dart)
           await inviteTables(db);
         }
+        if (oldV < 95) {
+          // linked devices: lists, proofs, quiet devices, the pool and
+          // what the later steps keep (devices/device_store.dart)
+          await deviceTables(db, addColumn);
+        }
+        // the pq restart of held chats, and the one-time invites an
+        // opener went to (pq_restart.dart, 3c)
+        if (oldV < 96) {
+          await pqRestartTables(db, upgrade: true);
+        }
         // profile photos (profile_photo.dart), first made at 93. every
         // step is safe twice and runs on any upgrade, last, so a file that
         // took a later number without them still gets them
@@ -944,6 +960,28 @@ class HaloDb
     } catch (e) {
       dlog('roster invite: table not made (${e.runtimeType})');
     }
+    // the heal's lines and nonces (heal.dart): no version step, so a file
+    // that took 95 or 96 first gets them all the same
+    try {
+      await healTablesAtOpen(_db!);
+    } catch (e) {
+      dlog('heal: tables not made (${e.runtimeType})');
+    }
+    // a file that took a later number without them (a build of another
+    // branch) still gets them
+    try {
+      await deviceTablesAtOpen(_db!, addColumn);
+    } catch (e) {
+      dlog('devices: tables not made (${e.runtimeType})');
+    }
+    // folders by number and files under names that say nothing, before a
+    // row is read; then the phone seals what is still plain
+    try {
+      await mediaNamesAtOpen(_db!, container, p.dirname(path));
+    } catch (e) {
+      dlog('media names: not all renamed (${e.runtimeType})');
+    }
+    containerSettled?.call(container);
     // retired while it was opening
     if (_retired) {
       await close();
@@ -2068,6 +2106,8 @@ Future<void> inviteTables(DatabaseExecutor db) async {
       hello BLOB,
       fc TEXT,
       at INTEGER NOT NULL,
+      once INTEGER NOT NULL DEFAULT 0,
+      went_at INTEGER,
       PRIMARY KEY (ident, way, peer, invite_id)
     )
   ''');
@@ -2127,6 +2167,36 @@ Future<void> contactIdentColumns(DatabaseExecutor db) async {
 Future<void> contactKeyIndex(DatabaseExecutor db) => db.execute(
   'CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_ikey ON contacts(ikey)',
 );
+
+/// the upgrade to 96: per held chat, its pq restart (pq_restart.dart):
+/// [key] the identity its session runs on, when the last KDB1 went and
+/// how many, when their first message opened on the pq state, and when
+/// the classic states went. and on an open hello row, whether its invite
+/// was one-time and when the first frame went to it (3c)
+Future<void> pqRestartTables(
+  DatabaseExecutor db, {
+  bool upgrade = false,
+}) async {
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS pq_restarts (
+      ident INTEGER NOT NULL,
+      peer TEXT NOT NULL,
+      key TEXT NOT NULL,
+      asked_at INTEGER,
+      asks INTEGER NOT NULL DEFAULT 0,
+      pq_at INTEGER,
+      dropped_at INTEGER,
+      PRIMARY KEY (ident, peer)
+    )
+  ''');
+  // a file made at 96 or later has them in its hellos already
+  if (!upgrade) return;
+  await addColumn(
+    db,
+    'ALTER TABLE hellos ADD COLUMN once INTEGER NOT NULL DEFAULT 0',
+  );
+  await addColumn(db, 'ALTER TABLE hellos ADD COLUMN went_at INTEGER');
+}
 
 /// the upgrade to 92: identities, the signal tables per identity, pairs,
 /// first-contact keys and the contacts' identity keys. the main identity

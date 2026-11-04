@@ -31,7 +31,7 @@ class _RootShellState extends State<RootShell> {
   }
 
   void _open(Widget w) {
-    Navigator.push(context, haloRoute(w));
+    deskPush(context, haloRoute(w));
   }
 
   @override
@@ -85,7 +85,11 @@ class _RootShellState extends State<RootShell> {
       onOpenChat: (id) => openChatAt(context, peer: id),
       onOpenGroup: (groupId) async {
         if (!mounted) return;
-        Navigator.push(context, haloRoute(GroupChatScreen(groupId: groupId)));
+        deskPush(
+          context,
+          haloRoute(GroupChatScreen(groupId: groupId)),
+          id: 'group:$groupId',
+        );
       },
     );
   }
@@ -99,15 +103,16 @@ Future<void> showAddContact(BuildContext context) async {
   );
   if (action == null || !context.mounted) return;
   if (action == 'mine') {
-    await Navigator.of(context).push(haloRoute(const MyKryfoScreen()));
+    await deskPush(context, haloRoute(const MyKryfoScreen()));
     return;
   }
 
   String uri;
   if (action == 'scan') {
-    final result = await Navigator.of(
+    final result = await deskPush<String>(
       context,
-    ).push<String>(haloRoute<String>(const ScanScreen()));
+      haloRoute<String>(const ScanScreen()),
+    );
     if (result == null) return;
     uri = result;
   } else {
@@ -205,39 +210,42 @@ class _AddSheetState extends State<_AddSheet>
             ),
             const SizedBox(height: 6),
             Text(
-              l10n.appScanTheirCodeOr,
+              l10n.appScanTheirCodeOrShown,
               style: HaloType.sans(size: 12.5, color: HaloColors.text2),
             ),
-            const SizedBox(height: 16),
-            _Pressable(
-              onTap: () => Navigator.pop(sheetCtx, 'scan'),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.qr_code_scanner,
-                      size: 19,
-                      color: HaloColors.onAmber,
-                    ),
-                    const SizedBox(width: 9),
-                    Text(
-                      l10n.appScanTheirCode,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w600,
+            // no camera on a computer: the field below is the way in
+            if (!onDesktop) ...[
+              const SizedBox(height: 16),
+              _Pressable(
+                onTap: () => Navigator.pop(sheetCtx, 'scan'),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.qr_code_scanner,
+                        size: 19,
                         color: HaloColors.onAmber,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 9),
+                      Text(
+                        l10n.appScanTheirCode,
+                        style: HaloType.sans(
+                          size: 14,
+                          weight: FontWeight.w600,
+                          color: HaloColors.onAmber,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
             const SizedBox(height: 14),
             AnimatedBuilder(
               animation: _shake,

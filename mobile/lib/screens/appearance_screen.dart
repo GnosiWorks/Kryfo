@@ -165,7 +165,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
             child: Text(
-              l10n.appearanceWallpaperHint,
+              l10n.appearanceWallpaperHintShown,
               style: HaloType.sans(size: 12.5, color: HaloColors.text2),
             ),
           ),

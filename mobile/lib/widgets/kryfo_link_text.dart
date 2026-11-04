@@ -225,7 +225,7 @@ Future<bool> askTakeNameSheet(
     line: chat
         ? l10n.nameTakenChatLine
         : tombed
-        ? l10n.nameTakenTombLine
+        ? l10n.nameTakenTombLineShown
         : deleted
         ? l10n.nameTakenDeletedLine
         : l10n.nameTakenLine,

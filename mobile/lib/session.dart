@@ -150,6 +150,11 @@ class Session {
   // the primary, a chat's row beside the chat
   Future<Database> settingsDb() => primary.open();
   Future<Database> chatDb(String chatId) => _ofChat(chatId).open();
+  // every container open now: the primary, and the vault while it is open
+  Future<List<Database>> openDbs() async => [
+    await primary.open(),
+    if (vault case final v? when v.isOpen) await v.open(),
+  ];
 
   HaloDb _ofPeer(String haloId) {
     final v = vault;
@@ -394,6 +399,11 @@ class Session {
   Future<String?> heldKey(String haloId) => _ofPeer(haloId).heldKey(haloId);
 
   Future<bool> keyHeld(String haloId) => _ofPeer(haloId).keyHeld(haloId);
+  Future<int?> healHold(String haloId) => _ofPeer(haloId).healHold(haloId);
+  Future<void> releaseHealHold(String haloId) =>
+      _ofPeer(haloId).releaseHealHold(haloId);
+  Future<List<({int at, int kind})>> healLines(String haloId) =>
+      _ofPeer(haloId).healLines(haloId);
 
   // everyone held in either container, for a list
   Future<Set<String>> heldPeers() async => {

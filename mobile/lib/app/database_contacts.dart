@@ -670,6 +670,26 @@ mixin _ContactRows {
   Future<bool> keyHeld(String haloId) async =>
       keyHeldIn(await open(), haloId, identity: _keySource);
 
+  /// the heal line that holds [haloId] (kHealLineRestored or Repair), null
+  /// when no heal holds them, or when their key moved too: the key's card
+  /// says what is true then, and its ways out come first
+  Future<int?> healHold(String haloId) async {
+    if (!kHealHold) return null;
+    final db = await open();
+    if (await keyHeldIn(db, haloId, identity: _keySource, heal: false)) {
+      return null;
+    }
+    return healHoldOf(db, haloId);
+  }
+
+  /// the person looked: [haloId] goes on, verified as before
+  Future<void> releaseHealHold(String haloId) async =>
+      dropHealHold(await open(), haloId);
+
+  /// where heals rebuilt [haloId]'s session, oldest first
+  Future<List<({int at, int kind})>> healLines(String haloId) async =>
+      healLinesOf(await open(), haloId);
+
   Future<void> acceptNewKey(String haloId) async {
     final db = await open();
     await _inLane(haloId, () => acceptNewKeyIn(db, haloId));
@@ -769,16 +789,15 @@ mixin _ContactRows {
     return (await requestsInbox()).length;
   }
 
-  // someone who asked, or asked and was let go: adding them by their card
-  // is the accept they were waiting for
   /// [onion] for a contact accepted here who has none yet; a held one
   /// stays
   Future<void> fillOnion(String haloId, String onion) async {
     final db = await open();
+    // contacts.onion is NOT NULL: none is ''
     await db.update(
       'contacts',
       {'onion': onion},
-      where: "halo_id = ? AND accepted = 1 AND (onion IS NULL OR onion = '')",
+      where: "halo_id = ? AND accepted = 1 AND onion = ''",
       whereArgs: [haloId],
     );
   }
@@ -798,6 +817,8 @@ mixin _ContactRows {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  // someone who asked, or asked and was let go: adding them by their card
+  // is the accept they were waiting for
   Future<bool> askedBefore(String haloId) async {
     final db = await open();
     final r = await db.rawQuery(
@@ -1263,8 +1284,22 @@ Future<bool> keyHeldIn(
   DatabaseExecutor db,
   String haloId, {
   Future<String?> Function(String haloId)? identity,
+  // a heal's hold counts too (Q22); false asks for a moved key alone
+  bool heal = true,
 }) async {
   if (isDevId(haloId)) return false;
+  if (await _keyMovedIn(db, haloId, identity: identity)) return true;
+  // a heal rebuilt a verified contact's session: held until the person
+  // looks, whatever key they hold
+  return heal && kHealHold && await healHoldOf(db, haloId) != null;
+}
+
+// verified under one key, holding another now
+Future<bool> _keyMovedIn(
+  DatabaseExecutor db,
+  String haloId, {
+  Future<String?> Function(String haloId)? identity,
+}) async {
   final rows = await db.query(
     'contacts',
     columns: ['verified_key', 'xpub'],

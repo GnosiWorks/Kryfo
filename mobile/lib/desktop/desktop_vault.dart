@@ -18,6 +18,7 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 
+import '../chunk_keys.dart';
 import '../engine_strings.dart' show engineTakeSecretKey, freeSecret;
 import 'desktop_posix.dart' show syncFolder;
 import 'system_seal.dart';
@@ -57,17 +58,6 @@ abstract class VaultCrypto {
 
 typedef _KeyC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>, Int32);
 typedef _Key = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>, int);
-typedef _ChunkC =
-    Int32 Function(
-      Pointer<Utf8>,
-      Uint64,
-      Uint8,
-      Pointer<Uint8>,
-      Int32,
-      Pointer<Uint8>,
-    );
-typedef _Chunk =
-    int Function(Pointer<Utf8>, int, int, Pointer<Uint8>, int, Pointer<Uint8>);
 
 Uint8List? _engineKey(String passphrase, Uint8List salt, int logN) {
   final fn = DynamicLibrary.process().lookupFunction<_KeyC, _Key>(
@@ -94,40 +84,33 @@ class EngineVaultCrypto implements VaultCrypto {
   Future<Uint8List?> keyOf(String passphrase, Uint8List salt, int logN) =>
       Isolate.run(() => _engineKey(passphrase, salt, logN));
 
-  static final _sealChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloSealChunk');
-  static final _openChunk = DynamicLibrary.process()
-      .lookupFunction<_ChunkC, _Chunk>('HaloOpenChunk');
+  static final _keys = ChunkKeys(DynamicLibrary.process());
 
-  // the key as the engine reads it, 64 hex in native memory zeroed after
-  Uint8List? _run(_Chunk call, Uint8List key, Uint8List data) {
+  // one seal or open: the key crosses as bytes, held by the engine for
+  // this call alone
+  Uint8List? _run(ChunkCall call, Uint8List key, Uint8List data) {
     if (key.length != 32) throw ArgumentError('key length');
-    final k = calloc<Uint8>(65);
-    const digits = '0123456789abcdef';
-    for (var i = 0; i < 32; i++) {
-      k[2 * i] = digits.codeUnitAt(key[i] >> 4);
-      k[2 * i + 1] = digits.codeUnitAt(key[i] & 15);
-    }
+    final h = _keys.take(key);
+    if (h <= 0) return null;
     final cap = data.length + 16;
     final inp = calloc<Uint8>(cap), out = calloc<Uint8>(cap);
     try {
       inp.asTypedList(cap).setAll(0, data);
-      final n = call(k.cast(), 0, _type, inp, data.length, out);
+      final n = call(h, 0, _type, inp, data.length, out);
       if (n < 0 || n > cap) return null;
       return Uint8List.fromList(out.asTypedList(n));
     } finally {
+      _keys.drop(h);
       inp.asTypedList(cap).fillRange(0, cap, 0);
       out.asTypedList(cap).fillRange(0, cap, 0);
       calloc.free(inp);
       calloc.free(out);
-      k.asTypedList(65).fillRange(0, 65, 0);
-      calloc.free(k);
     }
   }
 
   @override
   Uint8List seal(Uint8List key, Uint8List plain) {
-    final s = _run(_sealChunk, key, plain);
+    final s = _run(_keys.seal, key, plain);
     if (s == null || s.length != plain.length + 16) {
       throw StateError('seal failed');
     }
@@ -137,7 +120,7 @@ class EngineVaultCrypto implements VaultCrypto {
   @override
   Uint8List? open(Uint8List key, Uint8List sealed) {
     if (sealed.length < 16) return null;
-    return _run(_openChunk, key, sealed);
+    return _run(_keys.open, key, sealed);
   }
 }
 

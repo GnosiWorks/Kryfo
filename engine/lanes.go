@@ -77,6 +77,10 @@ const laneMoat = "moat"
 // a room is a name that exists only inside the room.
 func roomLane(pubHex string) string { return "room:" + pubHex }
 
+// the opener addresses of an identity's device pairs (address_device.go):
+// apart from its seeded addresses, as its first-contact address is
+func opnLane(ident int) string { return "opn:" + strconv.Itoa(ident) }
+
 // a pair code's key comes from the code alone and belongs to nobody, so
 // looking one up says nothing about who looked.
 func pairLane(pk string) string { return "pair:" + pk }
