@@ -39,16 +39,27 @@ Future<void> _foldersByNumber(Database db, HaloContainer c, String docs) async {
     rawFiles(() => _merge(p.join(docs, from), p.join(docs, to)));
   }
   final have = await _columns(db);
+  // the rows that still name a folder by its old name: none once done, and
+  // then nothing is written
+  final owed = <(String, String, String, String)>[];
+  for (final (from, to) in moves) {
+    for (final (table, col) in _pathCols) {
+      if (!(have[table]?.contains(col) ?? false)) continue;
+      final r = await db.rawQuery(
+        'SELECT 1 FROM $table WHERE instr($col, ?) > 0 LIMIT 1',
+        ['/$from/'],
+      );
+      if (r.isNotEmpty) owed.add((table, col, '/$from/', '/$to/'));
+    }
+  }
+  if (owed.isEmpty) return;
   await db.transaction((t) async {
-    for (final (from, to) in moves) {
-      for (final (table, col) in _pathCols) {
-        if (!(have[table]?.contains(col) ?? false)) continue;
-        await t.execute(
-          'UPDATE $table SET $col = replace($col, ?, ?) '
-          'WHERE instr($col, ?) > 0',
-          ['/$from/', '/$to/', '/$from/'],
-        );
-      }
+    for (final (table, col, from, to) in owed) {
+      await t.execute(
+        'UPDATE $table SET $col = replace($col, ?, ?) '
+        'WHERE instr($col, ?) > 0',
+        [from, to, from],
+      );
     }
   });
 }

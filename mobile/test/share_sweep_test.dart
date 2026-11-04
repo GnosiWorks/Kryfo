@@ -144,10 +144,9 @@ void main() {
     final unlock = bodyOf(main, 'Future<void> _sessionFor(');
     expect(
       unlock,
-      contains(
-        'all: from != null && from != containerFor(r, vaultKey: vaultKey)',
-      ),
+      contains('from != null && from != containerFor(r, vaultKey: vaultKey)'),
     );
+    expect(unlock, contains('dropOpenCopies(all: switched)'));
     // a wipe shreds them with every other plaintext (wipe_order_test)
     expect(
       bodyOf(sourceOf('lib/wipe.dart'), 'Future<void> _erase('),
@@ -179,7 +178,9 @@ void main() {
     expect(out, contains('if (!backup) JobSetup.scheduleCopySweep(this)'));
     expect(
       bodyOf(act, 'private fun shareFile('),
-      contains('handOut(File(path), name, Shred.shareInto(backup, quiet))'),
+      contains(
+        'handOut(File(path), name, Shred.shareInto(backup, quiet), key)',
+      ),
     );
     final into = bodyOf(shred, 'fun shareInto(');
     expect(into, contains('backup -> BACKUP_OUT'));

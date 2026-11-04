@@ -27,6 +27,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/transfers.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -174,7 +175,8 @@ void main() {
       expect(File(path).readAsBytesSync(), [7, 7, 7]);
       // under a name of the chat's own, out of the fetch folder
       expect(path, isNot(contains('/fetch/')));
-      expect(path, endsWith('plan.pdf'));
+      // its type only: the name lives in the row
+      expect(p.basename(path), matches(RegExp(r'^in_[0-9a-f]{32}\.pdf$')));
       expect(eng.gots, [('ab' * 16, _tok)]);
       expect(await fetchOf(live.mem, 'f1'), isNull);
     },
@@ -288,7 +290,8 @@ void main() {
       final row = live.msg('w1')!;
       expect('${row['plaintext']}', contains('the plan'));
       final path = row['file_path'] as String;
-      expect(path, endsWith('plan.pdf'));
+      // its type only: the name lives in the row
+      expect(p.basename(path), matches(RegExp(r'^in_[0-9a-f]{32}\.pdf$')));
       expect(File(path).existsSync(), isFalse);
       expect((await fetchOf(live.mem, 'w1'))!.state, kFetchAsks);
       expect(fileWaitOf('w1')!.state, WaitState.asks);
