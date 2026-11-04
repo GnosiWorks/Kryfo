@@ -14,6 +14,7 @@ import 'desktop_channels.dart';
 import 'desktop_db.dart';
 import 'desktop_posix.dart' show execSelf;
 import 'desktop_save.dart';
+import 'desktop_wipe.dart';
 
 /// flutter_secure_storage's channel to libsecret
 const keyringChannel = 'plugins.it_nomads.com/flutter_secure_storage';
@@ -125,6 +126,16 @@ class DesktopHost {
   /// what the computer account kept for the vault goes after it
   Future<void> Function()? forgetKeys;
 
+  /// what holds a file open lets go of it: the databases
+  Future<void> Function()? letGo;
+
+  /// kryfo no longer starts with the computer: the run value, the
+  /// autostart file, the portal's grant
+  Future<void> Function()? startOff;
+
+  /// the engine's folder zeroed and gone, once the engine let go of it
+  void Function()? engineGone;
+
   /// what is kept and cleared as the process ends or becomes a new run
   void Function()? beforeExit;
   final _since = Stopwatch()..start();
@@ -166,7 +177,10 @@ class DesktopHost {
   }
 
   /// the panic wipe's last step, as android's clear of the app's data: the
-  /// vault is overwritten, then it and every file go, and the process ends
+  /// vault is overwritten and what the account kept for it cleared, keys
+  /// first, then the start with the computer goes, every file is let go of
+  /// and every file goes, and the process ends. a file windows still holds
+  /// goes at the next start (clearWithoutVault)
   Future<void> wipe() async {
     try {
       destroyKeys?.call();
@@ -175,7 +189,16 @@ class DesktopHost {
       await forgetKeys?.call().timeout(const Duration(seconds: 5));
     } catch (_) {}
     try {
-      Directory(dataDir).deleteSync(recursive: true);
+      await startOff?.call().timeout(const Duration(seconds: 3));
+    } catch (_) {}
+    try {
+      await letGo?.call().timeout(const Duration(seconds: 3));
+    } catch (_) {}
+    try {
+      engineGone?.call();
+    } catch (_) {}
+    try {
+      await clearDataDir(dataDir);
     } catch (_) {}
     exit(0);
   }

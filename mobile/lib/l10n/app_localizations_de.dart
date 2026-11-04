@@ -10472,6 +10472,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get desktopTrayLockedTip => 'Öffne Kryfo, um Nachrichten zu empfangen';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo läuft im Infobereich weiter. Beenden kannst du es über das Symbol im Infobereich.';
+
+  @override
   String get desktopRunSection => 'Auf diesem Computer';
 
   @override
@@ -11204,6 +11208,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Hier ablegen zum Senden';
+
+  @override
+  String get notesDropKeepsWords =>
+      'Notiz an mich behält Text. Dateien sendest du in einem Chat.';
 
   @override
   String get voiceSeeTranscription => 'Transkript anzeigen';

@@ -10527,6 +10527,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Відкрий Kryfo, щоб почати отримувати повідомлення';
 
   @override
+  String get desktopTrayStillRunning =>
+      'Kryfo і далі працює в області сповіщень. Вийти можна через його значок там.';
+
+  @override
   String get desktopRunSection => 'На цьому комп’ютері';
 
   @override
@@ -11254,6 +11258,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatDropHereToSend => 'Відпусти тут, щоб надіслати';
+
+  @override
+  String get notesDropKeepsWords =>
+      'Нотатки для себе зберігають текст. Файли надсилай у чаті.';
 
   @override
   String get voiceSeeTranscription => 'Показати текст';

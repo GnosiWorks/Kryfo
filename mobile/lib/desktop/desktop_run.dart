@@ -117,6 +117,15 @@ class DesktopRun extends ChangeNotifier implements DesktopRunView {
   @override
   bool get trayOn => _kept()['tray'] != false;
 
+  /// the first close to the tray has said the app keeps running there
+  bool get trayHinted => _kept()['hinted'] == true;
+
+  Future<void> markHinted() async {
+    try {
+      await _keep('hinted', true);
+    } catch (_) {}
+  }
+
   @override
   bool? get trayShown => _trayShown;
 
