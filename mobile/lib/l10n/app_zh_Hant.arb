@@ -2919,5 +2919,5 @@
   "savedLongPressAnyMessageDesk": "在任何訊息上按右鍵，再選「儲存」，就能收藏在這裡。",
   "chatFailedTapToRetryDesk": "失敗 · 按一下重試",
   "groupChatTapToRetryDesk": "! 按一下重試",
-  "modesFastLineDesk": "不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。"
+  "modesFastLineDesk": "不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。"
 }

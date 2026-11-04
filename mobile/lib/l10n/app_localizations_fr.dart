@@ -11194,5 +11194,5 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get modesFastLineDesk =>
-      'Sans Tor, les messages arrivent plus vite et usent moins la batterie. Nos serveurs voient votre adresse IP seulement pendant que vous êtes connecté, sans jamais l\'enregistrer ni la garder. Vos contacts ne la voient jamais.';
+      'Sans Tor, les messages arrivent plus vite et usent moins la batterie. Nos serveurs voient votre adresse IP seulement pendant que vous êtes connecté, sans jamais l\'enregistrer ni la garder. Vos contacts ne la voient jamais. Votre réseau peut voir que vous vous connectez à Kryfo.';
 }

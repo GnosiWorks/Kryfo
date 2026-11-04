@@ -11062,5 +11062,5 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modesFastLineDesk =>
-      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó.';
+      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.';
 }

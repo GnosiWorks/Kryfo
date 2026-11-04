@@ -11100,5 +11100,5 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get modesFastLineDesk =>
-      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez.';
+      'Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir.';
 }

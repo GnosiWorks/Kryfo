@@ -2919,5 +2919,5 @@
   "savedLongPressAnyMessageDesk": "Haz clic derecho en cualquier mensaje y elige guardar para tenerlo aquí.",
   "chatFailedTapToRetryDesk": "Falló · haz clic para reintentar",
   "groupChatTapToRetryDesk": "! Haz clic para reintentar",
-  "modesFastLineDesk": "Se salta Tor, así que los mensajes llegan antes y gastan menos batería. Nuestros servidores ven tu dirección IP solo mientras estás conectado, y nunca la registran ni la guardan. Tus contactos nunca la ven."
+  "modesFastLineDesk": "Se salta Tor, así que los mensajes llegan antes y gastan menos batería. Nuestros servidores ven tu dirección IP solo mientras estás conectado, y nunca la registran ni la guardan. Tus contactos nunca la ven. Tu red puede ver que te conectas a Kryfo."
 }

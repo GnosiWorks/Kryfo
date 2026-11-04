@@ -2919,5 +2919,5 @@
   "savedLongPressAnyMessageDesk": "Nhấp chuột phải vào một tin nhắn bất kỳ rồi chọn lưu để giữ nó ở đây.",
   "chatFailedTapToRetryDesk": "Thất bại · nhấp để thử lại",
   "groupChatTapToRetryDesk": "! Nhấp để thử lại",
-  "modesFastLineDesk": "Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó."
+  "modesFastLineDesk": "Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo."
 }

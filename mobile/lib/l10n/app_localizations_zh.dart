@@ -10491,7 +10491,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modesFastLineDesk =>
-      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。';
+      '不经过 Tor，消息到得更快，也更省电。我们的服务器只在你连接期间看到你的 IP 地址，从不记录或保存。你的联系人永远看不到它。你的网络能看到你在连接 Kryfo。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -20867,5 +20867,5 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modesFastLineDesk =>
-      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。';
+      '不經過 Tor，訊息到得更快，也更省電。我們的伺服器只在你連線期間看到你的 IP 位址，從不記錄或保存。你的聯絡人永遠看不到它。你的網路能看到你在連線 Kryfo。';
 }

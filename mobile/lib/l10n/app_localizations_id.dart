@@ -11077,5 +11077,5 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get modesFastLineDesk =>
-      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya.';
+      'Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo.';
 }

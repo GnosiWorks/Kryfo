@@ -2919,5 +2919,5 @@
   "savedLongPressAnyMessageDesk": "Klik kanan pesan mana pun lalu pilih simpan untuk menyimpannya di sini.",
   "chatFailedTapToRetryDesk": "Gagal · klik untuk coba lagi",
   "groupChatTapToRetryDesk": "! Klik untuk ulangi",
-  "modesFastLineDesk": "Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya."
+  "modesFastLineDesk": "Melewati Tor, jadi pesan sampai lebih cepat dan lebih hemat baterai. Server kami melihat alamat IP-mu hanya selama kamu terhubung, dan tidak pernah mencatat atau menyimpannya. Kontakmu tidak pernah melihatnya. Jaringanmu bisa melihat kamu terhubung ke Kryfo."
 }

@@ -17798,7 +17798,7 @@ abstract class AppLocalizations {
   /// screens/modes_screen.dart, on a computer
   ///
   /// In en, this message translates to:
-  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Your contacts never see it.'**
+  /// **'Skips Tor, so messages arrive quicker and use less battery. Our servers see your IP address only while you\'re connected, and never log or keep it. Your contacts never see it. Your network can see that you connect to Kryfo.'**
   String get modesFastLineDesk;
 }
 

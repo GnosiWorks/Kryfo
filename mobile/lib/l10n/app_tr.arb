@@ -2919,5 +2919,5 @@
   "savedLongPressAnyMessageDesk": "Herhangi bir mesaja sağ tıkla ve burada tutmak için kaydet'i seç.",
   "chatFailedTapToRetryDesk": "Başarısız · tekrar için tıkla",
   "groupChatTapToRetryDesk": "! Tekrar için tıkla",
-  "modesFastLineDesk": "Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez."
+  "modesFastLineDesk": "Tor’u atlar, böylece mesajlar daha hızlı ulaşır ve daha az pil harcar. Sunucularımız IP adresini yalnızca bağlıyken görür, asla kaydetmez ya da saklamaz. Kişilerin onu asla görmez. Ağın Kryfo’ya bağlandığını görebilir."
 }
