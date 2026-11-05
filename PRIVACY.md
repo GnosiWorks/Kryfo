@@ -56,7 +56,7 @@ the "Marios · built Kryfo" chat at the top of the list talks to the person who 
 
 with your three words, Marios sees them and can write back like any contact. the face you picked, your onion address and any supporter badge are not sent. "Write anonymously" makes a new name and keys for that chat alone: they stay on your phone, are never used anywhere else and are left out of backups. either way Marios sees what you write and when, and delivery receipts tell each side when a message arrived. anonymous does not hide your writing style, the details you share, or your ip in fast mode. voice notes in an anonymous chat always go through the voice disguise.
 
-deleting the chat deletes it on your phone, and it does not come back unless you open it again from settings. Marios keeps a copy of what you sent, as any person you write to does.
+deleting the chat deletes it on your phone, and it does not come back unless you open it again from settings. it also takes back what you sent from Marios's phone, the same way taking back a single message does. if his phone cannot be reached within half a minute, the app tells you how many could not be taken back. a message he already read has been read.
 
 ## notifications
 
