@@ -15,6 +15,7 @@ import '../forward.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../widgets/desk_menu.dart';
 import '../widgets/sealed_picture.dart';
+import '../widgets/photo_shape.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
@@ -27,7 +28,6 @@ import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/owned_text.dart';
-import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
@@ -42,6 +42,12 @@ import '../file_kind.dart'
         readFileFactsFresh;
 import '../file_save.dart' show saveReceivedFile;
 import '../widgets/media_bubbles.dart';
+import '../translate/chat_translation.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
+import '../translate/translate_bubble.dart';
+import '../translate/foreign.dart' show Offer;
+import '../translate/translate_menu.dart' show neverOffer;
+import '../translate/lang_names.dart' show langName;
 import '../voice/chat_transcripts.dart';
 import '../voice/ui/transcript_line.dart';
 import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
@@ -631,8 +637,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     null => null,
   };
 
-  // a note that went: its words go from memory now, a run for it stops
+  // theirs in other languages, translated on the phone
+  late final ChatTranslation? _translation = switch (translationHubIfOn()) {
+    final hub? => ChatTranslation(hub, widget.groupId),
+    null => null,
+  };
+
+  // a message that went: its translation and its note's words go from
+  // memory now, a run for it stops
   void _forgetTranscript(_GMsg m) {
+    _translation?.forget(trKeyOf(m.msgUid, m.came), m.text);
     final uid = m.msgUid;
     if (uid != null && isVoiceName(m.fileName)) _transcripts?.forget(uid);
   }
@@ -1918,6 +1932,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     child: _GroupBubble(
                       m: m,
                       transcripts: _transcripts,
+                      translation: _translation,
                       album: run,
                       showSender: showSender,
                       kept: _keeps(m),
@@ -3525,6 +3540,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final rows =
         2 +
         (words ? 2 : 0) +
+        (_trOffer(target) != null ? 3 : 0) +
         (target.filePath != null && !isVoiceName(target.fileName) ? 1 : 0) +
         (isOut ? (words ? 2 : 1) : 0);
     final rowH = 20 + math.max(17.0, mq.textScaler.scale(13.5) * 1.3);
@@ -3640,6 +3656,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             child: _GroupBubble(
                               m: target,
                               transcripts: _transcripts,
+                              translation: _translation,
                               album: album,
                               showSender: showSender,
                               faceOf: _faceOf,
@@ -3794,6 +3811,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       ? l10n.roomShotsMenuNote
       : l10n.groupShotsMenuNote;
 
+  // theirs in a language the person does not read, when translation is on
+  Offer? _trOffer(_GMsg t) {
+    final tr = _translation;
+    if (tr == null || t.direction == 'out' || t.sticker != null) return null;
+    if (t.text.isEmpty) return null;
+    return tr.offer(t.text);
+  }
+
   // what the menu can do, the phone's card and the computer's menu alike
   List<MenuAction> _menuActions(
     _GMsg target,
@@ -3807,6 +3832,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final anchor = album?.anchor ?? target;
     final saveOn = held ?? anchor;
     final shareOn = album == null ? target : held;
+    final translation = _translation;
+    final trOffer = _trOffer(target);
+    final trKey = trKeyOf(target.msgUid, target.came);
     return [
       MenuAction(
         icon: anchor.pinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -3840,6 +3868,38 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 showHaloToast(context, l10n.commonCopied);
               },
       ),
+      if (translation != null && trOffer != null) ...[
+        MenuAction(
+          icon: Icons.translate_rounded,
+          label: translation.shown(trKey, target.text)
+              ? l10n.translateShowOriginal
+              : l10n.translateAction,
+          onTap: () {
+            dismiss();
+            unawaited(askTranslate(context, translation, trKey, target.text));
+          },
+        ),
+        // the translate line's own menu, in rows of their own here
+        MenuAction(
+          icon: Icons.all_inclusive_rounded,
+          label: l10n.translateAlwaysChat,
+          checked: translation.auto == true,
+          onTap: () {
+            dismiss();
+            unawaited(
+              translation.setAuto(translation.auto != true).catchError((_) {}),
+            );
+          },
+        ),
+        MenuAction(
+          icon: Icons.do_not_disturb_on_outlined,
+          label: l10n.translateBarNever(langName(trOffer.seen)),
+          onTap: () {
+            dismiss();
+            unawaited(neverOffer(context, translation.hub, trOffer));
+          },
+        ),
+      ],
       MenuAction(
         icon: Icons.forward_rounded,
         label: l10n.groupChatForward,
@@ -4612,6 +4672,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void dispose() {
     _composerFocus.dispose();
     _transcripts?.dispose();
+    _translation?.dispose();
     _find.detach();
     _unwatchCaptures?.call();
     wallpaperRevision.removeListener(_loadWall);
@@ -5946,9 +6007,12 @@ class _GroupBubble extends StatelessWidget {
   final void Function(BuildContext, int)? onLongPressTile;
   // the group's voice note transcripts
   final ChatTranscripts? transcripts;
+  // theirs in other languages, translated on the phone
+  final ChatTranslation? translation;
   const _GroupBubble({
     required this.m,
     this.transcripts,
+    this.translation,
     this.album,
     this.onLongPressTile,
     required this.showSender,
@@ -6011,7 +6075,6 @@ class _GroupBubble extends StatelessWidget {
         !isVoiceName(m.fileName) &&
         shape == FileShape.video;
     final frameless = m.mediaPath != null || isVideo;
-    final onAmberText = isOut && m.mediaPath == null;
     final reacted = m.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
     return LeaveFold(
@@ -6463,52 +6526,54 @@ class _GroupBubble extends StatelessWidget {
                                                           ),
                                                       child: Stack(
                                                         children: [
-                                                          ConstrainedBox(
-                                                            constraints:
-                                                                const BoxConstraints(
-                                                                  maxHeight:
-                                                                      280,
-                                                                  maxWidth: 240,
-                                                                ),
-                                                            child: RememberedHeight(
-                                                              id: m.mediaPath!,
-                                                              child: HaloHero(
-                                                                tag: photoHeroTag(
-                                                                  m.mediaPath!,
-                                                                  'chat',
-                                                                ),
-                                                                child: ChatPicture(
+                                                          // the photo's own shape, its blur
+                                                          // the same, before the file decodes
+                                                          PhotoShape(
+                                                            path: m.mediaPath!,
+                                                            image: mediaImage(
+                                                              m.mediaPath!,
+                                                              decodePx(
+                                                                context,
+                                                                240,
+                                                              ),
+                                                            ),
+                                                            maxWidth: 240,
+                                                            maxHeight: 280,
+                                                            child: HaloHero(
+                                                              tag: photoHeroTag(
+                                                                m.mediaPath!,
+                                                                'chat',
+                                                              ),
+                                                              child: ChatPicture(
+                                                                path: m
+                                                                    .mediaPath!,
+                                                                child: SealedPicture(
                                                                   path: m
                                                                       .mediaPath!,
-                                                                  child: SealedPicture(
-                                                                    path: m
-                                                                        .mediaPath!,
-                                                                    shaped:
-                                                                        true,
-                                                                    decodeWidth:
-                                                                        decodePx(
-                                                                          context,
-                                                                          240,
-                                                                        ),
-                                                                    image: mediaImage(
-                                                                      m.mediaPath!,
+                                                                  shaped: false,
+                                                                  decodeWidth:
                                                                       decodePx(
                                                                         context,
                                                                         240,
                                                                       ),
+                                                                  image: mediaImage(
+                                                                    m.mediaPath!,
+                                                                    decodePx(
+                                                                      context,
+                                                                      240,
                                                                     ),
-                                                                    semanticLabel:
-                                                                        l10n.appPhoto,
-                                                                    // the file is gone:
-                                                                    // say so, not a gap
-                                                                    errorBuilder:
-                                                                        (
-                                                                          _,
-                                                                          _,
-                                                                          _,
-                                                                        ) =>
-                                                                            const _MissingPhoto(),
                                                                   ),
+                                                                  semanticLabel:
+                                                                      l10n.appPhoto,
+                                                                  // the file is gone:
+                                                                  // say so, not a gap
+                                                                  errorBuilder:
+                                                                      (
+                                                                        _,
+                                                                        _,
+                                                                        _,
+                                                                      ) =>
+                                                                          const _MissingPhoto(),
                                                                 ),
                                                               ),
                                                             ),
@@ -6550,110 +6615,24 @@ class _GroupBubble extends StatelessWidget {
                                                       : () => onLongPress!(ctx),
                                                   child: writtenStart(
                                                     m.text,
-                                                    Padding(
-                                                      padding:
-                                                          m.mediaPath != null
-                                                          ? const EdgeInsets.fromLTRB(
-                                                              4,
-                                                              6,
-                                                              4,
-                                                              0,
-                                                            )
-                                                          : EdgeInsets.zero,
-                                                      // a search marks its hits; else
-                                                      // a kryfo link is drawn as one,
-                                                      // otherwise @three-words in amber
-                                                      child: query.isNotEmpty
-                                                          ? Text.rich(
-                                                              TextSpan(
-                                                                style:
-                                                                    _bodyStyle(
-                                                                      isOut,
-                                                                    ),
-                                                                children: searchLit(
-                                                                  m.text,
-                                                                  query,
-                                                                  onAmber:
-                                                                      onAmberText,
-                                                                ),
-                                                              ),
-                                                              textDirection:
-                                                                  writtenDir(
-                                                                    m.text,
-                                                                  ),
-                                                            )
-                                                          : m.text.contains(
-                                                              'kryfo://',
-                                                            )
-                                                          ? KryfoLinkText(
-                                                              text: m.text,
-                                                              style: HaloType.sans(
-                                                                size: 14,
-                                                                color:
-                                                                    (isOut &&
-                                                                        m.mediaPath ==
-                                                                            null)
-                                                                    ? HaloColors
-                                                                          .onAmber
-                                                                    : HaloColors
-                                                                          .text,
-                                                                height: 1.35,
-                                                              ),
-                                                              onAmber:
-                                                                  isOut &&
-                                                                  m.mediaPath ==
-                                                                      null,
-                                                              linkColor:
-                                                                  (isOut &&
-                                                                      m.mediaPath ==
-                                                                          null)
-                                                                  ? HaloColors
-                                                                        .onAmber
-                                                                  : HaloColors
-                                                                        .amber,
-                                                            )
-                                                          : Text.rich(
-                                                              mentionRich(
-                                                                m.text,
-                                                                HaloType.sans(
-                                                                  size: 14,
-                                                                  // captions get more
-                                                                  // weight to read over
-                                                                  // busy images
-                                                                  weight:
-                                                                      m.mediaPath !=
-                                                                          null
-                                                                      ? FontWeight
-                                                                            .w600
-                                                                      : FontWeight
-                                                                            .w400,
-                                                                  // a photo caption sits
-                                                                  // on a transparent
-                                                                  // bubble, where onAmber
-                                                                  // is invisible
-                                                                  color:
-                                                                      (isOut &&
-                                                                          m.mediaPath ==
-                                                                              null)
-                                                                      ? HaloColors
-                                                                            .onAmber
-                                                                      : HaloColors
-                                                                            .text,
-                                                                  height: 1.35,
-                                                                ),
-                                                                accent:
-                                                                    (isOut &&
-                                                                        m.mediaPath ==
-                                                                            null)
-                                                                    ? HaloColors
-                                                                          .onAmber
-                                                                    : null,
-                                                              ),
-                                                              textDirection:
-                                                                  writtenDir(
-                                                                    m.text,
-                                                                  ),
-                                                            ),
+                                                    TranslatedBody(
+                                                      chat: translation,
+                                                      msgKey: trKeyOf(
+                                                        m.msgUid,
+                                                        m.came,
+                                                      ),
+                                                      text: m.text,
+                                                      // theirs only, and not while a search marks its hits
+                                                      enabled:
+                                                          !isOut &&
+                                                          query.isEmpty &&
+                                                          m.sticker == null,
+                                                      original: _words(
+                                                        m.text,
+                                                        isOut,
+                                                      ),
+                                                      translated: (t) =>
+                                                          _words(t, isOut),
                                                     ),
                                                   ),
                                                 ),
@@ -6969,6 +6948,68 @@ class _GroupBubble extends StatelessWidget {
   }
 
   // the words of a bubble: weightier on a photo's caption, dark on ours
+  // the words of a message, or of its translation in their place
+  Widget _words(String text, bool isOut) {
+    final onAmberText = isOut && m.mediaPath == null;
+    return Padding(
+      padding: m.mediaPath != null
+          ? const EdgeInsets.fromLTRB(4, 6, 4, 0)
+          : EdgeInsets.zero,
+      // a search marks its hits; else
+      // a kryfo link is drawn as one,
+      // otherwise @three-words in amber
+      child: query.isNotEmpty
+          ? Text.rich(
+              TextSpan(
+                style: _bodyStyle(isOut),
+                children: searchLit(text, query, onAmber: onAmberText),
+              ),
+              textDirection: writtenDir(text),
+            )
+          : text.contains('kryfo://')
+          ? KryfoLinkText(
+              text: text,
+              style: HaloType.sans(
+                size: 14,
+                color: (isOut && m.mediaPath == null)
+                    ? HaloColors.onAmber
+                    : HaloColors.text,
+                height: 1.35,
+              ),
+              onAmber: isOut && m.mediaPath == null,
+              linkColor: (isOut && m.mediaPath == null)
+                  ? HaloColors.onAmber
+                  : HaloColors.amber,
+            )
+          : Text.rich(
+              mentionRich(
+                text,
+                HaloType.sans(
+                  size: 14,
+                  // captions get more
+                  // weight to read over
+                  // busy images
+                  weight: m.mediaPath != null
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                  // a photo caption sits
+                  // on a transparent
+                  // bubble, where onAmber
+                  // is invisible
+                  color: (isOut && m.mediaPath == null)
+                      ? HaloColors.onAmber
+                      : HaloColors.text,
+                  height: 1.35,
+                ),
+                accent: (isOut && m.mediaPath == null)
+                    ? HaloColors.onAmber
+                    : null,
+              ),
+              textDirection: writtenDir(text),
+            ),
+    );
+  }
+
   TextStyle _bodyStyle(bool isOut) => HaloType.sans(
     size: 14,
     weight: m.mediaPath != null ? FontWeight.w600 : FontWeight.w400,

@@ -50,6 +50,27 @@ void main() {
     expect(bad, isEmpty);
   });
 
+  test('while off, the release builds the library and leaves it out', () {
+    // the switch and the gradle line go together: on, the library ships
+    final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+    expect(
+      gradle.contains('excludes += "**/libkryfo_translate.so"'),
+      !kOfflineTranslation,
+    );
+    // engine/build.sh reads JNI_LIBS_DIR and a release exports it, so a
+    // shared name would carry the library in by the back door
+    final sh = File('../engine/translate/native/build.sh').readAsStringSync();
+    final reads = {
+      for (final m in RegExp(r'\$\{?(\w*JNI_LIBS_DIR)').allMatches(sh))
+        m.group(1)!,
+    };
+    expect(reads, {'KT_JNI_LIBS_DIR'});
+    // the reproducible build runs it into the app's jniLibs
+    final repro = File('../repro/build-repro.sh').readAsStringSync();
+    expect(repro, contains('engine/translate/native/build.sh'));
+    expect(repro, contains('KT_JNI_LIBS_DIR='));
+  });
+
   testWidgets('a chinese message in a chat shows no translate', (t) async {
     SharedPreferences.setMockInitialValues({
       'battery_opt_prompt_seen': true,

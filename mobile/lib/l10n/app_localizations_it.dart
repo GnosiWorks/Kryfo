@@ -10462,6 +10462,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Windows ha disattivato Kryfo nelle app di avvio. Attivalo lì, in Impostazioni, App, Avvio.';
 
   @override
+  String get desktopMicBlocked =>
+      'Kryfo può registrare quando Windows consente alle app desktop di usare il microfono, in Impostazioni, Privacy e sicurezza, Microfono.';
+
+  @override
+  String get desktopMicNone =>
+      'Collega un microfono per registrare una nota vocale.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo non può ancora usare una fotocamera su questo computer. Usa il link o il codice.';
 
@@ -11617,6 +11625,21 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get tipsProfileCard =>
       'Lascia una mancia per mantenere Kryfo indipendente';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name ha collegato un nuovo dispositivo';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name ha rimosso un dispositivo';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Non è stato possibile verificare l’elenco dei dispositivi di $name';
+  }
 
   @override
   String get notesDropToKeep => 'Rilascia qui per tenerlo';

@@ -9828,6 +9828,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopStartHeldOff => 'Windows 在启动应用中关闭了 Kryfo。请到设置、应用、启动中打开它。';
 
   @override
+  String get desktopMicBlocked => '在设置、隐私和安全性、麦克风中允许桌面应用使用麦克风后，Kryfo 即可录音。';
+
+  @override
+  String get desktopMicNone => '连接麦克风即可录制语音。';
+
+  @override
   String get desktopNoCamera => 'Kryfo 暂时还不能在这台电脑上使用摄像头。请改用链接或代码。';
 
   @override
@@ -10894,6 +10900,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tipsProfileCard => '打赏一下，让 Kryfo 保持独立';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name 关联了一台新设备';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name 移除了一台设备';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return '无法核对 $name 的设备列表';
+  }
 
   @override
   String get notesDropToKeep => '拖到这里松开即可保存';
@@ -20632,6 +20653,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Windows 在啟動應用程式中關閉了 Kryfo。請到設定、應用程式、啟動中開啟它。';
 
   @override
+  String get desktopMicBlocked => '在設定、隱私權與安全性、麥克風中允許桌面應用程式使用麥克風後，Kryfo 即可錄音。';
+
+  @override
+  String get desktopMicNone => '連接麥克風即可錄製語音。';
+
+  @override
   String get desktopNoCamera => 'Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。';
 
   @override
@@ -21700,6 +21727,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tipsProfileCard => '給點小費，讓 Kryfo 保持獨立';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name 連結了一台新裝置';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name 移除了一台裝置';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return '無法核對 $name 的裝置清單';
+  }
 
   @override
   String get notesDropToKeep => '拖到這裡放開即可保存';

@@ -72,6 +72,21 @@ class _World {
       sender: asSender(_x),
     ),
   );
+
+  // a gif's slice, in the picture lane, marked as one
+  Future<void> gifSlice(String mid, int index, int total) async => from(
+    _x,
+    await wrapMessage(
+      '',
+      msgUid: mid,
+      mediaId: mid,
+      chunkIndex: index,
+      chunkTotal: total,
+      imageB64: base64Encode(List.filled(300, index)),
+      gif: true,
+      sender: asSender(_x),
+    ),
+  );
 }
 
 void main() {
@@ -137,6 +152,15 @@ void main() {
     );
     await w.slice('f1', 1, 3);
     await w.slice('f1', 2, 3);
+    expect(incomingMediaProgress, isEmpty);
+  });
+
+  test('a gif coming in slices shows no share: it just appears', () async {
+    final w = await _World.make();
+    await w.gifSlice('g1', 0, 3);
+    await w.gifSlice('g1', 1, 3);
+    expect(incomingMediaProgress, isEmpty);
+    await w.gifSlice('g1', 2, 3);
     expect(incomingMediaProgress, isEmpty);
   });
 

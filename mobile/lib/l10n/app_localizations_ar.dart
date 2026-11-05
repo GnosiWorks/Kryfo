@@ -10519,6 +10519,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'يضع Windows ‏Kryfo على وضع الإيقاف في تطبيقات بدء التشغيل. شغّله من هناك: الإعدادات، التطبيقات، بدء التشغيل.';
 
   @override
+  String get desktopMicBlocked =>
+      'حين يسمح Windows لتطبيقات سطح المكتب باستخدام الميكروفون يستطيع Kryfo التسجيل: الإعدادات، الخصوصية والأمان، الميكروفون.';
+
+  @override
+  String get desktopMicNone => 'وصّل ميكروفونًا لتسجيل رسالة صوتية.';
+
+  @override
   String get desktopNoCamera =>
       'لا يستطيع Kryfo استخدام كاميرا على هذا الحاسوب بعد. استخدم الرابط أو الرمز بدلًا من ذلك.';
 
@@ -11666,6 +11673,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'اترك إكرامية ليبقى Kryfo مستقلًا';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return 'ربط ⁨$name⁩ جهازًا جديدًا';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return 'أزال ⁨$name⁩ جهازًا';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'تعذّر التحقق من قائمة أجهزة ⁨$name⁩';
+  }
 
   @override
   String get notesDropToKeep => 'أفلِت هنا للاحتفاظ به';

@@ -270,6 +270,24 @@ Future<int?> _encodeInTurn(String wav, String ogg, bool Function()? stop) {
   return run;
 }
 
+/// the ogg opus bytes [ogg] as a 16 khz wav in memory, by the engine's own
+/// decoder off the main isolate; null when they are not one. the copy the
+/// isolate gets is zeroed there, the caller's stays the caller's to zero
+Future<Uint8List?> wavBytesOfOgg(Uint8List ogg) async {
+  try {
+    final (said, b) = await Isolate.run(() {
+      final r = _wavBytes(ogg);
+      ogg.fillRange(0, ogg.length, 0);
+      return r;
+    });
+    if (b == null) dlog('voice: not decoded ($said)');
+    return b;
+  } catch (e) {
+    dlog('voice: not decoded (${e.runtimeType})');
+    return null;
+  }
+}
+
 /// the ogg opus at [ogg] as a 16 khz wav at [wav], for what reads wav
 /// only. false with nothing at [wav]
 Future<bool> decodeVoiceWav(String ogg, String wav) async {

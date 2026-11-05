@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "kryfo_translate.h"
 
+#include <cerrno>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
@@ -13,6 +15,20 @@
 #include "translator/translation_model.h"
 
 using namespace marian::bergamot;
+
+// marian opens a path ending in "|" as a shell command (popen), and has a
+// helper that runs one. nothing here asks for either, and the library starts
+// no process: the link sends both calls here (-Wl,--wrap), which refuse
+extern "C" {
+FILE *__wrap_popen(const char *, const char *) {
+  errno = EPERM;
+  return nullptr;
+}
+int __wrap_pclose(FILE *) {
+  errno = ECHILD;
+  return -1;
+}
+}
 
 struct kt_model {
   std::unique_ptr<BlockingService> service;

@@ -12982,6 +12982,14 @@
   "@desktopStartHeldOff": {
     "description": "windows: kryfo is listed but switched off in the startup apps of windows settings or task manager"
   },
+  "desktopMicBlocked": "Kryfo can record once Windows lets desktop apps use the microphone, in Settings, Privacy and security, Microphone.",
+  "@desktopMicBlocked": {
+    "description": "windows: the mic did not open because windows' privacy settings keep desktop apps from it"
+  },
+  "desktopMicNone": "Connect a microphone to record a voice note.",
+  "@desktopMicNone": {
+    "description": "windows: no microphone is connected, or it went away"
+  },
   "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
   "@desktopNoCamera": {
     "description": "screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera"
@@ -14443,6 +14451,33 @@
   "tipsProfileCard": "Leave a tip to keep Kryfo independent",
   "@tipsProfileCard": {
     "description": "screens/profile_screen.dart: the card on me in the play build"
+  },
+  "chatDeviceLinked": "{name} linked a new device",
+  "@chatDeviceLinked": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's verified device list added a device. no device names, calm",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatDeviceRemoved": "{name} removed a device",
+  "@chatDeviceRemoved": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's verified device list dropped a device. no device names, calm",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatDeviceListUnchecked": "{name}'s device list could not be checked",
+  "@chatDeviceListUnchecked": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's device list could not be checked (two lists at one version, or a key another holds). calm, never claims an attack",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
   },
   "notesDropToKeep": "Drop here to keep it",
   "@notesDropToKeep": {

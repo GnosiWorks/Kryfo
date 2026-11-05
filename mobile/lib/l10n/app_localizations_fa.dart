@@ -10393,6 +10393,13 @@ class AppLocalizationsFa extends AppLocalizations {
       'Windows، ‏Kryfo را در برنامه‌های راه‌اندازی خاموش کرده است. آن را از همان‌جا روشن کنید: تنظیمات، برنامه‌ها، راه‌اندازی.';
 
   @override
+  String get desktopMicBlocked =>
+      'وقتی Windows به برنامه‌های دسکتاپ اجازه‌ی استفاده از میکروفون بدهد، Kryfo می‌تواند ضبط کند: تنظیمات، حریم خصوصی و امنیت، میکروفون.';
+
+  @override
+  String get desktopMicNone => 'برای ضبط پیام صوتی یک میکروفون وصل کنید.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo هنوز نمی‌تواند روی این رایانه از دوربین استفاده کند. به‌جایش از پیوند یا کد استفاده کنید.';
 
@@ -11533,6 +11540,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'انعام بدهید تا Kryfo مستقل بماند';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '⁨$name⁩ یک دستگاه تازه پیوند داد';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '⁨$name⁩ یک دستگاه را برداشت';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'بررسی فهرست دستگاه‌های ⁨$name⁩ ممکن نشد';
+  }
 
   @override
   String get notesDropToKeep => 'برای نگه داشتن اینجا رها کنید';

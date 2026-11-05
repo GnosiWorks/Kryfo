@@ -14,6 +14,8 @@ import 'package:flutter/foundation.dart';
 import 'desktop/sealed_io.dart' show SealedIO, SealedLocked;
 import 'dlog.dart';
 import 'image_strip.dart' show PictureKind, pictureKind;
+import 'desktop/desktop_trace.dart' show tracing;
+import 'media_trace.dart' show mediaKindOf, mediaTraceOnce;
 import 'open_file.dart' show nameSaysVideo, videoInfoFor;
 import 'picture_lock.dart' show picturesShut;
 import 'shred.dart' show kBlurLeaf;
@@ -315,7 +317,10 @@ Future<PhotoBlur?> makeBlur(String media, {Uint8List? bytes, int? gen}) async {
     if (nameSaysVideo(media)) {
       picture = (await videoInfoFor(media))?.jpeg;
     } else {
-      if (!await _looksLikePicture(media)) return null;
+      if (!await _looksLikePicture(media)) {
+        _blurMissing(media, 'not a picture');
+        return null;
+      }
       // read as the bubble reads it: the keys stay on this isolate
       picture = await File(media).readAsBytes();
       ours = true;
@@ -329,6 +334,7 @@ Future<PhotoBlur?> makeBlur(String media, {Uint8List? bytes, int? gen}) async {
     if (ours) picture.fillRange(0, picture.length, 0);
   }
   if (blur == null || stale()) {
+    if (blur == null) _blurMissing(media, 'no decode');
     blur?.wipe();
     return null;
   }
@@ -342,7 +348,16 @@ Future<PhotoBlur?> makeBlur(String media, {Uint8List? bytes, int? gen}) async {
   }
   if (stale()) return null;
   _blurs[media] = blur;
+  mediaTraceOnce(media, 'blur', 'blur made');
   return blur;
+}
+
+// the trace's line for a picture left without a blur: why, and its kind
+void _blurMissing(String media, String why) {
+  if (!tracing) return;
+  mediaKindOf(
+    media,
+  ).then((kind) => mediaTraceOnce(media, 'blur', 'blur missing: $why $kind'));
 }
 
 Future<bool> _looksLikePicture(String media) async {

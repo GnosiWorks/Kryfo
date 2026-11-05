@@ -10549,6 +10549,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Windows вимкнув Kryfo в застосунках автозавантаження. Увімкни його там: Параметри, Застосунки, Автозавантаження.';
 
   @override
+  String get desktopMicBlocked =>
+      'Kryfo зможе записувати, коли Windows дозволить класичним застосункам доступ до мікрофона: Параметри, Конфіденційність і захист, Мікрофон.';
+
+  @override
+  String get desktopMicNone => 'Підключи мікрофон, щоб записати голосове.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo поки не може користуватися камерою на цьому комп’ютері. Скористайтеся посиланням або кодом.';
 
@@ -11708,6 +11715,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Залиш чайові, щоб Kryfo лишався незалежним';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name пов’язав(-ла) новий пристрій';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name прибрав(-ла) пристрій';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Не вдалося перевірити список пристроїв $name';
+  }
 
   @override
   String get notesDropToKeep => 'Відпусти тут, щоб зберегти';

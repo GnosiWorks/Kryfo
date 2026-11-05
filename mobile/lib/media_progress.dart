@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // live progress for chunked media, both directions: a big file over tor
 // takes minutes, so the sender's bubble shows a percentage and the receiver
-// gets a slim banner above the composer.
+// gets a slim banner above the composer. a gif shows none: it just appears.
 // plain maps and one global tick. the widgets stay mounted and hide
 // themselves, so it does not matter whether the widget or the entry comes
 // first.
@@ -21,6 +21,17 @@ final Map<String, double> mediaSendProgress = {};
 /// outgoing sends still doing the work the files service asks, before any
 /// byte goes: the strip says preparing, not 0%
 final Set<String> mediaPreparing = {};
+
+// sends that show no share: a gif's
+final Set<String> _quiet = {};
+
+/// a gif goes as a picture, in slices or through the files service: true
+/// when [path] is one, by the name its bytes gave it
+bool quietMedia(String path, {String? fileName, bool voice = false}) =>
+    fileName == null && !voice && path.toLowerCase().endsWith('.gif');
+
+/// whether [msgUid]'s send shows no share
+bool mediaQuiet(String msgUid) => _quiet.contains(msgUid);
 
 void mediaPreparingSet(String msgUid, bool on) {
   if (on ? mediaPreparing.add(msgUid) : mediaPreparing.remove(msgUid)) _bump();
@@ -66,6 +77,7 @@ String? transferDetail(String key, double share) {
 ({int sending, int receiving, int done, int total}) transfersNow() {
   var sending = 0, receiving = 0, done = 0, total = 0;
   for (final e in mediaSendProgress.entries) {
+    if (_quiet.contains(e.key)) continue;
     sending++;
     final b = _bytes[e.key] ?? 0;
     total += b;
@@ -126,7 +138,14 @@ void stopMediaSweeper() {
   _sweeper = null;
 }
 
-void mediaProgressStart(String msgUid, {String? chatKey, int? bytes}) {
+/// [quiet]: a gif's, which shows no share anywhere
+void mediaProgressStart(
+  String msgUid, {
+  String? chatKey,
+  int? bytes,
+  bool quiet = false,
+}) {
+  if (quiet) _quiet.add(msgUid);
   mediaSendProgress.putIfAbsent(msgUid, () => 0);
   if (chatKey != null) _sendChat[msgUid] = chatKey;
   if (bytes != null && bytes > 0) _bytes[msgUid] = bytes;
@@ -141,6 +160,7 @@ void mediaProgressUpdate(String msgUid, double v) {
 
 void mediaProgressEnd(String msgUid) {
   _sendChat.remove(msgUid);
+  _quiet.remove(msgUid);
   mediaPreparing.remove(msgUid);
   _bytes.remove(msgUid);
   _pace.remove(msgUid);
@@ -195,7 +215,9 @@ class SendProgressLabel extends StatelessWidget {
       valueListenable: mediaProgressTick,
       builder: (_, _, _) {
         final v = mediaSendProgress[msgUid];
-        if (v == null) return const SizedBox.shrink();
+        if (v == null || _quiet.contains(msgUid)) {
+          return const SizedBox.shrink();
+        }
         return Padding(
           padding: const EdgeInsetsDirectional.only(end: 6),
           child: Text(
@@ -241,7 +263,7 @@ class IncomingMediaBanner extends StatelessWidget {
         double? outV;
         String? outUid;
         for (final e in _sendChat.entries) {
-          if (e.value == chatKey) {
+          if (e.value == chatKey && !_quiet.contains(e.key)) {
             final v = mediaSendProgress[e.key];
             if (v != null) {
               outV = v;

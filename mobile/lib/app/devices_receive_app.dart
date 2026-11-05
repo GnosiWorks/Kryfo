@@ -133,6 +133,8 @@ void _bootDeviceReceive(DeviceState ds, DeviceSend send) {
       if (AppState._shown(went)) appState.notifyListeners();
     },
   );
+  // a contact's device line: their open chat reads it again
+  _deviceReceive!.lined = appState.chatChanged;
   _bootOwnSync(ds, send, _deviceReceive!);
   _bootUnlink(ds, send, _deviceReceive!);
   unawaited(() async {

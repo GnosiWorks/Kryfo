@@ -74,8 +74,11 @@ int main(int argc, char **argv) {
   printf("load: %.2fs wall %.2fs cpu\n", now(CLOCK_MONOTONIC) - w0, now(CLOCK_THREAD_CPUTIME_ID) - c0);
 
   char **out = calloc(n, sizeof(char *));
-  // warm up on the first line, as the first message after opening would
+  // warm up on the first line, as the first message after opening would:
+  // what a person waits for on their first tap, after the load
+  w0 = now(CLOCK_MONOTONIC), c0 = now(CLOCK_THREAD_CPUTIME_ID);
   kt_translate(m, lines, 1, out, &err);
+  printf("first line: %.2fs wall %.2fs cpu\n", now(CLOCK_MONOTONIC) - w0, now(CLOCK_THREAD_CPUTIME_ID) - c0);
   kt_free(out[0]);
 
   long inw = 0, outw = 0, inb = 0;

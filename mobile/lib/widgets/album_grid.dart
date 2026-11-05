@@ -504,7 +504,7 @@ class _Progress extends StatelessWidget {
   Widget build(BuildContext context) => ValueListenableBuilder<int>(
     valueListenable: mediaProgressTick,
     builder: (_, _, _) {
-      final v = mediaSendProgress[uid];
+      final v = mediaQuiet(uid) ? null : mediaSendProgress[uid];
       return IgnorePointer(
         child: AnimatedOpacity(
           opacity: v == null ? 0 : 1,

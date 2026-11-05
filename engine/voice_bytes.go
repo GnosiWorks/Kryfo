@@ -41,6 +41,27 @@ func outBytes(b []byte, out **C.uchar, outLen *C.longlong) {
 	*outLen = C.longlong(len(b))
 }
 
+// zeroBuf is a growing buffer that zeroes what it leaves behind, so no
+// earlier copy of a note stays in the heap when it grows
+type zeroBuf struct{ b []byte }
+
+// room for n more bytes; the old backing array is zeroed once copied
+func (z *zeroBuf) grow(n int) {
+	if cap(z.b)-len(z.b) >= n {
+		return
+	}
+	nb := make([]byte, len(z.b), 2*cap(z.b)+n)
+	copy(nb, z.b)
+	clear(z.b[:cap(z.b)])
+	z.b = nb
+}
+
+func (z *zeroBuf) Write(p []byte) (int, error) {
+	z.grow(len(p))
+	z.b = append(z.b, p...)
+	return len(p), nil
+}
+
 // "ok <ms> <bytes>" once the wav bytes are ogg opus
 func voiceBytesToOgg(in []byte, stopKey string) (ogg []byte, ret string) {
 	defer voiceSafe(&ret)
@@ -49,27 +70,30 @@ func voiceBytesToOgg(in []byte, stopKey string) (ogg []byte, ret string) {
 		delete(voiceStops, stopKey)
 		voiceStopMu.Unlock()
 	}()
-	var w bytes.Buffer
+	// opus at voice rates is well under a tenth of the pcm
+	w := zeroBuf{b: make([]byte, 0, len(in)/8+4096)}
 	n, err := opus.EncodeWavStop(bytes.NewReader(in), &w, func() bool { return voiceStopped(stopKey) })
 	if err != nil {
-		clear(w.Bytes())
+		clear(w.b[:cap(w.b)])
 		return nil, voiceWord(err)
 	}
-	return w.Bytes(), fmt.Sprintf("ok %d %d", n.Ms(), n.Bytes)
+	return w.b, fmt.Sprintf("ok %d %d", n.Ms(), n.Bytes)
 }
 
 // "ok <ms>" once the ogg opus bytes are a 16 khz wav
 func voiceBytesToWav(in []byte) (wav []byte, ret string) {
 	defer voiceSafe(&ret)
-	pcm := make([]byte, 44, 44+len(in)*8)
+	z := zeroBuf{b: make([]byte, 44, 44+len(in)*8)}
 	note, err := opus.Decode(bytes.NewReader(in), opus.DecodeRate, func(s []int16) error {
+		z.grow(2 * len(s))
 		for _, v := range s {
-			pcm = binary.LittleEndian.AppendUint16(pcm, uint16(v))
+			z.b = binary.LittleEndian.AppendUint16(z.b, uint16(v))
 		}
 		return nil
 	})
+	pcm := z.b
 	if err != nil {
-		clear(pcm)
+		clear(pcm[:cap(pcm)])
 		return nil, voiceWord(err)
 	}
 	// the decoder may give more than the note holds, as DecodeFile cuts

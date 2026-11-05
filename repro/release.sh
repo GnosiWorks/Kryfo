@@ -164,11 +164,13 @@ clone_to() {
 RUN=(docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)")
 
 SHIM_TARGET=mobile/native/kryfo_signal/target
+# the translation library's source tarballs, checked by fetch-bergamot.sh
+KT_DL=engine/translate/native/.third_party/dl
 
 fetch_step() {
   clone_to "$WORK/fetch" || return 1
-  rm -rf cache/pub cache/gradle cache/cargo cache/commit "$WORK/fetch-out"
-  mkdir -p cache/pub cache/gradle cache/cargo "$WORK/fetch-out"
+  rm -rf cache/pub cache/gradle cache/cargo cache/bergamot cache/commit "$WORK/fetch-out"
+  mkdir -p cache/pub cache/gradle cache/cargo cache/bergamot "$WORK/fetch-out"
   "${RUN[@]}" -e HALO_STEP=fetch \
     -v "$WORK/fetch:/home/vagrant/build/app.kryfo" \
     -v "$PWD/cache/pub:/home/vagrant/.pub-cache" \
@@ -183,15 +185,17 @@ fetch_step() {
     find cache/gradle/caches -mindepth 1 -maxdepth 1 ! -name modules-2 -exec rm -rf {} + &&
     cp -a "$WORK/fetch/$SHIM_TARGET/vendor" "$WORK/fetch/$SHIM_TARGET/vendor.toml" \
       "$WORK/fetch/$SHIM_TARGET/vendor.lock" cache/cargo/ &&
-    du -sh cache/pub cache/gradle cache/cargo
+    cp -a "$WORK/fetch/$KT_DL/." cache/bergamot/ &&
+    du -sh cache/pub cache/gradle cache/cargo cache/bergamot
 }
 
 build_step() {
   clone_to "$WORK/src" || return 1
-  # the shim's crates where build-android.sh looks for them
+  # the shim's crates and the translation sources where their scripts look
   if [ "$MODE" = offline ]; then
-    mkdir -p "$WORK/src/$SHIM_TARGET"
+    mkdir -p "$WORK/src/$SHIM_TARGET" "$WORK/src/$KT_DL"
     cp -a cache/cargo/. "$WORK/src/$SHIM_TARGET/"
+    cp -a cache/bergamot/. "$WORK/src/$KT_DL/"
   fi
   rm -rf "$WORK/out"
   mkdir -p "$WORK/out"

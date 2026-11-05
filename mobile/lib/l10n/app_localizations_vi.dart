@@ -10367,6 +10367,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Windows đang tắt Kryfo trong các ứng dụng khởi động. Hãy bật lại ở đó, trong Cài đặt, Ứng dụng, Khởi động.';
 
   @override
+  String get desktopMicBlocked =>
+      'Kryfo có thể ghi âm khi Windows cho phép ứng dụng máy tính dùng micrô, trong Cài đặt, Quyền riêng tư và bảo mật, Micrô.';
+
+  @override
+  String get desktopMicNone => 'Hãy cắm micrô để ghi tin nhắn thoại.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo chưa dùng được camera trên máy tính này. Hãy dùng liên kết hoặc mã thay thế.';
 
@@ -11512,6 +11519,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Gửi tiền tip để Kryfo luôn độc lập';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name đã liên kết một thiết bị mới';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name đã gỡ một thiết bị';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Không thể kiểm tra danh sách thiết bị của $name';
+  }
 
   @override
   String get notesDropToKeep => 'Thả vào đây để giữ lại';

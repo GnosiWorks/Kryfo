@@ -10410,6 +10410,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Windows, Kryfo’yu başlangıç uygulamalarında kapalı tutuyor. Oradan aç: Ayarlar, Uygulamalar, Başlangıç.';
 
   @override
+  String get desktopMicBlocked =>
+      'Windows masaüstü uygulamalarının mikrofonu kullanmasına izin verdiğinde Kryfo kayıt yapabilir: Ayarlar, Gizlilik ve güvenlik, Mikrofon.';
+
+  @override
+  String get desktopMicNone => 'Sesli not kaydetmek için bir mikrofon bağla.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo bu bilgisayarda henüz kamera kullanamıyor. Bunun yerine bağlantıyı ya da kodu kullan.';
 
@@ -11551,6 +11558,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Kryfo bağımsız kalsın diye bahşiş bırak';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name yeni bir cihaz bağladı';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name bir cihazı kaldırdı';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return '$name kişisinin cihaz listesi denetlenemedi';
+  }
 
   @override
   String get notesDropToKeep => 'Saklamak için buraya bırak';

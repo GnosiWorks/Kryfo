@@ -84,6 +84,7 @@ import 'group_shots.dart';
 import 'group_media_send.dart';
 import 'media_names.dart' show mediaNamesAtOpen;
 import 'media_progress.dart';
+import 'media_trace.dart' show traceCode;
 import 'transfers.dart';
 import 'transfer_note.dart';
 import 'media_send.dart';

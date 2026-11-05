@@ -16669,6 +16669,18 @@ abstract class AppLocalizations {
   /// **'Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.'**
   String get desktopStartHeldOff;
 
+  /// windows: the mic did not open because windows' privacy settings keep desktop apps from it
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo can record once Windows lets desktop apps use the microphone, in Settings, Privacy and security, Microphone.'**
+  String get desktopMicBlocked;
+
+  /// windows: no microphone is connected, or it went away
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a microphone to record a voice note.'**
+  String get desktopMicNone;
+
   /// screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera
   ///
   /// In en, this message translates to:
@@ -18456,6 +18468,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave a tip to keep Kryfo independent'**
   String get tipsProfileCard;
+
+  /// screens/chat_screen.dart: the quiet line where a contact's verified device list added a device. no device names, calm
+  ///
+  /// In en, this message translates to:
+  /// **'{name} linked a new device'**
+  String chatDeviceLinked(Object name);
+
+  /// screens/chat_screen.dart: the quiet line where a contact's verified device list dropped a device. no device names, calm
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed a device'**
+  String chatDeviceRemoved(Object name);
+
+  /// screens/chat_screen.dart: the quiet line where a contact's device list could not be checked (two lists at one version, or a key another holds). calm, never claims an attack
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s device list could not be checked'**
+  String chatDeviceListUnchecked(Object name);
 
   /// notes to self on a computer: the line on the wash while files are dragged over it
   ///
