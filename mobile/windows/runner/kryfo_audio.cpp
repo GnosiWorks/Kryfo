@@ -10,6 +10,7 @@
 #include <mmdeviceapi.h>
 
 #include <cstring>
+#include <new>
 
 namespace {
 
@@ -189,10 +190,11 @@ Mic* MicStart(int32_t rate, int32_t channels, bool probe, int32_t* word) {
   m->rate = rate;
   m->channels = channels;
   m->probe = probe;
-  if (!probe) m->buf = new uint8_t[kMicMax];
+  // no throw across dart's ffi: out of memory is a failure
+  if (!probe) m->buf = new (std::nothrow) uint8_t[kMicMax];
   m->stop = CreateEventW(nullptr, TRUE, FALSE, nullptr);
   m->ready = CreateEventW(nullptr, TRUE, FALSE, nullptr);
-  if (m->stop && m->ready) m->thread = CreateThread(nullptr, 0, MicMain, m, 0, nullptr);
+  if (m->stop && m->ready && (probe || m->buf)) m->thread = CreateThread(nullptr, 0, MicMain, m, 0, nullptr);
   if (!m->thread) {
     MicEnd(m);
     return nullptr;
@@ -408,7 +410,8 @@ int32_t PlayLoad(int64_t h, const uint8_t* data, int64_t n, int32_t rate, int32_
     return kFailed;
   }
   n -= n % (channels * 2);
-  p->pcm = new uint8_t[static_cast<size_t>(n)];
+  p->pcm = new (std::nothrow) uint8_t[static_cast<size_t>(n > 0 ? n : 1)];
+  if (!p->pcm) return kFailed;
   memcpy(p->pcm, data, static_cast<size_t>(n));
   p->len = n;
   p->rate = rate;
