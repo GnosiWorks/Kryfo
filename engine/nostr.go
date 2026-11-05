@@ -959,12 +959,19 @@ func failingDialBegin(u string) (bool, func()) {
 }
 
 // a runner's base wait after a failure: our second store's entries wait as
-// a public relay does while our other store answers, not three seconds
+// a public relay does while our first store answers, not three seconds
 func retryFor(u string, retry time.Duration, own bool) time.Duration {
-	if own && retry < 10*time.Second && otherStoreAnswers(nostrRelaysNow(), u) {
+	if own && retry < 10*time.Second && secondStoreSpared(nostrRelaysNow(), u) {
 		return 10 * time.Second
 	}
 	return retry
+}
+
+// u is an entry of our second store and our first store answers: it may
+// wait. our first store never does: the versions before the second store
+// read it alone
+func secondStoreSpared(urls []string, u string) bool {
+	return storeOf(urls, u) == storeSecond && otherStoreAnswers(urls, u)
 }
 
 // closed when every bench is let go of, at a wake or a new route
@@ -1370,10 +1377,10 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 	}
 	urls := make([]string, 0, len(all))
 	for _, u := range all {
-		// an entry of ours on the bench is left out only while another of
-		// our stores answers: that one carries it, and this store is given
-		// it once it answers again (topup)
-		if (own[u] && !(relayCold(u) && otherStoreAnswers(all, u))) || (!own[u] && !relayCold(u)) {
+		// an entry of our second store on the bench is left out only while
+		// our first store answers: that one carries it, and the second is
+		// given it once it answers again (topup). the first never is
+		if (own[u] && !(relayCold(u) && secondStoreSpared(all, u))) || (!own[u] && !relayCold(u)) {
 			urls = append(urls, u)
 		}
 	}
@@ -2084,8 +2091,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// a relay on a failing streak takes one dial at a time: while
 				// another socket's dial to it is out, this try counts as failed
 				// and waits its own backoff, so a dead relay costs one dial a
-				// round and not one per socket
-				goDial, dialOver := failingDialBegin(u)
+				// round and not one per socket. joining a shared socket that
+				// is up is no dial
+				goDial, dialOver := true, func() {}
+				if hk.group == "" || !isClosed(hubReady(hk)) {
+					goDial, dialOver = failingDialBegin(u)
+				}
 				if !goDial {
 					turn.dialed(false)
 					nap(relayRetryAfter(u, retryFor(u, retry, own), own))

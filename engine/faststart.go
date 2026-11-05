@@ -23,14 +23,22 @@ import (
 
 import "C"
 
-// the longest a start waits for tor before its sockets dial anyway
-var startGateMost = 90 * time.Second
+// the longest a start waits for tor before its sockets dial anyway, unless
+// tor still says it is climbing: then it looks again every startGateLook,
+// up to startGateLongest. a dial before 100% gains nothing, tor holds it
+// and lets the start's sockets go together once it is up
+var (
+	startGateMost    = 90 * time.Second
+	startGateLook    = 15 * time.Second
+	startGateLongest = 10 * time.Minute
+)
 
 var startGate struct {
 	sync.Mutex
 	// nil once open
 	c     chan struct{}
 	armed bool
+	at    time.Time
 }
 
 // at the first start of tor in this process
@@ -41,8 +49,42 @@ func armStartGate() {
 		return
 	}
 	startGate.armed = true
-	startGate.c = make(chan struct{})
-	time.AfterFunc(startGateMost, openStartGate)
+	c := make(chan struct{})
+	startGate.c = c
+	startGate.at = time.Now()
+	time.AfterFunc(startGateMost, func() { capStartGate(c) })
+}
+
+// the cap of gate c: open, unless tor's own watcher says it is still on
+// its way
+func capStartGate(c chan struct{}) {
+	startGate.Lock()
+	at, gone := startGate.at, startGate.c != c
+	startGate.Unlock()
+	if gone {
+		return
+	}
+	if torStillClimbing() && time.Since(at) < startGateLongest {
+		time.AfterFunc(startGateLook, func() { capStartGate(c) })
+		return
+	}
+	startGate.Lock()
+	defer startGate.Unlock()
+	if startGate.c == c {
+		close(c)
+		startGate.c = nil
+	}
+}
+
+// tor's bootstrap watcher runs, its control port answers and it is under
+// 100%: its percent is current, and no circuit is there to dial on
+var torStillClimbing = func() bool {
+	if atomic.LoadInt32(&bootstrapWatching) == 0 || ctrlSilentCount() > 0 || torIsPaused() {
+		return false
+	}
+	statusMu.RLock()
+	defer statusMu.RUnlock()
+	return bootstrapPct < 100
 }
 
 // tor is up, or waited for long enough

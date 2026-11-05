@@ -279,6 +279,51 @@ func TestTheStartGateOpens(t *testing.T) {
 	}
 }
 
+// past the cap the gate stays shut while tor says it is still climbing, as
+// it does over a slow bridge: dialled then, tor would hold the start's
+// sockets and let them go together at 100%. a tor that says nothing, or
+// climbs past the longest wait, opens it
+func TestTheStartGateWaitsForAClimbingTor(t *testing.T) {
+	oldMost, oldLook, oldLongest, oldClimb := startGateMost, startGateLook, startGateLongest, torStillClimbing
+	t.Cleanup(func() {
+		startGateMost, startGateLook, startGateLongest, torStillClimbing = oldMost, oldLook, oldLongest, oldClimb
+	})
+	var climbing atomic.Bool
+	torStillClimbing = func() bool { return climbing.Load() }
+	startGateMost, startGateLook, startGateLongest = 50*time.Millisecond, 20*time.Millisecond, time.Hour
+
+	shutFor := func(d time.Duration) bool {
+		g := startGateChan()
+		if g == nil {
+			return false
+		}
+		select {
+		case <-g:
+			return false
+		case <-time.After(d):
+			return true
+		}
+	}
+	freshStart(t)
+	climbing.Store(true)
+	armStartGate()
+	if !shutFor(400 * time.Millisecond) {
+		t.Fatal("the gate opened past the cap while tor was climbing")
+	}
+	climbing.Store(false)
+	if shutFor(2 * time.Second) {
+		t.Fatal("the gate stayed shut once tor stopped saying it climbs")
+	}
+
+	freshStart(t)
+	startGateLongest = 300 * time.Millisecond
+	climbing.Store(true)
+	armStartGate()
+	if shutFor(3 * time.Second) {
+		t.Fatal("the gate never opened past the longest wait")
+	}
+}
+
 // a card on screen opens a socket to each relay on the hello lane and lets
 // it go: nothing asked, nothing sent, and not again within the while
 func TestWarmHelloOpensAndAsksNothing(t *testing.T) {
@@ -370,6 +415,81 @@ func TestASendDoesNotWaitOnDeadRelays(t *testing.T) {
 	}
 	if d := time.Since(began); d > 3*time.Second {
 		t.Fatalf("the send waited %s on relays that never answer", d)
+	}
+}
+
+// an address joining its batch's socket while it is up is no dial: a
+// failing streak's one dial out elsewhere does not hold it back
+func TestJoiningAnUpSocketIsNoDial(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own)
+	freshInbox(t)
+	freshBatches(t)
+	a, b := newXid(t), newXid(t)
+	if res := nostrSubscribeAs(mainIdent, hex.EncodeToString(a.pub[:]), false, false); res != "ok" {
+		t.Fatal(res)
+	}
+	ra, rb := mustRcv(t, a), mustRcv(t, b)
+	waitFor(t, "the first address listening", 10*time.Second, func() bool { return own.listening()[ra] > 0 })
+	// another socket's dial to it is out, on a failing streak
+	out := new(atomic.Int32)
+	out.Store(1)
+	failingDials.Store(own.url(), out)
+	relayHealthMu.Lock()
+	relayFails[own.url()] = 1
+	relayHealthMu.Unlock()
+	t.Cleanup(func() { failingDials.Delete(own.url()) })
+	if res := nostrSubscribeAs(mainIdent, hex.EncodeToString(b.pub[:]), false, false); res != "ok" {
+		t.Fatal(res)
+	}
+	if receiveLane(mainIdent, ra) != receiveLane(mainIdent, rb) {
+		t.Fatal("the two are not in one batch")
+	}
+	waitFor(t, "the second address on the socket that is up", 5*time.Second, func() bool { return own.listening()[rb] > 0 })
+}
+
+// a send leaves out a benched entry of our second store while our first
+// answers, never one of our first store: the versions before the second
+// store read the first alone. and only the second's entries wait longer
+// between tries
+func TestOurFirstStoreIsNeverLeftOut(t *testing.T) {
+	second := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, second)
+	first := newBlackHole(t, false)
+	oldSecond := secondRelayHost.get()
+	secondRelayHost.put(strings.TrimPrefix(second.url(), "ws://"))
+	ownRelayHost.put(strings.TrimPrefix(first.url(), "ws://"))
+	t.Cleanup(func() { secondRelayHost.put(oldSecond) })
+	setRelays([]string{first.url(), second.url()})
+	urls := nostrRelaysNow()
+	if storeOf(urls, first.url()) != storeFirst || storeOf(urls, second.url()) != storeSecond {
+		t.Fatal("the stand-ins are not our two stores")
+	}
+	relayHealthMu.Lock()
+	relayUpAt[second.url()] = time.Now()
+	relayFails[first.url()] = relayFailGrace + 2
+	relayCoolTill[first.url()] = time.Now().Add(time.Minute)
+	relayHealthMu.Unlock()
+	if d := retryFor(first.url(), 3*time.Second, true); d != 3*time.Second {
+		t.Fatalf("our first store waits %s between tries while the second answers", d)
+	}
+	peer := newXid(t)
+	if r := nostrSend(mainIdent, hex.EncodeToString(peer.pub[:]), "hi"); r != "ok" {
+		t.Fatal(r)
+	}
+	waitFor(t, "our benched first store given the send", 5*time.Second, func() bool { return first.dials.Load() > 0 })
+
+	// the other way round the second store may wait
+	relayHealthMu.Lock()
+	delete(relayFails, first.url())
+	delete(relayCoolTill, first.url())
+	relayUpAt[first.url()] = time.Now()
+	relayHealthMu.Unlock()
+	if d := retryFor(second.url(), 3*time.Second, true); d != 10*time.Second {
+		t.Fatalf("our second store waits %s while the first answers", d)
+	}
+	if !secondStoreSpared(urls, second.url()) || secondStoreSpared(urls, first.url()) {
+		t.Fatal("the wrong store is spared")
 	}
 }
 
