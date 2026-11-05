@@ -79,10 +79,6 @@ const kHiddenRemovalMeta = 'hidden_removal_owed:';
   return (version: version, at: p.length > 1 ? int.tryParse(p[1]) ?? 0 : 0);
 }
 
-/// the dev_marks kind for a contact I deleted whose phone read my lists:
-/// my removals still go to them (they may still copy to my devices)
-const kDeletedReader = 'deleted_reader';
-
 /// how often a contact's phone is asked for a fresh bundle of one device
 const kAskEvery = Duration(days: 1);
 
@@ -1214,7 +1210,7 @@ class DeviceSend {
     final spread = <({int ident, String peer, int version, String devs})>[];
     final rows = <Map<String, Object?>>[];
     for (final ch in changes) {
-      for (final peer in await _readers(d, ch.ident, removal: ch.removed)) {
+      for (final peer in await _readers(d, ch.ident)) {
         if (ch.removed) {
           rows.add({
             'ident': ch.ident,
@@ -1309,45 +1305,29 @@ class DeviceSend {
     }
   }
 
-  // the identity keys of [ident]'s contacts whose phones read lists. a
-  // removal also goes to one I deleted who read them ([kDeletedReader]):
-  // they may still hold my list and copy to the device, unless no session
-  // with their phone is left
-  Future<List<String>> _readers(
-    DatabaseExecutor d,
-    int ident, {
-    bool removal = false,
-  }) async {
-    final out = <String>{
-      for (final r in await d.query(
+  // the identity keys of [ident]'s contacts whose phones read lists. only
+  // current ones: a contact I deleted gets no list, a removal neither, as
+  // it would show them I am still here
+  Future<List<String>> _readers(DatabaseExecutor d, int ident) async => [
+    for (final r in await d.query(
+      'contacts',
+      columns: ['ikey', 'caps'],
+      where: 'ident = ? AND ikey IS NOT NULL AND accepted = 1',
+      whereArgs: [ident],
+    ))
+      if ((r['caps'] as String? ?? '').split(',').contains(kCapDevices))
+        r['ikey'] as String,
+  ];
+
+  // whether [identity] is still a contact of my [ident] here
+  static Future<bool> _current(Database d, int ident, String identity) async =>
+      (await d.query(
         'contacts',
-        columns: ['ikey', 'caps'],
-        where: 'ident = ? AND ikey IS NOT NULL AND accepted = 1',
-        whereArgs: [ident],
-      ))
-        if ((r['caps'] as String? ?? '').split(',').contains(kCapDevices))
-          r['ikey'] as String,
-    };
-    if (!removal) return [...out];
-    final gone = await d.rawQuery(
-      'SELECT c.halo_id, c.ikey FROM dev_marks m JOIN contacts c ON '
-      'c.ikey = m.peer AND c.ident = m.ident WHERE m.ident = ? AND '
-      'm.kind = ? AND c.accepted = 0 AND c.blocked = 0',
-      [ident, kDeletedReader],
-    );
-    if (gone.isEmpty) return [...out];
-    final ds = await sessions(ident);
-    for (final r in gone) {
-      final ikey = r['ikey'] as String;
-      if (out.contains(ikey)) continue;
-      try {
-        if (await ds.has(r['halo_id'] as String, 1)) out.add(ikey);
-      } on Object {
-        // no session read: nothing goes
-      }
-    }
-    return [...out];
-  }
+        columns: ['ikey'],
+        where: 'ident = ? AND ikey = ? AND accepted = 1',
+        whereArgs: [ident, identity],
+        limit: 1,
+      )).isNotEmpty;
 
   /// [identity], a contact of my [ident], showed [kCapDevices] for the
   /// first time: my list goes to them once, with a bundle of each of my
@@ -1473,6 +1453,16 @@ class DeviceSend {
     for (final rs in go) {
       final ident = rs.first['ident'] as int;
       final identity = rs.first['peer'] as String;
+      // one not a contact now gets nothing: a removal owed to one deleted
+      // since goes, a list waits for a request to be accepted
+      if (!await _current(d, ident, identity)) {
+        await d.delete(
+          'dev_pushes',
+          where: "ident = ? AND peer = ? AND kind = 'remove'",
+          whereArgs: [ident, identity],
+        );
+        continue;
+      }
       final who = await contact(ident, identity);
       if (who == null) continue;
       final Map<String, dynamic> own;
@@ -1585,27 +1575,6 @@ class DeviceSend {
         );
       } on Object {
         await _pushFailed(d, rs, now);
-        continue;
-      }
-      // a contact I deleted, whose lists the engine let go: a removal
-      // reaches their phone alone, so it stops copying to the device
-      if (r == null && rs.every((x) => x['kind'] == 'remove')) {
-        final f =
-            '$kEnvelopePrefix${jsonEncode({'u': 'dl:${_listVersion(list)}', 'dl': list})}';
-        final p = phone(who.me, who.c);
-        try {
-          final c = await p.seal(f, await p.measure(f) ?? 0);
-          if (!await send(who.me, who.c, c)) throw StateError('not sent');
-        } on Object {
-          await _pushFailed(d, rs, now);
-          continue;
-        }
-        await _pushRows(d, rs, {
-          'sent_at': now,
-          'bundles': '',
-          'tries': 0,
-          'next_at': 0,
-        });
         continue;
       }
       if (r == null) {

@@ -65,6 +65,8 @@ extension AppStateIdentity on AppState {
         return;
       }
     }
+    // linked devices: my list to them now
+    if (fresh) unawaited(_devAdded(haloId));
     var xPub = await d.contactXPub(haloId);
     if (xPub == null || xPub.isEmpty) {
       xPub = await peerXPubOf(haloId);

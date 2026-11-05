@@ -28,11 +28,29 @@ import 'package:kryfo/devices/own_device_store.dart';
 import 'package:kryfo/devices/own_devices.dart' show DeviceKind;
 import 'package:kryfo/devices/own_sync.dart' show OwnApply, OwnSync;
 import 'package:kryfo/devices/own_unlink.dart';
-import 'package:kryfo/heal.dart' show restoreCutsLinkedDevices;
+import 'package:kryfo/heal.dart'
+    show
+        kRestoreCutPref,
+        kVaultRestoreCutMeta,
+        restoreCutsLinkedDevices,
+        restoreCutsVaultDevices,
+        vaultMadeAfterRestore;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/invites.dart' show bundleBlock;
 import 'package:kryfo/main.dart'
-    show HaloDb, deviceOpenAt, deviceStateForTest, devMineOf;
+    show
+        HaloDb,
+        deviceOpenAt,
+        deviceReceiveForTest,
+        deviceSendForTest,
+        deviceStateForTest,
+        devAddedForTest,
+        devForgetForTest,
+        devMineOf,
+        useDatabasesForTest,
+        vaultCutWaitsForTest,
+        vaultRestoreCutForTest;
+import 'package:kryfo/session.dart' show Session;
 import 'package:kryfo/signal_ffi/kryfo_signal.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/wire_pad.dart' show unpad;
@@ -1226,63 +1244,179 @@ void main() {
     expect(await w.count('SELECT COUNT(*) FROM dev_pushes'), 0);
   });
 
-  test('a contact I deleted who read my lists still gets a removal, on their '
-      'phone alone while a session is left; a request never does', () async {
+  test('a contact I deleted gets no removal and no list: one owed a removal '
+      'gets nothing more, the delete itself sends nothing, and a request\'s '
+      'list waits for the accept', () async {
     if (skip()) return;
     final w = await phone();
-    final carol = devHex((await testStore()).identity.public);
-    final dave = devHex((await testStore()).identity.public);
-    for (final (id, ikey) in [
-      ('carol-far-hill', carol),
-      ('dave-new-one', dave),
-    ]) {
-      await w.db.insert('contacts', {
-        'halo_id': id,
-        'onion': '',
-        'xpub': ikey.substring(2),
-        'first_seen': 0,
-        'last_seen': 0,
-        'ident': kMainIdent,
-        'ikey': ikey,
-        'caps': 'dv,pq,ty',
-        'accepted': 0,
-        'archived': 1,
-      });
-      await w.ana.sessionStore.store(id, Uint8List(4));
-    }
+    final carolStore = await testStore();
+    final carol = devHex(carolStore.identity.public);
+    const carolId = 'carol-far-hill';
+    await w.db.insert('contacts', {
+      'halo_id': carolId,
+      'onion': '',
+      'xpub': carol.substring(2),
+      'first_seen': 0,
+      'last_seen': 0,
+      'ident': kMainIdent,
+      'ikey': carol,
+      'caps': 'dv,pq,ty',
+      'accepted': 1,
+    });
+    // a mark an earlier build left at a delete brings no one back
     await w.db.insert('dev_marks', {
       'ident': kMainIdent,
       'peer': carol,
-      'kind': kDeletedReader,
+      'kind': 'deleted_reader',
       'key': '',
       'at': w.clock,
     });
     await w.unlink.remove(['u4'], why: kGoneRemoved);
-    final peers = {
+    Future<Set<String>> owed() async => {
       for (final r in await w.db.query('dev_pushes')) r['peer'] as String,
     };
-    expect(peers, {w.bob, carol});
-    // the engine let carol's lists go: her phone's copy alone
-    final sent = await pushNow(w, also: carol);
-    final mine = base64Encode(await currentList(w));
-    expect(sent, hasLength(2));
-    expect(sent.where((f) => _json(f)['dl'] == mine), hasLength(2));
-    expect(
-      await w.count(
-        "SELECT COUNT(*) FROM dev_pushes WHERE peer = ? AND sent_at > 0",
-        [carol],
-      ),
-      1,
+    expect(await owed(), {w.bob, carol});
+    // carol is deleted with the removal still owed to her
+    final home = opened.first;
+    useDatabasesForTest(home, Session(home));
+    deviceSendForTest(w.send);
+    deviceReceiveForTest(w.recv);
+    addTearDown(() {
+      deviceSendForTest(null);
+      deviceReceiveForTest(null);
+    });
+    final wired = w.wire.sent.length;
+    await devForgetForTest(carolId);
+    await w.db.update(
+      'contacts',
+      {'accepted': 0, 'archived': 1},
+      where: 'halo_id = ?',
+      whereArgs: [carolId],
     );
+    expect(w.wire.sent, hasLength(wired));
+    // no mark of her is written, and none is left
+    expect(
+      await w.count('SELECT COUNT(*) FROM dev_marks WHERE peer = ?', [carol]),
+      0,
+    );
+    expect(await owed(), {w.bob});
+    // the send loop, with whom each phone's copy went to
+    Future<List<String>> pushTo() async {
+      final to = <String>[];
+      await w.send.pushes(
+        contact: (_, id) async => (
+          me: meOf(w),
+          c: id == w.bob
+              ? bobOf(w)
+              : (
+                  peer: carolId,
+                  identity: id,
+                  devices: true,
+                  phoneClassic: false,
+                ),
+        ),
+        phone: (_, _) =>
+            (measure: (f) async => f.length, seal: (f, _) async => f),
+        send: (_, c, _) async {
+          to.add(c.peer);
+          return true;
+        },
+      );
+      return to;
+    }
+
+    expect(await pushTo(), [bobPeer]);
+    expect(await owed(), {w.bob});
+    // the next change of my list: bob alone
+    await w.send.listsChanged([
+      (ident: kMainIdent, version: 9000, added: const [], removed: true),
+      (ident: kMainIdent, version: 9001, added: const [7], removed: false),
+    ]);
+    expect(await owed(), {w.bob});
+    // owed while she was a contact, deleted with no forget run: the send
+    // loop drops the removal, and a list for a request waits for the accept
+    await w.db.update(
+      'contacts',
+      {'accepted': 1},
+      where: 'halo_id = ?',
+      whereArgs: [carolId],
+    );
+    await w.send.listsChanged([
+      (ident: kMainIdent, version: 9002, added: const [7], removed: true),
+    ]);
+    expect(
+      (await w.db.query(
+        'dev_pushes',
+        columns: ['kind'],
+        where: 'peer = ?',
+        whereArgs: [carol],
+      )).map((r) => r['kind']).toSet(),
+      {'remove', 'add'},
+    );
+    await w.db.update(
+      'contacts',
+      {'accepted': 0},
+      where: 'halo_id = ?',
+      whereArgs: [carolId],
+    );
+    w.clock += _day;
+    expect(await pushTo(), isNot(contains(carolId)));
+    expect(
+      (await w.db.query(
+        'dev_pushes',
+        columns: ['kind', 'sent_at'],
+        where: 'peer = ?',
+        whereArgs: [carol],
+      )).map((r) => (r['kind'], r['sent_at'])).toList(),
+      [('add', 0)],
+    );
+    // deleted again, then added back: my list as it is now goes to her at
+    // once, so her phone stops copying to a device I removed meanwhile
+    await devForgetForTest(carolId);
+    expect(await owed(), isNot(contains(carol)));
+    await w.db.update(
+      'contacts',
+      {'accepted': 1, 'archived': 0},
+      where: 'halo_id = ?',
+      whereArgs: [carolId],
+    );
+    await devAddedForTest(carolId);
+    final mine = await w.db.query(
+      'dev_lists',
+      columns: ['version'],
+      where: "ident = ? AND owner = 'me'",
+      whereArgs: [kMainIdent],
+    );
+    expect(
+      (await w.db.query(
+        'dev_pushes',
+        columns: ['kind', 'version'],
+        where: 'peer = ?',
+        whereArgs: [carol],
+      )).map((r) => (r['kind'], r['version'])).toList(),
+      [('add', mine.single['version'])],
+    );
+    // it goes once her phone is heard again
+    w.clock += _day;
+    expect(await pushTo(), isNot(contains(carolId)));
+    await w.ds.session(w.db, 'opened', {
+      'ident': kMainIdent,
+      'identity': carol,
+      'device': 1,
+      'pq': true,
+    }, SessionRemote.opened(carolStore.identity.public));
+    w.clock += _day;
+    expect(await pushTo(), contains(carolId));
   });
 
-  test('a restore leaves the contacts\' lists stale: their devices are not '
-      'let in or copied to until their phone sends the list again, which '
-      'is answered and asked for', () async {
-    if (skip()) return;
+  // what a restore leaves of bob's devices once [cut] ran on the store that
+  // holds them: only his phone let in and copied to until it sends his list
+  Future<void> staleUntilTheirPhone(
+    Future<void> Function(Database d) cut,
+  ) async {
     final w = await phone();
     final lib = shim!;
-    await restoreCutsLinkedDevices(w.db);
+    await cut(w.db);
     expect(await staleList(w.db, kMainIdent, w.bob), isTrue);
     final b = withBob(w);
     // asked for, once a day
@@ -1326,6 +1460,219 @@ void main() {
     expect(await staleList(w.db, kMainIdent, w.bob), isFalse);
     expect(b.toBob.map((f) => _json(f)['dy']), contains(7000));
     expect(b.shown.single.frame, contains('from bob'));
+  }
+
+  test('a restore leaves the contacts\' lists stale: their devices are not '
+      'let in or copied to until their phone sends the list again, which '
+      'is answered and asked for', () async {
+    if (skip()) return;
+    await staleUntilTheirPhone(restoreCutsLinkedDevices);
+  });
+
+  test('the vault\'s cut after a restore leaves its contacts\' lists stale '
+      'the same way', () async {
+    if (skip()) return;
+    await staleUntilTheirPhone((d) async {
+      expect(await restoreCutsVaultDevices(d, 5000), isTrue);
+    });
+  });
+
+  test('a restore cuts the hidden contacts\' devices at the vault\'s first '
+      'open, in the vault alone and once a restore; a vault made after one '
+      'is not cut', () async {
+    if (sql == null) {
+      markTestSkipped('no sqlite on this host');
+      return;
+    }
+    final everyday = await open();
+    final vh = HaloDb.withKey(HaloContainer.vault, _keyFile['vault']!);
+    opened.add(vh);
+    final v = await vh.open();
+    Future<void> seed(Database d, String peer, String key) async {
+      for (final dev in [1, 5]) {
+        await d.insert('sessions', {
+          'ident': kMainIdent,
+          'address': peer,
+          'device_id': dev,
+          'record': Uint8List(4),
+        });
+      }
+      await d.insert('pairs', {
+        'ident': kMainIdent,
+        'peer': key,
+        'their_device': 1,
+        'my_device': 1,
+        'conv': 3,
+      });
+      await d.insert('pairs', {
+        'ident': kMainIdent,
+        'peer': key,
+        'their_device': 5,
+        'my_device': 1,
+        'conv': 4,
+        'seed': Uint8List(32),
+      });
+      await d.insert('dev_lists', {
+        'ident': kMainIdent,
+        'owner': key,
+        'version': 7,
+        'wire': Uint8List(8),
+      });
+      await d.insert('dev_proven', {
+        'ident': kMainIdent,
+        'peer': key,
+        'key': 'k5',
+      });
+      await d.insert('dev_pq', {'ident': kMainIdent, 'peer': key});
+      await d.insert('dev_pushes', {
+        'ident': kMainIdent,
+        'peer': key,
+        'version': 7,
+        'kind': 'remove',
+        'due_at': 1,
+      });
+      await d.insert('dev_held_openers', {
+        'ident': kMainIdent,
+        'peer': key,
+        'device': 5,
+        'cipher': Uint8List(4),
+        'came_at': 1,
+      });
+      await d.insert('dev_marks', {
+        'ident': kMainIdent,
+        'peer': key,
+        'kind': 'mine',
+        'key': '7',
+        'at': 1,
+      });
+    }
+
+    const hid = 'hid-far-shore';
+    final hidKey = '05${'ab' * 32}';
+    await seed(v, hid, hidKey);
+    await seed(everyday, 'eve-near-field', '05${'cd' * 32}');
+    await everyday.insert('dev_lists', {
+      'ident': kMainIdent,
+      'owner': 'me',
+      'version': 4000,
+      'wire': Uint8List(8),
+    });
+    Future<String> dump(Database d) async {
+      final out = StringBuffer();
+      for (final t in await d.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
+      )) {
+        final n = t['name'] as String;
+        if (n.startsWith('sqlite_')) continue;
+        out.writeln('$n ${await d.rawQuery('SELECT * FROM "$n" ORDER BY 1')}');
+      }
+      return out.toString();
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(kRestoreCutPref, 5000);
+    Map<String, Object?> prefsNow() => {
+      for (final k in prefs.getKeys()) k: prefs.get(k),
+    };
+    final was = await dump(everyday);
+    final wasPrefs = prefsNow();
+    Future<List<int>> devs() async => [
+      for (final r in await v.query(
+        'sessions',
+        columns: ['device_id'],
+        orderBy: 'device_id',
+      ))
+        r['device_id'] as int,
+    ];
+    Future<int> n(String t) async =>
+        (await v.rawQuery('SELECT COUNT(*) AS n FROM $t')).first['n'] as int;
+
+    expect(await restoreCutsVaultDevices(v, 5000), isTrue);
+    expect(await devs(), [1]);
+    expect(
+      (await v.query(
+        'pairs',
+      )).map((r) => (r['their_device'], r['my_device'])).toList(),
+      [(1, 1)],
+    );
+    // the lists, proofs and pq marks stay; each list is stale
+    expect(await n('dev_lists'), 1);
+    expect(await n('dev_proven'), 1);
+    expect(await n('dev_pq'), 1);
+    expect(await n('dev_pushes'), 0);
+    expect(await n('dev_held_openers'), 0);
+    expect(
+      (await v.query('dev_marks')).map((r) => (r['peer'], r['kind'])).toList(),
+      [(hidKey, kStaleList)],
+    );
+    expect(await staleList(v, kMainIdent, hidKey), isTrue);
+    expect(
+      (await v.query(
+        'vault_meta',
+        where: 'k = ?',
+        whereArgs: [kVaultRestoreCutMeta],
+      )).single['v'],
+      '5000',
+    );
+    expect(
+      await v.query(
+        'signal_meta',
+        where: 'k = ?',
+        whereArgs: [kRestoreListOwedMeta],
+      ),
+      isEmpty,
+    );
+    // nothing on the everyday side moved
+    expect(await dump(everyday), was);
+    expect(prefsNow(), wasPrefs);
+    // once a restore: a session made since stays
+    Future<void> session6() => v.insert('sessions', {
+      'ident': kMainIdent,
+      'address': hid,
+      'device_id': 6,
+      'record': Uint8List(4),
+    });
+    await session6();
+    expect(await restoreCutsVaultDevices(v, 5000), isFalse);
+    expect(await restoreCutsVaultDevices(v, null), isFalse);
+    expect(await devs(), [1, 6]);
+    // the next restore cuts it again
+    expect(await restoreCutsVaultDevices(v, 6000), isTrue);
+    expect(await devs(), [1]);
+    // a vault made after a restore holds nothing of it
+    await prefs.setInt(kRestoreCutPref, 7000);
+    await vaultMadeAfterRestore(v);
+    await session6();
+    expect(await restoreCutsVaultDevices(v, 7000), isFalse);
+    expect(await devs(), [1, 6]);
+    // at the open: the last restore's cut, then nothing more
+    await prefs.setInt(kRestoreCutPref, 8000);
+    await vaultRestoreCutForTest(vh);
+    expect(vaultCutWaitsForTest, isFalse);
+    expect(await devs(), [1]);
+    await session6();
+    await vaultRestoreCutForTest(vh);
+    expect(await devs(), [1, 6]);
+    expect(await dump(everyday), isNot(contains(hidKey)));
+  });
+
+  test('a vault whose restore cut fails keeps its devices\' side off until '
+      'an open where it ran', () async {
+    if (sql == null) {
+      markTestSkipped('no sqlite on this host');
+      return;
+    }
+    final vh = HaloDb.withKey(HaloContainer.vault, _keyFile['vault']!);
+    opened.add(vh);
+    final v = await vh.open();
+    await v.execute('DROP TABLE vault_meta');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(kRestoreCutPref, 5000);
+    await vaultRestoreCutForTest(vh);
+    expect(vaultCutWaitsForTest, isTrue);
+    await v.execute('CREATE TABLE vault_meta (k TEXT PRIMARY KEY, v TEXT)');
+    await vaultRestoreCutForTest(vh);
+    expect(vaultCutWaitsForTest, isFalse);
   });
 
   test('my phone\'s bundle goes to each device of a contact with my list, '
