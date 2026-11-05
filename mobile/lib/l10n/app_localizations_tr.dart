@@ -9675,7 +9675,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti aynı sunucuda çalışır ve onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir; yani sunucumuzu işleten ya da ona el koyan da bağlayabilir. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti ikinci sunucumuzda çalışır. İki sunucu birlikte onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir. Birine el koymak yetmez, ama ikisini de biz işletiyoruz, yani biz bağlayabiliriz. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11287,6 +11287,41 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Şimdi değil';
+
+  @override
+  String get albumPrevious => 'Önceki';
+
+  @override
+  String get albumNext => 'Sonraki';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Kopyalamak ya da silmek için bir nota sağ tıkla.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Henüz sabitlenen bir şey yok. Bir mesaja sağ tıkla ve Sabitle’yi seç; sohbetteki herkes için burada durur.';
+
+  @override
+  String get chatGalleryDesk => 'Resimler';
+
+  @override
+  String get groupChatGalleryDesk => 'Resimler';
+
+  @override
+  String get photoChooseDesk => 'Bir resim dosyası seç';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Bir resim dosyasından';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Ses';
+
+  @override
+  String get notificationsPlaySound => 'Ses çal';
+
+  @override
+  String get notificationsPlaySoundHint => 'Bu bilgisayardaki her bildirimde';
 
   @override
   String bridgesShareBridgeN(String n) {

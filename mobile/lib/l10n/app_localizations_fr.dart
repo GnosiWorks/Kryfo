@@ -9748,7 +9748,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais ne garde que des adresses qu’il ne peut pas relier entre elles. Le service de push tourne sur le même serveur et pourrait les relier, et avec l’aide de Google à votre compte Google, donc celui qui gère ou saisit notre serveur le pourrait aussi. Si cela compte pour vous, choisissez un autre moyen. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
+      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais ne garde que des adresses qu’il ne peut pas relier entre elles. Le service de push tourne sur notre second serveur. Les deux serveurs ensemble pourraient les relier, et avec l’aide de Google à votre compte Google. En saisir un seul ne suffit pas, mais nous gérons les deux, donc nous le pourrions. Si cela compte pour vous, choisissez un autre moyen. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11382,6 +11382,42 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Pas maintenant';
+
+  @override
+  String get albumPrevious => 'Précédent';
+
+  @override
+  String get albumNext => 'Suivant';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Faites un clic droit sur une note pour la copier ou la supprimer.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Rien d’épinglé ici pour l’instant. Faites un clic droit sur un message et choisissez Épingler : il attendra ici pour tout le monde dans la discussion.';
+
+  @override
+  String get chatGalleryDesk => 'Images';
+
+  @override
+  String get groupChatGalleryDesk => 'Images';
+
+  @override
+  String get photoChooseDesk => 'Choisir un fichier image';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Depuis un fichier image';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Son';
+
+  @override
+  String get notificationsPlaySound => 'Jouer un son';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'À chaque notification sur cet ordinateur';
 
   @override
   String bridgesShareBridgeN(String n) {

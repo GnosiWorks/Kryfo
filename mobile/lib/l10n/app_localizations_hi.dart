@@ -9654,7 +9654,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'इसमें झूठे जगाने के संकेत भी मिलाए जाते हैं, जिससे Google के लिए यह बताना मुश्किल होता है कि असली मैसेज कब आते हैं। हमारा रिले सिर्फ़ ऐसे पते रखता है जिन्हें वह आपस में जोड़ नहीं सकता। पुश सेवा उसी सर्वर पर चलती है और उन्हें जोड़ सकती है, और Google की मदद से आपके Google अकाउंट तक भी, इसलिए जो भी हमारा सर्वर चलाए या ज़ब्त करे, वह भी ऐसा कर सकता है। अगर यह आपके लिए मायने रखता है, तो कोई दूसरा तरीक़ा चुनें। छिपी चैट, शुरुआती कुछ के बाद के रूम, और कभी-कभी कोई आम संपर्क, लगभग पाँच में से एक महीने, उस जाँच का इंतज़ार करते हैं जो Kryfo अब भी हर 15 मिनट में करता है।';
+      'इसमें झूठे जगाने के संकेत भी मिलाए जाते हैं, जिससे Google के लिए यह बताना मुश्किल होता है कि असली मैसेज कब आते हैं। हमारा रिले सिर्फ़ ऐसे पते रखता है जिन्हें वह आपस में जोड़ नहीं सकता। पुश सेवा हमारे दूसरे सर्वर पर चलती है। दोनों सर्वर मिलकर उन्हें जोड़ सकते हैं, और Google की मदद से आपके Google अकाउंट तक भी। किसी एक को ज़ब्त करना काफ़ी नहीं है, पर दोनों हम चलाते हैं, इसलिए हम ऐसा कर सकते हैं। अगर यह आपके लिए मायने रखता है, तो कोई दूसरा तरीक़ा चुनें। छिपी चैट, शुरुआती कुछ के बाद के रूम, और कभी-कभी कोई आम संपर्क, लगभग पाँच में से एक महीने, उस जाँच का इंतज़ार करते हैं जो Kryfo अब भी हर 15 मिनट में करता है।';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11268,6 +11268,41 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'अभी नहीं';
+
+  @override
+  String get albumPrevious => 'पिछला';
+
+  @override
+  String get albumNext => 'अगला';
+
+  @override
+  String get notesHoldHintDesk =>
+      'कॉपी या डिलीट करने के लिए नोट पर राइट-क्लिक करें।';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'यहाँ अभी कुछ पिन नहीं है। किसी मैसेज पर राइट-क्लिक करें और पिन करें चुनें, वह यहाँ चैट के सभी लोगों के लिए रहेगा।';
+
+  @override
+  String get chatGalleryDesk => 'तस्वीरें';
+
+  @override
+  String get groupChatGalleryDesk => 'तस्वीरें';
+
+  @override
+  String get photoChooseDesk => 'तस्वीर की फ़ाइल चुनें';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'तस्वीर की फ़ाइल से';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'आवाज़';
+
+  @override
+  String get notificationsPlaySound => 'आवाज़ चलाएँ';
+
+  @override
+  String get notificationsPlaySoundHint => 'इस कंप्यूटर पर हर सूचना के साथ';
 
   @override
   String bridgesShareBridgeN(String n) {

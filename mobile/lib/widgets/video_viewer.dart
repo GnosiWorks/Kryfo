@@ -11,11 +11,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'halo_hero.dart';
+import 'key_ring.dart' show HoverTip;
 import 'motion.dart' show kText2, motionStill;
 import 'press_scale.dart';
 import 'sealed_picture.dart';
@@ -719,39 +721,51 @@ class ViewerRound extends StatefulWidget {
 
 class _ViewerRoundState extends State<ViewerRound> {
   bool _down = false;
+  bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    Widget w = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => setState(() => _down = true),
+      onTapCancel: () => setState(() => _down = false),
+      onTapUp: (_) => setState(() => _down = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _down ? 0.9 : 1,
+        duration: still ? Duration.zero : const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          duration: still ? Duration.zero : const Duration(milliseconds: 120),
+          width: widget.size,
+          height: widget.size,
+          alignment: Alignment.center,
+          decoration: widget.plain
+              ? null
+              : BoxDecoration(
+                  shape: BoxShape.circle,
+                  // a computer: a little deeper under the mouse
+                  color: Colors.black.withValues(alpha: _hover ? 0.62 : 0.45),
+                ),
+          child: widget.child,
+        ),
+      ),
+    );
+    if (onDesktop && widget.onTap != null) {
+      w = MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hover = true),
+        onExit: (_) => setState(() => _hover = false),
+        child: w,
+      );
+      w = HoverTip(message: widget.label, child: w);
+    }
     return Semantics(
       button: true,
       label: widget.label,
       excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapDown: (_) => setState(() => _down = true),
-        onTapCancel: () => setState(() => _down = false),
-        onTapUp: (_) => setState(() => _down = false),
-        onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: _down ? 0.9 : 1,
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 120),
-          curve: Curves.easeOut,
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            alignment: Alignment.center,
-            decoration: widget.plain
-                ? null
-                : BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.black.withValues(alpha: 0.45),
-                  ),
-            child: widget.child,
-          ),
-        ),
-      ),
+      child: w,
     );
   }
 }

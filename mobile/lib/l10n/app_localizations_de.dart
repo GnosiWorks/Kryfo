@@ -9757,7 +9757,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Dazwischen kommen falsche Weckrufe. So kann Google schwerer erkennen, wann echte Nachrichten ankommen. Unser Relais speichert nur Adressen, die es nicht miteinander verbinden kann. Der Push-Dienst läuft auf demselben Server und könnte sie verbinden, mit Googles Hilfe sogar mit deinem Google-Konto, also könnte es auch, wer unseren Server betreibt oder beschlagnahmt. Wenn dir das wichtig ist, wähl einen anderen Weg. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
+      'Dazwischen kommen falsche Weckrufe. So kann Google schwerer erkennen, wann echte Nachrichten ankommen. Unser Relais speichert nur Adressen, die es nicht miteinander verbinden kann. Der Push-Dienst läuft auf unserem zweiten Server. Beide Server zusammen könnten sie verbinden, mit Googles Hilfe sogar mit deinem Google-Konto. Wer nur einen beschlagnahmt, kann das nicht, aber wir betreiben beide, also könnten wir es. Wenn dir das wichtig ist, wähl einen anderen Weg. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11387,6 +11387,42 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Nicht jetzt';
+
+  @override
+  String get albumPrevious => 'Zurück';
+
+  @override
+  String get albumNext => 'Weiter';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Klicke mit der rechten Maustaste auf eine Notiz, um sie zu kopieren oder zu löschen.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Noch nichts angeheftet. Klicke mit der rechten Maustaste auf eine Nachricht und wähle Anheften, dann wartet sie hier für alle im Chat.';
+
+  @override
+  String get chatGalleryDesk => 'Bilder';
+
+  @override
+  String get groupChatGalleryDesk => 'Bilder';
+
+  @override
+  String get photoChooseDesk => 'Bilddatei wählen';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Aus einer Bilddatei';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Ton';
+
+  @override
+  String get notificationsPlaySound => 'Ton abspielen';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Bei jeder Benachrichtigung auf diesem Computer';
 
   @override
   String bridgesShareBridgeN(String n) {

@@ -3,10 +3,14 @@
 // is drawn behind it: the glyph grows with the drag, its round fills once
 // the swipe has gone far enough, with a click, and its word shows under it.
 // the row always slides back; the action says what came of it. with reduced
-// motion the glyph shows at once and only its round changes.
+// motion the glyph shows at once and only its round changes. on a computer
+// a mouse never swipes: a click that drags is no mute or archive. touch and
+// a trackpad still do.
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../theme.dart';
 import 'motion.dart';
 
@@ -83,10 +87,32 @@ class _SwipeActionsState extends State<SwipeActions> {
             ?.onDone();
         return false;
       },
-      child: widget.child,
+      child: noMouseSwipe(widget.child),
     );
   }
 }
+
+/// [child] with a mouse's sideways drag taken before a swipe around it sees
+/// it, on a computer. it holds nothing else: a click still clicks
+Widget noMouseSwipe(Widget child) => !onDesktop
+    ? child
+    : GestureDetector(
+        supportedDevices: const {PointerDeviceKind.mouse},
+        // the row's own actions are what a screen reader hears
+        excludeFromSemantics: true,
+        onHorizontalDragStart: (_) {},
+        onHorizontalDragUpdate: (_) {},
+        child: child,
+      );
+
+/// what may swipe on a computer: all but a mouse
+const swipeDevices = {
+  PointerDeviceKind.touch,
+  PointerDeviceKind.trackpad,
+  PointerDeviceKind.stylus,
+  PointerDeviceKind.invertedStylus,
+  PointerDeviceKind.unknown,
+};
 
 class _Behind extends StatelessWidget {
   final SwipeAction action;

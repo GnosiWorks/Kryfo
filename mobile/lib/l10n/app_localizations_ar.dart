@@ -9783,7 +9783,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على Google معرفة متى تصل الرسائل الحقيقية. لا يخزّن مُرحِّلنا إلا عناوين لا يستطيع الربط بينها. تعمل خدمة الإشعارات الفورية على الخادم نفسه ويمكنها الربط بينها، وبمساعدة Google بحسابك على Google أيضًا، لذا يستطيع ذلك أيضًا من يدير خادمنا أو يصادره. إن كان هذا يهمّك، فاختر طريقة أخرى. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
+      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على Google معرفة متى تصل الرسائل الحقيقية. لا يخزّن مُرحِّلنا إلا عناوين لا يستطيع الربط بينها. تعمل خدمة الإشعارات الفورية على خادمنا الثاني. يستطيع الخادمان معًا الربط بينها، وبمساعدة Google بحسابك على Google أيضًا. مصادرة أحدهما لا تكفي، لكننا نُدير الاثنين، فنستطيع نحن ذلك. إن كان هذا يهمّك، فاختر طريقة أخرى. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11404,6 +11404,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'ليس الآن';
+
+  @override
+  String get albumPrevious => 'السابق';
+
+  @override
+  String get albumNext => 'التالي';
+
+  @override
+  String get notesHoldHintDesk =>
+      'انقر بزر الفأرة الأيمن على ملاحظة لنسخها أو حذفها.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'لا شيء مثبّت هنا بعد. انقر بزر الفأرة الأيمن على رسالة واختر «تثبيت»، فتنتظر هنا للجميع في المحادثة.';
+
+  @override
+  String get chatGalleryDesk => 'الصور';
+
+  @override
+  String get groupChatGalleryDesk => 'الصور';
+
+  @override
+  String get photoChooseDesk => 'اختر ملف صورة';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'من ملف صورة';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'الصوت';
+
+  @override
+  String get notificationsPlaySound => 'تشغيل صوت';
+
+  @override
+  String get notificationsPlaySoundHint => 'مع كل إشعار على هذا الحاسوب';
 
   @override
   String bridgesShareBridgeN(String n) {

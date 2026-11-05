@@ -9645,7 +9645,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, and with Google\'s help to your Google account, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.';
+      'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on our second server. The two servers together could link them, and with Google\'s help to your Google account. Seizing one is not enough, but we run both, so we could. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11262,6 +11262,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Not now';
+
+  @override
+  String get albumPrevious => 'Previous';
+
+  @override
+  String get albumNext => 'Next';
+
+  @override
+  String get notesHoldHintDesk => 'Right-click a note to copy or delete it.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Nothing pinned here yet. Right-click a message and choose Pin, and it waits here for everyone in the chat.';
+
+  @override
+  String get chatGalleryDesk => 'Pictures';
+
+  @override
+  String get groupChatGalleryDesk => 'Pictures';
+
+  @override
+  String get photoChooseDesk => 'Choose a picture file';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'From a picture file';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Sound';
+
+  @override
+  String get notificationsPlaySound => 'Play a sound';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'With each notification on this computer';
 
   @override
   String bridgesShareBridgeN(String n) {

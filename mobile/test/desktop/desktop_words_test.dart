@@ -811,6 +811,48 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.groupChatTapToRetry,
     (l) => l.groupChatTapToRetryDesk,
   ),
+  (
+    'notesHoldHint',
+    (l) => l.notesHoldHintShown,
+    (l) => l.notesHoldHint,
+    (l) => l.notesHoldHintDesk,
+  ),
+  (
+    'pinsNothingPinnedHereYet',
+    (l) => l.pinsNothingPinnedHereYetShown,
+    (l) => l.pinsNothingPinnedHereYet,
+    (l) => l.pinsNothingPinnedHereYetDesk,
+  ),
+  (
+    'chatGallery',
+    (l) => l.chatGalleryShown,
+    (l) => l.chatGallery,
+    (l) => l.chatGalleryDesk,
+  ),
+  (
+    'groupChatGallery',
+    (l) => l.groupChatGalleryShown,
+    (l) => l.groupChatGallery,
+    (l) => l.groupChatGalleryDesk,
+  ),
+  (
+    'photoChoose',
+    (l) => l.photoChooseShown,
+    (l) => l.photoChoose,
+    (l) => l.photoChooseDesk,
+  ),
+  (
+    'wallpaperFromYourPhotos',
+    (l) => l.wallpaperFromYourPhotosShown,
+    (l) => l.wallpaperFromYourPhotos,
+    (l) => l.wallpaperFromYourPhotosDesk,
+  ),
+  (
+    'notificationsSoundAndVibration',
+    (l) => l.notificationsSoundAndVibrationShown,
+    (l) => l.notificationsSoundAndVibration,
+    (l) => l.notificationsSoundAndVibrationDesk,
+  ),
 ];
 
 Locale _locale(String tag) {

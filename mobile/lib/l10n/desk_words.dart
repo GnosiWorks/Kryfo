@@ -140,6 +140,13 @@ const deskWordKeys = [
   'savedLongPressAnyMessage',
   'chatFailedTapToRetry',
   'groupChatTapToRetry',
+  'notesHoldHint',
+  'pinsNothingPinnedHereYet',
+  'chatGallery',
+  'groupChatGallery',
+  'photoChoose',
+  'wallpaperFromYourPhotos',
+  'notificationsSoundAndVibration',
 ];
 
 extension DeskWords on AppLocalizations {
@@ -417,4 +424,17 @@ extension DeskWords on AppLocalizations {
       onDesktop ? chatFailedTapToRetryDesk : chatFailedTapToRetry;
   String get groupChatTapToRetryShown =>
       onDesktop ? groupChatTapToRetryDesk : groupChatTapToRetry;
+  String get notesHoldHintShown =>
+      onDesktop ? notesHoldHintDesk : notesHoldHint;
+  String get pinsNothingPinnedHereYetShown =>
+      onDesktop ? pinsNothingPinnedHereYetDesk : pinsNothingPinnedHereYet;
+  String get chatGalleryShown => onDesktop ? chatGalleryDesk : chatGallery;
+  String get groupChatGalleryShown =>
+      onDesktop ? groupChatGalleryDesk : groupChatGallery;
+  String get photoChooseShown => onDesktop ? photoChooseDesk : photoChoose;
+  String get wallpaperFromYourPhotosShown =>
+      onDesktop ? wallpaperFromYourPhotosDesk : wallpaperFromYourPhotos;
+  String get notificationsSoundAndVibrationShown => onDesktop
+      ? notificationsSoundAndVibrationDesk
+      : notificationsSoundAndVibration;
 }

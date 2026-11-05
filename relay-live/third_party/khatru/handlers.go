@@ -306,20 +306,26 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						if rl.getSubRelayFromFilter != nil {
 							srl = rl.getSubRelayFromFilter(filter)
 						}
-						err := srl.handleRequest(reqCtx, env.SubscriptionID, &eose, ws, filter)
-						if err != nil {
+						// kryfo: the filter is checked first, then listened to, then
+						// its stored events are read, so an event saved during the
+						// read is in one or the other. hold keeps it back until the
+						// eose
+						checked := filter
+						if err := srl.checkRequest(reqCtx, &checked); err != nil {
 							// fail everything if any filter is rejected
 							reason := err.Error()
 							if strings.HasPrefix(reason, "auth-required:") {
 								RequestAuth(ctx)
 							}
+							eose.Done()                                 // kryfo: for the filter not handled
+							rl.removeListenerId(ws, env.SubscriptionID) // kryfo: and the ones before it
 							ws.WriteJSON(nostr.ClosedEnvelope{SubscriptionID: env.SubscriptionID, Reason: reason})
 							cancelReqCtx(errors.New("filter rejected"))
 							ws.release(env.SubscriptionID) // kryfo
 							return
-						} else {
-							rl.addListener(ws, env.SubscriptionID, srl, filter, cancelReqCtx)
 						}
+						rl.addListener(ws, env.SubscriptionID, srl, filter, cancelReqCtx)
+						srl.handleRequest(reqCtx, env.SubscriptionID, &eose, ws, checked)
 					}
 
 					go func() {

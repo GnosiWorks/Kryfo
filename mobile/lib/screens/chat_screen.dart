@@ -82,6 +82,7 @@ import '../media_send.dart'
     show sendChunkedMediaTo, cancelMediaSend, mediaInflight, mediaSendsTick;
 import '../clean_media.dart';
 import '../image_strip.dart';
+import '../widgets/desk_select.dart';
 import '../widgets/decode_px.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import '../devchat/dev_chat.dart' show DevChatRow, DevRow, DevState;
@@ -1388,6 +1389,9 @@ class _ChatScreenState extends State<ChatScreen>
     super.initState();
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
+    // a computer: the chat opens ready to type. the field takes it as soon
+    // as it is built
+    if (onDesktop) _composerFocus.requestFocus();
     if (_isDev) {
       final d = _devShown;
       _devOpening = DevOpening(
@@ -3944,7 +3948,7 @@ class _ChatScreenState extends State<ChatScreen>
           AttachItem(
             icon: (c) => Icon(Icons.photo_library_outlined, color: c),
             tint: HaloColors.violet,
-            label: l10n.chatGallery,
+            label: l10n.chatGalleryShown,
             onTap: _pickAndSendMultiple,
           ),
           AttachItem(
@@ -4941,6 +4945,9 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || (_devOpening?.busy ?? false)) return;
+    // a computer: the next words go straight on, the send button's click
+    // took the field's focus
+    if (onDesktop) _composerFocus.requestFocus();
     await _sendBody(text);
   }
 
@@ -6706,13 +6713,34 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   Widget build(BuildContext context) => menuBack(
-    child: DragInZone(
-      enabled: _composerShown && !_mediaWaits,
-      send: _sendFileFrom,
-      couldNotRead: () => l10n.chatCouldNotReadThat,
-      child: _page(context),
+    child: PopScope(
+      canPop: !_escHolds,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _escOne();
+      },
+      child: DragInZone(
+        enabled: _composerShown && !_mediaWaits,
+        send: _sendFileFrom,
+        couldNotRead: () => l10n.chatCouldNotReadThat,
+        child: _page(context),
+      ),
     ),
   );
+
+  // esc on a computer lets go of the quote, then the search, and only then
+  // closes the chat
+  bool get _escHolds =>
+      onDesktop && ((_replyTo != null && !_blocked) || _searching);
+
+  void _escOne() {
+    if (_replyTo != null && !_blocked) {
+      setState(() => _replyTo = null);
+      _keepDraft();
+    } else if (_searching) {
+      _closeSearch();
+    }
+    if (onDesktop) _composerFocus.requestFocus();
+  }
 
   // the bar under the thread is the composer: a drop goes as a pick would
   bool get _composerShown =>
@@ -8972,28 +9000,40 @@ class _Bubble extends StatelessWidget {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           if (msg.text.isNotEmpty)
-                                            writtenStart(
-                                              msg.text,
-                                              TranslatedBody(
-                                                chat: translation,
-                                                msgKey: trKeyOf(
-                                                  msg.msgUid,
-                                                  msg.came,
-                                                ),
-                                                text: msg.text,
-                                                enabled:
-                                                    !isOut &&
-                                                    query.isEmpty &&
-                                                    msg.sticker == null &&
-                                                    !msg.welcome,
-                                                original: _body(
-                                                  isOut,
-                                                  image: msg.mediaPath != null,
-                                                ),
-                                                translated: (t) => _body(
-                                                  isOut,
-                                                  image: msg.mediaPath != null,
-                                                  words: t,
+                                            DeskSelectable(
+                                              // a click on these words is the bubble's while it retries
+                                              enabled:
+                                                  !((failedShown || parked) &&
+                                                      onRetry != null),
+                                              onMenu: onLongPress == null
+                                                  ? null
+                                                  : () => onLongPress!(context),
+                                              onTap: onReveal,
+                                              child: writtenStart(
+                                                msg.text,
+                                                TranslatedBody(
+                                                  chat: translation,
+                                                  msgKey: trKeyOf(
+                                                    msg.msgUid,
+                                                    msg.came,
+                                                  ),
+                                                  text: msg.text,
+                                                  enabled:
+                                                      !isOut &&
+                                                      query.isEmpty &&
+                                                      msg.sticker == null &&
+                                                      !msg.welcome,
+                                                  original: _body(
+                                                    isOut,
+                                                    image:
+                                                        msg.mediaPath != null,
+                                                  ),
+                                                  translated: (t) => _body(
+                                                    isOut,
+                                                    image:
+                                                        msg.mediaPath != null,
+                                                    words: t,
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -10150,11 +10190,18 @@ class MediaGalleryScreen extends StatelessWidget {
             )
           : GridView.builder(
               padding: const EdgeInsets.all(2),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 2,
-                crossAxisSpacing: 2,
-              ),
+              // a computer's window is wide: tiles keep a thumbnail's size
+              gridDelegate: onDesktop
+                  ? const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: kDeskTile,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                    )
+                  : const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                    ),
               itemCount: paths.length,
               itemBuilder: (context, i) {
                 final path = paths[i];

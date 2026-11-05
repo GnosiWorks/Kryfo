@@ -9647,7 +9647,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Ada juga panggilan bangun palsu, jadi Google lebih sulit tahu kapan pesan asli masuk. Relay kami hanya menyimpan alamat yang tidak bisa ia hubungkan satu sama lain. Layanan push berjalan di server yang sama dan bisa menghubungkannya, dan dengan bantuan Google ke akun Google-mu, jadi siapa pun yang menjalankan atau menyita server kami juga bisa. Kalau itu penting bagimu, pilih cara lain. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
+      'Ada juga panggilan bangun palsu, jadi Google lebih sulit tahu kapan pesan asli masuk. Relay kami hanya menyimpan alamat yang tidak bisa ia hubungkan satu sama lain. Layanan push berjalan di server kedua kami. Kedua server itu bersama-sama bisa menghubungkannya, dan dengan bantuan Google ke akun Google-mu. Menyita satu saja tidak cukup, tapi kami menjalankan keduanya, jadi kami bisa. Kalau itu penting bagimu, pilih cara lain. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11262,6 +11262,42 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Nanti saja';
+
+  @override
+  String get albumPrevious => 'Sebelumnya';
+
+  @override
+  String get albumNext => 'Berikutnya';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Klik kanan sebuah catatan untuk menyalin atau menghapusnya.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Belum ada yang disematkan di sini. Klik kanan sebuah pesan lalu pilih Sematkan, dan pesan itu menunggu di sini untuk semua orang di obrolan.';
+
+  @override
+  String get chatGalleryDesk => 'Gambar';
+
+  @override
+  String get groupChatGalleryDesk => 'Gambar';
+
+  @override
+  String get photoChooseDesk => 'Pilih file gambar';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Dari file gambar';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Suara';
+
+  @override
+  String get notificationsPlaySound => 'Putar suara';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Di setiap notifikasi di komputer ini';
 
   @override
   String bridgesShareBridgeN(String n) {

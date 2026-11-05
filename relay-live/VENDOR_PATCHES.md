@@ -12,7 +12,9 @@ left out, and upstream's go.mod. five files differ, the new lines marked
   the sender gets its ok, with no deadline, so one slow listener held up
   every sender to its address. the listeners are read under
   `clientsMutex`, which upstream skips, as a reader so publishers do not
-  wait for each other.
+  wait for each other. a listener that goes is cleared from the list's
+  array: upstream only shortens the list, and the slot past its end keeps
+  the closed connection and its buffers until a new listener takes it.
 - `websocket.go`: every write gets `Relay.WriteWait` (upstream's field, set
   to 10s and never used), and a write that fails closes the connection.
   each connection has a queue for new events, written by a goroutine that
@@ -28,16 +30,21 @@ left out, and upstream's go.mod. five files differ, the new lines marked
   stamped up to two days back, so a catch-up judged by its stamp would step
   over stored wraps it never got. held events count toward the bounds like
   queued ones.
+- `websocket.go`: `Close` ends a connection for the relay's own bounds
+  (pages.go closes the oldest pages' sockets when the page budget is full).
 - `responding.go`: a page of stored events gets `Relay.PageWait` in all,
-  then the connection is closed with no eose. the store's read stays open
-  until the last event is written, and each write has its own deadline, so
-  a reader taking a frame just inside it could hold the read for 100 of
-  them.
+  then the connection is closed with no eose. each write has its own
+  deadline, so a reader taking a frame just inside it could keep the page,
+  and what it holds in memory, for 100 of them. the overwrite and reject
+  hooks run in `checkRequest`, apart from the query.
 - `handlers.go`: each connection keeps its relay, for the bounds. a
   request holds its live events from before its listeners are added until
-  its eose is written, or until it is refused. an unexpected close is
-  logged without the caller's address (upstream logs X-Forwarded-For or
-  the remote address).
+  its eose is written, or until it is refused. a filter is checked, then
+  its listener added, then its stored events read: upstream adds the
+  listener after the read, so an event saved during the read reached
+  neither. a refused filter gets no listener, and the request's earlier
+  ones are removed. an unexpected close is logged without the caller's
+  address (upstream logs X-Forwarded-For or the remote address).
 - `relay.go`: `MaxQueuedSize` (8 MB unless set), `MaxQueuedTotal` and
   `PageWait` (no bound unless set), `clientsMutex` as a read-write lock,
   and a deadline on the handshake answer.

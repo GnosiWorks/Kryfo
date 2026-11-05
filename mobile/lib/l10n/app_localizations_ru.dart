@@ -9811,7 +9811,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'К настоящим пробуждениям подмешиваются ложные, поэтому Google сложнее понять, когда приходят настоящие сообщения. Наш ретранслятор хранит только адреса, которые не может связать между собой. Служба пушей работает на том же сервере и могла бы их связать, а с помощью Google и с твоим аккаунтом Google, а значит, смог бы и тот, кто управляет нашим сервером или изымет его. Если для тебя это важно, выбери другой способ. Скрытые чаты, комнаты сверх первых нескольких и время от времени обычный контакт, примерно один месяц из пяти, ждут проверки, которую Kryfo всё равно делает каждые 15 минут.';
+      'К настоящим пробуждениям подмешиваются ложные, поэтому Google сложнее понять, когда приходят настоящие сообщения. Наш ретранслятор хранит только адреса, которые не может связать между собой. Служба пушей работает на нашем втором сервере. Вместе два сервера могли бы их связать, а с помощью Google и с твоим аккаунтом Google. Изъять один недостаточно, но обоими управляем мы, так что мы могли бы. Если для тебя это важно, выбери другой способ. Скрытые чаты, комнаты сверх первых нескольких и время от времени обычный контакт, примерно один месяц из пяти, ждут проверки, которую Kryfo всё равно делает каждые 15 минут.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11443,6 +11443,42 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Не сейчас';
+
+  @override
+  String get albumPrevious => 'Предыдущее';
+
+  @override
+  String get albumNext => 'Следующее';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Щёлкни правой кнопкой по заметке, чтобы скопировать или удалить её.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Здесь пока ничего не закреплено. Щёлкни правой кнопкой по сообщению и выбери «Закрепить», и оно будет ждать здесь всех в чате.';
+
+  @override
+  String get chatGalleryDesk => 'Изображения';
+
+  @override
+  String get groupChatGalleryDesk => 'Изображения';
+
+  @override
+  String get photoChooseDesk => 'Выбрать файл изображения';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Из файла изображения';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Звук';
+
+  @override
+  String get notificationsPlaySound => 'Воспроизводить звук';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'При каждом уведомлении на этом компьютере';
 
   @override
   String bridgesShareBridgeN(String n) {
