@@ -23,9 +23,10 @@ const kTipProducts = {
   'tip_guardian': SupporterTier.guardian,
 };
 
-// a tip was started on this phone and play may still owe its outcome. only
-// then does a return to the front ask play, so a phone that never tips never
-// talks to play billing. the phone's, like the google account it pays from
+// a tip was started in this session and play may still owe its outcome.
+// only then does a return to the front ask play, so a phone that never tips
+// never talks to play billing. kept per identity: a tip started in one
+// session is never settled into the other
 const _owedKey = 'tip_owed';
 
 /// the product id that gives [t]
@@ -167,10 +168,11 @@ class TipJar {
 
   Future<void> _owe(bool on) async {
     final prefs = await SharedPreferences.getInstance();
+    final k = _container().key(_owedKey);
     if (on) {
-      await prefs.setBool(_owedKey, true);
+      await prefs.setBool(k, true);
     } else {
-      await prefs.remove(_owedKey);
+      await prefs.remove(k);
     }
   }
 
@@ -181,7 +183,7 @@ class TipJar {
   Future<TipEvent?> settle({bool always = false}) async {
     if (!always) {
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool(_owedKey) != true) return null;
+      if (prefs.getBool(_container().key(_owedKey)) != true) return null;
     }
     final r = await _billing.owned();
     if (r.code != TipCode.ok) return null;

@@ -195,6 +195,22 @@ void main() {
     expect(await loadSupporterTier(), SupporterTier.none);
   });
 
+  test('a tip owed to one session is not settled in the other', () async {
+    // started in the everyday app, still pending at play
+    await jar.buy(SupporterTier.patron);
+    play.owns = [bought('tip_patron', token: 'p')];
+    // the decoy opens to the front: nothing owed there, play not asked
+    box = HaloContainer.decoy;
+    expect(await jar.settle(), isNull);
+    expect(play.ownedAsks, 0);
+    expect(await loadSupporterTier(HaloContainer.decoy), SupporterTier.none);
+    // back in the everyday app it lands there
+    box = HaloContainer.everyday;
+    expect((await jar.settle())?.outcome, TipOutcome.granted);
+    expect(await loadSupporterTier(), SupporterTier.patron);
+    expect(play.acked, ['p']);
+  });
+
   test('a grant waits for the lock to lift', () async {
     final held = <Future<void> Function()>[];
     jar = TipJar(

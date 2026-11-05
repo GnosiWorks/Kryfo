@@ -311,6 +311,9 @@ const containerKeys = {
   'supporter_show_self',
   'supporter_share_contacts',
   'badge_open_invoice',
+  // a google play tip this identity started whose outcome play may still
+  // owe (tips/tip_jar.dart): settled only in the session that started it
+  'tip_owed',
   'kryfo.intro.accept',
   'kryfo.intro.sent',
   'kryfo.scamshield.on',
@@ -332,8 +335,6 @@ const containerKeys = {
 // receiving side reads: kept once, never prefixed
 const deviceKeys = {
   'app_locale',
-  // a google play tip whose outcome play may still owe (tips/tip_jar.dart)
-  'tip_owed',
   'delivery_mode',
   'delivery_heartbeat',
   'delivery_kills',
