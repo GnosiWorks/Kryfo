@@ -25,14 +25,18 @@ import (
 
 const (
 	wrapKind = 1059
-	// nip-44 caps a wrap's content near 90 kB
-	maxMessage = 256 << 10
+	// nip-44 caps a wrap's content at 87472 bytes, and the rest of the
+	// event is under a kilobyte
+	maxMessage = 96 << 10
 	// a media send is a burst of slices, then quiet
 	eventsPerSec, eventBurst = 10, 500
 	// a socket carries a batch of up to 8 addresses: their windows and
 	// catch-up pages share this, the app paces at 8/s, burst 180
 	reqsPerSec, reqBurst = 10, 200
 	maxIDs, maxAddrs     = 20, 10
+	// ids asked for with their address: the app asks for wraps it was told
+	// of by id, a hundred at a time
+	maxAddrIDs = 100
 	// knocks the wraps of one connection may set off: a phone writes to
 	// one address at a time
 	knocksPerSec, knockBurst = 1, 20
@@ -64,9 +68,9 @@ const (
 	walPages = 8 << 12
 	// a client gets this long to take each frame, then it is closed
 	writeWait = 10 * time.Second
-	// and this long for a page of stored wraps. the store's read stays open
-	// while a page is written, which keeps the wal from being emptied. the
-	// app gives up on a page after 90 s
+	// and this long for a page of stored wraps in all, which waits in memory
+	// until it is written. the app gives up on a page after 20 s without an
+	// event
 	pageWait = 2 * time.Minute
 	// live wraps waiting for one connection, counted as what they hold in
 	// memory. a phone on a slow circuit gets about 160 media slices of
@@ -109,8 +113,11 @@ func (b *bucket) takeN(now time.Time, n float64) bool {
 }
 
 // a connection's events, reqs, the knocks its wraps may set off and the
-// new knock registrations it may make
-type budget struct{ events, reqs, knocks, regs *bucket }
+// new knock registrations it may make, and its one page in memory
+type budget struct {
+	events, reqs, knocks, regs *bucket
+	page                       chan struct{}
+}
 
 type limits struct {
 	mu       sync.Mutex
@@ -126,6 +133,13 @@ type limits struct {
 	written atomic.Int64
 	// the helper app mode's registrations, nil when off
 	knock *knocker
+	// pages of stored wraps in memory, and reads of them (pages.go)
+	pages, reads *pageBudget
+	// the pages in memory now, for cutting the oldest. under inMemMu
+	inMem   map[*pageInMemory]struct{}
+	inMemMu sync.Mutex
+	// pageCutAfter, apart for the tests
+	cutAfter time.Duration
 }
 
 // sockets for everyone together. a phone holds one per contact address,
@@ -146,6 +160,10 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 		maxConns: maxConns,
 		stored:   newBucket(float64(storedPerMin)/60, float64(storedPerMin)*4),
 		dataDir:  dataDir,
+		pages:    newPageBudget(maxPagesBytes),
+		reads:    newPageBudget(maxReadsBytes),
+		inMem:    map[*pageInMemory]struct{}{},
+		cutAfter: pageCutAfter,
 	}
 	relay.MaxMessageSize = maxMessage
 	relay.WriteWait = writeWait
@@ -160,7 +178,7 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 	relay.RejectFilter = append(relay.RejectFilter, l.filter)
 	relay.RejectCountFilter = append(relay.RejectCountFilter, l.filter)
 	for i, q := range relay.QueryEvents {
-		relay.QueryEvents[i] = noDeletionLookups(q)
+		relay.QueryEvents[i] = noDeletionLookups(l.paged(q))
 	}
 	if dataDir != "" {
 		go l.watchDisk(dataDir)
@@ -170,16 +188,26 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 
 type queryFunc = func(context.Context, nostr.Filter) (chan *nostr.Event, error)
 
-var errNoDeletion = errors.New("this relay deletes nothing on request")
+var (
+	errNoDeletion = errors.New("this relay deletes nothing on request")
+	errNotOpen    = errors.New("this connection is not open")
+)
 
 // khatru looks up a kind 5's targets before any reject hook runs. this relay
 // keeps wraps until they expire, so those lookups never reach the store and
 // the event then meets l.event like any other. khatru's expiry checks have
-// no connection and pass.
+// no connection and pass. before it saves an event khatru also asks for a
+// kind 5 naming it. the store never holds one, so that is answered here
+// without a store connection or a page.
 func noDeletionLookups(q queryFunc) queryFunc {
 	return func(ctx context.Context, f nostr.Filter) (chan *nostr.Event, error) {
 		if khatru.IsInternalCall(ctx) && khatru.GetConnection(ctx) != nil {
 			return nil, errNoDeletion
+		}
+		if len(f.Kinds) == 1 && f.Kinds[0] == 5 {
+			ch := make(chan *nostr.Event)
+			close(ch)
+			return ch, nil
 		}
 		return q(ctx, f)
 	}
@@ -197,7 +225,13 @@ func (l *limits) connect(ctx context.Context) {
 		return
 	}
 	l.mu.Lock()
-	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst), newBucket(knocksPerSec, knockBurst), newBucket(regsPerSec, regBurst)}
+	l.conns[ws] = &budget{
+		events: newBucket(eventsPerSec, eventBurst),
+		reqs:   newBucket(reqsPerSec, reqBurst),
+		knocks: newBucket(knocksPerSec, knockBurst),
+		regs:   newBucket(regsPerSec, regBurst),
+		page:   make(chan struct{}, 1),
+	}
 	l.mu.Unlock()
 }
 
@@ -342,14 +376,21 @@ func (l *limits) filter(ctx context.Context, f nostr.Filter) (bool, string) {
 	return false, ""
 }
 
-// by id alone (the liveness probe of older builds), or wraps to named
-// addresses
+// by id alone (the liveness probe of older builds), wraps to named
+// addresses, or wraps to named addresses by id
 func filterOK(f nostr.Filter) bool {
 	if f.Search != "" || len(f.Authors) > 0 {
 		return false
 	}
 	if len(f.IDs) > 0 {
-		if len(f.IDs) > maxIDs || len(f.Kinds) > 0 || len(f.Tags) > 0 {
+		most := maxIDs
+		if len(f.Kinds) > 0 || len(f.Tags) > 0 {
+			if !addrsOK(f) {
+				return false
+			}
+			most = maxAddrIDs
+		}
+		if len(f.IDs) > most {
 			return false
 		}
 		for _, id := range f.IDs {
@@ -359,6 +400,11 @@ func filterOK(f nostr.Filter) bool {
 		}
 		return true
 	}
+	return addrsOK(f)
+}
+
+// wraps to at most maxAddrs named addresses, and nothing else
+func addrsOK(f nostr.Filter) bool {
 	if len(f.Kinds) != 1 || f.Kinds[0] != wrapKind || len(f.Tags) != 1 {
 		return false
 	}
