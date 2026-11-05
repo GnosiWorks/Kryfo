@@ -364,11 +364,11 @@ func startListener(dataDir string) string {
 		mu.Unlock()
 		return addr
 	}
-	have := torNode != nil
+	up := torNode
 	mu.Unlock()
 	// a client's tor is started once and never again, with or without an
 	// onion left to take down from before it was a client
-	if have && torClientOnly() {
+	if up != nil && torClientOnly() {
 		if r := dropOnion(); r != "ok" {
 			return r
 		}
@@ -377,6 +377,12 @@ func startListener(dataDir string) string {
 
 	if dataDir == "" {
 		return "error: empty data dir"
+	}
+	// a phone's tor is started once per process too: a listen that failed
+	// goes again on the same tor, never on a second one
+	if up != nil {
+		log.Println("halo: tor is up, listening again")
+		return onionOn(up, dataDir, false)
 	}
 	torDataDir := dataDir + "/tor"
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
@@ -389,13 +395,18 @@ func startListener(dataDir string) string {
 	// we hold startMu, so removing them here is safe.
 	cleanTorRunFiles(torDataDir)
 
+	// a third tor in one process aborts it: only a new process starts one
+	if !torMayLaunch() {
+		log.Println("halo: tor ran twice in this process, a new one needs a restart")
+		return "error: tor start: no more tors in this process"
+	}
 	setStatus("starting")
 	log.Println("halo: starting embedded tor...")
 	// torArgs start it with DisableNetwork 1
 	netWentOff()
 	choosePinnedSocks()
 	start := func() (*tor.Tor, error) {
-		return tor.Start(nil, &tor.StartConf{
+		return startTor(nil, &tor.StartConf{
 			ProcessCreator: libtorCreator{},
 			DataDir:        torDataDir,
 			DebugWriter:    newTorDebugWriter(),
@@ -406,7 +417,7 @@ func startListener(dataDir string) string {
 		})
 	}
 	t, err := start()
-	if err != nil && socksPin() != 0 {
+	if err != nil && socksPin() != 0 && torMayLaunch() {
 		// something else took the port between choosing it and tor binding
 		// it. not worth failing a start over: let tor choose, and the cache
 		// resets keep one-shot requests working across a bounce.
@@ -438,12 +449,24 @@ func startListener(dataDir string) string {
 		log.Println("halo: tor runs as a client, no onion of its own")
 		return torClientAddr
 	}
+	return onionOn(t, dataDir, true)
+}
 
+// tor's own start, the tests' to stand in for
+var startTor = tor.Start
+
+// our onion on tor t, with the key kept in dataDir. [first]: the start that
+// made t, which also puts it on the network
+func onionOn(t *tor.Tor, dataDir string, first bool) string {
+	if t.Control == nil {
+		return "error: listen: no control connection"
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	keyPath := dataDir + "/onion.key"
 	var key ed25519.PrivateKey
+	var err error
 	if data, rerr := os.ReadFile(keyPath); rerr == nil && len(data) == ed25519.PrivateKeySize {
 		key = ed25519.PrivateKey(data)
 		log.Println("halo: loaded onion key from disk")
@@ -466,7 +489,9 @@ func startListener(dataDir string) string {
 	// only on the branch NoWait skips, so turn it on here, over the engine's
 	// own connection (see control_events.go). with no bridge mode yet it
 	// stays off: the bounce that sets the mode turns it on.
-	networkOnAtStart(t)
+	if first {
+		networkOnAtStart(t)
+	}
 
 	listenStart := time.Now()
 	onion, err := t.Listen(ctx, &tor.ListenConf{
@@ -477,6 +502,15 @@ func startListener(dataDir string) string {
 	})
 	if err != nil {
 		log.Printf("halo: listen failed after %.0fs: %v", time.Since(listenStart).Seconds(), err)
+		// the next start listens again and subscribes afresh
+		if hsSubbed {
+			evMu.Lock()
+			c := evConn
+			evMu.Unlock()
+			if c != nil {
+				c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
+			}
+		}
 		return fmt.Sprintf("error: listen: %v", err)
 	}
 	log.Printf("halo: listen returned in %.0fs", time.Since(listenStart).Seconds())
