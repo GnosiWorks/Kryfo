@@ -23,6 +23,7 @@ import 'package:kryfo/widgets/breathing_ring.dart';
 import 'package:kryfo/widgets/burn_fade.dart' show FadeFold;
 import 'package:kryfo/widgets/press_scale.dart';
 import 'package:kryfo/widgets/row_motion.dart' show GrowIn;
+import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // only what these screens ask for; anything else fails on its type
@@ -356,6 +357,8 @@ void main() {
       expect(grown.every((g) => !g.active), isTrue, reason: 'first load');
       await t.enterText(find.byType(TextField), 'water the fig');
       await t.pump();
+      // the save comes in for the mic
+      await t.pump(const Duration(milliseconds: 250));
       await t.tap(find.bySemanticsLabel(l10n.commonSave));
       await t.pump();
       await t.pump(const Duration(milliseconds: 20));
@@ -380,9 +383,8 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('the send button lights once there is something to keep', (
-      t,
-    ) async {
+    testWidgets('the save button comes in lit, for the mic, once there is '
+        'something to keep', (t) async {
       phone(t);
       await t.pumpWidget(framed(const NotesScreen()));
       await t.pump(const Duration(seconds: 1));
@@ -397,10 +399,14 @@ void main() {
                       .decoration
                   as BoxDecoration)
               .color;
-      expect(send(), HaloColors.surface3);
+      // nothing written: the mic, no save
+      expect(find.byIcon(Icons.arrow_upward_rounded), findsNothing);
+      expect(find.byType(HoldToTalkMic), findsOneWidget);
       await t.enterText(find.byType(TextField), 'x');
       await t.pump(const Duration(milliseconds: 250));
+      await t.pump(const Duration(milliseconds: 250));
       expect(send(), HaloColors.amber);
+      expect(find.byType(HoldToTalkMic), findsNothing);
       await rest(t);
       await drain(t);
     });

@@ -11210,10 +11210,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatDropHereToSend => 'Lepaskan di sini untuk mengirim';
 
   @override
-  String get notesDropKeepsWords =>
-      'Catatan pribadi menyimpan kata. Kirim file di sebuah chat.';
-
-  @override
   String get voiceSeeTranscription => 'Lihat transkrip';
 
   @override
@@ -11530,4 +11526,36 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Beri tip agar Kryfo tetap mandiri';
+
+  @override
+  String get notesDropToKeep => 'Lepaskan di sini untuk menyimpannya';
+
+  @override
+  String get notesOnAllDevices => 'Di semua perangkatmu';
+
+  @override
+  String get notesKeepAnything =>
+      'Simpan tulisan, foto, dan file di sini. Semuanya muncul di semua perangkatmu.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Catatan ini terhapus dari semua perangkatmu untuk selamanya.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Semua catatan terhapus dari semua perangkatmu untuk selamanya.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Semua catatan hanya terhapus dari perangkat ini. Ponselmu tetap menyimpannya.';
+
+  @override
+  String get notesAddItem => 'Tambah foto atau file';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo tidak bisa membersihkan gambar ini. Tambahkan sebagai foto saja.';
+
+  @override
+  String get notesVoiceNotKept => 'Pesan suaramu tidak disimpan';
 }

@@ -11217,10 +11217,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatDropHereToSend => 'भेजने के लिए यहाँ छोड़ें';
 
   @override
-  String get notesDropKeepsWords =>
-      'अपने लिए नोट में शब्द रहते हैं। फ़ाइलें किसी चैट में भेजें।';
-
-  @override
   String get voiceSeeTranscription => 'लिखित रूप देखें';
 
   @override
@@ -11534,4 +11530,36 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Kryfo को स्वतंत्र रखने के लिए टिप दें';
+
+  @override
+  String get notesDropToKeep => 'रखने के लिए यहाँ छोड़ें';
+
+  @override
+  String get notesOnAllDevices => 'आपके सभी डिवाइस पर';
+
+  @override
+  String get notesKeepAnything =>
+      'शब्द, फ़ोटो और फ़ाइलें यहाँ रखें। ये आपके सभी डिवाइस पर दिखते हैं।';
+
+  @override
+  String get notesGoneEverywhere =>
+      'यह आपके सभी डिवाइस से हमेशा के लिए हट जाता है।';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'हर नोट आपके सभी डिवाइस से हमेशा के लिए हट जाएगा।';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'हर नोट सिर्फ़ इसी डिवाइस से हटेगा। आपका फ़ोन उन्हें रखता है।';
+
+  @override
+  String get notesAddItem => 'फ़ोटो या फ़ाइल जोड़ें';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo इस तस्वीर को साफ़ नहीं कर सकता। इसे फ़ोटो की तरह जोड़ें।';
+
+  @override
+  String get notesVoiceNotKept => 'आपका वॉइस नोट नहीं रखा गया';
 }

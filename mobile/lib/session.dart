@@ -15,7 +15,7 @@ import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
-import 'devices/own_sync.dart' show OwnChat, ownNoted;
+import 'devices/own_sync.dart' show OwnChat, kOwnNotes, ownNoted;
 import 'dlog.dart';
 import 'drafts.dart' show KeptDraft;
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend, wallKey;
@@ -284,6 +284,15 @@ class Session {
   Future<void> declineRequest(String haloId) =>
       _ofPeer(haloId).declineRequest(haloId);
   Future<int> deleteAllOf(String chatId) => _ofPeer(chatId).deleteAllOf(chatId);
+
+  /// every note to self, gone: my devices hear the clear (a linked
+  /// device's stays on it, as a chat's does)
+  Future<int> deleteAllNotes() async {
+    final d = _ofPeer(kOwnNotes.id);
+    final n = await d.deleteAllOf(kOwnNotes.id);
+    _ownTell(d, 'clear', kOwnNotes, {'t': _now()});
+    return n;
+  }
 
   Future<void> deleteConversation(String haloId) async {
     final db = _ofPeer(haloId);

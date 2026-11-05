@@ -11222,10 +11222,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatDropHereToSend => 'برای فرستادن اینجا رها کنید';
 
   @override
-  String get notesDropKeepsWords =>
-      'یادداشت برای خود متن نگه می‌دارد. فایل‌ها را در یک گفتگو بفرستید.';
-
-  @override
   String get voiceSeeTranscription => 'دیدن متن';
 
   @override
@@ -11537,4 +11533,36 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'انعام بدهید تا Kryfo مستقل بماند';
+
+  @override
+  String get notesDropToKeep => 'برای نگه داشتن اینجا رها کنید';
+
+  @override
+  String get notesOnAllDevices => 'روی همه‌ی دستگاه‌هایتان';
+
+  @override
+  String get notesKeepAnything =>
+      'نوشته‌ها، عکس‌ها و فایل‌ها را اینجا نگه دارید. روی همه‌ی دستگاه‌هایتان دیده می‌شوند.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'برای همیشه از همه‌ی دستگاه‌هایتان پاک می‌شود.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'همه‌ی یادداشت‌ها برای همیشه از همه‌ی دستگاه‌هایتان پاک می‌شوند.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'همه‌ی یادداشت‌ها فقط از این دستگاه پاک می‌شوند. گوشی‌تان آن‌ها را نگه می‌دارد.';
+
+  @override
+  String get notesAddItem => 'افزودن عکس یا فایل';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo نمی‌تواند این تصویر را پاک‌سازی کند. آن را به‌صورت عکس اضافه کنید.';
+
+  @override
+  String get notesVoiceNotKept => 'پیام صوتی شما نگه داشته نشد';
 }

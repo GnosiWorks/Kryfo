@@ -11393,10 +11393,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatDropHereToSend => 'Відпусти тут, щоб надіслати';
 
   @override
-  String get notesDropKeepsWords =>
-      'Нотатки для себе зберігають текст. Файли надсилай у чаті.';
-
-  @override
   String get voiceSeeTranscription => 'Показати текст';
 
   @override
@@ -11712,4 +11708,36 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Залиш чайові, щоб Kryfo лишався незалежним';
+
+  @override
+  String get notesDropToKeep => 'Відпусти тут, щоб зберегти';
+
+  @override
+  String get notesOnAllDevices => 'На всіх твоїх пристроях';
+
+  @override
+  String get notesKeepAnything =>
+      'Зберігай тут текст, фото й файли. Вони з’являються на всіх твоїх пристроях.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Її буде стерто з усіх твоїх пристроїв назавжди.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Усі нотатки буде стерто з усіх твоїх пристроїв назавжди.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Усі нотатки буде стерто лише з цього пристрою. На телефоні вони залишаться.';
+
+  @override
+  String get notesAddItem => 'Додати фото або файл';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo не може очистити це зображення. Додай його як фото.';
+
+  @override
+  String get notesVoiceNotKept => 'Голосове повідомлення не збережено';
 }

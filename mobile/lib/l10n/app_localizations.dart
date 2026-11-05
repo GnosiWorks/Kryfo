@@ -17965,12 +17965,6 @@ abstract class AppLocalizations {
   /// **'Drop here to send'**
   String get chatDropHereToSend;
 
-  /// a computer: files dropped on note to self, which keeps text only
-  ///
-  /// In en, this message translates to:
-  /// **'Note to self keeps words. Send files in a chat.'**
-  String get notesDropKeepsWords;
-
   /// the link under a voice message that shows its words
   ///
   /// In en, this message translates to:
@@ -18462,6 +18456,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave a tip to keep Kryfo independent'**
   String get tipsProfileCard;
+
+  /// notes to self on a computer: the line on the wash while files are dragged over it
+  ///
+  /// In en, this message translates to:
+  /// **'Drop here to keep it'**
+  String get notesDropToKeep;
+
+  /// note to self's line under its title when it reaches the person's other devices
+  ///
+  /// In en, this message translates to:
+  /// **'On all your devices'**
+  String get notesOnAllDevices;
+
+  /// note to self's empty page when it reaches the person's other devices
+  ///
+  /// In en, this message translates to:
+  /// **'Keep words, photos and files here. They show on all your devices.'**
+  String get notesKeepAnything;
+
+  /// the confirm line for deleting one note that reaches the person's other devices
+  ///
+  /// In en, this message translates to:
+  /// **'It goes from all your devices, for good.'**
+  String get notesGoneEverywhere;
+
+  /// the confirm line for deleting every note from the phone, which reaches the person's other devices
+  ///
+  /// In en, this message translates to:
+  /// **'Every note goes from all your devices, for good.'**
+  String get notesDeleteAllEverywhere;
+
+  /// the confirm line for deleting every note on a linked device: only that device's notes go
+  ///
+  /// In en, this message translates to:
+  /// **'Every note goes from this device only. Your phone keeps them.'**
+  String get notesDeleteAllHereOnly;
+
+  /// the label of the button that adds a photo or a file to note to self
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo or a file'**
+  String get notesAddItem;
+
+  /// a picture that cannot be cleaned is not kept in note to self
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo can\'t clean this picture. Add it as a photo instead.'**
+  String get notesRawPicture;
+
+  /// a voice note that could not be kept in note to self
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice note was not kept'**
+  String get notesVoiceNotKept;
 }
 
 class _AppLocalizationsDelegate

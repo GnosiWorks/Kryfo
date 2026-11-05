@@ -152,7 +152,11 @@ extension AppStateFiles on AppState {
       for (final d in [?_openVault, live]) {
         r ??= await d.sentMediaRow(uid);
       }
-      if (r == null || r['direction'] != 'out') return;
+      // mine: one I sent, or a note to self kept here
+      if (r == null ||
+          (r['direction'] != 'out' && r['peer_id'] != kOwnNotes.id)) {
+        return;
+      }
       final path = (r['file_path'] ?? r['media_path']) as String?;
       if (path == null || !dropFits(await File(path).length())) return;
       final v = jsonDecode(
@@ -601,6 +605,15 @@ extension AppStateFiles on AppState {
 
   // the kept envelope filed as if it had just come
   Future<void> _fileNow(HaloDb d, DropFetch f, UnwrappedMessage env) async {
+    // a note of mine from another device of mine: into note to self
+    if (f.sender == kOwnNotes.id) {
+      try {
+        await _fileNoteFetched(d, f, env);
+      } catch (e) {
+        dlog('notes: fetched file not filed (${e.runtimeType})');
+      }
+      return;
+    }
     try {
       await _applyIncomingPayload(
         f.sender,

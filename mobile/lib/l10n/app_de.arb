@@ -2947,7 +2947,6 @@
   "chatFailedTapToRetryDesk": "Fehler · klicke zum Wiederholen",
   "groupChatTapToRetryDesk": "! Klicken zum Wiederholen",
   "chatDropHereToSend": "Hier ablegen zum Senden",
-  "notesDropKeepsWords": "Notiz an mich behält Text. Dateien sendest du in einem Chat.",
   "voiceSeeTranscription": "Transkript anzeigen",
   "voiceTranscribing": "Wird transkribiert…",
   "voiceHideTranscription": "Ausblenden",
@@ -3029,5 +3028,14 @@
   "tipsThanks": "Danke",
   "tipsGranted": "{tier, select, supporter{Du hast jetzt das Unterstützer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.} patron{Du hast jetzt das Förderer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.} guardian{Du hast jetzt das Hüter-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.} other{Du hast jetzt das Unterstützer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.}}",
   "tipsKept": "{tier, select, supporter{Danke für das Trinkgeld. Du behältst dein Unterstützer-Abzeichen, das höhere.} patron{Danke für das Trinkgeld. Du behältst dein Förderer-Abzeichen, das höhere.} guardian{Danke für das Trinkgeld. Du behältst dein Hüter-Abzeichen, das höhere.} other{Danke für das Trinkgeld. Du behältst dein Unterstützer-Abzeichen, das höhere.}}",
-  "tipsProfileCard": "Gib ein Trinkgeld, damit Kryfo unabhängig bleibt"
+  "tipsProfileCard": "Gib ein Trinkgeld, damit Kryfo unabhängig bleibt",
+  "notesDropToKeep": "Hier ablegen, um es zu behalten",
+  "notesOnAllDevices": "Auf all deinen Geräten",
+  "notesKeepAnything": "Bewahre hier Text, Fotos und Dateien auf. Sie erscheinen auf all deinen Geräten.",
+  "notesGoneEverywhere": "Sie wird endgültig von all deinen Geräten gelöscht.",
+  "notesDeleteAllEverywhere": "Jede Notiz wird endgültig von all deinen Geräten gelöscht.",
+  "notesDeleteAllHereOnly": "Jede Notiz wird nur von diesem Gerät gelöscht. Dein Handy behält sie.",
+  "notesAddItem": "Foto oder Datei hinzufügen",
+  "notesRawPicture": "Kryfo kann dieses Bild nicht bereinigen. Füge es stattdessen als Foto hinzu.",
+  "notesVoiceNotKept": "Deine Sprachnachricht wurde nicht gespeichert"
 }

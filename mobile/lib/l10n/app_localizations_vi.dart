@@ -11196,10 +11196,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatDropHereToSend => 'Thả vào đây để gửi';
 
   @override
-  String get notesDropKeepsWords =>
-      'Ghi chú riêng lưu chữ. Hãy gửi tệp trong một cuộc trò chuyện.';
-
-  @override
   String get voiceSeeTranscription => 'Xem bản chép lời';
 
   @override
@@ -11516,4 +11512,36 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Gửi tiền tip để Kryfo luôn độc lập';
+
+  @override
+  String get notesDropToKeep => 'Thả vào đây để giữ lại';
+
+  @override
+  String get notesOnAllDevices => 'Trên mọi thiết bị của bạn';
+
+  @override
+  String get notesKeepAnything =>
+      'Giữ chữ, ảnh và tệp ở đây. Chúng hiện trên mọi thiết bị của bạn.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Ghi chú sẽ bị xóa vĩnh viễn khỏi mọi thiết bị của bạn.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Mọi ghi chú sẽ bị xóa vĩnh viễn khỏi mọi thiết bị của bạn.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Mọi ghi chú chỉ bị xóa khỏi thiết bị này. Điện thoại của bạn vẫn giữ chúng.';
+
+  @override
+  String get notesAddItem => 'Thêm ảnh hoặc tệp';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo không thể làm sạch ảnh này. Hãy thêm nó dưới dạng ảnh.';
+
+  @override
+  String get notesVoiceNotKept => 'Tin nhắn thoại của bạn chưa được giữ lại';
 }

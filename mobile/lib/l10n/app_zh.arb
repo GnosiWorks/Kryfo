@@ -2947,7 +2947,6 @@
   "chatFailedTapToRetryDesk": "失败 · 单击重试",
   "groupChatTapToRetryDesk": "! 单击重试",
   "chatDropHereToSend": "拖到这里松开即可发送",
-  "notesDropKeepsWords": "给自己的笔记只存文字。文件请在聊天中发送。",
   "voiceSeeTranscription": "查看文字",
   "voiceTranscribing": "正在转成文字…",
   "voiceHideTranscription": "收起",
@@ -3029,5 +3028,14 @@
   "tipsThanks": "谢谢你",
   "tipsGranted": "{tier, select, supporter{你现在有了支持者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。} patron{你现在有了赞助人徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。} guardian{你现在有了守护者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。} other{你现在有了支持者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。}}",
   "tipsKept": "{tier, select, supporter{谢谢你的打赏。你保留更高的支持者徽章。} patron{谢谢你的打赏。你保留更高的赞助人徽章。} guardian{谢谢你的打赏。你保留更高的守护者徽章。} other{谢谢你的打赏。你保留更高的支持者徽章。}}",
-  "tipsProfileCard": "打赏一下，让 Kryfo 保持独立"
+  "tipsProfileCard": "打赏一下，让 Kryfo 保持独立",
+  "notesDropToKeep": "拖到这里松开即可保存",
+  "notesOnAllDevices": "在你所有的设备上",
+  "notesKeepAnything": "在这里保存文字、照片和文件。它们会出现在你所有的设备上。",
+  "notesGoneEverywhere": "它会从你所有的设备上永久清除。",
+  "notesDeleteAllEverywhere": "所有笔记都会从你所有的设备上永久删除。",
+  "notesDeleteAllHereOnly": "所有笔记只会从这台设备上删除。你的手机仍会保留它们。",
+  "notesAddItem": "添加照片或文件",
+  "notesRawPicture": "Kryfo 无法清理这张图片。请改为以照片添加。",
+  "notesVoiceNotKept": "你的语音消息没有保存"
 }

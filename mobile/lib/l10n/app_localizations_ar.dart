@@ -11358,10 +11358,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatDropHereToSend => 'أفلِت هنا للإرسال';
 
   @override
-  String get notesDropKeepsWords =>
-      'ملاحظة لنفسي تحفظ الكلمات. أرسل الملفات في محادثة.';
-
-  @override
   String get voiceSeeTranscription => 'عرض النص';
 
   @override
@@ -11670,4 +11666,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'اترك إكرامية ليبقى Kryfo مستقلًا';
+
+  @override
+  String get notesDropToKeep => 'أفلِت هنا للاحتفاظ به';
+
+  @override
+  String get notesOnAllDevices => 'على كل أجهزتك';
+
+  @override
+  String get notesKeepAnything =>
+      'احتفظ هنا بالكلمات والصور والملفات. تظهر على كل أجهزتك.';
+
+  @override
+  String get notesGoneEverywhere => 'ستُمحى من كل أجهزتك نهائيًا.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'تُحذف كل الملاحظات من كل أجهزتك نهائيًا.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'تُحذف كل الملاحظات من هذا الجهاز فقط. يحتفظ بها هاتفك.';
+
+  @override
+  String get notesAddItem => 'أضف صورة أو ملفًا';
+
+  @override
+  String get notesRawPicture =>
+      'لا يستطيع Kryfo تنظيف هذه الصورة. أضفها كصورة بدلًا من ذلك.';
+
+  @override
+  String get notesVoiceNotKept => 'لم يُحفظ تسجيلك الصوتي';
 }

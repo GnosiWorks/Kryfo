@@ -11300,10 +11300,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatDropHereToSend => 'Rilascia qui per inviare';
 
   @override
-  String get notesDropKeepsWords =>
-      'Note conserva parole. Invia i file in una chat.';
-
-  @override
   String get voiceSeeTranscription => 'Vedi trascrizione';
 
   @override
@@ -11621,4 +11617,36 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get tipsProfileCard =>
       'Lascia una mancia per mantenere Kryfo indipendente';
+
+  @override
+  String get notesDropToKeep => 'Rilascia qui per tenerlo';
+
+  @override
+  String get notesOnAllDevices => 'Su tutti i tuoi dispositivi';
+
+  @override
+  String get notesKeepAnything =>
+      'Tieni qui testi, foto e file. Compaiono su tutti i tuoi dispositivi.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Viene cancellata da tutti i tuoi dispositivi per sempre.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Tutte le note vengono cancellate da tutti i tuoi dispositivi per sempre.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Tutte le note vengono cancellate solo da questo dispositivo. Il tuo telefono le tiene.';
+
+  @override
+  String get notesAddItem => 'Aggiungi una foto o un file';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo non può pulire questa immagine. Aggiungila come foto.';
+
+  @override
+  String get notesVoiceNotKept => 'Il tuo messaggio vocale non è stato salvato';
 }

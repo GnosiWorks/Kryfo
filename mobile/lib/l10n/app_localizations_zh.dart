@@ -10613,9 +10613,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatDropHereToSend => '拖到这里松开即可发送';
 
   @override
-  String get notesDropKeepsWords => '给自己的笔记只存文字。文件请在聊天中发送。';
-
-  @override
   String get voiceSeeTranscription => '查看文字';
 
   @override
@@ -10897,6 +10894,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tipsProfileCard => '打赏一下，让 Kryfo 保持独立';
+
+  @override
+  String get notesDropToKeep => '拖到这里松开即可保存';
+
+  @override
+  String get notesOnAllDevices => '在你所有的设备上';
+
+  @override
+  String get notesKeepAnything => '在这里保存文字、照片和文件。它们会出现在你所有的设备上。';
+
+  @override
+  String get notesGoneEverywhere => '它会从你所有的设备上永久清除。';
+
+  @override
+  String get notesDeleteAllEverywhere => '所有笔记都会从你所有的设备上永久删除。';
+
+  @override
+  String get notesDeleteAllHereOnly => '所有笔记只会从这台设备上删除。你的手机仍会保留它们。';
+
+  @override
+  String get notesAddItem => '添加照片或文件';
+
+  @override
+  String get notesRawPicture => 'Kryfo 无法清理这张图片。请改为以照片添加。';
+
+  @override
+  String get notesVoiceNotKept => '你的语音消息没有保存';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -21394,9 +21418,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatDropHereToSend => '拖到這裡放開即可傳送';
 
   @override
-  String get notesDropKeepsWords => '給自己的筆記只存文字。檔案請在聊天中傳送。';
-
-  @override
   String get voiceSeeTranscription => '查看文字';
 
   @override
@@ -21679,4 +21700,31 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tipsProfileCard => '給點小費，讓 Kryfo 保持獨立';
+
+  @override
+  String get notesDropToKeep => '拖到這裡放開即可保存';
+
+  @override
+  String get notesOnAllDevices => '在你所有的裝置上';
+
+  @override
+  String get notesKeepAnything => '在這裡保存文字、照片和檔案。它們會出現在你所有的裝置上。';
+
+  @override
+  String get notesGoneEverywhere => '它會從你所有的裝置上永久抹除。';
+
+  @override
+  String get notesDeleteAllEverywhere => '所有筆記都會從你所有的裝置上永久刪除。';
+
+  @override
+  String get notesDeleteAllHereOnly => '所有筆記只會從這台裝置上刪除。你的手機仍會保留它們。';
+
+  @override
+  String get notesAddItem => '新增照片或檔案';
+
+  @override
+  String get notesRawPicture => 'Kryfo 無法清理這張圖片。請改用照片新增。';
+
+  @override
+  String get notesVoiceNotKept => '你的語音訊息沒有保存';
 }

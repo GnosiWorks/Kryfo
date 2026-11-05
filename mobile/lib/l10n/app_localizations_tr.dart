@@ -11237,10 +11237,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatDropHereToSend => 'Göndermek için buraya bırak';
 
   @override
-  String get notesDropKeepsWords =>
-      'Kendime not metin saklar. Dosyaları bir sohbette gönder.';
-
-  @override
   String get voiceSeeTranscription => 'Metni gör';
 
   @override
@@ -11555,4 +11551,35 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Kryfo bağımsız kalsın diye bahşiş bırak';
+
+  @override
+  String get notesDropToKeep => 'Saklamak için buraya bırak';
+
+  @override
+  String get notesOnAllDevices => 'Tüm cihazlarında';
+
+  @override
+  String get notesKeepAnything =>
+      'Yazılarını, fotoğraflarını ve dosyalarını burada sakla. Tüm cihazlarında görünürler.';
+
+  @override
+  String get notesGoneEverywhere => 'Tüm cihazlarından kalıcı olarak silinir.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Tüm notlar tüm cihazlarından kalıcı olarak silinir.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Tüm notlar yalnızca bu cihazdan silinir. Telefonun onları saklar.';
+
+  @override
+  String get notesAddItem => 'Fotoğraf ya da dosya ekle';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo bu resmi temizleyemiyor. Onu fotoğraf olarak ekle.';
+
+  @override
+  String get notesVoiceNotKept => 'Sesli mesajın saklanmadı';
 }

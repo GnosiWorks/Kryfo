@@ -2947,7 +2947,6 @@
   "chatFailedTapToRetryDesk": "Başarısız · tekrar için tıkla",
   "groupChatTapToRetryDesk": "! Tekrar için tıkla",
   "chatDropHereToSend": "Göndermek için buraya bırak",
-  "notesDropKeepsWords": "Kendime not metin saklar. Dosyaları bir sohbette gönder.",
   "voiceSeeTranscription": "Metni gör",
   "voiceTranscribing": "Metne çevriliyor…",
   "voiceHideTranscription": "Gizle",
@@ -3029,5 +3028,14 @@
   "tipsThanks": "Teşekkürler",
   "tipsGranted": "{tier, select, supporter{Artık destekçi rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.} patron{Artık hami rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.} guardian{Artık koruyucu rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.} other{Artık destekçi rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.}}",
   "tipsKept": "{tier, select, supporter{Bahşiş için teşekkürler. Daha yüksek olan destekçi rozetin sende kalır.} patron{Bahşiş için teşekkürler. Daha yüksek olan hami rozetin sende kalır.} guardian{Bahşiş için teşekkürler. Daha yüksek olan koruyucu rozetin sende kalır.} other{Bahşiş için teşekkürler. Daha yüksek olan destekçi rozetin sende kalır.}}",
-  "tipsProfileCard": "Kryfo bağımsız kalsın diye bahşiş bırak"
+  "tipsProfileCard": "Kryfo bağımsız kalsın diye bahşiş bırak",
+  "notesDropToKeep": "Saklamak için buraya bırak",
+  "notesOnAllDevices": "Tüm cihazlarında",
+  "notesKeepAnything": "Yazılarını, fotoğraflarını ve dosyalarını burada sakla. Tüm cihazlarında görünürler.",
+  "notesGoneEverywhere": "Tüm cihazlarından kalıcı olarak silinir.",
+  "notesDeleteAllEverywhere": "Tüm notlar tüm cihazlarından kalıcı olarak silinir.",
+  "notesDeleteAllHereOnly": "Tüm notlar yalnızca bu cihazdan silinir. Telefonun onları saklar.",
+  "notesAddItem": "Fotoğraf ya da dosya ekle",
+  "notesRawPicture": "Kryfo bu resmi temizleyemiyor. Onu fotoğraf olarak ekle.",
+  "notesVoiceNotKept": "Sesli mesajın saklanmadı"
 }

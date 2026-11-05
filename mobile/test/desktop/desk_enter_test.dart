@@ -3,7 +3,8 @@
 // composer: a chat's and a group's (composer_cursor_test), the caption
 // (media_send_screen_test), note to self and the edit sheet here. a field
 // that is no composer keeps its own enter, and the phone keeps its
-// keyboard's. a file dropped on note to self is told where files go
+// keyboard's. a file dropped on note to self is kept there, the dropped
+// file only read
 import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -36,6 +37,8 @@ class _Db implements HaloDb {
         'rowid': notes.length + 1,
         'msg_uid': 'n${notes.length + 1}',
         'plaintext': i.positionalArguments[2],
+        'file_path': i.namedArguments[#filePath],
+        'file_name': i.namedArguments[#fileName],
         'sent_at': DateTime.now().millisecondsSinceEpoch,
       });
       return Future<void>.value();
@@ -106,15 +109,23 @@ void main() {
     await _drain(t);
   });
 
-  testWidgets('a file dropped on note to self is told where files go', (
-    t,
-  ) async {
+  testWidgets('a file dropped on note to self is kept there', (t) async {
     onDesktop = true;
     DesktopDrop.scale = () => 1;
-    await _notes(t);
     final dir = Directory.systemTemp.createTempSync('notes_drop');
     addTearDown(() => dir.deleteSync(recursive: true));
-    final f = File('${dir.path}/photo.jpg')..writeAsStringSync('p');
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/path_provider'),
+      (_) async => dir.path,
+    );
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/path_provider'),
+        null,
+      ),
+    );
+    final db = await _notes(t);
+    final f = File('${dir.path}/list.txt')..writeAsStringSync('p');
     Future<void> say(String method, Object? args) async {
       await t.binding.defaultBinaryMessenger.handlePlatformMessage(
         DesktopDrop.channel.name,
@@ -124,19 +135,31 @@ void main() {
       await t.pump();
     }
 
-    // while held: the line on the wash says it, not "drop here to send"
+    // while held: the line on the wash says it is kept, not sent
     await say('updated', [500.0, 400.0]);
     await t.pump(const Duration(milliseconds: 200));
-    expect(find.text(l10n.notesDropKeepsWords), findsOneWidget);
+    expect(find.text(l10n.notesDropToKeep), findsOneWidget);
     expect(find.text(l10n.chatDropHereToSend), findsNothing);
     await say('dropped', [
       [f.path],
       500.0,
       400.0,
     ]);
+    // cleaned off the ui thread: real time passes for it
+    for (var i = 0; i < 200 && db.notes.isEmpty; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await t.pump();
+    }
     await t.pump(const Duration(milliseconds: 300));
-    // and after the drop, as a toast: never nothing
-    expect(find.text(l10n.notesDropKeepsWords), findsWidgets);
+    // a copy in the notes' media folder under the name it had, the file
+    // dropped left as it was
+    expect(db.notes, hasLength(1));
+    expect(db.notes.single['file_name'], 'list.txt');
+    final kept = db.notes.single['file_path'] as String;
+    expect(kept, isNot(f.path));
+    expect(File(kept).readAsStringSync(), 'p');
     expect(f.readAsStringSync(), 'p');
     await _drain(t);
   });

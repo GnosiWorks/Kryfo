@@ -2947,7 +2947,6 @@
   "chatFailedTapToRetryDesk": "Échec · cliquez pour réessayer",
   "groupChatTapToRetryDesk": "! Cliquez pour réessayer",
   "chatDropHereToSend": "Déposez ici pour envoyer",
-  "notesDropKeepsWords": "Note pour moi garde des mots. Envoie les fichiers dans une discussion.",
   "voiceSeeTranscription": "Voir la transcription",
   "voiceTranscribing": "Transcription…",
   "voiceHideTranscription": "Masquer",
@@ -3029,5 +3028,14 @@
   "tipsThanks": "Merci",
   "tipsGranted": "{tier, select, supporter{Vous avez maintenant le badge de soutien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.} patron{Vous avez maintenant le badge de mécène. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.} guardian{Vous avez maintenant le badge de gardien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.} other{Vous avez maintenant le badge de soutien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.}}",
   "tipsKept": "{tier, select, supporter{Merci pour le pourboire. Vous gardez votre badge de soutien, le plus élevé.} patron{Merci pour le pourboire. Vous gardez votre badge de mécène, le plus élevé.} guardian{Merci pour le pourboire. Vous gardez votre badge de gardien, le plus élevé.} other{Merci pour le pourboire. Vous gardez votre badge de soutien, le plus élevé.}}",
-  "tipsProfileCard": "Laissez un pourboire pour garder Kryfo indépendant"
+  "tipsProfileCard": "Laissez un pourboire pour garder Kryfo indépendant",
+  "notesDropToKeep": "Déposez ici pour le garder",
+  "notesOnAllDevices": "Sur tous vos appareils",
+  "notesKeepAnything": "Gardez ici des mots, des photos et des fichiers. Ils apparaissent sur tous vos appareils.",
+  "notesGoneEverywhere": "Elle est effacée de tous vos appareils pour de bon.",
+  "notesDeleteAllEverywhere": "Toutes les notes sont effacées de tous vos appareils, pour de bon.",
+  "notesDeleteAllHereOnly": "Toutes les notes sont effacées de cet appareil seulement. Votre téléphone les garde.",
+  "notesAddItem": "Ajouter une photo ou un fichier",
+  "notesRawPicture": "Kryfo ne peut pas nettoyer cette image. Ajoutez-la plutôt comme photo.",
+  "notesVoiceNotKept": "Votre message vocal n’a pas été gardé"
 }

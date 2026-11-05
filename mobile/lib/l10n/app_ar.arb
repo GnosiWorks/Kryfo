@@ -2947,7 +2947,6 @@
   "chatFailedTapToRetryDesk": "فشل · انقر لإعادة المحاولة",
   "groupChatTapToRetryDesk": "! انقر لإعادة المحاولة",
   "chatDropHereToSend": "أفلِت هنا للإرسال",
-  "notesDropKeepsWords": "ملاحظة لنفسي تحفظ الكلمات. أرسل الملفات في محادثة.",
   "voiceSeeTranscription": "عرض النص",
   "voiceTranscribing": "جارٍ التحويل إلى نص…",
   "voiceHideTranscription": "إخفاء",
@@ -3029,5 +3028,14 @@
   "tipsThanks": "شكرًا لك",
   "tipsGranted": "{tier, select, supporter{صارت لديك شارة الداعم. لا تفتح أي شيء آخر: يبقى كل ما في Kryfo مجانيًا للجميع.} patron{صارت لديك شارة الراعي. لا تفتح أي شيء آخر: يبقى كل ما في Kryfo مجانيًا للجميع.} guardian{صارت لديك شارة الحارس. لا تفتح أي شيء آخر: يبقى كل ما في Kryfo مجانيًا للجميع.} other{صارت لديك شارة الداعم. لا تفتح أي شيء آخر: يبقى كل ما في Kryfo مجانيًا للجميع.}}",
   "tipsKept": "{tier, select, supporter{شكرًا على الإكرامية. تبقى لك شارة الداعم، وهي الأعلى.} patron{شكرًا على الإكرامية. تبقى لك شارة الراعي، وهي الأعلى.} guardian{شكرًا على الإكرامية. تبقى لك شارة الحارس، وهي الأعلى.} other{شكرًا على الإكرامية. تبقى لك شارة الداعم، وهي الأعلى.}}",
-  "tipsProfileCard": "اترك إكرامية ليبقى Kryfo مستقلًا"
+  "tipsProfileCard": "اترك إكرامية ليبقى Kryfo مستقلًا",
+  "notesDropToKeep": "أفلِت هنا للاحتفاظ به",
+  "notesOnAllDevices": "على كل أجهزتك",
+  "notesKeepAnything": "احتفظ هنا بالكلمات والصور والملفات. تظهر على كل أجهزتك.",
+  "notesGoneEverywhere": "ستُمحى من كل أجهزتك نهائيًا.",
+  "notesDeleteAllEverywhere": "تُحذف كل الملاحظات من كل أجهزتك نهائيًا.",
+  "notesDeleteAllHereOnly": "تُحذف كل الملاحظات من هذا الجهاز فقط. يحتفظ بها هاتفك.",
+  "notesAddItem": "أضف صورة أو ملفًا",
+  "notesRawPicture": "لا يستطيع Kryfo تنظيف هذه الصورة. أضفها كصورة بدلًا من ذلك.",
+  "notesVoiceNotKept": "لم يُحفظ تسجيلك الصوتي"
 }

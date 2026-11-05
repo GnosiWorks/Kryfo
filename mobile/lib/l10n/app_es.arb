@@ -2947,7 +2947,6 @@
   "chatFailedTapToRetryDesk": "Falló · haz clic para reintentar",
   "groupChatTapToRetryDesk": "! Haz clic para reintentar",
   "chatDropHereToSend": "Suelta aquí para enviar",
-  "notesDropKeepsWords": "Notas guarda palabras. Envía los archivos en un chat.",
   "voiceSeeTranscription": "Ver transcripción",
   "voiceTranscribing": "Transcribiendo…",
   "voiceHideTranscription": "Ocultar",
@@ -3029,5 +3028,14 @@
   "tipsThanks": "Gracias",
   "tipsGranted": "{tier, select, supporter{Ya tienes la insignia de colaborador. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.} patron{Ya tienes la insignia de mecenas. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.} guardian{Ya tienes la insignia de guardián. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.} other{Ya tienes la insignia de colaborador. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.}}",
   "tipsKept": "{tier, select, supporter{Gracias por la propina. Conservas tu insignia de colaborador, la más alta.} patron{Gracias por la propina. Conservas tu insignia de mecenas, la más alta.} guardian{Gracias por la propina. Conservas tu insignia de guardián, la más alta.} other{Gracias por la propina. Conservas tu insignia de colaborador, la más alta.}}",
-  "tipsProfileCard": "Da una propina para que Kryfo siga siendo independiente"
+  "tipsProfileCard": "Da una propina para que Kryfo siga siendo independiente",
+  "notesDropToKeep": "Suelta aquí para guardarlo",
+  "notesOnAllDevices": "En todos tus dispositivos",
+  "notesKeepAnything": "Guarda aquí textos, fotos y archivos. Aparecen en todos tus dispositivos.",
+  "notesGoneEverywhere": "Se borra de todos tus dispositivos para siempre.",
+  "notesDeleteAllEverywhere": "Todas las notas se borran de todos tus dispositivos para siempre.",
+  "notesDeleteAllHereOnly": "Todas las notas se borran solo de este dispositivo. Tu teléfono las conserva.",
+  "notesAddItem": "Añadir una foto o un archivo",
+  "notesRawPicture": "Kryfo no puede limpiar esta imagen. Añádela como foto.",
+  "notesVoiceNotKept": "Tu mensaje de voz no se guardó"
 }

@@ -11396,10 +11396,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatDropHereToSend => 'Отпусти здесь, чтобы отправить';
 
   @override
-  String get notesDropKeepsWords =>
-      'Заметки хранят текст. Файлы отправляй в чате.';
-
-  @override
   String get voiceSeeTranscription => 'Показать текст';
 
   @override
@@ -11714,4 +11710,36 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get tipsProfileCard =>
       'Оставь чаевые, чтобы Kryfo оставался независимым';
+
+  @override
+  String get notesDropToKeep => 'Отпусти здесь, чтобы сохранить';
+
+  @override
+  String get notesOnAllDevices => 'На всех твоих устройствах';
+
+  @override
+  String get notesKeepAnything =>
+      'Храни здесь текст, фото и файлы. Они появляются на всех твоих устройствах.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Она будет стёрта со всех твоих устройств навсегда.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Все заметки будут стёрты со всех твоих устройств навсегда.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Все заметки будут стёрты только с этого устройства. На телефоне они останутся.';
+
+  @override
+  String get notesAddItem => 'Добавить фото или файл';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo не может очистить это изображение. Добавь его как фото.';
+
+  @override
+  String get notesVoiceNotKept => 'Голосовое сообщение не сохранено';
 }

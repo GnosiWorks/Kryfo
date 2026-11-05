@@ -14067,10 +14067,6 @@
   "@chatDropHereToSend": {
     "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
   },
-  "notesDropKeepsWords": "Note to self keeps words. Send files in a chat.",
-  "@notesDropKeepsWords": {
-    "description": "a computer: files dropped on note to self, which keeps text only"
-  },
   "voiceSeeTranscription": "See transcription",
   "@voiceSeeTranscription": {
     "description": "the link under a voice message that shows its words"
@@ -14447,5 +14443,41 @@
   "tipsProfileCard": "Leave a tip to keep Kryfo independent",
   "@tipsProfileCard": {
     "description": "screens/profile_screen.dart: the card on me in the play build"
+  },
+  "notesDropToKeep": "Drop here to keep it",
+  "@notesDropToKeep": {
+    "description": "notes to self on a computer: the line on the wash while files are dragged over it"
+  },
+  "notesOnAllDevices": "On all your devices",
+  "@notesOnAllDevices": {
+    "description": "note to self's line under its title when it reaches the person's other devices"
+  },
+  "notesKeepAnything": "Keep words, photos and files here. They show on all your devices.",
+  "@notesKeepAnything": {
+    "description": "note to self's empty page when it reaches the person's other devices"
+  },
+  "notesGoneEverywhere": "It goes from all your devices, for good.",
+  "@notesGoneEverywhere": {
+    "description": "the confirm line for deleting one note that reaches the person's other devices"
+  },
+  "notesDeleteAllEverywhere": "Every note goes from all your devices, for good.",
+  "@notesDeleteAllEverywhere": {
+    "description": "the confirm line for deleting every note from the phone, which reaches the person's other devices"
+  },
+  "notesDeleteAllHereOnly": "Every note goes from this device only. Your phone keeps them.",
+  "@notesDeleteAllHereOnly": {
+    "description": "the confirm line for deleting every note on a linked device: only that device's notes go"
+  },
+  "notesAddItem": "Add a photo or a file",
+  "@notesAddItem": {
+    "description": "the label of the button that adds a photo or a file to note to self"
+  },
+  "notesRawPicture": "Kryfo can't clean this picture. Add it as a photo instead.",
+  "@notesRawPicture": {
+    "description": "a picture that cannot be cleaned is not kept in note to self"
+  },
+  "notesVoiceNotKept": "Your voice note was not kept",
+  "@notesVoiceNotKept": {
+    "description": "a voice note that could not be kept in note to self"
   }
 }

@@ -2947,7 +2947,6 @@
   "chatFailedTapToRetryDesk": "Gagal · klik untuk coba lagi",
   "groupChatTapToRetryDesk": "! Klik untuk ulangi",
   "chatDropHereToSend": "Lepaskan di sini untuk mengirim",
-  "notesDropKeepsWords": "Catatan pribadi menyimpan kata. Kirim file di sebuah chat.",
   "voiceSeeTranscription": "Lihat transkrip",
   "voiceTranscribing": "Mentranskrip…",
   "voiceHideTranscription": "Sembunyikan",
@@ -3029,5 +3028,14 @@
   "tipsThanks": "Terima kasih",
   "tipsGranted": "{tier, select, supporter{Sekarang kamu punya lencana pendukung. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.} patron{Sekarang kamu punya lencana patron. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.} guardian{Sekarang kamu punya lencana penjaga. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.} other{Sekarang kamu punya lencana pendukung. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.}}",
   "tipsKept": "{tier, select, supporter{Terima kasih atas tipnya. Lencana pendukungmu tetap, yang lebih tinggi.} patron{Terima kasih atas tipnya. Lencana patronmu tetap, yang lebih tinggi.} guardian{Terima kasih atas tipnya. Lencana penjagamu tetap, yang lebih tinggi.} other{Terima kasih atas tipnya. Lencana pendukungmu tetap, yang lebih tinggi.}}",
-  "tipsProfileCard": "Beri tip agar Kryfo tetap mandiri"
+  "tipsProfileCard": "Beri tip agar Kryfo tetap mandiri",
+  "notesDropToKeep": "Lepaskan di sini untuk menyimpannya",
+  "notesOnAllDevices": "Di semua perangkatmu",
+  "notesKeepAnything": "Simpan tulisan, foto, dan file di sini. Semuanya muncul di semua perangkatmu.",
+  "notesGoneEverywhere": "Catatan ini terhapus dari semua perangkatmu untuk selamanya.",
+  "notesDeleteAllEverywhere": "Semua catatan terhapus dari semua perangkatmu untuk selamanya.",
+  "notesDeleteAllHereOnly": "Semua catatan hanya terhapus dari perangkat ini. Ponselmu tetap menyimpannya.",
+  "notesAddItem": "Tambah foto atau file",
+  "notesRawPicture": "Kryfo tidak bisa membersihkan gambar ini. Tambahkan sebagai foto saja.",
+  "notesVoiceNotKept": "Pesan suaramu tidak disimpan"
 }

@@ -78,6 +78,8 @@ mixin _DeleteRows {
       await t.delete('messages', where: _kOneToOne, whereArgs: [chatId]);
       // what we undid in it is kept no longer
       await dropTaken(t, peer: chatId);
+      // and what was still on its way in for it
+      await _dropFilesComingFrom(t, chatId);
     });
     await _scrubMedia(rows);
     return rows.length;

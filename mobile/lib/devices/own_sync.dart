@@ -78,6 +78,16 @@ typedef OwnChat = ({String id, bool group});
 
 String ownChatName(OwnChat c) => '${c.group ? 'g' : 'p'}:${c.id}';
 
+/// note to self as own frames name it: each device's own notes, kept in
+/// step with my others ('p:_notes_self_', a name no contact can have)
+const OwnChat kOwnNotes = (id: '_notes_self_', group: false);
+
+/// whether [c] is note to self
+bool isOwnNotes(OwnChat c) => !c.group && c.id == kOwnNotes.id;
+
+/// the ops a note to self takes: one note deleted, all of them cleared
+const kOwnNoteOps = {'del', 'clear'};
+
 final _chatShape = RegExp(r'^[pg]:[A-Za-z0-9_.:\-]{1,128}$');
 
 /// the chat [c] names; null for anything else
@@ -240,17 +250,22 @@ class OwnSync {
 
   /// my own [frame] in [chat], to every other device of mine: one copy of
   /// a group's frame, whichever members it went to. [notReached], in a
-  /// group, the members this device could not reach
+  /// group, the members this device could not reach. [only]: to that
+  /// device of mine alone, when it is still on my list
   Future<bool> copy(
     int ident,
     OwnChat chat,
     String frame, {
     List<String> notReached = const [],
+    OwnPeer? only,
   }) async {
     if (!linkedDevicesOn || frame.length > kOwnFrameMost) return false;
     final m = await me(ident);
     if (m == null) return false;
-    final to = await others(ident);
+    final to = [
+      for (final p in await others(ident))
+        if (only == null || (p.id == only.id && p.key == only.key)) p,
+    ];
     if (to.isEmpty) return false;
     final oc = {
       'i': ident,

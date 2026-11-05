@@ -2947,7 +2947,6 @@
   "chatFailedTapToRetryDesk": "Non inviato · fai clic per riprovare",
   "groupChatTapToRetryDesk": "! Fai clic per riprovare",
   "chatDropHereToSend": "Rilascia qui per inviare",
-  "notesDropKeepsWords": "Note conserva parole. Invia i file in una chat.",
   "voiceSeeTranscription": "Vedi trascrizione",
   "voiceTranscribing": "Trascrizione in corso…",
   "voiceHideTranscription": "Nascondi",
@@ -3029,5 +3028,14 @@
   "tipsThanks": "Grazie",
   "tipsGranted": "{tier, select, supporter{Ora hai il badge sostenitore. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.} patron{Ora hai il badge mecenate. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.} guardian{Ora hai il badge custode. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.} other{Ora hai il badge sostenitore. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.}}",
   "tipsKept": "{tier, select, supporter{Grazie per la mancia. Tieni il tuo badge sostenitore, quello più alto.} patron{Grazie per la mancia. Tieni il tuo badge mecenate, quello più alto.} guardian{Grazie per la mancia. Tieni il tuo badge custode, quello più alto.} other{Grazie per la mancia. Tieni il tuo badge sostenitore, quello più alto.}}",
-  "tipsProfileCard": "Lascia una mancia per mantenere Kryfo indipendente"
+  "tipsProfileCard": "Lascia una mancia per mantenere Kryfo indipendente",
+  "notesDropToKeep": "Rilascia qui per tenerlo",
+  "notesOnAllDevices": "Su tutti i tuoi dispositivi",
+  "notesKeepAnything": "Tieni qui testi, foto e file. Compaiono su tutti i tuoi dispositivi.",
+  "notesGoneEverywhere": "Viene cancellata da tutti i tuoi dispositivi per sempre.",
+  "notesDeleteAllEverywhere": "Tutte le note vengono cancellate da tutti i tuoi dispositivi per sempre.",
+  "notesDeleteAllHereOnly": "Tutte le note vengono cancellate solo da questo dispositivo. Il tuo telefono le tiene.",
+  "notesAddItem": "Aggiungi una foto o un file",
+  "notesRawPicture": "Kryfo non può pulire questa immagine. Aggiungila come foto.",
+  "notesVoiceNotKept": "Il tuo messaggio vocale non è stato salvato"
 }

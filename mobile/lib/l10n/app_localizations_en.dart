@@ -11212,10 +11212,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatDropHereToSend => 'Drop here to send';
 
   @override
-  String get notesDropKeepsWords =>
-      'Note to self keeps words. Send files in a chat.';
-
-  @override
   String get voiceSeeTranscription => 'See transcription';
 
   @override
@@ -11529,4 +11525,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Leave a tip to keep Kryfo independent';
+
+  @override
+  String get notesDropToKeep => 'Drop here to keep it';
+
+  @override
+  String get notesOnAllDevices => 'On all your devices';
+
+  @override
+  String get notesKeepAnything =>
+      'Keep words, photos and files here. They show on all your devices.';
+
+  @override
+  String get notesGoneEverywhere => 'It goes from all your devices, for good.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Every note goes from all your devices, for good.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Every note goes from this device only. Your phone keeps them.';
+
+  @override
+  String get notesAddItem => 'Add a photo or a file';
+
+  @override
+  String get notesRawPicture =>
+      'Kryfo can\'t clean this picture. Add it as a photo instead.';
+
+  @override
+  String get notesVoiceNotKept => 'Your voice note was not kept';
 }

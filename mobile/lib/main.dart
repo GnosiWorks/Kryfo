@@ -250,6 +250,7 @@ part 'app/devices_send_app.dart';
 part 'app/devices_unlink_app.dart';
 part 'app/devices_vault_app.dart';
 part 'app/link_app.dart';
+part 'app/notes_own_app.dart';
 part 'app/history_app.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
