@@ -112,6 +112,10 @@ android {
             keepDebugSymbols += "**/libhalo.so"
             // voice transcripts are off: a stray copy in jniLibs never ships
             excludes += "**/libkryfo_voice.so"
+            // offline translation is off: the release builds the library
+            // (engine/translate/native/build.sh) but it ships only once the
+            // switch is on, when this line goes with it
+            excludes += "**/libkryfo_translate.so"
             // the shim's build script checks these exact bytes
             keepDebugSymbols += "**/libkryfo_signal.so"
         }
