@@ -224,6 +224,7 @@ class LinkTaken {
     required this.once,
     required this.made,
     required this.stream,
+    this.bind,
   });
   final int device;
   final String key;
@@ -234,6 +235,9 @@ class LinkTaken {
   final List<Uint8List> once;
   final int made;
   final Uint8List stream;
+
+  /// the link's transcript, which the history copy is bound to
+  final Uint8List? bind;
 
   static LinkTaken of(Map<String, dynamic> j) {
     final d = j['device'] as Map<String, dynamic>;
@@ -248,6 +252,7 @@ class LinkTaken {
       once: [for (final x in (j['once'] as List?) ?? const []) b(x)],
       made: j['made'] as int,
       stream: b(j['stream']),
+      bind: j['bind'] is String ? b(j['bind']) : null,
     );
   }
 }
@@ -387,6 +392,10 @@ class JoinPlace {
   final String keyNumber;
 }
 
+/// what a new device keeps of its link for the history copy: the stream
+/// key, the link's transcript and its phone's onion
+typedef LinkStream = ({Uint8List key, Uint8List? bind, String? onion});
+
 /// a new device's first bundles for its phone
 typedef JoinBundles = ({
   Uint8List first,
@@ -412,7 +421,7 @@ abstract class JoinLinkHooks {
   /// own list's rows, the history stream's key) and onboarding done
   Future<void> joined(
     JoinPlace p,
-    Uint8List stream,
+    LinkStream stream,
     Map<String, dynamic> ownRows,
   );
 
@@ -506,8 +515,13 @@ class JoinLinkFlow extends _EngineFlow {
         final t = calls.call('take', {'link': _link});
         if (t['err'] != null) return fail(LinkEnd.interrupted);
         final stream = base64Decode(t['stream'] as String);
+        final bind = t['bind'];
         try {
-          await hooks.joined(p, stream, own);
+          await hooks.joined(p, (
+            key: stream,
+            bind: bind is String ? base64Decode(bind) : null,
+            onion: t['onion'] as String?,
+          ), own);
         } catch (_) {
           return fail(LinkEnd.interrupted);
         } finally {

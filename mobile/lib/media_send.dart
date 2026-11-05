@@ -21,6 +21,9 @@ import 'dlog.dart';
 import 'image_strip.dart' show cleanSavedPhoto;
 import 'main.dart'
     show
+        DeviceSent,
+        DeviceCannotReach,
+        kNotFromDevice,
         appState,
         engine,
         sendFirstContactNoted,
@@ -400,6 +403,19 @@ Future<String> _sendChunkedMediaInner({
         final sealed = await signalSeal(peerId, wrapped);
         cipher = sealed.cipher;
         sealedOn = sealed.ident;
+      } on DeviceSent {
+        // a linked device: this slice's copies went from here
+        done.add(i);
+        if (ended) return;
+        quiet = 0;
+        if (only == null) {
+          chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
+        }
+        if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
+        continue;
+      } on DeviceCannotReach {
+        failure = kNotFromDevice;
+        return;
       } on KeyHeld {
         // waits on a check of their new number: going, not failed
         parked = true;

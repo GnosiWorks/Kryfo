@@ -3,24 +3,27 @@
 // through the album in its order with a count at the top, zooms a photo by
 // pinch or double tap, and plays a video where it is. a swipe down or the
 // close button takes it back into its tile; with no movement asked for it
-// fades instead.
+// fades instead. on a computer the arrow keys and the round buttons at its
+// sides go back and forth, as a mouse cannot swipe.
 import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
+import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'album_grid.dart' show albumFlight, albumHeroTag;
 import 'decode_px.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show houseSpring, kHouseCurve, kText2, motionStill;
-import 'photo_viewer.dart' show PhotoTileFade;
+import 'sealed_picture.dart';
 import 'text_ground.dart';
 import 'video_frame.dart';
 import 'video_viewer.dart' show ViewerRound, ViewerScrubber, ViewerTime;
@@ -191,6 +194,77 @@ class AlbumViewerState extends State<AlbumViewer>
     if (z != _zoomed) setState(() => _zoomed = z);
   }
 
+  /// one item on, [by] +1 or -1, in the album's order
+  void step(int by) {
+    final to = _at + by;
+    if (to < 0 || to >= widget.items.length || !_pages.hasClients) return;
+    if (motionStill(context)) {
+      _pages.jumpToPage(to);
+    } else {
+      _pages.animateToPage(
+        to,
+        duration: const Duration(milliseconds: 280),
+        curve: kHouseCurve,
+      );
+    }
+  }
+
+  // the arrows as they read: in a right-to-left language the next item is
+  // to the left
+  Map<ShortcutActivator, VoidCallback> _keys(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return {
+      const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+          step(rtl ? -1 : 1),
+      const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+          step(rtl ? 1 : -1),
+      const SingleActivator(LogicalKeyboardKey.escape): _close,
+    };
+  }
+
+  // the round buttons at the sides, while the count shows
+  List<Widget> _sides(double fade) {
+    final n = widget.items.length;
+    if (!onDesktop || n < 2) return const [];
+    Widget side(bool next) {
+      final shown = _chrome && !_zoomed && (next ? _at < n - 1 : _at > 0);
+      return PositionedDirectional(
+        start: next ? null : 16,
+        end: next ? 16 : null,
+        top: 0,
+        bottom: 0,
+        child: Center(
+          child: IgnorePointer(
+            ignoring: !shown,
+            child: AnimatedOpacity(
+              opacity: shown ? fade.clamp(0.0, 1.0) : 0,
+              duration: motionStill(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
+              child: ViewerRound(
+                key: ValueKey(next ? 'album next' : 'album previous'),
+                size: 44,
+                label: next ? l10n.albumNext : l10n.albumPrevious,
+                onTap: () => step(next ? 1 : -1),
+                child: Icon(
+                  next
+                      ? Icons.chevron_right_rounded
+                      : Icons.chevron_left_rounded,
+                  size: 28,
+                  color: Colors.white,
+                  // the chevron points the way the album goes
+                  textDirection: Directionality.of(context),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return [side(false), side(true)];
+  }
+
   @override
   Widget build(BuildContext context) {
     final pad = MediaQuery.paddingOf(context);
@@ -238,7 +312,7 @@ class AlbumViewerState extends State<AlbumViewer>
         );
       },
     );
-    return AnimatedBuilder(
+    final viewer = AnimatedBuilder(
       animation: widget.route,
       builder: (context, child) {
         final dark = widget.route.value * (1 - pulled * 0.75);
@@ -261,6 +335,7 @@ class AlbumViewerState extends State<AlbumViewer>
                 ),
                 Positioned.fill(child: child!),
                 ..._top(pad, widget.route.value * (1 - pulled)),
+                ..._sides(widget.route.value * (1 - pulled)),
               ],
             ),
           ),
@@ -270,6 +345,11 @@ class AlbumViewerState extends State<AlbumViewer>
         offset: Offset(0, _drag),
         child: Transform.scale(scale: 1 - pulled * 0.12, child: pages),
       ),
+    );
+    if (!onDesktop) return viewer;
+    return CallbackShortcuts(
+      bindings: _keys(context),
+      child: Focus(autofocus: true, child: viewer),
     );
   }
 
@@ -429,8 +509,9 @@ class _PhotoPageState extends State<_PhotoPage>
 
   @override
   Widget build(BuildContext context) {
+    final px = screenPx(context, times: 2);
     final image = ResizeImage.resizeIfNeeded(
-      screenPx(context, times: 2),
+      px,
       null,
       FileImage(File(widget.path)),
     );
@@ -454,11 +535,13 @@ class _PhotoPageState extends State<_PhotoPage>
             child: Semantics(
               image: true,
               label: l10n.appPhoto,
-              child: Image(
+              // its blur, the photo fading up over it once decoded
+              child: SealedPicture(
+                path: widget.path,
                 image: image,
-                gaplessPlayback: true,
-                frameBuilder: (_, child, frame, sync) =>
-                    PhotoTileFade(shown: sync || frame != null, child: child),
+                shaped: true,
+                decodeWidth: px,
+                fit: BoxFit.contain,
                 errorBuilder: (_, _, _) => Icon(
                   Icons.image_not_supported_outlined,
                   size: 28,
@@ -529,7 +612,53 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
         });
       });
     }
+    picturesShut.addListener(_lockChanged);
     if (widget.active) _open();
+  }
+
+  // the lock closes the player, so no frame of it is held behind the pin,
+  // and it comes back paused where it was once the lock lifts
+  bool _resting = false;
+
+  void _lockChanged() {
+    if (picturesShut.value) {
+      _rest();
+    } else {
+      unawaited(_wake());
+    }
+  }
+
+  void _rest() {
+    _poll?.cancel();
+    _poll = null;
+    _hide?.cancel();
+    final id = _id;
+    _id = null;
+    if (id != null) _channel.invokeMethod('close', {'id': id});
+    _resting = true;
+    if (!mounted) return;
+    setState(() {
+      _started = false;
+      _playing = false;
+      _controls = true;
+    });
+  }
+
+  Future<void> _wake() async {
+    if (!_resting || !mounted) return;
+    _resting = false;
+    videoInfoFor(widget.item.path).then((i) {
+      if (mounted && i != null) setState(() => _info = i);
+    });
+    if (!widget.active) return;
+    await _open(play: false);
+    final id = _id;
+    if (id != null && _pos > Duration.zero && !_done) {
+      await _channel.invokeMethod('seek', {
+        'id': id,
+        'ms': _pos.inMilliseconds,
+      });
+    }
   }
 
   @override
@@ -545,6 +674,7 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _unguard?.call();
+    picturesShut.removeListener(_lockChanged);
     WidgetsBinding.instance.removeObserver(this);
     widget.route.removeStatusListener(_routeStatus);
     _poll?.cancel();
@@ -565,9 +695,9 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _open() async {
+  Future<void> _open({bool play = true}) async {
     if (_id != null) {
-      if (widget.route.status == AnimationStatus.completed) _play();
+      if (play && widget.route.status == AnimationStatus.completed) _play();
       return;
     }
     if (_opening || _failed) return;
@@ -582,7 +712,9 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
       dlog('album video: not opened (${e.runtimeType})');
     }
     _opening = false;
-    if (!mounted) {
+    // gone, or the lock went up while it opened
+    if (!mounted || picturesShut.value) {
+      if (mounted) _resting = true;
       final id = (m?['id'] as num?)?.toInt();
       if (id != null) _channel.invokeMethod('close', {'id': id});
       return;
@@ -599,7 +731,9 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
       final ms = (m['ms'] as num?)?.toInt() ?? 0;
       if (ms > 0) _length = Duration(milliseconds: ms);
     });
-    if (widget.active && widget.route.status == AnimationStatus.completed) {
+    if (play &&
+        widget.active &&
+        widget.route.status == AnimationStatus.completed) {
       _play();
     }
   }
@@ -719,13 +853,12 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
                 : VideoFrame(
                     aspect: _aspect,
                     turns: _turns,
-                    under: jpeg != null
-                        ? Image.memory(
-                            jpeg,
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                          )
-                        : const ColoredBox(color: Colors.black),
+                    // its blur, the first frame fading up over it
+                    under: SealedPicture(
+                      path: widget.item.path,
+                      image: jpeg == null ? null : MemoryImage(jpeg),
+                      ground: Colors.black,
+                    ),
                     texture: id != null && _started
                         ? Texture(textureId: id)
                         : null,

@@ -165,6 +165,8 @@ Future<void> _chat(WidgetTester t) async {
     'first_seen': 1,
     'last_seen': 1,
     'accepted': 1,
+    // a friend: a request to a stranger takes no file
+    'back_paired': 1,
   });
   final db = SayHiDb(mem);
   useDatabasesForTest(db, Session(db));

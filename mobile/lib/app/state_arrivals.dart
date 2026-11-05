@@ -125,6 +125,28 @@ extension AppStateArrivals on AppState {
     return edited;
   }
 
+  /// a linked device's history copy landed: what came early for the
+  /// messages it brought (an edit, a reaction, a pin) goes in now, as it
+  /// would have had each come live
+  Future<void> applyEarlyCopied() async {
+    if (_early.isEmpty) return;
+    final db = live;
+    final due = <String, String>{
+      for (final e in _early)
+        if (identical(e.db, db)) e.uid: e.sender,
+    };
+    var any = false;
+    for (final u in due.entries) {
+      if (!await db.messageExists(u.key)) continue;
+      await _applyEarly(u.key, u.value, db, null);
+      any = true;
+    }
+    if (any) {
+      await refreshContacts();
+      notifyListeners();
+    }
+  }
+
   String? _arrivingPoll(Object? raw) {
     final p = PollSpec.parse(raw);
     return p == null
@@ -241,6 +263,10 @@ extension AppStateArrivals on AppState {
         reached: reached,
       );
       if (AppState._shown(to)) _typingAnswered(senderHaloId, env);
+      // linked devices: what reached this phone alone goes on to my devices
+      if (linkedDevicesOn && !fromDevice && !fromBackPair) {
+        await _ownPassOn(senderHaloId, env, wire, to);
+      }
       // a v4 first contact keeps no onion until they answer: their first
       // frame on the session gives it, and a held one is never replaced
       if (to == RouteTo.everyday && !fromBackPair && env.groupId == null) {
@@ -910,6 +936,18 @@ extension AppStateArrivals on AppState {
         firstFails.note('pow');
         throw const _NoProof();
       }
+      // a stranger's photos and files wait on the shelf until the accept,
+      // from any version. none of them counts toward the two
+      if (strangerMediaWaits(
+        env,
+        accepted: false,
+        vouched: vouched,
+        support: support.on,
+        dev: isDevChat(senderHaloId),
+      )) {
+        dlog('stranger: a file held until accepted');
+        throw _HeldIn(db);
+      }
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
       // until we accept them. past the cap there is no receipt. a file still
       // in slices counts as one of the two, and its own slices come in
@@ -1199,6 +1237,10 @@ extension AppStateArrivals on AppState {
         dlog('recv: file not saved: $e');
         unsaved = true;
       }
+    }
+    // the blur its bubble shows first, made now while unlocked
+    for (final made in [mediaPath, filePath]) {
+      if (made != null && made.isNotEmpty) makeBlurSoon(made);
     }
     final bodyText = unsaved
         ? [

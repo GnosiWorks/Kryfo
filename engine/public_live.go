@@ -167,9 +167,11 @@ func firstStoreDown() bool {
 	return firstDown
 }
 
-// only a contact's address is ranked: first-contact, room and pair
-// addresses stay live everywhere
-func rankedLane(lane string) bool { return strings.HasPrefix(lane, laneEveryday+":") }
+// only a contact's address is ranked, a hidden chat's too: first-contact,
+// room and pair addresses stay live everywhere
+func rankedLane(lane string) bool {
+	return strings.HasPrefix(lane, laneEveryday+":") || strings.HasPrefix(lane, laneHidden+":")
+}
 
 // a runner listens on rcvPk. fresh: someone just added, live until the
 // next start, unless the address has a place in this run already. returns

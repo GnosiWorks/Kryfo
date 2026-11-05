@@ -148,7 +148,7 @@ class _PickerState extends State<_Picker> {
                 // a picture from the gallery, copied into the app's own
                 // folder and drawn behind this chat only
                 PressScale(
-                  label: l10n.wallpaperFromYourPhotos,
+                  label: l10n.wallpaperFromYourPhotosShown,
                   onTap: () =>
                       Navigator.pop(context, const WallpaperFromPhotos()),
                   child: AnimatedContainer(
@@ -175,7 +175,7 @@ class _PickerState extends State<_Picker> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          l10n.wallpaperFromYourPhotos,
+                          l10n.wallpaperFromYourPhotosShown,
                           style: HaloType.sans(
                             size: 13,
                             color: HaloColors.text,

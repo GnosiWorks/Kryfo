@@ -146,6 +146,10 @@ class _Io extends AppIo {
 
   @override
   void listen(int ident, String xPub, {bool fresh = false}) {}
+
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      listen(ident, xPub, fresh: fresh);
   @override
   void unlisten(int ident, String xPub) {}
   @override

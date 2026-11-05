@@ -24,6 +24,7 @@ import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
+import 'bridge_share_sheet.dart';
 import 'bridge_sheets.dart';
 import '../wide/read_width.dart' show DeskPage;
 
@@ -777,7 +778,18 @@ class _MoreSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        // plain advice, the same everywhere
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(4, 14, 4, 12),
+          child: Text(
+            l10n.bridgesPlainAdvice,
+            style: HaloType.sans(
+              size: 13,
+              color: HaloColors.text2,
+              height: 1.45,
+            ),
+          ),
+        ),
         _Box(
           children: [
             _RowChoice(
@@ -812,11 +824,6 @@ class _MoreSection extends StatelessWidget {
                 if (!v) return appState.setBridgeConsent(false);
                 await showTorProjectConsentSheet(context);
               },
-            ),
-            EaseSize(
-              child: asks
-                  ? _CountryRow(country: setup.country)
-                  : const SizedBox(width: double.infinity),
             ),
           ],
         ),
@@ -1063,90 +1070,6 @@ class _SwitchRow extends StatelessWidget {
   );
 }
 
-// the country the tor project advises for. its own guess comes first
-class _CountryRow extends StatefulWidget {
-  const _CountryRow({required this.country});
-  final String country;
-
-  @override
-  State<_CountryRow> createState() => _CountryRowState();
-}
-
-class _CountryRowState extends State<_CountryRow> {
-  bool _asking = false;
-
-  // the sheet comes up at once. the tor project is asked only when its
-  // guess is picked
-  Future<void> _open() async {
-    final picked = await showCountrySheet(
-      context,
-      current: widget.country,
-      guess: appState.moatGuess,
-    );
-    if (picked == null || !mounted) return;
-    await appState.setBridgeCountry(picked);
-    if (picked.isNotEmpty || !mounted) return;
-    setState(() => _asking = true);
-    await appState.askMoatGuess();
-    if (mounted) setState(() => _asking = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cc = widget.country;
-    final guess = appState.moatGuess;
-    final value = _asking
-        ? l10n.bridgesAsking
-        : cc.isNotEmpty
-        ? bridgeCountryName(cc)
-        : guess != null
-        ? '${bridgeCountryName(guess)} · ${l10n.bridgesTheTorProjectSGuess}'
-        : l10n.bridgesLetTheTorProject;
-    return Semantics(
-      button: true,
-      child: PressScale(
-        scale: 0.98,
-        onTap: _open,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 12, 14),
-          child: Row(
-            children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 130),
-                child: Text(
-                  l10n.bridgesCountry,
-                  style: HaloType.sans(size: 14, color: HaloColors.text),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: RiseSwap(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Text(
-                    value,
-                    key: ValueKey(value),
-                    textAlign: TextAlign.end,
-                    style: HaloType.mono(
-                      size: 12,
-                      color: HaloColors.violetText,
-                    ),
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: HaloColors.text2,
-                textDirection: Directionality.of(context),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // one kept line: its transport and address, never more of it, and whether
 // kryfo can use it
 class _LineRow extends StatelessWidget {
@@ -1199,6 +1122,23 @@ class _LineRow extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          // a line that works can go to a friend; one that does not stays
+          EaseSize(
+            child: bad
+                ? const SizedBox.shrink()
+                : IconButton(
+                    tooltip: l10n.bridgesShareBridgeN(whole(number)),
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      showBridgeShareSheet(context, line);
+                    },
+                    icon: Icon(
+                      Icons.ios_share_rounded,
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                  ),
           ),
           IconButton(
             tooltip: l10n.bridgesRemoveBridgeN(whole(number)),

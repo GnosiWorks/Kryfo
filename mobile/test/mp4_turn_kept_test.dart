@@ -6,7 +6,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/clean_media.dart';
 import 'package:kryfo/mp4_strip.dart';
+
+// a real upright clip from the samsung's own camera: 1920x1080 and a turn
+const _upright =
+    '/home/mario/kryfo-notes/cleaner-corpus/samsung/20261022_135332.mp4';
 
 Uint8List box(String type, List<int> payload) {
   final size = 8 + payload.length;
@@ -118,4 +123,57 @@ void main() {
       expect(await mp4MetadataCount(f.path), 0);
     });
   }
+
+  test('a real upright samsung clip keeps its turn and shape', () async {
+    final src = await File(_upright).readAsBytes();
+    final dir = await Directory.systemTemp.createTemp('mp4turn');
+    addTearDown(() => dir.delete(recursive: true));
+    final f = File('${dir.path}/clip.mp4');
+    await f.writeAsBytes(src);
+    final before = turnsOf(src);
+    // the camera wrote one quarter turn on its picture track
+    expect(
+      before.where((t) => t.$1.toString() == turn90.toString()),
+      hasLength(1),
+    );
+    final done = await cleanMediaFileHere(f.path, name: 'clip.mp4');
+    expect(done.how, MediaClean.clean);
+    final out = await f.readAsBytes();
+    expect(turnsOf(out).toString(), before.toString());
+    expect(await mp4MetadataCount(f.path), 0);
+  });
+}
+
+int _be(Uint8List b, int at) =>
+    b[at] << 24 | b[at + 1] << 16 | b[at + 2] << 8 | b[at + 3];
+
+// every track header's matrix and shown size, walking moov and its traks
+List<(List<int>, List<int>)> turnsOf(Uint8List b) {
+  final out = <(List<int>, List<int>)>[];
+  void walk(int from, int to) {
+    var at = from;
+    while (at + 8 <= to) {
+      var size = _be(b, at);
+      var head = 8;
+      if (size == 1) {
+        size = _be(b, at + 8) << 32 | _be(b, at + 12);
+        head = 16;
+      } else if (size == 0) {
+        size = to - at;
+      }
+      if (size < head) return;
+      final type = String.fromCharCodes(b.sublist(at + 4, at + 8));
+      final body = at + head;
+      if (type == 'moov' || type == 'trak') walk(body, at + size);
+      if (type == 'tkhd') {
+        final w = b[body] == 1 ? 8 : 4;
+        final m = body + 4 + 2 * w + 8 + w + 8 + 8;
+        out.add((b.sublist(m, m + 36), b.sublist(m + 36, m + 44)));
+      }
+      at += size;
+    }
+  }
+
+  walk(0, b.length);
+  return out;
 }

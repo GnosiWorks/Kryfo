@@ -25,8 +25,11 @@ import 'package:kryfo/main.dart'
         OtherIdentity,
         PairRefused,
         appState,
+        DeviceCannotReach,
         deviceSendForTest,
+        linkedRoleForTest,
         pairArgOf,
+        signalSeal,
         newMsgUid,
         useDatabasesForTest,
         useEngineForTest,
@@ -598,6 +601,46 @@ void main() {
       deviceSendForTest(null);
     }
   });
+
+  test('a linked device never seals on the identity pair: a contact its '
+      'device sessions cannot reach gets nothing sealed at all', () async {
+    linkedDevicesForTest = true;
+    linkedRoleForTest = true;
+    deviceSendForTest(
+      DeviceSend(
+        state: DeviceState(_NoLists()),
+        db: () async => mem,
+        sessions: (_) async => throw StateError('no device'),
+        wire: _NoDeviceWire(),
+      ),
+    );
+    try {
+      final wrapped = await wrapMessage('from the desk', msgUid: newMsgUid());
+      await expectLater(
+        signalSeal(_ci, wrapped),
+        throwsA(isA<DeviceCannotReach>()),
+      );
+      await expectLater(
+        signalSeal(_ci, wrapped, onlySettled: true),
+        throwsA(isA<DeviceCannotReach>()),
+      );
+    } finally {
+      linkedDevicesForTest = false;
+      linkedRoleForTest = false;
+      deviceSendForTest(null);
+    }
+  });
+}
+
+// a device engine with no list of anyone's
+class _NoLists implements DeviceEngine {
+  @override
+  String call(String op, Map<String, Object?> args) =>
+      jsonEncode({'rows': [], 'err': 'unknown'});
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
 }
 
 // a device engine whose contacts have their phones alone

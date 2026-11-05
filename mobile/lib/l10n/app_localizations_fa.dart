@@ -1243,9 +1243,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'وقتی پل درخواست می‌کنید، پروژه‌ی Tor نشانی IP شما را می‌بیند. این عادی است: Tor Browser و همه‌ی برنامه‌های Tor همین‌طور پل می‌گیرند، و تنها چیزی که از این می‌فهمند این است که کسی پل خواسته است. چیزی درباره‌ی گفت‌وگوهای شما نمی‌فهمند.';
 
   @override
-  String get bridgesAsking => 'در حال درخواست…';
-
-  @override
   String get cameraNoCameraOnThis => 'این گوشی دوربین ندارد';
 
   @override
@@ -7216,9 +7213,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get transportBridgeMode => 'پل‌ها';
 
   @override
-  String get bridgesEgypt => 'مصر';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'پل شما راه‌اندازی نشد';
 
   @override
@@ -7263,9 +7257,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'ایران';
-
-  @override
   String get bridgesTurnOnAutomatic => 'روشن کردن حالت خودکار';
 
   @override
@@ -7297,9 +7288,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesScanACode => 'اسکن کد';
 
   @override
-  String get bridgesMyanmar => 'میانمار';
-
-  @override
   String get bridgesSwitchToAutomatic => 'رفتن به حالت خودکار';
 
   @override
@@ -7321,9 +7309,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'از رایانه‌ی یک داوطلب می‌گذرد. مسدود کردنش سخت است و شروعش کند.';
-
-  @override
-  String get bridgesLetTheTorProject => 'بگذارید پروژه‌ی Tor حدس بزند';
 
   @override
   String get bridgesTorSeemsBlocked =>
@@ -7355,10 +7340,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'Kryfo راهی پیدا می‌کند که جایی که هستید جواب بدهد.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'پروژه‌ی Tor برای این کشورها توصیه‌های خودش را دارد.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'این پل راه پیدا نمی‌کند';
 
   @override
@@ -7370,9 +7351,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'فعلاً نه';
-
-  @override
-  String get bridgesRussia => 'روسیه';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7398,9 +7376,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesAlmostThere => 'چیزی نمانده';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'حدس پروژه‌ی Tor';
-
-  @override
   String get bridgesUseThisBridge => 'استفاده از این پل';
 
   @override
@@ -7416,9 +7391,6 @@ class AppLocalizationsFa extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'ترکمنستان';
 
   @override
   String get transportBridgeMethod => 'روش';
@@ -7445,11 +7417,12 @@ class AppLocalizationsFa extends AppLocalizations {
       'پل‌ها ممکن است بی‌خبر از کار بیفتند. «خودکار» می‌تواند راه دیگری پیدا کند.';
 
   @override
-  String get bridgesHongKong => 'هنگ کنگ';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'وقتی Tor مسدود است، «خودکار» از پروژه‌ی Tor می‌پرسد در کشور شما چه جواب می‌دهد.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo پل‌ها را خودکار انتخاب می‌کند. Snowflake و WebTunnel در بیشتر جاها کار می‌کنند. اگر یکی وصل نشد، یکی دیگر را امتحان کنید یا از یک دوست خط پل بخواهید.';
 
   @override
   String get bridgesAskTorProject => 'پرسیدن از پروژه‌ی Tor';
@@ -7458,18 +7431,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesTooLongForTor => 'برای Tor بیش از حد بلند است';
 
   @override
-  String get bridgesCountry => 'کشور';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '⁨$method⁩، ⁨$from⁩';
   }
-
-  @override
-  String get bridgesChina => 'چین';
-
-  @override
-  String get bridgesBelarus => 'بلاروس';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo نمی‌تواند از این خط استفاده کند';
@@ -9121,9 +9085,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get mediaSendVideo => 'ارسال ویدیو';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'تا وقتی قبول نکند، ⁨$count⁩ مورد می‌تواند برود';
-  }
+  String get requestSenderMediaLater =>
+      'عکس‌ها و فایل‌ها بعد از این‌که شما را قبول کند باز می‌شوند، تا هر دو در امان باشید.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'عکس‌ها و فایل‌ها بعد از این‌که او را قبول کنید باز می‌شوند، تا در امان بمانید.';
 
   @override
   String get groupEndedYou => 'شما این گروه را پایان دادید';
@@ -10147,10 +10114,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'همه‌ی پیام‌هایتان، با عکس‌ها و ویدیوهای ۳۰ روز گذشته.';
 
   @override
-  String get devicesHistoryNone => 'شروع بدون تاریخچه';
+  String get devicesHistoryNone => 'فقط مخاطبان و گروه‌ها';
 
   @override
-  String get devicesHistoryNoneHint => 'فقط پیام‌های تازه به دستگاه می‌رسد.';
+  String get devicesHistoryNoneHint => 'بدون هیچ پیامی منتقل می‌شوند.';
 
   @override
   String get devicesSkipMedia => 'بدون عکس و ویدیو';
@@ -10728,6 +10695,144 @@ class AppLocalizationsFa extends AppLocalizations {
       'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کند. از گوشی خود پاسخ دهید.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'فعلاً از گوشی خود به $name پاسخ دهید.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'همه‌ی پیام‌های این‌جا فقط از این رایانه حذف می‌شوند. گوشی شما آن‌ها را نگه می‌دارد.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'همه‌ی پیام‌ها و مخاطب فقط از این رایانه حذف می‌شوند. گوشی شما گفت‌وگو را نگه می‌دارد.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'دیگر پیامی از او به این رایانه نمی‌رسد. به او گفته نمی‌شود. در گوشی‌تان هم مسدودش کنید تا آنجا هم نرسد.';
+
+  @override
+  String get historyCopyTitle => 'تاریخچهٔ گفت‌وگوها';
+
+  @override
+  String get historyCopyMaking => 'در حال آماده‌کردن گفت‌وگوهایتان';
+
+  @override
+  String get historyCopyMakingLine =>
+      'گوشی شما آنچه را باید کپی شود جمع می‌کند. چند لحظه دیگر شروع می‌شود.';
+
+  @override
+  String get historyCopyGoing => 'در حال کپی گفت‌وگوهایتان';
+
+  @override
+  String get historyCopyGoingLine =>
+      'تا پایان کار، هر دو دستگاه را آنلاین نگه دارید.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'روی هم ⁨$size⁩';
+  }
+
+  @override
+  String get historyCopyWaiting => 'در انتظار دستگاه دیگر';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'وقتی هر دو دستگاه آنلاین باشند، کپی خودش ادامه پیدا می‌کند.';
+
+  @override
+  String get historyCopyPaused => 'کپی کمی مکث کرده است';
+
+  @override
+  String get historyCopyPausedLine => 'یک دقیقهٔ دیگر ادامه می‌دهد.';
+
+  @override
+  String get historyCopyWhole => 'همهٔ پیام‌ها و فایل‌ها رسید';
+
+  @override
+  String get historyCopyWholeLine => 'چیزی کم نیست.';
+
+  @override
+  String get historyCopyRows => 'مخاطبان و گروه‌هایتان رسید';
+
+  @override
+  String get historyCopyRowsLine =>
+      'بدون هیچ پیامی رسیدند. پیام‌های تازه از این پس روی دستگاه نشان داده می‌شوند.';
+
+  @override
+  String get historyCopyGaps => 'بیشتر گفت‌وگوهایتان رسید';
+
+  @override
+  String get historyCopyGapsLine =>
+      'در این گفت‌وگوها روی دستگاه تازه کمتر از گوشی‌تان هست.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'پیام‌ها: ⁨$got⁩ از ⁨$want⁩';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'فایل‌ها: ⁨$got⁩ از ⁨$want⁩';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ مورد روی گوشی شما ماند',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'برای کپی خیلی بزرگ یا ناخوانا است.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$countString⁩ گفت‌وگو روی گوشی شما ماند',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'کپی متوقف شد';
+
+  @override
+  String get historyCopyEndedLine =>
+      'چیز دیگری نمی‌رسد. برای کپی تازه، دستگاه را دوباره پیوند دهید.';
+
+  @override
+  String get historyCopyFailed => 'کپی تمام نشد';
+
+  @override
+  String get historyCopyFailedLine =>
+      'برای کپی تازه، دستگاه را دوباره پیوند دهید.';
+
+  @override
+  String get historyCopyStays => 'روی گوشی شما ماند';
+
+  @override
+  String get historyCopySee => 'دیدن کپی';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11168,4 +11273,60 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'فعلاً نه';
+
+  @override
+  String get albumPrevious => 'قبلی';
+
+  @override
+  String get albumNext => 'بعدی';
+
+  @override
+  String get notesHoldHintDesk =>
+      'برای کپی یا حذف، روی یادداشت راست‌کلیک کنید.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'هنوز چیزی این‌جا سنجاق نشده. روی پیامی راست‌کلیک کنید و «سنجاق» را انتخاب کنید تا این‌جا برای همه‌ی اعضای گفت‌وگو بماند.';
+
+  @override
+  String get chatGalleryDesk => 'تصویرها';
+
+  @override
+  String get groupChatGalleryDesk => 'تصویرها';
+
+  @override
+  String get photoChooseDesk => 'انتخاب فایل تصویر';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'از یک فایل تصویر';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'صدا';
+
+  @override
+  String get notificationsPlaySound => 'پخش صدا';
+
+  @override
+  String get notificationsPlaySoundHint => 'با هر اعلان روی این رایانه';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'اشتراک پل ⁨$n⁩';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'این پل را به اشتراک بگذار';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'آن را خصوصی و با کسانی که به آن‌ها اعتماد داری به اشتراک بگذار. پلی که در صفحه‌های عمومی نیاید، مدت بیشتری کار می‌کند.';
+
+  @override
+  String get bridgesCopyBridge => 'کپی پل';
+
+  @override
+  String get bridgesBridgeCopied => 'پل کپی شد';
+
+  @override
+  String get bridgesSendBridgeTo => 'فرستادن پل به';
 }

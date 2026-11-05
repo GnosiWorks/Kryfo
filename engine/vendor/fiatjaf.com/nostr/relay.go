@@ -81,8 +81,9 @@ type Relay struct {
 	subscriptionIDCounter atomic.Int64
 
 	// kryfo: see RelayOptions
-	pingInterval time.Duration
-	pongTimeout  time.Duration
+	pingInterval  time.Duration
+	pongTimeout   time.Duration
+	closedHandler func(string)
 }
 
 // NewRelay returns a new relay. It takes a context that, when canceled, will close the relay connection.
@@ -103,6 +104,7 @@ func NewRelay(ctx context.Context, url string, opts RelayOptions) *Relay {
 		AssumeValid:                   opts.AssumeValid,
 		pingInterval:                  opts.PingInterval,
 		pongTimeout:                   opts.PongTimeout,
+		closedHandler:                 opts.ClosedHandler,
 	}
 
 	go func() {
@@ -172,6 +174,10 @@ type RelayOptions struct {
 
 	// kryfo: PongTimeout is how long a ping waits for its pong, zero means 800 milliseconds
 	PongTimeout time.Duration
+
+	// kryfo: ClosedHandler, if given, hears the reason of every CLOSED the
+	// relay sends, on the read loop: it must not block
+	ClosedHandler func(reason string)
 }
 
 // String just returns the relay URL.
@@ -467,6 +473,9 @@ func (r *Relay) handleMessage(message string) {
 			subscription.dispatchEose()
 		}
 	case *ClosedEnvelope:
+		if r.closedHandler != nil {
+			r.closedHandler(env.Reason)
+		}
 		if subscription, ok := r.Subscriptions.Load(subIdToSerial(env.SubscriptionID)); ok {
 			subscription.handleClosed(env.Reason)
 		}

@@ -27,8 +27,10 @@ import '../widgets/ease_size.dart';
 import '../bidi_safe.dart';
 import '../widgets/shift_tap_guard.dart';
 import '../widgets/enter_sends.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../desktop/drag_in.dart' show DragInZone;
 import 'notes_export_screen.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 const String kNotesPeerId = '_notes_self_';
 
@@ -396,97 +398,103 @@ class _NotesScreenState extends State<NotesScreen> {
       line: () => l10n.notesDropKeepsWords,
       child: Scaffold(
         backgroundColor: HaloColors.surface,
-        body: SafeArea(
-          child: Column(
-            children: [
-              PageBar(
-                under: _under,
-                title: l10n.notesNoteToSelf,
-                sub: Text(
-                  l10n.notesOnlyOnThisPhoneShown,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: HaloType.mono(size: 10, color: HaloColors.text2),
-                ),
-                actions: [
-                  if (_notes.isNotEmpty)
-                    IconButton(
-                      tooltip: l10n.notesMenu,
-                      icon: Icon(
-                        Icons.more_horiz,
-                        color: HaloColors.text2,
-                        size: 22,
+        body: DeskPage(
+          child: SafeArea(
+            child: Column(
+              children: [
+                PageBar(
+                  under: _under,
+                  title: l10n.notesNoteToSelf,
+                  sub: Text(
+                    l10n.notesOnlyOnThisPhoneShown,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                  ),
+                  actions: [
+                    if (_notes.isNotEmpty)
+                      IconButton(
+                        tooltip: l10n.notesMenu,
+                        icon: Icon(
+                          Icons.more_horiz,
+                          color: HaloColors.text2,
+                          size: 22,
+                        ),
+                        onPressed: _pageMenu,
                       ),
-                      onPressed: _pageMenu,
-                    ),
-                ],
-              ),
-              Expanded(
-                // the first note fades the empty page away
-                child: !_loaded
-                    ? const SizedBox.shrink()
-                    : NotificationListener<Notification>(
-                        onNotification: _track,
-                        child: FadeSwap(
-                          child: _notes.isEmpty
-                              ? KeyedSubtree(
-                                  key: const ValueKey('none'),
-                                  child: _empty(),
-                                )
-                              : _Seen(
-                                  key: const ValueKey('notes'),
-                                  onMount: (c) => _listCtx = c,
-                                  onGone: (c) {
-                                    if (identical(_listCtx, c)) _listCtx = null;
-                                  },
-                                  child: Stack(
-                                    children: [
-                                      _list(),
-                                      Positioned(
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        child: _held(),
-                                      ),
-                                    ],
+                  ],
+                ),
+                Expanded(
+                  // the first note fades the empty page away
+                  child: !_loaded
+                      ? const SizedBox.shrink()
+                      : NotificationListener<Notification>(
+                          onNotification: _track,
+                          child: FadeSwap(
+                            child: _notes.isEmpty
+                                ? KeyedSubtree(
+                                    key: const ValueKey('none'),
+                                    child: _empty(),
+                                  )
+                                : _Seen(
+                                    key: const ValueKey('notes'),
+                                    onMount: (c) => _listCtx = c,
+                                    onGone: (c) {
+                                      if (identical(_listCtx, c)) {
+                                        _listCtx = null;
+                                      }
+                                    },
+                                    child: Stack(
+                                      children: [
+                                        _list(),
+                                        Positioned(
+                                          top: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: _held(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                          ),
+                        ),
+                ),
+                EaseSize(
+                  child: !_holdTold && _notes.isNotEmpty
+                      ? Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                            18,
+                            6,
+                            18,
+                            8,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                onDesktop
+                                    ? Icons.mouse_outlined
+                                    : Icons.touch_app_outlined,
+                                size: 15,
+                                color: HaloColors.amber,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  l10n.notesHoldHintShown,
+                                  style: HaloType.sans(
+                                    size: 12.5,
+                                    color: HaloColors.text,
                                   ),
                                 ),
-                        ),
-                      ),
-              ),
-              EaseSize(
-                child: !_holdTold && _notes.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                          18,
-                          6,
-                          18,
-                          8,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.touch_app_outlined,
-                              size: 15,
-                              color: HaloColors.amber,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                l10n.notesHoldHint,
-                                style: HaloType.sans(
-                                  size: 12.5,
-                                  color: HaloColors.text,
-                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox(width: double.infinity),
-              ),
-              _inputBar(),
-            ],
+                            ],
+                          ),
+                        )
+                      : const SizedBox(width: double.infinity),
+                ),
+                _inputBar(),
+              ],
+            ),
           ),
         ),
       ),

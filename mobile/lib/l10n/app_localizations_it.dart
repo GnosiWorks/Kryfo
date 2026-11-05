@@ -1252,9 +1252,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Quando chiedi dei bridge, il Progetto Tor vede il tuo indirizzo IP. È normale: è così che Tor Browser e ogni app Tor ottengono i bridge, e tutto ciò che ne ricavano è che qualcuno ha chiesto dei bridge. Niente sulle tue chat.';
 
   @override
-  String get bridgesAsking => 'Richiesta…';
-
-  @override
   String get cameraNoCameraOnThis => 'Questo telefono non ha fotocamera';
 
   @override
@@ -7281,9 +7278,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get transportBridgeMode => 'Bridge';
 
   @override
-  String get bridgesEgypt => 'Egitto';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Il tuo bridge non è partito';
 
   @override
@@ -7328,9 +7322,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Iran';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Attiva Automatico';
 
   @override
@@ -7362,9 +7353,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesScanACode => 'Scansiona un codice';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Passa ad Automatico';
 
   @override
@@ -7387,9 +7375,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Passa dal computer di un volontario. Difficile da bloccare, lento ad avviarsi.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Lascia indovinare il Progetto Tor';
 
   @override
   String get bridgesTorSeemsBlocked => 'Tor sembra bloccato su questa rete';
@@ -7420,10 +7405,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Kryfo trova una strada che funziona dove ti trovi.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Il Progetto Tor ha consigli specifici per questi paesi.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting =>
       'Questo bridge non riesce a passare';
 
@@ -7436,9 +7417,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Non ora';
-
-  @override
-  String get bridgesRussia => 'Russia';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7464,9 +7442,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesAlmostThere => 'Ci siamo quasi';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Ipotesi del Progetto Tor';
-
-  @override
   String get bridgesUseThisBridge => 'Usa questo bridge';
 
   @override
@@ -7482,9 +7457,6 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
   String get transportBridgeMethod => 'Metodo';
@@ -7511,11 +7483,12 @@ class AppLocalizationsIt extends AppLocalizations {
       'I bridge possono smettere di funzionare senza preavviso. Automatico può trovare un\'altra strada.';
 
   @override
-  String get bridgesHongKong => 'Hong Kong';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Quando Tor è bloccato, Automatico chiede al Progetto Tor cosa funziona nel tuo paese.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo sceglie i bridge in automatico. Snowflake e WebTunnel funzionano quasi ovunque. Se uno non si connette, provane un altro o chiedi una riga bridge a un amico.';
 
   @override
   String get bridgesAskTorProject => 'Chiedi al Progetto Tor';
@@ -7524,18 +7497,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesTooLongForTor => 'Troppo lunga per Tor';
 
   @override
-  String get bridgesCountry => 'Paese';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Cina';
-
-  @override
-  String get bridgesBelarus => 'Bielorussia';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo non può usare questa riga';
@@ -9187,9 +9151,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mediaSendVideo => 'Invia video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Finché non accetta, ne possono partire $count';
-  }
+  String get requestSenderMediaLater =>
+      'Foto e file si sbloccano quando ti accetta, per la sicurezza di entrambi.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Foto e file si sbloccano quando lo accetti, per la tua sicurezza.';
 
   @override
   String get groupEndedYou => 'Hai chiuso questo gruppo';
@@ -10215,11 +10182,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Tutti i tuoi messaggi, con foto e video degli ultimi 30 giorni.';
 
   @override
-  String get devicesHistoryNone => 'Inizia senza cronologia';
+  String get devicesHistoryNone => 'Solo contatti e gruppi';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Sul dispositivo arrivano solo i nuovi messaggi.';
+  String get devicesHistoryNoneHint => 'Arrivano senza alcun messaggio.';
 
   @override
   String get devicesSkipMedia => 'Salta foto e video';
@@ -10797,6 +10763,146 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questa chat resta sul tuo telefono perché qui gli screenshot sono bloccati.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name usa una versione precedente di Kryfo. Rispondi dal tuo telefono.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Per ora rispondi a $name dal tuo telefono.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Ogni messaggio qui viene cancellato solo da questo computer. Il tuo telefono li conserva.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Tutti i messaggi e il contatto vanno via solo da questo computer. Il tuo telefono conserva la chat.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'I suoi messaggi non arrivano più su questo computer. Non riceve nessun avviso. Bloccalo sul telefono perché smettano di arrivare anche lì.';
+
+  @override
+  String get historyCopyTitle => 'Cronologia chat';
+
+  @override
+  String get historyCopyMaking => 'Preparazione delle tue chat';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Il telefono raccoglie cosa copiare. Si parte tra un attimo.';
+
+  @override
+  String get historyCopyGoing => 'Copia delle tue chat';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Tieni online entrambi i dispositivi finché non è finita.';
+
+  @override
+  String historyCopySize(Object size) {
+    return '$size in tutto';
+  }
+
+  @override
+  String get historyCopyWaiting => 'In attesa dell’altro dispositivo';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'La copia riprende da sola quando entrambi i dispositivi sono online.';
+
+  @override
+  String get historyCopyPaused => 'La copia fa una breve pausa';
+
+  @override
+  String get historyCopyPausedLine => 'Riprende tra un minuto.';
+
+  @override
+  String get historyCopyWhole => 'Sono arrivati tutti i messaggi e i file';
+
+  @override
+  String get historyCopyWholeLine => 'Non manca nulla.';
+
+  @override
+  String get historyCopyRows => 'Sono arrivati i tuoi contatti e gruppi';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Sono arrivati senza alcun messaggio. I nuovi messaggi si vedono sul dispositivo da ora in poi.';
+
+  @override
+  String get historyCopyGaps => 'Sono arrivate quasi tutte le tue chat';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Queste chat hanno meno sul nuovo dispositivo che sul tuo telefono.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Messaggi: $got di $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'File: $got di $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString elementi sono rimasti sul tuo telefono',
+      one: '1 elemento è rimasto sul tuo telefono',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Troppo grandi o illeggibili da copiare.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString chat sono rimaste sul tuo telefono',
+      one: '1 chat è rimasta sul tuo telefono',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'La copia si è fermata';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Non arriva altro. Collega di nuovo il dispositivo per una nuova copia.';
+
+  @override
+  String get historyCopyFailed => 'La copia non è riuscita a finire';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Collega di nuovo il dispositivo per una nuova copia.';
+
+  @override
+  String get historyCopyStays => 'Rimasto sul tuo telefono';
+
+  @override
+  String get historyCopySee => 'Vedi la copia';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11245,4 +11351,60 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Non ora';
+
+  @override
+  String get albumPrevious => 'Precedente';
+
+  @override
+  String get albumNext => 'Successivo';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Fai clic destro su una nota per copiarla o eliminarla.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Ancora niente di fissato qui. Fai clic destro su un messaggio e scegli Fissa: resterà qui per tutti nella chat.';
+
+  @override
+  String get chatGalleryDesk => 'Immagini';
+
+  @override
+  String get groupChatGalleryDesk => 'Immagini';
+
+  @override
+  String get photoChooseDesk => 'Scegli un file immagine';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Da un file immagine';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Suono';
+
+  @override
+  String get notificationsPlaySound => 'Riproduci un suono';
+
+  @override
+  String get notificationsPlaySoundHint => 'A ogni notifica su questo computer';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Condividi bridge $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Condividi questo bridge';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Condividilo in privato, con persone di cui ti fidi. Un bridge che resta fuori dalle pagine pubbliche funziona più a lungo.';
+
+  @override
+  String get bridgesCopyBridge => 'Copia bridge';
+
+  @override
+  String get bridgesBridgeCopied => 'Bridge copiato';
+
+  @override
+  String get bridgesSendBridgeTo => 'Invia il bridge a';
 }

@@ -143,6 +143,7 @@ func addressFiles(rcvPk string) (seenPath, lastPath string) {
 func dropAddressFiles(rcvPk string) {
 	dropHeard(rcvPk)
 	liveForget(rcvPk)
+	// its batch place stays in the book (batches.go), so it comes back there
 	seenPath, lastPath := addressFiles(rcvPk)
 	if seenPath == "" {
 		return

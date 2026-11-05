@@ -1248,9 +1248,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Köprü istediğinde Tor Projesi IP adresini görür. Bu normal: Tor Browser ve tüm Tor uygulamaları köprüleri böyle alır ve bu onlara yalnızca birinin köprü istediğini söyler. Sohbetlerin hakkında hiçbir şey söylemez.';
 
   @override
-  String get bridgesAsking => 'İsteniyor…';
-
-  @override
   String get cameraNoCameraOnThis => 'Bu telefonda kamera yok';
 
   @override
@@ -7237,9 +7234,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transportBridgeMode => 'Köprüler';
 
   @override
-  String get bridgesEgypt => 'Mısır';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Köprün başlatılamadı';
 
   @override
@@ -7284,9 +7278,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'İran';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Otomatiği aç';
 
   @override
@@ -7318,9 +7309,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesScanACode => 'Kod tara';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Otomatiğe geç';
 
   @override
@@ -7343,9 +7331,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Bir gönüllünün bilgisayarından geçer. Engellemesi zor, başlaması yavaş.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Tor Projesi tahmin etsin';
 
   @override
   String get bridgesTorSeemsBlocked => 'Tor bu ağda engellenmiş gibi';
@@ -7376,10 +7361,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo bulunduğun yerde işe yarayan bir yol bulur.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Tor Projesinin bu ülkeler için kendi önerileri var.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Bu köprü geçemiyor';
 
   @override
@@ -7391,9 +7372,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Şimdi değil';
-
-  @override
-  String get bridgesRussia => 'Rusya';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7419,9 +7397,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesAlmostThere => 'Az kaldı';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tor Projesinin tahmini';
-
-  @override
   String get bridgesUseThisBridge => 'Bu köprüyü kullan';
 
   @override
@@ -7437,9 +7412,6 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Türkmenistan';
 
   @override
   String get transportBridgeMethod => 'Yöntem';
@@ -7467,11 +7439,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Köprüler haber vermeden çalışmayı bırakabilir. Otomatik başka bir yol bulabilir.';
 
   @override
-  String get bridgesHongKong => 'Hong Kong';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Tor engellendiğinde Otomatik, Tor Projesine ülkende neyin işe yaradığını sorar.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo köprüleri otomatik seçer. Snowflake ve WebTunnel çoğu yerde çalışır. Biri bağlanmazsa başka birini dene ya da bir arkadaşından köprü satırı iste.';
 
   @override
   String get bridgesAskTorProject => 'Tor Projesine sor';
@@ -7480,18 +7453,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesTooLongForTor => 'Tor’un kullanması için fazla uzun';
 
   @override
-  String get bridgesCountry => 'Ülke';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Çin';
-
-  @override
-  String get bridgesBelarus => 'Belarus';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo bu satırı kullanamıyor';
@@ -9140,9 +9104,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mediaSendVideo => 'Video gönder';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Kabul edene kadar $count tane gidebilir';
-  }
+  String get requestSenderMediaLater =>
+      'Fotoğraflar ve dosyalar seni kabul ettikten sonra açılır, ikiniz de güvende olun diye.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Fotoğraflar ve dosyalar onu kabul ettikten sonra açılır, güvende kal diye.';
 
   @override
   String get groupEndedYou => 'Bu grubu sonlandırdın';
@@ -10165,10 +10132,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Tüm mesajların, son 30 günün fotoğraf ve videolarıyla.';
 
   @override
-  String get devicesHistoryNone => 'Geçmiş olmadan başla';
+  String get devicesHistoryNone => 'Yalnızca kişiler ve gruplar';
 
   @override
-  String get devicesHistoryNoneHint => 'Cihaza yalnızca yeni mesajlar gelir.';
+  String get devicesHistoryNoneHint => 'Hiçbir mesaj olmadan gelirler.';
 
   @override
   String get devicesSkipMedia => 'Fotoğraf ve videoları atla';
@@ -10742,6 +10709,145 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name daha eski bir Kryfo kullanıyor. Telefonundan yanıtla.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Şimdilik $name kişisine telefonundan yanıt ver.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Buradaki her mesaj yalnızca bu bilgisayardan silinir. Telefonun onları saklar.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Tüm mesajlar ve kişi yalnızca bu bilgisayardan gider. Telefonun sohbeti saklar.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Mesajları artık bu bilgisayara gelmez. Ona haber verilmez. Telefonunda da gelmemesi için onu orada da engelle.';
+
+  @override
+  String get historyCopyTitle => 'Sohbet geçmişi';
+
+  @override
+  String get historyCopyMaking => 'Sohbetlerin hazırlanıyor';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Telefonun kopyalanacakları topluyor. Birazdan başlıyor.';
+
+  @override
+  String get historyCopyGoing => 'Sohbetlerin kopyalanıyor';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Bitene kadar iki cihazı da çevrimiçi tut.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Toplam $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Diğer cihaz bekleniyor';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'İki cihaz da çevrimiçi olduğunda kopyalama kendiliğinden sürer.';
+
+  @override
+  String get historyCopyPaused => 'Kopyalama kısa bir mola veriyor';
+
+  @override
+  String get historyCopyPausedLine => 'Bir dakika içinde sürüyor.';
+
+  @override
+  String get historyCopyWhole => 'Tüm mesajlar ve dosyalar geldi';
+
+  @override
+  String get historyCopyWholeLine => 'Eksik bir şey yok.';
+
+  @override
+  String get historyCopyRows => 'Kişilerin ve grupların geldi';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Hiçbir mesaj olmadan geldiler. Yeni mesajlar bundan sonra cihazda görünür.';
+
+  @override
+  String get historyCopyGaps => 'Sohbetlerinin çoğu geldi';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Bu sohbetlerde yeni cihazda telefonundakinden daha az şey var.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Mesajlar: $want içinden $got';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Dosyalar: $want içinden $got';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString öge telefonunda kaldı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy =>
+      'Kopyalamak için çok büyük ya da okunamıyor.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString sohbet telefonunda kaldı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Kopyalama durdu';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Başka bir şey gelmeyecek. Yeni bir kopya için cihazı yeniden bağla.';
+
+  @override
+  String get historyCopyFailed => 'Kopyalama bitirilemedi';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Yeni bir kopya için cihazı yeniden bağla.';
+
+  @override
+  String get historyCopyStays => 'Telefonunda kaldı';
+
+  @override
+  String get historyCopySee => 'Kopyayı gör';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11181,4 +11287,60 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Şimdi değil';
+
+  @override
+  String get albumPrevious => 'Önceki';
+
+  @override
+  String get albumNext => 'Sonraki';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Kopyalamak ya da silmek için bir nota sağ tıkla.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Henüz sabitlenen bir şey yok. Bir mesaja sağ tıkla ve Sabitle’yi seç; sohbetteki herkes için burada durur.';
+
+  @override
+  String get chatGalleryDesk => 'Resimler';
+
+  @override
+  String get groupChatGalleryDesk => 'Resimler';
+
+  @override
+  String get photoChooseDesk => 'Bir resim dosyası seç';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Bir resim dosyasından';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Ses';
+
+  @override
+  String get notificationsPlaySound => 'Ses çal';
+
+  @override
+  String get notificationsPlaySoundHint => 'Bu bilgisayardaki her bildirimde';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return '$n. köprüyü paylaş';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Bu köprüyü paylaş';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Güvendiğin kişilerle özel olarak paylaş. Herkese açık sayfalarda yer almayan bir köprü daha uzun süre çalışır.';
+
+  @override
+  String get bridgesCopyBridge => 'Köprüyü kopyala';
+
+  @override
+  String get bridgesBridgeCopied => 'Köprü kopyalandı';
+
+  @override
+  String get bridgesSendBridgeTo => 'Köprüyü gönder';
 }

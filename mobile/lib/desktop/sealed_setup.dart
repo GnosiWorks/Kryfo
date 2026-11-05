@@ -323,7 +323,9 @@ class EngineFiles {
   String get _key => p.join(dir, 'onion.key');
   String get _sealedKey => p.join(docs, 'onion.key');
   String get _state => p.join(support, 'engine.state');
-  static final _marks = RegExp(r'^nostr_(seen|last|heard)_');
+  // the batch book (engine/batches.go) is one of them: kept, a desktop
+  // start puts every address back in its batch
+  static final _marks = RegExp(r'^nostr_((seen|last|heard)_|book$)');
 
   String get _anchorsEntry => 'kryfo.anchors';
 
@@ -687,8 +689,9 @@ Map<String, String> keepMarksIn(
   String state, {
   String writer = 'new',
 }) {
-  // a store after the first keeps its anchor under .<store>
-  final marks = RegExp(r'^nostr_(seen|last|heard)_[0-9a-f]+(\.[0-9])?$');
+  // a store after the first keeps its anchor under .<store>. the batch
+  // book is one sealed line
+  final marks = RegExp(r'^nostr_((seen|last|heard)_[0-9a-f]+(\.[0-9])?|book)$');
   final files = rawFileAccess(() {
     final d = Directory(dir);
     if (!d.existsSync()) return <File>[];
@@ -718,7 +721,8 @@ Map<String, String> keepMarksIn(
 /// earlier time. the anchor (nostr_last_) is one number and stays as it is
 @visibleForTesting
 Uint8List wholeLines(String name, Uint8List b) {
-  if (name.startsWith('nostr_last_') || b.isEmpty || b.last == 10) return b;
+  if (name.startsWith('nostr_last_') || name == 'nostr_book') return b;
+  if (b.isEmpty || b.last == 10) return b;
   final cut = b.lastIndexOf(10);
   return Uint8List.sublistView(b, 0, cut + 1);
 }

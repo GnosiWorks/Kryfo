@@ -7,7 +7,9 @@ import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../lock_state.dart' show lockState;
+import '../transfers.dart' show unmeteredNow;
 import '../main.dart' show appState, session, sessionQuiet;
 import 'bergamot_ffi.dart';
 import 'catalog.dart';
@@ -20,7 +22,9 @@ import 'settings.dart';
 Future<String> modelsDir() async =>
     p.join((await getApplicationSupportDirectory()).path, 'translate');
 
+// a computer: a cable or a vpn counts as wi-fi does for its downloads
 Future<bool> _onWifi() async {
+  if (onDesktop) return unmeteredNow();
   try {
     return (await Connectivity().checkConnectivity()).contains(
       ConnectivityResult.wifi,

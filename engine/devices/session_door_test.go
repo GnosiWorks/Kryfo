@@ -31,6 +31,12 @@ var engineDoors = []doorRule{
 	// a first own list as the link brought it: only the link's own file,
 	// with the list it holds, never one handed in
 	{"a link source", regexp.MustCompile(`devices\.FromLink\(`), map[string]bool{"../dev_link.go": true}},
+	// a contact's list the phone held, from the history copy: only the
+	// engine's copy call, which takes it on a linked device alone
+	{"a copy source", regexp.MustCompile(`devices\.FromCopy\(`), map[string]bool{"../dev_ffi.go": true}},
+	// a contact's list my phone passed on: only the session door, which
+	// checks the remote is my phone
+	{"my phone's word", regexp.MustCompile(`devices\.FromMyPhone\(`), map[string]bool{"../dev_session.go": true}},
 }
 
 var appDoors = []doorRule{
@@ -102,6 +108,8 @@ func TestTheDoorRulesMatch(t *testing.T) {
 		{engineDoors, "book.Proven(id, remote)"},
 		{engineDoors, "devices.Kept{Identity: id}"},
 		{engineDoors, "d.own.Set(id, list, key, devices.FromLink(), d.v)"},
+		{engineDoors, "d.accept(id, a.List, devices.FromCopy(), out)"},
+		{engineDoors, "d.accept(id, a.List, devices.FromMyPhone(), out)"},
 		{appDoors, "final r = SessionRemote.opened(key);"},
 		{appDoors, "lookup('HaloDevSession')"},
 		{appDoors, "engine.session('own_mine', {})"},

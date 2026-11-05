@@ -1274,9 +1274,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Коли ти запитуєш мости, проєкт Tor бачить твою IP-адресу. Це нормально: так мости отримують Tor Browser і кожен застосунок Tor, і все, що він із цього дізнається, — що хтось попросив мости. Нічого про твої чати.';
 
   @override
-  String get bridgesAsking => 'Запитуємо…';
-
-  @override
   String get cameraNoCameraOnThis => 'На цьому телефоні немає камери';
 
   @override
@@ -7341,9 +7338,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get transportBridgeMode => 'Мости';
 
   @override
-  String get bridgesEgypt => 'Єгипет';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Міст не запустився';
 
   @override
@@ -7388,9 +7382,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Іран';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Увімкнути «Авто»';
 
   @override
@@ -7422,9 +7413,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesScanACode => 'Сканувати код';
 
   @override
-  String get bridgesMyanmar => 'М’янма';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Перейти на «Авто»';
 
   @override
@@ -7447,9 +7435,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Іде через комп’ютер волонтера. Важко заблокувати, але довго запускається.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Хай визначить проєкт Tor';
 
   @override
   String get bridgesTorSeemsBlocked => 'Схоже, Tor заблоковано в цій мережі';
@@ -7482,10 +7467,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Kryfo сам знаходить спосіб, що працює там, де ти є.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Проєкт Tor має власні поради для цих країн.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Через цей міст не пробитися';
 
   @override
@@ -7497,9 +7478,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Не зараз';
-
-  @override
-  String get bridgesRussia => 'Росія';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7525,9 +7503,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesAlmostThere => 'Майже готово';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'За версією проєкту Tor';
-
-  @override
   String get bridgesUseThisBridge => 'Використати цей міст';
 
   @override
@@ -7546,9 +7521,6 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Туркменістан';
 
   @override
   String get transportBridgeMethod => 'Спосіб';
@@ -7575,11 +7547,12 @@ class AppLocalizationsUk extends AppLocalizations {
       'Мости можуть перестати працювати без попередження. Режим «Авто» може знайти інший шлях.';
 
   @override
-  String get bridgesHongKong => 'Гонконг';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Коли Tor заблоковано, режим «Авто» питає в проєкту Tor, що працює у твоїй країні.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo вибирає мости сам. Snowflake і WebTunnel працюють майже всюди. Якщо один не підключається, спробуй інший або попроси в друга рядок моста.';
 
   @override
   String get bridgesAskTorProject => 'Запитати проєкт Tor';
@@ -7588,18 +7561,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesTooLongForTor => 'Задовгий для Tor';
 
   @override
-  String get bridgesCountry => 'Країна';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Китай';
-
-  @override
-  String get bridgesBelarus => 'Білорусь';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo не може використати цей рядок';
@@ -9267,9 +9231,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mediaSendVideo => 'Надіслати відео';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Поки співрозмовник не прийме, можна надіслати $count';
-  }
+  String get requestSenderMediaLater =>
+      'Фото й файли відкриються, коли співрозмовник прийме тебе: так безпечніше для вас обох.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Фото й файли відкриються, коли ти приймеш співрозмовника: так безпечніше для тебе.';
 
   @override
   String get groupEndedYou => 'Ти завершив(-ла) цю групу';
@@ -10300,11 +10267,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Усі ваші повідомлення, а також фото й відео за останні 30 днів.';
 
   @override
-  String get devicesHistoryNone => 'Почати без історії';
+  String get devicesHistoryNone => 'Лише контакти й групи';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'На пристрій надходитимуть лише нові повідомлення.';
+  String get devicesHistoryNoneHint => 'Вони переносяться без повідомлень.';
 
   @override
   String get devicesSkipMedia => 'Без фото й відео';
@@ -10883,6 +10849,150 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name користується старішою версією Kryfo. Відповідай з телефона.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Поки що відповідай $name з телефона.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Кожне повідомлення тут буде стерто лише з цього комп’ютера. Телефон їх збереже.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Усі повідомлення й контакт зникнуть лише з цього комп’ютера. Телефон збереже чат.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Повідомлення від контакту перестануть надходити на цей комп’ютер. Йому про це не скажуть. Заблокуйте його на телефоні, щоб вони не надходили і там.';
+
+  @override
+  String get historyCopyTitle => 'Історія чатів';
+
+  @override
+  String get historyCopyMaking => 'Готуємо ваші чати';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Телефон збирає те, що буде скопійовано. Зараз почнеться.';
+
+  @override
+  String get historyCopyGoing => 'Копіюємо ваші чати';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Тримайте обидва пристрої в мережі, доки копіювання не завершиться.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Усього $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Чекаємо на інший пристрій';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Копіювання продовжиться саме, коли обидва пристрої будуть у мережі.';
+
+  @override
+  String get historyCopyPaused => 'Копіювання ненадовго зупинилося';
+
+  @override
+  String get historyCopyPausedLine => 'Продовжиться за хвилину.';
+
+  @override
+  String get historyCopyWhole => 'Усі повідомлення й файли перенесено';
+
+  @override
+  String get historyCopyWholeLine => 'Нічого не бракує.';
+
+  @override
+  String get historyCopyRows => 'Контакти й групи перенесено';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Їх перенесено без повідомлень. Нові повідомлення з’являються на пристрої відтепер.';
+
+  @override
+  String get historyCopyGaps => 'Майже всі чати перенесено';
+
+  @override
+  String get historyCopyGapsLine =>
+      'У цих чатах на новому пристрої менше, ніж на телефоні.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Повідомлення: $got з $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Файли: $got з $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString елемента залишилися на телефоні',
+      many: '$countString елементів залишилися на телефоні',
+      few: '$countString елементи залишилися на телефоні',
+      one: '$countString елемент залишився на телефоні',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Завеликі або нечитабельні для копіювання.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString чату залишилися на телефоні',
+      many: '$countString чатів залишилися на телефоні',
+      few: '$countString чати залишилися на телефоні',
+      one: '$countString чат залишився на телефоні',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Копіювання зупинено';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Більше нічого не надійде. Зв’яжіть пристрій знову для нової копії.';
+
+  @override
+  String get historyCopyFailed => 'Копіювання не вдалося завершити';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Зв’яжіть пристрій знову для нової копії.';
+
+  @override
+  String get historyCopyStays => 'Залишилося на телефоні';
+
+  @override
+  String get historyCopySee => 'Переглянути копію';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11330,4 +11440,61 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Не зараз';
+
+  @override
+  String get albumPrevious => 'Попереднє';
+
+  @override
+  String get albumNext => 'Наступне';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Клацни правою кнопкою на нотатці, щоб скопіювати або видалити її.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Тут ще нічого не закріплено. Клацни правою кнопкою на повідомленні й вибери «Закріпити», і воно чекатиме тут для всіх у чаті.';
+
+  @override
+  String get chatGalleryDesk => 'Зображення';
+
+  @override
+  String get groupChatGalleryDesk => 'Зображення';
+
+  @override
+  String get photoChooseDesk => 'Вибрати файл зображення';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'З файлу зображення';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Звук';
+
+  @override
+  String get notificationsPlaySound => 'Відтворювати звук';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'З кожним сповіщенням на цьому комп’ютері';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Поділитися мостом $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Поділитися цим мостом';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Діліться ним особисто, з тими, кому довіряєте. Міст, якого немає на відкритих сторінках, працює довше.';
+
+  @override
+  String get bridgesCopyBridge => 'Копіювати міст';
+
+  @override
+  String get bridgesBridgeCopied => 'Міст скопійовано';
+
+  @override
+  String get bridgesSendBridgeTo => 'Надіслати міст';
 }

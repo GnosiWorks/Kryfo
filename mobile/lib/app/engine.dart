@@ -268,6 +268,8 @@ class HaloEngine {
                 ident: ident,
                 a: pair,
                 b: padRumor(b64Cipher),
+                // a hidden chat's: on its own lane, over tor on every route
+                hidden: hiddenSendPeer(peerXPubHex),
               )).timeout(
                 const Duration(seconds: 60),
                 onTimeout: () => 'error: relay timeout',
@@ -285,6 +287,30 @@ class HaloEngine {
           ident,
           peerXPubHex,
           (pair) => _subscribeOnIsolate(ident, pair, fresh: fresh),
+        ),
+        room: (priv) async {
+          roomSubscribeBg(priv, peerXPubHex);
+          return 'ok';
+        },
+      ),
+      'relay listen',
+    );
+  }
+
+  // a hidden chat: its address keeps a relay socket of its own
+  void nostrSubscribeHiddenBg(
+    int ident,
+    String peerXPubHex, {
+    bool fresh = false,
+  }) {
+    _background(
+      devGate.listen(
+        peerXPubHex,
+        out: () => _onPair(
+          ident,
+          peerXPubHex,
+          (pair) =>
+              _subscribeOnIsolate(ident, pair, fresh: fresh, hidden: true),
         ),
         room: (priv) async {
           roomSubscribeBg(priv, peerXPubHex);
@@ -719,9 +745,14 @@ class HaloEngine {
   // listening on a device pair (device_receive.dart): [arg] "x/their/my"
   // for its opener address, "x/their/my.seed" for the seeded pair
   // a device pair is never the dev chat's: a pinned key is not listened on
-  void deviceListenBg(int ident, String arg) {
+  // [hidden]: a hidden chat's contact's device pair, on a lane of its own
+  void deviceListenBg(int ident, String arg, {bool hidden = false}) {
     if (devGate.names(xPub: arg.split('/').first)) return;
-    deviceTagStep(ident, arg, () => _subscribeOnIsolate(ident, arg));
+    deviceTagStep(
+      ident,
+      arg,
+      () => _subscribeOnIsolate(ident, arg, hidden: hidden),
+    );
   }
 
   // no more listening on a device pair, by its tag; its files go
@@ -1150,6 +1181,7 @@ class HaloEngine {
           ident: kMainIdent,
           a: addr,
           b: msg,
+          hidden: false,
         )).timeout(
           const Duration(seconds: 15),
           onTimeout: () => 'error: onion timeout',
@@ -1623,7 +1655,7 @@ Future<String> _ffiOnIsolate(
 
 // [ident]: the identity a relay send seals on; an onion send has none
 Future<String> _sendOnIsolate(
-  ({bool nostr, int ident, String a, String b}) args,
+  ({bool nostr, int ident, String a, String b, bool hidden}) args,
 ) {
   return Isolate.run(() {
     final lib = haloLibrary();
@@ -1632,11 +1664,9 @@ Future<String> _sendOnIsolate(
     try {
       if (args.nostr) {
         return engineTake(
-          lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>('HaloNostrSend')(
-            args.ident,
-            p1,
-            p2,
-          ),
+          lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(
+            args.hidden ? 'HaloNostrSendHidden' : 'HaloNostrSend',
+          )(args.ident, p1, p2),
         );
       }
       final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
@@ -1652,12 +1682,14 @@ Future<String> _subscribeOnIsolate(
   int ident,
   String xPub, {
   bool fresh = false,
+  bool hidden = false,
 }) {
+  final name = hidden
+      ? (fresh ? 'HaloNostrSubscribeHiddenNew' : 'HaloNostrSubscribeHidden')
+      : (fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe');
   return Isolate.run(() {
     final lib = haloLibrary();
-    final fn = lib.lookupFunction<IdentOneFn, IdentOneFnDart>(
-      fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe',
-    );
+    final fn = lib.lookupFunction<IdentOneFn, IdentOneFnDart>(name);
     final p = xPub.toNativeUtf8();
     try {
       return engineTake(fn(ident, p));
@@ -1695,6 +1727,11 @@ Future<String> torStrictGetOnIsolate(String url) {
 }
 
 HaloEngine _engine = HaloEngine();
+
+/// whether a key is a hidden chat's, as the app's vault cards say: its
+/// sends go on the chat's own lane (HaloNostrSendHidden). the app state
+/// sets it
+bool Function(String xPub) hiddenSendPeer = (_) => false;
 
 // a kill, as the tests stand one in: called before each bridge key write
 @visibleForTesting

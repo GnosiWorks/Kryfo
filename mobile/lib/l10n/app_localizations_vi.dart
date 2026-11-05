@@ -1234,9 +1234,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khi bạn xin cầu nối, Dự án Tor sẽ thấy địa chỉ IP của bạn. Điều đó là bình thường: Tor Browser và mọi ứng dụng Tor đều lấy cầu nối theo cách này, và tất cả những gì họ biết được là có ai đó đã xin cầu nối. Không có gì về các cuộc trò chuyện của bạn.';
 
   @override
-  String get bridgesAsking => 'Đang hỏi…';
-
-  @override
   String get cameraNoCameraOnThis => 'Điện thoại này không có máy ảnh';
 
   @override
@@ -7199,9 +7196,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportBridgeMode => 'Cầu nối';
 
   @override
-  String get bridgesEgypt => 'Ai Cập';
-
-  @override
   String get bridgesYourBridgeCouldNot =>
       'Cầu nối của bạn không khởi động được';
 
@@ -7247,9 +7241,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Iran';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Bật tự động';
 
   @override
@@ -7281,9 +7272,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesScanACode => 'Quét mã';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Chuyển sang tự động';
 
   @override
@@ -7306,9 +7294,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Đi qua máy tính của một tình nguyện viên. Khó bị chặn, nhưng khởi động chậm.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Để Dự án Tor đoán';
 
   @override
   String get bridgesTorSeemsBlocked => 'Có vẻ Tor bị chặn trên mạng này';
@@ -7338,10 +7323,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo tự tìm cách dùng được ở nơi bạn đang ở.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Dự án Tor có lời khuyên riêng cho những nước này.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Cầu nối này không kết nối được';
 
   @override
@@ -7353,9 +7334,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Để sau';
-
-  @override
-  String get bridgesRussia => 'Nga';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7381,9 +7359,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesAlmostThere => 'Sắp xong rồi';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Dự án Tor đoán';
-
-  @override
   String get bridgesUseThisBridge => 'Dùng cầu nối này';
 
   @override
@@ -7399,9 +7374,6 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
   String get transportBridgeMethod => 'Phương thức';
@@ -7428,11 +7400,12 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cầu nối có thể ngừng hoạt động mà không báo trước. Chế độ Tự động có thể tìm cách khác.';
 
   @override
-  String get bridgesHongKong => 'Hồng Kông';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Khi Tor bị chặn, chế độ Tự động sẽ hỏi Dự án Tor cách nào dùng được ở nước bạn.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo tự động chọn cầu nối. Snowflake và WebTunnel hoạt động ở hầu hết mọi nơi. Nếu một cầu nối không kết nối được, hãy thử cái khác hoặc xin bạn bè một dòng cầu nối.';
 
   @override
   String get bridgesAskTorProject => 'Hỏi Dự án Tor';
@@ -7441,18 +7414,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesTooLongForTor => 'Quá dài để Tor dùng được';
 
   @override
-  String get bridgesCountry => 'Quốc gia';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Trung Quốc';
-
-  @override
-  String get bridgesBelarus => 'Belarus';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo không dùng được dòng này';
@@ -9096,9 +9060,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mediaSendVideo => 'Gửi video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Đến khi họ chấp nhận, có thể gửi $count';
-  }
+  String get requestSenderMediaLater =>
+      'Ảnh và tệp sẽ mở sau khi họ chấp nhận bạn, để cả hai cùng an toàn.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Ảnh và tệp sẽ mở sau khi bạn chấp nhận họ, để bạn được an toàn.';
 
   @override
   String get groupEndedYou => 'Bạn đã kết thúc nhóm này';
@@ -10121,10 +10088,11 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tất cả tin nhắn, kèm ảnh và video trong 30 ngày qua.';
 
   @override
-  String get devicesHistoryNone => 'Bắt đầu không có lịch sử';
+  String get devicesHistoryNone => 'Chỉ danh bạ và nhóm';
 
   @override
-  String get devicesHistoryNoneHint => 'Chỉ tin nhắn mới đến thiết bị.';
+  String get devicesHistoryNoneHint =>
+      'Chúng được chuyển sang không kèm tin nhắn nào.';
 
   @override
   String get devicesSkipMedia => 'Bỏ qua ảnh và video';
@@ -10700,6 +10668,144 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name dùng phiên bản Kryfo cũ hơn. Hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Tạm thời hãy trả lời $name từ điện thoại của bạn.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Mọi tin nhắn ở đây chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ chúng.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Mọi tin nhắn và liên hệ chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ cuộc trò chuyện.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Tin nhắn của họ sẽ không đến máy tính này nữa. Họ không được báo. Hãy chặn họ trên điện thoại để tin nhắn cũng dừng ở đó.';
+
+  @override
+  String get historyCopyTitle => 'Lịch sử trò chuyện';
+
+  @override
+  String get historyCopyMaking => 'Đang chuẩn bị các cuộc trò chuyện';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Điện thoại đang gom những gì sẽ được sao chép. Sắp bắt đầu.';
+
+  @override
+  String get historyCopyGoing => 'Đang sao chép các cuộc trò chuyện';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Hãy giữ cả hai thiết bị trực tuyến cho đến khi xong.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Tổng cộng $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Đang chờ thiết bị kia';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Việc sao chép tự tiếp tục khi cả hai thiết bị trực tuyến.';
+
+  @override
+  String get historyCopyPaused => 'Việc sao chép tạm nghỉ một chút';
+
+  @override
+  String get historyCopyPausedLine => 'Sẽ tiếp tục sau một phút.';
+
+  @override
+  String get historyCopyWhole => 'Mọi tin nhắn và tệp đã sang';
+
+  @override
+  String get historyCopyWholeLine => 'Không thiếu gì cả.';
+
+  @override
+  String get historyCopyRows => 'Danh bạ và nhóm của bạn đã sang';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Chúng đã sang mà không kèm tin nhắn nào. Tin nhắn mới hiện trên thiết bị từ bây giờ.';
+
+  @override
+  String get historyCopyGaps => 'Phần lớn cuộc trò chuyện đã sang';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Những cuộc trò chuyện này trên thiết bị mới có ít hơn trên điện thoại.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Tin nhắn: $got trên $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Tệp: $got trên $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString mục ở lại trên điện thoại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Quá lớn hoặc không đọc được để sao chép.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString cuộc trò chuyện ở lại trên điện thoại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Việc sao chép đã dừng';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Sẽ không có thêm gì. Hãy liên kết lại thiết bị để có bản sao mới.';
+
+  @override
+  String get historyCopyFailed => 'Việc sao chép không thể hoàn tất';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Hãy liên kết lại thiết bị để có bản sao mới.';
+
+  @override
+  String get historyCopyStays => 'Ở lại trên điện thoại';
+
+  @override
+  String get historyCopySee => 'Xem bản sao';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11140,4 +11246,61 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Để sau';
+
+  @override
+  String get albumPrevious => 'Trước';
+
+  @override
+  String get albumNext => 'Tiếp';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Nhấp chuột phải vào một ghi chú để sao chép hoặc xóa.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Chưa có gì được ghim ở đây. Nhấp chuột phải vào một tin nhắn và chọn Ghim, tin nhắn sẽ nằm ở đây cho mọi người trong cuộc trò chuyện.';
+
+  @override
+  String get chatGalleryDesk => 'Hình ảnh';
+
+  @override
+  String get groupChatGalleryDesk => 'Hình ảnh';
+
+  @override
+  String get photoChooseDesk => 'Chọn một tệp hình ảnh';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Từ một tệp hình ảnh';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Âm thanh';
+
+  @override
+  String get notificationsPlaySound => 'Phát âm thanh';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Với mỗi thông báo trên máy tính này';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Chia sẻ cầu nối $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Chia sẻ cầu nối này';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Hãy chia sẻ riêng với người bạn tin tưởng. Cầu nối không đăng ở trang công khai sẽ dùng được lâu hơn.';
+
+  @override
+  String get bridgesCopyBridge => 'Sao chép cầu nối';
+
+  @override
+  String get bridgesBridgeCopied => 'Đã sao chép cầu nối';
+
+  @override
+  String get bridgesSendBridgeTo => 'Gửi cầu nối cho';
 }

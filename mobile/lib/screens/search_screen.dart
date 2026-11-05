@@ -18,6 +18,7 @@ import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' hide live;
+import '../widgets/sealed_picture.dart';
 import 'group_info_screen.dart' show endedLine;
 import '../polls.dart';
 import '../quiet_wait.dart';
@@ -36,7 +37,6 @@ import '../widgets/media_bubbles.dart' show mediaTileLabel;
 import '../widgets/notice_banner.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/swap.dart' show RiseSwap;
-import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import '../widgets/poll_card.dart' show pollGlyph;
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
@@ -48,6 +48,8 @@ import '../widgets/dev_avatar.dart';
 import '../msg_order.dart' show rowWrittenAt;
 import '../widgets/shift_tap_guard.dart';
 import '../voice_format.dart' show isVoiceName;
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../wide/read_width.dart' show DeskPage, kDeskTile;
 
 /// home's search button grows into the field here
 const kSearchHero = 'home-search';
@@ -502,78 +504,80 @@ class _SearchScreenState extends State<SearchScreen> {
       },
       child: Scaffold(
         backgroundColor: HaloColors.surface,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 16, 6),
-                child: Row(
-                  children: [
-                    _in(
-                      IconButton(
-                        tooltip: l10n.commonBack,
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: StrokeIcon(
-                          const ['M15 5l-7 7l7 7'],
-                          size: 22,
-                          color: HaloColors.text,
-                          pointing: true,
+        body: DeskPage(
+          child: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 16, 6),
+                  child: Row(
+                    children: [
+                      _in(
+                        IconButton(
+                          tooltip: l10n.commonBack,
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          icon: StrokeIcon(
+                            const ['M15 5l-7 7l7 7'],
+                            size: 22,
+                            color: HaloColors.text,
+                            pointing: true,
+                          ),
                         ),
+                        still,
                       ),
-                      still,
-                    ),
-                    Expanded(
-                      child: HeroMode(
-                        enabled: !still,
-                        child: HaloHero(
-                          tag: kSearchHero,
-                          createRectTween: _straight,
-                          // a still copy flies: a live field built in the
-                          // flight takes the focus with it and leaves the
-                          // keyboard deaf. on the way back it keeps what was
-                          // typed and the amber edge until it shrinks away
-                          flightShuttleBuilder: (_, a, way, _, _) {
-                            final back = way == HeroFlightDirection.pop;
-                            return _Flight(
-                              t: a,
-                              query: back ? _ctrl.text : '',
-                              focused: back && _wasOn,
-                            );
-                          },
-                          child: Material(
-                            type: MaterialType.transparency,
-                            child: _Field(ctrl: _ctrl, focus: _focus),
+                      Expanded(
+                        child: HeroMode(
+                          enabled: !still,
+                          child: HaloHero(
+                            tag: kSearchHero,
+                            createRectTween: _straight,
+                            // a still copy flies: a live field built in the
+                            // flight takes the focus with it and leaves the
+                            // keyboard deaf. on the way back it keeps what was
+                            // typed and the amber edge until it shrinks away
+                            flightShuttleBuilder: (_, a, way, _, _) {
+                              final back = way == HeroFlightDirection.pop;
+                              return _Flight(
+                                t: a,
+                                query: back ? _ctrl.text : '',
+                                focused: back && _wasOn,
+                              );
+                            },
+                            child: Material(
+                              type: MaterialType.transparency,
+                              child: _Field(ctrl: _ctrl, focus: _focus),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              _in(SearchFilters(kind: _kind, onPick: _pick), still),
-              _in(const _FillLine(), still),
-              Expanded(
-                child: _in(
-                  AnimatedSwitcher(
-                    duration: Duration(milliseconds: still ? 0 : 200),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (c, a) => FadeTransition(
-                      opacity: a,
-                      child: SlideTransition(
-                        position: Tween(
-                          begin: const Offset(0, 0.015),
-                          end: Offset.zero,
-                        ).animate(a),
-                        child: c,
-                      ),
-                    ),
-                    child: KeyedSubtree(key: ValueKey(bodyKey), child: body),
+                    ],
                   ),
-                  still,
                 ),
-              ),
-            ],
+                _in(SearchFilters(kind: _kind, onPick: _pick), still),
+                _in(const _FillLine(), still),
+                Expanded(
+                  child: _in(
+                    AnimatedSwitcher(
+                      duration: Duration(milliseconds: still ? 0 : 200),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (c, a) => FadeTransition(
+                        opacity: a,
+                        child: SlideTransition(
+                          position: Tween(
+                            begin: const Offset(0, 0.015),
+                            end: Offset.zero,
+                          ).animate(a),
+                          child: c,
+                        ),
+                      ),
+                      child: KeyedSubtree(key: ValueKey(bodyKey), child: body),
+                    ),
+                    still,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1816,7 +1820,15 @@ class _ChatBlockState extends State<_ChatBlock> {
                   padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
                   child: LayoutBuilder(
                     builder: (_, box) {
-                      final w = (box.maxWidth - 8) / 3;
+                      // three to a row; a computer's wide one keeps them
+                      // a thumbnail's size
+                      final n = onDesktop
+                          ? math.max(
+                              3,
+                              ((box.maxWidth + 4) / (kDeskTile + 4)).ceil(),
+                            )
+                          : 3;
+                      final w = (box.maxWidth - 4 * (n - 1)) / n;
                       return Wrap(
                         spacing: 4,
                         runSpacing: 4,
@@ -1933,17 +1945,16 @@ class _HitRow extends StatelessWidget {
             if (hit.mediaPath != null && !hit.poll) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(hit.mediaPath!),
+                child: SizedBox(
                   width: 40,
                   height: 40,
-                  fit: BoxFit.cover,
-                  cacheWidth: decodePx(context, 40),
-                  // it fades up once decoded, not in one frame
-                  frameBuilder: (_, child, frame, sync) =>
-                      PhotoTileFade(shown: sync || frame != null, child: child),
-                  errorBuilder: (_, _, _) =>
-                      const SizedBox(width: 40, height: 40),
+                  // its blur, then the photo fading up once decoded
+                  child: SealedPicture(
+                    path: hit.mediaPath!,
+                    image: mediaImage(hit.mediaPath!, decodePx(context, 40)),
+                    errorBuilder: (_, _, _) =>
+                        const SizedBox(width: 40, height: 40),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -2076,17 +2087,18 @@ class _Thumb extends StatelessWidget {
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.file(
-          File(path),
+        child: SizedBox(
           width: size,
           height: size,
-          fit: BoxFit.cover,
-          cacheWidth: decodePx(context, size),
-          gaplessPlayback: true,
-          frameBuilder: (_, child, frame, sync) =>
-              PhotoTileFade(shown: sync || frame != null, child: child),
-          errorBuilder: (_, _, _) =>
-              Container(width: size, height: size, color: HaloColors.surface3),
+          child: SealedPicture(
+            path: path,
+            image: mediaImage(path, decodePx(context, size)),
+            errorBuilder: (_, _, _) => Container(
+              width: size,
+              height: size,
+              color: HaloColors.surface3,
+            ),
+          ),
         ),
       ),
     );

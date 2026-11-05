@@ -1969,12 +1969,6 @@ abstract class AppLocalizations {
   /// **'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.'**
   String get bridgesWhenYouAskFor;
 
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Asking…'**
-  String get bridgesAsking;
-
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
@@ -11566,12 +11560,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Egypt'**
-  String get bridgesEgypt;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Your bridge couldn\'t start'**
   String get bridgesYourBridgeCouldNot;
 
@@ -11650,12 +11638,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Iran'**
-  String get bridgesIran;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Turn on automatic'**
   String get bridgesTurnOnAutomatic;
 
@@ -11710,12 +11692,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Myanmar'**
-  String get bridgesMyanmar;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Switch to automatic'**
   String get bridgesSwitchToAutomatic;
 
@@ -11758,12 +11734,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Let the Tor Project guess'**
-  String get bridgesLetTheTorProject;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Tor seems blocked on this network'**
   String get bridgesTorSeemsBlocked;
 
@@ -11794,12 +11764,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The Tor Project has its own advice for these countries.'**
-  String get bridgesTheTorProjectKnows;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'This bridge isn\'t getting through'**
   String get bridgesThisBridgeIsnTGetting;
 
@@ -11820,12 +11784,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get bridgesNotNow;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Russia'**
-  String get bridgesRussia;
 
   /// screens/bridges_screen.dart
   ///
@@ -11869,12 +11827,6 @@ abstract class AppLocalizations {
   /// **'Almost there'**
   String get bridgesAlmostThere;
 
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The Tor Project\'s guess'**
-  String get bridgesTheTorProjectSGuess;
-
   /// screens/bridge_sheets.dart: the button when one bridge line is pasted or scanned
   ///
   /// In en, this message translates to:
@@ -11886,12 +11838,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, other{Use these {count} bridges}}'**
   String bridgesUseTheseBridges(int count);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Turkmenistan'**
-  String get bridgesTurkmenistan;
 
   /// screens/transport_screen.dart
   ///
@@ -11938,14 +11884,14 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Hong Kong'**
-  String get bridgesHongKong;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'When Tor is blocked, Automatic asks the Tor Project what works in your country.'**
   String get bridgesWhenTorIsBlockedAutomatic;
+
+  /// bridges screen: plain advice over the choices, the same for everyone, no country
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn\'t connect, try another, or ask a friend for a bridge line.'**
+  String get bridgesPlainAdvice;
 
   /// screens/bridges_screen.dart
   ///
@@ -11962,26 +11908,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Country'**
-  String get bridgesCountry;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'{method}, {from}'**
   String bridgesMethodFrom(String method, String from);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'China'**
-  String get bridgesChina;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Belarus'**
-  String get bridgesBelarus;
 
   /// screens/bridges_screen.dart
   ///
@@ -14635,11 +14563,17 @@ abstract class AppLocalizations {
   /// **'Send video'**
   String get mediaSendVideo;
 
-  /// send preview: before they accept, only this many go
+  /// a request I sent: photos and files go once they accept
   ///
   /// In en, this message translates to:
-  /// **'Until they accept, {count} can go'**
-  String mediaSendUntilAccepted(Object count);
+  /// **'Photos and files unlock after they accept you, to keep you both safe.'**
+  String get requestSenderMediaLater;
+
+  /// a stranger's request to me: their photos and files show once I accept
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and files unlock after you accept them, to keep you safe.'**
+  String get requestReceiverMediaLater;
 
   /// the line in a group this phone ended, in the chat and on its row in the chat list
   ///
@@ -16270,13 +16204,13 @@ abstract class AppLocalizations {
   /// screens/linked_devices_screen.dart: the second history choice
   ///
   /// In en, this message translates to:
-  /// **'Start with no history'**
+  /// **'Contacts and groups only'**
   String get devicesHistoryNone;
 
   /// screens/linked_devices_screen.dart: under the second history choice
   ///
   /// In en, this message translates to:
-  /// **'Only new messages reach the device.'**
+  /// **'They come over without any messages.'**
   String get devicesHistoryNoneHint;
 
   /// screens/linked_devices_screen.dart: the switch under the first history choice
@@ -17269,6 +17203,198 @@ abstract class AppLocalizations {
   /// **'This chat stays on your phone because screenshots are blocked in it.'**
   String get historyChatStaysShots;
 
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages come through the phone
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses an older Kryfo. Reply from your phone.'**
+  String chatDeviceReplyFromPhone(String name);
+
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact none of whose devices has written to this one yet, whose messages go from the phone for now
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to {name} from your phone for now.'**
+  String chatDeviceReplyFromPhoneForNow(String name);
+
+  /// screens/chat_screen.dart, screens/group_info_screen.dart: on a linked device, the clear confirm: a clear there stays on that device
+  ///
+  /// In en, this message translates to:
+  /// **'Every message here is erased from this computer only. Your phone keeps them.'**
+  String get linkedClearHereOnly;
+
+  /// screens/contact_screen.dart, screens/home_screen.dart: on a linked device, the delete confirm: a deleted chat goes from that device alone
+  ///
+  /// In en, this message translates to:
+  /// **'Every message and the contact go from this computer only. Your phone keeps the chat.'**
+  String get linkedDeleteHereOnly;
+
+  /// screens/chat_screen.dart, screens/contact_screen.dart: on a linked device, the block confirm: a block there stays on that device, the phone keeps its own
+  ///
+  /// In en, this message translates to:
+  /// **'Their messages stop arriving on this computer. They are not told. Block them on your phone to stop them there too.'**
+  String get linkedBlockHereOnly;
+
+  /// screens/history_copy_screen.dart: the page bar of the history copy
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history'**
+  String get historyCopyTitle;
+
+  /// screens/history_copy_screen.dart: the phone gathers the history before it goes
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your chats ready'**
+  String get historyCopyMaking;
+
+  /// screens/history_copy_screen.dart: under the gathering title
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone gathers what to copy. It starts in a moment.'**
+  String get historyCopyMakingLine;
+
+  /// screens/history_copy_screen.dart: the history copy under way
+  ///
+  /// In en, this message translates to:
+  /// **'Copying your chats'**
+  String get historyCopyGoing;
+
+  /// screens/history_copy_screen.dart: under the copying title
+  ///
+  /// In en, this message translates to:
+  /// **'Keep both devices online until it\'s done.'**
+  String get historyCopyGoingLine;
+
+  /// screens/history_copy_screen.dart: the whole copy's size, shown before and while it goes
+  ///
+  /// In en, this message translates to:
+  /// **'{size} in all'**
+  String historyCopySize(Object size);
+
+  /// screens/history_copy_screen.dart: the other device is not online now
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the other device'**
+  String get historyCopyWaiting;
+
+  /// screens/history_copy_screen.dart: under the waiting title
+  ///
+  /// In en, this message translates to:
+  /// **'The copy goes on by itself when both devices are online.'**
+  String get historyCopyWaitingLine;
+
+  /// screens/history_copy_screen.dart: a record did not come many times, the copy waits
+  ///
+  /// In en, this message translates to:
+  /// **'The copy takes a short break'**
+  String get historyCopyPaused;
+
+  /// screens/history_copy_screen.dart: under the pause title
+  ///
+  /// In en, this message translates to:
+  /// **'It goes on in a minute.'**
+  String get historyCopyPausedLine;
+
+  /// screens/history_copy_screen.dart: the counts match in every chat
+  ///
+  /// In en, this message translates to:
+  /// **'Every message and file came over'**
+  String get historyCopyWhole;
+
+  /// screens/history_copy_screen.dart: under the whole title
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is missing.'**
+  String get historyCopyWholeLine;
+
+  /// screens/history_copy_screen.dart: no history chosen: chats and contacts came, no old messages
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts and groups came over'**
+  String get historyCopyRows;
+
+  /// screens/history_copy_screen.dart: under the no history title
+  ///
+  /// In en, this message translates to:
+  /// **'They came without any messages. New messages show on the device from now on.'**
+  String get historyCopyRowsLine;
+
+  /// screens/history_copy_screen.dart: some chats came with fewer messages or files
+  ///
+  /// In en, this message translates to:
+  /// **'Most of your chats came over'**
+  String get historyCopyGaps;
+
+  /// screens/history_copy_screen.dart: over the list of chats with less
+  ///
+  /// In en, this message translates to:
+  /// **'These chats have less on the new device than on your phone.'**
+  String get historyCopyGapsLine;
+
+  /// screens/history_copy_screen.dart: one chat: messages on the new device of what the phone holds
+  ///
+  /// In en, this message translates to:
+  /// **'Messages: {got} of {want}'**
+  String historyCopyGapMessages(Object got, Object want);
+
+  /// screens/history_copy_screen.dart: one chat: files on the new device of what the phone sent
+  ///
+  /// In en, this message translates to:
+  /// **'Files: {got} of {want}'**
+  String historyCopyGapFiles(Object got, Object want);
+
+  /// screens/history_copy_screen.dart: rows and files the phone could not send in one chat
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 item stayed on your phone} other{{count} items stayed on your phone}}'**
+  String historyCopyLeft(num count);
+
+  /// screens/history_copy_screen.dart: why items stayed on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Too big or unreadable to copy.'**
+  String get historyCopyLeftWhy;
+
+  /// screens/history_copy_screen.dart: whole chats the phone could not send
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 chat stayed on your phone} other{{count} chats stayed on your phone}}'**
+  String historyCopyLeftChats(num count);
+
+  /// screens/history_copy_screen.dart: the copy was stopped on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'The copy stopped'**
+  String get historyCopyEnded;
+
+  /// screens/history_copy_screen.dart: under the stopped title, neutral on purpose
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing more comes over. Link the device again for a fresh copy.'**
+  String get historyCopyEndedLine;
+
+  /// screens/history_copy_screen.dart: the copy could not go on and was taken back
+  ///
+  /// In en, this message translates to:
+  /// **'The copy couldn\'t finish'**
+  String get historyCopyFailed;
+
+  /// screens/history_copy_screen.dart: under the could not finish title
+  ///
+  /// In en, this message translates to:
+  /// **'Link the device again for a fresh copy.'**
+  String get historyCopyFailedLine;
+
+  /// screens/history_copy_screen.dart: the section of chats that stayed on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Stayed on your phone'**
+  String get historyCopyStays;
+
+  /// screens/home_screen.dart: the card's button that opens the history copy page
+  ///
+  /// In en, this message translates to:
+  /// **'See the copy'**
+  String get historyCopySee;
+
   /// widgets/pin_pad.dart: the pin dots to a screen reader, the count only
   ///
   /// In en, this message translates to:
@@ -17940,6 +18066,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get voiceNotNow;
+
+  /// a computer: the round button at an album's side that goes back one photo or video
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get albumPrevious;
+
+  /// a computer: the round button at an album's side that goes on one photo or video
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get albumNext;
+
+  /// a computer: notesHoldHint with a right click in place of the hold
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click a note to copy or delete it.'**
+  String get notesHoldHintDesk;
+
+  /// a computer: pinsNothingPinnedHereYet with a right click in place of the hold
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing pinned here yet. Right-click a message and choose Pin, and it waits here for everyone in the chat.'**
+  String get pinsNothingPinnedHereYetDesk;
+
+  /// a computer: the attach menu's photo row, which opens the file picker for pictures
+  ///
+  /// In en, this message translates to:
+  /// **'Pictures'**
+  String get chatGalleryDesk;
+
+  /// a computer: the group attach menu's photo row, which opens the file picker for pictures
+  ///
+  /// In en, this message translates to:
+  /// **'Pictures'**
+  String get groupChatGalleryDesk;
+
+  /// a computer: the photo sheet's row that opens the file picker for a picture
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a picture file'**
+  String get photoChooseDesk;
+
+  /// a computer: the wallpaper row that opens the file picker for a picture
+  ///
+  /// In en, this message translates to:
+  /// **'From a picture file'**
+  String get wallpaperFromYourPhotosDesk;
+
+  /// a computer: the notifications page's section with the sound switch
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get notificationsSoundAndVibrationDesk;
+
+  /// a computer: the switch that lets a notification make its sound
+  ///
+  /// In en, this message translates to:
+  /// **'Play a sound'**
+  String get notificationsPlaySound;
+
+  /// a computer: the line under the sound switch
+  ///
+  /// In en, this message translates to:
+  /// **'With each notification on this computer'**
+  String get notificationsPlaySoundHint;
+
+  /// screens/bridges_screen.dart: the share button on a saved bridge line, for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Share bridge {n}'**
+  String bridgesShareBridgeN(String n);
+
+  /// screens/bridge_share_sheet.dart: the title of the sheet with one bridge as a qr code
+  ///
+  /// In en, this message translates to:
+  /// **'Share this bridge'**
+  String get bridgesShareThisBridge;
+
+  /// screens/bridge_share_sheet.dart: the line under the code: share in private, since public bridges get blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Share it privately, with people you trust. A bridge kept off public pages keeps working for longer.'**
+  String get bridgesShareItPrivately;
+
+  /// screens/bridge_share_sheet.dart: the button that copies the bridge line
+  ///
+  /// In en, this message translates to:
+  /// **'Copy bridge'**
+  String get bridgesCopyBridge;
+
+  /// screens/bridge_share_sheet.dart: the toast after the copy
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge copied'**
+  String get bridgesBridgeCopied;
+
+  /// screens/bridge_share_sheet.dart: the title of the chat picker the bridge goes to
+  ///
+  /// In en, this message translates to:
+  /// **'Send the bridge to'**
+  String get bridgesSendBridgeTo;
 }
 
 class _AppLocalizationsDelegate

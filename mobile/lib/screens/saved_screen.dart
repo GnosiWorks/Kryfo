@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/sealed_picture.dart';
 import '../widgets/swap.dart';
 import '../main.dart' hide live;
 import '../stickers/sticker_bubble.dart' show StickerLine;
@@ -14,7 +14,6 @@ import '../theme.dart';
 import '../devchat/dev_key.dart' show isDevChat;
 import '../rooms.dart' show looksLikeRoomKey, roomTag;
 import '../widgets/decode_px.dart';
-import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import 'chat_door.dart';
 import '../widgets/motion.dart' show kHouseCurve, motionStill;
 import '../widgets/page_head.dart' show PageBar;
@@ -23,6 +22,7 @@ import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../msg_order.dart' show rowWrittenAt;
 import '../voice_format.dart' show isVoiceName;
+import '../wide/read_width.dart' show DeskPage;
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave: it empties, and the
@@ -156,39 +156,46 @@ class _SavedScreenState extends State<SavedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            PageBar(title: l10n.savedSaved, controller: _scroll),
-            Expanded(
-              child: !_loaded
-                  ? const SizedBox.shrink()
-                  // the last one unsaved, the empty page fades in
-                  : FadeSwap(
-                      child: _rows.isEmpty
-                          ? KeyedSubtree(
-                              key: const ValueKey('none'),
-                              child: _empty(),
-                            )
-                          : ListView.builder(
-                              key: const ValueKey('cards'),
-                              controller: _scroll,
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                              itemCount: _rows.length,
-                              itemBuilder: (_, i) => StaggerIn(
-                                key: ValueKey(_rows[i]['msg_uid'] ?? i),
-                                index: i,
-                                child: FadeFold(
-                                  leaving: _leaving.contains(
-                                    _rows[i]['msg_uid'],
+      body: DeskPage(
+        child: SafeArea(
+          child: Column(
+            children: [
+              PageBar(title: l10n.savedSaved, controller: _scroll),
+              Expanded(
+                child: !_loaded
+                    ? const SizedBox.shrink()
+                    // the last one unsaved, the empty page fades in
+                    : FadeSwap(
+                        child: _rows.isEmpty
+                            ? KeyedSubtree(
+                                key: const ValueKey('none'),
+                                child: _empty(),
+                              )
+                            : ListView.builder(
+                                key: const ValueKey('cards'),
+                                controller: _scroll,
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  8,
+                                  16,
+                                  24,
+                                ),
+                                itemCount: _rows.length,
+                                itemBuilder: (_, i) => StaggerIn(
+                                  key: ValueKey(_rows[i]['msg_uid'] ?? i),
+                                  index: i,
+                                  child: FadeFold(
+                                    leaving: _leaving.contains(
+                                      _rows[i]['msg_uid'],
+                                    ),
+                                    child: _card(_rows[i]),
                                   ),
-                                  child: _card(_rows[i]),
                                 ),
                               ),
-                            ),
-                    ),
-            ),
-          ],
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -411,15 +418,17 @@ class _SavedScreenState extends State<SavedScreen> {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(9),
-          child: Image.file(
-            File(r['media_path'] as String),
+          child: SizedBox(
             width: 44,
             height: 44,
-            fit: BoxFit.cover,
-            cacheWidth: decodePx(context, 44),
-            frameBuilder: (_, child, frame, sync) =>
-                PhotoTileFade(shown: sync || frame != null, child: child),
-            errorBuilder: (_, _, _) => missing,
+            child: SealedPicture(
+              path: r['media_path'] as String,
+              image: mediaImage(
+                r['media_path'] as String,
+                decodePx(context, 44),
+              ),
+              errorBuilder: (_, _, _) => missing,
+            ),
           ),
         ),
         const SizedBox(width: 10),

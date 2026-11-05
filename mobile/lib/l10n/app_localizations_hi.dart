@@ -1248,9 +1248,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'जब आप ब्रिज माँगते हैं, तो Tor Project आपका पता देखता है। यह सामान्य है: Tor Browser और हर Tor ऐप ब्रिज ऐसे ही पाते हैं, और इससे उन्हें बस इतना पता चलता है कि किसी ने ब्रिज माँगे। आपकी चैट के बारे में कुछ नहीं।';
 
   @override
-  String get bridgesAsking => 'माँग रहे हैं…';
-
-  @override
   String get cameraNoCameraOnThis => 'इस फ़ोन में कैमरा नहीं है';
 
   @override
@@ -7218,9 +7215,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get transportBridgeMode => 'ब्रिज';
 
   @override
-  String get bridgesEgypt => 'मिस्र';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'आपका ब्रिज शुरू नहीं हो पाया';
 
   @override
@@ -7266,9 +7260,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'ईरान';
-
-  @override
   String get bridgesTurnOnAutomatic => 'अपने-आप चालू करें';
 
   @override
@@ -7300,9 +7291,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesScanACode => 'कोड स्कैन करें';
 
   @override
-  String get bridgesMyanmar => 'म्यांमार';
-
-  @override
   String get bridgesSwitchToAutomatic => 'अपने-आप पर जाएँ';
 
   @override
@@ -7324,9 +7312,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'किसी स्वयंसेवक के कंप्यूटर से होकर जाता है। रोकना मुश्किल, शुरू होने में धीमा।';
-
-  @override
-  String get bridgesLetTheTorProject => 'Tor Project को अंदाज़ा लगाने दें';
 
   @override
   String get bridgesTorSeemsBlocked => 'लगता है इस नेटवर्क पर Tor रुका हुआ है';
@@ -7357,10 +7342,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kryfo ऐसा तरीक़ा ढूँढता है जो आपकी जगह पर काम करे।';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'इन देशों के लिए Tor Project की अपनी सलाह है।';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'यह ब्रिज पार नहीं हो पा रहा';
 
   @override
@@ -7372,9 +7353,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'अभी नहीं';
-
-  @override
-  String get bridgesRussia => 'रूस';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7400,9 +7378,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesAlmostThere => 'बस पहुँचने वाले हैं';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tor Project का अंदाज़ा';
-
-  @override
   String get bridgesUseThisBridge => 'यह ब्रिज इस्तेमाल करें';
 
   @override
@@ -7418,9 +7393,6 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'तुर्कमेनिस्तान';
 
   @override
   String get transportBridgeMethod => 'तरीक़ा';
@@ -7448,11 +7420,12 @@ class AppLocalizationsHi extends AppLocalizations {
       'ब्रिज बिना बताए काम करना बंद कर सकते हैं। “अपने-आप” कोई दूसरा रास्ता ढूँढ सकता है।';
 
   @override
-  String get bridgesHongKong => 'हांगकांग';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'जब Tor पर रोक हो, “अपने-आप” Tor Project से पूछता है कि आपके देश में क्या काम करता है।';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo अपने आप ब्रिज चुनता है। Snowflake और WebTunnel ज़्यादातर जगहों पर काम करते हैं। अगर कोई कनेक्ट न हो, तो दूसरा आज़माएँ या किसी दोस्त से ब्रिज लाइन माँगें।';
 
   @override
   String get bridgesAskTorProject => 'Tor Project से पूछें';
@@ -7461,18 +7434,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesTooLongForTor => 'Tor के लिए बहुत लंबी';
 
   @override
-  String get bridgesCountry => 'देश';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'चीन';
-
-  @override
-  String get bridgesBelarus => 'बेलारूस';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo यह लाइन इस्तेमाल नहीं कर सकता';
@@ -9116,9 +9080,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get mediaSendVideo => 'वीडियो भेजें';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'उनके स्वीकार करने तक $count जा सकते हैं';
-  }
+  String get requestSenderMediaLater =>
+      'उनके स्वीकार करने के बाद फ़ोटो और फ़ाइलें खुलती हैं, ताकि आप दोनों सुरक्षित रहें।';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'आपके स्वीकार करने के बाद फ़ोटो और फ़ाइलें खुलती हैं, ताकि आप सुरक्षित रहें।';
 
   @override
   String get groupEndedYou => 'आपने यह ग्रुप ख़त्म किया';
@@ -10141,10 +10108,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपके सारे मैसेज, पिछले 30 दिन की फ़ोटो और वीडियो के साथ।';
 
   @override
-  String get devicesHistoryNone => 'बिना पुरानी चैट के शुरू करें';
+  String get devicesHistoryNone => 'सिर्फ़ संपर्क और ग्रुप';
 
   @override
-  String get devicesHistoryNoneHint => 'डिवाइस पर सिर्फ़ नए मैसेज आएँगे।';
+  String get devicesHistoryNoneHint => 'वे बिना किसी मैसेज के आते हैं।';
 
   @override
   String get devicesSkipMedia => 'फ़ोटो और वीडियो छोड़ दें';
@@ -10720,6 +10687,145 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name Kryfo का पुराना संस्करण इस्तेमाल करते हैं। अपने फ़ोन से जवाब दें।';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'अभी के लिए $name को अपने फ़ोन से जवाब दें।';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'यहाँ का हर मैसेज सिर्फ़ इस कंप्यूटर से मिटेगा। आपका फ़ोन उन्हें रखता है।';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'हर मैसेज और संपर्क सिर्फ़ इस कंप्यूटर से हटेंगे। आपका फ़ोन चैट रखता है।';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'उनके मैसेज इस कंप्यूटर पर आना बंद हो जाते हैं। उन्हें बताया नहीं जाता। फ़ोन पर भी रोकने के लिए उन्हें अपने फ़ोन पर ब्लॉक करें।';
+
+  @override
+  String get historyCopyTitle => 'चैट हिस्ट्री';
+
+  @override
+  String get historyCopyMaking => 'आपकी चैट तैयार हो रही हैं';
+
+  @override
+  String get historyCopyMakingLine =>
+      'आपका फ़ोन कॉपी होने वाली चीज़ें इकट्ठा कर रहा है। बस शुरू होने वाला है।';
+
+  @override
+  String get historyCopyGoing => 'आपकी चैट कॉपी हो रही हैं';
+
+  @override
+  String get historyCopyGoingLine => 'पूरा होने तक दोनों डिवाइस ऑनलाइन रखें।';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'कुल $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'दूसरे डिवाइस का इंतज़ार';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'दोनों डिवाइस ऑनलाइन होते ही कॉपी अपने-आप आगे बढ़ती है।';
+
+  @override
+  String get historyCopyPaused => 'कॉपी थोड़ी देर रुकी है';
+
+  @override
+  String get historyCopyPausedLine => 'एक मिनट में फिर चलेगी।';
+
+  @override
+  String get historyCopyWhole => 'सभी मैसेज और फ़ाइलें आ गईं';
+
+  @override
+  String get historyCopyWholeLine => 'कुछ भी छूटा नहीं।';
+
+  @override
+  String get historyCopyRows => 'आपके संपर्क और ग्रुप आ गए';
+
+  @override
+  String get historyCopyRowsLine =>
+      'वे बिना किसी मैसेज के आए। नए मैसेज अब से डिवाइस पर दिखते हैं।';
+
+  @override
+  String get historyCopyGaps => 'आपकी ज़्यादातर चैट आ गईं';
+
+  @override
+  String get historyCopyGapsLine =>
+      'इन चैट में नए डिवाइस पर आपके फ़ोन से कम है।';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'मैसेज: $want में से $got';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'फ़ाइलें: $want में से $got';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString चीज़ें आपके फ़ोन पर रह गईं',
+      one: '1 चीज़ आपके फ़ोन पर रह गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy =>
+      'कॉपी करने के लिए बहुत बड़ी या पढ़ने लायक नहीं।';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString चैट आपके फ़ोन पर रह गईं',
+      one: '1 चैट आपके फ़ोन पर रह गई',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'कॉपी रुक गई';
+
+  @override
+  String get historyCopyEndedLine =>
+      'अब और कुछ नहीं आएगा। नई कॉपी के लिए डिवाइस दोबारा लिंक करें।';
+
+  @override
+  String get historyCopyFailed => 'कॉपी पूरी नहीं हो सकी';
+
+  @override
+  String get historyCopyFailedLine => 'नई कॉपी के लिए डिवाइस दोबारा लिंक करें।';
+
+  @override
+  String get historyCopyStays => 'आपके फ़ोन पर रह गया';
+
+  @override
+  String get historyCopySee => 'कॉपी देखें';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11162,4 +11268,60 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'अभी नहीं';
+
+  @override
+  String get albumPrevious => 'पिछला';
+
+  @override
+  String get albumNext => 'अगला';
+
+  @override
+  String get notesHoldHintDesk =>
+      'कॉपी या डिलीट करने के लिए नोट पर राइट-क्लिक करें।';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'यहाँ अभी कुछ पिन नहीं है। किसी मैसेज पर राइट-क्लिक करें और पिन करें चुनें, वह यहाँ चैट के सभी लोगों के लिए रहेगा।';
+
+  @override
+  String get chatGalleryDesk => 'तस्वीरें';
+
+  @override
+  String get groupChatGalleryDesk => 'तस्वीरें';
+
+  @override
+  String get photoChooseDesk => 'तस्वीर की फ़ाइल चुनें';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'तस्वीर की फ़ाइल से';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'आवाज़';
+
+  @override
+  String get notificationsPlaySound => 'आवाज़ चलाएँ';
+
+  @override
+  String get notificationsPlaySoundHint => 'इस कंप्यूटर पर हर सूचना के साथ';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'ब्रिज $n शेयर करें';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'यह ब्रिज शेयर करें';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'इसे निजी तौर पर, भरोसे के लोगों के साथ शेयर करें। जो ब्रिज सार्वजनिक पन्नों से दूर रहता है, वह ज़्यादा समय तक चलता है।';
+
+  @override
+  String get bridgesCopyBridge => 'ब्रिज कॉपी करें';
+
+  @override
+  String get bridgesBridgeCopied => 'ब्रिज कॉपी हुआ';
+
+  @override
+  String get bridgesSendBridgeTo => 'ब्रिज भेजें';
 }

@@ -340,6 +340,7 @@ void main() {
       'devices/history_ffi.dart',
       'devices/device_state.dart',
       'devices/link_calls.dart',
+      'devices/history_link.dart',
       'desktop/desktop_vault.dart',
       'desktop/sealed_format.dart',
       'backup.dart',

@@ -1528,10 +1528,6 @@
   "@bridgesWhenYouAskFor": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesAsking": "Asking…",
-  "@bridgesAsking": {
-    "description": "screens/bridges_screen.dart"
-  },
   "cameraNoCameraOnThis": "No camera on this phone",
   "@cameraNoCameraOnThis": {
     "description": "screens/camera_screen.dart"
@@ -8958,9 +8954,6 @@
       }
     }
   },
-  "@bridgesBelarus": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesThatSNotABridge": {
     "description": "screens/bridges_screen.dart"
   },
@@ -8999,9 +8992,6 @@
   },
   "torBootSplashConnect": "Connect",
   "bridgesOffline": "Offline",
-  "@bridgesTheTorProjectKnows": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesTorNoBridge": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9012,13 +9002,7 @@
   "bridgesBridgeFromAFriend": "Bridge from a friend",
   "bridgesKryfoCanAskThe": "Kryfo can ask the Tor Project for a bridge to get around it.",
   "bridgesNotNeededRightNow": "Not needed right now",
-  "@bridgesTheTorProjectSGuess": {
-    "description": "screens/bridges_screen.dart"
-  },
   "bridgesBuiltInBridges": "Built-in bridges",
-  "@bridgesRussia": {
-    "description": "screens/bridges_screen.dart"
-  },
   "bridgesKryfoCanGetAround": "Kryfo can get around Tor blocks now",
   "bridgesThatSNotABridge": "That's not a bridge line",
   "@bridgesTorIsBlockedOnThis": {
@@ -9054,9 +9038,6 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesTryingAnotherWayOf": "Trying another way… ({attempt} of {attempts})",
-  "@bridgesChina": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesConnectingDots": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9087,10 +9068,6 @@
   },
   "bridgesDetails": "Details",
   "transportBridgeMode": "Bridges",
-  "bridgesEgypt": "Egypt",
-  "@bridgesIran": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesStraightToTor": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9157,15 +9134,11 @@
   "@bridgesFromTheTorProjectLower": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesIran": "Iran",
   "@bridgesAskTorProject": {
     "description": "screens/bridges_screen.dart"
   },
   "@settingsBridgesForNetworksThat": {
     "description": "screens/settings_screen.dart"
-  },
-  "@bridgesCountry": {
-    "description": "screens/bridges_screen.dart"
   },
   "@transportBridgeMethod": {
     "description": "screens/transport_screen.dart"
@@ -9200,7 +9173,6 @@
   },
   "torBootSplashIfTorIsBlocked": "If Tor is blocked or watched where you are, Kryfo can start through a bridge instead.",
   "bridgesScanACode": "Scan a code",
-  "bridgesMyanmar": "Myanmar",
   "bridgesSwitchToAutomatic": "Switch to automatic",
   "@bridgesNoInternet": {
     "description": "screens/bridges_screen.dart"
@@ -9235,7 +9207,6 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesGoesThroughAVolunteer": "Goes through a volunteer's computer. Hard to block, slow to start.",
-  "bridgesLetTheTorProject": "Let the Tor Project guess",
   "@torBootSplashTorIsBlockedHere": {
     "description": "widgets/tor_boot_splash.dart"
   },
@@ -9256,10 +9227,6 @@
   "bridgesKryfoCouldNotRead": "{count, plural, one{Kryfo couldn't read {count} of these lines} other{Kryfo couldn't read {count} of these lines}}",
   "bridgesTorNoBridge": "Tor, no bridge",
   "bridgesKryfoFindsAWay": "Kryfo finds a way that works where you are.",
-  "@bridgesLetTheTorProject": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "bridgesTheTorProjectKnows": "The Tor Project has its own advice for these countries.",
   "@bridgesTryingAnotherWay": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9282,7 +9249,6 @@
   "@torBootSplashIfTorIsBlocked": {
     "description": "widgets/tor_boot_splash.dart"
   },
-  "bridgesRussia": "Russia",
   "@transportBridgeMode": {
     "description": "screens/transport_screen.dart"
   },
@@ -9311,7 +9277,6 @@
   },
   "bridgesFromAFriendLower": "from a friend",
   "bridgesAlmostThere": "Almost there",
-  "bridgesTheTorProjectSGuess": "The Tor Project's guess",
   "@bridgesNothingGotThrough": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9338,7 +9303,6 @@
   "@transportBridgePhase": {
     "description": "screens/transport_screen.dart"
   },
-  "bridgesTurkmenistan": "Turkmenistan",
   "@bridgesCheckingForMessages": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9348,14 +9312,8 @@
   "transportBridgeMethod": "Method",
   "bridgesPointAtTheBridge": "Point at the bridge's QR code",
   "bridgesConnectingThroughYourBridge": "Connecting through your bridge…",
-  "@bridgesTurkmenistan": {
-    "description": "screens/bridges_screen.dart"
-  },
   "bridgesThisLineIsTooLong": "This line is too long for Tor to use.",
   "@bridgesMore": {
-    "description": "screens/bridges_screen.dart"
-  },
-  "@bridgesMyanmar": {
     "description": "screens/bridges_screen.dart"
   },
   "bridgesAutomaticFindsAWay": "Automatic finds a way by itself when Tor is blocked. To find a bridge, Kryfo may ask the Tor Project, if you agree.",
@@ -9370,10 +9328,6 @@
   "@bridgesNotNeededRightNow": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesHongKong": "Hong Kong",
-  "@bridgesHongKong": {
-    "description": "screens/bridges_screen.dart"
-  },
   "@bridgesAskingTheTorProject": {
     "description": "screens/bridges_screen.dart"
   },
@@ -9381,15 +9335,13 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesWhenTorIsBlockedAutomatic": "When Tor is blocked, Automatic asks the Tor Project what works in your country.",
-  "@bridgesEgypt": {
-    "description": "screens/bridges_screen.dart"
+  "bridgesPlainAdvice": "Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn't connect, try another, or ask a friend for a bridge line.",
+  "@bridgesPlainAdvice": {
+    "description": "bridges screen: plain advice over the choices, the same for everyone, no country"
   },
   "bridgesAskTorProject": "Ask the Tor Project",
   "bridgesTooLongForTor": "Too long for Tor to use",
-  "bridgesCountry": "Country",
   "bridgesMethodFrom": "{method}, {from}",
-  "bridgesChina": "China",
-  "bridgesBelarus": "Belarus",
   "bridgesKryfoCanTUseThis": "Kryfo can't use this line",
   "@bridgesTooLongForTor": {
     "description": "screens/bridges_screen.dart"
@@ -11388,14 +11340,13 @@
   "@mediaSendVideo": {
     "description": "send preview: title for one video"
   },
-  "mediaSendUntilAccepted": "Until they accept, {count} can go",
-  "@mediaSendUntilAccepted": {
-    "description": "send preview: before they accept, only this many go",
-    "placeholders": {
-      "count": {
-        "type": "Object"
-      }
-    }
+  "requestSenderMediaLater": "Photos and files unlock after they accept you, to keep you both safe.",
+  "@requestSenderMediaLater": {
+    "description": "a request I sent: photos and files go once they accept"
+  },
+  "requestReceiverMediaLater": "Photos and files unlock after you accept them, to keep you safe.",
+  "@requestReceiverMediaLater": {
+    "description": "a stranger's request to me: their photos and files show once I accept"
   },
   "groupEndedYou": "You ended this group",
   "@groupEndedYou": {
@@ -12695,11 +12646,11 @@
   "@devicesHistoryCopyHint": {
     "description": "screens/linked_devices_screen.dart: under the first history choice"
   },
-  "devicesHistoryNone": "Start with no history",
+  "devicesHistoryNone": "Contacts and groups only",
   "@devicesHistoryNone": {
     "description": "screens/linked_devices_screen.dart: the second history choice"
   },
-  "devicesHistoryNoneHint": "Only new messages reach the device.",
+  "devicesHistoryNoneHint": "They come over without any messages.",
   "@devicesHistoryNoneHint": {
     "description": "screens/linked_devices_screen.dart: under the second history choice"
   },
@@ -13413,6 +13364,177 @@
   "@historyChatStaysShots": {
     "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
   },
+  "chatDeviceReplyFromPhone": "{name} uses an older Kryfo. Reply from your phone.",
+  "@chatDeviceReplyFromPhone": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages come through the phone",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatDeviceReplyFromPhoneForNow": "Reply to {name} from your phone for now.",
+  "@chatDeviceReplyFromPhoneForNow": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact none of whose devices has written to this one yet, whose messages go from the phone for now",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedClearHereOnly": "Every message here is erased from this computer only. Your phone keeps them.",
+  "@linkedClearHereOnly": {
+    "description": "screens/chat_screen.dart, screens/group_info_screen.dart: on a linked device, the clear confirm: a clear there stays on that device"
+  },
+  "linkedDeleteHereOnly": "Every message and the contact go from this computer only. Your phone keeps the chat.",
+  "@linkedDeleteHereOnly": {
+    "description": "screens/contact_screen.dart, screens/home_screen.dart: on a linked device, the delete confirm: a deleted chat goes from that device alone"
+  },
+  "linkedBlockHereOnly": "Their messages stop arriving on this computer. They are not told. Block them on your phone to stop them there too.",
+  "@linkedBlockHereOnly": {
+    "description": "screens/chat_screen.dart, screens/contact_screen.dart: on a linked device, the block confirm: a block there stays on that device, the phone keeps its own"
+  },
+  "historyCopyTitle": "Chat history",
+  "@historyCopyTitle": {
+    "description": "screens/history_copy_screen.dart: the page bar of the history copy"
+  },
+  "historyCopyMaking": "Getting your chats ready",
+  "@historyCopyMaking": {
+    "description": "screens/history_copy_screen.dart: the phone gathers the history before it goes"
+  },
+  "historyCopyMakingLine": "Your phone gathers what to copy. It starts in a moment.",
+  "@historyCopyMakingLine": {
+    "description": "screens/history_copy_screen.dart: under the gathering title"
+  },
+  "historyCopyGoing": "Copying your chats",
+  "@historyCopyGoing": {
+    "description": "screens/history_copy_screen.dart: the history copy under way"
+  },
+  "historyCopyGoingLine": "Keep both devices online until it's done.",
+  "@historyCopyGoingLine": {
+    "description": "screens/history_copy_screen.dart: under the copying title"
+  },
+  "historyCopySize": "{size} in all",
+  "@historyCopySize": {
+    "description": "screens/history_copy_screen.dart: the whole copy's size, shown before and while it goes",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "historyCopyWaiting": "Waiting for the other device",
+  "@historyCopyWaiting": {
+    "description": "screens/history_copy_screen.dart: the other device is not online now"
+  },
+  "historyCopyWaitingLine": "The copy goes on by itself when both devices are online.",
+  "@historyCopyWaitingLine": {
+    "description": "screens/history_copy_screen.dart: under the waiting title"
+  },
+  "historyCopyPaused": "The copy takes a short break",
+  "@historyCopyPaused": {
+    "description": "screens/history_copy_screen.dart: a record did not come many times, the copy waits"
+  },
+  "historyCopyPausedLine": "It goes on in a minute.",
+  "@historyCopyPausedLine": {
+    "description": "screens/history_copy_screen.dart: under the pause title"
+  },
+  "historyCopyWhole": "Every message and file came over",
+  "@historyCopyWhole": {
+    "description": "screens/history_copy_screen.dart: the counts match in every chat"
+  },
+  "historyCopyWholeLine": "Nothing is missing.",
+  "@historyCopyWholeLine": {
+    "description": "screens/history_copy_screen.dart: under the whole title"
+  },
+  "historyCopyRows": "Your contacts and groups came over",
+  "@historyCopyRows": {
+    "description": "screens/history_copy_screen.dart: no history chosen: chats and contacts came, no old messages"
+  },
+  "historyCopyRowsLine": "They came without any messages. New messages show on the device from now on.",
+  "@historyCopyRowsLine": {
+    "description": "screens/history_copy_screen.dart: under the no history title"
+  },
+  "historyCopyGaps": "Most of your chats came over",
+  "@historyCopyGaps": {
+    "description": "screens/history_copy_screen.dart: some chats came with fewer messages or files"
+  },
+  "historyCopyGapsLine": "These chats have less on the new device than on your phone.",
+  "@historyCopyGapsLine": {
+    "description": "screens/history_copy_screen.dart: over the list of chats with less"
+  },
+  "historyCopyGapMessages": "Messages: {got} of {want}",
+  "@historyCopyGapMessages": {
+    "description": "screens/history_copy_screen.dart: one chat: messages on the new device of what the phone holds",
+    "placeholders": {
+      "got": {
+        "type": "Object"
+      },
+      "want": {
+        "type": "Object"
+      }
+    }
+  },
+  "historyCopyGapFiles": "Files: {got} of {want}",
+  "@historyCopyGapFiles": {
+    "description": "screens/history_copy_screen.dart: one chat: files on the new device of what the phone sent",
+    "placeholders": {
+      "got": {
+        "type": "Object"
+      },
+      "want": {
+        "type": "Object"
+      }
+    }
+  },
+  "historyCopyLeft": "{count, plural, one{1 item stayed on your phone} other{{count} items stayed on your phone}}",
+  "@historyCopyLeft": {
+    "description": "screens/history_copy_screen.dart: rows and files the phone could not send in one chat",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "historyCopyLeftWhy": "Too big or unreadable to copy.",
+  "@historyCopyLeftWhy": {
+    "description": "screens/history_copy_screen.dart: why items stayed on the phone"
+  },
+  "historyCopyLeftChats": "{count, plural, one{1 chat stayed on your phone} other{{count} chats stayed on your phone}}",
+  "@historyCopyLeftChats": {
+    "description": "screens/history_copy_screen.dart: whole chats the phone could not send",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "historyCopyEnded": "The copy stopped",
+  "@historyCopyEnded": {
+    "description": "screens/history_copy_screen.dart: the copy was stopped on the phone"
+  },
+  "historyCopyEndedLine": "Nothing more comes over. Link the device again for a fresh copy.",
+  "@historyCopyEndedLine": {
+    "description": "screens/history_copy_screen.dart: under the stopped title, neutral on purpose"
+  },
+  "historyCopyFailed": "The copy couldn't finish",
+  "@historyCopyFailed": {
+    "description": "screens/history_copy_screen.dart: the copy could not go on and was taken back"
+  },
+  "historyCopyFailedLine": "Link the device again for a fresh copy.",
+  "@historyCopyFailedLine": {
+    "description": "screens/history_copy_screen.dart: under the could not finish title"
+  },
+  "historyCopyStays": "Stayed on your phone",
+  "@historyCopyStays": {
+    "description": "screens/history_copy_screen.dart: the section of chats that stayed on the phone"
+  },
+  "historyCopySee": "See the copy",
+  "@historyCopySee": {
+    "description": "screens/home_screen.dart: the card's button that opens the history copy page"
+  },
   "a11yPinDigits": "{count, plural, =0{No digits} =1{1 digit} other{{count} digits}}",
   "@a11yPinDigits": {
     "description": "widgets/pin_pad.dart: the pin dots to a screen reader, the count only",
@@ -14012,5 +14134,78 @@
   "voiceNotNow": "Not now",
   "@voiceNotNow": {
     "description": "closes the model download sheet without downloading"
+  },
+  "albumPrevious": "Previous",
+  "@albumPrevious": {
+    "description": "a computer: the round button at an album's side that goes back one photo or video"
+  },
+  "albumNext": "Next",
+  "@albumNext": {
+    "description": "a computer: the round button at an album's side that goes on one photo or video"
+  },
+  "notesHoldHintDesk": "Right-click a note to copy or delete it.",
+  "@notesHoldHintDesk": {
+    "description": "a computer: notesHoldHint with a right click in place of the hold"
+  },
+  "pinsNothingPinnedHereYetDesk": "Nothing pinned here yet. Right-click a message and choose Pin, and it waits here for everyone in the chat.",
+  "@pinsNothingPinnedHereYetDesk": {
+    "description": "a computer: pinsNothingPinnedHereYet with a right click in place of the hold"
+  },
+  "chatGalleryDesk": "Pictures",
+  "@chatGalleryDesk": {
+    "description": "a computer: the attach menu's photo row, which opens the file picker for pictures"
+  },
+  "groupChatGalleryDesk": "Pictures",
+  "@groupChatGalleryDesk": {
+    "description": "a computer: the group attach menu's photo row, which opens the file picker for pictures"
+  },
+  "photoChooseDesk": "Choose a picture file",
+  "@photoChooseDesk": {
+    "description": "a computer: the photo sheet's row that opens the file picker for a picture"
+  },
+  "wallpaperFromYourPhotosDesk": "From a picture file",
+  "@wallpaperFromYourPhotosDesk": {
+    "description": "a computer: the wallpaper row that opens the file picker for a picture"
+  },
+  "notificationsSoundAndVibrationDesk": "Sound",
+  "@notificationsSoundAndVibrationDesk": {
+    "description": "a computer: the notifications page's section with the sound switch"
+  },
+  "notificationsPlaySound": "Play a sound",
+  "@notificationsPlaySound": {
+    "description": "a computer: the switch that lets a notification make its sound"
+  },
+  "notificationsPlaySoundHint": "With each notification on this computer",
+  "@notificationsPlaySoundHint": {
+    "description": "a computer: the line under the sound switch"
+  },
+  "bridgesShareBridgeN": "Share bridge {n}",
+  "@bridgesShareBridgeN": {
+    "description": "screens/bridges_screen.dart: the share button on a saved bridge line, for screen readers",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "bridgesShareThisBridge": "Share this bridge",
+  "@bridgesShareThisBridge": {
+    "description": "screens/bridge_share_sheet.dart: the title of the sheet with one bridge as a qr code"
+  },
+  "bridgesShareItPrivately": "Share it privately, with people you trust. A bridge kept off public pages keeps working for longer.",
+  "@bridgesShareItPrivately": {
+    "description": "screens/bridge_share_sheet.dart: the line under the code: share in private, since public bridges get blocked"
+  },
+  "bridgesCopyBridge": "Copy bridge",
+  "@bridgesCopyBridge": {
+    "description": "screens/bridge_share_sheet.dart: the button that copies the bridge line"
+  },
+  "bridgesBridgeCopied": "Bridge copied",
+  "@bridgesBridgeCopied": {
+    "description": "screens/bridge_share_sheet.dart: the toast after the copy"
+  },
+  "bridgesSendBridgeTo": "Send the bridge to",
+  "@bridgesSendBridgeTo": {
+    "description": "screens/bridge_share_sheet.dart: the title of the chat picker the bridge goes to"
   }
 }

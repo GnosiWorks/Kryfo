@@ -186,6 +186,8 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 	copy(myXPriv[:], xPrivBytes)
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
 	putIdentity(mainIdent, xid{priv: myXPriv, pub: myXPub})
+	// a restore may have landed another batch book
+	batchBookReset()
 
 	myId = idFromPubkey(myEdPub)
 	log.Printf("halo: identity restored: %s", myId)
@@ -1386,6 +1388,16 @@ func handleConn(conn net.Conn) {
 			return
 		}
 		line = strings.TrimSpace(line)
+		// a linked device asking for its history copy, under the link's
+		// key: answered with what it asked for, never the inbox
+		if ans, ok := histDoorTake(line); ok {
+			conn.SetWriteDeadline(time.Now().Add(histAskWait))
+			if _, err := conn.Write([]byte(ans + "\n")); err != nil {
+				return
+			}
+			conn.SetReadDeadline(deadline(doorNextLine))
+			continue
+		}
 		// a linking device's bundles, for the link that waits with its
 		// token: never the inbox. with no link waiting it is junk below
 		if linkDoorTake(line) {

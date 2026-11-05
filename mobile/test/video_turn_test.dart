@@ -2,14 +2,23 @@
 // an upright clip comes out of the player wide, with a quarter turn still to
 // make. the player's box takes the clip's shape as shown, and the texture
 // fills it at the decoded shape, turned upright.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/lock_guard.dart';
+import 'package:kryfo/picture_lock.dart';
 import 'package:kryfo/widgets/video_frame.dart';
 import 'package:kryfo/widgets/video_viewer.dart';
 
-void quiet(WidgetTester t, Map<String, dynamic> opened) {
+void quiet(
+  WidgetTester t,
+  Map<String, dynamic> opened, {
+  Completer<void>? gate,
+  List<MethodCall>? calls,
+}) {
+  var opens = 0;
   final was = videoGuard;
   videoGuard = LockGuard(isLocked: () => false);
   final m = t.binding.defaultBinaryMessenger;
@@ -18,6 +27,13 @@ void quiet(WidgetTester t, Map<String, dynamic> opened) {
   m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
   m.setMockMethodCallHandler(secure, (_) async => null);
   m.setMockMethodCallHandler(video, (c) async {
+    calls?.add(c);
+    if (c.method == 'open' && gate != null) {
+      // each open its own player
+      final n = opens++;
+      await gate.future;
+      return {...opened, 'id': (opened['id'] as int) + n};
+    }
     return switch (c.method) {
       'open' => opened,
       'state' => {'ms': 0, 'playing': true, 'done': false},
@@ -128,6 +144,39 @@ void main() {
     final box = t.getSize(find.byType(AspectRatio));
     expect(tex, box);
     expect(t.widget<RotatedBox>(find.byType(RotatedBox)).quarterTurns, 0);
+    await close(t);
+  });
+
+  testWidgets('a lock and an unlock while the player opens leave one '
+      'player, and the next lock closes it', (t) async {
+    addTearDown(resetPicturesForTest);
+    final gate = Completer<void>();
+    final calls = <MethodCall>[];
+    quiet(
+      t,
+      {'id': 7, 'w': 1080, 'h': 1920, 'ms': 4000},
+      gate: gate,
+      calls: calls,
+    );
+    await open(t);
+    shutPictures();
+    await t.pump();
+    openPictures();
+    await t.pump();
+    // both opens answer after the unlock
+    gate.complete();
+    await t.pump(const Duration(milliseconds: 100));
+    await t.pump(const Duration(milliseconds: 100));
+    List<int> ids(String m) => [
+      for (final c in calls)
+        if (c.method == m) (c.arguments as Map)['id'] as int,
+    ];
+    expect(ids('close'), [7], reason: 'the open from before the lock goes');
+    shutPictures();
+    await t.pump();
+    expect(ids('close').toSet(), {7, 8}, reason: 'no player behind the pin');
+    openPictures();
+    await t.pump();
     await close(t);
   });
 }

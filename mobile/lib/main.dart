@@ -6,12 +6,24 @@ import 'devices/device_receive.dart';
 import 'devices/device_send.dart';
 import 'devices/device_state.dart';
 import 'devices/device_store.dart';
+import 'devices/history_export.dart'
+    show
+        HistoryChatRef,
+        HistoryNotHere,
+        HistoryOutgoing,
+        exportHistory,
+        kHistoryContactCols,
+        kHistoryGroupCols;
+import 'devices/history_ffi.dart' show historyHex;
+import 'devices/history_link.dart';
 import 'devices/history_open.dart' show endHistoryCopies;
 import 'devices/link_calls.dart' show EngineLinkCalls;
 import 'devices/link_flow.dart';
 import 'devices/own_device_store.dart';
+import 'devices/own_sync.dart';
 import 'devices/own_devices.dart'
     show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
+import 'photo_blur.dart' show makeBlurSoon;
 import 'secure_store.dart';
 import 'desktop/desktop_mode.dart'
     show
@@ -227,10 +239,12 @@ part 'app/database_rooms.dart';
 part 'app/database_search.dart';
 part 'app/dev_screen.dart';
 part 'app/devices_app.dart';
+part 'app/devices_own_app.dart';
 part 'app/devices_receive_app.dart';
 part 'app/devices_send_app.dart';
 part 'app/devices_vault_app.dart';
 part 'app/link_app.dart';
+part 'app/history_app.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
 part 'app/gates.dart';

@@ -27,7 +27,23 @@ extension AppStateRooms on AppState {
   ) async {
     if (everydayHeld) return false;
     final room = await _roomOf(groupId);
-    if (room == null) return _sendOneEnvelope(memberId, wrapped, member: true);
+    if (room == null) {
+      // linked devices: a member a linked device cannot reach is my phone's
+      // to send to; one copy of mine per frame goes to my other devices
+      if (linkedDevicesOn && linkedRole) {
+        final r = await _sendFromDevice(memberId, wrapped);
+        _ownGroupCopy(
+          groupId,
+          memberId,
+          wrapped,
+          reached: r != _DeviceSend.cannot,
+        );
+        return r != _DeviceSend.failed;
+      }
+      final ok = await _sendOneEnvelope(memberId, wrapped, member: true);
+      if (ok) _ownGroupCopy(groupId, memberId, wrapped, reached: true);
+      return ok;
+    }
     if (memberId == room.pub) return false;
     if (room.expiresAt <= DateTime.now().millisecondsSinceEpoch) return false;
     int? number;

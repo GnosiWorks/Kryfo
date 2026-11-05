@@ -35,10 +35,9 @@ class MediaSendScreen extends StatefulWidget {
   final bool? secure;
   // the chat blocks screenshots, so this screen does too
   final bool holdSecure;
-  // the most that go in this send. before they accept, the slots a
-  // request has left ([request])
+  // the most that go in this send: the slots the dev chat has left
+  // before his first word, or kPickMax
   final int max;
-  final bool request;
   // asked on send, with this screen still up: a big file's question.
   // false keeps it open
   final Future<bool> Function(List<PickedMedia> items)? beforeSend;
@@ -52,7 +51,6 @@ class MediaSendScreen extends StatefulWidget {
     this.secure,
     this.holdSecure = false,
     this.max = kPickMax,
-    this.request = false,
     this.beforeSend,
     this.onGone,
   });
@@ -108,12 +106,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
   }
 
   // never a quiet drop: what stays behind is said
-  void _capped() => showHaloToast(
-    context,
-    widget.request
-        ? l10n.mediaSendUntilAccepted(whole(_max))
-        : l10n.mediaSendUpTo(whole(_max)),
-  );
+  void _capped() => showHaloToast(context, l10n.mediaSendUpTo(whole(_max)));
 
   @override
   void dispose() {

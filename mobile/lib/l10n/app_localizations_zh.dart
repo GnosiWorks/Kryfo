@@ -1187,9 +1187,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '你请求网桥时，Tor 项目会看到你的 IP 地址。这很正常：Tor Browser 和所有 Tor 应用都是这样获取网桥的，他们从中只能知道有人请求了网桥，对你的聊天一无所知。';
 
   @override
-  String get bridgesAsking => '正在请求…';
-
-  @override
   String get cameraNoCameraOnThis => '这部手机没有相机';
 
   @override
@@ -6882,9 +6879,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportBridgeMode => '网桥';
 
   @override
-  String get bridgesEgypt => '埃及';
-
-  @override
   String get bridgesYourBridgeCouldNot => '网桥无法启动';
 
   @override
@@ -6927,9 +6921,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => '伊朗';
-
-  @override
   String get bridgesTurnOnAutomatic => '开启自动';
 
   @override
@@ -6958,9 +6949,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesScanACode => '扫码';
 
   @override
-  String get bridgesMyanmar => '缅甸';
-
-  @override
   String get bridgesSwitchToAutomatic => '切换到自动';
 
   @override
@@ -6981,9 +6969,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesGoesThroughAVolunteer => '经由志愿者的电脑连接。很难封锁，但启动慢。';
-
-  @override
-  String get bridgesLetTheTorProject => '让 Tor 项目判断';
 
   @override
   String get bridgesTorSeemsBlocked => '这个网络似乎封锁了 Tor';
@@ -7012,9 +6997,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesKryfoFindsAWay => 'Kryfo 会找出在你那里能用的方式。';
 
   @override
-  String get bridgesTheTorProjectKnows => 'Tor 项目对这些国家和地区有专门的建议。';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => '这个网桥连不出去';
 
   @override
@@ -7025,9 +7007,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesNotNow => '暂不';
-
-  @override
-  String get bridgesRussia => '俄罗斯';
 
   @override
   String get bridgesObfs4BridgesThatCome => 'Kryfo 自带的网桥（obfs4）。试起来快，但常被封锁。';
@@ -7051,9 +7030,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesAlmostThere => '快好了';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tor 项目的判断';
-
-  @override
   String get bridgesUseThisBridge => '使用这个网桥';
 
   @override
@@ -7069,9 +7045,6 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => '土库曼斯坦';
 
   @override
   String get transportBridgeMethod => '方式';
@@ -7096,11 +7069,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesBridgesGoDeadWithout => '网桥可能会毫无预兆地失效。“自动”能找到别的办法。';
 
   @override
-  String get bridgesHongKong => '香港';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Tor 被封锁时，“自动”会询问 Tor 项目，在你所在的国家或地区什么方式能用。';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo 会自动选择网桥。Snowflake 和 WebTunnel 在大多数地方都能用。如果一个连不上，就换一个试试，或者向朋友要一条网桥配置。';
 
   @override
   String get bridgesAskTorProject => '询问 Tor 项目';
@@ -7109,18 +7083,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesTooLongForTor => '太长，Tor 用不了';
 
   @override
-  String get bridgesCountry => '国家/地区';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method，$from';
   }
-
-  @override
-  String get bridgesChina => '中国';
-
-  @override
-  String get bridgesBelarus => '白俄罗斯';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo 用不了这行配置';
@@ -8661,9 +8626,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaSendVideo => '发送视频';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return '对方接受前，可以发送 $count 个';
-  }
+  String get requestSenderMediaLater => '对方接受你之后，照片和文件才会开放，让你们都更安全。';
+
+  @override
+  String get requestReceiverMediaLater => '你接受对方之后，照片和文件才会开放，让你更安全。';
 
   @override
   String get groupEndedYou => '你结束了这个群组';
@@ -9609,10 +9575,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesHistoryCopyHint => '所有消息，以及最近 30 天的照片和视频。';
 
   @override
-  String get devicesHistoryNone => '不带历史记录开始';
+  String get devicesHistoryNone => '仅联系人和群组';
 
   @override
-  String get devicesHistoryNoneHint => '设备只会收到新消息。';
+  String get devicesHistoryNoneHint => '它们会复制过来，不含任何消息。';
 
   @override
   String get devicesSkipMedia => '跳过照片和视频';
@@ -10141,6 +10107,135 @@ class AppLocalizationsZh extends AppLocalizations {
   String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name 使用的是较旧版本的 Kryfo。请在手机上回复。';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return '暂时请在手机上回复 $name。';
+  }
+
+  @override
+  String get linkedClearHereOnly => '这里的每条消息只会从这台电脑上清除。你的手机会保留它们。';
+
+  @override
+  String get linkedDeleteHereOnly => '所有消息和这位联系人只会从这台电脑上移除。你的手机会保留这段聊天。';
+
+  @override
+  String get linkedBlockHereOnly =>
+      '对方的消息将不再送达这台电脑。对方不会被告知。在手机上屏蔽对方，手机上也不会再收到。';
+
+  @override
+  String get historyCopyTitle => '聊天记录';
+
+  @override
+  String get historyCopyMaking => '正在准备你的聊天';
+
+  @override
+  String get historyCopyMakingLine => '你的手机正在整理要复制的内容，马上开始。';
+
+  @override
+  String get historyCopyGoing => '正在复制你的聊天';
+
+  @override
+  String get historyCopyGoingLine => '复制完成前，请让两台设备保持在线。';
+
+  @override
+  String historyCopySize(Object size) {
+    return '共 $size';
+  }
+
+  @override
+  String get historyCopyWaiting => '正在等待另一台设备';
+
+  @override
+  String get historyCopyWaitingLine => '两台设备都在线时，复制会自动继续。';
+
+  @override
+  String get historyCopyPaused => '复制稍作停顿';
+
+  @override
+  String get historyCopyPausedLine => '一分钟后继续。';
+
+  @override
+  String get historyCopyWhole => '所有消息和文件都已复制';
+
+  @override
+  String get historyCopyWholeLine => '没有遗漏。';
+
+  @override
+  String get historyCopyRows => '你的联系人和群组已复制';
+
+  @override
+  String get historyCopyRowsLine => '它们已复制过来，不含任何消息。从现在起，新消息会显示在这台设备上。';
+
+  @override
+  String get historyCopyGaps => '大部分聊天已复制';
+
+  @override
+  String get historyCopyGapsLine => '这些聊天在新设备上的内容比手机上少。';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return '消息：$got / $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return '文件：$got / $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 项留在你的手机上',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => '太大或无法读取，无法复制。';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 个聊天留在你的手机上',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => '复制已停止';
+
+  @override
+  String get historyCopyEndedLine => '不会再有内容复制过来。重新关联设备即可重新复制。';
+
+  @override
+  String get historyCopyFailed => '复制未能完成';
+
+  @override
+  String get historyCopyFailedLine => '重新关联设备即可重新复制。';
+
+  @override
+  String get historyCopyStays => '留在你的手机上';
+
+  @override
+  String get historyCopySee => '查看复制情况';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -10562,6 +10657,60 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceNotNow => '暂不';
+
+  @override
+  String get albumPrevious => '上一个';
+
+  @override
+  String get albumNext => '下一个';
+
+  @override
+  String get notesHoldHintDesk => '右键点击一条笔记即可复制或删除。';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      '这里还没有置顶内容。右键点击一条消息，选择“置顶”，它就会在这里等着聊天里的每个人。';
+
+  @override
+  String get chatGalleryDesk => '图片';
+
+  @override
+  String get groupChatGalleryDesk => '图片';
+
+  @override
+  String get photoChooseDesk => '选择图片文件';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => '从图片文件';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => '声音';
+
+  @override
+  String get notificationsPlaySound => '播放提示音';
+
+  @override
+  String get notificationsPlaySoundHint => '这台电脑上的每条通知都会响';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return '分享网桥 $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => '分享这个网桥';
+
+  @override
+  String get bridgesShareItPrivately => '请私下分享给你信任的人。不出现在公开页面上的网桥能用得更久。';
+
+  @override
+  String get bridgesCopyBridge => '复制网桥';
+
+  @override
+  String get bridgesBridgeCopied => '网桥已复制';
+
+  @override
+  String get bridgesSendBridgeTo => '把网桥发给';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -11745,9 +11894,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get bridgesWhenYouAskFor =>
       '你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。';
-
-  @override
-  String get bridgesAsking => '索取中…';
 
   @override
   String get cameraNoCameraOnThis => '這支手機沒有相機';
@@ -17444,9 +17590,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get transportBridgeMode => '橋接';
 
   @override
-  String get bridgesEgypt => '埃及';
-
-  @override
   String get bridgesYourBridgeCouldNot => '橋接無法啟動';
 
   @override
@@ -17489,9 +17632,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get bridgesIran => '伊朗';
-
-  @override
   String get bridgesTurnOnAutomatic => '開啟自動';
 
   @override
@@ -17520,9 +17660,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesScanACode => '掃描 QR 碼';
 
   @override
-  String get bridgesMyanmar => '緬甸';
-
-  @override
   String get bridgesSwitchToAutomatic => '改用自動';
 
   @override
@@ -17543,9 +17680,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesGoesThroughAVolunteer => '經由志願者的電腦連線。很難封鎖，但啟動較慢。';
-
-  @override
-  String get bridgesLetTheTorProject => '讓 Tor 專案判斷';
 
   @override
   String get bridgesTorSeemsBlocked => '這個網路似乎封鎖了 Tor';
@@ -17574,9 +17708,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesKryfoFindsAWay => 'Kryfo 會找出在你那裡行得通的方式。';
 
   @override
-  String get bridgesTheTorProjectKnows => 'Tor 專案對這些國家和地區有專門的建議。';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => '這個橋接連不出去';
 
   @override
@@ -17587,9 +17718,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesNotNow => '以後再說';
-
-  @override
-  String get bridgesRussia => '俄羅斯';
 
   @override
   String get bridgesObfs4BridgesThatCome => 'Kryfo 內建的橋接（obfs4）。試起來快，但常被封鎖。';
@@ -17613,9 +17741,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesAlmostThere => '快好了';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tor 專案的判斷';
-
-  @override
   String get bridgesUseThisBridge => '使用這個橋接';
 
   @override
@@ -17631,9 +17756,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => '土庫曼';
 
   @override
   String get transportBridgeMethod => '方式';
@@ -17658,11 +17780,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesBridgesGoDeadWithout => '橋接可能會無預警失效。「自動」能找到別的辦法。';
 
   @override
-  String get bridgesHongKong => '香港';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Tor 被封鎖時，「自動」會詢問 Tor 專案，在你所在的國家或地區什麼方式可用。';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo 會自動選擇橋接。Snowflake 和 WebTunnel 在大多數地方都能用。如果一個連不上，就換一個試試，或者向朋友要一條橋接設定。';
 
   @override
   String get bridgesAskTorProject => '詢問 Tor 專案';
@@ -17671,18 +17794,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesTooLongForTor => '太長，Tor 無法使用';
 
   @override
-  String get bridgesCountry => '國家/地區';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method，$from';
   }
-
-  @override
-  String get bridgesChina => '中國';
-
-  @override
-  String get bridgesBelarus => '白俄羅斯';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo 無法使用這行設定';
@@ -19104,9 +19218,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mediaSendVideo => '傳送影片';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return '對方接受前，可以傳送 $count 個';
-  }
+  String get requestSenderMediaLater => '對方接受你之後，照片和檔案才會開放，讓你們都更安全。';
+
+  @override
+  String get requestReceiverMediaLater => '你接受對方之後，照片和檔案才會開放，讓你更安全。';
 
   @override
   String get groupEndedYou => '你結束了這個群組';
@@ -20053,10 +20168,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesHistoryCopyHint => '所有訊息，以及最近 30 天的照片和影片。';
 
   @override
-  String get devicesHistoryNone => '不帶歷史記錄開始';
+  String get devicesHistoryNone => '僅聯絡人和群組';
 
   @override
-  String get devicesHistoryNoneHint => '裝置只會收到新訊息。';
+  String get devicesHistoryNoneHint => '它們會複製過來，不含任何訊息。';
 
   @override
   String get devicesSkipMedia => '略過照片和影片';
@@ -20586,6 +20701,135 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name 使用的是較舊版本的 Kryfo。請在手機上回覆。';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return '暫時請在手機上回覆 $name。';
+  }
+
+  @override
+  String get linkedClearHereOnly => '這裡的每則訊息只會從這台電腦上抹除。你的手機會保留它們。';
+
+  @override
+  String get linkedDeleteHereOnly => '所有訊息和這位聯絡人只會從這台電腦上移除。你的手機會保留這段聊天。';
+
+  @override
+  String get linkedBlockHereOnly =>
+      '對方的訊息將不再送達這台電腦。對方不會收到通知。在手機上封鎖對方，手機上也不會再收到。';
+
+  @override
+  String get historyCopyTitle => '聊天記錄';
+
+  @override
+  String get historyCopyMaking => '正在準備你的聊天';
+
+  @override
+  String get historyCopyMakingLine => '你的手機正在整理要複製的內容，馬上開始。';
+
+  @override
+  String get historyCopyGoing => '正在複製你的聊天';
+
+  @override
+  String get historyCopyGoingLine => '複製完成前，請讓兩台裝置保持在線。';
+
+  @override
+  String historyCopySize(Object size) {
+    return '共 $size';
+  }
+
+  @override
+  String get historyCopyWaiting => '正在等待另一台裝置';
+
+  @override
+  String get historyCopyWaitingLine => '兩台裝置都在線時，複製會自動繼續。';
+
+  @override
+  String get historyCopyPaused => '複製稍作停頓';
+
+  @override
+  String get historyCopyPausedLine => '一分鐘後繼續。';
+
+  @override
+  String get historyCopyWhole => '所有訊息和檔案都已複製';
+
+  @override
+  String get historyCopyWholeLine => '沒有遺漏。';
+
+  @override
+  String get historyCopyRows => '你的聯絡人和群組已複製';
+
+  @override
+  String get historyCopyRowsLine => '它們已複製過來，不含任何訊息。從現在起，新訊息會顯示在這台裝置上。';
+
+  @override
+  String get historyCopyGaps => '大部分聊天已複製';
+
+  @override
+  String get historyCopyGapsLine => '這些聊天在新裝置上的內容比手機上少。';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return '訊息：$got / $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return '檔案：$got / $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 項留在你的手機上',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => '太大或無法讀取，無法複製。';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 個聊天留在你的手機上',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => '複製已停止';
+
+  @override
+  String get historyCopyEndedLine => '不會再有內容複製過來。重新連結裝置即可重新複製。';
+
+  @override
+  String get historyCopyFailed => '複製未能完成';
+
+  @override
+  String get historyCopyFailedLine => '重新連結裝置即可重新複製。';
+
+  @override
+  String get historyCopyStays => '留在你的手機上';
+
+  @override
+  String get historyCopySee => '查看複製情況';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -21008,4 +21252,58 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceNotNow => '以後再說';
+
+  @override
+  String get albumPrevious => '上一個';
+
+  @override
+  String get albumNext => '下一個';
+
+  @override
+  String get notesHoldHintDesk => '在筆記上按右鍵即可複製或刪除。';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      '這裡還沒有置頂的訊息。在一則訊息上按右鍵並選擇「置頂」，它就會在這裡等著聊天中的每個人。';
+
+  @override
+  String get chatGalleryDesk => '圖片';
+
+  @override
+  String get groupChatGalleryDesk => '圖片';
+
+  @override
+  String get photoChooseDesk => '選擇圖片檔案';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => '從圖片檔案';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => '聲音';
+
+  @override
+  String get notificationsPlaySound => '播放提示音';
+
+  @override
+  String get notificationsPlaySoundHint => '這台電腦上的每則通知都會響';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return '分享橋接 $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => '分享這個橋接';
+
+  @override
+  String get bridgesShareItPrivately => '請私下分享給你信任的人。不出現在公開頁面上的橋接能用得更久。';
+
+  @override
+  String get bridgesCopyBridge => '複製橋接';
+
+  @override
+  String get bridgesBridgeCopied => '已複製橋接';
+
+  @override
+  String get bridgesSendBridgeTo => '把橋接傳給';
 }

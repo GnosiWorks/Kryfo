@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // home screen: date header, the chat list or empty state, and the nav tabs.
 
+import 'history_copy_screen.dart';
 import 'saved_screen.dart';
 import 'transport_screen.dart';
 import '../widgets/press_scale.dart';
@@ -38,6 +39,8 @@ import 'bridge_sheets.dart' show showTorBlockedSheet;
 import '../bridge_mode.dart';
 import 'archived_screen.dart';
 import '../miui_autostart.dart';
+import '../devices/history_link.dart'
+    show HistoryCopyStage, HistoryCopyStep, historyCopyOver;
 import '../main.dart' hide live;
 import '../tor_valve.dart' show ValveStage;
 import '../link_view.dart' show LinkKind;
@@ -507,6 +510,7 @@ class _ChatsTab extends StatelessWidget {
           const _ShotsCard(),
           const _ComputerBackupCard(),
           if (kLinkedDevicesOn) const _LinkNoticeCard(),
+          if (kLinkedDevicesOn) const _HistoryCopyCard(),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -961,6 +965,66 @@ class _LinkNoticeCard extends StatelessWidget {
                 await Navigator.of(
                   context,
                 ).push(haloRoute(LinkedDevicesScreen(source: src)));
+              },
+              fill: HaloColors.amber,
+              ink: HaloColors.onAmber,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// a history copy under way, or one that ended and has not been seen: said
+// on the phone and on the new device until the person opens it. never in
+// the decoy
+class _HistoryCopyCard extends StatelessWidget {
+  const _HistoryCopyCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        historyCopyShown,
+        historyCopySeen,
+        lockState,
+      ]),
+      builder: (context, _) {
+        final s = historyCopyShown.value;
+        final over = s != null && historyCopyOver(s.step);
+        final show =
+            s != null &&
+            (!over || !historyCopySeen.value) &&
+            !lockState.inDecoy &&
+            !sessionQuiet;
+        final words = historyCopyWords(
+          s ?? const HistoryCopyStage(HistoryCopyStep.making),
+        );
+        return _HomeCard(
+          show: show,
+          id: 'history-copy',
+          tint: HaloColors.amber,
+          wash: true,
+          title: words.title,
+          line: s != null && s.bytes > 0 && !over
+              ? l10n.historyCopySize(historyCopySize(s.bytes))
+              : words.line,
+          lineColor: HaloColors.text,
+          actions: [
+            CardAction(
+              label: l10n.historyCopySee,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.of(context).push(
+                  haloRoute(
+                    HistoryCopyScreen(
+                      stage: historyCopyShown,
+                      nameOf: historyChatName,
+                      onSeen: historyCopyOpened,
+                    ),
+                  ),
+                );
               },
               fill: HaloColors.amber,
               ink: HaloColors.onAmber,
@@ -2817,7 +2881,9 @@ Future<void> _confirmDelete(BuildContext context, ContactPreview c) async {
   final ok = await showConfirmSheet(
     context,
     title: l10n.homeDeleteThisChat,
-    line: l10n.homeEveryMessageWithGoesShown(c.nickname ?? c.haloId),
+    line: ownChatEndsHere
+        ? l10n.linkedDeleteHereOnly
+        : l10n.homeEveryMessageWithGoesShown(c.nickname ?? c.haloId),
     yes: l10n.commonDelete,
   );
   if (!ok) return;

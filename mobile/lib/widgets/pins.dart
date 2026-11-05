@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // pins, the parts both chats share. a pinned message is reached from one
 // place, the pin in the header; nothing sits over the conversation.
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +15,7 @@ import 'count_badge.dart';
 import 'halo_sheet.dart';
 import 'kryfo_avatar.dart';
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
+import 'sealed_picture.dart';
 import 'sheet_handle.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
@@ -219,7 +219,7 @@ class _PinsSheetState extends State<_PinsSheet> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 10, 22, 30),
                 child: Text(
-                  l10n.pinsNothingPinnedHereYet,
+                  l10n.pinsNothingPinnedHereYetShown,
                   style: HaloType.sans(
                     size: 13.5,
                     color: HaloColors.text2,
@@ -349,14 +349,15 @@ class _PinCard extends StatelessWidget {
                           const SizedBox(width: 10),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.file(
-                              File(img),
+                            child: SizedBox(
                               width: 52,
                               height: 52,
-                              fit: BoxFit.cover,
-                              cacheWidth: decodePx(context, 52),
-                              errorBuilder: (_, _, _) =>
-                                  const SizedBox(width: 52, height: 52),
+                              child: SealedPicture(
+                                path: img,
+                                image: mediaImage(img, decodePx(context, 52)),
+                                errorBuilder: (_, _, _) =>
+                                    const SizedBox(width: 52, height: 52),
+                              ),
                             ),
                           ),
                         ],

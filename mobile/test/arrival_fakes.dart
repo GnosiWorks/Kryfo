@@ -256,6 +256,10 @@ class ArrivalIo implements AppIo {
   @override
   void listen(int ident, String xPub, {bool fresh = false}) =>
       listened.add(xPub);
+
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      listen(ident, xPub, fresh: fresh);
   final unheard = <String>[];
   @override
   void unlisten(int ident, String xPub) => unheard.add(xPub);
