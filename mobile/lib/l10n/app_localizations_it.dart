@@ -11372,4 +11372,109 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Invia il bridge a';
+
+  @override
+  String get tipsTitle => 'Sostieni Kryfo';
+
+  @override
+  String get tipsHeadline => 'Mantieni Kryfo *gratis per tutti*';
+
+  @override
+  String get tipsLine =>
+      'Niente pubblicità, niente investitori, niente account. Una mancia aiuta a pagare i server e il lavoro su Kryfo.';
+
+  @override
+  String get tipsLeave => 'Lascia una mancia';
+
+  @override
+  String get tipsYours => 'Tuo';
+
+  @override
+  String get tipsAsking => 'Chiedo i prezzi a Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Una mancia ti dà un badge sostenitore e nient’altro. Tutto in Kryfo resta gratis per tutti, con o senza.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Il pagamento passa da Google Play. Non vediamo mai i dati della tua carta né il tuo nome.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Il badge resta su questo telefono. In Io scegli se mostrarlo e se i tuoi contatti lo vedono.';
+
+  @override
+  String get tipsRestore => 'Recupera il mio badge';
+
+  @override
+  String get tipsRestoreLine =>
+      'Hai già lasciato una mancia? Il tuo badge torna su qualsiasi telefono con lo stesso account Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Il tuo badge sostenitore è tornato',
+      'patron': 'Il tuo badge mecenate è tornato',
+      'guardian': 'Il tuo badge custode è tornato',
+      'other': 'Il tuo badge sostenitore è tornato',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Questo account Google non ha ancora lasciato mance';
+
+  @override
+  String get tipsUnavailable =>
+      'Le mance passano da Google Play. Compaiono qui appena Google Play funziona su questo telefono.';
+
+  @override
+  String get tipsSoon => 'Le mance arrivano qui presto.';
+
+  @override
+  String get tipsPending =>
+      'Google Play sta ancora completando il pagamento. Il badge arriva appena va a buon fine.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play non ha completato il pagamento. Riprova tra un momento.';
+
+  @override
+  String get tipsThanks => 'Grazie';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Ora hai il badge sostenitore. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.',
+      'patron':
+          'Ora hai il badge mecenate. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.',
+      'guardian':
+          'Ora hai il badge custode. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.',
+      'other':
+          'Ora hai il badge sostenitore. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Grazie per la mancia. Tieni il tuo badge sostenitore, quello più alto.',
+      'patron':
+          'Grazie per la mancia. Tieni il tuo badge mecenate, quello più alto.',
+      'guardian':
+          'Grazie per la mancia. Tieni il tuo badge custode, quello più alto.',
+      'other':
+          'Grazie per la mancia. Tieni il tuo badge sostenitore, quello più alto.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard =>
+      'Lascia una mancia per mantenere Kryfo indipendente';
 }

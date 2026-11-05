@@ -11267,4 +11267,108 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Gửi cầu nối cho';
+
+  @override
+  String get tipsTitle => 'Ủng hộ Kryfo';
+
+  @override
+  String get tipsHeadline => 'Giữ Kryfo *miễn phí cho mọi người*';
+
+  @override
+  String get tipsLine =>
+      'Không quảng cáo, không nhà đầu tư, không tài khoản. Tiền tip giúp trả cho máy chủ và công sức làm Kryfo.';
+
+  @override
+  String get tipsLeave => 'Gửi tiền tip';
+
+  @override
+  String get tipsYours => 'Của bạn';
+
+  @override
+  String get tipsAsking => 'Đang hỏi giá từ Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Tiền tip mang lại cho bạn một huy hiệu người ủng hộ và không gì khác. Mọi thứ trong Kryfo vẫn miễn phí cho mọi người, dù có tip hay không.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Thanh toán đi qua Google Play. Chúng tôi không bao giờ thấy thông tin thẻ hay tên của bạn.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Huy hiệu nằm trên điện thoại này. Trong Tôi, bạn chọn có hiện nó không và danh bạ của bạn có thấy nó không.';
+
+  @override
+  String get tipsRestore => 'Khôi phục huy hiệu của tôi';
+
+  @override
+  String get tipsRestoreLine =>
+      'Đã từng gửi tip? Huy hiệu của bạn quay lại trên bất kỳ điện thoại nào đăng nhập cùng tài khoản Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Huy hiệu người ủng hộ của bạn đã quay lại',
+      'patron': 'Huy hiệu nhà bảo trợ của bạn đã quay lại',
+      'guardian': 'Huy hiệu người bảo hộ của bạn đã quay lại',
+      'other': 'Huy hiệu người ủng hộ của bạn đã quay lại',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Tài khoản Google này chưa có khoản tip nào';
+
+  @override
+  String get tipsUnavailable =>
+      'Tiền tip đi qua Google Play. Chúng sẽ hiện ở đây ngay khi Google Play chạy trên điện thoại này.';
+
+  @override
+  String get tipsSoon => 'Tiền tip sắp có ở đây.';
+
+  @override
+  String get tipsPending =>
+      'Google Play vẫn đang hoàn tất thanh toán của bạn. Huy hiệu sẽ đến ngay khi thanh toán xong.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play chưa hoàn tất thanh toán. Hãy thử lại sau giây lát.';
+
+  @override
+  String get tipsThanks => 'Cảm ơn bạn';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Giờ bạn đã có huy hiệu người ủng hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'patron':
+          'Giờ bạn đã có huy hiệu nhà bảo trợ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'guardian':
+          'Giờ bạn đã có huy hiệu người bảo hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'other':
+          'Giờ bạn đã có huy hiệu người ủng hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người ủng hộ, huy hiệu cao hơn.',
+      'patron':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu nhà bảo trợ, huy hiệu cao hơn.',
+      'guardian':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người bảo hộ, huy hiệu cao hơn.',
+      'other':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người ủng hộ, huy hiệu cao hơn.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Gửi tiền tip để Kryfo luôn độc lập';
 }

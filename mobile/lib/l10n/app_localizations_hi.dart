@@ -11289,4 +11289,105 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'ब्रिज भेजें';
+
+  @override
+  String get tipsTitle => 'Kryfo का सहयोग करें';
+
+  @override
+  String get tipsHeadline => 'Kryfo को *सबके लिए मुफ़्त* रखें';
+
+  @override
+  String get tipsLine =>
+      'न विज्ञापन, न निवेशक, न अकाउंट। टिप से सर्वरों और Kryfo पर होने वाले काम का खर्च चलता है।';
+
+  @override
+  String get tipsLeave => 'टिप दें';
+
+  @override
+  String get tipsYours => 'आपका';
+
+  @override
+  String get tipsAsking => 'Google Play से कीमतें पूछी जा रही हैं';
+
+  @override
+  String get tipsBadgeOnly =>
+      'टिप से आपको एक समर्थक बैज मिलता है, और कुछ नहीं। Kryfo में सब कुछ सबके लिए मुफ़्त रहता है, टिप दें या न दें।';
+
+  @override
+  String get tipsThroughPlay =>
+      'भुगतान Google Play से होता है। हम आपके कार्ड की जानकारी या आपका नाम कभी नहीं देखते।';
+
+  @override
+  String get tipsBadgeStays =>
+      'बैज इसी फ़ोन पर रहता है। मैं में आप चुनते हैं कि वह दिखे या नहीं, और आपके संपर्क उसे देखें या नहीं।';
+
+  @override
+  String get tipsRestore => 'मेरा बैज वापस लाएँ';
+
+  @override
+  String get tipsRestoreLine =>
+      'पहले टिप दी थी? उसी Google अकाउंट से साइन इन किए किसी भी फ़ोन पर आपका बैज वापस आ जाता है।';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'आपका समर्थक बैज वापस आ गया',
+      'patron': 'आपका संरक्षक बैज वापस आ गया',
+      'guardian': 'आपका रक्षक बैज वापस आ गया',
+      'other': 'आपका समर्थक बैज वापस आ गया',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'इस Google अकाउंट से अभी तक कोई टिप नहीं दी गई';
+
+  @override
+  String get tipsUnavailable =>
+      'टिप Google Play से दी जाती है। इस फ़ोन पर Google Play चलते ही टिप यहाँ दिखेगी।';
+
+  @override
+  String get tipsSoon => 'टिप जल्द ही यहाँ शुरू होगी।';
+
+  @override
+  String get tipsPending =>
+      'Google Play अभी आपका भुगतान पूरा कर रहा है। भुगतान होते ही आपका बैज आ जाएगा।';
+
+  @override
+  String get tipsFailed =>
+      'Google Play ने भुगतान पूरा नहीं किया। थोड़ी देर में फिर कोशिश करें।';
+
+  @override
+  String get tipsThanks => 'धन्यवाद';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'अब आपके पास समर्थक बैज है। इससे और कुछ नहीं खुलता: Kryfo में सब कुछ सबके लिए मुफ़्त रहता है।',
+      'patron':
+          'अब आपके पास संरक्षक बैज है। इससे और कुछ नहीं खुलता: Kryfo में सब कुछ सबके लिए मुफ़्त रहता है।',
+      'guardian':
+          'अब आपके पास रक्षक बैज है। इससे और कुछ नहीं खुलता: Kryfo में सब कुछ सबके लिए मुफ़्त रहता है।',
+      'other':
+          'अब आपके पास समर्थक बैज है। इससे और कुछ नहीं खुलता: Kryfo में सब कुछ सबके लिए मुफ़्त रहता है।',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'टिप के लिए धन्यवाद। आपका समर्थक बैज बना रहता है, वह ऊँचा है।',
+      'patron': 'टिप के लिए धन्यवाद। आपका संरक्षक बैज बना रहता है, वह ऊँचा है।',
+      'guardian': 'टिप के लिए धन्यवाद। आपका रक्षक बैज बना रहता है, वह ऊँचा है।',
+      'other': 'टिप के लिए धन्यवाद। आपका समर्थक बैज बना रहता है, वह ऊँचा है।',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Kryfo को स्वतंत्र रखने के लिए टिप दें';
 }

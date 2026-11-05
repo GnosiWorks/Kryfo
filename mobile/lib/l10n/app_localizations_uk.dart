@@ -11461,4 +11461,107 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Надіслати міст';
+
+  @override
+  String get tipsTitle => 'Підтримати Kryfo';
+
+  @override
+  String get tipsHeadline => 'Нехай Kryfo лишається *безкоштовним для всіх*';
+
+  @override
+  String get tipsLine =>
+      'Без реклами, без інвесторів, без облікових записів. Чайові допомагають платити за сервери й роботу над Kryfo.';
+
+  @override
+  String get tipsLeave => 'Залишити чайові';
+
+  @override
+  String get tipsYours => 'Уже твій';
+
+  @override
+  String get tipsAsking => 'Дізнаємося ціни в Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Чайові дають значок прихильника і більше нічого. Усе в Kryfo лишається безкоштовним для всіх, із чайовими чи без.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Оплата йде через Google Play. Ми ніколи не бачимо ні даних твоєї картки, ні твого імені.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Значок живе на цьому телефоні. У розділі Я ти обираєш, чи показувати його і чи бачать його контакти.';
+
+  @override
+  String get tipsRestore => 'Повернути мій значок';
+
+  @override
+  String get tipsRestoreLine =>
+      'Уже залишав чайові? Значок повернеться на будь-якому телефоні з тим самим обліковим записом Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Твій значок прихильника знову з тобою',
+      'patron': 'Твій значок мецената знову з тобою',
+      'guardian': 'Твій значок хранителя знову з тобою',
+      'other': 'Твій значок прихильника знову з тобою',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'З цього облікового запису Google чайових поки не було';
+
+  @override
+  String get tipsUnavailable =>
+      'Чайові йдуть через Google Play. Вони з’являться тут, щойно Google Play запрацює на цьому телефоні.';
+
+  @override
+  String get tipsSoon => 'Чайові скоро з’являться тут.';
+
+  @override
+  String get tipsPending =>
+      'Google Play ще завершує оплату. Значок прийде, щойно вона пройде.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play не завершив оплату. Спробуй ще раз трохи згодом.';
+
+  @override
+  String get tipsThanks => 'Дякуємо';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Тепер у тебе значок прихильника. Більше він нічого не відкриває: усе в Kryfo лишається безкоштовним для всіх.',
+      'patron':
+          'Тепер у тебе значок мецената. Більше він нічого не відкриває: усе в Kryfo лишається безкоштовним для всіх.',
+      'guardian':
+          'Тепер у тебе значок хранителя. Більше він нічого не відкриває: усе в Kryfo лишається безкоштовним для всіх.',
+      'other':
+          'Тепер у тебе значок прихильника. Більше він нічого не відкриває: усе в Kryfo лишається безкоштовним для всіх.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Дякуємо за чайові. Твій значок прихильника лишається, він вищий.',
+      'patron': 'Дякуємо за чайові. Твій значок мецената лишається, він вищий.',
+      'guardian':
+          'Дякуємо за чайові. Твій значок хранителя лишається, він вищий.',
+      'other':
+          'Дякуємо за чайові. Твій значок прихильника лишається, він вищий.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Залиш чайові, щоб Kryfo лишався незалежним';
 }

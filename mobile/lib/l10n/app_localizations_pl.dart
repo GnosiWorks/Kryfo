@@ -11502,4 +11502,108 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Wyślij mostek do';
+
+  @override
+  String get tipsTitle => 'Wesprzyj Kryfo';
+
+  @override
+  String get tipsHeadline => 'Niech Kryfo zostanie *darmowe dla wszystkich*';
+
+  @override
+  String get tipsLine =>
+      'Bez reklam, bez inwestorów, bez kont. Napiwek pomaga opłacić serwery i pracę nad Kryfo.';
+
+  @override
+  String get tipsLeave => 'Zostaw napiwek';
+
+  @override
+  String get tipsYours => 'Twoje';
+
+  @override
+  String get tipsAsking => 'Pytamy Google Play o ceny';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Napiwek daje ci odznakę wspierającego i nic więcej. Wszystko w Kryfo zostaje darmowe dla wszystkich, z napiwkiem czy bez.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Płatność idzie przez Google Play. Nigdy nie widzimy danych twojej karty ani twojego imienia.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Odznaka jest na tym telefonie. W zakładce Ja wybierasz, czy ją widać i czy widzą ją twoje kontakty.';
+
+  @override
+  String get tipsRestore => 'Przywróć moją odznakę';
+
+  @override
+  String get tipsRestoreLine =>
+      'Zostawiałeś już napiwek? Odznaka wraca na każdym telefonie z tym samym kontem Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Twoja odznaka wspierającego wróciła',
+      'patron': 'Twoja odznaka mecenasa wróciła',
+      'guardian': 'Twoja odznaka strażnika wróciła',
+      'other': 'Twoja odznaka wspierającego wróciła',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Z tego konta Google nie było jeszcze napiwku';
+
+  @override
+  String get tipsUnavailable =>
+      'Napiwki idą przez Google Play. Pojawią się tutaj, gdy tylko Google Play zadziała na tym telefonie.';
+
+  @override
+  String get tipsSoon => 'Napiwki już wkrótce tutaj.';
+
+  @override
+  String get tipsPending =>
+      'Google Play jeszcze kończy twoją płatność. Odznaka przyjdzie, gdy tylko płatność przejdzie.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play nie dokończył płatności. Spróbuj ponownie za chwilę.';
+
+  @override
+  String get tipsThanks => 'Dziękujemy';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Masz teraz odznakę wspierającego. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.',
+      'patron':
+          'Masz teraz odznakę mecenasa. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.',
+      'guardian':
+          'Masz teraz odznakę strażnika. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.',
+      'other':
+          'Masz teraz odznakę wspierającego. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Dziękujemy za napiwek. Zostaje twoja odznaka wspierającego, ta wyższa.',
+      'patron':
+          'Dziękujemy za napiwek. Zostaje twoja odznaka mecenasa, ta wyższa.',
+      'guardian':
+          'Dziękujemy za napiwek. Zostaje twoja odznaka strażnika, ta wyższa.',
+      'other':
+          'Dziękujemy za napiwek. Zostaje twoja odznaka wspierającego, ta wyższa.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Zostaw napiwek, żeby Kryfo zostało niezależne';
 }
