@@ -11396,4 +11396,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Send the bridge to';
+
+  @override
+  String get tipsTitle => 'Support Kryfo';
+
+  @override
+  String get tipsHeadline => 'Keep Kryfo *free for everyone*';
+
+  @override
+  String get tipsLine =>
+      'No ads, no investors, no accounts. A tip helps pay for the servers and the work on Kryfo.';
+
+  @override
+  String get tipsLeave => 'Leave a tip';
+
+  @override
+  String get tipsYours => 'Yours';
+
+  @override
+  String get tipsAsking => 'Asking Google Play for the prices';
+
+  @override
+  String get tipsBadgeOnly =>
+      'A tip gives you a supporter badge and nothing else. Everything in Kryfo stays free for everyone, with or without one.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Payment goes through Google Play. We never see your card details or your name.';
+
+  @override
+  String get tipsBadgeStays =>
+      'The badge lives on this phone. In Me you choose whether it shows and whether your contacts see it.';
+
+  @override
+  String get tipsRestore => 'Restore my badge';
+
+  @override
+  String get tipsRestoreLine =>
+      'Tipped before? Your badge comes back on any phone signed in to the same Google account.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Your supporter badge is back',
+      'patron': 'Your patron badge is back',
+      'guardian': 'Your guardian badge is back',
+      'other': 'Your supporter badge is back',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => 'No tip on this Google account yet';
+
+  @override
+  String get tipsUnavailable =>
+      'Tips go through Google Play. They show here once Google Play works on this phone.';
+
+  @override
+  String get tipsSoon => 'Tips open here soon.';
+
+  @override
+  String get tipsPending =>
+      'Google Play is still finishing your payment. Your badge comes as soon as it goes through.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play did not finish the payment. Try again in a moment.';
+
+  @override
+  String get tipsThanks => 'Thank you';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.',
+      'patron':
+          'You now have the patron badge. It unlocks nothing else: everything in Kryfo stays free for everyone.',
+      'guardian':
+          'You now have the guardian badge. It unlocks nothing else: everything in Kryfo stays free for everyone.',
+      'other':
+          'You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Thank you for the tip. You keep your supporter badge, the higher one.',
+      'patron':
+          'Thank you for the tip. You keep your patron badge, the higher one.',
+      'guardian':
+          'Thank you for the tip. You keep your guardian badge, the higher one.',
+      'other':
+          'Thank you for the tip. You keep your supporter badge, the higher one.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Leave a tip to keep Kryfo independent';
 }

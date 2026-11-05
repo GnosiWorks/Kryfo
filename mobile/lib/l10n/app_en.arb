@@ -14315,5 +14315,104 @@
   "bridgesSendBridgeTo": "Send the bridge to",
   "@bridgesSendBridgeTo": {
     "description": "screens/bridge_share_sheet.dart: the title of the chat picker the bridge goes to"
+  },
+  "tipsTitle": "Support Kryfo",
+  "@tipsTitle": {
+    "description": "screens/tip_screen.dart: the play build support tab title and the section on me"
+  },
+  "tipsHeadline": "Keep Kryfo *free for everyone*",
+  "@tipsHeadline": {
+    "description": "screens/tip_screen.dart: the headline, the words between * are amber"
+  },
+  "tipsLine": "No ads, no investors, no accounts. A tip helps pay for the servers and the work on Kryfo.",
+  "@tipsLine": {
+    "description": "screens/tip_screen.dart: under the headline"
+  },
+  "tipsLeave": "Leave a tip",
+  "@tipsLeave": {
+    "description": "screens/tip_screen.dart: the button that opens google play payment sheet"
+  },
+  "tipsYours": "Yours",
+  "@tipsYours": {
+    "description": "screens/tip_screen.dart: on an amount already bought on this google account"
+  },
+  "tipsAsking": "Asking Google Play for the prices",
+  "@tipsAsking": {
+    "description": "screens/tip_screen.dart: screen reader words while prices load"
+  },
+  "tipsBadgeOnly": "A tip gives you a supporter badge and nothing else. Everything in Kryfo stays free for everyone, with or without one.",
+  "@tipsBadgeOnly": {
+    "description": "screens/tip_screen.dart: what a tip gives"
+  },
+  "tipsThroughPlay": "Payment goes through Google Play. We never see your card details or your name.",
+  "@tipsThroughPlay": {
+    "description": "screens/tip_screen.dart: who handles the payment"
+  },
+  "tipsBadgeStays": "The badge lives on this phone. In Me you choose whether it shows and whether your contacts see it.",
+  "@tipsBadgeStays": {
+    "description": "screens/tip_screen.dart: where the badge lives. Me is the tab name"
+  },
+  "tipsRestore": "Restore my badge",
+  "@tipsRestore": {
+    "description": "screens/tip_screen.dart: the restore row"
+  },
+  "tipsRestoreLine": "Tipped before? Your badge comes back on any phone signed in to the same Google account.",
+  "@tipsRestoreLine": {
+    "description": "screens/tip_screen.dart: under the restore row"
+  },
+  "tipsRestored": "{tier, select, supporter{Your supporter badge is back} patron{Your patron badge is back} guardian{Your guardian badge is back} other{Your supporter badge is back}}",
+  "@tipsRestored": {
+    "description": "screens/tip_screen.dart: toast after a restore. tier is the supporter tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "tipsNothingToRestore": "No tip on this Google account yet",
+  "@tipsNothingToRestore": {
+    "description": "screens/tip_screen.dart: toast when the google account bought nothing"
+  },
+  "tipsUnavailable": "Tips go through Google Play. They show here once Google Play works on this phone.",
+  "@tipsUnavailable": {
+    "description": "screens/tip_screen.dart: when google play billing is not there"
+  },
+  "tipsSoon": "Tips open here soon.",
+  "@tipsSoon": {
+    "description": "screens/tip_screen.dart: when no product is set up yet"
+  },
+  "tipsPending": "Google Play is still finishing your payment. Your badge comes as soon as it goes through.",
+  "@tipsPending": {
+    "description": "screens/tip_screen.dart: a payment google play still holds"
+  },
+  "tipsFailed": "Google Play did not finish the payment. Try again in a moment.",
+  "@tipsFailed": {
+    "description": "screens/tip_screen.dart: toast when the payment did not finish"
+  },
+  "tipsThanks": "Thank you",
+  "@tipsThanks": {
+    "description": "screens/tip_screen.dart: the thank you title"
+  },
+  "tipsGranted": "{tier, select, supporter{You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} patron{You now have the patron badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} guardian{You now have the guardian badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} other{You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.}}",
+  "@tipsGranted": {
+    "description": "screens/tip_screen.dart: under the thank you. tier is the supporter tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "tipsKept": "{tier, select, supporter{Thank you for the tip. You keep your supporter badge, the higher one.} patron{Thank you for the tip. You keep your patron badge, the higher one.} guardian{Thank you for the tip. You keep your guardian badge, the higher one.} other{Thank you for the tip. You keep your supporter badge, the higher one.}}",
+  "@tipsKept": {
+    "description": "screens/tip_screen.dart: under the thank you when a higher badge stays. tier is the higher tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "tipsProfileCard": "Leave a tip to keep Kryfo independent",
+  "@tipsProfileCard": {
+    "description": "screens/profile_screen.dart: the card on me in the play build"
   }
 }
