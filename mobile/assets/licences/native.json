@@ -192,6 +192,22 @@
    "version": "a311f986"
   },
   {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Chinese to English",
+   "texts": [
+    3
+   ],
+   "version": "5cd14960"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Chinese",
+   "texts": [
+    3
+   ],
+   "version": "4e5accc1"
+  },
+  {
    "licence": "MIT",
    "name": "yaml-cpp",
    "texts": [
@@ -216,6 +232,7 @@
    "version": null
   }
  ],
+ "translationModels": "343d8d700c30760e6944ff6be09a366fe7aba4a9a97ec82d0f03bf8ce2f1ad49",
  "voice": [
   {
    "licence": "MIT",

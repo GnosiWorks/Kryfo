@@ -294,6 +294,11 @@ void main() {
         _sha('../engine/translate/native/bergamot.lock'),
         reason: stale,
       );
+      expect(
+        j['translationModels'],
+        _sha('../engine/translate/models.json'),
+        reason: stale,
+      );
     });
 
     test(
@@ -363,6 +368,24 @@ void main() {
           (p) => p.name.toLowerCase() == pin,
         );
         expect(part.version, c, reason: pin);
+      }
+      // the model files are mozilla's under the mpl 2.0 too, one row a pair,
+      // named by the first bytes of the model's sha256
+      final models =
+          jsonDecode(
+                File('../engine/translate/models.json').readAsStringSync(),
+              )['pairs']
+              as List<dynamic>;
+      const lang = {'en': 'English', 'zh': 'Chinese'};
+      for (final m in models.cast<Map<String, dynamic>>()) {
+        final name =
+            'Translation model, ${lang[m['from']]} to ${lang[m['to']]}';
+        final model = (m['files'] as List<dynamic>).singleWhere(
+          (f) => f['kind'] == 'model',
+        );
+        expect(by[name]!.licence, 'MPL-2.0', reason: name);
+        expect(by[name]!.version, (model['sha256'] as String).substring(0, 8));
+        expect(by[name]!.texts.single, by['Bergamot translator']!.texts.single);
       }
       for (final p in n.translation) {
         expect(p.texts, isNotEmpty, reason: p.name);

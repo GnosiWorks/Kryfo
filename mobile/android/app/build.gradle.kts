@@ -123,6 +123,12 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
 
+    // the reliability harness's sender, in debug and profile builds only
+    sourceSets {
+        getByName("debug").java.srcDir("src/bench/kotlin")
+        getByName("profile").java.srcDir("src/bench/kotlin")
+    }
+
     // robolectric tests read the app's strings
     testOptions {
         unitTests.isIncludeAndroidResources = true
