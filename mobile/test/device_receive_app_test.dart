@@ -422,10 +422,9 @@ void main() {
       await everydaySend.listsChanged([
         (ident: 0, version: 8, added: const [], removed: true),
       ]);
-      expect((await everyday.query('signal_meta')).single, {
-        'k': '${kHiddenRemovalMeta}0',
-        'v': '8',
-      });
+      final meta = (await everyday.query('signal_meta')).single;
+      expect(meta['k'], '${kHiddenRemovalMeta}0');
+      expect(hiddenRemovalOf(meta['v'] as String?)?.version, 8);
       await app.hiddenListsChangedForTest([
         (ident: 0, version: 8, added: const [], removed: true),
       ]);
@@ -445,7 +444,7 @@ void main() {
       await app.pushHiddenRemovalsForTest();
       expect(sent, hasLength(3));
       // the vault opens: the removal is its own push now, kept there
-      // until their phone answers, and owed no more on the everyday side
+      // until their phone answers, marked queued in the vault alone
       final vmem = SqliteMem.open()!;
       await vmem.execute(
         'CREATE TABLE contacts (halo_id TEXT, ident INTEGER, ikey TEXT, '
@@ -475,8 +474,65 @@ void main() {
       expect(queued['peer'], '05$_x');
       expect(queued['kind'], 'remove');
       expect(queued['version'], 8);
+      expect(sent, hasLength(3));
+      // the everyday side still holds it as it was: nothing there shows
+      // that a vault opened
+      expect((await everyday.query('signal_meta')).single, meta);
+      // queued once: the vault's mark says so, so a later open after their
+      // phone answered queues it no more
+      await vmem.delete('dev_pushes');
+      await app.pushHiddenRemovalsForTest();
+      expect(await vmem.query('dev_pushes'), isEmpty);
+      expect(sent, hasLength(3));
+      // past its keep it goes by its age alone, the vault shut or open
+      final old =
+          DateTime.now().millisecondsSinceEpoch -
+          kRemovePushKept.inMilliseconds -
+          1;
+      await everyday.update('signal_meta', {'v': '8:$old'});
+      vaultDevicesForTest(null, null, null);
+      hiddenPhoneSendForTest = phoneSend;
+      await app.pushHiddenRemovalsForTest();
       expect(await everyday.query('signal_meta'), isEmpty);
       expect(sent, hasLength(3));
+    });
+
+    test('a removal owed to hidden chats past the relays\' keep goes to '
+        'their phones no more while the vault is shut', () async {
+      final everyday = SqliteMem.open();
+      if (everyday == null) {
+        markTestSkipped('no sqlite on this host');
+        return;
+      }
+      await everyday.execute(
+        'CREATE TABLE signal_meta (k TEXT PRIMARY KEY, v TEXT)',
+      );
+      final rows = _MemRows(HaloContainer.everyday, everyday)
+        ..person(_v, onion: 'o-$_v', xpub: 'x-$_v');
+      useDatabasesForTest(rows, Session(rows));
+      final list = base64Encode([
+        ...List.filled(37, 1),
+        ...[0, 0, 0, 0, 0, 0, 0, 8],
+        ...List.filled(60, 2),
+      ]);
+      deviceStateForTest(DeviceState(_Eng((op, _) => {'list': list})));
+      final sent = <String>[];
+      hiddenPhoneSendForTest = (ident, peer, identity, frame) async {
+        sent.add(peer);
+        return true;
+      };
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final at = now - kRemovePushGapMost.inMilliseconds - 60000;
+      await everyday.insert('signal_meta', {
+        'k': '${kHiddenRemovalMeta}0',
+        'v': '8:$at',
+      });
+      await app.pushHiddenRemovalsForTest();
+      expect(sent, isEmpty);
+      expect(await everyday.query('signal_meta'), hasLength(1));
+      await everyday.update('signal_meta', {'v': '8:$now'});
+      await app.pushHiddenRemovalsForTest();
+      expect(sent, [_h]);
     });
   });
 

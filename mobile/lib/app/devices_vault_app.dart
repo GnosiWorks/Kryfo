@@ -25,6 +25,10 @@ Timer? _hiddenCardsTimer;
 // memory only: a start sends each again, the vault's open queues it
 final _hiddenRemovalsSent = <String, int>{};
 
+// the vault's own dev_marks kind: a removal owed (kHiddenRemovalMeta) it
+// queued as its pushes, by version
+const kHiddenRemovalQueued = 'hidden_removal';
+
 // a frame of mine to a hidden chat's contact's phone, on the phone pair
 // whose session the everyday side holds
 Future<bool> Function(int ident, String peer, String identity, String frame)
@@ -545,38 +549,69 @@ extension AppStateVaultDevices on AppState {
   }
 
   // the removals owed to hidden contacts: with the vault open, queued as
-  // its own pushes (kept in it until each phone answers) and no longer owed
-  // here; while it is shut, my list as I hold it to each hidden contact's
-  // phone, the same bytes each time, once a version a start
+  // its own pushes (kept in it until each phone answers) and marked queued
+  // in the vault; while it is shut, my list as I hold it to each hidden
+  // contact's phone, the same bytes each time, once a version a start. the
+  // everyday value goes by its age alone, vault or no vault
   Future<void> _pushHiddenRemovals() async {
     final ds = _deviceState;
     if (!linkedDevicesOn || ds == null) return;
     final db = await live.open();
-    final owed = <int, int>{};
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final owed = <int, ({int version, int at})>{};
     for (final r in await db.query(
       'signal_meta',
       columns: ['k', 'v'],
       where: 'k LIKE ?',
       whereArgs: ['$kHiddenRemovalMeta%'],
     )) {
-      final ident = int.tryParse(
-        (r['k'] as String).substring(kHiddenRemovalMeta.length),
-      );
-      final version = int.tryParse(r['v'] as String? ?? '');
-      if (ident != null && version != null) owed[ident] = version;
+      final k = r['k'] as String;
+      final ident = int.tryParse(k.substring(kHiddenRemovalMeta.length));
+      final o = hiddenRemovalOf(r['v'] as String?);
+      if (ident == null || o == null) continue;
+      if (now - o.at > kRemovePushKept.inMilliseconds) {
+        await dropDevMeta(db, k);
+        continue;
+      }
+      owed[ident] = o;
     }
     if (owed.isEmpty) return;
     final v = _vaultDevSend;
-    if (v != null) {
+    final vdb = _vaultDevOf;
+    if (v != null && vdb != null) {
       try {
-        await v.listsChanged([
-          for (final e in owed.entries)
-            (ident: e.key, version: e.value, added: const [], removed: true),
-        ]);
-        for (final i in owed.keys) {
-          await dropDevMeta(db, '$kHiddenRemovalMeta$i');
+        final vd = await vdb.open();
+        for (final e in owed.entries) {
+          final key = '${e.value.version}';
+          final had = await vd.query(
+            'dev_marks',
+            where: "ident = ? AND peer = '' AND kind = ? AND key = ?",
+            whereArgs: [e.key, kHiddenRemovalQueued, key],
+            limit: 1,
+          );
+          if (had.isEmpty) {
+            await v.listsChanged([
+              (
+                ident: e.key,
+                version: e.value.version,
+                added: const [],
+                removed: true,
+              ),
+            ]);
+            await vd.insert('dev_marks', {
+              'ident': e.key,
+              'peer': '',
+              'kind': kHiddenRemovalQueued,
+              'key': key,
+              'at': now,
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+          for (final c in _router.hiddenDevices.entries) {
+            if (c.value.ident == e.key) {
+              _hiddenRemovalsSent[c.key] = e.value.version;
+            }
+          }
         }
-        _hiddenRemovalsSent.clear();
       } catch (e) {
         dlog('devices: the vault\'s removals wait (${e.runtimeType})');
       }
@@ -584,8 +619,11 @@ extension AppStateVaultDevices on AppState {
     }
     for (final e in _router.hiddenDevices.entries) {
       final card = e.value;
-      final version = owed[card.ident];
-      if (!card.lists || version == null) continue;
+      final o = owed[card.ident];
+      if (!card.lists || o == null) continue;
+      // past the relays' keep only the vault's open queues it
+      if (now - o.at > kRemovePushGapMost.inMilliseconds) continue;
+      final version = o.version;
       if ((_hiddenRemovalsSent[e.key] ?? 0) >= version) continue;
       try {
         final cur =

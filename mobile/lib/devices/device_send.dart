@@ -60,12 +60,24 @@ const kRemovePushGapMost = Duration(days: 14);
 const kRemovePushKept = Duration(days: 60);
 
 /// a removal from my list owed to the hidden chats' contacts, kept on the
-/// everyday side with no names (my identity and the version) in the same
-/// write as the everyday pushes, until the vault's next open queues it as
-/// its own pushes, kept there until each phone says it holds the list.
-/// while the vault is shut it goes to each hidden contact's phone at every
-/// start and pump until it went (devices_vault_app.dart)
+/// everyday side with no names (my identity, the version, when) in the
+/// same write as the everyday pushes, for [kRemovePushKept] whatever the
+/// vault does. the vault's next open queues it as its own pushes, kept
+/// there until each phone says it holds the list, and marks it queued in
+/// the vault alone. while the vault is shut it goes to each hidden
+/// contact's phone at every start and pump until it went, for
+/// [kRemovePushGapMost] (devices_vault_app.dart)
 const kHiddenRemovalMeta = 'hidden_removal_owed:';
+
+/// a [kHiddenRemovalMeta] value: the version and when it was owed. it goes
+/// by age alone ([kRemovePushKept]), the same with a vault or without, so
+/// the everyday side never shows that a vault opened
+({int version, int at})? hiddenRemovalOf(String? v) {
+  final p = (v ?? '').split(':');
+  final version = int.tryParse(p.first);
+  if (version == null) return null;
+  return (version: version, at: p.length > 1 ? int.tryParse(p[1]) ?? 0 : 0);
+}
 
 /// the dev_marks kind for a contact I deleted whose phone read my lists:
 /// my removals still go to them (they may still copy to my devices)
@@ -1256,11 +1268,13 @@ class DeviceSend {
           where: 'k = ?',
           whereArgs: [k],
         );
-        final v = was.isEmpty ? 0 : int.tryParse('${was.first['v']}') ?? 0;
+        final v = was.isEmpty
+            ? 0
+            : hiddenRemovalOf(was.first['v'] as String?)?.version ?? 0;
         if (ch.version <= v) continue;
         await t.insert('signal_meta', {
           'k': k,
-          'v': '${ch.version}',
+          'v': '${ch.version}:$now',
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
