@@ -9635,7 +9635,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Có lẫn các lần đánh thức giả, khiến Google khó biết khi nào tin nhắn thật đến. Relay của chúng tôi chỉ lưu những địa chỉ mà nó không thể nối với nhau. Dịch vụ thông báo đẩy chạy trên cùng máy chủ và có thể nối chúng, và với sự giúp đỡ của Google, với tài khoản Google của bạn, nên ai vận hành hoặc thu giữ máy chủ của chúng tôi cũng có thể. Nếu điều đó quan trọng với bạn, hãy chọn cách khác. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
+      'Có lẫn các lần đánh thức giả, khiến Google khó biết khi nào tin nhắn thật đến. Relay của chúng tôi chỉ lưu những địa chỉ mà nó không thể nối với nhau. Dịch vụ thông báo đẩy chạy trên máy chủ thứ hai của chúng tôi. Hai máy chủ cùng nhau có thể nối chúng, và với sự giúp đỡ của Google, với tài khoản Google của bạn. Thu giữ một máy chủ thôi là không đủ, nhưng cả hai đều do chúng tôi vận hành, nên chúng tôi có thể. Nếu điều đó quan trọng với bạn, hãy chọn cách khác. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11120,7 +11120,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name cần cập nhật Kryfo để tiếp tục trò chuyện.';
+    return '$name cần cập nhật Kryfo để tiếp tục trò chuyện';
   }
 
   @override
@@ -11248,6 +11248,85 @@ class AppLocalizationsVi extends AppLocalizations {
   String get voiceNotNow => 'Để sau';
 
   @override
+  String get unlinkedTitle => 'Thiết bị này đã hủy liên kết';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Điện thoại của bạn đã gỡ thiết bị này khỏi tài khoản, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Thiết bị này không được mở trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Thiết bị này không nhận được gì từ điện thoại của bạn trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Đồng hồ của thiết bị bị chỉnh lùi, nên Kryfo đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo không biết được thiết bị này được mở lần cuối khi nào, nên đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Bạn đã hủy liên kết thiết bị này, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Điện thoại của bạn vẫn giữ các cuộc trò chuyện. Để dùng lại Kryfo ở đây, hãy liên kết thiết bị này với điện thoại.';
+
+  @override
+  String get unlinkedClose => 'Đóng Kryfo';
+
+  @override
+  String get devicesLeave => 'Hủy liên kết thiết bị này';
+
+  @override
+  String get devicesLeaveTitle => 'Hủy liên kết thiết bị này?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo sẽ báo cho điện thoại của bạn và xóa mọi thứ nó lưu ở đây. Điện thoại vẫn giữ các cuộc trò chuyện của bạn.';
+
+  @override
+  String get devicesLeaveYes => 'Hủy liên kết và xóa';
+
+  @override
+  String get devicesGoneNotice => 'Đã gỡ thiết bị';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name đã bị gỡ khỏi tài khoản của bạn vào $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name không được dùng trong 30 ngày, nên đã bị gỡ khỏi tài khoản của bạn vào $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name đã tự hủy liên kết vào $date và xóa những gì nó lưu.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Thiết bị của bạn đã thay đổi';
+
+  @override
+  String get devicesChangedLine =>
+      'Mở Thiết bị đã liên kết để xem những gì đã thay đổi.';
+
+  @override
+  String get devicesUnknownNotice => 'Thiết bị được liên kết ở nơi khác';
+
+  @override
+  String get devicesUnknownLine =>
+      'Một bản Kryfo khác đã liên kết một thiết bị với tài khoản của bạn. Điện thoại này đã gỡ nó khỏi danh sách của bạn.';
+
+  @override
   String get albumPrevious => 'Trước';
 
   @override
@@ -11303,4 +11382,108 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Gửi cầu nối cho';
+
+  @override
+  String get tipsTitle => 'Ủng hộ Kryfo';
+
+  @override
+  String get tipsHeadline => 'Giữ Kryfo *miễn phí cho mọi người*';
+
+  @override
+  String get tipsLine =>
+      'Không quảng cáo, không nhà đầu tư, không tài khoản. Tiền tip giúp trả cho máy chủ và công sức làm Kryfo.';
+
+  @override
+  String get tipsLeave => 'Gửi tiền tip';
+
+  @override
+  String get tipsYours => 'Của bạn';
+
+  @override
+  String get tipsAsking => 'Đang hỏi giá từ Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Tiền tip mang lại cho bạn một huy hiệu người ủng hộ và không gì khác. Mọi thứ trong Kryfo vẫn miễn phí cho mọi người, dù có tip hay không.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Thanh toán đi qua Google Play. Chúng tôi không bao giờ thấy thông tin thẻ hay tên của bạn.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Huy hiệu nằm trên điện thoại này. Trong Tôi, bạn chọn có hiện nó không và danh bạ của bạn có thấy nó không.';
+
+  @override
+  String get tipsRestore => 'Khôi phục huy hiệu của tôi';
+
+  @override
+  String get tipsRestoreLine =>
+      'Đã từng gửi tip? Huy hiệu của bạn quay lại trên bất kỳ điện thoại nào đăng nhập cùng tài khoản Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Huy hiệu người ủng hộ của bạn đã quay lại',
+      'patron': 'Huy hiệu nhà bảo trợ của bạn đã quay lại',
+      'guardian': 'Huy hiệu người bảo hộ của bạn đã quay lại',
+      'other': 'Huy hiệu người ủng hộ của bạn đã quay lại',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Tài khoản Google này chưa có khoản tip nào';
+
+  @override
+  String get tipsUnavailable =>
+      'Tiền tip đi qua Google Play. Chúng sẽ hiện ở đây ngay khi Google Play chạy trên điện thoại này.';
+
+  @override
+  String get tipsSoon => 'Tiền tip sắp có ở đây.';
+
+  @override
+  String get tipsPending =>
+      'Google Play vẫn đang hoàn tất thanh toán của bạn. Huy hiệu sẽ đến ngay khi thanh toán xong.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play chưa hoàn tất thanh toán. Hãy thử lại sau giây lát.';
+
+  @override
+  String get tipsThanks => 'Cảm ơn bạn';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Giờ bạn đã có huy hiệu người ủng hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'patron':
+          'Giờ bạn đã có huy hiệu nhà bảo trợ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'guardian':
+          'Giờ bạn đã có huy hiệu người bảo hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'other':
+          'Giờ bạn đã có huy hiệu người ủng hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người ủng hộ, huy hiệu cao hơn.',
+      'patron':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu nhà bảo trợ, huy hiệu cao hơn.',
+      'guardian':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người bảo hộ, huy hiệu cao hơn.',
+      'other':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người ủng hộ, huy hiệu cao hơn.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Gửi tiền tip để Kryfo luôn độc lập';
 }

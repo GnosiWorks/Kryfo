@@ -9830,7 +9830,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Dorzucane są fałszywe pobudki, przez co Google trudniej ustalić, kiedy przychodzą prawdziwe wiadomości. Nasz przekaźnik przechowuje tylko adresy, których nie może ze sobą powiązać. Usługa powiadomień działa na tym samym serwerze i mogłaby je powiązać, a z pomocą Google także z twoim kontem Google, więc mogłaby to zrobić każda osoba, która prowadzi albo przejmie nasz serwer. Jeśli to dla ciebie ważne, wybierz inny sposób. Ukryte czaty, pokoje poza kilkoma pierwszymi, a czasem też zwykły kontakt, mniej więcej przez jeden miesiąc na pięć, czekają na sprawdzenie, które Kryfo nadal robi co 15 minut.';
+      'Dorzucane są fałszywe pobudki, przez co Google trudniej ustalić, kiedy przychodzą prawdziwe wiadomości. Nasz przekaźnik przechowuje tylko adresy, których nie może ze sobą powiązać. Usługa powiadomień działa na naszym drugim serwerze. Oba serwery razem mogłyby je powiązać, a z pomocą Google także z twoim kontem Google. Przejęcie jednego nie wystarczy, ale prowadzimy oba, więc my moglibyśmy. Jeśli to dla ciebie ważne, wybierz inny sposób. Ukryte czaty, pokoje poza kilkoma pierwszymi, a czasem też zwykły kontakt, mniej więcej przez jeden miesiąc na pięć, czekają na sprawdzenie, które Kryfo nadal robi co 15 minut.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11347,7 +11347,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name musi zaktualizować Kryfo, żeby dało się dalej pisać.';
+    return '$name musi zaktualizować Kryfo, żeby dało się dalej pisać';
   }
 
   @override
@@ -11483,6 +11483,85 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceNotNow => 'Nie teraz';
 
   @override
+  String get unlinkedTitle => 'To urządzenie jest rozłączone';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Twój telefon usunął je z konta, więc Kryfo wymazał wszystko, co tu przechowywał.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Nie było otwierane przez 30 dni, więc Kryfo wymazał wszystko, co tu przechowywał.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Przez 30 dni nie dostało nic od twojego telefonu, więc Kryfo wymazał wszystko, co tu przechowywał.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Jego zegar cofnięto, więc Kryfo wymazał wszystko, co tu przechowywał, żeby chronić twoje czaty.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo nie mógł ustalić, kiedy było ostatnio otwierane, więc wymazał wszystko, co tu przechowywał, żeby chronić twoje czaty.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Rozłączono je, więc Kryfo wymazał wszystko, co tu przechowywał.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Twój telefon zachowuje czaty. Żeby znów używać tu Kryfo, połącz to urządzenie z telefonem.';
+
+  @override
+  String get unlinkedClose => 'Zamknij Kryfo';
+
+  @override
+  String get devicesLeave => 'Rozłącz to urządzenie';
+
+  @override
+  String get devicesLeaveTitle => 'Rozłączyć to urządzenie?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo powiadomi telefon i wymaże wszystko, co tu przechowuje. Twój telefon zachowa czaty.';
+
+  @override
+  String get devicesLeaveYes => 'Rozłącz i wymaż';
+
+  @override
+  String get devicesGoneNotice => 'Urządzenie usunięte';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return 'Urządzenie $name usunięto z twojego konta $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return 'Urządzenie $name nie było używane przez 30 dni, więc usunięto je z twojego konta $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return 'Urządzenie $name samo się rozłączyło $date i wymazało to, co przechowywało.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Twoje urządzenia się zmieniły';
+
+  @override
+  String get devicesChangedLine =>
+      'Otwórz Połączone urządzenia, żeby zobaczyć, co się zmieniło.';
+
+  @override
+  String get devicesUnknownNotice => 'Urządzenie połączone gdzie indziej';
+
+  @override
+  String get devicesUnknownLine =>
+      'Inna kopia Kryfo połączyła urządzenie z twoim kontem. Ten telefon zdjął je z twojej listy.';
+
+  @override
   String get albumPrevious => 'Poprzednie';
 
   @override
@@ -11538,4 +11617,108 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Wyślij mostek do';
+
+  @override
+  String get tipsTitle => 'Wesprzyj Kryfo';
+
+  @override
+  String get tipsHeadline => 'Niech Kryfo zostanie *darmowe dla wszystkich*';
+
+  @override
+  String get tipsLine =>
+      'Bez reklam, bez inwestorów, bez kont. Napiwek pomaga opłacić serwery i pracę nad Kryfo.';
+
+  @override
+  String get tipsLeave => 'Zostaw napiwek';
+
+  @override
+  String get tipsYours => 'Twoje';
+
+  @override
+  String get tipsAsking => 'Pytamy Google Play o ceny';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Napiwek daje ci odznakę wspierającego i nic więcej. Wszystko w Kryfo zostaje darmowe dla wszystkich, z napiwkiem czy bez.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Płatność idzie przez Google Play. Nigdy nie widzimy danych twojej karty ani twojego imienia.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Odznaka jest na tym telefonie. W zakładce Ja wybierasz, czy ją widać i czy widzą ją twoje kontakty.';
+
+  @override
+  String get tipsRestore => 'Przywróć moją odznakę';
+
+  @override
+  String get tipsRestoreLine =>
+      'Zostawiałeś już napiwek? Odznaka wraca na każdym telefonie z tym samym kontem Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Twoja odznaka wspierającego wróciła',
+      'patron': 'Twoja odznaka mecenasa wróciła',
+      'guardian': 'Twoja odznaka strażnika wróciła',
+      'other': 'Twoja odznaka wspierającego wróciła',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Z tego konta Google nie było jeszcze napiwku';
+
+  @override
+  String get tipsUnavailable =>
+      'Napiwki idą przez Google Play. Pojawią się tutaj, gdy tylko Google Play zadziała na tym telefonie.';
+
+  @override
+  String get tipsSoon => 'Napiwki już wkrótce tutaj.';
+
+  @override
+  String get tipsPending =>
+      'Google Play jeszcze kończy twoją płatność. Odznaka przyjdzie, gdy tylko płatność przejdzie.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play nie dokończył płatności. Spróbuj ponownie za chwilę.';
+
+  @override
+  String get tipsThanks => 'Dziękujemy';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Masz teraz odznakę wspierającego. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.',
+      'patron':
+          'Masz teraz odznakę mecenasa. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.',
+      'guardian':
+          'Masz teraz odznakę strażnika. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.',
+      'other':
+          'Masz teraz odznakę wspierającego. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Dziękujemy za napiwek. Zostaje twoja odznaka wspierającego, ta wyższa.',
+      'patron':
+          'Dziękujemy za napiwek. Zostaje twoja odznaka mecenasa, ta wyższa.',
+      'guardian':
+          'Dziękujemy za napiwek. Zostaje twoja odznaka strażnika, ta wyższa.',
+      'other':
+          'Dziękujemy za napiwek. Zostaje twoja odznaka wspierającego, ta wyższa.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Zostaw napiwek, żeby Kryfo zostało niezależne';
 }

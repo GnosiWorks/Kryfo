@@ -4,6 +4,7 @@
 import 'history_copy_screen.dart';
 import 'saved_screen.dart';
 import 'transport_screen.dart';
+import '../widgets/desk_menu.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import 'requests_screen.dart';
@@ -11,6 +12,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'donate_screen.dart';
+import 'tip_screen.dart';
 import 'profile_screen.dart';
 import 'tools_screen.dart';
 import 'photo_knows_screen.dart';
@@ -46,7 +48,6 @@ import '../tor_valve.dart' show ValveStage;
 import '../link_view.dart' show LinkKind;
 import '../widgets/motion.dart';
 import '../widgets/route_merged_card.dart';
-import '../widgets/halo_sheet.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/shift_in_place.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
@@ -56,7 +57,7 @@ import '../widgets/chat_parts.dart' show GrowSwap;
 import '../widgets/swap.dart';
 import '../widgets/typing_mark.dart';
 import '../widgets/card_action.dart';
-import '../widgets/message_menu.dart' show MenuSheet, MenuSheetRow;
+import '../widgets/message_menu.dart' show MenuSheetRow;
 import '../widgets/confirm_sheet.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/home_pin.dart';
@@ -277,8 +278,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenLocked: () => _pickFor((f) => OpenLockedScreen(file: f)),
         );
       case HaloTab.support:
-        // never on the bar in the play build
-        return kPlayBuild ? const SizedBox.shrink() : const DonateScreen();
+        // the play build tips through google play, and names no other way
+        return kPlayBuild ? const TipScreen() : const DonateScreen();
       case HaloTab.me:
         return ProfileScreen(onOpenSupport: () => _pick(HaloTab.support));
     }
@@ -945,7 +946,7 @@ class _LinkNoticeCard extends StatelessWidget {
         final words = all.isEmpty
             ? (title: l10n.devicesNewNotice, line: '')
             : linkNoticeWords([
-                for (final n in all) (name: n.name, at: n.at),
+                for (final n in all) (name: n.name, at: n.at, why: n.why),
               ], homeClock());
         return _HomeCard(
           show: show,
@@ -2511,157 +2512,163 @@ class _GroupRow extends StatelessWidget {
     // so they fade and slide with it. on the page's surface they were drawn
     // once, under a row still invisible at the start of its entrance, and
     // the tint never showed
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: onTap,
-        // held: its menu, as a chat's. a right click on a computer
-        onLongPress: () => _groupMenu(context, g),
-        onSecondaryTap: onDesktop ? () => _groupMenu(context, g) : null,
-        splashColor: HaloColors.amber.withValues(alpha: 0.10),
-        highlightColor: HaloColors.amber.withValues(alpha: 0.05),
-        child: Ink(
-          decoration: g.unread > 0
-              ? BoxDecoration(
-                  color: HaloColors.amber.withValues(alpha: 0.06),
-                  border: BorderDirectional(
-                    start: BorderSide(color: HaloColors.amber, width: 2),
-                  ),
-                )
-              : null,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                // group avatar: a square tile with the first letter of the name
-                // in italic serif, so groups differ from round contact avatars
-                // an ended group's tile goes quiet, as a closed room's link
-                HaloHero(
-                  tag: 'group-${g.groupId}',
-                  child: AnimatedContainer(
-                    duration: motionStill(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 260),
-                    curve: Curves.easeOutCubic,
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: g.ended
-                          ? HaloColors.surface2
-                          : g.isRoom
-                          ? HaloColors.violet.withValues(alpha: 0.14)
-                          : HaloColors.amberSoft,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: g.ended
-                            ? HaloColors.line2
-                            : (g.isRoom ? HaloColors.violet : HaloColors.amber)
-                                  .withValues(alpha: 0.35),
-                        width: 0.6,
-                      ),
+    // the menu key and shift+f10 on a computer, as a right click
+    return DeskMenuKeys(
+      onMenu: () => _groupMenu(context, g),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          // held: its menu, as a chat's. a right click on a computer
+          onLongPress: () => _groupMenu(context, g),
+          onSecondaryTap: onDesktop ? () => _groupMenu(context, g) : null,
+          splashColor: HaloColors.amber.withValues(alpha: 0.10),
+          highlightColor: HaloColors.amber.withValues(alpha: 0.05),
+          child: Ink(
+            decoration: g.unread > 0
+                ? BoxDecoration(
+                    color: HaloColors.amber.withValues(alpha: 0.06),
+                    border: BorderDirectional(
+                      start: BorderSide(color: HaloColors.amber, width: 2),
                     ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      g.name.isEmpty
-                          ? '·'
-                          : g.name.characters.first.toUpperCase(),
-                      style: HaloType.serif(
-                        size: 18,
-                        italic: true,
+                  )
+                : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  // group avatar: a square tile with the first letter of the name
+                  // in italic serif, so groups differ from round contact avatars
+                  // an ended group's tile goes quiet, as a closed room's link
+                  HaloHero(
+                    tag: 'group-${g.groupId}',
+                    child: AnimatedContainer(
+                      duration: motionStill(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 260),
+                      curve: Curves.easeOutCubic,
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
                         color: g.ended
-                            ? HaloColors.text2
+                            ? HaloColors.surface2
                             : g.isRoom
-                            ? HaloColors.violetText
-                            : HaloColors.amberText,
+                            ? HaloColors.violet.withValues(alpha: 0.14)
+                            : HaloColors.amberSoft,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: g.ended
+                              ? HaloColors.line2
+                              : (g.isRoom
+                                        ? HaloColors.violet
+                                        : HaloColors.amber)
+                                    .withValues(alpha: 0.35),
+                          width: 0.6,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        g.name.isEmpty
+                            ? '·'
+                            : g.name.characters.first.toUpperCase(),
+                        style: HaloType.serif(
+                          size: 18,
+                          italic: true,
+                          color: g.ended
+                              ? HaloColors.text2
+                              : g.isRoom
+                              ? HaloColors.violetText
+                              : HaloColors.amberText,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              g.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: HaloType.sans(
-                                size: 14,
-                                weight: g.unread > 0
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                color: g.ended
-                                    ? HaloColors.text2
-                                    : HaloColors.text,
-                              ),
-                            ),
-                          ),
-                          HiddenMark(on: g.hidden),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      // not let in yet: no clock, no count, until it is.
-                      // a new state rises in over the last one
-                      RiseSwap(
-                        child: g.ended
-                            // its admin ended it: the line, in place of all else
-                            ? Text(
-                                endedLine((at: 0, by: g.endedBy!)),
-                                key: const ValueKey('ended'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                g.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: HaloType.sans(
-                                  size: 12,
-                                  color: HaloColors.text2,
-                                ).copyWith(fontStyle: slant()),
-                              )
-                            : g.isRoom && g.joiningAt != null
-                            ? RoomJoinLine(
-                                key: const ValueKey('joining'),
-                                joiningAt: g.joiningAt!,
-                                full: appState.roomFull(g.groupId),
-                              )
-                            : g.isRoom
-                            ? RoomCountdown(
-                                key: const ValueKey('room'),
-                                expiresAt: g.expiresAt!,
-                                size: 10,
-                              )
-                            : g.mentioned
-                            // your three words came up in there
-                            ? Text(
-                                l10n.homeMentionedYou,
-                                key: const ValueKey('mentioned'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: HaloType.mono(
-                                  size: 10,
-                                  color: HaloColors.amberText,
-                                  weight: FontWeight.w600,
-                                  letter: 0.06,
-                                ),
-                              )
-                            : Text(
-                                l10n.homeMembers(g.memberCount),
-                                key: const ValueKey('members'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: HaloType.mono(
-                                  size: 10,
-                                  color: HaloColors.text2,
+                                  size: 14,
+                                  weight: g.unread > 0
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  color: g.ended
+                                      ? HaloColors.text2
+                                      : HaloColors.text,
                                 ),
                               ),
-                      ),
-                    ],
+                            ),
+                            HiddenMark(on: g.hidden),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        // not let in yet: no clock, no count, until it is.
+                        // a new state rises in over the last one
+                        RiseSwap(
+                          child: g.ended
+                              // its admin ended it: the line, in place of all else
+                              ? Text(
+                                  endedLine((at: 0, by: g.endedBy!)),
+                                  key: const ValueKey('ended'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: HaloType.sans(
+                                    size: 12,
+                                    color: HaloColors.text2,
+                                  ).copyWith(fontStyle: slant()),
+                                )
+                              : g.isRoom && g.joiningAt != null
+                              ? RoomJoinLine(
+                                  key: const ValueKey('joining'),
+                                  joiningAt: g.joiningAt!,
+                                  full: appState.roomFull(g.groupId),
+                                )
+                              : g.isRoom
+                              ? RoomCountdown(
+                                  key: const ValueKey('room'),
+                                  expiresAt: g.expiresAt!,
+                                  size: 10,
+                                )
+                              : g.mentioned
+                              // your three words came up in there
+                              ? Text(
+                                  l10n.homeMentionedYou,
+                                  key: const ValueKey('mentioned'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: HaloType.mono(
+                                    size: 10,
+                                    color: HaloColors.amberText,
+                                    weight: FontWeight.w600,
+                                    letter: 0.06,
+                                  ),
+                                )
+                              : Text(
+                                  l10n.homeMembers(g.memberCount),
+                                  key: const ValueKey('members'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: HaloType.mono(
+                                    size: 10,
+                                    color: HaloColors.text2,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                // pops in, rolls to each new count, pops away once read
-                CountBadge(count: g.unread, lead: 8),
-              ],
+                  // pops in, rolls to each new count, pops away once read
+                  CountBadge(count: g.unread, lead: 8),
+                ],
+              ),
             ),
           ),
         ),
@@ -2737,51 +2744,46 @@ class _SwipeRow extends StatelessWidget {
 // the delete on its own at the end
 void _chatMenu(BuildContext context, ContactPreview c) {
   HapticFeedback.mediumImpact();
-  showHaloSheet<String>(
+  showMenuSheet<String>(
     context,
-    scroll: true,
-    builder: (ctx) {
+    groups: (ctx) {
       void pick(String a) => Navigator.pop(ctx, a);
-      return SingleChildScrollView(
-        child: MenuSheet(
-          groups: [
-            [
-              MenuSheetRow(
-                icon: c.muted
-                    ? Icons.notifications_active_outlined
-                    : Icons.notifications_off_outlined,
-                label: c.muted ? l10n.homeUnmute : l10n.homeMute,
-                onTap: () => pick('mute'),
-              ),
-              MenuSheetRow(
-                icon: Icons.archive_outlined,
-                label: l10n.homeArchive,
-                onTap: () => pick('archive'),
-              ),
-              // hidden chats open: a chat goes out of the everyday list, or
-              // comes back to it, and its row says which
-              if (lockState.inVault && !c.blocked)
-                MenuSheetRow(
-                  icon: c.hidden
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  label: c.hidden ? l10n.chatShowInList : l10n.chatHide,
-                  tint: HaloColors.violet,
-                  onTap: () => pick('hide'),
-                ),
-            ],
-            [
-              MenuSheetRow(
-                icon: Icons.delete_outline,
-                label: l10n.homeDeleteChat,
-                sub: l10n.homeMessagesAndContactGoneShown,
-                danger: true,
-                onTap: () => pick('delete'),
-              ),
-            ],
-          ],
-        ),
-      );
+      return [
+        [
+          MenuSheetRow(
+            icon: c.muted
+                ? Icons.notifications_active_outlined
+                : Icons.notifications_off_outlined,
+            label: c.muted ? l10n.homeUnmute : l10n.homeMute,
+            onTap: () => pick('mute'),
+          ),
+          MenuSheetRow(
+            icon: Icons.archive_outlined,
+            label: l10n.homeArchive,
+            onTap: () => pick('archive'),
+          ),
+          // hidden chats open: a chat goes out of the everyday list, or
+          // comes back to it, and its row says which
+          if (lockState.inVault && !c.blocked)
+            MenuSheetRow(
+              icon: c.hidden
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              label: c.hidden ? l10n.chatShowInList : l10n.chatHide,
+              tint: HaloColors.violet,
+              onTap: () => pick('hide'),
+            ),
+        ],
+        [
+          MenuSheetRow(
+            icon: Icons.delete_outline,
+            label: l10n.homeDeleteChat,
+            sub: l10n.homeMessagesAndContactGoneShown,
+            danger: true,
+            onTap: () => pick('delete'),
+          ),
+        ],
+      ];
     },
   ).then((a) {
     if (a == null || !context.mounted) return;
@@ -2808,40 +2810,35 @@ bool groupMenuHides(GroupSummary g, {required bool inVault}) =>
 // leave it, after saying what leaving costs
 void _groupMenu(BuildContext context, GroupSummary g) {
   HapticFeedback.mediumImpact();
-  showHaloSheet<String>(
+  showMenuSheet<String>(
     context,
-    scroll: true,
-    builder: (ctx) {
+    groups: (ctx) {
       void pick(String a) => Navigator.pop(ctx, a);
-      return SingleChildScrollView(
-        child: MenuSheet(
-          groups: [
-            if (groupMenuHides(g, inVault: lockState.inVault))
-              [
-                MenuSheetRow(
-                  icon: g.hidden
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  label: g.hidden ? l10n.chatShowInList : l10n.chatHide,
-                  tint: HaloColors.violet,
-                  onTap: () => pick('hide'),
-                ),
-              ],
-            [
-              MenuSheetRow(
-                icon: g.ended ? Icons.delete_outline : Icons.logout_rounded,
-                label: g.ended
-                    ? l10n.groupInfoDeleteGroup
-                    : g.isRoom
-                    ? l10n.groupInfoLeaveRoom2
-                    : l10n.groupInfoLeaveGroup2,
-                danger: true,
-                onTap: () => pick('leave'),
-              ),
-            ],
+      return [
+        if (groupMenuHides(g, inVault: lockState.inVault))
+          [
+            MenuSheetRow(
+              icon: g.hidden
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              label: g.hidden ? l10n.chatShowInList : l10n.chatHide,
+              tint: HaloColors.violet,
+              onTap: () => pick('hide'),
+            ),
           ],
-        ),
-      );
+        [
+          MenuSheetRow(
+            icon: g.ended ? Icons.delete_outline : Icons.logout_rounded,
+            label: g.ended
+                ? l10n.groupInfoDeleteGroup
+                : g.isRoom
+                ? l10n.groupInfoLeaveRoom2
+                : l10n.groupInfoLeaveGroup2,
+            danger: true,
+            onTap: () => pick('leave'),
+          ),
+        ],
+      ];
     },
   ).then((a) {
     if (a == null || !context.mounted) return;
@@ -2929,44 +2926,39 @@ class _DevSwipeRow extends StatelessWidget {
 
 void _devMenu(BuildContext context, DevRow d) {
   HapticFeedback.mediumImpact();
-  showHaloSheet<String>(
+  showMenuSheet<String>(
     context,
-    scroll: true,
-    builder: (ctx) {
+    groups: (ctx) {
       void pick(String a) => Navigator.pop(ctx, a);
-      return SingleChildScrollView(
-        child: MenuSheet(
-          groups: [
-            [
-              MenuSheetRow(
-                icon: d.muted
-                    ? Icons.notifications_active_outlined
-                    : Icons.notifications_off_outlined,
-                label: d.muted ? l10n.homeUnmute : l10n.homeMute,
-                onTap: () => pick('mute'),
-              ),
-              MenuSheetRow(
-                icon: Icons.archive_outlined,
-                label: l10n.homeArchive,
-                onTap: () => pick('archive'),
-              ),
-              MenuSheetRow(
-                icon: d.pinned ? Icons.push_pin_outlined : Icons.push_pin,
-                label: d.pinned ? l10n.contactUnpin : l10n.contactPinToTop,
-                onTap: () => pick('pin'),
-              ),
-            ],
-            [
-              MenuSheetRow(
-                icon: Icons.delete_outline,
-                label: l10n.homeDeleteChat,
-                danger: true,
-                onTap: () => pick('delete'),
-              ),
-            ],
-          ],
-        ),
-      );
+      return [
+        [
+          MenuSheetRow(
+            icon: d.muted
+                ? Icons.notifications_active_outlined
+                : Icons.notifications_off_outlined,
+            label: d.muted ? l10n.homeUnmute : l10n.homeMute,
+            onTap: () => pick('mute'),
+          ),
+          MenuSheetRow(
+            icon: Icons.archive_outlined,
+            label: l10n.homeArchive,
+            onTap: () => pick('archive'),
+          ),
+          MenuSheetRow(
+            icon: d.pinned ? Icons.push_pin_outlined : Icons.push_pin,
+            label: d.pinned ? l10n.contactUnpin : l10n.contactPinToTop,
+            onTap: () => pick('pin'),
+          ),
+        ],
+        [
+          MenuSheetRow(
+            icon: Icons.delete_outline,
+            label: l10n.homeDeleteChat,
+            danger: true,
+            onTap: () => pick('delete'),
+          ),
+        ],
+      ];
     },
   ).then((a) {
     if (a == null || !context.mounted) return;
@@ -3002,115 +2994,119 @@ class _DevRowTile extends StatelessWidget {
     final queued =
         appState.queuedFor(d.chatId) > 0 &&
         (!appState.online || !appState.torReady);
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        // a right click on a computer opens the row's menu
-        onSecondaryTap: onDesktop ? onLongPress : null,
-        splashColor: HaloColors.amber.withValues(alpha: 0.10),
-        highlightColor: HaloColors.amber.withValues(alpha: 0.05),
-        child: Ink(
-          decoration: unread
-              ? BoxDecoration(
-                  color: HaloColors.amber.withValues(alpha: 0.06),
-                  border: BorderDirectional(
-                    start: BorderSide(color: HaloColors.amber, width: 2),
-                  ),
-                )
-              : null,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-          child: Row(
-            children: [
-              HaloHero(tag: kDevFaceHero, child: const DevAvatar(pop: true)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            l10n.devRowTitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.sans(
-                              size: 14,
-                              weight: unread
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                        ),
-                        if (d.pinned) ...[
-                          const SizedBox(width: 6),
-                          Icon(
-                            Icons.push_pin,
-                            size: 11,
-                            color: HaloColors.text3,
-                          ),
-                        ],
-                        if (d.muted) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.notifications_off_outlined,
-                            size: 12,
-                            color: HaloColors.text3,
-                          ),
-                        ],
-                        if (queued) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.homeQueued,
-                            style: HaloType.mono(
-                              size: 10,
-                              color: HaloColors.text2,
-                              letter: 0.08,
-                            ),
-                          ),
-                        ] else if (d.when != null) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            _relTime(d.when),
-                            style: HaloType.mono(
-                              size: 10.5,
-                              color: unread
-                                  ? HaloColors.amberText
-                                  : HaloColors.text2,
-                              weight: unread
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ],
+    // the menu key and shift+f10 on a computer, as a right click
+    return DeskMenuKeys(
+      onMenu: onLongPress,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          // a right click on a computer opens the row's menu
+          onSecondaryTap: onDesktop ? onLongPress : null,
+          splashColor: HaloColors.amber.withValues(alpha: 0.10),
+          highlightColor: HaloColors.amber.withValues(alpha: 0.05),
+          child: Ink(
+            decoration: unread
+                ? BoxDecoration(
+                    color: HaloColors.amber.withValues(alpha: 0.06),
+                    border: BorderDirectional(
+                      start: BorderSide(color: HaloColors.amber, width: 2),
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            d.preview ?? l10n.devWelcome,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.sans(
+                  )
+                : null,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            child: Row(
+              children: [
+                HaloHero(tag: kDevFaceHero, child: const DevAvatar(pop: true)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.devRowTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.sans(
+                                size: 14,
+                                weight: unread
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: HaloColors.text,
+                              ),
+                            ),
+                          ),
+                          if (d.pinned) ...[
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.push_pin,
+                              size: 11,
+                              color: HaloColors.text3,
+                            ),
+                          ],
+                          if (d.muted) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.notifications_off_outlined,
                               size: 12,
-                              color: unread
-                                  ? HaloColors.text
-                                  : HaloColors.text2,
+                              color: HaloColors.text3,
+                            ),
+                          ],
+                          if (queued) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.homeQueued,
+                              style: HaloType.mono(
+                                size: 10,
+                                color: HaloColors.text2,
+                                letter: 0.08,
+                              ),
+                            ),
+                          ] else if (d.when != null) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              _relTime(d.when),
+                              style: HaloType.mono(
+                                size: 10.5,
+                                color: unread
+                                    ? HaloColors.amberText
+                                    : HaloColors.text2,
+                                weight: unread
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              d.preview ?? l10n.devWelcome,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.sans(
+                                size: 12,
+                                color: unread
+                                    ? HaloColors.text
+                                    : HaloColors.text2,
+                              ),
                             ),
                           ),
-                        ),
-                        CountBadge(count: d.unread, lead: 8),
-                      ],
-                    ),
-                  ],
+                          CountBadge(count: d.unread, lead: 8),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -3126,176 +3122,180 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // its own ink surface, like the group row's
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        // a right click on a computer opens the row's menu
-        onSecondaryTap: onDesktop ? onLongPress : null,
-        splashColor: HaloColors.amber.withValues(alpha: 0.10),
-        highlightColor: HaloColors.amber.withValues(alpha: 0.05),
-        // Ink, not Container: an unread row tints itself amber, and a Container
-        // paints that tint over the splash so the tap looks dead.
-        child: Ink(
-          decoration: c.unread > 0
-              ? BoxDecoration(
-                  color: HaloColors.amber.withValues(alpha: 0.06),
-                  border: BorderDirectional(
-                    start: BorderSide(color: HaloColors.amber, width: 2),
+    // the menu key and shift+f10 on a computer, as a right click
+    return DeskMenuKeys(
+      onMenu: onLongPress,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          // a right click on a computer opens the row's menu
+          onSecondaryTap: onDesktop ? onLongPress : null,
+          splashColor: HaloColors.amber.withValues(alpha: 0.10),
+          highlightColor: HaloColors.amber.withValues(alpha: 0.05),
+          // Ink, not Container: an unread row tints itself amber, and a Container
+          // paints that tint over the splash so the tap looks dead.
+          child: Ink(
+            decoration: c.unread > 0
+                ? BoxDecoration(
+                    color: HaloColors.amber.withValues(alpha: 0.06),
+                    border: BorderDirectional(
+                      start: BorderSide(color: HaloColors.amber, width: 2),
+                    ),
+                  )
+                : null,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            child: Row(
+              children: [
+                Opacity(
+                  opacity: c.blocked ? 0.4 : 1,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      HaloHero(
+                        tag: 'face-${c.avatarSeed}',
+                        child: KryfoAvatar(
+                          seed: c.avatarSeed,
+                          size: 44,
+                          choice: c.avatar,
+                        ),
+                      ),
+                      if (c.verified)
+                        PositionedDirectional(
+                          end: -1,
+                          bottom: -1,
+                          child: _verifiedTick(onAmber: false),
+                        ),
+                    ],
                   ),
-                )
-              : null,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-          child: Row(
-            children: [
-              Opacity(
-                opacity: c.blocked ? 0.4 : 1,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    HaloHero(
-                      tag: 'face-${c.avatarSeed}',
-                      child: KryfoAvatar(
-                        seed: c.avatarSeed,
-                        size: 44,
-                        choice: c.avatar,
-                      ),
-                    ),
-                    if (c.verified)
-                      PositionedDirectional(
-                        end: -1,
-                        bottom: -1,
-                        child: _verifiedTick(onAmber: false),
-                      ),
-                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  c.nickname ?? c.haloId,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: HaloType.sans(
-                                    size: 14,
-                                    weight: c.unread > 0
-                                        ? FontWeight.w600
-                                        : FontWeight.w500,
-                                    color: c.blocked
-                                        ? HaloColors.text3
-                                        : HaloColors.text,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    c.nickname ?? c.haloId,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: HaloType.sans(
+                                      size: 14,
+                                      weight: c.unread > 0
+                                          ? FontWeight.w600
+                                          : FontWeight.w500,
+                                      color: c.blocked
+                                          ? HaloColors.text3
+                                          : HaloColors.text,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (c.supporterBadge != null) ...[
-                                const SizedBox(width: 6),
-                                _supporterPill(),
+                                if (c.supporterBadge != null) ...[
+                                  const SizedBox(width: 6),
+                                  _supporterPill(),
+                                ],
+                                HiddenMark(on: c.hidden),
                               ],
-                              HiddenMark(on: c.hidden),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (c.pinned) ...[
-                              Icon(
-                                Icons.push_pin,
-                                size: 11,
-                                color: HaloColors.text3,
-                              ),
-                              const SizedBox(width: 4),
-                            ],
-                            if (c.muted) ...[
-                              Icon(
-                                Icons.notifications_off_outlined,
-                                size: 12,
-                                color: HaloColors.text3,
-                              ),
-                              const SizedBox(width: 4),
-                            ],
-                            // a message still in the outbox says so where the
-                            // time would be, so the row is honest about it
-                            if (!c.blocked &&
-                                appState.queuedFor(c.haloId) > 0 &&
-                                (!appState.online || !appState.torReady))
-                              Text(
-                                l10n.homeQueued,
-                                style: HaloType.mono(
-                                  size: 10,
-                                  color: HaloColors.text2,
-                                  letter: 0.08,
-                                ),
-                              )
-                            else
-                              Text(
-                                (c.blocked
-                                    ? l10n.homeBlocked
-                                    : _relTime(c.when)),
-                                style: HaloType.mono(
-                                  size: 10.5,
-                                  color: c.unread > 0
-                                      ? HaloColors.amberText
-                                      : HaloColors.text2,
-                                  weight: c.unread > 0
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Expanded(
-                          // "Typing" takes the preview's place while they
-                          // type, over a draft too
-                          child: TypingSwap(
-                            showing: c.blocked
-                                ? const AlwaysStoppedAnimation(false)
-                                : appState.typing.board.of(
-                                    appState.typingKey(c.haloId),
-                                  ),
-                            style: typingStyle(size: 12),
-                            child: Text(
-                              // a room link is an invitation, not a line of
-                              // two hundred characters
-                              (c.preview ?? '').contains('kryfo://room?')
-                                  ? l10n.homeRoomInvite
-                                  : (c.preview ?? ''),
-                              // unread reads in full colour until it is read
-                              style: HaloType.sans(
-                                size: 12,
-                                color: c.unread > 0
-                                    ? HaloColors.text
-                                    : HaloColors.text2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                        CountBadge(count: c.unread, lead: 8),
-                      ],
-                    ),
-                  ],
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (c.pinned) ...[
+                                Icon(
+                                  Icons.push_pin,
+                                  size: 11,
+                                  color: HaloColors.text3,
+                                ),
+                                const SizedBox(width: 4),
+                              ],
+                              if (c.muted) ...[
+                                Icon(
+                                  Icons.notifications_off_outlined,
+                                  size: 12,
+                                  color: HaloColors.text3,
+                                ),
+                                const SizedBox(width: 4),
+                              ],
+                              // a message still in the outbox says so where the
+                              // time would be, so the row is honest about it
+                              if (!c.blocked &&
+                                  appState.queuedFor(c.haloId) > 0 &&
+                                  (!appState.online || !appState.torReady))
+                                Text(
+                                  l10n.homeQueued,
+                                  style: HaloType.mono(
+                                    size: 10,
+                                    color: HaloColors.text2,
+                                    letter: 0.08,
+                                  ),
+                                )
+                              else
+                                Text(
+                                  (c.blocked
+                                      ? l10n.homeBlocked
+                                      : _relTime(c.when)),
+                                  style: HaloType.mono(
+                                    size: 10.5,
+                                    color: c.unread > 0
+                                        ? HaloColors.amberText
+                                        : HaloColors.text2,
+                                    weight: c.unread > 0
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Expanded(
+                            // "Typing" takes the preview's place while they
+                            // type, over a draft too
+                            child: TypingSwap(
+                              showing: c.blocked
+                                  ? const AlwaysStoppedAnimation(false)
+                                  : appState.typing.board.of(
+                                      appState.typingKey(c.haloId),
+                                    ),
+                              style: typingStyle(size: 12),
+                              child: Text(
+                                // a room link is an invitation, not a line of
+                                // two hundred characters
+                                (c.preview ?? '').contains('kryfo://room?')
+                                    ? l10n.homeRoomInvite
+                                    : (c.preview ?? ''),
+                                // unread reads in full colour until it is read
+                                style: HaloType.sans(
+                                  size: 12,
+                                  color: c.unread > 0
+                                      ? HaloColors.text
+                                      : HaloColors.text2,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          CountBadge(count: c.unread, lead: 8),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

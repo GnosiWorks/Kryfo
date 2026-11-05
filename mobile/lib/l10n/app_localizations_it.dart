@@ -9726,7 +9726,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Vengono mescolati falsi risvegli, così per Google è più difficile capire quando arrivano i messaggi veri. Il nostro relay conserva solo indirizzi che non può collegare tra loro. Il servizio push gira sullo stesso server e potrebbe collegarli, e con l\'aiuto di Google al tuo account Google, quindi potrebbe farlo anche chi gestisce o sequestra il nostro server. Se per te conta, scegli un altro modo. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
+      'Vengono mescolati falsi risvegli, così per Google è più difficile capire quando arrivano i messaggi veri. Il nostro relay conserva solo indirizzi che non può collegare tra loro. Il servizio push gira sul nostro secondo server. I due server insieme potrebbero collegarli, e con l\'aiuto di Google al tuo account Google. Sequestrarne uno solo non basta, ma li gestiamo entrambi, quindi noi potremmo. Se per te conta, scegli un altro modo. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11218,7 +11218,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name deve aggiornare Kryfo per continuare a chattare.';
+    return '$name deve aggiornare Kryfo per continuare a chattare';
   }
 
   @override
@@ -11353,6 +11353,85 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voiceNotNow => 'Non ora';
 
   @override
+  String get unlinkedTitle => 'Questo dispositivo è scollegato';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Il tuo telefono l’ha rimosso dal tuo account, quindi Kryfo ha cancellato tutto ciò che teneva qui.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Non è stato aperto per 30 giorni, quindi Kryfo ha cancellato tutto ciò che teneva qui.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Non ha ricevuto nulla dal tuo telefono per 30 giorni, quindi Kryfo ha cancellato tutto ciò che teneva qui.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Il suo orologio è stato spostato indietro, quindi Kryfo ha cancellato tutto ciò che teneva qui per proteggere le tue chat.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo non è riuscito a capire quando è stato aperto l’ultima volta, quindi ha cancellato tutto ciò che teneva qui per proteggere le tue chat.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'L’hai scollegato, quindi Kryfo ha cancellato tutto ciò che teneva qui.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Il tuo telefono conserva le tue chat. Per usare di nuovo Kryfo qui, collega questo dispositivo al tuo telefono.';
+
+  @override
+  String get unlinkedClose => 'Chiudi Kryfo';
+
+  @override
+  String get devicesLeave => 'Scollega questo dispositivo';
+
+  @override
+  String get devicesLeaveTitle => 'Scollegare questo dispositivo?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo lo dice al tuo telefono e cancella tutto ciò che tiene qui. Il tuo telefono conserva le tue chat.';
+
+  @override
+  String get devicesLeaveYes => 'Scollega e cancella';
+
+  @override
+  String get devicesGoneNotice => 'Dispositivo rimosso';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name è stato rimosso dal tuo account il $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name non è stato usato per 30 giorni, quindi è stato rimosso dal tuo account il $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name si è scollegato da solo il $date e ha cancellato ciò che teneva.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'I tuoi dispositivi sono cambiati';
+
+  @override
+  String get devicesChangedLine =>
+      'Apri Dispositivi collegati per vedere cosa è cambiato.';
+
+  @override
+  String get devicesUnknownNotice => 'Dispositivo collegato altrove';
+
+  @override
+  String get devicesUnknownLine =>
+      'Un’altra copia di Kryfo ha collegato un dispositivo al tuo account. Questo telefono l’ha tolto dalla tua lista.';
+
+  @override
   String get albumPrevious => 'Precedente';
 
   @override
@@ -11407,4 +11486,109 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Invia il bridge a';
+
+  @override
+  String get tipsTitle => 'Sostieni Kryfo';
+
+  @override
+  String get tipsHeadline => 'Mantieni Kryfo *gratis per tutti*';
+
+  @override
+  String get tipsLine =>
+      'Niente pubblicità, niente investitori, niente account. Una mancia aiuta a pagare i server e il lavoro su Kryfo.';
+
+  @override
+  String get tipsLeave => 'Lascia una mancia';
+
+  @override
+  String get tipsYours => 'Tuo';
+
+  @override
+  String get tipsAsking => 'Chiedo i prezzi a Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Una mancia ti dà un badge sostenitore e nient’altro. Tutto in Kryfo resta gratis per tutti, con o senza.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Il pagamento passa da Google Play. Non vediamo mai i dati della tua carta né il tuo nome.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Il badge resta su questo telefono. In Io scegli se mostrarlo e se i tuoi contatti lo vedono.';
+
+  @override
+  String get tipsRestore => 'Recupera il mio badge';
+
+  @override
+  String get tipsRestoreLine =>
+      'Hai già lasciato una mancia? Il tuo badge torna su qualsiasi telefono con lo stesso account Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Il tuo badge sostenitore è tornato',
+      'patron': 'Il tuo badge mecenate è tornato',
+      'guardian': 'Il tuo badge custode è tornato',
+      'other': 'Il tuo badge sostenitore è tornato',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Questo account Google non ha ancora lasciato mance';
+
+  @override
+  String get tipsUnavailable =>
+      'Le mance passano da Google Play. Compaiono qui appena Google Play funziona su questo telefono.';
+
+  @override
+  String get tipsSoon => 'Le mance arrivano qui presto.';
+
+  @override
+  String get tipsPending =>
+      'Google Play sta ancora completando il pagamento. Il badge arriva appena va a buon fine.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play non ha completato il pagamento. Riprova tra un momento.';
+
+  @override
+  String get tipsThanks => 'Grazie';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Ora hai il badge sostenitore. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.',
+      'patron':
+          'Ora hai il badge mecenate. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.',
+      'guardian':
+          'Ora hai il badge custode. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.',
+      'other':
+          'Ora hai il badge sostenitore. Non sblocca nient’altro: tutto in Kryfo resta gratis per tutti.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Grazie per la mancia. Tieni il tuo badge sostenitore, quello più alto.',
+      'patron':
+          'Grazie per la mancia. Tieni il tuo badge mecenate, quello più alto.',
+      'guardian':
+          'Grazie per la mancia. Tieni il tuo badge custode, quello più alto.',
+      'other':
+          'Grazie per la mancia. Tieni il tuo badge sostenitore, quello più alto.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard =>
+      'Lascia una mancia per mantenere Kryfo indipendente';
 }

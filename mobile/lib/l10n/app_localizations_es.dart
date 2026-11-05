@@ -9720,7 +9720,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Se mezclan activaciones falsas, lo que le pone más difícil a Google saber cuándo llegan los mensajes reales. Nuestro repetidor solo guarda direcciones que no puede unir entre sí. El servicio de push funciona en el mismo servidor y podría unirlas, y con ayuda de Google, a tu cuenta de Google, así que quien gestione o incaute nuestro servidor también podría. Si eso te importa, elige otra forma. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
+      'Se mezclan activaciones falsas, lo que le pone más difícil a Google saber cuándo llegan los mensajes reales. Nuestro repetidor solo guarda direcciones que no puede unir entre sí. El servicio de push funciona en nuestro segundo servidor. Los dos servidores juntos podrían unirlas, y con ayuda de Google, a tu cuenta de Google. Incautar uno solo no basta, pero gestionamos los dos, así que nosotros podríamos. Si eso te importa, elige otra forma. Los chats ocultos, las salas después de las primeras y, de vez en cuando, un contacto normal, más o menos un mes de cada cinco, esperan a la consulta que Kryfo sigue haciendo cada 15 minutos.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11210,7 +11210,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name tiene que actualizar Kryfo para seguir chateando.';
+    return '$name tiene que actualizar Kryfo para seguir chateando';
   }
 
   @override
@@ -11345,6 +11345,85 @@ class AppLocalizationsEs extends AppLocalizations {
   String get voiceNotNow => 'Ahora no';
 
   @override
+  String get unlinkedTitle => 'Este dispositivo está desvinculado';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Tu teléfono lo quitó de tu cuenta, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'No se abrió en 30 días, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'No supo nada de tu teléfono en 30 días, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Su reloj se atrasó, así que Kryfo borró todo lo que guardaba aquí para proteger tus chats.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo no pudo saber cuándo se abrió por última vez, así que borró todo lo que guardaba aquí para proteger tus chats.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Lo desvinculaste, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Tu teléfono conserva tus chats. Para volver a usar Kryfo aquí, vincula este dispositivo a tu teléfono.';
+
+  @override
+  String get unlinkedClose => 'Cerrar Kryfo';
+
+  @override
+  String get devicesLeave => 'Desvincular este dispositivo';
+
+  @override
+  String get devicesLeaveTitle => '¿Desvincular este dispositivo?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo avisa a tu teléfono y borra todo lo que guarda aquí. Tu teléfono conserva tus chats.';
+
+  @override
+  String get devicesLeaveYes => 'Desvincular y borrar';
+
+  @override
+  String get devicesGoneNotice => 'Dispositivo quitado';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name se quitó de tu cuenta el $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name no se usó en 30 días, así que se quitó de tu cuenta el $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name se desvinculó solo el $date y borró lo que guardaba.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Tus dispositivos cambiaron';
+
+  @override
+  String get devicesChangedLine =>
+      'Abre Dispositivos vinculados para ver qué cambió.';
+
+  @override
+  String get devicesUnknownNotice => 'Dispositivo vinculado en otro lugar';
+
+  @override
+  String get devicesUnknownLine =>
+      'Otra copia de Kryfo vinculó un dispositivo a tu cuenta. Este teléfono lo quitó de tu lista.';
+
+  @override
   String get albumPrevious => 'Anterior';
 
   @override
@@ -11400,4 +11479,109 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Enviar el puente a';
+
+  @override
+  String get tipsTitle => 'Apoyar Kryfo';
+
+  @override
+  String get tipsHeadline => 'Mantén Kryfo *gratis para todos*';
+
+  @override
+  String get tipsLine =>
+      'Sin anuncios, sin inversores, sin cuentas. Una propina ayuda a pagar los servidores y el trabajo en Kryfo.';
+
+  @override
+  String get tipsLeave => 'Dar una propina';
+
+  @override
+  String get tipsYours => 'Tuya';
+
+  @override
+  String get tipsAsking => 'Pidiendo los precios a Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Una propina te da una insignia de colaborador y nada más. Todo en Kryfo sigue gratis para todo el mundo, con propina o sin ella.';
+
+  @override
+  String get tipsThroughPlay =>
+      'El pago pasa por Google Play. Nunca vemos los datos de tu tarjeta ni tu nombre.';
+
+  @override
+  String get tipsBadgeStays =>
+      'La insignia vive en este teléfono. En Yo eliges si se muestra y si tus contactos la ven.';
+
+  @override
+  String get tipsRestore => 'Recuperar mi insignia';
+
+  @override
+  String get tipsRestoreLine =>
+      '¿Ya diste una propina? Tu insignia vuelve en cualquier teléfono con la misma cuenta de Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Tu insignia de colaborador ha vuelto',
+      'patron': 'Tu insignia de mecenas ha vuelto',
+      'guardian': 'Tu insignia de guardián ha vuelto',
+      'other': 'Tu insignia de colaborador ha vuelto',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Esta cuenta de Google aún no tiene ninguna propina';
+
+  @override
+  String get tipsUnavailable =>
+      'Las propinas pasan por Google Play. Aparecen aquí en cuanto Google Play funcione en este teléfono.';
+
+  @override
+  String get tipsSoon => 'Las propinas llegan aquí pronto.';
+
+  @override
+  String get tipsPending =>
+      'Google Play aún está terminando tu pago. Tu insignia llega en cuanto se complete.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play no terminó el pago. Vuelve a intentarlo en un momento.';
+
+  @override
+  String get tipsThanks => 'Gracias';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Ya tienes la insignia de colaborador. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.',
+      'patron':
+          'Ya tienes la insignia de mecenas. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.',
+      'guardian':
+          'Ya tienes la insignia de guardián. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.',
+      'other':
+          'Ya tienes la insignia de colaborador. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Gracias por la propina. Conservas tu insignia de colaborador, la más alta.',
+      'patron':
+          'Gracias por la propina. Conservas tu insignia de mecenas, la más alta.',
+      'guardian':
+          'Gracias por la propina. Conservas tu insignia de guardián, la más alta.',
+      'other':
+          'Gracias por la propina. Conservas tu insignia de colaborador, la más alta.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard =>
+      'Da una propina para que Kryfo siga siendo independiente';
 }

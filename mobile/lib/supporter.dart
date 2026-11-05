@@ -304,3 +304,16 @@ Future<SupporterTier> grantReceipt(
   }
   return t;
 }
+
+/// grants a tier this phone was given without a receipt to keep, a tip on
+/// google play. a lower one never replaces a higher badge. returns the badge
+/// the phone wears after it
+Future<SupporterTier> grantTier(
+  SupporterTier t, [
+  HaloContainer c = HaloContainer.everyday,
+]) async {
+  final held = await loadSupporterTier(c);
+  if (t == SupporterTier.none || held.index >= t.index) return held;
+  await saveSupporterTier(t, c);
+  return t;
+}

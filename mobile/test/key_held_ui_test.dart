@@ -134,6 +134,32 @@ void main() {
     await _close(t);
   });
 
+  testWidgets('the notice on their page crosses as it comes and goes, '
+      'at once with less motion', (t) async {
+    for (final still in [false, true]) {
+      final db = await _held(t);
+      await t.pumpWidget(
+        app(
+          const ContactScreen(haloId: _peer, avatarSeed: _peer, peerXPub: ''),
+          still: still,
+        ),
+      );
+      await t.pump(const Duration(seconds: 1));
+      final card = find.byKey(const ValueKey('held_key'));
+      expect(card, findsOneWidget);
+      expect(
+        find.ancestor(of: card, matching: find.byType(AnimatedSwitcher)),
+        findsWidgets,
+      );
+      final sw = t.widget<AnimatedSwitcher>(
+        find.ancestor(of: card, matching: find.byType(AnimatedSwitcher)).first,
+      );
+      expect(sw.duration, still ? Duration.zero : isNot(Duration.zero));
+      await db.acceptNewKey(_peer);
+      await _close(t);
+    }
+  });
+
   testWidgets('one not held carries none of it', (t) async {
     final db = await _held(t);
     await db.acceptNewKey(_peer);

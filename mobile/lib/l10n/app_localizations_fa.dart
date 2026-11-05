@@ -9656,7 +9656,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای گوگل سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. رله‌ی ما فقط نشانی‌هایی را نگه می‌دارد که نمی‌تواند به هم ربط دهد. سرویس اعلان فوری روی همان سرور اجرا می‌شود و می‌تواند آن‌ها را به هم ربط دهد، و با کمک گوگل به حساب گوگل شما هم، پس هر کسی که سرور ما را اداره یا توقیف کند هم می‌تواند. اگر این برایتان مهم است، راه دیگری انتخاب کنید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
+      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای گوگل سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. رله‌ی ما فقط نشانی‌هایی را نگه می‌دارد که نمی‌تواند به هم ربط دهد. سرویس اعلان فوری روی سرور دوم ما اجرا می‌شود. این دو سرور با هم می‌توانند آن‌ها را به هم ربط دهند، و با کمک گوگل به حساب گوگل شما هم. توقیف یکی از آن‌ها کافی نیست، اما هر دو را ما اداره می‌کنیم، پس ما می‌توانیم. اگر این برایتان مهم است، راه دیگری انتخاب کنید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11146,7 +11146,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند.';
+    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند';
   }
 
   @override
@@ -11275,6 +11275,85 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceNotNow => 'فعلاً نه';
 
   @override
+  String get unlinkedTitle => 'این دستگاه جدا شد';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'گوشی‌تان آن را از حساب‌تان حذف کرد، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      '۳۰ روز باز نشد، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedSilentLine =>
+      '۳۰ روز هیچ خبری از گوشی‌تان نگرفت، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedClockLine =>
+      'ساعتش به عقب برگردانده شد، پس Kryfo برای امن ماندن گفت‌وگوهایتان هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo نتوانست بفهمد آخرین بار کی باز شده، پس برای امن ماندن گفت‌وگوهایتان هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'خودتان جدایش کردید، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'گفت‌وگوهایتان روی گوشی‌تان می‌ماند. برای استفادهٔ دوباره از Kryfo اینجا، این دستگاه را به گوشی‌تان پیوند دهید.';
+
+  @override
+  String get unlinkedClose => 'بستن Kryfo';
+
+  @override
+  String get devicesLeave => 'جدا کردن این دستگاه';
+
+  @override
+  String get devicesLeaveTitle => 'این دستگاه جدا شود؟';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo به گوشی‌تان خبر می‌دهد و هر چه اینجا نگه داشته پاک می‌کند. گفت‌وگوهایتان روی گوشی‌تان می‌ماند.';
+
+  @override
+  String get devicesLeaveYes => 'جدا کن و پاک کن';
+
+  @override
+  String get devicesGoneNotice => 'دستگاه حذف شد';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '⁨$name⁩ در ⁨$date⁩ از حساب‌تان حذف شد.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '⁨$name⁩ ۳۰ روز استفاده نشد، پس در ⁨$date⁩ از حساب‌تان حذف شد.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '⁨$name⁩ در ⁨$date⁩ خودش جدا شد و هر چه نگه داشته بود پاک کرد.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'دستگاه‌هایتان تغییر کرد';
+
+  @override
+  String get devicesChangedLine =>
+      'برای دیدن تغییرها دستگاه‌های پیوندخورده را باز کنید.';
+
+  @override
+  String get devicesUnknownNotice => 'دستگاهی که جای دیگری پیوند خورد';
+
+  @override
+  String get devicesUnknownLine =>
+      'نسخهٔ دیگری از Kryfo دستگاهی را به حساب‌تان پیوند داد. این گوشی آن را از فهرست‌تان برداشت.';
+
+  @override
   String get albumPrevious => 'قبلی';
 
   @override
@@ -11329,4 +11408,103 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'فرستادن پل به';
+
+  @override
+  String get tipsTitle => 'حمایت از Kryfo';
+
+  @override
+  String get tipsHeadline => 'Kryfo را *برای همه رایگان* نگه دارید';
+
+  @override
+  String get tipsLine =>
+      'بدون تبلیغ، بدون سرمایه‌گذار، بدون حساب کاربری. انعام به پرداخت هزینه‌ی سرورها و کار روی Kryfo کمک می‌کند.';
+
+  @override
+  String get tipsLeave => 'انعام بدهید';
+
+  @override
+  String get tipsYours => 'مال شما';
+
+  @override
+  String get tipsAsking => 'در حال پرسیدن قیمت‌ها از Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'انعام فقط یک نشان هوادار به شما می‌دهد و هیچ چیز دیگری. همه‌چیزِ Kryfo برای همه رایگان می‌ماند، با انعام یا بی انعام.';
+
+  @override
+  String get tipsThroughPlay =>
+      'پرداخت از طریق Google Play انجام می‌شود. ما هرگز اطلاعات کارت یا نام شما را نمی‌بینیم.';
+
+  @override
+  String get tipsBadgeStays =>
+      'نشان روی همین گوشی می‌ماند. در «من» انتخاب می‌کنید که نمایش داده شود یا نه و مخاطبانتان آن را ببینند یا نه.';
+
+  @override
+  String get tipsRestore => 'بازگرداندن نشانم';
+
+  @override
+  String get tipsRestoreLine =>
+      'قبلاً انعام داده‌اید؟ نشانتان روی هر گوشی‌ای که با همان حساب Google وارد شده باشد برمی‌گردد.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'نشان هوادار شما برگشت',
+      'patron': 'نشان حامی شما برگشت',
+      'guardian': 'نشان نگهبان شما برگشت',
+      'other': 'نشان هوادار شما برگشت',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => 'این حساب Google هنوز انعامی نداده است';
+
+  @override
+  String get tipsUnavailable =>
+      'انعام‌ها از طریق Google Play انجام می‌شوند. به محض اینکه Google Play روی این گوشی کار کند، اینجا نمایش داده می‌شوند.';
+
+  @override
+  String get tipsSoon => 'انعام‌ها به‌زودی اینجا باز می‌شوند.';
+
+  @override
+  String get tipsPending =>
+      'Google Play هنوز در حال تکمیل پرداخت شماست. نشانتان به محض انجام پرداخت می‌رسد.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play پرداخت را تمام نکرد. کمی بعد دوباره امتحان کنید.';
+
+  @override
+  String get tipsThanks => 'ممنونیم';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'حالا نشان هوادار را دارید. چیز دیگری باز نمی‌کند: همه‌چیزِ Kryfo برای همه رایگان می‌ماند.',
+      'patron':
+          'حالا نشان حامی را دارید. چیز دیگری باز نمی‌کند: همه‌چیزِ Kryfo برای همه رایگان می‌ماند.',
+      'guardian':
+          'حالا نشان نگهبان را دارید. چیز دیگری باز نمی‌کند: همه‌چیزِ Kryfo برای همه رایگان می‌ماند.',
+      'other':
+          'حالا نشان هوادار را دارید. چیز دیگری باز نمی‌کند: همه‌چیزِ Kryfo برای همه رایگان می‌ماند.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'ممنون بابت انعام. نشان هوادار شما که بالاتر است می‌ماند.',
+      'patron': 'ممنون بابت انعام. نشان حامی شما که بالاتر است می‌ماند.',
+      'guardian': 'ممنون بابت انعام. نشان نگهبان شما که بالاتر است می‌ماند.',
+      'other': 'ممنون بابت انعام. نشان هوادار شما که بالاتر است می‌ماند.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'انعام بدهید تا Kryfo مستقل بماند';
 }

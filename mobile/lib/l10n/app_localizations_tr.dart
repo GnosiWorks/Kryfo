@@ -9675,7 +9675,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti aynı sunucuda çalışır ve onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir; yani sunucumuzu işleten ya da ona el koyan da bağlayabilir. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti ikinci sunucumuzda çalışır. İki sunucu birlikte onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir. Birine el koymak yetmez, ama ikisini de biz işletiyoruz, yani biz bağlayabiliriz. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11161,7 +11161,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return 'Sohbete devam etmek için $name kişisinin Kryfo’yu güncellemesi gerekiyor.';
+    return 'Sohbete devam etmek için $name kişisinin Kryfo’yu güncellemesi gerekiyor';
   }
 
   @override
@@ -11289,6 +11289,85 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceNotNow => 'Şimdi değil';
 
   @override
+  String get unlinkedTitle => 'Bu cihazın bağlantısı kesildi';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Telefonun onu hesabından kaldırdı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      '30 gün boyunca açılmadı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedSilentLine =>
+      '30 gün boyunca telefonundan hiçbir şey almadı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Saati geri alındı, bu yüzden Kryfo sohbetlerini korumak için burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo en son ne zaman açıldığını anlayamadı, bu yüzden sohbetlerini korumak için burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Bağlantısını sen kestin, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Sohbetlerin telefonunda kalır. Kryfo’yu burada yeniden kullanmak için bu cihazı telefonuna bağla.';
+
+  @override
+  String get unlinkedClose => 'Kryfo’yu kapat';
+
+  @override
+  String get devicesLeave => 'Bu cihazın bağlantısını kes';
+
+  @override
+  String get devicesLeaveTitle => 'Bu cihazın bağlantısı kesilsin mi?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo telefonuna haber verir ve burada tuttuğu her şeyi siler. Sohbetlerin telefonunda kalır.';
+
+  @override
+  String get devicesLeaveYes => 'Bağlantıyı kes ve sil';
+
+  @override
+  String get devicesGoneNotice => 'Cihaz kaldırıldı';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name $date tarihinde hesabından kaldırıldı.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 gün kullanılmadı, bu yüzden $date tarihinde hesabından kaldırıldı.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name $date tarihinde bağlantısını kendisi kesti ve tuttuklarını sildi.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Cihazların değişti';
+
+  @override
+  String get devicesChangedLine =>
+      'Neyin değiştiğini görmek için Bağlı cihazlar’ı aç.';
+
+  @override
+  String get devicesUnknownNotice => 'Başka yerde bağlanan cihaz';
+
+  @override
+  String get devicesUnknownLine =>
+      'Kryfo’nun başka bir kopyası hesabına bir cihaz bağladı. Bu telefon onu listenden çıkardı.';
+
+  @override
   String get albumPrevious => 'Önceki';
 
   @override
@@ -11343,4 +11422,107 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Köprüyü gönder';
+
+  @override
+  String get tipsTitle => 'Kryfo’yu destekle';
+
+  @override
+  String get tipsHeadline => 'Kryfo *herkes için ücretsiz* kalsın';
+
+  @override
+  String get tipsLine =>
+      'Reklam yok, yatırımcı yok, hesap yok. Bahşiş, sunucuların ve Kryfo üzerindeki emeğin ödenmesine yardım eder.';
+
+  @override
+  String get tipsLeave => 'Bahşiş bırak';
+
+  @override
+  String get tipsYours => 'Senin';
+
+  @override
+  String get tipsAsking => 'Fiyatlar Google Play’den alınıyor';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Bahşiş sana bir destekçi rozeti verir, başka hiçbir şey vermez. Kryfo’daki her şey, bahşişle ya da bahşişsiz, herkes için ücretsiz kalır.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Ödeme Google Play üzerinden yapılır. Kart bilgilerini de adını da asla görmeyiz.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Rozet bu telefonda durur. Ben bölümünde görünüp görünmeyeceğini ve kişilerinin görüp görmeyeceğini sen seçersin.';
+
+  @override
+  String get tipsRestore => 'Rozetimi geri getir';
+
+  @override
+  String get tipsRestoreLine =>
+      'Daha önce bahşiş bıraktın mı? Rozetin aynı Google hesabıyla oturum açılmış her telefona geri gelir.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Destekçi rozetin geri geldi',
+      'patron': 'Hami rozetin geri geldi',
+      'guardian': 'Koruyucu rozetin geri geldi',
+      'other': 'Destekçi rozetin geri geldi',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => 'Bu Google hesabından henüz bahşiş yok';
+
+  @override
+  String get tipsUnavailable =>
+      'Bahşişler Google Play üzerinden yapılır. Google Play bu telefonda çalışır çalışmaz burada görünürler.';
+
+  @override
+  String get tipsSoon => 'Bahşişler yakında burada.';
+
+  @override
+  String get tipsPending =>
+      'Google Play ödemeni hâlâ tamamlıyor. Rozetin, ödeme geçer geçmez gelir.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play ödemeyi tamamlamadı. Birazdan yeniden dene.';
+
+  @override
+  String get tipsThanks => 'Teşekkürler';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Artık destekçi rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.',
+      'patron':
+          'Artık hami rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.',
+      'guardian':
+          'Artık koruyucu rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.',
+      'other':
+          'Artık destekçi rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Bahşiş için teşekkürler. Daha yüksek olan destekçi rozetin sende kalır.',
+      'patron':
+          'Bahşiş için teşekkürler. Daha yüksek olan hami rozetin sende kalır.',
+      'guardian':
+          'Bahşiş için teşekkürler. Daha yüksek olan koruyucu rozetin sende kalır.',
+      'other':
+          'Bahşiş için teşekkürler. Daha yüksek olan destekçi rozetin sende kalır.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Kryfo bağımsız kalsın diye bahşiş bırak';
 }

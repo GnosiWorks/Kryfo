@@ -9748,7 +9748,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais ne garde que des adresses qu’il ne peut pas relier entre elles. Le service de push tourne sur le même serveur et pourrait les relier, et avec l’aide de Google à votre compte Google, donc celui qui gère ou saisit notre serveur le pourrait aussi. Si cela compte pour vous, choisissez un autre moyen. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
+      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais ne garde que des adresses qu’il ne peut pas relier entre elles. Le service de push tourne sur notre second serveur. Les deux serveurs ensemble pourraient les relier, et avec l’aide de Google à votre compte Google. En saisir un seul ne suffit pas, mais nous gérons les deux, donc nous le pourrions. Si cela compte pour vous, choisissez un autre moyen. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11249,7 +11249,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name doit mettre à jour Kryfo pour continuer à discuter.';
+    return '$name doit mettre à jour Kryfo pour continuer à discuter';
   }
 
   @override
@@ -11384,6 +11384,85 @@ class AppLocalizationsFr extends AppLocalizations {
   String get voiceNotNow => 'Pas maintenant';
 
   @override
+  String get unlinkedTitle => 'Cet appareil est dissocié';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Votre téléphone l’a retiré de votre compte, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Il n’a pas été ouvert pendant 30 jours, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Il n’a rien reçu de votre téléphone pendant 30 jours, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Son horloge a été reculée, donc Kryfo a effacé tout ce qu’il gardait ici pour protéger vos discussions.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo n’a pas pu savoir quand il a été ouvert pour la dernière fois, donc il a effacé tout ce qu’il gardait ici pour protéger vos discussions.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Vous l’avez dissocié, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Votre téléphone garde vos discussions. Pour réutiliser Kryfo ici, associez cet appareil à votre téléphone.';
+
+  @override
+  String get unlinkedClose => 'Fermer Kryfo';
+
+  @override
+  String get devicesLeave => 'Dissocier cet appareil';
+
+  @override
+  String get devicesLeaveTitle => 'Dissocier cet appareil ?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo prévient votre téléphone et efface tout ce qu’il garde ici. Votre téléphone garde vos discussions.';
+
+  @override
+  String get devicesLeaveYes => 'Dissocier et effacer';
+
+  @override
+  String get devicesGoneNotice => 'Appareil retiré';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name a été retiré de votre compte le $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name n’a pas été utilisé pendant 30 jours, donc il a été retiré de votre compte le $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name s’est dissocié tout seul le $date et a effacé ce qu’il gardait.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Vos appareils ont changé';
+
+  @override
+  String get devicesChangedLine =>
+      'Ouvrez Appareils associés pour voir ce qui a changé.';
+
+  @override
+  String get devicesUnknownNotice => 'Appareil associé ailleurs';
+
+  @override
+  String get devicesUnknownLine =>
+      'Une autre copie de Kryfo a associé un appareil à votre compte. Ce téléphone l’a retiré de votre liste.';
+
+  @override
   String get albumPrevious => 'Précédent';
 
   @override
@@ -11439,4 +11518,109 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Envoyer le pont à';
+
+  @override
+  String get tipsTitle => 'Soutenir Kryfo';
+
+  @override
+  String get tipsHeadline => 'Gardez Kryfo *gratuit pour tous*';
+
+  @override
+  String get tipsLine =>
+      'Pas de pub, pas d’investisseurs, pas de comptes. Un pourboire aide à payer les serveurs et le travail sur Kryfo.';
+
+  @override
+  String get tipsLeave => 'Laisser un pourboire';
+
+  @override
+  String get tipsYours => 'À vous';
+
+  @override
+  String get tipsAsking => 'Demande des prix à Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Un pourboire vous donne un badge de soutien, et rien d’autre. Tout dans Kryfo reste gratuit pour tout le monde, avec ou sans.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Le paiement passe par Google Play. Nous ne voyons jamais les données de votre carte ni votre nom.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Le badge reste sur ce téléphone. Dans Moi, vous choisissez s’il s’affiche et si vos contacts le voient.';
+
+  @override
+  String get tipsRestore => 'Récupérer mon badge';
+
+  @override
+  String get tipsRestoreLine =>
+      'Déjà laissé un pourboire ? Votre badge revient sur tout téléphone connecté au même compte Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Votre badge de soutien est de retour',
+      'patron': 'Votre badge de mécène est de retour',
+      'guardian': 'Votre badge de gardien est de retour',
+      'other': 'Votre badge de soutien est de retour',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Ce compte Google n’a encore laissé aucun pourboire';
+
+  @override
+  String get tipsUnavailable =>
+      'Les pourboires passent par Google Play. Ils s’affichent ici dès que Google Play fonctionne sur ce téléphone.';
+
+  @override
+  String get tipsSoon => 'Les pourboires arrivent ici bientôt.';
+
+  @override
+  String get tipsPending =>
+      'Google Play termine encore votre paiement. Votre badge arrive dès qu’il est passé.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play n’a pas terminé le paiement. Réessayez dans un instant.';
+
+  @override
+  String get tipsThanks => 'Merci';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Vous avez maintenant le badge de soutien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.',
+      'patron':
+          'Vous avez maintenant le badge de mécène. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.',
+      'guardian':
+          'Vous avez maintenant le badge de gardien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.',
+      'other':
+          'Vous avez maintenant le badge de soutien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Merci pour le pourboire. Vous gardez votre badge de soutien, le plus élevé.',
+      'patron':
+          'Merci pour le pourboire. Vous gardez votre badge de mécène, le plus élevé.',
+      'guardian':
+          'Merci pour le pourboire. Vous gardez votre badge de gardien, le plus élevé.',
+      'other':
+          'Merci pour le pourboire. Vous gardez votre badge de soutien, le plus élevé.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard =>
+      'Laissez un pourboire pour garder Kryfo indépendant';
 }

@@ -12104,7 +12104,7 @@
   "@notificationsGoogleNoStart": {
     "description": "toast: no token came from google"
   },
-  "notificationsGoogleNote": "Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, and with Google's help to your Google account, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.",
+  "notificationsGoogleNote": "Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on our second server. The two servers together could link them, and with Google's help to your Google account. Seizing one is not enough, but we run both, so we could. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.",
   "@notificationsGoogleNote": {
     "description": "screens/notifications_screen.dart: note under google push"
   },
@@ -13952,7 +13952,7 @@
   "@chatKeepChatting": {
     "description": "widgets/key_held.dart: the button that ends a heal's hold and keeps the verified mark"
   },
-  "chatNeedsUpdateToChat": "{name} needs to update Kryfo to keep chatting.",
+  "chatNeedsUpdateToChat": "{name} needs to update Kryfo to keep chatting",
   "@chatNeedsUpdateToChat": {
     "description": "screens/chat_screen.dart: the line under a chat with a 0.5.x contact after this phone was restored: what is written waits until they update (Q20)",
     "placeholders": {
@@ -14135,6 +14135,114 @@
   "@voiceNotNow": {
     "description": "closes the model download sheet without downloading"
   },
+  "unlinkedTitle": "This device is unlinked",
+  "@unlinkedTitle": {
+    "description": "screens/unlinked_screen.dart: the title once a linked device unlinked and erased itself"
+  },
+  "unlinkedRemovedLine": "Your phone removed it from your account, so Kryfo erased everything it kept here.",
+  "@unlinkedRemovedLine": {
+    "description": "screens/unlinked_screen.dart: why: the phone removed this device"
+  },
+  "unlinkedUnusedLine": "It wasn't opened for 30 days, so Kryfo erased everything it kept here.",
+  "@unlinkedUnusedLine": {
+    "description": "screens/unlinked_screen.dart: why: not opened for 30 days"
+  },
+  "unlinkedSilentLine": "It heard nothing from your phone for 30 days, so Kryfo erased everything it kept here.",
+  "@unlinkedSilentLine": {
+    "description": "screens/unlinked_screen.dart: why: no word from the phone for 30 days of this device's time online (cut off by a restore, or removed while it was away)"
+  },
+  "unlinkedClockLine": "Its clock was set back, so Kryfo erased everything it kept here to keep your chats safe.",
+  "@unlinkedClockLine": {
+    "description": "screens/unlinked_screen.dart: why: the device clock was set back"
+  },
+  "unlinkedBrokenLine": "Kryfo couldn't tell when it was last opened, so it erased everything it kept here to keep your chats safe.",
+  "@unlinkedBrokenLine": {
+    "description": "screens/unlinked_screen.dart: why: the lock state did not read"
+  },
+  "unlinkedSelfLine": "You unlinked it, so Kryfo erased everything it kept here.",
+  "@unlinkedSelfLine": {
+    "description": "screens/unlinked_screen.dart: why: the person unlinked it on this device"
+  },
+  "unlinkedAgainLine": "Your phone keeps your chats. To use Kryfo here again, link this device to your phone.",
+  "@unlinkedAgainLine": {
+    "description": "screens/unlinked_screen.dart: the chats stay on the phone, and how to use Kryfo here again"
+  },
+  "unlinkedClose": "Close Kryfo",
+  "@unlinkedClose": {
+    "description": "screens/unlinked_screen.dart: the button that closes the app"
+  },
+  "devicesLeave": "Unlink this device",
+  "@devicesLeave": {
+    "description": "screens/linked_devices_screen.dart: the row on a linked device that unlinks it and erases it"
+  },
+  "devicesLeaveTitle": "Unlink this device?",
+  "@devicesLeaveTitle": {
+    "description": "screens/linked_devices_screen.dart: the confirm before a linked device unlinks itself"
+  },
+  "devicesLeaveLine": "Kryfo tells your phone and erases everything it keeps here. Your phone keeps your chats.",
+  "@devicesLeaveLine": {
+    "description": "screens/linked_devices_screen.dart: what unlinking this device does"
+  },
+  "devicesLeaveYes": "Unlink and erase",
+  "@devicesLeaveYes": {
+    "description": "screens/linked_devices_screen.dart: the confirm button"
+  },
+  "devicesGoneNotice": "Device removed",
+  "@devicesGoneNotice": {
+    "description": "screens/home_screen.dart: the card title when one device was removed"
+  },
+  "devicesGoneRemovedLine": "{name} was removed from your account on {date}.",
+  "@devicesGoneRemovedLine": {
+    "description": "screens/home_screen.dart: the card line: the device and the day it was removed",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      },
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesGoneUnusedLine": "{name} wasn't used for 30 days, so it was removed from your account on {date}.",
+  "@devicesGoneUnusedLine": {
+    "description": "screens/home_screen.dart: the card line: the device was not used for 30 days and was removed on that day",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      },
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesGoneItselfLine": "{name} unlinked itself on {date} and erased what it kept.",
+  "@devicesGoneItselfLine": {
+    "description": "screens/home_screen.dart: the card line: the device unlinked itself on that day",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      },
+      "date": {
+        "type": "Object"
+      }
+    }
+  },
+  "devicesChangedNotice": "Your devices changed",
+  "@devicesChangedNotice": {
+    "description": "screens/home_screen.dart: the card title when devices came and went"
+  },
+  "devicesChangedLine": "Open Linked devices to see what changed.",
+  "@devicesChangedLine": {
+    "description": "screens/home_screen.dart: the card line when devices came and went"
+  },
+  "devicesUnknownNotice": "Device linked elsewhere",
+  "@devicesUnknownNotice": {
+    "description": "screens/home_screen.dart: the card title: another copy of the phone linked a device"
+  },
+  "devicesUnknownLine": "Another copy of Kryfo linked a device to your account. This phone took it off your list.",
+  "@devicesUnknownLine": {
+    "description": "screens/home_screen.dart: the card line: another copy of the phone linked a device, and this phone took it off the list"
+  },
   "albumPrevious": "Previous",
   "@albumPrevious": {
     "description": "a computer: the round button at an album's side that goes back one photo or video"
@@ -14207,5 +14315,104 @@
   "bridgesSendBridgeTo": "Send the bridge to",
   "@bridgesSendBridgeTo": {
     "description": "screens/bridge_share_sheet.dart: the title of the chat picker the bridge goes to"
+  },
+  "tipsTitle": "Support Kryfo",
+  "@tipsTitle": {
+    "description": "screens/tip_screen.dart: the play build support tab title and the section on me"
+  },
+  "tipsHeadline": "Keep Kryfo *free for everyone*",
+  "@tipsHeadline": {
+    "description": "screens/tip_screen.dart: the headline, the words between * are amber"
+  },
+  "tipsLine": "No ads, no investors, no accounts. A tip helps pay for the servers and the work on Kryfo.",
+  "@tipsLine": {
+    "description": "screens/tip_screen.dart: under the headline"
+  },
+  "tipsLeave": "Leave a tip",
+  "@tipsLeave": {
+    "description": "screens/tip_screen.dart: the button that opens google play payment sheet"
+  },
+  "tipsYours": "Yours",
+  "@tipsYours": {
+    "description": "screens/tip_screen.dart: on an amount already bought on this google account"
+  },
+  "tipsAsking": "Asking Google Play for the prices",
+  "@tipsAsking": {
+    "description": "screens/tip_screen.dart: screen reader words while prices load"
+  },
+  "tipsBadgeOnly": "A tip gives you a supporter badge and nothing else. Everything in Kryfo stays free for everyone, with or without one.",
+  "@tipsBadgeOnly": {
+    "description": "screens/tip_screen.dart: what a tip gives"
+  },
+  "tipsThroughPlay": "Payment goes through Google Play. We never see your card details or your name.",
+  "@tipsThroughPlay": {
+    "description": "screens/tip_screen.dart: who handles the payment"
+  },
+  "tipsBadgeStays": "The badge lives on this phone. In Me you choose whether it shows and whether your contacts see it.",
+  "@tipsBadgeStays": {
+    "description": "screens/tip_screen.dart: where the badge lives. Me is the tab name"
+  },
+  "tipsRestore": "Restore my badge",
+  "@tipsRestore": {
+    "description": "screens/tip_screen.dart: the restore row"
+  },
+  "tipsRestoreLine": "Tipped before? Your badge comes back on any phone signed in to the same Google account.",
+  "@tipsRestoreLine": {
+    "description": "screens/tip_screen.dart: under the restore row"
+  },
+  "tipsRestored": "{tier, select, supporter{Your supporter badge is back} patron{Your patron badge is back} guardian{Your guardian badge is back} other{Your supporter badge is back}}",
+  "@tipsRestored": {
+    "description": "screens/tip_screen.dart: toast after a restore. tier is the supporter tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "tipsNothingToRestore": "No tip on this Google account yet",
+  "@tipsNothingToRestore": {
+    "description": "screens/tip_screen.dart: toast when the google account bought nothing"
+  },
+  "tipsUnavailable": "Tips go through Google Play. They show here once Google Play works on this phone.",
+  "@tipsUnavailable": {
+    "description": "screens/tip_screen.dart: when google play billing is not there"
+  },
+  "tipsSoon": "Tips open here soon.",
+  "@tipsSoon": {
+    "description": "screens/tip_screen.dart: when no product is set up yet"
+  },
+  "tipsPending": "Google Play is still finishing your payment. Your badge comes as soon as it goes through.",
+  "@tipsPending": {
+    "description": "screens/tip_screen.dart: a payment google play still holds"
+  },
+  "tipsFailed": "Google Play did not finish the payment. Try again in a moment.",
+  "@tipsFailed": {
+    "description": "screens/tip_screen.dart: toast when the payment did not finish"
+  },
+  "tipsThanks": "Thank you",
+  "@tipsThanks": {
+    "description": "screens/tip_screen.dart: the thank you title"
+  },
+  "tipsGranted": "{tier, select, supporter{You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} patron{You now have the patron badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} guardian{You now have the guardian badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} other{You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.}}",
+  "@tipsGranted": {
+    "description": "screens/tip_screen.dart: under the thank you. tier is the supporter tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "tipsKept": "{tier, select, supporter{Thank you for the tip. You keep your supporter badge, the higher one.} patron{Thank you for the tip. You keep your patron badge, the higher one.} guardian{Thank you for the tip. You keep your guardian badge, the higher one.} other{Thank you for the tip. You keep your supporter badge, the higher one.}}",
+  "@tipsKept": {
+    "description": "screens/tip_screen.dart: under the thank you when a higher badge stays. tier is the higher tier",
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "tipsProfileCard": "Leave a tip to keep Kryfo independent",
+  "@tipsProfileCard": {
+    "description": "screens/profile_screen.dart: the card on me in the play build"
   }
 }

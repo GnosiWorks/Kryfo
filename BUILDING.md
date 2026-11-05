@@ -69,6 +69,51 @@ gradle runs offline. a fresh machine needs one online run first:
 
     cd mobile/android && ./gradlew :app:lintFossDebug
 
+## desktop
+
+both desktop apps start at lib/main_desktop.dart, never at main.dart.
+
+linux, on the machine it runs on (x64 or arm64):
+
+    engine/build-linux.sh
+    mobile/native/kryfo_signal/build-host.sh
+    mobile/linux/build-sqlcipher.sh
+    cd mobile && flutter build linux --release -t lib/main_desktop.dart
+    linux/check-bundle.sh
+
+build-linux.sh writes engine/out/linux-<arch>/libhalo.so, offline from
+vendor/ like build.sh. mobile/linux/engine.cmake links it and the shim into
+the runner and puts both in the bundle's lib/ with the sqlcipher, and a
+release build stops without the sqlcipher. check-bundle.sh checks the
+bundle's libraries and exports. packaging/flatpak takes that bundle as it
+is.
+
+for the tests that need the engine on this computer, `sh
+mobile/tool/host_engine.sh` builds engine/build/host/libhalo.so.
+
+windows, x64 only. the engine and the shim cross-build on linux with
+mingw-w64; the flutter app builds on windows:
+
+    TOR_EXE=<tor.exe> engine/build-windows.sh
+    mobile/native/kryfo_signal/build-windows.sh
+    packaging/windows/stage-tor.sh <tor-expert-bundle.tar.gz>
+    packaging/windows/stage-tor.sh --check-dll engine/out/windows-x64/halo.dll
+    flutter build windows --release -t lib/main_desktop.dart   (in mobile, on windows)
+    iscc packaging\windows\kryfo.iss
+
+go-libtor has no windows build, so halo.dll runs tor\tor.exe next to the
+app. TOR_EXE pins that file's sha256 into halo.dll, which refuses any other
+tor.exe; `HALO_DEV=1` instead makes a dev build that takes any tor.exe, and
+with neither it does not build. the shim needs the x86_64-pc-windows-gnu
+rust target. stage-tor.sh checks the expert bundle and its tor.exe against
+packaging/windows/tor-pin.txt and copies tor.exe, what sits beside it and the
+licences to packaging/build/windows/tor. kryfo.iss makes a per-user
+installer, needs no admin rights, and checks tor.exe against the same pin.
+on release-06 the pins in tor-pin.txt and kryfo.iss are zeros, so a
+release build stops there. the rest of the windows packaging (the real tor
+pins, the sqlcipher, the bundle checks and ci) lives on desktop-windows until
+it merges.
+
 ## test build for blocked networks
 
     cd engine && HALO_TOR_BLOCKED=1 HALO_TEST_ID=1 ./build.sh

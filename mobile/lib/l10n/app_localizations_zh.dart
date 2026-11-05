@@ -9160,7 +9160,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，借助 Google 还能关联到你的 Google 账号，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在我们的第二台服务器上。两台服务器合起来能够把它们关联起来，借助 Google 还能关联到你的 Google 账号。只查扣其中一台做不到，但两台都由我们运营，所以我们能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
   String get notificationsGoogleRefused =>
@@ -10539,7 +10539,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name 需要更新 Kryfo 才能继续聊天。';
+    return '$name 需要更新 Kryfo 才能继续聊天';
   }
 
   @override
@@ -10659,6 +10659,76 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceNotNow => '暂不';
 
   @override
+  String get unlinkedTitle => '这台设备已解除关联';
+
+  @override
+  String get unlinkedRemovedLine => '你的手机已把它从账号中移除，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedUnusedLine => '它 30 天没被打开，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedSilentLine => '它 30 天没有收到你手机的任何消息，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedClockLine => '它的时钟被调回了，所以 Kryfo 为保护你的聊天，抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo 无法得知它上次是何时被打开的，所以为保护你的聊天，抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedSelfLine => '你解除了它的关联，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedAgainLine => '你的聊天仍在手机上。要在这里再次使用 Kryfo，请把这台设备关联到你的手机。';
+
+  @override
+  String get unlinkedClose => '关闭 Kryfo';
+
+  @override
+  String get devicesLeave => '解除这台设备的关联';
+
+  @override
+  String get devicesLeaveTitle => '解除这台设备的关联？';
+
+  @override
+  String get devicesLeaveLine => 'Kryfo 会告诉你的手机，并抹除它在这里保存的一切。你的聊天仍在手机上。';
+
+  @override
+  String get devicesLeaveYes => '解除关联并抹除';
+
+  @override
+  String get devicesGoneNotice => '设备已移除';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name 于 $date 从你的账号中移除。';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 天没有使用，所以于 $date 从你的账号中移除。';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name 于 $date 自己解除了关联，并抹除了上面保存的内容。';
+  }
+
+  @override
+  String get devicesChangedNotice => '你的设备有变化';
+
+  @override
+  String get devicesChangedLine => '打开“已关联的设备”查看变化。';
+
+  @override
+  String get devicesUnknownNotice => '在别处关联的设备';
+
+  @override
+  String get devicesUnknownLine => '另一份 Kryfo 把一台设备关联到了你的账号。这部手机已把它从你的列表中移除。';
+
+  @override
   String get albumPrevious => '上一个';
 
   @override
@@ -10711,6 +10781,94 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => '把网桥发给';
+
+  @override
+  String get tipsTitle => '支持 Kryfo';
+
+  @override
+  String get tipsHeadline => '让 Kryfo *对所有人免费*';
+
+  @override
+  String get tipsLine => '没有广告，没有投资人，没有账号。打赏帮忙支付服务器和 Kryfo 的开发工作。';
+
+  @override
+  String get tipsLeave => '打赏';
+
+  @override
+  String get tipsYours => '已拥有';
+
+  @override
+  String get tipsAsking => '正在向 Google Play 询问价格';
+
+  @override
+  String get tipsBadgeOnly => '打赏会给你一枚支持者徽章，除此之外什么都没有。不管打不打赏，Kryfo 的一切对所有人都免费。';
+
+  @override
+  String get tipsThroughPlay => '付款通过 Google Play 完成。我们永远看不到你的银行卡信息，也看不到你的名字。';
+
+  @override
+  String get tipsBadgeStays => '徽章保存在这部手机上。在“我”里，你可以选择是否显示它，以及联系人能否看到它。';
+
+  @override
+  String get tipsRestore => '恢复我的徽章';
+
+  @override
+  String get tipsRestoreLine => '以前打赏过？在登录同一个 Google 账号的任何手机上，你的徽章都会回来。';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你的支持者徽章回来了',
+      'patron': '你的赞助人徽章回来了',
+      'guardian': '你的守护者徽章回来了',
+      'other': '你的支持者徽章回来了',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => '这个 Google 账号还没有打赏过';
+
+  @override
+  String get tipsUnavailable =>
+      '打赏通过 Google Play 完成。等 Google Play 在这部手机上能用了，打赏就会出现在这里。';
+
+  @override
+  String get tipsSoon => '打赏很快就会在这里开放。';
+
+  @override
+  String get tipsPending => 'Google Play 还在完成你的付款。付款一通过，你的徽章就会到来。';
+
+  @override
+  String get tipsFailed => 'Google Play 没有完成付款。请稍后再试。';
+
+  @override
+  String get tipsThanks => '谢谢你';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你现在有了支持者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。',
+      'patron': '你现在有了赞助人徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。',
+      'guardian': '你现在有了守护者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。',
+      'other': '你现在有了支持者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '谢谢你的打赏。你保留更高的支持者徽章。',
+      'patron': '谢谢你的打赏。你保留更高的赞助人徽章。',
+      'guardian': '谢谢你的打赏。你保留更高的守护者徽章。',
+      'other': '谢谢你的打赏。你保留更高的支持者徽章。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => '打赏一下，让 Kryfo 保持独立';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -19753,7 +19911,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notificationsGoogleNote =>
-      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在我們的第二台伺服器上。兩台伺服器合起來能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號。只查扣其中一台做不到，但兩台都由我們營運，所以我們能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
   String get notificationsGoogleRefused =>
@@ -21134,7 +21292,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name 需要更新 Kryfo 才能繼續聊天。';
+    return '$name 需要更新 Kryfo 才能繼續聊天';
   }
 
   @override
@@ -21254,6 +21412,76 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get voiceNotNow => '以後再說';
 
   @override
+  String get unlinkedTitle => '這台裝置已解除連結';
+
+  @override
+  String get unlinkedRemovedLine => '你的手機已把它從帳號中移除，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedUnusedLine => '它 30 天沒被開啟，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedSilentLine => '它 30 天沒有收到你手機的任何訊息，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedClockLine => '它的時鐘被調回了，所以 Kryfo 為保護你的聊天，抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo 無法得知它上次是何時被開啟的，所以為保護你的聊天，抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedSelfLine => '你解除了它的連結，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedAgainLine => '你的聊天仍在手機上。要在這裡再次使用 Kryfo，請把這台裝置連結到你的手機。';
+
+  @override
+  String get unlinkedClose => '關閉 Kryfo';
+
+  @override
+  String get devicesLeave => '解除這台裝置的連結';
+
+  @override
+  String get devicesLeaveTitle => '解除這台裝置的連結？';
+
+  @override
+  String get devicesLeaveLine => 'Kryfo 會告訴你的手機，並抹除它在這裡保存的一切。你的聊天仍在手機上。';
+
+  @override
+  String get devicesLeaveYes => '解除連結並抹除';
+
+  @override
+  String get devicesGoneNotice => '裝置已移除';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name 於 $date 從你的帳號中移除。';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 天沒有使用，所以於 $date 從你的帳號中移除。';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name 於 $date 自己解除了連結，並抹除了上面保存的內容。';
+  }
+
+  @override
+  String get devicesChangedNotice => '你的裝置有變化';
+
+  @override
+  String get devicesChangedLine => '開啟「已連結的裝置」查看變化。';
+
+  @override
+  String get devicesUnknownNotice => '在別處連結的裝置';
+
+  @override
+  String get devicesUnknownLine => '另一份 Kryfo 把一台裝置連結到了你的帳號。這支手機已把它從你的清單中移除。';
+
+  @override
   String get albumPrevious => '上一個';
 
   @override
@@ -21306,4 +21534,93 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesSendBridgeTo => '把橋接傳給';
+
+  @override
+  String get tipsTitle => '支持 Kryfo';
+
+  @override
+  String get tipsHeadline => '讓 Kryfo *對所有人免費*';
+
+  @override
+  String get tipsLine => '沒有廣告，沒有投資人，沒有帳號。小費幫忙支付伺服器和 Kryfo 的開發工作。';
+
+  @override
+  String get tipsLeave => '給小費';
+
+  @override
+  String get tipsYours => '已擁有';
+
+  @override
+  String get tipsAsking => '正在向 Google Play 詢問價格';
+
+  @override
+  String get tipsBadgeOnly =>
+      '小費會給你一枚支持者徽章，除此之外什麼都沒有。不管給不給小費，Kryfo 的一切對所有人都免費。';
+
+  @override
+  String get tipsThroughPlay => '付款透過 Google Play 完成。我們永遠看不到你的信用卡資料，也看不到你的名字。';
+
+  @override
+  String get tipsBadgeStays => '徽章保存在這支手機上。在「我」裡，你可以選擇是否顯示它，以及聯絡人能否看到它。';
+
+  @override
+  String get tipsRestore => '恢復我的徽章';
+
+  @override
+  String get tipsRestoreLine => '以前給過小費？在登入同一個 Google 帳號的任何手機上，你的徽章都會回來。';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你的支持者徽章回來了',
+      'patron': '你的贊助人徽章回來了',
+      'guardian': '你的守護者徽章回來了',
+      'other': '你的支持者徽章回來了',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => '這個 Google 帳號還沒有給過小費';
+
+  @override
+  String get tipsUnavailable =>
+      '小費透過 Google Play 完成。等 Google Play 在這支手機上能用了，小費就會出現在這裡。';
+
+  @override
+  String get tipsSoon => '小費很快就會在這裡開放。';
+
+  @override
+  String get tipsPending => 'Google Play 還在完成你的付款。付款一通過，你的徽章就會到來。';
+
+  @override
+  String get tipsFailed => 'Google Play 沒有完成付款。請稍後再試。';
+
+  @override
+  String get tipsThanks => '謝謝你';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你現在有了支持者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。',
+      'patron': '你現在有了贊助人徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。',
+      'guardian': '你現在有了守護者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。',
+      'other': '你現在有了支持者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '謝謝你的小費。你保留更高的支持者徽章。',
+      'patron': '謝謝你的小費。你保留更高的贊助人徽章。',
+      'guardian': '謝謝你的小費。你保留更高的守護者徽章。',
+      'other': '謝謝你的小費。你保留更高的支持者徽章。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => '給點小費，讓 Kryfo 保持獨立';
 }
