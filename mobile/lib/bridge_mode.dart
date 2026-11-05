@@ -42,8 +42,6 @@ class BridgeSetup {
   final String consent;
   // tor is risky here: automatic never tries it without a bridge
   final bool skipDirect;
-  // two letters for the tor project, empty lets it guess
-  final String country;
   // an upgrade from before automatic: offer it once
   final bool offerAuto;
 
@@ -53,7 +51,6 @@ class BridgeSetup {
     this.torProjectLines = '',
     this.consent = 'ask',
     this.skipDirect = false,
-    this.country = '',
     this.offerAuto = false,
   });
 
@@ -63,7 +60,6 @@ class BridgeSetup {
     String? torProjectLines,
     String? consent,
     bool? skipDirect,
-    String? country,
     bool? offerAuto,
   }) => BridgeSetup(
     choice: choice ?? this.choice,
@@ -71,7 +67,6 @@ class BridgeSetup {
     torProjectLines: torProjectLines ?? this.torProjectLines,
     consent: consent ?? this.consent,
     skipDirect: skipDirect ?? this.skipDirect,
-    country: country ?? this.country,
     offerAuto: offerAuto ?? this.offerAuto,
   );
 
@@ -92,7 +87,6 @@ class BridgeSetup {
           jsonEncode({
             'consent': consent,
             if (skipDirect) 'skip_direct': true,
-            if (country.isNotEmpty) 'country': country,
             if (wt.isNotEmpty) 'webtunnel': wt,
           }),
         );
@@ -612,18 +606,3 @@ class FriendLines {
   int get broken => used ? checks.where((c) => c.broken).length : total;
   bool get tooLong => checks.any((c) => c.broken && c.tooLong);
 }
-
-/// the countries the tor project has its own advice for
-const kBridgeCountries = ['by', 'cn', 'eg', 'hk', 'ir', 'mm', 'ru', 'tm'];
-
-String bridgeCountryName(String cc) => switch (cc) {
-  'by' => l10n.bridgesBelarus,
-  'cn' => l10n.bridgesChina,
-  'eg' => l10n.bridgesEgypt,
-  'hk' => l10n.bridgesHongKong,
-  'ir' => l10n.bridgesIran,
-  'mm' => l10n.bridgesMyanmar,
-  'ru' => l10n.bridgesRussia,
-  'tm' => l10n.bridgesTurkmenistan,
-  _ => cc.toUpperCase(),
-};

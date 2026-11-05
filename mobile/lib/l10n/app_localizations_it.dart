@@ -1252,9 +1252,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Quando chiedi dei bridge, il Progetto Tor vede il tuo indirizzo IP. È normale: è così che Tor Browser e ogni app Tor ottengono i bridge, e tutto ciò che ne ricavano è che qualcuno ha chiesto dei bridge. Niente sulle tue chat.';
 
   @override
-  String get bridgesAsking => 'Richiesta…';
-
-  @override
   String get cameraNoCameraOnThis => 'Questo telefono non ha fotocamera';
 
   @override
@@ -7281,9 +7278,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get transportBridgeMode => 'Bridge';
 
   @override
-  String get bridgesEgypt => 'Egitto';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Il tuo bridge non è partito';
 
   @override
@@ -7328,9 +7322,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Iran';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Attiva Automatico';
 
   @override
@@ -7362,9 +7353,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesScanACode => 'Scansiona un codice';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Passa ad Automatico';
 
   @override
@@ -7387,9 +7375,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Passa dal computer di un volontario. Difficile da bloccare, lento ad avviarsi.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Lascia indovinare il Progetto Tor';
 
   @override
   String get bridgesTorSeemsBlocked => 'Tor sembra bloccato su questa rete';
@@ -7420,10 +7405,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Kryfo trova una strada che funziona dove ti trovi.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Il Progetto Tor ha consigli specifici per questi paesi.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting =>
       'Questo bridge non riesce a passare';
 
@@ -7436,9 +7417,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Non ora';
-
-  @override
-  String get bridgesRussia => 'Russia';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7464,9 +7442,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesAlmostThere => 'Ci siamo quasi';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Ipotesi del Progetto Tor';
-
-  @override
   String get bridgesUseThisBridge => 'Usa questo bridge';
 
   @override
@@ -7482,9 +7457,6 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
   String get transportBridgeMethod => 'Metodo';
@@ -7511,11 +7483,12 @@ class AppLocalizationsIt extends AppLocalizations {
       'I bridge possono smettere di funzionare senza preavviso. Automatico può trovare un\'altra strada.';
 
   @override
-  String get bridgesHongKong => 'Hong Kong';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Quando Tor è bloccato, Automatico chiede al Progetto Tor cosa funziona nel tuo paese.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo sceglie i bridge in automatico. Snowflake e WebTunnel funzionano quasi ovunque. Se uno non si connette, provane un altro o chiedi una riga bridge a un amico.';
 
   @override
   String get bridgesAskTorProject => 'Chiedi al Progetto Tor';
@@ -7524,18 +7497,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesTooLongForTor => 'Troppo lunga per Tor';
 
   @override
-  String get bridgesCountry => 'Paese';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Cina';
-
-  @override
-  String get bridgesBelarus => 'Bielorussia';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo non può usare questa riga';
@@ -9187,9 +9151,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mediaSendVideo => 'Invia video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Finché non accetta, ne possono partire $count';
-  }
+  String get requestSenderMediaLater =>
+      'Foto e file si sbloccano quando ti accetta, per la sicurezza di entrambi.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Foto e file si sbloccano quando lo accetti, per la tua sicurezza.';
 
   @override
   String get groupEndedYou => 'Hai chiuso questo gruppo';

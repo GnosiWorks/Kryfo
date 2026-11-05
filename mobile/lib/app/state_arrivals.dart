@@ -936,6 +936,18 @@ extension AppStateArrivals on AppState {
         firstFails.note('pow');
         throw const _NoProof();
       }
+      // a stranger's photos and files wait on the shelf until the accept,
+      // from any version. none of them counts toward the two
+      if (strangerMediaWaits(
+        env,
+        accepted: false,
+        vouched: vouched,
+        support: support.on,
+        dev: isDevChat(senderHaloId),
+      )) {
+        dlog('stranger: a file held until accepted');
+        throw _HeldIn(db);
+      }
       // 2-message cap: a stranger gets 2 into requests, then the chat is locked
       // until we accept them. past the cap there is no receipt. a file still
       // in slices counts as one of the two, and its own slices come in

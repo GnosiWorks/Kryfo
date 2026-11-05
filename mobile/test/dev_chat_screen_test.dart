@@ -1589,6 +1589,8 @@ void main() {
             'first_seen': 1,
             'last_seen': 1,
             'accepted': 1,
+            // a friend: a request to a stranger takes no voice note
+            'back_paired': 1,
           });
           final vault = _VaultDb(vaultMem, HaloContainer.decoyVault);
           useDatabasesForTest(live, await Session.withVault(decoy, vault));

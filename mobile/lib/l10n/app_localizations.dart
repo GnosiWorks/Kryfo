@@ -1969,12 +1969,6 @@ abstract class AppLocalizations {
   /// **'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.'**
   String get bridgesWhenYouAskFor;
 
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Asking…'**
-  String get bridgesAsking;
-
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
@@ -11566,12 +11560,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Egypt'**
-  String get bridgesEgypt;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Your bridge couldn\'t start'**
   String get bridgesYourBridgeCouldNot;
 
@@ -11650,12 +11638,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Iran'**
-  String get bridgesIran;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Turn on automatic'**
   String get bridgesTurnOnAutomatic;
 
@@ -11710,12 +11692,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Myanmar'**
-  String get bridgesMyanmar;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Switch to automatic'**
   String get bridgesSwitchToAutomatic;
 
@@ -11758,12 +11734,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Let the Tor Project guess'**
-  String get bridgesLetTheTorProject;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Tor seems blocked on this network'**
   String get bridgesTorSeemsBlocked;
 
@@ -11794,12 +11764,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The Tor Project has its own advice for these countries.'**
-  String get bridgesTheTorProjectKnows;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'This bridge isn\'t getting through'**
   String get bridgesThisBridgeIsnTGetting;
 
@@ -11820,12 +11784,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get bridgesNotNow;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Russia'**
-  String get bridgesRussia;
 
   /// screens/bridges_screen.dart
   ///
@@ -11869,12 +11827,6 @@ abstract class AppLocalizations {
   /// **'Almost there'**
   String get bridgesAlmostThere;
 
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The Tor Project\'s guess'**
-  String get bridgesTheTorProjectSGuess;
-
   /// screens/bridge_sheets.dart: the button when one bridge line is pasted or scanned
   ///
   /// In en, this message translates to:
@@ -11886,12 +11838,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, other{Use these {count} bridges}}'**
   String bridgesUseTheseBridges(int count);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Turkmenistan'**
-  String get bridgesTurkmenistan;
 
   /// screens/transport_screen.dart
   ///
@@ -11938,14 +11884,14 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Hong Kong'**
-  String get bridgesHongKong;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'When Tor is blocked, Automatic asks the Tor Project what works in your country.'**
   String get bridgesWhenTorIsBlockedAutomatic;
+
+  /// bridges screen: plain advice over the choices, the same for everyone, no country
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn\'t connect, try another, or ask a friend for a bridge line.'**
+  String get bridgesPlainAdvice;
 
   /// screens/bridges_screen.dart
   ///
@@ -11962,26 +11908,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Country'**
-  String get bridgesCountry;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'{method}, {from}'**
   String bridgesMethodFrom(String method, String from);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'China'**
-  String get bridgesChina;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Belarus'**
-  String get bridgesBelarus;
 
   /// screens/bridges_screen.dart
   ///
@@ -14635,11 +14563,17 @@ abstract class AppLocalizations {
   /// **'Send video'**
   String get mediaSendVideo;
 
-  /// send preview: before they accept, only this many go
+  /// a request I sent: photos and files go once they accept
   ///
   /// In en, this message translates to:
-  /// **'Until they accept, {count} can go'**
-  String mediaSendUntilAccepted(Object count);
+  /// **'Photos and files unlock after they accept you, to keep you both safe.'**
+  String get requestSenderMediaLater;
+
+  /// a stranger's request to me: their photos and files show once I accept
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and files unlock after you accept them, to keep you safe.'**
+  String get requestReceiverMediaLater;
 
   /// the line in a group this phone ended, in the chat and on its row in the chat list
   ///

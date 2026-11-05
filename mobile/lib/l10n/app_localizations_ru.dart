@@ -1276,9 +1276,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Когда ты запрашиваешь мосты, проект Tor видит твой IP-адрес. Это нормально: так мосты получают Tor Browser и любое приложение Tor, и всё, что он из этого узнаёт, — что кто-то запросил мосты. Ничего о твоих чатах.';
 
   @override
-  String get bridgesAsking => 'Запрашиваем…';
-
-  @override
   String get cameraNoCameraOnThis => 'На этом телефоне нет камеры';
 
   @override
@@ -7345,9 +7342,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transportBridgeMode => 'Мосты';
 
   @override
-  String get bridgesEgypt => 'Египет';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Мост не запустился';
 
   @override
@@ -7392,9 +7386,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Иран';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Включить «Авто»';
 
   @override
@@ -7426,9 +7417,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesScanACode => 'Сканировать код';
 
   @override
-  String get bridgesMyanmar => 'Мьянма';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Перейти на «Авто»';
 
   @override
@@ -7451,9 +7439,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Идёт через компьютер волонтёра. Трудно заблокировать, но долго запускается.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Пусть определит проект Tor';
 
   @override
   String get bridgesTorSeemsBlocked => 'Похоже, Tor заблокирован в этой сети';
@@ -7486,10 +7471,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kryfo сам находит способ, который работает там, где ты.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'У проекта Tor есть свои советы для этих стран.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Через этот мост не пробиться';
 
   @override
@@ -7501,9 +7482,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Не сейчас';
-
-  @override
-  String get bridgesRussia => 'Россия';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7529,9 +7507,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesAlmostThere => 'Почти готово';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'По версии проекта Tor';
-
-  @override
   String get bridgesUseThisBridge => 'Использовать этот мост';
 
   @override
@@ -7550,9 +7525,6 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Туркменистан';
 
   @override
   String get transportBridgeMethod => 'Способ';
@@ -7579,11 +7551,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Мосты могут перестать работать без предупреждения. Режим «Авто» может найти другой путь.';
 
   @override
-  String get bridgesHongKong => 'Гонконг';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Когда Tor заблокирован, режим «Авто» спрашивает у проекта Tor, что работает в твоей стране.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo выбирает мосты сам. Snowflake и WebTunnel работают почти везде. Если один не подключается, попробуй другой или попроси у друга строку моста.';
 
   @override
   String get bridgesAskTorProject => 'Спросить проект Tor';
@@ -7592,18 +7565,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesTooLongForTor => 'Слишком длинная для Tor';
 
   @override
-  String get bridgesCountry => 'Страна';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Китай';
-
-  @override
-  String get bridgesBelarus => 'Беларусь';
 
   @override
   String get bridgesKryfoCanTUseThis =>
@@ -9271,9 +9235,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mediaSendVideo => 'Отправить видео';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Пока собеседник не примет, можно отправить $count';
-  }
+  String get requestSenderMediaLater =>
+      'Фото и файлы откроются, когда собеседник примет тебя: так безопаснее для вас обоих.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Фото и файлы откроются, когда ты примешь собеседника: так безопаснее для тебя.';
 
   @override
   String get groupEndedYou => 'Ты завершил(а) эту группу';

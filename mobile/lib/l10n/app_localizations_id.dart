@@ -1236,9 +1236,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Saat kamu meminta jembatan, Tor Project melihat alamat IP-mu. Itu wajar: begitulah Tor Browser dan semua aplikasi Tor mendapatkan jembatan, dan yang mereka ketahui hanyalah ada seseorang yang meminta jembatan. Tidak ada apa pun tentang obrolanmu.';
 
   @override
-  String get bridgesAsking => 'Meminta…';
-
-  @override
   String get cameraNoCameraOnThis => 'Tidak ada kamera di ponsel ini';
 
   @override
@@ -7212,9 +7209,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get transportBridgeMode => 'Jembatan';
 
   @override
-  String get bridgesEgypt => 'Mesir';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Jembatanmu tidak bisa dimulai';
 
   @override
@@ -7259,9 +7253,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Iran';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Aktifkan otomatis';
 
   @override
@@ -7293,9 +7284,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesScanACode => 'Pindai kode';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Ganti ke otomatis';
 
   @override
@@ -7318,9 +7306,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Lewat komputer relawan. Sulit diblokir, lambat di awal.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Biar Tor Project yang menebak';
 
   @override
   String get bridgesTorSeemsBlocked =>
@@ -7351,10 +7336,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo mencari cara yang berhasil di tempatmu.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Tor Project punya saran sendiri untuk negara-negara ini.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Jembatan ini tidak tembus';
 
   @override
@@ -7366,9 +7347,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Nanti saja';
-
-  @override
-  String get bridgesRussia => 'Rusia';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7394,9 +7372,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesAlmostThere => 'Sebentar lagi';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tebakan Tor Project';
-
-  @override
   String get bridgesUseThisBridge => 'Pakai jembatan ini';
 
   @override
@@ -7412,9 +7387,6 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
   String get transportBridgeMethod => 'Metode';
@@ -7441,11 +7413,12 @@ class AppLocalizationsId extends AppLocalizations {
       'Jembatan bisa berhenti bekerja tanpa peringatan. Otomatis bisa mencari cara lain.';
 
   @override
-  String get bridgesHongKong => 'Hong Kong';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Saat Tor diblokir, Otomatis menanyakan ke Tor Project apa yang berhasil di negaramu.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo memilih jembatan secara otomatis. Snowflake dan WebTunnel berfungsi di sebagian besar tempat. Kalau salah satunya tidak tersambung, coba yang lain, atau minta baris jembatan dari teman.';
 
   @override
   String get bridgesAskTorProject => 'Tanya Tor Project';
@@ -7454,18 +7427,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesTooLongForTor => 'Terlalu panjang untuk Tor';
 
   @override
-  String get bridgesCountry => 'Negara';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Tiongkok';
-
-  @override
-  String get bridgesBelarus => 'Belarus';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo tidak bisa memakai baris ini';
@@ -9110,9 +9074,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get mediaSendVideo => 'Kirim video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Sampai dia menerima, $count bisa terkirim';
-  }
+  String get requestSenderMediaLater =>
+      'Foto dan file terbuka setelah dia menerimamu, supaya kalian berdua aman.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Foto dan file terbuka setelah kamu menerimanya, supaya kamu tetap aman.';
 
   @override
   String get groupEndedYou => 'Kamu mengakhiri grup ini';
