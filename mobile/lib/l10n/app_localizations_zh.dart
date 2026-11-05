@@ -10903,6 +10903,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tipsProfileCard => '打赏一下，让 Kryfo 保持独立';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name 关联了一台新设备';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name 移除了一台设备';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return '无法核对 $name 的设备列表';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -21691,4 +21706,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tipsProfileCard => '給點小費，讓 Kryfo 保持獨立';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name 連結了一台新裝置';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name 移除了一台裝置';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return '無法核對 $name 的裝置清單';
+  }
 }

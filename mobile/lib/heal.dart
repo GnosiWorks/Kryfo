@@ -47,6 +47,18 @@ const kRestoreWarnsOlder = true;
 const kHealLineRestored = 1;
 const kHealLineRepair = 2;
 
+/// the device lines kept with them (device_receive.dart): a contact's
+/// verified list added a device, dropped one, or could not be checked
+const kDeviceLineLinked = 3;
+const kDeviceLineRemoved = 4;
+const kDeviceLineUnchecked = 5;
+
+/// whether a line of [kind] is a device line
+bool isDeviceLine(int kind) =>
+    kind == kDeviceLineLinked ||
+    kind == kDeviceLineRemoved ||
+    kind == kDeviceLineUnchecked;
+
 /// set as a restore lands, with when its file was made (0 when unknown),
 /// and cleared once the next start ran what follows a restore (8)
 const kRestoreAfterPref = 'restore.after';

@@ -8,7 +8,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../container.dart' show HaloContainer;
 import '../drafts.dart';
-import '../heal.dart' show kHealLineRestored;
+import '../heal.dart'
+    show
+        isDeviceLine,
+        kDeviceLineLinked,
+        kDeviceLineRemoved,
+        kDeviceLineUnchecked,
+        kHealLineRestored;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5405,9 +5411,9 @@ class _ChatScreenState extends State<ChatScreen>
           );
   }
 
-  // where a heal rebuilt their session: a quiet line where it happened, as
-  // the screenshot line falls. under the newest row, the wait for their
-  // update after a restore here
+  // where a heal rebuilt their session, or their verified device list
+  // moved: a quiet line where it happened, as the screenshot line falls.
+  // under the newest row, the wait for their update after a restore here
   List<Widget> _healLinesAt(int ix, {required bool below}) {
     if (_messages.isEmpty) return const [];
     final name = _nickname ?? widget.peerHaloId;
@@ -5417,10 +5423,16 @@ class _ChatScreenState extends State<ChatScreen>
           ShotsLine(
             key: ValueKey('heal-line-${l.at}'),
             on: true,
-            icon: Icons.verified_user_outlined,
-            text: l.kind == kHealLineRestored
-                ? l10n.chatHealRestored(name)
-                : l10n.chatHealNewSession(name),
+            icon: isDeviceLine(l.kind)
+                ? Icons.devices_outlined
+                : Icons.verified_user_outlined,
+            text: switch (l.kind) {
+              kHealLineRestored => l10n.chatHealRestored(name),
+              kDeviceLineLinked => l10n.chatDeviceLinked(name),
+              kDeviceLineRemoved => l10n.chatDeviceRemoved(name),
+              kDeviceLineUnchecked => l10n.chatDeviceListUnchecked(name),
+              _ => l10n.chatHealNewSession(name),
+            },
           ),
       if (below && _pausedForUpdate && ix == _messages.length - 1)
         ShotsLine(

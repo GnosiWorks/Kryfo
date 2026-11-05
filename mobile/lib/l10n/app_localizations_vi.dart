@@ -11523,4 +11523,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Gửi tiền tip để Kryfo luôn độc lập';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name đã liên kết một thiết bị mới';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name đã gỡ một thiết bị';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Không thể kiểm tra danh sách thiết bị của $name';
+  }
 }

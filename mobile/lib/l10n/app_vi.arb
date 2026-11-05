@@ -3031,5 +3031,8 @@
   "tipsThanks": "Cảm ơn bạn",
   "tipsGranted": "{tier, select, supporter{Giờ bạn đã có huy hiệu người ủng hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.} patron{Giờ bạn đã có huy hiệu nhà bảo trợ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.} guardian{Giờ bạn đã có huy hiệu người bảo hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.} other{Giờ bạn đã có huy hiệu người ủng hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.}}",
   "tipsKept": "{tier, select, supporter{Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người ủng hộ, huy hiệu cao hơn.} patron{Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu nhà bảo trợ, huy hiệu cao hơn.} guardian{Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người bảo hộ, huy hiệu cao hơn.} other{Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người ủng hộ, huy hiệu cao hơn.}}",
-  "tipsProfileCard": "Gửi tiền tip để Kryfo luôn độc lập"
+  "tipsProfileCard": "Gửi tiền tip để Kryfo luôn độc lập",
+  "chatDeviceLinked": "{name} đã liên kết một thiết bị mới",
+  "chatDeviceRemoved": "{name} đã gỡ một thiết bị",
+  "chatDeviceListUnchecked": "Không thể kiểm tra danh sách thiết bị của {name}"
 }

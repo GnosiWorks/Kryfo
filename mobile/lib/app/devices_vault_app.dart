@@ -315,6 +315,7 @@ extension AppStateVaultDevices on AppState {
           if (AppState._shown(went)) notifyListeners();
         },
       );
+      _vaultDevReceive?.lined = chatChanged;
       await _vaultDevReceive?.listenAll();
       if (await shut()) return;
       await _vaultListsOwed(v);

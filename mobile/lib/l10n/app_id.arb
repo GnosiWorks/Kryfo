@@ -3031,5 +3031,8 @@
   "tipsThanks": "Terima kasih",
   "tipsGranted": "{tier, select, supporter{Sekarang kamu punya lencana pendukung. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.} patron{Sekarang kamu punya lencana patron. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.} guardian{Sekarang kamu punya lencana penjaga. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.} other{Sekarang kamu punya lencana pendukung. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.}}",
   "tipsKept": "{tier, select, supporter{Terima kasih atas tipnya. Lencana pendukungmu tetap, yang lebih tinggi.} patron{Terima kasih atas tipnya. Lencana patronmu tetap, yang lebih tinggi.} guardian{Terima kasih atas tipnya. Lencana penjagamu tetap, yang lebih tinggi.} other{Terima kasih atas tipnya. Lencana pendukungmu tetap, yang lebih tinggi.}}",
-  "tipsProfileCard": "Beri tip agar Kryfo tetap mandiri"
+  "tipsProfileCard": "Beri tip agar Kryfo tetap mandiri",
+  "chatDeviceLinked": "{name} menautkan perangkat baru",
+  "chatDeviceRemoved": "{name} menghapus sebuah perangkat",
+  "chatDeviceListUnchecked": "Daftar perangkat {name} tidak dapat diperiksa"
 }

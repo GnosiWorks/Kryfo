@@ -3031,5 +3031,8 @@
   "tipsThanks": "Danke",
   "tipsGranted": "{tier, select, supporter{Du hast jetzt das Unterstützer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.} patron{Du hast jetzt das Förderer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.} guardian{Du hast jetzt das Hüter-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.} other{Du hast jetzt das Unterstützer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.}}",
   "tipsKept": "{tier, select, supporter{Danke für das Trinkgeld. Du behältst dein Unterstützer-Abzeichen, das höhere.} patron{Danke für das Trinkgeld. Du behältst dein Förderer-Abzeichen, das höhere.} guardian{Danke für das Trinkgeld. Du behältst dein Hüter-Abzeichen, das höhere.} other{Danke für das Trinkgeld. Du behältst dein Unterstützer-Abzeichen, das höhere.}}",
-  "tipsProfileCard": "Gib ein Trinkgeld, damit Kryfo unabhängig bleibt"
+  "tipsProfileCard": "Gib ein Trinkgeld, damit Kryfo unabhängig bleibt",
+  "chatDeviceLinked": "{name} hat ein neues Gerät verknüpft",
+  "chatDeviceRemoved": "{name} hat ein Gerät entfernt",
+  "chatDeviceListUnchecked": "Die Geräteliste von {name} konnte nicht geprüft werden"
 }

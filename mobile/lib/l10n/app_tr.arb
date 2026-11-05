@@ -3031,5 +3031,8 @@
   "tipsThanks": "Teşekkürler",
   "tipsGranted": "{tier, select, supporter{Artık destekçi rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.} patron{Artık hami rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.} guardian{Artık koruyucu rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.} other{Artık destekçi rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.}}",
   "tipsKept": "{tier, select, supporter{Bahşiş için teşekkürler. Daha yüksek olan destekçi rozetin sende kalır.} patron{Bahşiş için teşekkürler. Daha yüksek olan hami rozetin sende kalır.} guardian{Bahşiş için teşekkürler. Daha yüksek olan koruyucu rozetin sende kalır.} other{Bahşiş için teşekkürler. Daha yüksek olan destekçi rozetin sende kalır.}}",
-  "tipsProfileCard": "Kryfo bağımsız kalsın diye bahşiş bırak"
+  "tipsProfileCard": "Kryfo bağımsız kalsın diye bahşiş bırak",
+  "chatDeviceLinked": "{name} yeni bir cihaz bağladı",
+  "chatDeviceRemoved": "{name} bir cihazı kaldırdı",
+  "chatDeviceListUnchecked": "{name} kişisinin cihaz listesi denetlenemedi"
 }

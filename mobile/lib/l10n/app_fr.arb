@@ -3031,5 +3031,8 @@
   "tipsThanks": "Merci",
   "tipsGranted": "{tier, select, supporter{Vous avez maintenant le badge de soutien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.} patron{Vous avez maintenant le badge de mécène. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.} guardian{Vous avez maintenant le badge de gardien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.} other{Vous avez maintenant le badge de soutien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.}}",
   "tipsKept": "{tier, select, supporter{Merci pour le pourboire. Vous gardez votre badge de soutien, le plus élevé.} patron{Merci pour le pourboire. Vous gardez votre badge de mécène, le plus élevé.} guardian{Merci pour le pourboire. Vous gardez votre badge de gardien, le plus élevé.} other{Merci pour le pourboire. Vous gardez votre badge de soutien, le plus élevé.}}",
-  "tipsProfileCard": "Laissez un pourboire pour garder Kryfo indépendant"
+  "tipsProfileCard": "Laissez un pourboire pour garder Kryfo indépendant",
+  "chatDeviceLinked": "{name} a associé un nouvel appareil",
+  "chatDeviceRemoved": "{name} a retiré un appareil",
+  "chatDeviceListUnchecked": "La liste des appareils de {name} n’a pas pu être vérifiée"
 }

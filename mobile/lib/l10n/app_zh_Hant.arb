@@ -3031,5 +3031,8 @@
   "tipsThanks": "謝謝你",
   "tipsGranted": "{tier, select, supporter{你現在有了支持者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。} patron{你現在有了贊助人徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。} guardian{你現在有了守護者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。} other{你現在有了支持者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。}}",
   "tipsKept": "{tier, select, supporter{謝謝你的小費。你保留更高的支持者徽章。} patron{謝謝你的小費。你保留更高的贊助人徽章。} guardian{謝謝你的小費。你保留更高的守護者徽章。} other{謝謝你的小費。你保留更高的支持者徽章。}}",
-  "tipsProfileCard": "給點小費，讓 Kryfo 保持獨立"
+  "tipsProfileCard": "給點小費，讓 Kryfo 保持獨立",
+  "chatDeviceLinked": "{name} 連結了一台新裝置",
+  "chatDeviceRemoved": "{name} 移除了一台裝置",
+  "chatDeviceListUnchecked": "無法核對 {name} 的裝置清單"
 }
