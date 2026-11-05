@@ -11146,7 +11146,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند.';
+    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند';
   }
 
   @override

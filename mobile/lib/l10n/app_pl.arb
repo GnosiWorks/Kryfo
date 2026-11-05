@@ -2928,7 +2928,7 @@
   "chatHealNewSession": "Urządzenie kontaktu {name} zaczyna nową bezpieczną sesję",
   "chatHealHeldLine": "Wcześniej zweryfikowano {name}. Nic nie zostanie wysłane, dopóki nie sprawdzisz numeru albo nie wybierzesz Pisz dalej. Wiadomości od tej osoby nadal docierają.",
   "chatKeepChatting": "Pisz dalej",
-  "chatNeedsUpdateToChat": "{name} musi zaktualizować Kryfo, żeby dało się dalej pisać.",
+  "chatNeedsUpdateToChat": "{name} musi zaktualizować Kryfo, żeby dało się dalej pisać",
   "restoreOlderTitle": "Niektóre czaty się wstrzymają",
   "restoreOlderOne": "{name} używa starszego Kryfo. Twój czat z tą osobą wstrzyma się, dopóki nie zaktualizuje aplikacji.",
   "restoreOlderTwo": "{first} i {second} używają starszego Kryfo. Twoje czaty z nimi wstrzymają się, dopóki nie zaktualizują aplikacji.",

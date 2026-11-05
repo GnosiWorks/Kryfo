@@ -11317,7 +11317,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name нужно обновить Kryfo, чтобы продолжить чат.';
+    return '$name нужно обновить Kryfo, чтобы продолжить чат';
   }
 
   @override

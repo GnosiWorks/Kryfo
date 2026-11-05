@@ -11161,7 +11161,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return 'Sohbete devam etmek için $name kişisinin Kryfo’yu güncellemesi gerekiyor.';
+    return 'Sohbete devam etmek için $name kişisinin Kryfo’yu güncellemesi gerekiyor';
   }
 
   @override

@@ -17854,7 +17854,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart: the line under a chat with a 0.5.x contact after this phone was restored: what is written waits until they update (Q20)
   ///
   /// In en, this message translates to:
-  /// **'{name} needs to update Kryfo to keep chatting.'**
+  /// **'{name} needs to update Kryfo to keep chatting'**
   String chatNeedsUpdateToChat(Object name);
 
   /// screens/restore_screen.dart: the sheet before a restore when the file holds contacts on 0.5.x

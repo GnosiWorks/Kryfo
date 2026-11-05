@@ -2928,7 +2928,7 @@
   "chatHealNewSession": "Perangkat {name} memulai sesi aman yang baru",
   "chatHealHeldLine": "Kamu sudah memverifikasi {name} sebelumnya. Tidak ada yang terkirim sampai kamu memeriksa nomornya atau lanjut mengobrol. Pesan darinya tetap masuk.",
   "chatKeepChatting": "Lanjut mengobrol",
-  "chatNeedsUpdateToChat": "{name} perlu memperbarui Kryfo agar bisa lanjut mengobrol.",
+  "chatNeedsUpdateToChat": "{name} perlu memperbarui Kryfo agar bisa lanjut mengobrol",
   "restoreOlderTitle": "Beberapa obrolan akan dijeda",
   "restoreOlderOne": "{name} memakai Kryfo versi lama. Obrolan kalian dijeda sampai dia memperbaruinya.",
   "restoreOlderTwo": "{first} dan {second} memakai Kryfo versi lama. Obrolanmu dengan mereka dijeda sampai mereka memperbaruinya.",

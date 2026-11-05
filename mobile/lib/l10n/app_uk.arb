@@ -2928,7 +2928,7 @@
   "chatHealNewSession": "Пристрій {name} почав новий захищений сеанс",
   "chatHealHeldLine": "Ти вже перевіряв(-ла) {name}. Нічого не надсилається, доки ти не звіриш номер або не продовжиш чат. Повідомлення від {name} і далі надходять.",
   "chatKeepChatting": "Продовжити чат",
-  "chatNeedsUpdateToChat": "{name} треба оновити Kryfo, щоб продовжити чат.",
+  "chatNeedsUpdateToChat": "{name} треба оновити Kryfo, щоб продовжити чат",
   "restoreOlderTitle": "Деякі чати стануть на паузу",
   "restoreOlderOne": "У {name} старіша версія Kryfo. Ваш чат стане на паузу, доки {name} не оновить застосунок.",
   "restoreOlderTwo": "У {first} і {second} старіша версія Kryfo. Чати з ними стануть на паузу, доки вони не оновлять застосунок.",

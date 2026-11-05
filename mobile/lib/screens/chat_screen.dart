@@ -7202,7 +7202,8 @@ class _ChatScreenState extends State<ChatScreen>
                         : _phoneOnly != null
                         ? 'bar_phone_only'
                         : _keyHeld && !_isDev
-                        ? 'bar_held'
+                        // a heal's card and a new key's card cross
+                        ? 'bar_held_${_healHold ?? 'key'}'
                         : 'bar_composer',
                   ),
                   child: !_barKnown
