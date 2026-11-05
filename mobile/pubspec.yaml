@@ -24,6 +24,7 @@ dependencies:
   path_provider: ^2.1.5
   path: ^1.9.1
   record: ^6.2.0
+  record_platform_interface: ^1.6.0
   just_audio: ^0.10.5
   image_picker: ^1.2.1
   # its photo picker switch, set for a mixed gallery pick only

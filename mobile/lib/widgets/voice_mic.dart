@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../desktop/desktop_mode.dart' show onDesktop;
+import '../desktop/win_record.dart' show micRefusedLine;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
@@ -301,7 +302,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       // one left from a note that never stopped cleanly
       _dropStream();
       if (!await _rec.hasPermission()) {
-        if (mounted) showHaloToast(context, l10n.chatMicPermissionNeeded);
+        if (mounted) showHaloToast(context, micRefusedLine(l10n));
         return;
       }
       // the permission prompt eats the long-press: by the time the user

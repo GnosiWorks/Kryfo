@@ -10563,6 +10563,14 @@ class AppLocalizationsPl extends AppLocalizations {
       'Windows ma Kryfo wyłączone w aplikacjach autostartu. Włącz je tam: Ustawienia, Aplikacje, Uruchamianie.';
 
   @override
+  String get desktopMicBlocked =>
+      'Kryfo może nagrywać, gdy Windows pozwoli aplikacjom klasycznym używać mikrofonu: Ustawienia, Prywatność i zabezpieczenia, Mikrofon.';
+
+  @override
+  String get desktopMicNone =>
+      'Podłącz mikrofon, aby nagrać wiadomość głosową.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo nie może jeszcze używać kamery na tym komputerze. Użyj zamiast tego linku albo kodu.';
 

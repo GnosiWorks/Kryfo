@@ -10369,6 +10369,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'Windows ने स्टार्टअप ऐप्स में Kryfo बंद कर रखा है। उसे वहीं चालू करें: सेटिंग्स, ऐप्स, स्टार्टअप।';
 
   @override
+  String get desktopMicBlocked =>
+      'जब Windows डेस्कटॉप ऐप्स को माइक्रोफ़ोन इस्तेमाल करने देगा, Kryfo रिकॉर्ड कर सकेगा: सेटिंग्स, गोपनीयता और सुरक्षा, माइक्रोफ़ोन।';
+
+  @override
+  String get desktopMicNone =>
+      'वॉइस नोट रिकॉर्ड करने के लिए माइक्रोफ़ोन जोड़ें।';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo अभी इस कंप्यूटर पर कैमरा इस्तेमाल नहीं कर सकता। इसके बजाय लिंक या कोड इस्तेमाल करें।';
 

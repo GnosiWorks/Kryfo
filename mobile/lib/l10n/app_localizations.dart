@@ -16651,6 +16651,18 @@ abstract class AppLocalizations {
   /// **'Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.'**
   String get desktopStartHeldOff;
 
+  /// windows: the mic did not open because windows' privacy settings keep desktop apps from it
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo can record once Windows lets desktop apps use the microphone, in Settings, Privacy and security, Microphone.'**
+  String get desktopMicBlocked;
+
+  /// windows: no microphone is connected, or it went away
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a microphone to record a voice note.'**
+  String get desktopMicNone;
+
   /// screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera
   ///
   /// In en, this message translates to:

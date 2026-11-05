@@ -2728,6 +2728,8 @@
   "desktopStartHint": "O Kryfo inicia na bandeja do sistema quando você entra neste computador.",
   "desktopStartRefused": "Este computador não deixou o Kryfo abrir junto com ele. O Kryfo abre sempre que você mesmo o iniciar.",
   "desktopStartHeldOff": "O Windows deixou o Kryfo desativado nos aplicativos de inicialização. Ative por lá, em Configurações, Aplicativos, Inicialização.",
+  "desktopMicBlocked": "O Kryfo pode gravar quando o Windows deixar os aplicativos da área de trabalho usarem o microfone, em Configurações, Privacidade e segurança, Microfone.",
+  "desktopMicNone": "Conecte um microfone para gravar um áudio.",
   "desktopNoCamera": "O Kryfo ainda não consegue usar uma câmera neste computador. Use o link ou o código.",
   "desktopAlreadyOpen": "O Kryfo já está aberto neste computador.",
   "desktopFolderNotYours": "A pasta do Kryfo pertence a outra conta deste computador, então o Kryfo não vai abri-la.",

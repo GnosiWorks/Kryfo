@@ -10445,6 +10445,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'Windows ha disattivato Kryfo nelle app di avvio. Attivalo lì, in Impostazioni, App, Avvio.';
 
   @override
+  String get desktopMicBlocked =>
+      'Kryfo può registrare quando Windows consente alle app desktop di usare il microfono, in Impostazioni, Privacy e sicurezza, Microfono.';
+
+  @override
+  String get desktopMicNone =>
+      'Collega un microfono per registrare una nota vocale.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo non può ancora usare una fotocamera su questo computer. Usa il link o il codice.';
 

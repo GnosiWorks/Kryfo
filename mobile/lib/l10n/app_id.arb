@@ -2728,6 +2728,8 @@
   "desktopStartHint": "Kryfo mulai di area notifikasi saat kamu masuk ke komputer ini.",
   "desktopStartRefused": "Komputer ini tidak mengizinkan Kryfo ikut mulai. Kryfo terbuka setiap kali kamu sendiri membukanya.",
   "desktopStartHeldOff": "Windows mematikan Kryfo di aplikasi startup-nya. Nyalakan di sana, di Pengaturan, Aplikasi, Startup.",
+  "desktopMicBlocked": "Kryfo bisa merekam setelah Windows mengizinkan aplikasi desktop memakai mikrofon, di Pengaturan, Privasi & keamanan, Mikrofon.",
+  "desktopMicNone": "Sambungkan mikrofon untuk merekam pesan suara.",
   "desktopNoCamera": "Kryfo belum bisa memakai kamera di komputer ini. Pakai tautan atau kodenya saja.",
   "desktopAlreadyOpen": "Kryfo sudah terbuka di komputer ini.",
   "desktopFolderNotYours": "Folder Kryfo milik akun lain di komputer ini, jadi Kryfo tidak akan membukanya.",
