@@ -30,6 +30,7 @@ mixin _BlockRows {
         for (final r in rows)
           if (r['msg_uid'] case final String u) u,
       ];
+      await _dropOwnWaiting(t, rows);
       final polls = [
         for (final r in rows)
           if (r['poll'] != null)

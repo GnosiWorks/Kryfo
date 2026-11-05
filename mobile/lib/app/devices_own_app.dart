@@ -356,6 +356,15 @@ final _ownGroupWait = <String, Set<String>>{};
 final _ownGroupTold = <String>{};
 final _ownGroupTimers = <String, Timer>{};
 
+/// a group frame of mine to [member], handed on as a send hands it
+@visibleForTesting
+void ownGroupCopyForTest(
+  String groupId,
+  String member,
+  String wrapped, {
+  required bool reached,
+}) => _madeApp?._ownGroupCopy(groupId, member, wrapped, reached: reached);
+
 /// every own copy of a group frame still gathering, sent now
 @visibleForTesting
 Future<void> ownGroupFlushForTest() async {
@@ -377,6 +386,9 @@ Future<void> _ownGroupGo(String k) async {
   final frame = k.substring(at + 1);
   try {
     if (!await _ownChatShared((id: groupId, group: true))) return;
+    // deleted here while it gathered: a copy only my devices would take
+    // goes no more
+    if (missed.isEmpty && !await _ownFrameStill(groupId, frame)) return;
     await own.copy(
       kMainIdent,
       (id: groupId, group: true),
@@ -386,6 +398,17 @@ Future<void> _ownGroupGo(String k) async {
   } catch (e) {
     dlog('own: a group copy not sent (${e.runtimeType})');
   }
+}
+
+// whether a message group [groupId]'s [frame] carries or speaks of is
+// still here; true for a frame that names none
+Future<bool> _ownFrameStill(String groupId, String frame) async {
+  final ids = frameMessageUids(frame);
+  if (ids.isEmpty) return true;
+  for (final u in ids) {
+    if ((await live.chatOf(u))?.$2 == groupId) return true;
+  }
+  return false;
 }
 
 extension AppStateOwn on AppState {
