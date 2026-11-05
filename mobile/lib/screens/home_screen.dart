@@ -2836,18 +2836,29 @@ void _groupMenu(BuildContext context, GroupSummary g) {
               onTap: () => pick('hide'),
             ),
           ],
-        [
-          MenuSheetRow(
-            icon: g.ended ? Icons.delete_outline : Icons.logout_rounded,
-            label: g.ended
-                ? l10n.groupInfoDeleteGroup
-                : g.isRoom
-                ? l10n.groupInfoLeaveRoom2
-                : l10n.groupInfoLeaveGroup2,
-            danger: true,
-            onTap: () => pick('leave'),
-          ),
-        ],
+        // a linked device leaves on its phone (GroupOnPhone); an ended
+        // group still goes from here alone
+        if (g.ended || !linkedRole)
+          [
+            MenuSheetRow(
+              icon: g.ended ? Icons.delete_outline : Icons.logout_rounded,
+              label: g.ended
+                  ? l10n.groupInfoDeleteGroup
+                  : g.isRoom
+                  ? l10n.groupInfoLeaveRoom2
+                  : l10n.groupInfoLeaveGroup2,
+              danger: true,
+              onTap: () => pick('leave'),
+            ),
+          ]
+        else
+          [
+            MenuSheetRow(
+              icon: Icons.smartphone_outlined,
+              label: l10n.linkedDoOnPhone,
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
       ];
     },
   ).then((a) {
