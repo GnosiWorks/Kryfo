@@ -9462,6 +9462,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get licencesLoadFailed => 'लोड नहीं हो पाया';
 
   @override
+  String get licencesInVoice => 'आवाज़ से लिखित में';
+
+  @override
+  String get licencesInTranslation => 'मैसेज के अनुवाद में';
+
+  @override
   String get settingsCopyLinkHint => 'लिंक कॉपी करें';
 
   @override

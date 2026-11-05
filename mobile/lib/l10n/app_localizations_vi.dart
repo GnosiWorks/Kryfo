@@ -9442,6 +9442,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get licencesLoadFailed => 'Không tải được';
 
   @override
+  String get licencesInVoice => 'Trong chép lời giọng nói';
+
+  @override
+  String get licencesInTranslation => 'Trong dịch tin nhắn';
+
+  @override
   String get settingsCopyLinkHint => 'Sao chép liên kết';
 
   @override

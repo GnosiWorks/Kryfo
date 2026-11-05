@@ -9534,6 +9534,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get licencesLoadFailed => 'Impossibile caricare';
 
   @override
+  String get licencesInVoice => 'Nella trascrizione vocale';
+
+  @override
+  String get licencesInTranslation => 'Nella traduzione dei messaggi';
+
+  @override
   String get settingsCopyLinkHint => 'Copia link';
 
   @override

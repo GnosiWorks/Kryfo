@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Kryfo's licence and source, libsignal's licence and source, and the parts
 // each piece of the app is built from: the dart packages and data files, the
-// signal library's crates, and the engine's go modules and c libraries
+// signal library's crates, the engine's go modules and c libraries, and,
+// once their switches are on, the voice and translation libraries' parts
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,6 +10,8 @@ import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../licences.dart';
 import '../theme.dart';
+import '../translate/hub_live.dart' show kOfflineTranslation;
+import '../voice/voice_transcripts.dart' show kVoiceTranscripts;
 import '../widgets/halo_rows.dart';
 import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
@@ -27,6 +30,9 @@ class LicencesScreen extends StatefulWidget {
     this.dart,
     this.engine,
     this.gpl,
+    this.native,
+    this.voice = kVoiceTranscripts,
+    this.translation = kOfflineTranslation,
   });
 
   // for tests: what the screen would load
@@ -34,6 +40,10 @@ class LicencesScreen extends StatefulWidget {
   final Future<List<LicencedPart>>? dart;
   final Future<EngineLicences>? engine;
   final Future<String>? gpl;
+  final Future<NativeLicences>? native;
+  // their libraries ship only with their switches, and their notices with them
+  final bool voice;
+  final bool translation;
 
   @override
   State<LicencesScreen> createState() => _LicencesScreenState();
@@ -51,6 +61,7 @@ class _LicencesScreenState extends State<LicencesScreen> {
   final _dart = _Load<List<LicencedPart>>();
   final _engine = _Load<EngineLicences>();
   final _gpl = _Load<String>();
+  final _native = _Load<NativeLicences>();
 
   @override
   void initState() {
@@ -59,6 +70,9 @@ class _LicencesScreenState extends State<LicencesScreen> {
     _watch(widget.dart ?? loadDartLicences(), _dart);
     _watch(widget.engine ?? loadEngineLicences(), _engine);
     _watch(widget.gpl ?? loadGpl(), _gpl);
+    if (widget.voice || widget.translation) {
+      _watch(widget.native ?? loadNativeLicences(), _native);
+    }
   }
 
   void _watch<T>(Future<T> future, _Load<T> slot) {
@@ -128,6 +142,7 @@ class _LicencesScreenState extends State<LicencesScreen> {
     final rust = _rust.value;
     final engine = _engine.value;
     final dart = _dart.value;
+    final native = _native.value;
     final app = dart == null || engine == null
         ? null
         : appParts(dart, engine.data);
@@ -217,6 +232,20 @@ class _LicencesScreenState extends State<LicencesScreen> {
                     engine?.parts,
                     failed: _engine.failed,
                   ),
+                  if (widget.voice)
+                    _listRow(
+                      Icons.graphic_eq,
+                      l10n.licencesInVoice,
+                      native?.voice,
+                      failed: _native.failed,
+                    ),
+                  if (widget.translation)
+                    _listRow(
+                      Icons.translate,
+                      l10n.licencesInTranslation,
+                      native?.translation,
+                      failed: _native.failed,
+                    ),
                 ],
               ),
             ]),

@@ -9595,6 +9595,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get licencesLoadFailed => 'تعذّر التحميل';
 
   @override
+  String get licencesInVoice => 'في تحويل الصوت إلى نص';
+
+  @override
+  String get licencesInTranslation => 'في ترجمة الرسائل';
+
+  @override
   String get settingsCopyLinkHint => 'نسخ الرابط';
 
   @override

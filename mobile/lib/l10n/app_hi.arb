@@ -2473,6 +2473,8 @@
   "licencesGplText": "GNU GPL 3.0, पूरा पाठ",
   "licencesInEngine": "नेटवर्क इंजन में",
   "licencesLoadFailed": "लोड नहीं हो पाया",
+  "licencesInVoice": "आवाज़ से लिखित में",
+  "licencesInTranslation": "मैसेज के अनुवाद में",
   "settingsCopyLinkHint": "लिंक कॉपी करें",
   "motionNoRelayYet": "अभी कोई रिले नहीं",
   "motionTheRouteIsUp": "रास्ता तैयार है",

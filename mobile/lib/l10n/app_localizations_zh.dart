@@ -8983,6 +8983,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get licencesLoadFailed => '无法加载';
 
   @override
+  String get licencesInVoice => '语音转文字中';
+
+  @override
+  String get licencesInTranslation => '消息翻译中';
+
+  @override
   String get settingsCopyLinkHint => '复制链接';
 
   @override
@@ -19793,6 +19799,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get licencesLoadFailed => '無法載入';
+
+  @override
+  String get licencesInVoice => '語音轉文字中';
+
+  @override
+  String get licencesInTranslation => '訊息翻譯中';
 
   @override
   String get settingsCopyLinkHint => '複製連結';

@@ -9555,6 +9555,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licencesLoadFailed => 'Chargement impossible';
 
   @override
+  String get licencesInVoice => 'Dans la transcription vocale';
+
+  @override
+  String get licencesInTranslation => 'Dans la traduction des messages';
+
+  @override
   String get settingsCopyLinkHint => 'Copier le lien';
 
   @override

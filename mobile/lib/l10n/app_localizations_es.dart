@@ -9528,6 +9528,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get licencesLoadFailed => 'No se pudo cargar';
 
   @override
+  String get licencesInVoice => 'En la transcripción de voz';
+
+  @override
+  String get licencesInTranslation => 'En la traducción de mensajes';
+
+  @override
   String get settingsCopyLinkHint => 'Copiar enlace';
 
   @override

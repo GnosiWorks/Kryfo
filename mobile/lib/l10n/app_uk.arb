@@ -2479,6 +2479,8 @@
   "licencesGplText": "GNU GPL 3.0, повний текст",
   "licencesInEngine": "У мережевому рушії",
   "licencesLoadFailed": "Не вдалося завантажити",
+  "licencesInVoice": "У розпізнаванні голосу",
+  "licencesInTranslation": "У перекладі повідомлень",
   "settingsCopyLinkHint": "Скопіювати посилання",
   "motionNoRelayYet": "РЕТРАНСЛЯТОРА ПОКИ НЕМАЄ",
   "motionTheRouteIsUp": "Маршрут побудовано",

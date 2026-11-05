@@ -2479,6 +2479,8 @@
   "licencesGplText": "GNU GPL 3.0 全文",
   "licencesInEngine": "网络引擎中",
   "licencesLoadFailed": "无法加载",
+  "licencesInVoice": "语音转文字中",
+  "licencesInTranslation": "消息翻译中",
   "settingsCopyLinkHint": "复制链接",
   "motionNoRelayYet": "暂无中继",
   "motionTheRouteIsUp": "路线已建好",

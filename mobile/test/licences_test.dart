@@ -14,11 +14,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/licences.dart';
 import 'package:kryfo/screens/licences_screen.dart';
+import 'package:kryfo/translate/hub_live.dart' show kOfflineTranslation;
+import 'package:kryfo/voice/voice_transcripts.dart' show kVoiceTranscripts;
 
 const _lock = 'native/kryfo_signal/Cargo.lock';
 const _manifest = 'native/kryfo_signal/Cargo.toml';
 final _asset = File(kRustLicencesAsset);
 final _engineAsset = File(kEngineLicencesAsset);
+final _nativeAsset = File(kNativeLicencesAsset);
 const _libtor = '../engine/vendor/github.com/alexballas/go-libtor';
 
 String _sha(String path) =>
@@ -105,16 +108,42 @@ EngineLicences _fakeEngine() => const EngineLicences(
 
 const _gplText = 'GNU GENERAL PUBLIC LICENSE\n\nVersion 3, 29 June 2007';
 
+NativeLicences _fakeNative() => const NativeLicences(
+  [
+    LicencedPart(
+      'whisper.cpp and ggml',
+      ['ggml MIT text'],
+      version: 'v1.9.5',
+      licence: 'MIT',
+    ),
+  ],
+  [
+    LicencedPart(
+      'Bergamot translator',
+      ['MPL text'],
+      version: 'eea6e5a8',
+      licence: 'MPL-2.0',
+    ),
+    LicencedPart('zlib', ['zlib text'], version: '1.2.11', licence: 'Zlib'),
+  ],
+);
+
 LicencesScreen _screen({
   Future<RustLicences>? rust,
   Future<List<LicencedPart>>? dart,
   Future<EngineLicences>? engine,
   Future<String>? gpl,
+  Future<NativeLicences>? native,
+  bool voice = false,
+  bool translation = false,
 }) => LicencesScreen(
   rust: rust ?? Future.value(_fakeRust()),
   dart: dart ?? Future.value(_fakeDart()),
   engine: engine ?? Future.value(_fakeEngine()),
   gpl: gpl ?? Future.value(_gplText),
+  native: native ?? Future.value(_fakeNative()),
+  voice: voice,
+  translation: translation,
 );
 
 // the module paths in vendor/modules.txt that bring at least one package
@@ -243,7 +272,119 @@ void main() {
     });
   });
 
+  group('the voice and translation lists', () {
+    final j =
+        jsonDecode(_nativeAsset.readAsStringSync()) as Map<String, dynamic>;
+    const stale = 'out of date: run engine/native-acknowledgments.sh';
+
+    test('were made from the pins in this tree', () {
+      expect(
+        j['whisper'],
+        _sha('../engine/voice/native/whisper.lock'),
+        reason: stale,
+      );
+      expect(j['models'], _sha('../engine/voice/models.json'), reason: stale);
+      expect(
+        j['weights'],
+        _sha('../engine/voice/licences/weights-LICENSE'),
+        reason: stale,
+      );
+      expect(
+        j['bergamot'],
+        _sha('../engine/translate/native/bergamot.lock'),
+        reason: stale,
+      );
+    });
+
+    test(
+      'voice: whisper.cpp and ggml, the YaRN notice, the weights word for word',
+      () {
+        final n = parseNativeLicences(_nativeAsset.readAsStringSync());
+        final by = {for (final p in n.voice) p.name: p};
+        expect(by.keys, [
+          'whisper.cpp and ggml',
+          'YaRN rope scaling, in ggml',
+          'Whisper base speech model',
+        ]);
+        final lock = File(
+          '../engine/voice/native/whisper.lock',
+        ).readAsStringSync();
+        expect(
+          by['whisper.cpp and ggml']!.version,
+          RegExp(
+            r'^WHISPER_VERSION=(\S+)$',
+            multiLine: true,
+          ).firstMatch(lock)![1],
+        );
+        expect(
+          by['whisper.cpp and ggml']!.texts.single,
+          contains('The ggml authors'),
+        );
+        expect(
+          by['YaRN rope scaling, in ggml']!.texts.first,
+          'MIT licensed. Copyright (c) 2023 Jeffrey Quesnelle and Bowen Peng.',
+        );
+        expect(
+          by['Whisper base speech model']!.texts.single,
+          File('../engine/voice/licences/weights-LICENSE').readAsStringSync(),
+        );
+        for (final p in n.voice) {
+          expect(p.licence, 'MIT', reason: p.name);
+        }
+      },
+    );
+
+    test('translation: bergamot and every part its library builds in', () {
+      final n = parseNativeLicences(_nativeAsset.readAsStringSync());
+      final by = {for (final p in n.translation) p.name: p};
+      expect(by['Bergamot translator']!.licence, 'MPL-2.0');
+      expect(
+        by['Bergamot translator']!.texts.single,
+        contains('Mozilla Public License Version 2.0'),
+      );
+      expect(
+        by.keys,
+        containsAll([
+          'Marian', 'SentencePiece', 'intgemm', 'ruy', 'cpuinfo', 'PCRE2', //
+          'simd_utils', 'ssplit-cpp', 'yaml-cpp', 'spdlog', 'faiss', 'zlib',
+          'Protocol Buffers lite, in SentencePiece', 'Abseil, in SentencePiece',
+        ]),
+      );
+      // the lock's commits name the versions
+      final lock = File(
+        '../engine/translate/native/bergamot.lock',
+      ).readAsStringSync();
+      for (final pin in ['intgemm', 'ruy', 'sentencepiece', 'cpuinfo']) {
+        final c = RegExp(
+          '^$pin\\s+\\S+\\s+([0-9a-f]{8})',
+          multiLine: true,
+        ).firstMatch(lock)![1];
+        final part = n.translation.singleWhere(
+          (p) => p.name.toLowerCase() == pin,
+        );
+        expect(part.version, c, reason: pin);
+      }
+      for (final p in n.translation) {
+        expect(p.texts, isNotEmpty, reason: p.name);
+        expect(p.licence, isNotEmpty, reason: p.name);
+      }
+      expect(
+        n.translation.map((p) => p.name.toLowerCase()).toList(),
+        [...n.translation.map((p) => p.name.toLowerCase())]..sort(),
+      );
+    });
+
+    test('the screen shows them with their switches', () {
+      const s = LicencesScreen();
+      expect(s.voice, kVoiceTranscripts);
+      expect(s.translation, kOfflineTranslation);
+    });
+  });
+
   testWidgets('the app bundles every list and text it loads', (t) async {
+    final n = await t.runAsync(loadNativeLicences);
+    expect(n!.voice, isNotEmpty);
+    expect(n.translation, isNotEmpty);
     final e = await t.runAsync(loadEngineLicences);
     expect(e!.parts, isNotEmpty);
     final gpl = await t.runAsync(loadGpl);
@@ -426,6 +567,57 @@ void main() {
       }
     });
   }
+
+  testWidgets('off, no voice or translation rows', (t) async {
+    await _show(t, _host(_screen()));
+    await t.pumpAndSettle();
+    expect(find.text('In voice transcription'), findsNothing);
+    expect(find.text('In message translation'), findsNothing);
+  });
+
+  for (final still in [false, true]) {
+    testWidgets('on, their rows open their parts, still: $still', (t) async {
+      await _show(
+        t,
+        _host(_screen(voice: true, translation: true), still: still),
+      );
+      await t.pumpAndSettle();
+      await t.ensureVisible(find.text('In voice transcription'));
+      expect(find.text('1 part'), findsOneWidget);
+      await t.tap(find.text('In voice transcription'));
+      await t.pumpAndSettle();
+      expect(find.text('v1.9.5 · MIT'), findsOneWidget);
+      await t.tap(find.text('whisper.cpp and ggml'));
+      await t.pumpAndSettle();
+      expect(find.text('whisper.cpp and ggml v1.9.5'), findsOneWidget);
+      expect(find.text('ggml MIT text'), findsOneWidget);
+      await t.pageBack();
+      await t.pumpAndSettle();
+      await t.pageBack();
+      await t.pumpAndSettle();
+
+      await t.ensureVisible(find.text('In message translation'));
+      await t.tap(find.text('In message translation'));
+      await t.pumpAndSettle();
+      expect(find.text('eea6e5a8 · MPL-2.0'), findsOneWidget);
+      await t.tap(find.text('zlib'));
+      await t.pumpAndSettle();
+      expect(find.text('zlib text'), findsOneWidget);
+    });
+  }
+
+  testWidgets('on, a list that fails says so and does not open', (t) async {
+    await _show(
+      t,
+      _host(_screen(voice: true, native: _fail('no native.json'))),
+    );
+    await t.pumpAndSettle();
+    expect(find.text('Could not load'), findsOneWidget);
+    await t.ensureVisible(find.text('In voice transcription'));
+    await t.tap(find.text('In voice transcription'));
+    await t.pumpAndSettle();
+    expect(find.text('whisper.cpp and ggml'), findsNothing);
+  });
 
   group('when a list fails to load', () {
     late List<String> copied;

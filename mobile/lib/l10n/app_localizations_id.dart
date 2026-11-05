@@ -9454,6 +9454,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get licencesLoadFailed => 'Tidak dapat dimuat';
 
   @override
+  String get licencesInVoice => 'Di transkrip suara';
+
+  @override
+  String get licencesInTranslation => 'Di terjemahan pesan';
+
+  @override
   String get settingsCopyLinkHint => 'Salin tautan';
 
   @override

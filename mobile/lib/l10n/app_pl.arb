@@ -2479,6 +2479,8 @@
   "licencesGplText": "GNU GPL 3.0, pełny tekst",
   "licencesInEngine": "W silniku sieciowym",
   "licencesLoadFailed": "Nie udało się wczytać",
+  "licencesInVoice": "W transkrypcji głosu",
+  "licencesInTranslation": "W tłumaczeniu wiadomości",
   "settingsCopyLinkHint": "Kopiuj link",
   "motionNoRelayYet": "JESZCZE BEZ PRZEKAŹNIKA",
   "motionTheRouteIsUp": "Trasa działa",

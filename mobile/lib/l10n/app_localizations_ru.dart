@@ -9621,6 +9621,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licencesLoadFailed => 'Не удалось загрузить';
 
   @override
+  String get licencesInVoice => 'В распознавании голоса';
+
+  @override
+  String get licencesInTranslation => 'В переводе сообщений';
+
+  @override
   String get settingsCopyLinkHint => 'Скопировать ссылку';
 
   @override

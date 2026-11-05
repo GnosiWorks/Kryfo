@@ -2479,6 +2479,8 @@
   "licencesGplText": "النص الكامل لرخصة GNU GPL 3.0",
   "licencesInEngine": "في محرّك الشبكة",
   "licencesLoadFailed": "تعذّر التحميل",
+  "licencesInVoice": "في تحويل الصوت إلى نص",
+  "licencesInTranslation": "في ترجمة الرسائل",
   "settingsCopyLinkHint": "نسخ الرابط",
   "motionNoRelayYet": "لا مُرحِّل بعد",
   "motionTheRouteIsUp": "المسار قائم",

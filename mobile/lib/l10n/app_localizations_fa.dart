@@ -9464,6 +9464,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get licencesLoadFailed => 'بارگیری نشد';
 
   @override
+  String get licencesInVoice => 'در تبدیل صدا به متن';
+
+  @override
+  String get licencesInTranslation => 'در ترجمهٔ پیام‌ها';
+
+  @override
   String get settingsCopyLinkHint => 'کپی پیوند';
 
   @override

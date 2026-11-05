@@ -9564,6 +9564,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licencesLoadFailed => 'Konnte nicht geladen werden';
 
   @override
+  String get licencesInVoice => 'In der Sprachtranskription';
+
+  @override
+  String get licencesInTranslation => 'In der Nachrichtenübersetzung';
+
+  @override
   String get settingsCopyLinkHint => 'Link kopieren';
 
   @override

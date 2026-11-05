@@ -9617,6 +9617,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licencesLoadFailed => 'Не вдалося завантажити';
 
   @override
+  String get licencesInVoice => 'У розпізнаванні голосу';
+
+  @override
+  String get licencesInTranslation => 'У перекладі повідомлень';
+
+  @override
   String get settingsCopyLinkHint => 'Скопіювати посилання';
 
   @override
