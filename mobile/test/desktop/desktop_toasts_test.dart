@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a windows toast never carries a name, a word of a message or what it opens
+// a windows toast says what the preview setting gave the post, never what a
+// click opens
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_mode.dart' show deskSound;
@@ -7,13 +8,21 @@ import 'package:kryfo/desktop/desktop_toasts.dart';
 import 'package:kryfo/l10n/l10n.dart';
 
 void main() {
-  test('a named post says only that a message came', () {
-    expect(toastWords('Wren'), ('Kryfo', l10n.notificationsNewMessage));
-    expect(toastWords(''), ('Kryfo', l10n.notificationsNewMessage));
+  test('a named post says what it was given', () {
+    expect(toastWords('Wren', 'meet at the gate'), (
+      'Wren',
+      'meet at the gate',
+    ));
+    expect(toastWords('Kryfo', l10n.notificationsNewMessage), (
+      'Kryfo',
+      l10n.notificationsNewMessage,
+    ));
+    expect(toastWords('Wren', null), ('Wren', l10n.notificationsNewMessage));
   });
 
   test('a plain post keeps its neutral line and no title', () {
-    expect(toastWords(null), (null, l10n.notifPlainLine));
+    expect(toastWords(null, 'meet at the gate'), (null, l10n.notifPlainLine));
+    expect(toastWords(null, null), (null, l10n.notifPlainLine));
   });
 
   test('the settings windows needs are there and well formed', () {

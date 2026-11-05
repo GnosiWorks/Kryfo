@@ -47,6 +47,14 @@ people's data, don't degrade the servers for others.
 - relay2.kryfo.app, files.kryfo.app and the push gateway
 - kryfo.app
 
+## windows
+
+the windows build is an early beta. one gap is known: while Kryfo runs,
+and after a crash until the next start, the engine's folder
+(<root>\tmp\engine) sits unencrypted on the disk. it holds the onion key,
+the relay marks and the top-up queue. sealing that folder comes in a
+coming update. THREAT_MODEL.md says what else a computer keeps and how.
+
 ## out of scope
 
 - attacks that need an unlocked phone in someone else's hands, beyond what
