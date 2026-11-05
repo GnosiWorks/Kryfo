@@ -14524,5 +14524,22 @@
   "notesVoiceNotKept": "Your voice note was not kept",
   "@notesVoiceNotKept": {
     "description": "a voice note that could not be kept in note to self"
+  },
+  "handleOlderKryfo": "They use an older Kryfo. Ask them to update, then add them.",
+  "@handleOlderKryfo": {
+    "description": "app/links.dart, handleHaloUriAdded: the handle's registry card comes from a phone on Kryfo 0.5 or older, which 0.6 cannot start a chat with; nothing is added"
+  },
+  "groupMemberNeedsUpdate": "{name} uses an older Kryfo. They'll need to update to get messages here.",
+  "@groupMemberNeedsUpdate": {
+    "description": "screens/group_chat_screen.dart: a line in a group with one member on an older Kryfo whom no session of this phone reaches and none can form with",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "groupMembersNeedUpdate": "Some members use an older Kryfo. They'll need to update to get messages here.",
+  "@groupMembersNeedUpdate": {
+    "description": "screens/group_chat_screen.dart: as groupMemberNeedsUpdate, with more than one such member"
   }
 }

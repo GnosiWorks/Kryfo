@@ -11578,4 +11578,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'Your voice note was not kept';
+
+  @override
+  String get handleOlderKryfo =>
+      'They use an older Kryfo. Ask them to update, then add them.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name uses an older Kryfo. They\'ll need to update to get messages here.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Some members use an older Kryfo. They\'ll need to update to get messages here.';
 }

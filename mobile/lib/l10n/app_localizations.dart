@@ -18540,6 +18540,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your voice note was not kept'**
   String get notesVoiceNotKept;
+
+  /// app/links.dart, handleHaloUriAdded: the handle's registry card comes from a phone on Kryfo 0.5 or older, which 0.6 cannot start a chat with; nothing is added
+  ///
+  /// In en, this message translates to:
+  /// **'They use an older Kryfo. Ask them to update, then add them.'**
+  String get handleOlderKryfo;
+
+  /// screens/group_chat_screen.dart: a line in a group with one member on an older Kryfo whom no session of this phone reaches and none can form with
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses an older Kryfo. They\'ll need to update to get messages here.'**
+  String groupMemberNeedsUpdate(Object name);
+
+  /// screens/group_chat_screen.dart: as groupMemberNeedsUpdate, with more than one such member
+  ///
+  /// In en, this message translates to:
+  /// **'Some members use an older Kryfo. They\'ll need to update to get messages here.'**
+  String get groupMembersNeedUpdate;
 }
 
 class _AppLocalizationsDelegate

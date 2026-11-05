@@ -3042,5 +3042,8 @@
   "notesDeleteAllEverywhere": "Todas as notas são apagadas de todos os seus aparelhos para sempre.",
   "notesDeleteAllHereOnly": "Todas as notas são apagadas só deste aparelho. Seu celular continua com elas.",
   "notesAddItem": "Adicionar uma foto ou um arquivo",
-  "notesVoiceNotKept": "Seu áudio não foi guardado"
+  "notesVoiceNotKept": "Seu áudio não foi guardado",
+  "handleOlderKryfo": "Essa pessoa usa uma versão antiga do Kryfo. Peça que ela atualize e depois adicione-a.",
+  "groupMemberNeedsUpdate": "{name} usa uma versão antiga do Kryfo. Precisará atualizar para receber mensagens aqui.",
+  "groupMembersNeedUpdate": "Alguns membros usam uma versão antiga do Kryfo. Precisarão atualizar para receber mensagens aqui."
 }

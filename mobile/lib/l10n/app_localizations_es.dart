@@ -11665,4 +11665,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'Tu mensaje de voz no se guardó';
+
+  @override
+  String get handleOlderKryfo =>
+      'Usa una versión anterior de Kryfo. Pídele que la actualice y luego añádelo.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name usa una versión anterior de Kryfo. Tendrá que actualizarla para recibir mensajes aquí.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Algunos miembros usan una versión anterior de Kryfo. Tendrán que actualizarla para recibir mensajes aquí.';
 }

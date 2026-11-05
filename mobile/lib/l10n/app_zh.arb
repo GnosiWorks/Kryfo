@@ -3042,5 +3042,8 @@
   "notesDeleteAllEverywhere": "所有笔记都会从你所有的设备上永久删除。",
   "notesDeleteAllHereOnly": "所有笔记只会从这台设备上删除。你的手机仍会保留它们。",
   "notesAddItem": "添加照片或文件",
-  "notesVoiceNotKept": "你的语音消息没有保存"
+  "notesVoiceNotKept": "你的语音消息没有保存",
+  "handleOlderKryfo": "对方使用的是旧版 Kryfo。请对方先更新，然后再添加。",
+  "groupMemberNeedsUpdate": "{name} 使用的是旧版 Kryfo，需要更新后才能在这里收到消息。",
+  "groupMembersNeedUpdate": "部分成员使用的是旧版 Kryfo，需要更新后才能在这里收到消息。"
 }

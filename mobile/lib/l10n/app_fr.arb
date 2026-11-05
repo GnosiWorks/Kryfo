@@ -3042,5 +3042,8 @@
   "notesDeleteAllEverywhere": "Toutes les notes sont effacées de tous vos appareils, pour de bon.",
   "notesDeleteAllHereOnly": "Toutes les notes sont effacées de cet appareil seulement. Votre téléphone les garde.",
   "notesAddItem": "Ajouter une photo ou un fichier",
-  "notesVoiceNotKept": "Votre message vocal n’a pas été gardé"
+  "notesVoiceNotKept": "Votre message vocal n’a pas été gardé",
+  "handleOlderKryfo": "Cette personne utilise une ancienne version de Kryfo. Demandez-lui de la mettre à jour, puis ajoutez-la.",
+  "groupMemberNeedsUpdate": "{name} utilise une ancienne version de Kryfo. Une mise à jour lui permettra de recevoir les messages ici.",
+  "groupMembersNeedUpdate": "Certains membres utilisent une ancienne version de Kryfo. Une mise à jour leur permettra de recevoir les messages ici."
 }

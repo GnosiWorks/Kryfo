@@ -260,6 +260,7 @@ part 'app/gates.dart';
 part 'app/group_hellos.dart';
 part 'app/groups.dart';
 part 'app/links.dart';
+part 'app/old_peers.dart';
 part 'app/invites_app.dart';
 part 'app/pair_codes_app.dart';
 part 'app/pairs.dart';

@@ -3042,5 +3042,8 @@
   "notesDeleteAllEverywhere": "Todas las notas se borran de todos tus dispositivos para siempre.",
   "notesDeleteAllHereOnly": "Todas las notas se borran solo de este dispositivo. Tu teléfono las conserva.",
   "notesAddItem": "Añadir una foto o un archivo",
-  "notesVoiceNotKept": "Tu mensaje de voz no se guardó"
+  "notesVoiceNotKept": "Tu mensaje de voz no se guardó",
+  "handleOlderKryfo": "Usa una versión anterior de Kryfo. Pídele que la actualice y luego añádelo.",
+  "groupMemberNeedsUpdate": "{name} usa una versión anterior de Kryfo. Tendrá que actualizarla para recibir mensajes aquí.",
+  "groupMembersNeedUpdate": "Algunos miembros usan una versión anterior de Kryfo. Tendrán que actualizarla para recibir mensajes aquí."
 }

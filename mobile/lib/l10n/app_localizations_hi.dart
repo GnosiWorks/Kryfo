@@ -11585,4 +11585,17 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'आपका वॉइस नोट नहीं रखा गया';
+
+  @override
+  String get handleOlderKryfo =>
+      'वे Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनसे अपडेट करने को कहें, फिर उन्हें जोड़ें।';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name Kryfo का पुराना संस्करण इस्तेमाल करते हैं। यहाँ संदेश पाने के लिए उन्हें अपडेट करना होगा।';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'कुछ सदस्य Kryfo का पुराना संस्करण इस्तेमाल करते हैं। यहाँ संदेश पाने के लिए उन्हें अपडेट करना होगा।';
 }

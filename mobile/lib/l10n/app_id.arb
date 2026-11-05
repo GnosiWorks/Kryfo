@@ -3042,5 +3042,8 @@
   "notesDeleteAllEverywhere": "Semua catatan terhapus dari semua perangkatmu untuk selamanya.",
   "notesDeleteAllHereOnly": "Semua catatan hanya terhapus dari perangkat ini. Ponselmu tetap menyimpannya.",
   "notesAddItem": "Tambah foto atau file",
-  "notesVoiceNotKept": "Pesan suaramu tidak disimpan"
+  "notesVoiceNotKept": "Pesan suaramu tidak disimpan",
+  "handleOlderKryfo": "Mereka memakai Kryfo versi lama. Minta mereka memperbarui, lalu tambahkan mereka.",
+  "groupMemberNeedsUpdate": "{name} memakai Kryfo versi lama. Mereka perlu memperbarui untuk menerima pesan di sini.",
+  "groupMembersNeedUpdate": "Beberapa anggota memakai Kryfo versi lama. Mereka perlu memperbarui untuk menerima pesan di sini."
 }

@@ -57,7 +57,8 @@ import '../atmosphere.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart' show SearchHead, firstUrl;
-import 'package:flutter/foundation.dart' show ValueListenable, setEquals;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, listEquals, setEquals;
 import 'package:flutter/material.dart';
 import '../drafts.dart';
 import '../wallpaper.dart';
@@ -91,6 +92,8 @@ import '../main.dart'
         kAdminGone,
         themeRevision,
         AppStateOutbox,
+        AppStateOldPeers,
+        kOldPeerWait,
         AppStateMessages,
         AppStateRoute,
         AppStatePrefs,
@@ -533,6 +536,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // its admin was taken off this phone ("this isn't them"): no change to
   // the group reaches it any more
   bool _adminGone = false;
+  // members on an older Kryfo whom no session here reaches: they get
+  // nothing from this phone until they update
+  List<String> _needUpdate = const [];
+
+  // a member counts only after a while in the group: read again as it
+  // passes
+  Future<void> _needUpdateTick() async {
+    final now = await appState.groupWaitsForUpdate(widget.groupId);
+    if (!mounted || listEquals(now, _needUpdate)) return;
+    setState(() => _needUpdate = now);
+  }
+
   // its admin ended it: what it held is gone, and nothing is written here
   GroupEnd? _end;
   // its screenshot block, and this screen's hold on the window's flag:
@@ -751,6 +766,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     groupOwedTick.addListener(_reachMoved);
     fileWaits.addListener(_waitsMoved);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
+    _timers.every(kOldPeerWait, () => unawaited(_needUpdateTick()));
     _burn = _timers.until(_burnWait, _burnTick);
     // back in view: what shows now has been read
     _reads.keepTime(_timers);
@@ -1144,6 +1160,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final reactions = await session.loadReactionsFor(uids);
       final votes = await session.pollVotesFor(uids);
       final reach = await session.groupFileReach(widget.groupId);
+      final needUpdate = await appState.groupWaitsForUpdate(widget.groupId);
       // local nickname is the display source of truth. fall back to the 3-word
       // id when we have no nickname for that member.
       final nickById = <String, String>{};
@@ -1176,6 +1193,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _joiningAt = joining;
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
         _adminGone = g['admin_id'] == kAdminGone && g['room_pub'] == null;
+        _needUpdate = needUpdate;
         _end = groupEndOf(g);
         _shots = GroupShots.ofRow(g, quiet: sessionQuiet);
         _adminId = g['admin_id'] as String?;
@@ -4884,6 +4902,23 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             delay: const Duration(milliseconds: 220),
                           ),
                         ],
+                      )
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
+              // a member on an older Kryfo: no session here reaches them yet
+              EaseSize(
+                child: _needUpdate.isNotEmpty && _end == null && !_isRoom
+                    ? NoticeBanner(
+                        key: const ValueKey('group-old'),
+                        glyph: NoticeGlyph.clock,
+                        text: _needUpdate.length == 1
+                            ? l10n.groupMemberNeedsUpdate(
+                                _nameOf(_needUpdate.first),
+                              )
+                            : l10n.groupMembersNeedUpdate,
+                        color: HaloColors.warn,
+                        textColor: HaloColors.warnText,
+                        margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
                       )
                     : const SizedBox(width: double.infinity, height: 0),
               ),

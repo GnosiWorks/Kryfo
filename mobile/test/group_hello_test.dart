@@ -28,12 +28,15 @@ import 'package:kryfo/main.dart'
         AppStateGroupHellos,
         AppStateGroupLanes,
         AppStateInvites,
+        AppStateOldPeers,
         AppStateOutbox,
         AppStateProfile,
         AppStateReceive,
         HaloDb,
         HaloEngine,
         keyBelow,
+        kOldPeerWait,
+        processPeerBundle,
         rosterPassWait,
         useDatabasesForTest,
         useEngineForTest;
@@ -1258,7 +1261,10 @@ void main() {
       admin.words,
       await env(
         admin,
-        GroupControl(type: 'roster', participants: [up.part(ri: newer)]),
+        GroupControl(
+          type: 'roster',
+          participants: [up.part(ri: newer)],
+        ),
       ),
       live,
     );
@@ -1401,5 +1407,32 @@ void main() {
       expect(live.ctlTo(p.words), contains('roster'));
     }
     expect(await rosterInvitesToPass(db), isEmpty);
+  });
+
+  test('a member on 0.5.x in a new group is named once they have been in it '
+      'a while, until a pair with them forms; one with a roster invite or a '
+      'session is never named', () async {
+    await myRoster();
+    final admin = await _Phone.make('admin-of-new', seed++);
+    final old = await phone('older-in-new', above: true);
+    final up = await phone('newer-in-new', above: true);
+    final known = await phone('known-in-new', above: true);
+    await joinFrom(admin, [
+      (old, null),
+      (up, await up.roster()),
+      (known, null),
+    ]);
+    live.joinedAt[_g] = DateTime.now().millisecondsSinceEpoch;
+    // the admin and someone chatting here already hold sessions with me
+    for (final p in [admin, known]) {
+      await processPeerBundle(p.words, await p.ss.makeBundleB64());
+    }
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final later = now + kOldPeerWait.inMilliseconds + 1000;
+    expect(await app.groupWaitsForUpdate(_g, nowMs: now), isEmpty);
+    expect(await app.groupWaitsForUpdate(_g, nowMs: later), [old.words]);
+    // they updated: a pair formed, nothing is said any more
+    await processPeerBundle(old.words, await old.ss.makeBundleB64());
+    expect(await app.groupWaitsForUpdate(_g, nowMs: later), isEmpty);
   });
 }

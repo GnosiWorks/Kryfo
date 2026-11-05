@@ -11719,4 +11719,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'لم يُحفظ تسجيلك الصوتي';
+
+  @override
+  String get handleOlderKryfo =>
+      'يستخدم إصدارًا أقدم من Kryfo. اطلب منه التحديث، ثم أضفه.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return 'يستخدم ⁨$name⁩ إصدارًا أقدم من Kryfo. عليه التحديث ليتلقى الرسائل هنا.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'بعض الأعضاء يستخدمون إصدارًا أقدم من Kryfo. عليهم التحديث ليتلقوا الرسائل هنا.';
 }

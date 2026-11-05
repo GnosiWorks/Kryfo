@@ -11604,4 +11604,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'Sesli mesajın saklanmadı';
+
+  @override
+  String get handleOlderKryfo =>
+      'Kryfo\'nun eski bir sürümünü kullanıyor. Güncellemesini isteyin, sonra ekleyin.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name Kryfo\'nun eski bir sürümünü kullanıyor. Buradaki mesajları alması için güncellemesi gerekecek.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Bazı üyeler Kryfo\'nun eski bir sürümünü kullanıyor. Buradaki mesajları almaları için güncellemeleri gerekecek.';
 }

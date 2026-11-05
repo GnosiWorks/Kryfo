@@ -11566,4 +11566,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'Tin nhắn thoại của bạn chưa được giữ lại';
+
+  @override
+  String get handleOlderKryfo =>
+      'Họ đang dùng Kryfo phiên bản cũ. Hãy nhờ họ cập nhật, rồi thêm họ.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Một số thành viên đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây.';
 }
