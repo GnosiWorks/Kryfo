@@ -15,14 +15,16 @@ boxes means two seizures and two providers.
 
 | service | reached at | box | follows the rule |
 |---|---|---|---|
-| relay (`relay-live/`) | `wss://relay.kryfo.app` and its onion | relay box | it is the relay |
-| handle registry (`server/handle/`) | `https://relay.kryfo.app/handle/*`, `/@name` | relay box | no |
-| badge service (`server/badge/`) | its own onion | relay box | no |
-| gif relay (`server/gif/`) | `https://relay.kryfo.app/gif/*` | relay box | no |
-| push gateway (`server/push/`) | the relay only, on loopback (endpoints read `https://relay.kryfo.app/push/*`) | relay box | no |
+| relay (`relay-live/`) | `wss://relay.kryfo.app` and its onion | first box | it is the relay |
+| second relay (`relay-live/`) | `wss://relay2.kryfo.app` and its onion | second box, another hosting company | it is the relay |
+| handle registry (`server/handle/`) | `https://relay.kryfo.app/handle/*`, `/@name` | first box | no |
+| badge service (`server/badge/`) | its own onion | first box | no |
+| gif relay (`server/gif/`) | `https://relay.kryfo.app/gif/*` | first box | no |
+| files service (`server/files/`) | `https://files.kryfo.app`, over tor only | second box | no |
+| push gateway (`server/push/`) | the first relay only, through a tunnel (endpoints read `https://relay.kryfo.app/push/*`) | second box | no |
 
-the handle registry and the badge service move. the gif relay runs on the relay box too; where it
-goes is not decided yet.
+the handle registry and the badge service move. where the gif relay, the
+files service and the push gateway go is not decided yet.
 
 ## moving the badge service
 
@@ -44,6 +46,15 @@ this needs a release, the hostname is in the app.
 4. the old box keeps serving `/handle/*` until the last release that calls it
    is gone.
 
+## the files service
+
+photos, videos, voice notes and files bigger than one message. a phone seals
+the file with a key of its own and sends the key inside the message, so the
+service holds sealed bytes it cannot open. phones reach it over tor only.
+what it could log: a file's random id, its size rounded up, how many
+recipients it has, and when it went up and came down. a file goes once every
+recipient has it, a week at most. it writes no access log.
+
 ## the push gateway
 
 google push in the play build. a relay posts an empty knock to
@@ -59,7 +70,10 @@ each, to refuse copies, and a held-back push's token for up to 45 seconds. once 
 logs counts. google sees the install and when it
 is woken, never by whom or with what. it has no public route: only our relay
 posts to it, on loopback (`RELAY_KNOCK_GATEWAY_LOCAL`, 127.0.0.1:3340 by
-default), and the app never talks to it.
+default), which on the first box is a tunnel to the gateway on the second.
+the app never talks to it. the relay's endpoint table and the gateway's key
+are on different boxes, so tying a phone's sixteen endpoints together takes
+both. we run both.
 
 ## watching them
 

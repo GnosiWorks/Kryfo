@@ -10,8 +10,10 @@ won't build a way to. Signal, Threema and SimpleX are in the same position.
   nobody can look you up by one. People search only finds a handle whose
   owner turned on "Show me in search", and it is off unless you do.
 - A new contact comes through a QR code you scanned, an invite link you gave
-  out, or a six digit code read out in person. Anything else waits in a
-  requests inbox until you decide.
+  out, or an eight digit pair code read out in person. Anything else waits in
+  a requests inbox until you decide.
+- Until you accept, a request shows only words: at most two messages, links
+  as plain text with no preview, and photos and files held back.
 - First contact costs the sender's phone some work, so messaging thousands of
   people is slow and expensive.
 - Public handles are off unless you turn one on, and you can retire yours at

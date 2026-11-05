@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -265,6 +266,73 @@ func fillPage(t *testing.T, db *store, to string) map[string]bool {
 		page[ev.ID] = true
 	}
 	return page
+}
+
+// once their clients are gone the relay holds none of their connections:
+// no goroutine, no entry and no slot of the listener list keeps one
+func TestClosedConnectionsAreLetGo(t *testing.T) {
+	const n = 20
+	var gone atomic.Int32
+	url, l := slowRelay(t, memStore(t), func(r *khatru.Relay) {
+		r.OnConnect = append(r.OnConnect, func(ctx context.Context) {
+			runtime.AddCleanup(khatru.GetConnection(ctx), func(struct{}) { gone.Add(1) }, struct{}{})
+		})
+	})
+	var cs []*websocket.Conn
+	for i := 0; i < n; i++ {
+		c := dialSlow(t, url)
+		listen(t, c, addr())
+		cs = append(cs, c)
+	}
+	for _, c := range cs {
+		c.Close()
+	}
+	waitConns(t, l, 0, 5*time.Second)
+	end := time.Now().Add(5 * time.Second)
+	for gone.Load() < n {
+		if time.Now().After(end) {
+			t.Fatalf("%d of %d closed connections still held", n-int(gone.Load()), n)
+		}
+		runtime.GC()
+		time.Sleep(50 * time.Millisecond)
+	}
+}
+
+// readers stopped in the middle of their pages hold no store connection,
+// so more of them than the store has connections leave it free: a
+// publisher is answered and a new reader gets its page
+func TestStoppedPagesHoldNoStoreConnection(t *testing.T) {
+	defer func(n int) { storeConns = n }(storeConns)
+	storeConns = 4
+	db, _ := testStore(t)
+	url, _ := slowRelay(t, db, func(r *khatru.Relay) { r.WriteWait = time.Minute })
+	for i := 0; i < storeConns+4; i++ {
+		to := addr()
+		for j := 0; j < 10; j++ {
+			ev := bigWrap(t, to, nostr.Now()-3600-nostr.Timestamp(j))
+			if err := db.SaveEvent(context.Background(), &ev); err != nil {
+				t.Fatal(err)
+			}
+		}
+		startPage(t, dialSlow(t, url), to)
+	}
+	if st := db.Stats(); st.InUse != 0 || st.OpenConnections > storeConns {
+		t.Fatalf("stopped pages hold %d store connections, %d open", st.InUse, st.OpenConnections)
+	}
+	if d := publishTimed(t, connect(t, url), wrap(t, addr(), nil)); d >= 2*time.Second {
+		t.Fatalf("an ok took %v", d)
+	}
+	to := addr()
+	for i := 0; i < 3; i++ {
+		ev := wrap(t, to, nil)
+		if err := db.SaveEvent(context.Background(), &ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, why := ask(t, connect(t, url), nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Limit: 100})
+	if why != "" || len(got) != 3 {
+		t.Fatalf("a new reader got %d of 3 wraps, closed %q", len(got), why)
+	}
 }
 
 // starts a page of stored wraps to a raw client and reads its first wrap,
