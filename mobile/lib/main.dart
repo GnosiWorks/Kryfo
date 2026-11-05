@@ -271,6 +271,7 @@ part 'app/signal.dart';
 part 'app/door.dart';
 part 'app/state.dart';
 part 'app/state_arrivals.dart';
+part 'app/state_bench.dart';
 part 'app/state_boot.dart';
 part 'app/state_bridges.dart';
 part 'app/state_contacts.dart';
@@ -352,6 +353,8 @@ void main() async {
       why: why,
     );
   });
+  // debug and profile builds: the reliability harness's sender (state_bench)
+  benchListen();
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started
   await loadAppLocale();
