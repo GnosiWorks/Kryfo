@@ -11437,6 +11437,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get linkedLinkOnPhone => 'این پیوند را روی گوشی‌تان باز کنید.';
 
   @override
+  String get linkedDoOnPhone => 'این کار را روی گوشی‌تان انجام دهید.';
+
+  @override
   String get tipsTitle => 'حمایت از Kryfo';
 
   @override

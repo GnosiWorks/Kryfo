@@ -8,6 +8,7 @@
 - typing indicator: in a 1:1 chat you see "Typing" under your contact's name and in the chat list while they write, and they see yours. it goes straight to them over tor, never through a relay, and only while you both have it on. it is on for everyone, also after the update, and off by itself while tor goes through a bridge or the chat is archived. turn it off under settings, privacy.
 - a universal apk with both arm builds in one file, on github and the site. it installs on every arm phone, so nobody has to know which one they need.
 - Kryfo in polish, the 17th language. thanks to padrian772 for reviewing the translation.
+- linked devices: link a computer to your phone. scan the code it shows, compare six digits, and pick what comes over: every chat, text only, or contacts and groups only. new messages reach the phone and the computer, read and deleted ones stay in step, and your supporter badge shows on both. hidden chats, the decoy, invites, rooms and group changes stay on the phone. remove a computer from the phone at any time; one left unused for 30 days erases itself.
 
 ### Changed
 - setup is shorter: five steps. your face is drawn from your name (change it in your profile), the route stays private (change it in settings), and the battery guide comes right after notifications.

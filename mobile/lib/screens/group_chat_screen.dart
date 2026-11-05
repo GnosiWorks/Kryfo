@@ -70,6 +70,7 @@ import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
         typeLeaf,
+        linkedRole,
         appState,
         AppStateFiles,
         kNotSent,
@@ -4769,7 +4770,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               // its admin went with "this isn't them": the group is frozen here
               EaseSize(
                 child: _adminGone && _end == null
-                    ? _AdminGoneLine(onLeave: _leaveAdminGone)
+                    ? _AdminGoneLine(
+                        // a linked device leaves on its phone (GroupOnPhone)
+                        onLeave: linkedRole ? null : _leaveAdminGone,
+                      )
                     : const SizedBox(width: double.infinity, height: 0),
               ),
               // a send that has waited on tor a minute gets a way out
@@ -7232,7 +7236,7 @@ class _MissingPhoto extends StatelessWidget {
 // the line in a group whose admin "this isn't them" took off this phone:
 // nothing it changes reaches here, and the way out
 class _AdminGoneLine extends StatelessWidget {
-  final VoidCallback onLeave;
+  final VoidCallback? onLeave;
   const _AdminGoneLine({required this.onLeave});
 
   @override
@@ -7265,26 +7269,30 @@ class _AdminGoneLine extends StatelessWidget {
               ),
             ),
           ),
-          Semantics(
-            button: true,
-            child: PressScale(
-              onTap: onLeave,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                alignment: Alignment.center,
-                color: Colors.transparent,
-                child: Text(
-                  l10n.groupInfoLeave,
-                  style: HaloType.sans(
-                    size: 13,
-                    weight: FontWeight.w600,
-                    color: HaloColors.roseText,
+          if (onLeave != null)
+            Semantics(
+              button: true,
+              child: PressScale(
+                onTap: onLeave,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  alignment: Alignment.center,
+                  color: Colors.transparent,
+                  child: Text(
+                    l10n.groupInfoLeave,
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: HaloColors.roseText,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

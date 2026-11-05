@@ -1103,7 +1103,7 @@ extension AppStateGroups on AppState {
     List<String> memberHaloIds,
   ) async {
     // groups are made on the phone: a phone takes no group from a device
-    if (linkedRole) throw StateError('no new group on a linked device');
+    if (linkedRole) throw const GroupOnPhone();
     // a group of only yourself is never made, whatever the screen let by
     if (!memberHaloIds.any((m) => m != sessionId)) {
       throw StateError('a group needs someone besides you');
@@ -1150,6 +1150,7 @@ extension AppStateGroups on AppState {
     String groupId,
     List<String> newHaloIds,
   ) async {
+    if (linkedRole) throw const GroupOnPhone();
     final group = await session.getGroup(groupId);
     if (group == null || groupEndOf(group) != null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
@@ -1204,6 +1205,7 @@ extension AppStateGroups on AppState {
     String groupId,
     List<String> removedHaloIds,
   ) async {
+    if (linkedRole) throw const GroupOnPhone();
     final group = await session.getGroup(groupId);
     if (group == null || groupEndOf(group) != null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
@@ -1263,6 +1265,7 @@ extension AppStateGroups on AppState {
   }
 
   Future<void> renameGroupAndAnnounce(String groupId, String newName) async {
+    if (linkedRole) throw const GroupOnPhone();
     final group = await session.getGroup(groupId);
     if (group == null || groupEndOf(group) != null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
@@ -1278,6 +1281,7 @@ extension AppStateGroups on AppState {
   // each keeps its line. a version that cannot read the end gets one plain
   // message saying so, which this one never keeps
   Future<bool> endGroupAndAnnounce(String groupId) async {
+    if (linkedRole) throw const GroupOnPhone();
     if (!mayEndGroup(await session.getGroup(groupId), sessionId)) return false;
     // the session's own: a decoy's group is the decoy's
     final d = session.groupDb(groupId);
@@ -1318,6 +1322,9 @@ extension AppStateGroups on AppState {
     }
     final d = _ownerOf(groupId);
     final ended = groupEndOf(await session.getGroup(groupId)) != null;
+    // an ended group only goes from here, on a linked device too; one that
+    // runs is left on the phone
+    if (linkedRole && !ended) throw const GroupOnPhone();
     final members = sessionQuiet || ended
         ? const <String>[]
         : await d.getGroupMembers(groupId);

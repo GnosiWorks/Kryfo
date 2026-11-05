@@ -11611,6 +11611,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get linkedLinkOnPhone => 'Откройте эту ссылку на телефоне.';
 
   @override
+  String get linkedDoOnPhone => 'Сделайте это на телефоне.';
+
+  @override
   String get tipsTitle => 'Поддержать Kryfo';
 
   @override

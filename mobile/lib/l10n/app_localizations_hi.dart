@@ -11432,6 +11432,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get linkedLinkOnPhone => 'यह लिंक अपने फ़ोन पर खोलें।';
 
   @override
+  String get linkedDoOnPhone => 'यह अपने फ़ोन पर करें।';
+
+  @override
   String get tipsTitle => 'Kryfo का सहयोग करें';
 
   @override

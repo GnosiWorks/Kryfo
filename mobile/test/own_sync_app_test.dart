@@ -33,6 +33,8 @@ import 'package:kryfo/main.dart'
         linkedRoleForTest,
         ownApplyForTest,
         ownPassForTest,
+        ownTellMeForTest,
+        AppStateRefresh,
         ownHeldGoForTest,
         ownNoteForTest,
         ownAroundHideForTest,
@@ -51,6 +53,7 @@ import 'package:kryfo/main.dart'
         AppStateContacts;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/supporter.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
@@ -549,6 +552,83 @@ void main() {
     expect(told.ops.last.$2, 'p:bob');
     // and nothing ever names the hidden chat
     expect(told.ops.where((o) => o.$2 == 'p:hid'), isEmpty);
+  }, skip: skip);
+
+  test('my badge rides my profile to my devices: at once to a device just '
+      'linked, and when it moves', () async {
+    await saveSupporterTier(SupporterTier.patron);
+    await saveShareBadge(true);
+    await ownPassForTest();
+    expect(told.ops, isEmpty);
+    await ownTellMeForTest();
+    expect(told.ops.single.$1, 'profile');
+    expect(told.ops.single.$2, isNull);
+    expect(told.ops.single.$3['h'], 'me');
+    expect(told.ops.single.$3['bg'], {'t': 'patron', 's': false, 'c': true});
+    // told once: the next pass has nothing new
+    await ownPassForTest();
+    expect(told.ops, hasLength(1));
+    // a choice that moves goes at the next pass, and so does a tier
+    await saveShowBadgeSelf(true);
+    await ownPassForTest();
+    expect(told.ops.last.$3['bg'], {'t': 'patron', 's': true, 'c': true});
+    await saveSupporterTier(SupporterTier.guardian);
+    await ownPassForTest();
+    expect(told.ops.last.$3['bg'], {'t': 'guardian', 's': true, 'c': true});
+    expect(told.ops, hasLength(3));
+  }, skip: skip);
+
+  test('a badge or a choice that moves on the everyday side asks for a pass; '
+      'the decoy\'s or the vault\'s never', () async {
+    var moved = 0;
+    supporterMoved = () => moved++;
+    addTearDown(() => supporterMoved = null);
+    await saveSupporterTier(SupporterTier.patron);
+    await saveShowBadgeSelf(true);
+    await saveShareBadge(true);
+    expect(moved, 3);
+    for (final c in [HaloContainer.decoy, HaloContainer.vault]) {
+      await saveSupporterTier(SupporterTier.guardian, c);
+      await saveShowBadgeSelf(false, c);
+      await saveShareBadge(false, c);
+    }
+    expect(moved, 3);
+  }, skip: skip);
+
+  test('a linked device wears and shares my badge as my phone does, so what '
+      'it sends carries it and clears it at no contact', () async {
+    linkedRoleForTest = true;
+    expect(await app.sharedBadge(), isNull);
+    expect(
+      await op('profile', null, {
+        'h': 'my-phone',
+        'bg': {'t': 'patron', 's': true, 'c': true},
+      }),
+      isTrue,
+    );
+    expect(await loadSupporterTier(), SupporterTier.patron);
+    expect(await loadShowBadgeSelf(), isTrue);
+    expect(await app.sharedBadge(), 'patron');
+    // the phone stops sharing it, or holds a tier this build does not know
+    await op('profile', null, {
+      'h': 'my-phone',
+      'bg': {'t': 'patron', 's': true, 'c': false},
+    });
+    expect(await app.sharedBadge(), isNull);
+    await op('profile', null, {
+      'h': 'my-phone',
+      'bg': {'t': 'emperor', 'c': true},
+    });
+    expect(await loadSupporterTier(), SupporterTier.none);
+    expect(await loadShowBadgeSelf(), isTrue);
+    expect(await app.sharedBadge(), isNull);
+    // a profile op on the phone moves nothing
+    linkedRoleForTest = false;
+    await op('profile', null, {
+      'h': 'x',
+      'bg': {'t': 'guardian', 'c': true},
+    });
+    expect(await loadSupporterTier(), SupporterTier.none);
   }, skip: skip);
 
   test('nothing is told while the decoy is open', () async {

@@ -23,6 +23,7 @@ import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
         wallKey,
+        linkedRoleForTest,
         GroupPreview,
         HaloDb,
         appState,
@@ -499,6 +500,42 @@ void main() {
       await _settle(t);
       expect(_hint(l10n.groupShotsOnForAll), findsOneWidget);
       expect(find.text(l10n.groupShotsWaitingFor(1)), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('on a linked device the admin\'s ways to change the group are '
+        'the phone\'s: no rename, add, remove, end or leave, the switch only '
+        'reads, and the page says where', (t) async {
+      final db = _use(t, _mine());
+      appState.contacts = [_contact(_anna, nick: 'Anna'), _contact(_bo)];
+      linkedRoleForTest = true;
+      addTearDown(() => linkedRoleForTest = false);
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await _settle(t);
+      expect(find.byIcon(Icons.edit_outlined), findsNothing);
+      expect(find.text(l10n.commonAdd), findsNothing);
+      expect(find.text(l10n.groupInfoEndGroup), findsNothing);
+      expect(find.byKey(const ValueKey('members-on-phone')), findsOneWidget);
+      expect(find.byKey(const ValueKey('leave-on-phone')), findsOneWidget);
+      // the switch reads, under the same words
+      expect(_switch(t).onChanged, isNull);
+      expect(find.text(l10n.linkedDoOnPhone), findsNWidgets(3));
+      await t.tap(find.text(l10n.chatBlockScreenshots));
+      await t.tap(find.text(l10n.groupInfoLeaveGroup2));
+      await _settle(t);
+      expect(db.shots['shots_on'], isNot(1));
+      expect(db.queued, isEmpty);
+      expect(find.text(l10n.groupInfoLeave), findsNothing);
+      await _close(t);
+      // the phone's page as before
+      linkedRoleForTest = false;
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await _settle(t);
+      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+      expect(find.text(l10n.commonAdd), findsOneWidget);
+      expect(find.text(l10n.groupInfoEndGroup), findsOneWidget);
+      expect(find.text(l10n.linkedDoOnPhone), findsNothing);
+      expect(_switch(t).onChanged, isNotNull);
       await _close(t);
     });
 

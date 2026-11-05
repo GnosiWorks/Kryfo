@@ -11411,6 +11411,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get linkedLinkOnPhone => 'Mở liên kết này trên điện thoại của bạn.';
 
   @override
+  String get linkedDoOnPhone => 'Hãy làm việc này trên điện thoại của bạn.';
+
+  @override
   String get tipsTitle => 'Ủng hộ Kryfo';
 
   @override
