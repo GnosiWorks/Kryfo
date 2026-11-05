@@ -1287,9 +1287,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'عندما تطلب جسورًا، يرى مشروع Tor عنوان IP الخاص بك. هذا أمر عادي: هكذا يحصل Tor Browser وكل تطبيقات Tor على الجسور، وكل ما يعرفونه من ذلك أن أحدًا طلب جسورًا. لا شيء عن محادثاتك.';
 
   @override
-  String get bridgesAsking => 'جارٍ الطلب…';
-
-  @override
   String get cameraNoCameraOnThis => 'لا كاميرا في هذا الهاتف';
 
   @override
@@ -7333,9 +7330,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportBridgeMode => 'الجسور';
 
   @override
-  String get bridgesEgypt => 'مصر';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'تعذّر تشغيل الجسر';
 
   @override
@@ -7380,9 +7374,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'إيران';
-
-  @override
   String get bridgesTurnOnAutomatic => 'تفعيل الوضع التلقائي';
 
   @override
@@ -7414,9 +7405,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesScanACode => 'قراءة رمز';
 
   @override
-  String get bridgesMyanmar => 'ميانمار';
-
-  @override
   String get bridgesSwitchToAutomatic => 'التبديل إلى الوضع التلقائي';
 
   @override
@@ -7438,9 +7426,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'يمر عبر حاسوب أحد المتطوعين. صعب الحجب، بطيء البدء.';
-
-  @override
-  String get bridgesLetTheTorProject => 'دع مشروع Tor يخمّن';
 
   @override
   String get bridgesTorSeemsBlocked => 'يبدو أن Tor محجوب على هذه الشبكة';
@@ -7474,10 +7459,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesKryfoFindsAWay => 'يجد Kryfo طريقة تعمل حيث أنت.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'لدى مشروع Tor نصائح خاصة لهذه البلدان.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'لا يستطيع هذا الجسر العبور';
 
   @override
@@ -7489,9 +7470,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'ليس الآن';
-
-  @override
-  String get bridgesRussia => 'روسيا';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7517,9 +7495,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesAlmostThere => 'اقتربنا';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'تخمين مشروع Tor';
-
-  @override
   String get bridgesUseThisBridge => 'استخدام هذا الجسر';
 
   @override
@@ -7538,9 +7513,6 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'تركمانستان';
 
   @override
   String get transportBridgeMethod => 'الطريقة';
@@ -7566,11 +7538,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'قد تتوقف الجسور عن العمل دون إنذار. يستطيع «تلقائي» إيجاد طريقة أخرى.';
 
   @override
-  String get bridgesHongKong => 'هونغ كونغ';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'حين يُحجب Tor، يسأل «تلقائي» مشروع Tor عمّا يعمل في بلدك.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'يختار Kryfo الجسور تلقائيًا. يعمل Snowflake وWebTunnel في معظم الأماكن. إذا لم يتصل أحدها، فجرّب غيره، أو اطلب سطر جسر من صديق.';
 
   @override
   String get bridgesAskTorProject => 'اسأل مشروع Tor';
@@ -7579,18 +7552,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesTooLongForTor => 'أطول من أن يستخدمه Tor';
 
   @override
-  String get bridgesCountry => 'البلد';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '⁨$method⁩، ⁨$from⁩';
   }
-
-  @override
-  String get bridgesChina => 'الصين';
-
-  @override
-  String get bridgesBelarus => 'بيلاروس';
 
   @override
   String get bridgesKryfoCanTUseThis => 'لا يستطيع Kryfo استخدام هذا السطر';
@@ -9245,9 +9209,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mediaSendVideo => 'إرسال الفيديو';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'حتى يقبل، يمكن إرسال ⁨$count⁩';
-  }
+  String get requestSenderMediaLater =>
+      'تُفتح الصور والملفات بعد أن يقبلك، لتبقيا في أمان.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'تُفتح الصور والملفات بعد أن تقبله، لتبقى في أمان.';
 
   @override
   String get groupEndedYou => 'أنهيت هذه المجموعة';
@@ -9816,7 +9783,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على Google معرفة متى تصل الرسائل الحقيقية. لا يخزّن مُرحِّلنا إلا عناوين لا يستطيع الربط بينها. تعمل خدمة الإشعارات الفورية على الخادم نفسه ويمكنها الربط بينها، وبمساعدة Google بحسابك على Google أيضًا، لذا يستطيع ذلك أيضًا من يدير خادمنا أو يصادره. إن كان هذا يهمّك، فاختر طريقة أخرى. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
+      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على Google معرفة متى تصل الرسائل الحقيقية. لا يخزّن مُرحِّلنا إلا عناوين لا يستطيع الربط بينها. تعمل خدمة الإشعارات الفورية على خادمنا الثاني. يستطيع الخادمان معًا الربط بينها، وبمساعدة Google بحسابك على Google أيضًا. مصادرة أحدهما لا تكفي، لكننا نُدير الاثنين، فنستطيع نحن ذلك. إن كان هذا يهمّك، فاختر طريقة أخرى. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11311,7 +11278,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return 'يحتاج ⁨$name⁩ إلى تحديث Kryfo لمتابعة المحادثة.';
+    return 'يحتاج ⁨$name⁩ إلى تحديث Kryfo لمتابعة المحادثة';
   }
 
   @override
@@ -11515,6 +11482,41 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'ربطت نسخة أخرى من Kryfo جهازًا بحسابك. أزاله هذا الهاتف من قائمتك.';
+
+  @override
+  String get albumPrevious => 'السابق';
+
+  @override
+  String get albumNext => 'التالي';
+
+  @override
+  String get notesHoldHintDesk =>
+      'انقر بزر الفأرة الأيمن على ملاحظة لنسخها أو حذفها.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'لا شيء مثبّت هنا بعد. انقر بزر الفأرة الأيمن على رسالة واختر «تثبيت»، فتنتظر هنا للجميع في المحادثة.';
+
+  @override
+  String get chatGalleryDesk => 'الصور';
+
+  @override
+  String get groupChatGalleryDesk => 'الصور';
+
+  @override
+  String get photoChooseDesk => 'اختر ملف صورة';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'من ملف صورة';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'الصوت';
+
+  @override
+  String get notificationsPlaySound => 'تشغيل صوت';
+
+  @override
+  String get notificationsPlaySoundHint => 'مع كل إشعار على هذا الحاسوب';
 
   @override
   String bridgesShareBridgeN(String n) {

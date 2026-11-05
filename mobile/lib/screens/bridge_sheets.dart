@@ -217,31 +217,6 @@ Future<void> showTorProjectConsentSheet(BuildContext context) async {
   if (yes == true) await appState.setBridgeConsent(true);
 }
 
-/// the countries the tor project has advice for, its own guess marked
-Future<String?> showCountrySheet(
-  BuildContext context, {
-  required String current,
-  String? guess,
-}) => showChoiceSheet<String>(
-  context,
-  title: l10n.bridgesCountry,
-  line: l10n.bridgesTheTorProjectKnows,
-  current: current,
-  choices: [
-    SheetChoice('', l10n.bridgesLetTheTorProject),
-    // a guess the tor project has no advice for is still the person's
-    for (final cc in [
-      ...kBridgeCountries,
-      if (guess != null && !kBridgeCountries.contains(guess)) guess,
-    ])
-      SheetChoice(
-        cc,
-        bridgeCountryName(cc),
-        hint: cc == guess ? l10n.bridgesTheTorProjectSGuess : null,
-      ),
-  ],
-);
-
 /// a friend's lines: pasted or scanned, read by the engine, used at once
 Future<void> showFriendLinesSheet(BuildContext context) => showHaloSheet<void>(
   context,

@@ -1243,9 +1243,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'وقتی پل درخواست می‌کنید، پروژه‌ی Tor نشانی IP شما را می‌بیند. این عادی است: Tor Browser و همه‌ی برنامه‌های Tor همین‌طور پل می‌گیرند، و تنها چیزی که از این می‌فهمند این است که کسی پل خواسته است. چیزی درباره‌ی گفت‌وگوهای شما نمی‌فهمند.';
 
   @override
-  String get bridgesAsking => 'در حال درخواست…';
-
-  @override
   String get cameraNoCameraOnThis => 'این گوشی دوربین ندارد';
 
   @override
@@ -7216,9 +7213,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get transportBridgeMode => 'پل‌ها';
 
   @override
-  String get bridgesEgypt => 'مصر';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'پل شما راه‌اندازی نشد';
 
   @override
@@ -7263,9 +7257,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'ایران';
-
-  @override
   String get bridgesTurnOnAutomatic => 'روشن کردن حالت خودکار';
 
   @override
@@ -7297,9 +7288,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesScanACode => 'اسکن کد';
 
   @override
-  String get bridgesMyanmar => 'میانمار';
-
-  @override
   String get bridgesSwitchToAutomatic => 'رفتن به حالت خودکار';
 
   @override
@@ -7321,9 +7309,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'از رایانه‌ی یک داوطلب می‌گذرد. مسدود کردنش سخت است و شروعش کند.';
-
-  @override
-  String get bridgesLetTheTorProject => 'بگذارید پروژه‌ی Tor حدس بزند';
 
   @override
   String get bridgesTorSeemsBlocked =>
@@ -7355,10 +7340,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'Kryfo راهی پیدا می‌کند که جایی که هستید جواب بدهد.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'پروژه‌ی Tor برای این کشورها توصیه‌های خودش را دارد.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'این پل راه پیدا نمی‌کند';
 
   @override
@@ -7370,9 +7351,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'فعلاً نه';
-
-  @override
-  String get bridgesRussia => 'روسیه';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7398,9 +7376,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesAlmostThere => 'چیزی نمانده';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'حدس پروژه‌ی Tor';
-
-  @override
   String get bridgesUseThisBridge => 'استفاده از این پل';
 
   @override
@@ -7416,9 +7391,6 @@ class AppLocalizationsFa extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'ترکمنستان';
 
   @override
   String get transportBridgeMethod => 'روش';
@@ -7445,11 +7417,12 @@ class AppLocalizationsFa extends AppLocalizations {
       'پل‌ها ممکن است بی‌خبر از کار بیفتند. «خودکار» می‌تواند راه دیگری پیدا کند.';
 
   @override
-  String get bridgesHongKong => 'هنگ کنگ';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'وقتی Tor مسدود است، «خودکار» از پروژه‌ی Tor می‌پرسد در کشور شما چه جواب می‌دهد.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo پل‌ها را خودکار انتخاب می‌کند. Snowflake و WebTunnel در بیشتر جاها کار می‌کنند. اگر یکی وصل نشد، یکی دیگر را امتحان کنید یا از یک دوست خط پل بخواهید.';
 
   @override
   String get bridgesAskTorProject => 'پرسیدن از پروژه‌ی Tor';
@@ -7458,18 +7431,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesTooLongForTor => 'برای Tor بیش از حد بلند است';
 
   @override
-  String get bridgesCountry => 'کشور';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '⁨$method⁩، ⁨$from⁩';
   }
-
-  @override
-  String get bridgesChina => 'چین';
-
-  @override
-  String get bridgesBelarus => 'بلاروس';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo نمی‌تواند از این خط استفاده کند';
@@ -9121,9 +9085,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get mediaSendVideo => 'ارسال ویدیو';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'تا وقتی قبول نکند، ⁨$count⁩ مورد می‌تواند برود';
-  }
+  String get requestSenderMediaLater =>
+      'عکس‌ها و فایل‌ها بعد از این‌که شما را قبول کند باز می‌شوند، تا هر دو در امان باشید.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'عکس‌ها و فایل‌ها بعد از این‌که او را قبول کنید باز می‌شوند، تا در امان بمانید.';
 
   @override
   String get groupEndedYou => 'شما این گروه را پایان دادید';
@@ -9689,7 +9656,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای گوگل سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. رله‌ی ما فقط نشانی‌هایی را نگه می‌دارد که نمی‌تواند به هم ربط دهد. سرویس اعلان فوری روی همان سرور اجرا می‌شود و می‌تواند آن‌ها را به هم ربط دهد، و با کمک گوگل به حساب گوگل شما هم، پس هر کسی که سرور ما را اداره یا توقیف کند هم می‌تواند. اگر این برایتان مهم است، راه دیگری انتخاب کنید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
+      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای گوگل سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. رله‌ی ما فقط نشانی‌هایی را نگه می‌دارد که نمی‌تواند به هم ربط دهد. سرویس اعلان فوری روی سرور دوم ما اجرا می‌شود. این دو سرور با هم می‌توانند آن‌ها را به هم ربط دهند، و با کمک گوگل به حساب گوگل شما هم. توقیف یکی از آن‌ها کافی نیست، اما هر دو را ما اداره می‌کنیم، پس ما می‌توانیم. اگر این برایتان مهم است، راه دیگری انتخاب کنید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11179,7 +11146,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند.';
+    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند';
   }
 
   @override
@@ -11385,6 +11352,41 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'نسخهٔ دیگری از Kryfo دستگاهی را به حساب‌تان پیوند داد. این گوشی آن را از فهرست‌تان برداشت.';
+
+  @override
+  String get albumPrevious => 'قبلی';
+
+  @override
+  String get albumNext => 'بعدی';
+
+  @override
+  String get notesHoldHintDesk =>
+      'برای کپی یا حذف، روی یادداشت راست‌کلیک کنید.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'هنوز چیزی این‌جا سنجاق نشده. روی پیامی راست‌کلیک کنید و «سنجاق» را انتخاب کنید تا این‌جا برای همه‌ی اعضای گفت‌وگو بماند.';
+
+  @override
+  String get chatGalleryDesk => 'تصویرها';
+
+  @override
+  String get groupChatGalleryDesk => 'تصویرها';
+
+  @override
+  String get photoChooseDesk => 'انتخاب فایل تصویر';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'از یک فایل تصویر';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'صدا';
+
+  @override
+  String get notificationsPlaySound => 'پخش صدا';
+
+  @override
+  String get notificationsPlaySoundHint => 'با هر اعلان روی این رایانه';
 
   @override
   String bridgesShareBridgeN(String n) {

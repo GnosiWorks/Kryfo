@@ -193,3 +193,50 @@ func TestStoredSizeCoversTheRow(t *testing.T) {
 		}
 	}
 }
+
+// a page comes back with its store connection already given back, whole,
+// and a reader that goes away lets the rest go
+func TestPageGivesItsConnectionBack(t *testing.T) {
+	db, _ := testStore(t)
+	to := addr()
+	for i := 0; i < 5; i++ {
+		ev := wrap(t, to, nil)
+		if err := db.SaveEvent(context.Background(), &ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	f := nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Limit: 100}
+	ch, err := db.QueryEvents(context.Background(), f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := db.Stats().InUse; n != 0 {
+		t.Fatalf("%d store connections held by a page nobody has read yet", n)
+	}
+	n := 0
+	for range ch {
+		n++
+	}
+	if n != 5 {
+		t.Fatalf("%d of 5 wraps", n)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	ch, err = db.QueryEvents(ctx, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+	cancel()
+	end := time.After(2 * time.Second)
+	for {
+		select {
+		case _, ok := <-ch:
+			if !ok {
+				return
+			}
+		case <-end:
+			t.Fatal("a page went on after its reader went away")
+		}
+	}
+}

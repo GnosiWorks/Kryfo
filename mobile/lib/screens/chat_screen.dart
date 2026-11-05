@@ -82,6 +82,7 @@ import '../media_send.dart'
     show sendChunkedMediaTo, cancelMediaSend, mediaInflight, mediaSendsTick;
 import '../clean_media.dart';
 import '../image_strip.dart';
+import '../widgets/desk_select.dart';
 import '../widgets/decode_px.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import '../devchat/dev_chat.dart' show DevChatRow, DevRow, DevState;
@@ -1237,6 +1238,26 @@ class _ChatScreenState extends State<ChatScreen>
   int? _voucherAvatar;
   bool _voucherVerified = false;
   bool get _vouched => _voucherNames.isNotEmpty;
+  // a request to a stranger is words alone until they accept: no photo,
+  // file, voice note or gif goes from here, and their side holds any that
+  // come. an introduced one, the dev chat and his support chats keep theirs
+  bool get _mediaWaits =>
+      _requestPending && !_vouched && !_isDev && !widget.support;
+  // their side of it: what a stranger sent with a file waits, unshown,
+  // until the accept. a decline shreds it
+  bool _heldBack(_Msg m) =>
+      _incomingRequest &&
+      !_vouched &&
+      !_isDev &&
+      m.direction != 'out' &&
+      (m.mediaPath != null || m.filePath != null || m.fileName != null);
+  // said wherever media was reached for in a request still waiting
+  bool _sayMediaLater() {
+    if (!_mediaWaits) return false;
+    if (mounted) showHaloToast(context, l10n.requestSenderMediaLater);
+    return true;
+  }
+
   // what the scam shield saw on this stranger, if anything and not dismissed
   ShieldFlag? _flag;
   bool _showScrollDown = false;
@@ -1368,6 +1389,9 @@ class _ChatScreenState extends State<ChatScreen>
     super.initState();
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
+    // a computer: the chat opens ready to type. the field takes it as soon
+    // as it is built
+    if (onDesktop) _composerFocus.requestFocus();
     if (_isDev) {
       final d = _devShown;
       _devOpening = DevOpening(
@@ -2159,6 +2183,7 @@ class _ChatScreenState extends State<ChatScreen>
         // first line is the app's, not the chat's
         if (_messages[i].sticker == null &&
             !_messages[i].welcome &&
+            !_heldBack(_messages[i]) &&
             _messages[i].text.toLowerCase().contains(lower)) {
           matches.add(i);
         }
@@ -3811,13 +3836,17 @@ class _ChatScreenState extends State<ChatScreen>
     final pick = await showStickerSheet(
       context,
       container: session.container,
-      gifs: appGifTabs(),
+      // a gif goes as a photo: none in a request still waiting
+      gifs: _mediaWaits ? null : appGifTabs(),
     );
     // the sheet hands focus back to the composer; the keyboard stays down
     FocusManager.instance.primaryFocus?.unfocus();
     if (pick == null || !mounted) return;
     // a found gif goes the way a gif from the phone goes: inside the
     // message, cleaned, never fetched again by anyone
+    if (pick is GifPick || pick is PhoneGifPick) {
+      if (_sayMediaLater()) return;
+    }
     if (pick is GifPick) return _sendOneImage(pick.bytes, '');
     if (pick is PhoneGifPick) return _pickAndSendGif();
     if (pick is! StickerPick) return;
@@ -3919,7 +3948,7 @@ class _ChatScreenState extends State<ChatScreen>
           AttachItem(
             icon: (c) => Icon(Icons.photo_library_outlined, color: c),
             tint: HaloColors.violet,
-            label: l10n.chatGallery,
+            label: l10n.chatGalleryShown,
             onTap: _pickAndSendMultiple,
           ),
           AttachItem(
@@ -3962,7 +3991,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
 
     // the chat went while the note was made: the raw voice goes, unsent
-    if (!mounted || _requestLocked) {
+    if (!mounted || _requestLocked || _sayMediaLater()) {
       // one that will not go is swept at the next start
       drop().ignore();
       return;
@@ -4285,7 +4314,7 @@ class _ChatScreenState extends State<ChatScreen>
   // src is a file this app can read: the picker's copy or a camera clip.
   // it is copied into the media folder, never read into memory.
   Future<void> _sendFileFrom(String src, String picked) async {
-    if (_requestLocked) return;
+    if (_requestLocked || _sayMediaLater()) return;
     final ready = await _readyFile(src, picked);
     if (ready != null) await _sendReady(ready, '');
   }
@@ -4373,9 +4402,9 @@ class _ChatScreenState extends State<ChatScreen>
     return _Ready(msgUid, mediaFile.path);
   }
 
-  // a ready photo or file shown and sent. two of anything before they
-  // accept, photos included: the far side holds a third, and a slot is
-  // taken before any await so a second send cannot slip past
+  // a ready photo or file shown and sent. none to a stranger before they
+  // accept (their side holds it), and to the dev chat a slot is taken
+  // before any await so a second send cannot slip past
   Future<void> _sendReady(
     _Ready ready,
     String caption, {
@@ -4395,7 +4424,7 @@ class _ChatScreenState extends State<ChatScreen>
       drop();
       return;
     }
-    if (_requestLocked) {
+    if (_requestLocked || _sayMediaLater()) {
       await shredFile(ready.path);
       drop();
       return;
@@ -4564,11 +4593,10 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  // the slots a request has left: to someone who has not accepted yet, two
-  // things in all (kDevCap to the developer)
-  int get _roomLeft => _requestPending && !_vouched
-      ? (_isDev ? kDevCap : 2) - _sentCount
-      : kPickMax;
+  // the slots the dev chat has left before his first word: kDevCap in all.
+  // a stranger's request takes none (_mediaWaits)
+  int get _roomLeft =>
+      _requestPending && !_vouched && _isDev ? kDevCap - _sentCount : kPickMax;
 
   // a big file's question, asked over the preview before it closes
   Future<bool> _askBig(List<PickedMedia> items) async {
@@ -4594,11 +4622,14 @@ class _ChatScreenState extends State<ChatScreen>
   ]) async {
     if (!mounted) return null;
     final room = _roomLeft;
-    if (room <= 0) {
+    if (_mediaWaits || room <= 0) {
       for (final m in items) {
         if (m.video case final v?) unawaited(shredPickedImages([v]));
       }
-      showHaloToast(context, l10n.mediaSendUntilAccepted(whole(0)));
+      showHaloToast(
+        context,
+        _mediaWaits ? l10n.requestSenderMediaLater : l10n.chatWaitingForThemTo,
+      );
       return null;
     }
     return Navigator.of(context).push<MediaSendResult?>(
@@ -4611,7 +4642,6 @@ class _ChatScreenState extends State<ChatScreen>
           addMore: more,
           secure: _secureNext,
           max: room,
-          request: room < kPickMax,
           beforeSend: _askBig,
           onGone: (videos) => unawaited(shredPickedImages(videos)),
         ),
@@ -4792,7 +4822,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _sendOneImage(Uint8List raw, String caption) async {
     // first, so a photo that is dropped spends no request slot
-    if (_requestLocked) return;
+    if (_requestLocked || _sayMediaLater()) return;
     final ready = await _readyPhoto(raw);
     if (ready != null) await _sendReady(ready, caption);
   }
@@ -4915,6 +4945,9 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || (_devOpening?.busy ?? false)) return;
+    // a computer: the next words go straight on, the send button's click
+    // took the field's focus
+    if (onDesktop) _composerFocus.requestFocus();
     await _sendBody(text);
   }
 
@@ -5532,6 +5565,9 @@ class _ChatScreenState extends State<ChatScreen>
         // show on its own bubble, where reading them starts its clock
         if (original.burnUnread) {
           quoted = l10n.timedMessageLabel;
+        } else if (_heldBack(original)) {
+          // a stranger's file, its name and caption too, waits for the accept
+          quoted = l10n.requestReceiverMediaLater;
         } else if (original.sticker != null) {
           quoted = l10n.stickerLabel;
           quotedSticker = original.sticker;
@@ -6677,13 +6713,34 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   Widget build(BuildContext context) => menuBack(
-    child: DragInZone(
-      enabled: _composerShown,
-      send: _sendFileFrom,
-      couldNotRead: () => l10n.chatCouldNotReadThat,
-      child: _page(context),
+    child: PopScope(
+      canPop: !_escHolds,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _escOne();
+      },
+      child: DragInZone(
+        enabled: _composerShown && !_mediaWaits,
+        send: _sendFileFrom,
+        couldNotRead: () => l10n.chatCouldNotReadThat,
+        child: _page(context),
+      ),
     ),
   );
+
+  // esc on a computer lets go of the quote, then the search, and only then
+  // closes the chat
+  bool get _escHolds =>
+      onDesktop && ((_replyTo != null && !_blocked) || _searching);
+
+  void _escOne() {
+    if (_replyTo != null && !_blocked) {
+      setState(() => _replyTo = null);
+      _keepDraft();
+    } else if (_searching) {
+      _closeSearch();
+    }
+    if (onDesktop) _composerFocus.requestFocus();
+  }
 
   // the bar under the thread is the composer: a drop goes as a pick would
   bool get _composerShown =>
@@ -6796,6 +6853,7 @@ class _ChatScreenState extends State<ChatScreen>
                             ? _RequestBanner(
                                 key: const ValueKey('request'),
                                 compact: short,
+                                mediaLater: _mediaWaits,
                               )
                             : const SizedBox(
                                 key: ValueKey('top-none'),
@@ -6931,8 +6989,10 @@ class _ChatScreenState extends State<ChatScreen>
                                                   1 -
                                                   i];
                                           final id = _rowKey(row);
-                                          // drawn, and landed on, in its album
-                                          if (_albums.hidden(row)) {
+                                          // drawn, and landed on, in its album.
+                                          // a stranger's file waits unshown
+                                          if (_albums.hidden(row) ||
+                                              _heldBack(row)) {
                                             return SizedBox.shrink(
                                               key: ValueKey(id),
                                             );
@@ -7170,7 +7230,8 @@ class _ChatScreenState extends State<ChatScreen>
                         : _phoneOnly != null
                         ? 'bar_phone_only'
                         : _keyHeld && !_isDev
-                        ? 'bar_held'
+                        // a heal's card and a new key's card cross
+                        ? 'bar_held_${_healHold ?? 'key'}'
                         : 'bar_composer',
                   ),
                   child: !_barKnown
@@ -7237,6 +7298,7 @@ class _ChatScreenState extends State<ChatScreen>
                               ),
                             ),
                             _Composer(
+                              media: !_mediaWaits,
                               onAttach: _showAttachSheet,
                               onStickers: _showStickers,
                               onCamera: _openCamera,
@@ -7402,6 +7464,19 @@ class _AcceptRequestBar extends StatelessWidget {
               height: 1.5,
             ),
           ),
+          // a stranger's photos and files wait for the accept
+          if (introducer == null) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.requestReceiverMediaLater,
+              textAlign: TextAlign.center,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.5,
+              ),
+            ),
+          ],
           const SizedBox(height: 11),
           // every button takes a share of the row, so a long word or a big
           // font shrinks a label instead of pushing the row off the screen
@@ -7535,7 +7610,13 @@ class _IntroBanner extends StatelessWidget {
 class _RequestBanner extends StatelessWidget {
   // little room: closer in, and the line under the title on one line
   final bool compact;
-  const _RequestBanner({super.key, this.compact = false});
+  // photos and files wait for their accept: said under the line
+  final bool mediaLater;
+  const _RequestBanner({
+    super.key,
+    this.compact = false,
+    this.mediaLater = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -7577,6 +7658,17 @@ class _RequestBanner extends StatelessWidget {
               height: 1.5,
             ),
           ),
+          if (mediaLater && !compact) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.requestSenderMediaLater,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.5,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -8908,28 +9000,40 @@ class _Bubble extends StatelessWidget {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           if (msg.text.isNotEmpty)
-                                            writtenStart(
-                                              msg.text,
-                                              TranslatedBody(
-                                                chat: translation,
-                                                msgKey: trKeyOf(
-                                                  msg.msgUid,
-                                                  msg.came,
-                                                ),
-                                                text: msg.text,
-                                                enabled:
-                                                    !isOut &&
-                                                    query.isEmpty &&
-                                                    msg.sticker == null &&
-                                                    !msg.welcome,
-                                                original: _body(
-                                                  isOut,
-                                                  image: msg.mediaPath != null,
-                                                ),
-                                                translated: (t) => _body(
-                                                  isOut,
-                                                  image: msg.mediaPath != null,
-                                                  words: t,
+                                            DeskSelectable(
+                                              // a click on these words is the bubble's while it retries
+                                              enabled:
+                                                  !((failedShown || parked) &&
+                                                      onRetry != null),
+                                              onMenu: onLongPress == null
+                                                  ? null
+                                                  : () => onLongPress!(context),
+                                              onTap: onReveal,
+                                              child: writtenStart(
+                                                msg.text,
+                                                TranslatedBody(
+                                                  chat: translation,
+                                                  msgKey: trKeyOf(
+                                                    msg.msgUid,
+                                                    msg.came,
+                                                  ),
+                                                  text: msg.text,
+                                                  enabled:
+                                                      !isOut &&
+                                                      query.isEmpty &&
+                                                      msg.sticker == null &&
+                                                      !msg.welcome,
+                                                  original: _body(
+                                                    isOut,
+                                                    image:
+                                                        msg.mediaPath != null,
+                                                  ),
+                                                  translated: (t) => _body(
+                                                    isOut,
+                                                    image:
+                                                        msg.mediaPath != null,
+                                                    words: t,
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -9717,8 +9821,12 @@ class _Composer extends StatelessWidget {
   // on for good in this chat: the anonymous dev chat
   final bool disguiseLocked;
   final void Function(VoiceTake take) onVoice;
+  // photos, files, the camera and voice notes: off in a request to a
+  // stranger until they accept
+  final bool media;
 
   const _Composer({
+    this.media = true,
     required this.controller,
     this.focusNode,
     required this.onSend,
@@ -9853,7 +9961,7 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 1),
               // the camera that keeps its photos inside kryfo. each icon
               // sits in a finger-sized box, so a tap between them lands
-              if (!onDesktop)
+              if (!onDesktop && media)
                 PressScale(
                   label: l10n.chatOpenTheCamera,
                   onTap: onCamera,
@@ -9868,20 +9976,23 @@ class _Composer extends StatelessWidget {
                     ),
                   ),
                 ),
-              PressScale(
-                label: l10n.chatAttachAPhoto,
-                onTap: onAttach,
-                scale: 0.86,
-                child: SizedBox(
-                  width: 38,
-                  height: 40,
-                  child: Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              if (media)
+                PressScale(
+                  label: l10n.chatAttachAPhoto,
+                  onTap: onAttach,
+                  scale: 0.86,
+                  child: SizedBox(
+                    width: 38,
+                    height: 40,
+                    child: Icon(
+                      Icons.add_photo_alternate_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
-                ),
-              ),
+                )
+              else
+                const SizedBox(width: 8),
               const SizedBox(width: 1),
               Expanded(
                 child: WrittenDir(
@@ -9951,7 +10062,7 @@ class _Composer extends StatelessWidget {
                   // a send still grinding takes the next one behind it
                   final canSend = hasText;
                   // mic and send trade places with a small pop instead of a cut
-                  final Widget end = !hasText
+                  final Widget end = !hasText && media
                       ? KeyedSubtree(
                           key: const ValueKey('mic'),
                           child: HoldToTalkMic(
@@ -10079,11 +10190,18 @@ class MediaGalleryScreen extends StatelessWidget {
             )
           : GridView.builder(
               padding: const EdgeInsets.all(2),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 2,
-                crossAxisSpacing: 2,
-              ),
+              // a computer's window is wide: tiles keep a thumbnail's size
+              gridDelegate: onDesktop
+                  ? const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: kDeskTile,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                    )
+                  : const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
+                    ),
               itemCount: paths.length,
               itemBuilder: (context, i) {
                 final path = paths[i];

@@ -81,6 +81,10 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) error {
 	return err
 }
 
+// kryfo: ends the connection for the relay's own bounds. the client
+// reconnects and reads again
+func (ws *WebSocket) Close() { ws.conn.Close() }
+
 // kryfo: no write waits forever on a client that stopped reading
 func (ws *WebSocket) setWriteDeadline() {
 	if ws.rl.WriteWait > 0 {

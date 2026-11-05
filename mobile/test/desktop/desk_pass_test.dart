@@ -249,7 +249,7 @@ void main() {
         expect(at, greaterThan(0), reason: '$f $k');
         expect(
           s.substring(at - 400, at),
-          contains('if (!onDesktop)'),
+          contains('if (!onDesktop'),
           reason: '$f $k',
         );
       }

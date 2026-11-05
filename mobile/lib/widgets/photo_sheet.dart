@@ -76,7 +76,7 @@ Future<PhotoChoice?> showPhotoSheet(
                 ),
                 HaloRow(
                   icon: Icons.photo_library_outlined,
-                  label: l10n.photoChoose,
+                  label: l10n.photoChooseShown,
                   onTap: () => Navigator.pop(ctx, PhotoChoice.gallery),
                 ),
               ],

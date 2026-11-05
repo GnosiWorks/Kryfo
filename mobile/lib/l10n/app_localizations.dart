@@ -1969,12 +1969,6 @@ abstract class AppLocalizations {
   /// **'When you ask for bridges, the Tor Project sees your address. That\'s normal: it\'s how Tor Browser and every Tor app get bridges, and all it tells them is that someone asked for bridges. Nothing about your chats.'**
   String get bridgesWhenYouAskFor;
 
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Asking…'**
-  String get bridgesAsking;
-
   /// screens/camera_screen.dart
   ///
   /// In en, this message translates to:
@@ -11566,12 +11560,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Egypt'**
-  String get bridgesEgypt;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Your bridge couldn\'t start'**
   String get bridgesYourBridgeCouldNot;
 
@@ -11650,12 +11638,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Iran'**
-  String get bridgesIran;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Turn on automatic'**
   String get bridgesTurnOnAutomatic;
 
@@ -11710,12 +11692,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Myanmar'**
-  String get bridgesMyanmar;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Switch to automatic'**
   String get bridgesSwitchToAutomatic;
 
@@ -11758,12 +11734,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Let the Tor Project guess'**
-  String get bridgesLetTheTorProject;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Tor seems blocked on this network'**
   String get bridgesTorSeemsBlocked;
 
@@ -11794,12 +11764,6 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'The Tor Project has its own advice for these countries.'**
-  String get bridgesTheTorProjectKnows;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'This bridge isn\'t getting through'**
   String get bridgesThisBridgeIsnTGetting;
 
@@ -11820,12 +11784,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get bridgesNotNow;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Russia'**
-  String get bridgesRussia;
 
   /// screens/bridges_screen.dart
   ///
@@ -11869,12 +11827,6 @@ abstract class AppLocalizations {
   /// **'Almost there'**
   String get bridgesAlmostThere;
 
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'The Tor Project\'s guess'**
-  String get bridgesTheTorProjectSGuess;
-
   /// screens/bridge_sheets.dart: the button when one bridge line is pasted or scanned
   ///
   /// In en, this message translates to:
@@ -11886,12 +11838,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, other{Use these {count} bridges}}'**
   String bridgesUseTheseBridges(int count);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Turkmenistan'**
-  String get bridgesTurkmenistan;
 
   /// screens/transport_screen.dart
   ///
@@ -11938,14 +11884,14 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Hong Kong'**
-  String get bridgesHongKong;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'When Tor is blocked, Automatic asks the Tor Project what works in your country.'**
   String get bridgesWhenTorIsBlockedAutomatic;
+
+  /// bridges screen: plain advice over the choices, the same for everyone, no country
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn\'t connect, try another, or ask a friend for a bridge line.'**
+  String get bridgesPlainAdvice;
 
   /// screens/bridges_screen.dart
   ///
@@ -11962,26 +11908,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Country'**
-  String get bridgesCountry;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'{method}, {from}'**
   String bridgesMethodFrom(String method, String from);
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'China'**
-  String get bridgesChina;
-
-  /// screens/bridges_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Belarus'**
-  String get bridgesBelarus;
 
   /// screens/bridges_screen.dart
   ///
@@ -14635,11 +14563,17 @@ abstract class AppLocalizations {
   /// **'Send video'**
   String get mediaSendVideo;
 
-  /// send preview: before they accept, only this many go
+  /// a request I sent: photos and files go once they accept
   ///
   /// In en, this message translates to:
-  /// **'Until they accept, {count} can go'**
-  String mediaSendUntilAccepted(Object count);
+  /// **'Photos and files unlock after they accept you, to keep you both safe.'**
+  String get requestSenderMediaLater;
+
+  /// a stranger's request to me: their photos and files show once I accept
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and files unlock after you accept them, to keep you safe.'**
+  String get requestReceiverMediaLater;
 
   /// the line in a group this phone ended, in the chat and on its row in the chat list
   ///
@@ -15544,7 +15478,7 @@ abstract class AppLocalizations {
   /// screens/notifications_screen.dart: note under google push
   ///
   /// In en, this message translates to:
-  /// **'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, and with Google\'s help to your Google account, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
+  /// **'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on our second server. The two servers together could link them, and with Google\'s help to your Google account. Seizing one is not enough, but we run both, so we could. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.'**
   String get notificationsGoogleNote;
 
   /// screens/notifications_screen.dart: google push, the relay refuses some registrations
@@ -17920,7 +17854,7 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart: the line under a chat with a 0.5.x contact after this phone was restored: what is written waits until they update (Q20)
   ///
   /// In en, this message translates to:
-  /// **'{name} needs to update Kryfo to keep chatting.'**
+  /// **'{name} needs to update Kryfo to keep chatting'**
   String chatNeedsUpdateToChat(Object name);
 
   /// screens/restore_screen.dart: the sheet before a restore when the file holds contacts on 0.5.x
@@ -18258,6 +18192,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Another copy of Kryfo linked a device to your account. This phone took it off your list.'**
   String get devicesUnknownLine;
+
+  /// a computer: the round button at an album's side that goes back one photo or video
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get albumPrevious;
+
+  /// a computer: the round button at an album's side that goes on one photo or video
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get albumNext;
+
+  /// a computer: notesHoldHint with a right click in place of the hold
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click a note to copy or delete it.'**
+  String get notesHoldHintDesk;
+
+  /// a computer: pinsNothingPinnedHereYet with a right click in place of the hold
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing pinned here yet. Right-click a message and choose Pin, and it waits here for everyone in the chat.'**
+  String get pinsNothingPinnedHereYetDesk;
+
+  /// a computer: the attach menu's photo row, which opens the file picker for pictures
+  ///
+  /// In en, this message translates to:
+  /// **'Pictures'**
+  String get chatGalleryDesk;
+
+  /// a computer: the group attach menu's photo row, which opens the file picker for pictures
+  ///
+  /// In en, this message translates to:
+  /// **'Pictures'**
+  String get groupChatGalleryDesk;
+
+  /// a computer: the photo sheet's row that opens the file picker for a picture
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a picture file'**
+  String get photoChooseDesk;
+
+  /// a computer: the wallpaper row that opens the file picker for a picture
+  ///
+  /// In en, this message translates to:
+  /// **'From a picture file'**
+  String get wallpaperFromYourPhotosDesk;
+
+  /// a computer: the notifications page's section with the sound switch
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get notificationsSoundAndVibrationDesk;
+
+  /// a computer: the switch that lets a notification make its sound
+  ///
+  /// In en, this message translates to:
+  /// **'Play a sound'**
+  String get notificationsPlaySound;
+
+  /// a computer: the line under the sound switch
+  ///
+  /// In en, this message translates to:
+  /// **'With each notification on this computer'**
+  String get notificationsPlaySoundHint;
 
   /// screens/bridges_screen.dart: the share button on a saved bridge line, for screen readers
   ///

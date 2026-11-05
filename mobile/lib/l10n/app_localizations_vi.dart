@@ -1234,9 +1234,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khi bạn xin cầu nối, Dự án Tor sẽ thấy địa chỉ IP của bạn. Điều đó là bình thường: Tor Browser và mọi ứng dụng Tor đều lấy cầu nối theo cách này, và tất cả những gì họ biết được là có ai đó đã xin cầu nối. Không có gì về các cuộc trò chuyện của bạn.';
 
   @override
-  String get bridgesAsking => 'Đang hỏi…';
-
-  @override
   String get cameraNoCameraOnThis => 'Điện thoại này không có máy ảnh';
 
   @override
@@ -7199,9 +7196,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportBridgeMode => 'Cầu nối';
 
   @override
-  String get bridgesEgypt => 'Ai Cập';
-
-  @override
   String get bridgesYourBridgeCouldNot =>
       'Cầu nối của bạn không khởi động được';
 
@@ -7247,9 +7241,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Iran';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Bật tự động';
 
   @override
@@ -7281,9 +7272,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesScanACode => 'Quét mã';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Chuyển sang tự động';
 
   @override
@@ -7306,9 +7294,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Đi qua máy tính của một tình nguyện viên. Khó bị chặn, nhưng khởi động chậm.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Để Dự án Tor đoán';
 
   @override
   String get bridgesTorSeemsBlocked => 'Có vẻ Tor bị chặn trên mạng này';
@@ -7338,10 +7323,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo tự tìm cách dùng được ở nơi bạn đang ở.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Dự án Tor có lời khuyên riêng cho những nước này.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Cầu nối này không kết nối được';
 
   @override
@@ -7353,9 +7334,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Để sau';
-
-  @override
-  String get bridgesRussia => 'Nga';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7381,9 +7359,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesAlmostThere => 'Sắp xong rồi';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Dự án Tor đoán';
-
-  @override
   String get bridgesUseThisBridge => 'Dùng cầu nối này';
 
   @override
@@ -7399,9 +7374,6 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
   String get transportBridgeMethod => 'Phương thức';
@@ -7428,11 +7400,12 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cầu nối có thể ngừng hoạt động mà không báo trước. Chế độ Tự động có thể tìm cách khác.';
 
   @override
-  String get bridgesHongKong => 'Hồng Kông';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Khi Tor bị chặn, chế độ Tự động sẽ hỏi Dự án Tor cách nào dùng được ở nước bạn.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo tự động chọn cầu nối. Snowflake và WebTunnel hoạt động ở hầu hết mọi nơi. Nếu một cầu nối không kết nối được, hãy thử cái khác hoặc xin bạn bè một dòng cầu nối.';
 
   @override
   String get bridgesAskTorProject => 'Hỏi Dự án Tor';
@@ -7441,18 +7414,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesTooLongForTor => 'Quá dài để Tor dùng được';
 
   @override
-  String get bridgesCountry => 'Quốc gia';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Trung Quốc';
-
-  @override
-  String get bridgesBelarus => 'Belarus';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo không dùng được dòng này';
@@ -9096,9 +9060,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mediaSendVideo => 'Gửi video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Đến khi họ chấp nhận, có thể gửi $count';
-  }
+  String get requestSenderMediaLater =>
+      'Ảnh và tệp sẽ mở sau khi họ chấp nhận bạn, để cả hai cùng an toàn.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Ảnh và tệp sẽ mở sau khi bạn chấp nhận họ, để bạn được an toàn.';
 
   @override
   String get groupEndedYou => 'Bạn đã kết thúc nhóm này';
@@ -9668,7 +9635,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Có lẫn các lần đánh thức giả, khiến Google khó biết khi nào tin nhắn thật đến. Relay của chúng tôi chỉ lưu những địa chỉ mà nó không thể nối với nhau. Dịch vụ thông báo đẩy chạy trên cùng máy chủ và có thể nối chúng, và với sự giúp đỡ của Google, với tài khoản Google của bạn, nên ai vận hành hoặc thu giữ máy chủ của chúng tôi cũng có thể. Nếu điều đó quan trọng với bạn, hãy chọn cách khác. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
+      'Có lẫn các lần đánh thức giả, khiến Google khó biết khi nào tin nhắn thật đến. Relay của chúng tôi chỉ lưu những địa chỉ mà nó không thể nối với nhau. Dịch vụ thông báo đẩy chạy trên máy chủ thứ hai của chúng tôi. Hai máy chủ cùng nhau có thể nối chúng, và với sự giúp đỡ của Google, với tài khoản Google của bạn. Thu giữ một máy chủ thôi là không đủ, nhưng cả hai đều do chúng tôi vận hành, nên chúng tôi có thể. Nếu điều đó quan trọng với bạn, hãy chọn cách khác. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11153,7 +11120,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name cần cập nhật Kryfo để tiếp tục trò chuyện.';
+    return '$name cần cập nhật Kryfo để tiếp tục trò chuyện';
   }
 
   @override
@@ -11358,6 +11325,42 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'Một bản Kryfo khác đã liên kết một thiết bị với tài khoản của bạn. Điện thoại này đã gỡ nó khỏi danh sách của bạn.';
+
+  @override
+  String get albumPrevious => 'Trước';
+
+  @override
+  String get albumNext => 'Tiếp';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Nhấp chuột phải vào một ghi chú để sao chép hoặc xóa.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Chưa có gì được ghim ở đây. Nhấp chuột phải vào một tin nhắn và chọn Ghim, tin nhắn sẽ nằm ở đây cho mọi người trong cuộc trò chuyện.';
+
+  @override
+  String get chatGalleryDesk => 'Hình ảnh';
+
+  @override
+  String get groupChatGalleryDesk => 'Hình ảnh';
+
+  @override
+  String get photoChooseDesk => 'Chọn một tệp hình ảnh';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Từ một tệp hình ảnh';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Âm thanh';
+
+  @override
+  String get notificationsPlaySound => 'Phát âm thanh';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Với mỗi thông báo trên máy tính này';
 
   @override
   String bridgesShareBridgeN(String n) {

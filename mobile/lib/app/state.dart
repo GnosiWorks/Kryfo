@@ -510,10 +510,6 @@ class AppState extends ChangeNotifier {
   bool _askDue = false;
   bool _askShown = false;
 
-  // the country the tor project guessed from the address it saw, for the
-  // picker. kept for this run only
-  String? _moatGuess;
-
   // which first-contact address our invites currently point at. an invite can
   // end up in a bio or a screenshot, so it has to be retirable without
   // burning the identity: bumping this leaves every conversation alone.

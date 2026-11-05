@@ -1274,9 +1274,6 @@ class AppLocalizationsPl extends AppLocalizations {
       'Gdy prosisz o mostki, Tor Project widzi twój adres. To normalne: tak Tor Browser i każda aplikacja Tor dostają mostki, a jedyne, czego się dowiadują, to że poproszono o mostki. Nic o twoich czatach.';
 
   @override
-  String get bridgesAsking => 'Pytam…';
-
-  @override
   String get cameraNoCameraOnThis => 'Ten telefon nie ma aparatu';
 
   @override
@@ -7363,9 +7360,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get transportBridgeMode => 'Mostki';
 
   @override
-  String get bridgesEgypt => 'Egipt';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Twój mostek nie mógł się uruchomić';
 
   @override
@@ -7410,9 +7404,6 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Iran';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Włącz tryb automatyczny';
 
   @override
@@ -7444,9 +7435,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bridgesScanACode => 'Zeskanuj kod';
 
   @override
-  String get bridgesMyanmar => 'Mjanma';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Przełącz na automatyczny';
 
   @override
@@ -7469,9 +7457,6 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Idzie przez komputer wolontariusza. Trudno zablokować, powoli startuje.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Niech Tor Project zgadnie';
 
   @override
   String get bridgesTorSeemsBlocked => 'Tor wygląda na zablokowany w tej sieci';
@@ -7504,10 +7489,6 @@ class AppLocalizationsPl extends AppLocalizations {
       'Kryfo znajdzie drogę, która u ciebie działa.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Tor Project ma własne porady dla tych krajów.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Ten mostek się nie przebija';
 
   @override
@@ -7519,9 +7500,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Nie teraz';
-
-  @override
-  String get bridgesRussia => 'Rosja';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7547,9 +7525,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bridgesAlmostThere => 'Prawie gotowe';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Propozycja Tor Project';
-
-  @override
   String get bridgesUseThisBridge => 'Użyj tego mostka';
 
   @override
@@ -7568,9 +7543,6 @@ class AppLocalizationsPl extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
   String get transportBridgeMethod => 'Metoda';
@@ -7596,11 +7568,12 @@ class AppLocalizationsPl extends AppLocalizations {
       'Mostki mogą przestać działać bez ostrzeżenia. Tryb automatyczny znajdzie inną drogę.';
 
   @override
-  String get bridgesHongKong => 'Hongkong';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Gdy Tor jest zablokowany, tryb automatyczny pyta Tor Project, co działa w twoim kraju.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo wybiera mostki automatycznie. Snowflake i WebTunnel działają w większości miejsc. Jeśli jeden się nie łączy, spróbuj innego albo poproś znajomego o linię mostka.';
 
   @override
   String get bridgesAskTorProject => 'Zapytaj Tor Project';
@@ -7609,18 +7582,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bridgesTooLongForTor => 'Za długie dla Tor';
 
   @override
-  String get bridgesCountry => 'Kraj';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Chiny';
-
-  @override
-  String get bridgesBelarus => 'Białoruś';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo nie może użyć tej linii';
@@ -9285,9 +9249,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get mediaSendVideo => 'Wyślij film';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Do czasu akceptacji może pójść: $count';
-  }
+  String get requestSenderMediaLater =>
+      'Zdjęcia i pliki odblokują się, gdy ta osoba cię zaakceptuje, dla bezpieczeństwa was obojga.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Zdjęcia i pliki odblokują się, gdy zaakceptujesz tę osobę, dla twojego bezpieczeństwa.';
 
   @override
   String get groupEndedYou => 'Zakończono tę grupę';
@@ -9863,7 +9830,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Dorzucane są fałszywe pobudki, przez co Google trudniej ustalić, kiedy przychodzą prawdziwe wiadomości. Nasz przekaźnik przechowuje tylko adresy, których nie może ze sobą powiązać. Usługa powiadomień działa na tym samym serwerze i mogłaby je powiązać, a z pomocą Google także z twoim kontem Google, więc mogłaby to zrobić każda osoba, która prowadzi albo przejmie nasz serwer. Jeśli to dla ciebie ważne, wybierz inny sposób. Ukryte czaty, pokoje poza kilkoma pierwszymi, a czasem też zwykły kontakt, mniej więcej przez jeden miesiąc na pięć, czekają na sprawdzenie, które Kryfo nadal robi co 15 minut.';
+      'Dorzucane są fałszywe pobudki, przez co Google trudniej ustalić, kiedy przychodzą prawdziwe wiadomości. Nasz przekaźnik przechowuje tylko adresy, których nie może ze sobą powiązać. Usługa powiadomień działa na naszym drugim serwerze. Oba serwery razem mogłyby je powiązać, a z pomocą Google także z twoim kontem Google. Przejęcie jednego nie wystarczy, ale prowadzimy oba, więc my moglibyśmy. Jeśli to dla ciebie ważne, wybierz inny sposób. Ukryte czaty, pokoje poza kilkoma pierwszymi, a czasem też zwykły kontakt, mniej więcej przez jeden miesiąc na pięć, czekają na sprawdzenie, które Kryfo nadal robi co 15 minut.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11380,7 +11347,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name musi zaktualizować Kryfo, żeby dało się dalej pisać.';
+    return '$name musi zaktualizować Kryfo, żeby dało się dalej pisać';
   }
 
   @override
@@ -11593,6 +11560,42 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get devicesUnknownLine =>
       'Inna kopia Kryfo połączyła urządzenie z twoim kontem. Ten telefon zdjął je z twojej listy.';
+
+  @override
+  String get albumPrevious => 'Poprzednie';
+
+  @override
+  String get albumNext => 'Następne';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Kliknij notatkę prawym przyciskiem, żeby ją skopiować albo usunąć.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Nic tu jeszcze nie przypięto. Kliknij wiadomość prawym przyciskiem i wybierz Przypnij, a będzie tu czekać na wszystkich w czacie.';
+
+  @override
+  String get chatGalleryDesk => 'Obrazy';
+
+  @override
+  String get groupChatGalleryDesk => 'Obrazy';
+
+  @override
+  String get photoChooseDesk => 'Wybierz plik obrazu';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Z pliku obrazu';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Dźwięk';
+
+  @override
+  String get notificationsPlaySound => 'Odtwarzaj dźwięk';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Przy każdym powiadomieniu na tym komputerze';
 
   @override
   String bridgesShareBridgeN(String n) {

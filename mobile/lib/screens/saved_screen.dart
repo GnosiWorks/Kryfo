@@ -22,6 +22,7 @@ import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../msg_order.dart' show rowWrittenAt;
 import '../voice_format.dart' show isVoiceName;
+import '../wide/read_width.dart' show DeskPage;
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave: it empties, and the
@@ -155,39 +156,46 @@ class _SavedScreenState extends State<SavedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            PageBar(title: l10n.savedSaved, controller: _scroll),
-            Expanded(
-              child: !_loaded
-                  ? const SizedBox.shrink()
-                  // the last one unsaved, the empty page fades in
-                  : FadeSwap(
-                      child: _rows.isEmpty
-                          ? KeyedSubtree(
-                              key: const ValueKey('none'),
-                              child: _empty(),
-                            )
-                          : ListView.builder(
-                              key: const ValueKey('cards'),
-                              controller: _scroll,
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                              itemCount: _rows.length,
-                              itemBuilder: (_, i) => StaggerIn(
-                                key: ValueKey(_rows[i]['msg_uid'] ?? i),
-                                index: i,
-                                child: FadeFold(
-                                  leaving: _leaving.contains(
-                                    _rows[i]['msg_uid'],
+      body: DeskPage(
+        child: SafeArea(
+          child: Column(
+            children: [
+              PageBar(title: l10n.savedSaved, controller: _scroll),
+              Expanded(
+                child: !_loaded
+                    ? const SizedBox.shrink()
+                    // the last one unsaved, the empty page fades in
+                    : FadeSwap(
+                        child: _rows.isEmpty
+                            ? KeyedSubtree(
+                                key: const ValueKey('none'),
+                                child: _empty(),
+                              )
+                            : ListView.builder(
+                                key: const ValueKey('cards'),
+                                controller: _scroll,
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  8,
+                                  16,
+                                  24,
+                                ),
+                                itemCount: _rows.length,
+                                itemBuilder: (_, i) => StaggerIn(
+                                  key: ValueKey(_rows[i]['msg_uid'] ?? i),
+                                  index: i,
+                                  child: FadeFold(
+                                    leaving: _leaving.contains(
+                                      _rows[i]['msg_uid'],
+                                    ),
+                                    child: _card(_rows[i]),
                                   ),
-                                  child: _card(_rows[i]),
                                 ),
                               ),
-                            ),
-                    ),
-            ),
-          ],
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

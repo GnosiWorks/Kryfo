@@ -1187,9 +1187,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '你请求网桥时，Tor 项目会看到你的 IP 地址。这很正常：Tor Browser 和所有 Tor 应用都是这样获取网桥的，他们从中只能知道有人请求了网桥，对你的聊天一无所知。';
 
   @override
-  String get bridgesAsking => '正在请求…';
-
-  @override
   String get cameraNoCameraOnThis => '这部手机没有相机';
 
   @override
@@ -6882,9 +6879,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportBridgeMode => '网桥';
 
   @override
-  String get bridgesEgypt => '埃及';
-
-  @override
   String get bridgesYourBridgeCouldNot => '网桥无法启动';
 
   @override
@@ -6927,9 +6921,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => '伊朗';
-
-  @override
   String get bridgesTurnOnAutomatic => '开启自动';
 
   @override
@@ -6958,9 +6949,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesScanACode => '扫码';
 
   @override
-  String get bridgesMyanmar => '缅甸';
-
-  @override
   String get bridgesSwitchToAutomatic => '切换到自动';
 
   @override
@@ -6981,9 +6969,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesGoesThroughAVolunteer => '经由志愿者的电脑连接。很难封锁，但启动慢。';
-
-  @override
-  String get bridgesLetTheTorProject => '让 Tor 项目判断';
 
   @override
   String get bridgesTorSeemsBlocked => '这个网络似乎封锁了 Tor';
@@ -7012,9 +6997,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesKryfoFindsAWay => 'Kryfo 会找出在你那里能用的方式。';
 
   @override
-  String get bridgesTheTorProjectKnows => 'Tor 项目对这些国家和地区有专门的建议。';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => '这个网桥连不出去';
 
   @override
@@ -7025,9 +7007,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesNotNow => '暂不';
-
-  @override
-  String get bridgesRussia => '俄罗斯';
 
   @override
   String get bridgesObfs4BridgesThatCome => 'Kryfo 自带的网桥（obfs4）。试起来快，但常被封锁。';
@@ -7051,9 +7030,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesAlmostThere => '快好了';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tor 项目的判断';
-
-  @override
   String get bridgesUseThisBridge => '使用这个网桥';
 
   @override
@@ -7069,9 +7045,6 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => '土库曼斯坦';
 
   @override
   String get transportBridgeMethod => '方式';
@@ -7096,11 +7069,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesBridgesGoDeadWithout => '网桥可能会毫无预兆地失效。“自动”能找到别的办法。';
 
   @override
-  String get bridgesHongKong => '香港';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Tor 被封锁时，“自动”会询问 Tor 项目，在你所在的国家或地区什么方式能用。';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo 会自动选择网桥。Snowflake 和 WebTunnel 在大多数地方都能用。如果一个连不上，就换一个试试，或者向朋友要一条网桥配置。';
 
   @override
   String get bridgesAskTorProject => '询问 Tor 项目';
@@ -7109,18 +7083,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesTooLongForTor => '太长，Tor 用不了';
 
   @override
-  String get bridgesCountry => '国家/地区';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method，$from';
   }
-
-  @override
-  String get bridgesChina => '中国';
-
-  @override
-  String get bridgesBelarus => '白俄罗斯';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo 用不了这行配置';
@@ -8661,9 +8626,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaSendVideo => '发送视频';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return '对方接受前，可以发送 $count 个';
-  }
+  String get requestSenderMediaLater => '对方接受你之后，照片和文件才会开放，让你们都更安全。';
+
+  @override
+  String get requestReceiverMediaLater => '你接受对方之后，照片和文件才会开放，让你更安全。';
 
   @override
   String get groupEndedYou => '你结束了这个群组';
@@ -9194,7 +9160,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，借助 Google 还能关联到你的 Google 账号，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在我们的第二台服务器上。两台服务器合起来能够把它们关联起来，借助 Google 还能关联到你的 Google 账号。只查扣其中一台做不到，但两台都由我们运营，所以我们能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
   String get notificationsGoogleRefused =>
@@ -10573,7 +10539,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name 需要更新 Kryfo 才能继续聊天。';
+    return '$name 需要更新 Kryfo 才能继续聊天';
   }
 
   @override
@@ -10761,6 +10727,40 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get devicesUnknownLine => '另一份 Kryfo 把一台设备关联到了你的账号。这部手机已把它从你的列表中移除。';
+
+  @override
+  String get albumPrevious => '上一个';
+
+  @override
+  String get albumNext => '下一个';
+
+  @override
+  String get notesHoldHintDesk => '右键点击一条笔记即可复制或删除。';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      '这里还没有置顶内容。右键点击一条消息，选择“置顶”，它就会在这里等着聊天里的每个人。';
+
+  @override
+  String get chatGalleryDesk => '图片';
+
+  @override
+  String get groupChatGalleryDesk => '图片';
+
+  @override
+  String get photoChooseDesk => '选择图片文件';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => '从图片文件';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => '声音';
+
+  @override
+  String get notificationsPlaySound => '播放提示音';
+
+  @override
+  String get notificationsPlaySoundHint => '这台电脑上的每条通知都会响';
 
   @override
   String bridgesShareBridgeN(String n) {
@@ -11964,9 +11964,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get bridgesWhenYouAskFor =>
       '你請求橋接時，Tor 專案會看到你的 IP 位址。這很正常：Tor Browser 和所有 Tor 應用程式都是這樣取得橋接的，他們從中只能知道有人請求了橋接，對你的聊天一無所知。';
-
-  @override
-  String get bridgesAsking => '索取中…';
 
   @override
   String get cameraNoCameraOnThis => '這支手機沒有相機';
@@ -17663,9 +17660,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get transportBridgeMode => '橋接';
 
   @override
-  String get bridgesEgypt => '埃及';
-
-  @override
   String get bridgesYourBridgeCouldNot => '橋接無法啟動';
 
   @override
@@ -17708,9 +17702,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get bridgesIran => '伊朗';
-
-  @override
   String get bridgesTurnOnAutomatic => '開啟自動';
 
   @override
@@ -17739,9 +17730,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesScanACode => '掃描 QR 碼';
 
   @override
-  String get bridgesMyanmar => '緬甸';
-
-  @override
   String get bridgesSwitchToAutomatic => '改用自動';
 
   @override
@@ -17762,9 +17750,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesGoesThroughAVolunteer => '經由志願者的電腦連線。很難封鎖，但啟動較慢。';
-
-  @override
-  String get bridgesLetTheTorProject => '讓 Tor 專案判斷';
 
   @override
   String get bridgesTorSeemsBlocked => '這個網路似乎封鎖了 Tor';
@@ -17793,9 +17778,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesKryfoFindsAWay => 'Kryfo 會找出在你那裡行得通的方式。';
 
   @override
-  String get bridgesTheTorProjectKnows => 'Tor 專案對這些國家和地區有專門的建議。';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => '這個橋接連不出去';
 
   @override
@@ -17806,9 +17788,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesNotNow => '以後再說';
-
-  @override
-  String get bridgesRussia => '俄羅斯';
 
   @override
   String get bridgesObfs4BridgesThatCome => 'Kryfo 內建的橋接（obfs4）。試起來快，但常被封鎖。';
@@ -17832,9 +17811,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesAlmostThere => '快好了';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tor 專案的判斷';
-
-  @override
   String get bridgesUseThisBridge => '使用這個橋接';
 
   @override
@@ -17850,9 +17826,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => '土庫曼';
 
   @override
   String get transportBridgeMethod => '方式';
@@ -17877,11 +17850,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesBridgesGoDeadWithout => '橋接可能會無預警失效。「自動」能找到別的辦法。';
 
   @override
-  String get bridgesHongKong => '香港';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Tor 被封鎖時，「自動」會詢問 Tor 專案，在你所在的國家或地區什麼方式可用。';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo 會自動選擇橋接。Snowflake 和 WebTunnel 在大多數地方都能用。如果一個連不上，就換一個試試，或者向朋友要一條橋接設定。';
 
   @override
   String get bridgesAskTorProject => '詢問 Tor 專案';
@@ -17890,18 +17864,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesTooLongForTor => '太長，Tor 無法使用';
 
   @override
-  String get bridgesCountry => '國家/地區';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method，$from';
   }
-
-  @override
-  String get bridgesChina => '中國';
-
-  @override
-  String get bridgesBelarus => '白俄羅斯';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo 無法使用這行設定';
@@ -19323,9 +19288,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get mediaSendVideo => '傳送影片';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return '對方接受前，可以傳送 $count 個';
-  }
+  String get requestSenderMediaLater => '對方接受你之後，照片和檔案才會開放，讓你們都更安全。';
+
+  @override
+  String get requestReceiverMediaLater => '你接受對方之後，照片和檔案才會開放，讓你更安全。';
 
   @override
   String get groupEndedYou => '你結束了這個群組';
@@ -19857,7 +19823,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notificationsGoogleNote =>
-      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在我們的第二台伺服器上。兩台伺服器合起來能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號。只查扣其中一台做不到，但兩台都由我們營運，所以我們能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
   String get notificationsGoogleRefused =>
@@ -21238,7 +21204,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name 需要更新 Kryfo 才能繼續聊天。';
+    return '$name 需要更新 Kryfo 才能繼續聊天';
   }
 
   @override
@@ -21426,6 +21392,40 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get devicesUnknownLine => '另一份 Kryfo 把一台裝置連結到了你的帳號。這支手機已把它從你的清單中移除。';
+
+  @override
+  String get albumPrevious => '上一個';
+
+  @override
+  String get albumNext => '下一個';
+
+  @override
+  String get notesHoldHintDesk => '在筆記上按右鍵即可複製或刪除。';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      '這裡還沒有置頂的訊息。在一則訊息上按右鍵並選擇「置頂」，它就會在這裡等著聊天中的每個人。';
+
+  @override
+  String get chatGalleryDesk => '圖片';
+
+  @override
+  String get groupChatGalleryDesk => '圖片';
+
+  @override
+  String get photoChooseDesk => '選擇圖片檔案';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => '從圖片檔案';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => '聲音';
+
+  @override
+  String get notificationsPlaySound => '播放提示音';
+
+  @override
+  String get notificationsPlaySoundHint => '這台電腦上的每則通知都會響';
 
   @override
   String bridgesShareBridgeN(String n) {

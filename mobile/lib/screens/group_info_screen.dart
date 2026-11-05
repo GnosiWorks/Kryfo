@@ -55,6 +55,7 @@ import '../dlog.dart';
 import '../chat_shots.dart' show ShotsPacer;
 import '../group_shots.dart';
 import '../widgets/group_shots_sheet.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 // a member as the screens name them: a room key by its short tag
 String memberLabel(String id) => looksLikeRoomKey(id) ? roomTag(id) : id;
@@ -651,304 +652,306 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         ),
         bottom: HeadLine(controller: _scroll),
       ),
-      body: ListView(
-        controller: _scroll,
-        padding: EdgeInsets.fromLTRB(
-          16,
-          4,
-          16,
-          28 + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: staggerAllIn(context, [
-          // big group identity
-          ParallaxHead(
-            controller: _scroll,
-            child: Center(
-              child: Column(
-                children: [
-                  // the same tile flies here from the chat's header
-                  HaloHero(
-                    tag: 'group-${widget.groupId}',
-                    flightShuttleBuilder: (_, _, _, _, _) =>
-                        FittedBox(child: _tile(_name)),
-                    child: _tile(_name),
-                  ),
-                  const SizedBox(height: 14),
-                  PressScale(
-                    onTap: _isAdmin && !_isRoom && !_ended ? _rename : null,
-                    scale: 0.97,
-                    haptic: false,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            _name,
-                            maxLines: 2,
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.serif(
-                              size: 24,
-                              weight: FontWeight.w300,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                        ),
-                        if (_isAdmin && !_isRoom && !_ended) ...[
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 15,
-                            color: HaloColors.text3,
-                          ),
-                        ],
-                      ],
+      body: DeskPage(
+        child: ListView(
+          controller: _scroll,
+          padding: EdgeInsets.fromLTRB(
+            16,
+            4,
+            16,
+            28 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: staggerAllIn(context, [
+            // big group identity
+            ParallaxHead(
+              controller: _scroll,
+              child: Center(
+                child: Column(
+                  children: [
+                    // the same tile flies here from the chat's header
+                    HaloHero(
+                      tag: 'group-${widget.groupId}',
+                      flightShuttleBuilder: (_, _, _, _, _) =>
+                          FittedBox(child: _tile(_name)),
+                      child: _tile(_name),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  // an ended group counts no one: its line says what it is
-                  if (!_ended)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.groupInfo1Member(
-                            _loaded ? _members.length : _seenCount,
-                          ),
-                          style: HaloType.mono(
-                            size: 11,
-                            color: HaloColors.text2,
-                            letter: 0.1,
-                          ),
-                        ),
-                        if (_isAdmin && !_ended) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: HaloColors.amberSoft,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
+                    const SizedBox(height: 14),
+                    PressScale(
+                      onTap: _isAdmin && !_isRoom && !_ended ? _rename : null,
+                      scale: 0.97,
+                      haptic: false,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
                             child: Text(
-                              l10n.groupInfoAdmin,
-                              style: HaloType.mono(
-                                size: 9.5,
-                                color: HaloColors.amberText,
-                                weight: FontWeight.w600,
-                                letter: 0.1,
+                              _name,
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.serif(
+                                size: 24,
+                                weight: FontWeight.w300,
+                                color: HaloColors.text,
                               ),
                             ),
                           ),
+                          if (_isAdmin && !_isRoom && !_ended) ...[
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 15,
+                              color: HaloColors.text3,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  // ended: who did, grown in under the count
-                  EaseSize(
-                    child: FadeSwap(
-                      child: _end == null
-                          ? const SizedBox(
-                              key: ValueKey('running'),
-                              width: double.infinity,
-                            )
-                          : Padding(
-                              key: const ValueKey('ended'),
-                              padding: const EdgeInsets.only(top: 4),
+                    const SizedBox(height: 6),
+                    // an ended group counts no one: its line says what it is
+                    if (!_ended)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.groupInfo1Member(
+                              _loaded ? _members.length : _seenCount,
+                            ),
+                            style: HaloType.mono(
+                              size: 11,
+                              color: HaloColors.text2,
+                              letter: 0.1,
+                            ),
+                          ),
+                          if (_isAdmin && !_ended) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: HaloColors.amberSoft,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
                               child: Text(
-                                endedLine(_end!),
-                                textAlign: TextAlign.center,
-                                style: HaloType.sans(
-                                  size: 13,
-                                  color: HaloColors.text2,
+                                l10n.groupInfoAdmin,
+                                style: HaloType.mono(
+                                  size: 9.5,
+                                  color: HaloColors.amberText,
+                                  weight: FontWeight.w600,
+                                  letter: 0.1,
                                 ),
                               ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    // ended: who did, grown in under the count
+                    EaseSize(
+                      child: FadeSwap(
+                        child: _end == null
+                            ? const SizedBox(
+                                key: ValueKey('running'),
+                                width: double.infinity,
+                              )
+                            : Padding(
+                                key: const ValueKey('ended'),
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  endedLine(_end!),
+                                  textAlign: TextAlign.center,
+                                  style: HaloType.sans(
+                                    size: 13,
+                                    color: HaloColors.text2,
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // an ended group holds nothing more: what was here folds away
+            _fold(
+              'media',
+              Column(
+                children: [
+                  // the section brings its own 18 on top
+                  const SizedBox(height: 4),
+                  SharedMediaSection(
+                    paths: _media,
+                    count: _media.length,
+                    loaded: _mediaLoaded,
+                    onOpen: _media.isEmpty ? null : _openSharedMedia,
+                  ),
+                  const SizedBox(height: 18),
+                ],
+              ),
+            ),
+            _fold(
+              'settings',
+              HaloGroup(
+                children: [
+                  HaloRow(
+                    icon: Icons.theater_comedy_outlined,
+                    label: l10n.voiceDisguiseHere,
+                    toggled: _disguise ?? false,
+                    pending: _disguise == null,
+                    onTap: _flipDisguise,
+                  ),
+                  HaloRow(
+                    icon: Icons.palette_outlined,
+                    label: l10n.groupInfoWallpaper,
+                    onTap: _pickAtmosphere,
+                  ),
+                  // a group's: its admin's switch, read only for the rest
+                  if (!_isRoom && !_roomAtOpen) _shotsRow(),
+                  // always on in a room, on every phone in it
+                  if (_isRoom || _roomAtOpen)
+                    HaloRow(
+                      icon: Icons.phonelink_lock_outlined,
+                      label: l10n.chatBlockScreenshots,
+                      hint: l10n.roomShotsAlwaysOnShown,
+                      toggled: true,
+                    ),
+                  // the maker's alone: known from the list's row, so it is
+                  // there from the first frame
+                  if ((_isRoom || _roomAtOpen) && _isAdmin)
+                    HaloRow(
+                      label: l10n.groupInfoResetLink,
+                      // the glyph turns into a spinner while the reset runs
+                      mark: FadeSwap(
+                        child: _resetting
+                            ? SizedBox(
+                                key: const ValueKey('resetting'),
+                                width: 15,
+                                height: 15,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: HaloColors.amber,
+                                ),
+                              )
+                            : Icon(
+                                Icons.refresh_rounded,
+                                key: const ValueKey('reset'),
+                                size: 17,
+                                color: HaloColors.amber,
+                              ),
+                      ),
+                      onTap: _confirmResetLink,
+                    ),
+                  // hidden chats open: out of the everyday list, or back in it
+                  // a room before its first read too
+                  if (lockState.inVault && !_isRoom && !_roomAtOpen)
+                    HaloRow(
+                      icon: session.isHidden(widget.groupId)
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      label: session.isHidden(widget.groupId)
+                          ? l10n.chatShowInList
+                          : l10n.groupHide,
+                      onTap: _moveHidden,
+                    ),
+                ],
+              ),
+            ),
+            // an ended group's members are kept for its end alone: none show
+            _fold(
+              'members',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PageSection(
+                    l10n.groupInfoMembers2,
+                    actions: [
+                      if (_isRoom)
+                        _Pill(
+                          icon: Icons.qr_code_2_outlined,
+                          label: l10n.groupInfoInvite,
+                          color: HaloColors.violet,
+                          onTap: () async {
+                            final link = await appState.roomLinkFor(
+                              widget.groupId,
+                            );
+                            if (link != null && context.mounted) {
+                              await showRoomLinkSheet(context, link);
+                            }
+                          },
+                        ),
+                      if (_isAdmin && !_isRoom && !_ended)
+                        _Pill(
+                          icon: Icons.add_rounded,
+                          label: l10n.commonAdd,
+                          color: HaloColors.amber,
+                          onTap: _addMembers,
+                        ),
+                    ],
+                  ),
+                  // the card comes in whole once the members are read, over a
+                  // blank one the size the list said
+                  EaseSize(
+                    child: FadeSwap(
+                      child: _loaded
+                          ? MembersCard(
+                              key: const ValueKey('members'),
+                              // under the lock nothing is being watched
+                              quiet: lockGuard.isLocked(),
+                              members: _members,
+                              isMe: (m) =>
+                                  m == myId || (_isRoom && m == _roomPub),
+                              canRemove: _isAdmin && !_ended,
+                              onRemove: _confirmRemove,
+                              contactOf: _contactOf,
+                              onOpen: _openMember,
+                              held: _held,
+                              onHeld: _openHeld,
+                            )
+                          : _MembersWaiting(
+                              key: const ValueKey('members-waiting'),
+                              count: _seenCount,
                             ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          // an ended group holds nothing more: what was here folds away
-          _fold(
-            'media',
-            Column(
-              children: [
-                // the section brings its own 18 on top
-                const SizedBox(height: 4),
-                SharedMediaSection(
-                  paths: _media,
-                  count: _media.length,
-                  loaded: _mediaLoaded,
-                  onOpen: _media.isEmpty ? null : _openSharedMedia,
-                ),
-                const SizedBox(height: 18),
-              ],
-            ),
-          ),
-          _fold(
-            'settings',
+            const SizedBox(height: 14),
+            // what cannot be taken back, apart and in rose
             HaloGroup(
+              rose: true,
               children: [
+                if (!_ended)
+                  HaloRow(
+                    icon: Icons.delete_sweep_outlined,
+                    label: l10n.groupInfoClearConversation,
+                    rose: true,
+                    onTap: _confirmClear,
+                  ),
+                // the admin's, while it runs and an admin is on record
+                if (_mayEnd && !_ended)
+                  HaloRow(
+                    icon: Icons.stop_circle_outlined,
+                    label: l10n.groupInfoEndGroup,
+                    rose: true,
+                    pending: _ending,
+                    onTap: _confirmEnd,
+                  ),
                 HaloRow(
-                  icon: Icons.theater_comedy_outlined,
-                  label: l10n.voiceDisguiseHere,
-                  toggled: _disguise ?? false,
-                  pending: _disguise == null,
-                  onTap: _flipDisguise,
-                ),
-                HaloRow(
-                  icon: Icons.palette_outlined,
-                  label: l10n.groupInfoWallpaper,
-                  onTap: _pickAtmosphere,
-                ),
-                // a group's: its admin's switch, read only for the rest
-                if (!_isRoom && !_roomAtOpen) _shotsRow(),
-                // always on in a room, on every phone in it
-                if (_isRoom || _roomAtOpen)
-                  HaloRow(
-                    icon: Icons.phonelink_lock_outlined,
-                    label: l10n.chatBlockScreenshots,
-                    hint: l10n.roomShotsAlwaysOnShown,
-                    toggled: true,
-                  ),
-                // the maker's alone: known from the list's row, so it is
-                // there from the first frame
-                if ((_isRoom || _roomAtOpen) && _isAdmin)
-                  HaloRow(
-                    label: l10n.groupInfoResetLink,
-                    // the glyph turns into a spinner while the reset runs
-                    mark: FadeSwap(
-                      child: _resetting
-                          ? SizedBox(
-                              key: const ValueKey('resetting'),
-                              width: 15,
-                              height: 15,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: HaloColors.amber,
-                              ),
-                            )
-                          : Icon(
-                              Icons.refresh_rounded,
-                              key: const ValueKey('reset'),
-                              size: 17,
-                              color: HaloColors.amber,
-                            ),
-                    ),
-                    onTap: _confirmResetLink,
-                  ),
-                // hidden chats open: out of the everyday list, or back in it
-                // a room before its first read too
-                if (lockState.inVault && !_isRoom && !_roomAtOpen)
-                  HaloRow(
-                    icon: session.isHidden(widget.groupId)
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    label: session.isHidden(widget.groupId)
-                        ? l10n.chatShowInList
-                        : l10n.groupHide,
-                    onTap: _moveHidden,
-                  ),
-              ],
-            ),
-          ),
-          // an ended group's members are kept for its end alone: none show
-          _fold(
-            'members',
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                PageSection(
-                  l10n.groupInfoMembers2,
-                  actions: [
-                    if (_isRoom)
-                      _Pill(
-                        icon: Icons.qr_code_2_outlined,
-                        label: l10n.groupInfoInvite,
-                        color: HaloColors.violet,
-                        onTap: () async {
-                          final link = await appState.roomLinkFor(
-                            widget.groupId,
-                          );
-                          if (link != null && context.mounted) {
-                            await showRoomLinkSheet(context, link);
-                          }
-                        },
-                      ),
-                    if (_isAdmin && !_isRoom && !_ended)
-                      _Pill(
-                        icon: Icons.add_rounded,
-                        label: l10n.commonAdd,
-                        color: HaloColors.amber,
-                        onTap: _addMembers,
-                      ),
-                  ],
-                ),
-                // the card comes in whole once the members are read, over a
-                // blank one the size the list said
-                EaseSize(
-                  child: FadeSwap(
-                    child: _loaded
-                        ? MembersCard(
-                            key: const ValueKey('members'),
-                            // under the lock nothing is being watched
-                            quiet: lockGuard.isLocked(),
-                            members: _members,
-                            isMe: (m) =>
-                                m == myId || (_isRoom && m == _roomPub),
-                            canRemove: _isAdmin && !_ended,
-                            onRemove: _confirmRemove,
-                            contactOf: _contactOf,
-                            onOpen: _openMember,
-                            held: _held,
-                            onHeld: _openHeld,
-                          )
-                        : _MembersWaiting(
-                            key: const ValueKey('members-waiting'),
-                            count: _seenCount,
-                          ),
-                  ),
+                  icon: _ended ? Icons.delete_outline : Icons.logout_rounded,
+                  label: _ended
+                      ? l10n.groupInfoDeleteGroup
+                      : _isRoom
+                      ? l10n.groupInfoLeaveRoom2
+                      : l10n.groupInfoLeaveGroup2,
+                  rose: true,
+                  onTap: _confirmLeave,
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 14),
-          // what cannot be taken back, apart and in rose
-          HaloGroup(
-            rose: true,
-            children: [
-              if (!_ended)
-                HaloRow(
-                  icon: Icons.delete_sweep_outlined,
-                  label: l10n.groupInfoClearConversation,
-                  rose: true,
-                  onTap: _confirmClear,
-                ),
-              // the admin's, while it runs and an admin is on record
-              if (_mayEnd && !_ended)
-                HaloRow(
-                  icon: Icons.stop_circle_outlined,
-                  label: l10n.groupInfoEndGroup,
-                  rose: true,
-                  pending: _ending,
-                  onTap: _confirmEnd,
-                ),
-              HaloRow(
-                icon: _ended ? Icons.delete_outline : Icons.logout_rounded,
-                label: _ended
-                    ? l10n.groupInfoDeleteGroup
-                    : _isRoom
-                    ? l10n.groupInfoLeaveRoom2
-                    : l10n.groupInfoLeaveGroup2,
-                rose: true,
-                onTap: _confirmLeave,
-              ),
-            ],
-          ),
-        ]),
+          ]),
+        ),
       ),
     );
   }

@@ -9,13 +9,13 @@ import (
 	"github.com/nbd-wtf/go-nostr/nip45/hyperloglog"
 )
 
-func (rl *Relay) handleRequest(ctx context.Context, id string, eose *sync.WaitGroup, ws *WebSocket, filter nostr.Filter) error {
-	defer eose.Done()
-
+// kryfo: the overwrite and reject hooks, run before the listener is added
+// and the query is made, so only a filter that is taken gets a listener
+func (rl *Relay) checkRequest(ctx context.Context, filter *nostr.Filter) error {
 	// overwrite the filter (for example, to eliminate some kinds or
 	// that we know we don't support)
 	for _, ovw := range rl.OverwriteFilter {
-		ovw(ctx, &filter)
+		ovw(ctx, filter)
 	}
 
 	if filter.LimitZero {
@@ -28,9 +28,19 @@ func (rl *Relay) handleRequest(ctx context.Context, id string, eose *sync.WaitGr
 	// that we know we don't support, and then if the end result is an empty
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
-		if reject, msg := reject(ctx, filter); reject {
+		if reject, msg := reject(ctx, *filter); reject {
 			return errors.New(nostr.NormalizeOKMessage(msg, "blocked"))
 		}
+	}
+	return nil
+}
+
+// kryfo: filter has been through checkRequest
+func (rl *Relay) handleRequest(ctx context.Context, id string, eose *sync.WaitGroup, ws *WebSocket, filter nostr.Filter) {
+	defer eose.Done()
+
+	if filter.LimitZero {
+		return
 	}
 
 	// run the functions to query events (generally just one,
@@ -59,8 +69,6 @@ func (rl *Relay) handleRequest(ctx context.Context, id string, eose *sync.WaitGr
 			eose.Done()
 		}(ch)
 	}
-
-	return nil
 }
 
 func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, filter nostr.Filter) int64 {

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'container.dart';
+import 'desktop/desktop_mode.dart' show onDesktop;
 import 'voice_format.dart' show isVoiceName;
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
@@ -142,12 +143,23 @@ Future<bool> Function() unmeteredNow = _unmetered;
 
 Future<bool> _unmetered() async {
   try {
-    final r = await Connectivity().checkConnectivity();
-    return r.contains(ConnectivityResult.wifi) ||
-        r.contains(ConnectivityResult.ethernet);
+    return unmeteredIn(await Connectivity().checkConnectivity());
   } catch (_) {
     return false;
   }
+}
+
+/// [r] is wi-fi or a cable. a computer's full tunnel vpn reads as vpn alone,
+/// and the line under it is wi-fi or a cable all but always: a computer
+/// counts a vpn or a link it cannot name too. a mobile modem stays metered
+bool unmeteredIn(List<ConnectivityResult> r) {
+  if (r.contains(ConnectivityResult.wifi) ||
+      r.contains(ConnectivityResult.ethernet)) {
+    return true;
+  }
+  if (!onDesktop || r.contains(ConnectivityResult.mobile)) return false;
+  return r.contains(ConnectivityResult.vpn) ||
+      r.contains(ConnectivityResult.other);
 }
 
 // ---- files filed before their bytes ----

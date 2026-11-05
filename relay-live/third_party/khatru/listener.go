@@ -92,6 +92,7 @@ func (rl *Relay) removeListenerId(ws *WebSocket, id string) {
 					movedSpecs[idx].index = spec.index
 					rl.clients[moved.ws] = movedSpecs
 				}
+				srl.listeners[len(srl.listeners)-1] = listener{}        // kryfo: the array keeps no closed listener
 				srl.listeners = srl.listeners[0 : len(srl.listeners)-1] // finally reduce the slice length
 			}
 		}
@@ -126,6 +127,7 @@ func (rl *Relay) removeClientAndListeners(ws *WebSocket) {
 				movedSpecs[idx].index = spec.index
 				rl.clients[moved.ws] = movedSpecs
 			}
+			srl.listeners[len(srl.listeners)-1] = listener{}        // kryfo: the array keeps no closed listener
 			srl.listeners = srl.listeners[0 : len(srl.listeners)-1] // finally reduce the slice length
 		}
 	}

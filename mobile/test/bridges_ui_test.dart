@@ -29,8 +29,7 @@ import 'package:kryfo/screens/bridge_share_sheet.dart';
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/widgets/halo_buttons.dart';
-import 'package:kryfo/widgets/motion.dart'
-    show BreathDot, TorStatus, kHouseCurve;
+import 'package:kryfo/widgets/motion.dart' show BreathDot, kHouseCurve;
 import 'package:kryfo/widgets/press_scale.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -868,7 +867,8 @@ void main() {
       );
       await t.tap(find.text(l10n.bridgesMore));
       await _in(t);
-      expect(find.text(l10n.bridgesCountry), findsNothing);
+      // plain advice, no country to pick
+      expect(find.text(l10n.bridgesPlainAdvice), findsOneWidget);
       await t.ensureVisible(find.text(l10n.bridgesAskTorProject));
       await t.pump();
       await t.tap(find.text(l10n.bridgesAskTorProject));
@@ -878,31 +878,9 @@ void main() {
       await t.tap(find.text(l10n.commonAllow));
       await _in(t);
       expect(_eng.calls.single, contains('"consent":"yes"'));
+      // no country goes to the engine, and the tor project is not asked
+      expect(_eng.calls.single, isNot(contains('country')));
       expect(_eng.moat, 0);
-      // the country: the sheet at once, and the tor project asked only
-      // for its guess, when that is picked
-      await t.pump(const Duration(seconds: 1));
-      await t.ensureVisible(find.text(l10n.bridgesCountry));
-      await t.pump(const Duration(seconds: 1));
-      await t.tap(find.text(l10n.bridgesCountry));
-      await _in(t);
-      expect(find.text(l10n.bridgesIran), findsOneWidget);
-      expect(_eng.moat, 0);
-      await t.tap(find.text(l10n.bridgesIran));
-      await _in(t);
-      expect(appState.bridge.country, 'ir');
-      expect(_eng.calls.last, contains('"country":"ir"'));
-      expect(_eng.moat, 0);
-      await t.tap(find.text(l10n.bridgesCountry));
-      await _in(t);
-      await t.tap(find.text(l10n.bridgesLetTheTorProject).last);
-      await _in(t);
-      expect(_eng.moat, 1);
-      expect(appState.bridge.country, '');
-      expect(
-        find.textContaining(l10n.bridgesTheTorProjectSGuess),
-        findsOneWidget,
-      );
       await _done(t);
     });
   });
@@ -1001,14 +979,25 @@ void main() {
       }
     });
 
-    test('the fallback is kept at once, the yes and country with it', () async {
+    test('a country picked before goes, and none reaches the engine', () async {
+      FlutterSecureStorage.setMockInitialValues({
+        'bridge_mode': 'auto',
+        'bridge_consent': 'yes',
+        'bridge_country': 'ir',
+      });
+      final b = await AppState().readBridgeSetup(firstStart: false);
+      const st = FlutterSecureStorage();
+      expect(await st.read(key: 'bridge_country'), isNull);
+      expect(b.engineMode()!.$2, isNot(contains('country')));
+    });
+
+    test('the fallback is kept at once, the yes with it', () async {
       _eng.restoreAnswer = 'error: lines_bad';
       final app = AppState()
         ..bridgeSetupForTest = const BridgeSetup(
           choice: BridgeChoice.friend,
           friendLines: 'obfs4 mangled',
           consent: 'yes',
-          country: 'ir',
         );
       app.restoreBridgeAtBoot();
       await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -1016,7 +1005,7 @@ void main() {
       expect(await st.read(key: 'bridge_mode'), 'auto');
       expect(await st.read(key: 'bridge_skip_direct'), '1');
       expect(await st.read(key: 'bridge_consent'), 'yes');
-      expect(await st.read(key: 'bridge_country'), 'ir');
+      expect(await st.read(key: 'bridge_country'), isNull);
     });
 
     test('what automatic learnt waits for the decoy to close', () async {
@@ -1227,12 +1216,8 @@ void main() {
       const lines =
           'obfs4 192.0.2.1:443 A cert=x\nwebtunnel [2001:db8::1]:443 B';
       expect(
-        const BridgeSetup(
-          consent: 'yes',
-          friendLines: lines,
-          country: 'ir',
-        ).engineMode()!.$2,
-        allOf(contains('"country":"ir"'), contains('"webtunnel"')),
+        const BridgeSetup(consent: 'yes', friendLines: lines).engineMode()!.$2,
+        allOf(isNot(contains('country')), contains('"webtunnel"')),
       );
       expect(
         const BridgeSetup(
@@ -1399,7 +1384,7 @@ void main() {
         expect(_eng.calls, isEmpty);
         // removed, then something else changed: the undo is refused
         final d = (await app.removeBridgeLine(BridgeChoice.torProject, 0))!;
-        await app.setBridgeCountry('ir');
+        await app.setBridgeConsent(true);
         expect(await app.putBridgeSetupBack(d.$1, d.$2), isFalse);
         expect(splitBridgeLines(app.bridge.torProjectLines), hasLength(1));
       },
@@ -1525,24 +1510,6 @@ void main() {
       expect(find.text(l10n.bridgesOpenWifiSettings), findsNothing);
       expect(find.text(l10n.bridgesWaitingForWifiSignIn), findsNothing);
       await _done(t);
-    });
-
-    test('with tor up there is no guess, only the list', () async {
-      final app = AppState()
-        ..bridgeSetupForTest = const BridgeSetup(consent: 'yes')
-        ..sendModeForTest = 'private';
-      app.setTorStatusForTest(TorStatus.publishing);
-      app.setRouteOKForTest(true);
-      expect(await app.askMoatGuess(), isNull);
-      expect(_eng.moat, 0);
-      app.setTorStatusForTest(TorStatus.starting);
-      app.setRouteOKForTest(false);
-      expect(await app.askMoatGuess(), 'ir');
-      expect(_eng.moat, 1);
-      // over meek only with the yes
-      final no = AppState()..bridgeSetupForTest = const BridgeSetup();
-      expect(await no.askMoatGuess(), isNull);
-      expect(_eng.moat, 1);
     });
 
     test('a wi-fi sign-in shows on home, whatever the way, onion only', () {
@@ -1684,7 +1651,7 @@ void main() {
           await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
           await _in(t);
           await _done(t);
-          // a removed line, its undo, and the country row with a guess
+          // a removed line and its undo
           await at(
             h: 4000,
             setup: const BridgeSetup(
@@ -1694,7 +1661,6 @@ void main() {
                   'obfs4 192.0.2.1:443 A cert=x\nobfs4 192.0.2.2:443 B cert=y',
             ),
           );
-          await appState.askMoatGuess();
           await t.tap(find.text(l10n.bridgesMore));
           await _in(t);
           final x = find.byTooltip(l10n.bridgesRemoveBridgeN(whole(2)));

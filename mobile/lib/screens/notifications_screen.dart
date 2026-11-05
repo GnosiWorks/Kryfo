@@ -9,7 +9,8 @@ import 'package:flutter/services.dart';
 
 import '../battery_brand.dart' show BrandGuide;
 import '../delivery_mode.dart';
-import '../desktop/desktop_mode.dart' show desktopRun, onDesktop;
+import '../desktop/desktop_mode.dart'
+    show deskSound, desktopRun, onDesktop, setDeskSound;
 import '../lock_state.dart';
 import '../main.dart'
     show
@@ -496,8 +497,32 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   ),
                 ],
                 const SizedBox(height: 10),
-                // android's channel page: a computer's sound is its own
-                if (!onDesktop) _section(l10n.notificationsSoundAndVibration),
+                // android's channel page; a computer has its own switch
+                _section(l10n.notificationsSoundAndVibrationShown),
+                if (onDesktop)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: HaloGroup(
+                      children: [
+                        ValueListenableBuilder<bool>(
+                          valueListenable: deskSound,
+                          builder: (_, on, _) => HaloRow(
+                            key: const ValueKey('deskSoundRow'),
+                            icon: on
+                                ? Icons.volume_up_outlined
+                                : Icons.volume_off_outlined,
+                            label: l10n.notificationsPlaySound,
+                            hint: l10n.notificationsPlaySoundHint,
+                            toggled: on,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setDeskSound(!on);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 if (!onDesktop)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
