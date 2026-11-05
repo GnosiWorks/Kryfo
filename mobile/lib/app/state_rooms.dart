@@ -76,6 +76,8 @@ extension AppStateRooms on AppState {
     required Duration expiry,
     int? cap,
   }) async {
+    // burner rooms stay on the phone (mario 2026-10-30)
+    if (linkedRole) throw StateError('no rooms on a linked device');
     final k = engine.roomKeygen();
     if (k == null) throw StateError('could not make a room key');
     final fc = engine.roomFcPk(k.priv);
@@ -259,6 +261,7 @@ extension AppStateRooms on AppState {
   // creator's roster names the key, since nobody reads a key before that.
   // the waiting room opening is the answer, so there is nothing to say
   Future<String> joinRoom(RoomLink link) async {
+    if (linkedRole) return l10n.linkedLinkOnPhone;
     final now = DateTime.now().millisecondsSinceEpoch;
     if (link.expiresAt <= now) return l10n.appThisRoomHasAlready;
     // the same link twice at once: the first one is opening the room

@@ -11384,6 +11384,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesSendBridgeTo => 'Gửi cầu nối cho';
 
   @override
+  String get linkedAddOnPhone =>
+      'Thêm người trên điện thoại của bạn. Họ cũng hiện ở đây.';
+
+  @override
+  String get linkedLinkOnPhone => 'Mở liên kết này trên điện thoại của bạn.';
+
+  @override
   String get tipsTitle => 'Ủng hộ Kryfo';
 
   @override

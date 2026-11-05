@@ -1102,6 +1102,8 @@ extension AppStateGroups on AppState {
     String name,
     List<String> memberHaloIds,
   ) async {
+    // groups are made on the phone: a phone takes no group from a device
+    if (linkedRole) throw StateError('no new group on a linked device');
     // a group of only yourself is never made, whatever the screen let by
     if (!memberHaloIds.any((m) => m != sessionId)) {
       throw StateError('a group needs someone besides you');

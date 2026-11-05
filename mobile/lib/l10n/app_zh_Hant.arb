@@ -3002,6 +3002,8 @@
   "bridgesCopyBridge": "複製橋接",
   "bridgesBridgeCopied": "已複製橋接",
   "bridgesSendBridgeTo": "把橋接傳給",
+  "linkedAddOnPhone": "在手機上新增聯絡人。他們也會出現在這裡。",
+  "linkedLinkOnPhone": "在手機上開啟這個連結。",
   "tipsTitle": "支持 Kryfo",
   "tipsHeadline": "讓 Kryfo *對所有人免費*",
   "tipsLine": "沒有廣告，沒有投資人，沒有帳號。小費幫忙支付伺服器和 Kryfo 的開發工作。",

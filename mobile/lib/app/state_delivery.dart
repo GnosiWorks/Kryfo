@@ -334,8 +334,9 @@ extension AppStateDelivery on AppState {
   HelperPush _pushOf(DeliveryMode m) =>
       m == DeliveryMode.google ? GooglePush.instance : HelperPush.instance;
 
-  /// google push can be picked: a play build, on a phone with play services
-  bool get googleOffered => playBuild && _googleAvailable;
+  /// google push can be picked: a play build, on a phone with play services.
+  /// never on a linked device: its pushes are its phone's
+  bool get googleOffered => playBuild && _googleAvailable && !linkedRole;
   @visibleForTesting
   set googleAvailableForTest(bool v) => _googleAvailable = v;
 
@@ -432,8 +433,9 @@ extension AppStateDelivery on AppState {
   /// the private route: registrations go over tor or not at all. a phone
   /// already on it always sees its choice
   bool get helperOffered =>
-      _deliveryMode == DeliveryMode.helper ||
-      (_relayKnocks && _sendMode == 'private');
+      !linkedRole &&
+      (_deliveryMode == DeliveryMode.helper ||
+          (_relayKnocks && _sendMode == 'private'));
   String? get helperName => _helperName;
   bool get helperRefused => _helperRefused;
   bool get helperGoneDue => _helperGone.startsWith('due:') && !sessionQuiet;
@@ -535,6 +537,8 @@ extension AppStateDelivery on AppState {
   // from before. with the app open the next round follows a few minutes
   // on; in the background the next check-in takes it
   Future<int> _helperRound() async {
+    // a linked device registers nothing with the relay as a phone does
+    if (linkedRole) return 0;
     var n = 0;
     var more = false;
     try {
@@ -567,6 +571,7 @@ extension AppStateDelivery on AppState {
   /// the helper app chosen: sixteen registrations with it, the mode, then
   /// the relay. false when the helper app handed back no endpoint
   Future<bool> useHelper(HelperApp app) => _helperOp(() async {
+    if (linkedRole) return false;
     final was = _deliveryMode;
     // google push lets go first: its token is deleted
     if (was == DeliveryMode.google) {
@@ -738,7 +743,7 @@ extension AppStateDelivery on AppState {
       dlog('delivery: tor did not start: $addr');
       return false;
     }
-    myOnion = addr;
+    myOnion = onionOfStart(addr);
     notifyListeners();
     return true;
   }

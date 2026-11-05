@@ -40,6 +40,8 @@ Future<void> bootDevices() async {
   try {
     final db = await live.open();
     await readLinkedRole(db);
+    // a role the boot could not read before tor started
+    if (linkedRole) unawaited(torAsLinked(at: 'load'));
     // a linked device past its end ends before anything of it runs: no
     // listens, no copies opened or shown
     final end = await _linkedPeek();

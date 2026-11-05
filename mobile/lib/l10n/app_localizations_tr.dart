@@ -11424,6 +11424,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesSendBridgeTo => 'Köprüyü gönder';
 
   @override
+  String get linkedAddOnPhone =>
+      'Kişileri telefonundan ekle. Burada da görünürler.';
+
+  @override
+  String get linkedLinkOnPhone => 'Bu bağlantıyı telefonunda aç.';
+
+  @override
   String get tipsTitle => 'Kryfo’yu destekle';
 
   @override

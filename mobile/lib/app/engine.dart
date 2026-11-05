@@ -1042,6 +1042,9 @@ class HaloEngine {
   Future<String> torResume() => _torCtlOnIsolate('HaloTorResume');
   Future<String> startListenerBg(String dataDir) =>
       _startListenerOnIsolate(dataDir);
+  // a linked device's tor is a client with no onion of its own, from here
+  // to the end of the process (engine/tor_client.go)
+  Future<String> torClientOnly() => _torCtlOnIsolate('HaloTorClientOnly');
   // whether the engine holds tor asleep. a wake that failed has let it run
   // already, whatever the app thinks
   bool torPaused() => _torPaused() == 1;
@@ -1557,6 +1560,12 @@ Future<String> _fcSubscribeOnIsolate(int ident, int counter) {
     return engineTake(fn(ident, counter));
   });
 }
+
+/// what a start answers on a client's tor in place of an onion
+const kTorClientAddr = 'client';
+
+/// our onion from what a start answered, none on a client's tor
+String onionOfStart(String r) => r == kTorClientAddr ? '' : r;
 
 // tor's control port answers fast, but never on the ui thread
 Future<String> _torCtlOnIsolate(String symbol) {

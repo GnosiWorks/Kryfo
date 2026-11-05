@@ -14316,6 +14316,14 @@
   "@bridgesSendBridgeTo": {
     "description": "screens/bridge_share_sheet.dart: the title of the chat picker the bridge goes to"
   },
+  "linkedAddOnPhone": "Add people on your phone. They show up here too.",
+  "@linkedAddOnPhone": {
+    "description": "screens/home_screen.dart, app/shell.dart: on a linked device, where adding a contact would be; people are added on the phone"
+  },
+  "linkedLinkOnPhone": "Open this link on your phone.",
+  "@linkedLinkOnPhone": {
+    "description": "widgets/kryfo_link_text.dart: on a linked device, an invite or room link opened there; such links are the phone's"
+  },
   "tipsTitle": "Support Kryfo",
   "@tipsTitle": {
     "description": "screens/tip_screen.dart: the play build support tab title and the section on me"

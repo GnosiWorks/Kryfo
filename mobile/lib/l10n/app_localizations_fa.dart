@@ -11410,6 +11410,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesSendBridgeTo => 'فرستادن پل به';
 
   @override
+  String get linkedAddOnPhone =>
+      'افراد را از روی گوشی‌تان اضافه کنید. اینجا هم نشان داده می‌شوند.';
+
+  @override
+  String get linkedLinkOnPhone => 'این پیوند را روی گوشی‌تان باز کنید.';
+
+  @override
   String get tipsTitle => 'حمایت از Kryfo';
 
   @override

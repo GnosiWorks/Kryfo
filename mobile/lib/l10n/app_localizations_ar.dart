@@ -11540,6 +11540,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesSendBridgeTo => 'أرسل الجسر إلى';
 
   @override
+  String get linkedAddOnPhone => 'أضف الأشخاص من هاتفك. سيظهرون هنا أيضًا.';
+
+  @override
+  String get linkedLinkOnPhone => 'افتح هذا الرابط على هاتفك.';
+
+  @override
   String get tipsTitle => 'ادعم Kryfo';
 
   @override
