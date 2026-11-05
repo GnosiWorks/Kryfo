@@ -324,40 +324,43 @@ class _PinsScreenState extends State<PinsScreen> {
                           : HaloColors.text3,
                       onTap: on ? _wipeRow : null,
                     ),
-                    _ExtraRow(
-                      icon: Icons.theater_comedy_outlined,
-                      tint: HaloColors.amber,
-                      name: l10n.pinsDecoyPin,
-                      line: l10n.pinsDecoyLine,
-                      state: !on
-                          ? l10n.pinsNeedsAPinFirst
-                          : decoy
-                          ? l10n.pinsSet
-                          : l10n.commonOff,
-                      stateColor: on && decoy
-                          ? HaloColors.amber
-                          : HaloColors.text3,
-                      onTap: on ? _decoyRow : null,
-                    ),
-                    _ExtraRow(
-                      icon: Icons.visibility_off_outlined,
-                      tint: HaloColors.violet,
-                      name: l10n.pinsHiddenChats,
-                      line: l10n.pinsHiddenLine,
-                      state: !on
-                          ? l10n.pinsNeedsAPinFirst
-                          : vault
-                          ? l10n.pinsSet
-                          : l10n.pinsSetUp,
-                      stateColor: on && vault
-                          ? HaloColors.violet
-                          : HaloColors.text3,
-                      onTap: on ? _hiddenRow : null,
-                    ),
-                    _HowRow(
-                      onTap: () =>
-                          _showHow(context, finger: _lock.bioSupported),
-                    ),
+                    if (_host.decoyAndVault)
+                      _ExtraRow(
+                        icon: Icons.theater_comedy_outlined,
+                        tint: HaloColors.amber,
+                        name: l10n.pinsDecoyPin,
+                        line: l10n.pinsDecoyLine,
+                        state: !on
+                            ? l10n.pinsNeedsAPinFirst
+                            : decoy
+                            ? l10n.pinsSet
+                            : l10n.commonOff,
+                        stateColor: on && decoy
+                            ? HaloColors.amber
+                            : HaloColors.text3,
+                        onTap: on ? _decoyRow : null,
+                      ),
+                    if (_host.decoyAndVault)
+                      _ExtraRow(
+                        icon: Icons.visibility_off_outlined,
+                        tint: HaloColors.violet,
+                        name: l10n.pinsHiddenChats,
+                        line: l10n.pinsHiddenLine,
+                        state: !on
+                            ? l10n.pinsNeedsAPinFirst
+                            : vault
+                            ? l10n.pinsSet
+                            : l10n.pinsSetUp,
+                        stateColor: on && vault
+                            ? HaloColors.violet
+                            : HaloColors.text3,
+                        onTap: on ? _hiddenRow : null,
+                      ),
+                    if (_host.decoyAndVault)
+                      _HowRow(
+                        onTap: () =>
+                            _showHow(context, finger: _lock.bioSupported),
+                      ),
                   ],
                 ),
               ]),

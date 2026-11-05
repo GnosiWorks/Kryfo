@@ -10711,6 +10711,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => '把网桥发给';
+
+  @override
+  String get linkedAddOnPhone => '在手机上添加联系人。他们也会出现在这里。';
+
+  @override
+  String get linkedLinkOnPhone => '在手机上打开这个链接。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -21306,4 +21312,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesSendBridgeTo => '把橋接傳給';
+
+  @override
+  String get linkedAddOnPhone => '在手機上新增聯絡人。他們也會出現在這裡。';
+
+  @override
+  String get linkedLinkOnPhone => '在手機上開啟這個連結。';
 }

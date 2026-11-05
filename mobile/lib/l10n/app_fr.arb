@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "Partage-le en privé, avec des personnes de confiance. Un pont qui reste hors des pages publiques fonctionne plus longtemps.",
   "bridgesCopyBridge": "Copier le pont",
   "bridgesBridgeCopied": "Pont copié",
-  "bridgesSendBridgeTo": "Envoyer le pont à"
+  "bridgesSendBridgeTo": "Envoyer le pont à",
+  "linkedAddOnPhone": "Ajoutez des personnes depuis votre téléphone. Elles apparaissent aussi ici.",
+  "linkedLinkOnPhone": "Ouvrez ce lien sur votre téléphone."
 }

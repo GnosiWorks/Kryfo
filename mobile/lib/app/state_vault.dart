@@ -323,6 +323,8 @@ extension AppStateVault on AppState {
   // use is taken and kept nowhere, as every pin set in the decoy is: the
   // flow goes on as with any other, and what it hides no pin opens
   Future<bool> createVault(String pin) => _serial(() async {
+    // hidden chats are the phone's: a linked device never holds a vault
+    if (linkedRole) throw StateError('no vault on a linked device');
     if (_session.vault != null) throw StateError('no vault setup from here');
     if (!_host.lockOn) throw StateError('no app lock');
     final c = _ownVault;

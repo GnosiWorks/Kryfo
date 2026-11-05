@@ -18168,6 +18168,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send the bridge to'**
   String get bridgesSendBridgeTo;
+
+  /// screens/home_screen.dart, app/shell.dart: on a linked device, where adding a contact would be; people are added on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Add people on your phone. They show up here too.'**
+  String get linkedAddOnPhone;
+
+  /// widgets/kryfo_link_text.dart: on a linked device, an invite or room link opened there; such links are the phone's
+  ///
+  /// In en, this message translates to:
+  /// **'Open this link on your phone.'**
+  String get linkedLinkOnPhone;
 }
 
 class _AppLocalizationsDelegate

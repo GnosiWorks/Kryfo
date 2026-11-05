@@ -16,7 +16,7 @@ import 'invites.dart' show isV4Link;
 import 'l10n/app_locale.dart' show currentLanguage;
 import 'l10n/l10n.dart';
 import 'lock_state.dart';
-import 'main.dart' show appState, AppStateSession;
+import 'main.dart' show appState, linkedRole, AppStateSession;
 import 'theme.dart';
 import 'update_check.dart' show downloadPageFor;
 
@@ -63,6 +63,8 @@ String inviteShareText(String id, String kryfo, {String? lang}) {
 Future<String?> readyInvite({
   Duration wait = const Duration(seconds: 90),
 }) async {
+  // invites are the phone's: a linked device has no onion to put in one
+  if (linkedRole) return null;
   if (appState.sessionOnion.isEmpty) {
     final done = Completer<void>();
     void on() {

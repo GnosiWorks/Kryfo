@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "شاركه بشكل خاص مع من تثق بهم. الجسر الذي يبقى بعيدًا عن الصفحات العامة يعمل لمدة أطول.",
   "bridgesCopyBridge": "نسخ الجسر",
   "bridgesBridgeCopied": "نُسخ الجسر",
-  "bridgesSendBridgeTo": "أرسل الجسر إلى"
+  "bridgesSendBridgeTo": "أرسل الجسر إلى",
+  "linkedAddOnPhone": "أضف الأشخاص من هاتفك. سيظهرون هنا أيضًا.",
+  "linkedLinkOnPhone": "افتح هذا الرابط على هاتفك."
 }

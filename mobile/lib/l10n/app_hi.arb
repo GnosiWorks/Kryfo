@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "इसे निजी तौर पर, भरोसे के लोगों के साथ शेयर करें। जो ब्रिज सार्वजनिक पन्नों से दूर रहता है, वह ज़्यादा समय तक चलता है।",
   "bridgesCopyBridge": "ब्रिज कॉपी करें",
   "bridgesBridgeCopied": "ब्रिज कॉपी हुआ",
-  "bridgesSendBridgeTo": "ब्रिज भेजें"
+  "bridgesSendBridgeTo": "ब्रिज भेजें",
+  "linkedAddOnPhone": "लोगों को अपने फ़ोन पर जोड़ें। वे यहाँ भी दिखेंगे।",
+  "linkedLinkOnPhone": "यह लिंक अपने फ़ोन पर खोलें।"
 }

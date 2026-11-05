@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "Діліться ним особисто, з тими, кому довіряєте. Міст, якого немає на відкритих сторінках, працює довше.",
   "bridgesCopyBridge": "Копіювати міст",
   "bridgesBridgeCopied": "Міст скопійовано",
-  "bridgesSendBridgeTo": "Надіслати міст"
+  "bridgesSendBridgeTo": "Надіслати міст",
+  "linkedAddOnPhone": "Додавайте людей на телефоні. Вони з’являться і тут.",
+  "linkedLinkOnPhone": "Відкрийте це посилання на телефоні."
 }

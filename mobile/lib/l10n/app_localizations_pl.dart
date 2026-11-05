@@ -11538,4 +11538,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Wyślij mostek do';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Dodawaj osoby na telefonie. Pojawią się też tutaj.';
+
+  @override
+  String get linkedLinkOnPhone => 'Otwórz ten link na telefonie.';
 }

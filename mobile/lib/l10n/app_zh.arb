@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "请私下分享给你信任的人。不出现在公开页面上的网桥能用得更久。",
   "bridgesCopyBridge": "复制网桥",
   "bridgesBridgeCopied": "网桥已复制",
-  "bridgesSendBridgeTo": "把网桥发给"
+  "bridgesSendBridgeTo": "把网桥发给",
+  "linkedAddOnPhone": "在手机上添加联系人。他们也会出现在这里。",
+  "linkedLinkOnPhone": "在手机上打开这个链接。"
 }

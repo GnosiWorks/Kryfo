@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "Bagikan secara pribadi, kepada orang yang kamu percaya. Jembatan yang tidak dipasang di halaman publik bekerja lebih lama.",
   "bridgesCopyBridge": "Salin jembatan",
   "bridgesBridgeCopied": "Jembatan disalin",
-  "bridgesSendBridgeTo": "Kirim jembatan ke"
+  "bridgesSendBridgeTo": "Kirim jembatan ke",
+  "linkedAddOnPhone": "Tambahkan orang di ponselmu. Mereka juga muncul di sini.",
+  "linkedLinkOnPhone": "Buka tautan ini di ponselmu."
 }

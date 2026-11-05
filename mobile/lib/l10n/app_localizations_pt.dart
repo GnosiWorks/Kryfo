@@ -11401,4 +11401,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Enviar a ponte para';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Adicione pessoas no seu celular. Elas aparecem aqui também.';
+
+  @override
+  String get linkedLinkOnPhone => 'Abra este link no seu celular.';
 }

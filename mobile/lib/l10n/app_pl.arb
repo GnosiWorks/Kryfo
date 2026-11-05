@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "Udostępnij go prywatnie, osobom, którym ufasz. Mostek, którego nie ma na publicznych stronach, działa dłużej.",
   "bridgesCopyBridge": "Kopiuj mostek",
   "bridgesBridgeCopied": "Mostek skopiowany",
-  "bridgesSendBridgeTo": "Wyślij mostek do"
+  "bridgesSendBridgeTo": "Wyślij mostek do",
+  "linkedAddOnPhone": "Dodawaj osoby na telefonie. Pojawią się też tutaj.",
+  "linkedLinkOnPhone": "Otwórz ten link na telefonie."
 }

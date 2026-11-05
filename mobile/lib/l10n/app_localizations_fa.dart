@@ -11329,4 +11329,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'فرستادن پل به';
+
+  @override
+  String get linkedAddOnPhone =>
+      'افراد را از روی گوشی‌تان اضافه کنید. اینجا هم نشان داده می‌شوند.';
+
+  @override
+  String get linkedLinkOnPhone => 'این پیوند را روی گوشی‌تان باز کنید.';
 }

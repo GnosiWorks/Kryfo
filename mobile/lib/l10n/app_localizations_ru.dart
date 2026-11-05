@@ -11500,4 +11500,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Отправить мост';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Добавляйте людей на телефоне. Они появятся и здесь.';
+
+  @override
+  String get linkedLinkOnPhone => 'Откройте эту ссылку на телефоне.';
 }

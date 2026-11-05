@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "Güvendiğin kişilerle özel olarak paylaş. Herkese açık sayfalarda yer almayan bir köprü daha uzun süre çalışır.",
   "bridgesCopyBridge": "Köprüyü kopyala",
   "bridgesBridgeCopied": "Köprü kopyalandı",
-  "bridgesSendBridgeTo": "Köprüyü gönder"
+  "bridgesSendBridgeTo": "Köprüyü gönder",
+  "linkedAddOnPhone": "Kişileri telefonundan ekle. Burada da görünürler.",
+  "linkedLinkOnPhone": "Bu bağlantıyı telefonunda aç."
 }

@@ -11319,4 +11319,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Kirim jembatan ke';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Tambahkan orang di ponselmu. Mereka juga muncul di sini.';
+
+  @override
+  String get linkedLinkOnPhone => 'Buka tautan ini di ponselmu.';
 }

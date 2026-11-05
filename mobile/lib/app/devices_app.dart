@@ -40,6 +40,8 @@ Future<void> bootDevices() async {
   try {
     final db = await live.open();
     await readLinkedRole(db);
+    // a role the boot could not read before tor started
+    if (linkedRole) unawaited(torAsLinked(at: 'load'));
     final lib = signalSession.lib;
     final path = KryfoSignal.loadedFrom;
     if (path == null) throw StateError('the signal library has no path');

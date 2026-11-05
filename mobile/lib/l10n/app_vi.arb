@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "Hãy chia sẻ riêng với người bạn tin tưởng. Cầu nối không đăng ở trang công khai sẽ dùng được lâu hơn.",
   "bridgesCopyBridge": "Sao chép cầu nối",
   "bridgesBridgeCopied": "Đã sao chép cầu nối",
-  "bridgesSendBridgeTo": "Gửi cầu nối cho"
+  "bridgesSendBridgeTo": "Gửi cầu nối cho",
+  "linkedAddOnPhone": "Thêm người trên điện thoại của bạn. Họ cũng hiện ở đây.",
+  "linkedLinkOnPhone": "Mở liên kết này trên điện thoại của bạn."
 }

@@ -11324,4 +11324,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'ब्रिज भेजें';
+
+  @override
+  String get linkedAddOnPhone =>
+      'लोगों को अपने फ़ोन पर जोड़ें। वे यहाँ भी दिखेंगे।';
+
+  @override
+  String get linkedLinkOnPhone => 'यह लिंक अपने फ़ोन पर खोलें।';
 }

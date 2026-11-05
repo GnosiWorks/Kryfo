@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "آن را خصوصی و با کسانی که به آن‌ها اعتماد داری به اشتراک بگذار. پلی که در صفحه‌های عمومی نیاید، مدت بیشتری کار می‌کند.",
   "bridgesCopyBridge": "کپی پل",
   "bridgesBridgeCopied": "پل کپی شد",
-  "bridgesSendBridgeTo": "فرستادن پل به"
+  "bridgesSendBridgeTo": "فرستادن پل به",
+  "linkedAddOnPhone": "افراد را از روی گوشی‌تان اضافه کنید. اینجا هم نشان داده می‌شوند.",
+  "linkedLinkOnPhone": "این پیوند را روی گوشی‌تان باز کنید."
 }

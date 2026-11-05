@@ -15,6 +15,7 @@ import '../lock_state.dart';
 import '../main.dart'
     show
         appState,
+        linkedRole,
         reduceMotion,
         session,
         AppStateRoute,
@@ -383,27 +384,29 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     on: mode == DeliveryMode.checkins,
                     onTap: () => _pick(DeliveryMode.checkins),
                   ),
-                  // always there, greyed until onion and our relay allow it
-                  _ModeCard(
-                    title: l10n.deliveryModeThroughAHelperApp,
-                    body: l10n.gettingMessagesHelperBody,
-                    on: mode == DeliveryMode.helper,
-                    wait: helperWait,
-                    checking: checking,
-                    // a pill says what the tap does: move the route, or set up
-                    action: mode == DeliveryMode.helper
-                        ? null
-                        : helperWait == null
-                        ? l10n.gettingMessagesHelperSetUp
-                        : onOnion
-                        ? null
-                        : l10n.gettingMessagesHelperUseOnion,
-                    onTap: helperWait == null
-                        ? () => _pick(DeliveryMode.helper)
-                        : onOnion
-                        ? null
-                        : _toOnion,
-                  ),
+                  // always there, greyed until onion and our relay allow it.
+                  // a linked device's pushes are its phone's
+                  if (!linkedRole)
+                    _ModeCard(
+                      title: l10n.deliveryModeThroughAHelperApp,
+                      body: l10n.gettingMessagesHelperBody,
+                      on: mode == DeliveryMode.helper,
+                      wait: helperWait,
+                      checking: checking,
+                      // a pill says what the tap does: move the route, or set up
+                      action: mode == DeliveryMode.helper
+                          ? null
+                          : helperWait == null
+                          ? l10n.gettingMessagesHelperSetUp
+                          : onOnion
+                          ? null
+                          : l10n.gettingMessagesHelperUseOnion,
+                      onTap: helperWait == null
+                          ? () => _pick(DeliveryMode.helper)
+                          : onOnion
+                          ? null
+                          : _toOnion,
+                    ),
                 ],
                 Padding(
                   padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),

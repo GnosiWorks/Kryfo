@@ -11318,4 +11318,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Send the bridge to';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Add people on your phone. They show up here too.';
+
+  @override
+  String get linkedLinkOnPhone => 'Open this link on your phone.';
 }

@@ -10,6 +10,7 @@ import '../desktop/desktop_mode.dart' show onDesktop;
 import '../main.dart'
     show
         appState,
+        linkedRole,
         session,
         showAddContact,
         AppStatePhotos,
@@ -278,26 +279,32 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
 
-                _reveal(3, _Section(l10n.profileShareConnect)),
-                // the same rows as settings: one surface, a tile per row
-                _reveal(
-                  3,
-                  HaloGroup(
-                    children: [
-                      HaloRow(
-                        icon: Icons.qr_code_2_outlined,
-                        label: l10n.profileMyKryfoCode,
-                        onTap: () =>
-                            deskPush(context, haloRoute(const MyKryfoScreen())),
-                      ),
-                      HaloRow(
-                        icon: Icons.person_add_outlined,
-                        label: l10n.profileAddContact,
-                        onTap: () => showAddContact(context),
-                      ),
-                    ],
+                // the code, the invite and adding are the phone's on a
+                // linked device
+                if (!linkedRole) ...[
+                  _reveal(3, _Section(l10n.profileShareConnect)),
+                  // the same rows as settings: one surface, a tile per row
+                  _reveal(
+                    3,
+                    HaloGroup(
+                      children: [
+                        HaloRow(
+                          icon: Icons.qr_code_2_outlined,
+                          label: l10n.profileMyKryfoCode,
+                          onTap: () => deskPush(
+                            context,
+                            haloRoute(const MyKryfoScreen()),
+                          ),
+                        ),
+                        HaloRow(
+                          icon: Icons.person_add_outlined,
+                          label: l10n.profileAddContact,
+                          onTap: () => showAddContact(context),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
                 // the play build offers no way to give
                 if (!kPlayBuild) ...[
                   const SizedBox(height: 24),

@@ -11497,4 +11497,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Надіслати міст';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Додавайте людей на телефоні. Вони з’являться і тут.';
+
+  @override
+  String get linkedLinkOnPhone => 'Відкрийте це посилання на телефоні.';
 }

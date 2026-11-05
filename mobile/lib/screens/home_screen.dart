@@ -819,7 +819,8 @@ class _HomeHead extends StatelessWidget {
         // between the rounds
         SearchDoor(onTap: onSearch),
         _GearButton(onTap: onSettings),
-        _AddScanButton(onTap: onAdd),
+        // people are added on the phone a device is linked to
+        if (!linkedRole) _AddScanButton(onTap: onAdd),
         const SizedBox(width: 12 - (kDoorBox - kDoorRound) / 2),
         TorHalo(label: true),
       ],
@@ -1996,80 +1997,85 @@ class _EmptyStateState extends State<_EmptyState>
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.homeScanTheirCodeSendShown,
+              // a linked device adds no one: its phone does
+              linkedRole
+                  ? l10n.linkedAddOnPhone
+                  : l10n.homeScanTheirCodeSendShown,
               textAlign: TextAlign.center,
               style: HaloType.sans(size: 13, color: HaloColors.text2),
             ),
-            const SizedBox(height: 22),
-            // one clear way: the invite goes out in any messenger. the
-            // code and the @name sit under it
-            PressScale(
-              onTap: _invite,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: HaloColors.amber.withValues(alpha: 0.25),
-                      blurRadius: 16,
-                      spreadRadius: -4,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.ios_share_rounded,
-                      size: 16,
-                      color: HaloColors.onAmber,
-                    ),
-                    const SizedBox(width: 8),
-                    // a large font wraps the label instead of cutting it
-                    Flexible(
-                      child: Text(
-                        l10n.homeInviteSomeone,
-                        textAlign: TextAlign.center,
-                        style: HaloType.sans(
-                          size: 13.5,
-                          weight: FontWeight.w600,
-                          color: HaloColors.onAmber,
-                          height: 1.15,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Semantics(
-              button: true,
-              child: PressScale(
-                onTap: widget.onAdd,
-                child: Padding(
+            if (!linkedRole) ...[
+              const SizedBox(height: 22),
+              // one clear way: the invite goes out in any messenger. the
+              // code and the @name sit under it
+              PressScale(
+                onTap: _invite,
+                child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
+                    horizontal: 20,
                     vertical: 12,
                   ),
-                  child: Text(
-                    l10n.homeAddSomeone,
-                    textAlign: TextAlign.center,
-                    style: HaloType.sans(
-                      size: 13,
-                      weight: FontWeight.w500,
-                      color: HaloColors.amberText,
+                  decoration: BoxDecoration(
+                    color: HaloColors.amber,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: HaloColors.amber.withValues(alpha: 0.25),
+                        blurRadius: 16,
+                        spreadRadius: -4,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.ios_share_rounded,
+                        size: 16,
+                        color: HaloColors.onAmber,
+                      ),
+                      const SizedBox(width: 8),
+                      // a large font wraps the label instead of cutting it
+                      Flexible(
+                        child: Text(
+                          l10n.homeInviteSomeone,
+                          textAlign: TextAlign.center,
+                          style: HaloType.sans(
+                            size: 13.5,
+                            weight: FontWeight.w600,
+                            color: HaloColors.onAmber,
+                            height: 1.15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Semantics(
+                button: true,
+                child: PressScale(
+                  onTap: widget.onAdd,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Text(
+                      l10n.homeAddSomeone,
+                      textAlign: TextAlign.center,
+                      style: HaloType.sans(
+                        size: 13,
+                        weight: FontWeight.w500,
+                        color: HaloColors.amberText,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           ]),
         ),
       ),
@@ -2306,12 +2312,14 @@ class _GroupsHead extends StatelessWidget {
         _SectionHead(
           label: l10n.homeGroups,
           actions: [
-            _HeadAction(
-              icon: Icons.timer_outlined,
-              label: l10n.homeRoom,
-              color: HaloColors.violet,
-              onTap: onNewRoom,
-            ),
+            // burner rooms stay on the phone
+            if (!linkedRole)
+              _HeadAction(
+                icon: Icons.timer_outlined,
+                label: l10n.homeRoom,
+                color: HaloColors.violet,
+                onTap: onNewRoom,
+              ),
             _HeadAction(
               icon: Icons.add_rounded,
               label: l10n.homeNew,

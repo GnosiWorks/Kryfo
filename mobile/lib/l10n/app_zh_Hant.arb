@@ -2980,5 +2980,7 @@
   "bridgesShareItPrivately": "請私下分享給你信任的人。不出現在公開頁面上的橋接能用得更久。",
   "bridgesCopyBridge": "複製橋接",
   "bridgesBridgeCopied": "已複製橋接",
-  "bridgesSendBridgeTo": "把橋接傳給"
+  "bridgesSendBridgeTo": "把橋接傳給",
+  "linkedAddOnPhone": "在手機上新增聯絡人。他們也會出現在這裡。",
+  "linkedLinkOnPhone": "在手機上開啟這個連結。"
 }
