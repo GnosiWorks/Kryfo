@@ -68,9 +68,8 @@ class DesktopBinding extends WidgetsFlutterBinding {
       DesktopMessenger(super.createBinaryMessenger(), _answers);
 }
 
-/// notifications on desktop say only that something came. gnome and kde keep
-/// a history of them on disk, and the phone's choice of what to show does
-/// not reach that far
+/// notifications on desktop say what the phone's preview setting gave the
+/// post: kryfo and new message unless previews are on
 class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
   /// a click brings the window up from the tray before the chat opens
   @override
@@ -91,12 +90,18 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
     String? body,
     LinuxNotificationDetails? notificationDetails,
     String? payload,
-  }) => post(
-    id: id,
-    title: 'Kryfo',
-    body: l10n.notificationsNewMessage,
-    payload: payload,
-  );
+  }) {
+    // a plain post has no title: still only that something came
+    final named = title != null;
+    return post(
+      id: id,
+      title: named ? title : 'Kryfo',
+      body: named
+          ? (body ?? l10n.notificationsNewMessage)
+          : l10n.notificationsNewMessage,
+      payload: payload,
+    );
+  }
 
   /// what reaches the desktop's notification server
   @visibleForTesting

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// windows toasts. windows keeps every toast in its own history on the disk,
-// so a toast says only that something came, and what a click opens stays in
-// this process
+// windows toasts. what a toast says is what the phone's preview setting gave
+// the post, and what a click opens stays in this process
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:math' show Random;
@@ -42,12 +41,13 @@ void joinComApartment({DynamicLibrary Function(String name)? open}) {
   } catch (_) {}
 }
 
-/// a plain post comes without a title and keeps its neutral line. every
-/// other toast says only that a message came, whatever the setting
+/// a plain post comes without a title and keeps its neutral line. any other
+/// says what the post says: previews off, a hidden chat, the vault and a
+/// chat that blocks screenshots come as kryfo and new message already
 @visibleForTesting
-(String?, String) toastWords(String? title) => title == null
+(String?, String) toastWords(String? title, String? body) => title == null
     ? (null, l10n.notifPlainLine)
-    : ('Kryfo', l10n.notificationsNewMessage);
+    : (title, body ?? l10n.notificationsNewMessage);
 
 /// a toast's details: silent when the notifications page's sound switch
 /// is off, windows' own sound otherwise
@@ -85,7 +85,7 @@ class ToastPayloads {
   );
 }
 
-/// the windows plugin with neutral words and hidden payloads. a click
+/// the windows plugin with hidden payloads. a click
 /// raises the window first
 class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
   QuietWindowsNotifications({required this.raise});
@@ -116,7 +116,7 @@ class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
     String? payload,
     WindowsNotificationDetails? notificationDetails,
   }) {
-    final (t, b) = toastWords(title);
+    final (t, b) = toastWords(title, body);
     return super.show(
       id: id,
       title: t,
