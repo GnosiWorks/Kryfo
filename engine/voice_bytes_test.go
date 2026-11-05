@@ -74,3 +74,25 @@ func TestVoiceBytesStop(t *testing.T) {
 		t.Fatal("the stop mark stayed")
 	}
 }
+
+// a buffer that grows leaves no copy of what it held behind
+func TestZeroBufGrowZeroes(t *testing.T) {
+	z := zeroBuf{b: make([]byte, 0, 4)}
+	z.Write([]byte{1, 2, 3, 4})
+	old := z.b[:cap(z.b)]
+	z.Write([]byte{5, 6})
+	if !bytes.Equal(z.b, []byte{1, 2, 3, 4, 5, 6}) {
+		t.Fatalf("held %v", z.b)
+	}
+	for _, v := range old {
+		if v != 0 {
+			t.Fatalf("the old array still holds %v", old)
+		}
+	}
+	// room enough: the same array, nothing moved
+	same := &z.b[:cap(z.b)][0]
+	z.Write([]byte{7})
+	if &z.b[0] != same {
+		t.Fatal("grew with room to spare")
+	}
+}

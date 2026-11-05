@@ -991,7 +991,7 @@ packages:
     source: hosted
     version: "1.2.2"
   record_platform_interface:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: record_platform_interface
       sha256: "8e56cbe06c6984137fb86132ff03459f29938d927496d9b2d0962e2d6345d488"

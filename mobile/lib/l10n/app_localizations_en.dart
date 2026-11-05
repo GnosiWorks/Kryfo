@@ -10376,6 +10376,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.';
 
   @override
+  String get desktopMicBlocked =>
+      'Kryfo can record once Windows lets desktop apps use the microphone, in Settings, Privacy and security, Microphone.';
+
+  @override
+  String get desktopMicNone => 'Connect a microphone to record a voice note.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo cannot use a camera on this computer yet. Use the link or the code instead.';
 

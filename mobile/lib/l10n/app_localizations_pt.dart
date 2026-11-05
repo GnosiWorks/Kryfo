@@ -10457,6 +10457,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'O Windows deixou o Kryfo desativado nos aplicativos de inicialização. Ative por lá, em Configurações, Aplicativos, Inicialização.';
 
   @override
+  String get desktopMicBlocked =>
+      'O Kryfo pode gravar quando o Windows deixar os aplicativos da área de trabalho usarem o microfone, em Configurações, Privacidade e segurança, Microfone.';
+
+  @override
+  String get desktopMicNone => 'Conecte um microfone para gravar um áudio.';
+
+  @override
   String get desktopNoCamera =>
       'O Kryfo ainda não consegue usar uma câmera neste computador. Use o link ou o código.';
 

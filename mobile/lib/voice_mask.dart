@@ -10,6 +10,23 @@ import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'desktop/sealed_format.dart' show ChunkCrypto;
+import 'desktop/sealed_io.dart' show SealedIO, installSealedIO;
+
+/// windows' temporary folder is sealed: an isolate that reads a take
+/// there takes the seal along. null elsewhere, where takes are plain
+typedef SealCarry = (Map<String, Object?>, ChunkCrypto)?;
+
+SealCarry _carry() {
+  final io = IOOverrides.current;
+  if (io is! SealedIO || io.areas.tmp == null) return null;
+  return (io.areas.toMessage(), io.crypto);
+}
+
+void _arrive(SealCarry c) {
+  if (c != null) installSealedIO(c.$1, c.$2);
+}
+
 /// the random part of one note's disguise
 class MaskDraw {
   // pitch factor, above 1 is higher
@@ -124,7 +141,7 @@ MaskJob startMaskFile(
   });
   Isolate.spawn(
     _fileMain,
-    (port.sendPort, from, to, _drawOf(seed)),
+    (port.sendPort, from, to, _drawOf(seed), _carry()),
     onExit: port.sendPort,
     onError: port.sendPort,
   ).catchError((Object _) {
@@ -174,8 +191,11 @@ Future<void> _shredMade(String to) => Isolate.run(() {
 
 // the whole-take disguise in its own isolate, a piece at a time, with a
 // turn between pieces for a stop to get in
-Future<void> _fileMain((SendPort, String, String, MaskDraw) a) async {
-  final (out, from, to, draw) = a;
+Future<void> _fileMain(
+  (SendPort, String, String, MaskDraw, SealCarry) a,
+) async {
+  final (out, from, to, draw, seal) = a;
+  _arrive(seal);
   final inbox = ReceivePort();
   var stop = false;
   inbox.listen((_) => stop = true);
@@ -469,6 +489,9 @@ class _MaskOut {
 
 // where the samples are: start, length in bytes, channels and rate. [size]
 // is the whole file's when [b] is only its head
+/// (start, length, channels, rate) of a 16-bit pcm wav's samples
+(int, int, int, int)? wavPcmAt(Uint8List b, [int? size]) => _pcmAt(b, size);
+
 (int, int, int, int)? _pcmAt(Uint8List b, [int? size]) {
   if (b.length < 12) return null;
   final d = ByteData.sublistView(b);
@@ -871,6 +894,7 @@ class LiveMask {
           seed,
           every.inMilliseconds,
           life.inMilliseconds,
+          _carry(),
         ),
         onError: from.sendPort,
         onExit: from.sendPort,
@@ -963,8 +987,11 @@ int _hashFile(RandomAccessFile f, int from, int end) {
   return h;
 }
 
-void _liveMain((SendPort, String, int, int?, int, int) a) {
-  final (out, path, rate, seed, every, life) = a;
+void _liveMain((SendPort, String, int, int?, int, int, SealCarry) a) {
+  final (out, path, rate, seed, every, life, seal) = a;
+  _arrive(seal);
+  // a sealed take knows its length as it was opened: read anew each turn
+  final fresh = seal != null;
   final inbox = ReceivePort();
   out.send(inbox.sendPort);
   final draw = _drawOf(seed);
@@ -1003,14 +1030,22 @@ void _liveMain((SendPort, String, int, int?, int, int) a) {
     final int n;
     try {
       final f = file ??= File(path).openSync();
-      var want = f.lengthSync() - at;
-      want -= want & 1;
-      if (want > turn) want = turn;
-      if (want <= 0) return;
-      f.setPositionSync(at);
-      n = f.readIntoSync(buf, 0, want);
+      try {
+        var want = f.lengthSync() - at;
+        want -= want & 1;
+        if (want > turn) want = turn;
+        if (want <= 0) return;
+        f.setPositionSync(at);
+        n = f.readIntoSync(buf, 0, want);
+      } finally {
+        if (fresh) {
+          file = null;
+          f.closeSync();
+        }
+      }
     } catch (_) {
-      // not readable now: the finish reads it whole
+      // not readable now (a sealed take half way through its write): the
+      // next turn, or the finish reads it whole
       return;
     }
     final got = n - (n & 1);

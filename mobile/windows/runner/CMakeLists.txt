@@ -8,6 +8,7 @@ project(runner LANGUAGES CXX)
 # Any new source files that you add to the application should be added here.
 add_executable(${BINARY_NAME} WIN32
   "flutter_window.cpp"
+  "kryfo_audio.cpp"
   "kryfo_tray.cpp"
   "kryfo_win.cpp"
   "main.cpp"
@@ -38,6 +39,8 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 # the hardening and the tray (kryfo_win.cpp, kryfo_tray.cpp)
 target_link_libraries(${BINARY_NAME} PRIVATE "advapi32.lib" "shell32.lib" "wer.lib")
+# voice notes through wasapi (kryfo_audio.cpp)
+target_link_libraries(${BINARY_NAME} PRIVATE "ole32.lib")
 # the session's lock, so toasts go neutral while it is (flutter_window.cpp)
 target_link_libraries(${BINARY_NAME} PRIVATE "wtsapi32.lib")
 # cfg on the exe; the go and gcc dlls are not cfg-built. cet in its

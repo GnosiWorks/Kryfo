@@ -2731,6 +2731,8 @@
   "desktopStartHint": "Kryfo khởi động trong khay hệ thống khi bạn đăng nhập vào máy tính này.",
   "desktopStartRefused": "Máy tính này không cho Kryfo khởi động cùng. Kryfo vẫn mở mỗi khi bạn tự khởi động nó.",
   "desktopStartHeldOff": "Windows đang tắt Kryfo trong các ứng dụng khởi động. Hãy bật lại ở đó, trong Cài đặt, Ứng dụng, Khởi động.",
+  "desktopMicBlocked": "Kryfo có thể ghi âm khi Windows cho phép ứng dụng máy tính dùng micrô, trong Cài đặt, Quyền riêng tư và bảo mật, Micrô.",
+  "desktopMicNone": "Hãy cắm micrô để ghi tin nhắn thoại.",
   "desktopNoCamera": "Kryfo chưa dùng được camera trên máy tính này. Hãy dùng liên kết hoặc mã thay thế.",
   "desktopAlreadyOpen": "Kryfo đã mở sẵn trên máy tính này.",
   "desktopFolderNotYours": "Thư mục của Kryfo thuộc về một tài khoản khác trên máy tính này, nên Kryfo sẽ không mở nó.",

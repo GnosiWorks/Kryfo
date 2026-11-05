@@ -10519,6 +10519,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'يضع Windows ‏Kryfo على وضع الإيقاف في تطبيقات بدء التشغيل. شغّله من هناك: الإعدادات، التطبيقات، بدء التشغيل.';
 
   @override
+  String get desktopMicBlocked =>
+      'حين يسمح Windows لتطبيقات سطح المكتب باستخدام الميكروفون يستطيع Kryfo التسجيل: الإعدادات، الخصوصية والأمان، الميكروفون.';
+
+  @override
+  String get desktopMicNone => 'وصّل ميكروفونًا لتسجيل رسالة صوتية.';
+
+  @override
   String get desktopNoCamera =>
       'لا يستطيع Kryfo استخدام كاميرا على هذا الحاسوب بعد. استخدم الرابط أو الرمز بدلًا من ذلك.';
 

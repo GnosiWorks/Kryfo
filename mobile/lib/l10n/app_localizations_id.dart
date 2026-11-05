@@ -10381,6 +10381,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Windows mematikan Kryfo di aplikasi startup-nya. Nyalakan di sana, di Pengaturan, Aplikasi, Startup.';
 
   @override
+  String get desktopMicBlocked =>
+      'Kryfo bisa merekam setelah Windows mengizinkan aplikasi desktop memakai mikrofon, di Pengaturan, Privasi & keamanan, Mikrofon.';
+
+  @override
+  String get desktopMicNone => 'Sambungkan mikrofon untuk merekam pesan suara.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo belum bisa memakai kamera di komputer ini. Pakai tautan atau kodenya saja.';
 
