@@ -200,6 +200,8 @@ class _Io implements AppIo {
   @override
   Future<String> pinFirst(List<(int, String)> peers) async => 'ok';
   @override
+  Future<String> firstChats(List<(int, String)> peers) async => 'ok';
+  @override
   Future<String?> decryptIf(
     String peer,
     String cipher,

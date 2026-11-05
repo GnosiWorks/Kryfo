@@ -126,6 +126,9 @@ abstract class ComputerLockView implements Listenable {
   /// a [decoy] session shows its own note and never changes the real lock
   bool passphraseOn({required bool decoy});
 
+  /// what keeps the vault's key, as this session shows it
+  ComputerSeal sealedBy({required bool decoy});
+
   /// the settings page
   Widget page({required bool decoy});
 
@@ -141,6 +144,10 @@ abstract class ComputerLockView implements Listenable {
   /// the decoy's own note, read ahead with the decoy's database
   void decoyNoteRead(String? note);
 }
+
+/// what opens the vault: a passphrase, or the computer account through
+/// windows (dpapi, the security chip when there is one) or the keyring
+enum ComputerSeal { passphrase, windows, keyring }
 
 /// where a session database keeps the decoy's note (vault_meta)
 const kComputerDecoyNote = 'computer_lock';

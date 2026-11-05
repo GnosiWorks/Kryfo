@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'home_screen.dart' show historyCopyPage;
 import '../main.dart'
     show
         appState,
@@ -12,7 +13,6 @@ import '../main.dart'
         AppStatePrefs,
         AppStateProfile,
         AppStateDelivery,
-        AppStateScreen,
         AppStateTyping,
         AppStateBridges,
         AppStateSession,
@@ -53,7 +53,9 @@ import 'restore_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notifications.dart';
 import '../delivery_mode.dart';
-import '../desktop/desktop_mode.dart' show computerLock, desktopRun, onDesktop;
+import '../desktop/desktop_mode.dart'
+    show ComputerLockView, ComputerSeal, computerLock, desktopRun, onDesktop;
+import '../last_backup.dart' show backupFresh, backupWhen, loadLastBackup;
 import 'notifications_screen.dart';
 import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
@@ -367,6 +369,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool? _updateOn;
   // asked once a visit, not on every rebuild
   late final Future<bool> _notifs = notificationsEnabled();
+  // when this side last handed a backup out, once read
+  bool _backupRead = false;
+  DateTime? _lastBackup;
+
+  void _readLastBackup() {
+    loadLastBackup(session.container).then((v) {
+      if (mounted) {
+        setState(() {
+          _backupRead = true;
+          _lastBackup = v;
+        });
+      }
+    });
+  }
+
+  Future<void> _openBackup() async {
+    await Navigator.of(context).push(haloRoute(const BackupScreen()));
+    if (mounted) _readLastBackup();
+  }
+
+  Future<void> _openComputerLock(ComputerLockView lock) => Navigator.of(
+    context,
+  ).push(haloRoute(lock.page(decoy: lockState.inDecoy)));
 
   @override
   void initState() {
@@ -392,6 +417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     _readUpdateOn();
     if (kLinkedDevicesOn) _readDevices();
+    if (!linkedRole) _readLastBackup();
   }
 
   // the devices row's value, from where the devices page reads
@@ -415,9 +441,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _openDevices() async {
     final src = _devices ?? await ownDevicesSource();
     if (!mounted) return;
-    await Navigator.of(
-      context,
-    ).push(haloRoute(LinkedDevicesScreen(source: src)));
+    await Navigator.of(context).push(
+      haloRoute(LinkedDevicesScreen(source: src, copyPage: historyCopyPage)),
+    );
     if (mounted) await _readDevices();
   }
 
@@ -480,7 +506,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: staggerAll([
             LinkViewBuilder(
               builder: (_, link) => ListenableBuilder(
-                listenable: lockState,
+                listenable: Listenable.merge([lockState, ?computerLock]),
                 builder: (_, _) {
                   // the reading the home pill and the tor sheet show, grace and
                   // words alike, or the screens disagree about the same tor.
@@ -488,14 +514,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // be a promise nothing is trying to keep
                   final onTor = appState.sendMode == 'private';
                   final torOn = onTor && link.kind == LinkKind.ready;
-                  // the old switch covers every screen until home's card
-                  // about it is answered, and so does a pin on android 12
-                  // and older. otherwise each chat has its own switch
-                  final shots =
-                      appState.shotsCardCovers || appState.pinBlocksShots;
                   // as the App lock screen reads it: a lock turned off in a
                   // decoy session is off
                   final lock = lockState.lockOn;
+                  // a computer shows what opens its vault instead, as this
+                  // session sees it: a decoy its own note
+                  final desk = onDesktop ? computerLock : null;
+                  final sealed = desk?.sealedBy(decoy: lockState.inDecoy);
+                  final passOn = sealed == ComputerSeal.passphrase;
+                  // this side's own backups. a linked device keeps none
+                  final backups = !linkedRole;
+                  final fresh = backupFresh(_lastBackup);
                   return Container(
                     margin: const EdgeInsets.only(bottom: 24),
                     padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
@@ -520,11 +549,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                 ),
                               ),
-                              // a computer cannot block them yet: not counted
                               ProtectionMeter([
                                 torOn,
-                                if (!onDesktop) shots,
-                                lock,
+                                desk == null ? lock : passOn,
+                                if (backups) fresh,
                               ]),
                             ],
                           ),
@@ -541,20 +569,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               // relay and fast are one route now
                               : l10n.settingsOffFastMode,
                         ),
-                        ProtectionLine(
-                          l10n.settingsScreenshots,
-                          shots && !onDesktop,
-                          onDesktop
-                              ? l10n.settingsShotsNotHereYet
-                              : shots
-                              ? l10n.settingsBlocked2
-                              : l10n.settingsPerChat,
-                        ),
-                        ProtectionLine(
-                          l10n.settingsAppLock,
-                          lock,
-                          lock ? l10n.settingsOn : l10n.settingsOff,
-                        ),
+                        if (desk == null)
+                          ProtectionLine(
+                            l10n.settingsAppLock,
+                            lock,
+                            lock ? l10n.settingsOn : l10n.settingsOff,
+                          )
+                        else
+                          ProtectionLine(
+                            l10n.desktopPassRow,
+                            passOn,
+                            switch (sealed!) {
+                              ComputerSeal.passphrase => l10n.settingsOn,
+                              ComputerSeal.windows =>
+                                l10n.desktopPassWindowsAccount,
+                              ComputerSeal.keyring => l10n.desktopPassKeyring,
+                            },
+                            key: const ValueKey('computerPassLine'),
+                            onTap: () => _openComputerLock(desk),
+                          ),
+                        if (backups)
+                          ProtectionLine(
+                            l10n.settingsProtectBackup,
+                            fresh,
+                            _backupRead ? backupWhen(_lastBackup) : '',
+                            key: const ValueKey('backupLine'),
+                            onTap: _openBackup,
+                          ),
                         // only when android is blocking them: a line that says
                         // so outlives the home banner, which can be dismissed
                         FutureBuilder<bool>(
@@ -884,9 +925,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               false
                           ? l10n.desktopBackupHint
                           : null,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).push(haloRoute(const BackupScreen())),
+                      onTap: _openBackup,
                     ),
                   ),
                   HaloRow(

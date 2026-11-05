@@ -6,6 +6,7 @@ import 'saved_screen.dart';
 import 'transport_screen.dart';
 import '../widgets/desk_menu.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/entrance.dart';
 import '../widgets/stagger_in.dart';
 import 'requests_screen.dart';
 import 'dart:async';
@@ -964,9 +965,11 @@ class _LinkNoticeCard extends StatelessWidget {
                 HapticFeedback.selectionClick();
                 final src = await ownDevicesSource();
                 if (!context.mounted) return;
-                await Navigator.of(
-                  context,
-                ).push(haloRoute(LinkedDevicesScreen(source: src)));
+                await Navigator.of(context).push(
+                  haloRoute(
+                    LinkedDevicesScreen(source: src, copyPage: historyCopyPage),
+                  ),
+                );
               },
               fill: HaloColors.amber,
               ink: HaloColors.onAmber,
@@ -981,6 +984,13 @@ class _LinkNoticeCard extends StatelessWidget {
 // a history copy under way, or one that ended and has not been seen: said
 // on the phone and on the new device until the person opens it. never in
 // the decoy
+/// the history copy's page, as the card and a link that took open it
+Widget historyCopyPage(BuildContext _) => HistoryCopyScreen(
+  stage: historyCopyShown,
+  nameOf: historyChatName,
+  onSeen: historyCopyOpened,
+);
+
 class _HistoryCopyCard extends StatelessWidget {
   const _HistoryCopyCard();
 
@@ -1018,15 +1028,7 @@ class _HistoryCopyCard extends StatelessWidget {
               label: l10n.historyCopySee,
               onTap: () {
                 HapticFeedback.selectionClick();
-                Navigator.of(context).push(
-                  haloRoute(
-                    HistoryCopyScreen(
-                      stage: historyCopyShown,
-                      nameOf: historyChatName,
-                      onSeen: historyCopyOpened,
-                    ),
-                  ),
-                );
+                Navigator.of(context).push(haloRoute(historyCopyPage(context)));
               },
               fill: HaloColors.amber,
               ink: HaloColors.onAmber,
@@ -2466,6 +2468,14 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
     duration: const Duration(milliseconds: 360),
     value: _animate ? 0.0 : 1.0,
   );
+  final _entrance = Entrance();
+
+  // motion off or a held ticker: the row at rest from the first frame
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_animate && !_c.isCompleted && entranceOff(context)) _c.value = 1;
+  }
 
   @override
   void initState() {
@@ -2479,7 +2489,7 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
         );
       }
       Future.delayed(Duration(milliseconds: widget.index * 45), () {
-        if (mounted) _c.forward();
+        if (mounted) _entrance.play(context, _c);
       });
     }
   }
@@ -2488,6 +2498,7 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
   void dispose() {
     // a row past its entrance never made one, and a ticker is not made on
     // the way out
+    _entrance.dispose();
     if (_animate) _c.dispose();
     super.dispose();
   }
@@ -2836,18 +2847,29 @@ void _groupMenu(BuildContext context, GroupSummary g) {
               onTap: () => pick('hide'),
             ),
           ],
-        [
-          MenuSheetRow(
-            icon: g.ended ? Icons.delete_outline : Icons.logout_rounded,
-            label: g.ended
-                ? l10n.groupInfoDeleteGroup
-                : g.isRoom
-                ? l10n.groupInfoLeaveRoom2
-                : l10n.groupInfoLeaveGroup2,
-            danger: true,
-            onTap: () => pick('leave'),
-          ),
-        ],
+        // a linked device leaves on its phone (GroupOnPhone); an ended
+        // group still goes from here alone
+        if (g.ended || !linkedRole)
+          [
+            MenuSheetRow(
+              icon: g.ended ? Icons.delete_outline : Icons.logout_rounded,
+              label: g.ended
+                  ? l10n.groupInfoDeleteGroup
+                  : g.isRoom
+                  ? l10n.groupInfoLeaveRoom2
+                  : l10n.groupInfoLeaveGroup2,
+              danger: true,
+              onTap: () => pick('leave'),
+            ),
+          ]
+        else
+          [
+            MenuSheetRow(
+              icon: Icons.smartphone_outlined,
+              label: l10n.linkedDoOnPhone,
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
       ];
     },
   ).then((a) {

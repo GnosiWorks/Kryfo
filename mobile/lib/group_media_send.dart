@@ -239,6 +239,8 @@ Future<String> sendGroupSlices({
   // one frame in place of the slices, the file being on the files
   // service: nothing is read from [path]
   bool single = false,
+  // a gif: no share shows
+  bool quiet = false,
 }) async {
   if (!mediaInflight.add(msgUid)) return 'busy';
   mediaSendsTick.value++;
@@ -274,6 +276,7 @@ Future<String> sendGroupSlices({
         owed: owed,
         hold: hold ?? () => false,
         single: single,
+        quiet: quiet,
       ),
       stop.future,
     ]);
@@ -305,6 +308,7 @@ Future<String> _send({
   required Map<String, Set<int>>? owed,
   required bool Function() hold,
   required bool single,
+  required bool quiet,
 }) async {
   // nobody to send to is not a send that went
   if (members.isEmpty) return 'error: no members';
@@ -333,6 +337,7 @@ Future<String> _send({
       msgUid,
       chatKey: progressKey,
       bytes: total * mediaChunkSize ~/ 4 * 3,
+      quiet: quiet,
     );
   }
   final Map<String, Set<int>> done;

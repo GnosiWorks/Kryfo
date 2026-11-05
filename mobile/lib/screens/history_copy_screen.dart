@@ -300,7 +300,7 @@ class _Bar extends StatelessWidget {
   }
 }
 
-class _ChatLine extends StatelessWidget {
+class _ChatLine extends StatefulWidget {
   const _ChatLine({
     required this.chat,
     required this.nameOf,
@@ -311,7 +311,16 @@ class _ChatLine extends StatelessWidget {
   final List<String> lines;
 
   @override
+  State<_ChatLine> createState() => _ChatLineState();
+}
+
+class _ChatLineState extends State<_ChatLine> {
+  // read once: a page drawn again keeps the name it has
+  late final Future<String> _name = widget.nameOf(widget.chat);
+
+  @override
   Widget build(BuildContext context) {
+    final lines = widget.lines;
     return Padding(
       padding: const EdgeInsets.only(top: 14),
       child: Container(
@@ -324,14 +333,24 @@ class _ChatLine extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // the name fades in where its line already stands, so nothing
+            // under it moves when it is read
             FutureBuilder<String>(
-              future: nameOf(chat),
-              builder: (context, n) => Text(
-                n.data ?? '',
-                style: HaloType.sans(
-                  size: 15,
-                  weight: FontWeight.w600,
-                  color: HaloColors.text,
+              future: _name,
+              builder: (context, n) => AnimatedOpacity(
+                opacity: n.hasData ? 1 : 0,
+                duration: motionStill(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 220),
+                child: Text(
+                  n.data ?? ' ',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.sans(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: HaloColors.text,
+                  ),
                 ),
               ),
             ),

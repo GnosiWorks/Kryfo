@@ -113,11 +113,13 @@ String deviceLine(OwnDevice d, DateTime now, {bool linked = false}) {
 }
 
 class LinkedDevicesScreen extends StatefulWidget {
-  // where the devices come from; the phone alone until linking is wired
+  // where the devices come from: the app's (ownDevicesSource), or a test's
   final OwnDevices? source;
   // the clock, for tests
   final DateTime Function()? now;
-  const LinkedDevicesScreen({super.key, this.source, this.now});
+  // the history copy's page, opened from a link that took
+  final WidgetBuilder? copyPage;
+  const LinkedDevicesScreen({super.key, this.source, this.now, this.copyPage});
 
   @override
   State<LinkedDevicesScreen> createState() => _LinkedDevicesScreenState();
@@ -260,6 +262,8 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
     );
     if (code == null || !mounted) return;
     var again = false;
+    var copy = false;
+    final copyPage = widget.copyPage;
     final linked = await nav.push<bool>(
       haloRoute(
         LinkRunScreen(
@@ -268,6 +272,12 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
             again = true;
             nav.pop(false);
           },
+          onSeeCopy: copyPage == null
+              ? null
+              : () {
+                  copy = true;
+                  nav.pop(true);
+                },
         ),
       ),
     );
@@ -276,6 +286,10 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
       nav.pop();
       await _load();
       unawaited(_source.opened());
+      // the copy's page over the devices: closed, the list is there
+      if (copy && copyPage != null && mounted) {
+        await nav.push(haloRoute(Builder(builder: copyPage)));
+      }
     } else if (again) {
       await _scan(history);
     }
@@ -689,8 +703,8 @@ class _DeviceSheet extends StatelessWidget {
 }
 
 /// linking one more device: how it goes, and how much history it gets.
-/// [onScan] opens the scanner for the device's code; until linking is
-/// wired there is none and the button stays off
+/// [onScan] opens the scanner for the device's code; with none (a build
+/// that cannot link here) the button stays off
 class LinkDeviceScreen extends StatefulWidget {
   final void Function(LinkHistory history)? onScan;
   const LinkDeviceScreen({super.key, this.onScan});

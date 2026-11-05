@@ -403,7 +403,7 @@ void main() {
       l.appReadyToChatAddressFinishing,
       "Ready to chat · address finishing",
     );
-    expect(l.appConnecting("<pct>"), "Connecting · <pct>");
+    expect(l.appStartingTorPct("<pct>"), "Starting Tor · <pct>");
     expect(l.appTor, "Tor");
     expect(l.appTorIsOffTurn, "Tor is off. Turn it on to connect privately.");
     expect(
@@ -3106,9 +3106,6 @@ void main() {
     expect(l.transportListening, "Listening");
     expect(l.transportMemory, "Memory");
     expect(l.settingsConnected, "Connected");
-    expect(l.settingsScreenshots, "Screenshots");
-    expect(l.settingsBlocked2, "Blocked");
-    expect(l.settingsPerChat, "Per chat");
     expect(l.settingsOn, "On");
     expect(l.settingsOff, "Off");
     expect(l.settingsNotifications, "Notifications");

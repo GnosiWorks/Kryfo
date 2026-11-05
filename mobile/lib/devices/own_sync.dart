@@ -116,6 +116,18 @@ bool ownFrameNames(String plain, OwnChat chat) {
   return chat.group ? g == chat.id : !inGroup && of['h'] == chat.id;
 }
 
+/// whether a frame [plain] waiting for a contact's device is of group
+/// [groupId]: a hide drops the ones still unsealed (vault_life)
+bool frameOfGroup(String plain, String groupId) {
+  if (!plain.startsWith(kEnvelopePrefix)) return false;
+  try {
+    final j = jsonDecode(plain.substring(kEnvelopePrefix.length));
+    return j is Map && j['g'] == groupId;
+  } catch (_) {
+    return false;
+  }
+}
+
 /// what the person did on a chat here, told by the session (session.dart)
 /// for my other devices: set by the app once own sync runs
 void Function(String kind, OwnChat chat, Map<String, Object?> a)? ownNoted;

@@ -649,11 +649,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Siap mengobrol · alamat sedang disiapkan';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Menghubungkan · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -686,6 +681,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'Menunggu relay';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'Memulai Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Mengambil pesan baru';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -7059,12 +7062,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsConnected => 'Terhubung';
 
   @override
-  String get settingsScreenshots => 'Tangkapan layar';
-
-  @override
-  String get settingsBlocked2 => 'Diblokir';
-
-  @override
   String get settingsOn => 'Aktif';
 
   @override
@@ -7081,6 +7078,28 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Cadangan';
+
+  @override
+  String get settingsProtectBackup => 'Cadangan';
+
+  @override
+  String get settingsBackupNotYet => 'Belum';
+
+  @override
+  String get settingsBackupToday => 'Hari ini';
+
+  @override
+  String get settingsBackupYesterday => 'Kemarin';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hari lalu',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Suara';
@@ -8817,9 +8836,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Selalu menyala di ruang, di Kryfo untuk Android';
-
-  @override
-  String get settingsPerChat => 'Per obrolan';
 
   @override
   String get homeShotsPerChat =>
@@ -11064,6 +11080,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get desktopPassRow => 'Frasa sandi di komputer ini';
 
   @override
+  String get desktopPassWindowsAccount => 'Dikunci dengan akun Windows-mu';
+
+  @override
+  String get desktopPassKeyring => 'Dikunci dengan ring kuncimu';
+
+  @override
   String get desktopPassOffBody => 'Kryfo terbuka dengan akun penggunamu.';
 
   @override
@@ -11167,9 +11189,6 @@ class AppLocalizationsId extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alfa';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Belum ada di komputer ini';
 
   @override
   String get settingsDeskInTray => 'Berjalan di area notifikasi';
@@ -11412,6 +11431,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'Buka tautan ini di ponselmu.';
+
+  @override
+  String get linkedDoOnPhone => 'Lakukan ini di ponselmu.';
 
   @override
   String get tipsTitle => 'Dukung Kryfo';

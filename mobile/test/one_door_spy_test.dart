@@ -13,8 +13,10 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/device_sessions.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/devices/device_store.dart' show deviceTables;
 import 'package:kryfo/heal.dart' show healOfWire;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/main.dart'
@@ -26,6 +28,8 @@ import 'package:kryfo/main.dart'
         PairRefused,
         appState,
         DeviceCannotReach,
+        devDoorForTest,
+        devicePushPhoneForTest,
         deviceSendForTest,
         linkedRoleForTest,
         pairArgOf,
@@ -51,6 +55,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 import 'engine_take_scan.dart' show sourceCode;
 import 'mem_db.dart';
 import 'signal_kit.dart';
+import 'sqlite_ffi.dart';
 
 const _p0Words = 'amber-otter-lake';
 const _p0Onion =
@@ -602,6 +607,101 @@ void main() {
     }
   });
 
+  test('with the switch on, a device frame to a contact on an identity of its '
+      'own goes through the door: a list push, a bundle or an answer naming '
+      'the main identity reaches neither their phone nor their computer, and '
+      'one of their own goes on their identity', () async {
+    final s = SqliteMem.open();
+    if (s == null) {
+      markTestSkipped('no sqlite on this host');
+      return;
+    }
+    await appSchemaOn(s);
+    await deviceTables(s, (d, sql) async {
+      try {
+        await d.execute(sql);
+      } catch (_) {
+        // a column the schema has already
+      }
+    });
+    linkedDevicesForTest = true;
+    final send = DeviceSend(
+      state: DeviceState(_TheirDesk()),
+      db: () async => s,
+      sessions: (_) async => DeviceSessions(ciStore),
+      wire: _NoDeviceWire(),
+      door: devDoorForTest,
+    );
+    try {
+      final me = (ident: 1, identity: ciStore.identity.public, device: 1);
+      final c = (
+        peer: _ci,
+        identity: _TheirDesk.them,
+        devices: true,
+        phoneClassic: false,
+      );
+      // the frames a list push, a bundle answer and an ask carry: their
+      // bytes in base64, with the main identity's key somewhere in them
+      String frame(String k, List<int> bytes) =>
+          '$kEnvelopePrefix${jsonEncode({'u': 'dl:3', k: base64Encode(bytes)})}';
+      final named = [
+        for (final k in ['dl', 'db', 'dh'])
+          frame(k, [1, 2, 3, ...main0.x, 9, 9]),
+      ];
+      final mine = frame('dl', [1, 2, 3, ...ciX, 9, 9]);
+      Future<int> rows() async =>
+          (await s.query('dev_out', where: 'device = 9')).length;
+      wire.out.clear();
+      for (final f in named) {
+        // to their phone: refused at the door, no device copy made either
+        await expectLater(
+          send.burst(
+            me,
+            c,
+            f,
+            phone: devicePushPhoneForTest(1, _ci),
+            force: true,
+          ),
+          throwsA(isA<OtherIdentity>()),
+        );
+        // to their computer alone: that copy goes nowhere
+        final b = await send.burst(
+          me,
+          c,
+          mine,
+          frameFor: (slot, x) => slot.device == 9 ? f : x,
+        );
+        expect(b, isNotNull);
+        expect(await rows(), 0);
+        // one frame to the computer: nothing kept
+        await expectLater(
+          send.toOne(
+            ident: 1,
+            identity: _TheirDesk.them,
+            device: 9,
+            addr: _ci,
+            pin: _TheirDesk.desk,
+            reg: 99,
+            frame: f,
+          ),
+          throwsA(isA<OtherIdentity>()),
+        );
+        expect(await rows(), 0);
+      }
+      expect(wire.out, isEmpty);
+      // one of their own identity's waits for the computer as it is
+      await send.burst(me, c, mine);
+      final kept = await s.query('dev_out', where: 'device = 9');
+      expect(kept, hasLength(1));
+      final plain = kept.single['plain'] as String;
+      expect(main0.foundIn(plain), isEmpty);
+      expect(plain, contains(base64Encode([1, 2, 3, ...ciX, 9, 9])));
+    } finally {
+      linkedDevicesForTest = false;
+      await s.close();
+    }
+  });
+
   test('a linked device never seals on the identity pair: a contact its '
       'device sessions cannot reach gets nothing sealed at all', () async {
     linkedDevicesForTest = true;
@@ -630,6 +730,27 @@ void main() {
       deviceSendForTest(null);
     }
   });
+}
+
+// a device engine whose contact has a phone and a computer (device 9)
+class _TheirDesk implements DeviceEngine {
+  static final them = '05${'cd' * 32}';
+  static final desk = '05${'ab' * 32}';
+  @override
+  String call(String op, Map<String, Object?> args) {
+    if (op != 'fanout') return jsonEncode({'rows': [], 'err': 'error'});
+    return jsonEncode({
+      'rows': [],
+      'slots': [
+        {'identity': them, 'device': 1, 'key': them, 'reg': 0},
+        {'identity': them, 'device': 9, 'key': desk, 'reg': 99},
+      ],
+    });
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) =>
+      throw UnimplementedError('engine: ${i.memberName}');
 }
 
 // a device engine with no list of anyone's

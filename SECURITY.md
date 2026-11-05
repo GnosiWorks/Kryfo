@@ -41,11 +41,20 @@ people's data, don't degrade the servers for others.
 - the android app and the linux and windows test builds (mobile/), the
   engine (engine/) and the libsignal shim (mobile/native/kryfo_signal/):
   crypto, pair codes, storage, the lock layer, decoy and hidden chats,
-  backups and restores, the tor and relay transport
+  backups and restores, the tor and relay transport, linked devices
+  (linking, the history copy, device lists, removal)
 - relay.kryfo.app: the relay, the handle registry, people search, the gif
   relay
 - relay2.kryfo.app, files.kryfo.app and the push gateway
 - kryfo.app
+
+## windows
+
+the windows build is an early beta. one gap is known: while Kryfo runs,
+and after a crash until the next start, the engine's folder
+(<root>\tmp\engine) sits unencrypted on the disk. it holds the onion key,
+the relay marks and the top-up queue. sealing that folder comes in a
+coming update. THREAT_MODEL.md says what else a computer keeps and how.
 
 ## out of scope
 

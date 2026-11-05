@@ -42,6 +42,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart'
     show haloRoute, motionStill, kHouseCurve, kHouseTime;
+import '../widgets/entrance.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
@@ -119,17 +120,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _go(int to) {
     if (to < 0 || to >= _steps.length) return;
     setState(() => _to = to);
+    _settle?.cancel();
     // reduced motion: the step without animation
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (entranceOff(context)) {
       _ctrl.jumpToPage(to);
       return;
     }
-    _ctrl.animateToPage(
-      to,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeInOutCubic,
-    );
+    const d = Duration(milliseconds: 320);
+    _ctrl.animateToPage(to, duration: d, curve: Curves.easeInOutCubic);
+    // a held ticker leaves the pager between two steps, both faded and
+    // neither taking taps: the step lands anyway
+    _settle = Timer(d + const Duration(milliseconds: 300), () {
+      if (mounted && _ctrl.hasClients && _ctrl.page != to.toDouble()) {
+        _ctrl.jumpToPage(to);
+      }
+    });
   }
+
+  Timer? _settle;
 
   int get _at => (_ctrl.page ?? _page.toDouble()).round();
 
@@ -169,6 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   void dispose() {
+    _settle?.cancel();
     _ctrl.dispose();
     super.dispose();
   }
@@ -448,6 +457,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
   late final AnimationController _ctl;
   // the page comes up in order: the light, the line, the promises, the button
   late final AnimationController _in;
+  final _entrance = Entrance();
 
   @override
   void initState() {
@@ -471,11 +481,11 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
     // someone reads
     if (_glowed) return;
     _glowed = true;
-    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
+    if (!widget.enter || entranceOff(context)) {
       _in.value = 1;
       return;
     }
-    _in.forward();
+    _entrance.play(context, _in);
     // a whole number of glows ends where it began
     _ctl.repeat(count: 2).whenComplete(() {
       if (mounted) _ctl.value = 0;
@@ -484,6 +494,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
 
   @override
   void dispose() {
+    _entrance.dispose();
     _ctl.dispose();
     _in.dispose();
     super.dispose();
@@ -733,6 +744,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
   // a new name: the old words lift away, the new ones land one by one
   late final AnimationController _roll;
   late final AnimationController _spin;
+  final _entrance = Entrance();
   bool _leaving = false;
 
   @override
@@ -770,11 +782,11 @@ class _IdentityScreenState extends State<_IdentityScreen>
     _shown = true;
     // the name writes itself in, the shine and the ring play twice, then
     // stop. reduced motion, or back on this step: no animation
-    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
+    if (!widget.enter || entranceOff(context)) {
       _reveal.value = 1;
       return;
     }
-    _reveal.forward(from: 0);
+    _entrance.play(context, _reveal, from: 0);
     _shimmer.repeat(count: 2);
     _breath.repeat(count: 2).whenComplete(() {
       if (mounted) _breath.value = 0;
@@ -783,6 +795,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
 
   @override
   void dispose() {
+    _entrance.dispose();
     _shimmer.dispose();
     _reveal.dispose();
     _breath.dispose();
@@ -1733,6 +1746,7 @@ class _ShadeArtState extends State<_ShadeArt>
     vsync: this,
     duration: const Duration(milliseconds: 1200),
   );
+  final _entrance = Entrance();
   bool _started = false;
 
   @override
@@ -1741,15 +1755,16 @@ class _ShadeArtState extends State<_ShadeArt>
     if (_started) return;
     _started = true;
     // reduced motion, or back on this step: no animation
-    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
+    if (!widget.enter || entranceOff(context)) {
       _in.value = 1;
       return;
     }
-    _in.forward();
+    _entrance.play(context, _in);
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }
@@ -1982,6 +1997,7 @@ class _InviteScreenState extends State<_InviteScreen> {
   }
 
   Future<void> _scan() async {
+    appState.warmHelloLane();
     final nav = Navigator.of(context);
     final raw = await nav.push<String>(haloRoute<String>(const ScanScreen()));
     // the scanner only hands the code back; takeOwnLink is what adds the

@@ -327,6 +327,8 @@ class AppState extends ChangeNotifier {
   bool _resubscribeDue = false;
   // the pinned chats' keys the engine was last told, sorted and joined
   String _pinsTold = '';
+  // the chats on top of the list the engine was last told, in order
+  String _firstsTold = '';
   // the keys last listened on as hidden chats (AppStateReceive._listen)
   final Set<String> _toldHidden = {};
 
@@ -707,6 +709,12 @@ class AppState extends ChangeNotifier {
 
   // when the status poll last saw the route carry, for the pill's grace
   DateTime? _usableAt;
+  // a relay answered through tor once in this process: before that a
+  // route up and no relay is the start still connecting
+  bool _everUsable = false;
+  // the start's new messages are in (engine HaloStartCaught): until then
+  // a ready route says getting new messages
+  bool _startCaught = true;
   // a route changed on purpose: the engine's next generation is not held.
   // counted in polls, so a change the engine turned down lets go
   int _routeOnPurpose = 0;
@@ -871,6 +879,8 @@ class AppState extends ChangeNotifier {
   // the invite upkeep or reset under way, and when the last upkeep began
   Future<void>? _invitesKeep;
   var _invitesKeptAt = 0;
+  // an upkeep ran before the onion was known: it runs again once it is
+  var _invitesFaceOwed = false;
 
   // ids "this isn't them" is taking off this phone right now: nothing of
   // theirs is filed meanwhile

@@ -151,6 +151,7 @@ class DeviceSend {
     this.noOwn = false,
     this.hiddenRemovals = false,
     this.changed,
+    this.door,
     int Function()? clock,
     Random? random,
   }) : mine = mine ?? db,
@@ -184,6 +185,12 @@ class DeviceSend {
     List<({int ident, int version, List<int> added, bool removed})> changes,
   )?
   changed;
+
+  /// the one door (app/door.dart) for a frame to a contact's device, as
+  /// signalSeal takes the phone's: the frame filled for the identity they
+  /// know, and one naming another identity of mine throws, so that copy
+  /// goes nowhere. my own devices' frames are mine
+  final Future<String> Function(String peer, String frame)? door;
 
   /// listens on a device pair, [arg] as the engine names it
   /// ("x/their/my.seed"): a pair given a seed here is heard on from then on
@@ -280,8 +287,11 @@ class DeviceSend {
       if (f == null) continue;
       final addr = s.own ? kOwnDevices : c.peer;
       // a slot that fails here (a session held on another key, a row that
-      // does not read) misses this message; the phone and the others go
+      // does not read, a frame the door refuses) misses this message; the
+      // phone and the others go
       try {
+        final dr = door;
+        if (!s.own && dr != null) f = await dr(c.peer, f);
         if (await _owed(d, uidOf(s), me.ident, s)) continue;
         final pin = _bytes(s.key);
         final has = await ds.has(addr, s.device);
@@ -912,6 +922,9 @@ class DeviceSend {
   }) async {
     final body = _bodyOf(frame);
     if (body == null) return;
+    // a contact's device: through the door first, nothing kept when refused
+    final dr = door;
+    if (!own && dr != null) frame = await dr(addr, frame);
     final now = _clock();
     await (await db()).insert('dev_out', {
       'uid': _uidOf(body, frame),
@@ -1974,7 +1987,7 @@ bool ownCopyFits(Map<String, dynamic> body) {
 const kOwnPassOnKeys = {
   'm', 'w', 'op', 'bl', 'st', 'pl', 'vt', 'pc', 'u', 'r', 'pn', 'ed', 'q', //
   'i', 'un', 'cr', 'f', 'fn', 'vo', 'vd', 'pv', 'mid', 'ci', 'ct', 'b', 'g',
-  'sc', 'al',
+  'sc', 'al', 'gf',
 };
 
 Uint8List _bytes(String hex) => Uint8List.fromList([

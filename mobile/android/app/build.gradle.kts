@@ -27,6 +27,16 @@ if ((project.findProperty("dart-defines") as String?)
     throw GradleException("KRYFO_STORE is gone. build the play bundle with --flavor play")
 }
 
+// linked devices are in every android build (lib/devices/linked_switch.dart).
+// a script that passes KRYFO_LINKED=0 would ship a phone that cannot link
+if ((project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.map { String(Base64.getDecoder().decode(it)).trim() }
+        ?.any { it == "KRYFO_LINKED=0" || it == "KRYFO_LINKED=false" } == true
+) {
+    throw GradleException("linked devices are in every android build: drop KRYFO_LINKED")
+}
+
 // google push in the play build: the firebase project's google-services.json
 // lives outside the repo (BUILDING.md), and only its few public values go into
 // the play build's resources, which FirebaseApp reads. no google-services

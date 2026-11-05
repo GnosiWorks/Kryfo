@@ -72,6 +72,42 @@ void main() {
     ]);
   });
 
+  // a samsung camera's heic went whole (24 mp, 2.3 mb) and a computer
+  // could not draw it: photo unavailable, a black viewer, no blur
+  test(
+    'a heic or an avif is drawn again as a jpeg, as a jpeg is shrunk',
+    () async {
+      List<int> iso(String brand) => [
+        0,
+        0,
+        0,
+        24,
+        ...'ftyp'.codeUnits,
+        ...brand.codeUnits,
+        0,
+        0,
+        0,
+        0,
+        ...'mif1'.codeUnits,
+        ...brand.codeUnits,
+        9,
+      ];
+      final heic = iso('heic'), avif = iso('avif');
+      final out = await readPickedPhotos(
+        [
+          pick('ffe32de1-5e01-47ec-a829-0f6c560e27b4', 'IMG_1.HEIC', heic),
+          pick('2767e4fe-a67c-43f8-bd24-682f8ae06129', 'b.avif', avif),
+        ],
+        shrink: shrink,
+        drop: (_) async {},
+      );
+      expect(out, [
+        [0xAA, ...heic],
+        [0xAA, ...avif],
+      ]);
+    },
+  );
+
   test('a picture kept in its own format is named for it', () {
     Uint8List b(List<int> x) => Uint8List.fromList(x);
     expect(pictureExt(b([0xFF, 0xD8, 0xFF, 0xE0])), 'jpg');

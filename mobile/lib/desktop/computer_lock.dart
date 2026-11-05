@@ -57,6 +57,13 @@ class DesktopComputerLock extends ChangeNotifier implements ComputerLockView {
   }
 
   @override
+  ComputerSeal sealedBy({required bool decoy}) => passphraseOn(decoy: decoy)
+      ? ComputerSeal.passphrase
+      : _place == SealPlace.windows
+      ? ComputerSeal.windows
+      : ComputerSeal.keyring;
+
+  @override
   Widget page({required bool decoy}) =>
       DesktopPassphraseScreen(lock: lockFor(decoy: decoy));
 

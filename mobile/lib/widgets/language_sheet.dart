@@ -13,6 +13,7 @@ import 'halo_sheet.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'stroke_icon.dart';
+import 'entrance.dart';
 
 /// the language row's value: the chosen language's own name, or match
 /// phone and the language that is
@@ -99,17 +100,21 @@ class _LanguageSheetState extends State<_LanguageSheet>
     vsync: this,
     duration: const Duration(milliseconds: 420),
   );
+  final _entrance = Entrance();
+
+  // motion off: the rows at rest from the first frame
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (entranceOff(context)) _in.value = 1;
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (MediaQuery.of(context).disableAnimations) {
-        _in.value = 1;
-      } else {
-        _in.forward();
-      }
+      _entrance.play(context, _in);
       _reveal();
     });
   }
@@ -122,6 +127,7 @@ class _LanguageSheetState extends State<_LanguageSheet>
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }

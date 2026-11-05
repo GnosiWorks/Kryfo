@@ -659,11 +659,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bereit zum Chatten · Adresse wird eingerichtet';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Verbinde · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -696,6 +691,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'Warte auf Relais';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'Tor startet · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Lade neue Nachrichten';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -7142,12 +7145,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsConnected => 'Verbunden';
 
   @override
-  String get settingsScreenshots => 'Screenshots';
-
-  @override
-  String get settingsBlocked2 => 'Blockiert';
-
-  @override
   String get settingsOn => 'An';
 
   @override
@@ -7164,6 +7161,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Backup';
+
+  @override
+  String get settingsProtectBackup => 'Backup';
+
+  @override
+  String get settingsBackupNotYet => 'Noch nicht';
+
+  @override
+  String get settingsBackupToday => 'Heute';
+
+  @override
+  String get settingsBackupYesterday => 'Gestern';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vor $count Tagen',
+      one: 'Vor $count Tag',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Stimme';
@@ -8921,9 +8941,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'In einem Raum immer an, in Kryfo für Android';
-
-  @override
-  String get settingsPerChat => 'Pro Chat';
 
   @override
   String get homeShotsPerChat => 'Screenshots blockierst du jetzt pro Chat.';
@@ -11184,6 +11201,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get desktopPassRow => 'Passphrase auf diesem Computer';
 
   @override
+  String get desktopPassWindowsAccount => 'Durch dein Windows-Konto gesichert';
+
+  @override
+  String get desktopPassKeyring => 'Durch deinen Schlüsselbund gesichert';
+
+  @override
   String get desktopPassOffBody =>
       'Kryfo öffnet sich mit deinem Benutzerkonto.';
 
@@ -11294,9 +11317,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · Alpha';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Auf diesem Computer noch nicht';
 
   @override
   String get settingsDeskInTray => 'Läuft im Infobereich';
@@ -11538,6 +11558,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'Öffne diesen Link auf deinem Handy.';
+
+  @override
+  String get linkedDoOnPhone => 'Mach das auf deinem Handy.';
 
   @override
   String get tipsTitle => 'Kryfo unterstützen';

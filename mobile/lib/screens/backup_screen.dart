@@ -30,6 +30,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
+import '../last_backup.dart' show keepLastBackup;
 import '../l10n/numbers.dart';
 import '../dlog.dart';
 import '../save_names.dart' show backupName, savesPlain;
@@ -211,6 +212,8 @@ class _BackupScreenState extends State<BackupScreen> {
     final later = sayLater ?? _notMadeLater();
     final decoy = lockState.inDecoy;
     final hidden = sessionBackupHasHidden;
+    // the side it was made on, whatever opens over the save
+    final home = session.container;
     setState(() {
       _busy = true;
       _saving = true;
@@ -244,6 +247,7 @@ class _BackupScreenState extends State<BackupScreen> {
     if (out) {
       // saved, or the share sheet has a copy of its own: this one goes
       _made = null;
+      await keepLastBackup(home);
       unawaited(shredMade(made.path, lost: _lost));
       if (dropped || !mounted) {
         // another session opened over the save: what went out is said, or

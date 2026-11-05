@@ -633,11 +633,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appReadyToChatAddressFinishing => '可以聊天了 · 地址即将就绪';
 
   @override
-  String appConnecting(Object pct) {
-    return '正在连接 · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -668,6 +663,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => '正在等待中继';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return '正在启动 Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => '正在接收新消息';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -6735,12 +6738,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsConnected => '已连接';
 
   @override
-  String get settingsScreenshots => '截屏';
-
-  @override
-  String get settingsBlocked2 => '已禁止';
-
-  @override
   String get settingsOn => '开';
 
   @override
@@ -6757,6 +6754,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsBackup => '备份';
+
+  @override
+  String get settingsProtectBackup => '备份';
+
+  @override
+  String get settingsBackupNotYet => '还没有';
+
+  @override
+  String get settingsBackupToday => '今天';
+
+  @override
+  String get settingsBackupYesterday => '昨天';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 天前',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => '语音';
@@ -8384,9 +8403,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get roomShotsAlwaysOnDesk => '聊天室里始终开启，在 Android 版 Kryfo 中';
-
-  @override
-  String get settingsPerChat => '按聊天设置';
 
   @override
   String get homeShotsPerChat => '禁止截屏现在按聊天设置。';
@@ -10472,6 +10488,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopPassRow => '这台电脑上的密码短语';
 
   @override
+  String get desktopPassWindowsAccount => '由你的 Windows 账户锁定';
+
+  @override
+  String get desktopPassKeyring => '由你的密钥环锁定';
+
+  @override
   String get desktopPassOffBody => 'Kryfo 会用你的用户账户打开。';
 
   @override
@@ -10570,9 +10592,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alpha 版';
   }
-
-  @override
-  String get settingsShotsNotHereYet => '这台电脑上暂不支持';
 
   @override
   String get settingsDeskInTray => '在系统托盘中运行';
@@ -10793,6 +10812,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => '在手机上打开这个链接。';
+
+  @override
+  String get linkedDoOnPhone => '请在手机上操作。';
 
   @override
   String get tipsTitle => '支持 Kryfo';
@@ -11512,11 +11534,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appReadyToChatAddressFinishing => '可以聊天了 · 位址即將就緒';
 
   @override
-  String appConnecting(Object pct) {
-    return '連線中 · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -11547,6 +11564,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appWaitingForARelay => '正在等待中繼';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return '正在啟動 Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => '正在接收新訊息';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -17616,12 +17641,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsConnected => '已連線';
 
   @override
-  String get settingsScreenshots => '截圖';
-
-  @override
-  String get settingsBlocked2 => '已禁止';
-
-  @override
   String get settingsOn => '開啟';
 
   @override
@@ -17638,6 +17657,28 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsBackup => '備份';
+
+  @override
+  String get settingsProtectBackup => '備份';
+
+  @override
+  String get settingsBackupNotYet => '還沒有';
+
+  @override
+  String get settingsBackupToday => '今天';
+
+  @override
+  String get settingsBackupYesterday => '昨天';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 天前',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => '語音';
@@ -19146,9 +19187,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get roomShotsAlwaysOnDesk => '聊天室裡一律開啟，在 Android 版 Kryfo 中';
-
-  @override
-  String get settingsPerChat => '依聊天設定';
 
   @override
   String get homeShotsPerChat => '禁止截圖現在依聊天設定。';
@@ -21236,6 +21274,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopPassRow => '這台電腦上的密碼短語';
 
   @override
+  String get desktopPassWindowsAccount => '由你的 Windows 帳戶鎖定';
+
+  @override
+  String get desktopPassKeyring => '由你的鑰匙圈鎖定';
+
+  @override
   String get desktopPassOffBody => 'Kryfo 會用你的使用者帳戶開啟。';
 
   @override
@@ -21335,9 +21379,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String settingsVersionAlpha(String version) {
     return '$version · alpha 版';
   }
-
-  @override
-  String get settingsShotsNotHereYet => '這台電腦上暫不支援';
 
   @override
   String get settingsDeskInTray => '在系統匣中執行';
@@ -21558,6 +21599,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get linkedLinkOnPhone => '在手機上開啟這個連結。';
+
+  @override
+  String get linkedDoOnPhone => '請在手機上操作。';
 
   @override
   String get tipsTitle => '支持 Kryfo';

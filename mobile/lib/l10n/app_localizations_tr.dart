@@ -659,11 +659,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sohbete hazır · adresin hazırlanıyor';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Bağlanıyor · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -695,6 +690,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'Aktarıcı bekleniyor';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'Tor açılıyor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Yeni mesajlar alınıyor';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -7083,12 +7086,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsConnected => 'Bağlı';
 
   @override
-  String get settingsScreenshots => 'Ekran görüntüleri';
-
-  @override
-  String get settingsBlocked2 => 'Engelli';
-
-  @override
   String get settingsOn => 'Açık';
 
   @override
@@ -7105,6 +7102,29 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Yedek';
+
+  @override
+  String get settingsProtectBackup => 'Yedek';
+
+  @override
+  String get settingsBackupNotYet => 'Henüz yok';
+
+  @override
+  String get settingsBackupToday => 'Bugün';
+
+  @override
+  String get settingsBackupYesterday => 'Dün';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gün önce',
+      one: '$count gün önce',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Ses';
@@ -8848,9 +8868,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Odada her zaman açık, Android için Kryfo\'da';
-
-  @override
-  String get settingsPerChat => 'Sohbete göre';
 
   @override
   String get homeShotsPerChat => 'Ekran görüntüsü engeli artık sohbet başına.';
@@ -11090,6 +11107,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get desktopPassRow => 'Bu bilgisayardaki parola ifadesi';
 
   @override
+  String get desktopPassWindowsAccount => 'Windows hesabınla kilitli';
+
+  @override
+  String get desktopPassKeyring => 'Anahtarlığınla kilitli';
+
+  @override
   String get desktopPassOffBody => 'Kryfo kullanıcı hesabınla açılır.';
 
   @override
@@ -11193,9 +11216,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alfa';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Bu bilgisayarda henüz yok';
 
   @override
   String get settingsDeskInTray => 'Sistem tepsisinde çalışıyor';
@@ -11436,6 +11456,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'Bu bağlantıyı telefonunda aç.';
+
+  @override
+  String get linkedDoOnPhone => 'Bunu telefonundan yap.';
 
   @override
   String get tipsTitle => 'Kryfo’yu destekle';

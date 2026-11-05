@@ -27,6 +27,7 @@ import 'devices/own_devices.dart'
     show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
 import 'photo_blur.dart' show makeBlurSoon;
 import 'secure_store.dart';
+import 'desktop/desktop_trace.dart' as desk_trace;
 import 'desktop/desktop_mode.dart'
     show
         computerLock,
@@ -83,6 +84,7 @@ import 'group_shots.dart';
 import 'group_media_send.dart';
 import 'media_names.dart' show mediaNamesAtOpen;
 import 'media_progress.dart';
+import 'media_trace.dart' show traceCode;
 import 'transfers.dart';
 import 'transfer_note.dart';
 import 'media_send.dart';

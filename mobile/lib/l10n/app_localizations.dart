@@ -1075,12 +1075,6 @@ abstract class AppLocalizations {
   /// **'Ready to chat · address finishing'**
   String get appReadyToChatAddressFinishing;
 
-  /// app/gates.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting · {pct}'**
-  String appConnecting(Object pct);
-
   /// app/gates.dart
   ///
   /// In en, this message translates to:
@@ -1140,6 +1134,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for a relay'**
   String get appWaitingForARelay;
+
+  /// link_view.dart. the home pill while tor starts, after a while. the placeholder is a percentage, already written the language's way (42%, 42 %, %42). keep it short
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Tor · {pct}'**
+  String appStartingTorPct(Object pct);
+
+  /// link_view.dart. the home pill at a start, once a relay answers, until the messages that came while kryfo was closed are in. keep it short
+  ///
+  /// In en, this message translates to:
+  /// **'Getting new messages'**
+  String get appGettingNewMessages;
 
   /// media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
@@ -11278,18 +11284,6 @@ abstract class AppLocalizations {
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Screenshots'**
-  String get settingsScreenshots;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Blocked'**
-  String get settingsBlocked2;
-
-  /// screens/settings_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'On'**
   String get settingsOn;
 
@@ -11322,6 +11316,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup'**
   String get settingsBackup;
+
+  /// screens/settings_screen.dart: the backup line of your protections, its label
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get settingsProtectBackup;
+
+  /// screens/settings_screen.dart: the backup line of your protections when no backup was made on this side
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get settingsBackupNotYet;
+
+  /// screens/settings_screen.dart: the backup line of your protections, a backup made today
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get settingsBackupToday;
+
+  /// screens/settings_screen.dart: the backup line of your protections, a backup made yesterday
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get settingsBackupYesterday;
+
+  /// screens/settings_screen.dart: the backup line of your protections, days since the last backup (2 to 30)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} day ago} other{{count} days ago}}'**
+  String settingsBackupDaysAgo(int count);
 
   /// screens/settings_screen.dart
   ///
@@ -14148,12 +14172,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Always on in a room, in Kryfo for Android'**
   String get roomShotsAlwaysOnDesk;
-
-  /// screens/settings_screen.dart: the screenshots line of your protections: each chat has its own switch, with an app lock too on android 13 and newer
-  ///
-  /// In en, this message translates to:
-  /// **'Per chat'**
-  String get settingsPerChat;
 
   /// screens/home_screen.dart: title of the one-time card for people who had the old switch for the whole app on
   ///
@@ -17737,6 +17755,18 @@ abstract class AppLocalizations {
   /// **'Passphrase on this computer'**
   String get desktopPassRow;
 
+  /// screens/settings_screen.dart: your protections on windows, no passphrase: the windows account (and its security chip) keeps the key
+  ///
+  /// In en, this message translates to:
+  /// **'Locked by your Windows account'**
+  String get desktopPassWindowsAccount;
+
+  /// screens/settings_screen.dart: your protections on linux, no passphrase: the system keyring keeps the key
+  ///
+  /// In en, this message translates to:
+  /// **'Locked by your keyring'**
+  String get desktopPassKeyring;
+
   /// desktop/desktop_passphrase_screen.dart: when no passphrase is set
   ///
   /// In en, this message translates to:
@@ -17898,12 +17928,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{version} · alpha'**
   String settingsVersionAlpha(String version);
-
-  /// screens/settings_screen.dart: the screenshots line on a computer
-  ///
-  /// In en, this message translates to:
-  /// **'Not on this computer yet'**
-  String get settingsShotsNotHereYet;
 
   /// screens/settings_screen.dart: how messages arrive on a computer, kept in the tray
   ///
@@ -18318,6 +18342,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open this link on your phone.'**
   String get linkedLinkOnPhone;
+
+  /// group_info_screen.dart and the group menu: on a linked device, where a group's rename, add, remove, end, leave and screenshot switch would be; they are the phone's
+  ///
+  /// In en, this message translates to:
+  /// **'Do this on your phone.'**
+  String get linkedDoOnPhone;
 
   /// screens/tip_screen.dart: the play build support tab title and the section on me
   ///

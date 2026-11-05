@@ -72,9 +72,8 @@ class DesktopBinding extends WidgetsFlutterBinding {
       DesktopMessenger(super.createBinaryMessenger(), _answers);
 }
 
-/// notifications on desktop say only that something came. gnome and kde keep
-/// a history of them on disk, and the phone's choice of what to show does
-/// not reach that far
+/// notifications on desktop say what the phone's preview setting gave the
+/// post: kryfo and new message unless previews are on
 class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
   /// a click brings the window up from the tray before the chat opens
   @override
@@ -95,12 +94,18 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
     String? body,
     LinuxNotificationDetails? notificationDetails,
     String? payload,
-  }) => post(
-    id: id,
-    title: 'Kryfo',
-    body: l10n.notificationsNewMessage,
-    payload: payload,
-  );
+  }) {
+    // a plain post has no title: still only that something came
+    final named = title != null;
+    return post(
+      id: id,
+      title: named ? title : 'Kryfo',
+      body: named
+          ? (body ?? l10n.notificationsNewMessage)
+          : l10n.notificationsNewMessage,
+      payload: payload,
+    );
+  }
 
   /// what reaches the desktop's notification server
   @visibleForTesting
@@ -353,8 +358,11 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     // the first close to the tray was said: never again
     final run = desktopRun;
     if (call.method == 'hinted' && run is DesktopRun) await run.markHinted();
+    if (call.method == 'sessionLock') heardSessionLock(call.arguments);
     return null;
   });
+  // windows: toasts go neutral while the session is locked
+  if (Platform.isWindows) unawaited(readSessionLock(_desktopChannel));
   // a run before's temporary files: its key died with it, they go unread
   // tor's own folder stays: its state is no secret of the run
   if (Platform.isWindows) {
@@ -513,20 +521,8 @@ Future<void> openSeal({
   for (final area in ['', '_k2', '_k3', '_k4', '*']) {
     if (vault.read(sweptEntry(area)) != null) areas.swept.add(area);
   }
-  // an area's sweep done once: from then a plain file there is damage
-  Future<void> sweep(String area, List<String> dirs) async {
-    if (areas.swept.contains(area)) return;
-    try {
-      for (final d in dirs) {
-        await runSealed(() => sealPlainUnder(d));
-      }
-      await vault.write(sweptEntry(area), '1');
-      areas.swept.add(area);
-    } catch (e, st) {
-      // the next start sweeps again
-      traceError('sweep', e, st);
-    }
-  }
+  Future<void> sweep(String area, List<String> dirs) =>
+      sweepArea(areas, vault, area, dirs);
 
   final keys = ContainerKeys(
     areas,
@@ -594,6 +590,30 @@ Future<void> openSeal({
       vault.close();
     },
   );
+}
+
+/// an area's sweep, done once: from then a plain file there is damage.
+/// top level, so the job the isolate gets holds its folder alone: made
+/// inside openSeal it held openSeal's whole context, the vault with it,
+/// and isolate.run could not send it
+@visibleForTesting
+Future<void> sweepArea(
+  SealedAreas areas,
+  DesktopVault vault,
+  String area,
+  List<String> dirs,
+) async {
+  if (areas.swept.contains(area)) return;
+  try {
+    for (final d in dirs) {
+      await runSealed(sealUnderJob(d));
+    }
+    await vault.write(sweptEntry(area), '1');
+    areas.swept.add(area);
+  } catch (e, st) {
+    // the next start sweeps again
+    traceError('sweep', e, st);
+  }
 }
 
 /// the shared wipe's desktop steps, through [host]: the keys first,

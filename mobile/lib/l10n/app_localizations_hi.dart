@@ -657,11 +657,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'चैट के लिए तैयार · पता पूरा हो रहा है';
 
   @override
-  String appConnecting(Object pct) {
-    return 'जुड़ रहा है · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -694,6 +689,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'रिले का इंतज़ार';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'Tor शुरू · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'नए संदेश आ रहे हैं';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -7064,12 +7067,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsConnected => 'जुड़ा हुआ';
 
   @override
-  String get settingsScreenshots => 'स्क्रीनशॉट';
-
-  @override
-  String get settingsBlocked2 => 'रोके गए';
-
-  @override
   String get settingsOn => 'चालू';
 
   @override
@@ -7086,6 +7083,29 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsBackup => 'बैकअप';
+
+  @override
+  String get settingsProtectBackup => 'बैकअप';
+
+  @override
+  String get settingsBackupNotYet => 'अभी नहीं';
+
+  @override
+  String get settingsBackupToday => 'आज';
+
+  @override
+  String get settingsBackupYesterday => 'कल';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count दिन पहले',
+      one: '$count दिन पहले',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'आवाज़';
@@ -8825,9 +8845,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'रूम में हमेशा चालू, Android के लिए Kryfo में';
-
-  @override
-  String get settingsPerChat => 'हर चैट के लिए अलग';
 
   @override
   String get homeShotsPerChat => 'स्क्रीनशॉट रोकना अब हर चैट के लिए अलग है।';
@@ -11071,6 +11088,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get desktopPassRow => 'इस कंप्यूटर पर पासफ़्रेज़';
 
   @override
+  String get desktopPassWindowsAccount => 'आपके Windows अकाउंट से लॉक है';
+
+  @override
+  String get desktopPassKeyring => 'आपकी कीरिंग से लॉक है';
+
+  @override
   String get desktopPassOffBody => 'Kryfo आपके यूज़र अकाउंट से खुलता है।';
 
   @override
@@ -11174,9 +11197,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · अल्फ़ा';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'इस कंप्यूटर पर अभी नहीं';
 
   @override
   String get settingsDeskInTray => 'सिस्टम ट्रे में चल रहा है';
@@ -11418,6 +11438,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'यह लिंक अपने फ़ोन पर खोलें।';
+
+  @override
+  String get linkedDoOnPhone => 'यह अपने फ़ोन पर करें।';
 
   @override
   String get tipsTitle => 'Kryfo का सहयोग करें';

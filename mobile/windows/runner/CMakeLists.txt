@@ -41,6 +41,8 @@ target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 target_link_libraries(${BINARY_NAME} PRIVATE "advapi32.lib" "shell32.lib" "wer.lib")
 # voice notes through wasapi (kryfo_audio.cpp)
 target_link_libraries(${BINARY_NAME} PRIVATE "ole32.lib")
+# the session's lock, so toasts go neutral while it is (flutter_window.cpp)
+target_link_libraries(${BINARY_NAME} PRIVATE "wtsapi32.lib")
 # cfg on the exe; the go and gcc dlls are not cfg-built. cet in its
 # compatible mode only, as go is not marked cet ready. the exe's own
 # imports come from its folder and system32 only
