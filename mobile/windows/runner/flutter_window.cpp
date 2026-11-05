@@ -6,6 +6,7 @@
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "kryfo_audio.h"
 
 namespace {
 constexpr UINT_PTR kQuitTimer = 0x4B51;
@@ -69,6 +70,11 @@ bool FlutterWindow::OnCreate() {
       result->Success(flutter::EncodableValue(start_hidden_));
     } else if (call.method_name() == "trayState") {
       result->Success(flutter::EncodableValue(tray_.shown()));
+    } else if (call.method_name() == "audio") {
+      // the mic and speaker calls for dart's ffi, by address
+      flutter::EncodableList calls;
+      for (int64_t a : kryfo::AudioCalls()) calls.push_back(flutter::EncodableValue(a));
+      result->Success(flutter::EncodableValue(calls));
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();
