@@ -1559,10 +1559,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatCouldNotCleanThat => 'उस वीडियो को साफ़ नहीं कर पाए';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'उस तस्वीर को साफ़ नहीं कर पाए · इसे फ़ोटो की तरह भेजें';
-
-  @override
   String get chatGifTooBig8 => 'GIF बहुत बड़ा है · अधिकतम 8 MB';
 
   @override
@@ -2600,10 +2596,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'उस वीडियो को साफ़ नहीं कर पाए';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'उस तस्वीर को साफ़ नहीं कर पाए · इसे फ़ोटो की तरह भेजें';
 
   @override
   String get groupChat30Seconds => '30 सेकंड';
@@ -8972,13 +8964,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह फ़ाइल बिल्कुल जैसी है वैसी जाती है। Kryfo सिर्फ़ JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 और MOV साफ़ करता है।';
 
   @override
-  String get fileRawPictureTitle => 'यह तस्वीर जैसी है वैसी भेजें?';
-
-  @override
-  String get fileRawPictureLine =>
-      'इस तस्वीर को साफ़ नहीं किया जा सकता। यह कहाँ खींची गई, जैसी जानकारी इसके साथ जाती है। इसे साफ़ करने के लिए फ़ोटो की तरह भेजें।';
-
-  @override
   String get voiceStoppedAtLimit =>
       'वॉइस नोट 30 मिनट पर रुक जाते हैं। इसे सुनें, फिर भेजें।';
 
@@ -11591,10 +11576,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get notesAddItem => 'फ़ोटो या फ़ाइल जोड़ें';
-
-  @override
-  String get notesRawPicture =>
-      'Kryfo इस तस्वीर को साफ़ नहीं कर सकता। इसे फ़ोटो की तरह जोड़ें।';
 
   @override
   String get notesVoiceNotKept => 'आपका वॉइस नोट नहीं रखा गया';

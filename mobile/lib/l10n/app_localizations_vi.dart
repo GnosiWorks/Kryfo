@@ -1544,10 +1544,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Không làm sạch được video đó';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Không làm sạch được hình đó · hãy gửi dưới dạng ảnh';
-
-  @override
   String get chatGifTooBig8 => 'Gif quá lớn · tối đa 8 mb';
 
   @override
@@ -2587,10 +2583,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Không làm sạch được video đó';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Không làm sạch được hình đó · hãy gửi dưới dạng ảnh';
 
   @override
   String get groupChat30Seconds => '30 giây';
@@ -8950,13 +8942,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 và MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Gửi ảnh này nguyên trạng?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Tin nhắn thoại dừng ở 30 phút. Hãy nghe lại rồi gửi đi.';
 
@@ -11572,10 +11557,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notesAddItem => 'Thêm ảnh hoặc tệp';
-
-  @override
-  String get notesRawPicture =>
-      'Kryfo không thể làm sạch ảnh này. Hãy thêm nó dưới dạng ảnh.';
 
   @override
   String get notesVoiceNotKept => 'Tin nhắn thoại của bạn chưa được giữ lại';

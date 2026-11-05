@@ -483,7 +483,6 @@
   "chatSendIt": "Enviar",
   "chatCouldNotReadThat": "No se pudo leer ese archivo",
   "chatCouldNotCleanThat": "No se pudo limpiar ese video",
-  "chatCouldNotCleanThatPictureSend": "No se pudo limpiar esa imagen · envíala como foto",
   "chatGifTooBig8": "Gif muy grande · máx. 8 mb",
   "chatCouldNotCleanThatGif": "No se pudo limpiar ese gif",
   "chatTorIsNotUp": "Tor aún no está conectado · sin vista previa del enlace",
@@ -768,7 +767,6 @@
   "groupChatGifTooBig8": "Gif muy grande · máx. 8 mb",
   "groupChatCouldNotCleanThat": "No se pudo limpiar ese gif",
   "groupChatCouldNotCleanThatVideo": "No se pudo limpiar ese video",
-  "groupChatCouldNotCleanThatPictureSend": "No se pudo limpiar esa imagen · envíala como foto",
   "groupChat30Seconds": "30 segundos",
   "groupChat1Minute": "1 minuto",
   "groupChat5Minutes": "5 minutos",
@@ -2348,8 +2346,6 @@
   "fileNotSavedNoSpace": "No se guardó: no hay espacio suficiente ahí",
   "fileTooBig": "Este archivo pesa {size}. Los archivos pueden pesar hasta {max}.",
   "fileGoesAsItIs": "Este archivo sale tal cual. Kryfo solo limpia JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 y MOV.",
-  "fileRawPictureTitle": "¿Enviar esta imagen tal cual?",
-  "fileRawPictureLine": "Esta imagen no se puede limpiar. Datos como dónde se tomó van con ella. Envíala como foto para limpiarla.",
   "voiceStoppedAtLimit": "Las notas de voz se detienen a los 30 minutos. Escúchala y luego envíala.",
   "gettingMessagesHelperBody": "Al instante y ligero. Su servidor ve tu IP y cuándo llegan mensajes, nunca lo que dicen.",
   "gettingMessagesHelperUseOnion": "Cambiar a Onion",
@@ -3044,6 +3040,5 @@
   "notesDeleteAllEverywhere": "Todas las notas se borran de todos tus dispositivos para siempre.",
   "notesDeleteAllHereOnly": "Todas las notas se borran solo de este dispositivo. Tu teléfono las conserva.",
   "notesAddItem": "Añadir una foto o un archivo",
-  "notesRawPicture": "Kryfo no puede limpiar esta imagen. Añádela como foto.",
   "notesVoiceNotKept": "Tu mensaje de voz no se guardó"
 }

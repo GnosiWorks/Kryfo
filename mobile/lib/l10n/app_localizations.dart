@@ -2458,12 +2458,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Could not clean that picture · send it as a photo'**
-  String get chatCouldNotCleanThatPictureSend;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Gif too big · 8 mb max'**
   String get chatGifTooBig8;
 
@@ -4164,12 +4158,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not clean that video'**
   String get groupChatCouldNotCleanThatVideo;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Could not clean that picture · send it as a photo'**
-  String get groupChatCouldNotCleanThatPictureSend;
 
   /// screens/group_chat_screen.dart
   ///
@@ -14371,18 +14359,6 @@ abstract class AppLocalizations {
   /// **'This file goes exactly as it is. Kryfo cleans only JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV.'**
   String get fileGoesAsItIs;
 
-  /// chat and group: title of the sheet before sending a picture Kryfo cannot clean (raw, tiff, psd, svg, jpeg xl)
-  ///
-  /// In en, this message translates to:
-  /// **'Send this picture as it is?'**
-  String get fileRawPictureTitle;
-
-  /// chat and group: line on that sheet, shown whatever the size. sending it as a photo re-encodes it, which removes its details
-  ///
-  /// In en, this message translates to:
-  /// **'This picture can\'t be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.'**
-  String get fileRawPictureLine;
-
   /// widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself
   ///
   /// In en, this message translates to:
@@ -18546,12 +18522,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a photo or a file'**
   String get notesAddItem;
-
-  /// a picture that cannot be cleaned is not kept in note to self
-  ///
-  /// In en, this message translates to:
-  /// **'Kryfo can\'t clean this picture. Add it as a photo instead.'**
-  String get notesRawPicture;
 
   /// a voice note that could not be kept in note to self
   ///

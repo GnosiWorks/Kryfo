@@ -4247,27 +4247,19 @@ class _ChatScreenState extends State<ChatScreen>
 
   // anything big enough to be a wait gets a confirm first. small stuff goes
   // straight out: a dialog on a 40kb photo is noise.
-  // [asItIs]: a kind the send lane does not clean, which it says. [raw]: a
-  // picture it cannot clean, which is always asked, whatever its size
-  Future<bool> _confirmBigSend(
-    int bytes, {
-    bool asItIs = false,
-    bool raw = false,
-  }) async {
+  // [asItIs]: a kind the send lane does not clean, which it says
+  Future<bool> _confirmBigSend(int bytes, {bool asItIs = false}) async {
     final big = bytes >= 512 * 1024;
-    if (!big && !raw) return true;
+    if (!big) return true;
     if (!mounted) return false;
-    final why = raw ? l10n.fileRawPictureLine : l10n.fileGoesAsItIs;
     final ok = await showConfirmSheet(
       context,
-      title: raw ? l10n.fileRawPictureTitle : l10n.chatSendThis,
+      title: l10n.chatSendThis,
       figure: appState.sendMode == 'private'
           ? l10n.chatOverTor(_humanBytes(bytes), _wireEstimate(bytes))
           : _humanBytes(bytes),
-      line: !big
-          ? why
-          : asItIs || raw
-          ? '${l10n.chatBigFilesGoOut}\n\n$why'
+      line: asItIs
+          ? '${l10n.chatBigFilesGoOut}\n\n${l10n.fileGoesAsItIs}'
           : l10n.chatBigFilesGoOut,
       yes: l10n.chatSendIt,
       keep: l10n.commonCancel,
@@ -4370,7 +4362,6 @@ class _ChatScreenState extends State<ChatScreen>
         !await _confirmBigSend(
           size,
           asItIs: !await sendLaneCleans(src, name),
-          raw: raw,
         )) {
       return null;
     }
@@ -4383,21 +4374,22 @@ class _ChatScreenState extends State<ChatScreen>
     // told by their bytes and cleaned on our own copy by the one cleaner;
     // one that cannot be read through, or still reads as anything after,
     // is not sent. a raw picture is never walked as a video. the copy is
-    // made and cleaned out of the media folder and only moved in clean
-    final done = await copyClean(src, dest.path, name: name, raw: raw);
-    if (done.how == MediaClean.refused) {
+    // made and cleaned out of the media folder and only moved in clean. a
+    // picture it cannot clean is drawn again as a clean jpeg, or goes as it
+    // is, never asked about (copyForSend)
+    final done = await copyForSend(src, dest.path, name: name, raw: raw);
+    final at = done.path;
+    if (at == null) {
       if (mounted) {
         showHaloToast(
           context,
-          done.video
-              ? l10n.chatCouldNotCleanThat
-              : l10n.chatCouldNotCleanThatPictureSend,
+          done.video ? l10n.chatCouldNotCleanThat : l10n.chatCouldNotReadThat,
         );
       }
       return null;
     }
-    makeBlurSoon(dest.path);
-    return _Ready(msgUid, dest.path, fileName: name);
+    makeBlurSoon(at);
+    return _Ready(msgUid, at, fileName: done.name);
   }
 
   // a photo made ready the same way: cleaned of what the gallery's

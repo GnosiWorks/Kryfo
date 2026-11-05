@@ -483,7 +483,6 @@
   "chatSendIt": "Gönder",
   "chatCouldNotReadThat": "Bu dosya okunamadı",
   "chatCouldNotCleanThat": "Bu video temizlenemedi",
-  "chatCouldNotCleanThatPictureSend": "Bu resim temizlenemedi · fotoğraf olarak gönder",
   "chatGifTooBig8": "Gif çok büyük · en fazla 8 mb",
   "chatCouldNotCleanThatGif": "Bu gif temizlenemedi",
   "chatTorIsNotUp": "Tor henüz bağlı değil · bağlantı önizlemesi yok",
@@ -768,7 +767,6 @@
   "groupChatGifTooBig8": "Gif çok büyük · en fazla 8 mb",
   "groupChatCouldNotCleanThat": "Bu gif temizlenemedi",
   "groupChatCouldNotCleanThatVideo": "Bu video temizlenemedi",
-  "groupChatCouldNotCleanThatPictureSend": "Bu resim temizlenemedi · fotoğraf olarak gönder",
   "groupChat30Seconds": "30 saniye",
   "groupChat1Minute": "1 dakika",
   "groupChat5Minutes": "5 dakika",
@@ -2348,8 +2346,6 @@
   "fileNotSavedNoSpace": "Kaydedilmedi: orada yeterli alan yok",
   "fileTooBig": "Bu dosya {size}. Dosyalar en fazla {max} olabilir.",
   "fileGoesAsItIs": "Bu dosya olduğu gibi gider. Kryfo yalnızca JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 ve MOV dosyalarını temizler.",
-  "fileRawPictureTitle": "Bu resim olduğu gibi gönderilsin mi?",
-  "fileRawPictureLine": "Bu resim temizlenemez. Nerede çekildiği gibi ayrıntılar onunla gider. Temizlemek için fotoğraf olarak gönder.",
   "voiceStoppedAtLimit": "Sesli mesajlar 30 dakikada durur. Dinle, sonra gönder.",
   "gettingMessagesHelperBody": "Anında ve hafif. Sunucusu IP adresini ve mesajların ne zaman geldiğini görür, içeriğini asla.",
   "gettingMessagesHelperUseOnion": "Onion'a geç",
@@ -3044,6 +3040,5 @@
   "notesDeleteAllEverywhere": "Tüm notlar tüm cihazlarından kalıcı olarak silinir.",
   "notesDeleteAllHereOnly": "Tüm notlar yalnızca bu cihazdan silinir. Telefonun onları saklar.",
   "notesAddItem": "Fotoğraf ya da dosya ekle",
-  "notesRawPicture": "Kryfo bu resmi temizleyemiyor. Onu fotoğraf olarak ekle.",
   "notesVoiceNotKept": "Sesli mesajın saklanmadı"
 }

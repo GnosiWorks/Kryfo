@@ -354,6 +354,41 @@ void main() {
       expect((await readyNoteFile(none, 'none.bin')).line, isNotNull);
     }, skip: skip);
 
+    test('a picture the cleaner cannot clean is kept a clean jpeg where it '
+        'can be drawn, as it is where not, never refused', () async {
+      final raw = [...'II*'.codeUnits, 0, ...List.filled(64, 7)];
+      final src = p.join(docs.path, 'IMG_1.dng');
+      rawFileAccess(() => File(src).writeAsBytesSync(raw));
+      final m =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (c) async => c.method == 'shrinkJpeg' ? _gps : null,
+      );
+      addTearDown(
+        () => m.setMockMethodCallHandler(
+          const MethodChannel('halo/platform'),
+          null,
+        ),
+      );
+      final a = await readyNoteFile(src, 'IMG_1.dng');
+      expect(a.line, isNull);
+      expect(a.item!.fileName, 'IMG_1.jpg');
+      expect(a.item!.path, endsWith('.jpg'));
+      expect(isSealedHead(_raw(a.item!.path)), isTrue);
+      final kept = File(a.item!.path).readAsBytesSync();
+      expect(jpegHasExif(kept), isFalse);
+      expect(_holdsGps(kept), isFalse);
+      m.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (_) async => null,
+      );
+      final b = await readyNoteFile(src, 'IMG_1.dng');
+      expect(b.line, isNull);
+      expect(b.item!.fileName, 'IMG_1.dng');
+      expect(File(b.item!.path).readAsBytesSync(), raw);
+    }, skip: skip);
+
     test('a gif keeps its frames and loses its comment; one past 8 MB is '
         'not kept', () async {
       // a one pixel gif with a comment block
@@ -795,13 +830,17 @@ void main() {
       expect(await owed(), isEmpty);
     }, skip: skip);
 
-    test('a note copy on another identity\'s own session is not filed', () async {
-      expect(
-        await ownApplyForTest.copy(2, kOwnNotes, _f({'u': 'n-i', 'm': 'x'})),
-        isFalse,
-      );
-      expect(await notes(), isEmpty);
-    }, skip: skip);
+    test(
+      'a note copy on another identity\'s own session is not filed',
+      () async {
+        expect(
+          await ownApplyForTest.copy(2, kOwnNotes, _f({'u': 'n-i', 'm': 'x'})),
+          isFalse,
+        );
+        expect(await notes(), isEmpty);
+      },
+      skip: skip,
+    );
 
     test('note to self takes no other op, and tells none', () async {
       ownNoted = ownNoteForTest;

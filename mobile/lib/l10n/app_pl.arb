@@ -388,7 +388,6 @@
   "chatSendIt": "Wyślij",
   "chatCouldNotReadThat": "Nie udało się odczytać tego pliku",
   "chatCouldNotCleanThat": "Nie udało się wyczyścić tego wideo",
-  "chatCouldNotCleanThatPictureSend": "Nie udało się wyczyścić tego obrazu · wyślij go jako zdjęcie",
   "chatGifTooBig8": "GIF za duży · maks. 8 MB",
   "chatCouldNotCleanThatGif": "Nie udało się wyczyścić tego GIF-a",
   "chatTorIsNotUp": "Tor jeszcze nie połączony · bez podglądu linku",
@@ -673,7 +672,6 @@
   "groupChatGifTooBig8": "GIF za duży · maks. 8 MB",
   "groupChatCouldNotCleanThat": "Nie udało się wyczyścić tego GIF-a",
   "groupChatCouldNotCleanThatVideo": "Nie udało się wyczyścić tego wideo",
-  "groupChatCouldNotCleanThatPictureSend": "Nie udało się wyczyścić tego obrazu · wyślij go jako zdjęcie",
   "groupChat30Seconds": "30 sekund",
   "groupChat1Minute": "1 minuta",
   "groupChat5Minutes": "5 minut",
@@ -2348,8 +2346,6 @@
   "fileNotSavedNoSpace": "Nie zapisano: brakuje tam miejsca",
   "fileTooBig": "Ten plik ma {size}. Pliki mogą mieć do {max}.",
   "fileGoesAsItIs": "Ten plik pójdzie dokładnie taki, jaki jest. Kryfo czyści tylko JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 i MOV.",
-  "fileRawPictureTitle": "Wysłać ten obraz bez zmian?",
-  "fileRawPictureLine": "Tego obrazu nie da się wyczyścić. Szczegóły, takie jak miejsce zrobienia, pójdą razem z nim. Wyślij go jako zdjęcie, żeby go wyczyścić.",
   "voiceStoppedAtLimit": "Wiadomości głosowe kończą się po 30 minutach. Odsłuchaj ją, a potem wyślij.",
   "gettingMessagesHelperBody": "Natychmiastowe i lekkie. Jego serwer widzi twój adres IP i to, kiedy przychodzą wiadomości, nigdy ich treść.",
   "gettingMessagesHelperUseOnion": "Przełącz na Onion",
@@ -3044,6 +3040,5 @@
   "notesDeleteAllEverywhere": "Każda notatka zniknie ze wszystkich twoich urządzeń na dobre.",
   "notesDeleteAllHereOnly": "Każda notatka zniknie tylko z tego urządzenia. Twój telefon je zachowa.",
   "notesAddItem": "Dodaj zdjęcie lub plik",
-  "notesRawPicture": "Kryfo nie może oczyścić tego obrazu. Dodaj go jako zdjęcie.",
   "notesVoiceNotKept": "Twoja wiadomość głosowa nie została zachowana"
 }

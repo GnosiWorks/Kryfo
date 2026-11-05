@@ -1556,10 +1556,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Could not clean that video';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Could not clean that picture · send it as a photo';
-
-  @override
   String get chatGifTooBig8 => 'Gif too big · 8 mb max';
 
   @override
@@ -2594,10 +2590,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Could not clean that video';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Could not clean that picture · send it as a photo';
 
   @override
   String get groupChat30Seconds => '30 seconds';
@@ -8963,13 +8955,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This file goes exactly as it is. Kryfo cleans only JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Send this picture as it is?';
-
-  @override
-  String get fileRawPictureLine =>
-      'This picture can\'t be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Voice notes stop at 30 minutes. Listen to it, then send it.';
 
@@ -11584,10 +11569,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesAddItem => 'Add a photo or a file';
-
-  @override
-  String get notesRawPicture =>
-      'Kryfo can\'t clean this picture. Add it as a photo instead.';
 
   @override
   String get notesVoiceNotKept => 'Your voice note was not kept';

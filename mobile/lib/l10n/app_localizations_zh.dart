@@ -1485,9 +1485,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatCouldNotCleanThat => '无法清理这个视频';
 
   @override
-  String get chatCouldNotCleanThatPictureSend => '无法清理这张图片 · 请作为照片发送';
-
-  @override
   String get chatGifTooBig8 => 'GIF 太大 · 最大 8 MB';
 
   @override
@@ -2463,9 +2460,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => '无法清理这个视频';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend => '无法清理这张图片 · 请作为照片发送';
 
   @override
   String get groupChat30Seconds => '30 秒';
@@ -8521,12 +8515,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '这个文件会原样发出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
 
   @override
-  String get fileRawPictureTitle => '按原样发送这张图片？';
-
-  @override
-  String get fileRawPictureLine => '这张图片无法清理。拍摄地点等信息会随它一起发出。以照片形式发送即可清理。';
-
-  @override
   String get voiceStoppedAtLimit => '语音消息最长 30 分钟，已自动停止。听一遍后再发送。';
 
   @override
@@ -10951,9 +10939,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesAddItem => '添加照片或文件';
 
   @override
-  String get notesRawPicture => 'Kryfo 无法清理这张图片。请改为以照片添加。';
-
-  @override
   String get notesVoiceNotKept => '你的语音消息没有保存';
 }
 
@@ -12438,9 +12423,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatCouldNotCleanThat => '無法清理那段影片';
 
   @override
-  String get chatCouldNotCleanThatPictureSend => '無法清理那張圖片 · 請改用照片傳送';
-
-  @override
   String get chatGifTooBig8 => 'GIF 太大 · 上限 8 mb';
 
   @override
@@ -13416,9 +13398,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatCouldNotCleanThatVideo => '無法清理那段影片';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend => '無法清理那張圖片 · 請改用照片傳送';
 
   @override
   String get groupChat30Seconds => '30 秒';
@@ -19357,12 +19336,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '這個檔案會原樣送出。Kryfo 只清理 JPEG、PNG、WebP、HEIC、AVIF、GIF、MP4 和 MOV。';
 
   @override
-  String get fileRawPictureTitle => '按原樣傳送這張圖片？';
-
-  @override
-  String get fileRawPictureLine => '這張圖片無法清理。拍攝地點等資訊會隨它一起送出。以照片形式傳送即可清理。';
-
-  @override
   String get voiceStoppedAtLimit => '語音訊息最長 30 分鐘，已自動停止。聽一遍後再傳送。';
 
   @override
@@ -21789,9 +21762,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notesAddItem => '新增照片或檔案';
-
-  @override
-  String get notesRawPicture => 'Kryfo 無法清理這張圖片。請改用照片新增。';
 
   @override
   String get notesVoiceNotKept => '你的語音訊息沒有保存';

@@ -483,7 +483,6 @@
   "chatSendIt": "ارسال",
   "chatCouldNotReadThat": "آن فایل خوانده نشد",
   "chatCouldNotCleanThat": "تمیز کردن آن ویدیو ممکن نشد",
-  "chatCouldNotCleanThatPictureSend": "تمیز کردن آن تصویر ممکن نشد · آن را به‌صورت عکس بفرستید",
   "chatGifTooBig8": "گیف بزرگ است · حداکثر ۸ مگابایت",
   "chatCouldNotCleanThatGif": "تمیز کردن آن گیف ممکن نشد",
   "chatTorIsNotUp": "Tor هنوز وصل نیست · بدون پیش‌نمایش پیوند",
@@ -768,7 +767,6 @@
   "groupChatGifTooBig8": "گیف بزرگ است · حداکثر ۸ مگابایت",
   "groupChatCouldNotCleanThat": "تمیز کردن آن گیف ممکن نشد",
   "groupChatCouldNotCleanThatVideo": "تمیز کردن آن ویدیو ممکن نشد",
-  "groupChatCouldNotCleanThatPictureSend": "تمیز کردن آن تصویر ممکن نشد · آن را به‌صورت عکس بفرستید",
   "groupChat30Seconds": "۳۰ ثانیه",
   "groupChat1Minute": "۱ دقیقه",
   "groupChat5Minutes": "۵ دقیقه",
@@ -2348,8 +2346,6 @@
   "fileNotSavedNoSpace": "ذخیره نشد: آنجا فضای کافی نیست",
   "fileTooBig": "حجم این فایل ⁨{size}⁩ است. فایل‌ها حداکثر می‌توانند ⁨{max}⁩ باشند.",
   "fileGoesAsItIs": "این فایل همان‌طور که هست فرستاده می‌شود. Kryfo فقط فایل‌های JPEG، PNG، WebP، HEIC، AVIF، GIF، MP4 و MOV را تمیز می‌کند.",
-  "fileRawPictureTitle": "این تصویر همان‌طور که هست فرستاده شود؟",
-  "fileRawPictureLine": "این تصویر را نمی‌شود تمیز کرد. جزئیاتی مثل جای گرفتنش همراهش می‌رود. برای تمیز شدن، آن را به‌صورت عکس بفرستید.",
   "voiceStoppedAtLimit": "پیام‌های صوتی در ۳۰ دقیقه متوقف می‌شوند. گوش کنید و بعد بفرستید.",
   "gettingMessagesHelperBody": "فوری و سبک. سرورش IP شما و زمان رسیدن پیام‌ها را می‌بیند، هرگز محتوایشان را نه.",
   "gettingMessagesHelperUseOnion": "رفتن به Onion",
@@ -3044,6 +3040,5 @@
   "notesDeleteAllEverywhere": "همه‌ی یادداشت‌ها برای همیشه از همه‌ی دستگاه‌هایتان پاک می‌شوند.",
   "notesDeleteAllHereOnly": "همه‌ی یادداشت‌ها فقط از این دستگاه پاک می‌شوند. گوشی‌تان آن‌ها را نگه می‌دارد.",
   "notesAddItem": "افزودن عکس یا فایل",
-  "notesRawPicture": "Kryfo نمی‌تواند این تصویر را پاک‌سازی کند. آن را به‌صورت عکس اضافه کنید.",
   "notesVoiceNotKept": "پیام صوتی شما نگه داشته نشد"
 }

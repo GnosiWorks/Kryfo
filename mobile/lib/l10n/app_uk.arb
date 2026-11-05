@@ -483,7 +483,6 @@
   "chatSendIt": "Надіслати",
   "chatCouldNotReadThat": "Не вдалося прочитати файл",
   "chatCouldNotCleanThat": "Не вдалося очистити це відео",
-  "chatCouldNotCleanThatPictureSend": "Не вдалося очистити це зображення · надішли його як фото",
   "chatGifTooBig8": "GIF завеликий · макс. 8 МБ",
   "chatCouldNotCleanThatGif": "Не вдалося очистити цей GIF",
   "chatTorIsNotUp": "Tor ще не під’єднано · без прев’ю посилання",
@@ -768,7 +767,6 @@
   "groupChatGifTooBig8": "GIF завеликий · макс. 8 МБ",
   "groupChatCouldNotCleanThat": "Не вдалося очистити цей GIF",
   "groupChatCouldNotCleanThatVideo": "Не вдалося очистити це відео",
-  "groupChatCouldNotCleanThatPictureSend": "Не вдалося очистити це зображення · надішли його як фото",
   "groupChat30Seconds": "30 секунд",
   "groupChat1Minute": "1 хвилина",
   "groupChat5Minutes": "5 хвилин",
@@ -2348,8 +2346,6 @@
   "fileNotSavedNoSpace": "Не збережено: там замало місця",
   "fileTooBig": "Цей файл важить {size}. Файли можуть бути до {max}.",
   "fileGoesAsItIs": "Цей файл піде як є. Kryfo очищує лише JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 і MOV.",
-  "fileRawPictureTitle": "Надіслати це зображення як є?",
-  "fileRawPictureLine": "Це зображення не можна очистити. Відомості на кшталт місця зйомки підуть разом із ним. Надішли його як фото, щоб очистити.",
   "voiceStoppedAtLimit": "Голосові повідомлення зупиняються на 30 хвилинах. Прослухай і надішли.",
   "gettingMessagesHelperBody": "Одразу й легко. Його сервер бачить вашу IP-адресу і коли приходять повідомлення, але не їхній зміст.",
   "gettingMessagesHelperUseOnion": "Перейти на Onion",
@@ -3044,6 +3040,5 @@
   "notesDeleteAllEverywhere": "Усі нотатки буде стерто з усіх твоїх пристроїв назавжди.",
   "notesDeleteAllHereOnly": "Усі нотатки буде стерто лише з цього пристрою. На телефоні вони залишаться.",
   "notesAddItem": "Додати фото або файл",
-  "notesRawPicture": "Kryfo не може очистити це зображення. Додай його як фото.",
   "notesVoiceNotKept": "Голосове повідомлення не збережено"
 }

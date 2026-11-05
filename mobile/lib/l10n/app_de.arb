@@ -483,7 +483,6 @@
   "chatSendIt": "Senden",
   "chatCouldNotReadThat": "Konnte die Datei nicht lesen",
   "chatCouldNotCleanThat": "Konnte das Video nicht bereinigen",
-  "chatCouldNotCleanThatPictureSend": "Konnte das Bild nicht bereinigen · sende es als Foto",
   "chatGifTooBig8": "GIF zu groß · max. 8 MB",
   "chatCouldNotCleanThatGif": "Konnte das GIF nicht bereinigen",
   "chatTorIsNotUp": "Tor ist noch nicht verbunden · keine Link-Vorschau",
@@ -768,7 +767,6 @@
   "groupChatGifTooBig8": "GIF zu groß · max. 8 MB",
   "groupChatCouldNotCleanThat": "Konnte das GIF nicht bereinigen",
   "groupChatCouldNotCleanThatVideo": "Konnte das Video nicht bereinigen",
-  "groupChatCouldNotCleanThatPictureSend": "Konnte das Bild nicht bereinigen · sende es als Foto",
   "groupChat30Seconds": "30 Sekunden",
   "groupChat1Minute": "1 Minute",
   "groupChat5Minutes": "5 Minuten",
@@ -2348,8 +2346,6 @@
   "fileNotSavedNoSpace": "Nicht gespeichert: Dort ist nicht genug Platz",
   "fileTooBig": "Diese Datei hat {size}. Dateien dürfen bis zu {max} groß sein.",
   "fileGoesAsItIs": "Diese Datei geht genau so raus, wie sie ist. Kryfo bereinigt nur JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 und MOV.",
-  "fileRawPictureTitle": "Dieses Bild so senden, wie es ist?",
-  "fileRawPictureLine": "Dieses Bild kann nicht bereinigt werden. Angaben wie der Aufnahmeort gehen mit. Sende es als Foto, um es zu bereinigen.",
   "voiceStoppedAtLimit": "Sprachnachrichten enden nach 30 Minuten. Hör sie dir an und sende sie dann.",
   "gettingMessagesHelperBody": "Sofort und sparsam. Sein Server sieht deine IP und wann Nachrichten kommen, nie, was darin steht.",
   "gettingMessagesHelperUseOnion": "Zu Onion wechseln",
@@ -3044,6 +3040,5 @@
   "notesDeleteAllEverywhere": "Jede Notiz wird endgültig von all deinen Geräten gelöscht.",
   "notesDeleteAllHereOnly": "Jede Notiz wird nur von diesem Gerät gelöscht. Dein Handy behält sie.",
   "notesAddItem": "Foto oder Datei hinzufügen",
-  "notesRawPicture": "Kryfo kann dieses Bild nicht bereinigen. Füge es stattdessen als Foto hinzu.",
   "notesVoiceNotKept": "Deine Sprachnachricht wurde nicht gespeichert"
 }

@@ -1565,10 +1565,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Impossibile ripulire il video';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Impossibile ripulire l\'immagine · inviala come foto';
-
-  @override
   String get chatGifTooBig8 => 'Gif troppo grande · max 8 mb';
 
   @override
@@ -2621,10 +2617,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Impossibile ripulire il video';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Impossibile ripulire l\'immagine · inviala come foto';
 
   @override
   String get groupChat30Seconds => '30 secondi';
@@ -9042,13 +9034,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo file parte così com\'è. Kryfo pulisce solo JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 e MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Inviare questa immagine così com\'è?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Questa immagine non si può pulire. Dettagli come il luogo dello scatto partono con lei. Inviala come foto per pulirla.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'I messaggi vocali si fermano a 30 minuti. Ascoltalo, poi invialo.';
 
@@ -11678,10 +11663,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notesAddItem => 'Aggiungi una foto o un file';
-
-  @override
-  String get notesRawPicture =>
-      'Kryfo non può pulire questa immagine. Aggiungila come foto.';
 
   @override
   String get notesVoiceNotKept => 'Il tuo messaggio vocale non è stato salvato';

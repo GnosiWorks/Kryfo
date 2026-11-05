@@ -1545,10 +1545,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Gagal membersihkan video itu';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Gagal membersihkan gambar itu · kirim sebagai foto';
-
-  @override
   String get chatGifTooBig8 => 'Gif terlalu besar · maks 8 mb';
 
   @override
@@ -2592,10 +2588,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Gagal membersihkan video itu';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Gagal membersihkan gambar itu · kirim sebagai foto';
 
   @override
   String get groupChat30Seconds => '30 detik';
@@ -8964,13 +8956,6 @@ class AppLocalizationsId extends AppLocalizations {
       'File ini dikirim apa adanya. Kryfo hanya membersihkan JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4, dan MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Kirim gambar ini apa adanya?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Gambar ini tidak bisa dibersihkan. Detail seperti tempat diambilnya ikut terkirim. Kirim sebagai foto untuk membersihkannya.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Pesan suara berhenti di 30 menit. Dengarkan dulu, lalu kirim.';
 
@@ -11586,10 +11571,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notesAddItem => 'Tambah foto atau file';
-
-  @override
-  String get notesRawPicture =>
-      'Kryfo tidak bisa membersihkan gambar ini. Tambahkan sebagai foto saja.';
 
   @override
   String get notesVoiceNotKept => 'Pesan suaramu tidak disimpan';

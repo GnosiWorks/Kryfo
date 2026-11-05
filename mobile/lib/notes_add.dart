@@ -57,8 +57,9 @@ NoteReady _say(String line) => (item: null, line: line);
 Future<Directory> _folder() => session.mediaDirOf(kOwnNotes.id);
 
 /// a file at [src] (a pick, a drop, a paste) made ready under the name it
-/// was [picked] by: copied in and cleaned there, never read whole. a
-/// picture the cleaner cannot clean is not kept: as a photo it would be
+/// was [picked] by: copied in and cleaned there. a picture the cleaner
+/// cannot clean is drawn again as a clean jpeg, or kept as it is, never
+/// asked about (copyForSend)
 Future<NoteReady> readyNoteFile(String src, String picked) async {
   final name = sentFileName(picked);
   final int size;
@@ -71,21 +72,18 @@ Future<NoteReady> readyNoteFile(String src, String picked) async {
   if (!fileFits(size, kNoteFileMost)) {
     return _say(fileTooBigLine(size, kNoteFileMost));
   }
-  if ((await readFileFactsFresh(src, name))?.raw ?? false) {
-    return _say(l10n.notesRawPicture);
-  }
+  final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
   final uid = newMsgUid();
   final dest = File('${(await _folder()).path}/f_$uid${typeLeaf(name)}');
-  final done = await copyClean(src, dest.path, name: name);
-  if (done.how == MediaClean.refused) {
+  final done = await copyForSend(src, dest.path, name: name, raw: raw);
+  final at = done.path;
+  if (at == null) {
     return _say(
-      done.video
-          ? l10n.chatCouldNotCleanThat
-          : l10n.chatCouldNotCleanThatPictureSend,
+      done.video ? l10n.chatCouldNotCleanThat : l10n.chatCouldNotReadThat,
     );
   }
-  makeBlurSoon(dest.path);
-  return (item: (uid: uid, path: dest.path, fileName: name), line: null);
+  makeBlurSoon(at);
+  return (item: (uid: uid, path: at, fileName: done.name), line: null);
 }
 
 /// a photo's bytes made ready: cleaned of what rode along, kept as its kind

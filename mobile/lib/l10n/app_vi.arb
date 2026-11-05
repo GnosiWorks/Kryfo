@@ -483,7 +483,6 @@
   "chatSendIt": "Gửi",
   "chatCouldNotReadThat": "Không đọc được tệp đó",
   "chatCouldNotCleanThat": "Không làm sạch được video đó",
-  "chatCouldNotCleanThatPictureSend": "Không làm sạch được hình đó · hãy gửi dưới dạng ảnh",
   "chatGifTooBig8": "Gif quá lớn · tối đa 8 mb",
   "chatCouldNotCleanThatGif": "Không làm sạch được gif đó",
   "chatTorIsNotUp": "Tor chưa kết nối · không có xem trước liên kết",
@@ -768,7 +767,6 @@
   "groupChatGifTooBig8": "Gif quá lớn · tối đa 8 mb",
   "groupChatCouldNotCleanThat": "Không làm sạch được gif đó",
   "groupChatCouldNotCleanThatVideo": "Không làm sạch được video đó",
-  "groupChatCouldNotCleanThatPictureSend": "Không làm sạch được hình đó · hãy gửi dưới dạng ảnh",
   "groupChat30Seconds": "30 giây",
   "groupChat1Minute": "1 phút",
   "groupChat5Minutes": "5 phút",
@@ -2348,8 +2346,6 @@
   "fileNotSavedNoSpace": "Chưa lưu: nơi đó không đủ dung lượng",
   "fileTooBig": "Tệp này nặng {size}. Tệp chỉ được tối đa {max}.",
   "fileGoesAsItIs": "Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 và MOV.",
-  "fileRawPictureTitle": "Gửi ảnh này nguyên trạng?",
-  "fileRawPictureLine": "Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch.",
   "voiceStoppedAtLimit": "Tin nhắn thoại dừng ở 30 phút. Hãy nghe lại rồi gửi đi.",
   "gettingMessagesHelperBody": "Đến ngay và nhẹ. Máy chủ của nó thấy IP của bạn và lúc tin nhắn đến, không bao giờ biết nội dung.",
   "gettingMessagesHelperUseOnion": "Chuyển sang Onion",
@@ -3044,6 +3040,5 @@
   "notesDeleteAllEverywhere": "Mọi ghi chú sẽ bị xóa vĩnh viễn khỏi mọi thiết bị của bạn.",
   "notesDeleteAllHereOnly": "Mọi ghi chú chỉ bị xóa khỏi thiết bị này. Điện thoại của bạn vẫn giữ chúng.",
   "notesAddItem": "Thêm ảnh hoặc tệp",
-  "notesRawPicture": "Kryfo không thể làm sạch ảnh này. Hãy thêm nó dưới dạng ảnh.",
   "notesVoiceNotKept": "Tin nhắn thoại của bạn chưa được giữ lại"
 }

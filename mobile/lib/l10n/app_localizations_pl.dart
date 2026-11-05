@@ -1592,10 +1592,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Nie udało się wyczyścić tego wideo';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Nie udało się wyczyścić tego obrazu · wyślij go jako zdjęcie';
-
-  @override
   String get chatGifTooBig8 => 'GIF za duży · maks. 8 MB';
 
   @override
@@ -2656,10 +2652,6 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get groupChatCouldNotCleanThatVideo =>
       'Nie udało się wyczyścić tego wideo';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Nie udało się wyczyścić tego obrazu · wyślij go jako zdjęcie';
 
   @override
   String get groupChat30Seconds => '30 sekund';
@@ -9142,13 +9134,6 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ten plik pójdzie dokładnie taki, jaki jest. Kryfo czyści tylko JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 i MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Wysłać ten obraz bez zmian?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Tego obrazu nie da się wyczyścić. Szczegóły, takie jak miejsce zrobienia, pójdą razem z nim. Wyślij go jako zdjęcie, żeby go wyczyścić.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Wiadomości głosowe kończą się po 30 minutach. Odsłuchaj ją, a potem wyślij.';
 
@@ -11810,10 +11795,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get notesAddItem => 'Dodaj zdjęcie lub plik';
-
-  @override
-  String get notesRawPicture =>
-      'Kryfo nie może oczyścić tego obrazu. Dodaj go jako zdjęcie.';
 
   @override
   String get notesVoiceNotKept =>

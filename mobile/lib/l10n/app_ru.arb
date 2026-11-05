@@ -483,7 +483,6 @@
   "chatSendIt": "Отправить",
   "chatCouldNotReadThat": "Не удалось прочитать файл",
   "chatCouldNotCleanThat": "Не удалось очистить видео",
-  "chatCouldNotCleanThatPictureSend": "Не удалось очистить картинку · отправь её как фото",
   "chatGifTooBig8": "GIF слишком большой · максимум 8 МБ",
   "chatCouldNotCleanThatGif": "Не удалось очистить GIF",
   "chatTorIsNotUp": "Tor ещё не подключён · без превью ссылки",
@@ -768,7 +767,6 @@
   "groupChatGifTooBig8": "GIF слишком большой · максимум 8 МБ",
   "groupChatCouldNotCleanThat": "Не удалось очистить GIF",
   "groupChatCouldNotCleanThatVideo": "Не удалось очистить видео",
-  "groupChatCouldNotCleanThatPictureSend": "Не удалось очистить картинку · отправь её как фото",
   "groupChat30Seconds": "30 секунд",
   "groupChat1Minute": "1 минута",
   "groupChat5Minutes": "5 минут",
@@ -2348,8 +2346,6 @@
   "fileNotSavedNoSpace": "Не сохранено: там не хватает места",
   "fileTooBig": "Этот файл весит {size}. Файлы могут быть до {max}.",
   "fileGoesAsItIs": "Этот файл уйдёт как есть. Kryfo очищает только JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 и MOV.",
-  "fileRawPictureTitle": "Отправить это изображение как есть?",
-  "fileRawPictureLine": "Это изображение нельзя очистить. Сведения вроде места съёмки уйдут вместе с ним. Отправь его как фото, чтобы очистить.",
   "voiceStoppedAtLimit": "Голосовые сообщения останавливаются на 30 минутах. Прослушай и отправь.",
   "gettingMessagesHelperBody": "Сразу и легко. Его сервер видит ваш IP и когда приходят сообщения, но не их содержание.",
   "gettingMessagesHelperUseOnion": "Перейти на Onion",
@@ -3044,6 +3040,5 @@
   "notesDeleteAllEverywhere": "Все заметки будут стёрты со всех твоих устройств навсегда.",
   "notesDeleteAllHereOnly": "Все заметки будут стёрты только с этого устройства. На телефоне они останутся.",
   "notesAddItem": "Добавить фото или файл",
-  "notesRawPicture": "Kryfo не может очистить это изображение. Добавь его как фото.",
   "notesVoiceNotKept": "Голосовое сообщение не сохранено"
 }
