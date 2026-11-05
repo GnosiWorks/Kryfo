@@ -40,12 +40,14 @@ Future<OwnDevices> ownDevicesSource() async {
       thisName: l10n.devicesThisPhoneShown,
       thisKind: onDesktop ? DeviceKind.computer : DeviceKind.phone,
       phoneName: l10n.devicesYourPhone,
+      leave: _leaveHere,
     );
   }
   return StoredOwnDevices(
     db: db,
     thisName: l10n.devicesThisPhoneShown,
     thisKind: onDesktop ? DeviceKind.computer : DeviceKind.phone,
+    unlink: _ownUnlink == null ? null : _unlinkOwn,
     // phones link in 0.6: a computer that holds the account has no camera
     // to scan with
     link: deviceState == null || onDesktop
@@ -119,6 +121,13 @@ class _PhoneLinkApp implements PhoneLinkHooks {
     final bind = t.bind;
     try {
       await db.transaction((tx) async {
+        // a last word still owed to a device removed under this id goes:
+        // it would go to the new device's pair with the old seed
+        await tx.delete(
+          'dev_farewell',
+          where: 'ident = ? AND device = ?',
+          whereArgs: [kMainIdent, t.device],
+        );
         await ds.ownMine(tx, kMainIdent, t.list);
         await ds.call(tx, 'pool_put', {
           'ident': kMainIdent,
@@ -160,6 +169,12 @@ class _PhoneLinkApp implements PhoneLinkHooks {
       rethrow;
     }
     await readLinkNotices(db);
+    // the engine's leaving keys as the rows are now
+    try {
+      await _deviceSend?.leaving(kMainIdent);
+    } catch (e) {
+      dlog('devices: leaving keys not set (${e.runtimeType})');
+    }
     // the history copy for the new device, made and served from here
     if (bind != null) startPhoneHistoryCopy(uid);
     // the contacts who read lists learn of the new device, spread out
@@ -237,6 +252,9 @@ class _JoinLinkApp implements JoinLinkHooks {
     LinkStream stream,
     Map<String, dynamic> ownRows,
   ) async {
+    // its own end is kept from the start: a linked device with no lock
+    // state wipes at its next start
+    await linkedLock.start();
     await joinedRows(
       await live.open(),
       identity: _linkUnhex(p.identity),

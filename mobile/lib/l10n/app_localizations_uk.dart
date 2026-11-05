@@ -9807,7 +9807,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'До справжніх пробуджень домішуються фальшиві, тож Google важче зрозуміти, коли приходять справжні повідомлення. Наш ретранслятор зберігає лише адреси, які не може пов’язати між собою. Служба пушів працює на тому самому сервері й могла б їх пов’язати, а з допомогою Google і з твоїм обліковим записом Google, тож зміг би і той, хто керує нашим сервером або вилучить його. Якщо для тебе це важливо, обери інший спосіб. Приховані чати, кімнати понад перші кілька і час від часу звичайний контакт, приблизно один місяць із п’яти, чекають на перевірку, яку Kryfo однаково робить кожні 15 хвилин.';
+      'До справжніх пробуджень домішуються фальшиві, тож Google важче зрозуміти, коли приходять справжні повідомлення. Наш ретранслятор зберігає лише адреси, які не може пов’язати між собою. Служба пушів працює на нашому другому сервері. Разом два сервери могли б їх пов’язати, а з допомогою Google і з твоїм обліковим записом Google. Вилучити один недостатньо, але обома керуємо ми, тож ми могли б. Якщо для тебе це важливо, обери інший спосіб. Приховані чати, кімнати понад перші кілька і час від часу звичайний контакт, приблизно один місяць із п’яти, чекають на перевірку, яку Kryfo однаково робить кожні 15 хвилин.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11314,7 +11314,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name треба оновити Kryfo, щоб продовжити чат.';
+    return '$name треба оновити Kryfo, щоб продовжити чат';
   }
 
   @override
@@ -11440,6 +11440,121 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Не зараз';
+
+  @override
+  String get unlinkedTitle => 'Цей пристрій відв’язано';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Ваш телефон прибрав його з облікового запису, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Його не відкривали 30 днів, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Він 30 днів нічого не отримував від вашого телефона, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Його годинник перевели назад, тож Kryfo стер усе, що зберігав тут, щоб захистити ваші чати.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo не зміг зрозуміти, коли його відкривали востаннє, тож стер усе, що зберігав тут, щоб захистити ваші чати.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Ви відв’язали його, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Ваші чати лишаються на телефоні. Щоб знову користуватися Kryfo тут, пов’яжіть цей пристрій із телефоном.';
+
+  @override
+  String get unlinkedClose => 'Закрити Kryfo';
+
+  @override
+  String get devicesLeave => 'Відв’язати цей пристрій';
+
+  @override
+  String get devicesLeaveTitle => 'Відв’язати цей пристрій?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo повідомить телефон і зітре все, що зберігає тут. Ваші чати лишаться на телефоні.';
+
+  @override
+  String get devicesLeaveYes => 'Відв’язати й стерти';
+
+  @override
+  String get devicesGoneNotice => 'Пристрій прибрано';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name прибрано з вашого облікового запису $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name не використовували 30 днів, тож $date його прибрано з вашого облікового запису.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name саме відв’язалося $date і стерло те, що зберігало.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Ваші пристрої змінилися';
+
+  @override
+  String get devicesChangedLine =>
+      'Відкрийте Пов’язані пристрої, щоб побачити, що змінилося.';
+
+  @override
+  String get devicesUnknownNotice => 'Пристрій пов’язано деінде';
+
+  @override
+  String get devicesUnknownLine =>
+      'Інша копія Kryfo пов’язала пристрій із вашим обліковим записом. Цей телефон прибрав його з вашого списку.';
+
+  @override
+  String get albumPrevious => 'Попереднє';
+
+  @override
+  String get albumNext => 'Наступне';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Клацни правою кнопкою на нотатці, щоб скопіювати або видалити її.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Тут ще нічого не закріплено. Клацни правою кнопкою на повідомленні й вибери «Закріпити», і воно чекатиме тут для всіх у чаті.';
+
+  @override
+  String get chatGalleryDesk => 'Зображення';
+
+  @override
+  String get groupChatGalleryDesk => 'Зображення';
+
+  @override
+  String get photoChooseDesk => 'Вибрати файл зображення';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'З файлу зображення';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Звук';
+
+  @override
+  String get notificationsPlaySound => 'Відтворювати звук';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'З кожним сповіщенням на цьому комп’ютері';
 
   @override
   String bridgesShareBridgeN(String n) {

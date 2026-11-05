@@ -9645,7 +9645,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on the same server and could link them, and with Google\'s help to your Google account, so whoever runs or seizes our server could too. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.';
+      'Fake wake-ups are mixed in, which makes it harder for Google to tell when real messages arrive. Our relay only stores addresses it cannot link together. The push service runs on our second server. The two servers together could link them, and with Google\'s help to your Google account. Seizing one is not enough, but we run both, so we could. If that matters to you, pick another way. Hidden chats, rooms past the first few, and now and then an ordinary contact, about one month in five, wait for the check-in Kryfo still makes every 15 minutes.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11130,7 +11130,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name needs to update Kryfo to keep chatting.';
+    return '$name needs to update Kryfo to keep chatting';
   }
 
   @override
@@ -11262,6 +11262,119 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Not now';
+
+  @override
+  String get unlinkedTitle => 'This device is unlinked';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Your phone removed it from your account, so Kryfo erased everything it kept here.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'It wasn\'t opened for 30 days, so Kryfo erased everything it kept here.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'It heard nothing from your phone for 30 days, so Kryfo erased everything it kept here.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Its clock was set back, so Kryfo erased everything it kept here to keep your chats safe.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo couldn\'t tell when it was last opened, so it erased everything it kept here to keep your chats safe.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'You unlinked it, so Kryfo erased everything it kept here.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Your phone keeps your chats. To use Kryfo here again, link this device to your phone.';
+
+  @override
+  String get unlinkedClose => 'Close Kryfo';
+
+  @override
+  String get devicesLeave => 'Unlink this device';
+
+  @override
+  String get devicesLeaveTitle => 'Unlink this device?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo tells your phone and erases everything it keeps here. Your phone keeps your chats.';
+
+  @override
+  String get devicesLeaveYes => 'Unlink and erase';
+
+  @override
+  String get devicesGoneNotice => 'Device removed';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name was removed from your account on $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name wasn\'t used for 30 days, so it was removed from your account on $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name unlinked itself on $date and erased what it kept.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Your devices changed';
+
+  @override
+  String get devicesChangedLine => 'Open Linked devices to see what changed.';
+
+  @override
+  String get devicesUnknownNotice => 'Device linked elsewhere';
+
+  @override
+  String get devicesUnknownLine =>
+      'Another copy of Kryfo linked a device to your account. This phone took it off your list.';
+
+  @override
+  String get albumPrevious => 'Previous';
+
+  @override
+  String get albumNext => 'Next';
+
+  @override
+  String get notesHoldHintDesk => 'Right-click a note to copy or delete it.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Nothing pinned here yet. Right-click a message and choose Pin, and it waits here for everyone in the chat.';
+
+  @override
+  String get chatGalleryDesk => 'Pictures';
+
+  @override
+  String get groupChatGalleryDesk => 'Pictures';
+
+  @override
+  String get photoChooseDesk => 'Choose a picture file';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'From a picture file';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Sound';
+
+  @override
+  String get notificationsPlaySound => 'Play a sound';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'With each notification on this computer';
 
   @override
   String bridgesShareBridgeN(String n) {

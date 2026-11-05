@@ -9748,7 +9748,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais ne garde que des adresses qu’il ne peut pas relier entre elles. Le service de push tourne sur le même serveur et pourrait les relier, et avec l’aide de Google à votre compte Google, donc celui qui gère ou saisit notre serveur le pourrait aussi. Si cela compte pour vous, choisissez un autre moyen. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
+      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais ne garde que des adresses qu’il ne peut pas relier entre elles. Le service de push tourne sur notre second serveur. Les deux serveurs ensemble pourraient les relier, et avec l’aide de Google à votre compte Google. En saisir un seul ne suffit pas, mais nous gérons les deux, donc nous le pourrions. Si cela compte pour vous, choisissez un autre moyen. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11249,7 +11249,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name doit mettre à jour Kryfo pour continuer à discuter.';
+    return '$name doit mettre à jour Kryfo pour continuer à discuter';
   }
 
   @override
@@ -11382,6 +11382,121 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Pas maintenant';
+
+  @override
+  String get unlinkedTitle => 'Cet appareil est dissocié';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Votre téléphone l’a retiré de votre compte, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Il n’a pas été ouvert pendant 30 jours, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Il n’a rien reçu de votre téléphone pendant 30 jours, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Son horloge a été reculée, donc Kryfo a effacé tout ce qu’il gardait ici pour protéger vos discussions.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo n’a pas pu savoir quand il a été ouvert pour la dernière fois, donc il a effacé tout ce qu’il gardait ici pour protéger vos discussions.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Vous l’avez dissocié, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Votre téléphone garde vos discussions. Pour réutiliser Kryfo ici, associez cet appareil à votre téléphone.';
+
+  @override
+  String get unlinkedClose => 'Fermer Kryfo';
+
+  @override
+  String get devicesLeave => 'Dissocier cet appareil';
+
+  @override
+  String get devicesLeaveTitle => 'Dissocier cet appareil ?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo prévient votre téléphone et efface tout ce qu’il garde ici. Votre téléphone garde vos discussions.';
+
+  @override
+  String get devicesLeaveYes => 'Dissocier et effacer';
+
+  @override
+  String get devicesGoneNotice => 'Appareil retiré';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name a été retiré de votre compte le $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name n’a pas été utilisé pendant 30 jours, donc il a été retiré de votre compte le $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name s’est dissocié tout seul le $date et a effacé ce qu’il gardait.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Vos appareils ont changé';
+
+  @override
+  String get devicesChangedLine =>
+      'Ouvrez Appareils associés pour voir ce qui a changé.';
+
+  @override
+  String get devicesUnknownNotice => 'Appareil associé ailleurs';
+
+  @override
+  String get devicesUnknownLine =>
+      'Une autre copie de Kryfo a associé un appareil à votre compte. Ce téléphone l’a retiré de votre liste.';
+
+  @override
+  String get albumPrevious => 'Précédent';
+
+  @override
+  String get albumNext => 'Suivant';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Faites un clic droit sur une note pour la copier ou la supprimer.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Rien d’épinglé ici pour l’instant. Faites un clic droit sur un message et choisissez Épingler : il attendra ici pour tout le monde dans la discussion.';
+
+  @override
+  String get chatGalleryDesk => 'Images';
+
+  @override
+  String get groupChatGalleryDesk => 'Images';
+
+  @override
+  String get photoChooseDesk => 'Choisir un fichier image';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Depuis un fichier image';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Son';
+
+  @override
+  String get notificationsPlaySound => 'Jouer un son';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'À chaque notification sur cet ordinateur';
 
   @override
   String bridgesShareBridgeN(String n) {

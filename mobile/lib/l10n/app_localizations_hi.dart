@@ -9654,7 +9654,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'इसमें झूठे जगाने के संकेत भी मिलाए जाते हैं, जिससे Google के लिए यह बताना मुश्किल होता है कि असली मैसेज कब आते हैं। हमारा रिले सिर्फ़ ऐसे पते रखता है जिन्हें वह आपस में जोड़ नहीं सकता। पुश सेवा उसी सर्वर पर चलती है और उन्हें जोड़ सकती है, और Google की मदद से आपके Google अकाउंट तक भी, इसलिए जो भी हमारा सर्वर चलाए या ज़ब्त करे, वह भी ऐसा कर सकता है। अगर यह आपके लिए मायने रखता है, तो कोई दूसरा तरीक़ा चुनें। छिपी चैट, शुरुआती कुछ के बाद के रूम, और कभी-कभी कोई आम संपर्क, लगभग पाँच में से एक महीने, उस जाँच का इंतज़ार करते हैं जो Kryfo अब भी हर 15 मिनट में करता है।';
+      'इसमें झूठे जगाने के संकेत भी मिलाए जाते हैं, जिससे Google के लिए यह बताना मुश्किल होता है कि असली मैसेज कब आते हैं। हमारा रिले सिर्फ़ ऐसे पते रखता है जिन्हें वह आपस में जोड़ नहीं सकता। पुश सेवा हमारे दूसरे सर्वर पर चलती है। दोनों सर्वर मिलकर उन्हें जोड़ सकते हैं, और Google की मदद से आपके Google अकाउंट तक भी। किसी एक को ज़ब्त करना काफ़ी नहीं है, पर दोनों हम चलाते हैं, इसलिए हम ऐसा कर सकते हैं। अगर यह आपके लिए मायने रखता है, तो कोई दूसरा तरीक़ा चुनें। छिपी चैट, शुरुआती कुछ के बाद के रूम, और कभी-कभी कोई आम संपर्क, लगभग पाँच में से एक महीने, उस जाँच का इंतज़ार करते हैं जो Kryfo अब भी हर 15 मिनट में करता है।';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11141,7 +11141,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return 'बातचीत जारी रखने के लिए $name को Kryfo अपडेट करना होगा।';
+    return 'बातचीत जारी रखने के लिए $name को Kryfo अपडेट करना होगा';
   }
 
   @override
@@ -11268,6 +11268,120 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'अभी नहीं';
+
+  @override
+  String get unlinkedTitle => 'यह डिवाइस अलग हो गया है';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'आपके फ़ोन ने इसे आपके खाते से हटा दिया, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'इसे 30 दिन तक नहीं खोला गया, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedSilentLine =>
+      'इसे 30 दिन तक आपके फ़ोन से कुछ नहीं मिला, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedClockLine =>
+      'इसकी घड़ी पीछे कर दी गई, इसलिए आपकी चैट सुरक्षित रखने के लिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo यह नहीं जान सका कि इसे आख़िरी बार कब खोला गया, इसलिए आपकी चैट सुरक्षित रखने के लिए उसने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedSelfLine =>
+      'आपने इसे अलग किया, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedAgainLine =>
+      'आपकी चैट आपके फ़ोन पर रहती हैं। यहाँ फिर से Kryfo इस्तेमाल करने के लिए इस डिवाइस को अपने फ़ोन से जोड़ें।';
+
+  @override
+  String get unlinkedClose => 'Kryfo बंद करें';
+
+  @override
+  String get devicesLeave => 'यह डिवाइस अलग करें';
+
+  @override
+  String get devicesLeaveTitle => 'यह डिवाइस अलग करें?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo आपके फ़ोन को बताएगा और यहाँ रखा सब कुछ मिटा देगा। आपकी चैट आपके फ़ोन पर रहेंगी।';
+
+  @override
+  String get devicesLeaveYes => 'अलग करें और मिटाएँ';
+
+  @override
+  String get devicesGoneNotice => 'डिवाइस हटाया गया';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name $date को आपके खाते से हटाया गया।';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 दिन तक इस्तेमाल नहीं हुआ, इसलिए $date को इसे आपके खाते से हटाया गया।';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name $date को खुद अलग हो गया और उसने जो रखा था वह मिटा दिया।';
+  }
+
+  @override
+  String get devicesChangedNotice => 'आपके डिवाइस बदल गए';
+
+  @override
+  String get devicesChangedLine =>
+      'क्या बदला, यह देखने के लिए जुड़े हुए डिवाइस खोलें।';
+
+  @override
+  String get devicesUnknownNotice => 'कहीं और से जोड़ा गया डिवाइस';
+
+  @override
+  String get devicesUnknownLine =>
+      'Kryfo की किसी दूसरी कॉपी ने आपके खाते से एक डिवाइस जोड़ा। इस फ़ोन ने उसे आपकी सूची से हटा दिया।';
+
+  @override
+  String get albumPrevious => 'पिछला';
+
+  @override
+  String get albumNext => 'अगला';
+
+  @override
+  String get notesHoldHintDesk =>
+      'कॉपी या डिलीट करने के लिए नोट पर राइट-क्लिक करें।';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'यहाँ अभी कुछ पिन नहीं है। किसी मैसेज पर राइट-क्लिक करें और पिन करें चुनें, वह यहाँ चैट के सभी लोगों के लिए रहेगा।';
+
+  @override
+  String get chatGalleryDesk => 'तस्वीरें';
+
+  @override
+  String get groupChatGalleryDesk => 'तस्वीरें';
+
+  @override
+  String get photoChooseDesk => 'तस्वीर की फ़ाइल चुनें';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'तस्वीर की फ़ाइल से';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'आवाज़';
+
+  @override
+  String get notificationsPlaySound => 'आवाज़ चलाएँ';
+
+  @override
+  String get notificationsPlaySoundHint => 'इस कंप्यूटर पर हर सूचना के साथ';
 
   @override
   String bridgesShareBridgeN(String n) {

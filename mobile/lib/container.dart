@@ -359,6 +359,8 @@ const deviceKeys = {
   'theme_light',
   'theme_accent',
   'wide_list_width',
+  // the computer's notification sound, one for every identity on it
+  'desk_sound',
   'bridge_lines',
   'bridges_on',
   'bridge_hint_off',

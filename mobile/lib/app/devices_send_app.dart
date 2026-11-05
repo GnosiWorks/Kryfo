@@ -47,7 +47,16 @@ void _bootDeviceSend(DeviceState ds) {
     },
     wire: _EngineDeviceWire(),
     listen: engine.deviceListenBg,
-    changed: (changes) => _madeApp?._hiddenListsChanged(changes),
+    hiddenRemovals: true,
+    changed: (changes) {
+      final a = _madeApp;
+      if (a == null) return;
+      unawaited(
+        a._hiddenListsChanged(changes).catchError((Object e) {
+          dlog('devices: hidden chats not told (${e.runtimeType})');
+        }),
+      );
+    },
   );
   _bootDeviceReceive(ds, _deviceSend!);
 }
@@ -204,6 +213,12 @@ Future<void> pumpDeviceSends() async {
   final v = _vaultDevOf;
   if (v != null) await _pumpDevices(_vaultDevSend, v);
   await _madeApp?._pushHiddenRemovals();
+  // lists a restore left: asked again until each phone sends its own
+  try {
+    await _deviceReceive?.askStale();
+  } catch (e) {
+    dlog('devices: stale lists not asked (${e.runtimeType})');
+  }
 }
 
 Future<void> _pumpDevices(DeviceSend? send, HaloDb home) async {
@@ -216,8 +231,10 @@ Future<void> _pumpDevices(DeviceSend? send, HaloDb home) async {
         final r = await db.query(
           'contacts',
           columns: ['halo_id'],
-          where: 'ident = ? AND ikey = ? AND accepted = 1 AND blocked = 0',
+          // a contact I deleted too: only a removal is owed to them
+          where: 'ident = ? AND ikey = ? AND blocked = 0',
           whereArgs: [ident, identity],
+          orderBy: 'accepted DESC',
           limit: 1,
         );
         if (r.isEmpty) return null;
@@ -280,7 +297,7 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     final db = await home.open();
     final r = await db.query(
       'contacts',
-      columns: ['ident', 'ikey'],
+      columns: ['ident', 'ikey', 'accepted', 'caps'],
       where: 'halo_id = ?',
       whereArgs: [haloId],
       limit: 1,
@@ -288,6 +305,12 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     final ikey = r.isEmpty ? null : r.first['ikey'] as String?;
     if (ikey == null) return;
     final ident = r.first['ident'] as int? ?? kMainIdent;
+    // a contact whose phone read my lists may still hold one and copy to my
+    // devices: my removals still go to them while a session is left
+    final reader =
+        !sessions &&
+        r.first['accepted'] == 1 &&
+        capsOfText(r.first['caps'] as String?).contains(kCapDevices);
     // their device pairs are heard on no more (read before the list goes)
     await _devReceiveFor(haloId)?.forget(ident, ikey);
     try {
@@ -297,6 +320,15 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     }
     if (vault) _vaultDevPeers.remove(ikey);
     await _devSendFor(haloId)?.forget(ident, ikey);
+    if (reader) {
+      await db.insert('dev_marks', {
+        'ident': ident,
+        'peer': ikey,
+        'kind': kDeletedReader,
+        'key': '',
+        'at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
     // "not them": their devices' sessions go too, as their phone's does
     if (sessions) {
       final dss = DeviceSessions(

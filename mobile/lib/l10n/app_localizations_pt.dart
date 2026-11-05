@@ -9721,7 +9721,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Despertares falsos são misturados, o que dificulta para o Google saber quando chegam as mensagens de verdade. Nosso retransmissor só guarda endereços que não consegue ligar entre si. O serviço de push roda no mesmo servidor e poderia ligá-los, e com a ajuda do Google à sua conta Google, então quem administra ou apreende nosso servidor também poderia. Se isso importa para você, escolha outro jeito. Conversas ocultas, salas além das primeiras e, de vez em quando, um contato comum, cerca de um mês em cada cinco, esperam a consulta que o Kryfo ainda faz a cada 15 minutos.';
+      'Despertares falsos são misturados, o que dificulta para o Google saber quando chegam as mensagens de verdade. Nosso retransmissor só guarda endereços que não consegue ligar entre si. O serviço de push roda no nosso segundo servidor. Os dois servidores juntos poderiam ligá-los, e com a ajuda do Google à sua conta Google. Apreender só um não basta, mas administramos os dois, então nós poderíamos. Se isso importa para você, escolha outro jeito. Conversas ocultas, salas além das primeiras e, de vez em quando, um contato comum, cerca de um mês em cada cinco, esperam a consulta que o Kryfo ainda faz a cada 15 minutos.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11211,7 +11211,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name precisa atualizar o Kryfo para continuar a conversa.';
+    return '$name precisa atualizar o Kryfo para continuar a conversa';
   }
 
   @override
@@ -11344,6 +11344,121 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Agora não';
+
+  @override
+  String get unlinkedTitle => 'Este aparelho foi desconectado';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Seu celular o removeu da sua conta, então o Kryfo apagou tudo o que guardava aqui.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Ele não foi aberto por 30 dias, então o Kryfo apagou tudo o que guardava aqui.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Ele ficou 30 dias sem notícias do seu celular, então o Kryfo apagou tudo o que guardava aqui.';
+
+  @override
+  String get unlinkedClockLine =>
+      'O relógio dele foi atrasado, então o Kryfo apagou tudo o que guardava aqui para proteger suas conversas.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'O Kryfo não conseguiu saber quando ele foi aberto pela última vez, então apagou tudo o que guardava aqui para proteger suas conversas.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Você o desconectou, então o Kryfo apagou tudo o que guardava aqui.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Seu celular guarda suas conversas. Para usar o Kryfo aqui de novo, conecte este aparelho ao seu celular.';
+
+  @override
+  String get unlinkedClose => 'Fechar o Kryfo';
+
+  @override
+  String get devicesLeave => 'Desconectar este aparelho';
+
+  @override
+  String get devicesLeaveTitle => 'Desconectar este aparelho?';
+
+  @override
+  String get devicesLeaveLine =>
+      'O Kryfo avisa seu celular e apaga tudo o que guarda aqui. Seu celular guarda suas conversas.';
+
+  @override
+  String get devicesLeaveYes => 'Desconectar e apagar';
+
+  @override
+  String get devicesGoneNotice => 'Aparelho removido';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name foi removido da sua conta em $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name não foi usado por 30 dias, então foi removido da sua conta em $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name se desconectou sozinho em $date e apagou o que guardava.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Seus aparelhos mudaram';
+
+  @override
+  String get devicesChangedLine =>
+      'Abra Aparelhos conectados para ver o que mudou.';
+
+  @override
+  String get devicesUnknownNotice => 'Aparelho conectado em outro lugar';
+
+  @override
+  String get devicesUnknownLine =>
+      'Outra cópia do Kryfo conectou um aparelho à sua conta. Este celular o tirou da sua lista.';
+
+  @override
+  String get albumPrevious => 'Anterior';
+
+  @override
+  String get albumNext => 'Próximo';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Clique com o botão direito em uma nota para copiar ou apagar.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Nada fixado aqui ainda. Clique com o botão direito em uma mensagem e escolha Fixar, e ela fica aqui esperando por todos na conversa.';
+
+  @override
+  String get chatGalleryDesk => 'Imagens';
+
+  @override
+  String get groupChatGalleryDesk => 'Imagens';
+
+  @override
+  String get photoChooseDesk => 'Escolher um arquivo de imagem';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'De um arquivo de imagem';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Som';
+
+  @override
+  String get notificationsPlaySound => 'Tocar um som';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'A cada notificação neste computador';
 
   @override
   String bridgesShareBridgeN(String n) {

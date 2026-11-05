@@ -21,8 +21,8 @@ the pinned developer identity:
 the key is what counts. anyone can pick three words; the key is checked by
 the app. the same fingerprint is on kryfo.app.
 
-a short description, the version (settings, about), the phone and android
-version, and steps to reproduce are enough. no need for a polished write-up.
+a short description, the version (settings, about), the phone or computer
+and its system version, and steps to reproduce are enough. no need for a polished write-up.
 
 ## what happens next
 
@@ -38,10 +38,13 @@ people's data, don't degrade the servers for others.
 
 ## in scope
 
-- the android app (mobile/) and the engine (engine/): crypto, storage, the
-  lock layer, decoy and hidden chats (from 0.5.0), backups, the tor and
-  relay transport
-- relay.kryfo.app: the relay, the handle registry, people search
+- the android app and the linux and windows test builds (mobile/), the
+  engine (engine/) and the libsignal shim (mobile/native/kryfo_signal/):
+  crypto, pair codes, storage, the lock layer, decoy and hidden chats,
+  backups and restores, the tor and relay transport
+- relay.kryfo.app: the relay, the handle registry, people search, the gif
+  relay
+- relay2.kryfo.app, files.kryfo.app and the push gateway
 - kryfo.app
 
 ## out of scope

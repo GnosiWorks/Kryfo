@@ -9675,7 +9675,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti aynı sunucuda çalışır ve onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir; yani sunucumuzu işleten ya da ona el koyan da bağlayabilir. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
+      'Araya sahte uyandırmalar karışır; bu, Google’ın gerçek mesajların ne zaman geldiğini anlamasını zorlaştırır. Aktarıcımız yalnızca birbirine bağlayamadığı adresleri saklar. Bildirim hizmeti ikinci sunucumuzda çalışır. İki sunucu birlikte onları, Google’ın yardımıyla Google hesabına kadar, bağlayabilir. Birine el koymak yetmez, ama ikisini de biz işletiyoruz, yani biz bağlayabiliriz. Bu senin için önemliyse başka bir yol seç. Gizli sohbetler, ilk birkaçından sonraki odalar ve ara sıra, aşağı yukarı beş ayda bir ay, sıradan bir kişi, Kryfo’nun yine de 15 dakikada bir yaptığı kontrolü bekler.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11161,7 +11161,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return 'Sohbete devam etmek için $name kişisinin Kryfo’yu güncellemesi gerekiyor.';
+    return 'Sohbete devam etmek için $name kişisinin Kryfo’yu güncellemesi gerekiyor';
   }
 
   @override
@@ -11287,6 +11287,120 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Şimdi değil';
+
+  @override
+  String get unlinkedTitle => 'Bu cihazın bağlantısı kesildi';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Telefonun onu hesabından kaldırdı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      '30 gün boyunca açılmadı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedSilentLine =>
+      '30 gün boyunca telefonundan hiçbir şey almadı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Saati geri alındı, bu yüzden Kryfo sohbetlerini korumak için burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo en son ne zaman açıldığını anlayamadı, bu yüzden sohbetlerini korumak için burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Bağlantısını sen kestin, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Sohbetlerin telefonunda kalır. Kryfo’yu burada yeniden kullanmak için bu cihazı telefonuna bağla.';
+
+  @override
+  String get unlinkedClose => 'Kryfo’yu kapat';
+
+  @override
+  String get devicesLeave => 'Bu cihazın bağlantısını kes';
+
+  @override
+  String get devicesLeaveTitle => 'Bu cihazın bağlantısı kesilsin mi?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo telefonuna haber verir ve burada tuttuğu her şeyi siler. Sohbetlerin telefonunda kalır.';
+
+  @override
+  String get devicesLeaveYes => 'Bağlantıyı kes ve sil';
+
+  @override
+  String get devicesGoneNotice => 'Cihaz kaldırıldı';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name $date tarihinde hesabından kaldırıldı.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 gün kullanılmadı, bu yüzden $date tarihinde hesabından kaldırıldı.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name $date tarihinde bağlantısını kendisi kesti ve tuttuklarını sildi.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Cihazların değişti';
+
+  @override
+  String get devicesChangedLine =>
+      'Neyin değiştiğini görmek için Bağlı cihazlar’ı aç.';
+
+  @override
+  String get devicesUnknownNotice => 'Başka yerde bağlanan cihaz';
+
+  @override
+  String get devicesUnknownLine =>
+      'Kryfo’nun başka bir kopyası hesabına bir cihaz bağladı. Bu telefon onu listenden çıkardı.';
+
+  @override
+  String get albumPrevious => 'Önceki';
+
+  @override
+  String get albumNext => 'Sonraki';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Kopyalamak ya da silmek için bir nota sağ tıkla.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Henüz sabitlenen bir şey yok. Bir mesaja sağ tıkla ve Sabitle’yi seç; sohbetteki herkes için burada durur.';
+
+  @override
+  String get chatGalleryDesk => 'Resimler';
+
+  @override
+  String get groupChatGalleryDesk => 'Resimler';
+
+  @override
+  String get photoChooseDesk => 'Bir resim dosyası seç';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Bir resim dosyasından';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Ses';
+
+  @override
+  String get notificationsPlaySound => 'Ses çal';
+
+  @override
+  String get notificationsPlaySoundHint => 'Bu bilgisayardaki her bildirimde';
 
   @override
   String bridgesShareBridgeN(String n) {

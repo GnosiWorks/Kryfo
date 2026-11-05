@@ -9757,7 +9757,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Dazwischen kommen falsche Weckrufe. So kann Google schwerer erkennen, wann echte Nachrichten ankommen. Unser Relais speichert nur Adressen, die es nicht miteinander verbinden kann. Der Push-Dienst läuft auf demselben Server und könnte sie verbinden, mit Googles Hilfe sogar mit deinem Google-Konto, also könnte es auch, wer unseren Server betreibt oder beschlagnahmt. Wenn dir das wichtig ist, wähl einen anderen Weg. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
+      'Dazwischen kommen falsche Weckrufe. So kann Google schwerer erkennen, wann echte Nachrichten ankommen. Unser Relais speichert nur Adressen, die es nicht miteinander verbinden kann. Der Push-Dienst läuft auf unserem zweiten Server. Beide Server zusammen könnten sie verbinden, mit Googles Hilfe sogar mit deinem Google-Konto. Wer nur einen beschlagnahmt, kann das nicht, aber wir betreiben beide, also könnten wir es. Wenn dir das wichtig ist, wähl einen anderen Weg. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11255,7 +11255,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name muss Kryfo aktualisieren, damit ihr weiterchatten könnt.';
+    return '$name muss Kryfo aktualisieren, damit ihr weiterchatten könnt';
   }
 
   @override
@@ -11387,6 +11387,121 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'Nicht jetzt';
+
+  @override
+  String get unlinkedTitle => 'Dieses Gerät ist getrennt';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Dein Handy hat es aus deinem Konto entfernt, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Es wurde 30 Tage nicht geöffnet, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Es hat 30 Tage lang nichts von deinem Handy gehört, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Seine Uhr wurde zurückgestellt, deshalb hat Kryfo zum Schutz deiner Chats alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo konnte nicht feststellen, wann es zuletzt geöffnet wurde, deshalb hat es zum Schutz deiner Chats alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Du hast es getrennt, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Dein Handy behält deine Chats. Um Kryfo hier wieder zu nutzen, verknüpfe dieses Gerät mit deinem Handy.';
+
+  @override
+  String get unlinkedClose => 'Kryfo schließen';
+
+  @override
+  String get devicesLeave => 'Dieses Gerät trennen';
+
+  @override
+  String get devicesLeaveTitle => 'Dieses Gerät trennen?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo sagt es deinem Handy und löscht alles, was es hier speichert. Dein Handy behält deine Chats.';
+
+  @override
+  String get devicesLeaveYes => 'Trennen und löschen';
+
+  @override
+  String get devicesGoneNotice => 'Gerät entfernt';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name wurde am $date aus deinem Konto entfernt.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name wurde 30 Tage nicht genutzt und deshalb am $date aus deinem Konto entfernt.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name hat sich am $date selbst getrennt und gelöscht, was es gespeichert hatte.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Deine Geräte haben sich geändert';
+
+  @override
+  String get devicesChangedLine =>
+      'Öffne Verknüpfte Geräte, um zu sehen, was sich geändert hat.';
+
+  @override
+  String get devicesUnknownNotice => 'Gerät woanders verknüpft';
+
+  @override
+  String get devicesUnknownLine =>
+      'Eine andere Kopie von Kryfo hat ein Gerät mit deinem Konto verknüpft. Dieses Handy hat es von deiner Liste genommen.';
+
+  @override
+  String get albumPrevious => 'Zurück';
+
+  @override
+  String get albumNext => 'Weiter';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Klicke mit der rechten Maustaste auf eine Notiz, um sie zu kopieren oder zu löschen.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Noch nichts angeheftet. Klicke mit der rechten Maustaste auf eine Nachricht und wähle Anheften, dann wartet sie hier für alle im Chat.';
+
+  @override
+  String get chatGalleryDesk => 'Bilder';
+
+  @override
+  String get groupChatGalleryDesk => 'Bilder';
+
+  @override
+  String get photoChooseDesk => 'Bilddatei wählen';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Aus einer Bilddatei';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Ton';
+
+  @override
+  String get notificationsPlaySound => 'Ton abspielen';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Bei jeder Benachrichtigung auf diesem Computer';
 
   @override
   String bridgesShareBridgeN(String n) {

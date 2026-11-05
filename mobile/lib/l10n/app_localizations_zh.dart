@@ -9160,7 +9160,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，借助 Google 还能关联到你的 Google 账号，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在我们的第二台服务器上。两台服务器合起来能够把它们关联起来，借助 Google 还能关联到你的 Google 账号。只查扣其中一台做不到，但两台都由我们运营，所以我们能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
   String get notificationsGoogleRefused =>
@@ -10539,7 +10539,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name 需要更新 Kryfo 才能继续聊天。';
+    return '$name 需要更新 Kryfo 才能继续聊天';
   }
 
   @override
@@ -10657,6 +10657,110 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceNotNow => '暂不';
+
+  @override
+  String get unlinkedTitle => '这台设备已解除关联';
+
+  @override
+  String get unlinkedRemovedLine => '你的手机已把它从账号中移除，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedUnusedLine => '它 30 天没被打开，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedSilentLine => '它 30 天没有收到你手机的任何消息，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedClockLine => '它的时钟被调回了，所以 Kryfo 为保护你的聊天，抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo 无法得知它上次是何时被打开的，所以为保护你的聊天，抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedSelfLine => '你解除了它的关联，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedAgainLine => '你的聊天仍在手机上。要在这里再次使用 Kryfo，请把这台设备关联到你的手机。';
+
+  @override
+  String get unlinkedClose => '关闭 Kryfo';
+
+  @override
+  String get devicesLeave => '解除这台设备的关联';
+
+  @override
+  String get devicesLeaveTitle => '解除这台设备的关联？';
+
+  @override
+  String get devicesLeaveLine => 'Kryfo 会告诉你的手机，并抹除它在这里保存的一切。你的聊天仍在手机上。';
+
+  @override
+  String get devicesLeaveYes => '解除关联并抹除';
+
+  @override
+  String get devicesGoneNotice => '设备已移除';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name 于 $date 从你的账号中移除。';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 天没有使用，所以于 $date 从你的账号中移除。';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name 于 $date 自己解除了关联，并抹除了上面保存的内容。';
+  }
+
+  @override
+  String get devicesChangedNotice => '你的设备有变化';
+
+  @override
+  String get devicesChangedLine => '打开“已关联的设备”查看变化。';
+
+  @override
+  String get devicesUnknownNotice => '在别处关联的设备';
+
+  @override
+  String get devicesUnknownLine => '另一份 Kryfo 把一台设备关联到了你的账号。这部手机已把它从你的列表中移除。';
+
+  @override
+  String get albumPrevious => '上一个';
+
+  @override
+  String get albumNext => '下一个';
+
+  @override
+  String get notesHoldHintDesk => '右键点击一条笔记即可复制或删除。';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      '这里还没有置顶内容。右键点击一条消息，选择“置顶”，它就会在这里等着聊天里的每个人。';
+
+  @override
+  String get chatGalleryDesk => '图片';
+
+  @override
+  String get groupChatGalleryDesk => '图片';
+
+  @override
+  String get photoChooseDesk => '选择图片文件';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => '从图片文件';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => '声音';
+
+  @override
+  String get notificationsPlaySound => '播放提示音';
+
+  @override
+  String get notificationsPlaySoundHint => '这台电脑上的每条通知都会响';
 
   @override
   String bridgesShareBridgeN(String n) {
@@ -19807,7 +19911,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notificationsGoogleNote =>
-      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在我們的第二台伺服器上。兩台伺服器合起來能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號。只查扣其中一台做不到，但兩台都由我們營運，所以我們能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
   String get notificationsGoogleRefused =>
@@ -21188,7 +21292,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name 需要更新 Kryfo 才能繼續聊天。';
+    return '$name 需要更新 Kryfo 才能繼續聊天';
   }
 
   @override
@@ -21306,6 +21410,110 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceNotNow => '以後再說';
+
+  @override
+  String get unlinkedTitle => '這台裝置已解除連結';
+
+  @override
+  String get unlinkedRemovedLine => '你的手機已把它從帳號中移除，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedUnusedLine => '它 30 天沒被開啟，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedSilentLine => '它 30 天沒有收到你手機的任何訊息，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedClockLine => '它的時鐘被調回了，所以 Kryfo 為保護你的聊天，抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo 無法得知它上次是何時被開啟的，所以為保護你的聊天，抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedSelfLine => '你解除了它的連結，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedAgainLine => '你的聊天仍在手機上。要在這裡再次使用 Kryfo，請把這台裝置連結到你的手機。';
+
+  @override
+  String get unlinkedClose => '關閉 Kryfo';
+
+  @override
+  String get devicesLeave => '解除這台裝置的連結';
+
+  @override
+  String get devicesLeaveTitle => '解除這台裝置的連結？';
+
+  @override
+  String get devicesLeaveLine => 'Kryfo 會告訴你的手機，並抹除它在這裡保存的一切。你的聊天仍在手機上。';
+
+  @override
+  String get devicesLeaveYes => '解除連結並抹除';
+
+  @override
+  String get devicesGoneNotice => '裝置已移除';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name 於 $date 從你的帳號中移除。';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 天沒有使用，所以於 $date 從你的帳號中移除。';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name 於 $date 自己解除了連結，並抹除了上面保存的內容。';
+  }
+
+  @override
+  String get devicesChangedNotice => '你的裝置有變化';
+
+  @override
+  String get devicesChangedLine => '開啟「已連結的裝置」查看變化。';
+
+  @override
+  String get devicesUnknownNotice => '在別處連結的裝置';
+
+  @override
+  String get devicesUnknownLine => '另一份 Kryfo 把一台裝置連結到了你的帳號。這支手機已把它從你的清單中移除。';
+
+  @override
+  String get albumPrevious => '上一個';
+
+  @override
+  String get albumNext => '下一個';
+
+  @override
+  String get notesHoldHintDesk => '在筆記上按右鍵即可複製或刪除。';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      '這裡還沒有置頂的訊息。在一則訊息上按右鍵並選擇「置頂」，它就會在這裡等著聊天中的每個人。';
+
+  @override
+  String get chatGalleryDesk => '圖片';
+
+  @override
+  String get groupChatGalleryDesk => '圖片';
+
+  @override
+  String get photoChooseDesk => '選擇圖片檔案';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => '從圖片檔案';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => '聲音';
+
+  @override
+  String get notificationsPlaySound => '播放提示音';
+
+  @override
+  String get notificationsPlaySoundHint => '這台電腦上的每則通知都會響';
 
   @override
   String bridgesShareBridgeN(String n) {

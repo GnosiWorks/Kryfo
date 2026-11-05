@@ -33,6 +33,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
 import '../wide/wide_pane.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onOpenSupport;
@@ -156,179 +157,188 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _reveal(0, _head(id, hasBadge)),
-              const SizedBox(height: 26),
+      body: DeskPage(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _reveal(0, _head(id, hasBadge)),
+                const SizedBox(height: 26),
 
-              _reveal(1, _Section(l10n.profileIdentity)),
-              _reveal(
-                1,
-                _Card(
+                _reveal(1, _Section(l10n.profileIdentity)),
+                _reveal(
+                  1,
+                  _Card(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _CopyRow(
+                          onTap: () => _copy(id, l10n.profileKryfoId),
+                          copies: _idCopies,
+                          child: Text(
+                            id.isEmpty ? '...' : id,
+                            style: HaloType.mono(
+                              size: 16,
+                              color: HaloColors.amberText,
+                            ),
+                          ),
+                        ),
+                        if (appState.sessionOnion.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Container(
+                              height: 0.5,
+                              color: HaloColors.line,
+                            ),
+                          ),
+                          _CopyRow(
+                            onTap: () => _copy(
+                              appState.sessionOnion,
+                              l10n.profileOnionAddress,
+                              onion: true,
+                            ),
+                            copies: _onionCopies,
+                            child: Text(
+                              appState.sessionOnion,
+                              style: HaloType.mono(
+                                size: 10.5,
+                                color: HaloColors.text2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // a tier read after the intro grows in rather than
+                // pushing the sections under it down at once
+                Unfold(
+                  open: hasBadge,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _CopyRow(
-                        onTap: () => _copy(id, l10n.profileKryfoId),
-                        copies: _idCopies,
-                        child: Text(
-                          id.isEmpty ? '...' : id,
-                          style: HaloType.mono(
-                            size: 16,
-                            color: HaloColors.amberText,
-                          ),
+                      _reveal(2, _Section(l10n.profileSupporterBadge)),
+                      _reveal(
+                        2,
+                        HaloGroup(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: Row(
+                                children: [
+                                  _badgePill(_tier, glow: true),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.profileYouAreAThank(tierKey(_tier)),
+                                      style: HaloType.sans(
+                                        size: 13,
+                                        color: HaloColors.text2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // the switch flips at once; the save follows
+                            HaloRow(
+                              icon: Icons.verified_outlined,
+                              label: l10n.profileShowMyBadge,
+                              hint: l10n.profileOnMyOwnScreens,
+                              toggled: _showSelf,
+                              onTap: () {
+                                final v = !_showSelf;
+                                setState(() => _showSelf = v);
+                                if (v) _glow();
+                                saveShowBadgeSelf(v, session.container);
+                              },
+                            ),
+                            HaloRow(
+                              icon: Icons.people_outline,
+                              label: l10n.profileLetContactsSeeIt,
+                              hint: l10n.profileOffByDefault,
+                              toggled: _share,
+                              onTap: () {
+                                final v = !_share;
+                                setState(() => _share = v);
+                                saveShareBadge(v, session.container);
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                      if (appState.sessionOnion.isNotEmpty) ...[
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Container(height: 0.5, color: HaloColors.line),
-                        ),
-                        _CopyRow(
-                          onTap: () => _copy(
-                            appState.sessionOnion,
-                            l10n.profileOnionAddress,
-                            onion: true,
-                          ),
-                          copies: _onionCopies,
-                          child: Text(
-                            appState.sessionOnion,
-                            style: HaloType.mono(
-                              size: 10.5,
-                              color: HaloColors.text2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
 
-              // a tier read after the intro grows in rather than
-              // pushing the sections under it down at once
-              Unfold(
-                open: hasBadge,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _reveal(2, _Section(l10n.profileSupporterBadge)),
-                    _reveal(
-                      2,
-                      HaloGroup(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(14),
-                            child: Row(
-                              children: [
-                                _badgePill(_tier, glow: true),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    l10n.profileYouAreAThank(tierKey(_tier)),
-                                    style: HaloType.sans(
-                                      size: 13,
-                                      color: HaloColors.text2,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // the switch flips at once; the save follows
-                          HaloRow(
-                            icon: Icons.verified_outlined,
-                            label: l10n.profileShowMyBadge,
-                            hint: l10n.profileOnMyOwnScreens,
-                            toggled: _showSelf,
-                            onTap: () {
-                              final v = !_showSelf;
-                              setState(() => _showSelf = v);
-                              if (v) _glow();
-                              saveShowBadgeSelf(v, session.container);
-                            },
-                          ),
-                          HaloRow(
-                            icon: Icons.people_outline,
-                            label: l10n.profileLetContactsSeeIt,
-                            hint: l10n.profileOffByDefault,
-                            toggled: _share,
-                            onTap: () {
-                              final v = !_share;
-                              setState(() => _share = v);
-                              saveShareBadge(v, session.container);
-                            },
-                          ),
-                        ],
+                _reveal(3, _Section(l10n.profileShareConnect)),
+                // the same rows as settings: one surface, a tile per row
+                _reveal(
+                  3,
+                  HaloGroup(
+                    children: [
+                      HaloRow(
+                        icon: Icons.qr_code_2_outlined,
+                        label: l10n.profileMyKryfoCode,
+                        onTap: () =>
+                            deskPush(context, haloRoute(const MyKryfoScreen())),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-
-              _reveal(3, _Section(l10n.profileShareConnect)),
-              // the same rows as settings: one surface, a tile per row
-              _reveal(
-                3,
-                HaloGroup(
-                  children: [
-                    HaloRow(
-                      icon: Icons.qr_code_2_outlined,
-                      label: l10n.profileMyKryfoCode,
-                      onTap: () =>
-                          deskPush(context, haloRoute(const MyKryfoScreen())),
-                    ),
-                    HaloRow(
-                      icon: Icons.person_add_outlined,
-                      label: l10n.profileAddContact,
-                      onTap: () => showAddContact(context),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              // the play build's way is a tip through google play, and its
-              // words never name another
-              if (kPlayBuild) ...[
-                _reveal(4, _Section(l10n.tipsTitle)),
-                _reveal(
-                  4,
-                  _SupportCard(
-                    label: l10n.tipsProfileCard,
-                    onTap:
-                        widget.onOpenSupport ??
-                        () => deskPush(context, haloRoute(const TipScreen())),
+                      HaloRow(
+                        icon: Icons.person_add_outlined,
+                        label: l10n.profileAddContact,
+                        onTap: () => showAddContact(context),
+                      ),
+                    ],
                   ),
                 ),
-              ] else ...[
-                _reveal(
-                  4,
-                  _Section(
-                    hasBadge ? l10n.profileGiveAgain : l10n.profileSupportKryfo,
+                const SizedBox(height: 24),
+                // the play build's way is a tip through google play, and its
+                // words never name another
+                if (kPlayBuild) ...[
+                  _reveal(4, _Section(l10n.tipsTitle)),
+                  _reveal(
+                    4,
+                    _SupportCard(
+                      label: l10n.tipsProfileCard,
+                      onTap:
+                          widget.onOpenSupport ??
+                          () => deskPush(context, haloRoute(const TipScreen())),
+                    ),
                   ),
-                ),
-                _reveal(
-                  4,
-                  _SupportCard(
-                    label: hasBadge
-                        ? l10n.profileKryfoRunsOnWhat
-                        : l10n.profileKeepKryfoIndependent,
-                    onTap:
-                        widget.onOpenSupport ??
-                        () =>
-                            deskPush(context, haloRoute(const DonateScreen())),
+                ] else ...[
+                  _reveal(
+                    4,
+                    _Section(
+                      hasBadge
+                          ? l10n.profileGiveAgain
+                          : l10n.profileSupportKryfo,
+                    ),
                   ),
-                ),
+                  _reveal(
+                    4,
+                    _SupportCard(
+                      label: hasBadge
+                          ? l10n.profileKryfoRunsOnWhat
+                          : l10n.profileKeepKryfoIndependent,
+                      onTap:
+                          widget.onOpenSupport ??
+                          () => deskPush(
+                            context,
+                            haloRoute(const DonateScreen()),
+                          ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

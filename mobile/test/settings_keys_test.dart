@@ -37,6 +37,9 @@ const _apart = {
   // landed (heal.dart)
   'restore.after',
   'restore.cut',
+  // a linked device's lock state key: its own end, read before any unlock
+  // (devices/linked_lock.dart)
+  'linked_lock_key',
 };
 
 void main() {

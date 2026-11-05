@@ -9,12 +9,15 @@ put you in danger, read all of it.
   a tor connection, or a bridge when tor is blocked, not who you talk to or
   what you say. fast mode, which you can choose, skips tor for speed. on
   fast your network can see that you connect to Kryfo's servers, not what
-  you send or to whom.
-- networks that block tor. automatic mode tries tor the usual way first.
-  when tor's own signals say the network cuts it off, it tries bridges one
-  at a time: what the tor project suggests (only after you say yes), the
-  built-in obfs4 bridges, snowflake and saved webtunnel lines. it keeps the
-  first that carries tor and remembers it per network type for 30 days.
+  you send or to whom. burner rooms, pair codes and first contacts still go
+  through tor on fast.
+- networks that block tor. automatic mode tries what worked on that
+  network type before, then tor the usual way. when tor's own signals say
+  the network cuts it off, it tries bridges one at a time: what the tor
+  project suggests (only after you say yes), the built-in obfs4 bridges,
+  snowflake and saved webtunnel lines, with obfs4 last where tor looks
+  blocked. it keeps the first that carries tor and remembers it per network
+  type for 30 days. this was tested in heavily censored countries.
 - the relays. messages travel through nostr relays, sealed twice with
   nip-44/59 and sent from a throwaway key to a mailbox address that belongs
   to one conversation and to nobody's identity. no relay can read them.
@@ -29,6 +32,15 @@ put you in danger, read all of it.
   people in a chat use fast mode, it can see that two ip addresses share a
   mailbox. while the first relay is down, fast mode also reaches public
   relays, through tor, never directly.
+- recorded traffic and a future quantum computer. chats between 0.6 phones
+  use post-quantum keys (pqxdh and spqr) from the first message, and older
+  chats move over once both phones run 0.6. FORWARD_SECRECY.md says what
+  that does not cover.
+- someone guessing a pair code. a pair code is eight digits: two find the
+  other phone and six are the secret, checked with cpace, so a relay or a
+  listener learns nothing it can try offline. a guess has to be made live
+  against the phone showing the code, and it stops taking answers after
+  three wrong ones.
 - server seizure. there is no central server holding a contact graph or
   message history. our relay deletes sealed messages after 14 days.
 - casual device access. the database is sqlcipher encrypted, photos,
@@ -40,8 +52,13 @@ put you in danger, read all of it.
   that: without the keys they do not open, but a file from before 0.6,
   encrypted since or not, can have left plain blocks behind, and those are
   only as gone as the storage makes them.
+  while the lock is up no photo or video frame stays decoded in memory. the
+  small blur a picture shows while it loads is sealed next to it under the
+  same key.
 - phone number correlation. there is no number or email to tie you to a real
   identity, and no address book upload.
+- strangers sending media. until you accept a request it shows only words:
+  photos and files wait, and links stay plain with no preview.
 - someone making you unlock the app. a decoy pin opens an empty Kryfo, as if
   just installed. while it is open your own account sends nothing, not even
   delivery ticks. what arrives for it is still kept, unseen, and what waits
@@ -141,10 +158,11 @@ put you in danger, read all of it.
   the keys and addresses needed to receive, and those of their linked
   devices, which shows how many they use, and whether the chat blocks
   screenshots and when that last changed.
-- a linked computer and a hidden chat. a chat hidden on the phone leaves
-  the computer as a deleted one does. one shown again comes back there with
-  its name, note and settings as they were, where a deleted chat added again
-  starts empty: the computer can tell it was hidden.
+- a linked computer and a hidden chat, once linking is switched on (it is
+  off in 0.6). a chat hidden on the phone leaves the computer as a deleted
+  one does. one shown again comes back there with its name, note and
+  settings as they were, where a deleted chat added again starts empty: the
+  computer can tell it was hidden.
 - someone who already knows you. a person who knows your three words or
   handle sees different ones in the decoy, and nothing that arrives for you
   shows while it is open.
@@ -165,8 +183,9 @@ FORWARD_SECRECY.md says what a key taken from a phone can open later.
 
 ## on a computer
 
-the linux app is a test build and runs its own identity for now. what
-Kryfo keeps on a computer is always sealed on the disk: the database,
+the linux and windows apps are test builds. a computer runs an identity of
+its own for now: linking it to your phone is built but switched off in 0.6.
+what Kryfo keeps on a computer is always sealed on the disk: the database,
 photos, voice notes, files, contacts, keys and settings, under one random
 key. that key is kept one of two ways.
 
@@ -214,6 +233,24 @@ what follows is not covered by either.
 - screenshots: a computer cannot keep Kryfo's window out of a screenshot.
 - malware running as you while Kryfo is open, or a keylogger, sees what you
   see and what you type.
+
+a computer linked to your phone (linked devices, behind a switch in 0.6):
+
+- a linked computer erases itself after 30 days without being opened, or
+  when its clock is set back. this helps with a computer you forgot.
+  someone who already has it can copy its disk first: a copy of the disk,
+  with the clock set to the copy's time, beats both rules, and Kryfo kept
+  from running counts no days at all. so remove a lost computer from your
+  phone. what stops new messages reaching it is your phone and your
+  contacts' lists: once your contacts' apps have your new list, nothing new
+  goes to it, within minutes for contacts online and later for those
+  offline. a computer kept online with a changed Kryfo stays linked until
+  you remove it.
+- a removed computer keeps what it already held, and it still knows your
+  phone's onion address, so it can tell when your phone is online.
+- restoring your phone from a backup cuts every linked computer off, but
+  cannot tell one that is away: it erases itself once it has heard nothing
+  from your phone for 30 days of being online.
 
 ## status
 

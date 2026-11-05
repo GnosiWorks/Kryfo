@@ -28,6 +28,7 @@ import '../widgets/swap.dart';
 import '../wipe.dart';
 import 'backup_screen.dart';
 import 'hide_picker.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 enum PinFlow { wipe, decoy, vault }
 
@@ -388,25 +389,29 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           scrolledUnderElevation: 0,
           iconTheme: IconThemeData(color: HaloColors.text2),
         ),
-        body: SafeArea(
-          child: AnimatedSwitcher(
-            duration: still ? Duration.zero : const Duration(milliseconds: 240),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, a) {
-              final entering = child.key == ValueKey(_step);
-              return FadeTransition(
-                opacity: a,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: Offset((entering ? 0.18 : -0.18) * from, 0),
-                    end: Offset.zero,
-                  ).animate(a),
-                  child: child,
-                ),
-              );
-            },
-            child: KeyedSubtree(key: ValueKey(_step), child: _page()),
+        body: DeskPage(
+          child: SafeArea(
+            child: AnimatedSwitcher(
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, a) {
+                final entering = child.key == ValueKey(_step);
+                return FadeTransition(
+                  opacity: a,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: Offset((entering ? 0.18 : -0.18) * from, 0),
+                      end: Offset.zero,
+                    ).animate(a),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(key: ValueKey(_step), child: _page()),
+            ),
           ),
         ),
       ),

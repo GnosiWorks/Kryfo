@@ -9656,7 +9656,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای گوگل سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. رله‌ی ما فقط نشانی‌هایی را نگه می‌دارد که نمی‌تواند به هم ربط دهد. سرویس اعلان فوری روی همان سرور اجرا می‌شود و می‌تواند آن‌ها را به هم ربط دهد، و با کمک گوگل به حساب گوگل شما هم، پس هر کسی که سرور ما را اداره یا توقیف کند هم می‌تواند. اگر این برایتان مهم است، راه دیگری انتخاب کنید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
+      'بیداری‌های جعلی هم قاطی می‌شوند و این کار را برای گوگل سخت‌تر می‌کند که بفهمد پیام‌های واقعی کِی می‌رسند. رله‌ی ما فقط نشانی‌هایی را نگه می‌دارد که نمی‌تواند به هم ربط دهد. سرویس اعلان فوری روی سرور دوم ما اجرا می‌شود. این دو سرور با هم می‌توانند آن‌ها را به هم ربط دهند، و با کمک گوگل به حساب گوگل شما هم. توقیف یکی از آن‌ها کافی نیست، اما هر دو را ما اداره می‌کنیم، پس ما می‌توانیم. اگر این برایتان مهم است، راه دیگری انتخاب کنید. گفتگوهای پنهان، اتاق‌های بعد از چند تای اول، و گاهی یک مخاطب معمولی، حدوداً یک ماه از هر پنج ماه، منتظر سرکشی‌ای می‌مانند که Kryfo همچنان هر ۱۵ دقیقه انجام می‌دهد.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11146,7 +11146,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند.';
+    return '⁨$name⁩ برای ادامه‌ی گفتگو باید Kryfo را به‌روز کند';
   }
 
   @override
@@ -11273,6 +11273,120 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'فعلاً نه';
+
+  @override
+  String get unlinkedTitle => 'این دستگاه جدا شد';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'گوشی‌تان آن را از حساب‌تان حذف کرد، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      '۳۰ روز باز نشد، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedSilentLine =>
+      '۳۰ روز هیچ خبری از گوشی‌تان نگرفت، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedClockLine =>
+      'ساعتش به عقب برگردانده شد، پس Kryfo برای امن ماندن گفت‌وگوهایتان هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo نتوانست بفهمد آخرین بار کی باز شده، پس برای امن ماندن گفت‌وگوهایتان هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'خودتان جدایش کردید، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'گفت‌وگوهایتان روی گوشی‌تان می‌ماند. برای استفادهٔ دوباره از Kryfo اینجا، این دستگاه را به گوشی‌تان پیوند دهید.';
+
+  @override
+  String get unlinkedClose => 'بستن Kryfo';
+
+  @override
+  String get devicesLeave => 'جدا کردن این دستگاه';
+
+  @override
+  String get devicesLeaveTitle => 'این دستگاه جدا شود؟';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo به گوشی‌تان خبر می‌دهد و هر چه اینجا نگه داشته پاک می‌کند. گفت‌وگوهایتان روی گوشی‌تان می‌ماند.';
+
+  @override
+  String get devicesLeaveYes => 'جدا کن و پاک کن';
+
+  @override
+  String get devicesGoneNotice => 'دستگاه حذف شد';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '⁨$name⁩ در ⁨$date⁩ از حساب‌تان حذف شد.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '⁨$name⁩ ۳۰ روز استفاده نشد، پس در ⁨$date⁩ از حساب‌تان حذف شد.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '⁨$name⁩ در ⁨$date⁩ خودش جدا شد و هر چه نگه داشته بود پاک کرد.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'دستگاه‌هایتان تغییر کرد';
+
+  @override
+  String get devicesChangedLine =>
+      'برای دیدن تغییرها دستگاه‌های پیوندخورده را باز کنید.';
+
+  @override
+  String get devicesUnknownNotice => 'دستگاهی که جای دیگری پیوند خورد';
+
+  @override
+  String get devicesUnknownLine =>
+      'نسخهٔ دیگری از Kryfo دستگاهی را به حساب‌تان پیوند داد. این گوشی آن را از فهرست‌تان برداشت.';
+
+  @override
+  String get albumPrevious => 'قبلی';
+
+  @override
+  String get albumNext => 'بعدی';
+
+  @override
+  String get notesHoldHintDesk =>
+      'برای کپی یا حذف، روی یادداشت راست‌کلیک کنید.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'هنوز چیزی این‌جا سنجاق نشده. روی پیامی راست‌کلیک کنید و «سنجاق» را انتخاب کنید تا این‌جا برای همه‌ی اعضای گفت‌وگو بماند.';
+
+  @override
+  String get chatGalleryDesk => 'تصویرها';
+
+  @override
+  String get groupChatGalleryDesk => 'تصویرها';
+
+  @override
+  String get photoChooseDesk => 'انتخاب فایل تصویر';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'از یک فایل تصویر';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'صدا';
+
+  @override
+  String get notificationsPlaySound => 'پخش صدا';
+
+  @override
+  String get notificationsPlaySoundHint => 'با هر اعلان روی این رایانه';
 
   @override
   String bridgesShareBridgeN(String n) {

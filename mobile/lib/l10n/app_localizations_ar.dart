@@ -9783,7 +9783,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على Google معرفة متى تصل الرسائل الحقيقية. لا يخزّن مُرحِّلنا إلا عناوين لا يستطيع الربط بينها. تعمل خدمة الإشعارات الفورية على الخادم نفسه ويمكنها الربط بينها، وبمساعدة Google بحسابك على Google أيضًا، لذا يستطيع ذلك أيضًا من يدير خادمنا أو يصادره. إن كان هذا يهمّك، فاختر طريقة أخرى. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
+      'تُخلط إيقاظات زائفة بالحقيقية، فيصعب على Google معرفة متى تصل الرسائل الحقيقية. لا يخزّن مُرحِّلنا إلا عناوين لا يستطيع الربط بينها. تعمل خدمة الإشعارات الفورية على خادمنا الثاني. يستطيع الخادمان معًا الربط بينها، وبمساعدة Google بحسابك على Google أيضًا. مصادرة أحدهما لا تكفي، لكننا نُدير الاثنين، فنستطيع نحن ذلك. إن كان هذا يهمّك، فاختر طريقة أخرى. المحادثات المخفية، والغرف بعد الأوائل منها، وأحيانًا جهة اتصال عادية، نحو شهر من كل خمسة، تنتظر التفقّد الذي يواصل Kryfo إجراءه كل ١٥ دقيقة.';
 
   @override
   String get notificationsGoogleRefused =>
@@ -11278,7 +11278,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return 'يحتاج ⁨$name⁩ إلى تحديث Kryfo لمتابعة المحادثة.';
+    return 'يحتاج ⁨$name⁩ إلى تحديث Kryfo لمتابعة المحادثة';
   }
 
   @override
@@ -11404,6 +11404,119 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceNotNow => 'ليس الآن';
+
+  @override
+  String get unlinkedTitle => 'فُصل هذا الجهاز';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'أزاله هاتفك من حسابك، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'لم يُفتح منذ 30 يومًا، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'لم يسمع من هاتفك 30 يومًا، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedClockLine =>
+      'أُرجعت ساعته إلى الوراء، لذا مسح Kryfo كل ما كان يحفظه هنا ليحمي محادثاتك.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'لم يتمكن Kryfo من معرفة متى فُتح آخر مرة، لذا مسح كل ما كان يحفظه هنا ليحمي محادثاتك.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'فصلته بنفسك، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'يحتفظ هاتفك بمحادثاتك. لتستخدم Kryfo هنا من جديد، اربط هذا الجهاز بهاتفك.';
+
+  @override
+  String get unlinkedClose => 'أغلق Kryfo';
+
+  @override
+  String get devicesLeave => 'افصل هذا الجهاز';
+
+  @override
+  String get devicesLeaveTitle => 'أتفصل هذا الجهاز؟';
+
+  @override
+  String get devicesLeaveLine =>
+      'يُعلم Kryfo هاتفك ويمسح كل ما يحفظه هنا. يحتفظ هاتفك بمحادثاتك.';
+
+  @override
+  String get devicesLeaveYes => 'افصل وامسح';
+
+  @override
+  String get devicesGoneNotice => 'أُزيل جهاز';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return 'أُزيل ⁨$name⁩ من حسابك في ⁨$date⁩.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return 'لم يُستخدم ⁨$name⁩ منذ 30 يومًا، لذا أُزيل من حسابك في ⁨$date⁩.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return 'فصل ⁨$name⁩ نفسه في ⁨$date⁩ ومسح ما كان يحفظه.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'تغيّرت أجهزتك';
+
+  @override
+  String get devicesChangedLine => 'افتح الأجهزة المرتبطة لترى ما تغيّر.';
+
+  @override
+  String get devicesUnknownNotice => 'جهاز رُبط من مكان آخر';
+
+  @override
+  String get devicesUnknownLine =>
+      'ربطت نسخة أخرى من Kryfo جهازًا بحسابك. أزاله هذا الهاتف من قائمتك.';
+
+  @override
+  String get albumPrevious => 'السابق';
+
+  @override
+  String get albumNext => 'التالي';
+
+  @override
+  String get notesHoldHintDesk =>
+      'انقر بزر الفأرة الأيمن على ملاحظة لنسخها أو حذفها.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'لا شيء مثبّت هنا بعد. انقر بزر الفأرة الأيمن على رسالة واختر «تثبيت»، فتنتظر هنا للجميع في المحادثة.';
+
+  @override
+  String get chatGalleryDesk => 'الصور';
+
+  @override
+  String get groupChatGalleryDesk => 'الصور';
+
+  @override
+  String get photoChooseDesk => 'اختر ملف صورة';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'من ملف صورة';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'الصوت';
+
+  @override
+  String get notificationsPlaySound => 'تشغيل صوت';
+
+  @override
+  String get notificationsPlaySoundHint => 'مع كل إشعار على هذا الحاسوب';
 
   @override
   String bridgesShareBridgeN(String n) {

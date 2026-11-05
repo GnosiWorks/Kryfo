@@ -161,6 +161,7 @@ type devArgs struct {
 	PQ           bool     `json:"pq"`
 	Contact      string   `json:"contact"`
 	NoOwn        bool     `json:"no_own"`
+	Peek         bool     `json:"peek"`
 	Peers        []string `json:"peers"`
 	Keep         []string `json:"keep"`
 	Held         []struct {
@@ -225,6 +226,8 @@ func devCallJSON(op, raw string) string {
 			return devAnswer(out, err)
 		}
 		devCur = d
+		// a new state starts with no leaving keys: the rows set them again
+		devLeavingReset()
 		out.Claimants, out.Skipped = keysOut(claimants), skipped
 		return devAnswer(out, nil)
 	}
@@ -296,6 +299,12 @@ func (d *devState) call(op string, a *devArgs, out *devOut) error {
 		return nil
 	case "own_above":
 		return d.ownAbove(a, out)
+	case "own_remove":
+		return d.ownRemove(a, out)
+	case "own_restored":
+		return d.ownRestored(a, out)
+	case "own_leaving":
+		return d.ownLeaving(a)
 	case "drop_peers":
 		return d.dropPeers(a, out)
 	case "listen_keys":
@@ -434,7 +443,7 @@ func (d *devState) fanout(a *devArgs, out *devOut) error {
 		return devices.ErrUnknown
 	}
 	sc, sm := d.snap(contact), d.snap(mine)
-	f := &devices.Fanout{Book: d.book, Own: d.own, Quiet: d.quiet}
+	f := &devices.Fanout{Book: d.book, Own: d.own, Quiet: d.quiet, Peek: a.Peek}
 	// a hidden chat's copies go to the contact's devices, never mine
 	if a.NoOwn {
 		f.Own = nil

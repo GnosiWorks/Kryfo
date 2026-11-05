@@ -23,7 +23,7 @@ import 'package:kryfo/desk_bridge_line.dart';
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/desktop/desktop_run.dart';
 import 'package:kryfo/desktop/desktop_start.dart'
-    show startedHidden, trayBeforeOpen, trayWords;
+    show quietDetails, startedHidden, trayBeforeOpen, trayWords;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show LockGuard;
 import 'package:kryfo/lock_state.dart';
@@ -622,6 +622,39 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
+    testWidgets('a computer: a sound switch, kept, read by every post', (
+      t,
+    ) async {
+      await _world(t);
+      onDesktop = true;
+      addTearDown(() => deskSound.value = true);
+      desktopRun = _run(_Kv(), _Tray(), _Place());
+      await t.pumpWidget(devApp(const NotificationsScreen(), still: true));
+      await _settle(t);
+      expect(
+        find.text(l10n.notificationsSoundAndVibrationDesk),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.notificationsPlaySound), findsOneWidget);
+      expect(find.text(l10n.notificationsPlaySoundHint), findsOneWidget);
+      expect(quietDetails().suppressSound, isFalse);
+      await t.tap(find.text(l10n.notificationsPlaySound));
+      await _settle(t);
+      expect(deskSound.value, isFalse);
+      expect(quietDetails().suppressSound, isTrue);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('desk_sound'), isFalse);
+      // the next start reads it back
+      deskSound.value = true;
+      await readDeskSound();
+      expect(deskSound.value, isFalse);
+      await t.tap(find.text(l10n.notificationsPlaySound));
+      await _settle(t);
+      expect(deskSound.value, isTrue);
+      expect(prefs.getBool('desk_sound'), isTrue);
+      await t.pumpWidget(const SizedBox());
+    });
+
     testWidgets('the phone: the modes, sound and battery, no tray', (t) async {
       await _world(t);
       await t.pumpWidget(devApp(const NotificationsScreen(), still: true));
@@ -631,6 +664,7 @@ void main() {
       }
       expect(find.text(l10n.desktopRunSection), findsNothing);
       expect(find.text(l10n.desktopTrayRow), findsNothing);
+      expect(find.text(l10n.notificationsPlaySound), findsNothing);
       await t.pumpWidget(const SizedBox());
     });
   });

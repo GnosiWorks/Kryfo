@@ -11,6 +11,9 @@ import '../desktop/desktop_mode.dart' show onDesktop;
 /// the widest a chat's thread and composer get
 const kReadWidth = 720.0;
 
+/// the widest a photo tile in a grid gets on a computer
+const kDeskTile = 160.0;
+
 /// the thread: [builder] gets the room to leave on each side, and below it
 /// the screen reads as [kReadWidth] wide, so bubbles size to the column
 class ReadWidth extends StatelessWidget {
