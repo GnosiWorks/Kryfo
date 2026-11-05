@@ -15,6 +15,7 @@ const _buildPaths = [
   '../BUILDING.md',
   '../README.md',
   '../RELEASING.md',
+  '../.github',
   '../repro',
   '../packaging',
   '../fdroid',

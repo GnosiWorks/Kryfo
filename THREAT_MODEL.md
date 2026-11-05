@@ -250,7 +250,12 @@ a computer linked to your phone (linked devices):
   its own, so tor and the relays can tell it from a phone. it never adds
   contacts, makes invites, holds hidden chats or a decoy, or changes a
   group: those stay on the phone. a whole chat deleted or cleared, or a
-  block, on the computer stays on the computer.
+  block, on the computer stays on the computer. a single message deleted
+  there, or a timed one opened there, goes on the phone too.
+- your contacts' apps do not show when you link or remove a device: they go
+  by the list your phone signs. someone who takes your phone's keys can
+  sign a list with a device of their own on it and be sent a copy of what
+  your contacts write to you, and nothing in their app shows it.
 - the keys of a link and of a history copy are erased once they are done,
   but the engine that holds them cannot clear every copy of them from
   memory: until Kryfo stops they can stay there, and reach the disk
