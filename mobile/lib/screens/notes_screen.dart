@@ -22,6 +22,12 @@ import '../widgets/attach_grid.dart';
 import '../widgets/note_media.dart';
 import '../widgets/photo_shape.dart' show PhotoLedWidth, photoMaxWidth;
 import '../widgets/voice_mic.dart' show HoldToTalkMic, VoiceTake;
+import '../gifs/gif_engine.dart' show appGifTabs;
+import '../stickers/sticker_pack.dart' show StickerLibrary;
+import '../stickers/sticker_sheet.dart'
+    show GifPick, PhoneGifPick, StickerButton, StickerPick, showStickerSheet;
+import '../stickers/sticker_wire.dart' show StickerWire;
+import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 import 'camera_screen.dart';
 import 'media_send_screen.dart';
 import '../widgets/desk_menu.dart';
@@ -413,6 +419,12 @@ class _NotesScreenState extends State<NotesScreen> {
             onTap: _gallery,
           ),
           AttachItem(
+            icon: (c) => Icon(Icons.videocam_outlined, color: c),
+            tint: HaloColors.rose,
+            label: l10n.chatVideo,
+            onTap: _video,
+          ),
+          AttachItem(
             icon: (c) => Icon(Icons.gif_box_outlined, color: c),
             tint: HaloColors.violet,
             label: l10n.chatGifFromPhoneShown,
@@ -489,6 +501,52 @@ class _NotesScreenState extends State<NotesScreen> {
       } else if (photo != null) {
         await _add(() => readyNotePhoto(photo), caption: caption);
       }
+    }
+  }
+
+  // its own tile, as in a chat: without android's photo picker the
+  // gallery is photos only
+  Future<void> _video() async {
+    final x = await lockState.hold(
+      () => ImagePicker().pickVideo(source: ImageSource.gallery),
+    );
+    if (x == null) return;
+    try {
+      if (!mounted) return;
+      await sendGalleryPicks(
+        [x],
+        videos: true,
+        pickMore: () => lockState.hold(pickGallery),
+        preview: _preview,
+        send: _keepPicked,
+      );
+    } finally {
+      await shredPickedImages([x]);
+    }
+  }
+
+  // the chat's sheet: a sticker, a found gif, or a gif from this device
+  Future<void> _stickers() async {
+    final pick = await showStickerSheet(
+      context,
+      container: session.container,
+      gifs: appGifTabs(),
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (pick == null || !mounted) return;
+    if (pick is GifPick) return _add(() => readyNoteGif(pick.bytes));
+    if (pick is PhoneGifPick) return _gif();
+    if (pick is! StickerPick) return;
+    try {
+      final lib = StickerLibrary.ready ?? await StickerLibrary.load();
+      final pack = lib.pack(pick.ref.pack);
+      final st = pack?.sticker(pick.ref.id);
+      if (pack == null || st == null || !mounted) return;
+      await keepNoteSticker(StickerWire.of(pack, st), st.emoji);
+      HapticFeedback.lightImpact();
+      await _load();
+    } catch (e) {
+      dlog('notes: a sticker not kept (${e.runtimeType})');
     }
   }
 
@@ -846,7 +904,8 @@ class _NotesScreenState extends State<NotesScreen> {
                             maxWidth: photoMaxWidth(context),
                           )
                         : null,
-                    text: text,
+                    // a sticker says its emoji alone, never under it
+                    text: StickerWire.parse(n['sticker']) == null ? text : '',
                     time: ts == 0
                         ? ''
                         : _noteTime(
@@ -1034,6 +1093,12 @@ class _NotesScreenState extends State<NotesScreen> {
                           isDense: true,
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 8,
+                          ),
+                          // stickers and gifs, inside the field as in a chat
+                          suffixIcon: StickerButton(onTap: _stickers),
+                          suffixIconConstraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 36,
                           ),
                         ),
                       ),

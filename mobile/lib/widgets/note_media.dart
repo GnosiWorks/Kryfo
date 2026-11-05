@@ -12,6 +12,8 @@ import '../dlog.dart';
 import '../file_kind.dart' show FileShape, fileShapeNow;
 import '../gifs/gif_picture.dart' show ChatPicture;
 import '../l10n/l10n.dart';
+import '../stickers/sticker_bubble.dart' show StickerBubble;
+import '../stickers/sticker_wire.dart' show StickerWire;
 import '../theme.dart';
 import '../voice_format.dart' show isVoiceName;
 import 'decode_px.dart' show screenPx;
@@ -29,7 +31,9 @@ Object notePhotoTag(String path) => photoHeroTag(path, 'notes');
 
 /// whether note row [n] holds more than words
 bool noteHasMedia(Map<String, Object?> n) =>
-    n['media_path'] is String || n['file_path'] is String;
+    n['media_path'] is String ||
+    n['file_path'] is String ||
+    StickerWire.parse(n['sticker']) != null;
 
 /// a note's photo, gif, video, file or voice note, [maxWidth] wide at most
 class NoteMedia extends StatelessWidget {
@@ -43,6 +47,16 @@ class NoteMedia extends StatelessWidget {
     final media = note['media_path'] as String?;
     final file = note['file_path'] as String?;
     final name = note['file_name'] as String?;
+    final sticker = StickerWire.parse(note['sticker']);
+    if (sticker != null) {
+      return StickerBubble(
+        key: ValueKey('note-sticker-${note['msg_uid']}'),
+        wire: sticker,
+        emoji: note['plaintext'] as String? ?? '',
+        isOut: false,
+        seed: note['msg_uid'] as String? ?? '',
+      );
+    }
     if (file != null && isVoiceName(name)) {
       return VoiceBubble(
         key: ValueKey('note-voice-$file'),

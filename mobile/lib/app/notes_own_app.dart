@@ -161,8 +161,14 @@ extension AppStateNotes on AppState {
     final name = row['file_name'] as String?;
     Future<bool> go(String frame, {OwnPeer? only}) =>
         own.copy(kMainIdent, kOwnNotes, frame, only: only);
+    final sticker = StickerWire.parse(row['sticker']);
     if (path == null) {
-      final f = await wrapMessage(text, msgUid: uid, writtenAt: written);
+      final f = await wrapMessage(
+        text,
+        msgUid: uid,
+        writtenAt: written,
+        sticker: sticker?.value,
+      );
       return await go(f) ? 'ok' : 'later';
     }
     final voice = isVoiceName(name);
@@ -254,7 +260,6 @@ extension AppStateNotes on AppState {
         env.vote != null ||
         env.pollClose != null ||
         env.poll != null ||
-        env.sticker != null ||
         env.intro != null ||
         env.need != null ||
         env.replyTo != null ||
@@ -267,6 +272,19 @@ extension AppStateNotes on AppState {
     final uid = sliced ? env.mediaId : env.msgUid;
     if (uid == null || uid.isEmpty || uid.length > 128) return false;
     if (await live.messageExists(uid) || await _ownGoneHas(uid)) return false;
+    // a sticker is a sticker alone, as in a chat
+    final sticker = StickerWire.parse(env.sticker);
+    if (env.sticker != null) {
+      if (sticker == null || sliced || env.drop != null) return false;
+      if (env.imageB64 != null || env.fileB64 != null) return false;
+      if (env.fileName != null) return false;
+      return _keepOwnNote(
+        env,
+        uid,
+        sticker: sticker,
+        text: stickerText(sticker, env.message, await _stickers()),
+      );
+    }
     if (env.drop != null) return _ownNoteDrop(env, frame, uid);
     final got = await _ownMediaIn(env, uid);
     if (got == null) return false;
@@ -287,14 +305,19 @@ extension AppStateNotes on AppState {
     String? mediaPath,
     String? filePath,
     bool unsaved = false,
+    StickerWire? sticker,
+    String? text,
   }) async {
-    final text = unsaved
+    if (text != null) {
+      return _keepOwnText(env, uid, text, sticker: sticker);
+    }
+    final words = unsaved
         ? [
             env.message,
             l10n.appAnAttachmentCouldNotShown,
           ].where((s) => s.trim().isNotEmpty).join('\n')
         : env.message;
-    if (text.trim().isEmpty && mediaPath == null && filePath == null) {
+    if (words.trim().isEmpty && mediaPath == null && filePath == null) {
       return false;
     }
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -304,7 +327,7 @@ extension AppStateNotes on AppState {
     await live.saveMessage(
       kOwnNotes.id,
       'in',
-      text,
+      words,
       msgUid: uid,
       mediaPath: mediaPath,
       filePath: filePath,
@@ -314,6 +337,30 @@ extension AppStateNotes on AppState {
     );
     final shown = mediaPath ?? filePath;
     if (shown != null) makeBlurSoon(shown);
+    notesMoved.value++;
+    return true;
+  }
+
+  // a sticker of mine kept on another device, under its emoji here
+  Future<bool> _keepOwnText(
+    UnwrappedMessage env,
+    String uid,
+    String text, {
+    StickerWire? sticker,
+  }) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final written = env.writtenAt != null && env.writtenAt! <= now
+        ? env.writtenAt!
+        : now;
+    await live.saveMessage(
+      kOwnNotes.id,
+      'in',
+      text,
+      msgUid: uid,
+      sticker: sticker?.value,
+      sentAt: now,
+      writtenAt: written,
+    );
     notesMoved.value++;
     return true;
   }

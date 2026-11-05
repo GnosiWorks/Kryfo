@@ -29,6 +29,7 @@ import 'photo_blur.dart' show makeBlurSoon;
 import 'picked.dart' show placeVoice;
 import 'sent_name.dart' show sentFileName;
 import 'shred.dart' show shredFile;
+import 'stickers/sticker_wire.dart' show StickerWire;
 import 'voice_format.dart' show kVoiceWav;
 import 'voice_length.dart' show voiceFileMs;
 import 'voice_opus.dart' show voiceForWire;
@@ -160,6 +161,19 @@ Future<void> keepNoteItem(NoteItem item, {String caption = ''}) async {
 // owed to my devices, once own sync runs at all
 Future<void> _owed(String uid) async {
   if (ownSync != null) await notesApp.ownNoteKept(uid);
+}
+
+/// a sticker kept in note to self under its [emoji], owed to my devices
+Future<void> keepNoteSticker(StickerWire sticker, String emoji) async {
+  final uid = newMsgUid();
+  await session.saveMessage(
+    kOwnNotes.id,
+    'in',
+    emoji,
+    msgUid: uid,
+    sticker: sticker.value,
+  );
+  await _owed(uid);
 }
 
 /// words kept in note to self, owed to my devices

@@ -53,6 +53,7 @@ import 'package:kryfo/phone_seal.dart';
 import 'package:kryfo/photo_blur.dart' show blurPathOf, resetBlursForTest;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/stickers/sticker_wire.dart' show StickerWire;
 import 'package:kryfo/widgets/media_bubbles.dart' show fileTooBigLine;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -501,6 +502,15 @@ void main() {
       );
     }, skip: skip);
 
+    test('a sticker goes as a sticker', () async {
+      await keepNoteSticker(StickerWire.parse('fokia:3:1')!, '🙂');
+      await ownNotesGoForTest();
+      final b = _body(mine.copies.single.frame);
+      expect(b['st'], 'fokia:3:1');
+      expect(b['m'], '🙂');
+      expect((await notes()).single['sticker'], 'fokia:3:1');
+    }, skip: skip);
+
     test('with no device of mine nothing waits for one', () async {
       mine.to = [];
       await keepNoteWords('alone');
@@ -526,7 +536,6 @@ void main() {
           {'q': 'n-1'},
           {'b': 30},
           {'g': 'g1'},
-          {'st': 'fokia:1:1'},
           {
             'ed': {'u': 'n-1', 'm': 'x'},
           },
@@ -546,6 +555,29 @@ void main() {
       },
       skip: skip,
     );
+
+    test('a sticker is filed as a sticker, under its emoji; one that rides '
+        'with a picture is not', () async {
+      expect(
+        await copy(_f({'u': 'n-st', 'm': '🙂', 'st': 'fokia:3:1'})),
+        isTrue,
+      );
+      final r = (await notes()).single;
+      expect(r['sticker'], 'fokia:3:1');
+      expect(r['media_path'], isNull);
+      expect(
+        await copy(
+          _f({
+            'u': 'n-st2',
+            'm': '',
+            'st': 'fokia:3:1',
+            'i': base64Encode([1]),
+          }),
+        ),
+        isFalse,
+      );
+      expect(await notes(), hasLength(1));
+    }, skip: skip);
 
     test('a note in slices is put together once, sealed in the media '
         'folder', () async {

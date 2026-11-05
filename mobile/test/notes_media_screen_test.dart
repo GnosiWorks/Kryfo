@@ -25,6 +25,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/notes_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/stickers/sticker_sheet.dart' show StickerButton;
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/note_media.dart';
 import 'package:kryfo/widgets/photo_shape.dart';
@@ -167,6 +168,8 @@ void main() {
     await page(t, const []);
     expect(find.bySemanticsLabel(l10n.notesAddItem), findsOneWidget);
     expect(find.byType(HoldToTalkMic), findsOneWidget);
+    // stickers and gifs, inside the field as in a chat
+    expect(find.byType(StickerButton), findsOneWidget);
     await t.enterText(find.byType(TextField), 'buy bread');
     await t.pump(const Duration(milliseconds: 400));
     await t.pump(const Duration(milliseconds: 400));
