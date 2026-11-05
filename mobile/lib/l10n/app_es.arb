@@ -169,6 +169,8 @@
   "appTorReady": "Tor listo",
   "appConnecting2": "Conectando",
   "appWaitingForARelay": "Esperando un repetidor",
+  "appStartingTorPct": "Iniciando Tor · {pct}",
+  "appGettingNewMessages": "Recibiendo mensajes nuevos",
   "mediaProgressSendingKeepTheApp": "Enviando · {v} · deja la app abierta",
   "mediaProgressPausedOfWaitingFor": "En pausa · {count} de {count2} · esperando el resto",
   "mediaProgressReceivingMedia": "Recibiendo multimedia · {v}",

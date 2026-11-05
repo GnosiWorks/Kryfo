@@ -692,6 +692,14 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appWaitingForARelay => 'در انتظار رله';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return 'راه‌اندازی Tor · ⁨$pct⁩';
+  }
+
+  @override
+  String get appGettingNewMessages => 'در حال دریافت پیام‌های تازه';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return 'در حال ارسال · ⁨$v⁩ · برنامه را باز نگه دارید';
   }

@@ -3,6 +3,10 @@
 
 part of '../main.dart';
 
+// how many of the chats on top of the list pick the batch that asks first
+// at the start
+const kFirstChats = 5;
+
 extension AppStateReceive on AppState {
   void chatFirst(String? haloId) {
     // the dev chat's lane is its own, and nothing of it goes before it starts
@@ -205,6 +209,18 @@ extension AppStateReceive on AppState {
   }
 
   Future<void> _listenNow() async {
+    // the chats on top of the list before any runner starts, so no other
+    // socket takes the start's free turn first. the rows' own keys only:
+    // one signal has to tell waits for the next start
+    try {
+      if (!sessionQuiet) {
+        await loadIdents();
+        await pushPairSeeds();
+        await _firstChats(await live.contacts());
+      }
+    } catch (e) {
+      dlog('listen: first chats not read (${e.runtimeType})');
+    }
     // rooms first, on their own: a hang anywhere in the contact loop
     // below must not leave a live room deaf after a restart.
     try {
@@ -442,6 +458,37 @@ extension AppStateReceive on AppState {
     } catch (e) {
       // the order only: everyone is listened on all the same
       dlog('listen: pins not told (${e.runtimeType})');
+    }
+  }
+
+  // the chats on top of the list, pinned and then the latest (the rows
+  // come by last seen): their batch asks first at the start. everyday
+  // chats only, so no hidden key goes in
+  Future<void> _firstChats(List<Map<String, Object?>> rows) async {
+    final top = [
+      for (final r in rows)
+        if (r['accepted'] == 1 && r['pinned'] == 1) r,
+      for (final r in rows)
+        if (r['accepted'] == 1 && r['pinned'] != 1) r,
+    ];
+    final firsts = <(int, String)>[];
+    for (final r in top) {
+      if (firsts.length == kFirstChats) break;
+      final haloId = r['halo_id'] as String?;
+      final xPub = r['xpub'] as String?;
+      if (haloId == null || xPub == null || xPub.isEmpty) continue;
+      if (r['blocked'] == 1) continue;
+      if (_router.hidesKey(xPub) || _toldHidden.contains(xPub)) continue;
+      firsts.add((identOf(haloId), xPub));
+    }
+    final told = [for (final (i, x) in firsts) '$i:$x'].join(',');
+    if (firsts.isEmpty || told == _firstsTold) return;
+    try {
+      await _io.firstChats(firsts);
+      _firstsTold = told;
+    } catch (e) {
+      // the order only: everyone is listened on all the same
+      dlog('listen: first chats not told (${e.runtimeType})');
     }
   }
 

@@ -169,6 +169,8 @@
   "appTorReady": "Tor آماده",
   "appConnecting2": "در حال اتصال",
   "appWaitingForARelay": "در انتظار رله",
+  "appStartingTorPct": "راه‌اندازی Tor · ⁨{pct}⁩",
+  "appGettingNewMessages": "در حال دریافت پیام‌های تازه",
   "mediaProgressSendingKeepTheApp": "در حال ارسال · ⁨{v}⁩ · برنامه را باز نگه دارید",
   "mediaProgressPausedOfWaitingFor": "متوقف · ⁨{count}⁩ از ⁨{count2}⁩ · در انتظار بقیه",
   "mediaProgressReceivingMedia": "دریافت رسانه · ⁨{v}⁩",

@@ -169,6 +169,8 @@
   "appTorReady": "Tor 就緒",
   "appConnecting2": "連線中",
   "appWaitingForARelay": "正在等待中繼",
+  "appStartingTorPct": "正在啟動 Tor · {pct}",
+  "appGettingNewMessages": "正在接收新訊息",
   "mediaProgressSendingKeepTheApp": "傳送中 · {v} · 請保持應用程式開啟",
   "mediaProgressPausedOfWaitingFor": "已暫停 · {count}/{count2} · 等待其餘部分",
   "mediaProgressReceivingMedia": "正在接收媒體 · {v}",

@@ -697,6 +697,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get appWaitingForARelay => 'Aktarıcı bekleniyor';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return 'Tor açılıyor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Yeni mesajlar alınıyor';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return 'Gönderiliyor · $v · uygulamayı açık tut';
   }

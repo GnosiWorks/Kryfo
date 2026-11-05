@@ -109,6 +109,7 @@ Future<void> showAddContact(BuildContext context) async {
 
   String uri;
   if (action == 'scan') {
+    appState.warmHelloLane();
     final result = await deskPush<String>(
       context,
       haloRoute<String>(const ScanScreen()),

@@ -169,6 +169,8 @@
   "appTorReady": "Tor готовий",
   "appConnecting2": "Підключення",
   "appWaitingForARelay": "Чекаємо ретранслятор",
+  "appStartingTorPct": "Запускаємо Tor · {pct}",
+  "appGettingNewMessages": "Отримуємо нові повідомлення",
   "mediaProgressSendingKeepTheApp": "Надсилання · {v} · не закривай застосунок",
   "mediaProgressPausedOfWaitingFor": "Пауза · {count} з {count2} · чекаємо решту",
   "mediaProgressReceivingMedia": "Отримання медіа · {v}",

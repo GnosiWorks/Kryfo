@@ -714,6 +714,14 @@ class AppLocalizationsPl extends AppLocalizations {
   String get appWaitingForARelay => 'Czekam na przekaźnik';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return 'Uruchamiam Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Pobieram nowe wiadomości';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return 'Wysyłanie · $v · nie zamykaj aplikacji';
   }

@@ -714,6 +714,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get appWaitingForARelay => 'Чекаємо ретранслятор';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return 'Запускаємо Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Отримуємо нові повідомлення';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return 'Надсилання · $v · не закривай застосунок';
   }

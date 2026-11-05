@@ -694,6 +694,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appWaitingForARelay => 'Waiting for a relay';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return 'Starting Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Getting new messages';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return 'Sending · $v · keep the app open';
   }

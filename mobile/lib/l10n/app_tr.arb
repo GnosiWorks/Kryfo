@@ -169,6 +169,8 @@
   "appTorReady": "Tor hazır",
   "appConnecting2": "Bağlanıyor",
   "appWaitingForARelay": "Aktarıcı bekleniyor",
+  "appStartingTorPct": "Tor açılıyor · {pct}",
+  "appGettingNewMessages": "Yeni mesajlar alınıyor",
   "mediaProgressSendingKeepTheApp": "Gönderiliyor · {v} · uygulamayı açık tut",
   "mediaProgressPausedOfWaitingFor": "Duraklatıldı · {count}/{count2} · kalanı bekleniyor",
   "mediaProgressReceivingMedia": "Medya alınıyor · {v}",

@@ -329,10 +329,40 @@ extension AppStateBoot on AppState {
     // it runs for the life of the app and doubles as the watchdog.
     var torKickedAt = DateTime.now();
     var ticks = 0;
+    var startWatch = true;
+    var traceLeft = onDesktop;
+    // why a first contact did not file, on a computer's trace: codes only
+    if (onDesktop) {
+      firstFails.onNote = (c) => desk_trace.trace('first contact: $c');
+    }
+    var startTicks = 0;
     var autoTicks = 0;
     Timer.periodic(const Duration(seconds: 1), (t) {
       if (haloWiping) return;
       if (_sendMode == 'balanced' && ++ticks % 5 == 0) sampleRelayHealth();
+      // the start's steps, read before the status so a ready route never
+      // shows ready before it says getting new messages: whether the new
+      // messages are in, and on a computer the trace's lines. watched until
+      // both are done, ten minutes at most
+      if (startWatch || traceLeft) {
+        try {
+          if (startWatch) takeStartCaught(engine.startCaught());
+          if (traceLeft) {
+            for (final l in engine.startSteps()) {
+              desk_trace.trace(l);
+            }
+          }
+        } catch (_) {
+          startWatch = traceLeft = false;
+        }
+        if (_startCaught && (_everUsable || _sendMode != 'private')) {
+          startWatch = false;
+        }
+        // the trace goes on for the life of the app: a first contact
+        // later is traced as it comes
+        if (++startTicks >= 600) startWatch = false;
+        if (!startWatch && !_startCaught) takeStartCaught(true);
+      }
       final st = takeTorStatus(engine.getStatus());
       takeBridgeStatus(engine.bridgeStatus());
       flushOnRouteUp();

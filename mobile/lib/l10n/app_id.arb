@@ -169,6 +169,8 @@
   "appTorReady": "Tor siap",
   "appConnecting2": "Menghubungkan",
   "appWaitingForARelay": "Menunggu relay",
+  "appStartingTorPct": "Memulai Tor · {pct}",
+  "appGettingNewMessages": "Mengambil pesan baru",
   "mediaProgressSendingKeepTheApp": "Mengirim · {v} · biarkan aplikasi terbuka",
   "mediaProgressPausedOfWaitingFor": "Dijeda · {count} dari {count2} · menunggu sisanya",
   "mediaProgressReceivingMedia": "Menerima media · {v}",

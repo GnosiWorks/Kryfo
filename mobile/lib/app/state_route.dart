@@ -371,7 +371,13 @@ extension AppStateRoute on AppState {
       noteOnline(true);
     }
     // outside onion the route always reads usable, so only onion is held
-    if (_sendMode == 'private' && torUsable) _usableAt = at;
+    if (_sendMode == 'private' && torUsable) {
+      _usableAt = at;
+      if (!_everUsable) {
+        _everUsable = true;
+        changed = true;
+      }
+    }
     final hints = (suggestBridgesAt(at), suggestBridgesOffAt(at));
     if (hints != _bridgeHintsShown) {
       _bridgeHintsShown = hints;
@@ -423,7 +429,34 @@ extension AppStateRoute on AppState {
     tryingSince: _torTryingSince,
     relayDownSince: _relayDownSince,
     now: now,
+    everUsable: _everUsable,
+    caught: _startCaught,
   );
+
+  /// a card is on screen, to scan or to show: the engine builds the hello
+  /// lane's circuits now rather than after the scan. a quiet session asks
+  /// nothing of the network
+  void warmHelloLane() {
+    if (sessionQuiet) return;
+    try {
+      engine.nostrWarmHello();
+    } catch (e) {
+      dlog('hello lane: not warmed (${e.runtimeType})');
+    }
+  }
+
+  /// the start's new messages, as the engine says it: true once in, and
+  /// for an engine that does not know
+  void takeStartCaught(bool caught) {
+    if (caught == _startCaught) return;
+    _startCaught = caught;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  set everUsableForTest(bool v) => _everUsable = v;
+  @visibleForTesting
+  set startCaughtForTest(bool v) => _startCaught = v;
 
   DateTime? get relayDownSince => _relayDownSince;
   @visibleForTesting

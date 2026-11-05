@@ -169,6 +169,8 @@
   "appTorReady": "Tor sẵn sàng",
   "appConnecting2": "Đang kết nối",
   "appWaitingForARelay": "Đang chờ relay",
+  "appStartingTorPct": "Đang khởi động Tor · {pct}",
+  "appGettingNewMessages": "Đang nhận tin nhắn mới",
   "mediaProgressSendingKeepTheApp": "Đang gửi · {v} · hãy để ứng dụng mở",
   "mediaProgressPausedOfWaitingFor": "Tạm dừng · {count} trên {count2} · đang chờ phần còn lại",
   "mediaProgressReceivingMedia": "Đang nhận tệp · {v}",

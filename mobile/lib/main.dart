@@ -25,6 +25,7 @@ import 'devices/own_devices.dart'
     show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
 import 'photo_blur.dart' show makeBlurSoon;
 import 'secure_store.dart';
+import 'desktop/desktop_trace.dart' as desk_trace;
 import 'desktop/desktop_mode.dart'
     show
         computerLock,

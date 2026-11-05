@@ -670,6 +670,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appWaitingForARelay => '正在等待中继';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return '正在启动 Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => '正在接收新消息';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return '正在发送 · $v · 请保持应用打开';
   }
@@ -11377,6 +11385,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appWaitingForARelay => '正在等待中繼';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return '正在啟動 Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => '正在接收新訊息';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {

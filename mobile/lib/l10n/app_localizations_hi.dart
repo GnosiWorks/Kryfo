@@ -696,6 +696,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appWaitingForARelay => 'रिले का इंतज़ार';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return 'Tor शुरू हो रहा है · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'नए संदेश आ रहे हैं';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return 'भेजा जा रहा है · $v · ऐप खुला रखें';
   }

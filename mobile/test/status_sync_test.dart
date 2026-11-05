@@ -89,6 +89,10 @@ void main() {
   late _Engine e;
 
   setUp(() {
+    // a relay answered before in this process, and the start's new
+    // messages are in: a quiet relay is waited for, not still connecting
+    appState.everUsableForTest = true;
+    appState.startCaughtForTest = true;
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -150,17 +154,17 @@ void main() {
     // tor starting: connecting in both
     appState.torTryingSinceForTest = DateTime.now();
     await poll(t, 'starting|10|0|0|1');
-    _says(l10n.appConnecting2, graph: l10n.motionConnecting);
+    _says(l10n.appStartingTor, graph: l10n.motionConnecting);
 
     // a long climb: how far it is, in both
     appState.torTryingSinceForTest = _ago(40);
     await poll(t, 'starting|45|0|0|1');
-    _says(l10n.appConnecting(percent(0.45)), graph: l10n.motionConnecting);
+    _says(l10n.appStartingTorPct(percent(0.45)), graph: l10n.motionConnecting);
 
     // tor's route up, no relay through it yet: that, not connecting
     await poll(t, 'bootstrapped|100|0|0|1');
     _says(l10n.appWaitingForARelay, graph: l10n.motionNoRelayYet);
-    expect(find.text(l10n.appConnecting2), findsNothing);
+    expect(find.text(l10n.appStartingTor), findsNothing);
     expect(find.text(l10n.motionYouReAnonymous), findsNothing);
 
     // a relay answered: ready to chat, the address finishing behind it
@@ -198,6 +202,53 @@ void main() {
       line: l10n.appConnectedRoutedThrough3,
       graph: l10n.motionReady,
     );
+    await gone(t);
+  });
+
+  testWidgets('a start: starting tor, connecting, getting new messages, '
+      'then ready', (t) async {
+    appState.everUsableForTest = false;
+    appState.startCaughtForTest = false;
+    addTearDown(() {
+      appState.everUsableForTest = true;
+      appState.startCaughtForTest = true;
+    });
+    await show(t);
+    appState.torTryingSinceForTest = DateTime.now();
+    await poll(t, 'starting|10|0|0|1');
+    _says(l10n.appStartingTor, graph: l10n.motionConnecting);
+
+    // tor up and no relay yet, at the start: still connecting. the dot
+    // pulses, and what is typed meanwhile waits rather than failing
+    await poll(t, 'publishing|100|0|0|1');
+    _says(l10n.appConnecting2, graph: l10n.motionNoRelayYet);
+    expect(find.text(l10n.appWaitingForARelay), findsNothing);
+    final v = appState.linkView;
+    expect(v.pulsing, isTrue);
+    expect(sendReadsBlocked(online: true, torReady: false, link: v), isFalse);
+
+    // a relay answered: the chats on top are coming in
+    await poll(t, 'publishing|100|0|1|1');
+    _says(l10n.appGettingNewMessages, graph: l10n.motionReady);
+    expect(appState.linkView.connected, isTrue);
+
+    // they are in: ready, and nothing more is said
+    appState.takeStartCaught(true);
+    await nudge(t);
+    _says(
+      l10n.appTorReady,
+      line: l10n.appReadyToChatAddressFinishing,
+      graph: l10n.motionReady,
+    );
+
+    // a relay quiet later is waited for: the start is over
+    await poll(t, 'reachable|100|1|0|1');
+    appState.usableAtForTest = DateTime.now().subtract(
+      kPillGrace + const Duration(seconds: 1),
+    );
+    await nudge(t);
+    _says(l10n.appWaitingForARelay, graph: l10n.motionNoRelayYet);
+    expect(appState.linkView.pulsing, isFalse);
     await gone(t);
   });
 
@@ -276,7 +327,7 @@ void main() {
     await poll(t, 'reachable|100|1|1|1');
     // then the bounce asked for: a new generation, tor starting over
     await poll(t, 'starting|0|0|0|2');
-    _says(l10n.appConnecting2, graph: l10n.motionConnecting);
+    _says(l10n.appStartingTor, graph: l10n.motionConnecting);
     expect(find.text(l10n.appTorReady), findsNothing);
     await gone(t);
   });
@@ -316,7 +367,7 @@ void main() {
     await show(t);
     appState.torTryingSinceForTest = _ago(40);
     await poll(t, 'starting|45|0|0|1');
-    _says(l10n.appConnecting(percent(0.45)), graph: l10n.motionConnecting);
+    _says(l10n.appStartingTorPct(percent(0.45)), graph: l10n.motionConnecting);
     await poll(t, 'publishing|100|0|0|1');
     _says(l10n.appWaitingForARelay, graph: l10n.motionNoRelayYet);
     await poll(t, 'reachable|100|1|1|1');
@@ -355,14 +406,14 @@ void main() {
       await poll(t, 'starting|45|0|0|1');
       final pill = find.descendant(
         of: find.byType(TorHalo),
-        matching: find.bySemanticsLabel(l10n.appConnecting2),
+        matching: find.bySemanticsLabel(l10n.appStartingTor),
       );
       expect(t.getSemantics(pill), isSemantics(isLiveRegion: true));
       // a climbing percent: the same words for a screen reader
       await poll(t, 'starting|46|0|0|1');
       expect(pill, findsOneWidget);
       expect(
-        find.bySemanticsLabel(l10n.appConnecting(percent(0.46))),
+        find.bySemanticsLabel(l10n.appStartingTorPct(percent(0.46))),
         findsNothing,
       );
       // a new state: new words, once, in the pill and the sheet's line

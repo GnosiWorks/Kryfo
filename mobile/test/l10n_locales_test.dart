@@ -3009,6 +3009,8 @@ final _calls = <_Call>[
   ('modesSwitching', [], (l) => l.modesSwitching),
   ('appNoRelayReached', [], (l) => l.appNoRelayReached),
   ('appWaitingForARelay', [], (l) => l.appWaitingForARelay),
+  ('appStartingTorPct', ["⟨pct⟩"], (l) => l.appStartingTorPct("⟨pct⟩")),
+  ('appGettingNewMessages', [], (l) => l.appGettingNewMessages),
   ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),
   ('bridgesFindingAWayIn', [], (l) => l.bridgesFindingAWayIn),
   (

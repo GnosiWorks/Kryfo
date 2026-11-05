@@ -688,6 +688,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appWaitingForARelay => 'Đang chờ relay';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return 'Đang khởi động Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Đang nhận tin nhắn mới';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return 'Đang gửi · $v · hãy để ứng dụng mở';
   }

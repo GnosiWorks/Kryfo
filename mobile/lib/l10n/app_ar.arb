@@ -169,6 +169,8 @@
   "appTorReady": "Tor جاهز",
   "appConnecting2": "جارٍ الاتصال",
   "appWaitingForARelay": "بانتظار مُرحِّل",
+  "appStartingTorPct": "جارٍ تشغيل Tor · ⁨{pct}⁩",
+  "appGettingNewMessages": "جارٍ جلب الرسائل الجديدة",
   "mediaProgressSendingKeepTheApp": "جارٍ الإرسال · ⁨{v}⁩ · أبقِ التطبيق مفتوحًا",
   "mediaProgressPausedOfWaitingFor": "متوقف مؤقتًا · ⁨{count}⁩ من ⁨{count2}⁩ · بانتظار البقية",
   "mediaProgressReceivingMedia": "جارٍ استلام الوسائط · ⁨{v}⁩",

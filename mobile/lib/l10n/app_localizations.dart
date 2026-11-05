@@ -1141,6 +1141,18 @@ abstract class AppLocalizations {
   /// **'Waiting for a relay'**
   String get appWaitingForARelay;
 
+  /// link_view.dart. the home pill while tor starts, after a while. the placeholder is a percentage, already written the language's way (42%, 42 %, %42). keep it short
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Tor · {pct}'**
+  String appStartingTorPct(Object pct);
+
+  /// link_view.dart. the home pill at a start, once a relay answers, until the messages that came while kryfo was closed are in. keep it short
+  ///
+  /// In en, this message translates to:
+  /// **'Getting new messages'**
+  String get appGettingNewMessages;
+
   /// media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///
   /// In en, this message translates to:

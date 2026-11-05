@@ -722,6 +722,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appWaitingForARelay => 'بانتظار مُرحِّل';
 
   @override
+  String appStartingTorPct(Object pct) {
+    return 'جارٍ تشغيل Tor · ⁨$pct⁩';
+  }
+
+  @override
+  String get appGettingNewMessages => 'جارٍ جلب الرسائل الجديدة';
+
+  @override
   String mediaProgressSendingKeepTheApp(Object v) {
     return 'جارٍ الإرسال · ⁨$v⁩ · أبقِ التطبيق مفتوحًا';
   }
