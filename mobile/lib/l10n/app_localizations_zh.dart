@@ -9160,7 +9160,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在同一台服务器上，能够把它们关联起来，借助 Google 还能关联到你的 Google 账号，所以运营或查扣我们服务器的人也能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
+      '其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在我们的第二台服务器上。两台服务器合起来能够把它们关联起来，借助 Google 还能关联到你的 Google 账号。只查扣其中一台做不到，但两台都由我们运营，所以我们能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
   String get notificationsGoogleRefused =>
@@ -19753,7 +19753,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notificationsGoogleNote =>
-      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在同一台伺服器上，能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號，所以營運或查扣我們伺服器的人也能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
+      '其中混有假的喚醒，讓 Google 更難分辨真訊息何時送達。我們的中繼只保存它無法彼此關聯的位址。推播服務執行在我們的第二台伺服器上。兩台伺服器合起來能夠把它們關聯起來，借助 Google 還能關聯到你的 Google 帳號。只查扣其中一台做不到，但兩台都由我們營運，所以我們能做到。如果你在意這一點，請選擇其他方式。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
   String get notificationsGoogleRefused =>

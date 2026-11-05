@@ -9830,7 +9830,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'Dorzucane są fałszywe pobudki, przez co Google trudniej ustalić, kiedy przychodzą prawdziwe wiadomości. Nasz przekaźnik przechowuje tylko adresy, których nie może ze sobą powiązać. Usługa powiadomień działa na tym samym serwerze i mogłaby je powiązać, a z pomocą Google także z twoim kontem Google, więc mogłaby to zrobić każda osoba, która prowadzi albo przejmie nasz serwer. Jeśli to dla ciebie ważne, wybierz inny sposób. Ukryte czaty, pokoje poza kilkoma pierwszymi, a czasem też zwykły kontakt, mniej więcej przez jeden miesiąc na pięć, czekają na sprawdzenie, które Kryfo nadal robi co 15 minut.';
+      'Dorzucane są fałszywe pobudki, przez co Google trudniej ustalić, kiedy przychodzą prawdziwe wiadomości. Nasz przekaźnik przechowuje tylko adresy, których nie może ze sobą powiązać. Usługa powiadomień działa na naszym drugim serwerze. Oba serwery razem mogłyby je powiązać, a z pomocą Google także z twoim kontem Google. Przejęcie jednego nie wystarczy, ale prowadzimy oba, więc my moglibyśmy. Jeśli to dla ciebie ważne, wybierz inny sposób. Ukryte czaty, pokoje poza kilkoma pierwszymi, a czasem też zwykły kontakt, mniej więcej przez jeden miesiąc na pięć, czekają na sprawdzenie, które Kryfo nadal robi co 15 minut.';
 
   @override
   String get notificationsGoogleRefused =>

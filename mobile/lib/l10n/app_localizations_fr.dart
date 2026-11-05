@@ -9748,7 +9748,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationsGoogleNote =>
-      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais ne garde que des adresses qu’il ne peut pas relier entre elles. Le service de push tourne sur le même serveur et pourrait les relier, et avec l’aide de Google à votre compte Google, donc celui qui gère ou saisit notre serveur le pourrait aussi. Si cela compte pour vous, choisissez un autre moyen. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
+      'De faux réveils sont mêlés aux vrais, ce qui rend plus difficile pour Google de savoir quand arrivent les vrais messages. Notre relais ne garde que des adresses qu’il ne peut pas relier entre elles. Le service de push tourne sur notre second serveur. Les deux serveurs ensemble pourraient les relier, et avec l’aide de Google à votre compte Google. En saisir un seul ne suffit pas, mais nous gérons les deux, donc nous le pourrions. Si cela compte pour vous, choisissez un autre moyen. Les discussions masquées, les salons au-delà des premiers, et de temps en temps un contact ordinaire, environ un mois sur cinq, attendent le relevé que Kryfo fait toujours toutes les 15 minutes.';
 
   @override
   String get notificationsGoogleRefused =>
