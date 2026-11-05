@@ -79,10 +79,8 @@ class _StaggerInState extends State<StaggerIn>
       child: AnimatedBuilder(
         animation: _v,
         child: widget.child,
-        // only the paint moves: a tap lands where the row ends up
         builder: (_, child) => FractionalTranslation(
           translation: Offset(0, (1 - _v.value) * lift),
-          transformHitTests: false,
           child: child,
         ),
       ),

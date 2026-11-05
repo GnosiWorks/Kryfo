@@ -46,19 +46,9 @@ class _FitColumnState extends State<FitColumn> {
       builder: (context, c) => Stack(
         children: [
           // always in the tree, so the scroll keeps its place when the
-          // fade comes and goes
-          ShaderMask(
-            blendMode: BlendMode.dstIn,
-            shaderCallback: (r) => LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                const Color(0xFF000000),
-                const Color(0xFF000000),
-                _more ? const Color(0x00000000) : const Color(0xFF000000),
-              ],
-              stops: [0, math.max(1 - _edge / math.max(r.height, 1), 0.5), 1],
-            ).createShader(r),
+          // fade comes and goes; it only draws a layer while on
+          _EdgeFade(
+            on: _more,
             child: NotificationListener<ScrollMetricsNotification>(
               onNotification: (n) => n.depth == 0 && _metrics(n.metrics),
               child: NotificationListener<ScrollNotification>(
@@ -115,6 +105,58 @@ class _FitColumnState extends State<FitColumn> {
         ],
       ),
     );
+  }
+}
+
+// the bottom edge fades out while on, and the page paints plainly otherwise
+class _EdgeFade extends SingleChildRenderObjectWidget {
+  final bool on;
+  const _EdgeFade({required this.on, super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderEdgeFade(on);
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) {
+    (renderObject as _RenderEdgeFade).on = on;
+  }
+}
+
+class _RenderEdgeFade extends RenderProxyBox {
+  _RenderEdgeFade(this._on);
+
+  bool _on;
+  set on(bool v) {
+    if (v == _on) return;
+    _on = v;
+    markNeedsCompositingBitsUpdate();
+    markNeedsPaint();
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => child != null && _on;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (!_on || child == null) {
+      layer = null;
+      super.paint(context, offset);
+      return;
+    }
+    final r = offset & size;
+    final from = math.max(1 - _edge / math.max(size.height, 1), 0.5);
+    final mask = (layer as ShaderMaskLayer?) ?? ShaderMaskLayer();
+    mask
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: const [Color(0xFF000000), Color(0xFF000000), Color(0x00000000)],
+        stops: [0, from, 1],
+      ).createShader(Offset.zero & size)
+      ..maskRect = r
+      ..blendMode = BlendMode.dstIn;
+    layer = mask;
+    context.pushLayer(mask, super.paint, offset);
   }
 }
 
