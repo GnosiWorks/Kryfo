@@ -213,11 +213,14 @@ Future<void> pumpDeviceSends() async {
   final v = _vaultDevOf;
   if (v != null) await _pumpDevices(_vaultDevSend, v);
   await _madeApp?._pushHiddenRemovals();
-  // lists a restore left: asked again until each phone sends its own
-  try {
-    await _deviceReceive?.askStale();
-  } catch (e) {
-    dlog('devices: stale lists not asked (${e.runtimeType})');
+  // lists a restore left: asked again until each phone sends its own, the
+  // open vault's by its own side
+  for (final r in [_deviceReceive, _vaultDevReceive]) {
+    try {
+      await r?.askStale();
+    } catch (e) {
+      dlog('devices: stale lists not asked (${e.runtimeType})');
+    }
   }
 }
 
@@ -231,10 +234,8 @@ Future<void> _pumpDevices(DeviceSend? send, HaloDb home) async {
         final r = await db.query(
           'contacts',
           columns: ['halo_id'],
-          // a contact I deleted too: only a removal is owed to them
-          where: 'ident = ? AND ikey = ? AND blocked = 0',
+          where: 'ident = ? AND ikey = ? AND accepted = 1 AND blocked = 0',
           whereArgs: [ident, identity],
-          orderBy: 'accepted DESC',
           limit: 1,
         );
         if (r.isEmpty) return null;
@@ -283,9 +284,13 @@ Future<void> _devicesShown(String peer) async {
 }
 
 // a contact goes (deleted, released, "not them"): the engine forgets their
-// lists, quiet rows and proofs, and nothing more goes to their devices.
+// lists, quiet rows and proofs, and nothing more goes to them or their
+// devices, a list or a removal owed included. nothing is sent for the delete.
 // read before their row goes. a later message from their phone adds them
 // again, as a new contact's does
+@visibleForTesting
+Future<void> devForgetForTest(String haloId) => _devForget(haloId);
+
 Future<void> _devForget(String haloId, {bool sessions = false}) async {
   final ds = _deviceState;
   if (ds == null || !linkedDevicesOn || isDevId(haloId)) return;
@@ -297,7 +302,7 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     final db = await home.open();
     final r = await db.query(
       'contacts',
-      columns: ['ident', 'ikey', 'accepted', 'caps'],
+      columns: ['ident', 'ikey'],
       where: 'halo_id = ?',
       whereArgs: [haloId],
       limit: 1,
@@ -305,12 +310,6 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     final ikey = r.isEmpty ? null : r.first['ikey'] as String?;
     if (ikey == null) return;
     final ident = r.first['ident'] as int? ?? kMainIdent;
-    // a contact whose phone read my lists may still hold one and copy to my
-    // devices: my removals still go to them while a session is left
-    final reader =
-        !sessions &&
-        r.first['accepted'] == 1 &&
-        capsOfText(r.first['caps'] as String?).contains(kCapDevices);
     // their device pairs are heard on no more (read before the list goes)
     await _devReceiveFor(haloId)?.forget(ident, ikey);
     try {
@@ -320,15 +319,6 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     }
     if (vault) _vaultDevPeers.remove(ikey);
     await _devSendFor(haloId)?.forget(ident, ikey);
-    if (reader) {
-      await db.insert('dev_marks', {
-        'ident': ident,
-        'peer': ikey,
-        'kind': kDeletedReader,
-        'key': '',
-        'at': DateTime.now().millisecondsSinceEpoch,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-    }
     // "not them": their devices' sessions go too, as their phone's does
     if (sessions) {
       final dss = DeviceSessions(
