@@ -46,6 +46,9 @@ const plainOutZoneKey = #kryfoPlainOut;
 R plainOutAllowed<R>(R Function() f) =>
     runZoned(f, zoneValues: {plainOutZoneKey: true});
 
+/// the engine's folder inside the memory folder, or inside windows' tmp
+const kEngineFolder = 'engine';
+
 /// where things are sealed and under which key. sendable, so an isolate
 /// gets the same
 class SealedAreas {
@@ -53,6 +56,7 @@ class SealedAreas {
     required this.docs,
     required this.support,
     this.runtime,
+    this.tmp,
     this.phone = false,
   });
 
@@ -75,6 +79,11 @@ class SealedAreas {
 
   /// the key of everything else kryfo keeps
   Uint8List? filesKey;
+
+  /// windows: the temporary folder on the disk, sealed under [sessionKey],
+  /// which lives in memory only and dies with the process
+  final String? tmp;
+  Uint8List? sessionKey;
 
   // folders the system's own code reads by path: never sealed
   static const _plainSupport = {'translate', 'voice'};
@@ -124,6 +133,13 @@ class SealedAreas {
       }
       return '*';
     }
+    final t = tmp;
+    if (t != null && p.isWithin(t, full)) {
+      // the engine's own folder: go reads and writes it by path, plain
+      final e = p.join(t, kEngineFolder);
+      if (p.equals(e, full) || p.isWithin(e, full)) return null;
+      return '~';
+    }
     return null;
   }
 
@@ -132,8 +148,12 @@ class SealedAreas {
   Uint8List? keyFor(String path) {
     final a = areaOf(path);
     if (a == null) return null;
-    var k = a == '*' ? filesKey : containerKeys[a];
-    if (k == null && a != '*') {
+    var k = switch (a) {
+      '*' => filesKey,
+      '~' => sessionKey,
+      _ => containerKeys[a],
+    };
+    if (k == null && a != '*' && a != '~') {
       k = lateKey?.call(a);
       if (k != null) containerKeys[a] = k;
     }
@@ -161,6 +181,8 @@ class SealedAreas {
     'docs': docs,
     'support': support,
     'runtime': runtime,
+    'tmp': tmp,
+    'session': sessionKey,
     'phone': phone,
     'files': filesKey,
     'keys': Map.of(containerKeys),
@@ -172,8 +194,10 @@ class SealedAreas {
       docs: m['docs'] as String,
       support: m['support'] as String,
       runtime: m['runtime'] as String?,
+      tmp: m['tmp'] as String?,
       phone: m['phone'] == true,
     );
+    a.sessionKey = m['session'] as Uint8List?;
     a.swept.addAll((m['swept'] as List).cast<String>());
     a.filesKey = m['files'] as Uint8List?;
     a.containerKeys.addAll((m['keys'] as Map).cast<String, Uint8List>());

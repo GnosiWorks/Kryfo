@@ -14,6 +14,7 @@ import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart';
 import '../widgets/secret_field.dart';
 import 'desktop_start.dart' show DesktopStop;
+import 'desktop_trace.dart';
 import 'desktop_vault.dart';
 import 'system_seal.dart';
 
@@ -120,8 +121,9 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
   bool get _onWindows => widget.seal?.place == SealPlace.windows;
 
   // the type only: a message could carry a path or a key
-  void _failed(Object e) {
+  void _failed(String step, Object e, StackTrace st) {
     dlog('desktop lock: ${e.runtimeType}');
+    traceError(step, e, st);
     _say(l10n.desktopLockFailed);
   }
 
@@ -133,9 +135,10 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
     final SealedOpen r;
     try {
       r = await widget.vault.openSealed(widget.seal!);
-    } catch (e) {
-      return _failed(e);
+    } catch (e, st) {
+      return _failed('lock sealed', e, st);
     }
+    trace('lock sealed ${r.name}');
     switch (r) {
       case SealedOpen.opened:
         if (mounted) setState(() => _busy = false);
@@ -160,10 +163,12 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
       _busy = true;
       _error = null;
     });
+    trace('lock keep with account');
     try {
       await widget.vault.createSealed(widget.seal!);
-    } on SealError {
+    } on SealError catch (e) {
       // the keyring said no: a passphrase is the way left
+      trace('lock seal refused: ${e.why.name}');
       if (!mounted) return;
       setState(() {
         _view = _View.newPass;
@@ -174,9 +179,10 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
             ? l10n.desktopLockAccountRefused
             : l10n.desktopLockKeyringRefused,
       );
-    } catch (e) {
-      return _failed(e);
+    } catch (e, st) {
+      return _failed('lock keep', e, st);
     }
+    trace('lock kept');
     widget.onOpen();
   }
 
@@ -209,10 +215,12 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
       _busy = true;
       _error = null;
     });
+    trace(isNew ? 'lock create' : 'lock open');
     try {
       if (isNew) {
         await widget.vault.create(pass);
       } else if (!await widget.vault.open(pass, seal: widget.seal)) {
+        trace('lock refused');
         _first.clear();
         _firstFocus.requestFocus();
         return _say(
@@ -221,9 +229,10 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
               : l10n.desktopLockWrong,
         );
       }
-    } catch (e) {
-      return _failed(e);
+    } catch (e, st) {
+      return _failed('lock', e, st);
     }
+    trace('lock opened');
     _first.clear();
     _again.clear();
     widget.onOpen();
@@ -498,6 +507,7 @@ class DesktopStopApp extends StatelessWidget {
                       DesktopStop.notYours => l10n.desktopFolderNotYours,
                       DesktopStop.notPrivate => l10n.desktopFolderNotPrivate,
                       DesktopStop.noMemory => l10n.desktopNoMemoryFolder,
+                      DesktopStop.failed => l10n.desktopLockFailed,
                     },
                     textAlign: TextAlign.center,
                     style: HaloType.sans(

@@ -1,0 +1,249 @@
+# builds the windows app from this repository, in public, so anyone can see
+# what went into a release and check its sums. two jobs: the three native
+# dlls and tor.exe cross-built on linux with mingw (the same scripts as a
+# local build), then flutter, the bundle check and the installer on windows.
+# every tool is pinned by version and sha256 where its maker publishes one.
+# packaging/windows/CI.md says what is pinned, what is not yet, and how to
+# compare a download with a build of your own.
+name: windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  natives:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    # ubuntu 26.04 as of 2026-10-06, the release the local builds use
+    container:
+      image: ubuntu@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944
+    env:
+      # the archive as it was on this day, so apt hands out the same packages
+      APT_SNAPSHOT: 20261101T000000Z
+      GO_VERSION: "1.26.9"
+      GO_SHA256: 42d158b4d8f7b61ac0a830567c940a86098fb7aac52e467a5ebec03ef5cc2f8d
+      RUST_VERSION: "1.97.0"
+      RUST_COMMIT: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+      RUST_CHANNEL_SHA256: 3804d2666f7c12ce64205baa69b6be52f910b45b158091013264beb7aa1de7f5
+      RUSTUP_INIT_VERSION: "1.29.1"
+      RUSTUP_INIT_SHA256: dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71
+      PROTOC_VERSION: "36.2"
+      PROTOC_SHA256: 121f6c7afe1d4d0e3ea6aab9432038599250134cbf4474cb1167d2c7decd4278
+      GOTOOLCHAIN: local
+    steps:
+      - name: packages
+        run: |
+          apt-get update --snapshot "$APT_SNAPSHOT"
+          apt-get install -y --no-install-recommends --snapshot "$APT_SNAPSHOT" \
+            ca-certificates curl git unzip xz-utils make perl gcc libc6-dev \
+            gcc-mingw-w64-x86-64-win32=13.2.0-6ubuntu1+26.1 \
+            binutils-mingw-w64-x86-64=2.45.90.20260125-1ubuntu1+13.3 \
+            mingw-w64-x86-64-dev=13.0.0-2ubuntu1
+          x86_64-w64-mingw32-gcc --version | head -1
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: go
+        run: |
+          curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tgz
+          echo "${GO_SHA256}  /tmp/go.tgz" | sha256sum -c -
+          tar -C /usr/local -xzf /tmp/go.tgz && rm /tmp/go.tgz
+          echo /usr/local/go/bin >> "$GITHUB_PATH"
+
+      - name: rust
+        run: |
+          curl -fsSL "https://static.rust-lang.org/dist/channel-rust-${RUST_VERSION}.toml" -o /tmp/channel.toml
+          echo "${RUST_CHANNEL_SHA256}  /tmp/channel.toml" | sha256sum -c -
+          curl -fsSL "https://static.rust-lang.org/rustup/archive/${RUSTUP_INIT_VERSION}/x86_64-unknown-linux-gnu/rustup-init" -o /tmp/rustup-init
+          echo "${RUSTUP_INIT_SHA256}  /tmp/rustup-init" | sha256sum -c -
+          chmod +x /tmp/rustup-init
+          /tmp/rustup-init -y -q --default-toolchain none --profile minimal --no-modify-path
+          "$HOME/.cargo/bin/rustup" toolchain install "$RUST_VERSION" --profile minimal --target x86_64-pc-windows-gnu
+          test "$("$HOME/.cargo/bin/rustc" "+$RUST_VERSION" -vV | sed -n 's/^commit-hash: //p')" = "$RUST_COMMIT"
+          # rustup checks each download against the manifest it fetched;
+          # that manifest has to be the pinned one
+          lib="$HOME/.rustup/toolchains/${RUST_VERSION}-x86_64-unknown-linux-gnu/lib/rustlib"
+          for c in rustc:x86_64-unknown-linux-gnu rust-std:x86_64-pc-windows-gnu; do
+            t="[pkg.${c%%:*}.target.${c#*:}]"
+            a=$(awk -v t="$t" '$0==t{on=1;next} /^\[/{on=0} on&&/^(hash|xz_hash) = /' /tmp/channel.toml)
+            b=$(awk -v t="$t" '$0==t{on=1;next} /^\[/{on=0} on&&/^(hash|xz_hash) = /' "$lib/multirust-channel-manifest.toml")
+            [ -n "$a" ] && [ "$a" = "$b" ] || { echo "rust $c: not the pinned manifest's hashes"; exit 1; }
+          done
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: protoc
+        run: |
+          curl -fsSL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip" -o /tmp/protoc.zip
+          echo "${PROTOC_SHA256}  /tmp/protoc.zip" | sha256sum -c -
+          mkdir -p /opt/protoc && unzip -q /tmp/protoc.zip -d /opt/protoc && rm /tmp/protoc.zip
+          echo /opt/protoc/bin >> "$GITHUB_PATH"
+
+      - name: tor
+        run: |
+          . packaging/windows/tor-pin.txt
+          curl -fsSL "$TOR_BUNDLE_URL" -o /tmp/tor-bundle.tar.gz
+          packaging/windows/stage-tor.sh /tmp/tor-bundle.tar.gz
+
+      - name: halo.dll
+        run: |
+          TOR_EXE=packaging/build/windows/tor/tor.exe engine/build-windows.sh
+          packaging/windows/stage-tor.sh --check-dll engine/out/windows-x64/halo.dll
+
+      - name: kryfo_signal.dll
+        run: PROTOC=/opt/protoc/bin/protoc mobile/native/kryfo_signal/build-windows.sh
+
+      - name: sqlcipher.dll
+        run: mobile/windows/build-sqlcipher.sh
+
+      - name: stage
+        run: |
+          n=natives; mkdir -p $n/tor
+          cp engine/out/windows-x64/halo.dll \
+             mobile/native/kryfo_signal/target/x86_64-pc-windows-gnu/release/kryfo_signal.dll \
+             mobile/windows/out/sqlcipher.dll $n/
+          cp -r packaging/build/windows/tor/. $n/tor/
+          (cd $n && sha256sum *.dll tor/tor.exe tor/openssl.cnf > SHA256SUMS && cat SHA256SUMS)
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: natives
+          path: natives
+          if-no-files-found: error
+
+  app:
+    needs: natives
+    runs-on: windows-2022
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      FLUTTER_VERSION: "3.41.7"
+      FLUTTER_COMMIT: cc0734ac716fbb8b90f3f9db8020958b1553afa7
+      INNO_VERSION: "6.7.3"
+      INNO_SHA256: 9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732
+      # one fixed place: the dart snapshot carries the build path
+      K: C:\kryfo
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: src
+
+      - name: source at a fixed path
+        run: |
+          git config --global core.autocrlf false
+          git clone --no-hardlinks --quiet src $env:K
+          git -C $env:K checkout --quiet ${{ github.sha }}
+
+      - name: flutter
+        run: |
+          git clone --quiet --depth 1 --branch $env:FLUTTER_VERSION https://github.com/flutter/flutter.git C:\flutter
+          $got = git -C C:\flutter rev-parse HEAD
+          if ($got -ne $env:FLUTTER_COMMIT) { throw "flutter is $got, pinned $env:FLUTTER_COMMIT" }
+          "C:\flutter\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+          C:\flutter\bin\flutter config --no-analytics --no-cli-animations
+          C:\flutter\bin\flutter --disable-analytics
+
+      - name: inno setup
+        run: |
+          $f = "$env:RUNNER_TEMP\innosetup.exe"
+          Invoke-WebRequest -UseBasicParsing "https://github.com/jrsoftware/issrc/releases/download/is-$($env:INNO_VERSION -replace '\.','_')/innosetup-$env:INNO_VERSION.exe" -OutFile $f
+          $got = (Get-FileHash -Algorithm SHA256 $f).Hash.ToLowerInvariant()
+          if ($got -ne $env:INNO_SHA256) { throw "inno setup is $got, pinned $env:INNO_SHA256" }
+          Start-Process -Wait -FilePath $f -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/CURRENTUSER','/DIR=C:\inno'
+          if (-not (Test-Path C:\inno\ISCC.exe)) { throw "no ISCC.exe" }
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: natives
+          path: natives
+
+      - name: natives in place
+        run: |
+          $n = "$env:GITHUB_WORKSPACE\natives"
+          Push-Location $n
+          Get-Content SHA256SUMS | ForEach-Object {
+            $sum, $name = $_ -split '\s+\*?', 2
+            $got = (Get-FileHash -Algorithm SHA256 $name).Hash.ToLowerInvariant()
+            if ($got -ne $sum) { throw "$name is $got, the natives job said $sum" }
+          }
+          Pop-Location
+          New-Item -ItemType Directory -Force "$env:K\engine\out\windows-x64", "$env:K\mobile\native\kryfo_signal\target\x86_64-pc-windows-gnu\release", "$env:K\mobile\windows\out", "$env:K\packaging\build\windows\tor" | Out-Null
+          Copy-Item "$n\halo.dll" "$env:K\engine\out\windows-x64\"
+          Copy-Item "$n\kryfo_signal.dll" "$env:K\mobile\native\kryfo_signal\target\x86_64-pc-windows-gnu\release\"
+          Copy-Item "$n\sqlcipher.dll" "$env:K\mobile\windows\out\"
+          Copy-Item -Recurse -Force "$n\tor\*" "$env:K\packaging\build\windows\tor\"
+          Copy-Item "$n\SHA256SUMS" "$env:K\mobile\windows\out\natives.sha256"
+
+      - name: build
+        working-directory: C:\kryfo\mobile
+        run: |
+          flutter pub get --enforce-lockfile
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          flutter build windows --release -t lib/main_desktop.dart
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: bundle check
+        working-directory: C:\kryfo\mobile
+        run: |
+          $out = powershell -ExecutionPolicy Bypass -File windows\check-bundle.ps1 -NativeSums windows\out\natives.sha256
+          $out
+          if ($out -match 'FAIL') { exit 1 }
+
+      - name: installer
+        run: |
+          C:\inno\ISCC.exe /Q "/DOutputDir=$env:K\packaging\build\windows" "$env:K\packaging\windows\kryfo.iss"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: release files and sums
+        run: |
+          $o = "$env:GITHUB_WORKSPACE\out"
+          New-Item -ItemType Directory -Force $o | Out-Null
+          $setup = Get-ChildItem "$env:K\packaging\build\windows\kryfo-*-windows-x64-setup.exe" | Select-Object -First 1
+          if (-not $setup) { throw "no installer" }
+          Copy-Item $setup.FullName $o
+          $base = $setup.Name -replace '-setup\.exe$', ''
+          Compress-Archive -Path "$env:K\mobile\build\windows\x64\runner\Release\*" -DestinationPath "$o\$base.zip"
+          Push-Location $o
+          Get-ChildItem -File | Sort-Object Name | ForEach-Object {
+            "$((Get-FileHash -Algorithm SHA256 $_.Name).Hash.ToLowerInvariant())  $($_.Name)"
+          } | Out-File -Encoding ascii SHA256SUMS
+          Pop-Location
+          # every file of the app folder, as the installer puts it there
+          Push-Location "$env:K\mobile\build\windows\x64\runner\Release"
+          Get-ChildItem -File -Recurse | Sort-Object FullName | ForEach-Object {
+            $rel = Resolve-Path -Relative $_.FullName
+            "$((Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant())  $($rel.TrimStart('.\').Replace('\','/'))"
+          } | Out-File -Encoding ascii "$o\SHA256SUMS-files"
+          Pop-Location
+          Copy-Item "$env:GITHUB_WORKSPACE\natives\SHA256SUMS" "$o\SHA256SUMS-natives"
+          Get-Content "$o\SHA256SUMS"
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            out/*.exe
+            out/*.zip
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: kryfo-windows-x64
+          path: out
+          if-no-files-found: error

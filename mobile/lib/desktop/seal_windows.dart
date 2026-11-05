@@ -328,6 +328,10 @@ String systemDll(String systemDir, String name) {
   return '$systemDir$sep$name';
 }
 
+/// a dll of windows' own, opened by its full path in system32
+DynamicLibrary openSystemDll(String name) =>
+    DynamicLibrary.open(systemDll(_systemDir(), name));
+
 // windows' system32, as GetSystemDirectoryW gives it. kernel32 is a known
 // dll, always the system's own whatever the search order
 String _systemDir() {

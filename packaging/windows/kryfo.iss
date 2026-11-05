@@ -54,7 +54,7 @@
 #endif
 
 ; must equal TOR_EXE_SHA256 in tor-pin.txt and the pin in halo.dll
-#define TorExeSha256 "0000000000000000000000000000000000000000000000000000000000000000"
+#define TorExeSha256 "1607d98f5d13859077b1b349c55beba76b09acc788f0431fd824d11966fb1074"
 
 #if Exec("powershell.exe", '-NoProfile -ExecutionPolicy Bypass -File "' + SourcePath + 'check-tor.ps1" -Path "' + TorDir + '\tor.exe" -Sha256 ' + TorExeSha256, SourcePath, 1, SW_HIDE) != 0
   #error tor.exe does not match TorExeSha256, see tor-pin.txt
@@ -98,14 +98,26 @@ Source: "{#FlutterDir}\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recu
 Source: "{#HaloDll}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SignalDll}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#TorDir}\tor.exe"; DestDir: "{app}\tor"; Flags: ignoreversion
-; whatever else the expert bundle keeps next to tor.exe
-Source: "{#TorDir}\*"; Excludes: "tor.exe";DestDir: "{app}\tor"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "{#TorDir}\openssl.cnf"; DestDir: "{app}\tor"; Flags: ignoreversion
 Source: "{#TorDir}\licenses\*"; DestDir: "{app}\tor\licenses"; Flags: ignoreversion
 Source: "{#RepoDir}\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\kryfo.exe"; AppUserModelID: "app.kryfo"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\kryfo.exe"; AppUserModelID: "app.kryfo"; Tasks: desktopicon
+
+[Registry]
+; kryfo: links open in the app; a second start hands the link to the first
+Root: HKCU; Subkey: "Software\Classes\kryfo"; ValueType: string; ValueName: ""; ValueData: "URL:Kryfo"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\kryfo"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\kryfo\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: """{app}\kryfo.exe"",0"
+Root: HKCU; Subkey: "Software\Classes\kryfo\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\kryfo.exe"" ""%1"""
+; error reporting leaves both alone. kryfo.exe sets the same at each start
+Root: HKCU; Subkey: "Software\Microsoft\Windows\Windows Error Reporting\ExcludedApplications"; ValueType: dword; ValueName: "kryfo.exe"; ValueData: 1; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Microsoft\Windows\Windows Error Reporting\ExcludedApplications"; ValueType: dword; ValueName: "tor.exe"; ValueData: 1; Flags: uninsdeletevalue
+; the toasts' registration, written by the app at its first start
+Root: HKCU; Subkey: "Software\Classes\AppUserModelId\app.kryfo"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\PushNotifications\Backup\app.kryfo"; Flags: uninsdeletekey
 
 [Run]
 Filename: "{app}\kryfo.exe"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
