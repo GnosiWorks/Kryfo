@@ -116,7 +116,10 @@ void main() {
     docs.deleteSync(recursive: true);
   });
 
-  test('the switch is off in this build', () {
+  test('the switch is on in this build; off is a test\'s', () {
+    linkedDevicesForTest = null;
+    expect(linkedDevicesOn, isTrue);
+    linkedDevicesForTest = false;
     expect(linkedDevicesOn, isFalse);
   });
 

@@ -19,14 +19,15 @@ import '../engine_strings.dart' show engineTake;
 import 'device_store.dart';
 import 'linked_switch.dart';
 
-bool _onForTest = false;
+bool? _forTest;
 
-/// the switch, as the app reads it: off in every build until linking is
-/// wired end to end, and then nothing here runs and every table stays empty
-bool get linkedDevicesOn => kLinkedDevicesOn || _onForTest;
+/// the switch, as the app reads it: on in every build (linked_switch.dart).
+/// off, nothing here runs and every table stays empty
+bool get linkedDevicesOn => _forTest ?? kLinkedDevicesOn;
 
+/// a test turns it off or on; null goes back to the build's
 @visibleForTesting
-set linkedDevicesForTest(bool on) => _onForTest = on;
+set linkedDevicesForTest(bool? on) => _forTest = on;
 
 /// what libsignal's decrypt returned as the remote identity of a message
 /// that opened: the only remote the engine takes as a source. made only by
