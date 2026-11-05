@@ -7139,12 +7139,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsConnected => 'Connecté';
 
   @override
-  String get settingsScreenshots => 'Captures d’écran';
-
-  @override
-  String get settingsBlocked2 => 'Bloquées';
-
-  @override
   String get settingsOn => 'Activé';
 
   @override
@@ -7161,6 +7155,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Sauvegarde';
+
+  @override
+  String get settingsProtectBackup => 'Sauvegarde';
 
   @override
   String get settingsBackupNotYet => 'Pas encore';
@@ -8932,9 +8929,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Toujours activé dans un salon, dans Kryfo pour Android';
-
-  @override
-  String get settingsPerChat => 'Par discussion';
 
   @override
   String get homeShotsPerChat =>
@@ -11309,9 +11303,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alpha';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Pas encore sur cet ordinateur';
 
   @override
   String get settingsDeskInTray => 'Actif dans la zone de notification';

@@ -589,7 +589,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         if (backups)
                           ProtectionLine(
-                            l10n.settingsBackup,
+                            l10n.settingsProtectBackup,
                             fresh,
                             _backupRead ? backupWhen(_lastBackup) : '',
                             key: const ValueKey('backupLine'),

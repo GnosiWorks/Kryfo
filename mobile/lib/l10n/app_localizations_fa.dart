@@ -7065,12 +7065,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsConnected => 'متصل';
 
   @override
-  String get settingsScreenshots => 'اسکرین‌شات‌ها';
-
-  @override
-  String get settingsBlocked2 => 'مسدود';
-
-  @override
   String get settingsOn => 'روشن';
 
   @override
@@ -7087,6 +7081,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsBackup => 'نسخه‌ی پشتیبان';
+
+  @override
+  String get settingsProtectBackup => 'نسخه‌ی پشتیبان';
 
   @override
   String get settingsBackupNotYet => 'هنوز نه';
@@ -8852,9 +8849,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'در اتاق همیشه روشن است، در Kryfo برای اندروید';
-
-  @override
-  String get settingsPerChat => 'برای هر گفت‌وگو';
 
   @override
   String get homeShotsPerChat =>
@@ -11200,9 +11194,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · آلفا';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'هنوز روی این رایانه نیست';
 
   @override
   String get settingsDeskInTray => 'در سینی سیستم در حال اجرا';

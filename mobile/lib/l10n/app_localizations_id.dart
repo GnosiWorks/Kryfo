@@ -7062,12 +7062,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsConnected => 'Terhubung';
 
   @override
-  String get settingsScreenshots => 'Tangkapan layar';
-
-  @override
-  String get settingsBlocked2 => 'Diblokir';
-
-  @override
   String get settingsOn => 'Aktif';
 
   @override
@@ -7084,6 +7078,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Cadangan';
+
+  @override
+  String get settingsProtectBackup => 'Cadangan';
 
   @override
   String get settingsBackupNotYet => 'Belum';
@@ -8839,9 +8836,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Selalu menyala di ruang, di Kryfo untuk Android';
-
-  @override
-  String get settingsPerChat => 'Per obrolan';
 
   @override
   String get homeShotsPerChat =>
@@ -11188,9 +11182,6 @@ class AppLocalizationsId extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alfa';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Belum ada di komputer ini';
 
   @override
   String get settingsDeskInTray => 'Berjalan di area notifikasi';

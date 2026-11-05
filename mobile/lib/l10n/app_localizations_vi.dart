@@ -7047,12 +7047,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsConnected => 'Đã kết nối';
 
   @override
-  String get settingsScreenshots => 'Chụp màn hình';
-
-  @override
-  String get settingsBlocked2 => 'Đã chặn';
-
-  @override
   String get settingsOn => 'Bật';
 
   @override
@@ -7069,6 +7063,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Sao lưu';
+
+  @override
+  String get settingsProtectBackup => 'Sao lưu';
 
   @override
   String get settingsBackupNotYet => 'Chưa có';
@@ -8825,9 +8822,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Luôn bật trong phòng, trong Kryfo cho Android';
-
-  @override
-  String get settingsPerChat => 'Theo từng cuộc trò chuyện';
 
   @override
   String get homeShotsPerChat =>
@@ -11174,9 +11168,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alpha';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Chưa có trên máy tính này';
 
   @override
   String get settingsDeskInTray => 'Đang chạy trong khay hệ thống';

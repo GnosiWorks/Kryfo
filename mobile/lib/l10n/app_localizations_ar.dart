@@ -7188,12 +7188,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsConnected => 'متصل';
 
   @override
-  String get settingsScreenshots => 'لقطات الشاشة';
-
-  @override
-  String get settingsBlocked2 => 'ممنوعة';
-
-  @override
   String get settingsOn => 'مفعّل';
 
   @override
@@ -7210,6 +7204,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsBackup => 'النسخ الاحتياطي';
+
+  @override
+  String get settingsProtectBackup => 'النسخ الاحتياطي';
 
   @override
   String get settingsBackupNotYet => 'ليس بعد';
@@ -8978,9 +8975,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'مفعّل دائمًا في الغرفة، في Kryfo لأندرويد';
-
-  @override
-  String get settingsPerChat => 'حسب المحادثة';
 
   @override
   String get homeShotsPerChat => 'منع لقطات الشاشة صار لكل محادثة على حدة.';
@@ -11336,9 +11330,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · ألفا';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'ليس على هذا الحاسوب بعد';
 
   @override
   String get settingsDeskInTray => 'يعمل في علبة النظام';

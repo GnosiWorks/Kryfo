@@ -6738,12 +6738,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsConnected => '已连接';
 
   @override
-  String get settingsScreenshots => '截屏';
-
-  @override
-  String get settingsBlocked2 => '已禁止';
-
-  @override
   String get settingsOn => '开';
 
   @override
@@ -6760,6 +6754,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsBackup => '备份';
+
+  @override
+  String get settingsProtectBackup => '备份';
 
   @override
   String get settingsBackupNotYet => '还没有';
@@ -8406,9 +8403,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get roomShotsAlwaysOnDesk => '聊天室里始终开启，在 Android 版 Kryfo 中';
-
-  @override
-  String get settingsPerChat => '按聊天设置';
 
   @override
   String get homeShotsPerChat => '禁止截屏现在按聊天设置。';
@@ -10592,9 +10586,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alpha 版';
   }
-
-  @override
-  String get settingsShotsNotHereYet => '这台电脑上暂不支持';
 
   @override
   String get settingsDeskInTray => '在系统托盘中运行';
@@ -17641,12 +17632,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsConnected => '已連線';
 
   @override
-  String get settingsScreenshots => '截圖';
-
-  @override
-  String get settingsBlocked2 => '已禁止';
-
-  @override
   String get settingsOn => '開啟';
 
   @override
@@ -17663,6 +17648,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsBackup => '備份';
+
+  @override
+  String get settingsProtectBackup => '備份';
 
   @override
   String get settingsBackupNotYet => '還沒有';
@@ -19190,9 +19178,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get roomShotsAlwaysOnDesk => '聊天室裡一律開啟，在 Android 版 Kryfo 中';
-
-  @override
-  String get settingsPerChat => '依聊天設定';
 
   @override
   String get homeShotsPerChat => '禁止截圖現在依聊天設定。';
@@ -21379,9 +21364,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String settingsVersionAlpha(String version) {
     return '$version · alpha 版';
   }
-
-  @override
-  String get settingsShotsNotHereYet => '這台電腦上暫不支援';
 
   @override
   String get settingsDeskInTray => '在系統匣中執行';

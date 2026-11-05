@@ -7086,12 +7086,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsConnected => 'Bağlı';
 
   @override
-  String get settingsScreenshots => 'Ekran görüntüleri';
-
-  @override
-  String get settingsBlocked2 => 'Engelli';
-
-  @override
   String get settingsOn => 'Açık';
 
   @override
@@ -7108,6 +7102,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Yedek';
+
+  @override
+  String get settingsProtectBackup => 'Yedek';
 
   @override
   String get settingsBackupNotYet => 'Henüz yok';
@@ -8871,9 +8868,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Odada her zaman açık, Android için Kryfo\'da';
-
-  @override
-  String get settingsPerChat => 'Sohbete göre';
 
   @override
   String get homeShotsPerChat => 'Ekran görüntüsü engeli artık sohbet başına.';
@@ -11215,9 +11209,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alfa';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Bu bilgisayarda henüz yok';
 
   @override
   String get settingsDeskInTray => 'Sistem tepsisinde çalışıyor';

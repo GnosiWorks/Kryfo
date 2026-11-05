@@ -172,10 +172,13 @@ void main() {
       await _settle(t);
       expect(_line(t, l10n.settingsTorRouting), isNotNull);
       expect(_read(t, l10n.settingsAppLock), (true, l10n.settingsOn));
-      expect(_read(t, l10n.settingsBackup), (false, l10n.settingsBackupNotYet));
-      expect(_line(t, l10n.settingsScreenshots), isNull);
+      expect(_read(t, l10n.settingsProtectBackup), (
+        false,
+        l10n.settingsBackupNotYet,
+      ));
+      expect(_line(t, 'Screenshots'), isNull);
       expect(_line(t, l10n.desktopPassRow), isNull);
-      expect(find.text(l10n.settingsPerChat), findsNothing);
+      expect(find.text('Per chat'), findsNothing);
       await devClose(t);
     });
 
@@ -184,7 +187,7 @@ void main() {
       await _world(t, prefs: {kLastBackupKey: _daysBack(2)});
       await t.pumpWidget(devApp(const SettingsScreen(), still: true));
       await _settle(t);
-      expect(_read(t, l10n.settingsBackup), (true, '2 days ago'));
+      expect(_read(t, l10n.settingsProtectBackup), (true, '2 days ago'));
       await t.tap(find.byKey(const ValueKey('backupLine')));
       await _settle(t);
       expect(find.byType(BackupScreen), findsOneWidget);
@@ -199,7 +202,10 @@ void main() {
       );
       await t.pumpWidget(devApp(const SettingsScreen(), still: true));
       await _settle(t);
-      expect(_read(t, l10n.settingsBackup), (false, l10n.settingsBackupNotYet));
+      expect(_read(t, l10n.settingsProtectBackup), (
+        false,
+        l10n.settingsBackupNotYet,
+      ));
       await devClose(t);
       await _world(
         t,
@@ -211,7 +217,7 @@ void main() {
       );
       await t.pumpWidget(devApp(const SettingsScreen(), still: true));
       await _settle(t);
-      expect(_read(t, l10n.settingsBackup), (
+      expect(_read(t, l10n.settingsProtectBackup), (
         true,
         l10n.settingsBackupYesterday,
       ));
@@ -247,8 +253,8 @@ void main() {
         await _settle(t);
         expect(_read(t, l10n.desktopPassRow), (on, words()));
         expect(_line(t, l10n.settingsAppLock), isNull);
-        expect(_line(t, l10n.settingsScreenshots), isNull);
-        expect(_line(t, l10n.settingsBackup), isNotNull);
+        expect(_line(t, 'Screenshots'), isNull);
+        expect(_line(t, l10n.settingsProtectBackup), isNotNull);
         await devClose(t);
       });
     }

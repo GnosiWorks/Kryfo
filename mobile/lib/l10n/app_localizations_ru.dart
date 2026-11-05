@@ -7193,12 +7193,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsConnected => 'Подключено';
 
   @override
-  String get settingsScreenshots => 'Скриншоты';
-
-  @override
-  String get settingsBlocked2 => 'Запрещены';
-
-  @override
   String get settingsOn => 'Вкл.';
 
   @override
@@ -7215,6 +7209,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Резервная копия';
+
+  @override
+  String get settingsProtectBackup => 'Резервная копия';
 
   @override
   String get settingsBackupNotYet => 'Пока нет';
@@ -9001,9 +8998,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'В комнате включено всегда, в Kryfo для Android';
-
-  @override
-  String get settingsPerChat => 'Для каждого чата';
 
   @override
   String get homeShotsPerChat =>
@@ -11374,9 +11368,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · альфа';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'На этом компьютере пока нет';
 
   @override
   String get settingsDeskInTray => 'Работает в области уведомлений';

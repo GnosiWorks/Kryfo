@@ -7067,12 +7067,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsConnected => 'जुड़ा हुआ';
 
   @override
-  String get settingsScreenshots => 'स्क्रीनशॉट';
-
-  @override
-  String get settingsBlocked2 => 'रोके गए';
-
-  @override
   String get settingsOn => 'चालू';
 
   @override
@@ -7089,6 +7083,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsBackup => 'बैकअप';
+
+  @override
+  String get settingsProtectBackup => 'बैकअप';
 
   @override
   String get settingsBackupNotYet => 'अभी नहीं';
@@ -8848,9 +8845,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'रूम में हमेशा चालू, Android के लिए Kryfo में';
-
-  @override
-  String get settingsPerChat => 'हर चैट के लिए अलग';
 
   @override
   String get homeShotsPerChat => 'स्क्रीनशॉट रोकना अब हर चैट के लिए अलग है।';
@@ -11195,9 +11189,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · अल्फ़ा';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'इस कंप्यूटर पर अभी नहीं';
 
   @override
   String get settingsDeskInTray => 'सिस्टम ट्रे में चल रहा है';

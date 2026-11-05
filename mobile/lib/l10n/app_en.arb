@@ -8883,14 +8883,6 @@
   "@settingsConnected": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsScreenshots": "Screenshots",
-  "@settingsScreenshots": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsBlocked2": "Blocked",
-  "@settingsBlocked2": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOn": "On",
   "@settingsOn": {
     "description": "screens/settings_screen.dart"
@@ -8914,6 +8906,10 @@
   "settingsBackup": "Backup",
   "@settingsBackup": {
     "description": "screens/settings_screen.dart"
+  },
+  "settingsProtectBackup": "Backup",
+  "@settingsProtectBackup": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, its label"
   },
   "settingsBackupNotYet": "Not yet",
   "@settingsBackupNotYet": {
@@ -11036,10 +11032,6 @@
   "roomShotsAlwaysOnDesk": "Always on in a room, in Kryfo for Android",
   "@roomShotsAlwaysOnDesk": {
     "description": "roomShotsAlwaysOn as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own"
-  },
-  "settingsPerChat": "Per chat",
-  "@settingsPerChat": {
-    "description": "screens/settings_screen.dart: the screenshots line of your protections: each chat has its own switch, with an app lock too on android 13 and newer"
   },
   "homeShotsPerChat": "Screenshot blocking is now per chat.",
   "@homeShotsPerChat": {
@@ -14042,10 +14034,6 @@
         "type": "String"
       }
     }
-  },
-  "settingsShotsNotHereYet": "Not on this computer yet",
-  "@settingsShotsNotHereYet": {
-    "description": "screens/settings_screen.dart: the screenshots line on a computer"
   },
   "settingsDeskInTray": "Running in the tray",
   "@settingsDeskInTray": {

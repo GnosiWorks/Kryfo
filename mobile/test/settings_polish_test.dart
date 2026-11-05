@@ -296,7 +296,7 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.chatBlockScreenshots), findsNothing);
       // and no line for them in your protections
-      expect(find.text(l10n.settingsScreenshots), findsNothing);
+      expect(find.text('Screenshots'), findsNothing);
       await devClose(t);
     });
   });

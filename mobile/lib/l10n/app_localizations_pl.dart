@@ -7213,12 +7213,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsConnected => 'Połączono';
 
   @override
-  String get settingsScreenshots => 'Zrzuty ekranu';
-
-  @override
-  String get settingsBlocked2 => 'Zablokowane';
-
-  @override
   String get settingsOn => 'Wł.';
 
   @override
@@ -7235,6 +7229,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Kopia zapasowa';
+
+  @override
+  String get settingsProtectBackup => 'Kopia zapasowa';
 
   @override
   String get settingsBackupNotYet => 'Jeszcze nie';
@@ -9015,9 +9012,6 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'W pokoju zawsze włączone, w Kryfo na Androida';
-
-  @override
-  String get settingsPerChat => 'Osobno dla każdego czatu';
 
   @override
   String get homeShotsPerChat =>
@@ -11411,9 +11405,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alfa';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Jeszcze nie na tym komputerze';
 
   @override
   String get settingsDeskInTray => 'Działa w zasobniku';
