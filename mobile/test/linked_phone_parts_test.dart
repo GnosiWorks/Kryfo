@@ -21,12 +21,14 @@ import 'package:kryfo/main.dart'
         onionOfStart,
         useEngineForTest,
         AppStateDelivery,
+        AppStateGroups,
         AppStateRooms,
         AppStateRoute,
         AppStateSession,
         AppStateVault;
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart' show PinsHost;
+import 'package:kryfo/screens/new_group_screen.dart' show openNewGroup;
 import 'package:kryfo/screens/pins_screen.dart';
 import 'package:kryfo/store.dart' show playBuildForTest;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
@@ -166,6 +168,48 @@ void main() {
       throwsStateError,
     );
     expect(eng.calls, isEmpty);
+  });
+
+  test('no new group on a linked device: a phone takes no group from a '
+      'device', () async {
+    linkedRoleForTest = true;
+    final app = AppState();
+    await expectLater(
+      app.createGroupAndAnnounce('Night shift', ['other-kryfo-id']),
+      throwsStateError,
+    );
+    expect(eng.calls, isEmpty);
+  });
+
+  testWidgets('the new group way in opens nothing on a linked device', (
+    t,
+  ) async {
+    phone(t);
+    var added = 0;
+    await t.pumpWidget(
+      app(
+        Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () =>
+                  openNewGroup(context, onAdd: () async => added++),
+              child: const Text('new group'),
+            ),
+          ),
+        ),
+      ),
+    );
+    // a phone with nobody to pick is asked to add someone first
+    await t.tap(find.text('new group'));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.newGroupNeedsContacts), findsOneWidget);
+    await t.tap(find.text(l10n.homeNotNow));
+    await t.pumpAndSettle();
+    linkedRoleForTest = true;
+    await t.tap(find.text('new group'));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.newGroupNeedsContacts), findsNothing);
+    expect(added, 0);
   });
 
   test('no helper app or google push offered on a linked device', () {

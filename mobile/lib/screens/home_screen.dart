@@ -2320,12 +2320,14 @@ class _GroupsHead extends StatelessWidget {
                 color: HaloColors.violet,
                 onTap: onNewRoom,
               ),
-            _HeadAction(
-              icon: Icons.add_rounded,
-              label: l10n.homeNew,
-              color: HaloColors.amber,
-              onTap: onNewGroup,
-            ),
+            // and so are groups: a phone takes no group from a device
+            if (!linkedRole)
+              _HeadAction(
+                icon: Icons.add_rounded,
+                label: l10n.homeNew,
+                color: HaloColors.amber,
+                onTap: onNewGroup,
+              ),
           ],
         ),
         GrowSwap(
