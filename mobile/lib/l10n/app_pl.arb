@@ -158,7 +158,6 @@
   "appTorIsOff": "Tor jest wyłączony",
   "appConnectedRoutedThrough3": "Połączono · przez 3 przekaźniki",
   "appReadyToChatAddressFinishing": "Gotowe do czatu · adres się kończy",
-  "appConnecting": "Łączenie · {pct}",
   "appTor": "Tor",
   "appTorIsOffTurn": "Tor jest wyłączony. Włącz go, żeby łączyć się prywatnie.",
   "appTheFirstConnectionTakes": "Pierwsze połączenie trwa minutę lub dwie, ponieważ Tor buduje prywatną trasę. Potem jest zapamiętana, więc kolejne otwarcie Kryfo jest dużo szybsze.",

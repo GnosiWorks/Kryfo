@@ -675,11 +675,6 @@ class AppLocalizationsPl extends AppLocalizations {
       'Gotowe do czatu · adres się kończy';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Łączenie · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override

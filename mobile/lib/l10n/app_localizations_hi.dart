@@ -657,11 +657,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'चैट के लिए तैयार · पता पूरा हो रहा है';
 
   @override
-  String appConnecting(Object pct) {
-    return 'जुड़ रहा है · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -697,7 +692,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String appStartingTorPct(Object pct) {
-    return 'Tor शुरू हो रहा है · $pct';
+    return 'Tor शुरू · $pct';
   }
 
   @override

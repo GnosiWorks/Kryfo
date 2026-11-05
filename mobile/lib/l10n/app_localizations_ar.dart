@@ -684,11 +684,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'جاهز للدردشة · العنوان على وشك الاكتمال';
 
   @override
-  String appConnecting(Object pct) {
-    return 'جارٍ الاتصال · ⁨$pct⁩';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override

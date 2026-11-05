@@ -403,7 +403,7 @@ void main() {
       l.appReadyToChatAddressFinishing,
       "Ready to chat · address finishing",
     );
-    expect(l.appConnecting("<pct>"), "Connecting · <pct>");
+    expect(l.appStartingTorPct("<pct>"), "Starting Tor · <pct>");
     expect(l.appTor, "Tor");
     expect(l.appTorIsOffTurn, "Tor is off. Turn it on to connect privately.");
     expect(

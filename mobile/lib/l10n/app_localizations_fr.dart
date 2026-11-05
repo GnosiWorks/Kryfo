@@ -659,11 +659,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Prêt à discuter · adresse bientôt prête';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Connexion · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override

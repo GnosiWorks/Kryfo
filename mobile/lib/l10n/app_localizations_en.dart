@@ -656,11 +656,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ready to chat · address finishing';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Connecting · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override

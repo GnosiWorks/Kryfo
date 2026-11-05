@@ -654,11 +654,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'آماده‌ی گفتگو · نشانی در حال تکمیل';
 
   @override
-  String appConnecting(Object pct) {
-    return 'در حال اتصال · ⁨$pct⁩';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override

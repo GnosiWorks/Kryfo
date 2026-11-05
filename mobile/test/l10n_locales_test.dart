@@ -358,7 +358,6 @@ final _calls = <_Call>[
     [],
     (l) => l.appReadyToChatAddressFinishing,
   ),
-  ('appConnecting', ["⟨pct⟩"], (l) => l.appConnecting("⟨pct⟩")),
   ('appTor', [], (l) => l.appTor),
   ('appTorIsOffTurn', [], (l) => l.appTorIsOffTurn),
   ('appTheFirstConnectionTakes', [], (l) => l.appTheFirstConnectionTakes),

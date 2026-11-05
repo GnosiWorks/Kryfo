@@ -803,15 +803,6 @@
   "@appReadyToChatAddressFinishing": {
     "description": "app/gates.dart"
   },
-  "appConnecting": "Connecting · {pct}",
-  "@appConnecting": {
-    "description": "app/gates.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
-    "placeholders": {
-      "pct": {
-        "type": "Object"
-      }
-    }
-  },
   "appTor": "Tor",
   "@appTor": {
     "description": "app/gates.dart"

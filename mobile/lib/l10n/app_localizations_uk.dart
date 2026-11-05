@@ -675,11 +675,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Можна спілкуватися · адреса майже готова';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Підключення · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override

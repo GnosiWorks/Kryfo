@@ -649,11 +649,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Sẵn sàng trò chuyện · địa chỉ đang hoàn tất';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Đang kết nối · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override

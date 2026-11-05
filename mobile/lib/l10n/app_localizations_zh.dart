@@ -633,11 +633,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appReadyToChatAddressFinishing => '可以聊天了 · 地址即将就绪';
 
   @override
-  String appConnecting(Object pct) {
-    return '正在连接 · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -11348,11 +11343,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appReadyToChatAddressFinishing => '可以聊天了 · 位址即將就緒';
-
-  @override
-  String appConnecting(Object pct) {
-    return '連線中 · $pct';
-  }
 
   @override
   String get appTor => 'Tor';

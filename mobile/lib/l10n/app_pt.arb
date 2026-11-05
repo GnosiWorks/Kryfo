@@ -158,7 +158,6 @@
   "appTorIsOff": "Tor desligado",
   "appConnectedRoutedThrough3": "Conectado · roteado por 3 retransmissores",
   "appReadyToChatAddressFinishing": "Pronto para conversar · finalizando seu endereço",
-  "appConnecting": "Conectando · {pct}",
   "appTor": "Tor",
   "appTorIsOffTurn": "O Tor está desligado. Ligue-o para se conectar com privacidade.",
   "appTheFirstConnectionTakes": "A primeira conexão leva um ou dois minutos enquanto o Tor monta uma rota privada. Depois disso ela fica em cache, então abrir o Kryfo mais tarde é bem mais rápido.",

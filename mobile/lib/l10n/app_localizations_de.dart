@@ -659,11 +659,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bereit zum Chatten · Adresse wird eingerichtet';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Verbinde · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override

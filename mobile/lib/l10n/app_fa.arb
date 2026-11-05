@@ -158,7 +158,6 @@
   "appTorIsOff": "Tor خاموش است",
   "appConnectedRoutedThrough3": "متصل · عبور از ۳ رله",
   "appReadyToChatAddressFinishing": "آماده‌ی گفتگو · نشانی در حال تکمیل",
-  "appConnecting": "در حال اتصال · ⁨{pct}⁩",
   "appTor": "Tor",
   "appTorIsOffTurn": "Tor خاموش است. برای اتصال خصوصی، روشنش کنید.",
   "appTheFirstConnectionTakes": "اولین اتصال یکی دو دقیقه طول می‌کشد تا Tor مسیری خصوصی بسازد. پس از آن مسیر در حافظه می‌ماند، پس Kryfo دفعه‌های بعد خیلی سریع‌تر باز می‌شود.",

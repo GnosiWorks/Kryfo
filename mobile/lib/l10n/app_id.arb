@@ -158,7 +158,6 @@
   "appTorIsOff": "Tor mati",
   "appConnectedRoutedThrough3": "Terhubung · lewat 3 relay",
   "appReadyToChatAddressFinishing": "Siap mengobrol · alamat sedang disiapkan",
-  "appConnecting": "Menghubungkan · {pct}",
   "appTor": "Tor",
   "appTorIsOffTurn": "Tor mati. Nyalakan untuk terhubung secara privat.",
   "appTheFirstConnectionTakes": "Koneksi pertama butuh satu atau dua menit selagi Tor membangun rute privat. Setelah itu tersimpan di cache, jadi membuka Kryfo berikutnya jauh lebih cepat.",

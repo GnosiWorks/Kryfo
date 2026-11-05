@@ -158,7 +158,6 @@
   "appTorIsOff": "Tor выключен",
   "appConnectedRoutedThrough3": "Подключено · через 3 ретранслятора",
   "appReadyToChatAddressFinishing": "Можно общаться · адрес почти готов",
-  "appConnecting": "Подключение · {pct}",
   "appTor": "Tor",
   "appTorIsOffTurn": "Tor выключен. Включи его, чтобы подключаться приватно.",
   "appTheFirstConnectionTakes": "Первое подключение занимает минуту-две: Tor строит приватный маршрут. Потом маршрут кэшируется, поэтому в следующий раз Kryfo откроется гораздо быстрее.",

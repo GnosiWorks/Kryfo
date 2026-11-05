@@ -158,7 +158,6 @@
   "appTorIsOff": "Tor 已关闭",
   "appConnectedRoutedThrough3": "已连接 · 经 3 个中继转发",
   "appReadyToChatAddressFinishing": "可以聊天了 · 地址即将就绪",
-  "appConnecting": "正在连接 · {pct}",
   "appTor": "Tor",
   "appTorIsOffTurn": "Tor 已关闭。打开它才能私密连接。",
   "appTheFirstConnectionTakes": "首次连接需要一两分钟，Tor 要先建一条私密路线。之后它会被缓存，以后打开 Kryfo 会快很多。",

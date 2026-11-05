@@ -158,7 +158,6 @@
   "appTorIsOff": "Tor متوقف",
   "appConnectedRoutedThrough3": "متصل · يمر عبر ٣ مُرحِّلات",
   "appReadyToChatAddressFinishing": "جاهز للدردشة · العنوان على وشك الاكتمال",
-  "appConnecting": "جارٍ الاتصال · ⁨{pct}⁩",
   "appTor": "Tor",
   "appTorIsOffTurn": "Tor متوقف. شغّله لتتصل بخصوصية.",
   "appTheFirstConnectionTakes": "يستغرق الاتصال الأول دقيقة أو دقيقتين ريثما يبني Tor مسارًا خاصًا. بعد ذلك يُحفظ مؤقتًا، فيصبح فتح Kryfo لاحقًا أسرع بكثير.",

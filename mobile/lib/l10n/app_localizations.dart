@@ -1075,12 +1075,6 @@ abstract class AppLocalizations {
   /// **'Ready to chat · address finishing'**
   String get appReadyToChatAddressFinishing;
 
-  /// app/gates.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting · {pct}'**
-  String appConnecting(Object pct);
-
   /// app/gates.dart
   ///
   /// In en, this message translates to:
