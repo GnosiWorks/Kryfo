@@ -2475,6 +2475,8 @@
   "licencesGplText": "GNU GPL 3.0, teks lengkap",
   "licencesInEngine": "Di mesin jaringan",
   "licencesLoadFailed": "Tidak dapat dimuat",
+  "licencesInVoice": "Di transkrip suara",
+  "licencesInTranslation": "Di terjemahan pesan",
   "settingsCopyLinkHint": "Salin tautan",
   "motionNoRelayYet": "BELUM ADA RELAY",
   "motionTheRouteIsUp": "Rute sudah terbentuk",

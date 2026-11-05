@@ -3,8 +3,9 @@
 // inside the signal library, from assets/licences/rust.json
 // (native/kryfo_signal/acknowledgments.sh writes it from Cargo.lock), the go
 // modules and c libraries inside the engine and the third-party data files,
-// from assets/licences/engine.json (engine/acknowledgments.sh), and the dart
-// packages flutter collects
+// from assets/licences/engine.json (engine/acknowledgments.sh), the voice
+// and translation libraries' parts from assets/licences/native.json, and the
+// dart packages flutter collects
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,8 @@ import 'package:flutter/services.dart';
 
 const kRustLicencesAsset = 'assets/licences/rust.json';
 const kEngineLicencesAsset = 'assets/licences/engine.json';
+// the voice and translation libraries' parts (engine/native-acknowledgments.sh)
+const kNativeLicencesAsset = 'assets/licences/native.json';
 // the repository's LICENSE, byte for byte
 const kGplAsset = 'assets/licences/gpl-3.0.txt';
 
@@ -89,6 +92,34 @@ EngineLicences parseEngineLicences(String source) {
 Future<EngineLicences> loadEngineLicences([AssetBundle? bundle]) async =>
     parseEngineLicences(
       await (bundle ?? rootBundle).loadString(kEngineLicencesAsset),
+    );
+
+class NativeLicences {
+  const NativeLicences(this.voice, this.translation);
+  // whisper.cpp and ggml, the YaRN notice in ggml, the speech model
+  final List<LicencedPart> voice;
+  // bergamot and what its tree builds in
+  final List<LicencedPart> translation;
+}
+
+NativeLicences parseNativeLicences(String source) {
+  final j = jsonDecode(source) as Map<String, dynamic>;
+  final texts = [for (final t in j['licences'] as List) t as String];
+  List<LicencedPart> parts(String key) => [
+    for (final c in j[key] as List)
+      LicencedPart(
+        (c as Map)['name'] as String,
+        [for (final i in c['texts'] as List) texts[i as int]],
+        version: c['version'] as String?,
+        licence: c['licence'] as String,
+      ),
+  ];
+  return NativeLicences(parts('voice'), parts('translation'));
+}
+
+Future<NativeLicences> loadNativeLicences([AssetBundle? bundle]) async =>
+    parseNativeLicences(
+      await (bundle ?? rootBundle).loadString(kNativeLicencesAsset),
     );
 
 Future<String> loadGpl([AssetBundle? bundle]) =>

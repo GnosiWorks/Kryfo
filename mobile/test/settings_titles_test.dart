@@ -38,6 +38,8 @@ import 'package:kryfo/screens/why_kryfo_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/translate/hub.dart';
+import 'package:kryfo/voice/voice_models.dart';
+import 'package:kryfo/voice/voice_transcripts.dart';
 import 'package:kryfo/wallpaper.dart';
 import 'package:kryfo/widgets/halo_rows.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -195,8 +197,19 @@ final _pages = [
       l10n.settingsFollowTitle,
       l10n.settingsDangerZone,
     ],
-    // translation's section shows only with a hub
-    setUp: () => TranslationHub.instance = fakeHub().hub,
+    // translation's section and the voice transcription row show only
+    // with a hub
+    setUp: () {
+      TranslationHub.instance = fakeHub().hub;
+      VoiceTranscripts.instance = VoiceTranscripts(
+        models: VoiceModels(
+          call: (_, _) async => 'error: none',
+          dir: () async => '/tmp/v',
+          quiet: () => false,
+        ),
+        library: () => null,
+      );
+    },
   ),
   _Page(
     'appearance',
@@ -410,6 +423,7 @@ void main() {
     addTearDown(() => HaloColors.setAccent(HaloAccent.yellow));
     addTearDown(() => appState.bridgeSetupForTest = const BridgeSetup());
     addTearDown(() => TranslationHub.instance = null);
+    addTearDown(() => VoiceTranscripts.instance = null);
   }
 
   group('source', () {

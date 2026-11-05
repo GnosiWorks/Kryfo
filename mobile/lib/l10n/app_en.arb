@@ -11835,6 +11835,14 @@
   "@licencesLoadFailed": {
     "description": "screens/licences_screen.dart: the value of a row whose list or text failed to load"
   },
+  "licencesInVoice": "In voice transcription",
+  "@licencesInVoice": {
+    "description": "screens/licences_screen.dart: the parts inside the voice transcription library (whisper.cpp, ggml, the speech model)"
+  },
+  "licencesInTranslation": "In message translation",
+  "@licencesInTranslation": {
+    "description": "screens/licences_screen.dart: the parts inside the offline message translation library (bergamot and what it builds in)"
+  },
   "settingsCopyLinkHint": "Copy link",
   "@settingsCopyLinkHint": {
     "description": "screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does"

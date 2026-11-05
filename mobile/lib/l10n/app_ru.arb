@@ -2475,6 +2475,8 @@
   "licencesGplText": "GNU GPL 3.0, полный текст",
   "licencesInEngine": "В сетевом движке",
   "licencesLoadFailed": "Не удалось загрузить",
+  "licencesInVoice": "В распознавании голоса",
+  "licencesInTranslation": "В переводе сообщений",
   "settingsCopyLinkHint": "Скопировать ссылку",
   "motionNoRelayYet": "РЕТРАНСЛЯТОРА ПОКА НЕТ",
   "motionTheRouteIsUp": "Маршрут построен",

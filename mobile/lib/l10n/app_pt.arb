@@ -2475,6 +2475,8 @@
   "licencesGplText": "GNU GPL 3.0, texto completo",
   "licencesInEngine": "No motor de rede",
   "licencesLoadFailed": "Não foi possível carregar",
+  "licencesInVoice": "Na transcrição de voz",
+  "licencesInTranslation": "Na tradução de mensagens",
   "settingsCopyLinkHint": "Copiar link",
   "motionNoRelayYet": "AINDA SEM RETRANSMISSOR",
   "motionTheRouteIsUp": "A rota está aberta",

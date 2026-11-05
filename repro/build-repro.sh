@@ -52,6 +52,8 @@ if [ "$HALO_STEP" = fetch ]; then
   bash native/kryfo_signal/build-android.sh --vendor
   # the translation library's pinned sources, checked, for the offline build
   bash ../engine/translate/native/fetch-bergamot.sh >/dev/null
+  # and whisper.cpp's for the voice library
+  bash ../engine/voice/native/fetch-whisper.sh >/dev/null
   for abi in arm64-v8a armeabi-v7a x86_64; do
     mkdir -p "android/app/src/main/jniLibs/$abi"
     : > "android/app/src/main/jniLibs/$abi/libhalo.so"
@@ -104,6 +106,13 @@ echo "== translation library (all three abis)"
 # packaged only once translation is switched on (build.gradle.kts)
 KT_JNI_LIBS_DIR="$SRC/mobile/android/app/src/main/jniLibs" \
   bash "$SRC/engine/translate/native/build.sh"
+
+echo
+echo "== voice library (all three abis)"
+# the same way, from the pinned whisper.cpp. packaged only once voice
+# transcripts are switched on (build.gradle.kts)
+KV_JNI_LIBS_DIR="$SRC/mobile/android/app/src/main/jniLibs" \
+  bash "$SRC/engine/voice/native/build.sh"
 
 echo
 echo "== apk (unsigned: the keystore never comes near this container)"
