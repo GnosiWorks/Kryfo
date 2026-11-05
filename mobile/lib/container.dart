@@ -332,6 +332,8 @@ const containerKeys = {
 // receiving side reads: kept once, never prefixed
 const deviceKeys = {
   'app_locale',
+  // a google play tip whose outcome play may still owe (tips/tip_jar.dart)
+  'tip_owed',
   'delivery_mode',
   'delivery_heartbeat',
   'delivery_kills',
