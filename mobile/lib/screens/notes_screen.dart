@@ -10,6 +10,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../album.dart' show kPickMax;
+import '../desktop/attach_tray.dart';
 import '../desktop/drag_in.dart' show kDragInMost;
 import '../file_save.dart' show saveReceivedFile;
 import '../lock_guard.dart' show LockDropped;
@@ -172,12 +173,16 @@ class _NotesScreenState extends State<NotesScreen> {
   bool _shared = false;
   // an item being made ready: the bar takes no other until it is in
   bool _adding = false;
+  // files dropped or pasted on a computer wait in a row above the bar
+  // until enter keeps them, as in a chat. the row is this container's
+  late final AttachTray _tray = DeskTrays.of('${session.container.id}|notes');
 
   @override
   void initState() {
     super.initState();
     _load();
     notesMoved.addListener(_load);
+    _tray.addListener(_trayMoved);
     _readShared();
     SharedPreferences.getInstance().then((p) {
       if (mounted && p.getBool(_holdKey) != true) {
@@ -260,6 +265,8 @@ class _NotesScreenState extends State<NotesScreen> {
   @override
   void dispose() {
     notesMoved.removeListener(_load);
+    // the row stays with the notes for their next opening
+    _tray.removeListener(_trayMoved);
     _input.dispose();
     _under.dispose();
     _pin.dispose();
@@ -356,6 +363,7 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   Future<void> _save() async {
+    if (onDesktop && !_tray.isEmpty) return _keepTray();
     final text = _input.text.trim();
     if (text.isEmpty) return;
     // a uid, so the note can be found again to delete
@@ -595,14 +603,47 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
-  // a file dropped on the page, or pasted: only read, never moved
-  Future<void> _dropped(String path, String name) =>
-      _add(() => readyNoteFile(path, name));
+  void _trayMoved() {
+    if (mounted) setState(() {});
+  }
+
+  // files dropped on the page, or pasted: they wait in the row, only read,
+  // never moved
+  void _stage(List<String> files) {
+    unawaited(_tray.add(files, most: () async => kNoteFileMost));
+  }
+
+  // enter with files waiting: each kept as its own note in the order
+  // staged, a photo as a photo and a gif as a gif, the words with the first
+  Future<void> _keepTray() async {
+    if (_adding) return;
+    final caption = _input.text.trim();
+    final items = _tray.take();
+    _input.clear();
+    for (final (i, x) in items.indexed) {
+      if (!mounted || lockState.locked) return;
+      await _add(() => _readyStaged(x), caption: i == 0 ? caption : '');
+    }
+  }
+
+  Future<NoteReady> _readyStaged(TrayItem x) async {
+    final gif = x.name.toLowerCase().endsWith('.gif');
+    if (x.kind != TrayKind.photo && !gif) {
+      return readyNoteFile(x.path, x.name);
+    }
+    final Uint8List bytes;
+    try {
+      bytes = await File(x.path).readAsBytes();
+    } catch (_) {
+      return (item: null, line: l10n.chatCouldNotReadThat);
+    }
+    return gif ? readyNoteGif(bytes) : readyNotePhoto(bytes);
+  }
 
   // a paste that names files on this computer keeps them; anything else
   // pastes as words
   Future<bool> _pasteFiles() async {
-    if (!onDesktop || _adding) return false;
+    if (!onDesktop) return false;
     final ClipboardData? clip;
     try {
       clip = await Clipboard.getData(Clipboard.kTextPlain);
@@ -611,10 +652,7 @@ class _NotesScreenState extends State<NotesScreen> {
     }
     final files = pastedFiles(clip?.text);
     if (files.isEmpty) return false;
-    for (final f in files) {
-      if (!mounted || lockState.locked) break;
-      await _dropped(f, f.split(Platform.pathSeparator).last);
-    }
+    if (mounted && !lockState.locked) _stage(files);
     return true;
   }
 
@@ -752,8 +790,8 @@ class _NotesScreenState extends State<NotesScreen> {
     if (_notes.isNotEmpty) _queuePin();
     // a file dropped here is kept, as one picked with the paperclip
     return DragInZone(
-      enabled: !_adding,
-      send: _dropped,
+      enabled: true,
+      stage: _stage,
       couldNotRead: () => l10n.chatCouldNotReadThat,
       line: () => l10n.notesDropToKeep,
       child: Scaffold(
@@ -854,7 +892,8 @@ class _NotesScreenState extends State<NotesScreen> {
                         )
                       : const SizedBox(width: double.infinity),
                 ),
-                _inputBar(),
+                TrayStrip(tray: _tray),
+                PasteFiles(onFiles: _stage, child: _inputBar()),
               ],
             ),
           ),
@@ -1114,7 +1153,7 @@ class _NotesScreenState extends State<NotesScreen> {
           ValueListenableBuilder<TextEditingValue>(
             valueListenable: _input,
             builder: (_, v, _) {
-              final some = v.text.trim().isNotEmpty;
+              final some = v.text.trim().isNotEmpty || !_tray.isEmpty;
               return _Pop(
                 child: !some
                     ? KeyedSubtree(
