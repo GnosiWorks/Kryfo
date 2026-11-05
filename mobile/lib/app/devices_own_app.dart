@@ -37,6 +37,8 @@ void _bootOwnSync(DeviceState ds, DeviceSend send, DeviceReceive recv) {
   recv.ownSync = own;
   recv.ownAdded = _ownAddedHere;
   ownNoted = _ownNote;
+  // the badge moved on my phone: my devices hear it at the next pass
+  supporterMoved = () => _madeApp?._ownPassSoon();
   lockGuard.onLifted = () => unawaited(_ownBeat());
   unawaited(() async {
     try {
@@ -236,6 +238,10 @@ Future<bool> Function(String peer)? phonePqForTest;
 /// the pass that tells my devices what moved, run now, for the tests
 @visibleForTesting
 Future<void> ownPassForTest() async => _madeApp?._ownPass();
+
+/// a device just linked: my profile to my devices, for the tests
+@visibleForTesting
+Future<void> ownTellMeForTest() async => _madeApp?._ownTellMe();
 
 /// what the session tells of the person's doing, as the app takes it, for
 /// the tests
@@ -1192,8 +1198,52 @@ extension AppStateOwn on AppState {
     }
     final av = a['a'];
     if (av is int || av == null) await setMyAvatar(av as int?);
+    final bg = a['bg'];
+    if (bg is Map) await _ownBadgeTake(bg);
     await _ownMarkPass(null);
     return true;
+  }
+
+  // my phone's supporter badge as it wears and shares it. a linked device
+  // carries the same on what it sends: a message from it without one
+  // clears the badge at every contact (state_arrivals). only the tier and
+  // the two choices come over, never a receipt
+  Future<void> _ownBadgeTake(Map<dynamic, dynamic> bg) async {
+    const c = HaloContainer.everyday;
+    final t = bg['t'];
+    await saveSupporterTier(tierOf(t is String ? t : null), c);
+    final show = bg['s'], share = bg['c'];
+    if (show is bool) await saveShowBadgeSelf(show, c);
+    if (share is bool) await saveShareBadge(share, c);
+  }
+
+  // the badge as my profile op carries it to my devices
+  Future<Map<String, Object?>> _ownBadge() async {
+    const c = HaloContainer.everyday;
+    return {
+      't': tierKey(await loadSupporterTier(c)),
+      's': await loadShowBadgeSelf(c),
+      'c': await loadShareBadge(c),
+    };
+  }
+
+  /// a device just linked: my profile goes to my devices now, the badge
+  /// with it, whatever the passes told before (the first pass tells
+  /// nothing, and a new device was never told)
+  Future<void> _ownTellMe() async {
+    final own = _ownSync;
+    if (own == null || !_ownSends || linkedRole) return;
+    try {
+      final me = <String, Object?>{
+        'h': myId,
+        'a': _myAvatar,
+        'bg': await _ownBadge(),
+      };
+      await own.op(kMainIdent, 'profile', null, me);
+      await _ownKept('me', ownDigest(me));
+    } catch (e) {
+      dlog('own: my profile not sent (${e.runtimeType})');
+    }
   }
 
   // ---- what moved, told ----
@@ -1393,7 +1443,11 @@ extension AppStateOwn on AppState {
         final op = <String, Object?>{'r': row, 'm': members, 'p': people};
         out[ownChatName(chat)] = (digest: ownDigest(op), op: op);
       }
-      final me = <String, Object?>{'h': myId, 'a': _myAvatar};
+      final me = <String, Object?>{
+        'h': myId,
+        'a': _myAvatar,
+        'bg': await _ownBadge(),
+      };
       out['me'] = (digest: ownDigest(me), op: me);
     }
     return out;

@@ -14345,6 +14345,10 @@
   "@linkedLinkOnPhone": {
     "description": "widgets/kryfo_link_text.dart: on a linked device, an invite or room link opened there; such links are the phone's"
   },
+  "linkedDoOnPhone": "Do this on your phone.",
+  "@linkedDoOnPhone": {
+    "description": "group_info_screen.dart and the group menu: on a linked device, where a group's rename, add, remove, end, leave and screenshot switch would be; they are the phone's"
+  },
   "tipsTitle": "Support Kryfo",
   "@tipsTitle": {
     "description": "screens/tip_screen.dart: the play build support tab title and the section on me"

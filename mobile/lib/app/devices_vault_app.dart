@@ -287,6 +287,7 @@ extension AppStateVaultDevices on AppState {
         sessions: vs,
         wire: _EngineDeviceWire(),
         listen: listen.listen,
+        door: _devDoor,
       );
       _vaultDevOf = v;
       _vaultDevSend = send;

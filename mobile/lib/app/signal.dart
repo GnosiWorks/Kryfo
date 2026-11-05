@@ -145,13 +145,30 @@ Future<({int ident, String cipher})> signalSeal(
 // push's burst. a key held for a check seals nothing
 DevPhone _devicePushPhone(int ident, String peer) => (
   measure: (f) async => (await signalOfIdent(ident)).sealSize(peer, f),
+  // through the door like every frame to a contact: one naming another
+  // identity of mine goes nowhere
   seal: (f, size) async => (await signalOfIdent(ident)).encryptTo(
     peer,
-    f,
+    await _devDoor(peer, f),
     held: () => appState.keyHeld(peer, strict: true),
     size: size,
   ),
 );
+
+// the one door for a device frame to [peer] (DeviceSend.door): filled for
+// the identity their row names, refused when it names another of mine
+Future<String> _devDoor(String peer, String frame) async =>
+    (await appState.doorFor(peer, frame)).$2;
+
+/// a list push's phone copy as the app seals it, for the tests
+@visibleForTesting
+DevPhone devicePushPhoneForTest(int ident, String peer) =>
+    _devicePushPhone(ident, peer);
+
+/// the device frames' door, for the tests
+@visibleForTesting
+Future<String> devDoorForTest(String peer, String frame) =>
+    _devDoor(peer, frame);
 
 // where a seal finds a peer's card to start a session afresh from, after a
 // restore: the app state's rows. set as it is made

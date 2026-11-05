@@ -788,6 +788,47 @@ void main() {
     expect(await left('v'), isEmpty);
   }, skip: skip);
 
+  test('a group into the vault takes its frames still waiting unsealed for '
+      'its members\' devices out of the everyday side; another group\'s, a '
+      '1:1 frame and sealed ones stay', () async {
+    final db = await _world();
+    for (final s in ['main', 'v']) {
+      await db.execute(
+        'CREATE TABLE $s.dev_out (uid TEXT, ident INTEGER, peer TEXT, '
+        'device INTEGER, at INTEGER, own INTEGER NOT NULL DEFAULT 0, '
+        'plain TEXT, wire TEXT, PRIMARY KEY (uid, ident, peer, device))',
+      );
+    }
+    String env(Map<String, Object?> j) => 'halo/1:${jsonEncode(j)}';
+    final rows = {
+      'grp': env({'u': 'b', 'm': 'all', 'g': _g}),
+      'grp-other': env({'u': 'c', 'm': 'else', 'g': 'other'}),
+      'one': env({'u': 'a', 'm': 'hi'}),
+      'junk': 'not a frame',
+    };
+    for (final e in rows.entries) {
+      await db.execute(
+        'INSERT INTO main.dev_out (uid, ident, peer, device, at, own, plain) '
+        "VALUES (?, 0, 'member-key', 3, 1, 0, ?)",
+        [e.key, e.value],
+      );
+    }
+    await db.execute(
+      'INSERT INTO main.dev_out (uid, ident, peer, device, at, own, wire) '
+      "VALUES ('sealed', 0, 'member-key', 3, 1, 0, 'w')",
+    );
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, group, intoVault: true);
+    final left = [
+      for (final r in await db.rawQuery(
+        'SELECT uid FROM main.dev_out ORDER BY uid',
+      ))
+        r['uid'] as String,
+    ];
+    expect(left, ['grp-other', 'junk', 'one', 'sealed']);
+    expect(await db.rawQuery('SELECT uid FROM v.dev_out'), isEmpty);
+  }, skip: skip);
+
   for (final side in ['main', 'v']) {
     test(
       'a move goes on when $side has no drafts or wallpapers table',

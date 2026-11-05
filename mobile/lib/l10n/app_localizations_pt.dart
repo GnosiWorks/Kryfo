@@ -11509,6 +11509,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get linkedLinkOnPhone => 'Abra este link no seu celular.';
 
   @override
+  String get linkedDoOnPhone => 'Faça isso no seu celular.';
+
+  @override
   String get tipsTitle => 'Apoiar o Kryfo';
 
   @override

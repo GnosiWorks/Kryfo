@@ -184,6 +184,8 @@ final _pages = [
     () => [
       l10n.settingsPrivacy,
       l10n.settingsSecurity,
+      // linked devices, in every build
+      l10n.settingsDevices,
       l10n.settingsAppearance,
       l10n.settingsFiles,
       l10n.settingsBackup,

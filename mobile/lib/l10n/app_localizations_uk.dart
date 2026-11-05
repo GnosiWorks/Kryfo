@@ -11608,6 +11608,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get linkedLinkOnPhone => 'Відкрийте це посилання на телефоні.';
 
   @override
+  String get linkedDoOnPhone => 'Зробіть це на телефоні.';
+
+  @override
   String get tipsTitle => 'Підтримати Kryfo';
 
   @override

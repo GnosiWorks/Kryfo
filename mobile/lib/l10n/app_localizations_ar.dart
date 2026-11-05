@@ -11570,6 +11570,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linkedLinkOnPhone => 'افتح هذا الرابط على هاتفك.';
 
   @override
+  String get linkedDoOnPhone => 'افعل هذا من هاتفك.';
+
+  @override
   String get tipsTitle => 'ادعم Kryfo';
 
   @override

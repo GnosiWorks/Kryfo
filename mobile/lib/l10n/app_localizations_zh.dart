@@ -10808,6 +10808,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linkedLinkOnPhone => '在手机上打开这个链接。';
 
   @override
+  String get linkedDoOnPhone => '请在手机上操作。';
+
+  @override
   String get tipsTitle => '支持 Kryfo';
 
   @override
@@ -21584,6 +21587,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get linkedLinkOnPhone => '在手機上開啟這個連結。';
+
+  @override
+  String get linkedDoOnPhone => '請在手機上操作。';
 
   @override
   String get tipsTitle => '支持 Kryfo';

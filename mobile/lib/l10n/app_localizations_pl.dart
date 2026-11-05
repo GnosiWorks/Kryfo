@@ -11648,6 +11648,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get linkedLinkOnPhone => 'Otwórz ten link na telefonie.';
 
   @override
+  String get linkedDoOnPhone => 'Zrób to na telefonie.';
+
+  @override
   String get tipsTitle => 'Wesprzyj Kryfo';
 
   @override

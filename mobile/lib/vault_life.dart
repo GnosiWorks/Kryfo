@@ -16,7 +16,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'container.dart';
 import 'devices/device_state.dart' show linkedDevicesOn;
-import 'devices/own_sync.dart' show ownFrameNames;
+import 'devices/own_sync.dart' show frameOfGroup, ownFrameNames;
 import 'heal.dart' show vaultMadeAfterRestore;
 import 'lock_state.dart' show LockState, lockState;
 import 'main.dart' show HaloDb, deviceState, engine, shredFile;
@@ -717,6 +717,17 @@ class SqlChatMover implements ChatMover {
       )) {
         if (!ownFrameNames(r['plain'] as String, chat)) continue;
         await t.execute('DELETE FROM $s.dev_out WHERE rowid = ?', [r['r']]);
+      }
+      // and a group's frames waiting unsealed for its members' devices:
+      // their phones had them, nothing of the group stays readable here
+      if (c.group) {
+        for (final r in await t.rawQuery(
+          'SELECT rowid AS r, plain FROM $s.dev_out '
+          'WHERE own = 0 AND plain IS NOT NULL',
+        )) {
+          if (!frameOfGroup(r['plain'] as String, c.id)) continue;
+          await t.execute('DELETE FROM $s.dev_out WHERE rowid = ?', [r['r']]);
+        }
       }
     }
     await t.execute('DELETE FROM $s.messages WHERE ${_chatMsgs(c)}', [c.id]);
