@@ -37,6 +37,15 @@ func main() {
 	startSweeper(db)
 	startCheckpoints(db)
 
+	onion, what, err := onionServer(relay)
+	if err != nil {
+		panic(err)
+	}
+	if onion != nil {
+		fmt.Println("kryfo relay onion listener on", onion.Addr+",", what)
+		go func() { log.Fatal(onion.ListenAndServe()) }()
+	}
+
 	fmt.Println("kryfo relay listening on", addr)
 	srv := &http.Server{Addr: addr, Handler: relay, WriteTimeout: writeWait}
 	log.Fatal(srv.ListenAndServe())
