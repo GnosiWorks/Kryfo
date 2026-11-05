@@ -15,6 +15,7 @@ import '../forward.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../widgets/desk_menu.dart';
 import '../widgets/sealed_picture.dart';
+import '../widgets/photo_shape.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
@@ -27,7 +28,6 @@ import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/owned_text.dart';
-import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
@@ -6463,52 +6463,54 @@ class _GroupBubble extends StatelessWidget {
                                                           ),
                                                       child: Stack(
                                                         children: [
-                                                          ConstrainedBox(
-                                                            constraints:
-                                                                const BoxConstraints(
-                                                                  maxHeight:
-                                                                      280,
-                                                                  maxWidth: 240,
-                                                                ),
-                                                            child: RememberedHeight(
-                                                              id: m.mediaPath!,
-                                                              child: HaloHero(
-                                                                tag: photoHeroTag(
-                                                                  m.mediaPath!,
-                                                                  'chat',
-                                                                ),
-                                                                child: ChatPicture(
+                                                          // the photo's own shape, its blur
+                                                          // the same, before the file decodes
+                                                          PhotoShape(
+                                                            path: m.mediaPath!,
+                                                            image: mediaImage(
+                                                              m.mediaPath!,
+                                                              decodePx(
+                                                                context,
+                                                                240,
+                                                              ),
+                                                            ),
+                                                            maxWidth: 240,
+                                                            maxHeight: 280,
+                                                            child: HaloHero(
+                                                              tag: photoHeroTag(
+                                                                m.mediaPath!,
+                                                                'chat',
+                                                              ),
+                                                              child: ChatPicture(
+                                                                path: m
+                                                                    .mediaPath!,
+                                                                child: SealedPicture(
                                                                   path: m
                                                                       .mediaPath!,
-                                                                  child: SealedPicture(
-                                                                    path: m
-                                                                        .mediaPath!,
-                                                                    shaped:
-                                                                        true,
-                                                                    decodeWidth:
-                                                                        decodePx(
-                                                                          context,
-                                                                          240,
-                                                                        ),
-                                                                    image: mediaImage(
-                                                                      m.mediaPath!,
+                                                                  shaped: false,
+                                                                  decodeWidth:
                                                                       decodePx(
                                                                         context,
                                                                         240,
                                                                       ),
+                                                                  image: mediaImage(
+                                                                    m.mediaPath!,
+                                                                    decodePx(
+                                                                      context,
+                                                                      240,
                                                                     ),
-                                                                    semanticLabel:
-                                                                        l10n.appPhoto,
-                                                                    // the file is gone:
-                                                                    // say so, not a gap
-                                                                    errorBuilder:
-                                                                        (
-                                                                          _,
-                                                                          _,
-                                                                          _,
-                                                                        ) =>
-                                                                            const _MissingPhoto(),
                                                                   ),
+                                                                  semanticLabel:
+                                                                      l10n.appPhoto,
+                                                                  // the file is gone:
+                                                                  // say so, not a gap
+                                                                  errorBuilder:
+                                                                      (
+                                                                        _,
+                                                                        _,
+                                                                        _,
+                                                                      ) =>
+                                                                          const _MissingPhoto(),
                                                                 ),
                                                               ),
                                                             ),

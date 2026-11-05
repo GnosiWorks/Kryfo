@@ -231,13 +231,16 @@ extension AppStateFiles on AppState {
       if (!gets) {
         return (await _waitingPath(env, db, uid, kFetchAsks), waits: true);
       }
-      incomingMediaUpdate(
-        db.container.chatKey(env.groupId ?? sender),
-        0,
-        frame.chunks,
-        uid: uid,
-        bytes: frame.size,
-      );
+      // a gif shows no share: it just appears
+      if (!env.gif) {
+        incomingMediaUpdate(
+          db.container.chatKey(env.groupId ?? sender),
+          0,
+          frame.chunks,
+          uid: uid,
+          bytes: frame.size,
+        );
+      }
       unawaited(fetchDrops());
       return (null, waits: false);
     }
@@ -502,7 +505,7 @@ extension AppStateFiles on AppState {
         } else {
           // a blind fetch may have finished since the frame was kept
           await takeHeld(await d.container.mediaDir(), frame.token!, f.path);
-          final r = await _fetchOne(d, f, frame, chat);
+          final r = await _fetchOne(d, f, frame, chat, quiet: env.gif);
           // the chat was cleared or put away while it came: nothing of it
           // is filed, and the service hears this phone is done with it
           final after = await fetchOf(db, f.uid);
@@ -578,6 +581,7 @@ extension AppStateFiles on AppState {
       await File(f.path).rename(to);
     } catch (e) {
       dlog('files: a fetched file not sealed (${e.runtimeType})');
+      desk_trace.trace('media seal failed: ${e.runtimeType}');
       await shredFile(f.path);
       try {
         await fetchState(db, f.uid, kFetchWaiting);
@@ -596,6 +600,7 @@ extension AppStateFiles on AppState {
     for (final s in const ['.part', '.open']) {
       await shredFile('${f.path}$s');
     }
+    desk_trace.trace('media seal ok');
     return f.withPath(to);
   }
 
@@ -667,7 +672,7 @@ extension AppStateFiles on AppState {
       ),
     );
     if (state != kFetchComing) return;
-    final r = await _fetchOne(d, f, frame, chat, waiting: true);
+    final r = await _fetchOne(d, f, frame, chat, waiting: true, quiet: env.gif);
     final after = await fetchOf(db, f.uid);
     if (after == null || await d.incomingFilePath(f.uid) == null) {
       setFileWait(f.uid, null);
@@ -727,6 +732,8 @@ extension AppStateFiles on AppState {
     DropFrame frame,
     String chat, {
     bool waiting = false,
+    // a gif: no share shows
+    bool quiet = false,
   }) async {
     final key = 'f:${frame.id}';
     final mine = (d: d, key: key, chat: chat);
@@ -734,7 +741,7 @@ extension AppStateFiles on AppState {
     if (waiting) fileWaitFetching(f.uid, true);
     final watch = Timer.periodic(const Duration(milliseconds: 500), (_) {
       final p = engine.fileProgress(key);
-      if (p == null) return;
+      if (p == null || quiet) return;
       if (waiting) {
         fileWaitShare(f.uid, p.$1 / p.$2);
       } else {
@@ -747,11 +754,21 @@ extension AppStateFiles on AppState {
         );
       }
     });
+    final t0 = DateTime.now();
+    desk_trace.trace('media fetch start');
+    var r = '';
     try {
-      return await engine.fileFetch(frame.fetchJob(f.path));
+      return r = await engine.fileFetch(frame.fetchJob(f.path));
     } catch (e) {
-      return 'error: ${e.runtimeType}';
+      return r = 'error: ${e.runtimeType}';
     } finally {
+      final took = DateTime.now().difference(t0).inMilliseconds / 1000;
+      desk_trace.trace(
+        r == 'ok'
+            ? 'media fetch ok +${took.toStringAsFixed(1)}s'
+            : 'media fetch failed: ${traceCode(r)} '
+                  '+${took.toStringAsFixed(1)}s',
+      );
       watch.cancel();
       if (waiting) fileWaitFetching(f.uid, false);
       if (identical(_fetching, mine)) _fetching = null;

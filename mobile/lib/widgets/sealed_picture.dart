@@ -11,6 +11,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
+import '../media_trace.dart' show traceDecode;
 import '../photo_blur.dart';
 import '../picture_lock.dart';
 import '../theme.dart';
@@ -116,6 +117,7 @@ class _SealedPictureState extends State<SealedPicture> {
   }
 
   Widget? _error(BuildContext context, Object e, StackTrace? st) {
+    traceDecode(widget.path, error: e);
     final b = widget.errorBuilder;
     if (b == null) return null;
     if (widget.framed != null && _failed == null) {
@@ -154,6 +156,7 @@ class _SealedPictureState extends State<SealedPicture> {
                 : (c, e, st) => _error(c, e, st)!,
             frameBuilder: (_, child, frame, sync) {
               final shown = sync || frame != null;
+              if (shown) traceDecode(widget.path);
               if (shown && blur == null) _ask();
               return PictureFade(shown: shown, still: still, child: child);
             },

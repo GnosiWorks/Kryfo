@@ -1091,9 +1091,13 @@ extension AppStateArrivals on AppState {
         }
         // still waiting on more pieces: surface how far along we are. a
         // voice note is seconds of audio; the banner is for the long ones.
-        if (!env.voice) incomingMediaUpdate(progressKey, have, total);
+        // a gif shows none either: it just appears
+        if (!env.voice && !env.gif) {
+          incomingMediaUpdate(progressKey, have, total);
+        }
         return to;
       }
+      desk_trace.trace('media slices whole ($total)');
       if (await burnedWhileSealed()) {
         await db.dropMediaChunks(mid);
         unawaited(db.dropMediaWant(mid));
