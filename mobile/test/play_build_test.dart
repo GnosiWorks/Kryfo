@@ -212,6 +212,16 @@ void main() {
         );
       }
     }
+    // the bitcoin amounts are said only on the donate screen, which play
+    // never reaches: play shows only its own prices
+    final fixed = [
+      for (final e in src.entries)
+        if (RegExp(
+          r'l10n\.(donateBadgesStartAt20|donateReviewAmount)\b',
+        ).hasMatch(e.value))
+          e.key,
+    ];
+    expect(fixed, ['lib/screens/donate_screen.dart']);
   });
 
   // play installs and updates apps itself; so does f-droid. kryfo never

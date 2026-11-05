@@ -254,6 +254,24 @@ void main() {
           expect(v, isNot(en[k]), reason: '$lang $k is the english');
         }
       }
+      // play shows its own prices: no amount or currency of ours, in the
+      // tip jar's words or the tier names on its cards
+      for (final k in [
+        ...keys,
+        'donateTierSupporter',
+        'donateTierPatron',
+        'donateTierGuardian',
+      ]) {
+        final v = d[k] as String;
+        expect(amount.hasMatch(v), isFalse, reason: '$lang $k: $v');
+      }
     }
   });
 }
+
+// an amount or a currency, in any script's digits
+final amount = RegExp(
+  r'\p{Nd}|[$€£¥₹₽]|\b(usd|eur|sats?|btc)\b',
+  unicode: true,
+  caseSensitive: false,
+);
