@@ -11409,6 +11409,84 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceNotNow => 'ليس الآن';
 
   @override
+  String get unlinkedTitle => 'فُصل هذا الجهاز';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'أزاله هاتفك من حسابك، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'لم يُفتح منذ 30 يومًا، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'لم يسمع من هاتفك 30 يومًا، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedClockLine =>
+      'أُرجعت ساعته إلى الوراء، لذا مسح Kryfo كل ما كان يحفظه هنا ليحمي محادثاتك.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'لم يتمكن Kryfo من معرفة متى فُتح آخر مرة، لذا مسح كل ما كان يحفظه هنا ليحمي محادثاتك.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'فصلته بنفسك، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'يحتفظ هاتفك بمحادثاتك. لتستخدم Kryfo هنا من جديد، اربط هذا الجهاز بهاتفك.';
+
+  @override
+  String get unlinkedClose => 'أغلق Kryfo';
+
+  @override
+  String get devicesLeave => 'افصل هذا الجهاز';
+
+  @override
+  String get devicesLeaveTitle => 'أتفصل هذا الجهاز؟';
+
+  @override
+  String get devicesLeaveLine =>
+      'يُعلم Kryfo هاتفك ويمسح كل ما يحفظه هنا. يحتفظ هاتفك بمحادثاتك.';
+
+  @override
+  String get devicesLeaveYes => 'افصل وامسح';
+
+  @override
+  String get devicesGoneNotice => 'أُزيل جهاز';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return 'أُزيل ⁨$name⁩ من حسابك في ⁨$date⁩.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return 'لم يُستخدم ⁨$name⁩ منذ 30 يومًا، لذا أُزيل من حسابك في ⁨$date⁩.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return 'فصل ⁨$name⁩ نفسه في ⁨$date⁩ ومسح ما كان يحفظه.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'تغيّرت أجهزتك';
+
+  @override
+  String get devicesChangedLine => 'افتح الأجهزة المرتبطة لترى ما تغيّر.';
+
+  @override
+  String get devicesUnknownNotice => 'جهاز رُبط من مكان آخر';
+
+  @override
+  String get devicesUnknownLine =>
+      'ربطت نسخة أخرى من Kryfo جهازًا بحسابك. أزاله هذا الهاتف من قائمتك.';
+
+  @override
   String get albumPrevious => 'السابق';
 
   @override
@@ -11463,4 +11541,109 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'أرسل الجسر إلى';
+
+  @override
+  String get linkedAddOnPhone => 'أضف الأشخاص من هاتفك. سيظهرون هنا أيضًا.';
+
+  @override
+  String get linkedLinkOnPhone => 'افتح هذا الرابط على هاتفك.';
+
+  @override
+  String get tipsTitle => 'ادعم Kryfo';
+
+  @override
+  String get tipsHeadline => 'أبقِ Kryfo *مجانيًا للجميع*';
+
+  @override
+  String get tipsLine =>
+      'بلا إعلانات، بلا مستثمرين، بلا حسابات. تساعد الإكرامية في دفع تكاليف الخوادم والعمل على Kryfo.';
+
+  @override
+  String get tipsLeave => 'اترك إكرامية';
+
+  @override
+  String get tipsYours => 'لديك';
+
+  @override
+  String get tipsAsking => 'جارٍ سؤال Google Play عن الأسعار';
+
+  @override
+  String get tipsBadgeOnly =>
+      'تمنحك الإكرامية شارة الداعم ولا شيء غيرها. يبقى كل ما في Kryfo مجانيًا للجميع، بإكرامية أو بدونها.';
+
+  @override
+  String get tipsThroughPlay =>
+      'يتم الدفع عبر Google Play. لا نرى أبدًا بيانات بطاقتك ولا اسمك.';
+
+  @override
+  String get tipsBadgeStays =>
+      'تبقى الشارة على هذا الهاتف. في «أنا» تختار هل تظهر وهل تراها جهات اتصالك.';
+
+  @override
+  String get tipsRestore => 'استعد شارتي';
+
+  @override
+  String get tipsRestoreLine =>
+      'تركت إكرامية من قبل؟ تعود شارتك على أي هاتف مسجّل بحساب Google نفسه.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'عادت شارة الداعم إليك',
+      'patron': 'عادت شارة الراعي إليك',
+      'guardian': 'عادت شارة الحارس إليك',
+      'other': 'عادت شارة الداعم إليك',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => 'لا توجد إكرامية من حساب Google هذا بعد';
+
+  @override
+  String get tipsUnavailable =>
+      'تمر الإكراميات عبر Google Play. ستظهر هنا حالما يعمل Google Play على هذا الهاتف.';
+
+  @override
+  String get tipsSoon => 'الإكراميات قادمة هنا قريبًا.';
+
+  @override
+  String get tipsPending =>
+      'ما زال Google Play يُتمّ دفعتك. تصلك الشارة حالما تكتمل.';
+
+  @override
+  String get tipsFailed =>
+      'لم يُتمّ Google Play الدفع. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String get tipsThanks => 'شكرًا لك';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'صارت لديك شارة الداعم. لا تفتح أي شيء آخر: يبقى كل ما في Kryfo مجانيًا للجميع.',
+      'patron':
+          'صارت لديك شارة الراعي. لا تفتح أي شيء آخر: يبقى كل ما في Kryfo مجانيًا للجميع.',
+      'guardian':
+          'صارت لديك شارة الحارس. لا تفتح أي شيء آخر: يبقى كل ما في Kryfo مجانيًا للجميع.',
+      'other':
+          'صارت لديك شارة الداعم. لا تفتح أي شيء آخر: يبقى كل ما في Kryfo مجانيًا للجميع.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'شكرًا على الإكرامية. تبقى لك شارة الداعم، وهي الأعلى.',
+      'patron': 'شكرًا على الإكرامية. تبقى لك شارة الراعي، وهي الأعلى.',
+      'guardian': 'شكرًا على الإكرامية. تبقى لك شارة الحارس، وهي الأعلى.',
+      'other': 'شكرًا على الإكرامية. تبقى لك شارة الداعم، وهي الأعلى.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'اترك إكرامية ليبقى Kryfo مستقلًا';
 }

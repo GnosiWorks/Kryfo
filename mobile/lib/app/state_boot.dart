@@ -302,11 +302,15 @@ extension AppStateBoot on AppState {
     GooglePush.instance.seal ??= engine.pushSeal;
     GooglePush.instance.onChange = () => _helperSoon();
     if (playBuild) GooglePush.instance.listen();
+    // the tip jar hears of payments the sheet closed on (play only)
+    if (kPlayBuild) TipJar.instance.listen();
     if (_deliveryMode == DeliveryMode.google) {
       helper.usePush(GooglePush.instance);
     }
     unawaited(_loadHelper());
     await _loadDeliveryTimes();
+    // a linked device's tor runs as a client: told before it starts
+    await torAsLinked(at: 'boot');
     // start tor last: nothing above needs it, and earlier it stalls the main
     // thread while tor bootstraps. a process the fifteen-minute job started,
     // with no window, in a mode that sleeps between checks leaves tor down;
@@ -319,7 +323,7 @@ extension AppStateBoot on AppState {
       _docsPath = docsDir.path;
       startEngineIn(docsDir.path, engine.startListenerBg).then((addr) {
         if (addr.isNotEmpty && !addr.startsWith('error')) {
-          myOnion = addr;
+          myOnion = onionOfStart(addr);
           _maybeRepoint();
           notifyListeners();
         }
@@ -376,7 +380,7 @@ extension AppStateBoot on AppState {
         dlog('tor watchdog: tor off, restarting listener');
         startEngineIn(docsDir.path, engine.startListenerBg).then((addr) {
           if (addr.isNotEmpty && !addr.startsWith('error')) {
-            myOnion = addr;
+            myOnion = onionOfStart(addr);
             notifyListeners();
           }
         });

@@ -11273,6 +11273,85 @@ class AppLocalizationsHi extends AppLocalizations {
   String get voiceNotNow => 'अभी नहीं';
 
   @override
+  String get unlinkedTitle => 'यह डिवाइस अलग हो गया है';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'आपके फ़ोन ने इसे आपके खाते से हटा दिया, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'इसे 30 दिन तक नहीं खोला गया, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedSilentLine =>
+      'इसे 30 दिन तक आपके फ़ोन से कुछ नहीं मिला, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedClockLine =>
+      'इसकी घड़ी पीछे कर दी गई, इसलिए आपकी चैट सुरक्षित रखने के लिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo यह नहीं जान सका कि इसे आख़िरी बार कब खोला गया, इसलिए आपकी चैट सुरक्षित रखने के लिए उसने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedSelfLine =>
+      'आपने इसे अलग किया, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
+  String get unlinkedAgainLine =>
+      'आपकी चैट आपके फ़ोन पर रहती हैं। यहाँ फिर से Kryfo इस्तेमाल करने के लिए इस डिवाइस को अपने फ़ोन से जोड़ें।';
+
+  @override
+  String get unlinkedClose => 'Kryfo बंद करें';
+
+  @override
+  String get devicesLeave => 'यह डिवाइस अलग करें';
+
+  @override
+  String get devicesLeaveTitle => 'यह डिवाइस अलग करें?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo आपके फ़ोन को बताएगा और यहाँ रखा सब कुछ मिटा देगा। आपकी चैट आपके फ़ोन पर रहेंगी।';
+
+  @override
+  String get devicesLeaveYes => 'अलग करें और मिटाएँ';
+
+  @override
+  String get devicesGoneNotice => 'डिवाइस हटाया गया';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name $date को आपके खाते से हटाया गया।';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 दिन तक इस्तेमाल नहीं हुआ, इसलिए $date को इसे आपके खाते से हटाया गया।';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name $date को खुद अलग हो गया और उसने जो रखा था वह मिटा दिया।';
+  }
+
+  @override
+  String get devicesChangedNotice => 'आपके डिवाइस बदल गए';
+
+  @override
+  String get devicesChangedLine =>
+      'क्या बदला, यह देखने के लिए जुड़े हुए डिवाइस खोलें।';
+
+  @override
+  String get devicesUnknownNotice => 'कहीं और से जोड़ा गया डिवाइस';
+
+  @override
+  String get devicesUnknownLine =>
+      'Kryfo की किसी दूसरी कॉपी ने आपके खाते से एक डिवाइस जोड़ा। इस फ़ोन ने उसे आपकी सूची से हटा दिया।';
+
+  @override
   String get albumPrevious => 'पिछला';
 
   @override
@@ -11327,4 +11406,112 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'ब्रिज भेजें';
+
+  @override
+  String get linkedAddOnPhone =>
+      'लोगों को अपने फ़ोन पर जोड़ें। वे यहाँ भी दिखेंगे।';
+
+  @override
+  String get linkedLinkOnPhone => 'यह लिंक अपने फ़ोन पर खोलें।';
+
+  @override
+  String get tipsTitle => 'Kryfo का सहयोग करें';
+
+  @override
+  String get tipsHeadline => 'Kryfo को *सबके लिए मुफ़्त* रखें';
+
+  @override
+  String get tipsLine =>
+      'न विज्ञापन, न निवेशक, न अकाउंट। टिप से सर्वरों और Kryfo पर होने वाले काम का खर्च चलता है।';
+
+  @override
+  String get tipsLeave => 'टिप दें';
+
+  @override
+  String get tipsYours => 'आपका';
+
+  @override
+  String get tipsAsking => 'Google Play से कीमतें पूछी जा रही हैं';
+
+  @override
+  String get tipsBadgeOnly =>
+      'टिप से आपको एक समर्थक बैज मिलता है, और कुछ नहीं। Kryfo में सब कुछ सबके लिए मुफ़्त रहता है, टिप दें या न दें।';
+
+  @override
+  String get tipsThroughPlay =>
+      'भुगतान Google Play से होता है। हम आपके कार्ड की जानकारी या आपका नाम कभी नहीं देखते।';
+
+  @override
+  String get tipsBadgeStays =>
+      'बैज इसी फ़ोन पर रहता है। मैं में आप चुनते हैं कि वह दिखे या नहीं, और आपके संपर्क उसे देखें या नहीं।';
+
+  @override
+  String get tipsRestore => 'मेरा बैज वापस लाएँ';
+
+  @override
+  String get tipsRestoreLine =>
+      'पहले टिप दी थी? उसी Google अकाउंट से साइन इन किए किसी भी फ़ोन पर आपका बैज वापस आ जाता है।';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'आपका समर्थक बैज वापस आ गया',
+      'patron': 'आपका संरक्षक बैज वापस आ गया',
+      'guardian': 'आपका रक्षक बैज वापस आ गया',
+      'other': 'आपका समर्थक बैज वापस आ गया',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'इस Google अकाउंट से अभी तक कोई टिप नहीं दी गई';
+
+  @override
+  String get tipsUnavailable =>
+      'टिप Google Play से दी जाती है। इस फ़ोन पर Google Play चलते ही टिप यहाँ दिखेगी।';
+
+  @override
+  String get tipsSoon => 'टिप जल्द ही यहाँ शुरू होगी।';
+
+  @override
+  String get tipsPending =>
+      'Google Play अभी आपका भुगतान पूरा कर रहा है। भुगतान होते ही आपका बैज आ जाएगा।';
+
+  @override
+  String get tipsFailed =>
+      'Google Play ने भुगतान पूरा नहीं किया। थोड़ी देर में फिर कोशिश करें।';
+
+  @override
+  String get tipsThanks => 'धन्यवाद';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'अब आपके पास समर्थक बैज है। इससे और कुछ नहीं खुलता: Kryfo में सब कुछ सबके लिए मुफ़्त रहता है।',
+      'patron':
+          'अब आपके पास संरक्षक बैज है। इससे और कुछ नहीं खुलता: Kryfo में सब कुछ सबके लिए मुफ़्त रहता है।',
+      'guardian':
+          'अब आपके पास रक्षक बैज है। इससे और कुछ नहीं खुलता: Kryfo में सब कुछ सबके लिए मुफ़्त रहता है।',
+      'other':
+          'अब आपके पास समर्थक बैज है। इससे और कुछ नहीं खुलता: Kryfo में सब कुछ सबके लिए मुफ़्त रहता है।',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'टिप के लिए धन्यवाद। आपका समर्थक बैज बना रहता है, वह ऊँचा है।',
+      'patron': 'टिप के लिए धन्यवाद। आपका संरक्षक बैज बना रहता है, वह ऊँचा है।',
+      'guardian': 'टिप के लिए धन्यवाद। आपका रक्षक बैज बना रहता है, वह ऊँचा है।',
+      'other': 'टिप के लिए धन्यवाद। आपका समर्थक बैज बना रहता है, वह ऊँचा है।',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Kryfo को स्वतंत्र रखने के लिए टिप दें';
 }

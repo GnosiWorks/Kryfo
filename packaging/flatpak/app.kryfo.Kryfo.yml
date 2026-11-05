@@ -1,11 +1,15 @@
-# kryfo for linux as a flatpak. the flutter bundle, with libhalo.so and
-# libkryfo_signal.so already in its lib/, is built before flatpak-builder
-# runs (flutter fetches packages while it builds, and the sandbox has no
-# network) and comes in as a local dir.
+# kryfo for linux as a flatpak, for a local or own-repo build. the flutter
+# bundle (BUILDING.md desktop: build-linux.sh, build-host.sh,
+# build-sqlcipher.sh, flutter build linux -t lib/main_desktop.dart,
+# check-bundle.sh) is built before flatpak-builder runs and comes in as a
+# local dir: flutter fetches packages while it builds and the sandbox has no
+# network. sqlcipher and the voice recorder's ffmpeg build here from pinned
+# sources. tor is go-libtor inside libhalo.so, built from engine/vendor and
+# pinned there by go.sum, so there is no tor download of its own.
 id: app.kryfo.Kryfo
-runtime: org.gnome.Platform
-runtime-version: '50'
-sdk: org.gnome.Sdk
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
 command: kryfo
 finish-args:
   # tor, bridges and relays
@@ -17,16 +21,27 @@ finish-args:
   - --share=ipc
   # gpu rendering for flutter
   - --device=dri
-  # no org.freedesktop.secrets: sandboxed, libsecret keeps the vault's key
-  # in the app's own keyring file under the secret portal's per-app key.
-  # without that portal the app asks for a passphrase instead
-  # no tray yet. when it lands it needs:
-  # - --talk-name=org.kde.StatusNotifierWatcher
-  # file open/save go through portals, so no --filesystem. notifications
-  # have to use the portal too: no org.freedesktop.Notifications
+  # voice notes: gstreamer plays them through pulse, parecord records them
+  - --socket=pulseaudio
+  # flutter_local_notifications_linux calls this bus name itself and has no
+  # portal side yet. drop it once the app sends through
+  # org.freedesktop.portal.Notification
+  - --talk-name=org.freedesktop.Notifications
+  # no other bus names and no --filesystem:
+  # - files open and save through the file chooser portal (gtk's native
+  #   chooser), dropped files come through the document portal, links open
+  #   through the openuri portal
+  # - the vault's key: libsecret uses the secret portal inside a flatpak and
+  #   keeps it in the app's own keyring file, so no org.freedesktop.secrets
+  # - start with the computer: the background portal writes the autostart
+  #   entry itself (runner, ask_portal)
+  # - the tray is gtk's status icon (xembed, x11 only), which needs no bus
+  #   name. a statusnotifieritem tray would add
+  #   --talk-name=org.kde.StatusNotifierWatcher
 modules:
   - name: sqlcipher
     buildsystem: autotools
+    # the same release, sha256 and options as mobile/linux/build-sqlcipher.sh
     config-opts:
       - --with-tempstore=yes
       - --fts5
@@ -43,6 +58,10 @@ modules:
     build-options:
       cflags: -DSQLITE_HAS_CODEC -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown
       ldflags: -lcrypto
+    post-install:
+      # the app opens /app/lib/libsqlcipher.so.0 by full path
+      - cd ${FLATPAK_DEST}/lib && [ -e libsqlcipher.so.0 ] || ln -s "$(ls libsqlcipher.so.*.* | head -n1)" libsqlcipher.so.0
+      - nm -D --defined-only ${FLATPAK_DEST}/lib/libsqlcipher.so.0 | grep -q ' T sqlite3_key$'
     cleanup:
       - /bin
       - /include
@@ -54,12 +73,53 @@ modules:
         # tag v4.19.0, commit c4b275a47932888216bade83aff2bbc73df0ff85
         sha256: 7075f96cbabe45b4ecfc2e6b1745a625f856f695b0827a5506ce9ed85b906aa0
 
+  # record_linux pipes parecord's raw pcm into an ffmpeg binary, which the
+  # runtime has no fixed promise of. this one does only that: raw s16le in,
+  # wav out, nothing else
+  - name: ffmpeg
+    config-opts:
+      - --disable-everything
+      - --disable-autodetect
+      - --disable-doc
+      - --disable-network
+      - --disable-ffplay
+      - --disable-ffprobe
+      - --disable-x86asm
+      - --enable-protocol=pipe,file
+      - --enable-demuxer=pcm_s16le
+      - --enable-decoder=pcm_s16le
+      - --enable-encoder=pcm_s16le
+      - --enable-muxer=wav
+      - --enable-filter=aformat,anull,aresample
+    post-install:
+      # what record_linux runs, so a missing piece stops the build
+      - head -c 9600 /dev/zero | ${FLATPAK_DEST}/bin/ffmpeg -hide_banner -loglevel error -f s16le -ar 48000 -ac 1 -i - -c:a pcm_s16le -f wav t.wav
+      - test "$(head -c 4 t.wav)" = RIFF
+    cleanup:
+      - /include
+      - /lib
+      - /share
+    sources:
+      - type: archive
+        url: https://ffmpeg.org/releases/ffmpeg-8.1.3.tar.xz
+        sha256: 7138d28c96d9d3e3af4ee3d8cad72741f8ffb40da90c1112235dea3ecd3178a3
+
   - name: kryfo
     buildsystem: simple
     build-commands:
       - test -x bundle/kryfo
       - test -f bundle/lib/libhalo.so
       - test -f bundle/lib/libkryfo_signal.so
+      # the sqlcipher module's copy is the one, built against the runtime's
+      # openssl
+      - rm -f bundle/lib/libsqlcipher.so.0
+      # the bundle was built outside the sdk: it may not need a newer glibc
+      # than the runtime has
+      - >-
+        have=$(getconf GNU_LIBC_VERSION | cut -d' ' -f2);
+        need=$(find bundle -type f \( -name kryfo -o -name '*.so*' \) -exec objdump -T {} + 2>/dev/null | grep -o 'GLIBC_[0-9][0-9.]*' | cut -c7- | sort -uV | tail -n1);
+        [ -z "$need" ] || [ "$(printf '%s\n%s\n' "$need" "$have" | sort -V | tail -n1)" = "$have" ] ||
+        { echo "the bundle needs glibc $need, the runtime has $have" >&2; exit 1; }
       - mkdir -p ${FLATPAK_DEST}/lib/kryfo ${FLATPAK_DEST}/bin
       - cp -a bundle/. ${FLATPAK_DEST}/lib/kryfo/
       - ln -s ../lib/kryfo/kryfo ${FLATPAK_DEST}/bin/kryfo
@@ -67,8 +127,7 @@ modules:
       - install -Dm644 app.kryfo.Kryfo.metainfo.xml ${FLATPAK_DEST}/share/metainfo/app.kryfo.Kryfo.metainfo.xml
       - install -Dm644 icon.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/app.kryfo.Kryfo.png
     sources:
-      # flutter build linux --release, after engine/build-linux.sh and
-      # native/kryfo_signal/build-host.sh
+      # the checked bundle from BUILDING.md's desktop section
       - type: dir
         path: ../../mobile/build/linux/x64/release/bundle
         dest: bundle

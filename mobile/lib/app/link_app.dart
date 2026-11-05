@@ -24,6 +24,30 @@ Future<void> readLinkedRole(DatabaseExecutor db) async {
   await readLinkNotices(db);
 }
 
+/// a linked device's tor is a client: it reaches relays and its phone's
+/// onion and publishes no onion of its own (decision 4). told before tor's
+/// first start, and right after a link, whose process published the new
+/// device's onion already: the engine takes that one down. on a phone this
+/// does nothing
+Future<void> torAsLinked({required String at}) async {
+  if (!linkedDevicesOn) return;
+  if (at == 'boot') {
+    try {
+      _linkedRole = await linkedRoleOf(await live.open());
+    } catch (e) {
+      dlog('linked: role not read before tor (${e.runtimeType})');
+    }
+  }
+  if (!linkedRole) return;
+  appState.myOnion = '';
+  try {
+    final r = await engine.torClientOnly();
+    if (r != 'ok') dlog('linked: tor as a client at $at: $r');
+  } catch (e) {
+    dlog('linked: tor as a client at $at (${e.runtimeType})');
+  }
+}
+
 /// where the devices page reads from, for the session open now. the
 /// decoy's is this phone alone, linking to nobody: it reads nothing real
 Future<OwnDevices> ownDevicesSource() async {
@@ -40,12 +64,14 @@ Future<OwnDevices> ownDevicesSource() async {
       thisName: l10n.devicesThisPhoneShown,
       thisKind: onDesktop ? DeviceKind.computer : DeviceKind.phone,
       phoneName: l10n.devicesYourPhone,
+      leave: _leaveHere,
     );
   }
   return StoredOwnDevices(
     db: db,
     thisName: l10n.devicesThisPhoneShown,
     thisKind: onDesktop ? DeviceKind.computer : DeviceKind.phone,
+    unlink: _ownUnlink == null ? null : _unlinkOwn,
     // phones link in 0.6: a computer that holds the account has no camera
     // to scan with
     link: deviceState == null || onDesktop
@@ -119,6 +145,13 @@ class _PhoneLinkApp implements PhoneLinkHooks {
     final bind = t.bind;
     try {
       await db.transaction((tx) async {
+        // a last word still owed to a device removed under this id goes:
+        // it would go to the new device's pair with the old seed
+        await tx.delete(
+          'dev_farewell',
+          where: 'ident = ? AND device = ?',
+          whereArgs: [kMainIdent, t.device],
+        );
         await ds.ownMine(tx, kMainIdent, t.list);
         await ds.call(tx, 'pool_put', {
           'ident': kMainIdent,
@@ -160,6 +193,12 @@ class _PhoneLinkApp implements PhoneLinkHooks {
       rethrow;
     }
     await readLinkNotices(db);
+    // the engine's leaving keys as the rows are now
+    try {
+      await _deviceSend?.leaving(kMainIdent);
+    } catch (e) {
+      dlog('devices: leaving keys not set (${e.runtimeType})');
+    }
     // the history copy for the new device, made and served from here
     if (bind != null) startPhoneHistoryCopy(uid);
     // the contacts who read lists learn of the new device, spread out
@@ -237,6 +276,9 @@ class _JoinLinkApp implements JoinLinkHooks {
     LinkStream stream,
     Map<String, dynamic> ownRows,
   ) async {
+    // its own end is kept from the start: a linked device with no lock
+    // state wipes at its next start
+    await linkedLock.start();
     await joinedRows(
       await live.open(),
       identity: _linkUnhex(p.identity),
@@ -247,6 +289,8 @@ class _JoinLinkApp implements JoinLinkHooks {
       onion: stream.onion,
     );
     _linkedRole = true;
+    // no onion of its own from here: the one this process published goes
+    unawaited(torAsLinked(at: 'link'));
     // the state as the rows now hold it, loaded as every start loads it
     await bootDevices();
     // the history copy comes from the phone from here

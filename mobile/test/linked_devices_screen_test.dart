@@ -61,6 +61,13 @@ class _Devices implements OwnDevices {
 
   @override
   Future<void> opened() async {}
+
+  var left = 0;
+  @override
+  bool get canLeave => linkedDevice;
+
+  @override
+  Future<void> leaveHere() async => left++;
 }
 
 const _phone = OwnDevice(
@@ -146,16 +153,45 @@ void main() {
   test('the home card names every new device, not only the newest', () {
     setL10nLocale(const Locale('en'));
     final one = linkNoticeWords([
-      (name: 'Desk', at: DateTime(2026, 10, 27)),
+      (name: 'Desk', at: DateTime(2026, 10, 27), why: null),
     ], _now);
     expect(one.title, l10n.devicesNewNotice);
     expect(one.line, contains('Desk'));
     final two = linkNoticeWords([
-      (name: 'Desk', at: DateTime(2026, 10, 27)),
-      (name: 'Lap', at: DateTime(2026, 10, 28)),
+      (name: 'Desk', at: DateTime(2026, 10, 27), why: null),
+      (name: 'Lap', at: DateTime(2026, 10, 28), why: null),
     ], _now);
     expect(two.title, l10n.devicesNewNoticeMany);
     expect(two.line, l10n.devicesNewNoticeManyLine('Desk, Lap'));
+  });
+
+  test('the home card says why a device went, and a device another copy of '
+      'the phone linked comes before anything else', () {
+    setL10nLocale(const Locale('en'));
+    final at = DateTime(2026, 10, 27);
+    final gone = linkNoticeWords([(name: 'Desk', at: at, why: 'unused')], _now);
+    expect(gone.title, l10n.devicesGoneNotice);
+    expect(gone.line, contains('30 days'));
+    expect(gone.line, contains('Desk'));
+    expect(
+      linkNoticeWords([(name: 'Desk', at: at, why: 'itself')], _now).line,
+      contains('unlinked itself'),
+    );
+    expect(
+      linkNoticeWords([(name: 'Desk', at: at, why: 'removed')], _now).line,
+      contains('removed'),
+    );
+    final mixed = linkNoticeWords([
+      (name: 'Desk', at: at, why: 'removed'),
+      (name: 'Lap', at: at, why: null),
+    ], _now);
+    expect(mixed.title, l10n.devicesChangedNotice);
+    final unknown = linkNoticeWords([
+      (name: 'Lap', at: at, why: null),
+      (name: '', at: at, why: 'unknown'),
+    ], _now);
+    expect(unknown.title, l10n.devicesUnknownNotice);
+    expect(unknown.line, l10n.devicesUnknownLine);
   });
 
   test('use comes in four steps, never a time', () {
@@ -321,6 +357,20 @@ void main() {
     await t.tap(find.text('Your phone'));
     await t.pumpAndSettle();
     expect(find.text(l10n.devicesRename), findsNothing);
+    // it can unlink itself, once asked
+    await t.ensureVisible(find.text(l10n.devicesLeave));
+    await t.tap(find.text(l10n.devicesLeave));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.devicesLeaveLine), findsOneWidget);
+    await t.tap(find.text(l10n.devicesLeaveYes));
+    await t.pumpAndSettle();
+    expect(src.left, 1);
+  });
+
+  testWidgets('a phone offers no unlinking of itself', (t) async {
+    final src = _Devices([_phone, _computer('a', 'Desk')]);
+    await _open(t, src);
+    expect(find.text(l10n.devicesLeave), findsNothing);
   });
 
   testWidgets('a computer that holds the account offers no link in 0.6', (

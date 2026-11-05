@@ -18073,6 +18073,132 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get voiceNotNow;
 
+  /// screens/unlinked_screen.dart: the title once a linked device unlinked and erased itself
+  ///
+  /// In en, this message translates to:
+  /// **'This device is unlinked'**
+  String get unlinkedTitle;
+
+  /// screens/unlinked_screen.dart: why: the phone removed this device
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone removed it from your account, so Kryfo erased everything it kept here.'**
+  String get unlinkedRemovedLine;
+
+  /// screens/unlinked_screen.dart: why: not opened for 30 days
+  ///
+  /// In en, this message translates to:
+  /// **'It wasn\'t opened for 30 days, so Kryfo erased everything it kept here.'**
+  String get unlinkedUnusedLine;
+
+  /// screens/unlinked_screen.dart: why: no word from the phone for 30 days of this device's time online (cut off by a restore, or removed while it was away)
+  ///
+  /// In en, this message translates to:
+  /// **'It heard nothing from your phone for 30 days, so Kryfo erased everything it kept here.'**
+  String get unlinkedSilentLine;
+
+  /// screens/unlinked_screen.dart: why: the device clock was set back
+  ///
+  /// In en, this message translates to:
+  /// **'Its clock was set back, so Kryfo erased everything it kept here to keep your chats safe.'**
+  String get unlinkedClockLine;
+
+  /// screens/unlinked_screen.dart: why: the lock state did not read
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo couldn\'t tell when it was last opened, so it erased everything it kept here to keep your chats safe.'**
+  String get unlinkedBrokenLine;
+
+  /// screens/unlinked_screen.dart: why: the person unlinked it on this device
+  ///
+  /// In en, this message translates to:
+  /// **'You unlinked it, so Kryfo erased everything it kept here.'**
+  String get unlinkedSelfLine;
+
+  /// screens/unlinked_screen.dart: the chats stay on the phone, and how to use Kryfo here again
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone keeps your chats. To use Kryfo here again, link this device to your phone.'**
+  String get unlinkedAgainLine;
+
+  /// screens/unlinked_screen.dart: the button that closes the app
+  ///
+  /// In en, this message translates to:
+  /// **'Close Kryfo'**
+  String get unlinkedClose;
+
+  /// screens/linked_devices_screen.dart: the row on a linked device that unlinks it and erases it
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink this device'**
+  String get devicesLeave;
+
+  /// screens/linked_devices_screen.dart: the confirm before a linked device unlinks itself
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink this device?'**
+  String get devicesLeaveTitle;
+
+  /// screens/linked_devices_screen.dart: what unlinking this device does
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo tells your phone and erases everything it keeps here. Your phone keeps your chats.'**
+  String get devicesLeaveLine;
+
+  /// screens/linked_devices_screen.dart: the confirm button
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink and erase'**
+  String get devicesLeaveYes;
+
+  /// screens/home_screen.dart: the card title when one device was removed
+  ///
+  /// In en, this message translates to:
+  /// **'Device removed'**
+  String get devicesGoneNotice;
+
+  /// screens/home_screen.dart: the card line: the device and the day it was removed
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was removed from your account on {date}.'**
+  String devicesGoneRemovedLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card line: the device was not used for 30 days and was removed on that day
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wasn\'t used for 30 days, so it was removed from your account on {date}.'**
+  String devicesGoneUnusedLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card line: the device unlinked itself on that day
+  ///
+  /// In en, this message translates to:
+  /// **'{name} unlinked itself on {date} and erased what it kept.'**
+  String devicesGoneItselfLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card title when devices came and went
+  ///
+  /// In en, this message translates to:
+  /// **'Your devices changed'**
+  String get devicesChangedNotice;
+
+  /// screens/home_screen.dart: the card line when devices came and went
+  ///
+  /// In en, this message translates to:
+  /// **'Open Linked devices to see what changed.'**
+  String get devicesChangedLine;
+
+  /// screens/home_screen.dart: the card title: another copy of the phone linked a device
+  ///
+  /// In en, this message translates to:
+  /// **'Device linked elsewhere'**
+  String get devicesUnknownNotice;
+
+  /// screens/home_screen.dart: the card line: another copy of the phone linked a device, and this phone took it off the list
+  ///
+  /// In en, this message translates to:
+  /// **'Another copy of Kryfo linked a device to your account. This phone took it off your list.'**
+  String get devicesUnknownLine;
+
   /// a computer: the round button at an album's side that goes back one photo or video
   ///
   /// In en, this message translates to:
@@ -18174,6 +18300,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send the bridge to'**
   String get bridgesSendBridgeTo;
+
+  /// screens/home_screen.dart, app/shell.dart: on a linked device, where adding a contact would be; people are added on the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Add people on your phone. They show up here too.'**
+  String get linkedAddOnPhone;
+
+  /// widgets/kryfo_link_text.dart: on a linked device, an invite or room link opened there; such links are the phone's
+  ///
+  /// In en, this message translates to:
+  /// **'Open this link on your phone.'**
+  String get linkedLinkOnPhone;
+
+  /// screens/tip_screen.dart: the play build support tab title and the section on me
+  ///
+  /// In en, this message translates to:
+  /// **'Support Kryfo'**
+  String get tipsTitle;
+
+  /// screens/tip_screen.dart: the headline, the words between * are amber
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Kryfo *free for everyone*'**
+  String get tipsHeadline;
+
+  /// screens/tip_screen.dart: under the headline
+  ///
+  /// In en, this message translates to:
+  /// **'No ads, no investors, no accounts. A tip helps pay for the servers and the work on Kryfo.'**
+  String get tipsLine;
+
+  /// screens/tip_screen.dart: the button that opens google play payment sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a tip'**
+  String get tipsLeave;
+
+  /// screens/tip_screen.dart: on an amount already bought on this google account
+  ///
+  /// In en, this message translates to:
+  /// **'Yours'**
+  String get tipsYours;
+
+  /// screens/tip_screen.dart: screen reader words while prices load
+  ///
+  /// In en, this message translates to:
+  /// **'Asking Google Play for the prices'**
+  String get tipsAsking;
+
+  /// screens/tip_screen.dart: what a tip gives
+  ///
+  /// In en, this message translates to:
+  /// **'A tip gives you a supporter badge and nothing else. Everything in Kryfo stays free for everyone, with or without one.'**
+  String get tipsBadgeOnly;
+
+  /// screens/tip_screen.dart: who handles the payment
+  ///
+  /// In en, this message translates to:
+  /// **'Payment goes through Google Play. We never see your card details or your name.'**
+  String get tipsThroughPlay;
+
+  /// screens/tip_screen.dart: where the badge lives. Me is the tab name
+  ///
+  /// In en, this message translates to:
+  /// **'The badge lives on this phone. In Me you choose whether it shows and whether your contacts see it.'**
+  String get tipsBadgeStays;
+
+  /// screens/tip_screen.dart: the restore row
+  ///
+  /// In en, this message translates to:
+  /// **'Restore my badge'**
+  String get tipsRestore;
+
+  /// screens/tip_screen.dart: under the restore row
+  ///
+  /// In en, this message translates to:
+  /// **'Tipped before? Your badge comes back on any phone signed in to the same Google account.'**
+  String get tipsRestoreLine;
+
+  /// screens/tip_screen.dart: toast after a restore. tier is the supporter tier
+  ///
+  /// In en, this message translates to:
+  /// **'{tier, select, supporter{Your supporter badge is back} patron{Your patron badge is back} guardian{Your guardian badge is back} other{Your supporter badge is back}}'**
+  String tipsRestored(String tier);
+
+  /// screens/tip_screen.dart: toast when the google account bought nothing
+  ///
+  /// In en, this message translates to:
+  /// **'No tip on this Google account yet'**
+  String get tipsNothingToRestore;
+
+  /// screens/tip_screen.dart: when google play billing is not there
+  ///
+  /// In en, this message translates to:
+  /// **'Tips go through Google Play. They show here once Google Play works on this phone.'**
+  String get tipsUnavailable;
+
+  /// screens/tip_screen.dart: when no product is set up yet
+  ///
+  /// In en, this message translates to:
+  /// **'Tips open here soon.'**
+  String get tipsSoon;
+
+  /// screens/tip_screen.dart: a payment google play still holds
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play is still finishing your payment. Your badge comes as soon as it goes through.'**
+  String get tipsPending;
+
+  /// screens/tip_screen.dart: toast when the payment did not finish
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play did not finish the payment. Try again in a moment.'**
+  String get tipsFailed;
+
+  /// screens/tip_screen.dart: the thank you title
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you'**
+  String get tipsThanks;
+
+  /// screens/tip_screen.dart: under the thank you. tier is the supporter tier
+  ///
+  /// In en, this message translates to:
+  /// **'{tier, select, supporter{You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} patron{You now have the patron badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} guardian{You now have the guardian badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} other{You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.}}'**
+  String tipsGranted(String tier);
+
+  /// screens/tip_screen.dart: under the thank you when a higher badge stays. tier is the higher tier
+  ///
+  /// In en, this message translates to:
+  /// **'{tier, select, supporter{Thank you for the tip. You keep your supporter badge, the higher one.} patron{Thank you for the tip. You keep your patron badge, the higher one.} guardian{Thank you for the tip. You keep your guardian badge, the higher one.} other{Thank you for the tip. You keep your supporter badge, the higher one.}}'**
+  String tipsKept(String tier);
+
+  /// screens/profile_screen.dart: the card on me in the play build
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a tip to keep Kryfo independent'**
+  String get tipsProfileCard;
 }
 
 class _AppLocalizationsDelegate

@@ -234,6 +234,28 @@ what follows is not covered by either.
 - malware running as you while Kryfo is open, or a keylogger, sees what you
   see and what you type.
 
+a computer linked to your phone (linked devices, behind a switch in 0.6):
+
+- a linked computer erases itself after 30 days without being opened, or
+  when its clock is set back. this helps with a computer you forgot.
+  someone who already has it can copy its disk first: a copy of the disk,
+  with the clock set to the copy's time, beats both rules, and Kryfo kept
+  from running counts no days at all. so remove a lost computer from your
+  phone. what stops new messages reaching it is your phone and your
+  contacts' lists: once your contacts' apps have your new list, nothing new
+  goes to it, within minutes for contacts online and later for those
+  offline. a computer kept online with a changed Kryfo stays linked until
+  you remove it.
+- a removed computer keeps what it already held, and it still knows your
+  phone's onion address, so it can tell when your phone is online.
+- a contact you deleted is not told when you remove a computer, so they
+  cannot tell you still use Kryfo. if they still have you, their app may
+  keep sending that computer a copy of what they write to you, until you
+  add them again.
+- restoring your phone from a backup cuts every linked computer off, but
+  cannot tell one that is away: it erases itself once it has heard nothing
+  from your phone for 30 days of being online.
+
 ## status
 
 alpha, unaudited, one person. do not rely on it where being wrong would

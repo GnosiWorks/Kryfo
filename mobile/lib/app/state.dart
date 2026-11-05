@@ -685,6 +685,9 @@ class AppState extends ChangeNotifier {
   // how many times it has been torn down on purpose. see engine/route.go.
   bool _routeOK = true;
   int _routeGen = 0;
+  // the last time a relay answered (the transport rows' up), for the
+  // linked devices' clocks: a network alone is not being in touch
+  int? _relayUpAt;
 
   // what the home screen was last told about the two bridge cards
   (bool, bool) _bridgeHintsShown = (false, false);

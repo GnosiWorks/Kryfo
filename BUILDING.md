@@ -85,8 +85,7 @@ build-linux.sh writes engine/out/linux-<arch>/libhalo.so, offline from
 vendor/ like build.sh. mobile/linux/engine.cmake links it and the shim into
 the runner and puts both in the bundle's lib/ with the sqlcipher, and a
 release build stops without the sqlcipher. check-bundle.sh checks the
-bundle's libraries and exports. packaging/flatpak takes that bundle as it
-is.
+bundle's libraries and exports. the flatpak below takes that bundle.
 
 for the tests that need the engine on this computer, `sh
 mobile/tool/host_engine.sh` builds engine/build/host/libhalo.so.
@@ -113,6 +112,46 @@ on release-06 the pins in tor-pin.txt and kryfo.iss are zeros, so a
 release build stops there. the rest of the windows packaging (the real tor
 pins, the sqlcipher, the bundle checks and ci) lives on desktop-windows until
 it merges.
+
+## flatpak
+
+for a local or own-repo build, after the linux steps above (x64):
+
+    packaging/test.sh
+    flatpak install flathub org.freedesktop.Sdk//26.08 org.freedesktop.Platform//26.08
+    flatpak-builder --user --install --force-clean build-flatpak \
+      packaging/flatpak/app.kryfo.Kryfo.yml
+    flatpak run app.kryfo.Kryfo
+
+or `--repo=<dir>` in place of `--install` for a repo of our own, then
+`flatpak build-bundle <dir> kryfo.flatpak app.kryfo.Kryfo`.
+
+the manifest takes mobile/build/linux/x64/release/bundle as a local dir and
+builds sqlcipher (the pin and options of build-sqlcipher.sh) and a small
+ffmpeg (raw pcm in, wav out, for parecord's voice notes) from pinned
+archives. it drops the bundle's own libsqlcipher.so.0, so the app opens
+/app/lib's. tor is go-libtor inside libhalo.so, pinned by engine/vendor.
+the build stops when the bundle needs a newer glibc than the runtime has:
+then build the bundle on an older system. packaging/test.sh checks the
+permissions, the pins and the module layout, and validates the metainfo.
+
+each permission is argued for in the manifest. files, dropped files, links,
+the vault's key (secret portal), and starting with the computer (background
+portal) need none. notifications still use org.freedesktop.Notifications,
+the one bus name, until the app sends through the notification portal. the
+tray is gtk's status icon, so it shows only under x11.
+
+after the first build, check that voice notes record and play:
+`flatpak run --command=sh app.kryfo.Kryfo -c 'command -v parecord ffmpeg'`.
+
+each release adds a `<release>` line to app.kryfo.Kryfo.metainfo.xml.
+
+flathub builds everything from source with no network, so it needs, besides
+this: the engine from engine/ with the golang sdk extension (vendor/ is
+already offline), the shim with the rust extension and its crates vendored
+(flatpak-cargo-generator), flutter itself and every pub package as pinned
+sources (flatpak-flutter), screenshots in the metainfo, and its own
+flathub repo with this manifest.
 
 ## test build for blocked networks
 

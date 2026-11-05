@@ -28,6 +28,7 @@ import '../main.dart'
         AppStateRefresh;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
+import '../widgets/desk_menu.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/confirm_sheet.dart';
@@ -315,51 +316,46 @@ class _SupportScreenState extends State<SupportScreen> {
 
   void _menu(SupportChat c) {
     HapticFeedback.mediumImpact();
-    showHaloSheet<String>(
+    showMenuSheet<String>(
       context,
-      scroll: true,
-      builder: (ctx) {
+      groups: (ctx) {
         void pick(String a) => Navigator.pop(ctx, a);
-        return SingleChildScrollView(
-          child: MenuSheet(
-            groups: [
-              [
-                c.done
-                    ? MenuSheetRow(
-                        icon: Icons.undo_rounded,
-                        label: l10n.supportReopen,
-                        onTap: () => pick('reopen'),
-                      )
-                    : MenuSheetRow(
-                        icon: Icons.done_all_rounded,
-                        label: l10n.supportMarkDone,
-                        onTap: () => pick('done'),
-                      ),
-                // a contact by now: their chat can sit in Chats instead
-                if (c.answered)
-                  MenuSheetRow(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    label: l10n.supportMoveToChats,
-                    onTap: () => pick('chats'),
+        return [
+          [
+            c.done
+                ? MenuSheetRow(
+                    icon: Icons.undo_rounded,
+                    label: l10n.supportReopen,
+                    onTap: () => pick('reopen'),
+                  )
+                : MenuSheetRow(
+                    icon: Icons.done_all_rounded,
+                    label: l10n.supportMarkDone,
+                    onTap: () => pick('done'),
                   ),
-              ],
-              [
-                MenuSheetRow(
-                  icon: Icons.block,
-                  label: l10n.commonBlock,
-                  danger: true,
-                  onTap: () => pick('block'),
-                ),
-                MenuSheetRow(
-                  icon: Icons.delete_outline,
-                  label: l10n.homeDeleteChat,
-                  danger: true,
-                  onTap: () => pick('delete'),
-                ),
-              ],
-            ],
-          ),
-        );
+            // a contact by now: their chat can sit in Chats instead
+            if (c.answered)
+              MenuSheetRow(
+                icon: Icons.chat_bubble_outline_rounded,
+                label: l10n.supportMoveToChats,
+                onTap: () => pick('chats'),
+              ),
+          ],
+          [
+            MenuSheetRow(
+              icon: Icons.block,
+              label: l10n.commonBlock,
+              danger: true,
+              onTap: () => pick('block'),
+            ),
+            MenuSheetRow(
+              icon: Icons.delete_outline,
+              label: l10n.homeDeleteChat,
+              danger: true,
+              onTap: () => pick('delete'),
+            ),
+          ],
+        ];
       },
     ).then((a) {
       if (!mounted || a == null) return;

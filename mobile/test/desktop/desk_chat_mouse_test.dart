@@ -28,6 +28,7 @@ import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/desk_menu.dart';
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
 import 'package:kryfo/wide/wide_home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -293,7 +294,8 @@ void main() {
     await t.pump();
     await g.up();
     await _settle(t);
-    expect(find.byType(MessageMenuCard), findsOneWidget);
+    expect(find.byType(DeskMenu), findsOneWidget);
+    expect(find.byType(MessageMenuCard), findsNothing);
     await g.removePointer();
     await _close(t);
   });
@@ -336,7 +338,111 @@ void main() {
       buttons: kSecondaryMouseButton,
     );
     await _settle(t);
-    expect(find.byType(MessageMenuCard), findsOneWidget);
+    expect(find.byType(DeskMenu), findsOneWidget);
+    expect(find.byType(MessageMenuCard), findsNothing);
+    await _close(t);
+  });
+
+  testWidgets(
+    'a bubble\'s menu sits at the mouse, reactions first, esc closes',
+    (t) async {
+      await _open(t);
+      await _openRow(t, _a);
+      final at = t.getCenter(_words(_a)) + const Offset(4, 2);
+      await t.tapAt(
+        at,
+        kind: PointerDeviceKind.mouse,
+        buttons: kSecondaryMouseButton,
+      );
+      await _settle(t);
+      final menu = t.getRect(find.byKey(const ValueKey('desk menu')));
+      // at the mouse: under it, or over it this near the window's foot
+      expect(menu.left, at.dx);
+      expect(menu.top == at.dy || menu.bottom == at.dy, isTrue);
+      expect(find.byKey(const ValueKey('desk menu reactions')), findsOneWidget);
+      // the phone's order: reactions, reply, then pin, save, copy, forward
+      final reply = t.getRect(find.text(l10n.chatReply)).top;
+      final pin = t.getRect(find.text(l10n.chatPin)).top;
+      final copy = t.getRect(find.text(l10n.commonCopy)).top;
+      final forward = t.getRect(find.text(l10n.chatForward)).top;
+      expect(reply < pin && pin < copy && copy < forward, isTrue);
+      // theirs: no edit or unsend
+      expect(find.text(l10n.chatUnsend), findsNothing);
+      // nothing dimmed or lifted behind it
+      expect(find.byType(BackdropFilter), findsNothing);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await _settle(t);
+      expect(find.byType(DeskMenu), findsNothing);
+      await _close(t);
+    },
+  );
+
+  testWidgets('reply from the menu quotes the message', (t) async {
+    await _open(t);
+    await _openRow(t, _a);
+    await t.tapAt(
+      t.getCenter(_words(_a)),
+      kind: PointerDeviceKind.mouse,
+      buttons: kSecondaryMouseButton,
+    );
+    await _settle(t);
+    await t.tap(find.text(l10n.chatReply));
+    await _settle(t);
+    expect(find.byType(DeskMenu), findsNothing);
+    // the quote over the composer and the bubble: two of its words
+    expect(_words(_a), findsNWidgets(2));
+    await _close(t);
+  });
+
+  testWidgets('a chat row\'s right click is the small menu at the mouse', (
+    t,
+  ) async {
+    await _open(t);
+    final at = t.getCenter(_row(_b));
+    await t.tapAt(
+      at,
+      kind: PointerDeviceKind.mouse,
+      buttons: kSecondaryMouseButton,
+    );
+    await _settle(t);
+    expect(find.byType(DeskMenu), findsOneWidget);
+    expect(t.getRect(find.byKey(const ValueKey('desk menu'))).topLeft, at);
+    expect(find.text(l10n.homeMute), findsOneWidget);
+    expect(find.text(l10n.homeArchive), findsOneWidget);
+    expect(find.text(l10n.homeDeleteChat), findsOneWidget);
+    // delete still asks first
+    await t.tap(find.text(l10n.homeDeleteChat));
+    await _settle(t);
+    expect(find.text(l10n.homeDeleteThisChat), findsOneWidget);
+    await _close(t);
+  });
+
+  testWidgets('the menu key opens a focused message\'s menu', (t) async {
+    await _open(t);
+    await _openRow(t, _a);
+    // the bubble takes focus as tab would give it
+    final ring = find.ancestor(
+      of: _words(_a),
+      matching: find.byType(DeskMenuFocus),
+    );
+    expect(ring, findsOneWidget);
+    final node = Focus.of(
+      t.element(find.descendant(of: ring, matching: find.byType(Stack)).first),
+    );
+    node.requestFocus();
+    await t.pump();
+    await t.sendKeyEvent(LogicalKeyboardKey.contextMenu);
+    await _settle(t);
+    expect(find.byType(DeskMenu), findsOneWidget);
+    final menu = t.getRect(find.byKey(const ValueKey('desk menu')));
+    final bubble = t.getRect(ring);
+    expect(
+      (menu.top - bubble.bottom).abs() < 6 || menu.bottom <= bubble.top,
+      isTrue,
+    );
+    await t.sendKeyEvent(LogicalKeyboardKey.escape);
+    await _settle(t);
+    expect(find.byType(DeskMenu), findsNothing);
     await _close(t);
   });
 

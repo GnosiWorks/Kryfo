@@ -14,7 +14,8 @@ import '../backup.dart' show sealRestoredHidden;
 import '../desktop/desktop_mode.dart' show onDesktop;
 import '../l10n/l10n.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState, session, AppStateVault, AppStateSession;
+import '../main.dart'
+    show appState, session, linkedRole, AppStateVault, AppStateSession;
 import '../pass_rules.dart';
 import '../pin_shield.dart';
 import '../theme.dart';
@@ -52,6 +53,8 @@ class PinsHost {
   const PinsHost();
 
   Listenable get changes => appState;
+  // a linked device has neither: they are its phone's
+  bool get decoyAndVault => !linkedRole;
   bool get hasDecoy => appState.hasDecoy;
   Future<bool> setDecoyPin(String pin) => appState.setDecoyPin(pin);
   Future<void> removeDecoy() => appState.removeDecoy();

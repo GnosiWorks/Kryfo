@@ -134,6 +134,7 @@ void _bootDeviceReceive(DeviceState ds, DeviceSend send) {
     },
   );
   _bootOwnSync(ds, send, _deviceReceive!);
+  _bootUnlink(ds, send, _deviceReceive!);
   unawaited(() async {
     try {
       await pushPairSeeds();

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/desk_menu.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/chat_parts.dart' show DayChip;
 import '../widgets/confirm_sheet.dart';
@@ -294,32 +295,28 @@ class _NotesScreenState extends State<NotesScreen> {
   void _menu(Map<String, Object?> n) {
     _heldOnce();
     final text = n['plaintext'] as String? ?? '';
-    showHaloSheet<String>(
+    showMenuSheet<String>(
       context,
-      scroll: true,
-      builder: (ctx) {
+      label: l10n.a11yMessageActions,
+      groups: (ctx) {
         void pick(String a) => Navigator.pop(ctx, a);
-        return SingleChildScrollView(
-          child: MenuSheet(
-            groups: [
-              [
-                MenuSheetRow(
-                  icon: Icons.copy_rounded,
-                  label: l10n.commonCopy,
-                  onTap: text.isEmpty ? null : () => pick('copy'),
-                ),
-              ],
-              [
-                MenuSheetRow(
-                  icon: Icons.delete_outline,
-                  label: l10n.commonDelete,
-                  danger: true,
-                  onTap: () => pick('delete'),
-                ),
-              ],
-            ],
-          ),
-        );
+        return [
+          [
+            MenuSheetRow(
+              icon: Icons.copy_rounded,
+              label: l10n.commonCopy,
+              onTap: text.isEmpty ? null : () => pick('copy'),
+            ),
+          ],
+          [
+            MenuSheetRow(
+              icon: Icons.delete_outline,
+              label: l10n.commonDelete,
+              danger: true,
+              onTap: () => pick('delete'),
+            ),
+          ],
+        ];
       },
     ).then((a) {
       if (!mounted || a == null) return;

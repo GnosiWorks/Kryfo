@@ -35,7 +35,32 @@
     <category>InstantMessaging</category>
     <category>Chat</category>
   </categories>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <branding>
+    <color type="primary" scheme_preference="light">#f59e0b</color>
+    <color type="primary" scheme_preference="dark">#c96a06</color>
+  </branding>
   <content_rating type="oars-1.1">
     <content_attribute id="social-chat">intense</content_attribute>
   </content_rating>
+  <releases>
+    <release version="0.5.3" date="2026-10-22">
+      <url type="details">https://github.com/GnosiWorks/Kryfo/releases/tag/v0.5.3</url>
+    </release>
+    <release version="0.5.2" date="2026-10-16">
+      <url type="details">https://github.com/GnosiWorks/Kryfo/releases/tag/v0.5.2</url>
+    </release>
+    <release version="0.5.1" date="2026-10-15">
+      <url type="details">https://github.com/GnosiWorks/Kryfo/releases/tag/v0.5.1</url>
+    </release>
+    <release version="0.5.0" date="2026-10-08">
+      <url type="details">https://github.com/GnosiWorks/Kryfo/releases/tag/v0.5.0</url>
+    </release>
+  </releases>
 </component>

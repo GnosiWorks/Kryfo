@@ -315,7 +315,8 @@ extension AppStateSession on AppState {
   // registered nowhere, listed, and its pin entry written last. false when
   // the pin is in use: the screen says pick a different one
   Future<bool> setDecoyPin(String pin) async {
-    if (sessionQuiet) return false;
+    // a linked device has no decoy: its phone's is the account's
+    if (sessionQuiet || linkedRole) return false;
     if (_decoyDb != null) return lockState.setupDecoyPin(pin);
     final d = HaloDb(HaloContainer.decoy);
     try {
@@ -537,6 +538,8 @@ extension AppStateSession on AppState {
     try {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
+      // a restore's hidden chats: their contacts' devices cut, inside it
+      if (!decoy) await _vaultRestoreCut(v);
       // cards from before they kept the mark are written again first
       if (!decoy && _router.marksUnread) {
         try {

@@ -49,6 +49,7 @@ mkdir -p "$R/packaging" "$R/engine/out/windows-x64" "$R/mobile/windows/runner/re
 cp -a "$HERE/flatpak" "$HERE/windows" "$HERE/check_packaging.py" "$R/packaging/"
 cp "$ROOT/LICENSE" "$ROOT/ic_launcher-playstore.png" "$R/"
 cp "$ROOT/mobile/pubspec.yaml" "$R/mobile/"
+mkdir -p "$R/mobile/linux" && cp "$ROOT/mobile/linux/build-sqlcipher.sh" "$R/mobile/linux/"
 cp "$ROOT/mobile/windows/runner/resources/app_icon.ico" "$R/mobile/windows/runner/resources/"
 LB="$R/mobile/build/linux/x64/release/bundle"
 if [ -n "${LINUX_BUNDLE:-}" ]; then
@@ -59,7 +60,7 @@ else
   # what flutter build linux leaves, with engine.cmake adding libhalo.so
   mkdir -p "$LB/lib" "$LB/data/flutter_assets"
   printf '#!/bin/sh\n' > "$LB/kryfo" && chmod +x "$LB/kryfo"
-  touch "$LB/lib/libapp.so" "$LB/lib/libflutter_linux_gtk.so" "$LB/lib/libhalo.so" \
+  touch "$LB/lib/libapp.so" "$LB/lib/libflutter_linux_gtk.so" "$LB/lib/libhalo.so" "$LB/lib/libsqlcipher.so.0" \
     "$LB/lib/libkryfo_signal.so" "$LB/lib/libflutter_zxing.so" "$LB/data/icudtl.dat" \
     "$LB/data/flutter_assets/AssetManifest.bin"
 fi
@@ -138,7 +139,8 @@ if command -v flatpak-builder >/dev/null; then
   [ -z "$out" ] && ok "flatpak-builder reads the manifest" || no "flatpak-builder: $out"
   # flatpak checks the id before it looks for the sdk, which is not installed
   id="$(sed -n 's/^id: //p' "$HERE/flatpak/app.kryfo.Kryfo.yml")"
-  out="$(flatpak build-init "$tmp/init" "$id" org.gnome.Sdk org.gnome.Platform 50 2>&1)"
+  rv="$(sed -n "s/^runtime-version: '\(.*\)'$/\1/p" "$HERE/flatpak/app.kryfo.Kryfo.yml")"
+  out="$(flatpak build-init "$tmp/init" "$id" org.freedesktop.Sdk org.freedesktop.Platform "$rv" 2>&1)"
   echo "$out" | grep -q 'not a valid application name' \
     && no "flatpak refuses the id $id: $out" || ok "flatpak takes the id $id"
 else

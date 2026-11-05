@@ -15,6 +15,7 @@ import '../main.dart'
         appState,
         handleHaloUri,
         linkKinOf,
+        linkedRole,
         parseHaloUri,
         rootNavKey,
         session,
@@ -148,6 +149,8 @@ Future<String?> takeOutsideLink(
   }
   final g = guard ?? lockGuard;
   if (g.isLocked()) return null;
+  // invites and rooms are the phone's: a linked device takes neither
+  if (linkedRole) return l10n.linkedLinkOnPhone;
   final bool ok;
   var moves = false;
   if (room != null) {

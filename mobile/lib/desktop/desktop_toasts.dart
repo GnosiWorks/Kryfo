@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../l10n/l10n.dart';
+import 'desktop_mode.dart' show deskSound;
 import 'seal_windows.dart' show openSystemDll;
 
 /// the start menu shortcut's id (kryfo.iss), so toasts and the taskbar
@@ -47,6 +48,13 @@ void joinComApartment({DynamicLibrary Function(String name)? open}) {
 (String?, String) toastWords(String? title) => title == null
     ? (null, l10n.notifPlainLine)
     : ('Kryfo', l10n.notificationsNewMessage);
+
+/// a toast's details: silent when the notifications page's sound switch
+/// is off, windows' own sound otherwise
+@visibleForTesting
+WindowsNotificationDetails? toastDetails() => deskSound.value
+    ? null
+    : WindowsNotificationDetails(audio: WindowsNotificationAudio.silent());
 
 /// a toast carries a random token, the payload it stands for stays here
 @visibleForTesting
@@ -113,6 +121,7 @@ class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
       id: id,
       title: t,
       body: b,
+      notificationDetails: toastDetails(),
       payload: _payloads.hide(payload),
     );
   }

@@ -130,7 +130,7 @@ class _DevScreenState extends State<DevScreen> {
       if (addr.startsWith('error')) {
         _status = addr;
       } else {
-        _myAddr = addr;
+        _myAddr = onionOfStart(addr);
         _status = '';
       }
     });

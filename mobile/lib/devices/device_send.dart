@@ -22,15 +22,26 @@ import '../signal_ffi/kryfo_signal.dart' show kLsPreKey;
 import '../signal_session.dart' show WaitsForAnswer;
 import '../typing.dart' show kCapDevices;
 import '../wire_pad.dart' show kSealSizes;
+import 'device_receive.dart' show staleList;
 import 'device_state.dart';
+import 'own_device_store.dart' show ownPhoneFresh;
 import 'own_sync.dart' show kOwnFrameMost, ownChatName, ownHash;
 
 /// how long a copy waits for its device before it is let go
 const kDeviceCopyKept = Duration(days: 7);
 
-/// how long a state op waits for an own device that never answers: job 9
-/// ends them with the device, this is the most until then
+/// how long a state op waits for an own device that never answers: a
+/// removal ends them with the device, this is the most until then. a chat's
+/// end ('gone', 'ungroup') waits until the device answers or is removed
 const kOwnOpKept = Duration(days: 30);
+
+/// how long the last word to a device just removed is handed to the relay
+/// before it is let go: the relays keep a wrap about this long
+const kFarewellKept = Duration(days: 14);
+
+/// a frame sealed now for one device, with where it goes: a removal's last
+/// word and a linked device's own, whose session goes right after
+typedef DevLast = ({String arg, String wire, bool opener});
 
 /// the most contacts one pass of a spread push reaches
 const kPushPerPass = 8;
@@ -39,8 +50,34 @@ const kPushPerPass = 8;
 const kPushGapLeast = Duration(minutes: 20);
 const kPushGapMost = Duration(minutes: 70);
 
-/// a list not answered after it went goes again this long after
+/// a list not answered after it went goes again this long after; a
+/// removal again after as long as it has waited so far, at most
+/// [kRemovePushGapMost], until their phone says it holds it
 const kPushAgain = Duration(days: 1);
+const kRemovePushGapMost = Duration(days: 14);
+
+/// a removal no phone answered is let go this long after it was due
+const kRemovePushKept = Duration(days: 60);
+
+/// a removal from my list owed to the hidden chats' contacts, kept on the
+/// everyday side with no names (my identity, the version, when) in the
+/// same write as the everyday pushes, for [kRemovePushKept] whatever the
+/// vault does. the vault's next open queues it as its own pushes, kept
+/// there until each phone says it holds the list, and marks it queued in
+/// the vault alone. while the vault is shut it goes to each hidden
+/// contact's phone at every start and pump until it went, for
+/// [kRemovePushGapMost] (devices_vault_app.dart)
+const kHiddenRemovalMeta = 'hidden_removal_owed:';
+
+/// a [kHiddenRemovalMeta] value: the version and when it was owed. it goes
+/// by age alone ([kRemovePushKept]), the same with a vault or without, so
+/// the everyday side never shows that a vault opened
+({int version, int at})? hiddenRemovalOf(String? v) {
+  final p = (v ?? '').split(':');
+  final version = int.tryParse(p.first);
+  if (version == null) return null;
+  return (version: version, at: p.length > 1 ? int.tryParse(p[1]) ?? 0 : 0);
+}
 
 /// how often a contact's phone is asked for a fresh bundle of one device
 const kAskEvery = Duration(days: 1);
@@ -112,6 +149,7 @@ class DeviceSend {
     this.listen,
     Future<Database> Function()? mine,
     this.noOwn = false,
+    this.hiddenRemovals = false,
     this.changed,
     int Function()? clock,
     Random? random,
@@ -135,6 +173,10 @@ class DeviceSend {
   /// the open vault's: a hidden chat's copies go to the contact's
   /// devices and never to mine
   final bool noOwn;
+
+  /// the everyday side's: a removal is kept owed to the hidden chats too
+  /// ([kHiddenRemovalMeta])
+  final bool hiddenRemovals;
 
   /// told every change of my lists once its pushes are queued here: the
   /// hidden chats' contacts are not this side's
@@ -206,6 +248,11 @@ class DeviceSend {
     }
     bool isPhone(DevSlot s) => !s.own && s.device == 1 && me.device == 1;
     if (!force && slots.every(isPhone)) return null;
+    // a linked device that has not heard its phone lately copies to the
+    // phone alone: my list may have moved without it
+    final peersFresh = me.device == 1 || await ownPhoneFresh(await mine(), now);
+    // a list a restore left: their phone alone until it is sent again
+    final stale = await staleList(d, me.ident, c.identity);
     final uid = _uidOf(body, frame);
     // an own copy is answered by its own uid (OwnSync.take)
     final ownUid = 'oc:${ownHash(frame)}';
@@ -220,6 +267,8 @@ class DeviceSend {
     String? phoneFrame;
     for (final s in slots) {
       if (noOwn && s.own) continue;
+      if (s.own && s.device != 1 && !peersFresh) continue;
+      if (!s.own && s.device != 1 && stale) continue;
       if (isPhone(s)) {
         phoneFrame = frameFor == null ? frame : frameFor(s, frame);
         continue;
@@ -342,7 +391,8 @@ class DeviceSend {
   }
 
   /// whether a device of [c]'s holds a session with this one now: what a
-  /// burst with mustReach counts as reached
+  /// burst with mustReach counts as reached. a peek: no silent device's
+  /// probe is spent by asking
   Future<bool> reaches(DevMe me, DevContact c) async {
     if (!linkedDevicesOn) return false;
     final d = await db();
@@ -356,6 +406,7 @@ class DeviceSend {
           'phone_classic': c.phoneClassic,
           'now': _clock(),
           'no_own': true,
+          'peek': true,
         }),
       );
     } on DevRefused {
@@ -661,9 +712,11 @@ class DeviceSend {
     );
   }
 
-  // a state op to my own device goes again until its receipt
+  // a state op to my own device goes again until its receipt, and so does
+  // anything kept for good (my list after a removal)
   static bool _keptOwn(Map<String, Object?> r) =>
-      r['own'] == 1 && (r['uid'] as String? ?? '').startsWith('os:');
+      r['own'] == 1 &&
+      ((r['uid'] as String? ?? '').startsWith('os:') || r['keep'] == 1);
 
   static const _slotWhere = 'uid = ? AND ident = ? AND peer = ? AND device = ?';
   List<Object?> _keyArgs(Map<String, Object?> r) => [
@@ -704,17 +757,21 @@ class DeviceSend {
     final now = _clock();
     // a state op to my own device is kept until it answers: a hide that
     // never reached a laptop would leave the chat there. one that never
-    // answers for [kOwnOpKept] is let go
+    // answers for [kOwnOpKept] is let go, but for a chat's end: that one
+    // stays until the device answers or is removed, so a laptop that is
+    // used and never online with the phone still loses the hidden chat.
+    // my list after a removal is kept the same way (keep)
     await d.delete(
       'dev_out',
       where:
-          "(at < ? AND NOT (own = 1 AND uid LIKE 'os:%')) OR "
-          "(own = 1 AND uid LIKE 'os:%' AND at < ?)",
+          "(at < ? AND keep = 0 AND NOT (own = 1 AND uid LIKE 'os:%')) OR "
+          "(own = 1 AND uid LIKE 'os:%' AND at < ? AND keep = 0)",
       whereArgs: [
         now - kDeviceCopyKept.inMilliseconds,
         now - kOwnOpKept.inMilliseconds,
       ],
     );
+    if (!noOwn) await _farewells(now);
     final due = await d.query(
       'dev_out',
       where: 'next_at > 0 AND next_at <= ?',
@@ -849,6 +906,9 @@ class DeviceSend {
     bool own = false,
     // kept and sent again until that device's receipt (an own frame)
     bool receipt = false,
+    // and never let go for its age: a chat's end, until the device answers
+    // or is removed
+    bool keep = false,
   }) async {
     final body = _bodyOf(frame);
     if (body == null) return;
@@ -860,6 +920,7 @@ class DeviceSend {
       'device': device,
       'at': now,
       'own': own ? 1 : 0,
+      'keep': keep ? 1 : 0,
       'addr': addr,
       'pin': pin,
       'reg': reg,
@@ -869,6 +930,198 @@ class DeviceSend {
       'next_at': now,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
     unawaited(pump());
+  }
+
+  // ---- last words ----
+
+  /// [frame] sealed now on [device]'s session ([addr] its address, [pin]
+  /// its key), with the arg and whether it goes to the opener address:
+  /// kept nowhere, for a session that goes right after. null when there is
+  /// no session or it cannot seal
+  Future<DevLast?> sealLast({
+    required DevMe me,
+    required String identity,
+    required int device,
+    required String addr,
+    required String pin,
+    required int reg,
+    required String frame,
+  }) async {
+    final d = await db();
+    final ds = await sessions(me.ident);
+    final key = _bytes(pin);
+    if (!await ds.has(addr, device)) return null;
+    final slot = (
+      identity: identity,
+      device: device,
+      key: pin,
+      reg: reg,
+      own: addr == kOwnDevices,
+      rebuild: false,
+    );
+    try {
+      final seed = await _seed(d, me, slot);
+      final answered = await ds.answered(addr, device, key);
+      final w = await ds.seal(
+        addr,
+        device,
+        answered ? frame : _withSeed(frame, seed),
+        key,
+        size: answered ? null : kSealSizes[1],
+      );
+      final at = [me.ident, identity, device, me.device];
+      final rec = await d.query(
+        'dev_openers',
+        columns: ['at'],
+        where: _pairWhere,
+        whereArgs: at,
+        limit: 1,
+      );
+      final opener =
+          base64Decode(w)[0] == kLsPreKey &&
+          (rec.isEmpty || rec.first['at'] == 0);
+      return (
+        arg: '${identity.substring(2)}/$device/${me.device}.${devHex(seed)}',
+        wire: w,
+        opener: opener,
+      );
+    } on Object {
+      return null;
+    }
+  }
+
+  /// [last] to the relay now: true when it took it
+  Future<bool> handLast(int ident, DevLast last) async {
+    try {
+      final r = last.opener
+          ? await wire.sendOpener(ident, last.arg, last.wire)
+          : await wire.send(ident, last.arg, last.wire);
+      return r == 'ok';
+    } on Object {
+      return false;
+    }
+  }
+
+  /// my own [device] of [ident] is being removed: [frame] (my list without
+  /// it) sealed on its session now and kept with where it goes, then handed
+  /// to the relay until it took it. the engine keeps the device's key for
+  /// its address alone meanwhile. true when there was a session to seal on
+  Future<bool> farewell({
+    required DevMe me,
+    required int device,
+    required String pin,
+    required int reg,
+    required String frame,
+  }) async {
+    final last = await sealLast(
+      me: me,
+      identity: devHex(me.identity),
+      device: device,
+      addr: kOwnDevices,
+      pin: pin,
+      reg: reg,
+      frame: frame,
+    );
+    if (last == null) return false;
+    final d = await mine();
+    await d.insert('dev_farewell', {
+      'ident': me.ident,
+      'device': device,
+      'key': pin,
+      'arg': last.arg,
+      'wire': last.wire,
+      'opener': last.opener ? 1 : 0,
+      'at': _clock(),
+      'next_at': 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await leaving(me.ident);
+    return true;
+  }
+
+  /// whether the last word to my own [device] of [ident] on [key] is
+  /// sealed and kept already: a removal cut short seals none twice
+  Future<bool> farewellHeld(int ident, int device, String key) async =>
+      (await (await mine()).query(
+        'dev_farewell',
+        columns: ['device'],
+        where: 'ident = ? AND device = ? AND key = ?',
+        whereArgs: [ident, device, key],
+        limit: 1,
+      )).isNotEmpty;
+
+  /// the leaving keys the engine holds for [ident]'s last words, as the
+  /// rows are: set at a start and whenever one comes or goes
+  Future<void> leaving(int ident) async {
+    final d = await mine();
+    final rows = await d.query(
+      'dev_farewell',
+      columns: ['device', 'key'],
+      where: 'ident = ?',
+      whereArgs: [ident],
+    );
+    try {
+      await state.call(d, 'own_leaving', {
+        'ident': ident,
+        'held': [
+          for (final r in rows) {'id': r['device'], 'key': r['key']},
+        ],
+      });
+    } on DevRefused {
+      // a linked device: it removes no one
+    }
+  }
+
+  // the last words due: each handed to the relay until it takes one; past
+  // [kFarewellKept] let go. the engine's leaving keys follow the rows
+  Future<void> _farewells(int now) async {
+    final d = await mine();
+    final idents = <int>{};
+    for (final r in await d.query(
+      'dev_farewell',
+      where: 'at < ?',
+      whereArgs: [now - kFarewellKept.inMilliseconds],
+    )) {
+      idents.add(r['ident'] as int);
+    }
+    if (idents.isNotEmpty) {
+      await d.delete(
+        'dev_farewell',
+        where: 'at < ?',
+        whereArgs: [now - kFarewellKept.inMilliseconds],
+      );
+    }
+    for (final r in await d.query(
+      'dev_farewell',
+      where: 'next_at <= ?',
+      whereArgs: [now],
+    )) {
+      final ident = r['ident'] as int;
+      final ok = await handLast(ident, (
+        arg: r['arg'] as String,
+        wire: r['wire'] as String,
+        opener: r['opener'] == 1,
+      ));
+      final where = 'ident = ? AND device = ?';
+      final args = [ident, r['device']];
+      if (ok) {
+        await d.delete('dev_farewell', where: where, whereArgs: args);
+        idents.add(ident);
+        continue;
+      }
+      final tries = r['tries'] as int? ?? 0;
+      await d.update(
+        'dev_farewell',
+        {
+          'tries': tries + 1,
+          'next_at': now + _again[min(tries, _again.length - 1)].inMilliseconds,
+        },
+        where: where,
+        whereArgs: args,
+      );
+    }
+    for (final i in idents) {
+      await leaving(i);
+    }
   }
 
   /// [identity]'s [device] left its list: nothing more is owed to it
@@ -1001,8 +1254,40 @@ class DeviceSend {
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
+      if (!hiddenRemovals) return;
+      for (final ch in changes) {
+        if (!ch.removed) continue;
+        final k = '$kHiddenRemovalMeta${ch.ident}';
+        final was = await t.query(
+          'signal_meta',
+          columns: ['v'],
+          where: 'k = ?',
+          whereArgs: [k],
+        );
+        final v = was.isEmpty
+            ? 0
+            : hiddenRemovalOf(was.first['v'] as String?)?.version ?? 0;
+        if (ch.version <= v) continue;
+        await t.insert('signal_meta', {
+          'k': k,
+          'v': '${ch.version}:$now',
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
     });
     changed?.call(changes);
+  }
+
+  // a removal sent and not answered: again after as long as it has waited
+  // (1, 2, 4, 8 days ...), at most [kRemovePushGapMost]
+  static bool _againDue(Map<String, Object?> r, int now) {
+    final sent = r['sent_at'] as int? ?? 0;
+    if (r['kind'] != 'remove' || sent == 0) return true;
+    final waited = sent - (r['due_at'] as int? ?? sent);
+    final gap = waited.clamp(
+      kPushAgain.inMilliseconds,
+      kRemovePushGapMost.inMilliseconds,
+    );
+    return now - sent >= gap;
   }
 
   int _gap(bool first) {
@@ -1020,7 +1305,9 @@ class DeviceSend {
     }
   }
 
-  // the identity keys of [ident]'s contacts whose phones read lists
+  // the identity keys of [ident]'s contacts whose phones read lists. only
+  // current ones: a contact I deleted gets no list, a removal neither, as
+  // it would show them I am still here
   Future<List<String>> _readers(DatabaseExecutor d, int ident) async => [
     for (final r in await d.query(
       'contacts',
@@ -1031,6 +1318,16 @@ class DeviceSend {
       if ((r['caps'] as String? ?? '').split(',').contains(kCapDevices))
         r['ikey'] as String,
   ];
+
+  // whether [identity] is still a contact of my [ident] here
+  static Future<bool> _current(Database d, int ident, String identity) async =>
+      (await d.query(
+        'contacts',
+        columns: ['ikey'],
+        where: 'ident = ? AND ikey = ? AND accepted = 1',
+        whereArgs: [ident, identity],
+        limit: 1,
+      )).isNotEmpty;
 
   /// [identity], a contact of my [ident], showed [kCapDevices] for the
   /// first time: my list goes to them once, with a bundle of each of my
@@ -1068,14 +1365,29 @@ class DeviceSend {
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  /// a message from [identity] opened at [at]: every list that went to
-  /// them before it was taken, as far as I can know
+  /// a message from [identity] opened at [at]: every addition that went to
+  /// them before it was taken, as far as I can know. a removal waits for
+  /// their phone to say it holds the list ([listTaken]): a message they
+  /// wrote before it reached them says nothing of it
   Future<void> heard(int ident, String identity, int at) async {
     final d = await db();
     await d.delete(
       'dev_pushes',
-      where: 'ident = ? AND peer = ? AND sent_at > 0 AND sent_at <= ?',
+      where:
+          "ident = ? AND peer = ? AND kind != 'remove' AND sent_at > 0 AND "
+          'sent_at <= ?',
       whereArgs: [ident, identity, at],
+    );
+  }
+
+  /// [identity]'s phone holds my list of [ident] at [version]: every push
+  /// of it or an older one that went is done
+  Future<void> listTaken(int ident, String identity, int version) async {
+    final d = await db();
+    await d.delete(
+      'dev_pushes',
+      where: 'ident = ? AND peer = ? AND version <= ? AND sent_at > 0',
+      whereArgs: [ident, identity, version],
     );
   }
 
@@ -1097,14 +1409,24 @@ class DeviceSend {
     if (!linkedDevicesOn) return;
     final d = await db();
     final now = _clock();
-    final due = await d.query(
+    // a removal no phone answered is let go at last: its contact may be
+    // gone for good
+    await d.delete(
       'dev_pushes',
-      where:
-          'next_at <= ? AND ((sent_at = 0 AND due_at <= ?) OR '
-          '(sent_at > 0 AND sent_at <= ?))',
-      whereArgs: [now, now, now - kPushAgain.inMilliseconds],
-      orderBy: 'due_at',
+      where: "kind = 'remove' AND sent_at > 0 AND due_at < ?",
+      whereArgs: [now - kRemovePushKept.inMilliseconds],
     );
+    final due = [
+      for (final r in await d.query(
+        'dev_pushes',
+        where:
+            'next_at <= ? AND ((sent_at = 0 AND due_at <= ?) OR '
+            '(sent_at > 0 AND sent_at <= ?))',
+        whereArgs: [now, now, now - kPushAgain.inMilliseconds],
+        orderBy: 'due_at',
+      ))
+        if (_againDue(r, now)) r,
+    ];
     final byContact = <String, List<Map<String, Object?>>>{};
     for (final r in due) {
       byContact.putIfAbsent('${r['ident']}/${r['peer']}', () => []).add(r);
@@ -1131,6 +1453,16 @@ class DeviceSend {
     for (final rs in go) {
       final ident = rs.first['ident'] as int;
       final identity = rs.first['peer'] as String;
+      // one not a contact now gets nothing: a removal owed to one deleted
+      // since goes, a list waits for a request to be accepted
+      if (!await _current(d, ident, identity)) {
+        await d.delete(
+          'dev_pushes',
+          where: "ident = ? AND peer = ? AND kind = 'remove'",
+          whereArgs: [ident, identity],
+        );
+        continue;
+      }
       final who = await contact(ident, identity);
       if (who == null) continue;
       final Map<String, dynamic> own;
@@ -1205,6 +1537,18 @@ class DeviceSend {
         }
       }
       final bundles = per?.s ?? const <int, List<String>>{};
+      // with an addition's first send, each device of theirs gets a fresh
+      // bundle of this phone too, at most once a day a device: a device of
+      // theirs can then write to this phone before it ever wrote to them
+      final phoneOf = <int, String>{};
+      if (who.me.device == 1 &&
+          rs.any((r) => r['kind'] == 'add' && r['sent_at'] == 0)) {
+        try {
+          phoneOf.addAll(await _phoneBundles(d, ident, identity, now));
+        } on Object {
+          // the list goes without
+        }
+      }
       // a device whose copy of this list is still owed (in dev_out until its
       // receipt) gets no second one: burst skips a slot owed under the uid,
       // so a retry after a failed phone copy is the phone's alone, and a
@@ -1222,7 +1566,10 @@ class DeviceSend {
           frameFor: (slot, f) {
             // my own devices get my list from the phone, not as a push
             if (slot.own) return null;
-            final b = bundles[slot.device] ?? const [];
+            final b = [
+              ...bundles[slot.device] ?? const <String>[],
+              ?phoneOf[slot.device],
+            ];
             return b.isEmpty ? f : _with(f, (j) => j['db'] = b);
           },
         );
@@ -1246,6 +1593,45 @@ class DeviceSend {
         'next_at': 0,
       });
     }
+  }
+
+  // a fresh bundle of this phone for each device of [identity]'s list not
+  // given one in the last [kAskEvery], marked before it goes
+  Future<Map<int, String>> _phoneBundles(
+    Database d,
+    int ident,
+    String identity,
+    int now,
+  ) async {
+    final Map<String, dynamic> theirs;
+    try {
+      theirs = await state.call(d, 'current', {'identity': identity});
+    } on DevRefused {
+      return const {};
+    }
+    final out = <int, String>{};
+    final ds = await sessions(ident);
+    for (final e in (theirs['devices'] as List? ?? const [])) {
+      if (e is! Map || e['id'] is! int || e['id'] == 1) continue;
+      final dev = e['id'] as int;
+      final had = await d.query(
+        'dev_marks',
+        columns: ['at'],
+        where: "ident = ? AND peer = ? AND kind = 'p1' AND key = ? AND at > ?",
+        whereArgs: [ident, identity, '$dev', now - kAskEvery.inMilliseconds],
+        limit: 1,
+      );
+      if (had.isNotEmpty) continue;
+      await d.insert('dev_marks', {
+        'ident': ident,
+        'peer': identity,
+        'kind': 'p1',
+        'key': '$dev',
+        'at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      out[dev] = base64Encode(await ds.phoneBundle(now: now));
+    }
+    return out;
   }
 
   // whether a push still owes bundles: none taken yet, a device of mine
@@ -1565,8 +1951,8 @@ String? ownCopyOf(int ident, String peer, String frame) {
 // what an own copy never carries: receipts, typing, the session's and the
 // devices' own words, a profile photo's slices, a slice ask, a card
 const _notCopied = {
-  'dr', 'dl', 'db', 'dq', 'dh', 'dn', 'dk', 'dz', 'da', 'dw', 'fl', //
-  'oc', 'os', 'of', 'ob', 'hs', 'ty', 'pp', 'rq', 'nd', 'in', 'gc',
+  'dr', 'dl', 'db', 'dq', 'dh', 'dn', 'dk', 'dz', 'da', 'dw', 'dy', 'fl', //
+  'oc', 'os', 'of', 'ob', 'hs', 'ou', 'ty', 'pp', 'rq', 'nd', 'in', 'gc',
 };
 
 // my words on a message that carry its uid inside

@@ -11392,6 +11392,85 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceNotNow => 'Nicht jetzt';
 
   @override
+  String get unlinkedTitle => 'Dieses Gerät ist getrennt';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Dein Handy hat es aus deinem Konto entfernt, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Es wurde 30 Tage nicht geöffnet, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Es hat 30 Tage lang nichts von deinem Handy gehört, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Seine Uhr wurde zurückgestellt, deshalb hat Kryfo zum Schutz deiner Chats alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo konnte nicht feststellen, wann es zuletzt geöffnet wurde, deshalb hat es zum Schutz deiner Chats alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Du hast es getrennt, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Dein Handy behält deine Chats. Um Kryfo hier wieder zu nutzen, verknüpfe dieses Gerät mit deinem Handy.';
+
+  @override
+  String get unlinkedClose => 'Kryfo schließen';
+
+  @override
+  String get devicesLeave => 'Dieses Gerät trennen';
+
+  @override
+  String get devicesLeaveTitle => 'Dieses Gerät trennen?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo sagt es deinem Handy und löscht alles, was es hier speichert. Dein Handy behält deine Chats.';
+
+  @override
+  String get devicesLeaveYes => 'Trennen und löschen';
+
+  @override
+  String get devicesGoneNotice => 'Gerät entfernt';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name wurde am $date aus deinem Konto entfernt.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name wurde 30 Tage nicht genutzt und deshalb am $date aus deinem Konto entfernt.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name hat sich am $date selbst getrennt und gelöscht, was es gespeichert hatte.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Deine Geräte haben sich geändert';
+
+  @override
+  String get devicesChangedLine =>
+      'Öffne Verknüpfte Geräte, um zu sehen, was sich geändert hat.';
+
+  @override
+  String get devicesUnknownNotice => 'Gerät woanders verknüpft';
+
+  @override
+  String get devicesUnknownLine =>
+      'Eine andere Kopie von Kryfo hat ein Gerät mit deinem Konto verknüpft. Dieses Handy hat es von deiner Liste genommen.';
+
+  @override
   String get albumPrevious => 'Zurück';
 
   @override
@@ -11447,4 +11526,116 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Brücke senden an';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Füge Leute auf deinem Handy hinzu. Sie erscheinen auch hier.';
+
+  @override
+  String get linkedLinkOnPhone => 'Öffne diesen Link auf deinem Handy.';
+
+  @override
+  String get tipsTitle => 'Kryfo unterstützen';
+
+  @override
+  String get tipsHeadline => 'Halte Kryfo *für alle kostenlos*';
+
+  @override
+  String get tipsLine =>
+      'Keine Werbung, keine Investoren, keine Konten. Ein Trinkgeld hilft, die Server und die Arbeit an Kryfo zu bezahlen.';
+
+  @override
+  String get tipsLeave => 'Trinkgeld geben';
+
+  @override
+  String get tipsYours => 'Deins';
+
+  @override
+  String get tipsAsking => 'Google Play wird nach den Preisen gefragt';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Ein Trinkgeld bringt dir ein Unterstützer-Abzeichen und sonst nichts. Alles in Kryfo bleibt für alle kostenlos, mit oder ohne.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Die Zahlung läuft über Google Play. Wir sehen deine Kartendaten und deinen Namen nie.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Das Abzeichen bleibt auf diesem Handy. Unter Ich wählst du, ob es zu sehen ist und ob deine Kontakte es sehen.';
+
+  @override
+  String get tipsRestore => 'Mein Abzeichen zurückholen';
+
+  @override
+  String get tipsRestoreLine =>
+      'Schon einmal Trinkgeld gegeben? Dein Abzeichen kommt auf jedem Handy zurück, das mit demselben Google-Konto angemeldet ist.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Dein Unterstützer-Abzeichen ist zurück',
+      'patron': 'Dein Förderer-Abzeichen ist zurück',
+      'guardian': 'Dein Hüter-Abzeichen ist zurück',
+      'other': 'Dein Unterstützer-Abzeichen ist zurück',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Mit diesem Google-Konto gibt es noch kein Trinkgeld';
+
+  @override
+  String get tipsUnavailable =>
+      'Trinkgelder laufen über Google Play. Sie erscheinen hier, sobald Google Play auf diesem Handy läuft.';
+
+  @override
+  String get tipsSoon => 'Trinkgelder gibt es hier bald.';
+
+  @override
+  String get tipsPending =>
+      'Google Play schließt deine Zahlung noch ab. Dein Abzeichen kommt, sobald sie durch ist.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play hat die Zahlung nicht abgeschlossen. Versuch es gleich noch einmal.';
+
+  @override
+  String get tipsThanks => 'Danke';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Du hast jetzt das Unterstützer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.',
+      'patron':
+          'Du hast jetzt das Förderer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.',
+      'guardian':
+          'Du hast jetzt das Hüter-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.',
+      'other':
+          'Du hast jetzt das Unterstützer-Abzeichen. Es schaltet sonst nichts frei: Alles in Kryfo bleibt für alle kostenlos.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Danke für das Trinkgeld. Du behältst dein Unterstützer-Abzeichen, das höhere.',
+      'patron':
+          'Danke für das Trinkgeld. Du behältst dein Förderer-Abzeichen, das höhere.',
+      'guardian':
+          'Danke für das Trinkgeld. Du behältst dein Hüter-Abzeichen, das höhere.',
+      'other':
+          'Danke für das Trinkgeld. Du behältst dein Unterstützer-Abzeichen, das höhere.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard =>
+      'Gib ein Trinkgeld, damit Kryfo unabhängig bleibt';
 }

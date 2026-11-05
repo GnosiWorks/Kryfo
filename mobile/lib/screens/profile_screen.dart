@@ -10,6 +10,7 @@ import '../desktop/desktop_mode.dart' show onDesktop;
 import '../main.dart'
     show
         appState,
+        linkedRole,
         session,
         showAddContact,
         AppStatePhotos,
@@ -23,6 +24,7 @@ import '../supporter.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';
 import 'donate_screen.dart';
+import 'tip_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/motion.dart' show haloRoute, kHouseCurve, kHouseTime;
@@ -278,29 +280,47 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
 
-                _reveal(3, _Section(l10n.profileShareConnect)),
-                // the same rows as settings: one surface, a tile per row
-                _reveal(
-                  3,
-                  HaloGroup(
-                    children: [
-                      HaloRow(
-                        icon: Icons.qr_code_2_outlined,
-                        label: l10n.profileMyKryfoCode,
-                        onTap: () =>
-                            deskPush(context, haloRoute(const MyKryfoScreen())),
-                      ),
-                      HaloRow(
-                        icon: Icons.person_add_outlined,
-                        label: l10n.profileAddContact,
-                        onTap: () => showAddContact(context),
-                      ),
-                    ],
+                // the code, the invite and adding are the phone's on a
+                // linked device
+                if (!linkedRole) ...[
+                  _reveal(3, _Section(l10n.profileShareConnect)),
+                  // the same rows as settings: one surface, a tile per row
+                  _reveal(
+                    3,
+                    HaloGroup(
+                      children: [
+                        HaloRow(
+                          icon: Icons.qr_code_2_outlined,
+                          label: l10n.profileMyKryfoCode,
+                          onTap: () => deskPush(
+                            context,
+                            haloRoute(const MyKryfoScreen()),
+                          ),
+                        ),
+                        HaloRow(
+                          icon: Icons.person_add_outlined,
+                          label: l10n.profileAddContact,
+                          onTap: () => showAddContact(context),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                // the play build offers no way to give
-                if (!kPlayBuild) ...[
-                  const SizedBox(height: 24),
+                ],
+                const SizedBox(height: 24),
+                // the play build's way is a tip through google play, and its
+                // words never name another
+                if (kPlayBuild) ...[
+                  _reveal(4, _Section(l10n.tipsTitle)),
+                  _reveal(
+                    4,
+                    _SupportCard(
+                      label: l10n.tipsProfileCard,
+                      onTap:
+                          widget.onOpenSupport ??
+                          () => deskPush(context, haloRoute(const TipScreen())),
+                    ),
+                  ),
+                ] else ...[
                   _reveal(
                     4,
                     _Section(

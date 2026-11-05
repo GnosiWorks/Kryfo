@@ -47,7 +47,9 @@ void main() {
 
   test('google code can only come in through the play flavor', () {
     // a dependency on google's maven names, wherever it is declared
-    final google = RegExp(r'"com\.google\.(firebase|android\.gms)');
+    final google = RegExp(
+      r'"com\.(google\.(firebase|android\.gms)|android\.billingclient)',
+    );
     for (final l in gradle.split('\n')) {
       if (l.trimLeft().startsWith('//')) continue;
       if (google.hasMatch(l)) {
@@ -70,6 +72,55 @@ void main() {
         expect(google.hasMatch(f.readAsStringSync()), isFalse, reason: f.path);
       }
     }
+  });
+
+  test('play billing comes in through the play flavor alone', () {
+    final billing = [
+      for (final l in gradle.split('\n'))
+        if (!l.trimLeft().startsWith('//') && l.contains('billingclient'))
+          l.trim(),
+    ];
+    expect(billing, [
+      '"playImplementation"("com.android.billingclient:billing:9.1.0")',
+    ]);
+    // its code lives in src/play only, and main and foss never name it
+    for (final dir in ['main', 'foss', 'debug', 'profile']) {
+      for (final f in _files('$_app/src/$dir')) {
+        if (!RegExp(r'\.(kt|java|xml)$').hasMatch(f.path)) continue;
+        expect(
+          f.readAsStringSync().contains('billingclient'),
+          isFalse,
+          reason: f.path,
+        );
+      }
+    }
+    final tips = sourceOf('$_app/src/play/kotlin/app/kryfo/PlayTips.kt');
+    expect(tips, contains('import com.android.billingclient.api.'));
+    // nothing ties a purchase to a person, and nothing is consumed: play
+    // hands the kept products back on a new install
+    for (final banned in [
+      'setObfuscatedAccountId',
+      'setObfuscatedProfileId',
+      'consumeAsync',
+      'orderId',
+    ]) {
+      expect(tips, isNot(contains(banned)), reason: banned);
+    }
+    // the payment sheet takes a product and its offer, nothing else
+    final flow = tips.substring(tips.indexOf('BillingFlowParams.newBuilder()'));
+    expect(
+      RegExp(r'\.set\w+\(')
+          .allMatches(
+            flow.substring(0, flow.indexOf('.build()\n            val r')),
+          )
+          .map((m) => m[0])
+          .toSet(),
+      {
+        '.setProductDetailsParamsList(',
+        '.setProductDetails(',
+        '.setOfferToken(',
+      },
+    );
   });
 
   test('release kotlin keeps the module name it had before flavors', () {

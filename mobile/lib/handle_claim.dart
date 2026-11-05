@@ -7,7 +7,8 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import 'invite_share.dart' show readyInvite;
-import 'main.dart' show appState, engine, sessionQuiet, AppStateProfile;
+import 'main.dart'
+    show appState, engine, linkedRole, sessionQuiet, AppStateProfile;
 import 'quiet_wait.dart';
 
 final handleShape = RegExp(r'^[a-z0-9_]{3,20}$');
@@ -105,7 +106,8 @@ class HandleClaimer extends ChangeNotifier {
   /// 'ok' once the registry holds it, or what it said. null: nothing to claim
   Future<String?> claim({String bio = ''}) async {
     final h = typed;
-    if (h.isEmpty || state != 'free' || busy) return null;
+    // a handle is the phone's: a linked device claims none
+    if (h.isEmpty || state != 'free' || busy || linkedRole) return null;
     busy = true;
     claimsInFlight.value++;
     asking(true);

@@ -47,7 +47,16 @@ void _bootDeviceSend(DeviceState ds) {
     },
     wire: _EngineDeviceWire(),
     listen: engine.deviceListenBg,
-    changed: (changes) => _madeApp?._hiddenListsChanged(changes),
+    hiddenRemovals: true,
+    changed: (changes) {
+      final a = _madeApp;
+      if (a == null) return;
+      unawaited(
+        a._hiddenListsChanged(changes).catchError((Object e) {
+          dlog('devices: hidden chats not told (${e.runtimeType})');
+        }),
+      );
+    },
   );
   _bootDeviceReceive(ds, _deviceSend!);
 }
@@ -204,6 +213,15 @@ Future<void> pumpDeviceSends() async {
   final v = _vaultDevOf;
   if (v != null) await _pumpDevices(_vaultDevSend, v);
   await _madeApp?._pushHiddenRemovals();
+  // lists a restore left: asked again until each phone sends its own, the
+  // open vault's by its own side
+  for (final r in [_deviceReceive, _vaultDevReceive]) {
+    try {
+      await r?.askStale();
+    } catch (e) {
+      dlog('devices: stale lists not asked (${e.runtimeType})');
+    }
+  }
 }
 
 Future<void> _pumpDevices(DeviceSend? send, HaloDb home) async {
@@ -265,10 +283,25 @@ Future<void> _devicesShown(String peer) async {
   }
 }
 
+// a contact just added or accepted (subscribePeer, fresh): one who reads
+// lists gets mine at once, as one I deleted and added again may still
+// hold an old one naming a device I removed since
+@visibleForTesting
+Future<void> devAddedForTest(String haloId) => _devAdded(haloId);
+
+Future<void> _devAdded(String haloId) async {
+  if (!linkedDevicesOn || sessionQuiet || isDevId(haloId)) return;
+  await _devicesShown(haloId);
+}
+
 // a contact goes (deleted, released, "not them"): the engine forgets their
-// lists, quiet rows and proofs, and nothing more goes to their devices.
+// lists, quiet rows and proofs, and nothing more goes to them or their
+// devices, a list or a removal owed included. nothing is sent for the delete.
 // read before their row goes. a later message from their phone adds them
 // again, as a new contact's does
+@visibleForTesting
+Future<void> devForgetForTest(String haloId) => _devForget(haloId);
+
 Future<void> _devForget(String haloId, {bool sessions = false}) async {
   final ds = _deviceState;
   if (ds == null || !linkedDevicesOn || isDevId(haloId)) return;

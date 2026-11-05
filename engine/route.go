@@ -144,7 +144,7 @@ func correctStaleStart() {
 	statusMu.Unlock()
 	if stale {
 		log.Println("halo: a relay connected through tor while it said starting, so it is up")
-		setStatus("publishing")
+		setStatus(upStatus())
 	}
 }
 
@@ -469,11 +469,11 @@ var rescueCircuits = func() {
 // how long tor may sit off before the watch brings it back
 const offFor = 15 * time.Second
 
-// a tor runs in this process and has an address
+// a tor runs in this process and has an address, or is a client's
 func torUp() bool {
 	mu.Lock()
 	defer mu.Unlock()
-	return torNode != nil && myAddr != ""
+	return torNode != nil && (myAddr != "" || torClientOnly())
 }
 
 // a new network is a fresh start. the back-off grown while there was none,

@@ -209,4 +209,32 @@ void main() {
       }
     });
   });
+
+  test('the uninstaller takes the start with the computer along', () {
+    final iss = _src('../packaging/windows/kryfo.iss');
+    for (final key in [
+      r'Software\Microsoft\Windows\CurrentVersion\Run',
+      r'Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run',
+    ]) {
+      final line = iss
+          .split('\n')
+          .firstWhere((l) => l.contains('Subkey: "$key";'), orElse: () => '');
+      expect(line, contains('ValueName: "$runValueName"'), reason: key);
+      expect(line, contains('ValueType: none'), reason: key);
+      expect(line, contains('uninsdeletevalue'), reason: key);
+      expect(line, contains('dontcreatekey'), reason: key);
+    }
+  });
+
+  test('the installer pins the same tor.exe as tor-pin.txt', () {
+    final pin = RegExp(
+      r'^TOR_EXE_SHA256=([0-9a-f]{64})$',
+      multiLine: true,
+    ).firstMatch(_src('../packaging/windows/tor-pin.txt'))!.group(1);
+    final iss = RegExp(
+      r'^#define TorExeSha256 "([0-9a-f]{64})"$',
+      multiLine: true,
+    ).firstMatch(_src('../packaging/windows/kryfo.iss'))!.group(1);
+    expect(iss, pin);
+  });
 }

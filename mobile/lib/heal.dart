@@ -15,6 +15,9 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'invites.dart' show bundleBlock, unixHours;
 import 'signal_ffi/kryfo_signal.dart';
 import 'signal_session.dart';
+import 'devices/device_receive.dart' show kStaleList;
+import 'devices/own_unlink.dart' show kRestoreListOwedMeta;
+import 'router.dart' show RouterRows;
 
 /// the wire's word for a heal, beside the json heal's 'bundle'
 const kHealCtl = 'heal';
@@ -54,10 +57,111 @@ const kRestoreAfterPref = 'restore.after';
 const kRestoreCutPref = 'restore.cut';
 
 /// a restore cuts every linked device off before the first seal (linked
-/// step 7, D4 and B2): their sessions (device 2 and up), the own device
-/// rows and keys go, and each identity's device list jumps. linked step 7
-/// job 9 fills this in; until then no phone has a linked device to cut
-Future<void> restoreCutsLinkedDevices(DatabaseExecutor db) async {}
+/// step 7, D4 and B2): every device session (device 2 and up, mine and
+/// contacts', all as old as the file), the device pairs' seeds, my devices'
+/// rows and keys, their pool, copies, pushes, asks and marks go. a device in
+/// the backup may have been removed since, so each is linked again. what
+/// is kept: my own lists (the next start signs each above, naming the phone
+/// alone: kRestoreListOwedMeta), the contacts' proofs and pq marks, which
+/// only ever make this phone stricter, and their lists as the floor a list
+/// must reach: a list of theirs may name a device they removed since, so
+/// each is marked stale (kStaleList) and only their phone is let in until
+/// their phone sends it again. the registration id stays. [mine] false: a
+/// vault's (restoreCutsVaultDevices), which holds no list of mine
+Future<void> restoreCutsLinkedDevices(
+  DatabaseExecutor db, {
+  bool mine = true,
+}) async {
+  final have = {
+    for (final r in await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table'",
+    ))
+      r['name'] as String,
+  };
+  if (have.contains('sessions')) {
+    await db.delete('sessions', where: 'device_id >= 2');
+  }
+  if (have.contains('pairs')) {
+    await db.delete('pairs', where: 'their_device != 1 OR my_device != 1');
+  }
+  for (final t in const [
+    'own_devices',
+    'own_device_keys',
+    'dev_quiet',
+    'dev_pool',
+    'dev_held_openers',
+    'dev_pushes',
+    'dev_out',
+    'dev_openers',
+    'dev_asks',
+    'dev_marks',
+    'dev_farewell',
+    'own_told',
+    'own_held',
+  ]) {
+    if (have.contains(t)) await db.delete(t);
+  }
+  if (!have.contains('dev_lists')) return;
+  if (have.contains('dev_marks')) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final r in await db.query(
+      'dev_lists',
+      columns: ['ident', 'owner'],
+      where: "owner != 'me'",
+    )) {
+      await db.insert('dev_marks', {
+        'ident': r['ident'],
+        'peer': r['owner'],
+        'kind': kStaleList,
+        'key': '',
+        'at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+  if (!mine || !have.contains('signal_meta')) return;
+  final held = await db.query(
+    'dev_lists',
+    columns: ['ident'],
+    where: "owner = 'me'",
+    limit: 1,
+  );
+  if (held.isEmpty) return;
+  await db.insert('signal_meta', {
+    'k': kRestoreListOwedMeta,
+    'v': '1',
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+}
+
+/// the vault's own meta key (router.dart) of the restore (its [kRestoreCutPref]) whose cut the
+/// vault took, or that was the last one when the vault was made
+const kVaultRestoreCutMeta = 'restore_cut';
+
+/// a restore brings hidden chats back with their contacts' device sessions,
+/// pairs and lists as old as the file, and the everyday cut cannot reach
+/// them: the vault's first open after it cuts them the same way, inside the
+/// vault alone (every device session and pair, the pushes, copies, asks and
+/// marks go, each list is kept and marked stale). [restored] is the last
+/// restore's [kRestoreCutPref]. once a restore: the vault keeps which one it
+/// took. true when it cut
+Future<bool> restoreCutsVaultDevices(Database vault, int? restored) async {
+  if (restored == null) return false;
+  if (await RouterRows.meta(vault, kVaultRestoreCutMeta) == '$restored') {
+    return false;
+  }
+  await vault.transaction((t) async {
+    await restoreCutsLinkedDevices(t, mine: false);
+    await RouterRows.putMeta(t, kVaultRestoreCutMeta, '$restored');
+  });
+  return true;
+}
+
+/// a vault made now holds nothing from a restore: the last one is noted as
+/// taken, so its first open cuts nothing
+Future<void> vaultMadeAfterRestore(Database vault) async {
+  final at = await restoredAt();
+  if (at == null) return;
+  await RouterRows.putMeta(vault, kVaultRestoreCutMeta, '$at');
+}
 
 /// a heal to [peer] (their identity as [ss] holds it) from [ss]'s phone:
 /// the session spk and a fresh one-time kyber, [since] in unix hours (a

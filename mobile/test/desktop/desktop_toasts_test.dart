@@ -2,6 +2,7 @@
 // a windows toast never carries a name, a word of a message or what it opens
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/desktop/desktop_mode.dart' show deskSound;
 import 'package:kryfo/desktop/desktop_toasts.dart';
 import 'package:kryfo/l10n/l10n.dart';
 
@@ -26,6 +27,14 @@ void main() {
       ).hasMatch(s.guid),
       isTrue,
     );
+  });
+
+  test('the sound switch off makes every toast silent', () {
+    addTearDown(() => deskSound.value = true);
+    deskSound.value = true;
+    expect(toastDetails(), isNull);
+    deskSound.value = false;
+    expect(toastDetails()!.audio!.isSilent, isTrue);
   });
 
   test('a toast holds a token, the click gets the payload back', () {

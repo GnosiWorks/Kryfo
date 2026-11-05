@@ -21,6 +21,8 @@ import 'devices/link_calls.dart' show EngineLinkCalls;
 import 'devices/link_flow.dart';
 import 'devices/own_device_store.dart';
 import 'devices/own_sync.dart';
+import 'devices/own_unlink.dart';
+import 'devices/linked_lock.dart';
 import 'devices/own_devices.dart'
     show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
 import 'photo_blur.dart' show makeBlurSoon;
@@ -38,7 +40,7 @@ import 'desktop/desktop_mode.dart'
         shotsHonouredHere,
         startEngineIn,
         withNativeFiles;
-import 'store.dart' show playBuild;
+import 'store.dart' show kPlayBuild, playBuild;
 import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
@@ -117,6 +119,7 @@ import 'drafts.dart'
         sweepDrafts,
         writeDraftNow;
 import 'google_push.dart';
+import 'tips/tip_jar.dart' show TipJar;
 import 'helper_delivery.dart';
 import 'helper_push.dart';
 import 'screens/notifications_screen.dart';
@@ -146,6 +149,7 @@ import 'lock_layer.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'screens/moved_screen.dart';
+import 'screens/unlinked_screen.dart';
 import 'screens/restore_screen.dart' show RestoreScreen;
 import 'pin_gate.dart';
 import 'widgets/pins.dart' show kMaxPins;
@@ -243,6 +247,7 @@ part 'app/devices_app.dart';
 part 'app/devices_own_app.dart';
 part 'app/devices_receive_app.dart';
 part 'app/devices_send_app.dart';
+part 'app/devices_unlink_app.dart';
 part 'app/devices_vault_app.dart';
 part 'app/link_app.dart';
 part 'app/history_app.dart';

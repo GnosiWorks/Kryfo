@@ -278,3 +278,6 @@ func stopLeftoverTor(pidPath, exePath string) {
 	}
 	os.Remove(pidPath)
 }
+
+// tor.exe is a process of its own: every start is a fresh one
+func torMayLaunch() bool { return true }

@@ -11445,6 +11445,85 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voiceNotNow => 'Не зараз';
 
   @override
+  String get unlinkedTitle => 'Цей пристрій відв’язано';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Ваш телефон прибрав його з облікового запису, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Його не відкривали 30 днів, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Він 30 днів нічого не отримував від вашого телефона, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Його годинник перевели назад, тож Kryfo стер усе, що зберігав тут, щоб захистити ваші чати.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo не зміг зрозуміти, коли його відкривали востаннє, тож стер усе, що зберігав тут, щоб захистити ваші чати.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Ви відв’язали його, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Ваші чати лишаються на телефоні. Щоб знову користуватися Kryfo тут, пов’яжіть цей пристрій із телефоном.';
+
+  @override
+  String get unlinkedClose => 'Закрити Kryfo';
+
+  @override
+  String get devicesLeave => 'Відв’язати цей пристрій';
+
+  @override
+  String get devicesLeaveTitle => 'Відв’язати цей пристрій?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo повідомить телефон і зітре все, що зберігає тут. Ваші чати лишаться на телефоні.';
+
+  @override
+  String get devicesLeaveYes => 'Відв’язати й стерти';
+
+  @override
+  String get devicesGoneNotice => 'Пристрій прибрано';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name прибрано з вашого облікового запису $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name не використовували 30 днів, тож $date його прибрано з вашого облікового запису.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name саме відв’язалося $date і стерло те, що зберігало.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Ваші пристрої змінилися';
+
+  @override
+  String get devicesChangedLine =>
+      'Відкрийте Пов’язані пристрої, щоб побачити, що змінилося.';
+
+  @override
+  String get devicesUnknownNotice => 'Пристрій пов’язано деінде';
+
+  @override
+  String get devicesUnknownLine =>
+      'Інша копія Kryfo пов’язала пристрій із вашим обліковим записом. Цей телефон прибрав його з вашого списку.';
+
+  @override
   String get albumPrevious => 'Попереднє';
 
   @override
@@ -11500,4 +11579,114 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Надіслати міст';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Додавайте людей на телефоні. Вони з’являться і тут.';
+
+  @override
+  String get linkedLinkOnPhone => 'Відкрийте це посилання на телефоні.';
+
+  @override
+  String get tipsTitle => 'Підтримати Kryfo';
+
+  @override
+  String get tipsHeadline => 'Нехай Kryfo лишається *безкоштовним для всіх*';
+
+  @override
+  String get tipsLine =>
+      'Без реклами, без інвесторів, без облікових записів. Чайові допомагають платити за сервери й роботу над Kryfo.';
+
+  @override
+  String get tipsLeave => 'Залишити чайові';
+
+  @override
+  String get tipsYours => 'Уже твій';
+
+  @override
+  String get tipsAsking => 'Дізнаємося ціни в Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Чайові дають значок прихильника і більше нічого. Усе в Kryfo лишається безкоштовним для всіх, із чайовими чи без.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Оплата йде через Google Play. Ми ніколи не бачимо ні даних твоєї картки, ні твого імені.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Значок живе на цьому телефоні. У розділі Я ти обираєш, чи показувати його і чи бачать його контакти.';
+
+  @override
+  String get tipsRestore => 'Повернути мій значок';
+
+  @override
+  String get tipsRestoreLine =>
+      'Уже залишав чайові? Значок повернеться на будь-якому телефоні з тим самим обліковим записом Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Твій значок прихильника знову з тобою',
+      'patron': 'Твій значок мецената знову з тобою',
+      'guardian': 'Твій значок хранителя знову з тобою',
+      'other': 'Твій значок прихильника знову з тобою',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'З цього облікового запису Google чайових поки не було';
+
+  @override
+  String get tipsUnavailable =>
+      'Чайові йдуть через Google Play. Вони з’являться тут, щойно Google Play запрацює на цьому телефоні.';
+
+  @override
+  String get tipsSoon => 'Чайові скоро з’являться тут.';
+
+  @override
+  String get tipsPending =>
+      'Google Play ще завершує оплату. Значок прийде, щойно вона пройде.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play не завершив оплату. Спробуй ще раз трохи згодом.';
+
+  @override
+  String get tipsThanks => 'Дякуємо';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Тепер у тебе значок прихильника. Більше він нічого не відкриває: усе в Kryfo лишається безкоштовним для всіх.',
+      'patron':
+          'Тепер у тебе значок мецената. Більше він нічого не відкриває: усе в Kryfo лишається безкоштовним для всіх.',
+      'guardian':
+          'Тепер у тебе значок хранителя. Більше він нічого не відкриває: усе в Kryfo лишається безкоштовним для всіх.',
+      'other':
+          'Тепер у тебе значок прихильника. Більше він нічого не відкриває: усе в Kryfo лишається безкоштовним для всіх.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Дякуємо за чайові. Твій значок прихильника лишається, він вищий.',
+      'patron': 'Дякуємо за чайові. Твій значок мецената лишається, він вищий.',
+      'guardian':
+          'Дякуємо за чайові. Твій значок хранителя лишається, він вищий.',
+      'other':
+          'Дякуємо за чайові. Твій значок прихильника лишається, він вищий.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Залиш чайові, щоб Kryfo лишався незалежним';
 }

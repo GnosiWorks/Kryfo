@@ -418,10 +418,17 @@ extension AppStateRoute on AppState {
   /// the connection as the home pill and the tor sheet both show it
   LinkView get linkView => linkViewAt(DateTime.now());
 
+  /// tor's stage as the screens show it. a linked device's tor is a client:
+  /// at 100% it is all the way there, with no address of its own to finish
+  TorStatus get shownTorStatus =>
+      linkedRole && _torStatus == TorStatus.bootstrapped
+      ? TorStatus.reachable
+      : _torStatus;
+
   @visibleForTesting
   LinkView linkViewAt(DateTime now) => linkViewOf(
     mode: _sendMode,
-    status: _torStatus,
+    status: shownTorStatus,
     pct: _bootstrapPct,
     online: _online,
     usable: torUsable,
@@ -605,6 +612,9 @@ extension AppStateRoute on AppState {
   // what is true now. benched means it is in backoff. down is: nothing in
   // the list is usable.
   void _noteRelayHealth(List? relays, {DateTime? now}) {
+    if (relaysAnswer(relays)) {
+      _relayUpAt = (now ?? DateTime.now()).millisecondsSinceEpoch;
+    }
     if (_sendMode != 'balanced') {
       _relayDownSince = null;
       return;
@@ -644,6 +654,21 @@ extension AppStateRoute on AppState {
   }
 
   bool get online => _online;
+
+  /// the last time a relay answered, null before one did
+  int? get relayUpAt => _relayUpAt;
+
+  /// the relays read now, for the linked devices' clocks: the reads above
+  /// run only in balanced mode or when tor moves, so a tick reads its own
+  void sampleRelayUp({DateTime? now}) {
+    try {
+      if (relaysAnswer(engine.transportState()['relays'] as List?)) {
+        _relayUpAt = (now ?? DateTime.now()).millisecondsSinceEpoch;
+      }
+    } catch (_) {
+      // transport not readable: nothing counts
+    }
+  }
 
   Future<void> _initConnectivity() async {
     // what the network was when we started, so the first event the listener

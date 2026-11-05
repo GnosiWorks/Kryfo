@@ -360,6 +360,40 @@ void main() {
     expect(exited, 0);
   });
 
+  test('a linked device\'s last word goes only once everything is erased, '
+      'before the engine lets go of the network; with stay the process '
+      'lives on until the page closes it', () async {
+    final engine = _Engine();
+    useEngineForTest(engine);
+    bool? erasedAtWord;
+    List<String>? callsAtWord;
+    await wipeHalo(
+      stay: true,
+      afterErase: () async {
+        erasedAtWord = await erased();
+        callsAtWord = [...engine.calls];
+      },
+    );
+    expect(erasedAtWord, isTrue);
+    expect(callsAtWord, isEmpty);
+    expect(engine.calls, ['hold']);
+    expect(left('docs'), isEmpty);
+    expect(exited, isNull);
+    expect(platform, isNot(contains('wipe')));
+    await wipeFinish();
+    expect(platform, contains('wipe'));
+    expect(exited, 0);
+  });
+
+  test('a last word that never answers holds the wipe a few seconds at '
+      'most', () async {
+    useEngineForTest(_Engine());
+    final clock = Stopwatch()..start();
+    await wipeHalo(afterErase: () => Completer<void>().future);
+    expect(clock.elapsed, lessThan(kWipeTellWait + const Duration(seconds: 6)));
+    expect(exited, 0);
+  });
+
   test('the pin key goes first, before the secrets it guards', () async {
     useEngineForTest(_Engine());
     FlutterSecureStorage.setMockInitialValues({
