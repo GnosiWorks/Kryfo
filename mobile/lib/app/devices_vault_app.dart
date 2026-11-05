@@ -25,6 +25,33 @@ Timer? _hiddenCardsTimer;
 // memory only: a start sends each again, the vault's open queues it
 final _hiddenRemovalsSent = <String, int>{};
 
+// the open vault's restore cut (restoreCutsVaultDevices) did not run: its
+// devices' side stays off until an open where it did
+var _vaultCutWaits = false;
+
+// the vault [v] opening: after a restore, every device session and pair of
+// its contacts goes and their lists are marked stale, before anything reads
+// them, in the vault alone (heal.dart). nothing is written on the everyday
+// side. one that fails keeps the vault's devices' side off
+Future<void> _vaultRestoreCut(HaloDb v) async {
+  try {
+    final at = await restoredAt();
+    if (at != null && await restoreCutsVaultDevices(await v.open(), at)) {
+      dlog('vault: its contacts\' devices cut after the restore');
+    }
+    _vaultCutWaits = false;
+  } catch (e) {
+    _vaultCutWaits = true;
+    dlog('vault: the restore cut waits (${e.runtimeType})');
+  }
+}
+
+@visibleForTesting
+Future<void> vaultRestoreCutForTest(HaloDb v) => _vaultRestoreCut(v);
+
+@visibleForTesting
+bool get vaultCutWaitsForTest => _vaultCutWaits;
+
 // the vault's own dev_marks kind: a removal owed (kHiddenRemovalMeta) it
 // queued as its pushes, by version
 const kHiddenRemovalQueued = 'hidden_removal';
@@ -206,6 +233,8 @@ extension AppStateVaultDevices on AppState {
     final everyday = _deviceReceive;
     if (!linkedDevicesOn || ds == null || everyday == null) return;
     if (!AppState._everyday(v) || !identical(_openVault, v)) return;
+    // devices from before a restore are never let in
+    if (_vaultCutWaits) return;
     // a lock during any wait below: the close ran with nothing to let go,
     // so what this took in goes here
     var took = <String>[];

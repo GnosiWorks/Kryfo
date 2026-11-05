@@ -17,6 +17,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'container.dart';
 import 'devices/device_state.dart' show linkedDevicesOn;
 import 'devices/own_sync.dart' show ownFrameNames;
+import 'heal.dart' show vaultMadeAfterRestore;
 import 'lock_state.dart' show LockState, lockState;
 import 'main.dart' show HaloDb, deviceState, engine, shredFile;
 import 'notifications.dart'
@@ -185,7 +186,9 @@ class LiveVaultHost implements VaultHost {
     final keys = vault == HaloContainer.vault ? engine.vaultKeys() : null;
     final d = HaloDb.withKey(vault, keyHex);
     try {
-      await d.open();
+      final db = await d.open();
+      // made after a restore: nothing in it for that restore's cut
+      if (vault == HaloContainer.vault) await vaultMadeAfterRestore(db);
       if (keys != null) {
         await SqlRouterStore(d.open).putMeta('priv', keys.priv);
       }

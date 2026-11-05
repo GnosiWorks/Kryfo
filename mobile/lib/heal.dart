@@ -65,8 +65,12 @@ const kRestoreCutPref = 'restore.cut';
 /// only ever make this phone stricter, and their lists as the floor a list
 /// must reach: a list of theirs may name a device they removed since, so
 /// each is marked stale (kStaleList) and only their phone is let in until
-/// their phone sends it again. the registration id stays
-Future<void> restoreCutsLinkedDevices(DatabaseExecutor db) async {
+/// their phone sends it again. the registration id stays. [mine] false: a
+/// vault's (restoreCutsVaultDevices), which holds no list of mine
+Future<void> restoreCutsLinkedDevices(
+  DatabaseExecutor db, {
+  bool mine = true,
+}) async {
   final have = {
     for (final r in await db.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table'",
@@ -113,17 +117,59 @@ Future<void> restoreCutsLinkedDevices(DatabaseExecutor db) async {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
-  if (!have.contains('signal_meta')) return;
-  final mine = await db.query(
+  if (!mine || !have.contains('signal_meta')) return;
+  final held = await db.query(
     'dev_lists',
     columns: ['ident'],
     where: "owner = 'me'",
     limit: 1,
   );
-  if (mine.isEmpty) return;
+  if (held.isEmpty) return;
   await db.insert('signal_meta', {
     'k': kRestoreListOwedMeta,
     'v': '1',
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+}
+
+/// the vault_meta key of the restore (its [kRestoreCutPref]) whose cut the
+/// vault took, or that was the last one when the vault was made
+const kVaultRestoreCutMeta = 'restore_cut';
+
+/// a restore brings hidden chats back with their contacts' device sessions,
+/// pairs and lists as old as the file, and the everyday cut cannot reach
+/// them: the vault's first open after it cuts them the same way, inside the
+/// vault alone (every device session and pair, the pushes, copies, asks and
+/// marks go, each list is kept and marked stale). [restored] is the last
+/// restore's [kRestoreCutPref]. once a restore: the vault keeps which one it
+/// took. true when it cut
+Future<bool> restoreCutsVaultDevices(Database vault, int? restored) async {
+  if (restored == null) return false;
+  final took = await vault.query(
+    'vault_meta',
+    columns: ['v'],
+    where: 'k = ?',
+    whereArgs: [kVaultRestoreCutMeta],
+    limit: 1,
+  );
+  if (took.isNotEmpty && took.first['v'] == '$restored') return false;
+  await vault.transaction((t) async {
+    await restoreCutsLinkedDevices(t, mine: false);
+    await t.insert('vault_meta', {
+      'k': kVaultRestoreCutMeta,
+      'v': '$restored',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  });
+  return true;
+}
+
+/// a vault made now holds nothing from a restore: the last one is noted as
+/// taken, so its first open cuts nothing
+Future<void> vaultMadeAfterRestore(Database vault) async {
+  final at = await restoredAt();
+  if (at == null) return;
+  await vault.insert('vault_meta', {
+    'k': kVaultRestoreCutMeta,
+    'v': '$at',
   }, conflictAlgorithm: ConflictAlgorithm.replace);
 }
 
