@@ -1432,6 +1432,7 @@ extension AppStateArrivals on AppState {
     // saved now, messageExists covers dedup from here
     _inflightUids.removeAll(claims);
     claims.clear();
+    if (!isGroup && !unsealing && senderHaloId != myId) benchGot(env.writtenAt);
     // an edit that came first is the text it shows
     final edited = env.msgUid == null
         ? null
