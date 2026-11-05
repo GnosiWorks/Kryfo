@@ -482,3 +482,26 @@ func TestAFirstContactArrivesPastADeadAndASlowRelay(t *testing.T) {
 		})
 	}
 }
+
+// many sockets to a relay on a failing streak dial it one at a time: the
+// others wait their own backoff instead of each holding a dial of its own
+func TestAFailingRelayTakesOneDialAtATime(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own)
+	dead := newBlackHole(t, false)
+	setRelays([]string{own.url(), dead.url()})
+	relayHealthMu.Lock()
+	relayFails[dead.url()] = 1
+	relayHealthMu.Unlock()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	for i := 0; i < 5; i++ {
+		p := newXid(t)
+		go nostrSubscribeRunner(alone(ctx), hex.EncodeToString(p.pub[:]), mainPair(p.pub), mustRcv(t, p))
+	}
+	waitFor(t, "every socket on our relay", 10*time.Second, func() bool { return len(own.listening()) == 5 })
+	time.Sleep(time.Second)
+	if n := dead.dials.Load(); n != 1 {
+		t.Fatalf("%d dials out at once to a failing relay, want 1", n)
+	}
+}

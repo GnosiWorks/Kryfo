@@ -938,6 +938,35 @@ func relayBackoff(n int) time.Duration {
 	return d
 }
 
+// the dials out now to each relay on a failing streak
+var failingDials sync.Map // url -> *atomic.Int32
+
+// whether this socket may dial u now, and what to call once the dial is
+// over. a relay with no failure since it last answered: always
+func failingDialBegin(u string) (bool, func()) {
+	relayHealthMu.Lock()
+	failing := relayFails[u] > 0
+	relayHealthMu.Unlock()
+	if !failing {
+		return true, func() {}
+	}
+	v, _ := failingDials.LoadOrStore(u, new(atomic.Int32))
+	n := v.(*atomic.Int32)
+	if !n.CompareAndSwap(0, 1) {
+		return false, nil
+	}
+	return true, func() { n.Store(0) }
+}
+
+// a runner's base wait after a failure: our second store's entries wait as
+// a public relay does while our other store answers, not three seconds
+func retryFor(u string, retry time.Duration, own bool) time.Duration {
+	if own && retry < 10*time.Second && otherStoreAnswers(nostrRelaysNow(), u) {
+		return 10 * time.Second
+	}
+	return retry
+}
+
 // closed when every bench is let go of, at a wake or a new route
 var benchClear = struct {
 	sync.Mutex
@@ -2052,6 +2081,16 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					continue
 				default:
 				}
+				// a relay on a failing streak takes one dial at a time: while
+				// another socket's dial to it is out, this try counts as failed
+				// and waits its own backoff, so a dead relay costs one dial a
+				// round and not one per socket
+				goDial, dialOver := failingDialBegin(u)
+				if !goDial {
+					turn.dialed(false)
+					nap(relayRetryAfter(u, retryFor(u, retry, own), own))
+					continue
+				}
 				// each connection has a context of its own, so the relay and
 				// everything the library starts for it end with the connection
 				// and not with the subscription. ending it closes the relay.
@@ -2059,6 +2098,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				dialAt := time.Now()
 				dialGen := routeGeneration()
 				r, fresh, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry)
+				dialOver()
 				turn.dialed(err == nil)
 				if err != nil && routeGone(routeC) {
 					connDone()
@@ -2083,7 +2123,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					} else {
 						relayFailed(u, dialAt)
 					}
-					nap(relayRetryAfter(u, retry, own))
+					nap(relayRetryAfter(u, retryFor(u, retry, own), own))
 					continue
 				}
 				// the mode changed while it dialled. nothing is asked on it
