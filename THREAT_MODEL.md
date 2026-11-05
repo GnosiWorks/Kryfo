@@ -248,9 +248,10 @@ a computer linked to your phone (linked devices, behind a switch in 0.6):
   you remove it.
 - a removed computer keeps what it already held, and it still knows your
   phone's onion address, so it can tell when your phone is online.
-- a contact you deleted is not sent your new list when you remove a
-  computer, so they cannot tell you still use Kryfo. if they kept you,
-  their app can go on copying what they write to you to that computer.
+- a contact you deleted is not told when you remove a computer, so they
+  cannot tell you still use Kryfo. if they still have you, their app may
+  keep sending that computer a copy of what they write to you, until you
+  add them again.
 - restoring your phone from a backup cuts every linked computer off, but
   cannot tell one that is away: it erases itself once it has heard nothing
   from your phone for 30 days of being online.

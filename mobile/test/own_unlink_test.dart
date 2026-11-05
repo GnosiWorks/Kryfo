@@ -44,6 +44,7 @@ import 'package:kryfo/main.dart'
         deviceReceiveForTest,
         deviceSendForTest,
         deviceStateForTest,
+        devAddedForTest,
         devForgetForTest,
         devMineOf,
         useDatabasesForTest,
@@ -1248,7 +1249,8 @@ void main() {
       'list waits for the accept', () async {
     if (skip()) return;
     final w = await phone();
-    final carol = devHex((await testStore()).identity.public);
+    final carolStore = await testStore();
+    final carol = devHex(carolStore.identity.public);
     const carolId = 'carol-far-hill';
     await w.db.insert('contacts', {
       'halo_id': carolId,
@@ -1368,6 +1370,43 @@ void main() {
       )).map((r) => (r['kind'], r['sent_at'])).toList(),
       [('add', 0)],
     );
+    // deleted again, then added back: my list as it is now goes to her at
+    // once, so her phone stops copying to a device I removed meanwhile
+    await devForgetForTest(carolId);
+    expect(await owed(), isNot(contains(carol)));
+    await w.db.update(
+      'contacts',
+      {'accepted': 1, 'archived': 0},
+      where: 'halo_id = ?',
+      whereArgs: [carolId],
+    );
+    await devAddedForTest(carolId);
+    final mine = await w.db.query(
+      'dev_lists',
+      columns: ['version'],
+      where: "ident = ? AND owner = 'me'",
+      whereArgs: [kMainIdent],
+    );
+    expect(
+      (await w.db.query(
+        'dev_pushes',
+        columns: ['kind', 'version'],
+        where: 'peer = ?',
+        whereArgs: [carol],
+      )).map((r) => (r['kind'], r['version'])).toList(),
+      [('add', mine.single['version'])],
+    );
+    // it goes once her phone is heard again
+    w.clock += _day;
+    expect(await pushTo(), isNot(contains(carolId)));
+    await w.ds.session(w.db, 'opened', {
+      'ident': kMainIdent,
+      'identity': carol,
+      'device': 1,
+      'pq': true,
+    }, SessionRemote.opened(carolStore.identity.public));
+    w.clock += _day;
+    expect(await pushTo(), contains(carolId));
   });
 
   // what a restore leaves of bob's devices once [cut] ran on the store that

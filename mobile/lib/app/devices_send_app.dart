@@ -283,6 +283,17 @@ Future<void> _devicesShown(String peer) async {
   }
 }
 
+// a contact just added or accepted (subscribePeer, fresh): one who reads
+// lists gets mine at once, as one I deleted and added again may still
+// hold an old one naming a device I removed since
+@visibleForTesting
+Future<void> devAddedForTest(String haloId) => _devAdded(haloId);
+
+Future<void> _devAdded(String haloId) async {
+  if (!linkedDevicesOn || sessionQuiet || isDevId(haloId)) return;
+  await _devicesShown(haloId);
+}
+
 // a contact goes (deleted, released, "not them"): the engine forgets their
 // lists, quiet rows and proofs, and nothing more goes to them or their
 // devices, a list or a removal owed included. nothing is sent for the delete.
