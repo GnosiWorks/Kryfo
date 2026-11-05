@@ -81,6 +81,7 @@ class _PressScaleState extends State<PressScale> {
               tap();
             },
       radius: widget.ring,
+      onMenu: widget.onLongPress,
       pointer: (widget.onTap ?? widget.onLongPress) != null,
       tooltip: widget.label,
       child: g,

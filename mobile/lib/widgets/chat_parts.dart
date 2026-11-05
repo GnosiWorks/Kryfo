@@ -484,6 +484,9 @@ class BurnLine extends StatelessWidget {
   }
 }
 
+/// the reactions a menu offers at once, the phone's bar and the computer's
+const kQuickReactions = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
+
 // the reaction pill over a long-pressed bubble, the 1:1 and the group's.
 // it fades in as the menu grows; the emojis pop in one after another
 class ReactionPicker extends StatefulWidget {
