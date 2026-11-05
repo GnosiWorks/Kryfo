@@ -1555,9 +1555,15 @@ Future<String> _fcSendOnIsolate(
   });
 }
 
+/// the read below, stood in by a test (the handle lookup's registry)
+@visibleForTesting
+Future<String> Function(String url)? handleFetchForTest;
+
 // one read through the engine's http route, off the ui thread. used for the
 // handle lookup, which can wait on tor.
 Future<String> _torGetJsonOnIsolate(String url) {
+  final stood = handleFetchForTest;
+  if (stood != null) return stood(url);
   return Isolate.run(() {
     final lib = haloLibrary();
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');

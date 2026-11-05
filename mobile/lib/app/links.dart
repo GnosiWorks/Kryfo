@@ -6,10 +6,6 @@ part of '../main.dart';
 Future<String> handleHaloUri(String raw, {bool scanned = false}) async =>
     (await handleHaloUriAdded(raw, scanned: scanned)).$1;
 
-/// the registry read a handle add makes, stood in by a test
-@visibleForTesting
-Future<String> Function(String url)? handleFetchForTest;
-
 /// asked when a link names someone here under a name a request, an
 /// introduction or a group gave, never checked, or a deleted chat's, on
 /// another key: true lets the link take the name. [chat] says the other one
@@ -130,9 +126,7 @@ Future<(String, bool)> handleHaloUriAdded(
     // key the handle was claimed with
     final r = await resolveHandle(
       h,
-      sessionQuiet
-          ? engine.decoyTorGetJson
-          : (handleFetchForTest ?? _torGetJsonOnIsolate),
+      sessionQuiet ? engine.decoyTorGetJson : _torGetJsonOnIsolate,
       idOf: engine.idFromEdPub,
       v4FaceOf: v4FaceOfLink,
     );
