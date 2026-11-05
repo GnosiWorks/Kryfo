@@ -8883,14 +8883,6 @@
   "@settingsConnected": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsScreenshots": "Screenshots",
-  "@settingsScreenshots": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsBlocked2": "Blocked",
-  "@settingsBlocked2": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOn": "On",
   "@settingsOn": {
     "description": "screens/settings_screen.dart"
@@ -8914,6 +8906,31 @@
   "settingsBackup": "Backup",
   "@settingsBackup": {
     "description": "screens/settings_screen.dart"
+  },
+  "settingsProtectBackup": "Backup",
+  "@settingsProtectBackup": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, its label"
+  },
+  "settingsBackupNotYet": "Not yet",
+  "@settingsBackupNotYet": {
+    "description": "screens/settings_screen.dart: the backup line of your protections when no backup was made on this side"
+  },
+  "settingsBackupToday": "Today",
+  "@settingsBackupToday": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, a backup made today"
+  },
+  "settingsBackupYesterday": "Yesterday",
+  "@settingsBackupYesterday": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, a backup made yesterday"
+  },
+  "settingsBackupDaysAgo": "{count, plural, one{{count} day ago} other{{count} days ago}}",
+  "@settingsBackupDaysAgo": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, days since the last backup (2 to 30)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "settingsVoice": "Voice",
   "@settingsVoice": {
@@ -11015,10 +11032,6 @@
   "roomShotsAlwaysOnDesk": "Always on in a room, in Kryfo for Android",
   "@roomShotsAlwaysOnDesk": {
     "description": "roomShotsAlwaysOn as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own"
-  },
-  "settingsPerChat": "Per chat",
-  "@settingsPerChat": {
-    "description": "screens/settings_screen.dart: the screenshots line of your protections: each chat has its own switch, with an app lock too on android 13 and newer"
   },
   "homeShotsPerChat": "Screenshot blocking is now per chat.",
   "@homeShotsPerChat": {
@@ -13857,6 +13870,14 @@
   "@desktopPassRow": {
     "description": "screens/settings_screen.dart: settings row and page title, desktop only"
   },
+  "desktopPassWindowsAccount": "Locked by your Windows account",
+  "@desktopPassWindowsAccount": {
+    "description": "screens/settings_screen.dart: your protections on windows, no passphrase: the windows account (and its security chip) keeps the key"
+  },
+  "desktopPassKeyring": "Locked by your keyring",
+  "@desktopPassKeyring": {
+    "description": "screens/settings_screen.dart: your protections on linux, no passphrase: the system keyring keeps the key"
+  },
   "desktopPassOffBody": "Kryfo opens with your computer account.",
   "@desktopPassOffBody": {
     "description": "desktop/desktop_passphrase_screen.dart: when no passphrase is set"
@@ -14013,10 +14034,6 @@
         "type": "String"
       }
     }
-  },
-  "settingsShotsNotHereYet": "Not on this computer yet",
-  "@settingsShotsNotHereYet": {
-    "description": "screens/settings_screen.dart: the screenshots line on a computer"
   },
   "settingsDeskInTray": "Running in the tray",
   "@settingsDeskInTray": {

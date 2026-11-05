@@ -7116,12 +7116,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsConnected => 'Conectado';
 
   @override
-  String get settingsScreenshots => 'Capturas de tela';
-
-  @override
-  String get settingsBlocked2 => 'Bloqueadas';
-
-  @override
   String get settingsOn => 'Ativado';
 
   @override
@@ -7138,6 +7132,29 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Backup';
+
+  @override
+  String get settingsProtectBackup => 'Backup';
+
+  @override
+  String get settingsBackupNotYet => 'Ainda não';
+
+  @override
+  String get settingsBackupToday => 'Hoje';
+
+  @override
+  String get settingsBackupYesterday => 'Ontem';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Há $count dias',
+      one: 'Há $count dia',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Voz';
@@ -8891,9 +8908,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Sempre ativado numa sala, no Kryfo para Android';
-
-  @override
-  String get settingsPerChat => 'Por conversa';
 
   @override
   String get homeShotsPerChat =>
@@ -11136,6 +11150,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get desktopPassRow => 'Frase-senha neste computador';
 
   @override
+  String get desktopPassWindowsAccount => 'Bloqueado pela sua conta do Windows';
+
+  @override
+  String get desktopPassKeyring => 'Bloqueado pelo seu chaveiro';
+
+  @override
   String get desktopPassOffBody => 'O Kryfo abre com a sua conta de usuário.';
 
   @override
@@ -11245,9 +11265,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alfa';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Ainda não neste computador';
 
   @override
   String get settingsDeskInTray => 'Aberto na bandeja do sistema';

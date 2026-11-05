@@ -7062,12 +7062,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsConnected => 'Connected';
 
   @override
-  String get settingsScreenshots => 'Screenshots';
-
-  @override
-  String get settingsBlocked2 => 'Blocked';
-
-  @override
   String get settingsOn => 'On';
 
   @override
@@ -7084,6 +7078,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Backup';
+
+  @override
+  String get settingsProtectBackup => 'Backup';
+
+  @override
+  String get settingsBackupNotYet => 'Not yet';
+
+  @override
+  String get settingsBackupToday => 'Today';
+
+  @override
+  String get settingsBackupYesterday => 'Yesterday';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '$count day ago',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Voice';
@@ -8819,9 +8836,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Always on in a room, in Kryfo for Android';
-
-  @override
-  String get settingsPerChat => 'Per chat';
 
   @override
   String get homeShotsPerChat => 'Screenshot blocking is now per chat.';
@@ -11055,6 +11069,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get desktopPassRow => 'Passphrase on this computer';
 
   @override
+  String get desktopPassWindowsAccount => 'Locked by your Windows account';
+
+  @override
+  String get desktopPassKeyring => 'Locked by your keyring';
+
+  @override
   String get desktopPassOffBody => 'Kryfo opens with your computer account.';
 
   @override
@@ -11164,9 +11184,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alpha';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Not on this computer yet';
 
   @override
   String get settingsDeskInTray => 'Running in the tray';

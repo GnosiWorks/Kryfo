@@ -7065,12 +7065,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsConnected => 'متصل';
 
   @override
-  String get settingsScreenshots => 'اسکرین‌شات‌ها';
-
-  @override
-  String get settingsBlocked2 => 'مسدود';
-
-  @override
   String get settingsOn => 'روشن';
 
   @override
@@ -7087,6 +7081,29 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsBackup => 'نسخه‌ی پشتیبان';
+
+  @override
+  String get settingsProtectBackup => 'نسخه‌ی پشتیبان';
+
+  @override
+  String get settingsBackupNotYet => 'هنوز نه';
+
+  @override
+  String get settingsBackupToday => 'امروز';
+
+  @override
+  String get settingsBackupYesterday => 'دیروز';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ روز پیش',
+      one: '⁨$count⁩ روز پیش',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'صدا';
@@ -8832,9 +8849,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'در اتاق همیشه روشن است، در Kryfo برای اندروید';
-
-  @override
-  String get settingsPerChat => 'برای هر گفت‌وگو';
 
   @override
   String get homeShotsPerChat =>
@@ -11071,6 +11085,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get desktopPassRow => 'عبارت عبور روی این رایانه';
 
   @override
+  String get desktopPassWindowsAccount => 'قفل‌شده با حساب Windows شما';
+
+  @override
+  String get desktopPassKeyring => 'قفل‌شده با جاکلیدی شما';
+
+  @override
   String get desktopPassOffBody => 'Kryfo با حساب کاربری شما باز می‌شود.';
 
   @override
@@ -11174,9 +11194,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · آلفا';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'هنوز روی این رایانه نیست';
 
   @override
   String get settingsDeskInTray => 'در سینی سیستم در حال اجرا';

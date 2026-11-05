@@ -7047,12 +7047,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsConnected => 'Đã kết nối';
 
   @override
-  String get settingsScreenshots => 'Chụp màn hình';
-
-  @override
-  String get settingsBlocked2 => 'Đã chặn';
-
-  @override
   String get settingsOn => 'Bật';
 
   @override
@@ -7069,6 +7063,28 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Sao lưu';
+
+  @override
+  String get settingsProtectBackup => 'Sao lưu';
+
+  @override
+  String get settingsBackupNotYet => 'Chưa có';
+
+  @override
+  String get settingsBackupToday => 'Hôm nay';
+
+  @override
+  String get settingsBackupYesterday => 'Hôm qua';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ngày trước',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Giọng nói';
@@ -8806,9 +8822,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Luôn bật trong phòng, trong Kryfo cho Android';
-
-  @override
-  String get settingsPerChat => 'Theo từng cuộc trò chuyện';
 
   @override
   String get homeShotsPerChat =>
@@ -11044,6 +11057,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get desktopPassRow => 'Cụm mật khẩu trên máy tính này';
 
   @override
+  String get desktopPassWindowsAccount =>
+      'Được khóa bằng tài khoản Windows của bạn';
+
+  @override
+  String get desktopPassKeyring => 'Được khóa bằng chùm chìa khóa của bạn';
+
+  @override
   String get desktopPassOffBody =>
       'Kryfo mở bằng tài khoản người dùng của bạn.';
 
@@ -11148,9 +11168,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alpha';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Chưa có trên máy tính này';
 
   @override
   String get settingsDeskInTray => 'Đang chạy trong khay hệ thống';
