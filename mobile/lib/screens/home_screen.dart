@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'donate_screen.dart';
+import 'tip_screen.dart';
 import 'profile_screen.dart';
 import 'tools_screen.dart';
 import 'photo_knows_screen.dart';
@@ -277,8 +278,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenLocked: () => _pickFor((f) => OpenLockedScreen(file: f)),
         );
       case HaloTab.support:
-        // never on the bar in the play build
-        return kPlayBuild ? const SizedBox.shrink() : const DonateScreen();
+        // the play build tips through google play, and names no other way
+        return kPlayBuild ? const TipScreen() : const DonateScreen();
       case HaloTab.me:
         return ProfileScreen(onOpenSupport: () => _pick(HaloTab.support));
     }

@@ -11480,4 +11480,109 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'Enviar a ponte para';
+
+  @override
+  String get tipsTitle => 'Apoiar o Kryfo';
+
+  @override
+  String get tipsHeadline => 'Mantenha o Kryfo *gratuito para todos*';
+
+  @override
+  String get tipsLine =>
+      'Sem anúncios, sem investidores, sem contas. Uma gorjeta ajuda a pagar os servidores e o trabalho no Kryfo.';
+
+  @override
+  String get tipsLeave => 'Deixar uma gorjeta';
+
+  @override
+  String get tipsYours => 'Seu';
+
+  @override
+  String get tipsAsking => 'Pedindo os preços ao Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Uma gorjeta dá a você um selo de apoiador e nada mais. Tudo no Kryfo continua gratuito para todo mundo, com ou sem gorjeta.';
+
+  @override
+  String get tipsThroughPlay =>
+      'O pagamento passa pelo Google Play. Nunca vemos os dados do seu cartão nem o seu nome.';
+
+  @override
+  String get tipsBadgeStays =>
+      'O selo fica neste celular. Em Eu você escolhe se ele aparece e se seus contatos o veem.';
+
+  @override
+  String get tipsRestore => 'Recuperar meu selo';
+
+  @override
+  String get tipsRestoreLine =>
+      'Já deixou uma gorjeta? Seu selo volta em qualquer celular conectado à mesma conta Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Seu selo de apoiador voltou',
+      'patron': 'Seu selo de mecenas voltou',
+      'guardian': 'Seu selo de guardião voltou',
+      'other': 'Seu selo de apoiador voltou',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Esta conta Google ainda não deixou nenhuma gorjeta';
+
+  @override
+  String get tipsUnavailable =>
+      'As gorjetas passam pelo Google Play. Elas aparecem aqui assim que o Google Play funcionar neste celular.';
+
+  @override
+  String get tipsSoon => 'As gorjetas chegam aqui em breve.';
+
+  @override
+  String get tipsPending =>
+      'O Google Play ainda está concluindo seu pagamento. Seu selo chega assim que ele for aprovado.';
+
+  @override
+  String get tipsFailed =>
+      'O Google Play não concluiu o pagamento. Tente de novo daqui a pouco.';
+
+  @override
+  String get tipsThanks => 'Obrigado';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Agora você tem o selo de apoiador. Ele não libera mais nada: tudo no Kryfo continua gratuito para todo mundo.',
+      'patron':
+          'Agora você tem o selo de mecenas. Ele não libera mais nada: tudo no Kryfo continua gratuito para todo mundo.',
+      'guardian':
+          'Agora você tem o selo de guardião. Ele não libera mais nada: tudo no Kryfo continua gratuito para todo mundo.',
+      'other':
+          'Agora você tem o selo de apoiador. Ele não libera mais nada: tudo no Kryfo continua gratuito para todo mundo.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Obrigado pela gorjeta. Você fica com seu selo de apoiador, o mais alto.',
+      'patron':
+          'Obrigado pela gorjeta. Você fica com seu selo de mecenas, o mais alto.',
+      'guardian':
+          'Obrigado pela gorjeta. Você fica com seu selo de guardião, o mais alto.',
+      'other':
+          'Obrigado pela gorjeta. Você fica com seu selo de apoiador, o mais alto.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard =>
+      'Deixe uma gorjeta para manter o Kryfo independente';
 }

@@ -11408,4 +11408,103 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesSendBridgeTo => 'فرستادن پل به';
+
+  @override
+  String get tipsTitle => 'حمایت از Kryfo';
+
+  @override
+  String get tipsHeadline => 'Kryfo را *برای همه رایگان* نگه دارید';
+
+  @override
+  String get tipsLine =>
+      'بدون تبلیغ، بدون سرمایه‌گذار، بدون حساب کاربری. انعام به پرداخت هزینه‌ی سرورها و کار روی Kryfo کمک می‌کند.';
+
+  @override
+  String get tipsLeave => 'انعام بدهید';
+
+  @override
+  String get tipsYours => 'مال شما';
+
+  @override
+  String get tipsAsking => 'در حال پرسیدن قیمت‌ها از Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'انعام فقط یک نشان هوادار به شما می‌دهد و هیچ چیز دیگری. همه‌چیزِ Kryfo برای همه رایگان می‌ماند، با انعام یا بی انعام.';
+
+  @override
+  String get tipsThroughPlay =>
+      'پرداخت از طریق Google Play انجام می‌شود. ما هرگز اطلاعات کارت یا نام شما را نمی‌بینیم.';
+
+  @override
+  String get tipsBadgeStays =>
+      'نشان روی همین گوشی می‌ماند. در «من» انتخاب می‌کنید که نمایش داده شود یا نه و مخاطبانتان آن را ببینند یا نه.';
+
+  @override
+  String get tipsRestore => 'بازگرداندن نشانم';
+
+  @override
+  String get tipsRestoreLine =>
+      'قبلاً انعام داده‌اید؟ نشانتان روی هر گوشی‌ای که با همان حساب Google وارد شده باشد برمی‌گردد.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'نشان هوادار شما برگشت',
+      'patron': 'نشان حامی شما برگشت',
+      'guardian': 'نشان نگهبان شما برگشت',
+      'other': 'نشان هوادار شما برگشت',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => 'این حساب Google هنوز انعامی نداده است';
+
+  @override
+  String get tipsUnavailable =>
+      'انعام‌ها از طریق Google Play انجام می‌شوند. به محض اینکه Google Play روی این گوشی کار کند، اینجا نمایش داده می‌شوند.';
+
+  @override
+  String get tipsSoon => 'انعام‌ها به‌زودی اینجا باز می‌شوند.';
+
+  @override
+  String get tipsPending =>
+      'Google Play هنوز در حال تکمیل پرداخت شماست. نشانتان به محض انجام پرداخت می‌رسد.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play پرداخت را تمام نکرد. کمی بعد دوباره امتحان کنید.';
+
+  @override
+  String get tipsThanks => 'ممنونیم';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'حالا نشان هوادار را دارید. چیز دیگری باز نمی‌کند: همه‌چیزِ Kryfo برای همه رایگان می‌ماند.',
+      'patron':
+          'حالا نشان حامی را دارید. چیز دیگری باز نمی‌کند: همه‌چیزِ Kryfo برای همه رایگان می‌ماند.',
+      'guardian':
+          'حالا نشان نگهبان را دارید. چیز دیگری باز نمی‌کند: همه‌چیزِ Kryfo برای همه رایگان می‌ماند.',
+      'other':
+          'حالا نشان هوادار را دارید. چیز دیگری باز نمی‌کند: همه‌چیزِ Kryfo برای همه رایگان می‌ماند.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'ممنون بابت انعام. نشان هوادار شما که بالاتر است می‌ماند.',
+      'patron': 'ممنون بابت انعام. نشان حامی شما که بالاتر است می‌ماند.',
+      'guardian': 'ممنون بابت انعام. نشان نگهبان شما که بالاتر است می‌ماند.',
+      'other': 'ممنون بابت انعام. نشان هوادار شما که بالاتر است می‌ماند.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'انعام بدهید تا Kryfo مستقل بماند';
 }

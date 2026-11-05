@@ -39,7 +39,7 @@ import 'desktop/desktop_mode.dart'
         shotsHonouredHere,
         startEngineIn,
         withNativeFiles;
-import 'store.dart' show playBuild;
+import 'store.dart' show kPlayBuild, playBuild;
 import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
@@ -118,6 +118,7 @@ import 'drafts.dart'
         sweepDrafts,
         writeDraftNow;
 import 'google_push.dart';
+import 'tips/tip_jar.dart' show TipJar;
 import 'helper_delivery.dart';
 import 'helper_push.dart';
 import 'screens/notifications_screen.dart';

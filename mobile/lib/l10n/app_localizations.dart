@@ -18294,6 +18294,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send the bridge to'**
   String get bridgesSendBridgeTo;
+
+  /// screens/tip_screen.dart: the play build support tab title and the section on me
+  ///
+  /// In en, this message translates to:
+  /// **'Support Kryfo'**
+  String get tipsTitle;
+
+  /// screens/tip_screen.dart: the headline, the words between * are amber
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Kryfo *free for everyone*'**
+  String get tipsHeadline;
+
+  /// screens/tip_screen.dart: under the headline
+  ///
+  /// In en, this message translates to:
+  /// **'No ads, no investors, no accounts. A tip helps pay for the servers and the work on Kryfo.'**
+  String get tipsLine;
+
+  /// screens/tip_screen.dart: the button that opens google play payment sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a tip'**
+  String get tipsLeave;
+
+  /// screens/tip_screen.dart: on an amount already bought on this google account
+  ///
+  /// In en, this message translates to:
+  /// **'Yours'**
+  String get tipsYours;
+
+  /// screens/tip_screen.dart: screen reader words while prices load
+  ///
+  /// In en, this message translates to:
+  /// **'Asking Google Play for the prices'**
+  String get tipsAsking;
+
+  /// screens/tip_screen.dart: what a tip gives
+  ///
+  /// In en, this message translates to:
+  /// **'A tip gives you a supporter badge and nothing else. Everything in Kryfo stays free for everyone, with or without one.'**
+  String get tipsBadgeOnly;
+
+  /// screens/tip_screen.dart: who handles the payment
+  ///
+  /// In en, this message translates to:
+  /// **'Payment goes through Google Play. We never see your card details or your name.'**
+  String get tipsThroughPlay;
+
+  /// screens/tip_screen.dart: where the badge lives. Me is the tab name
+  ///
+  /// In en, this message translates to:
+  /// **'The badge lives on this phone. In Me you choose whether it shows and whether your contacts see it.'**
+  String get tipsBadgeStays;
+
+  /// screens/tip_screen.dart: the restore row
+  ///
+  /// In en, this message translates to:
+  /// **'Restore my badge'**
+  String get tipsRestore;
+
+  /// screens/tip_screen.dart: under the restore row
+  ///
+  /// In en, this message translates to:
+  /// **'Tipped before? Your badge comes back on any phone signed in to the same Google account.'**
+  String get tipsRestoreLine;
+
+  /// screens/tip_screen.dart: toast after a restore. tier is the supporter tier
+  ///
+  /// In en, this message translates to:
+  /// **'{tier, select, supporter{Your supporter badge is back} patron{Your patron badge is back} guardian{Your guardian badge is back} other{Your supporter badge is back}}'**
+  String tipsRestored(String tier);
+
+  /// screens/tip_screen.dart: toast when the google account bought nothing
+  ///
+  /// In en, this message translates to:
+  /// **'No tip on this Google account yet'**
+  String get tipsNothingToRestore;
+
+  /// screens/tip_screen.dart: when google play billing is not there
+  ///
+  /// In en, this message translates to:
+  /// **'Tips go through Google Play. They show here once Google Play works on this phone.'**
+  String get tipsUnavailable;
+
+  /// screens/tip_screen.dart: when no product is set up yet
+  ///
+  /// In en, this message translates to:
+  /// **'Tips open here soon.'**
+  String get tipsSoon;
+
+  /// screens/tip_screen.dart: a payment google play still holds
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play is still finishing your payment. Your badge comes as soon as it goes through.'**
+  String get tipsPending;
+
+  /// screens/tip_screen.dart: toast when the payment did not finish
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play did not finish the payment. Try again in a moment.'**
+  String get tipsFailed;
+
+  /// screens/tip_screen.dart: the thank you title
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you'**
+  String get tipsThanks;
+
+  /// screens/tip_screen.dart: under the thank you. tier is the supporter tier
+  ///
+  /// In en, this message translates to:
+  /// **'{tier, select, supporter{You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} patron{You now have the patron badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} guardian{You now have the guardian badge. It unlocks nothing else: everything in Kryfo stays free for everyone.} other{You now have the supporter badge. It unlocks nothing else: everything in Kryfo stays free for everyone.}}'**
+  String tipsGranted(String tier);
+
+  /// screens/tip_screen.dart: under the thank you when a higher badge stays. tier is the higher tier
+  ///
+  /// In en, this message translates to:
+  /// **'{tier, select, supporter{Thank you for the tip. You keep your supporter badge, the higher one.} patron{Thank you for the tip. You keep your patron badge, the higher one.} guardian{Thank you for the tip. You keep your guardian badge, the higher one.} other{Thank you for the tip. You keep your supporter badge, the higher one.}}'**
+  String tipsKept(String tier);
+
+  /// screens/profile_screen.dart: the card on me in the play build
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a tip to keep Kryfo independent'**
+  String get tipsProfileCard;
 }
 
 class _AppLocalizationsDelegate
