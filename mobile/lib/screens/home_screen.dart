@@ -964,9 +964,11 @@ class _LinkNoticeCard extends StatelessWidget {
                 HapticFeedback.selectionClick();
                 final src = await ownDevicesSource();
                 if (!context.mounted) return;
-                await Navigator.of(
-                  context,
-                ).push(haloRoute(LinkedDevicesScreen(source: src)));
+                await Navigator.of(context).push(
+                  haloRoute(
+                    LinkedDevicesScreen(source: src, copyPage: historyCopyPage),
+                  ),
+                );
               },
               fill: HaloColors.amber,
               ink: HaloColors.onAmber,
@@ -981,6 +983,13 @@ class _LinkNoticeCard extends StatelessWidget {
 // a history copy under way, or one that ended and has not been seen: said
 // on the phone and on the new device until the person opens it. never in
 // the decoy
+/// the history copy's page, as the card and a link that took open it
+Widget historyCopyPage(BuildContext _) => HistoryCopyScreen(
+  stage: historyCopyShown,
+  nameOf: historyChatName,
+  onSeen: historyCopyOpened,
+);
+
 class _HistoryCopyCard extends StatelessWidget {
   const _HistoryCopyCard();
 
@@ -1018,15 +1027,7 @@ class _HistoryCopyCard extends StatelessWidget {
               label: l10n.historyCopySee,
               onTap: () {
                 HapticFeedback.selectionClick();
-                Navigator.of(context).push(
-                  haloRoute(
-                    HistoryCopyScreen(
-                      stage: historyCopyShown,
-                      nameOf: historyChatName,
-                      onSeen: historyCopyOpened,
-                    ),
-                  ),
-                );
+                Navigator.of(context).push(haloRoute(historyCopyPage(context)));
               },
               fill: HaloColors.amber,
               ink: HaloColors.onAmber,

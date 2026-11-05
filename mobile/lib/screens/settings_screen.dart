@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'home_screen.dart' show historyCopyPage;
 import '../main.dart'
     show
         appState,
@@ -415,9 +416,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _openDevices() async {
     final src = _devices ?? await ownDevicesSource();
     if (!mounted) return;
-    await Navigator.of(
-      context,
-    ).push(haloRoute(LinkedDevicesScreen(source: src)));
+    await Navigator.of(context).push(
+      haloRoute(LinkedDevicesScreen(source: src, copyPage: historyCopyPage)),
+    );
     if (mounted) await _readDevices();
   }
 
