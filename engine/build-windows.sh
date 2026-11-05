@@ -37,12 +37,22 @@ export CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC
 # the only c left on windows is cgo's glue, nothing that parses network
 # bytes, and mingw has no libssp for -fstack-protector here
 export CGO_CFLAGS="-O2 -g"
-# a zero pe timestamp, so the build can reproduce
-export CGO_LDFLAGS="-Wl,--no-insert-timestamp"
+# a zero pe timestamp, so the build can reproduce. aslr and dep set by hand,
+# check-pe.sh checks them
+export CGO_LDFLAGS="-Wl,--no-insert-timestamp -Wl,--dynamicbase,--high-entropy-va,--nxcompat"
 export SOURCE_DATE_EPOCH=1700000000
 
 echo "windows amd64"
 go build ${HALO_FULL:+-a} -buildvcs=false -buildmode=c-shared \
   -ldflags "$LDFLAGS" -o "$OUT/halo.dll" .
+# exports are exactly the header's Halo calls, imports only windows' own
+CHECK="$ENGINE_DIR/../packaging/windows/check-pe.sh"
+want=$(grep -oE '^extern [^(]*\bHalo[A-Za-z0-9_]*\(' "$OUT/halo.h" | grep -oE 'Halo[A-Za-z0-9_]*' | sort -u)
 rm -f "$OUT/halo.h"
+got=$("$CHECK" --exports "$OUT/halo.dll" | sort -u)
+[ -n "$want" ] && [ "$got" = "$want" ] || {
+  echo "error: halo.dll exports differ from halo.h: $(diff <(echo "$want") <(echo "$got") | grep '^[<>]' | tr '\n' ' ')"
+  exit 1
+}
+"$CHECK" "$OUT/halo.dll"
 ls -la "$OUT/halo.dll"

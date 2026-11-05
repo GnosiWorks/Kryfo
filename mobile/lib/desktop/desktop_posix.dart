@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the few libc calls the desktop start needs, with linux's numbers for x64
-// and arm64
+// and arm64. linux only: on windows a lookup in the process opens kryfo.exe
+// for reading first, which its own dacl refuses, so every call returns early
 import 'dart:ffi';
 import 'dart:io';
 
@@ -47,10 +48,13 @@ void syncFolder(String dir) {
   _close(fd);
 }
 
-int getuid() => _libc.lookupFunction<_UidC, _Uid>('getuid')();
+/// 0 off linux, where the folder's owner is checked by the runner
+int getuid() =>
+    Platform.isLinux ? _libc.lookupFunction<_UidC, _Uid>('getuid')() : 0;
 
 /// the owner of [path] (lstat: a link is its own owner), null when unread
 int? ownerOf(String path) {
+  if (!Platform.isLinux) return null;
   final buf = calloc<Uint8>(256);
   final p = path.toNativeUtf8();
   try {
@@ -84,6 +88,7 @@ bool holdLock(String path) {
 
 /// this process becomes a new run of [exe]; returns only when exec failed
 void execSelf(String exe) {
+  if (!Platform.isLinux) return;
   final path = exe.toNativeUtf8();
   final argv = calloc<Pointer<Utf8>>(2);
   try {

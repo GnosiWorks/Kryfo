@@ -80,9 +80,7 @@ class HaloEngine {
   late final TwoArgFnDart _decryptBackup;
 
   HaloEngine() {
-    _lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    _lib = haloLibrary();
     _version = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloVersion');
     _genIdentity = _lib.lookupFunction<CStrFn, CStrFnDart>(
       'HaloGenerateIdentity',
@@ -181,6 +179,46 @@ class HaloEngine {
       // an older engine without the call
     } finally {
       malloc.free(p);
+    }
+  }
+
+  // the start's steps since the last call, for a computer's trace: times
+  // and counts only. looked up on first use so older engines still load
+  late final CStrFnDart _startSteps = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloStartSteps',
+  );
+  List<String> startSteps() {
+    try {
+      final raw = engineTake(_startSteps());
+      return raw.isEmpty ? const [] : raw.split('\n');
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  // the start's new messages are in: the batch of the chats on top of the
+  // list caught up. true for an older engine without the call
+  late final CStrFnDart _startCaught = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloStartCaught',
+  );
+  bool startCaught() {
+    try {
+      return engineTake(_startCaught()) != '0';
+    } catch (_) {
+      return true;
+    }
+  }
+
+  // a card is on screen to scan or to show: the hello lane's circuits are
+  // built ahead, so the first hello and its answer do not wait for them
+  late final CStrFnDart _warmHello = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloNostrWarmHello',
+  );
+  void nostrWarmHello() {
+    try {
+      engineTake(_warmHello());
+    } catch (_) {
+      // an older engine without the call
     }
   }
 
@@ -1316,6 +1354,11 @@ class HaloEngine {
   Future<String> nostrPinned(List<(int, String)> peers) async =>
       _roomFfiOnIsolate('HaloNostrPinned', [await _identPeers(peers)]);
 
+  // the chats on top of the list, the most recent first: their batch goes
+  // first at the start
+  Future<String> nostrFirstChats(List<(int, String)> peers) async =>
+      _roomFfiOnIsolate('HaloNostrFirstChats', [await _identPeers(peers)]);
+
   // each with its pair's seed when it has one; a peer whose pair is
   // refused is left out
   static Future<String> _identPeers(List<(int, String)> peers) async {
@@ -1409,9 +1452,7 @@ void _background(Future<Object?> call, String where) =>
 // other relay call.
 Future<String> _roomFfiOnIsolate(String name, List<String> args) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final ptrs = [for (final a in args) a.toNativeUtf8()];
     try {
       switch (ptrs.length) {
@@ -1453,9 +1494,7 @@ Future<String> _roomFfiOnIsolate(String name, List<String> args) {
 // a call that names the identity it runs on, then one to three strings
 Future<String> _identFfiOnIsolate(String name, int ident, List<String> args) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final ptrs = [for (final a in args) a.toNativeUtf8()];
     try {
       switch (ptrs.length) {
@@ -1499,9 +1538,7 @@ Future<String> _fcSendOnIsolate(
   String msg,
 ) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<IdentThreeFn, IdentThreeFnDart>(
       'HaloNostrSendFirstContact',
     );
@@ -1522,9 +1559,7 @@ Future<String> _fcSendOnIsolate(
 // handle lookup, which can wait on tor.
 Future<String> _torGetJsonOnIsolate(String url) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
     final u = url.toNativeUtf8();
     try {
@@ -1539,9 +1574,7 @@ Future<String> _torGetJsonOnIsolate(String url) {
 // copy is zeroed
 Future<String> _pairOnIsolate(String symbol, String arg) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(symbol);
     final a = arg.toNativeUtf8();
     try {
@@ -1557,9 +1590,7 @@ typedef PairHandleFnDart = Pointer<Utf8> Function(int);
 
 Future<String> _pairHandleOnIsolate(String symbol, int handle) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<PairHandleFn, PairHandleFnDart>(symbol);
     return engineTakeSecret(fn(handle));
   });
@@ -1567,9 +1598,7 @@ Future<String> _pairHandleOnIsolate(String symbol, int handle) {
 
 Future<String> _fcSubscribeOnIsolate(int ident, int counter) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<IdentCounterFn, IdentCounterFnDart>(
       'HaloNostrSubscribeFirstContact',
     );
@@ -1586,18 +1615,14 @@ String onionOfStart(String r) => r == kTorClientAddr ? '' : r;
 // tor's control port answers fast, but never on the ui thread
 Future<String> _torCtlOnIsolate(String symbol) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     return engineTake(lib.lookupFunction<CStrFn, CStrFnDart>(symbol)());
   }).timeout(const Duration(seconds: 70), onTimeout: () => 'error: timeout');
 }
 
 Future<String> _startListenerOnIsolate(String dataDir) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib
         .lookupFunction<
           Pointer<Utf8> Function(Pointer<Utf8>),
@@ -1651,9 +1676,7 @@ Future<String> _ffiOnIsolate(
   String what = 'registry',
 }) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final ps = [for (final a in args) a.toNativeUtf8()];
     try {
       switch (ps.length) {
@@ -1689,9 +1712,7 @@ Future<String> _sendOnIsolate(
   ({bool nostr, int ident, String a, String b, bool hidden}) args,
 ) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final p1 = args.a.toNativeUtf8();
     final p2 = args.b.toNativeUtf8();
     try {
@@ -1721,9 +1742,7 @@ Future<String> _subscribeOnIsolate(
       ? (fresh ? 'HaloNostrSubscribeHiddenNew' : 'HaloNostrSubscribeHidden')
       : (fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe');
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<IdentOneFn, IdentOneFnDart>(name);
     final p = xPub.toNativeUtf8();
     try {
@@ -1737,9 +1756,7 @@ Future<String> _subscribeOnIsolate(
 // the update check's GET: kryfo.app only, on a tor circuit of its own
 Future<String> updateGetOnIsolate(String url) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloUpdateGet');
     final p = url.toNativeUtf8();
     try {
@@ -1752,9 +1769,7 @@ Future<String> updateGetOnIsolate(String url) {
 
 Future<String> torStrictGetOnIsolate(String url) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetStrict');
     final p = url.toNativeUtf8();
     try {

@@ -167,6 +167,13 @@ class _Io implements AppIo {
     return 'ok';
   }
 
+  final firsts = <List<String>>[];
+  @override
+  Future<String> firstChats(List<(int, String)> peers) async {
+    firsts.add([for (final (_, x) in peers) x]);
+    return 'ok';
+  }
+
   @override
   Future<String?> decryptIf(
     String peer,
@@ -245,7 +252,6 @@ class _Io implements AppIo {
     hiddenHeard.add(xPub);
     _heard(xPub);
   }
-
 
   // listens and pin tellings, in the order they came
   final told = <String>[];

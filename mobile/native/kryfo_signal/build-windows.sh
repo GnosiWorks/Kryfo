@@ -10,8 +10,8 @@ die() { echo "error: $*" >&2; exit 1; }
 
 T=x86_64-pc-windows-gnu
 CC_W="${CC_W:-x86_64-w64-mingw32-gcc}"
-OBJDUMP_W="${OBJDUMP_W:-x86_64-w64-mingw32-objdump}"
-for c in cargo protoc "$CC_W" "$OBJDUMP_W"; do
+CHECK="$CRATE/../../../packaging/windows/check-pe.sh"
+for c in cargo protoc "$CC_W"; do
   command -v "$c" >/dev/null || die "$c not found"
 done
 CARGO=(cargo --locked ${CARGO_OFFLINE:+--offline})
@@ -26,18 +26,14 @@ c=$("${CARGO[@]}" tree -q -e normal,build --target "$T" --prefix none --format '
 export SOURCE_DATE_EPOCH=1700000000 CARGO_INCREMENTAL=0 CARGO_NET_GIT_FETCH_WITH_CLI=true
 unset CARGO_ENCODED_RUSTFLAGS CARGO_BUILD_RUSTFLAGS CARGO_TARGET_DIR RUSTFLAGS
 export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="$CC_W"
-export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="--remap-path-prefix=$CRATE=/kryfo_signal --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo -C target-feature=+crt-static -C link-arg=-Wl,--no-insert-timestamp"
+export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="--remap-path-prefix=$CRATE=/kryfo_signal --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo -C target-feature=+crt-static -C link-arg=-Wl,--no-insert-timestamp -C link-arg=-Wl,--dynamicbase,--high-entropy-va,--nxcompat"
 "${CARGO[@]}" build --release --target "$T"
 
 DLL="target/$T/release/kryfo_signal.dll"
-dump="$("$OBJDUMP_W" -p "$DLL")"
-# exactly the calls of the header
+# exactly the calls of the header, imports only windows' own
 want=$(grep -o 'ks_[a-z_0-9]*' include/kryfo_signal.h | sort -u)
-got=$(awk '/^\[Ordinal\/Name Pointer\] Table/{on=1; next} on && /^\s*\[/{print $NF} on && /^$/{on=0}' <<<"$dump" | sort -u)
+got=$("$CHECK" --exports "$DLL" | sort -u)
 [[ "$got" == "$want" ]] || die "exports differ from include/kryfo_signal.h: $(diff <(echo "$want") <(echo "$got") | grep '^[<>]' | tr '\n' ' ')"
-# only windows' own libraries
-bad=$(sed -n 's/^\s*DLL Name: //p' <<<"$dump" | tr 'A-Z' 'a-z' |
-  grep -vxE 'kernel32\.dll|ntdll\.dll|advapi32\.dll|bcryptprimitives\.dll|ws2_32\.dll|userenv\.dll|msvcrt\.dll|api-ms-win-.*\.dll' || true)
-[[ -z "$bad" ]] || die "imports $(echo $bad)"
-grep -q "/home/\|$CRATE" "$DLL" && die "a build path is left in the dll"
+"$CHECK" "$DLL"
+grep -q "$CRATE" "$DLL" && die "a build path is left in the dll"
 echo "built $CRATE/$DLL ($(wc -c <"$DLL") bytes)"

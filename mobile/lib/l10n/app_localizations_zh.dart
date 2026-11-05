@@ -633,11 +633,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appReadyToChatAddressFinishing => '可以聊天了 · 地址即将就绪';
 
   @override
-  String appConnecting(Object pct) {
-    return '正在连接 · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -668,6 +663,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => '正在等待中继';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return '正在启动 Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => '正在接收新消息';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -11509,11 +11512,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get appReadyToChatAddressFinishing => '可以聊天了 · 位址即將就緒';
 
   @override
-  String appConnecting(Object pct) {
-    return '連線中 · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -11544,6 +11542,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appWaitingForARelay => '正在等待中繼';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return '正在啟動 Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => '正在接收新訊息';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {

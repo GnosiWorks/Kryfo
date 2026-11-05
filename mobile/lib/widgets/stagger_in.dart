@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // one-time fade + slide-up entrance for list items. delay scales with index
 // (capped) so a list comes in row by row, not all at once.
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import '../lock_guard.dart' show entranceDone;
+import 'entrance.dart';
 
 class StaggerIn extends StatefulWidget {
   final int index;
@@ -20,22 +19,28 @@ class StaggerIn extends StatefulWidget {
 DateTime? _burstAt;
 DateTime? _lastAt;
 
-class _StaggerInState extends State<StaggerIn> {
-  // made under the lock after the app was first shown: no entrance at the
-  // reveal (lock_guard.dart, entranceDone)
-  late double _t = entranceDone ? 1 : 0;
-  Timer? _wait;
+class _StaggerInState extends State<StaggerIn>
+    with SingleTickerProviderStateMixin {
+  // the wait before a row moves is the start of its own run, so one ticker
+  // and one fallback cover both
+  AnimationController? _c;
+  final _entrance = Entrance();
+  Animation<double> _v = const AlwaysStoppedAnimation(1);
   bool _late = false;
+  bool _started = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_t == 1 || _wait != null) return;
-    // reduced motion: the list without animation
-    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
-      _t = 1;
+    if (_started) {
+      // held on the way in (a lock, a route over it): the row at rest
+      if (entranceOff(context)) _entrance.end();
       return;
     }
+    _started = true;
+    // made under the lock after the app was first shown, or motion off: the
+    // row at rest (lock_guard.dart, entranceDone)
+    if (entranceDone || entranceOff(context)) return;
     final now = DateTime.now();
     final quiet =
         _lastAt == null || now.difference(_lastAt!).inMilliseconds > 400;
@@ -43,32 +48,41 @@ class _StaggerInState extends State<StaggerIn> {
     _lastAt = now;
     _late = now.difference(_burstAt!).inMilliseconds > 200;
     final delay = _late ? 0 : (widget.index * 30).clamp(0, 180);
-    _wait = Timer(Duration(milliseconds: delay), () {
-      if (mounted) setState(() => _t = 1);
-    });
+    final run = _late ? 140 : 220;
+    final total = delay + run;
+    final c = _c = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: total),
+    );
+    _v = CurvedAnimation(
+      parent: c,
+      curve: Interval(delay / total, 1, curve: Curves.easeOut),
+    );
+    _entrance.play(context, c, from: 0);
   }
 
   @override
   void dispose() {
-    _wait?.cancel();
+    _entrance.dispose();
+    _c?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final d = Duration(milliseconds: _late ? 140 : 220);
-    return AnimatedOpacity(
-      opacity: _t,
-      duration: d,
-      curve: Curves.easeOut,
+    final lift = _late ? 0.03 : 0.08;
+    return FadeTransition(
+      opacity: _v,
       // a reader gets the row at once. left out while at zero, a row built
       // after a page jump never comes back into the tree
       alwaysIncludeSemantics: true,
-      child: AnimatedSlide(
-        offset: Offset(0, (1 - _t) * (_late ? 0.03 : 0.08)),
-        duration: d,
-        curve: Curves.easeOut,
+      child: AnimatedBuilder(
+        animation: _v,
         child: widget.child,
+        builder: (_, child) => FractionalTranslation(
+          translation: Offset(0, (1 - _v.value) * lift),
+          child: child,
+        ),
       ),
     );
   }

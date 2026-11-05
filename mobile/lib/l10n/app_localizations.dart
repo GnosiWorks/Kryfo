@@ -1075,12 +1075,6 @@ abstract class AppLocalizations {
   /// **'Ready to chat · address finishing'**
   String get appReadyToChatAddressFinishing;
 
-  /// app/gates.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting · {pct}'**
-  String appConnecting(Object pct);
-
   /// app/gates.dart
   ///
   /// In en, this message translates to:
@@ -1140,6 +1134,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for a relay'**
   String get appWaitingForARelay;
+
+  /// link_view.dart. the home pill while tor starts, after a while. the placeholder is a percentage, already written the language's way (42%, 42 %, %42). keep it short
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Tor · {pct}'**
+  String appStartingTorPct(Object pct);
+
+  /// link_view.dart. the home pill at a start, once a relay answers, until the messages that came while kryfo was closed are in. keep it short
+  ///
+  /// In en, this message translates to:
+  /// **'Getting new messages'**
+  String get appGettingNewMessages;
 
   /// media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
   ///

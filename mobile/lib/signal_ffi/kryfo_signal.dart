@@ -11,6 +11,8 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
+import '../native_libs.dart';
+
 typedef _CallC =
     Int32 Function(
       Pointer<Uint8>,
@@ -534,12 +536,16 @@ class KryfoSignal {
   /// on a desktop) the one build-host.sh left, else the platform's own name
   /// for it. throws when it does not load
   static KryfoSignal open([String? path]) {
+    // kryfo.exe loaded it by full path from its own folder before dart ran
+    // (runner/kryfo_win.cpp); a release takes no other
+    if (Platform.isWindows && _product && path == null) return _beside();
     final p = path ?? Platform.environment[envVar];
     if (p != null && p.isNotEmpty) return _at(p);
     if (!_product && !Platform.isAndroid && !Platform.isIOS) {
       final host = forHostTests();
       if (host != null) return host;
     }
+    if (Platform.isWindows) return _beside();
     if (Platform.isIOS) return KryfoSignal._(DynamicLibrary.process());
     if (Platform.isMacOS) return _at('libkryfo_signal.dylib');
     return _at('libkryfo_signal.so');
@@ -549,6 +555,15 @@ class KryfoSignal {
   /// open the same one (null before, and on ios where it is linked in)
   static String? get loadedFrom => _loadedFrom;
   static String? _loadedFrom;
+
+  // kryfo.exe's folder, by full path: the engine opens the same file
+  static KryfoSignal _beside() {
+    final l = KryfoSignal._(besideExe(_windowsName));
+    _loadedFrom = besidePath(_windowsName);
+    return l;
+  }
+
+  static const _windowsName = 'kryfo_signal.dll';
 
   static KryfoSignal _at(String p) {
     final l = KryfoSignal._(DynamicLibrary.open(p));

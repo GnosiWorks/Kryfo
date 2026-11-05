@@ -63,6 +63,11 @@ class AppIo {
   Future<String> pinFirst(List<(int, String)> peers) =>
       engine.nostrPinned(peers);
 
+  // the chats on top of the list, the most recent first: the batch that
+  // holds them asks first at the start. in memory only
+  Future<String> firstChats(List<(int, String)> peers) =>
+      engine.nostrFirstChats(peers);
+
   Future<List<String>> sessionAddresses() =>
       signalSession.sessionStore.allSessionAddresses();
 

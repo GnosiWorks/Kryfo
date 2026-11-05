@@ -358,7 +358,6 @@ final _calls = <_Call>[
     [],
     (l) => l.appReadyToChatAddressFinishing,
   ),
-  ('appConnecting', ["⟨pct⟩"], (l) => l.appConnecting("⟨pct⟩")),
   ('appTor', [], (l) => l.appTor),
   ('appTorIsOffTurn', [], (l) => l.appTorIsOffTurn),
   ('appTheFirstConnectionTakes', [], (l) => l.appTheFirstConnectionTakes),
@@ -3009,6 +3008,8 @@ final _calls = <_Call>[
   ('modesSwitching', [], (l) => l.modesSwitching),
   ('appNoRelayReached', [], (l) => l.appNoRelayReached),
   ('appWaitingForARelay', [], (l) => l.appWaitingForARelay),
+  ('appStartingTorPct', ["⟨pct⟩"], (l) => l.appStartingTorPct("⟨pct⟩")),
+  ('appGettingNewMessages', [], (l) => l.appGettingNewMessages),
   ('handleStillReaching', ["Tor"], (l) => l.handleStillReaching),
   ('bridgesFindingAWayIn', [], (l) => l.bridgesFindingAWayIn),
   (

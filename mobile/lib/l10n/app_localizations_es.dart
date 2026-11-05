@@ -659,11 +659,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Listo para chatear · terminando tu dirección';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Conectando · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -696,6 +691,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'Esperando un repetidor';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'Iniciando Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Recibiendo mensajes nuevos';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {

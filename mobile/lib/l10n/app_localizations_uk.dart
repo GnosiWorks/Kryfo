@@ -675,11 +675,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Можна спілкуватися · адреса майже готова';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Підключення · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -712,6 +707,14 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'Чекаємо ретранслятор';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'Запускаємо Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Отримуємо нові повідомлення';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {

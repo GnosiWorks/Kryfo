@@ -684,11 +684,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'جاهز للدردشة · العنوان على وشك الاكتمال';
 
   @override
-  String appConnecting(Object pct) {
-    return 'جارٍ الاتصال · ⁨$pct⁩';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -720,6 +715,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'بانتظار مُرحِّل';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'جارٍ تشغيل Tor · ⁨$pct⁩';
+  }
+
+  @override
+  String get appGettingNewMessages => 'جارٍ جلب الرسائل الجديدة';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {

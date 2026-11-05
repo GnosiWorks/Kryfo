@@ -9,6 +9,7 @@ import '../theme.dart';
 import 'halo_switch.dart';
 import 'motion.dart';
 import 'sheet_handle.dart';
+import 'entrance.dart';
 
 // one thing a menu can do. no [onTap] leaves it out
 class MenuAction {
@@ -88,20 +89,18 @@ class _MessageMenuCardState extends State<MessageMenuCard>
     vsync: this,
     duration: _staggered(_live.length, _beat),
   );
+  final _entrance = Entrance();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_in.isAnimating || _in.isCompleted) return;
-    if (motionStill(context)) {
-      _in.value = 1;
-    } else {
-      _in.forward();
-    }
+    _entrance.play(context, _in);
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }
@@ -275,20 +274,18 @@ class _MenuSheetState extends State<MenuSheet>
     vsync: this,
     duration: _staggered(_groups.length, _beat),
   );
+  final _entrance = Entrance();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_in.isAnimating || _in.isCompleted) return;
-    if (motionStill(context)) {
-      _in.value = 1;
-    } else {
-      _in.forward();
-    }
+    _entrance.play(context, _in);
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }

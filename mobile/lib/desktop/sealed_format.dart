@@ -7,7 +7,6 @@
 // no two seals share a key, so a chunk written again is safe
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io' show Platform;
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -15,6 +14,7 @@ import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
 
 import '../chunk_keys.dart';
+import '../native_libs.dart';
 
 const sealedMagic = [0x4b, 0x52, 0x59, 0x4d]; // KRYM
 const sealedVersion = 1;
@@ -42,11 +42,7 @@ abstract class ChunkCrypto {
 class EngineChunkCrypto implements ChunkCrypto {
   const EngineChunkCrypto();
 
-  static final _keys = ChunkKeys(
-    Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process(),
-  );
+  static final _keys = ChunkKeys(haloLibrary());
 
   // each chunk has a key of its own: it crosses as bytes and is held by
   // the engine for this chunk alone
