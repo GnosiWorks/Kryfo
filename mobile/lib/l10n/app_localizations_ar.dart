@@ -11365,6 +11365,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatDropHereToSend => 'أفلِت هنا للإرسال';
 
   @override
+  String get chatDropHereToAdd => 'أفلِت هنا للإضافة';
+
+  @override
+  String trayRemove(String name) {
+    return 'إزالة $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'جاهز للإرسال: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'عرض النص';
 
   @override

@@ -305,7 +305,8 @@ void main() {
       await devClose(t);
     });
 
-    testWidgets('a file dropped on a chat reaches its send', (t) async {
+    testWidgets('a file dropped on a chat waits in its row, and enter '
+        'sends it', (t) async {
       lockState.openForTest();
       await _chat(t);
       DesktopDrop.scale = () => 1;
@@ -321,6 +322,12 @@ void main() {
         ),
         (_) {},
       );
+      await t.pump();
+      await t.pump();
+      // staged above the composer, nothing sent yet
+      expect(find.text('plan.txt'), findsOneWidget);
+      expect(find.text('plan'), findsNothing);
+      expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isTrue);
       // the copy, its check and its cleaning run off the test's clock
       bool there() =>
           find.text(l10n.chatSendIt).evaluate().isNotEmpty ||

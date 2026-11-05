@@ -14075,6 +14075,28 @@
   "@chatDropHereToSend": {
     "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
   },
+  "chatDropHereToAdd": "Drop here to add",
+  "@chatDropHereToAdd": {
+    "description": "a computer: files dragged over a chat, the line on the wash; let go, they wait in a row above the composer until enter sends them"
+  },
+  "trayRemove": "Remove {name}",
+  "@trayRemove": {
+    "description": "a computer: the x on a file waiting above the composer, said by a screen reader and on hover",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "trayReadyToSend": "Ready to send: {count}",
+  "@trayReadyToSend": {
+    "description": "a computer: what a screen reader says of the row of files waiting above the composer; enter sends them",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
   "voiceSeeTranscription": "See transcription",
   "@voiceSeeTranscription": {
     "description": "the link under a voice message that shows its words"

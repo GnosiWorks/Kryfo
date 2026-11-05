@@ -11403,6 +11403,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatDropHereToSend => 'Отпусти здесь, чтобы отправить';
 
   @override
+  String get chatDropHereToAdd => 'Отпустите здесь, чтобы добавить';
+
+  @override
+  String trayRemove(String name) {
+    return 'Убрать $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Готово к отправке: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Показать текст';
 
   @override

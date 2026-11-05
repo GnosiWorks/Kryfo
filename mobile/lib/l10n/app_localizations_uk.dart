@@ -11400,6 +11400,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatDropHereToSend => 'Відпусти тут, щоб надіслати';
 
   @override
+  String get chatDropHereToAdd => 'Відпустіть тут, щоб додати';
+
+  @override
+  String trayRemove(String name) {
+    return 'Прибрати $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Готово до надсилання: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Показати текст';
 
   @override

@@ -11225,6 +11225,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatDropHereToSend => 'भेजने के लिए यहाँ छोड़ें';
 
   @override
+  String get chatDropHereToAdd => 'जोड़ने के लिए यहाँ छोड़ें';
+
+  @override
+  String trayRemove(String name) {
+    return '$name हटाएँ';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'भेजने के लिए तैयार: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'लिखित रूप देखें';
 
   @override

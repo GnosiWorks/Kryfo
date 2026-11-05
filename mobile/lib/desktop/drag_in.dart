@@ -33,10 +33,11 @@ class DragInZone extends StatefulWidget {
     super.key,
     required this.child,
     required this.enabled,
-    required this.send,
+    this.send,
+    this.stage,
     required this.couldNotRead,
     this.line,
-  });
+  }) : assert(send != null || stage != null);
 
   final Widget child;
 
@@ -44,7 +45,10 @@ class DragInZone extends StatefulWidget {
   final bool enabled;
 
   /// one file sent from its path under the name it had, as a pick is
-  final Future<void> Function(String path, String name) send;
+  final Future<void> Function(String path, String name)? send;
+
+  /// the files of a drop, staged instead of sent (attach_tray.dart)
+  final void Function(List<String> files)? stage;
 
   /// the chat's own words for a file it could not read
   final String Function() couldNotRead;
@@ -65,6 +69,17 @@ class _DragInZoneState extends State<DragInZone> {
   Future<void> _drop(List<String> paths) async {
     if (!_open) return;
     final send = widget.send;
+    final stage = widget.stage;
+    if (stage != null) {
+      final files = draggedFiles(paths);
+      if (files.isEmpty) {
+        showHaloToast(context, widget.couldNotRead());
+      } else {
+        stage(files);
+      }
+      return;
+    }
+    if (send == null) return;
     final files = draggedFiles(paths);
     if (files.isEmpty) {
       showHaloToast(context, widget.couldNotRead());
@@ -108,7 +123,10 @@ class _DragInZoneState extends State<DragInZone> {
                 child: AnimatedOpacity(
                   opacity: _over && _open ? 1 : 0,
                   duration: Duration(milliseconds: still ? 0 : 150),
-                  child: _DropShade(line: widget.line),
+                  child: _DropShade(
+                    line: widget.line,
+                    adds: widget.stage != null,
+                  ),
                 ),
               ),
             ),
@@ -119,9 +137,13 @@ class _DragInZoneState extends State<DragInZone> {
   }
 }
 
-// the chat under a wash, an accent ring and one line: let go to send
+// the chat under a wash, an accent ring and one line: let go to send, or
+// to add to the row above the composer
 class _DropShade extends StatelessWidget {
-  const _DropShade({this.line});
+  const _DropShade({this.line, this.adds = false});
+
+  /// a drop is staged, not sent
+  final bool adds;
 
   /// a place that keeps what is dropped: its own line
   final String Function()? line;
@@ -148,7 +170,8 @@ class _DropShade extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              line?.call() ?? l10n.chatDropHereToSend,
+              line?.call() ??
+                  (adds ? l10n.chatDropHereToAdd : l10n.chatDropHereToSend),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 16,

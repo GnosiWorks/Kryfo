@@ -11203,6 +11203,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatDropHereToSend => 'Thả vào đây để gửi';
 
   @override
+  String get chatDropHereToAdd => 'Thả vào đây để thêm';
+
+  @override
+  String trayRemove(String name) {
+    return 'Gỡ $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Sẵn sàng gửi: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Xem bản chép lời';
 
   @override

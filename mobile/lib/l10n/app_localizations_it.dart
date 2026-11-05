@@ -11308,6 +11308,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatDropHereToSend => 'Rilascia qui per inviare';
 
   @override
+  String get chatDropHereToAdd => 'Rilascia qui per aggiungere';
+
+  @override
+  String trayRemove(String name) {
+    return 'Rimuovi $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Pronti da inviare: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Vedi trascrizione';
 
   @override

@@ -11244,6 +11244,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatDropHereToSend => 'Göndermek için buraya bırak';
 
   @override
+  String get chatDropHereToAdd => 'Eklemek için buraya bırakın';
+
+  @override
+  String trayRemove(String name) {
+    return '$name öğesini kaldır';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Göndermeye hazır: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Metni gör';
 
   @override

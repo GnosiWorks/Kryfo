@@ -11229,6 +11229,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatDropHereToSend => 'برای فرستادن اینجا رها کنید';
 
   @override
+  String get chatDropHereToAdd => 'برای افزودن اینجا رها کنید';
+
+  @override
+  String trayRemove(String name) {
+    return 'برداشتن $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'آماده فرستادن: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'دیدن متن';
 
   @override

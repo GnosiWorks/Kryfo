@@ -11217,6 +11217,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatDropHereToSend => 'Lepaskan di sini untuk mengirim';
 
   @override
+  String get chatDropHereToAdd => 'Lepas di sini untuk menambah';
+
+  @override
+  String trayRemove(String name) {
+    return 'Hapus $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Siap dikirim: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Lihat transkrip';
 
   @override
