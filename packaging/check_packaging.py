@@ -20,6 +20,8 @@ FINISH_ARGS = {
     "--socket=fallback-x11",
     "--share=ipc",
     "--device=dri",
+    "--socket=pulseaudio",
+    "--talk-name=org.freedesktop.Notifications",
 }
 
 failed = False
@@ -42,8 +44,10 @@ def flatpak(repo, app):
     ok("manifest parses as yaml")
     if m.get("id") != "app.kryfo.Kryfo" or m.get("command") != "kryfo":
         fail("id or command changed: %s %s" % (m.get("id"), m.get("command")))
-    if m.get("runtime") != "org.gnome.Platform" or m.get("sdk") != "org.gnome.Sdk":
-        fail("runtime is not the gnome one, gtk3 and libsecret come from it")
+    if m.get("runtime") != "org.freedesktop.Platform" or m.get("sdk") != "org.freedesktop.Sdk":
+        fail("runtime is not org.freedesktop.Platform")
+    if not re.fullmatch(r"\d\d\.08", str(m.get("runtime-version"))):
+        fail("runtime-version is not a yy.08 release: %r" % m.get("runtime-version"))
     args = set(m.get("finish-args", []))
     if args != FINISH_ARGS:
         fail("finish-args differ: added %s, removed %s"
@@ -54,15 +58,29 @@ def flatpak(repo, app):
         fail("filesystem access: files go through portals")
 
     mods = {mod["name"]: mod for mod in m["modules"]}
-    for src in mods["sqlcipher"]["sources"]:
-        if src["type"] == "archive":
+    for name in ["sqlcipher", "ffmpeg"]:
+        for src in mods[name]["sources"]:
+            if src["type"] != "archive":
+                fail("%s builds from a %s, not a pinned archive" % (name, src["type"]))
+                continue
             sha = str(src.get("sha256", ""))
-            if not re.fullmatch(r"[0-9a-f]{64}", sha):
-                fail("sqlcipher sha256 is not 64 hex: %r" % sha)
-            elif sha == "0" * 64:
-                print("note sqlcipher sha256 is still a placeholder")
-            if not re.search(r"/v\d+\.\d+\.\d+\.tar\.gz$", src["url"]):
-                fail("sqlcipher is not pinned to a release tag: " + src["url"])
+            if not re.fullmatch(r"[0-9a-f]{64}", sha) or sha == "0" * 64:
+                fail("%s sha256 is not a real pin: %r" % (name, sha))
+            if not re.search(r"\d+\.\d+\.\d+\.tar\.[gx]z$", src["url"]):
+                fail("%s is not pinned to a release: %s" % (name, src["url"]))
+    # one sqlcipher for the linux build and the flatpak
+    sh = open(os.path.join(repo, "mobile", "linux", "build-sqlcipher.sh")).read()
+    ver = re.search(r"^ver=(\S+)$", sh, re.M).group(1)
+    sum_ = re.search(r"^sum=(\S+)$", sh, re.M).group(1)
+    src = mods["sqlcipher"]["sources"][0]
+    if src["sha256"] != sum_ or "/v%s.tar.gz" % ver not in src["url"]:
+        fail("the flatpak's sqlcipher is not build-sqlcipher.sh's %s %s" % (ver, sum_))
+    else:
+        ok("sqlcipher pin equals build-sqlcipher.sh")
+    cfg = set(mods["sqlcipher"]["config-opts"])
+    for opt in re.findall(r"--[a-z0-9-]+(?:=\S+)?", sh.split("./configure", 1)[1].split(">", 1)[0]):
+        if opt not in cfg:
+            fail("build-sqlcipher.sh configures %s, the flatpak does not" % opt)
 
     # lay the kryfo module's sources out as flatpak-builder would, then run
     # its build commands with /app moved to app-out
@@ -101,6 +119,9 @@ def flatpak(repo, app):
                 "share/icons/hicolor/512x512/apps/app.kryfo.Kryfo.png"]:
         if not os.path.isfile(os.path.join(app, rel)):
             fail("/app/%s missing" % rel)
+    # the app takes the bundle's lib/ first: only the module's copy may be there
+    if os.path.exists(os.path.join(app, "lib/kryfo/lib/libsqlcipher.so.0")):
+        fail("the bundle's libsqlcipher.so.0 would shadow /app/lib's")
     ok("/app layout checked")
 
 
