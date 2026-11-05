@@ -953,6 +953,36 @@ void main() {
     expect(engine.unsubscribed, contains(once.id));
   });
 
+  test('a start before the onion is known listens on the invites people '
+      'hold, and keeps them once it is there', () async {
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+    final main = await myMain();
+    // the next start: the upkeep runs before tor hands the onion back
+    await world();
+    app.myOnion = '';
+    engine.subscribed.clear();
+    final held = [for (final r in await invitesOf(db, kMainIdent)) r.id];
+    await app.keepMyInvites(nowMs: t0);
+    expect(engine.subscribed, unorderedEquals(held));
+    expect(engine.subscribed, contains(main.id));
+    expect((await currentMainInvite(db, kMainIdent))!.id, main.id);
+    // nothing to keep before the hour while there is still no onion
+    await app.keepMyInvitesDue(nowMs: t0 + 60 * 1000);
+    expect(engine.subscribed, unorderedEquals(held));
+    // the onion came: the next tick keeps them
+    app.myOnion = _onionOf(_onionKey);
+    final once = await makeInvite(
+      db,
+      signalSession,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+      nowMs: t0,
+    );
+    await app.keepMyInvitesDue(nowMs: t0 + 2 * 60 * 1000);
+    expect(engine.subscribed, containsAll([main.id, once.id]));
+    expect((await currentMainInvite(db, kMainIdent))!.id, main.id);
+  });
+
   test('a start and a tick keeping the invites at once make one main '
       'invite, and a reset during an upkeep leaves only its own', () async {
     final now = DateTime.now().millisecondsSinceEpoch;
