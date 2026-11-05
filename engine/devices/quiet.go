@@ -127,6 +127,33 @@ func (q *Quiet) Fresh(identity Key, device uint8, key Key) bool {
 // Forget drops what is held for a device that left its list.
 func (q *Quiet) Forget(identity Key, device uint8) { q.Heard(identity, device) }
 
+// Peek is State as it would answer now, with nothing held moved: no probe
+// spent, no device marked silent, no row dropped.
+func (q *Quiet) Peek(identity Key, device uint8, key Key, version uint64, now time.Time) QuietState {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	r := q.rows[slotKey{identity, device}]
+	if r == nil || r.key != key {
+		return Open
+	}
+	if r.silent {
+		if r.under != version {
+			return Open
+		}
+		if now.Sub(r.probed) >= QuietProbe {
+			return Rebuild
+		}
+		return Silent
+	}
+	if now.Sub(r.first) >= QuietSilent {
+		return Silent
+	}
+	if !r.session.IsZero() && now.Sub(r.session) >= QuietRebuild {
+		return Rebuild
+	}
+	return Open
+}
+
 // State is what to do with the copy to the device on key now, version
 // being the version of the list that names it. a clock set back counts no
 // time.

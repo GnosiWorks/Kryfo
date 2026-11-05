@@ -40,11 +40,40 @@ String devicesRowValue(List<OwnDevice> all) {
 }
 
 /// the home card's title and line for the notices not opened yet: one
-/// device by its name and day, more by their names, oldest first
+/// device by its name and day, more by their names, oldest first. a device
+/// another copy of the phone linked comes before anything else; a device
+/// that went says why ([why], own_unlink.dart's words); new and gone ones
+/// together say the devices changed
 ({String title, String line}) linkNoticeWords(
-  List<({String name, DateTime at})> all,
+  List<({String name, DateTime at, String? why})> all,
   DateTime now,
 ) {
+  final unknown = [
+    for (final n in all)
+      if (n.why == 'unknown') n,
+  ];
+  if (unknown.isNotEmpty) {
+    return (title: l10n.devicesUnknownNotice, line: l10n.devicesUnknownLine);
+  }
+  final gone = [
+    for (final n in all)
+      if (n.why != null) n,
+  ];
+  if (gone.length == 1 && all.length == 1) {
+    final n = gone.single;
+    final date = dayMonthMaybeYear(n.at, now: now);
+    return (
+      title: l10n.devicesGoneNotice,
+      line: switch (n.why) {
+        'unused' => l10n.devicesGoneUnusedLine(n.name, date),
+        'itself' => l10n.devicesGoneItselfLine(n.name, date),
+        _ => l10n.devicesGoneRemovedLine(n.name, date),
+      },
+    );
+  }
+  if (gone.isNotEmpty) {
+    return (title: l10n.devicesChangedNotice, line: l10n.devicesChangedLine);
+  }
   if (all.length == 1) {
     final n = all.single;
     return (
@@ -203,6 +232,18 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
     if (mounted) showHaloToast(context, l10n.devicesRemovedAll);
   }
 
+  Future<void> _leave() async {
+    final yes = await showConfirmSheet(
+      context,
+      title: l10n.devicesLeaveTitle,
+      line: l10n.devicesLeaveLine,
+      yes: l10n.devicesLeaveYes,
+    );
+    if (!yes || !mounted) return;
+    HapticFeedback.mediumImpact();
+    await _source.leaveHere();
+  }
+
   void _link() {
     HapticFeedback.selectionClick();
     Navigator.of(
@@ -301,6 +342,23 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                           _Note(
                             icon: Icons.timer_outlined,
                             text: l10n.devicesUnusedRule,
+                          ),
+                          Unfold(
+                            open: _source.canLeave,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 24),
+                              child: HaloGroup(
+                                rose: true,
+                                children: [
+                                  HaloRow(
+                                    icon: Icons.link_off_rounded,
+                                    label: l10n.devicesLeave,
+                                    rose: true,
+                                    onTap: _leave,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                           Unfold(
                             open: others.isNotEmpty && !_source.linkedDevice,

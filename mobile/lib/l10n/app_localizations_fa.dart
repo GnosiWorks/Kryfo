@@ -11275,6 +11275,85 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceNotNow => 'فعلاً نه';
 
   @override
+  String get unlinkedTitle => 'این دستگاه جدا شد';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'گوشی‌تان آن را از حساب‌تان حذف کرد، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      '۳۰ روز باز نشد، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedSilentLine =>
+      '۳۰ روز هیچ خبری از گوشی‌تان نگرفت، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedClockLine =>
+      'ساعتش به عقب برگردانده شد، پس Kryfo برای امن ماندن گفت‌وگوهایتان هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo نتوانست بفهمد آخرین بار کی باز شده، پس برای امن ماندن گفت‌وگوهایتان هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'خودتان جدایش کردید، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'گفت‌وگوهایتان روی گوشی‌تان می‌ماند. برای استفادهٔ دوباره از Kryfo اینجا، این دستگاه را به گوشی‌تان پیوند دهید.';
+
+  @override
+  String get unlinkedClose => 'بستن Kryfo';
+
+  @override
+  String get devicesLeave => 'جدا کردن این دستگاه';
+
+  @override
+  String get devicesLeaveTitle => 'این دستگاه جدا شود؟';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo به گوشی‌تان خبر می‌دهد و هر چه اینجا نگه داشته پاک می‌کند. گفت‌وگوهایتان روی گوشی‌تان می‌ماند.';
+
+  @override
+  String get devicesLeaveYes => 'جدا کن و پاک کن';
+
+  @override
+  String get devicesGoneNotice => 'دستگاه حذف شد';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '⁨$name⁩ در ⁨$date⁩ از حساب‌تان حذف شد.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '⁨$name⁩ ۳۰ روز استفاده نشد، پس در ⁨$date⁩ از حساب‌تان حذف شد.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '⁨$name⁩ در ⁨$date⁩ خودش جدا شد و هر چه نگه داشته بود پاک کرد.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'دستگاه‌هایتان تغییر کرد';
+
+  @override
+  String get devicesChangedLine =>
+      'برای دیدن تغییرها دستگاه‌های پیوندخورده را باز کنید.';
+
+  @override
+  String get devicesUnknownNotice => 'دستگاهی که جای دیگری پیوند خورد';
+
+  @override
+  String get devicesUnknownLine =>
+      'نسخهٔ دیگری از Kryfo دستگاهی را به حساب‌تان پیوند داد. این گوشی آن را از فهرست‌تان برداشت.';
+
+  @override
   String get albumPrevious => 'قبلی';
 
   @override

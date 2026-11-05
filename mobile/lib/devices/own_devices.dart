@@ -17,6 +17,15 @@ const int kUnusedDays = 30;
 /// the last days before that, when the list says so
 const int kUnlinkWarnDays = 7;
 
+/// the days left before a device unlinks, from the phone's own time online
+/// since its last word ([onlineMs]); null while it is not near
+int? unlinksInDaysOf(int onlineMs) {
+  const day = Duration.millisecondsPerDay;
+  final left = kUnusedDays * day - onlineMs;
+  if (left > kUnlinkWarnDays * day) return null;
+  return left <= 0 ? 0 : left ~/ day;
+}
+
 enum DeviceKind { phone, computer }
 
 /// how recently a device was used, in the steps the list shows. never a
@@ -98,6 +107,13 @@ abstract class OwnDevices {
 
   /// the person opened the page: notices of new devices have done their job
   Future<void> opened();
+
+  /// a linked device can unlink itself here
+  bool get canLeave => false;
+
+  /// this linked device unlinks itself: its phone is told, everything Kryfo
+  /// keeps here is erased
+  Future<void> leaveHere() async {}
 }
 
 class ThisPhoneOnly implements OwnDevices {
@@ -140,6 +156,12 @@ class ThisPhoneOnly implements OwnDevices {
 
   @override
   Future<void> opened() async {}
+
+  @override
+  bool get canLeave => false;
+
+  @override
+  Future<void> leaveHere() async {}
 }
 
 /// the decoy's devices: this phone alone, and a link that looks like any

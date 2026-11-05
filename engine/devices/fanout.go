@@ -45,6 +45,9 @@ type Fanout struct {
 	Own   *Own
 	Quiet *Quiet
 	Rand  io.Reader
+	// Peek reads what a send would do and moves no probe or silent clock:
+	// a chat opened is not a send
+	Peek bool
 }
 
 // To is every copy of a message from my identity mine to the contact
@@ -103,7 +106,11 @@ func (f *Fanout) quiet(s *Slot, version uint64, now time.Time) bool {
 	if f.Quiet == nil {
 		return true
 	}
-	switch f.Quiet.State(s.Identity, s.Device, s.Key, version, now) {
+	state := f.Quiet.State
+	if f.Peek {
+		state = f.Quiet.Peek
+	}
+	switch state(s.Identity, s.Device, s.Key, version, now) {
 	case Silent:
 		return false
 	case Rebuild:

@@ -11389,6 +11389,85 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceNotNow => 'Nicht jetzt';
 
   @override
+  String get unlinkedTitle => 'Dieses Gerät ist getrennt';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Dein Handy hat es aus deinem Konto entfernt, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Es wurde 30 Tage nicht geöffnet, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Es hat 30 Tage lang nichts von deinem Handy gehört, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Seine Uhr wurde zurückgestellt, deshalb hat Kryfo zum Schutz deiner Chats alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo konnte nicht feststellen, wann es zuletzt geöffnet wurde, deshalb hat es zum Schutz deiner Chats alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Du hast es getrennt, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Dein Handy behält deine Chats. Um Kryfo hier wieder zu nutzen, verknüpfe dieses Gerät mit deinem Handy.';
+
+  @override
+  String get unlinkedClose => 'Kryfo schließen';
+
+  @override
+  String get devicesLeave => 'Dieses Gerät trennen';
+
+  @override
+  String get devicesLeaveTitle => 'Dieses Gerät trennen?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo sagt es deinem Handy und löscht alles, was es hier speichert. Dein Handy behält deine Chats.';
+
+  @override
+  String get devicesLeaveYes => 'Trennen und löschen';
+
+  @override
+  String get devicesGoneNotice => 'Gerät entfernt';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name wurde am $date aus deinem Konto entfernt.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name wurde 30 Tage nicht genutzt und deshalb am $date aus deinem Konto entfernt.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name hat sich am $date selbst getrennt und gelöscht, was es gespeichert hatte.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Deine Geräte haben sich geändert';
+
+  @override
+  String get devicesChangedLine =>
+      'Öffne Verknüpfte Geräte, um zu sehen, was sich geändert hat.';
+
+  @override
+  String get devicesUnknownNotice => 'Gerät woanders verknüpft';
+
+  @override
+  String get devicesUnknownLine =>
+      'Eine andere Kopie von Kryfo hat ein Gerät mit deinem Konto verknüpft. Dieses Handy hat es von deiner Liste genommen.';
+
+  @override
   String get albumPrevious => 'Zurück';
 
   @override

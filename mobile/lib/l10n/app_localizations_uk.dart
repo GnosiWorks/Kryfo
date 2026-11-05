@@ -11442,6 +11442,85 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voiceNotNow => 'Не зараз';
 
   @override
+  String get unlinkedTitle => 'Цей пристрій відв’язано';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Ваш телефон прибрав його з облікового запису, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Його не відкривали 30 днів, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Він 30 днів нічого не отримував від вашого телефона, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Його годинник перевели назад, тож Kryfo стер усе, що зберігав тут, щоб захистити ваші чати.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo не зміг зрозуміти, коли його відкривали востаннє, тож стер усе, що зберігав тут, щоб захистити ваші чати.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Ви відв’язали його, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Ваші чати лишаються на телефоні. Щоб знову користуватися Kryfo тут, пов’яжіть цей пристрій із телефоном.';
+
+  @override
+  String get unlinkedClose => 'Закрити Kryfo';
+
+  @override
+  String get devicesLeave => 'Відв’язати цей пристрій';
+
+  @override
+  String get devicesLeaveTitle => 'Відв’язати цей пристрій?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo повідомить телефон і зітре все, що зберігає тут. Ваші чати лишаться на телефоні.';
+
+  @override
+  String get devicesLeaveYes => 'Відв’язати й стерти';
+
+  @override
+  String get devicesGoneNotice => 'Пристрій прибрано';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name прибрано з вашого облікового запису $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name не використовували 30 днів, тож $date його прибрано з вашого облікового запису.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name саме відв’язалося $date і стерло те, що зберігало.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Ваші пристрої змінилися';
+
+  @override
+  String get devicesChangedLine =>
+      'Відкрийте Пов’язані пристрої, щоб побачити, що змінилося.';
+
+  @override
+  String get devicesUnknownNotice => 'Пристрій пов’язано деінде';
+
+  @override
+  String get devicesUnknownLine =>
+      'Інша копія Kryfo пов’язала пристрій із вашим обліковим записом. Цей телефон прибрав його з вашого списку.';
+
+  @override
   String get albumPrevious => 'Попереднє';
 
   @override

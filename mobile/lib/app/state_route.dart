@@ -579,6 +579,9 @@ extension AppStateRoute on AppState {
   // what is true now. benched means it is in backoff. down is: nothing in
   // the list is usable.
   void _noteRelayHealth(List? relays, {DateTime? now}) {
+    if (relaysAnswer(relays)) {
+      _relayUpAt = (now ?? DateTime.now()).millisecondsSinceEpoch;
+    }
     if (_sendMode != 'balanced') {
       _relayDownSince = null;
       return;
@@ -618,6 +621,21 @@ extension AppStateRoute on AppState {
   }
 
   bool get online => _online;
+
+  /// the last time a relay answered, null before one did
+  int? get relayUpAt => _relayUpAt;
+
+  /// the relays read now, for the linked devices' clocks: the reads above
+  /// run only in balanced mode or when tor moves, so a tick reads its own
+  void sampleRelayUp({DateTime? now}) {
+    try {
+      if (relaysAnswer(engine.transportState()['relays'] as List?)) {
+        _relayUpAt = (now ?? DateTime.now()).millisecondsSinceEpoch;
+      }
+    } catch (_) {
+      // transport not readable: nothing counts
+    }
+  }
 
   Future<void> _initConnectivity() async {
     // what the network was when we started, so the first event the listener

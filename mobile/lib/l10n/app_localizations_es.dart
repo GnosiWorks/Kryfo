@@ -11345,6 +11345,85 @@ class AppLocalizationsEs extends AppLocalizations {
   String get voiceNotNow => 'Ahora no';
 
   @override
+  String get unlinkedTitle => 'Este dispositivo está desvinculado';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Tu teléfono lo quitó de tu cuenta, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'No se abrió en 30 días, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'No supo nada de tu teléfono en 30 días, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Su reloj se atrasó, así que Kryfo borró todo lo que guardaba aquí para proteger tus chats.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo no pudo saber cuándo se abrió por última vez, así que borró todo lo que guardaba aquí para proteger tus chats.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Lo desvinculaste, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Tu teléfono conserva tus chats. Para volver a usar Kryfo aquí, vincula este dispositivo a tu teléfono.';
+
+  @override
+  String get unlinkedClose => 'Cerrar Kryfo';
+
+  @override
+  String get devicesLeave => 'Desvincular este dispositivo';
+
+  @override
+  String get devicesLeaveTitle => '¿Desvincular este dispositivo?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo avisa a tu teléfono y borra todo lo que guarda aquí. Tu teléfono conserva tus chats.';
+
+  @override
+  String get devicesLeaveYes => 'Desvincular y borrar';
+
+  @override
+  String get devicesGoneNotice => 'Dispositivo quitado';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name se quitó de tu cuenta el $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name no se usó en 30 días, así que se quitó de tu cuenta el $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name se desvinculó solo el $date y borró lo que guardaba.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Tus dispositivos cambiaron';
+
+  @override
+  String get devicesChangedLine =>
+      'Abre Dispositivos vinculados para ver qué cambió.';
+
+  @override
+  String get devicesUnknownNotice => 'Dispositivo vinculado en otro lugar';
+
+  @override
+  String get devicesUnknownLine =>
+      'Otra copia de Kryfo vinculó un dispositivo a tu cuenta. Este teléfono lo quitó de tu lista.';
+
+  @override
   String get albumPrevious => 'Anterior';
 
   @override

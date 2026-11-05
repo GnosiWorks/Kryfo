@@ -10659,6 +10659,76 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceNotNow => '暂不';
 
   @override
+  String get unlinkedTitle => '这台设备已解除关联';
+
+  @override
+  String get unlinkedRemovedLine => '你的手机已把它从账号中移除，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedUnusedLine => '它 30 天没被打开，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedSilentLine => '它 30 天没有收到你手机的任何消息，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedClockLine => '它的时钟被调回了，所以 Kryfo 为保护你的聊天，抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo 无法得知它上次是何时被打开的，所以为保护你的聊天，抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedSelfLine => '你解除了它的关联，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
+  String get unlinkedAgainLine => '你的聊天仍在手机上。要在这里再次使用 Kryfo，请把这台设备关联到你的手机。';
+
+  @override
+  String get unlinkedClose => '关闭 Kryfo';
+
+  @override
+  String get devicesLeave => '解除这台设备的关联';
+
+  @override
+  String get devicesLeaveTitle => '解除这台设备的关联？';
+
+  @override
+  String get devicesLeaveLine => 'Kryfo 会告诉你的手机，并抹除它在这里保存的一切。你的聊天仍在手机上。';
+
+  @override
+  String get devicesLeaveYes => '解除关联并抹除';
+
+  @override
+  String get devicesGoneNotice => '设备已移除';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name 于 $date 从你的账号中移除。';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 天没有使用，所以于 $date 从你的账号中移除。';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name 于 $date 自己解除了关联，并抹除了上面保存的内容。';
+  }
+
+  @override
+  String get devicesChangedNotice => '你的设备有变化';
+
+  @override
+  String get devicesChangedLine => '打开“已关联的设备”查看变化。';
+
+  @override
+  String get devicesUnknownNotice => '在别处关联的设备';
+
+  @override
+  String get devicesUnknownLine => '另一份 Kryfo 把一台设备关联到了你的账号。这部手机已把它从你的列表中移除。';
+
+  @override
   String get albumPrevious => '上一个';
 
   @override
@@ -21258,6 +21328,76 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceNotNow => '以後再說';
+
+  @override
+  String get unlinkedTitle => '這台裝置已解除連結';
+
+  @override
+  String get unlinkedRemovedLine => '你的手機已把它從帳號中移除，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedUnusedLine => '它 30 天沒被開啟，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedSilentLine => '它 30 天沒有收到你手機的任何訊息，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedClockLine => '它的時鐘被調回了，所以 Kryfo 為保護你的聊天，抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo 無法得知它上次是何時被開啟的，所以為保護你的聊天，抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedSelfLine => '你解除了它的連結，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedAgainLine => '你的聊天仍在手機上。要在這裡再次使用 Kryfo，請把這台裝置連結到你的手機。';
+
+  @override
+  String get unlinkedClose => '關閉 Kryfo';
+
+  @override
+  String get devicesLeave => '解除這台裝置的連結';
+
+  @override
+  String get devicesLeaveTitle => '解除這台裝置的連結？';
+
+  @override
+  String get devicesLeaveLine => 'Kryfo 會告訴你的手機，並抹除它在這裡保存的一切。你的聊天仍在手機上。';
+
+  @override
+  String get devicesLeaveYes => '解除連結並抹除';
+
+  @override
+  String get devicesGoneNotice => '裝置已移除';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name 於 $date 從你的帳號中移除。';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name 30 天沒有使用，所以於 $date 從你的帳號中移除。';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name 於 $date 自己解除了連結，並抹除了上面保存的內容。';
+  }
+
+  @override
+  String get devicesChangedNotice => '你的裝置有變化';
+
+  @override
+  String get devicesChangedLine => '開啟「已連結的裝置」查看變化。';
+
+  @override
+  String get devicesUnknownNotice => '在別處連結的裝置';
+
+  @override
+  String get devicesUnknownLine => '另一份 Kryfo 把一台裝置連結到了你的帳號。這支手機已把它從你的清單中移除。';
 
   @override
   String get albumPrevious => '上一個';
