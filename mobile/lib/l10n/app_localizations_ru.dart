@@ -11407,6 +11407,19 @@ class AppLocalizationsRu extends AppLocalizations {
       'Заметки хранят текст. Файлы отправляй в чате.';
 
   @override
+  String get chatDropHereToAdd => 'Отпустите здесь, чтобы добавить';
+
+  @override
+  String trayRemove(String name) {
+    return 'Убрать $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Готово к отправке: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Показать текст';
 
   @override

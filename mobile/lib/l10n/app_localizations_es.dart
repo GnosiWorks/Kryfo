@@ -11304,6 +11304,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Notas guarda palabras. Envía los archivos en un chat.';
 
   @override
+  String get chatDropHereToAdd => 'Suelta aquí para añadir';
+
+  @override
+  String trayRemove(String name) {
+    return 'Quitar $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Listo para enviar: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Ver transcripción';
 
   @override

@@ -31,6 +31,7 @@ import '../widgets/photo_shape.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/attach_tray.dart';
 import '../desktop/drag_in.dart' show DragInZone;
 import 'dart:io';
 import 'dart:convert';
@@ -1396,6 +1397,7 @@ class _ChatScreenState extends State<ChatScreen>
     super.initState();
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
+    _tray.addListener(_trayMoved);
     // a computer: the chat opens ready to type. the field takes it as soon
     // as it is built
     if (onDesktop) _composerFocus.requestFocus();
@@ -4958,6 +4960,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _send() async {
+    if (onDesktop && !_tray.isEmpty && !(_devOpening?.busy ?? false)) {
+      _composerFocus.requestFocus();
+      return _sendTray();
+    }
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || (_devOpening?.busy ?? false)) return;
     // a computer: the next words go straight on, the send button's click
@@ -5816,6 +5822,8 @@ class _ChatScreenState extends State<ChatScreen>
   void dispose() {
     _find.detach();
     _unwatchCaptures?.call();
+    // the row stays with the chat for its next opening
+    _tray.removeListener(_trayMoved);
     for (final land in List.of(_flights)) {
       land();
     }
@@ -6740,21 +6748,103 @@ class _ChatScreenState extends State<ChatScreen>
         if (!didPop) _escOne();
       },
       child: DragInZone(
-        enabled: _composerShown && !_mediaWaits,
-        send: _sendFileFrom,
+        enabled: _composerShown,
+        stage: _stage,
         couldNotRead: () => l10n.chatCouldNotReadThat,
         child: _page(context),
       ),
     ),
   );
 
-  // esc on a computer lets go of the quote, then the search, and only then
-  // closes the chat
+  // this chat's row of staged files on a computer, kept by chat and
+  // container so it can never go to anyone else
+  late final AttachTray _tray = DeskTrays.of(
+    '${session.container.id}|${widget.peerHaloId}',
+  );
+
+  void _trayMoved() {
+    if (mounted) setState(() {});
+  }
+
+  // dropped or pasted files wait above the composer. a request to a
+  // stranger is words alone: the row says so and keeps nothing
+  void _stage(List<String> files) {
+    if (!_composerShown) return;
+    if (_mediaWaits) {
+      _tray.say(l10n.requestSenderMediaLater);
+      return;
+    }
+    unawaited(
+      _tray.add(files, most: () => appState.fileLimitFor(widget.peerHaloId)),
+    );
+  }
+
+  // enter with files staged: the photos and videos as albums with the
+  // caption on the first, the phone's way, then each file after it. a file
+  // alone takes the caption itself
+  Future<void> _sendTray() async {
+    if (_requestLocked || _sayMediaLater()) return;
+    if (_requestPending && _tray.items.length > _roomLeft) {
+      showHaloToast(context, l10n.chatWaitingForThemTo);
+      return;
+    }
+    // a second enter while the first reads finds the row taken
+    if (_trayBusy) return;
+    _trayBusy = true;
+    try {
+      await _sendTrayNow();
+    } finally {
+      _trayBusy = false;
+    }
+  }
+
+  bool _trayBusy = false;
+
+  Future<void> _sendTrayNow() async {
+    final caption = _msgCtrl.text.trim();
+    final plan = trayPlan(_tray.items, caption);
+    final picks = <PickedMedia>[];
+    for (final x in plan.media) {
+      if (x.kind == TrayKind.video) {
+        picks.add(PickedMedia.video(XFile(x.path, name: x.name)));
+        continue;
+      }
+      try {
+        picks.add(PickedMedia.photo(await File(x.path).readAsBytes()));
+      } catch (_) {
+        if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
+      }
+    }
+    // a big video is asked about as the preview asks
+    if (!mounted || !await _askBig(picks) || !mounted) return;
+    // a lock while it read took the row: nothing goes
+    if (lockState.locked) return;
+    _tray.clear();
+    _msgCtrl.clear();
+    _keepDraft();
+    if (picks.isNotEmpty) {
+      await _sendPicked(
+        MediaSendResult(items: picks, caption: caption, secure: _secureNext),
+      );
+    }
+    for (final (f, words) in plan.files) {
+      if (!mounted || lockState.locked) break;
+      final ready = await _readyFile(f.path, f.name);
+      if (ready != null) await _sendReady(ready, words);
+    }
+  }
+
+  // esc on a computer lets go of the staged files, then the quote, then
+  // the search, and only then closes the chat. a menu open over it goes
+  // first, as its own page
   bool get _escHolds =>
-      onDesktop && ((_replyTo != null && !_blocked) || _searching);
+      onDesktop &&
+      (_tray.shown || (_replyTo != null && !_blocked) || _searching);
 
   void _escOne() {
-    if (_replyTo != null && !_blocked) {
+    if (_tray.shown) {
+      _tray.clear();
+    } else if (_replyTo != null && !_blocked) {
       setState(() => _replyTo = null);
       _keepDraft();
     } else if (_searching) {
@@ -7318,39 +7408,47 @@ class _ChatScreenState extends State<ChatScreen>
                                     setState(() => _pendingPreview = null),
                               ),
                             ),
-                            _Composer(
-                              media: !_mediaWaits,
-                              onAttach: _showAttachSheet,
-                              onStickers: _showStickers,
-                              onCamera: _openCamera,
-                              ghost: _ghost,
-                              secure: _secureNext,
-                              onToggleSecure: () {
-                                HapticFeedback.selectionClick();
-                                setState(() => _secureNext = !_secureNext);
-                                showHaloToast(
-                                  context,
-                                  _secureNext
-                                      ? l10n.chatTheNextPhotoYou
-                                      : l10n.chatPhotoProtectionOff,
-                                );
-                              },
-                              onToggleGhost: () {
-                                setState(() {
-                                  _ghost = !_ghost;
-                                  _lastGhost = _ghost;
-                                  appState.saveGhostPref(_ghost, _burnSeconds);
-                                });
-                                _keepDraft(clock: true);
-                              },
-                              onPickBurn: _pickBurnDuration,
-                              burnSeconds: _burnSeconds,
-                              controller: _msgCtrl,
-                              focusNode: _composerFocus,
-                              onSend: _send,
-                              disguise: _voiceDisguise,
-                              disguiseLocked: _devAnon,
-                              onVoice: _sendVoice,
+                            TrayStrip(tray: _tray),
+                            PasteFiles(
+                              onFiles: _stage,
+                              child: _Composer(
+                                media: !_mediaWaits,
+                                staged: !_tray.isEmpty,
+                                onAttach: _showAttachSheet,
+                                onStickers: _showStickers,
+                                onCamera: _openCamera,
+                                ghost: _ghost,
+                                secure: _secureNext,
+                                onToggleSecure: () {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _secureNext = !_secureNext);
+                                  showHaloToast(
+                                    context,
+                                    _secureNext
+                                        ? l10n.chatTheNextPhotoYou
+                                        : l10n.chatPhotoProtectionOff,
+                                  );
+                                },
+                                onToggleGhost: () {
+                                  setState(() {
+                                    _ghost = !_ghost;
+                                    _lastGhost = _ghost;
+                                    appState.saveGhostPref(
+                                      _ghost,
+                                      _burnSeconds,
+                                    );
+                                  });
+                                  _keepDraft(clock: true);
+                                },
+                                onPickBurn: _pickBurnDuration,
+                                burnSeconds: _burnSeconds,
+                                controller: _msgCtrl,
+                                focusNode: _composerFocus,
+                                onSend: _send,
+                                disguise: _voiceDisguise,
+                                disguiseLocked: _devAnon,
+                                onVoice: _sendVoice,
+                              ),
                             ),
                           ],
                         ),
@@ -9887,9 +9985,12 @@ class _Composer extends StatelessWidget {
   // photos, files, the camera and voice notes: off in a request to a
   // stranger until they accept
   final bool media;
+  // files wait in the row above: send shows with nothing typed
+  final bool staged;
 
   const _Composer({
     this.media = true,
+    this.staged = false,
     required this.controller,
     this.focusNode,
     required this.onSend,
@@ -10121,7 +10222,7 @@ class _Composer extends StatelessWidget {
                 valueListenable: controller,
                 builder: (context, value, _) {
                   final still = motionStill(context);
-                  final hasText = value.text.trim().isNotEmpty;
+                  final hasText = value.text.trim().isNotEmpty || staged;
                   // a send still grinding takes the next one behind it
                   final canSend = hasText;
                   // mic and send trade places with a small pop instead of a cut

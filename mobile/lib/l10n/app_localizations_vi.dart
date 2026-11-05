@@ -11207,6 +11207,19 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ghi chú riêng lưu chữ. Hãy gửi tệp trong một cuộc trò chuyện.';
 
   @override
+  String get chatDropHereToAdd => 'Thả vào đây để thêm';
+
+  @override
+  String trayRemove(String name) {
+    return 'Gỡ $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Sẵn sàng gửi: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Xem bản chép lời';
 
   @override

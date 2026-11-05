@@ -11233,6 +11233,19 @@ class AppLocalizationsFa extends AppLocalizations {
       'یادداشت برای خود متن نگه می‌دارد. فایل‌ها را در یک گفتگو بفرستید.';
 
   @override
+  String get chatDropHereToAdd => 'برای افزودن اینجا رها کنید';
+
+  @override
+  String trayRemove(String name) {
+    return 'برداشتن $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'آماده فرستادن: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'دیدن متن';
 
   @override

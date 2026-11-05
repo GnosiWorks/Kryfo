@@ -10622,6 +10622,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notesDropKeepsWords => '给自己的笔记只存文字。文件请在聊天中发送。';
 
   @override
+  String get chatDropHereToAdd => '拖到这里松开即可添加';
+
+  @override
+  String trayRemove(String name) {
+    return '移除 $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return '待发送：$count';
+  }
+
+  @override
   String get voiceSeeTranscription => '查看文字';
 
   @override
@@ -21422,6 +21435,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notesDropKeepsWords => '給自己的筆記只存文字。檔案請在聊天中傳送。';
+
+  @override
+  String get chatDropHereToAdd => '拖到這裡放開即可加入';
+
+  @override
+  String trayRemove(String name) {
+    return '移除 $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return '待傳送：$count';
+  }
 
   @override
   String get voiceSeeTranscription => '查看文字';

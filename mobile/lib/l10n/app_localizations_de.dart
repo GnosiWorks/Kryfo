@@ -11349,6 +11349,19 @@ class AppLocalizationsDe extends AppLocalizations {
       'Notiz an mich behält Text. Dateien sendest du in einem Chat.';
 
   @override
+  String get chatDropHereToAdd => 'Hier ablegen zum Hinzufügen';
+
+  @override
+  String trayRemove(String name) {
+    return '$name entfernen';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Bereit zum Senden: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Transkript anzeigen';
 
   @override

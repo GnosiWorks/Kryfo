@@ -17983,6 +17983,24 @@ abstract class AppLocalizations {
   /// **'Note to self keeps words. Send files in a chat.'**
   String get notesDropKeepsWords;
 
+  /// a computer: files dragged over a chat, the line on the wash; let go, they wait in a row above the composer until enter sends them
+  ///
+  /// In en, this message translates to:
+  /// **'Drop here to add'**
+  String get chatDropHereToAdd;
+
+  /// a computer: the x on a file waiting above the composer, said by a screen reader and on hover
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String trayRemove(String name);
+
+  /// a computer: what a screen reader says of the row of files waiting above the composer; enter sends them
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to send: {count}'**
+  String trayReadyToSend(Object count);
+
   /// the link under a voice message that shows its words
   ///
   /// In en, this message translates to:

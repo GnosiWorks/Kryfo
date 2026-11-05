@@ -11229,6 +11229,19 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपने लिए नोट में शब्द रहते हैं। फ़ाइलें किसी चैट में भेजें।';
 
   @override
+  String get chatDropHereToAdd => 'जोड़ने के लिए यहाँ छोड़ें';
+
+  @override
+  String trayRemove(String name) {
+    return '$name हटाएँ';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'भेजने के लिए तैयार: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'लिखित रूप देखें';
 
   @override

@@ -11223,6 +11223,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Note to self keeps words. Send files in a chat.';
 
   @override
+  String get chatDropHereToAdd => 'Drop here to add';
+
+  @override
+  String trayRemove(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Ready to send: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'See transcription';
 
   @override
