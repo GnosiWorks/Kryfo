@@ -226,6 +226,8 @@ func devCallJSON(op, raw string) string {
 			return devAnswer(out, err)
 		}
 		devCur = d
+		// a new state starts with no leaving keys: the rows set them again
+		devLeavingReset()
 		out.Claimants, out.Skipped = keysOut(claimants), skipped
 		return devAnswer(out, nil)
 	}

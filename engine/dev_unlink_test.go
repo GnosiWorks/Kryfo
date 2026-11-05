@@ -212,3 +212,35 @@ func TestALeavingKeyOnlyAddresses(t *testing.T) {
 		t.Fatalf("a linked device leaving: %s", e)
 	}
 }
+
+// a load starts with no leaving keys: the rows set them again, and an id a
+// new link reuses never gets the old device's key from a state gone by
+func TestALoadForgetsLeavingKeys(t *testing.T) {
+	l := devTestShim(t)
+	me := newDevAcct(t, l)
+	deskKey := newDevSigner(t, l).pub
+	desk := me.link(t, deskKey, false)
+	load := func() {
+		mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
+			"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub)}},
+		})))
+	}
+	load()
+	mustOK(t, devSessionJSON("own_mine", devJSON(t, map[string]any{"ident": 0, "list": me.wire})))
+	out := devOutOf(t, devCallJSON("own_remove", devJSON(t, map[string]any{"ident": 0, "held": []map[string]any{{"id": int(desk.ID)}}})))
+	sig, err := me.id.Sign(devices.ContextList, out.List)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mustOK(t, devSessionJSON("own_mine", devJSON(t, map[string]any{"ident": 0, "list": append(slices.Clone(out.List), sig...)})))
+	mustOK(t, devCallJSON("own_leaving", devJSON(t, map[string]any{"ident": 0, "held": []map[string]any{{"id": int(desk.ID), "key": hexKey(deskKey)}}})))
+	t.Cleanup(devLeavingReset)
+	var src devKeySource
+	if _, ok := src.deviceKey(0, devX(me.id.pub), desk.ID); !ok {
+		t.Fatal("no leaving key before the load")
+	}
+	load()
+	if _, ok := src.deviceKey(0, devX(me.id.pub), desk.ID); ok {
+		t.Fatal("a leaving key outlived the load")
+	}
+}

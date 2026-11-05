@@ -116,6 +116,14 @@ func (d *devState) ownLeaving(a *devArgs) error {
 	return nil
 }
 
+// every leaving key forgotten, at a load: the device state there names
+// other identities, or a container wiped since
+func devLeavingReset() {
+	devLeavingMu.Lock()
+	defer devLeavingMu.Unlock()
+	clear(devLeavingKeys)
+}
+
 func devLeavingKey(ident int, dev uint8) (devices.Key, bool) {
 	devLeavingMu.Lock()
 	defer devLeavingMu.Unlock()
