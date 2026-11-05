@@ -2475,6 +2475,8 @@
   "licencesGplText": "GNU GPL 3.0, toàn văn",
   "licencesInEngine": "Trong bộ máy mạng",
   "licencesLoadFailed": "Không tải được",
+  "licencesInVoice": "Trong chép lời giọng nói",
+  "licencesInTranslation": "Trong dịch tin nhắn",
   "settingsCopyLinkHint": "Sao chép liên kết",
   "motionNoRelayYet": "CHƯA CÓ RELAY",
   "motionTheRouteIsUp": "Tuyến đường đã thông",

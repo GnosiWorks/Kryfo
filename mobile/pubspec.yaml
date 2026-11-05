@@ -103,6 +103,8 @@ flutter:
     - assets/licences/rust.json
     # written by engine/acknowledgments.sh
     - assets/licences/engine.json
+    # written by engine/native-acknowledgments.sh
+    - assets/licences/native.json
     # the repository's LICENSE
     - assets/licences/gpl-3.0.txt
 

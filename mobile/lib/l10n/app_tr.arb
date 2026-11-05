@@ -2475,6 +2475,8 @@
   "licencesGplText": "GNU GPL 3.0, tam metin",
   "licencesInEngine": "Ağ motorunda",
   "licencesLoadFailed": "Yüklenemedi",
+  "licencesInVoice": "Ses yazıya dökmede",
+  "licencesInTranslation": "Mesaj çevirisinde",
   "settingsCopyLinkHint": "Bağlantıyı kopyala",
   "motionNoRelayYet": "HENÜZ AKTARICI YOK",
   "motionTheRouteIsUp": "Rota kuruldu",

@@ -9467,6 +9467,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get licencesLoadFailed => 'Yüklenemedi';
 
   @override
+  String get licencesInVoice => 'Ses yazıya dökmede';
+
+  @override
+  String get licencesInTranslation => 'Mesaj çevirisinde';
+
+  @override
   String get settingsCopyLinkHint => 'Bağlantıyı kopyala';
 
   @override

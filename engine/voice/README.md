@@ -66,11 +66,18 @@ same files. build.sh wants ndk 28.2.13676358 and cmake 3.22.1, the ones
 repro/Dockerfile already pins, and builds with prefix maps, no build id,
 16 kb pages and `SOURCE_DATE_EPOCH`.
 
-the app build does not package the library yet: gradle excludes it and
-`KV_JNI_LIBS_DIR` copies it into jniLibs once transcripts are turned on.
-it is not `JNI_LIBS_DIR`, which engine/build.sh reads for libhalo.
+a release builds it: repro/build-repro.sh runs build.sh with
+`KV_JNI_LIBS_DIR` set to the app's jniLibs (release.sh keeps the tarball for
+`--offline`), and the f-droid recipe does the same from a whisper.cpp
+srclib (RELEASING.md). gradle leaves it out of the apk until transcripts are
+switched on, and that line goes in the same commit as the switch.
+`KV_JNI_LIBS_DIR` is not `JNI_LIBS_DIR`, which engine/build.sh reads for
+libhalo.
 
 ## licences
 
 whisper.cpp and ggml are MIT, the whisper weights MIT. both can ship in a
-GPL-3.0-or-later app.
+GPL-3.0-or-later app. the licences screen lists them, the YaRN notice in
+ggml's rope code and the weights' text word for word (licences/), from
+mobile/assets/licences/native.json, which engine/native-acknowledgments.sh
+writes; the rows show once the switch is on.

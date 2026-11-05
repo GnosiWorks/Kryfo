@@ -15133,6 +15133,18 @@ abstract class AppLocalizations {
   /// **'Could not load'**
   String get licencesLoadFailed;
 
+  /// screens/licences_screen.dart: the parts inside the voice transcription library (whisper.cpp, ggml, the speech model)
+  ///
+  /// In en, this message translates to:
+  /// **'In voice transcription'**
+  String get licencesInVoice;
+
+  /// screens/licences_screen.dart: the parts inside the offline message translation library (bergamot and what it builds in)
+  ///
+  /// In en, this message translates to:
+  /// **'In message translation'**
+  String get licencesInTranslation;
+
   /// screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does
   ///
   /// In en, this message translates to:

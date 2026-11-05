@@ -2475,6 +2475,8 @@
   "licencesGplText": "متن کامل GNU GPL 3.0",
   "licencesInEngine": "در موتور شبکه",
   "licencesLoadFailed": "بارگیری نشد",
+  "licencesInVoice": "در تبدیل صدا به متن",
+  "licencesInTranslation": "در ترجمهٔ پیام‌ها",
   "settingsCopyLinkHint": "کپی پیوند",
   "motionNoRelayYet": "هنوز رله‌ای نیست",
   "motionTheRouteIsUp": "مسیر برقرار است",

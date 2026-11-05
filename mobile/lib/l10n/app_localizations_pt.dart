@@ -9514,6 +9514,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licencesLoadFailed => 'Não foi possível carregar';
 
   @override
+  String get licencesInVoice => 'Na transcrição de voz';
+
+  @override
+  String get licencesInTranslation => 'Na tradução de mensagens';
+
+  @override
   String get settingsCopyLinkHint => 'Copiar link';
 
   @override

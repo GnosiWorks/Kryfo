@@ -9438,6 +9438,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licencesLoadFailed => 'Could not load';
 
   @override
+  String get licencesInVoice => 'In voice transcription';
+
+  @override
+  String get licencesInTranslation => 'In message translation';
+
+  @override
   String get settingsCopyLinkHint => 'Copy link';
 
   @override

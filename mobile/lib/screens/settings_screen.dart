@@ -858,15 +858,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
-              if (voiceTranscriptsIfOn() case final hub?)
-                HaloRow(
-                  icon: Icons.notes_rounded,
-                  label: l10n.voiceSettingsTitle,
-                  hint: l10n.translateSettingsHintShown,
-                  onTap: () => Navigator.of(
-                    context,
-                  ).push(haloRoute(VoiceTxScreen(hub: hub))),
-                ),
             ],
             HaloSection(l10n.settingsAppearance),
             HaloGroup(
@@ -954,6 +945,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     await appState.saveDisguisePref(v);
                   },
                 ),
+                if (voiceTranscriptsIfOn() case final hub?)
+                  HaloRow(
+                    icon: Icons.notes_rounded,
+                    label: l10n.voiceSettingsTitle,
+                    hint: l10n.translateSettingsHintShown,
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(haloRoute(VoiceTxScreen(hub: hub))),
+                  ),
               ],
             ),
             if (translationHubIfOn() case final hub?) ...[

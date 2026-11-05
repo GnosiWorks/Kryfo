@@ -9621,6 +9621,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get licencesLoadFailed => 'Nie udało się wczytać';
 
   @override
+  String get licencesInVoice => 'W transkrypcji głosu';
+
+  @override
+  String get licencesInTranslation => 'W tłumaczeniu wiadomości';
+
+  @override
   String get settingsCopyLinkHint => 'Kopiuj link';
 
   @override
