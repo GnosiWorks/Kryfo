@@ -6,6 +6,7 @@ import 'saved_screen.dart';
 import 'transport_screen.dart';
 import '../widgets/desk_menu.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/entrance.dart';
 import '../widgets/stagger_in.dart';
 import 'requests_screen.dart';
 import 'dart:async';
@@ -2466,6 +2467,14 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
     duration: const Duration(milliseconds: 360),
     value: _animate ? 0.0 : 1.0,
   );
+  final _entrance = Entrance();
+
+  // motion off or a held ticker: the row at rest from the first frame
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_animate && !_c.isCompleted && entranceOff(context)) _c.value = 1;
+  }
 
   @override
   void initState() {
@@ -2479,7 +2488,7 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
         );
       }
       Future.delayed(Duration(milliseconds: widget.index * 45), () {
-        if (mounted) _c.forward();
+        if (mounted) _entrance.play(context, _c);
       });
     }
   }
@@ -2488,6 +2497,7 @@ class _EnterState extends State<_Enter> with SingleTickerProviderStateMixin {
   void dispose() {
     // a row past its entrance never made one, and a ticker is not made on
     // the way out
+    _entrance.dispose();
     if (_animate) _c.dispose();
     super.dispose();
   }
