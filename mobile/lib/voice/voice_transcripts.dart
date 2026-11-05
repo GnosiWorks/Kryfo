@@ -22,6 +22,7 @@ import '../desktop/desktop_mode.dart' show onDesktop;
 import '../engine_strings.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session, sessionQuiet;
+import '../native_libs.dart';
 import '../translate/downloads.dart';
 import '../translate/engine_bridge.dart' show FetchStatus;
 import '../transfers.dart' show unmeteredNow;
@@ -503,9 +504,7 @@ typedef _S2 = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 
 // the check reads the whole model, so every call runs off the ui isolate
 Future<String> _engineCall(String symbol, List<String> args) => Isolate.run(() {
-  final lib = Platform.isAndroid
-      ? DynamicLibrary.open('libhalo.so')
-      : DynamicLibrary.process();
+  final lib = haloLibrary();
   final a = [for (final s in args) s.toNativeUtf8()];
   try {
     return switch (a.length) {

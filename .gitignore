@@ -54,6 +54,7 @@ icon-backup-*/
 mobile/*.py
 mobile/android/key.properties
 mobile/linux/out/
+mobile/windows/out/
 onionfix.py
 patch*.py
 patch_*.py

@@ -20,6 +20,7 @@ import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage
 
 import '../chunk_keys.dart';
 import '../engine_strings.dart' show engineTakeSecretKey, freeSecret;
+import '../native_libs.dart';
 import 'desktop_posix.dart' show syncFolder;
 import 'system_seal.dart';
 
@@ -60,9 +61,7 @@ typedef _KeyC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>, Int32);
 typedef _Key = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>, int);
 
 Uint8List? _engineKey(String passphrase, Uint8List salt, int logN) {
-  final fn = DynamicLibrary.process().lookupFunction<_KeyC, _Key>(
-    'HaloVaultKey',
-  );
+  final fn = haloLibrary().lookupFunction<_KeyC, _Key>('HaloVaultKey');
   final pp = passphrase.toNativeUtf8();
   final ps = calloc<Uint8>(_saltLen);
   try {
@@ -84,7 +83,7 @@ class EngineVaultCrypto implements VaultCrypto {
   Future<Uint8List?> keyOf(String passphrase, Uint8List salt, int logN) =>
       Isolate.run(() => _engineKey(passphrase, salt, logN));
 
-  static final _keys = ChunkKeys(DynamicLibrary.process());
+  static final _keys = ChunkKeys(haloLibrary());
 
   // one seal or open: the key crosses as bytes, held by the engine for
   // this call alone

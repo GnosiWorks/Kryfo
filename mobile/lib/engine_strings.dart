@@ -5,11 +5,12 @@
 // freed native memory.
 
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+
+import 'native_libs.dart';
 
 typedef _FreeC = Void Function(Pointer<Utf8>);
 typedef _FreeD = void Function(Pointer<Utf8>);
@@ -23,9 +24,7 @@ final void Function(Pointer<Utf8>) _engineFree = _lookupFree();
 
 void Function(Pointer<Utf8>) _lookupFree() {
   try {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     return lib.lookupFunction<_FreeC, _FreeD>('HaloFree');
   } on ArgumentError {
     // no engine in this process (host tests): what is taken here was made

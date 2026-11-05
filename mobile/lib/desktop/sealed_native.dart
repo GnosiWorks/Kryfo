@@ -45,7 +45,10 @@ class MemFile implements NativeCopy {
   String get path => '/proc/self/fd/$fd';
 
   static MemFile create() {
-    if (noMemfdForTest) throw const FileSystemException('no memfd');
+    // memfd is linux's: windows spills to a disk copy instead
+    if (noMemfdForTest || !Platform.isLinux) {
+      throw const FileSystemException('no memfd');
+    }
     final libc = DynamicLibrary.process();
     final f = libc.lookupFunction<_MemfdC, _Memfd>('memfd_create');
     final n = 'kryfo'.toNativeUtf8();
@@ -73,7 +76,9 @@ class MemFile implements NativeCopy {
         r.closeSync();
       } catch (_) {}
     });
-    DynamicLibrary.process().lookupFunction<_CloseC, _Close>('close')(fd);
+    if (Platform.isLinux) {
+      DynamicLibrary.process().lookupFunction<_CloseC, _Close>('close')(fd);
+    }
   }
 }
 
