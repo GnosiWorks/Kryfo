@@ -11712,4 +11712,19 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Залиш чайові, щоб Kryfo лишався незалежним';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name пов’язав(-ла) новий пристрій';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name прибрав(-ла) пристрій';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Не вдалося перевірити список пристроїв $name';
+  }
 }

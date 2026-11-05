@@ -3029,5 +3029,8 @@
   "tipsThanks": "Gracias",
   "tipsGranted": "{tier, select, supporter{Ya tienes la insignia de colaborador. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.} patron{Ya tienes la insignia de mecenas. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.} guardian{Ya tienes la insignia de guardián. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.} other{Ya tienes la insignia de colaborador. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.}}",
   "tipsKept": "{tier, select, supporter{Gracias por la propina. Conservas tu insignia de colaborador, la más alta.} patron{Gracias por la propina. Conservas tu insignia de mecenas, la más alta.} guardian{Gracias por la propina. Conservas tu insignia de guardián, la más alta.} other{Gracias por la propina. Conservas tu insignia de colaborador, la más alta.}}",
-  "tipsProfileCard": "Da una propina para que Kryfo siga siendo independiente"
+  "tipsProfileCard": "Da una propina para que Kryfo siga siendo independiente",
+  "chatDeviceLinked": "{name} vinculó un dispositivo nuevo",
+  "chatDeviceRemoved": "{name} quitó un dispositivo",
+  "chatDeviceListUnchecked": "No se pudo comprobar la lista de dispositivos de {name}"
 }

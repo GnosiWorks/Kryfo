@@ -18462,6 +18462,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave a tip to keep Kryfo independent'**
   String get tipsProfileCard;
+
+  /// screens/chat_screen.dart: the quiet line where a contact's verified device list added a device. no device names, calm
+  ///
+  /// In en, this message translates to:
+  /// **'{name} linked a new device'**
+  String chatDeviceLinked(Object name);
+
+  /// screens/chat_screen.dart: the quiet line where a contact's verified device list dropped a device. no device names, calm
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed a device'**
+  String chatDeviceRemoved(Object name);
+
+  /// screens/chat_screen.dart: the quiet line where a contact's device list could not be checked (two lists at one version, or a key another holds). calm, never claims an attack
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s device list could not be checked'**
+  String chatDeviceListUnchecked(Object name);
 }
 
 class _AppLocalizationsDelegate

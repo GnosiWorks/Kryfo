@@ -14447,5 +14447,32 @@
   "tipsProfileCard": "Leave a tip to keep Kryfo independent",
   "@tipsProfileCard": {
     "description": "screens/profile_screen.dart: the card on me in the play build"
+  },
+  "chatDeviceLinked": "{name} linked a new device",
+  "@chatDeviceLinked": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's verified device list added a device. no device names, calm",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatDeviceRemoved": "{name} removed a device",
+  "@chatDeviceRemoved": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's verified device list dropped a device. no device names, calm",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatDeviceListUnchecked": "{name}'s device list could not be checked",
+  "@chatDeviceListUnchecked": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's device list could not be checked (two lists at one version, or a key another holds). calm, never claims an attack",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
   }
 }

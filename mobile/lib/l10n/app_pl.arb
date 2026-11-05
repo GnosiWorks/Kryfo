@@ -3029,5 +3029,8 @@
   "tipsThanks": "Dziękujemy",
   "tipsGranted": "{tier, select, supporter{Masz teraz odznakę wspierającego. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.} patron{Masz teraz odznakę mecenasa. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.} guardian{Masz teraz odznakę strażnika. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.} other{Masz teraz odznakę wspierającego. Nie odblokowuje niczego więcej: wszystko w Kryfo zostaje darmowe dla wszystkich.}}",
   "tipsKept": "{tier, select, supporter{Dziękujemy za napiwek. Zostaje twoja odznaka wspierającego, ta wyższa.} patron{Dziękujemy za napiwek. Zostaje twoja odznaka mecenasa, ta wyższa.} guardian{Dziękujemy za napiwek. Zostaje twoja odznaka strażnika, ta wyższa.} other{Dziękujemy za napiwek. Zostaje twoja odznaka wspierającego, ta wyższa.}}",
-  "tipsProfileCard": "Zostaw napiwek, żeby Kryfo zostało niezależne"
+  "tipsProfileCard": "Zostaw napiwek, żeby Kryfo zostało niezależne",
+  "chatDeviceLinked": "{name} łączy nowe urządzenie",
+  "chatDeviceRemoved": "{name} usuwa urządzenie",
+  "chatDeviceListUnchecked": "Nie udało się sprawdzić listy urządzeń kontaktu {name}"
 }

@@ -11753,4 +11753,19 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Zostaw napiwek, żeby Kryfo zostało niezależne';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name łączy nowe urządzenie';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name usuwa urządzenie';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Nie udało się sprawdzić listy urządzeń kontaktu $name';
+  }
 }

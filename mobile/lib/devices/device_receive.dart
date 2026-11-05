@@ -16,6 +16,12 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../device_sessions.dart';
 import '../dlog.dart';
+import '../heal.dart'
+    show
+        addHealLine,
+        kDeviceLineLinked,
+        kDeviceLineRemoved,
+        kDeviceLineUnchecked;
 import '../message_envelope.dart' show kEnvelopePrefix;
 import '../signal_ffi/kryfo_signal.dart' show kLsPreKey, kLsWhisper;
 import '../wire_pad.dart' show unpad;
@@ -95,6 +101,9 @@ const kOwnLeftWhy = {'unused', 'clock', 'broken', 'self', 'silent'};
 /// a device they removed since, so only their phone is let in and copied
 /// to until their phone sends their list again
 const kStaleList = 'stale_list';
+
+/// the dev_marks kind for the last "could not be checked" line on a contact
+const kUncheckedLineMark = 'line:unchecked';
 
 /// whether [identity]'s list on my [ident] is one a restore left
 Future<bool> staleList(DatabaseExecutor d, int ident, String identity) async =>
@@ -195,6 +204,9 @@ class DeviceReceive {
   /// the phone: my own [device] of [ident] on [key] says it unlinked itself
   /// ([why], one of [kOwnLeftWhy]) and wiped
   Future<void> Function(int ident, int device, String key, String why)? ownLeft;
+
+  /// a quiet line went into [peer]'s chat (heal.dart's kDeviceLine kinds)
+  void Function(String peer)? lined;
 
   final _alarms = StreamController<DevAlarm>.broadcast();
 
@@ -520,6 +532,7 @@ class DeviceReceive {
     final who = await contact(m.ident, identity);
     if (who == null) return;
     final d = await db();
+    final was = await _heldDevices(d, identity);
     final Map<String, dynamic> j;
     try {
       j = await state.session(d, 'phone_list', {
@@ -538,6 +551,7 @@ class DeviceReceive {
     if (outcome == 'first' || outcome == 'changed') {
       await listChanged(m, identity, who.c.peer);
     }
+    if (outcome == 'changed') await _deviceLines(d, who.c.peer, identity, was);
   }
 
   // a contact's list this phone took goes on to each of my own devices,
@@ -822,6 +836,7 @@ class DeviceReceive {
     String list,
     SessionRemote remote,
   ) async {
+    final was = await _heldDevices(d, identity);
     final Map<String, dynamic> j;
     try {
       j = await state.session(d, 'accept', {
@@ -841,6 +856,7 @@ class DeviceReceive {
     }
     await _claims(d, m.ident);
     final outcome = j['outcome'];
+    if (outcome == 'changed') await _deviceLines(d, c.peer, identity, was);
     if (outcome == 'first' || outcome == 'changed') {
       await listChanged(m, identity, c.peer);
       await _passOn(m, identity, list);
@@ -1436,6 +1452,73 @@ class DeviceReceive {
   ) async {
     await _mark(d, ident, peer, 'alarm:$kind', key, _clock());
     _alarms.add((ident: ident, peer: peer, kind: kind, key: key));
+    if (kind == 'equivocation' || kind == 'claim') {
+      await _uncheckedLine(d, ident, peer);
+    }
+  }
+
+  // ---- the quiet lines in a contact's chat ----
+
+  // the devices [identity]'s held list names, by id and key; null with none
+  Future<Set<String>?> _heldDevices(Database d, String identity) async {
+    try {
+      final j = await state.call(d, 'current', {'identity': identity});
+      return {for (final e in _entries(j['devices'])) '${e.id}/${e.key}'};
+    } on DevRefused {
+      return null;
+    }
+  }
+
+  // a verified list of a contact's moved past one held: one line per device
+  // it adds and per device it drops, nothing of which. the first list is the
+  // baseline and says nothing. 1:1 chats only, none in groups for now
+  Future<void> _deviceLines(
+    Database d,
+    String peer,
+    String identity,
+    Set<String>? was,
+  ) async {
+    if (was == null) return;
+    final now = await _heldDevices(d, identity);
+    if (now == null) return;
+    final kinds = [
+      for (final _ in was.difference(now)) kDeviceLineRemoved,
+      for (final _ in now.difference(was)) kDeviceLineLinked,
+    ];
+    if (kinds.isEmpty) return;
+    final at = _clock();
+    for (var i = 0; i < kinds.length; i++) {
+      await addHealLine(d, peer, at: at + i, kind: kinds[i]);
+    }
+    lined?.call(peer);
+  }
+
+  // a contact's list that could not be checked (two at one version, or a
+  // key someone else holds): a calm line in their chat, once a day at most.
+  // never for my own identity, nor for a contact not on this side
+  Future<void> _uncheckedLine(Database d, int ident, String identity) async {
+    try {
+      final m = await me(ident);
+      if (m == null || identity == devHex(m.identity)) return;
+      final who = await contact(ident, identity);
+      if (who == null) return;
+      final now = _clock();
+      if (await _markedSince(
+        d,
+        ident,
+        identity,
+        kUncheckedLineMark,
+        '',
+        now - const Duration(days: 1).inMilliseconds,
+      )) {
+        return;
+      }
+      await _mark(d, ident, identity, kUncheckedLineMark, '', now);
+      await addHealLine(d, who.c.peer, at: now, kind: kDeviceLineUnchecked);
+      lined?.call(who.c.peer);
+    } catch (e) {
+      _note('a line not kept (${e.runtimeType})');
+    }
   }
 
   // the contacts whose lists name a key someone else holds, as the engine

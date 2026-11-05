@@ -11555,4 +11555,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Kryfo bağımsız kalsın diye bahşiş bırak';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name yeni bir cihaz bağladı';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name bir cihazı kaldırdı';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return '$name kişisinin cihaz listesi denetlenemedi';
+  }
 }

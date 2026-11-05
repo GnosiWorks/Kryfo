@@ -11670,4 +11670,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'اترك إكرامية ليبقى Kryfo مستقلًا';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return 'ربط ⁨$name⁩ جهازًا جديدًا';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return 'أزال ⁨$name⁩ جهازًا';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'تعذّر التحقق من قائمة أجهزة ⁨$name⁩';
+  }
 }

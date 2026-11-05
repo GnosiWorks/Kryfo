@@ -11530,4 +11530,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Beri tip agar Kryfo tetap mandiri';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name menautkan perangkat baru';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name menghapus sebuah perangkat';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Daftar perangkat $name tidak dapat diperiksa';
+  }
 }

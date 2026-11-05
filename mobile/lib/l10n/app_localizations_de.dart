@@ -11658,4 +11658,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tipsProfileCard =>
       'Gib ein Trinkgeld, damit Kryfo unabhängig bleibt';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name hat ein neues Gerät verknüpft';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name hat ein Gerät entfernt';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Die Geräteliste von $name konnte nicht geprüft werden';
+  }
 }

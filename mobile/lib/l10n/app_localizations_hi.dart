@@ -11534,4 +11534,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Kryfo को स्वतंत्र रखने के लिए टिप दें';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name ने एक नया डिवाइस जोड़ा';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name ने एक डिवाइस हटाया';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return '$name की डिवाइस सूची जाँची नहीं जा सकी';
+  }
 }

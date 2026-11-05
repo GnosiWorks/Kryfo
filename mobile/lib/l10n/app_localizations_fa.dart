@@ -11537,4 +11537,19 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'انعام بدهید تا Kryfo مستقل بماند';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '⁨$name⁩ یک دستگاه تازه پیوند داد';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '⁨$name⁩ یک دستگاه را برداشت';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'بررسی فهرست دستگاه‌های ⁨$name⁩ ممکن نشد';
+  }
 }
