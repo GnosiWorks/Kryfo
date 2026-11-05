@@ -724,42 +724,78 @@ func goWatchPublished(t *tor.Tor, onionID string) {
 // sitting out the full fallback.
 func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 	hsCh := make(chan control.Event, 16)
+	return hsCh, subscribeUploads(t, hsCh)
+}
+
+// the event connection each HS_DESC watch subscribed on. a SETEVENTS that
+// runs out anywhere closes the shared one, and a watch on it hears nothing
+// more: it subscribes again (watchPublishedOn)
+var uploadSubs sync.Map // chan control.Event -> *control.Conn
+
+func subscribeUploads(t *tor.Tor, hsCh chan control.Event) bool {
 	if t == nil || t.Control == nil {
-		return hsCh, false
+		return false
 	}
 	// on the event connection, never on bine's: see control_events.go
 	c, err := eventConn(t)
 	if err != nil {
 		log.Printf("halo: HSDesc subscribe failed: %v", err)
-		return hsCh, false
+		return false
 	}
 	if aerr := evDo(c, "SETEVENTS HS_DESC", func() error {
 		return c.AddEventListener(hsCh, control.EventCodeHSDesc)
 	}); aerr != nil {
 		log.Printf("halo: HSDesc subscribe failed: %v", aerr)
-		return hsCh, false
+		uploadSubs.Delete(hsCh)
+		return false
 	}
-	return hsCh, true
+	uploadSubs.Store(hsCh, c)
+	return true
 }
 
-// the HS_DESC subscription of hsCh goes, on whatever event connection is up
+// whether hsCh still hears HS_DESC: subscribed, on the event connection up
+// now. a channel subscribed elsewhere (the tests') counts as heard
+func uploadsHeard(hsCh chan control.Event, subbed bool) bool {
+	if !subbed {
+		return false
+	}
+	v, known := uploadSubs.Load(hsCh)
+	if !known {
+		return true
+	}
+	evMu.Lock()
+	defer evMu.Unlock()
+	return evConn != nil && evConn == v.(*control.Conn)
+}
+
+// the HS_DESC subscription of hsCh goes. one whose connection went, went
+// with it
 func unlistenUploads(hsCh chan control.Event) {
+	v, known := uploadSubs.LoadAndDelete(hsCh)
 	evMu.Lock()
 	c := evConn
 	evMu.Unlock()
-	if c != nil {
-		_ = evDo(c, "SETEVENTS", func() error {
-			return c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
-		})
+	if c == nil || (known && v.(*control.Conn) != c) {
+		return
 	}
+	_ = evDo(c, "SETEVENTS", func() error {
+		return c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
+	})
 }
 
 func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionID string) {
 	gone := torGoneCh()
-	if hsSubbed {
-		defer unlistenUploads(hsCh)
-	}
+	defer func() {
+		if hsSubbed {
+			unlistenUploads(hsCh)
+		}
+	}()
 	for {
+		// a subscription that failed or went with its event connection is
+		// made again, or the status stays publishing with the onion up
+		if !uploadsHeard(hsCh, hsSubbed) {
+			hsSubbed = subscribeUploads(t, hsCh)
+		}
 		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
 			// a client by now: that onion was taken down
 			if torClientOnly() {
@@ -1797,11 +1833,15 @@ func openChunkAt(h int64, index uint64, typ byte, sealed, dst []byte) int {
 	return len(plain)
 }
 
+// how long one watch waits for an upload before it looks again. a var for
+// the tests
+var hsdirWait = 120 * time.Second
+
 // watchHSDirUpload reads tor's HS_DESC events and returns true as soon as
-// our descriptor is uploaded, or false after 120s. most networks upload
-// within 5-15 seconds.
+// our descriptor is uploaded, or false after hsdirWait. most networks
+// upload within 5-15 seconds.
 func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string, gone chan struct{}) bool {
-	timeout := time.After(120 * time.Second)
+	timeout := time.After(hsdirWait)
 	if t == nil || t.Control == nil || !subbed {
 		select {
 		case <-gone:
@@ -1851,7 +1891,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 		case <-gone:
 			return false
 		case <-timeout:
-			log.Printf("halo: no hsdir upload confirmed in 120s, staying in publishing and still trying")
+			log.Printf("halo: no hsdir upload confirmed in %s, staying in publishing and still trying", hsdirWait)
 			return false
 		}
 	}

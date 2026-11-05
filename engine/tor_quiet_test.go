@@ -36,6 +36,8 @@ type quietPort struct {
 	cmds []string
 	held map[net.Conn]bool
 	adds int
+	// the connections subscribed to HS_DESC
+	hs map[net.Conn]bool
 }
 
 func newQuietPort(t *testing.T, at string) *quietPort {
@@ -44,7 +46,7 @@ func newQuietPort(t *testing.T, at string) *quietPort {
 	if err != nil {
 		t.Fatalf("listen: %v", err)
 	}
-	q := &quietPort{ln: ln, held: map[net.Conn]bool{}}
+	q := &quietPort{ln: ln, held: map[net.Conn]bool{}, hs: map[net.Conn]bool{}}
 	q.quietAt.Store(at)
 	q.mute.Store("")
 	go func() {
@@ -81,6 +83,7 @@ func (q *quietPort) handle(c net.Conn) {
 	defer func() {
 		q.mu.Lock()
 		delete(q.held, c)
+		delete(q.hs, c)
 		q.mu.Unlock()
 		c.Close()
 	}()
@@ -110,6 +113,15 @@ func (q *quietPort) handle(c net.Conn) {
 		if m := q.mute.Load().(string); m != "" && strings.HasPrefix(cmd, m) {
 			continue
 		}
+		if strings.HasPrefix(cmd, "SETEVENTS") {
+			q.mu.Lock()
+			if strings.Contains(cmd, "HS_DESC") {
+				q.hs[c] = true
+			} else {
+				delete(q.hs, c)
+			}
+			q.mu.Unlock()
+		}
 		switch {
 		case strings.HasPrefix(cmd, "PROTOCOLINFO"):
 			fmt.Fprint(c, "250-PROTOCOLINFO 1\r\n250-AUTH METHODS=NULL\r\n250-VERSION Tor=\"0.4.9.15\"\r\n250 OK\r\n")
@@ -131,6 +143,17 @@ func (q *quietPort) services() (adds, live int) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	return q.adds, len(q.held)
+}
+
+// tor says it uploaded addr's descriptor, to every HS_DESC subscriber.
+// how many heard it
+func (q *quietPort) uploaded(addr string) int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	for c := range q.hs {
+		fmt.Fprintf(c, "650 HS_DESC UPLOADED %s UNKNOWN $AAAA\r\n", addr)
+	}
+	return len(q.hs)
 }
 
 func (q *quietPort) saw(prefix string) int {
@@ -397,5 +420,61 @@ func TestAQuietWakeHoldsNoStart(t *testing.T) {
 	}
 	if *calls != 1 {
 		t.Fatalf("tor started %d times", *calls)
+	}
+}
+
+// the HS_DESC subscription of a start ran out, or its event connection went
+// later (a SETEVENTS that ran out elsewhere closes it): the watch subscribes
+// again and the onion that is up turns reachable
+func TestAQuietSubscriptionIsMadeAgain(t *testing.T) {
+	setCtrlDeadline(t, 200*time.Millisecond)
+	old := hsdirWait
+	hsdirWait = 300 * time.Millisecond
+	t.Cleanup(func() { hsdirWait = old })
+	q := newQuietPort(t, "")
+	n := fakeTor(t, q.port())
+	t.Cleanup(eventReset)
+	onion := strings.Repeat("r", 56)
+	for _, later := range []bool{false, true} {
+		publishedForTest(t)
+		statusForTest(t, "publishing")
+		eventReset()
+		if later {
+			q.speak()
+		} else {
+			q.speakBut("SETEVENTS")
+		}
+		hsCh, subbed := listenForUploads(n)
+		if subbed != later {
+			t.Fatalf("later %v: subscribed %v", later, subbed)
+		}
+		if !later {
+			q.speak()
+		}
+		done := make(chan struct{})
+		go func() { watchPublishedOn(n, hsCh, subbed, onion); close(done) }()
+		if later {
+			// mid-watch the shared connection goes, as an observer's
+			// timeout drops it
+			time.Sleep(100 * time.Millisecond)
+			eventReset()
+		}
+		// the watch unsubscribes as it ends, so the upload is said until
+		// someone heard it
+		heard := false
+		waitFor(t, "a subscription that hears", 5*time.Second, func() bool {
+			if !heard {
+				heard = q.uploaded(onion) > 0
+			}
+			return heard && torStatusNow() == "reachable"
+		})
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			t.Fatal("the watch never ended")
+		}
+		if _, known := uploadSubs.Load(hsCh); known {
+			t.Fatalf("later %v: the subscription outlived its watch", later)
+		}
 	}
 }

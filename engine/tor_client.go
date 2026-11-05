@@ -93,7 +93,7 @@ func dropOnion() string {
 	err := onionDel(t, id)
 	// tor saying no means it holds no such service: nothing is published
 	if err != nil && !torRefused(err) {
-		log.Printf("halo: the onion stays up until tor answers: %v", err)
+		log.Printf("halo: the onion went with its connection: %v", err)
 		return "error: " + err.Error()
 	}
 	mu.Lock()
