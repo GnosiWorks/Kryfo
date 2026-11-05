@@ -10549,6 +10549,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Windows вимкнув Kryfo в застосунках автозавантаження. Увімкни його там: Параметри, Застосунки, Автозавантаження.';
 
   @override
+  String get desktopMicBlocked =>
+      'Kryfo зможе записувати, коли Windows дозволить класичним застосункам доступ до мікрофона: Параметри, Конфіденційність і захист, Мікрофон.';
+
+  @override
+  String get desktopMicNone => 'Підключи мікрофон, щоб записати голосове.';
+
+  @override
   String get desktopNoCamera =>
       'Kryfo поки не може користуватися камерою на цьому комп’ютері. Скористайтеся посиланням або кодом.';
 

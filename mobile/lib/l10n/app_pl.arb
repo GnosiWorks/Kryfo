@@ -2731,6 +2731,8 @@
   "desktopStartHint": "Kryfo uruchamia się w zasobniku, gdy logujesz się na tym komputerze.",
   "desktopStartRefused": "Ten komputer nie pozwolił Kryfo uruchamiać się razem z nim. Kryfo otworzy się, gdy je uruchomisz.",
   "desktopStartHeldOff": "Windows ma Kryfo wyłączone w aplikacjach autostartu. Włącz je tam: Ustawienia, Aplikacje, Uruchamianie.",
+  "desktopMicBlocked": "Kryfo może nagrywać, gdy Windows pozwoli aplikacjom klasycznym używać mikrofonu: Ustawienia, Prywatność i zabezpieczenia, Mikrofon.",
+  "desktopMicNone": "Podłącz mikrofon, aby nagrać wiadomość głosową.",
   "desktopNoCamera": "Kryfo nie może jeszcze używać kamery na tym komputerze. Użyj zamiast tego linku albo kodu.",
   "desktopAlreadyOpen": "Kryfo jest już otwarte na tym komputerze.",
   "desktopFolderNotYours": "Folder Kryfo należy do innego konta na tym komputerze, więc Kryfo go nie otworzy.",

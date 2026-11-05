@@ -2731,6 +2731,8 @@
   "desktopStartHint": "Kryfo startet im Infobereich, wenn du dich an diesem Computer anmeldest.",
   "desktopStartRefused": "Dieser Computer lässt Kryfo nicht mitstarten. Kryfo öffnet sich, wann immer du es selbst startest.",
   "desktopStartHeldOff": "Windows hat Kryfo in den Autostart-Apps ausgeschaltet. Schalte es dort ein, unter Einstellungen, Apps, Autostart.",
+  "desktopMicBlocked": "Kryfo kann aufnehmen, sobald Windows Desktop-Apps das Mikrofon nutzen lässt, unter Einstellungen, Datenschutz und Sicherheit, Mikrofon.",
+  "desktopMicNone": "Schließe ein Mikrofon an, um eine Sprachnachricht aufzunehmen.",
   "desktopNoCamera": "Kryfo kann auf diesem Computer noch keine Kamera nutzen. Nimm stattdessen den Link oder den Code.",
   "desktopAlreadyOpen": "Kryfo ist auf diesem Computer schon geöffnet.",
   "desktopFolderNotYours": "Der Kryfo-Ordner gehört einem anderen Konto auf diesem Computer, deshalb öffnet Kryfo ihn nicht.",

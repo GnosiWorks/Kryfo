@@ -2731,6 +2731,8 @@
   "desktopStartHint": "登入這台電腦時，Kryfo 會在系統匣中啟動。",
   "desktopStartRefused": "這台電腦不允許 Kryfo 隨它啟動。你自己啟動時，Kryfo 照常開啟。",
   "desktopStartHeldOff": "Windows 在啟動應用程式中關閉了 Kryfo。請到設定、應用程式、啟動中開啟它。",
+  "desktopMicBlocked": "在設定、隱私權與安全性、麥克風中允許桌面應用程式使用麥克風後，Kryfo 即可錄音。",
+  "desktopMicNone": "連接麥克風即可錄製語音。",
   "desktopNoCamera": "Kryfo 暫時還不能在這台電腦上使用相機。請改用連結或代碼。",
   "desktopAlreadyOpen": "Kryfo 已經在這台電腦上開啟了。",
   "desktopFolderNotYours": "Kryfo 的資料夾屬於這台電腦上的另一個帳戶，所以 Kryfo 不會開啟它。",

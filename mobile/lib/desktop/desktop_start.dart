@@ -16,6 +16,8 @@ import 'package:flutter_local_notifications_platform_interface/flutter_local_not
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:path/path.dart' as p;
+import 'package:record_platform_interface/record_platform_interface.dart'
+    show RecordPlatform;
 import 'package:path_provider_linux/path_provider_linux.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences_linux/shared_preferences_linux.dart'
@@ -50,6 +52,8 @@ import 'sealed_native.dart' show nativeFilesSealed, sweepNativeCopies;
 import 'seal_windows.dart';
 import 'sealed_setup.dart';
 import 'system_seal.dart';
+import 'win_audio.dart';
+import 'win_record.dart';
 
 /// the binding whose messenger answers the android channels
 class DesktopBinding extends WidgetsFlutterBinding {
@@ -308,6 +312,15 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   if (Platform.isWindows) {
     FlutterLocalNotificationsPlatform.instance = QuietWindowsNotifications(
       raise: showWindow,
+    );
+    // voice notes through the runner's wasapi: the mic written through the
+    // seal as it comes, a note played from memory
+    final audio = await WinAudioCalls.fetch();
+    RecordPlatform.instance = WinRecord(audio?.mic);
+    JustAudioPlatform.instance = DesktopAudio(
+      pipe: () => audio == null
+          ? throw StateError('no audio calls here')
+          : WasapiPipe(audio.speaker()),
     );
   }
   CameraPlatform.instance = NoCameras();

@@ -2731,6 +2731,8 @@
   "desktopStartHint": "Kryfo si avvia nell'area di notifica quando accedi a questo computer.",
   "desktopStartRefused": "Questo computer non ha permesso a Kryfo di avviarsi con lui. Kryfo si apre ogni volta che lo avvii tu.",
   "desktopStartHeldOff": "Windows ha disattivato Kryfo nelle app di avvio. Attivalo lì, in Impostazioni, App, Avvio.",
+  "desktopMicBlocked": "Kryfo può registrare quando Windows consente alle app desktop di usare il microfono, in Impostazioni, Privacy e sicurezza, Microfono.",
+  "desktopMicNone": "Collega un microfono per registrare una nota vocale.",
   "desktopNoCamera": "Kryfo non può ancora usare una fotocamera su questo computer. Usa il link o il codice.",
   "desktopAlreadyOpen": "Kryfo è già aperto su questo computer.",
   "desktopFolderNotYours": "La cartella di Kryfo appartiene a un altro account di questo computer, quindi Kryfo non la apre.",

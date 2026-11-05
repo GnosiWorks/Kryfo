@@ -12982,6 +12982,14 @@
   "@desktopStartHeldOff": {
     "description": "windows: kryfo is listed but switched off in the startup apps of windows settings or task manager"
   },
+  "desktopMicBlocked": "Kryfo can record once Windows lets desktop apps use the microphone, in Settings, Privacy and security, Microphone.",
+  "@desktopMicBlocked": {
+    "description": "windows: the mic did not open because windows' privacy settings keep desktop apps from it"
+  },
+  "desktopMicNone": "Connect a microphone to record a voice note.",
+  "@desktopMicNone": {
+    "description": "windows: no microphone is connected, or it went away"
+  },
   "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
   "@desktopNoCamera": {
     "description": "screens/scan_screen.dart, screens/camera_screen.dart: on desktop, where the phone would open its camera"
