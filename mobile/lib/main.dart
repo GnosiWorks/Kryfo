@@ -20,6 +20,7 @@ import 'devices/history_open.dart' show endHistoryCopies;
 import 'devices/link_calls.dart' show EngineLinkCalls;
 import 'devices/link_flow.dart';
 import 'devices/own_device_store.dart';
+import 'devices/own_gone.dart';
 import 'devices/own_sync.dart';
 import 'devices/own_unlink.dart';
 import 'devices/linked_lock.dart';

@@ -50,6 +50,8 @@ void _bootOwnSync(DeviceState ds, DeviceSend send, DeviceReceive recv) {
         limit: 1,
       );
       if (r.isNotEmpty) _ownPhoneId = r.first['v'] as String?;
+      // whether the vault keeps what went too, before its first delete
+      await _ownGoneOn(await live.open(), live.container);
       await _madeApp?._ownPass();
     } catch (e) {
       dlog('own: not started (${e.runtimeType})');
@@ -411,6 +413,27 @@ Future<bool> _ownFrameStill(String groupId, String frame) async {
   return false;
 }
 
+// whether [uid] in [sender]'s chat, or in [group], went here or on another
+// device of mine before it came: a contact's frame of it shows no more
+Future<bool> _ownGoneFrom(
+  HaloDb db,
+  String sender,
+  String? group,
+  String uid,
+) async {
+  if (!linkedDevicesOn) return false;
+  try {
+    final chat = group != null
+        ? (id: group, group: true)
+        : (id: sender, group: false);
+    return (await ownGoneOf(await db.open(), ownChatName(chat), [
+      uid,
+    ], now: DateTime.now().millisecondsSinceEpoch)).gone;
+  } catch (_) {
+    return false;
+  }
+}
+
 extension AppStateOwn on AppState {
   // a frame of mine to [peer] from a linked device: on its device sessions
   // or not at all
@@ -476,7 +499,10 @@ extension AppStateOwn on AppState {
     // a group frame names its group, a 1:1 one none
     if (chat.group != (env.groupId != null)) return false;
     if (chat.group && env.groupId != chat.id) return false;
-    final took = await _fileOwnFrame(chat, env);
+    // one that went here comes back no more; the members it is owed still
+    // get it from the phone
+    final gone = await _ownGoneOf(chat, frame, written: env.writtenAt);
+    final took = !gone.gone && await _fileOwnFrame(chat, env, gone.burnAt);
     if (chat.group && notReached.isNotEmpty && !linkedRole) {
       await _passGroupOn(chat.id, frame, notReached);
     }
@@ -492,7 +518,11 @@ extension AppStateOwn on AppState {
     return took;
   }
 
-  Future<bool> _fileOwnFrame(OwnChat chat, UnwrappedMessage env) async {
+  Future<bool> _fileOwnFrame(
+    OwnChat chat,
+    UnwrappedMessage env,
+    int? burnAt,
+  ) async {
     final db = live;
     final group = chat.group ? chat.id : null;
     // whether uid is a row of mine in this chat
@@ -532,8 +562,9 @@ extension AppStateOwn on AppState {
     }
     final un = env.unsend;
     if (un != null) {
+      // one not here yet stays out when its copy comes
+      await _ownGoneUid(chat, un);
       if (!await mine(un)) return false;
-      await _ownGoneUid(un);
       await db.deleteMessage(un);
       unawaited(_io.unnotifyMessage(un));
       return true;
@@ -583,18 +614,35 @@ extension AppStateOwn on AppState {
       );
       return true;
     }
-    return _fileOwnMessage(chat, env);
+    return _fileOwnMessage(chat, env, burnAt);
   }
 
   // a message of mine: text, a sticker, a poll, a picture or a file whole
-  // or in slices. one already here, or deleted here, is not filed again
-  Future<bool> _fileOwnMessage(OwnChat chat, UnwrappedMessage env) async {
+  // or in slices. one already here is not filed again, nor one whose time
+  // ran out. [burnAt]: when my other device burns it
+  Future<bool> _fileOwnMessage(
+    OwnChat chat,
+    UnwrappedMessage env,
+    int? burnAt,
+  ) async {
     final db = live;
     final group = chat.group ? chat.id : null;
     final sliced = AppState._sliced(env);
     final uid = sliced ? env.mediaId : env.msgUid;
     if (uid == null) return false;
-    if (await db.messageExists(uid) || await _ownGoneHas(uid)) return false;
+    if (await db.messageExists(uid)) return false;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final written = env.writtenAt != null && env.writtenAt! <= now
+        ? env.writtenAt!
+        : now;
+    final secs = (env.burnSeconds ?? 0) > 0 ? env.burnSeconds : null;
+    var burns = secs == null ? null : written + secs * 1000;
+    if (burns != null && burnAt != null && burnAt < burns) burns = burnAt;
+    // its time ran out on my other devices as well
+    if (burns != null && burns <= now) {
+      if (sliced) await db.dropMediaChunks(uid);
+      return false;
+    }
     final got = await _ownMediaIn(env, uid, group: group);
     if (got == null) return false;
     final (:mediaPath, :filePath, :unsaved) = got;
@@ -622,11 +670,6 @@ extension AppStateOwn on AppState {
         env.poll == null) {
       return false;
     }
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final written = env.writtenAt != null && env.writtenAt! <= now
-        ? env.writtenAt!
-        : now;
-    final secs = (env.burnSeconds ?? 0) > 0 ? env.burnSeconds : null;
     await db.saveMessage(
       group == null ? chat.id : sessionId,
       'out',
@@ -635,7 +678,7 @@ extension AppStateOwn on AppState {
       burnSecs: secs,
       // a timed one of mine counts from when it went, as on the device
       // that sent it
-      burnAt: secs == null ? null : written + secs * 1000,
+      burnAt: burns,
       msgUid: uid,
       replyTo: env.replyTo,
       groupId: group,
@@ -801,6 +844,12 @@ extension AppStateOwn on AppState {
       // a chat forgotten here (a hide on the phone) takes nothing
       return false;
     }
+    // what went here or on my phone before this came stays out
+    final chat = env.groupId != null
+        ? (id: env.groupId!, group: true)
+        : (id: sender, group: false);
+    final gone = await _ownGoneOf(chat, frame, written: came);
+    if (gone.gone) return false;
     final to = await _applyIncomingPayload(
       sender,
       env,
@@ -808,6 +857,16 @@ extension AppStateOwn on AppState {
       fromDevice: true,
       arrivedAt: came,
     );
+    final burnAt = gone.burnAt;
+    final uid = AppState._sliced(env) ? env.mediaId : env.msgUid;
+    if (burnAt != null && uid != null) {
+      // its clock started on my phone: it burns here no later
+      await (await live.open()).rawUpdate(
+        'UPDATE messages SET burn_at = ? WHERE msg_uid = ? AND '
+        'burn_secs IS NOT NULL AND (burn_at IS NULL OR burn_at > ?)',
+        [burnAt, uid, burnAt],
+      );
+    }
     if (AppState._shown(to)) notifyListeners();
     return AppState._shown(to);
   }
@@ -978,7 +1037,20 @@ extension AppStateOwn on AppState {
         final d = await live.open();
         for (final e in b.entries.take(kOwnUidsMost)) {
           if (e.key is! String || e.value is! int) continue;
-          if (!await _ownInChat(chat, e.key as String)) continue;
+          if (!await _ownInChat(chat, e.key as String)) {
+            // one not here yet burns when it would have, once it comes
+            final k = e.key as String;
+            if (k.isNotEmpty && k.length <= 128) {
+              await ownGoneBurns(
+                d,
+                ownChatName(chat),
+                k,
+                e.value as int,
+                now: _clockMs(),
+              );
+            }
+            continue;
+          }
           await d.rawUpdate(
             'UPDATE messages SET burn_at = ? WHERE msg_uid = ? AND '
             'burn_secs IS NOT NULL AND (burn_at IS NULL OR burn_at > ?)',
@@ -987,20 +1059,20 @@ extension AppStateOwn on AppState {
         }
         return true;
       case 'del':
-        if (!shared) return false;
+        if (!shared && !_ownGoneKept(chat, known)) return false;
         final u = a['u'];
         if (u is! List) return false;
         var any = false;
         for (final x in u.take(kOwnUidsMost)) {
-          if (x is! String) continue;
+          if (x is! String || x.isEmpty || x.length > 128) continue;
+          // one not here yet stays out when its copy comes
+          await _ownGoneUid(chat, x);
           // a note whose file is still on its way: it stops and stays out
           if (isOwnNotes(chat) && await _noteFetchGone(x)) {
-            await _ownGoneUid(x);
             any = true;
             continue;
           }
-          if (!await _ownInChat(chat, x)) continue;
-          await _ownGoneUid(x);
+          if (!shared || !await _ownInChat(chat, x)) continue;
           await live.deleteMessage(x);
           // nothing of a note gone here waits for my other devices
           if (isOwnNotes(chat)) await ownNoteGone(x);
@@ -1014,17 +1086,21 @@ extension AppStateOwn on AppState {
         }
         return any;
       case 'clear':
-        if (!shared) return false;
         final t = a['t'];
         if (t is! int) return false;
-        await _ownClear(chat, t);
+        if (!shared && !_ownGoneKept(chat, known)) return false;
+        await ownGoneMadeAt(t, () async {
+          if (shared) await _ownClear(chat, t);
+          // what was written before it stays out when it comes late
+          await _ownGoneAllOf(chat);
+        });
         return true;
       case 'contact':
         if (chat.group) return false;
         return _ownContact(chat.id, a['r'], shared: known);
       case 'gone':
         if (chat.group) return false;
-        return _ownGone(chat.id);
+        return ownGoneMadeAt(_ownMadeAt(a), () => _ownGone(chat.id));
       case 'group':
         if (!chat.group || !linkedRole) return false;
         return _ownGroup(chat.id, a);
@@ -1032,7 +1108,7 @@ extension AppStateOwn on AppState {
         if (!chat.group || !linkedRole) return false;
         if (await live.getGroup(chat.id) == null) return false;
         // its notifications leave the shade with it (_dropGroup)
-        await _dropGroup(chat.id, live);
+        await ownGoneMadeAt(_ownMadeAt(a), () => _dropGroup(chat.id, live));
         await _ownMarkPass(chat);
         await refreshGroups();
         return true;
@@ -1369,11 +1445,12 @@ extension AppStateOwn on AppState {
           // only the phone ends a chat on my other devices; a linked
           // device's delete stays on it unless kOwnChatEndsBothWays
           if (!linkedRole || (!chat.group && kOwnChatEndsBothWays)) {
+            // when it went, so a late copy of what it held stays out
             await own.op(
               _ownIdentOf(chat),
               chat.group ? 'ungroup' : 'gone',
               chat,
-              const {},
+              {'t': _clockMs()},
             );
           }
         }
@@ -1427,7 +1504,9 @@ extension AppStateOwn on AppState {
     for (final (chat, ident) in told) {
       if (!gone.contains(ownChatName(chat))) continue;
       try {
-        await own.op(ident, chat.group ? 'ungroup' : 'gone', chat, const {});
+        await own.op(ident, chat.group ? 'ungroup' : 'gone', chat, {
+          't': _clockMs(),
+        });
       } catch (e) {
         dlog('own: a gone not sent (${e.runtimeType})');
       }
@@ -1560,19 +1639,25 @@ extension AppStateOwn on AppState {
 
   // ---- what went here ----
 
-  Future<void> _ownGoneUid(String uid) async {
-    final d = await live.open();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    // a copy later than this would be too late for any gone row as well
-    await d.delete(
-      'own_gone',
-      where: 'at < ?',
-      whereArgs: [now - HaloDb.kGoneFor.inMilliseconds],
-    );
-    await d.insert('own_gone', {
-      'uid': uid,
-      'at': now,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<void> _ownGoneUid(OwnChat chat, String uid) async =>
+      ownGoneNote(await live.open(), ownChatName(chat), [uid], now: _clockMs());
+
+  // everything of [chat] written up to now, or ownGoneMadeAt's time
+  Future<void> _ownGoneAllOf(OwnChat chat) async =>
+      _ownGoneUpTo(await live.open(), live.container, chat);
+
+  // a delete or a clear of a chat this linked device does not hold yet:
+  // kept, so its copies stay out once the chat comes. never on the phone,
+  // where a chat it does not share may be hidden
+  bool _ownGoneKept(OwnChat chat, bool known) =>
+      linkedRole && !known && !isOwnNotes(chat);
+
+  // when another device of mine says it made a chat's end: no later than
+  // now here
+  int _ownMadeAt(Map<String, dynamic> a) {
+    final t = a['t'];
+    final now = _clockMs();
+    return t is int && t > 0 && t < now ? t : now;
   }
 
   // a person a gone chat names no more here: their row and what went of
@@ -1631,16 +1716,20 @@ extension AppStateOwn on AppState {
     });
   }
 
-  Future<bool> _ownGoneHas(String uid) async {
-    final d = await live.open();
-    return (await d.query(
-      'own_gone',
-      columns: ['uid'],
-      where: 'uid = ?',
-      whereArgs: [uid],
-      limit: 1,
-    )).isNotEmpty;
-  }
+  // whether what [frame] carries or speaks of in [chat] went here, and
+  // when my other device burns it. [written]: when it was written (a copy
+  // of mine) or my phone took it (a contact's frame passed on)
+  Future<({bool gone, int? burnAt})> _ownGoneOf(
+    OwnChat chat,
+    String frame, {
+    int? written,
+  }) async => ownGoneOf(
+    await live.open(),
+    ownChatName(chat),
+    frameMessageUids(frame),
+    written: written,
+    now: _clockMs(),
+  );
 }
 
 // what moves with every message, never told as a change

@@ -346,6 +346,12 @@ const _ownRows = {
   'own_held': 'chat = {c}',
 };
 
+// what went of a chat, kept from my devices' late copies (own_gone.dart):
+// it goes with the chat both ways, so none of a hidden one's stays behind
+Map<String, String> _goneOf(ChatRef c) => {
+  'own_gone': c.group ? "chat = 'g:' || ?1" : "chat = 'p:' || ?1",
+};
+
 Map<String, String> _ownOf(ChatRef c) => {
   for (final e in _ownRows.entries)
     e.key: e.value.replaceAll('{c}', c.group ? "'g:' || ?1" : "'p:' || ?1"),
@@ -365,6 +371,7 @@ const _mayLack = {
   'roster_invites',
   'heal_lines',
   'heal_nonces',
+  'own_gone',
   'dev_lists',
   'dev_proven',
   'dev_pq',
@@ -638,7 +645,10 @@ class SqlChatMover implements ChatMover {
       'ORDER BY m.id',
       [c.id],
     );
-    for (final e in (c.group ? _groupRows : _peerRows).entries) {
+    for (final e in {
+      ...(c.group ? _groupRows : _peerRows),
+      ..._goneOf(c),
+    }.entries) {
       await _put(t, e.key, e.value, c, src, dst, from, to);
     }
     if (!c.group) {
@@ -693,6 +703,7 @@ class SqlChatMover implements ChatMover {
     ];
     for (final e in {
       ...(c.group ? _groupRows : _peerRows),
+      ..._goneOf(c),
       if (!c.group) ..._devicesOf,
     }.entries) {
       if (_mayLack.contains(e.key) && (await _cols(t, s, e.key)).isEmpty) {

@@ -301,7 +301,10 @@ extension AppStateNotes on AppState {
     final sliced = AppState._sliced(env);
     final uid = sliced ? env.mediaId : env.msgUid;
     if (uid == null || uid.isEmpty || uid.length > 128) return false;
-    if (await live.messageExists(uid) || await _ownGoneHas(uid)) return false;
+    if (await live.messageExists(uid) ||
+        (await _ownGoneOf(kOwnNotes, frame, written: env.writtenAt)).gone) {
+      return false;
+    }
     // a sticker is a sticker alone, as in a chat
     final sticker = StickerWire.parse(env.sticker);
     if (env.sticker != null) {
@@ -438,7 +441,15 @@ extension AppStateNotes on AppState {
   ) async {
     // the everyday side's alone
     if (!identical(d, live)) return;
-    if (await live.messageExists(f.uid) || await _ownGoneHas(f.uid)) return;
+    if (await live.messageExists(f.uid)) return;
+    final gone = await ownGoneOf(
+      await live.open(),
+      ownChatName(kOwnNotes),
+      [f.uid],
+      written: env.writtenAt,
+      now: DateTime.now().millisecondsSinceEpoch,
+    );
+    if (gone.gone) return;
     final now = await fetchOf(await live.open(), f.uid);
     if (now?.state != kFetchHave) {
       await _keepOwnNote(env, f.uid, unsaved: true);

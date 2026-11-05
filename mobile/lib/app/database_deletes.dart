@@ -76,6 +76,8 @@ mixin _DeleteRows {
       }
       await _noteGone(t, rows);
       await _dropOwnWaiting(t, rows);
+      await _ownGoneRows(t, container, rows);
+      await _ownGoneUpTo(t, container, (id: chatId, group: false));
       await t.delete('messages', where: _kOneToOne, whereArgs: [chatId]);
       // what we undid in it is kept no longer
       await dropTaken(t, peer: chatId);
@@ -100,6 +102,7 @@ mixin _DeleteRows {
     await _unreadGo(db, media);
     await _noteGone(db, media);
     await _dropOwnWaiting(db, media);
+    await _ownGoneRows(db, container, media);
     await db.delete('messages', where: 'msg_uid = ?$only', whereArgs: args);
     // what hangs off the uid goes with its last row
     final left = await db.query(
@@ -325,6 +328,7 @@ mixin _DeleteRows {
     await _unreadGo(db, rows);
     await _noteGone(db, rows, burned: true);
     await _dropOwnWaiting(db, rows);
+    await _ownGoneRows(db, container, rows);
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       if (uid != null) {
@@ -356,6 +360,8 @@ mixin _DeleteRows {
     );
     await _noteGone(db, media);
     await _dropOwnWaiting(db, media);
+    await _ownGoneRows(db, container, media);
+    await _ownGoneUpTo(db, container, (id: peerId, group: false));
     await db.rawDelete(
       'DELETE FROM reactions WHERE msg_uid IN '
       '(SELECT msg_uid FROM messages WHERE $_kOneToOne AND msg_uid IS NOT NULL)',
@@ -381,6 +387,8 @@ mixin _DeleteRows {
     );
     if (noteGone) await _noteGone(db, media);
     await _dropOwnWaiting(db, media);
+    await _ownGoneRows(db, container, media);
+    await _ownGoneUpTo(db, container, (id: groupId, group: true));
     await db.rawDelete(
       'DELETE FROM reactions WHERE msg_uid IN '
       '(SELECT msg_uid FROM messages WHERE group_id = ? AND msg_uid IS NOT NULL)',
@@ -509,6 +517,7 @@ mixin _DeleteRows {
     await _unreadGo(db, media);
     await _noteGone(db, media, burned: true);
     await _dropOwnWaiting(db, media);
+    await _ownGoneRows(db, container, media);
     await db.delete(
       'gone_in',
       where: 'at < ?',
@@ -854,19 +863,7 @@ Future<void> _dropOwnWaiting(
   DatabaseExecutor db,
   Iterable<Map<String, Object?>> rows,
 ) async {
-  final gone = <String, Set<String>>{};
-  for (final r in rows) {
-    final uid = r['msg_uid'];
-    if (uid is! String || uid.isEmpty) continue;
-    final g = r['group_id'];
-    final peer = r['peer_id'];
-    final chat = g is String && g.isNotEmpty
-        ? ownChatName((id: g, group: true))
-        : peer is String && peer.isNotEmpty
-        ? ownChatName((id: peer, group: false))
-        : null;
-    if (chat != null) (gone[chat] ??= {}).add(uid);
-  }
+  final gone = _ownRowChats(rows);
   if (gone.isEmpty) return;
   bool named(String chat, Set<String> uids) {
     final g = gone[chat];
@@ -909,6 +906,100 @@ Future<void> _dropOwnWaiting(
     }
   } catch (e) {
     dlog('own: waiting copies not dropped (${e.runtimeType})');
+  }
+}
+
+// [rows]' uids by the chat own frames name them in
+Map<String, Set<String>> _ownRowChats(
+  Iterable<Map<String, Object?>> rows, {
+  int? from,
+}) {
+  final gone = <String, Set<String>>{};
+  for (final r in rows) {
+    final uid = r['msg_uid'];
+    if (uid is! String || uid.isEmpty) continue;
+    final sent = (r['sent_at'] as num?)?.toInt();
+    if (from != null && sent != null && sent < from) continue;
+    final g = r['group_id'];
+    final peer = r['peer_id'];
+    final chat = g is String && g.isNotEmpty
+        ? ownChatName((id: g, group: true))
+        : peer is String && peer.isNotEmpty
+        ? ownChatName((id: peer, group: false))
+        : null;
+    if (chat != null) (gone[chat] ??= {}).add(uid);
+  }
+  return gone;
+}
+
+// whether a device of mine may still send a copy here: a linked device, a
+// phone with one linked, its vault for what a hide took there. never the
+// decoy, which takes no copies and keeps none of the everyday side's
+bool _ownGoneLinked = false;
+
+Future<bool> _ownGoneOn(DatabaseExecutor db, HaloContainer c) async {
+  if (!linkedDevicesOn || c.quiet) return false;
+  if (linkedRole) return c == HaloContainer.everyday;
+  if (c != HaloContainer.everyday) return _ownGoneLinked;
+  try {
+    _ownGoneLinked = (await db.rawQuery(
+      'SELECT 1 FROM own_devices WHERE removed_at IS NULL LIMIT 1',
+    )).isNotEmpty;
+  } catch (_) {
+    _ownGoneLinked = false;
+  }
+  return _ownGoneLinked;
+}
+
+// what of [rows] went, kept by chat while a copy of it may still come
+// (own_gone.dart). a row filed before kOwnGoneFor had its copies long ago
+Future<void> _ownGoneRows(
+  DatabaseExecutor db,
+  HaloContainer c,
+  Iterable<Map<String, Object?>> rows,
+) async {
+  try {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final by = _ownRowChats(rows, from: now - kOwnGoneFor.inMilliseconds);
+    if (by.isEmpty || !await _ownGoneOn(db, c)) return;
+    for (final e in by.entries) {
+      await ownGoneNote(db, e.key, e.value, now: now);
+    }
+  } catch (e) {
+    dlog('own: what went not kept (${e.runtimeType})');
+  }
+}
+
+// the zone value a clear or a chat's end made on another device of mine
+// runs under (ownGoneMadeAt): when it was made there
+const _kOwnGoneMade = #ownGoneMade;
+
+/// [run] a clear or a chat's end another device of mine made at [t]: what
+/// it writes down as gone counts from then, not from now
+Future<T> ownGoneMadeAt<T>(int t, Future<T> Function() run) =>
+    runZoned(run, zoneValues: {_kOwnGoneMade: t});
+
+// everything of [chat] written up to now (or ownGoneMadeAt's time) went;
+// [ends] when the chat itself went
+Future<void> _ownGoneUpTo(
+  DatabaseExecutor db,
+  HaloContainer c,
+  OwnChat chat, {
+  bool ends = false,
+}) async {
+  try {
+    if (!await _ownGoneOn(db, c)) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final made = Zone.current[_kOwnGoneMade];
+    await ownGoneUpTo(
+      db,
+      ownChatName(chat),
+      made is int && made < now ? made : now,
+      now: now,
+      ends: ends,
+    );
+  } catch (e) {
+    dlog('own: a chat that went not kept (${e.runtimeType})');
   }
 }
 

@@ -111,6 +111,8 @@ mixin _BlockRows {
         ['own_held'],
       )).isNotEmpty) {
         await t.delete('own_held', where: 'sender = ?', whereArgs: [haloId]);
+        // and what of their chat went, by its name
+        await ownGoneDropChat(t, ownChatName((id: haloId, group: false)));
         // on a linked device, the block my phone last told for them
         await t.delete(
           'signal_meta',

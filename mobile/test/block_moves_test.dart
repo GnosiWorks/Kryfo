@@ -712,6 +712,42 @@ void main() {
     }
   }, skip: skip);
 
+  test('what went of a chat, kept from my devices\' late copies, goes into '
+      'the vault with it and back; another chat\'s stays', () async {
+    final db = await _world();
+    for (final s in ['main', 'v']) {
+      await db.execute(
+        'CREATE TABLE $s.own_gone (chat TEXT NOT NULL, uid TEXT NOT NULL, '
+        'at INTEGER NOT NULL, upto INTEGER, PRIMARY KEY (chat, uid))',
+      );
+    }
+    for (final c in ['p:$_f', 'g:$_g', 'p:someone', 'g:other']) {
+      await db.execute("INSERT INTO main.own_gone VALUES ('$c', 'u', 1, NULL)");
+    }
+    await db.execute("INSERT INTO main.own_gone VALUES ('p:$_f', '*', 1, 9)");
+    Future<List<String>> on(String s) async => [
+      for (final r in await db.rawQuery(
+        'SELECT chat, uid FROM $s.own_gone ORDER BY chat, uid',
+      ))
+        '${r['chat']} ${r['uid']}',
+    ];
+    final mover = SqlChatMover(_NoDb(), _NoDb());
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: true);
+    await mover.moveRowsOn(db, group, intoVault: true);
+    expect(await on('main'), ['g:other u', 'p:someone u']);
+    expect(await on('v'), ['g:$_g u', 'p:$_f *', 'p:$_f u']);
+    await mover.moveRowsOn(db, const ChatRef(_f), intoVault: false);
+    await mover.moveRowsOn(db, group, intoVault: false);
+    expect(await on('v'), isEmpty);
+    expect(await on('main'), [
+      'g:$_g u',
+      'g:other u',
+      'p:$_f *',
+      'p:$_f u',
+      'p:someone u',
+    ]);
+  }, skip: skip);
+
   test('a chat into the vault takes my own frames of it still waiting '
       'unsealed for my devices out of the everyday side; sealed ones and '
       'other chats\' stay', () async {
