@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a windows toast says what the preview setting gave the post, never what a
 // click opens
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_mode.dart' show deskSound;
@@ -77,5 +79,105 @@ void main() {
     expect(click(first).payload, isNull);
     expect(click('chat:abc').payload, isNull);
     expect(click(null).payload, isNull);
+  });
+
+  group('the windows session lock', () {
+    late ValueNotifier<bool> locked;
+    late int clears;
+    late ToastLock lock;
+    setUp(() {
+      locked = ValueNotifier(false);
+      clears = 0;
+      lock = ToastLock(locked, () async => clears++);
+    });
+    tearDown(() => lock.dispose());
+
+    test('locked, every named toast is kryfo and new message', () {
+      expect(lock.words('Wren', 'meet at the gate'), (
+        'Wren',
+        'meet at the gate',
+      ));
+      locked.value = true;
+      expect(lock.words('Wren', 'meet at the gate'), (
+        'Kryfo',
+        l10n.notificationsNewMessage,
+      ));
+      expect(lock.words('Wren', null), ('Kryfo', l10n.notificationsNewMessage));
+      // a plain post keeps its own neutral line
+      expect(lock.words(null, 'meet at the gate'), (null, l10n.notifPlainLine));
+      locked.value = false;
+      expect(lock.words('Wren', 'meet at the gate'), (
+        'Wren',
+        'meet at the gate',
+      ));
+    });
+
+    test('the lock clears toasts that may hold text', () async {
+      // a run before may have left some
+      locked.value = true;
+      await Future<void>.delayed(Duration.zero);
+      expect(clears, 1);
+      locked.value = false;
+      lock.words('Kryfo', l10n.notificationsNewMessage);
+      lock.words(null, 'meet at the gate');
+      locked.value = true;
+      await Future<void>.delayed(Duration.zero);
+      expect(clears, 1, reason: 'only neutral toasts since the last clear');
+      locked.value = false;
+      lock.words('Wren', 'meet at the gate');
+      locked.value = true;
+      await Future<void>.delayed(Duration.zero);
+      expect(clears, 2);
+      // unlocking clears nothing
+      locked.value = false;
+      await Future<void>.delayed(Duration.zero);
+      expect(clears, 2);
+    });
+
+    test('a clear that fails is let go', () async {
+      final l = ToastLock(locked, () async => throw StateError('not ready'));
+      addTearDown(l.dispose);
+      locked.value = true;
+      await Future<void>.delayed(Duration.zero);
+      expect(l.words('Wren', 'hi'), ('Kryfo', l10n.notificationsNewMessage));
+    });
+
+    test('the runner\'s answer and events set the lock', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      const ch = MethodChannel('kryfo/desktop');
+      final m =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      addTearDown(() {
+        m.setMockMethodCallHandler(ch, null);
+        sessionLocked.value = true;
+      });
+      expect(sessionLocked.value, isTrue, reason: 'locked until told');
+      Object? answer = false;
+      m.setMockMethodCallHandler(ch, (call) async {
+        expect(call.method, 'sessionLocked');
+        return answer;
+      });
+      await readSessionLock(ch);
+      expect(sessionLocked.value, isFalse);
+      answer = true;
+      await readSessionLock(ch);
+      expect(sessionLocked.value, isTrue);
+      // no answer: as it was
+      sessionLocked.value = true;
+      answer = null;
+      await readSessionLock(ch);
+      expect(sessionLocked.value, isTrue);
+      m.setMockMethodCallHandler(ch, (call) async {
+        throw PlatformException(code: 'none');
+      });
+      await readSessionLock(ch);
+      expect(sessionLocked.value, isTrue);
+      heardSessionLock(false);
+      expect(sessionLocked.value, isFalse);
+      heardSessionLock(true);
+      expect(sessionLocked.value, isTrue);
+      heardSessionLock(null);
+      expect(sessionLocked.value, isTrue);
+    });
   });
 }
