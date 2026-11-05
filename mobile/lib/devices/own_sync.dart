@@ -19,6 +19,7 @@ import '../device_sessions.dart' show kOwnDevices;
 import '../message_envelope.dart' show kEnvelopePrefix;
 import 'device_send.dart';
 import 'device_state.dart';
+import 'own_device_store.dart' show ownPhoneFresh;
 
 /// the own words
 const kOwnWords = {'oc', 'os', 'of', 'ob'};
@@ -182,10 +183,12 @@ class OwnSync {
     } on DevRefused {
       return const [];
     }
+    // a linked device that has not heard its phone lately: the phone alone
+    final fresh = m.device == 1 || await ownPhoneFresh(await db(), _clock());
     return [
       for (final e in (j['devices'] as List? ?? const []))
         if (e is Map && e['id'] is int && e['key'] is String)
-          if (e['id'] != m.device)
+          if (e['id'] != m.device && (fresh || e['id'] == 1))
             (
               id: e['id'] as int,
               key: e['key'] as String,

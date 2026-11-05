@@ -15,6 +15,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'invites.dart' show bundleBlock, unixHours;
 import 'signal_ffi/kryfo_signal.dart';
 import 'signal_session.dart';
+import 'devices/device_receive.dart' show kStaleList;
 import 'devices/own_unlink.dart' show kRestoreListOwedMeta;
 
 /// the wire's word for a heal, beside the json heal's 'bundle'
@@ -60,8 +61,11 @@ const kRestoreCutPref = 'restore.cut';
 /// rows and keys, their pool, copies, pushes, asks and marks go. a device in
 /// the backup may have been removed since, so each is linked again. what
 /// is kept: my own lists (the next start signs each above, naming the phone
-/// alone: kRestoreListOwedMeta), the contacts' lists, proofs and pq marks,
-/// which only ever make this phone stricter. the registration id stays
+/// alone: kRestoreListOwedMeta), the contacts' proofs and pq marks, which
+/// only ever make this phone stricter, and their lists as the floor a list
+/// must reach: a list of theirs may name a device they removed since, so
+/// each is marked stale (kStaleList) and only their phone is let in until
+/// their phone sends it again. the registration id stays
 Future<void> restoreCutsLinkedDevices(DatabaseExecutor db) async {
   final have = {
     for (final r in await db.rawQuery(
@@ -92,7 +96,24 @@ Future<void> restoreCutsLinkedDevices(DatabaseExecutor db) async {
   ]) {
     if (have.contains(t)) await db.delete(t);
   }
-  if (!have.contains('dev_lists') || !have.contains('signal_meta')) return;
+  if (!have.contains('dev_lists')) return;
+  if (have.contains('dev_marks')) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final r in await db.query(
+      'dev_lists',
+      columns: ['ident', 'owner'],
+      where: "owner != 'me'",
+    )) {
+      await db.insert('dev_marks', {
+        'ident': r['ident'],
+        'peer': r['owner'],
+        'kind': kStaleList,
+        'key': '',
+        'at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+  if (!have.contains('signal_meta')) return;
   final mine = await db.query(
     'dev_lists',
     columns: ['ident'],

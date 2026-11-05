@@ -121,6 +121,13 @@ class _PhoneLinkApp implements PhoneLinkHooks {
     final bind = t.bind;
     try {
       await db.transaction((tx) async {
+        // a last word still owed to a device removed under this id goes:
+        // it would go to the new device's pair with the old seed
+        await tx.delete(
+          'dev_farewell',
+          where: 'ident = ? AND device = ?',
+          whereArgs: [kMainIdent, t.device],
+        );
         await ds.ownMine(tx, kMainIdent, t.list);
         await ds.call(tx, 'pool_put', {
           'ident': kMainIdent,
@@ -162,6 +169,12 @@ class _PhoneLinkApp implements PhoneLinkHooks {
       rethrow;
     }
     await readLinkNotices(db);
+    // the engine's leaving keys as the rows are now
+    try {
+      await _deviceSend?.leaving(kMainIdent);
+    } catch (e) {
+      dlog('devices: leaving keys not set (${e.runtimeType})');
+    }
     // the history copy for the new device, made and served from here
     if (bind != null) startPhoneHistoryCopy(uid);
     // the contacts who read lists learn of the new device, spread out

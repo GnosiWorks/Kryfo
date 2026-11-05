@@ -235,21 +235,92 @@ Future<void> markOwnDevicesLeft(DatabaseExecutor db, List<String> uids) async {
   }
 }
 
-/// which of [uids] said they unlinked themselves and wait for it
-Future<List<String>> ownDevicesLeft(
+/// devices [uids] are being removed for [why]: owed until every step of
+/// it went (own_unlink.dart), so a kill midway is finished at the next
+/// start. one that said it unlinked itself keeps that
+Future<void> markOwnDevicesOwed(
+  DatabaseExecutor db,
+  Iterable<String> uids, {
+  required String why,
+}) async {
+  for (final uid in uids) {
+    await db.rawUpdate(
+      'UPDATE own_devices SET gone_why = COALESCE(gone_why, ?) '
+      'WHERE uid = ? AND removed_at IS NULL',
+      [why, uid],
+    );
+  }
+}
+
+/// why each of [uids] is owed a removal, for those that are
+Future<Map<String, String>> ownDevicesOwed(
   DatabaseExecutor db,
   List<String> uids,
-) async => [
+) async => {
   for (final r in await db.query(
     'own_devices',
-    columns: ['uid'],
+    columns: ['uid', 'gone_why'],
     where:
-        "removed_at IS NULL AND gone_why = 'itself' AND "
+        'removed_at IS NULL AND gone_why IS NOT NULL AND '
         'uid IN (${List.filled(uids.length, '?').join(',')})',
     whereArgs: uids,
   ))
-    r['uid'] as String,
-];
+    r['uid'] as String: r['gone_why'] as String,
+};
+
+/// a linked device: when it last heard its phone on their own session,
+/// and its time in touch with a relay since (own_unlink.dart's clock)
+const kPhoneHeardMeta = 'own_phone_heard';
+const kPhoneQuietMeta = 'own_phone_quiet';
+
+/// a linked device copies what it sends to my other devices only while
+/// its phone was heard this recently: one whose list may have moved since
+/// (a device removed meanwhile) sends to the phone alone until it hears
+/// it again. the relays keep a wrap this long, and the phone sends its
+/// list again every few days until it is answered
+const kOwnPhoneFresh = Duration(days: 14);
+
+/// a linked device heard its phone at [at]
+Future<void> ownPhoneHeard(DatabaseExecutor db, int at) async {
+  await putDevMeta(db, kPhoneHeardMeta, '$at');
+  await putDevMeta(db, kPhoneQuietMeta, '0');
+}
+
+/// whether a linked device heard its phone within [kOwnPhoneFresh] of [now]
+Future<bool> ownPhoneFresh(DatabaseExecutor db, int now) async {
+  final at = int.tryParse(await devMeta(db, kPhoneHeardMeta) ?? '');
+  return at != null && at <= now && now - at <= kOwnPhoneFresh.inMilliseconds;
+}
+
+/// a linked device was in touch with a relay [ms] more without a word from
+/// its phone: the time so far
+Future<int> addOwnPhoneQuiet(DatabaseExecutor db, int ms) async {
+  final was = int.tryParse(await devMeta(db, kPhoneQuietMeta) ?? '') ?? 0;
+  final now = was + ms;
+  if (ms > 0) await putDevMeta(db, kPhoneQuietMeta, '$now');
+  return now;
+}
+
+/// a value of the device state's own in signal_meta
+Future<String?> devMeta(DatabaseExecutor db, String k) async {
+  final r = await db.query(
+    'signal_meta',
+    columns: ['v'],
+    where: 'k = ?',
+    whereArgs: [k],
+    limit: 1,
+  );
+  return r.isEmpty ? null : r.first['v'] as String?;
+}
+
+Future<void> putDevMeta(DatabaseExecutor db, String k, String v) => db.insert(
+  'signal_meta',
+  {'k': k, 'v': v},
+  conflictAlgorithm: ConflictAlgorithm.replace,
+);
+
+Future<void> dropDevMeta(DatabaseExecutor db, String k) =>
+    db.delete('signal_meta', where: 'k = ?', whereArgs: [k]);
 
 /// the phone was online [ms] more: each device's time since its last word
 /// grows by that
@@ -310,6 +381,8 @@ Future<void> joinedRows(
     'k': kLinkStreamMeta,
     'v': base64Encode(stream),
   }, conflictAlgorithm: ConflictAlgorithm.replace);
+  // the phone was just heard: the link came from it
+  await ownPhoneHeard(tx, DateTime.now().millisecondsSinceEpoch);
   // where the history copy comes from, and the link it is bound to
   if (bind != null && onion != null) {
     await tx.insert('signal_meta', {

@@ -13,6 +13,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devices/device_receive.dart';
+import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
 import 'package:kryfo/devices/device_store.dart' show deviceTables;
 import 'package:kryfo/main.dart'
@@ -84,6 +85,14 @@ class _Eng implements DeviceEngine {
 
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+class _NoWire implements DeviceWire {
+  @override
+  Future<String> send(int ident, String arg, String cipher) async => 'down';
+  @override
+  Future<String> sendOpener(int ident, String arg, String cipher) async =>
+      'down';
 }
 
 // rows a test reads as sql: open() is the in-memory database
@@ -344,51 +353,131 @@ void main() {
       expect(store.inbox, hasLength(1));
     });
 
-    test(
-      'a removal from my list goes at once to their phone while the vault '
-      'is shut, again until it went; an addition waits for the open',
-      () async {
-        final list = base64Encode([
-          ...List.filled(37, 1),
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          8,
-          ...List.filled(60, 2),
-        ]);
-        deviceStateForTest(DeviceState(_Eng((op, _) => {'list': list})));
-        final sent = <(int, String, String, String)>[];
-        var ok = false;
-        hiddenPhoneSendForTest = (ident, peer, identity, frame) async {
-          sent.add((ident, peer, identity, frame));
-          return ok;
-        };
-        app.hiddenListsChangedForTest([
-          (ident: 0, version: 8, added: [4], removed: false),
-        ]);
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-        expect(sent, isEmpty);
-        app.hiddenListsChangedForTest([
-          (ident: 0, version: 8, added: const [], removed: true),
-        ]);
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-        expect(sent, hasLength(1));
-        final (ident, peer, identity, frame) = sent.single;
-        expect((ident, peer, identity), (0, _h, '05$_x'));
-        final j = jsonDecode(frame.substring('halo/1:'.length)) as Map;
-        expect(j, {'u': 'dl:8', 'dl': list});
-        // it did not go: the next pump tries it again, then no more
-        ok = true;
-        await app.pushHiddenRemovalsForTest();
-        expect(sent, hasLength(2));
-        await app.pushHiddenRemovalsForTest();
-        expect(sent, hasLength(2));
-      },
-    );
+    test('a removal owed to hidden chats is kept with no names: it goes to '
+        'their phone while the vault is shut, again at every start until it '
+        'went, and the vault\'s open queues it as its own push instead of '
+        'letting it go', () async {
+      final everyday = SqliteMem.open();
+      if (everyday == null) {
+        markTestSkipped('no sqlite on this host');
+        return;
+      }
+      await everyday.execute(
+        'CREATE TABLE signal_meta (k TEXT PRIMARY KEY, v TEXT)',
+      );
+      await everyday.execute(
+        'CREATE TABLE contacts (halo_id TEXT, ident INTEGER, ikey TEXT, '
+        'accepted INTEGER, blocked INTEGER DEFAULT 0, caps TEXT)',
+      );
+      await deviceTables(everyday, (db, sql) async {
+        try {
+          await db.execute(sql);
+        } catch (_) {
+          // no identities table here
+        }
+      });
+      final rows = _MemRows(HaloContainer.everyday, everyday)
+        ..person(_v, onion: 'o-$_v', xpub: 'x-$_v');
+      useDatabasesForTest(rows, Session(rows));
+      final list = base64Encode([
+        ...List.filled(37, 1),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        8,
+        ...List.filled(60, 2),
+      ]);
+      final ds = DeviceState(_Eng((op, _) => {'list': list}));
+      deviceStateForTest(ds);
+      final sent = <(int, String, String, String)>[];
+      var ok = false;
+      Future<bool> phoneSend(
+        int ident,
+        String peer,
+        String identity,
+        String frame,
+      ) async {
+        sent.add((ident, peer, identity, frame));
+        return ok;
+      }
+
+      hiddenPhoneSendForTest = phoneSend;
+      // an addition waits for the open: nothing owed
+      await app.hiddenListsChangedForTest([
+        (ident: 0, version: 8, added: [4], removed: false),
+      ]);
+      expect(sent, isEmpty);
+      // the everyday send loop keeps a removal owed in its own write
+      final everydaySend = DeviceSend(
+        state: ds,
+        db: () async => everyday,
+        sessions: (_) async => throw StateError('no sessions here'),
+        wire: _NoWire(),
+        hiddenRemovals: true,
+      );
+      await everydaySend.listsChanged([
+        (ident: 0, version: 8, added: const [], removed: true),
+      ]);
+      expect((await everyday.query('signal_meta')).single, {
+        'k': '${kHiddenRemovalMeta}0',
+        'v': '8',
+      });
+      await app.hiddenListsChangedForTest([
+        (ident: 0, version: 8, added: const [], removed: true),
+      ]);
+      expect(sent, hasLength(1));
+      final (ident, peer, identity, frame) = sent.single;
+      expect((ident, peer, identity), (0, _h, '05$_x'));
+      final j = jsonDecode(frame.substring('halo/1:'.length)) as Map;
+      expect(j, {'u': 'dl:8', 'dl': list});
+      // it did not go: the next pump tries it again, then no more
+      ok = true;
+      await app.pushHiddenRemovalsForTest();
+      expect(sent, hasLength(2));
+      await app.pushHiddenRemovalsForTest();
+      expect(sent, hasLength(2));
+      // a restart: it goes again, still owed
+      hiddenPhoneSendForTest = phoneSend;
+      await app.pushHiddenRemovalsForTest();
+      expect(sent, hasLength(3));
+      // the vault opens: the removal is its own push now, kept there
+      // until their phone answers, and owed no more on the everyday side
+      final vmem = SqliteMem.open()!;
+      await vmem.execute(
+        'CREATE TABLE contacts (halo_id TEXT, ident INTEGER, ikey TEXT, '
+        'accepted INTEGER, blocked INTEGER DEFAULT 0, caps TEXT)',
+      );
+      await deviceTables(vmem, (db, sql) async {
+        try {
+          await db.execute(sql);
+        } catch (_) {
+          // no identities table here
+        }
+      });
+      await vmem.execute(
+        "INSERT INTO contacts VALUES ('$_h', 0, '05$_x', 1, 0, 'dv')",
+      );
+      final vsend = DeviceSend(
+        state: ds,
+        db: () async => vmem,
+        mine: () async => everyday,
+        noOwn: true,
+        sessions: (_) async => throw StateError('no sessions here'),
+        wire: _NoWire(),
+      );
+      vaultDevicesForTest(null, vsend, _MemRows(HaloContainer.vault, vmem));
+      await app.pushHiddenRemovalsForTest();
+      final queued = (await vmem.query('dev_pushes')).single;
+      expect(queued['peer'], '05$_x');
+      expect(queued['kind'], 'remove');
+      expect(queued['version'], 8);
+      expect(await everyday.query('signal_meta'), isEmpty);
+      expect(sent, hasLength(3));
+    });
   });
 
   test('a lock while the vault\'s side starts lets go of what it took in, '

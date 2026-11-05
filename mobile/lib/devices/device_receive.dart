@@ -21,6 +21,7 @@ import '../signal_ffi/kryfo_signal.dart' show kLsPreKey, kLsWhisper;
 import '../wire_pad.dart' show unpad;
 import 'device_send.dart';
 import 'device_state.dart';
+import 'own_device_store.dart' show ownPhoneHeard;
 import 'own_sync.dart';
 
 /// how long an opener from a device not on the list held waits for it
@@ -81,14 +82,29 @@ typedef DevAlarm = ({int ident, String peer, String kind, String key});
 
 /// the device frames: lists, bundles, asks, handbacks, the own frames
 const kDeviceWords = {
-  'as', 'dl', 'db', 'dq', 'dh', 'dw', 'dn', 'dz', 'dk', 'da', 'fl', //
+  'as', 'dl', 'db', 'dq', 'dh', 'dw', 'dn', 'dz', 'dk', 'da', 'dy', 'fl', //
   'oc', 'os', 'of', 'ob', 'hs', 'ou',
 };
 
 /// why a linked device says it unlinked itself ('ou'): not opened for 30
 /// days, its clock set back, its lock state unreadable, or the person
 /// unlinked it there
-const kOwnLeftWhy = {'unused', 'clock', 'broken', 'self'};
+const kOwnLeftWhy = {'unused', 'clock', 'broken', 'self', 'silent'};
+
+/// the dev_marks kind for a contact whose list a restore left: it may name
+/// a device they removed since, so only their phone is let in and copied
+/// to until their phone sends their list again
+const kStaleList = 'stale_list';
+
+/// whether [identity]'s list on my [ident] is one a restore left
+Future<bool> staleList(DatabaseExecutor d, int ident, String identity) async =>
+    (await d.query(
+      'dev_marks',
+      columns: ['at'],
+      where: 'ident = ? AND peer = ? AND kind = ?',
+      whereArgs: [ident, identity, kStaleList],
+      limit: 1,
+    )).isNotEmpty;
 
 // what a device's copy may not say for its contact: its engine's own
 // onion and keys, its caps, a phone's first-contact and restart words
@@ -244,6 +260,15 @@ class DeviceReceive {
         }
       }
       entry = (key: identity, reg: reg);
+    }
+    // a restored phone: a list of theirs from the backup may name a device
+    // they removed since. only their phone is let in until their phone
+    // sends the list again; a device's opener waits for it
+    if (entry != null &&
+        !own &&
+        t.their != 1 &&
+        await staleList(d, t.ident, identity)) {
+      entry = null;
     }
     if (entry == null) {
       if (type == kLsPreKey && !blocked) {
@@ -423,11 +448,32 @@ class DeviceReceive {
         _note('own frame not taken (${e.runtimeType})');
       }
     }
+    // my phone hears my list taken: that device's copy is owed no more
+    final dr = j['dr'];
+    if (m.device == 1 && dr is String && dr.startsWith('dl:')) {
+      await send.receipt(m.ident, identity, t.their, dr);
+    }
+    if (m.device != 1 && t.their == 1) await _phoneHeard();
     final list = j['dl'];
     // a linked device takes its own list from its phone, or a device the
-    // list it holds names; the phone signs its own
+    // list it holds names; the phone signs its own. each is answered, so
+    // the phone sends it no more
     if (list is String && m.device != 1) {
-      await _ownList(d, m, identity, list, remote);
+      if (await _ownList(d, m, identity, list, remote)) {
+        final u = j['u'];
+        if (u is String && u.startsWith('dl:') && u.length <= 32) {
+          await send.toOne(
+            ident: m.ident,
+            identity: identity,
+            device: t.their,
+            addr: kOwnDevices,
+            pin: entry.key,
+            reg: entry.reg,
+            frame: '$kEnvelopePrefix${jsonEncode({'dr': u})}',
+            own: true,
+          );
+        }
+      }
     }
     // the phone's pool: a batch from its own device, its ask checked
     if (m.device == 1 && j['dk'] is int && j['db'] is List) {
@@ -524,7 +570,9 @@ class DeviceReceive {
     }
   }
 
-  Future<void> _ownList(
+  // true when the list was read and this device is still on it (taken,
+  // the one held, or older): answered then
+  Future<bool> _ownList(
     Database d,
     DevMe m,
     String identity,
@@ -547,7 +595,7 @@ class DeviceReceive {
       if (e.why == 'equivocation') {
         await _alarm(d, m.ident, identity, 'equivocation', '');
       }
-      return;
+      return e.why == 'rollback';
     }
     await ownGone(m, identity, _entries(j['gone']));
     // a device of mine this one has no row of: its notice shows here too,
@@ -565,6 +613,17 @@ class DeviceReceive {
       }
     }
     await listenAll(only: identity);
+    return true;
+  }
+
+  // a linked device heard its phone: its copies to my other devices go on,
+  // and its quiet clock starts again
+  Future<void> _phoneHeard() async {
+    try {
+      await ownPhoneHeard(await mine(), _clock());
+    } catch (e) {
+      _note('the phone not noted as heard (${e.runtimeType})');
+    }
   }
 
   /// my own devices [gone] from my list of my identity: their sessions,
@@ -703,12 +762,34 @@ class DeviceReceive {
   ) async {
     final list = j['dl'];
     if (list is String) {
-      await _takeList(d, m, c, identity, list, remote);
-      // each device's receipt ends its own copy of a list
+      final got = await _takeList(d, m, c, identity, list, remote);
+      final took = got != null;
+      // each device's receipt ends its own copy of a list; their phone's
+      // says which version it holds, which ends the push for good
       final u = j['u'];
       if (u is String && u.startsWith('dl:') && device != 1) {
         await _answer(m, c, identity, device, {'dr': u});
+      } else if (took && device == 1 && m.device == 1) {
+        await _answer(m, c, identity, 1, {'dy': _listVersion(list)});
       }
+      // their phone's list, as it holds it now: what a restore left of
+      // theirs is current again, and the openers that waited are tried
+      if (got != null &&
+          got != 'rollback' &&
+          device == 1 &&
+          await staleList(d, m.ident, identity)) {
+        await d.delete(
+          'dev_marks',
+          where: 'ident = ? AND peer = ? AND kind = ?',
+          whereArgs: [m.ident, identity, kStaleList],
+        );
+        await _retryHeld(d, m, identity);
+      }
+    }
+    // their phone holds my list of this version: the pushes up to it end
+    final dy = j['dy'];
+    if (dy is int && dy > 0 && device == 1 && m.device == 1) {
+      await send.listTaken(m.ident, identity, dy);
     }
     final db = j['db'];
     if (db is List) {
@@ -733,7 +814,9 @@ class DeviceReceive {
   // the opener addresses of the ones it adds are heard. a list older than
   // the one held, from their phone, gets the held one back once per
   // version, so another copy of their phone signs above it
-  Future<void> _takeList(
+  // what became of the list: the accept's outcome, 'rollback' for one older
+  // than the one held, null when it was not read
+  Future<String?> _takeList(
     Database d,
     DevMe m,
     DevContact c,
@@ -756,14 +839,20 @@ class DeviceReceive {
           await _alarm(d, m.ident, identity, 'equivocation', '');
       }
       await _claims(d, m.ident);
-      return;
+      return e.why == 'rollback' ? 'rollback' : null;
     }
     await _claims(d, m.ident);
     final outcome = j['outcome'];
     if (outcome == 'first' || outcome == 'changed') {
       await listChanged(m, identity, c.peer);
       await _passOn(m, identity, list);
+      // a device of theirs new to this phone gets my list and a bundle of
+      // the phone with it, so it can write here first
+      if (m.device == 1 && c.devices) {
+        await send.devicesShown(m.ident, identity);
+      }
     }
+    return outcome is String ? outcome : 'same';
   }
 
   /// [identity]'s list held moved: every session it no longer names on its
@@ -1029,7 +1118,7 @@ class DeviceReceive {
     final now = _clock();
     final out = <String>[];
     for (final id in ids.toSet().take(kAskMost)) {
-      if (id < 2 || id > 127) continue;
+      if (id < 1 || id > 127) continue;
       if (await _markedSince(
         d,
         m.ident,
@@ -1041,6 +1130,16 @@ class DeviceReceive {
         continue;
       }
       await _mark(d, m.ident, identity, 'dq', '$id', now);
+      // this phone itself: a fresh KDB1 of its own, so a device of theirs
+      // can open to it
+      if (id == 1) {
+        try {
+          out.add(base64Encode(await (await sessions(m.ident)).phoneBundle()));
+        } on Object catch (e) {
+          _note('no bundle of the phone (${e.runtimeType})');
+        }
+        continue;
+      }
       try {
         // the pool is mine, wherever the contact's marks are
         final j = await state.call(await mine(), 'pool_take', {
@@ -1136,14 +1235,19 @@ class DeviceReceive {
 
   /// [identity], a contact of my [ident], showed they read lists and no
   /// list of theirs is held here: their phone is asked for it, once a day
-  Future<void> askList(int ident, String identity) async {
+  ///
+  /// [stale]: a list is held but a restore left it (kStaleList): asked all
+  /// the same
+  Future<void> askList(int ident, String identity, {bool stale = false}) async {
     if (!linkedDevicesOn) return;
     final d = await db();
-    try {
-      await state.call(d, 'current', {'identity': identity});
-      return;
-    } on DevRefused catch (e) {
-      if (e.why != 'not_listed') return;
+    if (!stale) {
+      try {
+        await state.call(d, 'current', {'identity': identity});
+        return;
+      } on DevRefused catch (e) {
+        if (e.why != 'not_listed') return;
+      }
     }
     final now = _clock();
     if (await _markedSince(
@@ -1158,8 +1262,32 @@ class DeviceReceive {
     }
     final who = await contact(ident, identity);
     if (who == null || who.me.device != 1 || !who.c.devices) return;
-    await _mark(d, ident, identity, 'dw-sent', '', now);
-    await phone(who.me, who.c, '$kEnvelopePrefix${jsonEncode({'dw': 1})}');
+    if (await phone(
+      who.me,
+      who.c,
+      '$kEnvelopePrefix${jsonEncode({'dw': 1})}',
+    )) {
+      await _mark(d, ident, identity, 'dw-sent', '', now);
+    }
+  }
+
+  /// every contact whose list a restore left here is asked for it again,
+  /// once a day until their phone sends it
+  Future<void> askStale() async {
+    if (!linkedDevicesOn) return;
+    final d = await db();
+    for (final r in await d.query(
+      'dev_marks',
+      columns: ['ident', 'peer'],
+      where: 'kind = ?',
+      whereArgs: [kStaleList],
+    )) {
+      try {
+        await askList(r['ident'] as int, r['peer'] as String, stale: true);
+      } catch (e) {
+        _note('a list not asked for (${e.runtimeType})');
+      }
+    }
   }
 
   // a frame of mine to one of [c]'s devices: their phone on the identity

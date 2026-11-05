@@ -466,6 +466,29 @@ class DeviceSessions {
     return _kdb1(device, ids.signedId, ids.kyberId);
   }
 
+  /// a KDB1 of this store as the phone (device 1, on its identity key):
+  /// its session signed prekey and a fresh one-time kyber prekey from the
+  /// pool's, so a contact's device can open to the phone. the phone's
+  /// store only
+  Future<Uint8List> phoneBundle({int? now}) async {
+    if (linked) throw DeviceRefused('a linked device is not the phone');
+    final ids = await s.sessionPreKeysForUse(now: now);
+    final kyberId = await s.makePoolKyber(now: now);
+    final spk = _lib.preKeyPublic(
+      kLsSigned,
+      (await s.signedPreKeyStore.load(ids.signedId))!,
+    );
+    final kyber = _lib.preKeyPublic(
+      kLsKyber,
+      (await s.kyberPreKeyStore.load(kyberId))!,
+    );
+    return Uint8List.fromList([
+      ...ascii.encode('KDB1'),
+      1,
+      ...bundleBlock(registrationId: s.registrationId, spk: spk, kyber: kyber),
+    ]);
+  }
+
   void _linkedOnly(int device) {
     if (!isLinkedDevice(device)) {
       throw DeviceRefused('device $device is not a linked device');
