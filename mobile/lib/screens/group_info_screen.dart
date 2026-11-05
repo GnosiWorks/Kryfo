@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart'
     show
+        ownClearLine,
         appState,
         session,
         sessionQuiet,
@@ -547,7 +548,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.groupInfoClearThisConversation,
-      line: l10n.groupInfoEveryMessageHereIsShown,
+      line: ownClearLine(group: true),
       yes: l10n.groupInfoClear,
     );
     if (ok == true) {

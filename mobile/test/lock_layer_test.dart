@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/app_shell.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_layer.dart';
+import 'package:kryfo/picture_lock.dart';
 import 'package:kryfo/theme.dart';
 
 import 'source_body.dart';
@@ -74,6 +75,8 @@ class _App {
   int padTaps = 0;
   int keys = 0;
   bool quiet = false;
+  // false: no pin is set, so leaving locks nothing
+  bool pin = true;
   // android's word that the person went home or to recents
   int lefts = 0;
   // android screens that came onto the engine
@@ -97,7 +100,9 @@ class _App {
         loaded: () => lock.loaded,
         locked: () => lock.locked,
         load: () async {},
-        leaving: () => lock.set(locked: true),
+        leaving: () {
+          if (pin) lock.set(locked: true);
+        },
         returned: () {},
         left: () => lefts++,
         attached: () => attaches++,
@@ -447,6 +452,27 @@ void main() {
     await tester.pump();
     expect(find.byType(_Pad), findsOneWidget);
     expect(a.pads, 1);
+  });
+
+  testWidgets('with no pin, read while the app was away, its pictures open '
+      'once it is back', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester)..pin = false;
+    a.lock.loaded = false;
+    await a.pump();
+    expect(picturesShut.value, isTrue, reason: 'nothing decoded unread');
+    // gone before the lock was read, then read with nobody in front
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    a.lock.set(loaded: true);
+    await tester.pump();
+    expect(a.lock.locked, isFalse);
+    expect(picturesShut.value, isTrue);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(picturesShut.value, isFalse);
+    expect(find.text('secret home'), findsOneWidget);
   });
 
   testWidgets('a toast from before the lock is dropped', (tester) async {

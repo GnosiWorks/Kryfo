@@ -317,7 +317,7 @@ extension AppStatePairing on AppState {
     final heardAs = opened.heardAs;
     if (to != RouteTo.dropped && x != null && x.isNotEmpty) {
       _xPubToHaloId[x] = h;
-      _io.listen(identOf(h), x);
+      _listen(identOf(h), x, hidden: to == RouteTo.vault ? true : null);
     }
     var went = to;
     try {

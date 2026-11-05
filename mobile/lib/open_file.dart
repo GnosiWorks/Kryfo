@@ -8,6 +8,7 @@ import 'desktop/desktop_mode.dart' show canShareOut;
 import 'file_kind.dart';
 import 'l10n/numbers.dart';
 import 'phone_seal.dart' show withFileKey;
+import 'picture_lock.dart' show picturesShut;
 
 const _channel = MethodChannel('halo/platform');
 
@@ -106,11 +107,14 @@ bool nameSaysVideo(String? name) {
 }
 
 class VideoInfo {
-  final Uint8List? jpeg; // one frame, null when the phone could not read one
+  // one frame, null when the phone could not read one or the lock took it
+  Uint8List? jpeg;
+  // the lock took the frame: asked for again
+  bool _taken = false;
   final Duration length;
   final int width;
   final int height;
-  const VideoInfo(this.jpeg, this.length, this.width, this.height);
+  VideoInfo(this.jpeg, this.length, this.width, this.height);
   double get aspect => height <= 0 ? 16 / 9 : width / height;
 }
 
@@ -119,7 +123,28 @@ class VideoInfo {
 final Map<String, VideoInfo?> _infos = {};
 final Map<String, Future<VideoInfo?>> _asking = {};
 
+// every info handed out with a frame, so the lock reaches the copies the
+// screens hold as well as this one
+final List<WeakReference<VideoInfo>> _given = [];
+int _frameGen = 0;
+
 VideoInfo? videoInfoNow(String path) => _infos[path];
+
+/// the lock is going up: every first frame goes, zeroed. the length and
+/// shape stay, and the frame is asked for again after the unlock
+void forgetVideoFrames() {
+  _frameGen++;
+  for (final w in _given) {
+    final i = w.target;
+    final j = i?.jpeg;
+    if (j == null) continue;
+    j.fillRange(0, j.length, 0);
+    i!
+      ..jpeg = null
+      .._taken = true;
+  }
+  _given.clear();
+}
 
 // asked for, then shredded before the answer: the answer is not kept
 final Set<String> _gone = {};
@@ -131,24 +156,28 @@ void forgetVideoInfo(String path) {
 }
 
 Future<VideoInfo?> videoInfoFor(String path) {
-  if (_infos.containsKey(path)) return Future.value(_infos[path]);
+  final had = _infos[path];
+  // a frame the lock took is asked for again
+  if (_infos.containsKey(path) && !(had?._taken ?? false)) {
+    return Future.value(had);
+  }
   return _asking[path] ??= () async {
     VideoInfo? out;
-    try {
-      final m = await _channel.invokeMapMethod<String, dynamic>(
-        'videoInfo',
-        withFileKey(path, {'path': path, 'maxEdge': 640}),
-      );
-      if (m != null) {
-        out = VideoInfo(
-          m['jpeg'] as Uint8List?,
-          Duration(milliseconds: (m['ms'] as num?)?.toInt() ?? 0),
-          (m['w'] as num?)?.toInt() ?? 16,
-          (m['h'] as num?)?.toInt() ?? 9,
-        );
-      }
-    } catch (e) {
-      dlog('video info: ${e.runtimeType}');
+    while (true) {
+      final gen = _frameGen;
+      out = await _askVideoInfo(path);
+      if (gen == _frameGen) break;
+      // the lock went up while it was asked: no frame is kept behind it,
+      // and it is asked again once the lock has lifted
+      out?.jpeg?.fillRange(0, out.jpeg!.length, 0);
+      out
+        ?..jpeg = null
+        .._taken = true;
+      if (picturesShut.value || _gone.contains(path)) break;
+    }
+    if (out?.jpeg != null) {
+      _given.removeWhere((w) => w.target?.jpeg == null);
+      _given.add(WeakReference(out!));
     }
     if (!_gone.remove(path)) {
       if (_infos.length >= 40) _infos.remove(_infos.keys.first);
@@ -157,6 +186,25 @@ Future<VideoInfo?> videoInfoFor(String path) {
     _asking.remove(path);
     return out;
   }();
+}
+
+Future<VideoInfo?> _askVideoInfo(String path) async {
+  try {
+    final m = await _channel.invokeMapMethod<String, dynamic>(
+      'videoInfo',
+      withFileKey(path, {'path': path, 'maxEdge': 640}),
+    );
+    if (m == null) return null;
+    return VideoInfo(
+      m['jpeg'] as Uint8List?,
+      Duration(milliseconds: (m['ms'] as num?)?.toInt() ?? 0),
+      (m['w'] as num?)?.toInt() ?? 16,
+      (m['h'] as num?)?.toInt() ?? 9,
+    );
+  } catch (e) {
+    dlog('video info: ${e.runtimeType}');
+    return null;
+  }
 }
 
 String videoLength(Duration d) {

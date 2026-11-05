@@ -84,6 +84,13 @@ put you in danger, read all of it.
   regular pattern a network can notice.
 - the fact that you communicated. metadata is minimized, not erased. if you
   send while a contact is online, that timing existed.
+- the mailboxes a relay sees together. Kryfo asks each relay for your chats'
+  mailboxes in fixed groups of up to eight, each group on a connection and
+  a tor circuit of its own, so a relay knows that the mailboxes of one group
+  are one phone's. each hidden chat has a connection of its own. hiding a
+  chat you already have moves its mailbox out of its group, so a relay can
+  see that something changed in that group, and which mailbox left. a chat
+  made in hidden chats from the start never joins a group.
 - the helper app mode, if you choose it. the helper's server sees your
   phone's ip address and when each of your sixteen endpoints is knocked.
   fake knocks make the real ones harder to pick out, not impossible: a
@@ -134,6 +141,10 @@ put you in danger, read all of it.
   the keys and addresses needed to receive, and those of their linked
   devices, which shows how many they use, and whether the chat blocks
   screenshots and when that last changed.
+- a linked computer and a hidden chat. a chat hidden on the phone leaves
+  the computer as a deleted one does. one shown again comes back there with
+  its name, note and settings as they were, where a deleted chat added again
+  starts empty: the computer can tell it was hidden.
 - someone who already knows you. a person who knows your three words or
   handle sees different ones in the decoy, and nothing that arrives for you
   shows while it is open.

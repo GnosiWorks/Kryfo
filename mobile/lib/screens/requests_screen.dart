@@ -150,17 +150,26 @@ class _RequestsScreenState extends State<RequestsScreen> {
       final id = r['halo_id'] as String;
       final flag = ShieldFlag.fromRow(await session.shownShieldFor(id));
       if (flag != null) flags[id] = flag;
+      // an introduced row names the friends who vouched. only vouchers we
+      // still hold as contacts come back, so a deleted one just drops off.
+      final vs = await session.vouchesFor(id);
       final msgs = await session.messagesFor(id);
       if (msgs.isNotEmpty) {
         final last = msgs.last;
         final text = (last['plaintext'] as String?) ?? '';
-        previews[id] = text.isEmpty ? l10n.requestsSentAnAttachment : text;
+        // a stranger's file, its caption with it, waits for the accept
+        final file =
+            last['media_path'] != null ||
+            last['file_path'] != null ||
+            last['file_name'] != null;
+        previews[id] = file && vs.isEmpty
+            ? l10n.requestReceiverMediaLater
+            : text.isEmpty
+            ? l10n.requestsSentAnAttachment
+            : text;
       } else {
         previews[id] = l10n.requestsWantsToConnect;
       }
-      // an introduced row names the friends who vouched. only vouchers we
-      // still hold as contacts come back, so a deleted one just drops off.
-      final vs = await session.vouchesFor(id);
       if (vs.isNotEmpty) {
         final first = vs.first;
         introducers[id] = _Introducer(

@@ -16,6 +16,7 @@ extension AppStateRefresh on AppState {
     devRow = dev;
     if (waiting != null) supportWaiting = waiting;
     notifyListeners();
+    _ownPassSoon();
   }
 
   // developer mode as a session has it: his own phone, never its decoy
@@ -147,6 +148,7 @@ extension AppStateRefresh on AppState {
     if (!identical(s, _session)) return;
     groups = list;
     notifyListeners();
+    _ownPassSoon();
   }
 
   Future<List<GroupPreview>> _groupsOf(Session s) async {

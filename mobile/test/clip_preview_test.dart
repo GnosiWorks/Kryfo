@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
+import 'package:kryfo/picture_lock.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/clip_preview.dart';
 import 'package:kryfo/widgets/video_viewer.dart' show ViewerScrubber;
@@ -19,18 +20,25 @@ late bool done;
 // a play that waits here until let through
 Completer<void>? playGate;
 Map<String, Object> answer = {};
+// an open that waits here until let through, each with a new player id
+Completer<void>? openGate;
+var opens = 0;
 
 void player(WidgetTester t, {Map<String, Object>? open}) {
   calls = [];
   playing = false;
   done = false;
   answer = open ?? {'id': 5, 'w': 360, 'h': 640, 'ms': 4000};
+  openGate = null;
+  opens = 0;
   final m = t.binding.defaultBinaryMessenger;
   m.setMockMethodCallHandler(_video, (c) async {
     calls.add(c);
     switch (c.method) {
       case 'open':
-        return answer;
+        final n = opens++;
+        await openGate?.future;
+        return {...answer, 'id': (answer['id'] as int) + n};
       case 'play':
         await playGate?.future;
         playing = true;
@@ -103,6 +111,64 @@ void main() {
     expect(playing, isTrue);
     await t.pumpWidget(const SizedBox());
     expect(asked().last, 'close');
+  });
+
+  testWidgets('the lock closes the player, and after it the clip is back '
+      'paused where it was', (t) async {
+    addTearDown(resetPicturesForTest);
+    player(t);
+    await t.pumpWidget(host());
+    await beats(t);
+    expect(find.byType(Texture), findsOneWidget);
+    calls.clear();
+    locked = true;
+    shutPictures();
+    await beats(t);
+    // no player, no texture, no frame behind the pin
+    expect(asked(), contains('close'));
+    expect(find.byType(Texture), findsNothing);
+    expect(find.byType(RawImage), findsNothing);
+    calls.clear();
+    locked = false;
+    openPictures();
+    await beats(t);
+    expect(asked(), containsAllInOrder(['open', 'seek']));
+    expect(
+      (calls.lastWhere((c) => c.method == 'seek').arguments as Map)['ms'],
+      1000,
+    );
+    expect(asked(), isNot(contains('play')));
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a lock and an unlock while it opens leave one player, and '
+      'the next lock closes it', (t) async {
+    addTearDown(resetPicturesForTest);
+    player(t);
+    openGate = Completer<void>();
+    await t.pumpWidget(host());
+    await t.pump();
+    locked = true;
+    shutPictures();
+    await t.pump();
+    locked = false;
+    openPictures();
+    await t.pump();
+    // both opens answer after the unlock
+    openGate!.complete();
+    await beats(t);
+    List<int> ids(String m) => [
+      for (final c in calls)
+        if (c.method == m) (c.arguments as Map)['id'] as int,
+    ];
+    expect(opens, 2);
+    expect(ids('close'), [5], reason: 'the open from before the lock goes');
+    expect(find.byType(Texture), findsNothing);
+    locked = true;
+    shutPictures();
+    await beats(t);
+    expect(ids('close').toSet(), {5, 6}, reason: 'no player behind the pin');
+    await t.pumpWidget(const SizedBox());
   });
 
   testWidgets('reduced motion: it waits for a tap', (t) async {

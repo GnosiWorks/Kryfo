@@ -1254,9 +1254,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Quando você pede pontes, o Projeto Tor vê seu endereço IP. Isso é normal: é assim que o Tor Browser e todo app do Tor conseguem pontes, e tudo o que isso diz a eles é que alguém pediu pontes. Nada sobre suas conversas.';
 
   @override
-  String get bridgesAsking => 'Pedindo…';
-
-  @override
   String get cameraNoCameraOnThis => 'Nenhuma câmera neste celular';
 
   @override
@@ -7268,9 +7265,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get transportBridgeMode => 'Pontes';
 
   @override
-  String get bridgesEgypt => 'Egito';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Sua ponte não conseguiu iniciar';
 
   @override
@@ -7315,9 +7309,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Irã';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Ativar automático';
 
   @override
@@ -7349,9 +7340,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bridgesScanACode => 'Escanear um código';
 
   @override
-  String get bridgesMyanmar => 'Mianmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Mudar para automático';
 
   @override
@@ -7374,9 +7362,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Passa pelo computador de um voluntário. Difícil de bloquear, lento para começar.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Deixar o Projeto Tor adivinhar';
 
   @override
   String get bridgesTorSeemsBlocked =>
@@ -7408,10 +7393,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'O Kryfo encontra um jeito que funcione onde você está.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'O Projeto Tor tem orientações próprias para estes países.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting =>
       'Esta ponte não está conseguindo passar';
 
@@ -7424,9 +7405,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Agora não';
-
-  @override
-  String get bridgesRussia => 'Rússia';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7452,9 +7430,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bridgesAlmostThere => 'Quase lá';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Palpite do Projeto Tor';
-
-  @override
   String get bridgesUseThisBridge => 'Usar esta ponte';
 
   @override
@@ -7470,9 +7445,6 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turcomenistão';
 
   @override
   String get transportBridgeMethod => 'Método';
@@ -7499,11 +7471,12 @@ class AppLocalizationsPt extends AppLocalizations {
       'As pontes podem parar de funcionar sem aviso. O Automático pode encontrar outro jeito.';
 
   @override
-  String get bridgesHongKong => 'Hong Kong';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Quando o Tor está bloqueado, o Automático pergunta ao Projeto Tor o que funciona no seu país.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'O Kryfo escolhe as pontes automaticamente. Snowflake e WebTunnel funcionam na maioria dos lugares. Se uma não conectar, tente outra ou peça uma linha de ponte a um amigo.';
 
   @override
   String get bridgesAskTorProject => 'Perguntar ao Projeto Tor';
@@ -7512,18 +7485,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bridgesTooLongForTor => 'Longa demais para o Tor';
 
   @override
-  String get bridgesCountry => 'País';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'China';
-
-  @override
-  String get bridgesBelarus => 'Bielorrússia';
 
   @override
   String get bridgesKryfoCanTUseThis => 'O Kryfo não consegue usar esta linha';
@@ -9183,9 +9147,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mediaSendVideo => 'Enviar vídeo';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Até a pessoa aceitar, podem ir $count';
-  }
+  String get requestSenderMediaLater =>
+      'Fotos e arquivos são liberados depois que a pessoa aceitar você, para manter vocês dois seguros.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Fotos e arquivos são liberados depois que você aceitar a pessoa, para você ficar em segurança.';
 
   @override
   String get groupEndedYou => 'Você encerrou este grupo';
@@ -10211,11 +10178,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Todas as suas mensagens, com fotos e vídeos dos últimos 30 dias.';
 
   @override
-  String get devicesHistoryNone => 'Começar sem histórico';
+  String get devicesHistoryNone => 'Só contatos e grupos';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Só as mensagens novas chegam ao aparelho.';
+  String get devicesHistoryNoneHint => 'Eles vêm sem nenhuma mensagem.';
 
   @override
   String get devicesSkipMedia => 'Pular fotos e vídeos';
@@ -10790,6 +10756,146 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name usa uma versão mais antiga do Kryfo. Responda pelo seu celular.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Por enquanto, responda a $name pelo seu celular.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Todas as mensagens daqui são apagadas só deste computador. Seu celular as mantém.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Todas as mensagens e o contato saem só deste computador. Seu celular mantém a conversa.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'As mensagens dessa pessoa param de chegar a este computador. Ela não fica sabendo. Bloqueie no seu celular para que parem lá também.';
+
+  @override
+  String get historyCopyTitle => 'Histórico de conversas';
+
+  @override
+  String get historyCopyMaking => 'Preparando suas conversas';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Seu celular reúne o que vai ser copiado. Começa em um instante.';
+
+  @override
+  String get historyCopyGoing => 'Copiando suas conversas';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Mantenha os dois aparelhos online até terminar.';
+
+  @override
+  String historyCopySize(Object size) {
+    return '$size no total';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Aguardando o outro aparelho';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'A cópia continua sozinha quando os dois aparelhos estiverem online.';
+
+  @override
+  String get historyCopyPaused => 'A cópia faz uma pausa curta';
+
+  @override
+  String get historyCopyPausedLine => 'Continua em um minuto.';
+
+  @override
+  String get historyCopyWhole => 'Todas as mensagens e arquivos chegaram';
+
+  @override
+  String get historyCopyWholeLine => 'Não falta nada.';
+
+  @override
+  String get historyCopyRows => 'Seus contatos e grupos chegaram';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Eles vieram sem nenhuma mensagem. As novas mensagens aparecem no aparelho a partir de agora.';
+
+  @override
+  String get historyCopyGaps => 'Quase todas as suas conversas chegaram';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Estas conversas têm menos no aparelho novo do que no seu celular.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Mensagens: $got de $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Arquivos: $got de $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString itens ficaram no seu celular',
+      one: '1 item ficou no seu celular',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Grandes demais ou ilegíveis para copiar.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString conversas ficaram no seu celular',
+      one: '1 conversa ficou no seu celular',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'A cópia parou';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Não chega mais nada. Vincule o aparelho de novo para uma cópia nova.';
+
+  @override
+  String get historyCopyFailed => 'A cópia não conseguiu terminar';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Vincule o aparelho de novo para uma cópia nova.';
+
+  @override
+  String get historyCopyStays => 'Ficou no seu celular';
+
+  @override
+  String get historyCopySee => 'Ver a cópia';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11274,4 +11380,25 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get notificationsPlaySoundHint =>
       'A cada notificação neste computador';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Compartilhar ponte $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Compartilhar esta ponte';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Compartilhe em particular, com pessoas de confiança. Uma ponte fora de páginas públicas continua funcionando por mais tempo.';
+
+  @override
+  String get bridgesCopyBridge => 'Copiar ponte';
+
+  @override
+  String get bridgesBridgeCopied => 'Ponte copiada';
+
+  @override
+  String get bridgesSendBridgeTo => 'Enviar a ponte para';
 }

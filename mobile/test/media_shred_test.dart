@@ -189,6 +189,18 @@ void main() {
       expect(f.existsSync(), isTrue);
     });
 
+    test('a blur stays while its photo is named, and goes after it', () async {
+      final photo = await row('k3', col: 'media_path');
+      final blur = File('${photo.path}.blur')..writeAsBytesSync([1]);
+      final stray = File(p.join(media.path, 'in_gone.jpg.blur'))
+        ..writeAsBytesSync([1]);
+      final gone = await db.unnamedMedia(
+        before: DateTime.now().add(const Duration(minutes: 1)),
+      );
+      expect([for (final f in gone) f.path], [stray.path]);
+      expect(blur.existsSync(), isTrue);
+    });
+
     test('one written since is left alone', () async {
       File(p.join(media.path, 'in_new.jpg')).writeAsBytesSync([1]);
       final gone = await db.unnamedMedia(

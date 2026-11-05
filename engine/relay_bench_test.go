@@ -74,7 +74,7 @@ func TestABurstOfRefusalsBenchesARelayAtMostOnce(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
+		go nostrSubscribeRunner(alone(ctx), hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 	}
 	waitFor(t, "every socket turned away", 5*time.Second, func() bool { return pub.n.Load() >= 30 })
 	time.Sleep(200 * time.Millisecond)

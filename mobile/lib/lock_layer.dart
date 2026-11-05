@@ -8,6 +8,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'lock_guard.dart';
+import 'picture_lock.dart';
 import 'theme.dart';
 import 'widgets/wall_images.dart';
 
@@ -275,6 +276,8 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       }
       return '';
     });
+    // nothing is decoded under a lock not read yet
+    if (!widget.loaded() || widget.locked()) shutPictures();
     widget.load();
     // the lifecycle only reports changes, and a fresh start in front is not
     // one. a process the job started builds this too, with nobody looking.
@@ -306,6 +309,9 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       _away = false;
       widget.returned();
+      // back with no lock up: an app without a pin, left while the lock was
+      // read, never lifted one, and its pictures open here
+      if (widget.loaded() && !widget.locked()) openPictures();
       widget.inFront?.call(true);
     }
   }
@@ -320,8 +326,9 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     onLockUp: () {
       widget.guard.locking();
       haloClearToasts();
-      // no chat's photo stays decoded behind the pin
+      // no chat's photo or frame stays decoded behind the pin
       WallImages.clear();
+      shutPictures();
       widget.lockingUp?.call();
     },
     onLifted: () {
@@ -334,6 +341,7 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
         widget.leaving();
         return;
       }
+      openPictures();
       widget.revealed?.call();
       // what waited happens in an everyday session and is dropped in a decoy
       widget.quiet() ? widget.guard.dropHeld() : widget.guard.lifted();

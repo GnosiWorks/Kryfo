@@ -103,6 +103,8 @@ class AppState extends ChangeNotifier {
     // a vault's: only the everyday identity goes online. its seal and its
     // store read the same row
     _madeApp = this;
+    // a hidden chat's sends go on its own lane, as its listen does
+    hiddenSendPeer = (x) => _router.hidesKey(x) || _toldHidden.contains(x);
     devGate.chat = () => live.devChat.load();
     _keyMoved = flagKeyChanged;
     devLane.chat = () => live.devChat.load();
@@ -325,6 +327,8 @@ class AppState extends ChangeNotifier {
   bool _resubscribeDue = false;
   // the pinned chats' keys the engine was last told, sorted and joined
   String _pinsTold = '';
+  // the keys last listened on as hidden chats (AppStateReceive._listen)
+  final Set<String> _toldHidden = {};
 
   static const _platformChannel = MethodChannel('halo/platform');
   // the process engine's own, answered before a screen is there too
@@ -505,10 +509,6 @@ class AppState extends ChangeNotifier {
   // new install that was never asked. once a process
   bool _askDue = false;
   bool _askShown = false;
-
-  // the country the tor project guessed from the address it saw, for the
-  // picker. kept for this run only
-  String? _moatGuess;
 
   // which first-contact address our invites currently point at. an invite can
   // end up in a bio or a screenshot, so it has to be retirable without

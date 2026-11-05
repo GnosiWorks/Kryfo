@@ -163,7 +163,8 @@ Future<void> deviceTables(
       removed_at INTEGER,
       heard_online_ms INTEGER NOT NULL DEFAULT 0,
       notice INTEGER NOT NULL DEFAULT 0,
-      stream BLOB
+      stream BLOB,
+      hist TEXT
     )
   ''');
   // 1 until the person opens the devices page after the device came: the
@@ -174,6 +175,9 @@ Future<void> deviceTables(
   );
   // the history stream's key the link made, until the copy is done
   await addColumn(db, 'ALTER TABLE own_devices ADD COLUMN stream BLOB');
+  // the history copy's place on the phone: the link's transcript, the
+  // choice, the generation and how it ended (history_link.dart)
+  await addColumn(db, 'ALTER TABLE own_devices ADD COLUMN hist TEXT');
   await db.execute('''
     CREATE TABLE IF NOT EXISTS own_device_keys (
       uid TEXT NOT NULL,
@@ -251,6 +255,36 @@ Future<void> deviceTables(
   // what the receiving side did once per contact (device_receive.dart): a
   // bundle ask answered (a day per device), a held list handed back (once
   // per version), a list asked for, and the alarms step 8 shows
+  // own sync (own_sync.dart): what each chat's state was when it was last
+  // told to my other devices, and the uids of mine deleted here, so a late
+  // copy of one never comes back
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_told (
+      chat TEXT PRIMARY KEY,
+      digest TEXT NOT NULL
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_gone (
+      uid TEXT PRIMARY KEY,
+      at INTEGER NOT NULL
+    )
+  ''');
+  // a contact's frame my phone took while the decoy was open, to pass on
+  // to my devices once the everyday side sends again
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_held (
+      uid TEXT PRIMARY KEY,
+      chat TEXT NOT NULL,
+      sender TEXT NOT NULL,
+      frame TEXT NOT NULL
+    )
+  ''');
+  // when a linked device last said a person uses it (its 'ob')
+  await addColumn(
+    db,
+    'ALTER TABLE own_devices ADD COLUMN heard_at INTEGER NOT NULL DEFAULT 0',
+  );
   await db.execute('''
     CREATE TABLE IF NOT EXISTS dev_marks (
       ident INTEGER NOT NULL,
@@ -293,6 +327,9 @@ const _allTables = [
   'dev_openers',
   'dev_asks',
   'dev_marks',
+  'own_told',
+  'own_gone',
+  'own_held',
 ];
 
 /// at every open: [deviceTables] only when one is missing, so a file that
@@ -323,6 +360,7 @@ Future<void> deviceTablesAtOpen(
       _allTables.every(have.contains) &&
       own.contains('notice') &&
       own.contains('stream') &&
+      own.contains('heard_at') &&
       (!have.contains('identities') ||
           (cols.contains('dev_id') && cols.contains('ident_pub'))) &&
       (await colsOf('dev_out')).contains('sent_at') &&

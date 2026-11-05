@@ -442,6 +442,8 @@ extension AppStateOutbox on AppState {
     // a decoy open: all of it waits for the session that wrote it
     if (everydayHeld) return;
     unawaited(_replayHeld());
+    // linked devices: what reached the phone while the decoy was open
+    unawaited(_ownHeldGo());
     unawaited(_drainEdits());
     unawaited(_drainPins());
     unawaited(_drainFrames());
@@ -1128,6 +1130,10 @@ extension AppStateOutbox on AppState {
     // failed and the user gets tap-to-retry.
     // nothing of the everyday account leaves while a decoy is open
     if (everydayHeld) return false;
+    // a linked device sends on its device sessions alone
+    if (linkedDevicesOn && linkedRole) {
+      return await _sendFromDevice(memberId, wrapped) == _DeviceSend.sent;
+    }
     try {
       final to = await _reach(memberId);
       if (to == null) {

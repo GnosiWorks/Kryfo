@@ -1287,9 +1287,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'عندما تطلب جسورًا، يرى مشروع Tor عنوان IP الخاص بك. هذا أمر عادي: هكذا يحصل Tor Browser وكل تطبيقات Tor على الجسور، وكل ما يعرفونه من ذلك أن أحدًا طلب جسورًا. لا شيء عن محادثاتك.';
 
   @override
-  String get bridgesAsking => 'جارٍ الطلب…';
-
-  @override
   String get cameraNoCameraOnThis => 'لا كاميرا في هذا الهاتف';
 
   @override
@@ -7333,9 +7330,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportBridgeMode => 'الجسور';
 
   @override
-  String get bridgesEgypt => 'مصر';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'تعذّر تشغيل الجسر';
 
   @override
@@ -7380,9 +7374,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'إيران';
-
-  @override
   String get bridgesTurnOnAutomatic => 'تفعيل الوضع التلقائي';
 
   @override
@@ -7414,9 +7405,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesScanACode => 'قراءة رمز';
 
   @override
-  String get bridgesMyanmar => 'ميانمار';
-
-  @override
   String get bridgesSwitchToAutomatic => 'التبديل إلى الوضع التلقائي';
 
   @override
@@ -7438,9 +7426,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'يمر عبر حاسوب أحد المتطوعين. صعب الحجب، بطيء البدء.';
-
-  @override
-  String get bridgesLetTheTorProject => 'دع مشروع Tor يخمّن';
 
   @override
   String get bridgesTorSeemsBlocked => 'يبدو أن Tor محجوب على هذه الشبكة';
@@ -7474,10 +7459,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesKryfoFindsAWay => 'يجد Kryfo طريقة تعمل حيث أنت.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'لدى مشروع Tor نصائح خاصة لهذه البلدان.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'لا يستطيع هذا الجسر العبور';
 
   @override
@@ -7489,9 +7470,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'ليس الآن';
-
-  @override
-  String get bridgesRussia => 'روسيا';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7517,9 +7495,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesAlmostThere => 'اقتربنا';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'تخمين مشروع Tor';
-
-  @override
   String get bridgesUseThisBridge => 'استخدام هذا الجسر';
 
   @override
@@ -7538,9 +7513,6 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'تركمانستان';
 
   @override
   String get transportBridgeMethod => 'الطريقة';
@@ -7566,11 +7538,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'قد تتوقف الجسور عن العمل دون إنذار. يستطيع «تلقائي» إيجاد طريقة أخرى.';
 
   @override
-  String get bridgesHongKong => 'هونغ كونغ';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'حين يُحجب Tor، يسأل «تلقائي» مشروع Tor عمّا يعمل في بلدك.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'يختار Kryfo الجسور تلقائيًا. يعمل Snowflake وWebTunnel في معظم الأماكن. إذا لم يتصل أحدها، فجرّب غيره، أو اطلب سطر جسر من صديق.';
 
   @override
   String get bridgesAskTorProject => 'اسأل مشروع Tor';
@@ -7579,18 +7552,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesTooLongForTor => 'أطول من أن يستخدمه Tor';
 
   @override
-  String get bridgesCountry => 'البلد';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '⁨$method⁩، ⁨$from⁩';
   }
-
-  @override
-  String get bridgesChina => 'الصين';
-
-  @override
-  String get bridgesBelarus => 'بيلاروس';
 
   @override
   String get bridgesKryfoCanTUseThis => 'لا يستطيع Kryfo استخدام هذا السطر';
@@ -9245,9 +9209,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mediaSendVideo => 'إرسال الفيديو';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'حتى يقبل، يمكن إرسال ⁨$count⁩';
-  }
+  String get requestSenderMediaLater =>
+      'تُفتح الصور والملفات بعد أن يقبلك، لتبقيا في أمان.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'تُفتح الصور والملفات بعد أن تقبله، لتبقى في أمان.';
 
   @override
   String get groupEndedYou => 'أنهيت هذه المجموعة';
@@ -10270,10 +10237,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'كل رسائلك، مع الصور والفيديوهات من آخر 30 يومًا.';
 
   @override
-  String get devicesHistoryNone => 'البدء دون سجل';
+  String get devicesHistoryNone => 'جهات الاتصال والمجموعات فقط';
 
   @override
-  String get devicesHistoryNoneHint => 'تصل الرسائل الجديدة فقط إلى الجهاز.';
+  String get devicesHistoryNoneHint => 'تصل دون أي رسائل.';
 
   @override
   String get devicesSkipMedia => 'تخطي الصور والفيديوهات';
@@ -10846,6 +10813,149 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name يستخدم إصدارًا أقدم من Kryfo. ردّ من هاتفك.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'ردّ على $name من هاتفك في الوقت الحالي.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'تُمسح كل رسالة هنا من هذا الحاسوب فقط. يحتفظ بها هاتفك.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'تزول كل الرسائل وجهة الاتصال من هذا الحاسوب فقط. يحتفظ هاتفك بالمحادثة.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'تتوقف رسائله عن الوصول إلى هذا الحاسوب. ولا يُبلَّغ بذلك. احظره من هاتفك ليتوقف هناك أيضًا.';
+
+  @override
+  String get historyCopyTitle => 'سجل المحادثات';
+
+  @override
+  String get historyCopyMaking => 'جارٍ تجهيز محادثاتك';
+
+  @override
+  String get historyCopyMakingLine => 'يجمع هاتفك ما سيُنسخ. يبدأ بعد لحظة.';
+
+  @override
+  String get historyCopyGoing => 'جارٍ نسخ محادثاتك';
+
+  @override
+  String get historyCopyGoingLine => 'أبقِ الجهازين متصلين حتى ينتهي النسخ.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'المجموع ⁨$size⁩';
+  }
+
+  @override
+  String get historyCopyWaiting => 'بانتظار الجهاز الآخر';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'يتابع النسخ وحده حين يكون الجهازان متصلين.';
+
+  @override
+  String get historyCopyPaused => 'يأخذ النسخ استراحة قصيرة';
+
+  @override
+  String get historyCopyPausedLine => 'يتابع بعد دقيقة.';
+
+  @override
+  String get historyCopyWhole => 'وصلت كل الرسائل والملفات';
+
+  @override
+  String get historyCopyWholeLine => 'لا شيء ناقص.';
+
+  @override
+  String get historyCopyRows => 'وصلت جهات اتصالك ومجموعاتك';
+
+  @override
+  String get historyCopyRowsLine =>
+      'وصلت دون أي رسائل. تظهر الرسائل الجديدة على الجهاز من الآن.';
+
+  @override
+  String get historyCopyGaps => 'وصلت معظم محادثاتك';
+
+  @override
+  String get historyCopyGapsLine =>
+      'في هذه المحادثات محتوى أقل على الجهاز الجديد مما على هاتفك.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'الرسائل: ⁨$got⁩ من ⁨$want⁩';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'الملفات: ⁨$got⁩ من ⁨$want⁩';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'بقي ⁨$countString⁩ عنصر على هاتفك',
+      many: 'بقي ⁨$countString⁩ عنصرًا على هاتفك',
+      few: 'بقيت ⁨$countString⁩ عناصر على هاتفك',
+      two: 'بقي عنصران على هاتفك',
+      one: 'بقي عنصر واحد على هاتفك',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'كبيرة جدًا أو غير مقروءة للنسخ.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'بقيت ⁨$countString⁩ محادثة على هاتفك',
+      many: 'بقيت ⁨$countString⁩ محادثة على هاتفك',
+      few: 'بقيت ⁨$countString⁩ محادثات على هاتفك',
+      two: 'بقيت محادثتان على هاتفك',
+      one: 'بقيت محادثة واحدة على هاتفك',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'توقف النسخ';
+
+  @override
+  String get historyCopyEndedLine =>
+      'لن يصل شيء آخر. اربط الجهاز من جديد لنسخة جديدة.';
+
+  @override
+  String get historyCopyFailed => 'تعذّر إكمال النسخ';
+
+  @override
+  String get historyCopyFailedLine => 'اربط الجهاز من جديد لنسخة جديدة.';
+
+  @override
+  String get historyCopyStays => 'بقي على هاتفك';
+
+  @override
+  String get historyCopySee => 'عرض النسخ';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11329,4 +11439,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationsPlaySoundHint => 'مع كل إشعار على هذا الحاسوب';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'مشاركة الجسر ⁨$n⁩';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'شارك هذا الجسر';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'شاركه بشكل خاص مع من تثق بهم. الجسر الذي يبقى بعيدًا عن الصفحات العامة يعمل لمدة أطول.';
+
+  @override
+  String get bridgesCopyBridge => 'نسخ الجسر';
+
+  @override
+  String get bridgesBridgeCopied => 'نُسخ الجسر';
+
+  @override
+  String get bridgesSendBridgeTo => 'أرسل الجسر إلى';
 }

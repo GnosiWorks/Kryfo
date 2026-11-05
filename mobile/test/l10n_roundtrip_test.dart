@@ -608,7 +608,6 @@ void main() {
     expect(l.bridges1LineSaved(1), "1 line saved");
     expect(l.bridges1LineSaved(2), "2 lines saved");
     expect(l.bridges1LineSaved(5), "5 lines saved");
-    expect(l.bridgesAsking, "Asking…");
     expect(l.cameraNoCameraOnThis, "No camera on this phone");
     expect(l.cameraCameraNotAvailable, "Camera not available");
     expect(l.cameraCameraPermissionIsOff, "Camera permission is off");
@@ -1174,8 +1173,14 @@ void main() {
     expect(l.groupChatQuotedPhoto, "Photo");
     expect(l.groupChatMessageUnavailable, "Message unavailable");
     expect(l.groupChatTorIsNotUp, "Tor isn't connected yet · no link preview");
-    expect(l.groupChatCouldnTReachIt, "Couldn't reach the page · no link preview");
-    expect(l.groupChatNoTitleCameBack, "That page has no title · no link preview");
+    expect(
+      l.groupChatCouldnTReachIt,
+      "Couldn't reach the page · no link preview",
+    );
+    expect(
+      l.groupChatNoTitleCameBack,
+      "That page has no title · no link preview",
+    );
     expect(l.groupChatCouldnTFetchIt, "Couldn't load a preview");
     expect(l.groupChatCamera, "Camera");
     expect(l.groupChatGallery, "Gallery");
@@ -3311,24 +3316,15 @@ void main() {
     );
     expect(l.bridgesAskTorProject, "Ask the Tor Project");
     expect(
+      l.bridgesPlainAdvice,
+      "Kryfo picks bridges automatically. Snowflake and WebTunnel work in "
+      "most places. If one doesn't connect, try another, or ask a friend for "
+      "a bridge line.",
+    );
+    expect(
       l.bridgesWhenTorIsBlockedAutomatic,
       "When Tor is blocked, Automatic asks the Tor Project what works in your country.",
     );
-    expect(l.bridgesCountry, "Country");
-    expect(l.bridgesLetTheTorProject, "Let the Tor Project guess");
-    expect(
-      l.bridgesTheTorProjectKnows,
-      "The Tor Project has its own advice for these countries.",
-    );
-    expect(l.bridgesTheTorProjectSGuess, "The Tor Project's guess");
-    expect(l.bridgesBelarus, "Belarus");
-    expect(l.bridgesChina, "China");
-    expect(l.bridgesEgypt, "Egypt");
-    expect(l.bridgesHongKong, "Hong Kong");
-    expect(l.bridgesIran, "Iran");
-    expect(l.bridgesMyanmar, "Myanmar");
-    expect(l.bridgesRussia, "Russia");
-    expect(l.bridgesTurkmenistan, "Turkmenistan");
     expect(l.bridgesSavedLines, "Saved lines");
     expect(l.bridgesKryfoCanTUseThis, "Kryfo can't use this line");
     expect(l.bridgesTooLongForTor, "Too long for Tor to use");
@@ -3634,8 +3630,12 @@ void main() {
     expect(l.mediaSendUpTo("<count>"), "Up to <count> at a time");
     expect(l.mediaSendVideo, "Send video");
     expect(
-      l.mediaSendUntilAccepted("<count>"),
-      "Until they accept, <count> can go",
+      l.requestSenderMediaLater,
+      "Photos and files unlock after they accept you, to keep you both safe.",
+    );
+    expect(
+      l.requestReceiverMediaLater,
+      "Photos and files unlock after you accept them, to keep you safe.",
     );
     expect(
       l.fileInstallerLine,
@@ -3980,5 +3980,14 @@ void main() {
     expect(l.homeGoogleGoneTitle, "Google push is not available");
     expect(l.appNotificationsLink, "Notifications →");
     expect(l.devGooglePushes(3, 1), "Google pushes 3 · lowered 1");
+    expect(l.bridgesShareBridgeN("2"), "Share bridge 2");
+    expect(l.bridgesShareThisBridge, "Share this bridge");
+    expect(
+      l.bridgesShareItPrivately,
+      "Share it privately, with people you trust. A bridge kept off public pages keeps working for longer.",
+    );
+    expect(l.bridgesCopyBridge, "Copy bridge");
+    expect(l.bridgesBridgeCopied, "Bridge copied");
+    expect(l.bridgesSendBridgeTo, "Send the bridge to");
   });
 }

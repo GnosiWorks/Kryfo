@@ -70,6 +70,7 @@ func HaloWipeHold() *C.char { return C.CString(wipeHold()) }
 
 func wipeHold() string {
 	engineHeld.Store(true)
+	batchBookReset()
 	nostrMu.Lock()
 	for k, cancel := range nostrSubs {
 		cancel()

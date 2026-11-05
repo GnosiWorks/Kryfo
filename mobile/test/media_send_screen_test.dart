@@ -43,7 +43,6 @@ void main() {
     bool still = false,
     Locale locale = const Locale('en'),
     int? max,
-    bool request = false,
     Future<bool> Function(List<PickedMedia> items)? beforeSend,
     void Function(List<XFile> videos)? onGone,
   }) async {
@@ -82,7 +81,6 @@ void main() {
           addMore: more,
           secure: protect,
           max: max ?? kPickMax,
-          request: request,
           beforeSend: beforeSend,
           onGone: onGone,
         ),
@@ -232,18 +230,15 @@ void main() {
     expect((await got)!.items.map(_tagOf), [1]);
   });
 
-  testWidgets('before they accept, only the slots left go, and it says so', (
-    t,
-  ) async {
+  testWidgets('the dev chat\'s slots left go, and it says so', (t) async {
     final got = await open(
       t,
       [_photo(1), _photo(2), _photo(3)],
       max: 1,
-      request: true,
       more: () async => [_photo(4)],
     );
     expect(screen(t).items.map(_tagOf), [1]);
-    expect(find.text('Until they accept, 1 can go'), findsOneWidget);
+    expect(find.text('Up to 1 at a time'), findsOneWidget);
     // nothing more can join
     expect(find.bySemanticsLabel('Add more'), findsNothing);
     await send(t);

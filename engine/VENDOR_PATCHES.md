@@ -94,6 +94,9 @@ files differ, the new lines marked `kryfo:`:
   upstream's 19s and 800ms. the relay runners pass 90s and 20s in private
   mode (lanes.go): over tor a pong often takes longer than 800ms, and three
   late ones close the socket.
+- `relay.go`: `RelayOptions.ClosedHandler` hears every CLOSED's reason.
+  a shared socket to our relay (relayhub.go) learns from it that the relay
+  still keeps the old req budget and paces under that one.
 - `relay.go`: `handleMessage` ends at most its own connection, whatever
   the frame, and the caller dials again.
 - `relay.go`: a publish that sees its connection end clears the OK

@@ -37,7 +37,7 @@ func knockSubs(t *testing.T, contacts int) *knockWorld {
 		// as nostrSubscribeAt notes every subscription's address, the main
 		// identity's too: the knocks never derive one again
 		sk, pk, _ := nip17RcvAddressAs(testMain(), p.pub)
-		lane := receiveLane(pk)
+		lane := receiveLane(mainIdent, pk)
 		noteKnockTarget(h, knockTarget{pk, sk, lane, lane, h})
 		startSub(h, idle)
 		w.keys = append(w.keys, h)
@@ -112,8 +112,8 @@ func TestKnockAddressesNameNoAddress(t *testing.T) {
 		}
 	}
 	for _, pk := range w.contacts {
-		if got[knockID(pk)] != receiveLane(pk) {
-			t.Fatalf("a contact's address is in group %q, its lane is %q", got[knockID(pk)], receiveLane(pk))
+		if got[knockID(pk)] != receiveLane(mainIdent, pk) {
+			t.Fatalf("a contact's address is in group %q, its lane is %q", got[knockID(pk)], receiveLane(mainIdent, pk))
 		}
 	}
 	if g := got[knockID(w.fc)]; !strings.HasPrefix(g, "firstcontact:") {
@@ -175,7 +175,7 @@ func TestKnockRegisterGoesOnEachLaneToOurRelayOnly(t *testing.T) {
 
 	lanes := map[string]string{w.fc: laneFirstContact, w.roomPk: roomLane(hex.EncodeToString(w.room.pub[:])), dummyPk: knockSlotLane(9)}
 	for _, pk := range w.contacts {
-		lanes[pk] = receiveLane(pk)
+		lanes[pk] = receiveLane(mainIdent, pk)
 	}
 	seen := map[string]string{}
 	for _, c := range own.snapshot() {

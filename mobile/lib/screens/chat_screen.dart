@@ -13,11 +13,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../photo_blur.dart' show makeBlurSoon;
 import '../picked.dart';
 import '../album.dart';
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
+import '../widgets/sealed_picture.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
@@ -101,6 +103,11 @@ import '../widgets/kryfo_avatar.dart';
 import '../main.dart'
     show
         typeLeaf,
+        linkedRole,
+        deviceReaches,
+        deviceSealOutcome,
+        ownClearLine,
+        ownBlockLine,
         engine,
         sendFirstContactNoted,
         AppStatePqRestart,
@@ -197,7 +204,7 @@ import '../widgets/video_viewer.dart';
 import '../widgets/photo_viewer.dart';
 import '../widgets/swap.dart';
 import '../widgets/typing_mark.dart';
-import '../typing.dart' show composerEdit;
+import '../typing.dart' show capsOfText, composerEdit, kCapDevices;
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
 import '../back_on_top.dart';
@@ -1000,6 +1007,9 @@ class _ChatScreenState extends State<ChatScreen>
   // the bottom bar is drawn once blocked and request state are read, the
   // first one with no transition
   bool _barKnown = false;
+  // on a linked device, a chat it cannot answer: what the bar says instead
+  // of the composer (an older Kryfo, a chat with screenshots blocked)
+  String? _phoneOnly;
   bool _barSettled = false;
   bool _muted = false;
   bool _verified = false;
@@ -1030,6 +1040,35 @@ class _ChatScreenState extends State<ChatScreen>
 
   // what this chat shows about their key, read again whenever a key changes
   // or a mark is set somewhere else
+  // a linked device answers only a contact whose app reads its copies, and
+  // never a chat with screenshots blocked: the phone does
+  Future<void> _readPhoneOnly() async {
+    if (!linkedRole) return;
+    try {
+      final row = await session.getContact(widget.peerHaloId);
+      if (row == null || !mounted) return;
+      final String? line;
+      if (row['shots_on'] == 1) {
+        line = l10n.historyChatStaysShots;
+      } else if (!capsOfText(row['caps'] as String?).contains(kCapDevices)) {
+        line = l10n.chatDeviceReplyFromPhone(
+          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
+        );
+      } else if (!await deviceReaches(widget.peerHaloId)) {
+        // none of their devices wrote to this one yet: the phone answers
+        line = l10n.chatDeviceReplyFromPhoneForNow(
+          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
+        );
+      } else {
+        line = null;
+      }
+      if (!mounted) return;
+      if (line != _phoneOnly) setState(() => _phoneOnly = line);
+    } catch (e) {
+      dlog('chat: phone-only not read (${e.runtimeType})');
+    }
+  }
+
   Future<void> _readKeyState() async {
     if (_isDev) return;
     if (_keyReading) {
@@ -1173,6 +1212,10 @@ class _ChatScreenState extends State<ChatScreen>
   bool get _incomingRequest => !_accepted && _recvCount > 0 && !widget.support;
   // a reaction says this phone read it: none in a request or a block
   bool get _canReact => !_blocked && !_incomingRequest;
+  // a link in a request is plain words on both sides: nothing to tap open,
+  // no card under it
+  bool get _plainLinks =>
+      !_isDev && (_requestPending || (!_accepted && _recvCount > 0));
   // someone added here who knows nothing of it: nothing went to them and
   // nothing came (anything that came marks them engaged), so they hear of
   // this phone only with a first message
@@ -1195,6 +1238,26 @@ class _ChatScreenState extends State<ChatScreen>
   int? _voucherAvatar;
   bool _voucherVerified = false;
   bool get _vouched => _voucherNames.isNotEmpty;
+  // a request to a stranger is words alone until they accept: no photo,
+  // file, voice note or gif goes from here, and their side holds any that
+  // come. an introduced one, the dev chat and his support chats keep theirs
+  bool get _mediaWaits =>
+      _requestPending && !_vouched && !_isDev && !widget.support;
+  // their side of it: what a stranger sent with a file waits, unshown,
+  // until the accept. a decline shreds it
+  bool _heldBack(_Msg m) =>
+      _incomingRequest &&
+      !_vouched &&
+      !_isDev &&
+      m.direction != 'out' &&
+      (m.mediaPath != null || m.filePath != null || m.fileName != null);
+  // said wherever media was reached for in a request still waiting
+  bool _sayMediaLater() {
+    if (!_mediaWaits) return false;
+    if (mounted) showHaloToast(context, l10n.requestSenderMediaLater);
+    return true;
+  }
+
   // what the scam shield saw on this stranger, if anything and not dismissed
   ShieldFlag? _flag;
   bool _showScrollDown = false;
@@ -1463,6 +1526,7 @@ class _ChatScreenState extends State<ChatScreen>
       }),
       // a held chat never shows the composer first
       _readKeyState(),
+      _readPhoneOnly(),
     ];
     unawaited(_readAckLost());
     // the bottom bar waits for these, so a blocked chat or a request never
@@ -2119,6 +2183,7 @@ class _ChatScreenState extends State<ChatScreen>
         // first line is the app's, not the chat's
         if (_messages[i].sticker == null &&
             !_messages[i].welcome &&
+            !_heldBack(_messages[i]) &&
             _messages[i].text.toLowerCase().contains(lower)) {
           matches.add(i);
         }
@@ -2373,6 +2438,7 @@ class _ChatScreenState extends State<ChatScreen>
                             album: album,
                             translation: _translation,
                             transcripts: _transcripts,
+                            plainLinks: _plainLinks,
                           ),
                         ),
                         builder: (_, t, child) => Transform.scale(
@@ -3609,9 +3675,16 @@ class _ChatScreenState extends State<ChatScreen>
         cipher = sealed.cipher;
         sealedOn = sealed.ident;
       } catch (e) {
+        // a linked device: its copies went from here, or its phone answers
+        final out = deviceSealOutcome(e);
+        if (out == 'ok') {
+          await _finishTextSend(msg, 'ok');
+          return;
+        }
         if (!mounted) return;
         // waiting on their card: still going, as the first send has it
         if (e is StartingAfresh || e is KeyHeld) return;
+        if (out != null) unawaited(_readPhoneOnly());
         setState(() {
           msg.sending = false;
           msg.failed = true;
@@ -3763,13 +3836,17 @@ class _ChatScreenState extends State<ChatScreen>
     final pick = await showStickerSheet(
       context,
       container: session.container,
-      gifs: appGifTabs(),
+      // a gif goes as a photo: none in a request still waiting
+      gifs: _mediaWaits ? null : appGifTabs(),
     );
     // the sheet hands focus back to the composer; the keyboard stays down
     FocusManager.instance.primaryFocus?.unfocus();
     if (pick == null || !mounted) return;
     // a found gif goes the way a gif from the phone goes: inside the
     // message, cleaned, never fetched again by anyone
+    if (pick is GifPick || pick is PhoneGifPick) {
+      if (_sayMediaLater()) return;
+    }
     if (pick is GifPick) return _sendOneImage(pick.bytes, '');
     if (pick is PhoneGifPick) return _pickAndSendGif();
     if (pick is! StickerPick) return;
@@ -3914,7 +3991,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
 
     // the chat went while the note was made: the raw voice goes, unsent
-    if (!mounted || _requestLocked) {
+    if (!mounted || _requestLocked || _sayMediaLater()) {
       // one that will not go is swept at the next start
       drop().ignore();
       return;
@@ -4237,7 +4314,7 @@ class _ChatScreenState extends State<ChatScreen>
   // src is a file this app can read: the picker's copy or a camera clip.
   // it is copied into the media folder, never read into memory.
   Future<void> _sendFileFrom(String src, String picked) async {
-    if (_requestLocked) return;
+    if (_requestLocked || _sayMediaLater()) return;
     final ready = await _readyFile(src, picked);
     if (ready != null) await _sendReady(ready, '');
   }
@@ -4302,6 +4379,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       return null;
     }
+    makeBlurSoon(dest.path);
     return _Ready(msgUid, dest.path, fileName: name);
   }
 
@@ -4320,12 +4398,13 @@ class _ChatScreenState extends State<ChatScreen>
     // a png, gif, webp or heic keeps its own kind, and its name says so
     final mediaFile = File('${mediaDir.path}/$msgUid.${pictureExt(bytes)}');
     await mediaFile.writeAsBytes(bytes);
+    makeBlurSoon(mediaFile.path);
     return _Ready(msgUid, mediaFile.path);
   }
 
-  // a ready photo or file shown and sent. two of anything before they
-  // accept, photos included: the far side holds a third, and a slot is
-  // taken before any await so a second send cannot slip past
+  // a ready photo or file shown and sent. none to a stranger before they
+  // accept (their side holds it), and to the dev chat a slot is taken
+  // before any await so a second send cannot slip past
   Future<void> _sendReady(
     _Ready ready,
     String caption, {
@@ -4345,7 +4424,7 @@ class _ChatScreenState extends State<ChatScreen>
       drop();
       return;
     }
-    if (_requestLocked) {
+    if (_requestLocked || _sayMediaLater()) {
       await shredFile(ready.path);
       drop();
       return;
@@ -4514,11 +4593,10 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  // the slots a request has left: to someone who has not accepted yet, two
-  // things in all (kDevCap to the developer)
-  int get _roomLeft => _requestPending && !_vouched
-      ? (_isDev ? kDevCap : 2) - _sentCount
-      : kPickMax;
+  // the slots the dev chat has left before his first word: kDevCap in all.
+  // a stranger's request takes none (_mediaWaits)
+  int get _roomLeft =>
+      _requestPending && !_vouched && _isDev ? kDevCap - _sentCount : kPickMax;
 
   // a big file's question, asked over the preview before it closes
   Future<bool> _askBig(List<PickedMedia> items) async {
@@ -4544,11 +4622,14 @@ class _ChatScreenState extends State<ChatScreen>
   ]) async {
     if (!mounted) return null;
     final room = _roomLeft;
-    if (room <= 0) {
+    if (_mediaWaits || room <= 0) {
       for (final m in items) {
         if (m.video case final v?) unawaited(shredPickedImages([v]));
       }
-      showHaloToast(context, l10n.mediaSendUntilAccepted(whole(0)));
+      showHaloToast(
+        context,
+        _mediaWaits ? l10n.requestSenderMediaLater : l10n.chatWaitingForThemTo,
+      );
       return null;
     }
     return Navigator.of(context).push<MediaSendResult?>(
@@ -4561,7 +4642,6 @@ class _ChatScreenState extends State<ChatScreen>
           addMore: more,
           secure: _secureNext,
           max: room,
-          request: room < kPickMax,
           beforeSend: _askBig,
           onGone: (videos) => unawaited(shredPickedImages(videos)),
         ),
@@ -4742,7 +4822,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _sendOneImage(Uint8List raw, String caption) async {
     // first, so a photo that is dropped spends no request slot
-    if (_requestLocked) return;
+    if (_requestLocked || _sayMediaLater()) return;
     final ready = await _readyPhoto(raw);
     if (ready != null) await _sendReady(ready, caption);
   }
@@ -4826,7 +4906,11 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _addPreview() async {
     final url = firstUrl(_msgCtrl.text);
     // a quiet session fetches nothing: what is typed there stays here
-    if (url == null || _previewBusy || sessionQuiet || appState.everydayHeld) {
+    if (url == null ||
+        _previewBusy ||
+        sessionQuiet ||
+        appState.everydayHeld ||
+        _plainLinks) {
       return;
     }
     setState(() => _previewBusy = true);
@@ -5035,7 +5119,15 @@ class _ChatScreenState extends State<ChatScreen>
           gate.complete();
         }
       } catch (e) {
+        // a linked device: its copies went from here, or its phone answers
+        final out = deviceSealOutcome(e);
+        if (out == 'ok') {
+          mounted ? setState(() => sealing(false)) : sealing(false);
+          await _finishTextSend(msg, 'ok');
+          return;
+        }
         if (!mounted) return;
+        if (out != null) unawaited(_readPhoneOnly());
         setState(() {
           sealing(false);
           // one waiting on their card after a restore is no broken session
@@ -5047,7 +5139,7 @@ class _ChatScreenState extends State<ChatScreen>
           if (slot) _sentCount--;
           if (devKeyFailed(e)) {
             _devKeyFailed = true;
-          } else {
+          } else if (out == null) {
             _status = l10n.chatNoSignalSessionRe;
           }
         });
@@ -5473,6 +5565,9 @@ class _ChatScreenState extends State<ChatScreen>
         // show on its own bubble, where reading them starts its clock
         if (original.burnUnread) {
           quoted = l10n.timedMessageLabel;
+        } else if (_heldBack(original)) {
+          // a stranger's file, its name and caption too, waits for the accept
+          quoted = l10n.requestReceiverMediaLater;
         } else if (original.sticker != null) {
           quoted = l10n.stickerLabel;
           quotedSticker = original.sticker;
@@ -5549,6 +5644,7 @@ class _ChatScreenState extends State<ChatScreen>
           quotedSticker: quotedSticker,
           linkTitle: _linkPreview(m)?['title'],
           linkBySender: _linkPreview(m)?['by'] == 'sender',
+          plainLinks: _plainLinks,
           firstInGroup: firstInGroup,
           lastInGroup: lastInGroup,
           revealed: m.msgUid != null && m.msgUid == _revealedUid,
@@ -6173,7 +6269,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.chatClearThisConversation,
-      line: l10n.chatEveryMessageHereIsShown,
+      line: ownClearLine(group: false),
       yes: l10n.chatClear,
       keep: l10n.commonCancel,
     );
@@ -6224,7 +6320,7 @@ class _ChatScreenState extends State<ChatScreen>
     final confirm = await showConfirmSheet(
       context,
       title: l10n.chatBlockThisContact,
-      line: l10n.chatTheirMessagesStopArriving,
+      line: ownBlockLine(chat: true),
       yes: l10n.commonBlock,
       keep: l10n.commonCancel,
     );
@@ -6623,7 +6719,7 @@ class _ChatScreenState extends State<ChatScreen>
         if (!didPop) _escOne();
       },
       child: DragInZone(
-        enabled: _composerShown,
+        enabled: _composerShown && !_mediaWaits,
         send: _sendFileFrom,
         couldNotRead: () => l10n.chatCouldNotReadThat,
         child: _page(context),
@@ -6757,6 +6853,7 @@ class _ChatScreenState extends State<ChatScreen>
                             ? _RequestBanner(
                                 key: const ValueKey('request'),
                                 compact: short,
+                                mediaLater: _mediaWaits,
                               )
                             : const SizedBox(
                                 key: ValueKey('top-none'),
@@ -6892,8 +6989,10 @@ class _ChatScreenState extends State<ChatScreen>
                                                   1 -
                                                   i];
                                           final id = _rowKey(row);
-                                          // drawn, and landed on, in its album
-                                          if (_albums.hidden(row)) {
+                                          // drawn, and landed on, in its album.
+                                          // a stranger's file waits unshown
+                                          if (_albums.hidden(row) ||
+                                              _heldBack(row)) {
                                             return SizedBox.shrink(
                                               key: ValueKey(id),
                                             );
@@ -7128,6 +7227,8 @@ class _ChatScreenState extends State<ChatScreen>
                         ? 'bar_request'
                         : _requestLocked
                         ? 'bar_locked'
+                        : _phoneOnly != null
+                        ? 'bar_phone_only'
                         : _keyHeld && !_isDev
                         ? 'bar_held'
                         : 'bar_composer',
@@ -7158,6 +7259,11 @@ class _ChatScreenState extends State<ChatScreen>
                         )
                       : _requestLocked
                       ? _RequestLockBar(line: _isDev ? l10n.devLockLine : null)
+                      : _phoneOnly != null
+                      ? _RequestLockBar(
+                          line: _phoneOnly,
+                          icon: Icons.smartphone_outlined,
+                        )
                       : _keyHeld && !_isDev
                       ? KeyHeldCard(
                           peerName: _nickname ?? widget.peerHaloId,
@@ -7176,7 +7282,11 @@ class _ChatScreenState extends State<ChatScreen>
                               // over tor or not at all, so without it there is
                               // nothing to offer. never in a quiet session
                               builder: (_, v, _) => PreviewStrip(
-                                url: _accepted && !sessionQuiet && _torUp
+                                url:
+                                    _accepted &&
+                                        !_plainLinks &&
+                                        !sessionQuiet &&
+                                        _torUp
                                     ? firstUrl(v.text)
                                     : null,
                                 pending: _pendingPreview,
@@ -7187,6 +7297,7 @@ class _ChatScreenState extends State<ChatScreen>
                               ),
                             ),
                             _Composer(
+                              media: !_mediaWaits,
                               onAttach: _showAttachSheet,
                               onStickers: _showStickers,
                               onCamera: _openCamera,
@@ -7352,6 +7463,19 @@ class _AcceptRequestBar extends StatelessWidget {
               height: 1.5,
             ),
           ),
+          // a stranger's photos and files wait for the accept
+          if (introducer == null) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.requestReceiverMediaLater,
+              textAlign: TextAlign.center,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.5,
+              ),
+            ),
+          ],
           const SizedBox(height: 11),
           // every button takes a share of the row, so a long word or a big
           // font shrinks a label instead of pushing the row off the screen
@@ -7485,7 +7609,13 @@ class _IntroBanner extends StatelessWidget {
 class _RequestBanner extends StatelessWidget {
   // little room: closer in, and the line under the title on one line
   final bool compact;
-  const _RequestBanner({super.key, this.compact = false});
+  // photos and files wait for their accept: said under the line
+  final bool mediaLater;
+  const _RequestBanner({
+    super.key,
+    this.compact = false,
+    this.mediaLater = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -7527,6 +7657,17 @@ class _RequestBanner extends StatelessWidget {
               height: 1.5,
             ),
           ),
+          if (mediaLater && !compact) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.requestSenderMediaLater,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text2,
+                height: 1.5,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -8207,6 +8348,8 @@ class _Bubble extends StatelessWidget {
   // a link in the text: the title the sender shipped, if any
   final String? linkTitle;
   final bool linkBySender;
+  // a request's links: shown as the words they are, never tappable
+  final bool plainLinks;
   // a sticker row: the chat's budget, its place in it, and its flight
   final StickerBudget? stickers;
   final int stickerOrder;
@@ -8252,6 +8395,7 @@ class _Bubble extends StatelessWidget {
     this.onReveal,
     this.linkTitle,
     this.linkBySender = false,
+    this.plainLinks = false,
     this.firstInGroup = true,
     this.lastInGroup = true,
     this.unconfirmed = false,
@@ -8268,6 +8412,10 @@ class _Bubble extends StatelessWidget {
             color: (isOut && !image) ? HaloColors.onAmber : HaloColors.text,
             height: 1.4,
           );
+    if (query.isEmpty && plainLinks) {
+      final t = words ?? msg.text;
+      return Text(t, style: base, textDirection: writtenDir(t));
+    }
     if (query.isEmpty) {
       return KryfoLinkText(
         text: words ?? msg.text,
@@ -8747,33 +8895,25 @@ class _Bubble extends StatelessWidget {
                                                             0.78,
                                                         child: ChatPicture(
                                                           path: msg.mediaPath!,
-                                                          child: Image.file(
-                                                            File(
-                                                              msg.mediaPath!,
-                                                            ),
-                                                            gaplessPlayback:
-                                                                true,
-                                                            fit: BoxFit.cover,
-                                                            cacheWidth:
+                                                          // its blur at once,
+                                                          // the photo fading up
+                                                          // over it once decoded
+                                                          child: SealedPicture(
+                                                            path:
+                                                                msg.mediaPath!,
+                                                            shaped: true,
+                                                            decodeWidth:
                                                                 screenPx(
                                                                   context,
                                                                   times: 0.78,
                                                                 ),
-                                                            // fades up once decoded,
-                                                            // over a quiet box
-                                                            frameBuilder:
-                                                                (
-                                                                  _,
-                                                                  child,
-                                                                  frame,
-                                                                  sync,
-                                                                ) => PhotoTileFade(
-                                                                  shown:
-                                                                      sync ||
-                                                                      frame !=
-                                                                          null,
-                                                                  child: child,
-                                                                ),
+                                                            image: mediaImage(
+                                                              msg.mediaPath!,
+                                                              screenPx(
+                                                                context,
+                                                                times: 0.78,
+                                                              ),
+                                                            ),
                                                             errorBuilder: (_, e, _) {
                                                               dlog(
                                                                 'image failed: '
@@ -8896,7 +9036,8 @@ class _Bubble extends StatelessWidget {
                                                 ),
                                               ),
                                             ),
-                                          if (msg.url case final u?) ...[
+                                          if (msg.url case final u?
+                                              when !plainLinks) ...[
                                             const SizedBox(height: 6),
                                             LinkStub(
                                               url: u,
@@ -8905,7 +9046,8 @@ class _Bubble extends StatelessWidget {
                                               bySender: linkBySender,
                                             ),
                                           ],
-                                          if (msg.place case final p?) ...[
+                                          if (msg.place case final p?
+                                              when !plainLinks) ...[
                                             const SizedBox(height: 6),
                                             PlaceStub(place: p, isOut: isOut),
                                           ],
@@ -9678,8 +9820,12 @@ class _Composer extends StatelessWidget {
   // on for good in this chat: the anonymous dev chat
   final bool disguiseLocked;
   final void Function(VoiceTake take) onVoice;
+  // photos, files, the camera and voice notes: off in a request to a
+  // stranger until they accept
+  final bool media;
 
   const _Composer({
+    this.media = true,
     required this.controller,
     this.focusNode,
     required this.onSend,
@@ -9814,7 +9960,7 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 1),
               // the camera that keeps its photos inside kryfo. each icon
               // sits in a finger-sized box, so a tap between them lands
-              if (!onDesktop)
+              if (!onDesktop && media)
                 PressScale(
                   label: l10n.chatOpenTheCamera,
                   onTap: onCamera,
@@ -9829,20 +9975,23 @@ class _Composer extends StatelessWidget {
                     ),
                   ),
                 ),
-              PressScale(
-                label: l10n.chatAttachAPhoto,
-                onTap: onAttach,
-                scale: 0.86,
-                child: SizedBox(
-                  width: 38,
-                  height: 40,
-                  child: Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              if (media)
+                PressScale(
+                  label: l10n.chatAttachAPhoto,
+                  onTap: onAttach,
+                  scale: 0.86,
+                  child: SizedBox(
+                    width: 38,
+                    height: 40,
+                    child: Icon(
+                      Icons.add_photo_alternate_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
-                ),
-              ),
+                )
+              else
+                const SizedBox(width: 8),
               const SizedBox(width: 1),
               Expanded(
                 child: WrittenDir(
@@ -9912,7 +10061,7 @@ class _Composer extends StatelessWidget {
                   // a send still grinding takes the next one behind it
                   final canSend = hasText;
                   // mic and send trade places with a small pop instead of a cut
-                  final Widget end = !hasText
+                  final Widget end = !hasText && media
                       ? KeyedSubtree(
                           key: const ValueKey('mic'),
                           child: HoldToTalkMic(
@@ -10067,16 +10216,11 @@ class MediaGalleryScreen extends StatelessWidget {
                   ),
                   child: HaloHero(
                     tag: tag,
-                    child: Image.file(
-                      File(path),
-                      fit: BoxFit.cover,
-                      cacheWidth: 360,
+                    // each tile shows its blur, its photo fading up over it
+                    child: SealedPicture(
+                      path: path,
+                      image: mediaImage(path, 360),
                       filterQuality: FilterQuality.low,
-                      // each tile fades up once its photo is decoded
-                      frameBuilder: (_, child, frame, sync) => PhotoTileFade(
-                        shown: sync || frame != null,
-                        child: child,
-                      ),
                       // a photo whose file is gone says so, not a black square
                       errorBuilder: (_, _, _) => Container(
                         color: HaloColors.surface2,

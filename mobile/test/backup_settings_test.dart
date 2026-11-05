@@ -421,6 +421,46 @@ void main() {
       });
     });
 
+    test('restored, the batch book comes with the file in place of this '
+        'phone\'s, so every address stays in its batch, and batch files of '
+        'before go', () async {
+      oldPhone();
+      const line = 'c2VhbGVkIGJvb2sgbGluZQ';
+      put(kBatchBookName, '$line\n');
+      final d = await draftBackup(stage, side: const _Side());
+      expect(d.manifest['book'], line);
+      // a file that leaves the hidden chats out carries it too: it names no
+      // address, and a hidden chat's place reads as any other's
+      expect(
+        (await draftBackup(
+          stage,
+          side: const _HiddenLeftOut(),
+        )).manifest['book'],
+        line,
+      );
+      final out = await write(d.manifest, d.sources);
+      newPhone();
+      for (final f in Directory(docs).listSync()) {
+        if (p.basename(f.path).startsWith('nostr_')) f.deleteSync();
+      }
+      put(kBatchBookName, 'dGhpcyBwaG9uZXMgb3du\n');
+      put('nostr_batch_dddddddddddddddd', 'i0 3');
+      await restore(out, inDecoy: false);
+      final left = {
+        for (final f in Directory(docs).listSync())
+          if (p.basename(f.path).startsWith('nostr_'))
+            p.basename(f.path): File(f.path).readAsStringSync(),
+      };
+      expect(left, {kBatchBookName: '$line\n'});
+      // a file with no book, or an odd one, leaves none: the engine starts
+      // a new one
+      for (final odd in [null, 'not/a line!', 5]) {
+        put(kBatchBookName, '$line\n');
+        await landCatchUpAnchors(docs, null, book: odd);
+        expect(File(p.join(docs, kBatchBookName)).existsSync(), isFalse);
+      }
+    });
+
     test('a file that leaves hidden chats out carries no anchors and reads '
         'the same whether or not there were any', () async {
       oldPhone();

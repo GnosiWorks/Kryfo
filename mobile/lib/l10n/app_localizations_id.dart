@@ -1236,9 +1236,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Saat kamu meminta jembatan, Tor Project melihat alamat IP-mu. Itu wajar: begitulah Tor Browser dan semua aplikasi Tor mendapatkan jembatan, dan yang mereka ketahui hanyalah ada seseorang yang meminta jembatan. Tidak ada apa pun tentang obrolanmu.';
 
   @override
-  String get bridgesAsking => 'Meminta…';
-
-  @override
   String get cameraNoCameraOnThis => 'Tidak ada kamera di ponsel ini';
 
   @override
@@ -7212,9 +7209,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get transportBridgeMode => 'Jembatan';
 
   @override
-  String get bridgesEgypt => 'Mesir';
-
-  @override
   String get bridgesYourBridgeCouldNot => 'Jembatanmu tidak bisa dimulai';
 
   @override
@@ -7259,9 +7253,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get bridgesIran => 'Iran';
-
-  @override
   String get bridgesTurnOnAutomatic => 'Aktifkan otomatis';
 
   @override
@@ -7293,9 +7284,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesScanACode => 'Pindai kode';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Ganti ke otomatis';
 
   @override
@@ -7318,9 +7306,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Lewat komputer relawan. Sulit diblokir, lambat di awal.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Biar Tor Project yang menebak';
 
   @override
   String get bridgesTorSeemsBlocked =>
@@ -7351,10 +7336,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo mencari cara yang berhasil di tempatmu.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Tor Project punya saran sendiri untuk negara-negara ini.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Jembatan ini tidak tembus';
 
   @override
@@ -7366,9 +7347,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Nanti saja';
-
-  @override
-  String get bridgesRussia => 'Rusia';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7394,9 +7372,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesAlmostThere => 'Sebentar lagi';
 
   @override
-  String get bridgesTheTorProjectSGuess => 'Tebakan Tor Project';
-
-  @override
   String get bridgesUseThisBridge => 'Pakai jembatan ini';
 
   @override
@@ -7412,9 +7387,6 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
   String get transportBridgeMethod => 'Metode';
@@ -7441,11 +7413,12 @@ class AppLocalizationsId extends AppLocalizations {
       'Jembatan bisa berhenti bekerja tanpa peringatan. Otomatis bisa mencari cara lain.';
 
   @override
-  String get bridgesHongKong => 'Hong Kong';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Saat Tor diblokir, Otomatis menanyakan ke Tor Project apa yang berhasil di negaramu.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo memilih jembatan secara otomatis. Snowflake dan WebTunnel berfungsi di sebagian besar tempat. Kalau salah satunya tidak tersambung, coba yang lain, atau minta baris jembatan dari teman.';
 
   @override
   String get bridgesAskTorProject => 'Tanya Tor Project';
@@ -7454,18 +7427,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesTooLongForTor => 'Terlalu panjang untuk Tor';
 
   @override
-  String get bridgesCountry => 'Negara';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Tiongkok';
-
-  @override
-  String get bridgesBelarus => 'Belarus';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo tidak bisa memakai baris ini';
@@ -9110,9 +9074,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get mediaSendVideo => 'Kirim video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Sampai dia menerima, $count bisa terkirim';
-  }
+  String get requestSenderMediaLater =>
+      'Foto dan file terbuka setelah dia menerimamu, supaya kalian berdua aman.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Foto dan file terbuka setelah kamu menerimanya, supaya kamu tetap aman.';
 
   @override
   String get groupEndedYou => 'Kamu mengakhiri grup ini';
@@ -10136,11 +10103,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua pesanmu, dengan foto dan video dari 30 hari terakhir.';
 
   @override
-  String get devicesHistoryNone => 'Mulai tanpa riwayat';
+  String get devicesHistoryNone => 'Hanya kontak dan grup';
 
   @override
-  String get devicesHistoryNoneHint =>
-      'Hanya pesan baru yang sampai ke perangkat.';
+  String get devicesHistoryNoneHint => 'Semuanya pindah tanpa pesan apa pun.';
 
   @override
   String get devicesSkipMedia => 'Lewati foto dan video';
@@ -10717,6 +10683,145 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini.';
 
   @override
+  String chatDeviceReplyFromPhone(String name) {
+    return '$name memakai Kryfo versi lama. Balas dari ponselmu.';
+  }
+
+  @override
+  String chatDeviceReplyFromPhoneForNow(String name) {
+    return 'Untuk sekarang, balas $name dari ponselmu.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Semua pesan di sini dihapus hanya dari komputer ini. Ponselmu tetap menyimpannya.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Semua pesan dan kontak ini hilang hanya dari komputer ini. Ponselmu tetap menyimpan chatnya.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Pesannya berhenti masuk ke komputer ini. Dia tidak diberi tahu. Blokir dia di ponselmu agar di sana juga berhenti.';
+
+  @override
+  String get historyCopyTitle => 'Riwayat chat';
+
+  @override
+  String get historyCopyMaking => 'Menyiapkan chat kamu';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Ponselmu mengumpulkan yang akan disalin. Sebentar lagi dimulai.';
+
+  @override
+  String get historyCopyGoing => 'Menyalin chat kamu';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Biarkan kedua perangkat tetap online sampai selesai.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Total $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Menunggu perangkat lain';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Penyalinan berlanjut sendiri saat kedua perangkat online.';
+
+  @override
+  String get historyCopyPaused => 'Penyalinan rehat sebentar';
+
+  @override
+  String get historyCopyPausedLine => 'Berlanjut dalam semenit.';
+
+  @override
+  String get historyCopyWhole => 'Semua pesan dan file sudah sampai';
+
+  @override
+  String get historyCopyWholeLine => 'Tidak ada yang hilang.';
+
+  @override
+  String get historyCopyRows => 'Kontak dan grupmu sudah sampai';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Semuanya sampai tanpa pesan apa pun. Pesan baru muncul di perangkat mulai sekarang.';
+
+  @override
+  String get historyCopyGaps => 'Sebagian besar chatmu sudah sampai';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Chat ini berisi lebih sedikit di perangkat baru daripada di ponselmu.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Pesan: $got dari $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'File: $got dari $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString item tetap di ponselmu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy =>
+      'Terlalu besar atau tidak terbaca untuk disalin.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString chat tetap di ponselmu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Penyalinan berhenti';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Tidak ada lagi yang datang. Tautkan perangkat lagi untuk salinan baru.';
+
+  @override
+  String get historyCopyFailed => 'Penyalinan tidak bisa selesai';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Tautkan perangkat lagi untuk salinan baru.';
+
+  @override
+  String get historyCopyStays => 'Tetap di ponselmu';
+
+  @override
+  String get historyCopySee => 'Lihat salinan';
+
+  @override
   String a11yPinDigits(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -11193,4 +11298,25 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get notificationsPlaySoundHint =>
       'Di setiap notifikasi di komputer ini';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Bagikan jembatan $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Bagikan jembatan ini';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Bagikan secara pribadi, kepada orang yang kamu percaya. Jembatan yang tidak dipasang di halaman publik bekerja lebih lama.';
+
+  @override
+  String get bridgesCopyBridge => 'Salin jembatan';
+
+  @override
+  String get bridgesBridgeCopied => 'Jembatan disalin';
+
+  @override
+  String get bridgesSendBridgeTo => 'Kirim jembatan ke';
 }

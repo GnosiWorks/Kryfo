@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/widgets/media_bubbles.dart';
+import 'package:kryfo/widgets/sealed_picture.dart';
 
 import 'source_body.dart';
 import 'zip_maker.dart';
@@ -105,7 +106,8 @@ void main() {
     final f = made('c2', _jpeg);
     await t.runAsync(() => readFileFacts(f.path, 'photo.bin'));
     await show(t, fileCard(f.path, 'photo.bin', false));
-    expect(find.byType(Image), findsOneWidget);
+    // drawn as a picture; these few bytes do not decode, so the card stands in
+    expect(find.byType(SealedPicture), findsOneWidget);
   });
 
   testWidgets('an installer shows the name it is saved under', (t) async {

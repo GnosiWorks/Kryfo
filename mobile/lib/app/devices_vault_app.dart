@@ -71,7 +71,8 @@ class _VaultDeviceListen implements DeviceListen {
   @override
   void listen(int ident, String arg) {
     _hiddenHeard[arg] = ident;
-    engine.deviceListenBg(ident, arg);
+    // a hidden chat's contact's device: a lane of its own, as the chat's
+    engine.deviceListenBg(ident, arg, hidden: true);
     _hiddenCardsDue();
   }
 
@@ -513,7 +514,7 @@ extension AppStateVaultDevices on AppState {
     for (final e in want.entries) {
       if (_hiddenHeard[e.key] == e.value) continue;
       _hiddenHeard[e.key] = e.value;
-      engine.deviceListenBg(e.value, e.key);
+      engine.deviceListenBg(e.value, e.key, hidden: true);
     }
   }
 

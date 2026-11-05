@@ -67,6 +67,8 @@ class TranslationHub extends ChangeNotifier {
       } catch (_) {
         _settings = const TranslateSettings();
       }
+      // made after the vault opened, no switch heard: catch up before a read
+      await dropKept();
       for (final b in catalog.langs) {
         try {
           await downloads.refresh(b.lang);

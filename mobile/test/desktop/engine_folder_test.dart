@@ -292,6 +292,25 @@ void main() {
       });
     });
 
+    test('the batch book is kept between runs, so a start keeps every '
+        'batch', () async {
+      await startOnce([]);
+      final ef = EngineFiles(docs: docs, support: support, runtime: run);
+      await sealed(() => ef.prepare(vault));
+      // one sealed line, as the engine writes it; a cut line too stays whole
+      for (final body in ['c2VhbGVkIGJvb2s\n', 'c2VhbGVkIGJvb2s']) {
+        io.rawFile(p.join(ef.dir, 'nostr_book')).writeAsStringSync(body);
+        final anchors = sealed(
+          () => keepMarksIn(ef.dir, p.join(support, 'engine.state')),
+        );
+        expect(anchors.keys, isNot(contains('nostr_book')));
+        // the runtime folder is gone after a restart
+        io.rawDirectory(ef.dir).deleteSync(recursive: true);
+        await sealed(() => ef.prepare(vault));
+        expect(raw(p.join(ef.dir, 'nostr_book')), utf8.encode(body));
+      }
+    });
+
     test('the sweep syncs the folder before it zeroes', () {
       final a = p.join(docs, 'media', 'old.jpg');
       io.rawFile(a).writeAsStringSync('an old photo');
