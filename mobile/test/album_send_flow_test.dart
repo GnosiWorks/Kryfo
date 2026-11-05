@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // how both chats send what the preview gives back: its bubbles show at
 // once and the cleaning follows; the camera's clip goes through the
-// preview too; before they accept, the preview takes only the slots left;
+// preview too; to a stranger before they accept none opens, and the dev
+// chat's takes only the slots left;
 // a big file is asked about inside the preview, not after it
 import 'package:flutter_test/flutter_test.dart';
 
@@ -43,11 +44,13 @@ void main() {
     }
   });
 
-  test('before they accept, the preview takes only the slots left', () {
+  test('before they accept, no preview to a stranger, the dev chat\'s slots '
+      'left', () {
     final body = bodyOf(chat, 'Future<MediaSendResult?> _preview(');
     expect(body, contains('final room = _roomLeft;'));
     expect(body, contains('max: room,'));
-    expect(body, contains('request: room < kPickMax,'));
+    expect(body, contains('if (_mediaWaits || room <= 0)'));
+    expect(body, isNot(contains('request:')));
     expect(body, contains('onGone:'));
     expect(
       bodyOf(group, 'Future<MediaSendResult?> _preview('),
