@@ -532,15 +532,22 @@ func (d *devState) deviceKey(ident int, peer [32]byte, dev uint8) ([32]byte, boo
 		if m.ident != ident {
 			return [32]byte{}, false
 		}
+		var e devices.Entry
 		l := d.own.Current(id)
-		if l == nil {
+		if l != nil {
+			e, ok = l.Find(dev)
+		}
+		switch {
+		case l != nil && ok:
+			k = e.Key
+		case dev != devices.PhoneID:
+			// a device just removed: its last word goes to its pair
+			if k, ok = devLeavingKey(ident, dev); !ok {
+				return [32]byte{}, false
+			}
+		default:
 			return [32]byte{}, false
 		}
-		e, ok := l.Find(dev)
-		if !ok {
-			return [32]byte{}, false
-		}
-		k = e.Key
 	} else if i, held := d.peers[id]; !held {
 		// a hidden chat's contact while its vault is shut: the keys its
 		// card names, for listening alone

@@ -916,6 +916,87 @@ void main() {
     expect((await historyCopyOf(ph.db, _uid))!.hist.containsKey('q'), isFalse);
   }, skip: skip);
 
+  test('a device removed mid copy hears it ended and takes everything back, '
+      'and still hears it once the phone app came back; nothing makes its '
+      'copy again', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    final now = DateTime.fromMillisecondsSinceEpoch(ph.now);
+    final w = _World(ph, d)..clock = (() => now);
+    w.startPhone();
+    var removed = false;
+    w.wire.before = (i) async {
+      if (i == 10 && !removed) {
+        removed = true;
+        await PhoneHistoryCopy.unlinked(
+          ph.db,
+          _uid,
+          w.door,
+          running: w.phone,
+          clock: () => now,
+        );
+        await markOwnDevicesGone(
+          ph.db,
+          [_uid],
+          why: 'removed',
+          at: now.millisecondsSinceEpoch,
+          notice: false,
+        );
+      }
+    };
+    w.startDevice();
+    await w.deviceRun!.timeout(const Duration(seconds: 20));
+    await w.phoneRun;
+    expect(w.device!.stage.value.step, HistoryCopyStep.ended);
+    expect(await _count(d.db, 'SELECT COUNT(*) FROM messages'), 0);
+    expect(await _count(d.db, 'SELECT COUNT(*) FROM contacts'), 0);
+    expect(await linkStreamOf(d.db), isNull);
+    final row = await historyCopyAnyOf(ph.db, _uid);
+    expect(row!.stream, isNull);
+    expect(
+      HistoryCopyStage.fromJson(row.hist['r'])!.step,
+      HistoryCopyStep.ended,
+    );
+    // the phone's app goes and comes back: a removed device still hears it
+    w.door.serves.clear();
+    w.door.rests.clear();
+    await PhoneHistoryCopy.restAll(ph.db, w.door, clock: () => now);
+    expect(w.door.rests, ['ended']);
+    expect(await historyCopiesOwed(ph.db), isEmpty);
+  }, skip: skip);
+
+  test('a copy over says ended once its device is removed, whole or '
+      'not', () async {
+    final ph = await _phone();
+    final d = await _device(ph);
+    final now = DateTime.fromMillisecondsSinceEpoch(ph.now);
+    final w = _World(ph, d)..clock = (() => now);
+    w.startPhone();
+    w.startDevice();
+    await w.settle();
+    expect(w.phone!.stage.value.step, HistoryCopyStep.whole);
+    w.door.rests.clear();
+    await PhoneHistoryCopy.unlinked(ph.db, _uid, w.door, clock: () => now);
+    expect(w.door.rests, ['ended']);
+    await markOwnDevicesGone(
+      ph.db,
+      [_uid],
+      why: 'removed',
+      at: now.millisecondsSinceEpoch,
+      notice: false,
+    );
+    w.door.rests.clear();
+    await PhoneHistoryCopy.restAll(ph.db, w.door, clock: () => now);
+    expect(w.door.rests, ['ended']);
+    // what the copy came to is kept as it was for the page
+    expect(
+      HistoryCopyStage.fromJson(
+        (await historyCopyAnyOf(ph.db, _uid))!.hist['r'],
+      )!.step,
+      HistoryCopyStep.whole,
+    );
+  }, skip: skip);
+
   test('a device whose phone never answers again lets its copy go after '
       'two weeks', () async {
     final ph = await _phone();

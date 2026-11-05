@@ -11264,6 +11264,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceNotNow => 'Not now';
 
   @override
+  String get unlinkedTitle => 'This device is unlinked';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Your phone removed it from your account, so Kryfo erased everything it kept here.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'It wasn\'t opened for 30 days, so Kryfo erased everything it kept here.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'It heard nothing from your phone for 30 days, so Kryfo erased everything it kept here.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Its clock was set back, so Kryfo erased everything it kept here to keep your chats safe.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo couldn\'t tell when it was last opened, so it erased everything it kept here to keep your chats safe.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'You unlinked it, so Kryfo erased everything it kept here.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Your phone keeps your chats. To use Kryfo here again, link this device to your phone.';
+
+  @override
+  String get unlinkedClose => 'Close Kryfo';
+
+  @override
+  String get devicesLeave => 'Unlink this device';
+
+  @override
+  String get devicesLeaveTitle => 'Unlink this device?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo tells your phone and erases everything it keeps here. Your phone keeps your chats.';
+
+  @override
+  String get devicesLeaveYes => 'Unlink and erase';
+
+  @override
+  String get devicesGoneNotice => 'Device removed';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name was removed from your account on $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name wasn\'t used for 30 days, so it was removed from your account on $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name unlinked itself on $date and erased what it kept.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Your devices changed';
+
+  @override
+  String get devicesChangedLine => 'Open Linked devices to see what changed.';
+
+  @override
+  String get devicesUnknownNotice => 'Device linked elsewhere';
+
+  @override
+  String get devicesUnknownLine =>
+      'Another copy of Kryfo linked a device to your account. This phone took it off your list.';
+
+  @override
   String get albumPrevious => 'Previous';
 
   @override

@@ -299,12 +299,12 @@ class _AppOwn implements OwnApply {
 
   @override
   Future<void> heard(int ident, int device, String key, int at) async {
-    final db = await live.open();
-    await db.rawUpdate(
-      'UPDATE own_devices SET heard_online_ms = 0, heard_at = ? WHERE uid IN '
-      '(SELECT uid FROM own_device_keys WHERE ident = ? AND dev_id = ? '
-      'AND key = ?) AND removed_at IS NULL',
-      [at, ident, device, key],
+    await ownDeviceHeard(
+      await live.open(),
+      ident: ident,
+      dev: device,
+      key: key,
+      at: at,
     );
   }
 }

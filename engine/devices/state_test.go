@@ -292,3 +292,41 @@ func mustKey(t *testing.T) Key {
 	k, _ := newKey(t)
 	return k
 }
+
+// a peek answers as a send would and moves nothing: the silent mark, the
+// weekly probe and a row on another key stay for the send after it
+func TestAPeekSpendsNoProbe(t *testing.T) {
+	k := newFanoutKit(t, 0, 1)
+	bob := k.bob.id.pub
+	e := k.bob.list.Devices[1]
+	v := k.bob.list.Version
+	t0 := time.Unix(1_760_000_000, 0)
+	q := NewQuiet()
+	q.Sent(bob, e.ID, e.Key, t0)
+	if st := q.Peek(bob, e.ID, e.Key, v, t0.Add(QuietSilent)); st != Silent {
+		t.Fatalf("day 30 peeked: %v", st)
+	}
+	if st := q.State(bob, e.ID, e.Key, v, t0.Add(QuietSilent)); st != Silent {
+		t.Fatalf("day 30: %v", st)
+	}
+	at := t0.Add(QuietSilent + QuietProbe)
+	for range 3 {
+		if st := q.Peek(bob, e.ID, e.Key, v, at); st != Rebuild {
+			t.Fatalf("the probe peeked: %v", st)
+		}
+	}
+	if st := q.State(bob, e.ID, e.Key, v, at); st != Rebuild {
+		t.Fatalf("the probe after three peeks: %v", st)
+	}
+	if st := q.Peek(bob, e.ID, e.Key, v, at); st != Silent {
+		t.Fatalf("after the probe: %v", st)
+	}
+	other := e.Key
+	other[5] ^= 1
+	if st := q.Peek(bob, e.ID, other, v, at); st != Open {
+		t.Fatalf("another key peeked: %v", st)
+	}
+	if len(q.Slots(bob)) != 1 {
+		t.Fatal("a peek on another key dropped the row")
+	}
+}

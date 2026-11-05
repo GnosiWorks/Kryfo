@@ -11264,6 +11264,85 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceNotNow => 'Nanti saja';
 
   @override
+  String get unlinkedTitle => 'Perangkat ini sudah terlepas';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Ponselmu menghapusnya dari akunmu, jadi Kryfo menghapus semua yang disimpannya di sini.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Perangkat ini tidak dibuka selama 30 hari, jadi Kryfo menghapus semua yang disimpannya di sini.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Perangkat ini tidak mendapat kabar dari ponselmu selama 30 hari, jadi Kryfo menghapus semua yang disimpannya di sini.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Jamnya dimundurkan, jadi Kryfo menghapus semua yang disimpannya di sini agar obrolanmu tetap aman.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo tidak bisa tahu kapan perangkat ini terakhir dibuka, jadi Kryfo menghapus semua yang disimpannya di sini agar obrolanmu tetap aman.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Kamu melepasnya, jadi Kryfo menghapus semua yang disimpannya di sini.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Ponselmu tetap menyimpan obrolanmu. Untuk memakai Kryfo di sini lagi, tautkan perangkat ini ke ponselmu.';
+
+  @override
+  String get unlinkedClose => 'Tutup Kryfo';
+
+  @override
+  String get devicesLeave => 'Lepaskan perangkat ini';
+
+  @override
+  String get devicesLeaveTitle => 'Lepaskan perangkat ini?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo memberi tahu ponselmu dan menghapus semua yang disimpannya di sini. Ponselmu tetap menyimpan obrolanmu.';
+
+  @override
+  String get devicesLeaveYes => 'Lepaskan dan hapus';
+
+  @override
+  String get devicesGoneNotice => 'Perangkat dihapus';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name dihapus dari akunmu pada $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name tidak dipakai selama 30 hari, jadi dihapus dari akunmu pada $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name terlepas sendiri pada $date dan menghapus yang disimpannya.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Perangkatmu berubah';
+
+  @override
+  String get devicesChangedLine =>
+      'Buka Perangkat tertaut untuk melihat apa yang berubah.';
+
+  @override
+  String get devicesUnknownNotice => 'Perangkat ditautkan dari tempat lain';
+
+  @override
+  String get devicesUnknownLine =>
+      'Salinan Kryfo lain menautkan perangkat ke akunmu. Ponsel ini mengeluarkannya dari daftarmu.';
+
+  @override
   String get albumPrevious => 'Sebelumnya';
 
   @override

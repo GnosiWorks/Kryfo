@@ -20,10 +20,14 @@ final _hiddenHeard = <String, int>{};
 // the keys told to the engine for listening, by '$ident/$identity'
 final _hiddenKeysTold = <String, String>{};
 Timer? _hiddenCardsTimer;
-// removals from my list still to reach a hidden chat's contact's phone
-// while the vault is shut, by their chat: my identity they know. memory
-// only: the vault's own push at its next open carries it anyway
-final _hiddenRemovalsOwed = <String, int>{};
+// while the vault is shut, the hidden chats whose contact's phone took a
+// removal owed (kHiddenRemovalMeta), by chat: the version it went with.
+// memory only: a start sends each again, the vault's open queues it
+final _hiddenRemovalsSent = <String, int>{};
+
+// the vault's own dev_marks kind: a removal owed (kHiddenRemovalMeta) it
+// queued as its pushes, by version
+const kHiddenRemovalQueued = 'hidden_removal';
 
 // a frame of mine to a hidden chat's contact's phone, on the phone pair
 // whose session the everyday side holds
@@ -52,7 +56,7 @@ set hiddenPhoneSendForTest(
   send,
 ) {
   _hiddenPhoneSend = send ?? _hiddenPhoneSendLive;
-  _hiddenRemovalsOwed.clear();
+  _hiddenRemovalsSent.clear();
 }
 
 /// the receiving side of the open vault's hidden chats, while it is open
@@ -284,6 +288,9 @@ extension AppStateVaultDevices on AppState {
       await _vaultDevReceive?.listenAll();
       if (await shut()) return;
       await _vaultListsOwed(v);
+      // a removal owed while it was shut: queued in it now, kept there
+      // until each phone answers
+      if (!await shut()) await _pushHiddenRemovals();
       await shut();
     } catch (e) {
       dlog('devices: the vault\'s not loaded (${e.runtimeType})');
@@ -519,70 +526,119 @@ extension AppStateVaultDevices on AppState {
   }
 
   // my lists changed (devices_send_app.dart): the open vault's side queues
-  // its own pushes; while it is shut a removal goes at once to each hidden
-  // contact's phone that reads lists, on the phone pair the everyday side
-  // holds, so a removed device of mine stops getting their copies now.
-  // additions wait for the vault's next open
-  void _hiddenListsChanged(
+  // its own pushes; while it is shut a removal is owed (kHiddenRemovalMeta)
+  // and goes at once to each hidden contact's phone that reads lists, on
+  // the phone pair the everyday side holds, so a removed device of mine
+  // stops getting their copies now. additions wait for the vault's next
+  // open
+  Future<void> _hiddenListsChanged(
     List<({int ident, int version, List<int> added, bool removed})> changes,
-  ) {
+  ) async {
     if (!linkedDevicesOn) return;
     final v = _vaultDevSend;
     if (v != null) {
-      unawaited(
-        v.listsChanged(changes).catchError((Object e) {
-          dlog('devices: the vault\'s pushes not queued (${e.runtimeType})');
-        }),
-      );
-      return;
-    }
-    final removed = {
-      for (final c in changes)
-        if (c.removed) c.ident,
-    };
-    if (removed.isEmpty) return;
-    for (final e in _router.hiddenDevices.entries) {
-      if (e.value.lists && removed.contains(e.value.ident)) {
-        _hiddenRemovalsOwed[e.key] = e.value.ident;
+      try {
+        await v.listsChanged(changes);
+      } catch (e) {
+        dlog('devices: the vault\'s pushes not queued (${e.runtimeType})');
       }
     }
-    unawaited(_pushHiddenRemovals());
+    // the everyday send loop kept what is owed (kHiddenRemovalMeta) with
+    // its own pushes, in one write
+    await _pushHiddenRemovals();
   }
 
-  // the removals owed to hidden contacts' phones, tried now: my list as I
-  // hold it, the same bytes each time. one that does not go waits for the
-  // next pump
+  // the removals owed to hidden contacts: with the vault open, queued as
+  // its own pushes (kept in it until each phone answers) and marked queued
+  // in the vault; while it is shut, my list as I hold it to each hidden
+  // contact's phone, the same bytes each time, once a version a start. the
+  // everyday value goes by its age alone, vault or no vault
   Future<void> _pushHiddenRemovals() async {
     final ds = _deviceState;
-    if (!linkedDevicesOn || ds == null || _hiddenRemovalsOwed.isEmpty) return;
-    // the open vault's own pushes take them
-    if (_vaultDevSend != null) {
-      _hiddenRemovalsOwed.clear();
-      return;
-    }
-    for (final e in [..._hiddenRemovalsOwed.entries]) {
-      final card = _router.hiddenDevices[e.key];
-      if (card == null || !card.lists) {
-        _hiddenRemovalsOwed.remove(e.key);
+    if (!linkedDevicesOn || ds == null) return;
+    final db = await live.open();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final owed = <int, ({int version, int at})>{};
+    for (final r in await db.query(
+      'signal_meta',
+      columns: ['k', 'v'],
+      where: 'k LIKE ?',
+      whereArgs: ['$kHiddenRemovalMeta%'],
+    )) {
+      final k = r['k'] as String;
+      final ident = int.tryParse(k.substring(kHiddenRemovalMeta.length));
+      final o = hiddenRemovalOf(r['v'] as String?);
+      if (ident == null || o == null) continue;
+      if (now - o.at > kRemovePushKept.inMilliseconds) {
+        await dropDevMeta(db, k);
         continue;
       }
+      owed[ident] = o;
+    }
+    if (owed.isEmpty) return;
+    final v = _vaultDevSend;
+    final vdb = _vaultDevOf;
+    if (v != null && vdb != null) {
+      try {
+        final vd = await vdb.open();
+        for (final e in owed.entries) {
+          final key = '${e.value.version}';
+          final had = await vd.query(
+            'dev_marks',
+            where: "ident = ? AND peer = '' AND kind = ? AND key = ?",
+            whereArgs: [e.key, kHiddenRemovalQueued, key],
+            limit: 1,
+          );
+          if (had.isEmpty) {
+            await v.listsChanged([
+              (
+                ident: e.key,
+                version: e.value.version,
+                added: const [],
+                removed: true,
+              ),
+            ]);
+            await vd.insert('dev_marks', {
+              'ident': e.key,
+              'peer': '',
+              'kind': kHiddenRemovalQueued,
+              'key': key,
+              'at': now,
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+          for (final c in _router.hiddenDevices.entries) {
+            if (c.value.ident == e.key) {
+              _hiddenRemovalsSent[c.key] = e.value.version;
+            }
+          }
+        }
+      } catch (e) {
+        dlog('devices: the vault\'s removals wait (${e.runtimeType})');
+      }
+      return;
+    }
+    for (final e in _router.hiddenDevices.entries) {
+      final card = e.value;
+      final o = owed[card.ident];
+      if (!card.lists || o == null) continue;
+      // past the relays' keep only the vault's open queues it
+      if (now - o.at > kRemovePushGapMost.inMilliseconds) continue;
+      final version = o.version;
+      if ((_hiddenRemovalsSent[e.key] ?? 0) >= version) continue;
       try {
         final cur =
-            jsonDecode(ds.engine.call('current', {'ident': e.value}))
+            jsonDecode(ds.engine.call('current', {'ident': card.ident}))
                 as Map<String, dynamic>;
         final list = cur['list'];
-        if (cur['err'] != null || list is! String) {
-          _hiddenRemovalsOwed.remove(e.key);
-          continue;
-        }
+        if (cur['err'] != null || list is! String) continue;
         final w = base64Decode(list);
-        final version = w.length < 45
+        final at = w.length < 45
             ? 0
             : ByteData.sublistView(w, 37, 45).getUint64(0);
         final frame =
-            '$kEnvelopePrefix${jsonEncode({'u': 'dl:$version', 'dl': list})}';
-        if (await _hiddenPhoneSend(e.value, e.key, card.identity, frame)) {
-          _hiddenRemovalsOwed.remove(e.key);
+            '$kEnvelopePrefix${jsonEncode({'u': 'dl:$at', 'dl': list})}';
+        if (await _hiddenPhoneSend(card.ident, e.key, card.identity, frame)) {
+          _hiddenRemovalsSent[e.key] = max(version, at);
         }
       } catch (x) {
         dlog('devices: a removal to a hidden chat waits (${x.runtimeType})');
@@ -591,7 +647,7 @@ extension AppStateVaultDevices on AppState {
   }
 
   @visibleForTesting
-  void hiddenListsChangedForTest(
+  Future<void> hiddenListsChangedForTest(
     List<({int ident, int version, List<int> added, bool removed})> changes,
   ) => _hiddenListsChanged(changes);
 

@@ -18067,6 +18067,132 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get voiceNotNow;
 
+  /// screens/unlinked_screen.dart: the title once a linked device unlinked and erased itself
+  ///
+  /// In en, this message translates to:
+  /// **'This device is unlinked'**
+  String get unlinkedTitle;
+
+  /// screens/unlinked_screen.dart: why: the phone removed this device
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone removed it from your account, so Kryfo erased everything it kept here.'**
+  String get unlinkedRemovedLine;
+
+  /// screens/unlinked_screen.dart: why: not opened for 30 days
+  ///
+  /// In en, this message translates to:
+  /// **'It wasn\'t opened for 30 days, so Kryfo erased everything it kept here.'**
+  String get unlinkedUnusedLine;
+
+  /// screens/unlinked_screen.dart: why: no word from the phone for 30 days of this device's time online (cut off by a restore, or removed while it was away)
+  ///
+  /// In en, this message translates to:
+  /// **'It heard nothing from your phone for 30 days, so Kryfo erased everything it kept here.'**
+  String get unlinkedSilentLine;
+
+  /// screens/unlinked_screen.dart: why: the device clock was set back
+  ///
+  /// In en, this message translates to:
+  /// **'Its clock was set back, so Kryfo erased everything it kept here to keep your chats safe.'**
+  String get unlinkedClockLine;
+
+  /// screens/unlinked_screen.dart: why: the lock state did not read
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo couldn\'t tell when it was last opened, so it erased everything it kept here to keep your chats safe.'**
+  String get unlinkedBrokenLine;
+
+  /// screens/unlinked_screen.dart: why: the person unlinked it on this device
+  ///
+  /// In en, this message translates to:
+  /// **'You unlinked it, so Kryfo erased everything it kept here.'**
+  String get unlinkedSelfLine;
+
+  /// screens/unlinked_screen.dart: the chats stay on the phone, and how to use Kryfo here again
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone keeps your chats. To use Kryfo here again, link this device to your phone.'**
+  String get unlinkedAgainLine;
+
+  /// screens/unlinked_screen.dart: the button that closes the app
+  ///
+  /// In en, this message translates to:
+  /// **'Close Kryfo'**
+  String get unlinkedClose;
+
+  /// screens/linked_devices_screen.dart: the row on a linked device that unlinks it and erases it
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink this device'**
+  String get devicesLeave;
+
+  /// screens/linked_devices_screen.dart: the confirm before a linked device unlinks itself
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink this device?'**
+  String get devicesLeaveTitle;
+
+  /// screens/linked_devices_screen.dart: what unlinking this device does
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo tells your phone and erases everything it keeps here. Your phone keeps your chats.'**
+  String get devicesLeaveLine;
+
+  /// screens/linked_devices_screen.dart: the confirm button
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink and erase'**
+  String get devicesLeaveYes;
+
+  /// screens/home_screen.dart: the card title when one device was removed
+  ///
+  /// In en, this message translates to:
+  /// **'Device removed'**
+  String get devicesGoneNotice;
+
+  /// screens/home_screen.dart: the card line: the device and the day it was removed
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was removed from your account on {date}.'**
+  String devicesGoneRemovedLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card line: the device was not used for 30 days and was removed on that day
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wasn\'t used for 30 days, so it was removed from your account on {date}.'**
+  String devicesGoneUnusedLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card line: the device unlinked itself on that day
+  ///
+  /// In en, this message translates to:
+  /// **'{name} unlinked itself on {date} and erased what it kept.'**
+  String devicesGoneItselfLine(Object name, Object date);
+
+  /// screens/home_screen.dart: the card title when devices came and went
+  ///
+  /// In en, this message translates to:
+  /// **'Your devices changed'**
+  String get devicesChangedNotice;
+
+  /// screens/home_screen.dart: the card line when devices came and went
+  ///
+  /// In en, this message translates to:
+  /// **'Open Linked devices to see what changed.'**
+  String get devicesChangedLine;
+
+  /// screens/home_screen.dart: the card title: another copy of the phone linked a device
+  ///
+  /// In en, this message translates to:
+  /// **'Device linked elsewhere'**
+  String get devicesUnknownNotice;
+
+  /// screens/home_screen.dart: the card line: another copy of the phone linked a device, and this phone took it off the list
+  ///
+  /// In en, this message translates to:
+  /// **'Another copy of Kryfo linked a device to your account. This phone took it off your list.'**
+  String get devicesUnknownLine;
+
   /// a computer: the round button at an album's side that goes back one photo or video
   ///
   /// In en, this message translates to:

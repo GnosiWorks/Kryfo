@@ -945,7 +945,7 @@ class _LinkNoticeCard extends StatelessWidget {
         final words = all.isEmpty
             ? (title: l10n.devicesNewNotice, line: '')
             : linkNoticeWords([
-                for (final n in all) (name: n.name, at: n.at),
+                for (final n in all) (name: n.name, at: n.at, why: n.why),
               ], homeClock());
         return _HomeCard(
           show: show,
