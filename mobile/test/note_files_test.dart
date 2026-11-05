@@ -731,6 +731,78 @@ void main() {
       expect(await notes(), isEmpty);
     }, skip: skip);
 
+    test('a note gone here leaves no copy of it waiting unsealed for a '
+        'device of mine; a chat\'s and a sealed one stay', () async {
+      var n = 0;
+      // an own copy waiting for device [dev], unsealed unless [wire]
+      Future<void> waiting(
+        String chat,
+        Map<String, Object?> inner, {
+        int dev = 4,
+        bool wire = false,
+      }) async {
+        final f = _f(inner);
+        final plain = _f({
+          'u': 'oc:${n++}',
+          'oc': {'i': 0, 'c': chat, 'f': f},
+        });
+        await s.insert('dev_out', {
+          'uid': 'oc:$n',
+          'ident': 0,
+          'peer': 'me',
+          'device': dev,
+          'at': 1,
+          'own': 1,
+          'plain': wire ? null : plain,
+          'wire': wire ? 'c2VhbGVk' : null,
+          'state': wire ? 'go' : 'wait',
+        });
+      }
+
+      Future<List<String?>> left() async => [
+        for (final r in await s.query('dev_out', orderBy: 'rowid'))
+          r['plain'] == null ? 'sealed' : ownNoteUidOf(r['plain'] as String),
+      ];
+
+      await keepNoteWords('mine');
+      final uid = (await notes()).single['msg_uid'] as String;
+      await waiting('p:_notes_self_', {'u': uid, 'm': 'mine'});
+      await waiting('p:_notes_self_', {
+        'u': uid,
+        'mid': uid,
+        'ci': 0,
+        'ct': 2,
+        'f': 'QQ==',
+      }, dev: 5);
+      await waiting('p:_notes_self_', {'u': 'n-other', 'm': 'other'});
+      await waiting('p:abc', {'u': uid, 'm': 'a chat'});
+      await waiting('p:_notes_self_', {'u': uid, 'm': 'mine'}, wire: true);
+      await deleteNote(uid);
+      expect(await left(), ['n-other', null, 'sealed']);
+      // one deleted on another device of mine goes the same way
+      await copy(_f({'u': 'n-other', 'm': 'other'}));
+      expect(
+        await op('del', {
+          'u': ['n-other'],
+        }),
+        isTrue,
+      );
+      expect(await left(), [null, 'sealed']);
+      // and every note at once, a chat's copy kept
+      await waiting('p:_notes_self_', {'u': 'n-3', 'm': 'three'});
+      await deleteAllNotes();
+      expect(await left(), [null, 'sealed']);
+      expect(await owed(), isEmpty);
+    }, skip: skip);
+
+    test('a note copy on another identity\'s own session is not filed', () async {
+      expect(
+        await ownApplyForTest.copy(2, kOwnNotes, _f({'u': 'n-i', 'm': 'x'})),
+        isFalse,
+      );
+      expect(await notes(), isEmpty);
+    }, skip: skip);
+
     test('note to self takes no other op, and tells none', () async {
       ownNoted = ownNoteForTest;
       for (final k in ['contact', 'gone', 'read', 'lit', 'group']) {

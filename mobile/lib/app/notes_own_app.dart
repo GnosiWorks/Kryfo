@@ -75,8 +75,8 @@ extension AppStateNotes on AppState {
     unawaited(_ownNotesGo());
   }
 
-  /// a note deleted here: what of it was still to go stays, and its file
-  /// on the files service is taken back. read before its file goes
+  /// a note deleted here: nothing of it is owed any more, and the copies
+  /// of it still waiting unsealed for a device of mine go too
   Future<void> ownNoteGone(String uid) async {
     try {
       await (await live.open()).delete(
@@ -86,6 +86,36 @@ extension AppStateNotes on AppState {
       );
     } catch (e) {
       dlog('notes: a gone note stayed owed (${e.runtimeType})');
+    }
+    await _ownNotesDropWaiting({uid});
+  }
+
+  /// every note deleted here: none is owed, none waits unsealed
+  Future<void> ownNotesAllGone() async {
+    try {
+      await (await live.open()).delete('own_notes_out');
+    } catch (e) {
+      dlog('notes: gone notes stayed owed (${e.runtimeType})');
+    }
+    await _ownNotesDropWaiting(null);
+  }
+
+  // my own copies of notes in [uids] (null: every note) still waiting
+  // unsealed in dev_out: a note gone here leaves nothing of it readable
+  // there. sealed ones hold only the wire and go, the delete after them
+  Future<void> _ownNotesDropWaiting(Set<String>? uids) async {
+    try {
+      final d = await live.open();
+      for (final r in await d.rawQuery(
+        'SELECT rowid AS r, plain FROM dev_out '
+        'WHERE own = 1 AND plain IS NOT NULL',
+      )) {
+        final u = ownNoteUidOf(r['plain'] as String);
+        if (u == null || (uids != null && !uids.contains(u))) continue;
+        await d.delete('dev_out', where: 'rowid = ?', whereArgs: [r['r']]);
+      }
+    } catch (e) {
+      dlog('notes: waiting copies not dropped (${e.runtimeType})');
     }
   }
 
@@ -456,6 +486,7 @@ extension AppStateNotes on AppState {
     );
     if (newer.isEmpty) {
       await live.deleteAllOf(kOwnNotes.id);
+      await ownNotesAllGone();
     } else {
       for (final r in await d.query(
         'messages',
@@ -466,6 +497,7 @@ extension AppStateNotes on AppState {
         whereArgs: [kOwnNotes.id, t],
       )) {
         await live.deleteMessage(r['msg_uid'] as String);
+        await ownNoteGone(r['msg_uid'] as String);
       }
     }
     notesMoved.value++;

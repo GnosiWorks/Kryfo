@@ -214,7 +214,7 @@ class _NotesScreenState extends State<NotesScreen> {
     if (!ok || !mounted) return;
     HapticFeedback.heavyImpact();
     setState(() => _leaving.addAll(_notes.map(_key)));
-    await session.deleteAllNotes();
+    await deleteAllNotes();
     await Future.delayed(FadeFold.gone);
     if (!mounted) return;
     _leaving.clear();

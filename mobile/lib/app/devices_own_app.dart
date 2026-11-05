@@ -286,6 +286,8 @@ class _AppOwn implements OwnApply {
   }) async {
     final app = _madeApp;
     if (app == null) return false;
+    // note to self is the everyday identity's alone
+    if (isOwnNotes(chat) && ident != kMainIdent) return false;
     return app._fileOwnCopy(chat, frame, notReached: notReached);
   }
 
@@ -977,6 +979,8 @@ extension AppStateOwn on AppState {
           if (!await _ownInChat(chat, x)) continue;
           await _ownGoneUid(x);
           await live.deleteMessage(x);
+          // nothing of a note gone here waits for my other devices
+          if (isOwnNotes(chat)) await ownNoteGone(x);
           unawaited(_io.unnotifyMessage(x));
           any = true;
         }

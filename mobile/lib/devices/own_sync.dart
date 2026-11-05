@@ -126,6 +126,30 @@ bool ownFrameNames(String plain, OwnChat chat) {
   return chat.group ? g == chat.id : !inGroup && of['h'] == chat.id;
 }
 
+/// the note an own copy [plain] carries: its uid (a sliced one's media id),
+/// null for any other own frame. a note gone here drops the copies of it
+/// still waiting unsealed (notes_own_app.dart)
+String? ownNoteUidOf(String plain) {
+  Object? body(String s) {
+    if (!s.startsWith(kEnvelopePrefix)) return null;
+    try {
+      return jsonDecode(s.substring(kEnvelopePrefix.length));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  final j = body(plain);
+  if (j is! Map) return null;
+  final oc = j['oc'];
+  if (oc is! Map || oc['c'] != ownChatName(kOwnNotes)) return null;
+  final f = oc['f'];
+  final b = f is String ? body(f) : null;
+  if (b is! Map) return null;
+  final u = b['mid'] ?? b['u'];
+  return u is String && u.isNotEmpty ? u : null;
+}
+
 /// whether a frame [plain] waiting for a contact's device is of group
 /// [groupId]: a hide drops the ones still unsealed (vault_life)
 bool frameOfGroup(String plain, String groupId) {

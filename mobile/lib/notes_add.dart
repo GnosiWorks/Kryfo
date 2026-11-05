@@ -183,8 +183,8 @@ Future<void> keepNoteWords(String text) async {
   await _owed(uid);
 }
 
-/// a note gone here and on my devices: what of it was still to go stays,
-/// and a file of it on the files service is taken back first, while it is
+/// a note gone here and on my devices: nothing of it is owed any more, and
+/// a file of it on the files service is taken back first, while it is
 /// still on disk to read
 Future<void> deleteNote(String uid) async {
   if (ownSync != null) {
@@ -192,4 +192,14 @@ Future<void> deleteNote(String uid) async {
     if (await notesApp.ownNotesShared()) await notesApp.takeDropBackOf(uid);
   }
   await session.deleteMessage(uid);
+}
+
+/// every note gone here, and on my devices when this is my phone: nothing
+/// of them is owed or waits for my devices any more
+Future<void> deleteAllNotes() async {
+  // the everyday side's alone: a decoy's delete all leaves them be
+  if (ownSync != null && await notesApp.ownNotesShared()) {
+    await notesApp.ownNotesAllGone();
+  }
+  await session.deleteAllNotes();
 }
