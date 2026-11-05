@@ -6,6 +6,7 @@ import 'dart:ffi';
 import 'dart:math' show Random;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../l10n/l10n.dart';
@@ -43,11 +44,75 @@ void joinComApartment({DynamicLibrary Function(String name)? open}) {
 
 /// a plain post comes without a title and keeps its neutral line. any other
 /// says what the post says: previews off, a hidden chat, the vault and a
-/// chat that blocks screenshots come as kryfo and new message already
+/// chat that blocks screenshots come as kryfo and new message already.
+/// while the windows session is [locked], every toast is kryfo and new
+/// message, as on the phone's lock screen
 @visibleForTesting
-(String?, String) toastWords(String? title, String? body) => title == null
+(String?, String) toastWords(
+  String? title,
+  String? body, {
+  bool locked = false,
+}) => title == null
     ? (null, l10n.notifPlainLine)
+    : locked
+    ? ('Kryfo', l10n.notificationsNewMessage)
     : (title, body ?? l10n.notificationsNewMessage);
+
+/// the windows session's lock, as the runner tells it. locked until it
+/// answers: a start on the lock screen shows no text
+final sessionLocked = ValueNotifier<bool>(true);
+
+/// asks the runner whether the session is locked now. no answer keeps it
+/// locked until the first unlock comes
+Future<void> readSessionLock(MethodChannel channel) async {
+  try {
+    final locked = await channel.invokeMethod<bool>('sessionLocked');
+    if (locked != null) sessionLocked.value = locked;
+  } catch (_) {}
+}
+
+/// the runner's word on a lock or an unlock
+void heardSessionLock(Object? locked) => sessionLocked.value = locked != false;
+
+/// toasts and the session's lock. a toast with text shown before the lock
+/// stays in action center, readable on the lock screen: the lock clears
+/// kryfo's toasts when one may hold text
+@visibleForTesting
+class ToastLock {
+  ToastLock(this.locked, this.clear) {
+    locked.addListener(_changed);
+  }
+
+  final ValueListenable<bool> locked;
+  final Future<void> Function() clear;
+
+  // a run before may have left toasts with text
+  bool _texted = true;
+
+  /// what a toast says now
+  (String?, String) words(String? title, String? body) {
+    final w = toastWords(title, body, locked: locked.value);
+    if (w.$1 != null &&
+        (w.$1 != 'Kryfo' || w.$2 != l10n.notificationsNewMessage)) {
+      _texted = true;
+    }
+    return w;
+  }
+
+  void _changed() {
+    if (!locked.value || !_texted) return;
+    _texted = false;
+    unawaited(_clear());
+  }
+
+  Future<void> _clear() async {
+    try {
+      await clear();
+    } catch (_) {}
+  }
+
+  void dispose() => locked.removeListener(_changed);
+}
 
 /// a toast's details: silent when the notifications page's sound switch
 /// is off, windows' own sound otherwise
@@ -88,10 +153,18 @@ class ToastPayloads {
 /// the windows plugin with hidden payloads. a click
 /// raises the window first
 class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
-  QuietWindowsNotifications({required this.raise});
+  QuietWindowsNotifications({
+    required this.raise,
+    ValueListenable<bool>? locked,
+  }) {
+    // unpackaged, only clearing all of kryfo's toasts takes them from
+    // action center: the plugin's cancel of one id needs a package
+    _lock = ToastLock(locked ?? sessionLocked, cancelAll);
+  }
 
   final Future<void> Function() raise;
   final _payloads = ToastPayloads();
+  late final ToastLock _lock;
 
   @override
   Future<bool> initialize({
@@ -116,7 +189,7 @@ class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
     String? payload,
     WindowsNotificationDetails? notificationDetails,
   }) {
-    final (t, b) = toastWords(title, body);
+    final (t, b) = _lock.words(title, body);
     return super.show(
       id: id,
       title: t,
