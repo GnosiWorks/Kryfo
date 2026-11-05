@@ -10539,7 +10539,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name 需要更新 Kryfo 才能继续聊天。';
+    return '$name 需要更新 Kryfo 才能继续聊天';
   }
 
   @override
@@ -21134,7 +21134,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name 需要更新 Kryfo 才能繼續聊天。';
+    return '$name 需要更新 Kryfo 才能繼續聊天';
   }
 
   @override

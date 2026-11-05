@@ -2928,7 +2928,7 @@
   "chatHealNewSession": "Устройство {name} начало новую защищённую сессию",
   "chatHealHeldLine": "Ты уже проверял(а) {name}. Ничего не отправляется, пока ты не сверишь код или не продолжишь чат. Сообщения от {name} по-прежнему приходят.",
   "chatKeepChatting": "Продолжить чат",
-  "chatNeedsUpdateToChat": "{name} нужно обновить Kryfo, чтобы продолжить чат.",
+  "chatNeedsUpdateToChat": "{name} нужно обновить Kryfo, чтобы продолжить чат",
   "restoreOlderTitle": "Некоторые чаты встанут на паузу",
   "restoreOlderOne": "У {name} старая версия Kryfo. Ваш чат встанет на паузу, пока {name} не обновит приложение.",
   "restoreOlderTwo": "У {first} и {second} старая версия Kryfo. Чаты с ними встанут на паузу, пока они не обновят приложение.",

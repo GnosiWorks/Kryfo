@@ -2928,7 +2928,7 @@
   "chatHealNewSession": "بدأ جهاز ⁨{name}⁩ جلسة آمنة جديدة",
   "chatHealHeldLine": "سبق أن تحققت من ⁨{name}⁩. لن يُرسل شيء حتى تتحقق من الرقم أو تتابع المحادثة. رسائله ما زالت تصل.",
   "chatKeepChatting": "متابعة المحادثة",
-  "chatNeedsUpdateToChat": "يحتاج ⁨{name}⁩ إلى تحديث Kryfo لمتابعة المحادثة.",
+  "chatNeedsUpdateToChat": "يحتاج ⁨{name}⁩ إلى تحديث Kryfo لمتابعة المحادثة",
   "restoreOlderTitle": "ستتوقف بعض المحادثات مؤقتًا",
   "restoreOlderOne": "يستخدم ⁨{name}⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثتكما مؤقتًا حتى يحدّثه.",
   "restoreOlderTwo": "يستخدم ⁨{first}⁩ و⁨{second}⁩ إصدارًا أقدم من Kryfo. ستتوقف محادثاتك معهما مؤقتًا حتى يحدّثا التطبيق.",

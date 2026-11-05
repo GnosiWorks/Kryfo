@@ -11130,7 +11130,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name needs to update Kryfo to keep chatting.';
+    return '$name needs to update Kryfo to keep chatting';
   }
 
   @override

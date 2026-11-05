@@ -11135,7 +11135,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name perlu memperbarui Kryfo agar bisa lanjut mengobrol.';
+    return '$name perlu memperbarui Kryfo agar bisa lanjut mengobrol';
   }
 
   @override

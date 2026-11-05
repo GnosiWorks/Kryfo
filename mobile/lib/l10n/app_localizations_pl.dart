@@ -11347,7 +11347,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return '$name musi zaktualizować Kryfo, żeby dało się dalej pisać.';
+    return '$name musi zaktualizować Kryfo, żeby dało się dalej pisać';
   }
 
   @override

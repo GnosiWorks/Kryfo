@@ -2928,7 +2928,7 @@
   "chatHealNewSession": "Thiết bị của {name} đã bắt đầu một phiên bảo mật mới",
   "chatHealHeldLine": "Bạn đã xác minh {name} trước đây. Không có gì được gửi cho đến khi bạn kiểm tra số hoặc tiếp tục trò chuyện. Tin nhắn của họ vẫn đến.",
   "chatKeepChatting": "Tiếp tục trò chuyện",
-  "chatNeedsUpdateToChat": "{name} cần cập nhật Kryfo để tiếp tục trò chuyện.",
+  "chatNeedsUpdateToChat": "{name} cần cập nhật Kryfo để tiếp tục trò chuyện",
   "restoreOlderTitle": "Một số cuộc trò chuyện sẽ tạm dừng",
   "restoreOlderOne": "{name} đang dùng phiên bản Kryfo cũ. Cuộc trò chuyện sẽ tạm dừng cho đến khi họ cập nhật.",
   "restoreOlderTwo": "{first} và {second} đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.",

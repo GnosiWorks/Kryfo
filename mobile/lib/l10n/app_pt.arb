@@ -2928,7 +2928,7 @@
   "chatHealNewSession": "O aparelho de {name} iniciou uma nova sessão segura",
   "chatHealHeldLine": "Você já tinha verificado {name}. Nada é enviado até você conferir o número ou continuar a conversa. As mensagens dessa pessoa continuam chegando.",
   "chatKeepChatting": "Continuar a conversa",
-  "chatNeedsUpdateToChat": "{name} precisa atualizar o Kryfo para continuar a conversa.",
+  "chatNeedsUpdateToChat": "{name} precisa atualizar o Kryfo para continuar a conversa",
   "restoreOlderTitle": "Algumas conversas vão pausar",
   "restoreOlderOne": "{name} usa uma versão anterior do Kryfo. A conversa de vocês vai pausar até essa pessoa atualizar.",
   "restoreOlderTwo": "{first} e {second} usam uma versão anterior do Kryfo. Suas conversas com eles vão pausar até atualizarem.",

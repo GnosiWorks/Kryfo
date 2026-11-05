@@ -13952,7 +13952,7 @@
   "@chatKeepChatting": {
     "description": "widgets/key_held.dart: the button that ends a heal's hold and keeps the verified mark"
   },
-  "chatNeedsUpdateToChat": "{name} needs to update Kryfo to keep chatting.",
+  "chatNeedsUpdateToChat": "{name} needs to update Kryfo to keep chatting",
   "@chatNeedsUpdateToChat": {
     "description": "screens/chat_screen.dart: the line under a chat with a 0.5.x contact after this phone was restored: what is written waits until they update (Q20)",
     "placeholders": {

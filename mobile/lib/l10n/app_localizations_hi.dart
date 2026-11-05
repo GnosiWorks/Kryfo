@@ -11141,7 +11141,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String chatNeedsUpdateToChat(Object name) {
-    return 'बातचीत जारी रखने के लिए $name को Kryfo अपडेट करना होगा।';
+    return 'बातचीत जारी रखने के लिए $name को Kryfo अपडेट करना होगा';
   }
 
   @override

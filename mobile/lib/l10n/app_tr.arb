@@ -2928,7 +2928,7 @@
   "chatHealNewSession": "{name} kişisinin cihazı yeni bir güvenli oturum başlattı",
   "chatHealHeldLine": "{name} kişisini daha önce doğruladın. Numarayı kontrol edene ya da sohbete devam edene kadar hiçbir şey gönderilmez. Onun mesajları gelmeye devam eder.",
   "chatKeepChatting": "Sohbete devam et",
-  "chatNeedsUpdateToChat": "Sohbete devam etmek için {name} kişisinin Kryfo’yu güncellemesi gerekiyor.",
+  "chatNeedsUpdateToChat": "Sohbete devam etmek için {name} kişisinin Kryfo’yu güncellemesi gerekiyor",
   "restoreOlderTitle": "Bazı sohbetler duraklayacak",
   "restoreOlderOne": "{name} Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar sohbetiniz duraklar.",
   "restoreOlderTwo": "{first} ve {second} Kryfo’nun eski bir sürümünü kullanıyor. Güncelleyene kadar onlarla sohbetlerin duraklar.",

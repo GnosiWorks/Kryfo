@@ -618,15 +618,22 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
             // held: the notice and its two ways out, under the status
             EaseSize(
-              child: _held && !blocked
-                  ? KeyHeldCard(
-                      peerName: _name,
-                      healKind: _healHold,
-                      margin: const EdgeInsets.only(top: 18),
-                      onCheck: () => _checkNumber(verified),
-                      onAccept: _acceptNewKey,
-                    )
-                  : const SizedBox(width: double.infinity),
+              child: FadeSwap(
+                child: _held && !blocked
+                    ? KeyHeldCard(
+                        // a heal's card and a new key's card cross
+                        key: ValueKey('held_${_healHold ?? 'key'}'),
+                        peerName: _name,
+                        healKind: _healHold,
+                        margin: const EdgeInsets.only(top: 18),
+                        onCheck: () => _checkNumber(verified),
+                        onAccept: _acceptNewKey,
+                      )
+                    : const SizedBox(
+                        key: ValueKey('held_none'),
+                        width: double.infinity,
+                      ),
+              ),
             ),
             const SizedBox(height: 22),
             // the cards ease in once there is something to put on them
