@@ -115,13 +115,20 @@ func TestClientTorCycles(t *testing.T) {
 	if got := onionsOwned(t, first); got != "" {
 		t.Fatalf("an onion came back after the bounce: %q", got)
 	}
-	var kv []*control.KeyVal
-	if err := ctrlDo(first, "GETINFO circuit-established", func(c *control.Conn) error {
-		var gerr error
-		kv, gerr = c.GetInfo("status/circuit-established")
-		return gerr
-	}); err != nil || len(kv) == 0 || kv[0].Val != "1" {
-		t.Fatalf("no circuit on the client: %v %v", err, kv)
+	// 100% comes back at once after a bounce: the circuits follow
+	circ := ""
+	for t0 := time.Now(); circ != "1" && time.Since(t0) < 2*time.Minute; time.Sleep(time.Second) {
+		var kv []*control.KeyVal
+		if err := ctrlDo(first, "GETINFO circuit-established", func(c *control.Conn) error {
+			var gerr error
+			kv, gerr = c.GetInfo("status/circuit-established")
+			return gerr
+		}); err == nil && len(kv) > 0 {
+			circ = kv[0].Val
+		}
+	}
+	if circ != "1" {
+		t.Fatalf("no circuit on the client after the bounce: %q", circ)
 	}
 	mu.Lock()
 	same, left := torNode == first, myAddr
