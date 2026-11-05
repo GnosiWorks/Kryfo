@@ -69,12 +69,10 @@ class _FakeMic implements MicSource {
   }
 
   @override
-  AudioWord probe() => word ?? AudioWord.ok;
-  @override
   AudioWord open(int rate, int channels) {
+    opens++;
     if (word != null) return word!;
     open_ = true;
-    opens++;
     return AudioWord.ok;
   }
 
@@ -283,16 +281,34 @@ void main() {
       (AudioWord.failed, en.chatTheMicWouldNot),
     ]) {
       test(word.name, () async {
-        final rec = WinRecord(_FakeMic(Uint8List(0), word: word));
+        final mic = _FakeMic(Uint8List(0), word: word);
+        final rec = WinRecord(mic);
         RecordPlatform.instance = rec;
-        expect(await rec.hasPermission('r'), isFalse);
-        expect(micRefusedLine(en), line);
+        // nothing opened before the start: the mic opens once, there
+        expect(await rec.hasPermission('r'), isTrue);
+        expect(mic.opens, 0);
         await expectLater(
           rec.start('r', wav16, path: p.join(tmp, 'vn_6.wav')),
           throwsA(isA<MicRefused>()),
         );
+        expect(mic.opens, 1);
+        expect(micFailedLine(en), line);
+        expect(io.rawFile(p.join(tmp, 'vn_6.wav')).existsSync(), isFalse);
       });
     }
+
+    test('a take that starts opens the mic once', () async {
+      final mic = _FakeMic(_pcm(0.2));
+      final rec = WinRecord(mic, every: const Duration(milliseconds: 2));
+      RecordPlatform.instance = rec;
+      await sealed(() async {
+        expect(await rec.hasPermission('r'), isTrue);
+        await rec.start('r', wav16, path: p.join(tmp, 'vn_7.wav'));
+        await rec.stop('r');
+      });
+      expect(mic.opens, 1);
+      expect(rec.lastRefusal, isNull);
+    });
 
     test(
       'no audio calls in the runner: it fails, never a plain plugin',
@@ -301,11 +317,13 @@ void main() {
         RecordPlatform.instance = rec;
         expect(await rec.hasPermission('r'), isFalse);
         expect(micRefusedLine(en), en.chatTheMicWouldNot);
+        expect(micFailedLine(en), en.chatTheMicWouldNot);
       },
     );
 
-    test('the phone keeps its own line', () {
+    test('the phone keeps its own lines', () {
       expect(micRefusedLine(en), en.chatMicPermissionNeeded);
+      expect(micFailedLine(en), en.chatTheMicWouldNot);
     });
   });
 

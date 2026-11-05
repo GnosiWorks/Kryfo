@@ -27,8 +27,6 @@ AudioWord audioWordOf(int w) => switch (w) {
 
 /// the mic as the recorder takes it, a seam for the tests
 abstract class MicSource {
-  /// whether the mic opens now, without recording
-  AudioWord probe();
   AudioWord open(int rate, int channels);
 
   /// up to [cap] bytes of pcm into [into]; -1 once the device is gone
@@ -50,7 +48,6 @@ abstract class PcmOut {
   void dispose();
 }
 
-typedef _I32V = Int32 Function();
 typedef _I32I32I32 = Int32 Function(Int32, Int32);
 typedef _TakeC = Int32 Function(Pointer<Uint8>, Int32);
 typedef _VV = Void Function();
@@ -71,10 +68,8 @@ typedef _FreeD = void Function(int);
 /// the runner's calls, by the addresses its channel gives
 class WinAudioCalls {
   WinAudioCalls._(List<int> a)
-    : _probe = Pointer<NativeFunction<_I32V>>.fromAddress(
-        a[0],
-      ).asFunction<int Function()>(),
-      _open = Pointer<NativeFunction<_I32I32I32>>.fromAddress(
+    // a[0] is the runner's probe, not used: the mic opens once, at start
+    : _open = Pointer<NativeFunction<_I32I32I32>>.fromAddress(
         a[1],
       ).asFunction<int Function(int, int)>(),
       _take = Pointer<NativeFunction<_TakeC>>.fromAddress(
@@ -106,7 +101,6 @@ class WinAudioCalls {
 
   static const _count = 12;
 
-  final int Function() _probe;
   final int Function(int, int) _open;
   final int Function(Pointer<Uint8>, int) _take;
   final void Function() _close;
@@ -143,8 +137,6 @@ class WinAudioCalls {
 class _WinMic implements MicSource {
   _WinMic(this._c);
   final WinAudioCalls _c;
-  @override
-  AudioWord probe() => audioWordOf(_c._probe());
   @override
   AudioWord open(int rate, int channels) =>
       audioWordOf(_c._open(rate, channels));

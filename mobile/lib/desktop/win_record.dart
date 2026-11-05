@@ -75,12 +75,12 @@ class WinRecord extends RecordPlatform {
   @override
   Future<void> create(String recorderId) async {}
 
+  // windows asks nothing first: the mic opens once, at start, which says
+  // why it did not. a probe before it would open the device twice
   @override
   Future<bool> hasPermission(String recorderId, {bool request = true}) async {
-    final mic = _mic;
-    final word = mic == null ? AudioWord.failed : mic.probe();
-    lastRefusal = word == AudioWord.ok ? null : word;
-    return word == AudioWord.ok;
+    lastRefusal = _mic == null ? AudioWord.failed : null;
+    return _mic != null;
   }
 
   @override
@@ -299,6 +299,14 @@ Uint8List wavHead(int rate, int channels, int pcm) {
 String micRefusedLine(AppLocalizations l10n) {
   final r = RecordPlatform.instance;
   if (r is! WinRecord) return l10n.chatMicPermissionNeeded;
+  return micFailedLine(l10n);
+}
+
+/// the line for a recording that did not start: on windows what to do when
+/// the mic said why
+String micFailedLine(AppLocalizations l10n) {
+  final r = RecordPlatform.instance;
+  if (r is! WinRecord) return l10n.chatTheMicWouldNot;
   return switch (r.lastRefusal) {
     AudioWord.blocked => l10n.desktopMicBlocked,
     AudioWord.none => l10n.desktopMicNone,
