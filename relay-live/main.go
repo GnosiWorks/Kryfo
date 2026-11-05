@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/fiatjaf/khatru"
 )
@@ -37,7 +38,33 @@ func main() {
 	startSweeper(db)
 	startCheckpoints(db)
 
+	onion, what, err := onionServer(relay)
+	if err != nil {
+		panic(err)
+	}
+	if onion != nil {
+		fmt.Println("kryfo relay onion listener on", onion.Addr+",", what)
+		go func() { log.Fatal(onion.ListenAndServe()) }()
+	}
+
 	fmt.Println("kryfo relay listening on", addr)
-	srv := &http.Server{Addr: addr, Handler: relay, WriteTimeout: writeWait}
-	log.Fatal(srv.ListenAndServe())
+	log.Fatal(relayServer(addr, relay).ListenAndServe())
+}
+
+// both listeners: headers come within headerWait and a kept-alive
+// connection idles idleWait at most, so slow or idle streams over tor are
+// closed. after a websocket upgrade only the socket's own deadlines count
+var (
+	headerWait = 30 * time.Second
+	idleWait   = 2 * time.Minute
+)
+
+func relayServer(addr string, h http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           h,
+		WriteTimeout:      writeWait,
+		ReadHeaderTimeout: headerWait,
+		IdleTimeout:       idleWait,
+	}
 }
