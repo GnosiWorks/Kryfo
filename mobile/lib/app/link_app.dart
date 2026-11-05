@@ -201,6 +201,8 @@ class _PhoneLinkApp implements PhoneLinkHooks {
     }
     // the history copy for the new device, made and served from here
     if (bind != null) startPhoneHistoryCopy(uid);
+    // my profile and badge, so what the device sends carries the badge
+    unawaited(_madeApp?._ownTellMe());
     // the contacts who read lists learn of the new device, spread out
     // over passes. the link is kept whatever happens here
     try {
