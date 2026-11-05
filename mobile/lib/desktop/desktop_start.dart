@@ -500,20 +500,8 @@ Future<void> openSeal({
   for (final area in ['', '_k2', '_k3', '_k4', '*']) {
     if (vault.read(sweptEntry(area)) != null) areas.swept.add(area);
   }
-  // an area's sweep done once: from then a plain file there is damage
-  Future<void> sweep(String area, List<String> dirs) async {
-    if (areas.swept.contains(area)) return;
-    try {
-      for (final d in dirs) {
-        await runSealed(() => sealPlainUnder(d));
-      }
-      await vault.write(sweptEntry(area), '1');
-      areas.swept.add(area);
-    } catch (e, st) {
-      // the next start sweeps again
-      traceError('sweep', e, st);
-    }
-  }
+  Future<void> sweep(String area, List<String> dirs) =>
+      sweepArea(areas, vault, area, dirs);
 
   final keys = ContainerKeys(
     areas,
@@ -581,6 +569,30 @@ Future<void> openSeal({
       vault.close();
     },
   );
+}
+
+/// an area's sweep, done once: from then a plain file there is damage.
+/// top level, so the job the isolate gets holds its folder alone: made
+/// inside openSeal it held openSeal's whole context, the vault with it,
+/// and isolate.run could not send it
+@visibleForTesting
+Future<void> sweepArea(
+  SealedAreas areas,
+  DesktopVault vault,
+  String area,
+  List<String> dirs,
+) async {
+  if (areas.swept.contains(area)) return;
+  try {
+    for (final d in dirs) {
+      await runSealed(sealUnderJob(d));
+    }
+    await vault.write(sweptEntry(area), '1');
+    areas.swept.add(area);
+  } catch (e, st) {
+    // the next start sweeps again
+    traceError('sweep', e, st);
+  }
 }
 
 /// the shared wipe's desktop steps, through [host]: the keys first,

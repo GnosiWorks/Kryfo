@@ -20,7 +20,7 @@ import 'desktop/desktop_mode.dart';
 import 'desktop/sealed_format.dart';
 import 'desktop/sealed_io.dart';
 import 'desktop/sealed_setup.dart'
-    show ContainerKeys, SealSweep, mediaKeyOf, sealPlainUnder;
+    show ContainerKeys, SealSweep, mediaKeyOf, sealUnderJob;
 import 'dlog.dart';
 
 /// the seal over the media folders, once [openPhoneSeal] put it in place
@@ -131,7 +131,7 @@ Future<SealSweep?> sweepContainer(HaloContainer c) async {
     for (final name in ['media', 'wallpapers']) {
       final d = p.join(io.areas.docs, '$name${c.folderSuffix}');
       try {
-        final s = await runSealed(() => sealPlainUnder(d));
+        final s = await runSealed(sealUnderJob(d));
         total
           ..sealed += s.sealed
           ..resumed += s.resumed;
