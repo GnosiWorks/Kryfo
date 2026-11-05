@@ -480,10 +480,11 @@ mixin _GroupRows {
     final db = await open();
     final rows = await db.query(
       'messages',
-      columns: ['msg_uid'],
+      columns: ['msg_uid', 'group_id'],
       where: 'group_id = ?',
       whereArgs: [groupId],
     );
+    await _dropOwnWaiting(db, rows);
     for (final r in rows) {
       final uid = r['msg_uid'] as String?;
       if (uid != null) {

@@ -150,6 +150,69 @@ String? ownNoteUidOf(String plain) {
   return u is String && u.isNotEmpty ? u : null;
 }
 
+/// the messages a frame [frame] carries or speaks of: its uid, a sliced
+/// one's media id, and the uid an edit, a reaction, a pin, a vote or a poll
+/// close names. a take-back names none: it still has to go
+Set<String> frameMessageUids(String frame) {
+  if (!frame.startsWith(kEnvelopePrefix)) return const {};
+  final Object? b;
+  try {
+    b = jsonDecode(frame.substring(kEnvelopePrefix.length));
+  } catch (_) {
+    return const {};
+  }
+  if (b is! Map || b.containsKey('un')) return const {};
+  return {
+    for (final v in [
+      b['u'],
+      b['mid'],
+      for (final k in const ['ed', 'r', 'pn', 'vt', 'pc'])
+        if (b[k] is Map) (b[k] as Map)['u'],
+    ])
+      if (v is String && v.isNotEmpty) v,
+  };
+}
+
+/// the chat an own copy or a passed-on frame [plain] (oc or of) is of, as
+/// ownChatName names it, and the messages it carries or speaks of; whether
+/// it is a linked device's group copy its phone passes on to members (n).
+/// null for any other own frame: an op, a beat, a receipt
+({String chat, Set<String> uids, bool passOn})? ownFrameMessages(String plain) {
+  if (!plain.startsWith(kEnvelopePrefix)) return null;
+  final Object? j;
+  try {
+    j = jsonDecode(plain.substring(kEnvelopePrefix.length));
+  } catch (_) {
+    return null;
+  }
+  if (j is! Map) return null;
+  final oc = j['oc'];
+  if (oc is Map && oc['c'] is String && oc['f'] is String) {
+    final n = oc['n'];
+    return (
+      chat: oc['c'] as String,
+      uids: frameMessageUids(oc['f'] as String),
+      passOn: n is List && n.isNotEmpty,
+    );
+  }
+  final of = j['of'];
+  if (of is Map && of['h'] is String && of['f'] is String) {
+    final f = of['f'] as String;
+    Object? g;
+    if (f.startsWith(kEnvelopePrefix)) {
+      try {
+        final b = jsonDecode(f.substring(kEnvelopePrefix.length));
+        if (b is Map) g = b['g'];
+      } catch (_) {}
+    }
+    final chat = g is String && g.isNotEmpty
+        ? ownChatName((id: g, group: true))
+        : ownChatName((id: of['h'] as String, group: false));
+    return (chat: chat, uids: frameMessageUids(f), passOn: false);
+  }
+  return null;
+}
+
 /// whether a frame [plain] waiting for a contact's device is of group
 /// [groupId]: a hide drops the ones still unsealed (vault_life)
 bool frameOfGroup(String plain, String groupId) {
