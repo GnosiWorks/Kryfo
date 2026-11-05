@@ -233,18 +233,22 @@ class _TipBox extends StatelessWidget {
           duration: still ? Duration.zero : const Duration(milliseconds: 120),
           curve: Curves.easeOut,
           builder: (_, v, child) => Opacity(opacity: v, child: child),
-          child: Container(
-            key: const ValueKey('hover tip'),
-            constraints: const BoxConstraints(maxWidth: 280),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: HaloColors.text,
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-            ),
-            child: Text(
-              message,
-              textDirection: dir,
-              style: HaloType.sans(size: 12.5, color: HaloColors.surface),
+          // its own ground, as every overlay's text has
+          child: Material(
+            type: MaterialType.transparency,
+            child: Container(
+              key: const ValueKey('hover tip'),
+              constraints: const BoxConstraints(maxWidth: 280),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: HaloColors.text,
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+              ),
+              child: Text(
+                message,
+                textDirection: dir,
+                style: HaloType.sans(size: 12.5, color: HaloColors.surface),
+              ),
             ),
           ),
         ),
