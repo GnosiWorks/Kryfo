@@ -130,9 +130,11 @@ Future<Uint8List> shrinkPhoto(Uint8List b) async {
 
 // the gallery's picks, asked for whole and shrunk here: the picker's own
 // shrink writes cache/scaled_<name>, so two picks of one name came back as
-// the last of them twice. a jpeg is shrunk; a png, gif, webp or heic keeps
-// its own format, which the send lane cleans as it is; anything else is
-// drawn again as a jpeg. what the picker left goes even when a read fails.
+// the last of them twice. a jpeg is shrunk, and so is a heic or an avif,
+// drawn again as a jpeg: a computer cannot draw those, and a camera's is
+// many megabytes. a png, gif or webp keeps its own format, which the send
+// lane cleans as it is; anything else is drawn again as a jpeg. what the
+// picker left goes even when a read fails.
 // [shrink] and [drop] stand in for the platform and the shred in tests
 Future<List<Uint8List>> readPickedPhotos(
   List<XFile> picked, {
@@ -140,7 +142,9 @@ Future<List<Uint8List>> readPickedPhotos(
   Future<void> Function(List<XFile> x)? drop,
 }) async {
   Future<Uint8List> fit(Uint8List b) async => switch (pictureKind(b)) {
-    PictureKind.jpeg || PictureKind.other => (shrink ?? shrinkPhoto)(b),
+    PictureKind.jpeg ||
+    PictureKind.heif ||
+    PictureKind.other => (shrink ?? shrinkPhoto)(b),
     _ => b,
   };
   try {
