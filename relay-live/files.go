@@ -223,11 +223,7 @@ func onionServer(relay http.Handler) (*http.Server, string, error) {
 			what += " (models)"
 		}
 	}
-	srv := &http.Server{
-		Addr:         addr,
-		Handler:      onionHandler(relay, fs),
-		WriteTimeout: writeWait,
-		ConnContext:  withConnFiles,
-	}
+	srv := relayServer(addr, onionHandler(relay, fs))
+	srv.ConnContext = withConnFiles
 	return srv, what, nil
 }

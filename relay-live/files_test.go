@@ -59,11 +59,11 @@ func makeFiles(t *testing.T) filesBox {
 	write(filepath.Join(base, "outside"), []byte("outside the root"))
 	write(filepath.Join(base, vname), []byte("outside the root"))
 	links := map[string]string{
-		filepath.Join(root, "models", "in.bin"):   filepath.Join(root, "models", name),
-		filepath.Join(root, "models", "out.bin"):  filepath.Join(base, "outside"),
-		filepath.Join(root, "models", "rel.bin"):  "../secret",
-		filepath.Join(root, "models", "etc"):      "/etc/hostname",
-		filepath.Join(root, "models", "up"):       "..",
+		filepath.Join(root, "models", "in.bin"):  filepath.Join(root, "models", name),
+		filepath.Join(root, "models", "out.bin"): filepath.Join(base, "outside"),
+		filepath.Join(root, "models", "rel.bin"): "../secret",
+		filepath.Join(root, "models", "etc"):     "/etc/hostname",
+		filepath.Join(root, "models", "up"):      "..",
 	}
 	for l, to := range links {
 		if err := os.Symlink(to, l); err != nil {
@@ -89,7 +89,10 @@ func filesRelay(t *testing.T, env map[string]string) (clear, onion string) {
 	relay.QueryEvents = append(relay.QueryEvents, db.QueryEvents)
 	relay.DeleteEvent = append(relay.DeleteEvent, db.DeleteEvent)
 	applyLimits(relay, "")
-	c := httptest.NewServer(relay)
+	// each listener with the server main builds for it
+	c := httptest.NewUnstartedServer(relay)
+	c.Config = relayServer("", relay)
+	c.Start()
 	t.Cleanup(c.Close)
 	o, _, err := onionServer(relay)
 	if err != nil {
@@ -99,8 +102,7 @@ func filesRelay(t *testing.T, env map[string]string) (clear, onion string) {
 		t.Fatal("no onion server")
 	}
 	s := httptest.NewUnstartedServer(o.Handler)
-	s.Config.ConnContext = o.ConnContext
-	s.Config.WriteTimeout = o.WriteTimeout
+	s.Config = o
 	s.Start()
 	t.Cleanup(s.Close)
 	return c.URL, s.URL
@@ -404,6 +406,55 @@ func TestRelayUnchangedOnTheOnionListener(t *testing.T) {
 		_, why = ask(t, r, nostr.Filter{Kinds: []int{wrapKind}, Limit: 10})
 		if why == "" {
 			t.Fatalf("%s: an addressless req was answered", base)
+		}
+	}
+}
+
+// a caller that sends its headers slowly, or keeps a connection idle, is
+// closed on both listeners; a websocket lives on past both waits
+func TestSlowAndIdleConnectionsClosed(t *testing.T) {
+	oh, oi := headerWait, idleWait
+	headerWait, idleWait = 300*time.Millisecond, 600*time.Millisecond
+	t.Cleanup(func() { headerWait, idleWait = oh, oi })
+	fb := makeFiles(t)
+	cl, on := filesRelay(t, onEnv(fb))
+	closed := func(c net.Conn) bool {
+		c.SetReadDeadline(time.Now().Add(5 * time.Second))
+		_, err := io.ReadAll(c)
+		return err == nil
+	}
+	for _, base := range []string{cl, on} {
+		hostport := strings.TrimPrefix(base, "http://")
+		c, err := net.Dial("tcp", hostport)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Fprintf(c, "GET /models/SHA256SUMS HTTP/1.1\r\nHost: x\r\n")
+		start := time.Now()
+		if !closed(c) || time.Since(start) > 3*time.Second {
+			t.Fatalf("%s: half a header kept open", base)
+		}
+		c.Close()
+		// a whole request, then nothing: closed once idle
+		c, err = net.Dial("tcp", hostport)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Fprintf(c, "GET / HTTP/1.1\r\nHost: x\r\nAccept: application/nostr+json\r\n\r\n")
+		start = time.Now()
+		if !closed(c) || time.Since(start) > 3*time.Second {
+			t.Fatalf("%s: an idle connection kept open", base)
+		}
+		c.Close()
+		r := connect(t, "ws"+strings.TrimPrefix(base, "http"))
+		time.Sleep(time.Second)
+		to := addr()
+		if err := publish(t, r, wrap(t, to, nil)); err != nil {
+			t.Fatalf("%s: websocket after the waits: %v", base, err)
+		}
+		got, why := ask(t, r, nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Limit: 10})
+		if why != "" || len(got) != 1 {
+			t.Fatalf("%s: got %d, closed %q", base, len(got), why)
 		}
 	}
 }
