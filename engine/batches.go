@@ -241,6 +241,17 @@ func batchOf(set, rcvPk string) int {
 	return p.n
 }
 
+// the batch of rcvPk in set, if it has one. none is given
+func batchFind(set, rcvPk string) (int, bool) {
+	batchMu.Lock()
+	defer batchMu.Unlock()
+	b := batchBookNow()
+	if p, ok := b.every[b.id(rcvPk)]; ok && p.set == set {
+		return p.n, true
+	}
+	return 0, false
+}
+
 // the batches of an identity's contact addresses, and of its device pairs'
 // opener addresses, which are apart from them (address_device.go)
 func contactSet(ident int) string { return "i" + strconv.Itoa(ident) }

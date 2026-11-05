@@ -623,6 +623,9 @@ func noteCatchupDone(key string, dropped bool) {
 	catchupLast[key] = catchupRun{Ms: ms, Dropped: dropped, Long: long,
 		Pages: pend.Pages, Events: pend.Events, ConnectMs: connectLast[key], At: time.Now()}
 	catchupMu.Unlock()
+	if !dropped {
+		startSteps.caughtUp(rcvOfKey(key))
+	}
 	if dropped {
 		log.Printf("nostr: %s still catching up after %dms, dropped for this check-in (%d in a row)",
 			u, ms, drops)
@@ -848,6 +851,7 @@ const ownUpRecent = 10 * time.Minute
 
 func relayUp(u string) {
 	wakeRouteProven()
+	relayEverOK.Store(u, true)
 	relayHealthMu.Lock()
 	relayUpAt[u] = time.Now()
 	relayHealthMu.Unlock()
@@ -894,6 +898,22 @@ func ownWaitRule(u string, own bool) (mine bool, ceiling time.Duration) {
 	return true, ownRelayCeiling
 }
 
+// another of our stores than u's answered lately, with no failure since
+func otherStoreAnswers(urls []string, u string) bool {
+	st := storeOf(urls, u)
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	for _, o := range ownRelays(urls) {
+		if o == u || storeOf(urls, o) == st {
+			continue
+		}
+		if at, ok := relayUpAt[o]; ok && time.Since(at) < ownUpRecent && relayFails[o] == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // a fifth either way, so the runners of one relay do not all redial it in
 // the same second
 func ownSpread(d time.Duration) time.Duration {
@@ -916,6 +936,79 @@ func relayBackoff(n int) time.Duration {
 		d = 5 * time.Minute
 	}
 	return d
+}
+
+// closed when every bench is let go of, at a wake or a new route
+var benchClear = struct {
+	sync.Mutex
+	c chan struct{}
+}{c: make(chan struct{})}
+
+func benchClearChan() <-chan struct{} {
+	benchClear.Lock()
+	defer benchClear.Unlock()
+	return benchClear.c
+}
+
+// when u's bench ends, zero when it has none
+func relayCoolUntil(u string) time.Time {
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	return relayCoolTill[u]
+}
+
+// a public relay on the bench is not dialled before its bench ends, kick
+// or no kick: a kick is for sockets a change may have helped, and one that
+// turned tor away at its door is not. a wake or a new route lets every
+// bench go. false once ctx is over
+func waitOutBench(ctx context.Context, u string) bool {
+	cleared := benchClearChan()
+	till := relayCoolUntil(u)
+	d := time.Until(till)
+	if d <= 0 {
+		return true
+	}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-cleared:
+	case <-t.C:
+	}
+	return true
+}
+
+// a public relay that never answered in this process (one that turns tor
+// away at its door, say) backs off further, up to this
+const relayDeadBench = 15 * time.Minute
+
+// the relays that answered at least once in this process. a bench cleared
+// at a wake or a new route does not clear this
+var relayEverOK sync.Map
+
+// the backoff after n failures in a row on u: a public relay that never
+// answered here goes on doubling past relayMaxBench
+func relayBackoffFor(u string, n int) time.Duration {
+	if _, ok := relayEverOK.Load(u); ok || storeOf(nostrRelaysNow(), u) != "" || n <= relayFailGrace+6 {
+		return relayBackoff(n)
+	}
+	return min(relayMaxBench<<uint(min(n-relayFailGrace-6, 2)), relayDeadBench)
+}
+
+// the ceiling for u's waits: a public relay that never answered here has
+// the longer one
+func deadCeiling(u string, ceiling time.Duration) time.Duration {
+	if _, ok := relayEverOK.Load(u); ok || ceiling != relayMaxBench {
+		return ceiling
+	}
+	return relayDeadBench
+}
+
+func nostrRelaysNow() []string {
+	nostrMu.Lock()
+	defer nostrMu.Unlock()
+	return nostrRelays
 }
 
 func relayCold(u string) bool {
@@ -963,6 +1056,7 @@ func relayFailedAs(u string, began time.Time, route bool) {
 		routeNoteFailFrom(u, began)
 	}
 	_, ceiling := ownWaitRule(u, false)
+	ceiling = deadCeiling(u, ceiling)
 	nostrMu.Lock()
 	urls := nostrRelays
 	nostrMu.Unlock()
@@ -976,7 +1070,7 @@ func relayFailedAs(u string, began time.Time, route bool) {
 	}
 	relayFailAt[u] = now
 	relayFails[u]++
-	d := relayBackoff(relayFails[u])
+	d := relayBackoffFor(u, relayFails[u])
 	if d > ceiling {
 		d = ceiling
 	}
@@ -996,6 +1090,10 @@ func relayFailedAs(u string, began time.Time, route bool) {
 // nothing wrong, and holding it out for five more minutes after the route is
 // rebuilt is five more minutes of a message sitting in the outbox.
 func relayClearBenches() {
+	benchClear.Lock()
+	close(benchClear.c)
+	benchClear.c = make(chan struct{})
+	benchClear.Unlock()
 	relayHealthMu.Lock()
 	for k := range relayFails {
 		delete(relayFails, k)
@@ -1033,6 +1131,7 @@ func kickRelays() {
 
 func relayOK(u string) {
 	wakeRouteProven()
+	relayEverOK.Store(u, true)
 	relayHealthMu.Lock()
 	relayUpAt[u] = time.Now()
 	if relayFails[u] != 0 {
@@ -1051,10 +1150,11 @@ func relayOK(u string) {
 // every few seconds, around the clock, on whatever connection the phone has.
 func relayRetryAfter(u string, base time.Duration, own bool) time.Duration {
 	mine, ceiling := ownWaitRule(u, own)
+	ceiling = deadCeiling(u, ceiling)
 	relayHealthMu.Lock()
 	n := relayFails[u]
 	relayHealthMu.Unlock()
-	d := relayBackoff(n)
+	d := relayBackoffFor(u, n)
 	if d > ceiling {
 		d = ceiling
 	}
@@ -1241,7 +1341,10 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 	}
 	urls := make([]string, 0, len(all))
 	for _, u := range all {
-		if own[u] || !relayCold(u) {
+		// an entry of ours on the bench is left out only while another of
+		// our stores answers: that one carries it, and this store is given
+		// it once it answers again (topup)
+		if (own[u] && !(relayCold(u) && otherStoreAnswers(all, u))) || (!own[u] && !relayCold(u)) {
 			urls = append(urls, u)
 		}
 	}
@@ -1647,6 +1750,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		if live != nil {
 			liveHeard(rcvPk, time.Now().Unix())
 		}
+		if tag == laneFirstContact {
+			startSteps.fcIn()
+		}
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
 		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveAll, from: from, until: until, bare: bare})
@@ -1780,6 +1886,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			if hk.group != "" {
 				turn.ready = func() <-chan struct{} { return hubReady(hk) }
 				turn.batch = &hk
+				startSteps.member(lane, rcvPk)
 			}
 			for {
 				// nothing is counted while it parks or waits for tor below:
@@ -1883,6 +1990,25 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					sleepOrKickCtx(ctx, kc, 15*time.Minute)
 					continue
 				}
+				// a public relay on the bench: its bench first
+				if !ownEntry && !backup && time.Until(relayCoolUntil(u)) > 0 {
+					if !waitOutBench(ctx, u) {
+						return
+					}
+					continue
+				}
+				// at the start, a dial through tor waits for tor to be up:
+				// its turn is drawn from there, not held in tor with the rest
+				if g := startGateChan(); g != nil && relayOverTor(lane, u) {
+					turn.fresh = nil
+					select {
+					case <-ctx.Done():
+						return
+					case <-g:
+					case <-kc:
+					}
+					continue
+				}
 				client, err := relayClientFor(lane, u)
 				if err != nil {
 					// it asks as tor comes up, beside the start's first
@@ -1901,6 +2027,16 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						atomic.StoreInt64(&lastTorRestart, 0)
 						go reconnectTorFor(whyDialer)
 						nap(30 * time.Second)
+						continue
+					}
+					// tor is on its way at the start: up to it, not ten seconds
+					if g := startGateChan(); g != nil {
+						select {
+						case <-ctx.Done():
+							return
+						case <-g:
+						case <-kc:
+						}
 						continue
 					}
 					nap(wait)
@@ -1963,6 +2099,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// night asleep lived
 				connected := time.Now().Round(0)
 				noteRelayConnect(u, ck, int(time.Since(dialAt).Milliseconds()))
+				startSteps.relayUp()
+				if tag == laneFirstContact {
+					startSteps.fcUp(u)
+				}
 				connGen = routeGeneration()
 				// a relay answered. this is the one fact the watchdog trusts.
 				// a shared socket says so once it carried something lately
