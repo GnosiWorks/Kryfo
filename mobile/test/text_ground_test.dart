@@ -99,6 +99,7 @@ void main() {
       'lib/screens/chat_screen.dart': 1, // bubble and menu materials
       'lib/screens/group_chat_screen.dart': 1, // bubble and menu materials
       'lib/widgets/voice_parts.dart': 1, // the record bar is a material
+      'lib/widgets/key_ring.dart': 1, // the hover tip is a material
     };
     final bare = <String>[];
     final counted = <String, int>{};
