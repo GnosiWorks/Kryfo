@@ -723,10 +723,6 @@ void main() {
     expect(l.chatSendIt, "Send it");
     expect(l.chatCouldNotReadThat, "Could not read that file");
     expect(l.chatCouldNotCleanThat, "Could not clean that video");
-    expect(
-      l.chatCouldNotCleanThatPictureSend,
-      "Could not clean that picture · send it as a photo",
-    );
     expect(l.chatGifTooBig8, "Gif too big · 8 mb max");
     expect(l.chatCouldNotCleanThatGif, "Could not clean that gif");
     expect(l.chatTorIsNotUp, "Tor isn't connected yet · no link preview");
@@ -1191,10 +1187,6 @@ void main() {
     expect(l.groupChatGifTooBig8, "Gif too big · 8 mb max");
     expect(l.groupChatCouldNotCleanThat, "Could not clean that gif");
     expect(l.groupChatCouldNotCleanThatVideo, "Could not clean that video");
-    expect(
-      l.groupChatCouldNotCleanThatPictureSend,
-      "Could not clean that picture · send it as a photo",
-    );
     expect(l.groupChat30Seconds, "30 seconds");
     expect(l.groupChat1Minute, "1 minute");
     expect(l.groupChat5Minutes, "5 minutes");
@@ -3656,11 +3648,6 @@ void main() {
     expect(
       l.fileGoesAsItIs,
       "This file goes exactly as it is. Kryfo cleans only JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 and MOV.",
-    );
-    expect(l.fileRawPictureTitle, "Send this picture as it is?");
-    expect(
-      l.fileRawPictureLine,
-      "This picture can't be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.",
     );
     expect(
       l.voiceStoppedAtLimit,

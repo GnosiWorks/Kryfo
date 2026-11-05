@@ -3,11 +3,15 @@
 // picture or a video, told by its bytes (a video by its name too), cleaned
 // in place on our own copy and then read again. what still reads as
 // anything is refused, never passed on half clean. anything else is not
-// media and is left exactly as it is.
+// media and is left exactly as it is. a send or a note (copyForSend) draws
+// a picture the cleaner refuses again as a clean jpeg, and sends one that
+// cannot be drawn as it is, never asking
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'file_kind.dart' show bytesSayIsoVideo;
@@ -16,7 +20,8 @@ import 'meta/file_source.dart';
 import 'meta/meta_reader.dart';
 import 'mp4_strip.dart';
 import 'shred.dart';
-import 'desktop/desktop_mode.dart' show runIsolated;
+import 'desktop/desktop_mode.dart' show onDesktop, runIsolated;
+import 'picture_convert.dart' show cleanJpegOf, kConvertMost;
 
 enum MediaClean { clean, notMedia, refused }
 
@@ -179,4 +184,77 @@ Future<MediaCleaned> copyClean(
     await shredTree(dir.path);
   } catch (_) {}
   return done;
+}
+
+/// a file made ready to send or keep: its copy at [path] under [name], or
+/// no path when it cannot go (a video the cleaner refuses, a read that
+/// fails; [video] says which)
+typedef ReadyCopy = ({String? path, String name, bool video});
+
+/// [src] copied to [dest] for a send or a note, under [name]. media is
+/// cleaned on our copy (copyClean). a picture the cleaner cannot clean, a
+/// [raw] one first of all, is drawn again as a clean jpeg (cleanJpegOf)
+/// and goes as a .jpg; one that cannot be drawn goes as it is, never asked
+/// about (mario 2026-11-05). a video that cannot be cleaned does not go
+Future<ReadyCopy> copyForSend(
+  String src,
+  String dest, {
+  required String name,
+  bool raw = false,
+  Directory? cache,
+}) async {
+  if (!raw) {
+    final done = await copyClean(src, dest, name: name, cache: cache);
+    if (done.how != MediaClean.refused) {
+      return (path: dest, name: name, video: false);
+    }
+    if (done.video) return (path: null, name: name, video: true);
+  }
+  final jpeg = await _drawnClean(src);
+  if (jpeg != null) {
+    final to = p.setExtension(dest, '.jpg');
+    try {
+      await File(to).writeAsBytes(jpeg, flush: true);
+      return (path: to, name: p.setExtension(name, '.jpg'), video: false);
+    } catch (_) {
+      try {
+        await shredFile(to);
+      } catch (_) {}
+    }
+  }
+  // a raw one the cleaner may still take part of, else as it is
+  if (raw) {
+    final done = await copyClean(
+      src,
+      dest,
+      name: name,
+      raw: true,
+      cache: cache,
+    );
+    if (done.how != MediaClean.refused) {
+      return (path: dest, name: name, video: false);
+    }
+  }
+  try {
+    await File(src).copy(dest);
+    return (path: dest, name: name, video: false);
+  } catch (_) {
+    try {
+      await shredFile(dest);
+    } catch (_) {}
+    return (path: null, name: name, video: false);
+  }
+}
+
+// the picture at [path] as a clean jpeg; null where it cannot be drawn. a
+// computer has nothing to draw it with
+Future<Uint8List?> _drawnClean(String path) async {
+  if (onDesktop) return null;
+  try {
+    final f = File(path);
+    if (await f.length() > kConvertMost) return null;
+    return await cleanJpegOf(await f.readAsBytes());
+  } catch (_) {
+    return null;
+  }
 }

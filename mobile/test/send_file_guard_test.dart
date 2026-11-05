@@ -22,7 +22,7 @@ void main() {
       expect(body, isNot(contains('.delete(')), reason: file);
       // the copy is made and cleaned out of the media folder by the one
       // cleaner, which shreds it on a refusal; nothing copies in before it
-      expect(body, contains('await copyClean(src, dest.path'), reason: file);
+      expect(body, contains('await copyForSend(src, dest.path'), reason: file);
       expect(body, isNot(contains('.copy(dest.path)')), reason: file);
     });
   });

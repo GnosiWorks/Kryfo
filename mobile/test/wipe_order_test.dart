@@ -141,6 +141,9 @@ void main() {
       for (final (f, size) in [
         ('docs/media/v_1.mp4', 4 << 20),
         ('docs/media/in_ab/doc.pdf', 30000),
+        // note to self's own: a file and a voice note kept there
+        ('docs/media/f_n0te.pdf', 30000),
+        ('docs/media/vn_n0te.ogg', 20000),
         ('docs/media_v/h.jpg', 20000),
         ('docs/media_d/d.jpg', 20000),
         ('docs/wallpapers/w.jpg', 20000),

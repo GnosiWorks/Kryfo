@@ -1934,10 +1934,6 @@
   "@chatCouldNotCleanThat": {
     "description": "screens/chat_screen.dart"
   },
-  "chatCouldNotCleanThatPictureSend": "Could not clean that picture · send it as a photo",
-  "@chatCouldNotCleanThatPictureSend": {
-    "description": "screens/chat_screen.dart"
-  },
   "chatGifTooBig8": "Gif too big · 8 mb max",
   "@chatGifTooBig8": {
     "description": "screens/chat_screen.dart"
@@ -3214,10 +3210,6 @@
   },
   "groupChatCouldNotCleanThatVideo": "Could not clean that video",
   "@groupChatCouldNotCleanThatVideo": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatCouldNotCleanThatPictureSend": "Could not clean that picture · send it as a photo",
-  "@groupChatCouldNotCleanThatPictureSend": {
     "description": "screens/group_chat_screen.dart"
   },
   "groupChat30Seconds": "30 seconds",
@@ -11184,14 +11176,6 @@
   "@fileGoesAsItIs": {
     "description": "screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)"
   },
-  "fileRawPictureTitle": "Send this picture as it is?",
-  "@fileRawPictureTitle": {
-    "description": "chat and group: title of the sheet before sending a picture Kryfo cannot clean (raw, tiff, psd, svg, jpeg xl)"
-  },
-  "fileRawPictureLine": "This picture can't be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.",
-  "@fileRawPictureLine": {
-    "description": "chat and group: line on that sheet, shown whatever the size. sending it as a photo re-encodes it, which removes its details"
-  },
   "voiceStoppedAtLimit": "Voice notes stop at 30 minutes. Listen to it, then send it.",
   "@voiceStoppedAtLimit": {
     "description": "widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself"
@@ -14075,10 +14059,6 @@
   "@chatDropHereToSend": {
     "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
   },
-  "notesDropKeepsWords": "Note to self keeps words. Send files in a chat.",
-  "@notesDropKeepsWords": {
-    "description": "a computer: files dropped on note to self, which keeps text only"
-  },
   "chatDropHereToAdd": "Drop here to add",
   "@chatDropHereToAdd": {
     "description": "a computer: files dragged over a chat, the line on the wash; let go, they wait in a row above the composer until enter sends them"
@@ -14504,5 +14484,37 @@
         "type": "Object"
       }
     }
+  },
+  "notesDropToKeep": "Drop here to keep it",
+  "@notesDropToKeep": {
+    "description": "notes to self on a computer: the line on the wash while files are dragged over it"
+  },
+  "notesOnAllDevices": "On all your devices",
+  "@notesOnAllDevices": {
+    "description": "note to self's line under its title when it reaches the person's other devices"
+  },
+  "notesKeepAnything": "Keep words, photos and files here. They show on all your devices.",
+  "@notesKeepAnything": {
+    "description": "note to self's empty page when it reaches the person's other devices"
+  },
+  "notesGoneEverywhere": "It goes from all your devices, for good.",
+  "@notesGoneEverywhere": {
+    "description": "the confirm line for deleting one note that reaches the person's other devices"
+  },
+  "notesDeleteAllEverywhere": "Every note goes from all your devices, for good.",
+  "@notesDeleteAllEverywhere": {
+    "description": "the confirm line for deleting every note from the phone, which reaches the person's other devices"
+  },
+  "notesDeleteAllHereOnly": "Every note goes from this device only. Your phone keeps them.",
+  "@notesDeleteAllHereOnly": {
+    "description": "the confirm line for deleting every note on a linked device: only that device's notes go"
+  },
+  "notesAddItem": "Add a photo or a file",
+  "@notesAddItem": {
+    "description": "the label of the button that adds a photo or a file to note to self"
+  },
+  "notesVoiceNotKept": "Your voice note was not kept",
+  "@notesVoiceNotKept": {
+    "description": "a voice note that could not be kept in note to self"
   }
 }

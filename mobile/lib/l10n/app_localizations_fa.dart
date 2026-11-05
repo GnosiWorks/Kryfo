@@ -1555,10 +1555,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatCouldNotCleanThat => 'تمیز کردن آن ویدیو ممکن نشد';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'تمیز کردن آن تصویر ممکن نشد · آن را به‌صورت عکس بفرستید';
-
-  @override
   String get chatGifTooBig8 => 'گیف بزرگ است · حداکثر ۸ مگابایت';
 
   @override
@@ -2592,10 +2588,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'تمیز کردن آن ویدیو ممکن نشد';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'تمیز کردن آن تصویر ممکن نشد · آن را به‌صورت عکس بفرستید';
 
   @override
   String get groupChat30Seconds => '۳۰ ثانیه';
@@ -8976,13 +8968,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'این فایل همان‌طور که هست فرستاده می‌شود. Kryfo فقط فایل‌های JPEG، PNG، WebP، HEIC، AVIF، GIF، MP4 و MOV را تمیز می‌کند.';
 
   @override
-  String get fileRawPictureTitle => 'این تصویر همان‌طور که هست فرستاده شود؟';
-
-  @override
-  String get fileRawPictureLine =>
-      'این تصویر را نمی‌شود تمیز کرد. جزئیاتی مثل جای گرفتنش همراهش می‌رود. برای تمیز شدن، آن را به‌صورت عکس بفرستید.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'پیام‌های صوتی در ۳۰ دقیقه متوقف می‌شوند. گوش کنید و بعد بفرستید.';
 
@@ -11229,10 +11214,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatDropHereToSend => 'برای فرستادن اینجا رها کنید';
 
   @override
-  String get notesDropKeepsWords =>
-      'یادداشت برای خود متن نگه می‌دارد. فایل‌ها را در یک گفتگو بفرستید.';
-
-  @override
   String get chatDropHereToAdd => 'برای افزودن اینجا رها کنید';
 
   @override
@@ -11572,4 +11553,32 @@ class AppLocalizationsFa extends AppLocalizations {
   String chatDeviceListUnchecked(Object name) {
     return 'بررسی فهرست دستگاه‌های ⁨$name⁩ ممکن نشد';
   }
+
+  @override
+  String get notesDropToKeep => 'برای نگه داشتن اینجا رها کنید';
+
+  @override
+  String get notesOnAllDevices => 'روی همه‌ی دستگاه‌هایتان';
+
+  @override
+  String get notesKeepAnything =>
+      'نوشته‌ها، عکس‌ها و فایل‌ها را اینجا نگه دارید. روی همه‌ی دستگاه‌هایتان دیده می‌شوند.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'برای همیشه از همه‌ی دستگاه‌هایتان پاک می‌شود.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'همه‌ی یادداشت‌ها برای همیشه از همه‌ی دستگاه‌هایتان پاک می‌شوند.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'همه‌ی یادداشت‌ها فقط از این دستگاه پاک می‌شوند. گوشی‌تان آن‌ها را نگه می‌دارد.';
+
+  @override
+  String get notesAddItem => 'افزودن عکس یا فایل';
+
+  @override
+  String get notesVoiceNotKept => 'پیام صوتی شما نگه داشته نشد';
 }

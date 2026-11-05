@@ -108,7 +108,7 @@ void main() {
       ).replaceAll(RegExp(r'\s+'), ' ');
       expect(
         send,
-        contains('await copyClean(src, dest.path, name: name, raw: raw);'),
+        contains('await copyForSend(src, dest.path, name: name, raw: raw);'),
         reason: file,
       );
     });
@@ -124,7 +124,8 @@ void main() {
     );
   });
 
-  test('a picture the lane cannot clean is always asked about', () {
+  test('a picture the lane cannot clean is never asked about: it is drawn '
+      'again or goes as it is (copyForSend)', () {
     screens.forEach((file, sig) {
       final send = bodyOf(sourceOf(file), sig.$2);
       expect(
@@ -132,19 +133,13 @@ void main() {
         contains('readFileFactsFresh(src, name))?.raw'),
         reason: file,
       );
+      expect(send, contains('copyForSend(src, dest.path'), reason: file);
+      expect(send, isNot(contains('showConfirmSheet')), reason: file);
     });
     final chat = sourceOf('lib/screens/chat_screen.dart');
     final sheet = bodyOf(chat, 'Future<bool> _confirmBigSend(');
-    expect(sheet, contains('if (!big && !raw) return true;'));
-    expect(sheet, contains('l10n.fileRawPictureLine'));
-    expect(sheet, contains('l10n.fileRawPictureTitle'));
-    final group = bodyOf(
-      sourceOf('lib/screens/group_chat_screen.dart'),
-      'Future<_GReady?> _readyGroupFile(',
-    );
-    final ask = group.indexOf('line: l10n.fileRawPictureLine');
-    expect(ask, greaterThan(0));
-    expect(ask, lessThan(group.indexOf('newMsgUid()')));
+    expect(sheet, contains('if (!big) return true;'));
+    expect(sheet, isNot(contains('raw')));
   });
 
   test('a big file the lane does not clean says it goes as it is', () {

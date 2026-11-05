@@ -5,8 +5,8 @@
 // while it waits: a row holds paths and, for a photo, a small decoded
 // thumb in memory, and a lock lets go of all of it. the copy into the
 // sealed media folder is made on send, the way a pick's is. note to self
-// keeps words for now: once it keeps files, its DragInZone takes a stage
-// and DeskTrays.of('<container>|notes'), and its send reads this row
+// has its row too (DeskTrays.of('<container>|notes')): enter keeps each
+// staged file as a note
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
