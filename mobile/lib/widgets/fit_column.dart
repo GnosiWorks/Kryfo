@@ -7,7 +7,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-class FitColumn extends StatelessWidget {
+import '../theme.dart' show HaloColors;
+
+class FitColumn extends StatefulWidget {
   final EdgeInsets padding;
   final CrossAxisAlignment crossAxisAlignment;
   final List<Widget> children;
@@ -19,30 +21,98 @@ class FitColumn extends StatelessWidget {
   });
 
   @override
+  State<FitColumn> createState() => _FitColumnState();
+}
+
+// the bottom edge fades out
+const _edge = 48.0;
+
+class _FitColumnState extends State<FitColumn> {
+  // part of the page sits below the fold: the edge fades and an arrow says
+  // there is more, so a card under it is not taken for missing
+  bool _more = false;
+
+  bool _metrics(ScrollMetrics m) {
+    final more = m.extentAfter > 1;
+    if (more != _more) setState(() => _more = more);
+    return false;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final padding = widget.padding;
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     return LayoutBuilder(
-      builder: (context, c) => SingleChildScrollView(
-        padding: padding,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            // a scaffold's body is loose across, and a column left to it
-            // is only as wide as its widest line, at the start edge: its
-            // centred lines then sit off the middle of the screen
-            minWidth: c.hasBoundedWidth
-                ? math.max(0, c.maxWidth - padding.horizontal)
-                : 0,
-            minHeight: (c.maxHeight - padding.vertical).clamp(
-              0,
-              double.infinity,
+      builder: (context, c) => Stack(
+        children: [
+          // always in the tree, so the scroll keeps its place when the
+          // fade comes and goes
+          ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (r) => LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFF000000),
+                const Color(0xFF000000),
+                _more ? const Color(0x00000000) : const Color(0xFF000000),
+              ],
+              stops: [0, math.max(1 - _edge / math.max(r.height, 1), 0.5), 1],
+            ).createShader(r),
+            child: NotificationListener<ScrollMetricsNotification>(
+              onNotification: (n) => n.depth == 0 && _metrics(n.metrics),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (n) => n.depth == 0 && _metrics(n.metrics),
+                child: SingleChildScrollView(
+                  padding: padding,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      // a scaffold's body is loose across, and a column left
+                      // to it is only as wide as its widest line, at the
+                      // start edge: its centred lines then sit off the
+                      // middle of the screen
+                      minWidth: c.hasBoundedWidth
+                          ? math.max(0, c.maxWidth - padding.horizontal)
+                          : 0,
+                      minHeight: (c.maxHeight - padding.vertical).clamp(
+                        0,
+                        double.infinity,
+                      ),
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: widget.crossAxisAlignment,
+                        children: widget.children,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-          child: IntrinsicHeight(
-            child: Column(
-              crossAxisAlignment: crossAxisAlignment,
-              children: children,
+          // only a sign: taps go to the page under it, a reader scrolls
+          PositionedDirectional(
+            start: 0,
+            end: 0,
+            bottom: 2,
+            child: IgnorePointer(
+              child: ExcludeSemantics(
+                child: AnimatedOpacity(
+                  key: const ValueKey('fit-more'),
+                  opacity: _more ? 1 : 0,
+                  duration: Duration(milliseconds: still ? 0 : 180),
+                  child: Center(
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 28,
+                      color: HaloColors.amberText,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
