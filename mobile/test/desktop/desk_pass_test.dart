@@ -181,8 +181,8 @@ void main() {
     await _settle(t);
     final row = t.getRect(find.text(l10n.languageTitle));
     expect(row.left, greaterThan((1280 - 720) / 2));
-    expect(find.text(l10n.settingsShotsNotHereYet), findsOneWidget);
-    expect(find.text(l10n.settingsPerChat), findsNothing);
+    expect(find.text(l10n.settingsShotsNotHereYet), findsNothing);
+    expect(find.text(l10n.settingsScreenshots), findsNothing);
     expect(find.text(l10n.settingsVersionAlpha(kAppVersion)), findsOneWidget);
     expect(find.text(l10n.settingsTheOfflineMapIn), findsNothing);
     expect(find.textContaining(l10n.settingsDeskInTray), findsOneWidget);

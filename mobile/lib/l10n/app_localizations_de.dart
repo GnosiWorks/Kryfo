@@ -7169,6 +7169,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsBackup => 'Backup';
 
   @override
+  String get settingsBackupNotYet => 'Noch nicht';
+
+  @override
+  String get settingsBackupToday => 'Heute';
+
+  @override
+  String get settingsBackupYesterday => 'Gestern';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vor $count Tagen',
+      one: 'Vor $count Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'Stimme';
 
   @override
@@ -11177,6 +11197,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'Passphrase auf diesem Computer';
+
+  @override
+  String get desktopPassWindowsAccount => 'Durch dein Windows-Konto gesichert';
+
+  @override
+  String get desktopPassKeyring => 'Durch deinen Schlüsselbund gesichert';
 
   @override
   String get desktopPassOffBody =>

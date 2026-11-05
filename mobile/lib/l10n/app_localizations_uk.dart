@@ -7213,6 +7213,28 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsBackup => 'Резервна копія';
 
   @override
+  String get settingsBackupNotYet => 'Ще ні';
+
+  @override
+  String get settingsBackupToday => 'Сьогодні';
+
+  @override
+  String get settingsBackupYesterday => 'Учора';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count дня тому',
+      many: '$count днів тому',
+      few: '$count дні тому',
+      one: '$count день тому',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'Голос';
 
   @override
@@ -11236,6 +11258,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'Парольна фраза на цьому комп’ютері';
+
+  @override
+  String get desktopPassWindowsAccount =>
+      'Захищено вашим обліковим записом Windows';
+
+  @override
+  String get desktopPassKeyring => 'Захищено вашою в’язкою ключів';
 
   @override
   String get desktopPassOffBody =>

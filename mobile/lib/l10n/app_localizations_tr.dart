@@ -7110,6 +7110,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsBackup => 'Yedek';
 
   @override
+  String get settingsBackupNotYet => 'Henüz yok';
+
+  @override
+  String get settingsBackupToday => 'Bugün';
+
+  @override
+  String get settingsBackupYesterday => 'Dün';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gün önce',
+      one: '$count gün önce',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'Ses';
 
   @override
@@ -11084,6 +11104,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'Bu bilgisayardaki parola ifadesi';
+
+  @override
+  String get desktopPassWindowsAccount => 'Windows hesabınla kilitli';
+
+  @override
+  String get desktopPassKeyring => 'Anahtarlığınla kilitli';
 
   @override
   String get desktopPassOffBody => 'Kryfo kullanıcı hesabınla açılır.';

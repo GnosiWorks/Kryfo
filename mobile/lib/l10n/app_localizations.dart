@@ -11329,6 +11329,30 @@ abstract class AppLocalizations {
   /// **'Backup'**
   String get settingsBackup;
 
+  /// screens/settings_screen.dart: the backup line of your protections when no backup was made on this side
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get settingsBackupNotYet;
+
+  /// screens/settings_screen.dart: the backup line of your protections, a backup made today
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get settingsBackupToday;
+
+  /// screens/settings_screen.dart: the backup line of your protections, a backup made yesterday
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get settingsBackupYesterday;
+
+  /// screens/settings_screen.dart: the backup line of your protections, days since the last backup (2 to 30)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} day ago} other{{count} days ago}}'**
+  String settingsBackupDaysAgo(int count);
+
   /// screens/settings_screen.dart
   ///
   /// In en, this message translates to:
@@ -17730,6 +17754,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Passphrase on this computer'**
   String get desktopPassRow;
+
+  /// screens/settings_screen.dart: your protections on windows, no passphrase: the windows account (and its security chip) keeps the key
+  ///
+  /// In en, this message translates to:
+  /// **'Locked by your Windows account'**
+  String get desktopPassWindowsAccount;
+
+  /// screens/settings_screen.dart: your protections on linux, no passphrase: the system keyring keeps the key
+  ///
+  /// In en, this message translates to:
+  /// **'Locked by your keyring'**
+  String get desktopPassKeyring;
 
   /// desktop/desktop_passphrase_screen.dart: when no passphrase is set
   ///

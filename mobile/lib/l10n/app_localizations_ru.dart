@@ -7217,6 +7217,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsBackup => 'Резервная копия';
 
   @override
+  String get settingsBackupNotYet => 'Пока нет';
+
+  @override
+  String get settingsBackupToday => 'Сегодня';
+
+  @override
+  String get settingsBackupYesterday => 'Вчера';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count дня назад',
+      many: '$count дней назад',
+      few: '$count дня назад',
+      one: '$count день назад',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'Голос';
 
   @override
@@ -11240,6 +11262,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'Парольная фраза на этом компьютере';
+
+  @override
+  String get desktopPassWindowsAccount =>
+      'Защищено вашей учётной записью Windows';
+
+  @override
+  String get desktopPassKeyring => 'Защищено вашей связкой ключей';
 
   @override
   String get desktopPassOffBody => 'Kryfo открывается с вашей учётной записью.';

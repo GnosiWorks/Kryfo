@@ -6762,6 +6762,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsBackup => '备份';
 
   @override
+  String get settingsBackupNotYet => '还没有';
+
+  @override
+  String get settingsBackupToday => '今天';
+
+  @override
+  String get settingsBackupYesterday => '昨天';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 天前',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => '语音';
 
   @override
@@ -10467,6 +10486,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopPassRow => '这台电脑上的密码短语';
+
+  @override
+  String get desktopPassWindowsAccount => '由你的 Windows 账户锁定';
+
+  @override
+  String get desktopPassKeyring => '由你的密钥环锁定';
 
   @override
   String get desktopPassOffBody => 'Kryfo 会用你的用户账户打开。';
@@ -17640,6 +17665,25 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsBackup => '備份';
 
   @override
+  String get settingsBackupNotYet => '還沒有';
+
+  @override
+  String get settingsBackupToday => '今天';
+
+  @override
+  String get settingsBackupYesterday => '昨天';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 天前',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => '語音';
 
   @override
@@ -21228,6 +21272,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopPassRow => '這台電腦上的密碼短語';
+
+  @override
+  String get desktopPassWindowsAccount => '由你的 Windows 帳戶鎖定';
+
+  @override
+  String get desktopPassKeyring => '由你的鑰匙圈鎖定';
 
   @override
   String get desktopPassOffBody => 'Kryfo 會用你的使用者帳戶開啟。';

@@ -7086,6 +7086,25 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsBackup => 'Cadangan';
 
   @override
+  String get settingsBackupNotYet => 'Belum';
+
+  @override
+  String get settingsBackupToday => 'Hari ini';
+
+  @override
+  String get settingsBackupYesterday => 'Kemarin';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hari lalu',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'Suara';
 
   @override
@@ -11058,6 +11077,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'Frasa sandi di komputer ini';
+
+  @override
+  String get desktopPassWindowsAccount => 'Dikunci dengan akun Windows-mu';
+
+  @override
+  String get desktopPassKeyring => 'Dikunci dengan ring kuncimu';
 
   @override
   String get desktopPassOffBody => 'Kryfo terbuka dengan akun penggunamu.';

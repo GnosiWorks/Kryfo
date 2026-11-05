@@ -7212,6 +7212,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsBackup => 'النسخ الاحتياطي';
 
   @override
+  String get settingsBackupNotYet => 'ليس بعد';
+
+  @override
+  String get settingsBackupToday => 'اليوم';
+
+  @override
+  String get settingsBackupYesterday => 'أمس';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قبل ⁨$count⁩ يوم',
+      many: 'قبل ⁨$count⁩ يومًا',
+      few: 'قبل ⁨$count⁩ أيام',
+      two: 'قبل يومين',
+      one: 'قبل يوم',
+      zero: 'قبل ⁨$count⁩ يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'الصوت';
 
   @override
@@ -11202,6 +11226,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'عبارة المرور على هذا الحاسوب';
+
+  @override
+  String get desktopPassWindowsAccount => 'مقفل بحساب Windows الخاص بك';
+
+  @override
+  String get desktopPassKeyring => 'مقفل بحلقة المفاتيح الخاصة بك';
 
   @override
   String get desktopPassOffBody => 'يُفتح Kryfo بحساب المستخدم الخاص بك.';

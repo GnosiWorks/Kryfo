@@ -7086,6 +7086,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsBackup => 'Backup';
 
   @override
+  String get settingsBackupNotYet => 'Not yet';
+
+  @override
+  String get settingsBackupToday => 'Today';
+
+  @override
+  String get settingsBackupYesterday => 'Yesterday';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '$count day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'Voice';
 
   @override
@@ -11053,6 +11073,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'Passphrase on this computer';
+
+  @override
+  String get desktopPassWindowsAccount => 'Locked by your Windows account';
+
+  @override
+  String get desktopPassKeyring => 'Locked by your keyring';
 
   @override
   String get desktopPassOffBody => 'Kryfo opens with your computer account.';

@@ -7091,6 +7091,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsBackup => 'बैकअप';
 
   @override
+  String get settingsBackupNotYet => 'अभी नहीं';
+
+  @override
+  String get settingsBackupToday => 'आज';
+
+  @override
+  String get settingsBackupYesterday => 'कल';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count दिन पहले',
+      one: '$count दिन पहले',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'आवाज़';
 
   @override
@@ -11064,6 +11084,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'इस कंप्यूटर पर पासफ़्रेज़';
+
+  @override
+  String get desktopPassWindowsAccount => 'आपके Windows अकाउंट से लॉक है';
+
+  @override
+  String get desktopPassKeyring => 'आपकी कीरिंग से लॉक है';
 
   @override
   String get desktopPassOffBody => 'Kryfo आपके यूज़र अकाउंट से खुलता है।';

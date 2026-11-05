@@ -7071,6 +7071,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsBackup => 'Sao lưu';
 
   @override
+  String get settingsBackupNotYet => 'Chưa có';
+
+  @override
+  String get settingsBackupToday => 'Hôm nay';
+
+  @override
+  String get settingsBackupYesterday => 'Hôm qua';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ngày trước',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'Giọng nói';
 
   @override
@@ -11042,6 +11061,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'Cụm mật khẩu trên máy tính này';
+
+  @override
+  String get desktopPassWindowsAccount =>
+      'Được khóa bằng tài khoản Windows của bạn';
+
+  @override
+  String get desktopPassKeyring => 'Được khóa bằng chùm chìa khóa của bạn';
 
   @override
   String get desktopPassOffBody =>

@@ -7089,6 +7089,26 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsBackup => 'نسخه‌ی پشتیبان';
 
   @override
+  String get settingsBackupNotYet => 'هنوز نه';
+
+  @override
+  String get settingsBackupToday => 'امروز';
+
+  @override
+  String get settingsBackupYesterday => 'دیروز';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '⁨$count⁩ روز پیش',
+      one: '⁨$count⁩ روز پیش',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsVoice => 'صدا';
 
   @override
@@ -11069,6 +11089,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get desktopPassRow => 'عبارت عبور روی این رایانه';
+
+  @override
+  String get desktopPassWindowsAccount => 'قفل‌شده با حساب Windows شما';
+
+  @override
+  String get desktopPassKeyring => 'قفل‌شده با جاکلیدی شما';
 
   @override
   String get desktopPassOffBody => 'Kryfo با حساب کاربری شما باز می‌شود.';
