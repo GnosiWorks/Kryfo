@@ -2,9 +2,11 @@
 
 #include <flutter/method_result_functions.h>
 #include <flutter/standard_method_codec.h>
+#include <shellapi.h>
 #include <wtsapi32.h>
 
 #include <optional>
+#include <string>
 
 #include "flutter/generated_plugin_registrant.h"
 #include "kryfo_audio.h"
@@ -17,6 +19,32 @@ constexpr UINT kHiddenWaitMs = 10000;
 
 // the session's lock now. no answer counts as locked: the first unlock
 // says otherwise
+// the files copied in explorer, as utf-8 paths. nothing else on the
+// clipboard is read
+flutter::EncodableList ClipboardFiles(HWND owner) {
+  flutter::EncodableList files;
+  if (!::IsClipboardFormatAvailable(CF_HDROP) || !::OpenClipboard(owner)) return files;
+  HDROP drop = static_cast<HDROP>(::GetClipboardData(CF_HDROP));
+  if (drop) {
+    UINT n = ::DragQueryFileW(drop, 0xFFFFFFFF, nullptr, 0);
+    for (UINT i = 0; i < n; ++i) {
+      UINT len = ::DragQueryFileW(drop, i, nullptr, 0);
+      if (len == 0) continue;
+      std::wstring w(len + 1, L'\0');
+      ::DragQueryFileW(drop, i, w.data(), len + 1);
+      w.resize(len);
+      int m = ::WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), nullptr,
+                                    0, nullptr, nullptr);
+      std::string s(m, '\0');
+      ::WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), s.data(), m,
+                            nullptr, nullptr);
+      if (!s.empty()) files.push_back(flutter::EncodableValue(s));
+    }
+  }
+  ::CloseClipboard();
+  return files;
+}
+
 bool SessionLockedNow() {
   WTSINFOEXW* info = nullptr;
   DWORD n = 0;
@@ -102,6 +130,9 @@ bool FlutterWindow::OnCreate() {
     } else if (call.method_name() == "sessionLocked") {
       // toasts say only kryfo and new message while it is
       result->Success(flutter::EncodableValue(session_locked_));
+    } else if (call.method_name() == "clipFiles") {
+      // ctrl and v in a composer: files copied in explorer wait in its row
+      result->Success(flutter::EncodableValue(ClipboardFiles(GetHandle())));
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();

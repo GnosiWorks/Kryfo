@@ -183,6 +183,7 @@ import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/attach_tray.dart';
 import '../desktop/drag_in.dart' show DragInZone;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
@@ -668,6 +669,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.initState();
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.groupId);
+    _tray.addListener(_trayMoved);
     // a computer: the chat opens ready to type
     if (onDesktop) _composerFocus.requestFocus();
     _loadWall();
@@ -2110,6 +2112,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _send() async {
+    if (onDesktop && !_tray.isEmpty) {
+      _composerFocus.requestFocus();
+      return _sendTray();
+    }
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
     // the words stay in the field until someone is here
@@ -4670,6 +4676,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    // the row stays with the group for its next opening
+    _tray.removeListener(_trayMoved);
     _composerFocus.dispose();
     _transcripts?.dispose();
     _translation?.dispose();
@@ -4721,22 +4729,85 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       },
       child: DragInZone(
         enabled: _end == null && !_waiting,
-        send: (path, name) async {
-          if (_nobodyToRead()) return;
-          await _sendGroupFileFrom(path, name);
-        },
+        stage: _stage,
         couldNotRead: () => l10n.groupChatCouldNotReadThat,
         child: _page(context),
       ),
     ),
   );
 
-  // esc on a computer lets go of the quote, then the search, and only then
-  // closes the chat
-  bool get _escHolds => onDesktop && (_replyTo != null || _searching);
+  // this group's row of staged files on a computer, kept by group and
+  // container so it can never go anywhere else
+  late final AttachTray _tray = DeskTrays.of(
+    '${session.container.id}|group:${widget.groupId}',
+  );
+
+  void _trayMoved() {
+    if (mounted) setState(() {});
+  }
+
+  void _stage(List<String> files) {
+    if (_end != null || _waiting) return;
+    unawaited(
+      _tray.add(files, most: () => appState.fileLimitForGroup(widget.groupId)),
+    );
+  }
+
+  // enter with files staged: photos and videos as albums with the caption
+  // on the first, as a pick goes, then each file. a file alone takes it
+  Future<void> _sendTray() async {
+    if (_sending || _nobodyToRead()) return;
+    // a second enter while the first reads finds the row taken
+    if (_trayBusy) return;
+    _trayBusy = true;
+    try {
+      await _sendTrayNow();
+    } finally {
+      _trayBusy = false;
+    }
+  }
+
+  bool _trayBusy = false;
+
+  Future<void> _sendTrayNow() async {
+    final caption = _msgCtrl.text.trim();
+    final plan = trayPlan(_tray.items, caption);
+    final picks = <PickedMedia>[];
+    for (final x in plan.media) {
+      if (x.kind == TrayKind.video) {
+        picks.add(PickedMedia.video(XFile(x.path, name: x.name)));
+        continue;
+      }
+      try {
+        picks.add(PickedMedia.photo(await File(x.path).readAsBytes()));
+      } catch (_) {
+        if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
+      }
+    }
+    // a lock while it read took the row: nothing goes
+    if (!mounted || lockState.locked) return;
+    _tray.clear();
+    _msgCtrl.clear();
+    _keepDraft();
+    if (picks.isNotEmpty) {
+      await _sendPicked(MediaSendResult(items: picks, caption: caption));
+    }
+    for (final (f, words) in plan.files) {
+      if (!mounted || lockState.locked) break;
+      final ready = await _readyGroupFile(f.path, f.name);
+      if (ready != null) await _sendGroupReady(ready, words);
+    }
+  }
+
+  // esc on a computer lets go of the staged files, then the quote, then
+  // the search, and only then closes the chat
+  bool get _escHolds =>
+      onDesktop && (_tray.shown || _replyTo != null || _searching);
 
   void _escOne() {
-    if (_replyTo != null) {
+    if (_tray.shown) {
+      _tray.clear();
+    } else if (_replyTo != null) {
       setState(() => _replyTo = null);
       _keepDraft();
     } else if (_searching) {
@@ -5024,26 +5095,36 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       )
                     : KeyedSubtree(
                         key: const ValueKey('composer'),
-                        child: _Composer(
-                          controller: _msgCtrl,
-                          focusNode: _composerFocus,
-                          members: _mentionable,
-                          sending: _sending,
-                          ghost: _ghost,
-                          burnSeconds: _burnSeconds,
-                          disguise: _disguise,
-                          onToggleGhost: () {
-                            setState(() => _ghost = !_ghost);
-                            appState.saveGhostPref(_ghost, _burnSeconds);
-                            _keepDraft(clock: true);
-                          },
-                          onLongPressGhost: _showBurnPicker,
-                          onSend: _send,
-                          onAttach: _showAttachSheet,
-                          onStickers: _showStickers,
-                          onCamera: _openGroupCamera,
-                          onVoice: _onVoice,
-                          mayRecord: () => !_nobodyToRead(),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TrayStrip(tray: _tray),
+                            PasteFiles(
+                              onFiles: _stage,
+                              child: _Composer(
+                                staged: !_tray.isEmpty,
+                                controller: _msgCtrl,
+                                focusNode: _composerFocus,
+                                members: _mentionable,
+                                sending: _sending,
+                                ghost: _ghost,
+                                burnSeconds: _burnSeconds,
+                                disguise: _disguise,
+                                onToggleGhost: () {
+                                  setState(() => _ghost = !_ghost);
+                                  appState.saveGhostPref(_ghost, _burnSeconds);
+                                  _keepDraft(clock: true);
+                                },
+                                onLongPressGhost: _showBurnPicker,
+                                onSend: _send,
+                                onAttach: _showAttachSheet,
+                                onStickers: _showStickers,
+                                onCamera: _openGroupCamera,
+                                onVoice: _onVoice,
+                                mayRecord: () => !_nobodyToRead(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
               ),
@@ -5538,8 +5619,11 @@ class _Composer extends StatelessWidget {
   final bool Function() mayRecord;
   // who @ can offer
   final List<MentionCandidate> members;
+  // files wait in the row above: send shows with nothing typed
+  final bool staged;
   const _Composer({
     this.members = const [],
+    this.staged = false,
     required this.controller,
     this.focusNode,
     required this.sending,
@@ -5760,7 +5844,7 @@ class _Composer extends StatelessWidget {
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: controller,
                 builder: (context, value, _) {
-                  final hasText = value.text.trim().isNotEmpty;
+                  final hasText = value.text.trim().isNotEmpty || staged;
                   // empty field: voice lane. text: the send pill. the two
                   // trade places with a small pop instead of a cut
                   return AnimatedSwitcher(

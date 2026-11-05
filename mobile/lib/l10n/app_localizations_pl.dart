@@ -11445,6 +11445,19 @@ class AppLocalizationsPl extends AppLocalizations {
       'Notatka dla siebie przechowuje słowa. Pliki wyślij w czacie.';
 
   @override
+  String get chatDropHereToAdd => 'Upuść tutaj, aby dodać';
+
+  @override
+  String trayRemove(String name) {
+    return 'Usuń $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Gotowe do wysłania: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Pokaż transkrypcję';
 
   @override

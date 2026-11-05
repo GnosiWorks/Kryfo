@@ -11404,6 +11404,19 @@ class AppLocalizationsUk extends AppLocalizations {
       'Нотатки для себе зберігають текст. Файли надсилай у чаті.';
 
   @override
+  String get chatDropHereToAdd => 'Відпустіть тут, щоб додати';
+
+  @override
+  String trayRemove(String name) {
+    return 'Прибрати $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Готово до надсилання: $count';
+  }
+
+  @override
   String get voiceSeeTranscription => 'Показати текст';
 
   @override
