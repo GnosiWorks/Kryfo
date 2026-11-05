@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 
 import '../desktop/desktop_mode.dart' show onDesktop;
 import '../theme.dart';
+import 'desk_menu.dart'
+    show DeskMenuAt, DeskMenuIntent, deskMenuKeys, deskRectOf;
 
 class KeyRing extends StatefulWidget {
   final Widget child;
@@ -26,6 +28,8 @@ class KeyRing extends StatefulWidget {
   final bool? pointer;
   // a computer: shown when the mouse rests on it
   final String? tooltip;
+  // a computer: what the menu key and shift+f10 open, as a right click does
+  final VoidCallback? onMenu;
   const KeyRing({
     super.key,
     required this.child,
@@ -36,6 +40,7 @@ class KeyRing extends StatefulWidget {
     this.focusNode,
     this.pointer,
     this.tooltip,
+    this.onMenu,
   });
 
   @override
@@ -53,10 +58,12 @@ class _KeyRingState extends State<KeyRing> {
   @override
   Widget build(BuildContext context) {
     final go = widget.onActivate;
+    final menu = onDesktop ? widget.onMenu : null;
+    final reach = go != null || menu != null;
     final hand = onDesktop && (widget.pointer ?? go != null);
     final shape = widget.circle ? BoxShape.circle : BoxShape.rectangle;
     Widget w = FocusableActionDetector(
-      enabled: go != null,
+      enabled: reach,
       autofocus: widget.autofocus,
       focusNode: widget.focusNode,
       // the button's own node says what it is; focus adds nothing to hear
@@ -64,11 +71,21 @@ class _KeyRingState extends State<KeyRing> {
       onShowFocusHighlight: (v) {
         if (v != _ring) setState(() => _ring = v);
       },
+      shortcuts: menu == null ? null : deskMenuKeys,
       actions: {
         if (go != null)
           ActivateIntent: CallbackAction<ActivateIntent>(
             onInvoke: (_) {
               go();
+              return null;
+            },
+          ),
+        if (menu != null)
+          DeskMenuIntent: CallbackAction<DeskMenuIntent>(
+            onInvoke: (_) {
+              final r = deskRectOf(context);
+              if (r != null) DeskMenuAt.keyed(r);
+              menu();
               return null;
             },
           ),
@@ -100,7 +117,7 @@ class _KeyRingState extends State<KeyRing> {
                 ),
               ),
             ),
-          if (_ring && go != null)
+          if (_ring && reach)
             Positioned(
               left: -3,
               top: -3,
@@ -124,6 +141,7 @@ class _KeyRingState extends State<KeyRing> {
       ),
     );
     if (!onDesktop) return w;
+    if (menu != null) DeskMenuAt.watch();
     w = MouseRegion(
       cursor: hand ? SystemMouseCursors.click : MouseCursor.defer,
       onEnter: hand ? (_) => _hovered(true) : null,
