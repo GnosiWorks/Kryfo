@@ -315,7 +315,8 @@ extension AppStateSession on AppState {
   // registered nowhere, listed, and its pin entry written last. false when
   // the pin is in use: the screen says pick a different one
   Future<bool> setDecoyPin(String pin) async {
-    if (sessionQuiet) return false;
+    // a linked device has no decoy: its phone's is the account's
+    if (sessionQuiet || linkedRole) return false;
     if (_decoyDb != null) return lockState.setupDecoyPin(pin);
     final d = HaloDb(HaloContainer.decoy);
     try {

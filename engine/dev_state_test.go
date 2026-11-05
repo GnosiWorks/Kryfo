@@ -497,7 +497,12 @@ func TestDeviceKeysForTheAddressLayer(t *testing.T) {
 	if _, ok := src.deviceKey(1, x(bob.id.pub), bobDesk.ID); ok {
 		t.Fatal("bob under another of my identities")
 	}
-	if _, ok := src.deviceKey(0, x(bob.id.pub), 99); ok {
+	// an id bob's list does not hold: his desktop's is drawn at random
+	unlisted := uint8(99)
+	if bobDesk.ID == unlisted {
+		unlisted++
+	}
+	if _, ok := src.deviceKey(0, x(bob.id.pub), unlisted); ok {
 		t.Fatal("an unlisted device")
 	}
 	keys := []string{}

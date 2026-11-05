@@ -4,7 +4,7 @@
 import '../desktop/desktop_mode.dart' show onDesktop;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, GroupFull, AppStateGroups;
+import '../main.dart' show appState, linkedRole, GroupFull, AppStateGroups;
 import '../widgets/confirm_sheet.dart';
 import 'home_screen.dart' show ContactPreview;
 import '../theme.dart';
@@ -27,6 +27,8 @@ Future<void> openNewGroup(
   BuildContext context, {
   required Future<void> Function() onAdd,
 }) async {
+  // groups are made on the phone a device is linked to
+  if (linkedRole) return;
   if (canMakeGroupWith(appState.contacts)) {
     await deskPush(context, haloRoute(const NewGroupScreen()));
     return;

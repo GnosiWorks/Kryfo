@@ -96,6 +96,11 @@ class _RootShellState extends State<RootShell> {
 }
 
 Future<void> showAddContact(BuildContext context) async {
+  // a linked device adds no one: its contacts come from its phone
+  if (linkedRole) {
+    showHaloToast(context, l10n.linkedAddOnPhone);
+    return;
+  }
   final ctrl = TextEditingController();
   final action = await showHaloSheet<String>(
     context,

@@ -11525,6 +11525,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get bridgesSendBridgeTo => 'Brücke senden an';
 
   @override
+  String get linkedAddOnPhone =>
+      'Füge Leute auf deinem Handy hinzu. Sie erscheinen auch hier.';
+
+  @override
+  String get linkedLinkOnPhone => 'Öffne diesen Link auf deinem Handy.';
+
+  @override
   String get tipsTitle => 'Kryfo unterstützen';
 
   @override

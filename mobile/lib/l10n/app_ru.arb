@@ -3002,6 +3002,8 @@
   "bridgesCopyBridge": "Копировать мост",
   "bridgesBridgeCopied": "Мост скопирован",
   "bridgesSendBridgeTo": "Отправить мост",
+  "linkedAddOnPhone": "Добавляйте людей на телефоне. Они появятся и здесь.",
+  "linkedLinkOnPhone": "Откройте эту ссылку на телефоне.",
   "tipsTitle": "Поддержать Kryfo",
   "tipsHeadline": "Пусть Kryfo остаётся *бесплатным для всех*",
   "tipsLine": "Без рекламы, без инвесторов, без аккаунтов. Чаевые помогают платить за серверы и работу над Kryfo.",

@@ -24,6 +24,30 @@ Future<void> readLinkedRole(DatabaseExecutor db) async {
   await readLinkNotices(db);
 }
 
+/// a linked device's tor is a client: it reaches relays and its phone's
+/// onion and publishes no onion of its own (decision 4). told before tor's
+/// first start, and right after a link, whose process published the new
+/// device's onion already: the engine takes that one down. on a phone this
+/// does nothing
+Future<void> torAsLinked({required String at}) async {
+  if (!linkedDevicesOn) return;
+  if (at == 'boot') {
+    try {
+      _linkedRole = await linkedRoleOf(await live.open());
+    } catch (e) {
+      dlog('linked: role not read before tor (${e.runtimeType})');
+    }
+  }
+  if (!linkedRole) return;
+  appState.myOnion = '';
+  try {
+    final r = await engine.torClientOnly();
+    if (r != 'ok') dlog('linked: tor as a client at $at: $r');
+  } catch (e) {
+    dlog('linked: tor as a client at $at (${e.runtimeType})');
+  }
+}
+
 /// where the devices page reads from, for the session open now. the
 /// decoy's is this phone alone, linking to nobody: it reads nothing real
 Future<OwnDevices> ownDevicesSource() async {
@@ -265,6 +289,8 @@ class _JoinLinkApp implements JoinLinkHooks {
       onion: stream.onion,
     );
     _linkedRole = true;
+    // no onion of its own from here: the one this process published goes
+    unawaited(torAsLinked(at: 'link'));
     // the state as the rows now hold it, loaded as every start loads it
     await bootDevices();
     // the history copy comes from the phone from here

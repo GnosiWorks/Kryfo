@@ -189,6 +189,8 @@ extension AppStateProfile on AppState {
   Future<void> _listenFirstContact() async {
     _fcListenTimer?.cancel();
     _fcListenTimer = null;
+    // a linked device has no invite of its own to be first written to
+    if (linkedRole) return;
     String r;
     try {
       r = await engine.subscribeFirstContact(kMainIdent, _fcCounter);
@@ -212,8 +214,9 @@ extension AppStateProfile on AppState {
   // that started on an empty list, or lost every relay, starts again
   @visibleForTesting
   void checkFirstListener() {
-    // a quiet session starts nothing of the everyday side's
-    if (sessionQuiet) return;
+    // a quiet session starts nothing of the everyday side's, and a linked
+    // device listens on no invite
+    if (sessionQuiet || linkedRole) return;
     if (!_fcLoaded) {
       if (_fcUnread && _fcCounterTimer == null) unawaited(_loadFirstContact());
       return;
