@@ -126,6 +126,7 @@ class _Told extends OwnSync {
     OwnChat chat,
     String frame, {
     List<String> notReached = const [],
+    OwnPeer? only,
   }) async => true;
 }
 

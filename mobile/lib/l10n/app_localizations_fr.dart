@@ -1567,10 +1567,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Impossible de nettoyer cette vidéo';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Impossible de nettoyer cette image · envoyez-la comme photo';
-
-  @override
   String get chatGifTooBig8 => 'Gif trop gros · 8 Mo max';
 
   @override
@@ -2621,10 +2617,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get groupChatCouldNotCleanThatVideo =>
       'Impossible de nettoyer cette vidéo';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Impossible de nettoyer cette image · envoyez-la comme photo';
 
   @override
   String get groupChat30Seconds => '30 secondes';
@@ -9060,13 +9052,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Ce fichier part tel quel. Kryfo ne nettoie que les JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 et MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Envoyer cette image telle quelle ?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Cette image ne peut pas être nettoyée. Des détails comme le lieu de la prise de vue partent avec. Envoyez-la comme photo pour la nettoyer.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Les messages vocaux s’arrêtent à 30 minutes. Écoutez-le, puis envoyez-le.';
 
@@ -11345,10 +11330,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatDropHereToSend => 'Déposez ici pour envoyer';
 
   @override
-  String get notesDropKeepsWords =>
-      'Note pour moi garde des mots. Envoie les fichiers dans une discussion.';
-
-  @override
   String get chatDropHereToAdd => 'Déposez ici pour ajouter';
 
   @override
@@ -11695,4 +11676,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String chatDeviceListUnchecked(Object name) {
     return 'La liste des appareils de $name n’a pas pu être vérifiée';
   }
+
+  @override
+  String get notesDropToKeep => 'Déposez ici pour le garder';
+
+  @override
+  String get notesOnAllDevices => 'Sur tous vos appareils';
+
+  @override
+  String get notesKeepAnything =>
+      'Gardez ici des mots, des photos et des fichiers. Ils apparaissent sur tous vos appareils.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Elle est effacée de tous vos appareils pour de bon.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Toutes les notes sont effacées de tous vos appareils, pour de bon.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Toutes les notes sont effacées de cet appareil seulement. Votre téléphone les garde.';
+
+  @override
+  String get notesAddItem => 'Ajouter une photo ou un fichier';
+
+  @override
+  String get notesVoiceNotKept => 'Votre message vocal n’a pas été gardé';
 }

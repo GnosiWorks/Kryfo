@@ -280,6 +280,16 @@ Future<void> deviceTables(
       frame TEXT NOT NULL
     )
   ''');
+  // a note to self of mine still owed to my other devices: its uid, when it
+  // was kept, and when it is tried next (notes_own_app.dart)
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_notes_out (
+      uid TEXT PRIMARY KEY,
+      at INTEGER NOT NULL,
+      tries INTEGER NOT NULL DEFAULT 0,
+      next_at INTEGER NOT NULL DEFAULT 0
+    )
+  ''');
   // when a linked device last said a person uses it (its 'ob')
   await addColumn(
     db,
@@ -353,6 +363,7 @@ const _allTables = [
   'own_told',
   'own_gone',
   'own_held',
+  'own_notes_out',
   'dev_farewell',
 ];
 

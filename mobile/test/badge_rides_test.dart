@@ -25,6 +25,8 @@ void main() {
     for (final f in Directory('lib').listSync(recursive: true)) {
       if (f is! File || !f.path.endsWith('.dart')) continue;
       if (f.path.endsWith('message_envelope.dart')) continue;
+      // note to self's frames go to my own devices alone, never a contact
+      if (f.path.endsWith('notes_own_app.dart')) continue;
       final src = f.readAsStringSync();
       for (final m in RegExp(r'(?<!un)wrapMessage\(').allMatches(src)) {
         final a = _args(src, m.end - 1);

@@ -1,10 +1,15 @@
 // every lane that sends or saves a file uses one cleaner: a picture or video
 // is cleaned on a copy and read again, anything still found is refused,
-// and a file that is no media goes as it is.
+// and a file that is no media goes as it is. a send or a note draws a
+// picture the cleaner refuses, a raw one first, again as a clean jpeg, and
+// sends one that cannot be drawn as it is, with nothing asked
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/clean_media.dart';
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
+import 'package:kryfo/jpeg_strip.dart' show jpegHasExif;
 import 'package:kryfo/image_strip.dart';
 import 'package:kryfo/meta/meta_reader.dart';
 import 'package:kryfo/tools/cleaner.dart' show readFile;
@@ -12,6 +17,7 @@ import 'package:kryfo/tools/cleaner.dart' show readFile;
 import 'meta_fixtures.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late Directory tmp;
   setUp(() => tmp = Directory.systemTemp.createTempSync('cleanmedia'));
   tearDown(() => tmp.deleteSync(recursive: true));
@@ -185,13 +191,152 @@ void main() {
     });
   });
 
+  group('a picture the cleaner cannot clean', () {
+    // what the platform's draw answers: the bytes of a jpeg, or null
+    Uint8List? drawn;
+    var asked = 0;
+    late Directory cache;
+    setUp(() {
+      cache = Directory('${tmp.path}/cache')..createSync();
+      drawn = null;
+      asked = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
+            call,
+          ) async {
+            if (call.method != 'shrinkJpeg') return null;
+            asked++;
+            return drawn;
+          });
+    });
+    tearDown(() {
+      onDesktop = false;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('halo/platform'), null);
+    });
+
+    // a camera's raw file: a tiff head and its gps
+    final rawBytes = [
+      ...'II*'.codeUnits,
+      0,
+      ...List.filled(64, 7),
+      ...'GPS 52.5 13.4'.codeUnits,
+    ];
+    final photo = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
+
+    test('a raw one that can be drawn goes as a clean jpeg', () async {
+      drawn = photo;
+      final src = put('IMG_1.dng', rawBytes);
+      final r = await copyForSend(
+        src,
+        '${tmp.path}/f_1.dng',
+        name: 'IMG_1.dng',
+        raw: true,
+        cache: cache,
+      );
+      expect(asked, 1);
+      expect(r.path, '${tmp.path}/f_1.jpg');
+      expect(r.name, 'IMG_1.jpg');
+      final out = File(r.path!).readAsBytesSync();
+      expect(pictureKind(out), PictureKind.jpeg);
+      expect(jpegHasExif(out), isFalse);
+      expect(readFile(r.path!).status, MetaStatus.nothing);
+      expect(File('${tmp.path}/f_1.dng').existsSync(), isFalse);
+      expect(File(src).readAsBytesSync(), rawBytes);
+    });
+
+    test('a raw one that cannot be drawn goes as it is, nothing asked of '
+        'the person', () async {
+      final src = put('IMG_2.dng', rawBytes);
+      final r = await copyForSend(
+        src,
+        '${tmp.path}/f_2.dng',
+        name: 'IMG_2.dng',
+        raw: true,
+        cache: cache,
+      );
+      expect(asked, 1);
+      expect(r.path, '${tmp.path}/f_2.dng');
+      expect(r.name, 'IMG_2.dng');
+      expect(File(r.path!).readAsBytesSync(), rawBytes);
+    });
+
+    test('one the cleaner refuses is drawn again, or goes as it is', () async {
+      final whole = jpeg(tiff: cameraTiff());
+      final cut = whole.sublist(0, whole.length - 3);
+      final src = put('c.jpg', cut);
+      drawn = photo;
+      final a = await copyForSend(
+        src,
+        '${tmp.path}/f_3.jpg',
+        name: 'c.jpg',
+        cache: cache,
+      );
+      expect(a.path, '${tmp.path}/f_3.jpg');
+      expect(jpegHasExif(File(a.path!).readAsBytesSync()), isFalse);
+      expect(readFile(a.path!).status, MetaStatus.nothing);
+      drawn = null;
+      final b = await copyForSend(
+        src,
+        '${tmp.path}/f_4.jpg',
+        name: 'c.jpg',
+        cache: cache,
+      );
+      expect(b.path, '${tmp.path}/f_4.jpg');
+      expect(File(b.path!).readAsBytesSync(), cut);
+    });
+
+    test('a video the cleaner refuses still does not go, and is never '
+        'drawn', () async {
+      final src = put('v.mp4', t('not a video at all, though it says so'));
+      final r = await copyForSend(
+        src,
+        '${tmp.path}/f_5.mp4',
+        name: 'v.mp4',
+        cache: cache,
+      );
+      expect(r.path, isNull);
+      expect(r.video, isTrue);
+      expect(asked, 0);
+      expect(File('${tmp.path}/f_5.mp4').existsSync(), isFalse);
+    });
+
+    test('a picture it cleans is never drawn', () async {
+      drawn = photo;
+      final src = put('b.jpg', jpeg(tiff: cameraTiff(), xmp: xmpGps));
+      final r = await copyForSend(
+        src,
+        '${tmp.path}/f_6.jpg',
+        name: 'b.jpg',
+        cache: cache,
+      );
+      expect(r.path, '${tmp.path}/f_6.jpg');
+      expect(asked, 0);
+    });
+
+    test('a computer has nothing to draw with: it goes as it is', () async {
+      onDesktop = true;
+      drawn = photo;
+      final src = put('IMG_7.dng', rawBytes);
+      final r = await copyForSend(
+        src,
+        '${tmp.path}/f_7.dng',
+        name: 'IMG_7.dng',
+        raw: true,
+        cache: cache,
+      );
+      expect(asked, 0);
+      expect(File(r.path!).readAsBytesSync(), rawBytes);
+    });
+  });
+
   test('every send lane uses the one cleaner', () {
     for (final f in [
       'lib/screens/chat_screen.dart',
       'lib/screens/group_chat_screen.dart',
     ]) {
       final src = File(f).readAsStringSync();
-      expect(src, contains('copyClean(src, dest.path'), reason: f);
+      expect(src, contains('copyForSend(src, dest.path'), reason: f);
       expect(src, isNot(contains('stripMp4Metadata(')), reason: f);
     }
     final cam = File('lib/screens/camera_screen.dart').readAsStringSync();

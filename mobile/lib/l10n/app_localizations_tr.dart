@@ -1559,10 +1559,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Bu video temizlenemedi';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Bu resim temizlenemedi · fotoğraf olarak gönder';
-
-  @override
   String get chatGifTooBig8 => 'Gif çok büyük · en fazla 8 mb';
 
   @override
@@ -2599,10 +2595,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Bu video temizlenemedi';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Bu resim temizlenemedi · fotoğraf olarak gönder';
 
   @override
   String get groupChat30Seconds => '30 saniye';
@@ -8995,13 +8987,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu dosya olduğu gibi gider. Kryfo yalnızca JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 ve MOV dosyalarını temizler.';
 
   @override
-  String get fileRawPictureTitle => 'Bu resim olduğu gibi gönderilsin mi?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Bu resim temizlenemez. Nerede çekildiği gibi ayrıntılar onunla gider. Temizlemek için fotoğraf olarak gönder.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Sesli mesajlar 30 dakikada durur. Dinle, sonra gönder.';
 
@@ -11250,10 +11235,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatDropHereToSend => 'Göndermek için buraya bırak';
 
   @override
-  String get notesDropKeepsWords =>
-      'Kendime not metin saklar. Dosyaları bir sohbette gönder.';
-
-  @override
   String get chatDropHereToAdd => 'Eklemek için buraya bırakın';
 
   @override
@@ -11596,4 +11577,31 @@ class AppLocalizationsTr extends AppLocalizations {
   String chatDeviceListUnchecked(Object name) {
     return '$name kişisinin cihaz listesi denetlenemedi';
   }
+
+  @override
+  String get notesDropToKeep => 'Saklamak için buraya bırak';
+
+  @override
+  String get notesOnAllDevices => 'Tüm cihazlarında';
+
+  @override
+  String get notesKeepAnything =>
+      'Yazılarını, fotoğraflarını ve dosyalarını burada sakla. Tüm cihazlarında görünürler.';
+
+  @override
+  String get notesGoneEverywhere => 'Tüm cihazlarından kalıcı olarak silinir.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Tüm notlar tüm cihazlarından kalıcı olarak silinir.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Tüm notlar yalnızca bu cihazdan silinir. Telefonun onları saklar.';
+
+  @override
+  String get notesAddItem => 'Fotoğraf ya da dosya ekle';
+
+  @override
+  String get notesVoiceNotKept => 'Sesli mesajın saklanmadı';
 }

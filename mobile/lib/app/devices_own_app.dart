@@ -101,6 +101,8 @@ void _ownNote(String kind, OwnChat chat, Map<String, Object?> a) {
   if (own == null || !_ownSends) return;
   // a linked device's clear of a whole chat stays on it (kOwnChatEndsBothWays)
   if (linkedRole && !kOwnOpsFromDevice.contains(kind)) return;
+  // note to self tells only a delete and a clear
+  if (isOwnNotes(chat) && !kOwnNoteOps.contains(kind)) return;
   unawaited(() async {
     try {
       if (!await _ownChatShared(chat)) return;
@@ -111,7 +113,8 @@ void _ownNote(String kind, OwnChat chat, Map<String, Object?> a) {
   }());
 }
 
-int _ownIdentOf(OwnChat chat) => chat.group ? kMainIdent : identOfPeer(chat.id);
+int _ownIdentOf(OwnChat chat) =>
+    chat.group || isOwnNotes(chat) ? kMainIdent : identOfPeer(chat.id);
 
 // whether [chat] is one my devices share messages of: on the everyday
 // side, not hidden, not a burner room, no screenshot block
@@ -136,7 +139,9 @@ Future<bool> _ownChatKnown(OwnChat chat, {bool messages = false}) async {
     if (g.isEmpty || (messages && g.first['shots_on'] == 1)) return false;
     return await app._roomOf(chat.id, live) == null;
   }
-  if (isDevId(chat.id) || chat.id == _kNotesChat) return false;
+  // note to self: its items are my devices', it has no row to hold
+  if (isOwnNotes(chat)) return messages;
+  if (isDevId(chat.id)) return false;
   if (app._routeOf(chat.id, null) != RouteTo.everyday) return false;
   // a chat deleted or forgotten here (accepted 0) shares nothing more
   final c = await db.query(
@@ -281,6 +286,8 @@ class _AppOwn implements OwnApply {
   }) async {
     final app = _madeApp;
     if (app == null) return false;
+    // note to self is the everyday identity's alone
+    if (isOwnNotes(chat) && ident != kMainIdent) return false;
     return app._fileOwnCopy(chat, frame, notReached: notReached);
   }
 
@@ -437,6 +444,7 @@ extension AppStateOwn on AppState {
     List<String> notReached = const [],
   }) async {
     if (!linkedDevicesOn) return false;
+    if (isOwnNotes(chat)) return _fileOwnNote(frame);
     if (!await _ownChatShared(chat)) return false;
     final env = unwrapMessage(frame);
     if (env.typing || env.deliveredUid != null || env.groupControl != null) {
@@ -564,69 +572,9 @@ extension AppStateOwn on AppState {
     final uid = sliced ? env.mediaId : env.msgUid;
     if (uid == null) return false;
     if (await db.messageExists(uid) || await _ownGoneHas(uid)) return false;
-    String? mediaPath;
-    String? filePath;
-    var unsaved = false;
-    if (sliced) {
-      final total = env.chunkTotal!;
-      final index = env.chunkIndex ?? 0;
-      if (total > kMaxSlices || index < 0 || index >= total) return false;
-      if (env.msgUid != null && env.msgUid != uid) return false;
-      final owner = await db.mediaChunkSender(uid);
-      if (owner != null && owner != _kOwnChunks) return false;
-      final have = await db.putMediaChunk(
-        uid,
-        index,
-        (env.imageB64 ?? env.fileB64) ?? '',
-        total,
-        env.burnSeconds,
-        from: _kOwnChunks,
-        group: group,
-      );
-      if (have < total) return false;
-      if (env.pvImg) {
-        await db.dropMediaChunks(uid);
-        return false;
-      }
-      try {
-        final out = env.fileName != null
-            ? await receivedFileFor(env.fileName!, db.container)
-            : await receivedImageFor(db.container);
-        final path = await saveSlices(
-          out,
-          total,
-          (i) => db.mediaChunkSlice(uid, i),
-        );
-        if (env.fileName != null) {
-          filePath = path;
-        } else {
-          mediaPath = path;
-        }
-      } catch (e) {
-        dlog('own: slices not saved (${e.runtimeType})');
-        unsaved = true;
-      }
-    } else {
-      final img = env.imageB64;
-      final file = env.fileB64;
-      try {
-        if (img != null && img.isNotEmpty) {
-          mediaPath = await saveMediaBytes(base64Decode(img), db.container);
-        }
-        if (file != null && file.isNotEmpty) {
-          filePath = await saveFileBytes(
-            base64Decode(file),
-            env.fileName ?? 'file',
-            db.container,
-          );
-        }
-      } catch (e) {
-        dlog('own: a file not saved (${e.runtimeType})');
-        unsaved = true;
-      }
-      // a file on the files service: fetched where it was sent from only
-      if (env.drop != null) unsaved = true;
-    }
+    final got = await _ownMediaIn(env, uid, group: group);
+    if (got == null) return false;
+    final (:mediaPath, :filePath, :unsaved) = got;
     final text = unsaved
         ? [
             env.message,
@@ -681,6 +629,82 @@ extension AppStateOwn on AppState {
     );
     if (sliced) await db.dropMediaChunks(uid);
     return true;
+  }
+
+  // the picture or file a frame of mine carries, whole or in slices, put
+  // in this container's media. null while slices are still to come, or
+  // for slices that cannot be (too many, out of place, another's); unsaved
+  // when what came would not save, or waits on the files service
+  Future<({String? mediaPath, String? filePath, bool unsaved})?> _ownMediaIn(
+    UnwrappedMessage env,
+    String uid, {
+    String? group,
+  }) async {
+    final db = live;
+    String? mediaPath;
+    String? filePath;
+    var unsaved = false;
+    if (AppState._sliced(env)) {
+      final total = env.chunkTotal!;
+      final index = env.chunkIndex ?? 0;
+      if (total > kMaxSlices || index < 0 || index >= total) return null;
+      if (env.msgUid != null && env.msgUid != uid) return null;
+      final owner = await db.mediaChunkSender(uid);
+      if (owner != null && owner != _kOwnChunks) return null;
+      final have = await db.putMediaChunk(
+        uid,
+        index,
+        (env.imageB64 ?? env.fileB64) ?? '',
+        total,
+        env.burnSeconds,
+        from: _kOwnChunks,
+        group: group,
+      );
+      if (have < total) return null;
+      if (env.pvImg) {
+        await db.dropMediaChunks(uid);
+        return null;
+      }
+      try {
+        final out = env.fileName != null
+            ? await receivedFileFor(env.fileName!, db.container)
+            : await receivedImageFor(db.container);
+        final path = await saveSlices(
+          out,
+          total,
+          (i) => db.mediaChunkSlice(uid, i),
+        );
+        if (env.fileName != null) {
+          filePath = path;
+        } else {
+          mediaPath = path;
+        }
+      } catch (e) {
+        dlog('own: slices not saved (${e.runtimeType})');
+        unsaved = true;
+      }
+    } else {
+      final img = env.imageB64;
+      final file = env.fileB64;
+      try {
+        if (img != null && img.isNotEmpty) {
+          mediaPath = await saveMediaBytes(base64Decode(img), db.container);
+        }
+        if (file != null && file.isNotEmpty) {
+          filePath = await saveFileBytes(
+            base64Decode(file),
+            env.fileName ?? 'file',
+            db.container,
+          );
+        }
+      } catch (e) {
+        dlog('own: a file not saved (${e.runtimeType})');
+        unsaved = true;
+      }
+      // a file on the files service: fetched where it was sent from only
+      if (env.drop != null) unsaved = true;
+    }
+    return (mediaPath: mediaPath, filePath: filePath, unsaved: unsaved);
   }
 
   // a group frame of mine a linked device could not send to [members]:
@@ -908,6 +932,8 @@ extension AppStateOwn on AppState {
     if (!linkedDevicesOn) return false;
     if (kind == 'profile') return _ownProfile(a);
     if (chat == null) return false;
+    // note to self takes a delete and a clear, nothing a chat's rows carry
+    if (isOwnNotes(chat) && !kOwnNoteOps.contains(kind)) return false;
     // a contact or a group new here comes only from my phone
     final shared = await _ownChatShared(chat);
     final known = await _ownChatKnown(chat);
@@ -943,12 +969,22 @@ extension AppStateOwn on AppState {
         if (u is! List) return false;
         var any = false;
         for (final x in u.take(kOwnUidsMost)) {
-          if (x is! String || !await _ownInChat(chat, x)) continue;
+          if (x is! String) continue;
+          // a note whose file is still on its way: it stops and stays out
+          if (isOwnNotes(chat) && await _noteFetchGone(x)) {
+            await _ownGoneUid(x);
+            any = true;
+            continue;
+          }
+          if (!await _ownInChat(chat, x)) continue;
           await _ownGoneUid(x);
           await live.deleteMessage(x);
+          // nothing of a note gone here waits for my other devices
+          if (isOwnNotes(chat)) await ownNoteGone(x);
           unawaited(_io.unnotifyMessage(x));
           any = true;
         }
+        if (any && isOwnNotes(chat)) notesMoved.value++;
         if (any) {
           _bumpChatRev(chat.group ? 'group:${chat.id}' : chat.id);
           notifyListeners();
@@ -989,6 +1025,7 @@ extension AppStateOwn on AppState {
 
   // a clear made at [t]: what came after it stays
   Future<void> _ownClear(OwnChat chat, int t) async {
+    if (isOwnNotes(chat)) return _ownClearNotes(t);
     final d = await live.open();
     final newer = await d.query(
       'messages',
@@ -1582,9 +1619,6 @@ extension AppStateOwn on AppState {
     )).isNotEmpty;
   }
 }
-
-// the notes chat is this device's own
-const _kNotesChat = '_notes_self_';
 
 // what moves with every message, never told as a change
 const _kOwnNotTold = {'first_seen', 'last_seen', 'back_paired', 'caps_at'};

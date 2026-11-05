@@ -36,20 +36,8 @@ class DragInZone extends StatefulWidget {
     this.send,
     this.stage,
     required this.couldNotRead,
-  }) : assert(send != null || stage != null),
-       keepsOut = null;
-
-  /// a place that holds no files, note to self: a drop is met with [line],
-  /// on the wash and after, never with nothing
-  const DragInZone.wordsOnly({
-    super.key,
-    required this.child,
-    required String Function() line,
-  }) : enabled = true,
-       send = null,
-       stage = null,
-       couldNotRead = line,
-       keepsOut = line;
+    this.line,
+  }) : assert(send != null || stage != null);
 
   final Widget child;
 
@@ -65,8 +53,8 @@ class DragInZone extends StatefulWidget {
   /// the chat's own words for a file it could not read
   final String Function() couldNotRead;
 
-  /// what a place that takes no files says instead
-  final String Function()? keepsOut;
+  /// the wash's own line where a drop is kept, not sent: note to self
+  final String Function()? line;
 
   @override
   State<DragInZone> createState() => _DragInZoneState();
@@ -80,10 +68,9 @@ class _DragInZoneState extends State<DragInZone> {
 
   Future<void> _drop(List<String> paths) async {
     if (!_open) return;
-    final out = widget.keepsOut;
     final send = widget.send;
     final stage = widget.stage;
-    if (out == null && stage != null) {
+    if (stage != null) {
       final files = draggedFiles(paths);
       if (files.isEmpty) {
         showHaloToast(context, widget.couldNotRead());
@@ -92,10 +79,7 @@ class _DragInZoneState extends State<DragInZone> {
       }
       return;
     }
-    if (out != null || send == null) {
-      showHaloToast(context, (out ?? widget.couldNotRead)());
-      return;
-    }
+    if (send == null) return;
     final files = draggedFiles(paths);
     if (files.isEmpty) {
       showHaloToast(context, widget.couldNotRead());
@@ -140,7 +124,7 @@ class _DragInZoneState extends State<DragInZone> {
                   opacity: _over && _open ? 1 : 0,
                   duration: Duration(milliseconds: still ? 0 : 150),
                   child: _DropShade(
-                    line: widget.keepsOut,
+                    line: widget.line,
                     adds: widget.stage != null,
                   ),
                 ),
@@ -161,7 +145,7 @@ class _DropShade extends StatelessWidget {
   /// a drop is staged, not sent
   final bool adds;
 
-  /// a place that takes no files: its own line, under a note's glyph
+  /// a place that keeps what is dropped: its own line
   final String Function()? line;
 
   @override
@@ -180,7 +164,7 @@ class _DropShade extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              line == null ? Icons.file_download_outlined : Icons.notes_rounded,
+              Icons.file_download_outlined,
               size: 36,
               color: HaloColors.amber,
             ),

@@ -3102,22 +3102,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
-    // a picture the lane cannot clean goes only once the sender has read
-    // that its details go with it
+    // a picture the lane cannot clean is drawn again as a clean jpeg, or
+    // goes as it is, never asked about (copyForSend)
     final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
-    if (raw && mounted) {
-      final ok = await showConfirmSheet(
-        context,
-        title: l10n.fileRawPictureTitle,
-        figure: humanFileSize(size),
-        line: l10n.fileRawPictureLine,
-        yes: l10n.chatSendIt,
-        keep: l10n.commonCancel,
-        rose: false,
-      );
-      if (mounted) FocusManager.instance.primaryFocus?.unfocus();
-      if (!ok) return null;
-    }
     // ended while it was picked: nothing is copied
     if (!await _stillHere()) return null;
     final made = uid ?? newMsgUid();
@@ -3130,20 +3117,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // one that cannot be read through, or still reads as anything after,
     // is not sent. a raw picture is never walked as a video. the copy is
     // made and cleaned out of the media folder and only moved in clean
-    final done = await copyClean(src, dest.path, name: name, raw: raw);
-    if (done.how == MediaClean.refused) {
+    final done = await copyForSend(src, dest.path, name: name, raw: raw);
+    final at = done.path;
+    if (at == null) {
       if (mounted) {
         showHaloToast(
           context,
           done.video
               ? l10n.groupChatCouldNotCleanThatVideo
-              : l10n.groupChatCouldNotCleanThatPictureSend,
+              : l10n.groupChatCouldNotReadThat,
         );
       }
       return null;
     }
-    makeBlurSoon(dest.path);
-    return _GReady(made, dest.path, fileName: name);
+    makeBlurSoon(at);
+    return _GReady(made, at, fileName: done.name);
   }
 
   // the group is still here to send into. one gone closes the screen

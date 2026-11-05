@@ -1545,10 +1545,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Gagal membersihkan video itu';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Gagal membersihkan gambar itu · kirim sebagai foto';
-
-  @override
   String get chatGifTooBig8 => 'Gif terlalu besar · maks 8 mb';
 
   @override
@@ -2592,10 +2588,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Gagal membersihkan video itu';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Gagal membersihkan gambar itu · kirim sebagai foto';
 
   @override
   String get groupChat30Seconds => '30 detik';
@@ -8964,13 +8956,6 @@ class AppLocalizationsId extends AppLocalizations {
       'File ini dikirim apa adanya. Kryfo hanya membersihkan JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4, dan MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Kirim gambar ini apa adanya?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Gambar ini tidak bisa dibersihkan. Detail seperti tempat diambilnya ikut terkirim. Kirim sebagai foto untuk membersihkannya.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Pesan suara berhenti di 30 menit. Dengarkan dulu, lalu kirim.';
 
@@ -11223,10 +11208,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatDropHereToSend => 'Lepaskan di sini untuk mengirim';
 
   @override
-  String get notesDropKeepsWords =>
-      'Catatan pribadi menyimpan kata. Kirim file di sebuah chat.';
-
-  @override
   String get chatDropHereToAdd => 'Lepas di sini untuk menambah';
 
   @override
@@ -11571,4 +11552,32 @@ class AppLocalizationsId extends AppLocalizations {
   String chatDeviceListUnchecked(Object name) {
     return 'Daftar perangkat $name tidak dapat diperiksa';
   }
+
+  @override
+  String get notesDropToKeep => 'Lepaskan di sini untuk menyimpannya';
+
+  @override
+  String get notesOnAllDevices => 'Di semua perangkatmu';
+
+  @override
+  String get notesKeepAnything =>
+      'Simpan tulisan, foto, dan file di sini. Semuanya muncul di semua perangkatmu.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Catatan ini terhapus dari semua perangkatmu untuk selamanya.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Semua catatan terhapus dari semua perangkatmu untuk selamanya.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Semua catatan hanya terhapus dari perangkat ini. Ponselmu tetap menyimpannya.';
+
+  @override
+  String get notesAddItem => 'Tambah foto atau file';
+
+  @override
+  String get notesVoiceNotKept => 'Pesan suaramu tidak disimpan';
 }

@@ -1544,10 +1544,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Không làm sạch được video đó';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Không làm sạch được hình đó · hãy gửi dưới dạng ảnh';
-
-  @override
   String get chatGifTooBig8 => 'Gif quá lớn · tối đa 8 mb';
 
   @override
@@ -2587,10 +2583,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Không làm sạch được video đó';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Không làm sạch được hình đó · hãy gửi dưới dạng ảnh';
 
   @override
   String get groupChat30Seconds => '30 giây';
@@ -8950,13 +8942,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 và MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Gửi ảnh này nguyên trạng?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Tin nhắn thoại dừng ở 30 phút. Hãy nghe lại rồi gửi đi.';
 
@@ -11209,10 +11194,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatDropHereToSend => 'Thả vào đây để gửi';
 
   @override
-  String get notesDropKeepsWords =>
-      'Ghi chú riêng lưu chữ. Hãy gửi tệp trong một cuộc trò chuyện.';
-
-  @override
   String get chatDropHereToAdd => 'Thả vào đây để thêm';
 
   @override
@@ -11557,4 +11538,32 @@ class AppLocalizationsVi extends AppLocalizations {
   String chatDeviceListUnchecked(Object name) {
     return 'Không thể kiểm tra danh sách thiết bị của $name';
   }
+
+  @override
+  String get notesDropToKeep => 'Thả vào đây để giữ lại';
+
+  @override
+  String get notesOnAllDevices => 'Trên mọi thiết bị của bạn';
+
+  @override
+  String get notesKeepAnything =>
+      'Giữ chữ, ảnh và tệp ở đây. Chúng hiện trên mọi thiết bị của bạn.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Ghi chú sẽ bị xóa vĩnh viễn khỏi mọi thiết bị của bạn.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Mọi ghi chú sẽ bị xóa vĩnh viễn khỏi mọi thiết bị của bạn.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Mọi ghi chú chỉ bị xóa khỏi thiết bị này. Điện thoại của bạn vẫn giữ chúng.';
+
+  @override
+  String get notesAddItem => 'Thêm ảnh hoặc tệp';
+
+  @override
+  String get notesVoiceNotKept => 'Tin nhắn thoại của bạn chưa được giữ lại';
 }

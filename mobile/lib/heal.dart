@@ -110,6 +110,7 @@ Future<void> restoreCutsLinkedDevices(
     'dev_farewell',
     'own_told',
     'own_held',
+    'own_notes_out',
   ]) {
     if (have.contains(t)) await db.delete(t);
   }

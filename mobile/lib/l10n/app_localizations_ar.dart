@@ -1603,10 +1603,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatCouldNotCleanThat => 'تعذّر تنظيف ذلك الفيديو';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'تعذّر تنظيف تلك الصورة · أرسلها كصورة عادية';
-
-  @override
   String get chatGifTooBig8 => 'ملف GIF كبير جدًا · ٨ م.ب كحد أقصى';
 
   @override
@@ -2658,10 +2654,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'تعذّر تنظيف ذلك الفيديو';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'تعذّر تنظيف تلك الصورة · أرسلها كصورة عادية';
 
   @override
   String get groupChat30Seconds => '٣٠ ثانية';
@@ -9105,13 +9097,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'سيُرسل هذا الملف كما هو تمامًا. ينظّف Kryfo ملفات JPEG وPNG وWebP وHEIC وAVIF وGIF وMP4 وMOV فقط.';
 
   @override
-  String get fileRawPictureTitle => 'إرسال هذه الصورة كما هي؟';
-
-  @override
-  String get fileRawPictureLine =>
-      'لا يمكن تنظيف هذه الصورة. تُرسل معها تفاصيل مثل مكان التقاطها. أرسلها كصورة عادية لتنظيفها.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'تتوقف الرسائل الصوتية عند ٣٠ دقيقة. استمع إليها ثم أرسلها.';
 
@@ -11371,10 +11356,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatDropHereToSend => 'أفلِت هنا للإرسال';
 
   @override
-  String get notesDropKeepsWords =>
-      'ملاحظة لنفسي تحفظ الكلمات. أرسل الملفات في محادثة.';
-
-  @override
   String get chatDropHereToAdd => 'أفلِت هنا للإضافة';
 
   @override
@@ -11711,4 +11692,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String chatDeviceListUnchecked(Object name) {
     return 'تعذّر التحقق من قائمة أجهزة ⁨$name⁩';
   }
+
+  @override
+  String get notesDropToKeep => 'أفلِت هنا للاحتفاظ به';
+
+  @override
+  String get notesOnAllDevices => 'على كل أجهزتك';
+
+  @override
+  String get notesKeepAnything =>
+      'احتفظ هنا بالكلمات والصور والملفات. تظهر على كل أجهزتك.';
+
+  @override
+  String get notesGoneEverywhere => 'ستُمحى من كل أجهزتك نهائيًا.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'تُحذف كل الملاحظات من كل أجهزتك نهائيًا.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'تُحذف كل الملاحظات من هذا الجهاز فقط. يحتفظ بها هاتفك.';
+
+  @override
+  String get notesAddItem => 'أضف صورة أو ملفًا';
+
+  @override
+  String get notesVoiceNotKept => 'لم يُحفظ تسجيلك الصوتي';
 }
