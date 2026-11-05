@@ -29,9 +29,13 @@ screen shows translation and no part of it runs, though the opencc tables
 - `../translate_ffi.go`: the exports. the download dials through tor only
   (the update check's dialer), under a fresh socks name per download, with
   no direct fallback and no redirects.
-- `native/`: a four-call c api over bergamot (`kryfo_translate.h`), a bench,
-  and a script that builds bergamot for the desk outside the repo. none of
-  it is built by the app build yet.
+- `native/`: a four-call c api over bergamot (`kryfo_translate.h`), and
+  `build.sh`, which builds it as `libkryfo_translate.so` for arm64-v8a,
+  armeabi-v7a and x86_64 with the pinned ndk from the sources
+  `bergamot.lock` pins (`fetch-bergamot.sh` checks each tarball's sha256);
+  `--twice` builds again at another path and compares the bytes. the
+  release builds it; gradle leaves it out of the apk while the switch is
+  off. `KT_BENCH=1` adds `kt_bench`, for timing a phone from adb.
 - `cmd/ktmodels`: a desk tool to list, fetch (directly from the source,
   not over tor), fill a mirror directory, and print a pair's bergamot
   config.
@@ -45,7 +49,9 @@ not read gets a slim bar at its top (translate/translate_bar.dart): one
 tap translates the whole chat, and its menu sets the language to always or
 never translate, or puts the bar away in that chat. it is worked out from
 the guesses the chat holds in memory; only those three choices are stored.
-the decoy never shows it, and 1:1 chats only, like the rest. a reader of traditional chinese gets the models' simplified
+the decoy never shows it, and it is in 1:1 chats only; in groups a
+message has its translate line and menu rows, and the group page its
+switch. a reader of traditional chinese gets the models' simplified
 output converted with opencc's tables (apache 2.0, mobile/assets/opencc,
 remade by its fetch.sh): s2tw, taiwan's forms, for zh_Hant and zh_TW, as
 the app's own traditional strings use, and s2hk for zh_HK and zh_MO. a
@@ -104,12 +110,10 @@ requests, no compression, no redirects, and no logs of paths.
 
 ## before it is turned on
 
-1. build `libkryfo_translate.so` for every abi the app ships: arm64-v8a,
-   armeabi-v7a and x86_64, with the ndk (marian's ruy path on arm,
-   `-DANDROID_ABI=<abi> -DCOMPILE_WASM=OFF -DUSE_RUY_SGEMM=ON
-   -DUSE_MKL=OFF`, `-static-libstdc++`, only `kt_*` exported; on x86_64
-   intgemm instead of ruy), in the reproducible build, and add it to the
-   f-droid recipe. armeabi-v7a needs neon and ruy's 32-bit kernels.
-2. fill the mirror and serve it from the box.
-3. time a message on an a78-class phone, an a55-only one and a 32-bit one.
-4. groups: the bubble and the menu entry are wired in 1:1 chats only.
+1. the mirror on the box, answering over the onion.
+2. time the download and the first message on an a78-class phone, an
+   a55-only one and a 32-bit one.
+3. the switch: `kOfflineTranslation = true` in
+   mobile/lib/translate/hub_live.dart and the
+   `excludes += "**/libkryfo_translate.so"` line out of
+   mobile/android/app/build.gradle.kts, in one commit.

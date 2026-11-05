@@ -149,6 +149,13 @@ agree with the release:
   ours only: no `Builds:` block and no `VercodeOperation` for it
 - the signature is a pure insertion, release.sh passes `--alignment-preserved`
 - `AllowedAPKSigningKeys` is the certificate sha-256 that release.sh prints
+- the translation library, in every block: `bash ../engine/translate/native/fetch-bergamot.sh`
+  in `prebuild:` (it fetches the eight tarballs bergamot.lock pins and checks each sha256,
+  then unpacks them with their tests, docs and tools left out), `scandelete:
+  engine/translate/native/.third_party/dl` (the tarballs; the unpacked tree scans clean with
+  fdroid scanner 2.4.5), and in `build:` before the apk
+  `KT_JNI_LIBS_DIR=$(pwd)/android/app/src/main/jniLibs bash ../engine/translate/native/build.sh`.
+  gradle leaves it out of the apk until offline translation is switched on
 
 then check the tag is up: `git ls-remote --tags origin | grep vX.Y.Z`
 

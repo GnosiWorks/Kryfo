@@ -50,6 +50,8 @@ if [ "$HALO_STEP" = fetch ]; then
   cd "$SRC/mobile"
   flutter pub get --enforce-lockfile
   bash native/kryfo_signal/build-android.sh --vendor
+  # the translation library's pinned sources, checked, for the offline build
+  bash ../engine/translate/native/fetch-bergamot.sh >/dev/null
   for abi in arm64-v8a armeabi-v7a x86_64; do
     mkdir -p "android/app/src/main/jniLibs/$abi"
     : > "android/app/src/main/jniLibs/$abi/libhalo.so"
@@ -95,6 +97,13 @@ echo
 echo "== shim (all three abis)"
 # with HALO_OFFLINE the crates come from the fetch step, KS_OFFLINE says so
 KS_OFFLINE=${HALO_OFFLINE:+1} bash "$SRC/mobile/native/kryfo_signal/build-android.sh"
+
+echo
+echo "== translation library (all three abis)"
+# from the pinned sources; with HALO_OFFLINE they come from the fetch step.
+# packaged only once translation is switched on (build.gradle.kts)
+KT_JNI_LIBS_DIR="$SRC/mobile/android/app/src/main/jniLibs" \
+  bash "$SRC/engine/translate/native/build.sh"
 
 echo
 echo "== apk (unsigned: the keystore never comes near this container)"
