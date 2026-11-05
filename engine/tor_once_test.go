@@ -11,7 +11,9 @@ import (
 	"net/textproto"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/cretz/bine/control"
 	"github.com/cretz/bine/tor"
@@ -83,14 +85,31 @@ func TestAFailedListenListensAgainOnTheSameTor(t *testing.T) {
 	torNode, myAddr = nil, ""
 	mu.Unlock()
 	resetRoute(t, "starting", 0)
+	// what a start sets for the process, put back for the tests after
+	pin, off := atomic.LoadInt32(&pinnedSocks), torNetOff.Load()
+	// no watchers of this fake tor outlive the test: the slots are taken
+	waitFor(t, "the watcher slots", 5*time.Second, func() bool {
+		return atomic.CompareAndSwapInt32(&bootstrapWatching, 0, 1)
+	})
+	waitFor(t, "the watcher slots", 5*time.Second, func() bool {
+		return atomic.CompareAndSwapInt32(&publishWatching, 0, 1)
+	})
 	t.Cleanup(func() {
 		mu.Lock()
 		l, _ := listener.(*tor.OnionService)
-		listener = nil
+		// not this process's tor any more: its watchers let go
+		listener, torNode, myAddr = nil, nil, ""
 		mu.Unlock()
 		if l != nil && l.LocalListener != nil {
 			l.LocalListener.Close()
 		}
+		atomic.StoreInt32(&bootstrapWatching, 0)
+		atomic.StoreInt32(&publishWatching, 0)
+		eventReset()
+		atomic.StoreInt32(&pinnedSocks, pin)
+		torNetOff.Store(off)
+		// no client built over this test's socks port stays cached
+		nostrResetClient()
 	})
 	calls := standInStart(t, n)
 	dir := t.TempDir()
