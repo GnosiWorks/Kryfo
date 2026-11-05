@@ -182,6 +182,46 @@ class HaloEngine {
     }
   }
 
+  // the start's steps since the last call, for a computer's trace: times
+  // and counts only. looked up on first use so older engines still load
+  late final CStrFnDart _startSteps = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloStartSteps',
+  );
+  List<String> startSteps() {
+    try {
+      final raw = engineTake(_startSteps());
+      return raw.isEmpty ? const [] : raw.split('\n');
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  // the start's new messages are in: the batch of the chats on top of the
+  // list caught up. true for an older engine without the call
+  late final CStrFnDart _startCaught = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloStartCaught',
+  );
+  bool startCaught() {
+    try {
+      return engineTake(_startCaught()) != '0';
+    } catch (_) {
+      return true;
+    }
+  }
+
+  // a card is on screen to scan or to show: the hello lane's circuits are
+  // built ahead, so the first hello and its answer do not wait for them
+  late final CStrFnDart _warmHello = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloNostrWarmHello',
+  );
+  void nostrWarmHello() {
+    try {
+      engineTake(_warmHello());
+    } catch (_) {
+      // an older engine without the call
+    }
+  }
+
   // looked up on first use so older engines still load
   late final CStrFnDart _catchupState = _lib.lookupFunction<CStrFn, CStrFnDart>(
     'HaloCatchupState',
@@ -1313,6 +1353,11 @@ class HaloEngine {
   // the pinned chats' keys (HaloNostrPinned)
   Future<String> nostrPinned(List<(int, String)> peers) async =>
       _roomFfiOnIsolate('HaloNostrPinned', [await _identPeers(peers)]);
+
+  // the chats on top of the list, the most recent first: their batch goes
+  // first at the start
+  Future<String> nostrFirstChats(List<(int, String)> peers) async =>
+      _roomFfiOnIsolate('HaloNostrFirstChats', [await _identPeers(peers)]);
 
   // each with its pair's seed when it has one; a peer whose pair is
   // refused is left out

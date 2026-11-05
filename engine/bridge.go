@@ -116,6 +116,9 @@ func setStatus(s string) {
 		}
 		torStatus = s
 		torStatusMoved()
+		if s == "bootstrapped" || s == "publishing" || s == "reachable" {
+			openStartGate()
+		}
 	}
 }
 
@@ -358,6 +361,7 @@ func startListener(dataDir string) string {
 		return "error: tor is stopped, resume first"
 	}
 	startRouteWatch()
+	startSteps.begin()
 	mu.Lock()
 	if myAddr != "" && !torClientOnly() {
 		addr := myAddr
@@ -401,6 +405,7 @@ func startListener(dataDir string) string {
 		return "error: tor start: no more tors in this process"
 	}
 	setStatus("starting")
+	armStartGate()
 	log.Println("halo: starting embedded tor...")
 	// torArgs start it with DisableNetwork 1
 	netWentOff()
@@ -1868,6 +1873,8 @@ func watchBootstrap(t *tor.Tor) {
 	gen := routeGeneration()
 	began := time.Now()
 	var endAt time.Time
+	// asks in a row tor's control port did not answer
+	silent := 0
 	for {
 		if t == nil || t.Control == nil || torIsPaused() {
 			return
@@ -1889,6 +1896,16 @@ func watchBootstrap(t *tor.Tor) {
 			kv, gerr = c.GetInfo("status/bootstrap-phase")
 			return gerr
 		})
+		if err != nil {
+			// a control port that stopped answering says nothing of tor:
+			// the start's sockets do not wait on it, their dials tell
+			if silent++; silent == 3 {
+				log.Println("halo: tor's control port is silent, the start's sockets dial")
+				openStartGate()
+			}
+		} else {
+			silent = 0
+		}
 		if err == nil && len(kv) > 0 {
 			pct := parseBootstrapPct(kv[0].Val)
 			if pct != lastPct {
@@ -1897,10 +1914,12 @@ func watchBootstrap(t *tor.Tor) {
 				bootstrapPct = pct
 				noteBootstrapProgress(pct)
 				statusMu.Unlock()
+				startSteps.torPct(pct)
 				log.Printf("halo: tor bootstrap %d%%", pct)
 			}
 			if pct >= 100 {
 				noteTorUp(t)
+				startSteps.torReady()
 				statusMu.Lock()
 				cur := torStatus
 				statusMu.Unlock()

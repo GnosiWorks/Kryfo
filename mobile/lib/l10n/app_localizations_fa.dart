@@ -654,11 +654,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'آماده‌ی گفتگو · نشانی در حال تکمیل';
 
   @override
-  String appConnecting(Object pct) {
-    return 'در حال اتصال · ⁨$pct⁩';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -690,6 +685,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'در انتظار رله';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'راه‌اندازی Tor · ⁨$pct⁩';
+  }
+
+  @override
+  String get appGettingNewMessages => 'در حال دریافت پیام‌های تازه';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
