@@ -118,6 +118,11 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\Windows Error Reporting\Excluded
 ; the toasts' registration, written by the app at its first start
 Root: HKCU; Subkey: "Software\Classes\AppUserModelId\app.kryfo"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\PushNotifications\Backup\app.kryfo"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Notifications\Settings\app.kryfo"; Flags: uninsdeletekey dontcreatekey
+; start with the computer, written by the app when switched on, and windows'
+; own on/off for it: never made here, gone with the app
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "Kryfo"; Flags: uninsdeletevalue dontcreatekey
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"; ValueType: none; ValueName: "Kryfo"; Flags: uninsdeletevalue dontcreatekey
 
 [Run]
 Filename: "{app}\kryfo.exe"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
