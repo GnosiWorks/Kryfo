@@ -123,13 +123,17 @@ Future<void> _onlineTick() async {
   final u = _ownUnlink;
   if (u == null || linkedRole) return;
   try {
-    final due = await u.tick(
-      online: relayContactSince(appState.relayUpAt, u.lastTick),
-    );
+    final due = await u.tick(online: _relayInTouch(u.lastTick));
     if (due.isNotEmpty) await u.removeUnused();
   } catch (e) {
     dlog('devices: time online not counted (${e.runtimeType})');
   }
+}
+
+// whether a relay answered since [since], read at the tick itself
+bool _relayInTouch(int? since) {
+  appState.sampleRelayUp();
+  return relayContactSince(appState.relayUpAt, since);
 }
 
 // a linked device's time in touch with a relay without a word from its
@@ -138,9 +142,7 @@ Future<void> _quietTick() async {
   final u = _ownUnlink;
   if (u == null || !linkedRole || deviceUnlinked.value != null) return;
   try {
-    if (await u.quietTick(
-      online: relayContactSince(appState.relayUpAt, u.lastQuiet),
-    )) {
+    if (await u.quietTick(online: _relayInTouch(u.lastQuiet))) {
       await _linkedEnds(LinkedEnd.silent);
     }
   } catch (e) {
