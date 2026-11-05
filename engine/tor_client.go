@@ -48,8 +48,16 @@ func HaloTorClientOnly() *C.char { return C.CString(torClientOn()) }
 func torClientOn() string {
 	torClient.Store(true)
 	// a start under way sees the flag before its listen, or drops what it
-	// listened on after it: either way it is not waited for here
+	// listened on after it. it is not waited for here: the take-down runs
+	// once it lets go, for an onion it made after it last looked
 	if !startMu.TryLock() {
+		go func() {
+			startMu.Lock()
+			defer startMu.Unlock()
+			if r := dropOnion(); r != "ok" {
+				log.Printf("halo: after the start: %s", r)
+			}
+		}()
 		return "ok"
 	}
 	defer startMu.Unlock()

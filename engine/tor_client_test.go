@@ -313,3 +313,32 @@ func TestAPhoneStartIsAsItWas(t *testing.T) {
 		t.Fatal("a phone at 100% is not publishing and up")
 	}
 }
+
+// made a client while a start holds the lock, after that start looked: the
+// call does not wait, and the onion goes as soon as the start lets go
+func TestAStartUnderWayStillLosesItsOnion(t *testing.T) {
+	_, b, ln := clientRig(t, false)
+	startMu.Lock()
+	t0 := time.Now()
+	r := torClientOn()
+	if took := time.Since(t0); r != "ok" || took > time.Second {
+		startMu.Unlock()
+		t.Fatalf("made a client with a start under way: %q after %s", r, took)
+	}
+	if len(b.sent()) != 0 {
+		startMu.Unlock()
+		t.Fatalf("the onion went under the start's lock: %q", b.sent())
+	}
+	startMu.Unlock()
+	waitFor(t, "the onion to go", 2*time.Second, func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+		return listener == nil
+	})
+	if got := b.sent(); len(got) != 1 || got[0] != "DEL_ONION fakeonionid" {
+		t.Fatalf("bine's connection got %q", got)
+	}
+	if !listenerClosed(ln) {
+		t.Fatal("the onion's local listener still takes connections")
+	}
+}
