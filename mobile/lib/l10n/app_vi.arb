@@ -3042,5 +3042,8 @@
   "notesDeleteAllEverywhere": "Mọi ghi chú sẽ bị xóa vĩnh viễn khỏi mọi thiết bị của bạn.",
   "notesDeleteAllHereOnly": "Mọi ghi chú chỉ bị xóa khỏi thiết bị này. Điện thoại của bạn vẫn giữ chúng.",
   "notesAddItem": "Thêm ảnh hoặc tệp",
-  "notesVoiceNotKept": "Tin nhắn thoại của bạn chưa được giữ lại"
+  "notesVoiceNotKept": "Tin nhắn thoại của bạn chưa được giữ lại",
+  "handleOlderKryfo": "Họ đang dùng Kryfo phiên bản cũ. Hãy nhờ họ cập nhật, rồi thêm họ.",
+  "groupMemberNeedsUpdate": "{name} đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây.",
+  "groupMembersNeedUpdate": "Một số thành viên đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây."
 }

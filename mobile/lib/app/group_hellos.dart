@@ -335,8 +335,9 @@ extension AppStateGroupHellos on AppState {
     final waiting = await file.query(
       'hellos',
       columns: ['way'],
-      where: 'ident = ? AND peer = ?',
-      whereArgs: [kMainIdent, keyHex],
+      // the mark of a v3 card's owner is no hello waiting
+      where: 'ident = ? AND peer = ? AND way != ?',
+      whereArgs: [kMainIdent, keyHex, kHelloOld],
       limit: 1,
     );
     if (waiting.isNotEmpty) return false;

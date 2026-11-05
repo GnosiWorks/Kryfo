@@ -11805,4 +11805,17 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get notesVoiceNotKept =>
       'Twoja wiadomość głosowa nie została zachowana';
+
+  @override
+  String get handleOlderKryfo =>
+      'Ta osoba używa starszego Kryfo. Poproś ją o aktualizację, a potem dodaj ją.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name używa starszego Kryfo. Musi je zaktualizować, żeby dostawać tu wiadomości.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Niektórzy członkowie używają starszego Kryfo. Muszą je zaktualizować, żeby dostawać tu wiadomości.';
 }

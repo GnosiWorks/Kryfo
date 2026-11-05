@@ -11587,4 +11587,17 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'پیام صوتی شما نگه داشته نشد';
+
+  @override
+  String get handleOlderKryfo =>
+      'از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کنند. بخواهید به‌روز کنند، بعد اضافه‌شان کنید.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '⁨$name⁩ از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کند. برای گرفتن پیام‌ها در اینجا باید آن را به‌روز کند.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'بعضی از اعضا از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کنند. برای گرفتن پیام‌ها در اینجا باید آن را به‌روز کنند.';
 }

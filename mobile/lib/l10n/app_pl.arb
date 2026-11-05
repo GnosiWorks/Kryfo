@@ -3042,5 +3042,8 @@
   "notesDeleteAllEverywhere": "Każda notatka zniknie ze wszystkich twoich urządzeń na dobre.",
   "notesDeleteAllHereOnly": "Każda notatka zniknie tylko z tego urządzenia. Twój telefon je zachowa.",
   "notesAddItem": "Dodaj zdjęcie lub plik",
-  "notesVoiceNotKept": "Twoja wiadomość głosowa nie została zachowana"
+  "notesVoiceNotKept": "Twoja wiadomość głosowa nie została zachowana",
+  "handleOlderKryfo": "Ta osoba używa starszego Kryfo. Poproś ją o aktualizację, a potem dodaj ją.",
+  "groupMemberNeedsUpdate": "{name} używa starszego Kryfo. Musi je zaktualizować, żeby dostawać tu wiadomości.",
+  "groupMembersNeedUpdate": "Niektórzy członkowie używają starszego Kryfo. Muszą je zaktualizować, żeby dostawać tu wiadomości."
 }

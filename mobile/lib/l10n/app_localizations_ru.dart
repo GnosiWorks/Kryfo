@@ -11764,4 +11764,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'Голосовое сообщение не сохранено';
+
+  @override
+  String get handleOlderKryfo =>
+      'У этого человека старая версия Kryfo. Попросите обновиться, а потом добавьте.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return 'У $name старая версия Kryfo. Нужно обновиться, чтобы получать здесь сообщения.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'У некоторых участников старая версия Kryfo. Им нужно обновиться, чтобы получать здесь сообщения.';
 }

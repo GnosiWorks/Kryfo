@@ -11710,4 +11710,17 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notesVoiceNotKept =>
       'Deine Sprachnachricht wurde nicht gespeichert';
+
+  @override
+  String get handleOlderKryfo =>
+      'Diese Person nutzt eine ältere Kryfo-Version. Bitte sie, zu aktualisieren, und füge sie dann hinzu.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name nutzt eine ältere Kryfo-Version und muss aktualisieren, um hier Nachrichten zu bekommen.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Einige Mitglieder nutzen eine ältere Kryfo-Version und müssen aktualisieren, um hier Nachrichten zu bekommen.';
 }

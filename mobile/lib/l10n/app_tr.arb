@@ -3042,5 +3042,8 @@
   "notesDeleteAllEverywhere": "Tüm notlar tüm cihazlarından kalıcı olarak silinir.",
   "notesDeleteAllHereOnly": "Tüm notlar yalnızca bu cihazdan silinir. Telefonun onları saklar.",
   "notesAddItem": "Fotoğraf ya da dosya ekle",
-  "notesVoiceNotKept": "Sesli mesajın saklanmadı"
+  "notesVoiceNotKept": "Sesli mesajın saklanmadı",
+  "handleOlderKryfo": "Kryfo'nun eski bir sürümünü kullanıyor. Güncellemesini isteyin, sonra ekleyin.",
+  "groupMemberNeedsUpdate": "{name} Kryfo'nun eski bir sürümünü kullanıyor. Buradaki mesajları alması için güncellemesi gerekecek.",
+  "groupMembersNeedUpdate": "Bazı üyeler Kryfo'nun eski bir sürümünü kullanıyor. Buradaki mesajları almaları için güncellemeleri gerekecek."
 }

@@ -142,6 +142,9 @@ import '../main.dart'
         LinkViewBuilder,
         AppStateOutbox,
         AppStateHeal,
+        AppStateOldPeers,
+        HelloWait,
+        kNoHelloWait,
         AppStateMessages,
         AppStateRoute,
         AppStatePrefs,
@@ -1032,6 +1035,10 @@ class _ChatScreenState extends State<ChatScreen>
   // them to update after a restore here (Q20)
   List<({int at, int kind})> _healLines = const [];
   bool _pausedForUpdate = false;
+  // added by a hello that waits for its answer: what is written waits, and
+  // a v3 card's owner may need to update first (identity v4 11 step 7)
+  HelloWait _helloWait = kNoHelloWait;
+  Timer? _helloWaitTimer;
   bool _keyReading = false;
   // a read asked for while one runs runs again after it
   bool _keyAgain = false;
@@ -1137,8 +1144,22 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final lines = await session.healLines(widget.peerHaloId);
       final paused = await appState.pausedForUpdate(widget.peerHaloId);
+      final wait = await appState.helloWaitOf(widget.peerHaloId);
       if (!mounted) return;
-      if (paused == _pausedForUpdate &&
+      _helloWaitTimer?.cancel();
+      final at = wait.updateAt;
+      if (at != null) {
+        final left = at - DateTime.now().millisecondsSinceEpoch;
+        _helloWaitTimer = Timer(
+          Duration(milliseconds: left < 0 ? 0 : left + 50),
+          () => unawaited(_loadHealLines()),
+        );
+      }
+      // a send that failed for want of a session waits for their answer
+      final parks = wait.waits && _parkUnanswered();
+      if (!parks &&
+          wait == _helloWait &&
+          paused == _pausedForUpdate &&
           lines.length == _healLines.length &&
           (lines.isEmpty || lines.last.at == _healLines.last.at)) {
         return;
@@ -1146,10 +1167,32 @@ class _ChatScreenState extends State<ChatScreen>
       setState(() {
         _healLines = lines;
         _pausedForUpdate = paused;
+        _helloWait = wait;
       });
     } catch (e) {
       dlog('heal lines: not read (${e.runtimeType})');
     }
+  }
+
+  // rows of mine that failed while a hello waits for its answer: they wait
+  // with it, and the outbox sends them once a session is up. true when one
+  // moved
+  bool _parkUnanswered() {
+    var moved = false;
+    for (final m in _messages) {
+      if (m.direction == 'out' &&
+          m.failed &&
+          !m.notSent &&
+          !m.delivered &&
+          !m.sending) {
+        m
+          ..failed = false
+          ..parked = true;
+        moved = true;
+      }
+    }
+    if (moved && _status == l10n.chatNoSignalSessionRe) _status = '';
+    return moved;
   }
 
   // the new key taken as it is: the mark and the banner go, sending goes on
@@ -5139,6 +5182,11 @@ class _ChatScreenState extends State<ChatScreen>
           await _finishTextSend(msg, 'ok');
           return;
         }
+        // no session yet, and a hello of mine waits for their answer: it
+        // waits with it, no failed send. the outbox sends it once they answer
+        final wait = out == null && e is! StartingAfresh && e is! KeyHeld
+            ? await appState.helloWaitOf(widget.peerHaloId)
+            : kNoHelloWait;
         if (!mounted) return;
         if (out != null) unawaited(_readPhoneOnly());
         setState(() {
@@ -5147,6 +5195,12 @@ class _ChatScreenState extends State<ChatScreen>
           // and no failed send: it stays going, and the outbox sends it
           // once their card is here
           if (e is StartingAfresh || e is KeyHeld) return;
+          if (wait.waits) {
+            msg.sending = false;
+            msg.parked = true;
+            _helloWait = wait;
+            return;
+          }
           msg.sending = false;
           msg.failed = true;
           if (slot) _sentCount--;
@@ -5813,6 +5867,7 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   void dispose() {
     _find.detach();
+    _helloWaitTimer?.cancel();
     _unwatchCaptures?.call();
     // the row stays with the chat for its next opening
     _tray.removeListener(_trayMoved);
@@ -6981,6 +7036,28 @@ class _ChatScreenState extends State<ChatScreen>
                               )
                             : const SizedBox(
                                 key: ValueKey('dev-moved-none'),
+                                width: 0,
+                              ),
+                      ),
+                      // added by a v3 card: its owner may need the new Kryfo
+                      // before the chat can start. stays until they answer
+                      _Fold(
+                        _helloWait.update && !_blocked && !_isDev
+                            ? NoticeBanner(
+                                key: const ValueKey('hello-old'),
+                                glyph: NoticeGlyph.clock,
+                                text: l10n.helloSentOld,
+                                color: HaloColors.warn,
+                                textColor: HaloColors.warnText,
+                                margin: const EdgeInsets.fromLTRB(
+                                  14,
+                                  10,
+                                  14,
+                                  2,
+                                ),
+                              )
+                            : const SizedBox(
+                                key: ValueKey('hello-old-none'),
                                 width: 0,
                               ),
                       ),

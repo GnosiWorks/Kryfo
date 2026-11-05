@@ -6,6 +6,10 @@ part of '../main.dart';
 Future<String> handleHaloUri(String raw, {bool scanned = false}) async =>
     (await handleHaloUriAdded(raw, scanned: scanned)).$1;
 
+/// the registry read a handle add makes, stood in by a test
+@visibleForTesting
+Future<String> Function(String url)? handleFetchForTest;
+
 /// asked when a link names someone here under a name a request, an
 /// introduction or a group gave, never checked, or a deleted chat's, on
 /// another key: true lets the link take the name. [chat] says the other one
@@ -126,7 +130,9 @@ Future<(String, bool)> handleHaloUriAdded(
     // key the handle was claimed with
     final r = await resolveHandle(
       h,
-      sessionQuiet ? engine.decoyTorGetJson : _torGetJsonOnIsolate,
+      sessionQuiet
+          ? engine.decoyTorGetJson
+          : (handleFetchForTest ?? _torGetJsonOnIsolate),
       idOf: engine.idFromEdPub,
       v4FaceOf: v4FaceOfLink,
     );
@@ -223,7 +229,21 @@ Future<(String, bool)> handleHaloUriAdded(
   // owner on 0.6 answers whatever card the link carries (11 step 7)
   final helloFc = parsed['v'] == '3' ? parsed['fc'] : null;
   if (card != null && helloFc == null && bundleFault(card) is ClassicRefused) {
-    return (l10n.appLinkNeedsUpdate(parsed['id']!), false);
+    return (
+      viaHandle
+          ? l10n.handleOlderKryfo
+          : l10n.appLinkNeedsUpdate(parsed['id']!),
+      false,
+    );
+  }
+  // a handle 0.6 repoints to its v4 invite: one still on a card without the
+  // post-quantum prekey is a 0.5.x phone's, and a hello to it would only
+  // add someone nothing reaches. one already chatting here goes on as it is
+  if (viaHandle &&
+      classicCard(card) &&
+      !(await session.isAccepted(parsed['id']!) &&
+          (sessionQuiet || await hasSessionWith(parsed['id']!)))) {
+    return (l10n.handleOlderKryfo, false);
   }
   // the signal store holds a shut vault's people too: a link of one of
   // theirs reads as any link that does not take, on their key or another.
@@ -408,6 +428,7 @@ Future<(String, bool)> handleHaloUriAdded(
       parsed['id']!,
       cardKey,
       helloFc,
+      classic: bad != null,
       scanned: scanned,
       taken: taken,
       untombed: untombed,
@@ -577,6 +598,8 @@ Future<(String, bool)> _addV3ByHello(
   List<int> cardKey,
   String fc, {
   List<int>? answers,
+  // a v3 card without the post-quantum prekey: made on 0.5.x
+  bool classic = false,
   required bool scanned,
   required bool taken,
   required bool untombed,
@@ -652,6 +675,11 @@ Future<(String, bool)> _addV3ByHello(
     // the key the link gives is the one their answer has to come on, as a
     // session built from the card would have held it
     await signalSession.identityStore.saw(id, cardKey);
+    // a v3 card's owner may still be on 0.5.x, which cannot answer: their
+    // chat says so and the hello goes again until they do
+    if (answers == null) {
+      await appState.noteOldPeer(_hexOf(cardKey), fc, classic: classic);
+    }
     await appState.wantHello(
       owner: cardKey,
       answers: answers ?? Uint8List(16),

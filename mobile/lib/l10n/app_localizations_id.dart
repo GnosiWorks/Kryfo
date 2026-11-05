@@ -11580,4 +11580,17 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notesVoiceNotKept => 'Pesan suaramu tidak disimpan';
+
+  @override
+  String get handleOlderKryfo =>
+      'Mereka memakai Kryfo versi lama. Minta mereka memperbarui, lalu tambahkan mereka.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name memakai Kryfo versi lama. Mereka perlu memperbarui untuk menerima pesan di sini.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Beberapa anggota memakai Kryfo versi lama. Mereka perlu memperbarui untuk menerima pesan di sini.';
 }

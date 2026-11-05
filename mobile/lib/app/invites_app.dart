@@ -329,7 +329,10 @@ extension AppStateInvites on AppState {
     if (AppState._shown(paired.$2)) arrived();
     // my hello's one-time invite: its owner holds what follows the opener
     // until I answer (3c), so the empty answer goes now
-    if (out.isNotEmpty) unawaited(_answerNewSession(paired.$1));
+    if (out.isNotEmpty) {
+      unawaited(_answerNewSession(paired.$1));
+      unawaited(_helloAnswered(paired.$1));
+    }
   }
 
   // my face on the main invite: the onion key, F and F's signature
@@ -726,6 +729,8 @@ extension AppStateInvites on AppState {
         where: 'way = ? AND at < ?',
         whereArgs: [kHelloWant, now - kHelloWantDays * 24 * 3600 * 1000],
       );
+      // a v3 card's owner who has not answered is owed one again
+      await _oweOldPeerHellos(db, now);
       final rows = await db.query(
         'hellos',
         where: 'ident = ? AND way = ?',
@@ -806,7 +811,7 @@ extension AppStateInvites on AppState {
       'peer': peer,
       'invite_id': once.id,
       'fc': fc,
-      'at': DateTime.now().millisecondsSinceEpoch,
+      'at': nowMs ?? DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     final sk = (await fcKeysOf(db, kMainIdent))[once.id];
     if (sk != null) {
