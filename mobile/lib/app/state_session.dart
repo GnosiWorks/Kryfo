@@ -537,6 +537,8 @@ extension AppStateSession on AppState {
     try {
       // a move a crash cut short is put right before ownership is read
       await settleVault(v);
+      // a restore's hidden chats: their contacts' devices cut, inside it
+      if (!decoy) await _vaultRestoreCut(v);
       // cards from before they kept the mark are written again first
       if (!decoy && _router.marksUnread) {
         try {
