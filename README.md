@@ -20,6 +20,10 @@ found a security problem? SECURITY.md says how to tell me privately.
   and older chats move over once both sides update
 - add someone by qr code, invite link, handle or an eight digit pair code.
   a stranger's request shows only words until you accept
+- link a computer to your phone: scan its code, compare six digits, and
+  your chats come over, all of them, text only, or contacts and groups
+  only. new messages reach both, read and deleted ones stay in step, and
+  hidden chats stay on the phone. remove it from the phone at any time
 - app lock with a pin, a wipe pin and a decoy pin
 - encrypted backups and moving to a new phone
 - photos, voice notes and files are encrypted on the phone too, and no

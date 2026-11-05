@@ -158,9 +158,9 @@ put you in danger, read all of it.
   the keys and addresses needed to receive, and those of their linked
   devices, which shows how many they use, and whether the chat blocks
   screenshots and when that last changed.
-- a linked computer and a hidden chat, once linking is switched on (it is
-  off in 0.6). a chat hidden on the phone leaves the computer as a deleted
-  one does. one shown again comes back there with its name, note and
+- a linked computer and a hidden chat. a hidden chat never goes to a
+  linked computer, and a chat hidden on the phone leaves the computer as a
+  deleted one does. one shown again comes back there with its name, note and
   settings as they were, where a deleted chat added again starts empty: the
   computer can tell it was hidden.
 - someone who already knows you. a person who knows your three words or
@@ -184,7 +184,7 @@ FORWARD_SECRECY.md says what a key taken from a phone can open later.
 ## on a computer
 
 the linux and windows apps are test builds. a computer runs an identity of
-its own for now: linking it to your phone is built but switched off in 0.6.
+its own, or is linked to your phone (below).
 what Kryfo keeps on a computer is always sealed on the disk: the database,
 photos, voice notes, files, contacts, keys and settings, under one random
 key. that key is kept one of two ways.
@@ -234,7 +234,22 @@ what follows is not covered by either.
 - malware running as you while Kryfo is open, or a keylogger, sees what you
   see and what you type.
 
-a computer linked to your phone (linked devices, behind a switch in 0.6):
+a computer linked to your phone (linked devices):
+
+- your contacts' apps and the relays can count your devices. your
+  contacts' apps hold the list of them your phone signs, and each message
+  goes as one copy for each device of yours and of theirs, all at once and
+  in one size, so a relay sees how many go. a contact with a changed app
+  sees when you add or remove one.
+- a linked computer runs tor as a client only, with no onion address of
+  its own, so tor and the relays can tell it from a phone. it never adds
+  contacts, makes invites, holds hidden chats or a decoy, or changes a
+  group: those stay on the phone. a whole chat deleted or cleared, or a
+  block, on the computer stays on the computer.
+- the keys of a link and of a history copy are erased once they are done,
+  but the engine that holds them cannot clear every copy of them from
+  memory: until Kryfo stops they can stay there, and reach the disk
+  through swap.
 
 - a linked computer erases itself after 30 days without being opened, or
   when its clock is set back. this helps with a computer you forgot.
@@ -247,7 +262,9 @@ a computer linked to your phone (linked devices, behind a switch in 0.6):
   offline. a computer kept online with a changed Kryfo stays linked until
   you remove it.
 - a removed computer keeps what it already held, and it still knows your
-  phone's onion address, so it can tell when your phone is online.
+  phone's onion address, so it can tell when your phone is online. a
+  contact who took one of its bundles before the removal can still start a
+  session with it until their app has your new list.
 - a contact you deleted is not told when you remove a computer, so they
   cannot tell you still use Kryfo. if they still have you, their app may
   keep sending that computer a copy of what they write to you, until you
