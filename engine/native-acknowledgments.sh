@@ -3,9 +3,10 @@
 # writes mobile/assets/licences/native.json, the licences screen's lists for
 # the two libraries built beside the engine: libkryfo_voice (whisper.cpp and
 # ggml, the YaRN rope in ggml, the speech model's weights) and
-# libkryfo_translate (bergamot and what its tree builds in). the texts come
-# from the pinned sources the fetch scripts check, the weights' text from
-# voice/licences/. run it after a new whisper.lock, bergamot.lock or model:
+# libkryfo_translate (bergamot and what its tree builds in, and the models it
+# downloads). the texts come from the pinned sources the fetch scripts check,
+# the weights' text from voice/licences/. run it after a new whisper.lock,
+# bergamot.lock or model:
 # test/licences_test.dart fails until the file matches the tree.
 #   --check   make it again and fail when the committed file differs
 set -euo pipefail
@@ -116,6 +117,23 @@ translation = [
     part('zlib', '1.2.11', 'Zlib', [zlib.group(1)]),
     part('zstr', None, 'MIT', [m3('zstr/LICENSE')]),
 ]
+# the models: mozilla publishes every model file of its translations bucket
+# under the mpl 2.0 (mozilla/translations readme, "the model files are
+# distributed under the MPL 2.0 license"), the repo's own text. a new pair
+# fails here until its licence is checked too
+tm = json.loads(read('translate/models.json'))
+if not tm['source'].startswith('https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/'):
+    sys.exit('translate/models.json: a source whose licence is not checked here')
+langs = {'en': 'English', 'zh': 'Chinese'}
+pairs = sorted((p['from'], p['to']) for p in tm['pairs'])
+if pairs != [('en', 'zh'), ('zh', 'en')]:
+    sys.exit('translate/models.json: a pair whose licence is not checked here')
+for p in tm['pairs']:
+    model = [x for x in p['files'] if x['kind'] == 'model']
+    if len(model) != 1:
+        sys.exit('translate/models.json: %s-%s has no one model file' % (p['from'], p['to']))
+    translation.append(part('Translation model, %s to %s' % (langs[p['from']], langs[p['to']]),
+                            model[0]['sha256'][:8], 'MPL-2.0', [root]))
 translation.sort(key=lambda p: p['name'].lower())
 
 doc = {
@@ -123,6 +141,7 @@ doc = {
     'models': sha('voice/models.json'),
     'weights': sha('voice/licences/weights-LICENSE'),
     'bergamot': sha('translate/native/bergamot.lock'),
+    'translationModels': sha('translate/models.json'),
     'voice': voice,
     'translation': translation,
     'licences': licences,
