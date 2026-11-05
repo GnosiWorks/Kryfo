@@ -105,7 +105,7 @@ void main() {
     }
   });
 
-  test('the android build does not package the library', () {
+  test('while off, the android build leaves the library out', () {
     final hits = [
       for (final f
           in Directory('android')
@@ -118,21 +118,22 @@ void main() {
           for (final line in f.readAsLinesSync())
             if (line.contains('kryfo_voice')) '${f.path}: ${line.trim()}',
     ];
-    // the one mention is gradle leaving it out
+    // the one mention is gradle leaving it out, and it goes with the switch
     expect(hits, [
-      'android/app/build.gradle.kts: excludes += "**/libkryfo_voice.so"',
+      if (!kVoiceTranscripts)
+        'android/app/build.gradle.kts: excludes += "**/libkryfo_voice.so"',
     ]);
     expect(VoiceLibrary.hostBuilt, contains('build/host'));
   });
 
-  test('no copy of the library sits in jniLibs', () {
+  test('while off, no copy of the library sits in jniLibs', () {
     final jni = Directory('android/app/src/main/jniLibs');
     final hits = [
       if (jni.existsSync())
         for (final f in jni.listSync(recursive: true).whereType<File>())
           if (f.path.endsWith('/libkryfo_voice.so')) f.path,
     ];
-    expect(hits, isEmpty);
+    expect(hits, kVoiceTranscripts ? anything : isEmpty);
   });
 
   test(
@@ -147,4 +148,34 @@ void main() {
       expect(reads, {'KV_JNI_LIBS_DIR'});
     },
   );
+
+  test('the release builds it into the app\'s jniLibs, from the pin', () {
+    // the reproducible build, after the engine and the shim
+    final repro = File('../repro/build-repro.sh').readAsStringSync();
+    expect(repro, contains('bash ../engine/voice/native/fetch-whisper.sh'));
+    expect(
+      repro,
+      contains(
+        'KV_JNI_LIBS_DIR="\$SRC/mobile/android/app/src/main/jniLibs" \\\n'
+        '  bash "\$SRC/engine/voice/native/build.sh"',
+      ),
+    );
+    // its offline build keeps the tarball fetch-whisper.sh checks
+    final release = File('../repro/release.sh').readAsStringSync();
+    expect(release, contains('KV_DL=engine/voice/native/.third_party/dl'));
+    expect(release, contains('cp -a cache/whisper/. "\$WORK/src/\$KV_DL/"'));
+    // the f-droid recipe takes the srclib at the pinned commit
+    final lock = File('../engine/voice/native/whisper.lock').readAsStringSync();
+    final commit = RegExp(
+      r'^WHISPER_COMMIT=(\w+)$',
+      multiLine: true,
+    ).firstMatch(lock)![1]!;
+    final releasing = File('../RELEASING.md').readAsStringSync();
+    expect(releasing, contains('whisper.cpp@$commit'));
+    expect(releasing, contains('KV_WHISPER_DIR=\$\$whisper.cpp\$\$'));
+    expect(
+      releasing,
+      contains('KV_JNI_LIBS_DIR=\$(pwd)/android/app/src/main/jniLibs'),
+    );
+  });
 }
