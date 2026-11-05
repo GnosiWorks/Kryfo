@@ -7139,12 +7139,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsConnected => 'Connecté';
 
   @override
-  String get settingsScreenshots => 'Captures d’écran';
-
-  @override
-  String get settingsBlocked2 => 'Bloquées';
-
-  @override
   String get settingsOn => 'Activé';
 
   @override
@@ -7161,6 +7155,29 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Sauvegarde';
+
+  @override
+  String get settingsProtectBackup => 'Sauvegarde';
+
+  @override
+  String get settingsBackupNotYet => 'Pas encore';
+
+  @override
+  String get settingsBackupToday => 'Aujourd’hui';
+
+  @override
+  String get settingsBackupYesterday => 'Hier';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Il y a $count jours',
+      one: 'Il y a $count jour',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Voix';
@@ -8912,9 +8929,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'Toujours activé dans un salon, dans Kryfo pour Android';
-
-  @override
-  String get settingsPerChat => 'Par discussion';
 
   @override
   String get homeShotsPerChat =>
@@ -11173,6 +11187,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get desktopPassRow => 'Phrase secrète sur cet ordinateur';
 
   @override
+  String get desktopPassWindowsAccount => 'Verrouillé par votre compte Windows';
+
+  @override
+  String get desktopPassKeyring => 'Verrouillé par votre trousseau de clés';
+
+  @override
   String get desktopPassOffBody =>
       'Kryfo s’ouvre avec votre compte utilisateur.';
 
@@ -11283,9 +11303,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · alpha';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'Pas encore sur cet ordinateur';
 
   @override
   String get settingsDeskInTray => 'Actif dans la zone de notification';

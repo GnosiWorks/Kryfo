@@ -329,6 +329,8 @@ const containerKeys = {
   'notes_hold_told',
   // drafts written down for a restart the person asked for, read back once
   'kept_drafts',
+  // when this identity last handed a backup out (last_backup.dart)
+  'kryfo.backup.last',
 };
 
 // the phone's, and the everyday identity's working keys that only the

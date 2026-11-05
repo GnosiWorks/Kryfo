@@ -7188,12 +7188,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsConnected => 'متصل';
 
   @override
-  String get settingsScreenshots => 'لقطات الشاشة';
-
-  @override
-  String get settingsBlocked2 => 'ممنوعة';
-
-  @override
   String get settingsOn => 'مفعّل';
 
   @override
@@ -7210,6 +7204,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsBackup => 'النسخ الاحتياطي';
+
+  @override
+  String get settingsProtectBackup => 'النسخ الاحتياطي';
+
+  @override
+  String get settingsBackupNotYet => 'ليس بعد';
+
+  @override
+  String get settingsBackupToday => 'اليوم';
+
+  @override
+  String get settingsBackupYesterday => 'أمس';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قبل ⁨$count⁩ يوم',
+      many: 'قبل ⁨$count⁩ يومًا',
+      few: 'قبل ⁨$count⁩ أيام',
+      two: 'قبل يومين',
+      one: 'قبل يوم',
+      zero: 'قبل ⁨$count⁩ يوم',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'الصوت';
@@ -8954,9 +8975,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'مفعّل دائمًا في الغرفة، في Kryfo لأندرويد';
-
-  @override
-  String get settingsPerChat => 'حسب المحادثة';
 
   @override
   String get homeShotsPerChat => 'منع لقطات الشاشة صار لكل محادثة على حدة.';
@@ -11204,6 +11222,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get desktopPassRow => 'عبارة المرور على هذا الحاسوب';
 
   @override
+  String get desktopPassWindowsAccount => 'مقفل بحساب Windows الخاص بك';
+
+  @override
+  String get desktopPassKeyring => 'مقفل بحلقة المفاتيح الخاصة بك';
+
+  @override
   String get desktopPassOffBody => 'يُفتح Kryfo بحساب المستخدم الخاص بك.';
 
   @override
@@ -11306,9 +11330,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · ألفا';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'ليس على هذا الحاسوب بعد';
 
   @override
   String get settingsDeskInTray => 'يعمل في علبة النظام';
