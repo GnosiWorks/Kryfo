@@ -11489,6 +11489,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Его не открывали 30 дней, поэтому Kryfo стёр всё, что хранил здесь.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Он 30 дней ничего не получал от вашего телефона, поэтому Kryfo стёр всё, что хранил здесь.';
+
+  @override
   String get unlinkedClockLine =>
       'Его часы перевели назад, поэтому Kryfo стёр всё, что хранил здесь, чтобы защитить ваши чаты.';
 

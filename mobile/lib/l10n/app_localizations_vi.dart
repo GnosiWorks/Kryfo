@@ -11292,6 +11292,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thiết bị này không được mở trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Thiết bị này không nhận được gì từ điện thoại của bạn trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
   String get unlinkedClockLine =>
       'Đồng hồ của thiết bị bị chỉnh lùi, nên Kryfo đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.';
 

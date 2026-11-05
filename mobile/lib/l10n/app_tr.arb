@@ -2978,6 +2978,7 @@
   "unlinkedTitle": "Bu cihazın bağlantısı kesildi",
   "unlinkedRemovedLine": "Telefonun onu hesabından kaldırdı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.",
   "unlinkedUnusedLine": "30 gün boyunca açılmadı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.",
+  "unlinkedSilentLine": "30 gün boyunca telefonundan hiçbir şey almadı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.",
   "unlinkedClockLine": "Saati geri alındı, bu yüzden Kryfo sohbetlerini korumak için burada tuttuğu her şeyi sildi.",
   "unlinkedBrokenLine": "Kryfo en son ne zaman açıldığını anlayamadı, bu yüzden sohbetlerini korumak için burada tuttuğu her şeyi sildi.",
   "unlinkedSelfLine": "Bağlantısını sen kestin, bu yüzden Kryfo burada tuttuğu her şeyi sildi.",

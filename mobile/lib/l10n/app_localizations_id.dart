@@ -11308,6 +11308,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Perangkat ini tidak dibuka selama 30 hari, jadi Kryfo menghapus semua yang disimpannya di sini.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Perangkat ini tidak mendapat kabar dari ponselmu selama 30 hari, jadi Kryfo menghapus semua yang disimpannya di sini.';
+
+  @override
   String get unlinkedClockLine =>
       'Jamnya dimundurkan, jadi Kryfo menghapus semua yang disimpannya di sini agar obrolanmu tetap aman.';
 

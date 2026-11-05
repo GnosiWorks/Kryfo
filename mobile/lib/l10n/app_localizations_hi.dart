@@ -11314,6 +11314,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'इसे 30 दिन तक नहीं खोला गया, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
 
   @override
+  String get unlinkedSilentLine =>
+      'इसे 30 दिन तक आपके फ़ोन से कुछ नहीं मिला, इसलिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
+
+  @override
   String get unlinkedClockLine =>
       'इसकी घड़ी पीछे कर दी गई, इसलिए आपकी चैट सुरक्षित रखने के लिए Kryfo ने यहाँ रखा सब कुछ मिटा दिया।';
 

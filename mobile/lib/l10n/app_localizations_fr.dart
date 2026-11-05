@@ -11428,6 +11428,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Il n’a pas été ouvert pendant 30 jours, donc Kryfo a effacé tout ce qu’il gardait ici.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Il n’a rien reçu de votre téléphone pendant 30 jours, donc Kryfo a effacé tout ce qu’il gardait ici.';
+
+  @override
   String get unlinkedClockLine =>
       'Son horloge a été reculée, donc Kryfo a effacé tout ce qu’il gardait ici pour protéger vos discussions.';
 

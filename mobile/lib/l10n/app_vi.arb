@@ -2978,6 +2978,7 @@
   "unlinkedTitle": "Thiết bị này đã hủy liên kết",
   "unlinkedRemovedLine": "Điện thoại của bạn đã gỡ thiết bị này khỏi tài khoản, nên Kryfo đã xóa mọi thứ nó lưu ở đây.",
   "unlinkedUnusedLine": "Thiết bị này không được mở trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.",
+  "unlinkedSilentLine": "Thiết bị này không nhận được gì từ điện thoại của bạn trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.",
   "unlinkedClockLine": "Đồng hồ của thiết bị bị chỉnh lùi, nên Kryfo đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.",
   "unlinkedBrokenLine": "Kryfo không biết được thiết bị này được mở lần cuối khi nào, nên đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.",
   "unlinkedSelfLine": "Bạn đã hủy liên kết thiết bị này, nên Kryfo đã xóa mọi thứ nó lưu ở đây.",

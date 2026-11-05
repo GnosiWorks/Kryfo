@@ -11527,6 +11527,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Nie było otwierane przez 30 dni, więc Kryfo wymazał wszystko, co tu przechowywał.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Przez 30 dni nie dostało nic od twojego telefonu, więc Kryfo wymazał wszystko, co tu przechowywał.';
+
+  @override
   String get unlinkedClockLine =>
       'Jego zegar cofnięto, więc Kryfo wymazał wszystko, co tu przechowywał, żeby chronić twoje czaty.';
 

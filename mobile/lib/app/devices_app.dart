@@ -40,12 +40,19 @@ Future<void> bootDevices() async {
   try {
     final db = await live.open();
     await readLinkedRole(db);
+    // a linked device past its end ends before anything of it runs: no
+    // listens, no copies opened or shown
+    final end = await _linkedPeek();
     final lib = signalSession.lib;
     final path = KryfoSignal.loadedFrom;
     if (path == null) throw StateError('the signal library has no path');
     final ds = DeviceState(DeviceEngine());
     await ds.load(db, await devMineOf(db, lib), shimPath: path);
     _deviceState = ds;
+    if (end != null) {
+      await _linkedEnds(end);
+      return;
+    }
     // a restored phone's first lists name it alone, before anything goes
     final restored = linkedRole
         ? const <({int ident, int version, List<int> added, bool removed})>[]

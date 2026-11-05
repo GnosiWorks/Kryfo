@@ -11390,6 +11390,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ele não foi aberto por 30 dias, então o Kryfo apagou tudo o que guardava aqui.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Ele ficou 30 dias sem notícias do seu celular, então o Kryfo apagou tudo o que guardava aqui.';
+
+  @override
   String get unlinkedClockLine =>
       'O relógio dele foi atrasado, então o Kryfo apagou tudo o que guardava aqui para proteger suas conversas.';
 

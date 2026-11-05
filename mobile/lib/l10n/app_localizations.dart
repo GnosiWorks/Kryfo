@@ -18151,6 +18151,12 @@ abstract class AppLocalizations {
   /// **'It wasn\'t opened for 30 days, so Kryfo erased everything it kept here.'**
   String get unlinkedUnusedLine;
 
+  /// screens/unlinked_screen.dart: why: no word from the phone for 30 days of this device's time online (cut off by a restore, or removed while it was away)
+  ///
+  /// In en, this message translates to:
+  /// **'It heard nothing from your phone for 30 days, so Kryfo erased everything it kept here.'**
+  String get unlinkedSilentLine;
+
   /// screens/unlinked_screen.dart: why: the device clock was set back
   ///
   /// In en, this message translates to:

@@ -11333,6 +11333,10 @@ class AppLocalizationsTr extends AppLocalizations {
       '30 gün boyunca açılmadı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
 
   @override
+  String get unlinkedSilentLine =>
+      '30 gün boyunca telefonundan hiçbir şey almadı, bu yüzden Kryfo burada tuttuğu her şeyi sildi.';
+
+  @override
   String get unlinkedClockLine =>
       'Saati geri alındı, bu yüzden Kryfo sohbetlerini korumak için burada tuttuğu her şeyi sildi.';
 

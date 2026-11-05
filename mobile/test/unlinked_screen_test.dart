@@ -35,7 +35,7 @@ void main() {
       expect(closed, 1);
     }
     // five reasons, five lines
-    expect({for (final w in LinkedEnd.values) unlinkedLine(w)}, hasLength(5));
+    expect({for (final w in LinkedEnd.values) unlinkedLine(w)}, hasLength(6));
   });
 
   testWidgets('every language has its own words for it', (t) async {

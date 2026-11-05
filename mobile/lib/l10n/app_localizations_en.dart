@@ -11308,6 +11308,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'It wasn\'t opened for 30 days, so Kryfo erased everything it kept here.';
 
   @override
+  String get unlinkedSilentLine =>
+      'It heard nothing from your phone for 30 days, so Kryfo erased everything it kept here.';
+
+  @override
   String get unlinkedClockLine =>
       'Its clock was set back, so Kryfo erased everything it kept here to keep your chats safe.';
 

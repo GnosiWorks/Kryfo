@@ -19,6 +19,7 @@ String unlinkedLine(LinkedEnd why) => switch (why) {
   LinkedEnd.clock => l10n.unlinkedClockLine,
   LinkedEnd.broken => l10n.unlinkedBrokenLine,
   LinkedEnd.self => l10n.unlinkedSelfLine,
+  LinkedEnd.silent => l10n.unlinkedSilentLine,
 };
 
 class UnlinkedScreen extends StatelessWidget {

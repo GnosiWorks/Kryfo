@@ -11397,6 +11397,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Non è stato aperto per 30 giorni, quindi Kryfo ha cancellato tutto ciò che teneva qui.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Non ha ricevuto nulla dal tuo telefono per 30 giorni, quindi Kryfo ha cancellato tutto ciò che teneva qui.';
+
+  @override
   String get unlinkedClockLine =>
       'Il suo orologio è stato spostato indietro, quindi Kryfo ha cancellato tutto ciò che teneva qui per proteggere le tue chat.';
 

@@ -2978,6 +2978,7 @@
   "unlinkedTitle": "Cet appareil est dissocié",
   "unlinkedRemovedLine": "Votre téléphone l’a retiré de votre compte, donc Kryfo a effacé tout ce qu’il gardait ici.",
   "unlinkedUnusedLine": "Il n’a pas été ouvert pendant 30 jours, donc Kryfo a effacé tout ce qu’il gardait ici.",
+  "unlinkedSilentLine": "Il n’a rien reçu de votre téléphone pendant 30 jours, donc Kryfo a effacé tout ce qu’il gardait ici.",
   "unlinkedClockLine": "Son horloge a été reculée, donc Kryfo a effacé tout ce qu’il gardait ici pour protéger vos discussions.",
   "unlinkedBrokenLine": "Kryfo n’a pas pu savoir quand il a été ouvert pour la dernière fois, donc il a effacé tout ce qu’il gardait ici pour protéger vos discussions.",
   "unlinkedSelfLine": "Vous l’avez dissocié, donc Kryfo a effacé tout ce qu’il gardait ici.",

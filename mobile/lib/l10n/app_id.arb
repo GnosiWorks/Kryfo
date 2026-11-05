@@ -2978,6 +2978,7 @@
   "unlinkedTitle": "Perangkat ini sudah terlepas",
   "unlinkedRemovedLine": "Ponselmu menghapusnya dari akunmu, jadi Kryfo menghapus semua yang disimpannya di sini.",
   "unlinkedUnusedLine": "Perangkat ini tidak dibuka selama 30 hari, jadi Kryfo menghapus semua yang disimpannya di sini.",
+  "unlinkedSilentLine": "Perangkat ini tidak mendapat kabar dari ponselmu selama 30 hari, jadi Kryfo menghapus semua yang disimpannya di sini.",
   "unlinkedClockLine": "Jamnya dimundurkan, jadi Kryfo menghapus semua yang disimpannya di sini agar obrolanmu tetap aman.",
   "unlinkedBrokenLine": "Kryfo tidak bisa tahu kapan perangkat ini terakhir dibuka, jadi Kryfo menghapus semua yang disimpannya di sini agar obrolanmu tetap aman.",
   "unlinkedSelfLine": "Kamu melepasnya, jadi Kryfo menghapus semua yang disimpannya di sini.",

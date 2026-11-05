@@ -16,9 +16,11 @@ import 'package:crypto/crypto.dart' show Hmac, sha256;
 import 'own_devices.dart' show kUnusedDays;
 
 /// what ends a linked device: its phone removed it, it was not used for
-/// 30 days, its clock went back, its lock state did not read, or the
-/// person unlinked it there
-enum LinkedEnd { removed, unused, clock, broken, self }
+/// 30 days, its clock went back, its lock state did not read, the person
+/// unlinked it there, or it heard nothing from its phone for 30 days of
+/// its own time in touch with a relay (a restore cut it off, or its last
+/// word expired at the relays while it was away)
+enum LinkedEnd { removed, unused, clock, broken, self, silent }
 
 /// the word a linked device's 'ou' carries for [e], null for a removal
 /// (the phone did that itself)
@@ -28,6 +30,7 @@ String? linkedEndWord(LinkedEnd e) => switch (e) {
   LinkedEnd.clock => 'clock',
   LinkedEnd.broken => 'broken',
   LinkedEnd.self => 'self',
+  LinkedEnd.silent => 'silent',
 };
 
 /// unused this long by its own clock, a linked device wipes
@@ -81,6 +84,8 @@ class LinkedLock {
     final now = _clock();
     // a clock behind the highest seen is not a use: the check says so
     if (now < s.high - kClockSlack.inMilliseconds) return;
+    // nor is a use past the 30 days: it ends, it never comes back
+    if (now - s.used > kLinkedUnused.inMilliseconds) return;
     await _write(s.key, now, max(s.high, now));
   }
 

@@ -11486,6 +11486,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Його не відкривали 30 днів, тож Kryfo стер усе, що зберігав тут.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Він 30 днів нічого не отримував від вашого телефона, тож Kryfo стер усе, що зберігав тут.';
+
+  @override
   String get unlinkedClockLine =>
       'Його годинник перевели назад, тож Kryfo стер усе, що зберігав тут, щоб захистити ваші чати.';
 

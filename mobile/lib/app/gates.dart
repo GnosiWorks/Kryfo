@@ -183,7 +183,7 @@ class _LockGateState extends State<_LockGate> {
           : UnlinkedScreen(
               key: const ValueKey('unlinked'),
               why: why,
-              onClose: () => unawaited(wipeFinish()),
+              onClose: () => unawaited(_closeUnlinked()),
             ),
     ),
   );

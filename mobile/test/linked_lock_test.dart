@@ -53,6 +53,25 @@ void main() {
     },
   );
 
+  test('a use past the 30 days brings nothing back: the device still ends, '
+      'even when nothing checked it in between', () async {
+    final l = lock();
+    await l.start();
+    final t0 = now;
+    // a laptop left asleep for 40 days, opened: the resume's use comes
+    // before any check
+    now = t0 + 40 * _day;
+    await l.used();
+    expect(await l.check(), LinkedEnd.unused);
+    // a use just inside the 30 days still counts
+    now = t0;
+    await l.start();
+    now = t0 + 30 * _day - 1;
+    await l.used();
+    now = t0 + 45 * _day;
+    expect(await l.check(), isNull);
+  });
+
   test('a clock set back ends it, a small step back does not, and a use with '
       'the clock behind counts nothing', () async {
     final l = lock();
@@ -104,5 +123,6 @@ void main() {
     expect(linkedEndWord(LinkedEnd.clock), 'clock');
     expect(linkedEndWord(LinkedEnd.broken), 'broken');
     expect(linkedEndWord(LinkedEnd.self), 'self');
+    expect(linkedEndWord(LinkedEnd.silent), 'silent');
   });
 }

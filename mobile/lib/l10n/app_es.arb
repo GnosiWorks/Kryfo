@@ -2978,6 +2978,7 @@
   "unlinkedTitle": "Este dispositivo está desvinculado",
   "unlinkedRemovedLine": "Tu teléfono lo quitó de tu cuenta, así que Kryfo borró todo lo que guardaba aquí.",
   "unlinkedUnusedLine": "No se abrió en 30 días, así que Kryfo borró todo lo que guardaba aquí.",
+  "unlinkedSilentLine": "No supo nada de tu teléfono en 30 días, así que Kryfo borró todo lo que guardaba aquí.",
   "unlinkedClockLine": "Su reloj se atrasó, así que Kryfo borró todo lo que guardaba aquí para proteger tus chats.",
   "unlinkedBrokenLine": "Kryfo no pudo saber cuándo se abrió por última vez, así que borró todo lo que guardaba aquí para proteger tus chats.",
   "unlinkedSelfLine": "Lo desvinculaste, así que Kryfo borró todo lo que guardaba aquí.",

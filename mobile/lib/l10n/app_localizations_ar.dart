@@ -11450,6 +11450,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يُفتح منذ 30 يومًا، لذا مسح Kryfo كل ما كان يحفظه هنا.';
 
   @override
+  String get unlinkedSilentLine =>
+      'لم يسمع من هاتفك 30 يومًا، لذا مسح Kryfo كل ما كان يحفظه هنا.';
+
+  @override
   String get unlinkedClockLine =>
       'أُرجعت ساعته إلى الوراء، لذا مسح Kryfo كل ما كان يحفظه هنا ليحمي محادثاتك.';
 

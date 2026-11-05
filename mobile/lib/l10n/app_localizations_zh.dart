@@ -10702,6 +10702,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unlinkedUnusedLine => '它 30 天没被打开，所以 Kryfo 抹除了它在这里保存的一切。';
 
   @override
+  String get unlinkedSilentLine => '它 30 天没有收到你手机的任何消息，所以 Kryfo 抹除了它在这里保存的一切。';
+
+  @override
   String get unlinkedClockLine => '它的时钟被调回了，所以 Kryfo 为保护你的聊天，抹除了它在这里保存的一切。';
 
   @override
@@ -21362,6 +21365,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get unlinkedUnusedLine => '它 30 天沒被開啟，所以 Kryfo 抹除了它在這裡保存的一切。';
+
+  @override
+  String get unlinkedSilentLine => '它 30 天沒有收到你手機的任何訊息，所以 Kryfo 抹除了它在這裡保存的一切。';
 
   @override
   String get unlinkedClockLine => '它的時鐘被調回了，所以 Kryfo 為保護你的聊天，抹除了它在這裡保存的一切。';

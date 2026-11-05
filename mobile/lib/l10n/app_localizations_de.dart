@@ -11433,6 +11433,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Es wurde 30 Tage nicht geöffnet, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
 
   @override
+  String get unlinkedSilentLine =>
+      'Es hat 30 Tage lang nichts von deinem Handy gehört, deshalb hat Kryfo alles gelöscht, was es hier gespeichert hatte.';
+
+  @override
   String get unlinkedClockLine =>
       'Seine Uhr wurde zurückgestellt, deshalb hat Kryfo zum Schutz deiner Chats alles gelöscht, was es hier gespeichert hatte.';
 

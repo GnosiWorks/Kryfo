@@ -2978,6 +2978,7 @@
   "unlinkedTitle": "Questo dispositivo è scollegato",
   "unlinkedRemovedLine": "Il tuo telefono l’ha rimosso dal tuo account, quindi Kryfo ha cancellato tutto ciò che teneva qui.",
   "unlinkedUnusedLine": "Non è stato aperto per 30 giorni, quindi Kryfo ha cancellato tutto ciò che teneva qui.",
+  "unlinkedSilentLine": "Non ha ricevuto nulla dal tuo telefono per 30 giorni, quindi Kryfo ha cancellato tutto ciò che teneva qui.",
   "unlinkedClockLine": "Il suo orologio è stato spostato indietro, quindi Kryfo ha cancellato tutto ciò che teneva qui per proteggere le tue chat.",
   "unlinkedBrokenLine": "Kryfo non è riuscito a capire quando è stato aperto l’ultima volta, quindi ha cancellato tutto ciò che teneva qui per proteggere le tue chat.",
   "unlinkedSelfLine": "L’hai scollegato, quindi Kryfo ha cancellato tutto ciò che teneva qui.",

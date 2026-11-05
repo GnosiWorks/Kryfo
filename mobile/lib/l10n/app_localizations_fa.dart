@@ -11319,6 +11319,10 @@ class AppLocalizationsFa extends AppLocalizations {
       '۳۰ روز باز نشد، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
 
   @override
+  String get unlinkedSilentLine =>
+      '۳۰ روز هیچ خبری از گوشی‌تان نگرفت، پس Kryfo هر چه اینجا نگه داشته بود پاک کرد.';
+
+  @override
   String get unlinkedClockLine =>
       'ساعتش به عقب برگردانده شد، پس Kryfo برای امن ماندن گفت‌وگوهایتان هر چه اینجا نگه داشته بود پاک کرد.';
 

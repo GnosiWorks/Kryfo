@@ -2978,6 +2978,7 @@
   "unlinkedTitle": "这台设备已解除关联",
   "unlinkedRemovedLine": "你的手机已把它从账号中移除，所以 Kryfo 抹除了它在这里保存的一切。",
   "unlinkedUnusedLine": "它 30 天没被打开，所以 Kryfo 抹除了它在这里保存的一切。",
+  "unlinkedSilentLine": "它 30 天没有收到你手机的任何消息，所以 Kryfo 抹除了它在这里保存的一切。",
   "unlinkedClockLine": "它的时钟被调回了，所以 Kryfo 为保护你的聊天，抹除了它在这里保存的一切。",
   "unlinkedBrokenLine": "Kryfo 无法得知它上次是何时被打开的，所以为保护你的聊天，抹除了它在这里保存的一切。",
   "unlinkedSelfLine": "你解除了它的关联，所以 Kryfo 抹除了它在这里保存的一切。",

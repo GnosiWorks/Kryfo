@@ -2978,6 +2978,7 @@
   "unlinkedTitle": "Este aparelho foi desconectado",
   "unlinkedRemovedLine": "Seu celular o removeu da sua conta, então o Kryfo apagou tudo o que guardava aqui.",
   "unlinkedUnusedLine": "Ele não foi aberto por 30 dias, então o Kryfo apagou tudo o que guardava aqui.",
+  "unlinkedSilentLine": "Ele ficou 30 dias sem notícias do seu celular, então o Kryfo apagou tudo o que guardava aqui.",
   "unlinkedClockLine": "O relógio dele foi atrasado, então o Kryfo apagou tudo o que guardava aqui para proteger suas conversas.",
   "unlinkedBrokenLine": "O Kryfo não conseguiu saber quando ele foi aberto pela última vez, então apagou tudo o que guardava aqui para proteger suas conversas.",
   "unlinkedSelfLine": "Você o desconectou, então o Kryfo apagou tudo o que guardava aqui.",

@@ -11389,6 +11389,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se abrió en 30 días, así que Kryfo borró todo lo que guardaba aquí.';
 
   @override
+  String get unlinkedSilentLine =>
+      'No supo nada de tu teléfono en 30 días, así que Kryfo borró todo lo que guardaba aquí.';
+
+  @override
   String get unlinkedClockLine =>
       'Su reloj se atrasó, así que Kryfo borró todo lo que guardaba aquí para proteger tus chats.';
 
