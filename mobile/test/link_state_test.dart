@@ -35,6 +35,10 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
+    // a relay answered before in this process, and the start's new
+    // messages are in: a quiet relay is waited for, not still connecting
+    appState.everUsableForTest = true;
+    appState.startCaughtForTest = true;
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
   });
@@ -69,7 +73,7 @@ void main() {
       expect(find.text(l10n.appTorReady), findsNothing);
       // tor's route is up: it says what it waits for, not connecting
       expect(find.text(l10n.appWaitingForARelay), findsOneWidget);
-      expect(find.text(l10n.appConnecting2), findsNothing);
+      expect(find.text(l10n.appStartingTor), findsNothing);
 
       _set('private', TorStatus.publishing);
       await t.pump(const Duration(milliseconds: 400));
@@ -167,7 +171,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(l10n.appTorNoRelayYet), findsNothing);
-      expect(inSheet(l10n.appConnecting2), findsNothing);
+      expect(inSheet(l10n.appStartingTor), findsNothing);
       expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
       // another send mode does not help with no network
       expect(find.text(l10n.appRelayAndFastModes), findsNothing);
@@ -193,7 +197,7 @@ void main() {
       await openSheet(t);
       // the pill's words: tor is up and waits for a relay
       expect(inSheet(l10n.appWaitingForARelay), findsOneWidget);
-      expect(inSheet(l10n.appConnecting2), findsNothing);
+      expect(inSheet(l10n.appStartingTor), findsNothing);
       expect(find.text(l10n.appTorNoRelayYet), findsOneWidget);
       expect(find.text(l10n.appTheFirstConnectionTakes), findsNothing);
 
@@ -296,13 +300,13 @@ void main() {
       appState.takeTorStatus('starting|45|0|0|0');
       appState.torTryingSinceForTest = ago(5);
       await pill(t);
-      expect(find.text(l10n.appConnecting2), findsOneWidget);
+      expect(find.text(l10n.appStartingTor), findsOneWidget);
 
       // still building its route: how far along
       appState.torTryingSinceForTest = ago(40);
       appState.setRouteOKForTest(false);
       await t.pump();
-      expect(find.text(l10n.appConnecting(percent(0.45))), findsOneWidget);
+      expect(find.text(l10n.appStartingTorPct(percent(0.45))), findsOneWidget);
 
       // tor up, no relay through: that it waits for one
       appState.takeTorStatus('publishing|100|0|0|0');
@@ -316,7 +320,7 @@ void main() {
       appState.setRouteOKForTest(false);
       await t.pump();
       expect(find.text(l10n.appWaitingForARelay), findsOneWidget);
-      expect(find.text(l10n.appConnecting2), findsNothing);
+      expect(find.text(l10n.appStartingTor), findsNothing);
       await gone(t);
     });
   });

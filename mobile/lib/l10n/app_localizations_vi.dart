@@ -649,11 +649,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Sẵn sàng trò chuyện · địa chỉ đang hoàn tất';
 
   @override
-  String appConnecting(Object pct) {
-    return 'Đang kết nối · $pct';
-  }
-
-  @override
   String get appTor => 'Tor';
 
   @override
@@ -686,6 +681,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'Đang chờ relay';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'Đang khởi động Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Đang nhận tin nhắn mới';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {

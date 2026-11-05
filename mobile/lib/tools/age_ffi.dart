@@ -8,6 +8,7 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../engine_strings.dart';
+import '../native_libs.dart';
 
 typedef _LockC = Pointer<Utf8> Function(Int32, Int32, Pointer<Utf8>);
 typedef _LockD = Pointer<Utf8> Function(int, int, Pointer<Utf8>);
@@ -22,9 +23,7 @@ typedef _ProgressD = int Function();
 typedef _WordsC = Pointer<Utf8> Function();
 typedef _WordsD = Pointer<Utf8> Function();
 
-DynamicLibrary _lib() => Platform.isAndroid
-    ? DynamicLibrary.open('libhalo.so')
-    : DynamicLibrary.process();
+DynamicLibrary _lib() => haloLibrary();
 
 enum AgeError {
   wrongPassword,
@@ -213,6 +212,8 @@ const _oWrite = 0x1, _oCreate = 0x40, _oExcl = 0x80, _oCloexec = 0x80000;
 /// a descriptor of a file in the app's own folders, for the engine to read,
 /// or to write as a new file only this app can read. -1 when it will not open
 int openFd(String path, {bool write = false}) {
+  // windows has no descriptors the engine takes: the tool says it cannot
+  if (Platform.isWindows) return -1;
   final p = path.toNativeUtf8();
   try {
     return _libc().lookupFunction<_OpenFdC, _OpenFdD>('open')(
@@ -225,8 +226,10 @@ int openFd(String path, {bool write = false}) {
   }
 }
 
-void closeFd(int fd) =>
-    _libc().lookupFunction<_CloseFdC, _CloseFdD>('close')(fd);
+void closeFd(int fd) {
+  if (fd < 0 || Platform.isWindows) return;
+  _libc().lookupFunction<_CloseFdC, _CloseFdD>('close')(fd);
+}
 
 /// [inPath] locked into [outPath], which must not exist yet
 Future<AgeError?> ageLockPath(

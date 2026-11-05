@@ -103,6 +103,11 @@ class SealSweep {
   int stayed = 0;
 }
 
+/// [sealPlainUnder] of [dir] as a job for another isolate. made here, at
+/// the top level, it carries [dir] alone
+SealSweep Function() sealUnderJob(String dir) =>
+    () => sealPlainUnder(dir);
+
 /// every plain file under [dir] sealed in place, the plain bytes zeroed
 /// before the sealed copy takes the name. a sweep cut short is picked up:
 /// a whole sealed copy beside its file wins, a broken one goes. a file the
@@ -299,23 +304,27 @@ void makePlaceholders(String docs, {Random? random}) {
 /// (which carry the start of receive keys) and their contents never reach
 /// the disk as they are. what it keeps between runs is sealed: the onion
 /// key as docs/onion.key, the relay marks in support/engine.state. tor's
-/// own state stays on the disk through a link, docs/tor
+/// own state stays on the disk through a link, docs/tor. windows makes a
+/// link only for an admin or in developer mode, and its engine folder is
+/// on the disk already: tor's is a real folder there, kept across starts
 class EngineFiles {
   EngineFiles({
     required this.docs,
     required this.support,
     required this.runtime,
-  });
+    bool? windows,
+  }) : windows = windows ?? Platform.isWindows;
 
   final String docs;
   final String support;
   final String runtime;
+  final bool windows;
   Timer? _watch;
   // a digest of the key start() put in the engine's folder: one still the
   // same is no news, and never goes over a key a restore sealed since
   Digest? _handed;
 
-  String get dir => p.join(runtime, 'engine');
+  String get dir => p.join(runtime, kEngineFolder);
   String get _key => p.join(dir, 'onion.key');
   String get _sealedKey => p.join(docs, 'onion.key');
   String get _state => p.join(support, 'engine.state');
@@ -344,6 +353,7 @@ class EngineFiles {
   void _linkTor() {
     final at = p.join(dir, 'tor');
     final want = p.join(docs, 'tor');
+    if (windows) return _torFolderOnWindows(at, want);
     switch (FileSystemEntity.typeSync(at, followLinks: false)) {
       case FileSystemEntityType.link:
         if (Link(at).targetSync() == want) return;
@@ -356,6 +366,23 @@ class EngineFiles {
         File(at).deleteSync();
     }
     Link(at).createSync(want);
+  }
+
+  // a link a developer mode run made to docs/tor stays; any other link or
+  // a file goes, and a real folder takes its place
+  void _torFolderOnWindows(String at, String want) {
+    switch (FileSystemEntity.typeSync(at, followLinks: false)) {
+      case FileSystemEntityType.link:
+        if (p.equals(Link(at).targetSync(), want)) return;
+        Link(at).deleteSync();
+      case FileSystemEntityType.directory:
+        return;
+      case FileSystemEntityType.notFound:
+        break;
+      default:
+        File(at).deleteSync();
+    }
+    Directory(at).createSync(recursive: true);
   }
 
   // round two kept a link and the key in the vault; before that the key and

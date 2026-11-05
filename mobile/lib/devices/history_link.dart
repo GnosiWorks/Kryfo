@@ -9,7 +9,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
@@ -17,6 +16,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../engine_strings.dart' show engineTakeSecret;
+import '../native_libs.dart';
 import 'history_export.dart';
 import 'history_ffi.dart';
 import 'history_import.dart';
@@ -91,9 +91,7 @@ abstract class HistoryWire {
 typedef _JsonC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef _Json = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 
-DynamicLibrary _halo() => Platform.isAndroid
-    ? DynamicLibrary.open('libhalo.so')
-    : DynamicLibrary.process();
+DynamicLibrary _halo() => haloLibrary();
 
 Map<String, dynamic> _call(String fn, String op, Map<String, Object?> args) {
   final fnc = _halo().lookupFunction<_JsonC, _Json>(fn);

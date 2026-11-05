@@ -85,6 +85,7 @@ typedef _SetenvC = Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32);
 typedef _Setenv = int Function(Pointer<Utf8>, Pointer<Utf8>, int);
 
 void _setenv(String k, String v) {
+  if (!Platform.isLinux) return;
   final f = DynamicLibrary.process().lookupFunction<_SetenvC, _Setenv>(
     'setenv',
   );

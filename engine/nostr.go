@@ -623,6 +623,9 @@ func noteCatchupDone(key string, dropped bool) {
 	catchupLast[key] = catchupRun{Ms: ms, Dropped: dropped, Long: long,
 		Pages: pend.Pages, Events: pend.Events, ConnectMs: connectLast[key], At: time.Now()}
 	catchupMu.Unlock()
+	if !dropped {
+		startSteps.caughtUp(rcvOfKey(key))
+	}
 	if dropped {
 		log.Printf("nostr: %s still catching up after %dms, dropped for this check-in (%d in a row)",
 			u, ms, drops)
@@ -848,6 +851,7 @@ const ownUpRecent = 10 * time.Minute
 
 func relayUp(u string) {
 	wakeRouteProven()
+	relayEverOK.Store(u, true)
 	relayHealthMu.Lock()
 	relayUpAt[u] = time.Now()
 	relayHealthMu.Unlock()
@@ -894,6 +898,22 @@ func ownWaitRule(u string, own bool) (mine bool, ceiling time.Duration) {
 	return true, ownRelayCeiling
 }
 
+// another of our stores than u's answered lately, with no failure since
+func otherStoreAnswers(urls []string, u string) bool {
+	st := storeOf(urls, u)
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	for _, o := range ownRelays(urls) {
+		if o == u || storeOf(urls, o) == st {
+			continue
+		}
+		if at, ok := relayUpAt[o]; ok && time.Since(at) < ownUpRecent && relayFails[o] == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // a fifth either way, so the runners of one relay do not all redial it in
 // the same second
 func ownSpread(d time.Duration) time.Duration {
@@ -916,6 +936,115 @@ func relayBackoff(n int) time.Duration {
 		d = 5 * time.Minute
 	}
 	return d
+}
+
+// the dials out now to each relay on a failing streak
+var failingDials sync.Map // url -> *atomic.Int32
+
+// whether this socket may dial u now, and what to call once the dial is
+// over. a relay with no failure since it last answered: always
+func failingDialBegin(u string) (bool, func()) {
+	relayHealthMu.Lock()
+	failing := relayFails[u] > 0
+	relayHealthMu.Unlock()
+	if !failing {
+		return true, func() {}
+	}
+	v, _ := failingDials.LoadOrStore(u, new(atomic.Int32))
+	n := v.(*atomic.Int32)
+	if !n.CompareAndSwap(0, 1) {
+		return false, nil
+	}
+	return true, func() { n.Store(0) }
+}
+
+// a runner's base wait after a failure: our second store's entries wait as
+// a public relay does while our first store answers, not three seconds
+func retryFor(u string, retry time.Duration, own bool) time.Duration {
+	if own && retry < 10*time.Second && secondStoreSpared(nostrRelaysNow(), u) {
+		return 10 * time.Second
+	}
+	return retry
+}
+
+// u is an entry of our second store and our first store answers: it may
+// wait. our first store never does: the versions before the second store
+// read it alone
+func secondStoreSpared(urls []string, u string) bool {
+	return storeOf(urls, u) == storeSecond && otherStoreAnswers(urls, u)
+}
+
+// closed when every bench is let go of, at a wake or a new route
+var benchClear = struct {
+	sync.Mutex
+	c chan struct{}
+}{c: make(chan struct{})}
+
+func benchClearChan() <-chan struct{} {
+	benchClear.Lock()
+	defer benchClear.Unlock()
+	return benchClear.c
+}
+
+// when u's bench ends, zero when it has none
+func relayCoolUntil(u string) time.Time {
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	return relayCoolTill[u]
+}
+
+// a public relay on the bench is not dialled before its bench ends, kick
+// or no kick: a kick is for sockets a change may have helped, and one that
+// turned tor away at its door is not. a wake or a new route lets every
+// bench go. false once ctx is over
+func waitOutBench(ctx context.Context, u string) bool {
+	cleared := benchClearChan()
+	till := relayCoolUntil(u)
+	d := time.Until(till)
+	if d <= 0 {
+		return true
+	}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-cleared:
+	case <-t.C:
+	}
+	return true
+}
+
+// a public relay that never answered in this process (one that turns tor
+// away at its door, say) backs off further, up to this
+const relayDeadBench = 15 * time.Minute
+
+// the relays that answered at least once in this process. a bench cleared
+// at a wake or a new route does not clear this
+var relayEverOK sync.Map
+
+// the backoff after n failures in a row on u: a public relay that never
+// answered here goes on doubling past relayMaxBench
+func relayBackoffFor(u string, n int) time.Duration {
+	if _, ok := relayEverOK.Load(u); ok || storeOf(nostrRelaysNow(), u) != "" || n <= relayFailGrace+6 {
+		return relayBackoff(n)
+	}
+	return min(relayMaxBench<<uint(min(n-relayFailGrace-6, 2)), relayDeadBench)
+}
+
+// the ceiling for u's waits: a public relay that never answered here has
+// the longer one
+func deadCeiling(u string, ceiling time.Duration) time.Duration {
+	if _, ok := relayEverOK.Load(u); ok || ceiling != relayMaxBench {
+		return ceiling
+	}
+	return relayDeadBench
+}
+
+func nostrRelaysNow() []string {
+	nostrMu.Lock()
+	defer nostrMu.Unlock()
+	return nostrRelays
 }
 
 func relayCold(u string) bool {
@@ -963,6 +1092,7 @@ func relayFailedAs(u string, began time.Time, route bool) {
 		routeNoteFailFrom(u, began)
 	}
 	_, ceiling := ownWaitRule(u, false)
+	ceiling = deadCeiling(u, ceiling)
 	nostrMu.Lock()
 	urls := nostrRelays
 	nostrMu.Unlock()
@@ -976,7 +1106,7 @@ func relayFailedAs(u string, began time.Time, route bool) {
 	}
 	relayFailAt[u] = now
 	relayFails[u]++
-	d := relayBackoff(relayFails[u])
+	d := relayBackoffFor(u, relayFails[u])
 	if d > ceiling {
 		d = ceiling
 	}
@@ -996,6 +1126,10 @@ func relayFailedAs(u string, began time.Time, route bool) {
 // nothing wrong, and holding it out for five more minutes after the route is
 // rebuilt is five more minutes of a message sitting in the outbox.
 func relayClearBenches() {
+	benchClear.Lock()
+	close(benchClear.c)
+	benchClear.c = make(chan struct{})
+	benchClear.Unlock()
 	relayHealthMu.Lock()
 	for k := range relayFails {
 		delete(relayFails, k)
@@ -1033,6 +1167,7 @@ func kickRelays() {
 
 func relayOK(u string) {
 	wakeRouteProven()
+	relayEverOK.Store(u, true)
 	relayHealthMu.Lock()
 	relayUpAt[u] = time.Now()
 	if relayFails[u] != 0 {
@@ -1051,10 +1186,11 @@ func relayOK(u string) {
 // every few seconds, around the clock, on whatever connection the phone has.
 func relayRetryAfter(u string, base time.Duration, own bool) time.Duration {
 	mine, ceiling := ownWaitRule(u, own)
+	ceiling = deadCeiling(u, ceiling)
 	relayHealthMu.Lock()
 	n := relayFails[u]
 	relayHealthMu.Unlock()
-	d := relayBackoff(n)
+	d := relayBackoffFor(u, n)
 	if d > ceiling {
 		d = ceiling
 	}
@@ -1241,7 +1377,10 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 	}
 	urls := make([]string, 0, len(all))
 	for _, u := range all {
-		if own[u] || !relayCold(u) {
+		// an entry of our second store on the bench is left out only while
+		// our first store answers: that one carries it, and the second is
+		// given it once it answers again (topup). the first never is
+		if (own[u] && !(relayCold(u) && secondStoreSpared(all, u))) || (!own[u] && !relayCold(u)) {
 			urls = append(urls, u)
 		}
 	}
@@ -1647,6 +1786,9 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		if live != nil {
 			liveHeard(rcvPk, time.Now().Unix())
 		}
+		if tag == laneFirstContact {
+			startSteps.fcIn()
+		}
 		nostrMu.Lock()
 		nostrInbox = append(nostrInbox, tag+"|"+content)
 		nostrInboxDone = append(nostrInboxDone, inboxDone{set: seen, id: ev.ID, at: ev.CreatedAt, sent: int64(sent), resave: saveAll, from: from, until: until, bare: bare})
@@ -1780,6 +1922,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			if hk.group != "" {
 				turn.ready = func() <-chan struct{} { return hubReady(hk) }
 				turn.batch = &hk
+				startSteps.member(lane, rcvPk)
 			}
 			for {
 				// nothing is counted while it parks or waits for tor below:
@@ -1883,6 +2026,25 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					sleepOrKickCtx(ctx, kc, 15*time.Minute)
 					continue
 				}
+				// a public relay on the bench: its bench first
+				if !ownEntry && !backup && time.Until(relayCoolUntil(u)) > 0 {
+					if !waitOutBench(ctx, u) {
+						return
+					}
+					continue
+				}
+				// at the start, a dial through tor waits for tor to be up:
+				// its turn is drawn from there, not held in tor with the rest
+				if g := startGateChan(); g != nil && relayOverTor(lane, u) {
+					turn.fresh = nil
+					select {
+					case <-ctx.Done():
+						return
+					case <-g:
+					case <-kc:
+					}
+					continue
+				}
 				client, err := relayClientFor(lane, u)
 				if err != nil {
 					// it asks as tor comes up, beside the start's first
@@ -1903,6 +2065,16 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						nap(30 * time.Second)
 						continue
 					}
+					// tor is on its way at the start: up to it, not ten seconds
+					if g := startGateChan(); g != nil {
+						select {
+						case <-ctx.Done():
+							return
+						case <-g:
+						case <-kc:
+						}
+						continue
+					}
 					nap(wait)
 					continue
 				}
@@ -1916,6 +2088,20 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					continue
 				default:
 				}
+				// a relay on a failing streak takes one dial at a time: while
+				// another socket's dial to it is out, this try counts as failed
+				// and waits its own backoff, so a dead relay costs one dial a
+				// round and not one per socket. joining a shared socket that
+				// is up is no dial
+				goDial, dialOver := true, func() {}
+				if hk.group == "" || !isClosed(hubReady(hk)) {
+					goDial, dialOver = failingDialBegin(u)
+				}
+				if !goDial {
+					turn.dialed(false)
+					nap(relayRetryAfter(u, retryFor(u, retry, own), own))
+					continue
+				}
 				// each connection has a context of its own, so the relay and
 				// everything the library starts for it end with the connection
 				// and not with the subscription. ending it closes the relay.
@@ -1923,6 +2109,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				dialAt := time.Now()
 				dialGen := routeGeneration()
 				r, fresh, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry)
+				dialOver()
 				turn.dialed(err == nil)
 				if err != nil && routeGone(routeC) {
 					connDone()
@@ -1947,7 +2134,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					} else {
 						relayFailed(u, dialAt)
 					}
-					nap(relayRetryAfter(u, retry, own))
+					nap(relayRetryAfter(u, retryFor(u, retry, own), own))
 					continue
 				}
 				// the mode changed while it dialled. nothing is asked on it
@@ -1963,6 +2150,10 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// night asleep lived
 				connected := time.Now().Round(0)
 				noteRelayConnect(u, ck, int(time.Since(dialAt).Milliseconds()))
+				startSteps.relayUp()
+				if tag == laneFirstContact {
+					startSteps.fcUp(u)
+				}
 				connGen = routeGeneration()
 				// a relay answered. this is the one fact the watchdog trusts.
 				// a shared socket says so once it carried something lately

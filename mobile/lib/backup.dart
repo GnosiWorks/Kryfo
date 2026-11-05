@@ -59,6 +59,7 @@ import 'desktop/desktop_mode.dart'
         onDesktop,
         rawFiles,
         runIsolated;
+import 'native_libs.dart';
 
 const _kDbPassphrase = 'halo.db.passphrase';
 const _secureStorage = secureStore;
@@ -207,9 +208,7 @@ Future<List<String>> _olderIn(Database db) async {
 // screen keeps painting while it works.
 Future<String> _decryptOnIsolate(String blob, String passphrase) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloDecryptBackup');
     final p1 = blob.toNativeUtf8();
     final p2 = passphrase.toNativeUtf8();
@@ -635,9 +634,7 @@ bool get sessionBackupHasHidden => session.vault != null;
 typedef _KeyFn = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
 typedef _KeyFnDart = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Uint8>);
 
-DynamicLibrary _engineLib() => Platform.isAndroid
-    ? DynamicLibrary.open('libhalo.so')
-    : DynamicLibrary.process();
+DynamicLibrary _engineLib() => haloLibrary();
 
 // derives the key, as bytes the caller zeroes. null when the engine
 // refused, which it never should

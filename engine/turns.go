@@ -69,7 +69,8 @@ func takeFirstTurn(kc chan struct{}) bool {
 		return false
 	}
 	firstTurn.kick = kc
-	return true
+	// the start's is the first batch's
+	return !startFirstHolds(kc)
 }
 
 // the runner tag of the chat open on screen: its address asks with no turn
@@ -226,6 +227,9 @@ func (t *subTurn) take(ctx context.Context) bool {
 	}
 	now := autoNow()
 	d := t.sharedDelay(kc, 0, now, func() time.Duration {
+		if t.batch != nil && startFirstFor(t.batch.lane, kc) {
+			return 0
+		}
 		if takeFirstTurn(kc) {
 			return 0
 		}

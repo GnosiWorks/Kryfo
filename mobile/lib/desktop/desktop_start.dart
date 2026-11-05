@@ -4,6 +4,7 @@
 // computer's key or its passphrase, and only then the app itself
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' show Random;
 
 import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
@@ -22,6 +23,7 @@ import 'package:shared_preferences_linux/shared_preferences_linux.dart'
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
+import '../dlog.dart';
 import '../l10n/app_locale.dart' show loadAppLocale;
 import '../l10n/l10n.dart';
 import 'desktop_audio.dart';
@@ -33,10 +35,12 @@ import 'desktop_mode.dart';
 import 'desktop_net.dart';
 import 'computer_lock.dart';
 import 'desktop_paths.dart';
+import 'desktop_trace.dart';
 import 'desktop_platform.dart';
 import 'desktop_run.dart';
 import 'desktop_posix.dart';
 import 'desktop_prefs.dart';
+import 'desktop_toasts.dart';
 import 'desktop_vault.dart';
 import 'desktop_wipe.dart';
 import 'keyring_linux.dart';
@@ -64,9 +68,8 @@ class DesktopBinding extends WidgetsFlutterBinding {
       DesktopMessenger(super.createBinaryMessenger(), _answers);
 }
 
-/// notifications on desktop say only that something came. gnome and kde keep
-/// a history of them on disk, and the phone's choice of what to show does
-/// not reach that far
+/// notifications on desktop say what the phone's preview setting gave the
+/// post: kryfo and new message unless previews are on
 class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
   /// a click brings the window up from the tray before the chat opens
   @override
@@ -87,12 +90,18 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
     String? body,
     LinuxNotificationDetails? notificationDetails,
     String? payload,
-  }) => post(
-    id: id,
-    title: 'Kryfo',
-    body: l10n.notificationsNewMessage,
-    payload: payload,
-  );
+  }) {
+    // a plain post has no title: still only that something came
+    final named = title != null;
+    return post(
+      id: id,
+      title: named ? title : 'Kryfo',
+      body: named
+          ? (body ?? l10n.notificationsNewMessage)
+          : l10n.notificationsNewMessage,
+      payload: payload,
+    );
+  }
 
   /// what reaches the desktop's notification server
   @visibleForTesting
@@ -206,7 +215,7 @@ SystemSeal? systemSeal() {
 }
 
 /// why the desktop will not start, before anything of it runs
-enum DesktopStop { alreadyOpen, notYours, notPrivate, noMemory }
+enum DesktopStop { alreadyOpen, notYours, notPrivate, noMemory, failed }
 
 /// the folder checks, in the order they are made: private, the user's own,
 /// and no other process on it. a reopen's new process may find the old one
@@ -217,6 +226,9 @@ Future<DesktopStop?> claimFolder(
   int Function() uid = getuid,
   Duration wait = const Duration(seconds: 3),
 }) async {
+  if (Platform.isWindows) {
+    return windowsFolderStop(Platform.environment['KRYFO_FOLDER']);
+  }
   if (!makePrivateDir(root)) return DesktopStop.notPrivate;
   if (ownerOf(root) != uid()) return DesktopStop.notYours;
   final lock = p.join(root, 'lock');
@@ -228,11 +240,22 @@ Future<DesktopStop?> claimFolder(
   return null;
 }
 
+/// on windows kryfo.exe checks, closes and locks the folder before dart
+/// runs (runner/kryfo_win.cpp) and says how it went in KRYFO_FOLDER
+@visibleForTesting
+DesktopStop? windowsFolderStop(String? word) => switch (word) {
+  'ok' => null,
+  'locked' => DesktopStop.alreadyOpen,
+  'owner' => DesktopStop.notYours,
+  _ => DesktopStop.notPrivate,
+};
+
 Future<void> startDesktop(Future<void> Function() appMain) async {
   onDesktop = true;
   privateUmask();
   final root = desktopDataDir();
   final stop = await claimFolder(root);
+  if (stop == null) startTrace(root);
   if (stop != null) {
     WidgetsFlutterBinding.ensureInitialized();
     runApp(DesktopStopApp(stop: stop));
@@ -245,7 +268,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   final host = DesktopHost(dataDir: root);
   DesktopBinding.install(desktopAnswers(host, db));
 
-  final runtime = desktopRuntimeDir(uid: getuid(), root: root);
+  final uid = Platform.isWindows ? 0 : getuid();
+  final runtime = desktopRuntimeDir(uid: uid, root: root);
   // without a folder in memory the engine's files and the temporary ones
   // would be plain on the disk while the app runs: linux refuses that.
   // windows has no tmpfs and keeps them in <root>/tmp (its own branch)
@@ -253,7 +277,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     runApp(const DesktopStopApp(stop: DesktopStop.noMemory));
     return;
   }
-  sweepOldRuntimeDirs(runtime, uid: getuid(), root: root);
+  sweepOldRuntimeDirs(runtime, uid: uid, root: root);
   final paths = DesktopPaths(root, runtime: runtime);
   PathProviderPlatform.instance = paths;
   final vault = DesktopVault(p.join(root, 'vault.kv'));
@@ -280,6 +304,11 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     FlutterLocalNotificationsPlatform.instance = QuietLinuxNotifications();
     Gst.registryDir = (await paths.getApplicationCachePath())!;
     JustAudioPlatform.instance = DesktopAudio();
+  }
+  if (Platform.isWindows) {
+    FlutterLocalNotificationsPlatform.instance = QuietWindowsNotifications(
+      raise: showWindow,
+    );
   }
   CameraPlatform.instance = NoCameras();
   assertVaultOnly();
@@ -318,6 +347,14 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     if (call.method == 'hinted' && run is DesktopRun) await run.markHinted();
     return null;
   });
+  // a run before's temporary files: its key died with it, they go unread
+  // tor's own folder stays: its state is no secret of the run
+  if (Platform.isWindows) {
+    clearFolder(
+      p.join(root, 'tmp'),
+      keep: [p.join(root, 'tmp', kEngineFolder, 'tor')],
+    );
+  }
   // asked before the vault can open, so its words never come after begin's
   await trayBeforeOpen();
   // what memory held from a run before goes now, before anything is plain
@@ -353,19 +390,74 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
         desktopRun = run;
         unawaited(run.begin());
         unawaited(() async {
-          await openSeal(
-            root: root,
-            runtime: runtime,
-            vault: vault,
-            host: host,
-            paths: paths,
-          );
-          await readDeskSound();
-          await appMain();
+          var step = 'seal';
+          try {
+            trace('vault open');
+            await openSeal(
+              root: root,
+              runtime: runtime,
+              vault: vault,
+              host: host,
+              paths: paths,
+            );
+            step = 'app';
+            trace('seal open');
+            await readDeskSound();
+            await appMain();
+            trace('app started');
+          } catch (e, st) {
+            // said, not left as a lock screen that never moves
+            dlog('desktop start: $step ${e.runtimeType}');
+            traceError(step, e, st);
+            runApp(const DesktopStopApp(stop: DesktopStop.failed));
+          }
         }());
       },
     ),
   );
+}
+
+/// 32 random bytes for this run's temporary files
+@visibleForTesting
+Uint8List sessionKey() {
+  final r = Random.secure();
+  return Uint8List.fromList(List.generate(32, (_) => r.nextInt(256)));
+}
+
+/// every file under [dir] zeroed and removed, the folder kept, but for
+/// what lies under [keep]. best effort: a file windows still holds stays
+/// for the next start
+@visibleForTesting
+void clearFolder(String dir, {List<String> keep = const []}) {
+  final d = Directory(dir);
+  final List<FileSystemEntity> all;
+  try {
+    if (!d.existsSync()) return;
+    all = d.listSync(recursive: true, followLinks: false);
+  } catch (e, st) {
+    traceError('clear', e, st);
+    return;
+  }
+  for (final e in all) {
+    if (e is! File) continue;
+    if (keep.any((k) => p.equals(k, e.path) || p.isWithin(k, e.path))) {
+      continue;
+    }
+    try {
+      final n = e.lengthSync();
+      final r = e.openSync(mode: FileMode.writeOnlyAppend);
+      try {
+        r.setPositionSync(0);
+        for (var at = 0; at < n; at += 1 << 16) {
+          r.writeFromSync(Uint8List(n - at < 1 << 16 ? n - at : 1 << 16));
+        }
+        r.flushSync();
+      } finally {
+        r.closeSync();
+      }
+      e.deleteSync();
+    } catch (_) {}
+  }
 }
 
 /// the seal over kryfo's files, once the vault is open: every file the
@@ -385,7 +477,11 @@ Future<void> openSeal({
     docs: docs,
     support: support,
     runtime: runtime == null ? null : (await paths.getTemporaryPath())!,
+    // windows has no folder in memory: its temporary files are on the disk,
+    // sealed under a key that never leaves this process
+    tmp: Platform.isWindows ? p.join(root, 'tmp') : null,
   )..filesKey = await filesKeyFrom(vault);
+  if (Platform.isWindows) areas.sessionKey = sessionKey();
   final io = SealedIO(areas, const EngineChunkCrypto());
   IOOverrides.global = io;
   // where code outside dart gets its copies when there is no memfd: on
@@ -409,19 +505,8 @@ Future<void> openSeal({
   for (final area in ['', '_k2', '_k3', '_k4', '*']) {
     if (vault.read(sweptEntry(area)) != null) areas.swept.add(area);
   }
-  // an area's sweep done once: from then a plain file there is damage
-  Future<void> sweep(String area, List<String> dirs) async {
-    if (areas.swept.contains(area)) return;
-    try {
-      for (final d in dirs) {
-        await runSealed(() => sealPlainUnder(d));
-      }
-      await vault.write(sweptEntry(area), '1');
-      areas.swept.add(area);
-    } catch (_) {
-      // the next start sweeps again
-    }
-  }
+  Future<void> sweep(String area, List<String> dirs) =>
+      sweepArea(areas, vault, area, dirs);
 
   final keys = ContainerKeys(
     areas,
@@ -489,6 +574,30 @@ Future<void> openSeal({
       vault.close();
     },
   );
+}
+
+/// an area's sweep, done once: from then a plain file there is damage.
+/// top level, so the job the isolate gets holds its folder alone: made
+/// inside openSeal it held openSeal's whole context, the vault with it,
+/// and isolate.run could not send it
+@visibleForTesting
+Future<void> sweepArea(
+  SealedAreas areas,
+  DesktopVault vault,
+  String area,
+  List<String> dirs,
+) async {
+  if (areas.swept.contains(area)) return;
+  try {
+    for (final d in dirs) {
+      await runSealed(sealUnderJob(d));
+    }
+    await vault.write(sweptEntry(area), '1');
+    areas.swept.add(area);
+  } catch (e, st) {
+    // the next start sweeps again
+    traceError('sweep', e, st);
+  }
 }
 
 /// the shared wipe's desktop steps, through [host]: the keys first,

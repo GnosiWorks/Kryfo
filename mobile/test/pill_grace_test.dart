@@ -92,6 +92,10 @@ void main() {
 
   group('the app', () {
     setUp(() {
+    // a relay answered before in this process, and the start's new
+    // messages are in: a quiet relay is waited for, not still connecting
+    appState.everUsableForTest = true;
+    appState.startCaughtForTest = true;
       SharedPreferences.setMockInitialValues({});
       FlutterSecureStorage.setMockInitialValues({});
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -160,6 +164,10 @@ void main() {
 
   group('the pill', () {
     setUp(() {
+    // a relay answered before in this process, and the start's new
+    // messages are in: a quiet relay is waited for, not still connecting
+    appState.everUsableForTest = true;
+    appState.startCaughtForTest = true;
       SharedPreferences.setMockInitialValues({});
       FlutterSecureStorage.setMockInitialValues({});
       appState.sendModeForTest = 'private';
@@ -181,7 +189,7 @@ void main() {
       );
       await t.pump(const Duration(milliseconds: 400));
       expect(find.text(l10n.appTorReady), findsOneWidget);
-      expect(find.text(l10n.appConnecting2), findsNothing);
+      expect(find.text(l10n.appStartingTor), findsNothing);
 
       // the same drop, longer than the grace
       appState.usableAtForTest = DateTime.now().subtract(
@@ -190,7 +198,7 @@ void main() {
       appState.setTorStatusForTest(TorStatus.starting);
       await t.pump(const Duration(milliseconds: 400));
       expect(find.text(l10n.appTorReady), findsNothing);
-      expect(find.text(l10n.appConnecting2), findsOneWidget);
+      expect(find.text(l10n.appStartingTor), findsOneWidget);
       await t.pumpWidget(const SizedBox());
     });
   });

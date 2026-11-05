@@ -1982,6 +1982,7 @@ class _InviteScreenState extends State<_InviteScreen> {
   }
 
   Future<void> _scan() async {
+    appState.warmHelloLane();
     final nav = Navigator.of(context);
     final raw = await nav.push<String>(haloRoute<String>(const ScanScreen()));
     // the scanner only hands the code back; takeOwnLink is what adds the

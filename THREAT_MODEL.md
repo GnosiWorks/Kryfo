@@ -185,9 +185,10 @@ FORWARD_SECRECY.md says what a key taken from a phone can open later.
 
 the linux and windows apps are test builds. a computer runs an identity of
 its own for now: linking it to your phone is built but switched off in 0.6.
-what Kryfo keeps on a computer is always sealed on the disk: the database,
+what Kryfo keeps on a computer is sealed on the disk: the database,
 photos, voice notes, files, contacts, keys and settings, under one random
-key. that key is kept one of two ways.
+key. windows has one exception, the engine's folder, below. that key is
+kept one of two ways.
 
 - by default the computer account keeps it: the system keyring on linux,
   windows' own data protection (with the tpm where there is one). Kryfo
@@ -219,6 +220,10 @@ key. that key is kept one of two ways.
 
 what follows is not covered by either.
 
+- on windows, the engine's folder (<root>\tmp\engine) sits unencrypted on
+  the disk while Kryfo runs, and after a crash until the next start: the
+  onion key, the relay marks and the top-up queue. sealing it comes in a
+  coming update. on linux that folder is kept in memory.
 - tor's own state stays on the disk as tor writes it: which relays it uses
   as guards and its cached directory. it holds no key and no message.
 - the folder shows its shape: how many files there are, how big each is and

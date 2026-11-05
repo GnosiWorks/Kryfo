@@ -4,13 +4,13 @@
 // engine seals, checks and orders every record; this side only moves bytes
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
 import '../engine_strings.dart' show engineTake, freeSecret;
+import '../native_libs.dart';
 
 /// the most one record takes on the wire: a chunk of a megabyte and its
 /// framing
@@ -86,9 +86,7 @@ typedef _Check = Pointer<Utf8> Function(int, Pointer<Utf8>);
 typedef _TallyC = Int32 Function(Int64, Pointer<Utf8>, Pointer<Uint8>, Int32);
 typedef _Tally = int Function(int, Pointer<Utf8>, Pointer<Uint8>, int);
 
-DynamicLibrary _lib() => Platform.isAndroid
-    ? DynamicLibrary.open('libhalo.so')
-    : DynamicLibrary.process();
+DynamicLibrary _lib() => haloLibrary();
 
 /// the engine refused a record. [forGood] when the stream cannot go on;
 /// otherwise the same record may be sent again

@@ -8,7 +8,6 @@
 // the engine through the signal library, never here
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
@@ -16,6 +15,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../engine_strings.dart' show engineTake;
+import '../native_libs.dart';
 import 'device_store.dart';
 import 'linked_switch.dart';
 
@@ -66,11 +66,7 @@ typedef _DevShim = Pointer<Utf8> Function(Pointer<Utf8>);
 /// the engine's three calls
 class DeviceEngine {
   DeviceEngine([DynamicLibrary? lib]) {
-    final l =
-        lib ??
-        (Platform.isAndroid
-            ? DynamicLibrary.open('libhalo.so')
-            : DynamicLibrary.process());
+    final l = lib ?? haloLibrary();
     _call = l.lookupFunction<_DevCallC, _DevCall>('HaloDevCall');
     _session = l.lookupFunction<_DevCallC, _DevCall>('HaloDevSession');
     _shim = l.lookupFunction<_DevShimC, _DevShim>('HaloDevShim');
