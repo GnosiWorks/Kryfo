@@ -217,6 +217,8 @@ Future<String> _sendChunkedMediaInner({
   }
   if (mediaCancelled.contains(msgUid)) return 'cancelled';
   if (!appState.torReady) return 'error: tor not ready';
+  // a gif shows no share on either side: it just appears
+  final gif = quietMedia(path, fileName: fileName, voice: voice);
   // a photo is cleaned on every send, retries and the outbox included
   if (fileName == null && !voice) {
     final cleaned = await cleanSavedPhoto(path);
@@ -242,7 +244,12 @@ Future<String> _sendChunkedMediaInner({
   if (total > 1 && only == null && await appState.dropsFor(peerId)) {
     final bytes = await File(path).length();
     if (dropFits(bytes)) {
-      mediaProgressStart(msgUid, chatKey: progressKey, bytes: bytes);
+      mediaProgressStart(
+        msgUid,
+        chatKey: progressKey,
+        bytes: bytes,
+        quiet: gif,
+      );
       final (sent, r) = await appState.sendDrop(
         path: path,
         uid: msgUid,
@@ -273,6 +280,7 @@ Future<String> _sendChunkedMediaInner({
       msgUid,
       chatKey: progressKey,
       bytes: drop?.size ?? total * _sliceBytes,
+      quiet: gif,
     );
   }
   int? pow;
@@ -393,6 +401,7 @@ Future<String> _sendChunkedMediaInner({
           secure: secure,
           replyTo: replyTo,
           album: album,
+          gif: gif,
           powNonce: pow,
           powBitsUsed: pow == null ? null : powBits,
           supporterBadge: await appState.sharedBadge(),

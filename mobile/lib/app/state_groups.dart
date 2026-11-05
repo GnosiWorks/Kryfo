@@ -575,6 +575,8 @@ extension AppStateGroups on AppState {
     AlbumTag? album,
   }) async {
     final written = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
+    // a gif shows no share on either side: it just appears
+    final gif = quietMedia(path, fileName: fileName, voice: voice);
     // one send per media at a time, the same set the 1:1 path holds. the
     // drainer picks up any row older than 45 s, and a video to a group is
     // still leaving long after that: both would send the whole file.
@@ -651,6 +653,7 @@ extension AppStateGroups on AppState {
           msgUid,
           chatKey: d.container.chatKey(groupId),
           bytes: await File(path).length(),
+          quiet: gif,
         );
       }
       final (sent, r) = await sendDrop(
@@ -694,6 +697,7 @@ extension AppStateGroups on AppState {
       progressKey: owed == null ? d.container.chatKey(groupId) : null,
       owed: owed,
       hold: () => everydayHeld,
+      quiet: gif,
       // a member left short is sent the rest later, from the outbox
       onShort: (short, total) async {
         // the send went either way: a row not written costs that member
@@ -737,6 +741,7 @@ extension AppStateGroups on AppState {
           burnSeconds: burnSeconds,
           replyTo: replyTo,
           album: album,
+          gif: gif,
           groupId: groupId,
           roster: ids,
           rosterParticipants: parts,

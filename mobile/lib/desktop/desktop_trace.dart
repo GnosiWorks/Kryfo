@@ -15,6 +15,9 @@ void startTrace(String root) {
   trace('start ${Platform.operatingSystem}');
 }
 
+/// whether lines are written
+bool get tracing => _file != null;
+
 void trace(String line) {
   final f = _file;
   if (f == null) return;
