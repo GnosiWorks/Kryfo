@@ -11407,6 +11407,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get linkedLinkOnPhone => 'Buka tautan ini di ponselmu.';
 
   @override
+  String get linkedDoOnPhone => 'Lakukan ini di ponselmu.';
+
+  @override
   String get tipsTitle => 'Dukung Kryfo';
 
   @override

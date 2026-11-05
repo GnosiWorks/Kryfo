@@ -18307,6 +18307,12 @@ abstract class AppLocalizations {
   /// **'Open this link on your phone.'**
   String get linkedLinkOnPhone;
 
+  /// group_info_screen.dart and the group menu: on a linked device, where a group's rename, add, remove, end, leave and screenshot switch would be; they are the phone's
+  ///
+  /// In en, this message translates to:
+  /// **'Do this on your phone.'**
+  String get linkedDoOnPhone;
+
   /// screens/tip_screen.dart: the play build support tab title and the section on me
   ///
   /// In en, this message translates to:

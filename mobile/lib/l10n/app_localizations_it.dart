@@ -11495,6 +11495,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get linkedLinkOnPhone => 'Apri questo link sul tuo telefono.';
 
   @override
+  String get linkedDoOnPhone => 'Fallo dal tuo telefono.';
+
+  @override
   String get tipsTitle => 'Sostieni Kryfo';
 
   @override
