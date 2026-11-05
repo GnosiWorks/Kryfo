@@ -27,6 +27,7 @@ import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../wide/wide_pane.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 // the page about the audit backers help pay for. sent as is: no query, no tag
 const kAuditUrl = 'https://kryfo.app/audit';
@@ -218,25 +219,27 @@ class _DonateScreenState extends State<DonateScreen> {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _hero(),
-              const SizedBox(height: 18),
-              _auditRow(),
-              const SizedBox(height: 22),
-              if (kBadgeTiersShown) ...[
-                _tiers(),
-                const SizedBox(height: 10),
-                _cardUnderTiers(),
+      body: DeskPage(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _hero(),
+                const SizedBox(height: 18),
+                _auditRow(),
                 const SizedBox(height: 22),
+                if (kBadgeTiersShown) ...[
+                  _tiers(),
+                  const SizedBox(height: 10),
+                  _cardUnderTiers(),
+                  const SizedBox(height: 22),
+                ],
+                _cryptoPane(),
+                const SizedBox(height: 26),
               ],
-              _cryptoPane(),
-              const SizedBox(height: 26),
-            ],
+            ),
           ),
         ),
       ),
@@ -1211,25 +1214,27 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: SafeArea(
-        // reduced motion: a new phase without animation
-        child: AnimatedSwitcher(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 280),
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: SlideTransition(
-              position: Tween(
-                begin: const Offset(0, 0.02),
-                end: Offset.zero,
-              ).animate(anim),
-              child: child,
+      body: DeskPage(
+        child: SafeArea(
+          // reduced motion: a new phase without animation
+          child: AnimatedSwitcher(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 0.02),
+                  end: Offset.zero,
+                ).animate(anim),
+                child: child,
+              ),
             ),
+            child: _body(),
           ),
-          child: _body(),
         ),
       ),
     );

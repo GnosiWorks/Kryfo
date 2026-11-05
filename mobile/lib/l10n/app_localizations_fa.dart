@@ -11275,6 +11275,41 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceNotNow => 'فعلاً نه';
 
   @override
+  String get albumPrevious => 'قبلی';
+
+  @override
+  String get albumNext => 'بعدی';
+
+  @override
+  String get notesHoldHintDesk =>
+      'برای کپی یا حذف، روی یادداشت راست‌کلیک کنید.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'هنوز چیزی این‌جا سنجاق نشده. روی پیامی راست‌کلیک کنید و «سنجاق» را انتخاب کنید تا این‌جا برای همه‌ی اعضای گفت‌وگو بماند.';
+
+  @override
+  String get chatGalleryDesk => 'تصویرها';
+
+  @override
+  String get groupChatGalleryDesk => 'تصویرها';
+
+  @override
+  String get photoChooseDesk => 'انتخاب فایل تصویر';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'از یک فایل تصویر';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'صدا';
+
+  @override
+  String get notificationsPlaySound => 'پخش صدا';
+
+  @override
+  String get notificationsPlaySoundHint => 'با هر اعلان روی این رایانه';
+
+  @override
   String bridgesShareBridgeN(String n) {
     return 'اشتراک پل ⁨$n⁩';
   }

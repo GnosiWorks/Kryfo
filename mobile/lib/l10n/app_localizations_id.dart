@@ -11264,6 +11264,42 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceNotNow => 'Nanti saja';
 
   @override
+  String get albumPrevious => 'Sebelumnya';
+
+  @override
+  String get albumNext => 'Berikutnya';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Klik kanan sebuah catatan untuk menyalin atau menghapusnya.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Belum ada yang disematkan di sini. Klik kanan sebuah pesan lalu pilih Sematkan, dan pesan itu menunggu di sini untuk semua orang di obrolan.';
+
+  @override
+  String get chatGalleryDesk => 'Gambar';
+
+  @override
+  String get groupChatGalleryDesk => 'Gambar';
+
+  @override
+  String get photoChooseDesk => 'Pilih file gambar';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Dari file gambar';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Suara';
+
+  @override
+  String get notificationsPlaySound => 'Putar suara';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Di setiap notifikasi di komputer ini';
+
+  @override
   String bridgesShareBridgeN(String n) {
     return 'Bagikan jembatan $n';
   }

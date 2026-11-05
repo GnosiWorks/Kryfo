@@ -27,6 +27,7 @@ import 'chat_screen.dart';
 import '../scam_shield.dart' show ShieldFlag, requestTitle;
 import '../widgets/motion.dart' show haloRoute;
 import '../l10n/l10n.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 // the requests screens open in the stack: a request's tap goes back to one
 // rather than stacking another
@@ -325,32 +326,39 @@ class _RequestsScreenState extends State<RequestsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _rows.built());
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            PageBar(title: l10n.requestsRequests, controller: _scroll),
-            Expanded(
-              child: _loading
-                  ? const SizedBox.shrink()
-                  // the last card folds away, then the empty page fades in
-                  : FadeSwap(
-                      child: rows.isEmpty
-                          ? KeyedSubtree(
-                              key: const ValueKey('none'),
-                              child: _empty(),
-                            )
-                          : ListView(
-                              key: const ValueKey('cards'),
-                              controller: _scroll,
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-                              children: [
-                                for (final (i, row) in rows.indexed)
-                                  _card(row, i),
-                              ],
-                            ),
-                    ),
-            ),
-          ],
+      body: DeskPage(
+        child: SafeArea(
+          child: Column(
+            children: [
+              PageBar(title: l10n.requestsRequests, controller: _scroll),
+              Expanded(
+                child: _loading
+                    ? const SizedBox.shrink()
+                    // the last card folds away, then the empty page fades in
+                    : FadeSwap(
+                        child: rows.isEmpty
+                            ? KeyedSubtree(
+                                key: const ValueKey('none'),
+                                child: _empty(),
+                              )
+                            : ListView(
+                                key: const ValueKey('cards'),
+                                controller: _scroll,
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  8,
+                                  16,
+                                  14,
+                                ),
+                                children: [
+                                  for (final (i, row) in rows.indexed)
+                                    _card(row, i),
+                                ],
+                              ),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

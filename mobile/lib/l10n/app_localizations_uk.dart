@@ -11442,6 +11442,42 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voiceNotNow => 'Не зараз';
 
   @override
+  String get albumPrevious => 'Попереднє';
+
+  @override
+  String get albumNext => 'Наступне';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Клацни правою кнопкою на нотатці, щоб скопіювати або видалити її.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Тут ще нічого не закріплено. Клацни правою кнопкою на повідомленні й вибери «Закріпити», і воно чекатиме тут для всіх у чаті.';
+
+  @override
+  String get chatGalleryDesk => 'Зображення';
+
+  @override
+  String get groupChatGalleryDesk => 'Зображення';
+
+  @override
+  String get photoChooseDesk => 'Вибрати файл зображення';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'З файлу зображення';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Звук';
+
+  @override
+  String get notificationsPlaySound => 'Відтворювати звук';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'З кожним сповіщенням на цьому комп’ютері';
+
+  @override
   String bridgesShareBridgeN(String n) {
     return 'Поділитися мостом $n';
   }

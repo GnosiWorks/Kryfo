@@ -18,11 +18,13 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../engine_strings.dart';
 import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session, sessionQuiet;
 import '../translate/downloads.dart';
 import '../translate/engine_bridge.dart' show FetchStatus;
+import '../transfers.dart' show unmeteredNow;
 import '../translate/hub_live.dart' show translationHubIfOn;
 import 'transcript_store.dart';
 import 'voice_audio.dart';
@@ -483,7 +485,9 @@ VoiceTranscripts _live() {
   return t;
 }
 
+// a computer: a cable or a vpn counts as wi-fi does for its downloads
 Future<bool> _onWifi() async {
+  if (onDesktop) return unmeteredNow();
   try {
     return (await Connectivity().checkConnectivity()).contains(
       ConnectivityResult.wifi,

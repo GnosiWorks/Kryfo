@@ -14135,6 +14135,50 @@
   "@voiceNotNow": {
     "description": "closes the model download sheet without downloading"
   },
+  "albumPrevious": "Previous",
+  "@albumPrevious": {
+    "description": "a computer: the round button at an album's side that goes back one photo or video"
+  },
+  "albumNext": "Next",
+  "@albumNext": {
+    "description": "a computer: the round button at an album's side that goes on one photo or video"
+  },
+  "notesHoldHintDesk": "Right-click a note to copy or delete it.",
+  "@notesHoldHintDesk": {
+    "description": "a computer: notesHoldHint with a right click in place of the hold"
+  },
+  "pinsNothingPinnedHereYetDesk": "Nothing pinned here yet. Right-click a message and choose Pin, and it waits here for everyone in the chat.",
+  "@pinsNothingPinnedHereYetDesk": {
+    "description": "a computer: pinsNothingPinnedHereYet with a right click in place of the hold"
+  },
+  "chatGalleryDesk": "Pictures",
+  "@chatGalleryDesk": {
+    "description": "a computer: the attach menu's photo row, which opens the file picker for pictures"
+  },
+  "groupChatGalleryDesk": "Pictures",
+  "@groupChatGalleryDesk": {
+    "description": "a computer: the group attach menu's photo row, which opens the file picker for pictures"
+  },
+  "photoChooseDesk": "Choose a picture file",
+  "@photoChooseDesk": {
+    "description": "a computer: the photo sheet's row that opens the file picker for a picture"
+  },
+  "wallpaperFromYourPhotosDesk": "From a picture file",
+  "@wallpaperFromYourPhotosDesk": {
+    "description": "a computer: the wallpaper row that opens the file picker for a picture"
+  },
+  "notificationsSoundAndVibrationDesk": "Sound",
+  "@notificationsSoundAndVibrationDesk": {
+    "description": "a computer: the notifications page's section with the sound switch"
+  },
+  "notificationsPlaySound": "Play a sound",
+  "@notificationsPlaySound": {
+    "description": "a computer: the switch that lets a notification make its sound"
+  },
+  "notificationsPlaySoundHint": "With each notification on this computer",
+  "@notificationsPlaySoundHint": {
+    "description": "a computer: the line under the sound switch"
+  },
   "bridgesShareBridgeN": "Share bridge {n}",
   "@bridgesShareBridgeN": {
     "description": "screens/bridges_screen.dart: the share button on a saved bridge line, for screen readers",

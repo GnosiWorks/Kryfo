@@ -11406,6 +11406,41 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceNotNow => 'ليس الآن';
 
   @override
+  String get albumPrevious => 'السابق';
+
+  @override
+  String get albumNext => 'التالي';
+
+  @override
+  String get notesHoldHintDesk =>
+      'انقر بزر الفأرة الأيمن على ملاحظة لنسخها أو حذفها.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'لا شيء مثبّت هنا بعد. انقر بزر الفأرة الأيمن على رسالة واختر «تثبيت»، فتنتظر هنا للجميع في المحادثة.';
+
+  @override
+  String get chatGalleryDesk => 'الصور';
+
+  @override
+  String get groupChatGalleryDesk => 'الصور';
+
+  @override
+  String get photoChooseDesk => 'اختر ملف صورة';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'من ملف صورة';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'الصوت';
+
+  @override
+  String get notificationsPlaySound => 'تشغيل صوت';
+
+  @override
+  String get notificationsPlaySoundHint => 'مع كل إشعار على هذا الحاسوب';
+
+  @override
   String bridgesShareBridgeN(String n) {
     return 'مشاركة الجسر ⁨$n⁩';
   }

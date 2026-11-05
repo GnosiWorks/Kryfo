@@ -11289,6 +11289,41 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceNotNow => 'Şimdi değil';
 
   @override
+  String get albumPrevious => 'Önceki';
+
+  @override
+  String get albumNext => 'Sonraki';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Kopyalamak ya da silmek için bir nota sağ tıkla.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Henüz sabitlenen bir şey yok. Bir mesaja sağ tıkla ve Sabitle’yi seç; sohbetteki herkes için burada durur.';
+
+  @override
+  String get chatGalleryDesk => 'Resimler';
+
+  @override
+  String get groupChatGalleryDesk => 'Resimler';
+
+  @override
+  String get photoChooseDesk => 'Bir resim dosyası seç';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Bir resim dosyasından';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Ses';
+
+  @override
+  String get notificationsPlaySound => 'Ses çal';
+
+  @override
+  String get notificationsPlaySoundHint => 'Bu bilgisayardaki her bildirimde';
+
+  @override
   String bridgesShareBridgeN(String n) {
     return '$n. köprüyü paylaş';
   }

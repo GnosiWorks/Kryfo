@@ -11270,6 +11270,41 @@ class AppLocalizationsHi extends AppLocalizations {
   String get voiceNotNow => 'अभी नहीं';
 
   @override
+  String get albumPrevious => 'पिछला';
+
+  @override
+  String get albumNext => 'अगला';
+
+  @override
+  String get notesHoldHintDesk =>
+      'कॉपी या डिलीट करने के लिए नोट पर राइट-क्लिक करें।';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'यहाँ अभी कुछ पिन नहीं है। किसी मैसेज पर राइट-क्लिक करें और पिन करें चुनें, वह यहाँ चैट के सभी लोगों के लिए रहेगा।';
+
+  @override
+  String get chatGalleryDesk => 'तस्वीरें';
+
+  @override
+  String get groupChatGalleryDesk => 'तस्वीरें';
+
+  @override
+  String get photoChooseDesk => 'तस्वीर की फ़ाइल चुनें';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'तस्वीर की फ़ाइल से';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'आवाज़';
+
+  @override
+  String get notificationsPlaySound => 'आवाज़ चलाएँ';
+
+  @override
+  String get notificationsPlaySoundHint => 'इस कंप्यूटर पर हर सूचना के साथ';
+
+  @override
   String bridgesShareBridgeN(String n) {
     return 'ब्रिज $n शेयर करें';
   }

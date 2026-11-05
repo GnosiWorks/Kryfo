@@ -105,10 +105,15 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
     id: id,
     title: title,
     body: body,
-    notificationDetails: const LinuxNotificationDetails(),
+    notificationDetails: quietDetails(),
     payload: payload,
   );
 }
+
+/// a post's details: its sound as the notifications page's switch has it
+@visibleForTesting
+LinuxNotificationDetails quietDetails() =>
+    LinuxNotificationDetails(suppressSound: !deskSound.value);
 
 /// no camera plugin for desktop yet: none to offer, so the scan and the
 /// camera screens say so instead of waiting on a reader that never starts
@@ -355,6 +360,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
             host: host,
             paths: paths,
           );
+          await readDeskSound();
           await appMain();
         }());
       },

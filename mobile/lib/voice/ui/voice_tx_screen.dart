@@ -14,6 +14,7 @@ import '../../widgets/halo_rows.dart';
 import '../../widgets/stagger_in.dart';
 import '../voice_transcripts.dart';
 import 'model_sheet.dart';
+import '../../wide/read_width.dart' show DeskPage;
 
 class VoiceTxScreen extends StatefulWidget {
   final VoiceTranscripts hub;
@@ -50,72 +51,74 @@ class _VoiceTxScreenState extends State<VoiceTxScreen> {
         leading: BackButton(color: HaloColors.text2),
         title: Text(l10n.voiceSettingsTitle, style: HaloType.pageTitle()),
       ),
-      body: ListenableBuilder(
-        listenable: hub,
-        builder: (context, _) {
-          final s = hub.settings;
-          return ListView(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              8,
-              20,
-              32 + MediaQuery.paddingOf(context).bottom,
-            ),
-            children: staggerAll([
-              HaloGroup(
-                children: [
-                  HaloRow(
-                    key: const ValueKey('voice-tx-on'),
-                    icon: Icons.notes_rounded,
-                    label: l10n.voiceOnRow,
-                    hint: l10n.voiceOnHint,
-                    toggled: s.on,
-                    pending: !_read,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      hub.setOn(!s.on);
-                    },
-                  ),
-                ],
+      body: DeskPage(
+        child: ListenableBuilder(
+          listenable: hub,
+          builder: (context, _) {
+            final s = hub.settings;
+            return ListView(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                8,
+                20,
+                32 + MediaQuery.paddingOf(context).bottom,
               ),
-              Padding(
-                key: const ValueKey('voice-tx-off-note'),
-                padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 4, 0),
-                child: Text(l10n.voiceOffDeletes, style: note),
-              ),
-              HaloSection(l10n.voiceModelTitle),
-              _ModelCard(hub: hub),
-              HaloSection(l10n.translatePrivacyTitle),
-              Container(
-                key: const ValueKey('voice-tx-privacy'),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: HaloColors.surface2,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: HaloColors.line, width: 0.5),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              children: staggerAll([
+                HaloGroup(
                   children: [
-                    Icon(
-                      Icons.phone_android_rounded,
-                      size: 18,
-                      color: HaloColors.amberText,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        '${l10n.voiceModelPrivacyShown} '
-                        '${l10n.voiceKeptNoteShown}',
-                        style: note.copyWith(height: 1.45),
-                      ),
+                    HaloRow(
+                      key: const ValueKey('voice-tx-on'),
+                      icon: Icons.notes_rounded,
+                      label: l10n.voiceOnRow,
+                      hint: l10n.voiceOnHint,
+                      toggled: s.on,
+                      pending: !_read,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        hub.setOn(!s.on);
+                      },
                     ),
                   ],
                 ),
-              ),
-            ]),
-          );
-        },
+                Padding(
+                  key: const ValueKey('voice-tx-off-note'),
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 4, 0),
+                  child: Text(l10n.voiceOffDeletes, style: note),
+                ),
+                HaloSection(l10n.voiceModelTitle),
+                _ModelCard(hub: hub),
+                HaloSection(l10n.translatePrivacyTitle),
+                Container(
+                  key: const ValueKey('voice-tx-privacy'),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: HaloColors.surface2,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: HaloColors.line, width: 0.5),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.phone_android_rounded,
+                        size: 18,
+                        color: HaloColors.amberText,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          '${l10n.voiceModelPrivacyShown} '
+                          '${l10n.voiceKeptNoteShown}',
+                          style: note.copyWith(height: 1.45),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ]),
+            );
+          },
+        ),
       ),
     );
   }

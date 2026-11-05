@@ -11353,6 +11353,41 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voiceNotNow => 'Non ora';
 
   @override
+  String get albumPrevious => 'Precedente';
+
+  @override
+  String get albumNext => 'Successivo';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Fai clic destro su una nota per copiarla o eliminarla.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Ancora niente di fissato qui. Fai clic destro su un messaggio e scegli Fissa: resterà qui per tutti nella chat.';
+
+  @override
+  String get chatGalleryDesk => 'Immagini';
+
+  @override
+  String get groupChatGalleryDesk => 'Immagini';
+
+  @override
+  String get photoChooseDesk => 'Scegli un file immagine';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Da un file immagine';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Suono';
+
+  @override
+  String get notificationsPlaySound => 'Riproduci un suono';
+
+  @override
+  String get notificationsPlaySoundHint => 'A ogni notifica su questo computer';
+
+  @override
   String bridgesShareBridgeN(String n) {
     return 'Condividi bridge $n';
   }
