@@ -13,9 +13,12 @@ import 'package:kryfo/group_media_send.dart' show kGroupOwedTries;
 import 'package:kryfo/main.dart'
     show
         AppState,
+        GroupOnPhone,
         HaloDb,
         HaloEngine,
         groupUnsendRow,
+        linkedRoleForTest,
+        AppStateGroupShots,
         useDatabasesForTest,
         useEngineForTest,
         AppStateOutbox,
@@ -376,6 +379,43 @@ void main() {
       await tick(app);
       expect(io.got('carol'), ['ctl:create']);
       expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test('on a linked device a group is changed on the phone alone: a rename, '
+        'add, remove, end, leave or screenshot switch is refused and nothing '
+        'goes', () async {
+      final g = await app.createGroupAndAnnounce('Trip', ['bob', 'carol']);
+      await app.ctlPassForTest;
+      linkedRoleForTest = true;
+      addTearDown(() => linkedRoleForTest = false);
+      final asks = <String, Future<Object?> Function()>{
+        'rename': () => app.renameGroupAndAnnounce(g, 'Trip two'),
+        'add': () => app.addMembersToGroup(g, ['dave']),
+        'remove': () => app.removeMembersFromGroup(g, ['carol']),
+        'end': () => app.endGroupAndAnnounce(g),
+        'leave': () => app.leaveGroupAndAnnounce(g),
+        'shots': () => app.setGroupShots(g, true),
+      };
+      for (final e in asks.entries) {
+        await expectLater(
+          e.value(),
+          throwsA(isA<GroupOnPhone>()),
+          reason: e.key,
+        );
+      }
+      await tick(app);
+      expect(io.got('bob'), ['ctl:create']);
+      expect(io.got('carol'), ['ctl:create']);
+      expect(io.got('dave'), isEmpty);
+      expect(mem.rows('group_ctl_out'), isEmpty);
+      expect((await db.getGroup(g))?['name'], 'Trip');
+      expect(await db.getGroupMembers(g), ['me', 'bob', 'carol']);
+      expect((await db.groupShotsOf(g)).on, isFalse);
+      // the phone changes it
+      linkedRoleForTest = false;
+      await app.renameGroupAndAnnounce(g, 'Trip two');
+      await tick(app);
+      expect(io.got('bob'), ['ctl:create', 'ctl:rename']);
     });
 
     test('a quiet session queues nothing', () {

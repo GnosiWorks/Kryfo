@@ -47,6 +47,7 @@ void _bootDeviceSend(DeviceState ds) {
     },
     wire: _EngineDeviceWire(),
     listen: engine.deviceListenBg,
+    door: _devDoor,
     hiddenRemovals: true,
     changed: (changes) {
       final a = _madeApp;

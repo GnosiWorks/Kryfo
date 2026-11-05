@@ -15,6 +15,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show
         AppState,
+        GroupOnPhone,
         HaloEngine,
         kTorClientAddr,
         linkedRoleForTest,
@@ -176,7 +177,7 @@ void main() {
     final app = AppState();
     await expectLater(
       app.createGroupAndAnnounce('Night shift', ['other-kryfo-id']),
-      throwsStateError,
+      throwsA(isA<GroupOnPhone>()),
     );
     expect(eng.calls, isEmpty);
   });

@@ -53,7 +53,9 @@ void main() {
     final body = shotsBodyOf(await wrapMessage('hi', msgUid: 'u1'))!;
     capsPut(body);
     final env = unwrapMessage('halo/1:${jsonEncode(body)}');
-    expect(env.caps, kMyCaps);
+    // with linked devices on in every build, the devices word too
+    expect(env.caps, myCaps);
+    expect(env.caps, contains(kCapDevices));
     expect(env.caps, contains(kCapTyping));
     expect(unwrapMessage(await wrapMessage('hi')).caps, isNull);
   });

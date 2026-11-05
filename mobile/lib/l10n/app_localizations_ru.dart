@@ -7193,12 +7193,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsConnected => 'Подключено';
 
   @override
-  String get settingsScreenshots => 'Скриншоты';
-
-  @override
-  String get settingsBlocked2 => 'Запрещены';
-
-  @override
   String get settingsOn => 'Вкл.';
 
   @override
@@ -7215,6 +7209,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Резервная копия';
+
+  @override
+  String get settingsProtectBackup => 'Резервная копия';
+
+  @override
+  String get settingsBackupNotYet => 'Пока нет';
+
+  @override
+  String get settingsBackupToday => 'Сегодня';
+
+  @override
+  String get settingsBackupYesterday => 'Вчера';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count дня назад',
+      many: '$count дней назад',
+      few: '$count дня назад',
+      one: '$count день назад',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Голос';
@@ -8979,9 +8998,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get roomShotsAlwaysOnDesk =>
       'В комнате включено всегда, в Kryfo для Android';
-
-  @override
-  String get settingsPerChat => 'Для каждого чата';
 
   @override
   String get homeShotsPerChat =>
@@ -11242,6 +11258,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get desktopPassRow => 'Парольная фраза на этом компьютере';
 
   @override
+  String get desktopPassWindowsAccount =>
+      'Защищено вашей учётной записью Windows';
+
+  @override
+  String get desktopPassKeyring => 'Защищено вашей связкой ключей';
+
+  @override
   String get desktopPassOffBody => 'Kryfo открывается с вашей учётной записью.';
 
   @override
@@ -11345,9 +11368,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String settingsVersionAlpha(String version) {
     return '$version · альфа';
   }
-
-  @override
-  String get settingsShotsNotHereYet => 'На этом компьютере пока нет';
 
   @override
   String get settingsDeskInTray => 'Работает в области уведомлений';
@@ -11589,6 +11609,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'Откройте эту ссылку на телефоне.';
+
+  @override
+  String get linkedDoOnPhone => 'Сделайте это на телефоне.';
 
   @override
   String get tipsTitle => 'Поддержать Kryfo';

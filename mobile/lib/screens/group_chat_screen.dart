@@ -15,6 +15,7 @@ import '../forward.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../widgets/desk_menu.dart';
 import '../widgets/sealed_picture.dart';
+import '../widgets/photo_shape.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
@@ -27,7 +28,6 @@ import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/owned_text.dart';
-import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
@@ -76,6 +76,7 @@ import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
         typeLeaf,
+        linkedRole,
         appState,
         AppStateFiles,
         kNotSent,
@@ -4830,7 +4831,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               // its admin went with "this isn't them": the group is frozen here
               EaseSize(
                 child: _adminGone && _end == null
-                    ? _AdminGoneLine(onLeave: _leaveAdminGone)
+                    ? _AdminGoneLine(
+                        // a linked device leaves on its phone (GroupOnPhone)
+                        onLeave: linkedRole ? null : _leaveAdminGone,
+                      )
                     : const SizedBox(width: double.infinity, height: 0),
               ),
               // a send that has waited on tor a minute gets a way out
@@ -6522,52 +6526,54 @@ class _GroupBubble extends StatelessWidget {
                                                           ),
                                                       child: Stack(
                                                         children: [
-                                                          ConstrainedBox(
-                                                            constraints:
-                                                                const BoxConstraints(
-                                                                  maxHeight:
-                                                                      280,
-                                                                  maxWidth: 240,
-                                                                ),
-                                                            child: RememberedHeight(
-                                                              id: m.mediaPath!,
-                                                              child: HaloHero(
-                                                                tag: photoHeroTag(
-                                                                  m.mediaPath!,
-                                                                  'chat',
-                                                                ),
-                                                                child: ChatPicture(
+                                                          // the photo's own shape, its blur
+                                                          // the same, before the file decodes
+                                                          PhotoShape(
+                                                            path: m.mediaPath!,
+                                                            image: mediaImage(
+                                                              m.mediaPath!,
+                                                              decodePx(
+                                                                context,
+                                                                240,
+                                                              ),
+                                                            ),
+                                                            maxWidth: 240,
+                                                            maxHeight: 280,
+                                                            child: HaloHero(
+                                                              tag: photoHeroTag(
+                                                                m.mediaPath!,
+                                                                'chat',
+                                                              ),
+                                                              child: ChatPicture(
+                                                                path: m
+                                                                    .mediaPath!,
+                                                                child: SealedPicture(
                                                                   path: m
                                                                       .mediaPath!,
-                                                                  child: SealedPicture(
-                                                                    path: m
-                                                                        .mediaPath!,
-                                                                    shaped:
-                                                                        true,
-                                                                    decodeWidth:
-                                                                        decodePx(
-                                                                          context,
-                                                                          240,
-                                                                        ),
-                                                                    image: mediaImage(
-                                                                      m.mediaPath!,
+                                                                  shaped: false,
+                                                                  decodeWidth:
                                                                       decodePx(
                                                                         context,
                                                                         240,
                                                                       ),
+                                                                  image: mediaImage(
+                                                                    m.mediaPath!,
+                                                                    decodePx(
+                                                                      context,
+                                                                      240,
                                                                     ),
-                                                                    semanticLabel:
-                                                                        l10n.appPhoto,
-                                                                    // the file is gone:
-                                                                    // say so, not a gap
-                                                                    errorBuilder:
-                                                                        (
-                                                                          _,
-                                                                          _,
-                                                                          _,
-                                                                        ) =>
-                                                                            const _MissingPhoto(),
                                                                   ),
+                                                                  semanticLabel:
+                                                                      l10n.appPhoto,
+                                                                  // the file is gone:
+                                                                  // say so, not a gap
+                                                                  errorBuilder:
+                                                                      (
+                                                                        _,
+                                                                        _,
+                                                                        _,
+                                                                      ) =>
+                                                                          const _MissingPhoto(),
                                                                 ),
                                                               ),
                                                             ),
@@ -7271,7 +7277,7 @@ class _MissingPhoto extends StatelessWidget {
 // the line in a group whose admin "this isn't them" took off this phone:
 // nothing it changes reaches here, and the way out
 class _AdminGoneLine extends StatelessWidget {
-  final VoidCallback onLeave;
+  final VoidCallback? onLeave;
   const _AdminGoneLine({required this.onLeave});
 
   @override
@@ -7304,26 +7310,30 @@ class _AdminGoneLine extends StatelessWidget {
               ),
             ),
           ),
-          Semantics(
-            button: true,
-            child: PressScale(
-              onTap: onLeave,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                alignment: Alignment.center,
-                color: Colors.transparent,
-                child: Text(
-                  l10n.groupInfoLeave,
-                  style: HaloType.sans(
-                    size: 13,
-                    weight: FontWeight.w600,
-                    color: HaloColors.roseText,
+          if (onLeave != null)
+            Semantics(
+              button: true,
+              child: PressScale(
+                onTap: onLeave,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  alignment: Alignment.center,
+                  color: Colors.transparent,
+                  child: Text(
+                    l10n.groupInfoLeave,
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: HaloColors.roseText,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -151,6 +151,7 @@ final frameParams = <String, Object>{
   'shotsNudge': true,
   'writtenAt': 1791393419123,
   'album': const AlbumTag('0123456789abcdef', 4, 1),
+  'gif': true,
   'drop': DropFrame(
     host: kDropHost,
     id: 'ab' * 16,
@@ -224,6 +225,7 @@ Future<String> buildFrame(Set<String> on, {String m = 'hello marios'}) =>
       shotsNudge: on.contains('shotsNudge'),
       writtenAt: _param(on, 'writtenAt'),
       album: _param(on, 'album'),
+      gif: on.contains('gif'),
       drop: _param(on, 'drop'),
     );
 
@@ -381,5 +383,6 @@ Map<String, Object?> frameRead(String wrapped) {
     'pb': u.powBitsUsed,
     'w': u.writtenAt,
     'al': u.album?.toWire(),
+    'gf': u.gif,
   };
 }

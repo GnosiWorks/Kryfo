@@ -49,6 +49,7 @@ extension AppStateGroupShots on AppState {
   /// everyone once every member's app can. off goes at once. in a decoy it
   /// stays on this phone and is on for everyone from the start
   Future<void> setGroupShots(String groupId, bool on) async {
+    if (linkedRole) throw const GroupOnPhone();
     final d = session.groupDb(groupId);
     final row = await d.getGroup(groupId);
     final members = await d.getGroupMembers(groupId);
@@ -282,7 +283,8 @@ extension AppStateGroupShots on AppState {
     String? groupId,
     String? member,
   }) async {
-    if (d.container.quiet) return;
+    // the phone runs its groups' block: a linked device sends no word of it
+    if (d.container.quiet || linkedRole) return;
     try {
       final ids = groupId != null
           ? [groupId]

@@ -2,7 +2,7 @@
 // your own linked devices in settings: this phone alone, linked computers
 // with their day and use, the amber line before the 30 days run out,
 // removing one or all, renaming, the five limit, and the link page's
-// history choice. scanning stays off until linking is wired. right to left,
+// history choice. a source that cannot link keeps scanning off. right to left,
 // big text, reduced motion and both themes each hold
 import 'package:flutter/material.dart';
 import 'dart:ui' show CheckedState;
@@ -214,8 +214,9 @@ void main() {
     expect(deviceNameOf('电' * kDeviceNameMax), isNotNull);
   });
 
-  test('linked devices stay out of builds until linking is wired', () {
-    expect(kLinkedDevicesOn, isFalse);
+  test('linked devices are in this build; the stand-in source still cannot '
+      'link', () {
+    expect(kLinkedDevicesOn, isTrue);
     expect(const ThisPhoneOnly(phoneName: 'p').canLink, isFalse);
   });
 
@@ -233,7 +234,7 @@ void main() {
     await t.tap(find.text('This phone'));
     await t.pumpAndSettle();
     expect(find.text(l10n.devicesRename), findsNothing);
-    // the link page opens, but cannot scan until linking is wired
+    // the link page opens, but a source that cannot link has no scan
     await t.tap(find.text(l10n.devicesLinkADevice));
     await t.pumpAndSettle();
     expect(find.byType(LinkDeviceScreen), findsOneWidget);

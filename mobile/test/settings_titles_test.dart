@@ -184,6 +184,8 @@ final _pages = [
     () => [
       l10n.settingsPrivacy,
       l10n.settingsSecurity,
+      // linked devices, in every build
+      l10n.settingsDevices,
       l10n.settingsAppearance,
       l10n.settingsFiles,
       l10n.settingsBackup,
@@ -323,12 +325,18 @@ Future<void> _close(WidgetTester t) async {
 }
 
 // the paragraph a title is drawn in, when on screen
+// the title's own paragraph: a line elsewhere may share its words, as
+// your protections' backup line does
 RenderParagraph? _paragraph(String title) {
   final f = find.text(title, findRichText: true);
+  RenderParagraph? first;
   for (final e in f.evaluate()) {
-    if (e.widget is RichText) return e.renderObject! as RenderParagraph;
+    if (e.widget is! RichText) continue;
+    final r = e.renderObject! as RenderParagraph;
+    if (e.findAncestorWidgetOfExactType<HaloSection>() != null) return r;
+    first ??= r;
   }
-  return null;
+  return first;
 }
 
 bool _inSection(String title) => find
@@ -336,11 +344,20 @@ bool _inSection(String title) => find
     .evaluate()
     .isNotEmpty;
 
+// the title as its section draws it, else the one line with its words
+Finder _titleText(String title) {
+  final inSection = find.descendant(
+    of: find.byType(HaloSection),
+    matching: find.text(title),
+  );
+  return inSection.evaluate().isEmpty ? find.text(title) : inSection.first;
+}
+
 TextStyle _styleOf(RenderParagraph p) => (p.text as TextSpan).style!;
 
 // what a title sits on: the first solid ground above it
 Color _ground(String title) {
-  final e = find.text(title).evaluate().first;
+  final e = _titleText(title).evaluate().first;
   Color? found;
   e.visitAncestorElements((a) {
     final w = a.widget;
@@ -510,7 +527,7 @@ void main() {
         ];
         final gaps = <String>[];
         for (final title in page.titles()) {
-          final r = t.getRect(find.text(title));
+          final r = t.getRect(_titleText(title));
           final under = groups.where((g) => g.top >= r.bottom - 0.5).toList()
             ..sort((a, b) => a.top.compareTo(b.top));
           final over = groups.where((g) => g.bottom <= r.top + 0.5).toList()

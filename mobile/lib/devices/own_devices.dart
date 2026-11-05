@@ -84,8 +84,8 @@ class OwnDevice {
 /// what a history copy brings to a new device
 enum LinkHistory { all, textOnly, none }
 
-/// where the screens read and change the devices. until linking is wired
-/// the phone lists only itself and cannot link
+/// where the screens read and change the devices: the app's own source
+/// (link_app.dart), or one that lists only this phone and cannot link
 abstract class OwnDevices {
   Future<List<OwnDevice>> load();
   Future<void> rename(String id, String name);

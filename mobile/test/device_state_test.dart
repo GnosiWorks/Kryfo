@@ -208,8 +208,11 @@ void main() {
     }
   }
 
-  test('the switch is off in this build', () {
-    expect(kLinkedDevicesOn, isFalse);
+  test('the switch is on in this build; off is a test\'s', () {
+    expect(kLinkedDevicesOn, isTrue);
+    linkedDevicesForTest = null;
+    expect(linkedDevicesOn, isTrue);
+    linkedDevicesForTest = false;
     expect(linkedDevicesOn, isFalse);
   });
 

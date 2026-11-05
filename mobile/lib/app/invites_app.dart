@@ -234,6 +234,7 @@ extension AppStateInvites on AppState {
     if (row != null && cipher.startsWith(kHelloWireStart)) {
       final hw = helloOfWire(cipher);
       if (hw == null) {
+        firstFails.note('wire');
         await live.markSeenLong(h);
         arrived();
         return;
@@ -245,6 +246,7 @@ extension AppStateInvites on AppState {
     try {
       w = base64Decode(cipher);
     } catch (_) {
+      firstFails.note('wire');
       await live.markSeenLong(h);
       arrived();
       return;
@@ -258,6 +260,7 @@ extension AppStateInvites on AppState {
         w.isEmpty ||
         w[0] != kLsPreKey) {
       dlog('invite: a line dropped');
+      firstFails.note(row == null ? 'invite' : 'line');
       await live.markSeenLong(h);
       arrived();
       return;
@@ -359,8 +362,10 @@ extension AppStateInvites on AppState {
   /// months, without waiting for a start
   Future<void> keepMyInvitesDue({int? nowMs}) {
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    final owed = _invitesFaceOwed && _mainInviteFace() != null;
     if (_invitesKeep != null ||
-        (now - _invitesKeptAt).abs() < kInviteUpkeep.inMilliseconds) {
+        (!owed &&
+            (now - _invitesKeptAt).abs() < kInviteUpkeep.inMilliseconds)) {
       return Future.value();
     }
     return keepMyInvites(
@@ -381,11 +386,15 @@ extension AppStateInvites on AppState {
     if (sessionQuiet || !signalSession.ready) return;
     _invitesKeptAt = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     final face = _mainInviteFace();
+    final db = await live.open();
+    // the onion comes after the start's upkeep: the invites people hold
+    // are listened on now, and made or dropped once it is there
+    _invitesFaceOwed = face == null;
     if (face == null) {
-      dlog('invites: no face yet, kept next start');
+      dlog('invites: no face yet, listened on and kept once it is there');
+      if (!linkedRole) await _listenMyInvites(db, nowMs: nowMs);
       return;
     }
-    final db = await live.open();
     final up = await keepInvites(
       db,
       signalSession,

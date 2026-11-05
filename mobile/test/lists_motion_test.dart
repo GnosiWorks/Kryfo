@@ -230,6 +230,8 @@ void main() {
       db.requests = [_person('amber-fox-river'), _person('slow-kite-moss')];
       await t.pumpWidget(framed(const RequestsScreen()));
       await t.pump(const Duration(seconds: 1));
+      // the cards came with the load: their entrance ends
+      await t.pump(const Duration(seconds: 1));
       expect(t.hasRunningAnimations, isFalse);
       expect(find.byType(FadeFold), findsNWidgets(2));
       await t.tap(find.text(l10n.requestsDecline).first);

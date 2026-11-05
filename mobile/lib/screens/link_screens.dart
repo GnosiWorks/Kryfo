@@ -23,11 +23,19 @@ import '../widgets/swap.dart';
 
 /// the phone's side, from the moment the code was scanned
 class LinkRunScreen extends StatefulWidget {
-  const LinkRunScreen({super.key, required this.flow, this.onAgain});
+  const LinkRunScreen({
+    super.key,
+    required this.flow,
+    this.onAgain,
+    this.onSeeCopy,
+  });
   final LinkFlow flow;
 
   /// back to the scanner for a new code
   final VoidCallback? onAgain;
+
+  /// linked: the history copy's page, where the copy is followed
+  final VoidCallback? onSeeCopy;
 
   @override
   State<LinkRunScreen> createState() => _LinkRunScreenState();
@@ -116,6 +124,9 @@ class _LinkRunScreenState extends State<LinkRunScreen> {
         line: l10n.devicesLinkDoneLine,
         primary: l10n.commonDone,
         onPrimary: () => Navigator.of(context).pop(true),
+        // the history copy starts now: followed from here, or on its card
+        secondary: widget.onSeeCopy == null ? null : l10n.historyCopySee,
+        onSecondary: widget.onSeeCopy,
       ),
       LinkStep.failed => _Outcome(
         good: false,

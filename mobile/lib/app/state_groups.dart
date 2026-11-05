@@ -575,6 +575,8 @@ extension AppStateGroups on AppState {
     AlbumTag? album,
   }) async {
     final written = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
+    // a gif shows no share on either side: it just appears
+    final gif = quietMedia(path, fileName: fileName, voice: voice);
     // one send per media at a time, the same set the 1:1 path holds. the
     // drainer picks up any row older than 45 s, and a video to a group is
     // still leaving long after that: both would send the whole file.
@@ -651,6 +653,7 @@ extension AppStateGroups on AppState {
           msgUid,
           chatKey: d.container.chatKey(groupId),
           bytes: await File(path).length(),
+          quiet: gif,
         );
       }
       final (sent, r) = await sendDrop(
@@ -694,6 +697,7 @@ extension AppStateGroups on AppState {
       progressKey: owed == null ? d.container.chatKey(groupId) : null,
       owed: owed,
       hold: () => everydayHeld,
+      quiet: gif,
       // a member left short is sent the rest later, from the outbox
       onShort: (short, total) async {
         // the send went either way: a row not written costs that member
@@ -737,6 +741,7 @@ extension AppStateGroups on AppState {
           burnSeconds: burnSeconds,
           replyTo: replyTo,
           album: album,
+          gif: gif,
           groupId: groupId,
           roster: ids,
           rosterParticipants: parts,
@@ -1103,7 +1108,7 @@ extension AppStateGroups on AppState {
     List<String> memberHaloIds,
   ) async {
     // groups are made on the phone: a phone takes no group from a device
-    if (linkedRole) throw StateError('no new group on a linked device');
+    if (linkedRole) throw const GroupOnPhone();
     // a group of only yourself is never made, whatever the screen let by
     if (!memberHaloIds.any((m) => m != sessionId)) {
       throw StateError('a group needs someone besides you');
@@ -1150,6 +1155,7 @@ extension AppStateGroups on AppState {
     String groupId,
     List<String> newHaloIds,
   ) async {
+    if (linkedRole) throw const GroupOnPhone();
     final group = await session.getGroup(groupId);
     if (group == null || groupEndOf(group) != null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
@@ -1204,6 +1210,7 @@ extension AppStateGroups on AppState {
     String groupId,
     List<String> removedHaloIds,
   ) async {
+    if (linkedRole) throw const GroupOnPhone();
     final group = await session.getGroup(groupId);
     if (group == null || groupEndOf(group) != null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
@@ -1263,6 +1270,7 @@ extension AppStateGroups on AppState {
   }
 
   Future<void> renameGroupAndAnnounce(String groupId, String newName) async {
+    if (linkedRole) throw const GroupOnPhone();
     final group = await session.getGroup(groupId);
     if (group == null || groupEndOf(group) != null) return;
     if ((group['is_admin'] as int? ?? 0) != 1) return;
@@ -1278,6 +1286,7 @@ extension AppStateGroups on AppState {
   // each keeps its line. a version that cannot read the end gets one plain
   // message saying so, which this one never keeps
   Future<bool> endGroupAndAnnounce(String groupId) async {
+    if (linkedRole) throw const GroupOnPhone();
     if (!mayEndGroup(await session.getGroup(groupId), sessionId)) return false;
     // the session's own: a decoy's group is the decoy's
     final d = session.groupDb(groupId);
@@ -1318,6 +1327,9 @@ extension AppStateGroups on AppState {
     }
     final d = _ownerOf(groupId);
     final ended = groupEndOf(await session.getGroup(groupId)) != null;
+    // an ended group only goes from here, on a linked device too; one that
+    // runs is left on the phone
+    if (linkedRole && !ended) throw const GroupOnPhone();
     final members = sessionQuiet || ended
         ? const <String>[]
         : await d.getGroupMembers(groupId);
