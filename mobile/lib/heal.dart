@@ -17,6 +17,7 @@ import 'signal_ffi/kryfo_signal.dart';
 import 'signal_session.dart';
 import 'devices/device_receive.dart' show kStaleList;
 import 'devices/own_unlink.dart' show kRestoreListOwedMeta;
+import 'router.dart' show RouterRows;
 
 /// the wire's word for a heal, beside the json heal's 'bundle'
 const kHealCtl = 'heal';
@@ -131,7 +132,7 @@ Future<void> restoreCutsLinkedDevices(
   }, conflictAlgorithm: ConflictAlgorithm.replace);
 }
 
-/// the vault_meta key of the restore (its [kRestoreCutPref]) whose cut the
+/// the vault's own meta key (router.dart) of the restore (its [kRestoreCutPref]) whose cut the
 /// vault took, or that was the last one when the vault was made
 const kVaultRestoreCutMeta = 'restore_cut';
 
@@ -144,20 +145,12 @@ const kVaultRestoreCutMeta = 'restore_cut';
 /// took. true when it cut
 Future<bool> restoreCutsVaultDevices(Database vault, int? restored) async {
   if (restored == null) return false;
-  final took = await vault.query(
-    'vault_meta',
-    columns: ['v'],
-    where: 'k = ?',
-    whereArgs: [kVaultRestoreCutMeta],
-    limit: 1,
-  );
-  if (took.isNotEmpty && took.first['v'] == '$restored') return false;
+  if (await RouterRows.meta(vault, kVaultRestoreCutMeta) == '$restored') {
+    return false;
+  }
   await vault.transaction((t) async {
     await restoreCutsLinkedDevices(t, mine: false);
-    await t.insert('vault_meta', {
-      'k': kVaultRestoreCutMeta,
-      'v': '$restored',
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await RouterRows.putMeta(t, kVaultRestoreCutMeta, '$restored');
   });
   return true;
 }
@@ -167,10 +160,7 @@ Future<bool> restoreCutsVaultDevices(Database vault, int? restored) async {
 Future<void> vaultMadeAfterRestore(Database vault) async {
   final at = await restoredAt();
   if (at == null) return;
-  await vault.insert('vault_meta', {
-    'k': kVaultRestoreCutMeta,
-    'v': '$at',
-  }, conflictAlgorithm: ConflictAlgorithm.replace);
+  await RouterRows.putMeta(vault, kVaultRestoreCutMeta, '$at');
 }
 
 /// a heal to [peer] (their identity as [ss] holds it) from [ss]'s phone:
