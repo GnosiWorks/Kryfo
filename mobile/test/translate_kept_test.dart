@@ -103,6 +103,37 @@ void main() {
     expect(await store.kept('wren'), isEmpty);
   }, skip: skip);
 
+  test('a group\'s switch, bar and kept ones go with its row', () async {
+    final db = SqliteMem.open()!;
+    await appSchemaOn(db);
+    for (final g in ['g1', 'g2']) {
+      await db.insert('groups', {'group_id': g, 'name': g, 'created_at': 1});
+      await db.insert('messages', {
+        'peer_id': 'amber',
+        'group_id': g,
+        'direction': 'in',
+        'plaintext': _zh,
+        'sent_at': 1,
+        'msg_uid': 'u-$g',
+      });
+    }
+    final store = DbTranslateStore(() async => db);
+    for (final g in ['g1', 'g2']) {
+      await store.keep(g, 'u-$g', _k(_zh, _en), _zh);
+      await store.setChatAuto(g, true);
+      await store.setBarHidden(g, true);
+    }
+    // deleted, or moved into or out of the hidden chats: the row goes
+    await db.delete('groups', where: 'group_id = ?', whereArgs: ['g1']);
+    expect(await store.kept('g1'), isEmpty);
+    expect(await store.chatAuto('g1'), isNull);
+    expect(await store.barHidden('g1'), isFalse);
+    // the other group keeps its own
+    expect((await store.kept('g2')).keys, ['u-g2']);
+    expect(await store.chatAuto('g2'), isTrue);
+    expect(await store.barHidden('g2'), isTrue);
+  }, skip: skip);
+
   test('a hidden chat keeps its translations in the vault only', () async {
     final primary = await dbWith([('heron', 'u1', _zh)]);
     final vault = await dbWith([('wren', 'v1', _zh)]);

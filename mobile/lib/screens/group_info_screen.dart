@@ -56,6 +56,8 @@ import '../chat_shots.dart' show ShotsPacer;
 import '../group_shots.dart';
 import '../widgets/group_shots_sheet.dart';
 import '../wide/read_width.dart' show DeskPage;
+import '../translate/auto_translate_row.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
 
 // a member as the screens name them: a room key by its short tag
 String memberLabel(String id) => looksLikeRoomKey(id) ? roomTag(id) : id;
@@ -806,6 +808,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     label: l10n.groupInfoWallpaper,
                     onTap: _pickAtmosphere,
                   ),
+                  // the same switch as "always translate this chat" in it
+                  if (translationHubIfOn() case final hub? when hub.on)
+                    AutoTranslateRow(chatId: widget.groupId, hub: hub),
                   // a group's: its admin's switch, read only for the rest
                   if (!_isRoom && !_roomAtOpen) _shotsRow(),
                   // always on in a room, on every phone in it
