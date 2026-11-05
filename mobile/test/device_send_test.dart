@@ -1194,9 +1194,12 @@ void main() {
     expect([for (final s in went) s.device], [40]);
     final j = _json(await _openOn(late, 'ana', w.ana, went.single.cipher));
     expect(j['u'], 'dl:4000');
+    // a bundle of my device, and one of my phone with the list's first send
+    final dbs = [for (final x in j['db'] as List) base64Decode(x as String)];
+    expect([for (final b in dbs) b[9]]..sort(), [1, 9]);
     final k = w.bob.lib
         .parseDeviceBundle(
-          base64Decode((j['db'] as List).single as String),
+          dbs.singleWhere((b) => b[9] == 9),
           w.ana.identity.public,
         )
         .bundle

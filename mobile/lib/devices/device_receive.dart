@@ -763,7 +763,8 @@ class DeviceReceive {
     final list = j['dl'];
     if (list is String) {
       final got = await _takeList(d, m, c, identity, list, remote);
-      final took = got != null;
+      // an older list than the one held is answered with that one ('dh')
+      final took = got != null && got != 'rollback';
       // each device's receipt ends its own copy of a list; their phone's
       // says which version it holds, which ends the push for good
       final u = j['u'];
@@ -774,10 +775,7 @@ class DeviceReceive {
       }
       // their phone's list, as it holds it now: what a restore left of
       // theirs is current again, and the openers that waited are tried
-      if (got != null &&
-          got != 'rollback' &&
-          device == 1 &&
-          await staleList(d, m.ident, identity)) {
+      if (took && device == 1 && await staleList(d, m.ident, identity)) {
         await d.delete(
           'dev_marks',
           where: 'ident = ? AND peer = ? AND kind = ?',
