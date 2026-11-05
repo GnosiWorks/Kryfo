@@ -79,6 +79,10 @@ void main() {
   late _Engine e;
 
   setUp(() {
+    // a relay answered before in this process, and the start's new
+    // messages are in: a quiet relay is waited for, not still connecting
+    appState.everUsableForTest = true;
+    appState.startCaughtForTest = true;
     SharedPreferences.setMockInitialValues({
       'battery_opt_prompt_seen': true,
       'miui_autostart_prompt_seen': true,
@@ -162,11 +166,11 @@ void main() {
 
       appState.torTryingSinceForTest = DateTime.now();
       await poll(t, 'starting|10|0|0|1');
-      says(t, l10n.appConnecting2, on: false);
+      says(t, l10n.appStartingTor, on: false);
 
       appState.torTryingSinceForTest = _ago(40);
       await poll(t, 'starting|45|0|0|1');
-      says(t, l10n.appConnecting(percent(0.45)), on: false);
+      says(t, l10n.appStartingTorPct(percent(0.45)), on: false);
 
       // tor's route up, no relay through: that, not connecting
       await poll(t, 'bootstrapped|100|0|0|1');
@@ -189,7 +193,7 @@ void main() {
       says(t, l10n.appTorReady, card: l10n.settingsConnected, on: true);
       appState.bridgeRetry();
       await poll(t, 'starting|0|0|0|2');
-      says(t, l10n.appConnecting2, on: false);
+      says(t, l10n.appStartingTor, on: false);
 
       // asleep, then the network looked at again
       await poll(t, 'reachable|100|1|1|2');
@@ -247,8 +251,8 @@ void main() {
 
       appState.torTryingSinceForTest = _ago(40);
       await poll(t, 'starting|45|0|0|1');
-      expect(_inPill(l10n.appConnecting(percent(0.45))), findsOneWidget);
-      expect(line(l10n.appConnecting(percent(0.45))), findsOneWidget);
+      expect(_inPill(l10n.appStartingTorPct(percent(0.45))), findsOneWidget);
+      expect(line(l10n.appStartingTorPct(percent(0.45))), findsOneWidget);
 
       await poll(t, 'bootstrapped|100|0|0|1');
       expect(_inPill(l10n.appWaitingForARelay), findsOneWidget);
@@ -385,9 +389,9 @@ void main() {
       // tor still climbing: its words
       appState.torTryingSinceForTest = DateTime.now();
       await poll(t, 'starting|20|0|0|2');
-      expect(_inPill(l10n.appConnecting2), findsOneWidget);
+      expect(_inPill(l10n.appStartingTor), findsOneWidget);
       expect(
-        strip(l10n.homeWaitingState(2, l10n.appConnecting2)),
+        strip(l10n.homeWaitingState(2, l10n.appStartingTor)),
         findsOneWidget,
       );
 
@@ -412,6 +416,16 @@ void main() {
     // tor up with no relay: never "building" or "still connecting"
     expect(v(LinkKind.relayWait).chatLine, l10n.appWaitingForARelay);
     expect(v(LinkKind.relayWait).sendLine, l10n.appWaitingForARelay);
+    // at the start, before any relay answered, it is still coming up
+    const start = LinkView(
+      kind: LinkKind.relayWait,
+      status: TorStatus.publishing,
+      pct: 100,
+      starting: true,
+    );
+    expect(start.text, l10n.appConnecting2);
+    expect(start.chatLine, l10n.chatBuildingAPrivateRoute);
+    expect(start.sendLine, l10n.chatStillConnectingToTor);
     expect(v(LinkKind.offline).chatLine, l10n.appOffline);
     // and the chat screen takes them from the reading, nothing else
     final chat = File('lib/screens/chat_screen.dart').readAsStringSync();

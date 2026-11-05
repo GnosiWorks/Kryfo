@@ -31,10 +31,12 @@ enum LinkKind {
   /// tor starting for a while: how far it is
   climbing,
 
-  /// tor's route is up and no relay has answered through it
+  /// tor's route is up and no relay has answered through it. at the start,
+  /// before any relay ever did, that is still connecting (LinkView.starting)
   relayWait,
 
-  /// a relay answered through tor, or did a moment ago
+  /// a relay answered through tor, or did a moment ago. at the start,
+  /// until its new messages are in, it says so (LinkView.fetching)
   ready,
 
   /// relay mode, its relay answering
@@ -55,6 +57,8 @@ class LinkView {
     required this.pct,
     this.held = false,
     this.recheckAt,
+    this.starting = false,
+    this.fetching = false,
   });
 
   final LinkKind kind;
@@ -69,14 +73,23 @@ class LinkView {
   /// when the reading changes by time alone, null when it does not
   final DateTime? recheckAt;
 
+  /// no relay has answered through tor yet in this process: a route up and
+  /// no relay is the start still connecting, not a relay gone quiet
+  final bool starting;
+
+  /// ready, and the start's new messages still coming in
+  final bool fetching;
+
   /// the pill's words
   String get text => switch (kind) {
     LinkKind.offline => l10n.appOffline,
     LinkKind.off => l10n.appTorOff,
-    LinkKind.connecting => l10n.appConnecting2,
-    LinkKind.climbing => l10n.appConnecting(percent(pct / 100)),
-    LinkKind.relayWait => l10n.appWaitingForARelay,
-    LinkKind.ready => l10n.appTorReady,
+    LinkKind.connecting => l10n.appStartingTor,
+    LinkKind.climbing => l10n.appStartingTorPct(percent(pct / 100)),
+    LinkKind.relayWait =>
+      starting ? l10n.appConnecting2 : l10n.appWaitingForARelay,
+    LinkKind.ready =>
+      fetching && !held ? l10n.appGettingNewMessages : l10n.appTorReady,
     // relay is the fast route now: our two servers
     LinkKind.relay => l10n.modesFastConnected,
     LinkKind.relayDown => l10n.appServersNotAnswering,
@@ -89,14 +102,14 @@ class LinkView {
 
   /// what a screen reader hears, once per change of kind: a climbing
   /// percent is not a new state
-  String get spoken => kind == LinkKind.climbing ? l10n.appConnecting2 : text;
+  String get spoken => kind == LinkKind.climbing ? l10n.appStartingTor : text;
 
   /// the sheet's line: the pill's words, and for a ready route whether our
   /// address is still on its way. nothing waits for it. a ready held through
   /// a drop says only the pill's words: nothing sends meanwhile
   String get line {
     if (kind == LinkKind.off) return l10n.appTorIsOff;
-    if (kind != LinkKind.ready || held) return text;
+    if (kind != LinkKind.ready || held || fetching) return text;
     return switch (status) {
       TorStatus.reachable => l10n.appConnectedRoutedThrough3,
       TorStatus.publishing ||
@@ -160,8 +173,12 @@ class LinkView {
       ? l10n.chatStillConnectingToTor
       : text;
 
-  /// the dot pulses only while tor is still coming up
-  bool get pulsing => kind == LinkKind.connecting || kind == LinkKind.climbing;
+  /// the dot pulses only while the route is still coming up: tor starting,
+  /// or the start's first relay still on its way
+  bool get pulsing =>
+      kind == LinkKind.connecting ||
+      kind == LinkKind.climbing ||
+      (kind == LinkKind.relayWait && starting);
 
   @override
   bool operator ==(Object other) =>
@@ -169,13 +186,17 @@ class LinkView {
       other.kind == kind &&
       other.status == status &&
       other.pct == pct &&
-      other.held == held;
+      other.held == held &&
+      other.starting == starting &&
+      other.fetching == fetching;
 
   @override
-  int get hashCode => Object.hash(kind, status, pct, held);
+  int get hashCode => Object.hash(kind, status, pct, held, starting, fetching);
 
   @override
-  String toString() => 'LinkView($kind, $status, $pct%, held: $held)';
+  String toString() =>
+      'LinkView($kind, $status, $pct%, held: $held, starting: $starting, '
+      'fetching: $fetching)';
 }
 
 /// whether a send that did not go reads as failed: with no network, or with
@@ -190,7 +211,9 @@ bool sendReadsBlocked({
 /// the reading for one moment. [usable] is the engine's verdict that a relay
 /// answered through tor (AppState.torUsable), [usableAt] when the status
 /// poll last saw it, [tryingSince] when tor began trying, [relayDownSince]
-/// when relay mode's relay stopped answering
+/// when relay mode's relay stopped answering, [everUsable] whether a relay
+/// ever answered through tor in this process, [caught] whether the start's
+/// new messages are in
 LinkView linkViewOf({
   required String mode,
   required TorStatus status,
@@ -201,9 +224,18 @@ LinkView linkViewOf({
   required DateTime? tryingSince,
   required DateTime? relayDownSince,
   required DateTime now,
+  bool everUsable = true,
+  bool caught = true,
 }) {
-  LinkView v(LinkKind k, {bool held = false, DateTime? at}) =>
-      LinkView(kind: k, status: status, pct: pct, held: held, recheckAt: at);
+  LinkView v(LinkKind k, {bool held = false, DateTime? at}) => LinkView(
+    kind: k,
+    status: status,
+    pct: pct,
+    held: held,
+    recheckAt: at,
+    starting: !everUsable,
+    fetching: !caught,
+  );
   final off = status == TorStatus.off;
   // offline is offline in every mode, but tor stopped on purpose says so
   if (!online && !(mode == 'private' && off)) return v(LinkKind.offline);

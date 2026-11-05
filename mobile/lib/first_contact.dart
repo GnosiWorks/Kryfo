@@ -87,7 +87,11 @@ class FirstFails {
   final int most;
   final _last = <(String, int)>[];
 
+  /// told each code as it is noted (a computer's trace)
+  void Function(String code)? onNote;
+
   void note(String code, {int? at}) {
+    onNote?.call(code);
     _last.add((code, at ?? DateTime.now().millisecondsSinceEpoch));
     if (_last.length > most) _last.removeAt(0);
   }

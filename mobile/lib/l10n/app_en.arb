@@ -803,15 +803,6 @@
   "@appReadyToChatAddressFinishing": {
     "description": "app/gates.dart"
   },
-  "appConnecting": "Connecting · {pct}",
-  "@appConnecting": {
-    "description": "app/gates.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
-    "placeholders": {
-      "pct": {
-        "type": "Object"
-      }
-    }
-  },
   "appTor": "Tor",
   "@appTor": {
     "description": "app/gates.dart"
@@ -851,6 +842,19 @@
   "appWaitingForARelay": "Waiting for a relay",
   "@appWaitingForARelay": {
     "description": "app/gates.dart. the home pill, when tor is up but no relay has answered for a while. keep it short"
+  },
+  "appStartingTorPct": "Starting Tor · {pct}",
+  "@appStartingTorPct": {
+    "description": "link_view.dart. the home pill while tor starts, after a while. the placeholder is a percentage, already written the language's way (42%, 42 %, %42). keep it short",
+    "placeholders": {
+      "pct": {
+        "type": "Object"
+      }
+    }
+  },
+  "appGettingNewMessages": "Getting new messages",
+  "@appGettingNewMessages": {
+    "description": "link_view.dart. the home pill at a start, once a relay answers, until the messages that came while kryfo was closed are in. keep it short"
   },
   "mediaProgressSendingKeepTheApp": "Sending · {v} · keep the app open",
   "@mediaProgressSendingKeepTheApp": {

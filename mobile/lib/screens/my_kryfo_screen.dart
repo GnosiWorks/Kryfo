@@ -18,6 +18,7 @@ import '../main.dart'
         appState,
         handleHaloUriAdded,
         AppStateProfile,
+        AppStateRoute,
         AppStateSession,
         AppStateRefresh;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
@@ -61,6 +62,8 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
     super.initState();
     appState.addListener(_onState);
     _load();
+    // the card is on screen: whoever scans it gets the answer sooner
+    appState.warmHelloLane();
   }
 
   @override

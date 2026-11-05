@@ -103,6 +103,11 @@ class SealSweep {
   int stayed = 0;
 }
 
+/// [sealPlainUnder] of [dir] as a job for another isolate. made here, at
+/// the top level, it carries [dir] alone
+SealSweep Function() sealUnderJob(String dir) =>
+    () => sealPlainUnder(dir);
+
 /// every plain file under [dir] sealed in place, the plain bytes zeroed
 /// before the sealed copy takes the name. a sweep cut short is picked up:
 /// a whole sealed copy beside its file wins, a broken one goes. a file the
