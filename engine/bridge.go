@@ -359,12 +359,21 @@ func startListener(dataDir string) string {
 	}
 	startRouteWatch()
 	mu.Lock()
-	if myAddr != "" {
+	if myAddr != "" && !torClientOnly() {
 		addr := myAddr
 		mu.Unlock()
 		return addr
 	}
+	have := torNode != nil
 	mu.Unlock()
+	// a client's tor is started once and never again, with or without an
+	// onion left to take down from before it was a client
+	if have && torClientOnly() {
+		if r := dropOnion(); r != "ok" {
+			return r
+		}
+		return torClientAddr
+	}
 
 	if dataDir == "" {
 		return "error: empty data dir"
@@ -423,6 +432,13 @@ func startListener(dataDir string) string {
 	// bootstrap watcher owns the flip at a real 100%.
 	goWatchBootstrap(t)
 
+	// a linked device's: no onion key, no service, the network on as below
+	if torClientOnly() {
+		networkOnAtStart(t)
+		log.Println("halo: tor runs as a client, no onion of its own")
+		return torClientAddr
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -469,6 +485,13 @@ func startListener(dataDir string) string {
 	myAddr = fmt.Sprintf("%s.onion", onion.ID)
 	addr := myAddr
 	mu.Unlock()
+	// made a client while this listened: the onion goes again at once
+	if torClientOnly() {
+		if r := dropOnion(); r != "ok" {
+			return r
+		}
+		return torClientAddr
+	}
 
 	if atomic.CompareAndSwapInt32(&publishWatching, 0, 1) {
 		go func() {
@@ -624,7 +647,7 @@ func goWatchBootstrap(t *tor.Tor) {
 }
 
 func goWatchPublished(t *tor.Tor, onionID string) {
-	if t == nil || t.Control == nil || onionID == "" {
+	if t == nil || t.Control == nil || onionID == "" || torClientOnly() {
 		return
 	}
 	if !atomic.CompareAndSwapInt32(&publishWatching, 0, 1) {
@@ -672,6 +695,10 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 	}
 	for {
 		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
+			// a client by now: that onion was taken down
+			if torClientOnly() {
+				return
+			}
 			publishedOnce.Store(true)
 			break
 		}
@@ -683,7 +710,7 @@ func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionI
 		statusMu.RLock()
 		stillPub := torStatus == "publishing" || torStatus == "starting"
 		statusMu.RUnlock()
-		if !stillPub {
+		if !stillPub || torClientOnly() {
 			return
 		}
 		// no confirmed upload yet: the same listener stays live, so wait for
@@ -1844,8 +1871,10 @@ func watchBootstrap(t *tor.Tor) {
 				cur := torStatus
 				statusMu.Unlock()
 				if cur != "reachable" {
-					setStatus("publishing")
-					notePublishing()
+					setStatus(upStatus())
+					if !torClientOnly() {
+						notePublishing()
+					}
 				}
 				return
 			}
