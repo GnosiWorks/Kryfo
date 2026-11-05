@@ -10,6 +10,9 @@ import 'l10n/l10n.dart';
 
 const kLastBackupKey = 'kryfo.backup.last';
 
+/// the clock the backup line reads; tests pin it
+DateTime Function() backupNow = DateTime.now;
+
 /// past this many days a backup counts as old: a date, and no tick
 const kBackupFreshDays = 30;
 
@@ -32,7 +35,7 @@ Future<void> keepLastBackup(HaloContainer c, {DateTime? at}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(
       c.key(kLastBackupKey),
-      (at ?? DateTime.now()).millisecondsSinceEpoch,
+      (at ?? backupNow()).millisecondsSinceEpoch,
     );
   } catch (_) {}
 }
@@ -47,12 +50,13 @@ int _daysSince(DateTime at, DateTime now) {
 
 /// a backup made in the last [kBackupFreshDays] days
 bool backupFresh(DateTime? at, {DateTime? now}) =>
-    at != null && _daysSince(at, now ?? DateTime.now()) <= kBackupFreshDays;
+    at != null && _daysSince(at, now ?? backupNow()) <= kBackupFreshDays;
 
 /// "Not yet", "Today", "Yesterday", "5 days ago", or the date when old
 String backupWhen(DateTime? at, {DateTime? now}) {
   if (at == null) return l10n.settingsBackupNotYet;
-  final d = _daysSince(at, now ?? DateTime.now());
+  now ??= backupNow();
+  final d = _daysSince(at, now);
   if (d == 0) return l10n.settingsBackupToday;
   if (d == 1) return l10n.settingsBackupYesterday;
   if (d <= kBackupFreshDays) return l10n.settingsBackupDaysAgo(d);

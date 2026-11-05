@@ -52,8 +52,24 @@ class _Lock extends ChangeNotifier implements ComputerLockView {
   }
 }
 
-final _now = DateTime.now();
-int _daysBack(int d) => _now.subtract(Duration(days: d)).millisecondsSinceEpoch;
+// pinned clocks at both ends of a day, twelve days after the october and
+// november dst changes, so no run hour or zone moves a day count
+final _nows = [DateTime(2026, 11, 5, 23, 59), DateTime(2026, 11, 6, 0, 1)];
+var _now = _nows.first;
+
+// a backup d calendar days back, at the far end of that day from now
+int _daysBack(int d) {
+  if (d == 0) return _now.millisecondsSinceEpoch;
+  final late = _now.hour == 0;
+  final at = DateTime(
+    _now.year,
+    _now.month,
+    _now.day - d,
+    late ? 23 : 0,
+    late ? 59 : 1,
+  );
+  return at.millisecondsSinceEpoch;
+}
 
 Future<void> _world(
   WidgetTester t, {
@@ -122,6 +138,9 @@ ProtectionLine? _line(WidgetTester t, String label) {
 }
 
 void main() {
+  setUp(() => backupNow = () => _now);
+  tearDown(() => backupNow = DateTime.now);
+
   group('the backup line', () {
     test('a day count, a date when old, not yet when none', () {
       final now = DateTime(2026, 11, 5, 9);
@@ -144,6 +163,23 @@ void main() {
       expect(backupFresh(null, now: now), isFalse);
       expect(backupFresh(DateTime(2026, 10, 10), now: now), isTrue);
       expect(backupFresh(old, now: now), isFalse);
+      // calendar days, not 24h blocks, and across a dst change
+      final late = DateTime(2026, 11, 5, 23, 59);
+      final early = DateTime(2026, 11, 6, 0, 1);
+      expect(backupWhen(DateTime(2026, 11, 5, 0, 1), now: late), 'Today');
+      expect(backupWhen(late, now: early), 'Yesterday');
+      expect(
+        backupWhen(DateTime(2026, 10, 24, 0, 1), now: late),
+        '12 days ago',
+      );
+      expect(
+        backupWhen(DateTime(2026, 10, 25, 23, 59), now: early),
+        '12 days ago',
+      );
+      expect(
+        backupWhen(DateTime(2026, 10, 31, 23, 59), now: early),
+        '6 days ago',
+      );
       // a clock set back reads as today, never as a negative count
       expect(
         backupWhen(DateTime(2026, 11, 7), now: now),
@@ -165,77 +201,87 @@ void main() {
   });
 
   group('on a phone', () {
-    testWidgets('tor, app lock and backup: no screenshots line, never '
-        'backed up says not yet', (t) async {
-      await _world(t, lockOn: true);
-      await t.pumpWidget(devApp(const SettingsScreen(), still: true));
-      await _settle(t);
-      expect(_line(t, l10n.settingsTorRouting), isNotNull);
-      expect(_read(t, l10n.settingsAppLock), (true, l10n.settingsOn));
-      expect(_read(t, l10n.settingsProtectBackup), (
-        false,
-        l10n.settingsBackupNotYet,
-      ));
-      expect(_line(t, 'Screenshots'), isNull);
-      expect(_line(t, l10n.desktopPassRow), isNull);
-      expect(find.text('Per chat'), findsNothing);
-      await devClose(t);
-    });
+    for (final now in _nows) {
+      group('at ${now.toIso8601String().substring(11, 16)}', () {
+        setUp(() => _now = now);
+        tearDown(() => _now = _nows.first);
+        testWidgets('tor, app lock and backup: no screenshots line, never '
+            'backed up says not yet', (t) async {
+          await _world(t, lockOn: true);
+          await t.pumpWidget(devApp(const SettingsScreen(), still: true));
+          await _settle(t);
+          expect(_line(t, l10n.settingsTorRouting), isNotNull);
+          expect(_read(t, l10n.settingsAppLock), (true, l10n.settingsOn));
+          expect(_read(t, l10n.settingsProtectBackup), (
+            false,
+            l10n.settingsBackupNotYet,
+          ));
+          expect(_line(t, 'Screenshots'), isNull);
+          expect(_line(t, l10n.desktopPassRow), isNull);
+          expect(find.text('Per chat'), findsNothing);
+          await devClose(t);
+        });
 
-    testWidgets('a recent backup: the day count, ticked, and the row opens '
-        'the backup screen', (t) async {
-      await _world(t, prefs: {kLastBackupKey: _daysBack(2)});
-      await t.pumpWidget(devApp(const SettingsScreen(), still: true));
-      await _settle(t);
-      expect(_read(t, l10n.settingsProtectBackup), (true, '2 days ago'));
-      await t.tap(find.byKey(const ValueKey('backupLine')));
-      await _settle(t);
-      expect(find.byType(BackupScreen), findsOneWidget);
-      await devClose(t);
-    });
+        testWidgets('a recent backup: the day count, ticked, and the row opens '
+            'the backup screen', (t) async {
+          await _world(t, prefs: {kLastBackupKey: _daysBack(2)});
+          await t.pumpWidget(devApp(const SettingsScreen(), still: true));
+          await _settle(t);
+          expect(_read(t, l10n.settingsProtectBackup), (true, '2 days ago'));
+          await t.tap(find.byKey(const ValueKey('backupLine')));
+          await _settle(t);
+          expect(find.byType(BackupScreen), findsOneWidget);
+          await devClose(t);
+        });
 
-    testWidgets('a decoy reads its own time, never the real one\'s', (t) async {
-      await _world(
-        t,
-        container: HaloContainer.decoy,
-        prefs: {kLastBackupKey: _daysBack(0)},
-      );
-      await t.pumpWidget(devApp(const SettingsScreen(), still: true));
-      await _settle(t);
-      expect(_read(t, l10n.settingsProtectBackup), (
-        false,
-        l10n.settingsBackupNotYet,
-      ));
-      await devClose(t);
-      await _world(
-        t,
-        container: HaloContainer.decoy,
-        prefs: {
-          kLastBackupKey: _daysBack(0),
-          HaloContainer.decoy.key(kLastBackupKey): _daysBack(1),
-        },
-      );
-      await t.pumpWidget(devApp(const SettingsScreen(), still: true));
-      await _settle(t);
-      expect(_read(t, l10n.settingsProtectBackup), (
-        true,
-        l10n.settingsBackupYesterday,
-      ));
-      await devClose(t);
-    });
+        testWidgets('a decoy reads its own time, never the real one\'s', (
+          t,
+        ) async {
+          await _world(
+            t,
+            container: HaloContainer.decoy,
+            prefs: {kLastBackupKey: _daysBack(0)},
+          );
+          await t.pumpWidget(devApp(const SettingsScreen(), still: true));
+          await _settle(t);
+          expect(_read(t, l10n.settingsProtectBackup), (
+            false,
+            l10n.settingsBackupNotYet,
+          ));
+          await devClose(t);
+          await _world(
+            t,
+            container: HaloContainer.decoy,
+            prefs: {
+              kLastBackupKey: _daysBack(0),
+              HaloContainer.decoy.key(kLastBackupKey): _daysBack(1),
+            },
+          );
+          await t.pumpWidget(devApp(const SettingsScreen(), still: true));
+          await _settle(t);
+          expect(_read(t, l10n.settingsProtectBackup), (
+            true,
+            l10n.settingsBackupYesterday,
+          ));
+          await devClose(t);
+        });
 
-    testWidgets('readable at a small width with large text', (t) async {
-      await _world(
-        t,
-        prefs: {kLastBackupKey: _daysBack(12)},
-        size: const Size(640, 4000),
-      );
-      await t.pumpWidget(devApp(const SettingsScreen(), still: true, scale: 2));
-      await _settle(t);
-      expect(t.takeException(), isNull);
-      expect(find.text('12 days ago'), findsOneWidget);
-      await devClose(t);
-    });
+        testWidgets('readable at a small width with large text', (t) async {
+          await _world(
+            t,
+            prefs: {kLastBackupKey: _daysBack(12)},
+            size: const Size(640, 4000),
+          );
+          await t.pumpWidget(
+            devApp(const SettingsScreen(), still: true, scale: 2),
+          );
+          await _settle(t);
+          expect(t.takeException(), isNull);
+          expect(find.text('12 days ago'), findsOneWidget);
+          await devClose(t);
+        });
+      });
+    }
   });
 
   group('on a computer', () {
