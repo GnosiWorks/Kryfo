@@ -11525,4 +11525,109 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'Ouvrez ce lien sur votre téléphone.';
+
+  @override
+  String get tipsTitle => 'Soutenir Kryfo';
+
+  @override
+  String get tipsHeadline => 'Gardez Kryfo *gratuit pour tous*';
+
+  @override
+  String get tipsLine =>
+      'Pas de pub, pas d’investisseurs, pas de comptes. Un pourboire aide à payer les serveurs et le travail sur Kryfo.';
+
+  @override
+  String get tipsLeave => 'Laisser un pourboire';
+
+  @override
+  String get tipsYours => 'À vous';
+
+  @override
+  String get tipsAsking => 'Demande des prix à Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Un pourboire vous donne un badge de soutien, et rien d’autre. Tout dans Kryfo reste gratuit pour tout le monde, avec ou sans.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Le paiement passe par Google Play. Nous ne voyons jamais les données de votre carte ni votre nom.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Le badge reste sur ce téléphone. Dans Moi, vous choisissez s’il s’affiche et si vos contacts le voient.';
+
+  @override
+  String get tipsRestore => 'Récupérer mon badge';
+
+  @override
+  String get tipsRestoreLine =>
+      'Déjà laissé un pourboire ? Votre badge revient sur tout téléphone connecté au même compte Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Votre badge de soutien est de retour',
+      'patron': 'Votre badge de mécène est de retour',
+      'guardian': 'Votre badge de gardien est de retour',
+      'other': 'Votre badge de soutien est de retour',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Ce compte Google n’a encore laissé aucun pourboire';
+
+  @override
+  String get tipsUnavailable =>
+      'Les pourboires passent par Google Play. Ils s’affichent ici dès que Google Play fonctionne sur ce téléphone.';
+
+  @override
+  String get tipsSoon => 'Les pourboires arrivent ici bientôt.';
+
+  @override
+  String get tipsPending =>
+      'Google Play termine encore votre paiement. Votre badge arrive dès qu’il est passé.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play n’a pas terminé le paiement. Réessayez dans un instant.';
+
+  @override
+  String get tipsThanks => 'Merci';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Vous avez maintenant le badge de soutien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.',
+      'patron':
+          'Vous avez maintenant le badge de mécène. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.',
+      'guardian':
+          'Vous avez maintenant le badge de gardien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.',
+      'other':
+          'Vous avez maintenant le badge de soutien. Il ne débloque rien d’autre : tout dans Kryfo reste gratuit pour tout le monde.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Merci pour le pourboire. Vous gardez votre badge de soutien, le plus élevé.',
+      'patron':
+          'Merci pour le pourboire. Vous gardez votre badge de mécène, le plus élevé.',
+      'guardian':
+          'Merci pour le pourboire. Vous gardez votre badge de gardien, le plus élevé.',
+      'other':
+          'Merci pour le pourboire. Vous gardez votre badge de soutien, le plus élevé.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard =>
+      'Laissez un pourboire pour garder Kryfo indépendant';
 }

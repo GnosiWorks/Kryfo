@@ -48,5 +48,15 @@
         <meta-data
             android:name="firebase_messaging_notification_delegation_enabled"
             android:value="false" />
+        <!-- google's datatransport (play billing's own logging, firebase's
+             metrics) gets no backend: an event with none is dropped before
+             it is stored, so nothing it logs ever leaves the phone -->
+        <service
+            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+            android:exported="false">
+            <meta-data
+                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+                tools:node="remove" />
+        </service>
     </application>
 </manifest>

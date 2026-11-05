@@ -11405,4 +11405,107 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'Buka tautan ini di ponselmu.';
+
+  @override
+  String get tipsTitle => 'Dukung Kryfo';
+
+  @override
+  String get tipsHeadline => 'Jaga Kryfo tetap *gratis untuk semua*';
+
+  @override
+  String get tipsLine =>
+      'Tanpa iklan, tanpa investor, tanpa akun. Tip membantu membayar server dan pekerjaan di Kryfo.';
+
+  @override
+  String get tipsLeave => 'Beri tip';
+
+  @override
+  String get tipsYours => 'Milikmu';
+
+  @override
+  String get tipsAsking => 'Menanyakan harga ke Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Tip memberimu lencana pendukung dan tidak ada yang lain. Semua yang ada di Kryfo tetap gratis untuk semua orang, dengan atau tanpa tip.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Pembayaran lewat Google Play. Kami tidak pernah melihat data kartumu atau namamu.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Lencana tersimpan di ponsel ini. Di Aku, kamu memilih apakah lencana ditampilkan dan apakah kontakmu melihatnya.';
+
+  @override
+  String get tipsRestore => 'Pulihkan lencanaku';
+
+  @override
+  String get tipsRestoreLine =>
+      'Pernah memberi tip? Lencanamu kembali di ponsel mana pun yang masuk dengan akun Google yang sama.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Lencana pendukungmu sudah kembali',
+      'patron': 'Lencana patronmu sudah kembali',
+      'guardian': 'Lencana penjagamu sudah kembali',
+      'other': 'Lencana pendukungmu sudah kembali',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => 'Belum ada tip dari akun Google ini';
+
+  @override
+  String get tipsUnavailable =>
+      'Tip berjalan lewat Google Play. Tip muncul di sini begitu Google Play berjalan di ponsel ini.';
+
+  @override
+  String get tipsSoon => 'Tip segera hadir di sini.';
+
+  @override
+  String get tipsPending =>
+      'Google Play masih menyelesaikan pembayaranmu. Lencanamu datang begitu pembayarannya berhasil.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play tidak menyelesaikan pembayaran. Coba lagi sebentar lagi.';
+
+  @override
+  String get tipsThanks => 'Terima kasih';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Sekarang kamu punya lencana pendukung. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.',
+      'patron':
+          'Sekarang kamu punya lencana patron. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.',
+      'guardian':
+          'Sekarang kamu punya lencana penjaga. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.',
+      'other':
+          'Sekarang kamu punya lencana pendukung. Lencana ini tidak membuka apa pun lagi: semua yang ada di Kryfo tetap gratis untuk semua orang.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Terima kasih atas tipnya. Lencana pendukungmu tetap, yang lebih tinggi.',
+      'patron':
+          'Terima kasih atas tipnya. Lencana patronmu tetap, yang lebih tinggi.',
+      'guardian':
+          'Terima kasih atas tipnya. Lencana penjagamu tetap, yang lebih tinggi.',
+      'other':
+          'Terima kasih atas tipnya. Lencana pendukungmu tetap, yang lebih tinggi.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Beri tip agar Kryfo tetap mandiri';
 }

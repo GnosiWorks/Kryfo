@@ -11486,4 +11486,109 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'Abre este enlace en tu teléfono.';
+
+  @override
+  String get tipsTitle => 'Apoyar Kryfo';
+
+  @override
+  String get tipsHeadline => 'Mantén Kryfo *gratis para todos*';
+
+  @override
+  String get tipsLine =>
+      'Sin anuncios, sin inversores, sin cuentas. Una propina ayuda a pagar los servidores y el trabajo en Kryfo.';
+
+  @override
+  String get tipsLeave => 'Dar una propina';
+
+  @override
+  String get tipsYours => 'Tuya';
+
+  @override
+  String get tipsAsking => 'Pidiendo los precios a Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Una propina te da una insignia de colaborador y nada más. Todo en Kryfo sigue gratis para todo el mundo, con propina o sin ella.';
+
+  @override
+  String get tipsThroughPlay =>
+      'El pago pasa por Google Play. Nunca vemos los datos de tu tarjeta ni tu nombre.';
+
+  @override
+  String get tipsBadgeStays =>
+      'La insignia vive en este teléfono. En Yo eliges si se muestra y si tus contactos la ven.';
+
+  @override
+  String get tipsRestore => 'Recuperar mi insignia';
+
+  @override
+  String get tipsRestoreLine =>
+      '¿Ya diste una propina? Tu insignia vuelve en cualquier teléfono con la misma cuenta de Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Tu insignia de colaborador ha vuelto',
+      'patron': 'Tu insignia de mecenas ha vuelto',
+      'guardian': 'Tu insignia de guardián ha vuelto',
+      'other': 'Tu insignia de colaborador ha vuelto',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Esta cuenta de Google aún no tiene ninguna propina';
+
+  @override
+  String get tipsUnavailable =>
+      'Las propinas pasan por Google Play. Aparecen aquí en cuanto Google Play funcione en este teléfono.';
+
+  @override
+  String get tipsSoon => 'Las propinas llegan aquí pronto.';
+
+  @override
+  String get tipsPending =>
+      'Google Play aún está terminando tu pago. Tu insignia llega en cuanto se complete.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play no terminó el pago. Vuelve a intentarlo en un momento.';
+
+  @override
+  String get tipsThanks => 'Gracias';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Ya tienes la insignia de colaborador. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.',
+      'patron':
+          'Ya tienes la insignia de mecenas. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.',
+      'guardian':
+          'Ya tienes la insignia de guardián. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.',
+      'other':
+          'Ya tienes la insignia de colaborador. No desbloquea nada más: todo en Kryfo sigue gratis para todo el mundo.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Gracias por la propina. Conservas tu insignia de colaborador, la más alta.',
+      'patron':
+          'Gracias por la propina. Conservas tu insignia de mecenas, la más alta.',
+      'guardian':
+          'Gracias por la propina. Conservas tu insignia de guardián, la más alta.',
+      'other':
+          'Gracias por la propina. Conservas tu insignia de colaborador, la más alta.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard =>
+      'Da una propina para que Kryfo siga siendo independiente';
 }

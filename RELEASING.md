@@ -35,8 +35,8 @@ a feature goes into a release finished or not at all.
 - the push gateway's key is pinned (`kPushGatewayPub` in mobile/lib/google_push.dart, from
   `kryfo-push pubkey` on the server): `KRYFO_RELEASE=1 flutter test test/push_gateway_key_test.dart`
 - the foss apk carries no google code: `unzip -p app-arm64-v8a-release.apk 'classes*.dex' | strings |
-  grep -c 'com/google/firebase\|com/google/android/gms/common'` is 0, and
-  `./gradlew --offline :app:dependencies --configuration fossReleaseRuntimeClasspath | grep -ci firebase` is 0
+  grep -c 'com/google/firebase\|com/google/android/gms/common\|com/android/billingclient'` is 0, and
+  `./gradlew --offline :app:dependencies --configuration fossReleaseRuntimeClasspath | grep -ci 'firebase\|billing'` is 0
 
 ## version
 

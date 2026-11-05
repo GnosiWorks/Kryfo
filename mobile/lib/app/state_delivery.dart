@@ -620,6 +620,15 @@ extension AppStateDelivery on AppState {
     if (front && playBuild && _deliveryMode != DeliveryMode.google) {
       unawaited(GooglePush.instance.settle());
     }
+    // a tip that went through while kryfo was away gets its badge, and play
+    // its acknowledgement before the three days it waits
+    if (front && kPlayBuild) {
+      unawaited(
+        lockGuard.afterUnlock(() async {
+          await TipJar.instance.settle();
+        }, key: 'tip-settle'),
+      );
+    }
     if (front && knockMode(_deliveryMode)) {
       unawaited(_lookAtHelper().catchError((Object _) {}));
       unawaited(refreshHelperOffer());

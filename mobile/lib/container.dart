@@ -311,6 +311,9 @@ const containerKeys = {
   'supporter_show_self',
   'supporter_share_contacts',
   'badge_open_invoice',
+  // a google play tip this identity started whose outcome play may still
+  // owe (tips/tip_jar.dart): settled only in the session that started it
+  'tip_owed',
   'kryfo.intro.accept',
   'kryfo.intro.sent',
   'kryfo.scamshield.on',

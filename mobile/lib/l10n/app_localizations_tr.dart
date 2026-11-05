@@ -11429,4 +11429,107 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => 'Bu bağlantıyı telefonunda aç.';
+
+  @override
+  String get tipsTitle => 'Kryfo’yu destekle';
+
+  @override
+  String get tipsHeadline => 'Kryfo *herkes için ücretsiz* kalsın';
+
+  @override
+  String get tipsLine =>
+      'Reklam yok, yatırımcı yok, hesap yok. Bahşiş, sunucuların ve Kryfo üzerindeki emeğin ödenmesine yardım eder.';
+
+  @override
+  String get tipsLeave => 'Bahşiş bırak';
+
+  @override
+  String get tipsYours => 'Senin';
+
+  @override
+  String get tipsAsking => 'Fiyatlar Google Play’den alınıyor';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Bahşiş sana bir destekçi rozeti verir, başka hiçbir şey vermez. Kryfo’daki her şey, bahşişle ya da bahşişsiz, herkes için ücretsiz kalır.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Ödeme Google Play üzerinden yapılır. Kart bilgilerini de adını da asla görmeyiz.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Rozet bu telefonda durur. Ben bölümünde görünüp görünmeyeceğini ve kişilerinin görüp görmeyeceğini sen seçersin.';
+
+  @override
+  String get tipsRestore => 'Rozetimi geri getir';
+
+  @override
+  String get tipsRestoreLine =>
+      'Daha önce bahşiş bıraktın mı? Rozetin aynı Google hesabıyla oturum açılmış her telefona geri gelir.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Destekçi rozetin geri geldi',
+      'patron': 'Hami rozetin geri geldi',
+      'guardian': 'Koruyucu rozetin geri geldi',
+      'other': 'Destekçi rozetin geri geldi',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => 'Bu Google hesabından henüz bahşiş yok';
+
+  @override
+  String get tipsUnavailable =>
+      'Bahşişler Google Play üzerinden yapılır. Google Play bu telefonda çalışır çalışmaz burada görünürler.';
+
+  @override
+  String get tipsSoon => 'Bahşişler yakında burada.';
+
+  @override
+  String get tipsPending =>
+      'Google Play ödemeni hâlâ tamamlıyor. Rozetin, ödeme geçer geçmez gelir.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play ödemeyi tamamlamadı. Birazdan yeniden dene.';
+
+  @override
+  String get tipsThanks => 'Teşekkürler';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Artık destekçi rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.',
+      'patron':
+          'Artık hami rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.',
+      'guardian':
+          'Artık koruyucu rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.',
+      'other':
+          'Artık destekçi rozetin var. Başka hiçbir şeyin kilidini açmaz: Kryfo’daki her şey herkes için ücretsiz kalır.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Bahşiş için teşekkürler. Daha yüksek olan destekçi rozetin sende kalır.',
+      'patron':
+          'Bahşiş için teşekkürler. Daha yüksek olan hami rozetin sende kalır.',
+      'guardian':
+          'Bahşiş için teşekkürler. Daha yüksek olan koruyucu rozetin sende kalır.',
+      'other':
+          'Bahşiş için teşekkürler. Daha yüksek olan destekçi rozetin sende kalır.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Kryfo bağımsız kalsın diye bahşiş bırak';
 }

@@ -302,6 +302,8 @@ extension AppStateBoot on AppState {
     GooglePush.instance.seal ??= engine.pushSeal;
     GooglePush.instance.onChange = () => _helperSoon();
     if (playBuild) GooglePush.instance.listen();
+    // the tip jar hears of payments the sheet closed on (play only)
+    if (kPlayBuild) TipJar.instance.listen();
     if (_deliveryMode == DeliveryMode.google) {
       helper.usePush(GooglePush.instance);
     }

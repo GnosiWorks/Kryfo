@@ -24,6 +24,7 @@ import '../supporter.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';
 import 'donate_screen.dart';
+import 'tip_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/motion.dart' show haloRoute, kHouseCurve, kHouseTime;
@@ -305,9 +306,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                   ),
                 ],
-                // the play build offers no way to give
-                if (!kPlayBuild) ...[
-                  const SizedBox(height: 24),
+                const SizedBox(height: 24),
+                // the play build's way is a tip through google play, and its
+                // words never name another
+                if (kPlayBuild) ...[
+                  _reveal(4, _Section(l10n.tipsTitle)),
+                  _reveal(
+                    4,
+                    _SupportCard(
+                      label: l10n.tipsProfileCard,
+                      onTap:
+                          widget.onOpenSupport ??
+                          () => deskPush(context, haloRoute(const TipScreen())),
+                    ),
+                  ),
+                ] else ...[
                   _reveal(
                     4,
                     _Section(

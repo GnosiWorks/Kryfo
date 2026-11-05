@@ -10787,6 +10787,94 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get linkedLinkOnPhone => '在手机上打开这个链接。';
+
+  @override
+  String get tipsTitle => '支持 Kryfo';
+
+  @override
+  String get tipsHeadline => '让 Kryfo *对所有人免费*';
+
+  @override
+  String get tipsLine => '没有广告，没有投资人，没有账号。打赏帮忙支付服务器和 Kryfo 的开发工作。';
+
+  @override
+  String get tipsLeave => '打赏';
+
+  @override
+  String get tipsYours => '已拥有';
+
+  @override
+  String get tipsAsking => '正在向 Google Play 询问价格';
+
+  @override
+  String get tipsBadgeOnly => '打赏会给你一枚支持者徽章，除此之外什么都没有。不管打不打赏，Kryfo 的一切对所有人都免费。';
+
+  @override
+  String get tipsThroughPlay => '付款通过 Google Play 完成。我们永远看不到你的银行卡信息，也看不到你的名字。';
+
+  @override
+  String get tipsBadgeStays => '徽章保存在这部手机上。在“我”里，你可以选择是否显示它，以及联系人能否看到它。';
+
+  @override
+  String get tipsRestore => '恢复我的徽章';
+
+  @override
+  String get tipsRestoreLine => '以前打赏过？在登录同一个 Google 账号的任何手机上，你的徽章都会回来。';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你的支持者徽章回来了',
+      'patron': '你的赞助人徽章回来了',
+      'guardian': '你的守护者徽章回来了',
+      'other': '你的支持者徽章回来了',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => '这个 Google 账号还没有打赏过';
+
+  @override
+  String get tipsUnavailable =>
+      '打赏通过 Google Play 完成。等 Google Play 在这部手机上能用了，打赏就会出现在这里。';
+
+  @override
+  String get tipsSoon => '打赏很快就会在这里开放。';
+
+  @override
+  String get tipsPending => 'Google Play 还在完成你的付款。付款一通过，你的徽章就会到来。';
+
+  @override
+  String get tipsFailed => 'Google Play 没有完成付款。请稍后再试。';
+
+  @override
+  String get tipsThanks => '谢谢你';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你现在有了支持者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。',
+      'patron': '你现在有了赞助人徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。',
+      'guardian': '你现在有了守护者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。',
+      'other': '你现在有了支持者徽章。它不会解锁其他任何东西：Kryfo 的一切对所有人都免费。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '谢谢你的打赏。你保留更高的支持者徽章。',
+      'patron': '谢谢你的打赏。你保留更高的赞助人徽章。',
+      'guardian': '谢谢你的打赏。你保留更高的守护者徽章。',
+      'other': '谢谢你的打赏。你保留更高的支持者徽章。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => '打赏一下，让 Kryfo 保持独立';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -21458,4 +21546,93 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get linkedLinkOnPhone => '在手機上開啟這個連結。';
+
+  @override
+  String get tipsTitle => '支持 Kryfo';
+
+  @override
+  String get tipsHeadline => '讓 Kryfo *對所有人免費*';
+
+  @override
+  String get tipsLine => '沒有廣告，沒有投資人，沒有帳號。小費幫忙支付伺服器和 Kryfo 的開發工作。';
+
+  @override
+  String get tipsLeave => '給小費';
+
+  @override
+  String get tipsYours => '已擁有';
+
+  @override
+  String get tipsAsking => '正在向 Google Play 詢問價格';
+
+  @override
+  String get tipsBadgeOnly =>
+      '小費會給你一枚支持者徽章，除此之外什麼都沒有。不管給不給小費，Kryfo 的一切對所有人都免費。';
+
+  @override
+  String get tipsThroughPlay => '付款透過 Google Play 完成。我們永遠看不到你的信用卡資料，也看不到你的名字。';
+
+  @override
+  String get tipsBadgeStays => '徽章保存在這支手機上。在「我」裡，你可以選擇是否顯示它，以及聯絡人能否看到它。';
+
+  @override
+  String get tipsRestore => '恢復我的徽章';
+
+  @override
+  String get tipsRestoreLine => '以前給過小費？在登入同一個 Google 帳號的任何手機上，你的徽章都會回來。';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你的支持者徽章回來了',
+      'patron': '你的贊助人徽章回來了',
+      'guardian': '你的守護者徽章回來了',
+      'other': '你的支持者徽章回來了',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore => '這個 Google 帳號還沒有給過小費';
+
+  @override
+  String get tipsUnavailable =>
+      '小費透過 Google Play 完成。等 Google Play 在這支手機上能用了，小費就會出現在這裡。';
+
+  @override
+  String get tipsSoon => '小費很快就會在這裡開放。';
+
+  @override
+  String get tipsPending => 'Google Play 還在完成你的付款。付款一通過，你的徽章就會到來。';
+
+  @override
+  String get tipsFailed => 'Google Play 沒有完成付款。請稍後再試。';
+
+  @override
+  String get tipsThanks => '謝謝你';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '你現在有了支持者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。',
+      'patron': '你現在有了贊助人徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。',
+      'guardian': '你現在有了守護者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。',
+      'other': '你現在有了支持者徽章。它不會解鎖其他任何東西：Kryfo 的一切對所有人都免費。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': '謝謝你的小費。你保留更高的支持者徽章。',
+      'patron': '謝謝你的小費。你保留更高的贊助人徽章。',
+      'guardian': '謝謝你的小費。你保留更高的守護者徽章。',
+      'other': '謝謝你的小費。你保留更高的支持者徽章。',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => '給點小費，讓 Kryfo 保持獨立';
 }
