@@ -19,6 +19,7 @@ import 'device_receive.dart';
 import 'device_send.dart';
 import 'device_state.dart';
 import 'own_device_store.dart';
+import 'own_gone.dart' show ownGoneDropIfAlone;
 import 'own_devices.dart' show kUnusedDays;
 
 /// why a device of mine went, as own_devices.gone_why keeps it
@@ -136,6 +137,8 @@ class OwnUnlink {
           whereArgs: [r.ident, r.dev],
         );
       }
+      // the last device gone: no copy can come any more to keep out
+      await ownGoneDropIfAlone(t);
     });
     await readLinkNotices(d);
     removed?.call([...done], why);

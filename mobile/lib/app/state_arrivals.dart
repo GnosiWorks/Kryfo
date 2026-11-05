@@ -624,6 +624,8 @@ extension AppStateArrivals on AppState {
           ? await db.isAccepted(senderHaloId)
           : (await db.getGroupMembers(env.groupId!)).contains(senderHaloId);
       if (!ok || epoch != _openedEpoch) return;
+      // nothing waits for one that went on a device of mine
+      if (await _ownGoneFrom(db, senderHaloId, env.groupId, uid)) return;
       _parkEarly((
         uid: uid,
         db: db,
@@ -1048,10 +1050,9 @@ extension AppStateArrivals on AppState {
       // again. buffering it would start a copy that never finishes. one
       // receipt per pass, on the first slice, so the sender can stop. one
       // that went here, deleted or burned, stays gone the same way
-      final gone = await db.goneFrom(
-        goneKey(senderHaloId, group: env.groupId),
-        mid,
-      );
+      final gone =
+          await db.goneFrom(goneKey(senderHaloId, group: env.groupId), mid) ||
+          await _ownGoneFrom(db, senderHaloId, env.groupId, mid);
       if (gone || await db.messageFrom(mid, senderHaloId, env.groupId)) {
         if (!isGroup &&
             !unsealing &&
@@ -1160,7 +1161,8 @@ extension AppStateArrivals on AppState {
       final known =
           _inflightUids.contains(uid) ||
           await db.messageFrom(uid, senderHaloId, env.groupId) ||
-          await db.goneFrom(goneKey(senderHaloId, group: env.groupId), uid);
+          await db.goneFrom(goneKey(senderHaloId, group: env.groupId), uid) ||
+          await _ownGoneFrom(db, senderHaloId, env.groupId, uid);
       // a preview-only frame from an older client carries nothing we draw:
       // a sender never gets to put a title or an image on this screen
       final previewOnly =

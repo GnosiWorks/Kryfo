@@ -406,6 +406,7 @@ mixin _GroupRows {
   Future<void> deleteGroup(String groupId) async {
     await dropDraftOf(groupId, group: true);
     final db = await open();
+    await _ownGoneUpTo(db, container, (id: groupId, group: true), ends: true);
     final room = (await getGroup(groupId))?['room_pub'] != null;
     // what its members were still sending goes with it
     await _dropGroupFiles(

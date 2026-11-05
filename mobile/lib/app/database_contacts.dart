@@ -457,6 +457,8 @@ mixin _ContactRows {
       }
       await _noteGone(t, rows);
       await _dropOwnWaiting(t, rows);
+      // what of it went stays out as one row for the chat
+      await _ownGoneUpTo(t, container, (id: haloId, group: false), ends: true);
       await t.delete('messages', where: _kOneToOne, whereArgs: [haloId]);
       await _dropFilesComingFrom(t, haloId);
       // the row stays: it carries the xpub our nostr subscription is built

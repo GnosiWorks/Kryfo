@@ -109,6 +109,7 @@ Future<void> restoreCutsLinkedDevices(
     'dev_marks',
     'dev_farewell',
     'own_told',
+    'own_gone',
     'own_held',
     'own_notes_out',
   ]) {

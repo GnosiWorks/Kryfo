@@ -256,18 +256,26 @@ Future<void> deviceTables(
   // bundle ask answered (a day per device), a held list handed back (once
   // per version), a list asked for, and the alarms step 8 shows
   // own sync (own_sync.dart): what each chat's state was when it was last
-  // told to my other devices, and the uids of mine deleted here, so a late
-  // copy of one never comes back
+  // told to my other devices, and what went here by chat (own_gone.dart),
+  // so a late copy of it never comes back
   await db.execute('''
     CREATE TABLE IF NOT EXISTS own_told (
       chat TEXT PRIMARY KEY,
       digest TEXT NOT NULL
     )
   ''');
+  // an earlier build's rows by uid alone go: they last days at most
+  final gone = await db.rawQuery("PRAGMA table_info('own_gone')");
+  if (gone.isNotEmpty && !gone.any((c) => c['name'] == 'chat')) {
+    await db.execute('DROP TABLE own_gone');
+  }
   await db.execute('''
     CREATE TABLE IF NOT EXISTS own_gone (
-      uid TEXT PRIMARY KEY,
-      at INTEGER NOT NULL
+      chat TEXT NOT NULL,
+      uid TEXT NOT NULL,
+      at INTEGER NOT NULL,
+      upto INTEGER,
+      PRIMARY KEY (chat, uid)
     )
   ''');
   // a contact's frame my phone took while the decoy was open, to pass on
@@ -400,6 +408,7 @@ Future<void> deviceTablesAtOpen(
       (!have.contains('identities') ||
           (cols.contains('dev_id') && cols.contains('ident_pub'))) &&
       (await colsOf('dev_out')).contains('keep') &&
+      (await colsOf('own_gone')).contains('chat') &&
       (await colsOf('dev_pushes')).contains('dev_sent') &&
       (await colsOf('dev_openers')).contains('key');
   if (!whole) await deviceTables(db, addColumn);
