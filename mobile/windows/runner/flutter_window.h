@@ -36,12 +36,17 @@ class FlutterWindow : public Win32Window {
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
 
-  // kryfo/desktop: tray words and show from dart, quit to dart
+  // kryfo/desktop: tray words and show from dart, quit and the session's
+  // lock to dart
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> desktop_;
   kryfo::Tray tray_;
 
   // the one-time line for the first close to the tray, from dart
   std::wstring hint_;
+
+  // the windows session's lock, for dart's toasts
+  bool session_locked_ = true;
+  bool session_watched_ = false;
 
   // started with the computer (--hidden)
   bool start_hidden_ = false;

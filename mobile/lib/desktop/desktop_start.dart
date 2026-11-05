@@ -345,8 +345,11 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     // the first close to the tray was said: never again
     final run = desktopRun;
     if (call.method == 'hinted' && run is DesktopRun) await run.markHinted();
+    if (call.method == 'sessionLock') heardSessionLock(call.arguments);
     return null;
   });
+  // windows: toasts go neutral while the session is locked
+  if (Platform.isWindows) unawaited(readSessionLock(_desktopChannel));
   // a run before's temporary files: its key died with it, they go unread
   // tor's own folder stays: its state is no secret of the run
   if (Platform.isWindows) {
