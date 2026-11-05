@@ -8,23 +8,21 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/textproto"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/cretz/bine/control"
 	"github.com/cretz/bine/tor"
 )
 
 // one tor per process on a phone too: a start whose listen failed leaves
 // its tor up, and the next start listens again on it. no tor here: a fake
-// control port, a fake bine connection, tor's own start stood in for
+// control port, tor's own start stood in for
 
-// bine's connection answering ADD_ONION: no for the first [refuse], then
-// a service
+// a control port answering ADD_ONION: no for the first [refuse], then a
+// service
 type addSide struct {
 	mu     sync.Mutex
 	refuse int
@@ -37,6 +35,10 @@ func (s *addSide) serve(c net.Conn) {
 		line, err := r.ReadString('\n')
 		if err != nil {
 			return
+		}
+		if strings.HasPrefix(line, "PROTOCOLINFO") {
+			fmt.Fprint(c, "250-PROTOCOLINFO 1\r\n250-AUTH METHODS=NULL\r\n250-VERSION Tor=\"0.4.9.15\"\r\n250 OK\r\n")
+			continue
 		}
 		if !strings.HasPrefix(line, "ADD_ONION") {
 			fmt.Fprint(c, "250 OK\r\n")
@@ -74,13 +76,25 @@ func standInStart(t *testing.T, n *tor.Tor) *int {
 }
 
 func TestAFailedListenListensAgainOnTheSameTor(t *testing.T) {
-	f := newFakeControl(t, 100)
-	n := fakeTor(t, f.port())
-	a, c := net.Pipe()
-	t.Cleanup(func() { a.Close(); c.Close() })
 	side := &addSide{refuse: 1}
-	go side.serve(c)
-	n.Control = control.NewConn(textproto.NewConn(a))
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	t.Cleanup(func() { ln.Close() })
+	go func() {
+		for {
+			c, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			go side.serve(c)
+		}
+	}()
+	// bine's own connection in fakeTor is never answered
+	setCtrlDeadline(t, time.Second)
+	n := fakeTor(t, ln.Addr().(*net.TCPAddr).Port)
+	t.Cleanup(onionReset)
 	mu.Lock()
 	torNode, myAddr = nil, ""
 	mu.Unlock()

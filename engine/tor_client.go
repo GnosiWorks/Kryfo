@@ -12,7 +12,6 @@ import (
 	"log"
 	"sync/atomic"
 
-	"github.com/cretz/bine/control"
 	"github.com/cretz/bine/tor"
 )
 
@@ -65,9 +64,10 @@ func torClientOn() string {
 }
 
 // takes this process's onion service down, with startMu held. tor removes a
-// service only on the control connection that added it, bine's, which has
-// no deadline of its own: ctrlFallback bounds the wait. the local listener
-// closes first, so nothing more is let in whatever tor does
+// service only on the control connection that added it, the onion
+// connection, under its deadline. one that runs out closes it, and the
+// service goes with it. the local listener closes first, so nothing more is
+// let in whatever tor does
 func dropOnion() string {
 	mu.Lock()
 	t, l := torNode, listener
@@ -90,9 +90,7 @@ func dropOnion() string {
 		_ = o.LocalListener.Close()
 	}
 	id := o.ID
-	err := ctrlFallback(t, "DEL_ONION", func(c *control.Conn) error {
-		return c.DelOnion(id)
-	})
+	err := onionDel(t, id)
 	// tor saying no means it holds no such service: nothing is published
 	if err != nil && !torRefused(err) {
 		log.Printf("halo: the onion stays up until tor answers: %v", err)

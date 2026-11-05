@@ -468,11 +468,12 @@ var rescueCircuits = func() {
 // how long tor may sit off before the watch brings it back
 const offFor = 15 * time.Second
 
-// a tor runs in this process and has an address, or is a client's
+// a tor runs in this process and has an address, is a client's, or waits
+// to try its onion again
 func torUp() bool {
 	mu.Lock()
 	defer mu.Unlock()
-	return torNode != nil && (myAddr != "" || torClientOnly())
+	return torNode != nil && (myAddr != "" || torClientOnly() || onionRetrying.Load())
 }
 
 // a new network is a fresh start. the back-off grown while there was none,

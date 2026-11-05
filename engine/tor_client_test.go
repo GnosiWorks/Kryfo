@@ -18,10 +18,10 @@ import (
 )
 
 // a linked device's tor: a client, no onion of its own. no tor here: a
-// fake control port for the engine's own connection and a fake bine
+// fake control port for the engine's own connection and a fake onion
 // connection, the one tor adds and drops a service on
 
-// bine's connection as tor answers it: in order, every command taken. a
+// the onion connection as tor answers it: in order, every command taken. a
 // quiet one reads and holds its answers until it speaks again, as a control
 // port that stopped answering and came back does
 type bineSide struct {
@@ -68,8 +68,8 @@ func (b *bineSide) sent() []string {
 }
 
 // a tor of this process with a published onion, made a client later: a
-// control port for the engine's connection, bine's served by b, the
-// service's local listener open
+// control port for the engine's connection, the onion connection served by
+// b, the service's local listener open
 func clientRig(t *testing.T, quiet bool) (*tor.Tor, *bineSide, net.Listener) {
 	t.Helper()
 	f := newFakeControl(t, 100)
@@ -78,7 +78,10 @@ func clientRig(t *testing.T, quiet bool) (*tor.Tor, *bineSide, net.Listener) {
 	t.Cleanup(func() { a.Close(); c.Close() })
 	b := &bineSide{c: c, quiet: quiet}
 	go b.serve()
-	n.Control = control.NewConn(textproto.NewConn(a))
+	onionMu.Lock()
+	onionConn, onionSock, onionPort = control.NewConn(textproto.NewConn(a)), a, n.ControlPort
+	onionMu.Unlock()
+	t.Cleanup(onionReset)
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("listen: %v", err)
@@ -109,7 +112,7 @@ func listenerClosed(ln net.Listener) bool {
 }
 
 // a link in a process whose tor published the new device's onion: the onion
-// goes on bine's connection, which added it, nothing more comes in, and the
+// goes on the onion connection, which added it, nothing more comes in, and the
 // status says what a client's tor is. the same tor stays
 func TestALinkTakesTheDevicesOnionDown(t *testing.T) {
 	n, b, ln := clientRig(t, false)
@@ -117,7 +120,7 @@ func TestALinkTakesTheDevicesOnionDown(t *testing.T) {
 		t.Fatalf("made a client: %q", r)
 	}
 	if got := b.sent(); len(got) != 1 || got[0] != "DEL_ONION fakeonionid" {
-		t.Fatalf("bine's connection got %q, want the onion's DEL_ONION alone", got)
+		t.Fatalf("the onion connection got %q, want the onion's DEL_ONION alone", got)
 	}
 	if !listenerClosed(ln) {
 		t.Fatal("the onion's local listener still takes connections")
@@ -160,7 +163,8 @@ func TestALinkTakesTheDevicesOnionDown(t *testing.T) {
 
 // the control port stops answering the take-down: the call comes back on
 // its deadline, the address is forgotten and nothing comes in meanwhile.
-// the next start tries again once tor answers
+// the onion connection is closed, which takes the service down with it, so
+// the next start has nothing left to wait on
 func TestAQuietControlPortCannotHoldTheTakeDown(t *testing.T) {
 	setCtrlDeadline(t, 300*time.Millisecond)
 	n, b, ln := clientRig(t, true)
@@ -184,13 +188,14 @@ func TestAQuietControlPortCannotHoldTheTakeDown(t *testing.T) {
 	if st := statusNow(); st != "bootstrapped" {
 		t.Fatalf("status %q, want bootstrapped", st)
 	}
-	// still quiet: a start says so and starts nothing
-	if r := startListener(t.TempDir()); !strings.HasPrefix(r, "error: control port timeout") {
-		t.Fatalf("a start with tor still quiet: %q", r)
+	onionMu.Lock()
+	closed := onionConn == nil
+	onionMu.Unlock()
+	if !closed {
+		t.Fatal("the onion connection, and the service on it, outlived the timeout")
 	}
-	b.speak()
 	if r := startListener(t.TempDir()); r != torClientAddr {
-		t.Fatalf("a start once tor answered: %q", r)
+		t.Fatalf("a start after the take-down timed out: %q", r)
 	}
 	mu.Lock()
 	kept, same := listener != nil, torNode == n
@@ -198,10 +203,8 @@ func TestAQuietControlPortCannotHoldTheTakeDown(t *testing.T) {
 	if kept || !same {
 		t.Fatalf("listener kept %v, same tor %v", kept, same)
 	}
-	for _, c := range b.sent() {
-		if c != "DEL_ONION fakeonionid" {
-			t.Fatalf("bine's connection got %q", c)
-		}
+	if got := b.sent(); len(got) != 1 || got[0] != "DEL_ONION fakeonionid" {
+		t.Fatalf("the onion connection got %q", got)
 	}
 }
 
@@ -336,7 +339,7 @@ func TestAStartUnderWayStillLosesItsOnion(t *testing.T) {
 		return listener == nil
 	})
 	if got := b.sent(); len(got) != 1 || got[0] != "DEL_ONION fakeonionid" {
-		t.Fatalf("bine's connection got %q", got)
+		t.Fatalf("the onion connection got %q", got)
 	}
 	if !listenerClosed(ln) {
 		t.Fatal("the onion's local listener still takes connections")

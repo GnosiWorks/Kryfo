@@ -60,28 +60,37 @@ func ctrlTimeoutCount() int64 { return atomic.LoadInt64(&ctrlTimeouts) }
 func ctrlDialCount() int64    { return atomic.LoadInt64(&ctrlDials) }
 func ctrlSilentCount() int64  { return atomic.LoadInt64(&ctrlSilent) }
 
-// dials and authenticates a fresh control connection. ctrlMu must be held.
-func ctrlOpen(t *tor.Tor) error {
+// a fresh, authenticated control connection and its socket. the handshake
+// gets a deadline too: a tor that will not talk at all must not turn into a
+// permanent dial
+func ctrlDial(t *tor.Tor) (*control.Conn, net.Conn, error) {
 	if t == nil {
-		return fmt.Errorf("no tor")
+		return nil, nil, fmt.Errorf("no tor")
 	}
 	if t.ControlPort == 0 {
-		return fmt.Errorf("no control port to dial")
+		return nil, nil, fmt.Errorf("no control port to dial")
 	}
 	nc, err := net.DialTimeout("tcp",
 		fmt.Sprintf("127.0.0.1:%d", t.ControlPort), 5*time.Second)
 	if err != nil {
-		return fmt.Errorf("dial control port: %w", err)
+		return nil, nil, fmt.Errorf("dial control port: %w", err)
 	}
-	// the handshake gets a deadline too. a tor that will not talk at all
-	// must not turn into a permanent dial.
 	_ = nc.SetDeadline(time.Now().Add(ctrlDeadline()))
 	c := control.NewConn(textproto.NewConn(nc))
 	if err := c.Authenticate(""); err != nil {
 		_ = nc.Close()
-		return fmt.Errorf("authenticate control port: %w", err)
+		return nil, nil, fmt.Errorf("authenticate control port: %w", err)
 	}
 	_ = nc.SetDeadline(time.Time{})
+	return c, nc, nil
+}
+
+// dials and authenticates a fresh control connection. ctrlMu must be held.
+func ctrlOpen(t *tor.Tor) error {
+	c, nc, err := ctrlDial(t)
+	if err != nil {
+		return err
+	}
 	ctrlConn, ctrlSock = c, nc
 	atomic.AddInt64(&ctrlDials, 1)
 	log.Printf("halo: control connection open on 127.0.0.1:%d", t.ControlPort)

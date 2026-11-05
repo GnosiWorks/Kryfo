@@ -382,7 +382,7 @@ func startListener(dataDir string) string {
 	// goes again on the same tor, never on a second one
 	if up != nil {
 		log.Println("halo: tor is up, listening again")
-		return onionOn(up, dataDir, false)
+		return onionIn(up, dataDir, false)
 	}
 	torDataDir := dataDir + "/tor"
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
@@ -414,6 +414,8 @@ func startListener(dataDir string) string {
 			// torArgs names the port itself when the pin holds; bine would
 			// otherwise add "--SocksPort auto" alongside it.
 			NoAutoSocksPort: socksPin() != 0,
+			// bine's handshake has no deadline: done below, bounded
+			DisableEagerAuth: true,
 		})
 	}
 	t, err := start()
@@ -438,7 +440,15 @@ func startListener(dataDir string) string {
 	// and so did the socks port any cached http client was built against.
 	ctrlReset()
 	eventReset()
+	onionReset()
 	nostrResetClient()
+	// bine's own connection, only the fallback of ctrlDo now. a tor that
+	// does not answer leaves it as it is and the start goes on
+	if err := ctrlFallback(t, "AUTHENTICATE", func(c *control.Conn) error {
+		return c.Authenticate("")
+	}); err != nil {
+		log.Printf("halo: bine's control connection: %v", err)
+	}
 	// stay "starting": tor.Start returns before any circuit exists. the
 	// bootstrap watcher owns the flip at a real 100%.
 	goWatchBootstrap(t)
@@ -449,21 +459,17 @@ func startListener(dataDir string) string {
 		log.Println("halo: tor runs as a client, no onion of its own")
 		return torClientAddr
 	}
-	return onionOn(t, dataDir, true)
+	return onionIn(t, dataDir, true)
 }
 
 // tor's own start, the tests' to stand in for
 var startTor = tor.Start
 
-// our onion on tor t, with the key kept in dataDir. [first]: the start that
-// made t, which also puts it on the network
-func onionOn(t *tor.Tor, dataDir string, first bool) string {
+// our onion on tor t, with the key kept in dataDir
+func onionIn(t *tor.Tor, dataDir string, first bool) string {
 	if t.Control == nil {
 		return "error: listen: no control connection"
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
 	keyPath := dataDir + "/onion.key"
 	var key ed25519.PrivateKey
 	var err error
@@ -481,7 +487,16 @@ func onionOn(t *tor.Tor, dataDir string, first bool) string {
 			log.Println("halo: generated and saved new onion key")
 		}
 	}
+	return onionOn(t, key, first)
+}
 
+// our onion on tor t with key. [first]: the start that made t, which also
+// puts it on the network. one that does not go up is tried again later
+// with the same key: a retry never reads or makes one
+func onionOn(t *tor.Tor, key ed25519.PrivateKey, first bool) string {
+	if t.Control == nil {
+		return "error: listen: no control connection"
+	}
 	// no status flip here: publishing means nothing while bootstrap is at
 	// 50%. the watcher sets it when tor is actually there.
 	hsCh, hsSubbed := listenForUploads(t)
@@ -494,23 +509,24 @@ func onionOn(t *tor.Tor, dataDir string, first bool) string {
 	}
 
 	listenStart := time.Now()
-	onion, err := t.Listen(ctx, &tor.ListenConf{
-		NoWait:      true,
-		Version3:    true,
-		RemotePorts: []int{80},
-		Key:         key,
+	var onion *tor.OnionService
+	err := onionDo(t, "ADD_ONION", onionAddDeadline(), func(tc *tor.Tor) error {
+		var lerr error
+		onion, lerr = tc.Listen(context.Background(), &tor.ListenConf{
+			NoWait:      true,
+			Version3:    true,
+			RemotePorts: []int{80},
+			Key:         key,
+		})
+		return lerr
 	})
 	if err != nil {
 		log.Printf("halo: listen failed after %.0fs: %v", time.Since(listenStart).Seconds(), err)
-		// the next start listens again and subscribes afresh
+		// the next try listens again and subscribes afresh
 		if hsSubbed {
-			evMu.Lock()
-			c := evConn
-			evMu.Unlock()
-			if c != nil {
-				c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
-			}
+			unlistenUploads(hsCh)
 		}
+		onionLater(t, key)
 		return fmt.Sprintf("error: listen: %v", err)
 	}
 	log.Printf("halo: listen returned in %.0fs", time.Since(listenStart).Seconds())
@@ -593,7 +609,11 @@ func networkOn(t *tor.Tor, before func()) (string, error) {
 		netWentOn()
 		return nil
 	})
-	return why, err
+	// a fallback call that timed out may still write why
+	if err != nil {
+		return "", err
+	}
+	return why, nil
 }
 
 // tor answered and said no, as against a control port that did not answer
@@ -708,24 +728,31 @@ func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 		log.Printf("halo: HSDesc subscribe failed: %v", err)
 		return hsCh, false
 	}
-	if aerr := c.AddEventListener(hsCh, control.EventCodeHSDesc); aerr != nil {
+	if aerr := evDo(c, "SETEVENTS HS_DESC", func() error {
+		return c.AddEventListener(hsCh, control.EventCodeHSDesc)
+	}); aerr != nil {
 		log.Printf("halo: HSDesc subscribe failed: %v", aerr)
 		return hsCh, false
 	}
 	return hsCh, true
 }
 
+// the HS_DESC subscription of hsCh goes, on whatever event connection is up
+func unlistenUploads(hsCh chan control.Event) {
+	evMu.Lock()
+	c := evConn
+	evMu.Unlock()
+	if c != nil {
+		_ = evDo(c, "SETEVENTS", func() error {
+			return c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
+		})
+	}
+}
+
 func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionID string) {
 	gone := torGoneCh()
 	if hsSubbed {
-		defer func() {
-			evMu.Lock()
-			c := evConn
-			evMu.Unlock()
-			if c != nil {
-				c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
-			}
-		}()
+		defer unlistenUploads(hsCh)
 	}
 	for {
 		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
