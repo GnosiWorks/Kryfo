@@ -749,6 +749,7 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 		relayMsClear()
 		nostrResetClient()
 		relayClearBenches()
+		relayEverOK.Clear()
 		wakeReset()
 	})
 
@@ -764,6 +765,8 @@ func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*rela
 	}
 	nostrResetClient()
 	relayClearBenches()
+	// which relays answered is the process's, not a test's
+	relayEverOK.Clear()
 	setSavedDataDir(dir)
 	var urls []string
 	for _, r := range relays {
