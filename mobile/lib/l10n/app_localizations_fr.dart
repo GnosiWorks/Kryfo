@@ -1969,6 +1969,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cleanNotEnoughRoomOn => 'Pas assez de place sur le téléphone.';
 
   @override
+  String get cleanNotEnoughRoomOnDesk => 'Pas assez de place sur l’ordinateur.';
+
+  @override
   String get cleanKryfoCouldNotOpen => 'Kryfo n’a pas pu ouvrir ce fichier.';
 
   @override
@@ -1982,6 +1985,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get cleanPicturesOver64Mb =>
       'Les images de plus de 64 Mo ne sont pas nettoyées sur le téléphone. Rien n’a été modifié.';
+
+  @override
+  String get cleanPicturesOver64MbDesk =>
+      'Les images de plus de 64 Mo ne sont pas nettoyées sur ordinateur. Rien n’a été modifié.';
 
   @override
   String get cleanKryfoCouldNotRead =>
@@ -2000,12 +2007,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'L’appli qui l’a partagé l’a peut-être repris. Essayez de le partager à nouveau.';
 
   @override
+  String get cleanTheAppThatSharedDesk =>
+      'Il a peut-être été déplacé, ou une autre appli le garde ouvert. Choisissez-le à nouveau.';
+
+  @override
   String get cleanNoAppOnThis =>
       'Aucune appli de ce téléphone n’a pris le fichier.';
 
   @override
   String get cleanCouldNotSaveIt =>
       'Impossible de l’enregistrer. Vérifiez qu’il reste de la place sur le téléphone.';
+
+  @override
+  String get cleanCouldNotSaveItDesk =>
+      'Impossible de l’enregistrer. Vérifiez qu’il reste de la place sur l’ordinateur.';
 
   @override
   String get cleanTheOriginalIsGone =>
@@ -2025,6 +2040,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cleanSaveToGallery => 'Enregistrer dans la galerie';
 
   @override
+  String get cleanSaveToGalleryDesk => 'Enregistrer la copie propre';
+
+  @override
   String get commonStop => 'Arrêter';
 
   @override
@@ -2040,6 +2058,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cleanEverythingStaysOnThis => 'Tout reste sur ce téléphone.';
+
+  @override
+  String get cleanEverythingStaysOnThisDesk => 'Tout reste sur cet ordinateur.';
 
   @override
   String get cleanAlreadyClean => 'Déjà propre.';
@@ -2086,6 +2107,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cleanSavedToYourGallery => 'Enregistré dans votre galerie.';
+
+  @override
+  String get cleanSavedToYourGalleryDesk => 'Enregistré à l’endroit choisi.';
 
   @override
   String cleanTheOriginalIsStill(Object what) {
@@ -3625,6 +3649,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get lockFileEverythingStaysOnThis => 'Tout reste sur ce téléphone.';
 
   @override
+  String get lockFileEverythingStaysOnThisDesk =>
+      'Tout reste sur cet ordinateur.';
+
+  @override
   String get lockFileCouldNotMakeOne =>
       'Impossible d’en créer un. Tapez le vôtre.';
 
@@ -3668,6 +3696,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lockFileSaveToFiles => 'Enregistrer';
+
+  @override
+  String get lockFileSaveToFilesDesk => 'Enregistrer le fichier';
 
   @override
   String get lockFileLockFile => 'Verrouiller';
@@ -4300,6 +4331,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get openLockedItOpensOnThis => 'Il s’ouvre sur ce téléphone.';
 
   @override
+  String get openLockedItOpensOnThisDesk => 'Il s’ouvre sur cet ordinateur.';
+
+  @override
   String get openLockedLockedFile => 'Fichier verrouillé';
 
   @override
@@ -4472,8 +4506,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'LU SUR CE TÉLÉPHONE · LA VIDÉO N’EST ALLÉE NULLE PART';
 
   @override
+  String get photoKnowsReadOnThisPhoneDesk =>
+      'LU SUR CET ORDINATEUR · LA VIDÉO N’EST ALLÉE NULLE PART';
+
+  @override
   String get photoKnowsReadOnThisPhoneThePhoto =>
       'LU SUR CE TÉLÉPHONE · LA PHOTO N’EST ALLÉE NULLE PART';
+
+  @override
+  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
+      'LU SUR CET ORDINATEUR · LA PHOTO N’EST ALLÉE NULLE PART';
 
   @override
   String get photoKnowsReadingTheFile => 'Lecture du fichier';
@@ -4485,6 +4527,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get photoKnowsEverythingStaysOnThis => 'Tout reste sur ce téléphone.';
+
+  @override
+  String get photoKnowsEverythingStaysOnThisDesk =>
+      'Tout reste sur cet ordinateur.';
 
   @override
   String photoKnowsMapWithAPin(Object place) {
@@ -4647,6 +4693,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Créé sur ce téléphone · aucun site n’a vu le mot de passe';
 
   @override
+  String get qrMadeOnThisPhoneDesk =>
+      'Créé sur cet ordinateur · aucun site n’a vu le mot de passe';
+
+  @override
   String get qrNetworkName => 'Nom du réseau';
 
   @override
@@ -4738,6 +4788,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get qrCouldNotSaveIt =>
       'Impossible de l’enregistrer. Vérifiez qu’il reste de la place sur le téléphone.';
+
+  @override
+  String get qrCouldNotSaveItDesk =>
+      'Impossible de l’enregistrer. Vérifiez qu’il reste de la place sur l’ordinateur.';
 
   @override
   String get qrNoAppOnThis => 'Aucune appli de ce téléphone n’a pris l’image.';
@@ -5609,6 +5663,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tout ici se passe sur ce téléphone. Rien n’est mis en ligne, et personne d’autre n’a besoin d’être sur Kryfo.';
 
   @override
+  String get toolsEverythingHereHappensOnDesk =>
+      'Tout ici se passe sur cet ordinateur. Rien n’est mis en ligne, et personne d’autre n’a besoin d’être sur Kryfo.';
+
+  @override
   String get toolsPhotoCleaner => 'Nettoyeur de photos';
 
   @override
@@ -5618,6 +5676,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get toolsPickAPhotoAnd =>
       'Choisissez une photo ou une vidéo pour voir ce qu’elle révèle, puis retirez tout d’un seul geste. Vous pouvez aussi en partager une vers Kryfo depuis votre galerie.';
+
+  @override
+  String get toolsPickAPhotoAndDesk =>
+      'Choisissez une photo ou une vidéo pour voir ce qu’elle révèle, puis retirez tout d’un clic. Vous pouvez aussi la déposer ici ou la coller.';
 
   @override
   String get toolsPickAPhoto => 'Choisir une photo';
@@ -11744,4 +11806,38 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get onboardingAlwaysOnNotice =>
       'Android a besoin d’une notification silencieuse permanente pour que les messages arrivent quand Kryfo est fermé.';
+
+  @override
+  String get toolsSendToAChat => 'Envoyer dans une discussion';
+
+  @override
+  String get toolsOneFileAtATime => 'Un fichier à la fois';
+
+  @override
+  String get toolsLockThisFile => 'Verrouiller ce fichier';
+
+  @override
+  String get toolsLockThisFileLine =>
+      'Kryfo peut le verrouiller avec un mot de passe, pour que seule une personne qui le connaît puisse l’ouvrir.';
+
+  @override
+  String get toolsDropHere =>
+      'Déposez un fichier ici pour l’ouvrir dans un outil';
+
+  @override
+  String get toolsCopyPicture => 'Copier l’image';
+
+  @override
+  String get toolsPictureCopied => 'Image copiée';
+
+  @override
+  String get toolsCouldNotCopy => 'Impossible de copier l’image';
+
+  @override
+  String get cleanNotYetHere =>
+      'Cette image ne peut pas encore être nettoyée ici';
+
+  @override
+  String get cleanNotYetHereLine =>
+      'Une prochaine mise à jour nettoie les images comme celle-ci sur ordinateur. Votre image est restée telle quelle.';
 }

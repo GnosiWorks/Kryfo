@@ -2444,6 +2444,10 @@
   "@cleanNotEnoughRoomOn": {
     "description": "screens/clean_screen.dart"
   },
+  "cleanNotEnoughRoomOnDesk": "Not enough room on the computer.",
+  "@cleanNotEnoughRoomOnDesk": {
+    "description": "cleanNotEnoughRoomOn as a computer shows it (linux and windows)"
+  },
   "cleanKryfoCouldNotOpen": "Kryfo could not open that file.",
   "@cleanKryfoCouldNotOpen": {
     "description": "screens/clean_screen.dart"
@@ -2459,6 +2463,10 @@
   "cleanPicturesOver64Mb": "Pictures over 64 MB are not cleaned on the phone. Nothing was changed.",
   "@cleanPicturesOver64Mb": {
     "description": "screens/clean_screen.dart"
+  },
+  "cleanPicturesOver64MbDesk": "Pictures over 64 MB are not cleaned on a computer. Nothing was changed.",
+  "@cleanPicturesOver64MbDesk": {
+    "description": "cleanPicturesOver64Mb as a computer shows it (linux and windows)"
   },
   "cleanKryfoCouldNotRead": "Kryfo could not read it to the end, so it won’t call it clean. No copy was made.",
   "@cleanKryfoCouldNotRead": {
@@ -2476,6 +2484,10 @@
   "@cleanTheAppThatShared": {
     "description": "screens/clean_screen.dart"
   },
+  "cleanTheAppThatSharedDesk": "It may have moved, or another app may hold it. Try picking it again.",
+  "@cleanTheAppThatSharedDesk": {
+    "description": "cleanTheAppThatShared as a computer shows it (linux and windows)"
+  },
   "cleanNoAppOnThis": "No app on this phone took the file.",
   "@cleanNoAppOnThis": {
     "description": "screens/clean_screen.dart"
@@ -2483,6 +2495,10 @@
   "cleanCouldNotSaveIt": "Could not save it. Check the phone has room.",
   "@cleanCouldNotSaveIt": {
     "description": "screens/clean_screen.dart"
+  },
+  "cleanCouldNotSaveItDesk": "Could not save it. Check the computer has room.",
+  "@cleanCouldNotSaveItDesk": {
+    "description": "cleanCouldNotSaveIt as a computer shows it (linux and windows)"
   },
   "cleanTheOriginalIsGone": "The original is gone. The clean copy stays.",
   "@cleanTheOriginalIsGone": {
@@ -2503,6 +2519,10 @@
   "cleanSaveToGallery": "Save to gallery",
   "@cleanSaveToGallery": {
     "description": "screens/clean_screen.dart"
+  },
+  "cleanSaveToGalleryDesk": "Save clean copy",
+  "@cleanSaveToGalleryDesk": {
+    "description": "cleanSaveToGallery as a computer shows it (linux and windows)"
   },
   "commonStop": "Stop",
   "@commonStop": {
@@ -2531,6 +2551,10 @@
   "cleanEverythingStaysOnThis": "Everything stays on this phone.",
   "@cleanEverythingStaysOnThis": {
     "description": "screens/clean_screen.dart"
+  },
+  "cleanEverythingStaysOnThisDesk": "Everything stays on this computer.",
+  "@cleanEverythingStaysOnThisDesk": {
+    "description": "cleanEverythingStaysOnThis as a computer shows it (linux and windows)"
   },
   "cleanAlreadyClean": "Already clean.",
   "@cleanAlreadyClean": {
@@ -2592,6 +2616,10 @@
   "cleanSavedToYourGallery": "Saved to your gallery.",
   "@cleanSavedToYourGallery": {
     "description": "screens/clean_screen.dart"
+  },
+  "cleanSavedToYourGalleryDesk": "Saved where you picked.",
+  "@cleanSavedToYourGalleryDesk": {
+    "description": "cleanSavedToYourGallery as a computer shows it (linux and windows)"
   },
   "cleanTheOriginalIsStill": "The original is still there too, {what}",
   "@cleanTheOriginalIsStill": {
@@ -4432,6 +4460,10 @@
   "@lockFileEverythingStaysOnThis": {
     "description": "screens/lock_file_screen.dart"
   },
+  "lockFileEverythingStaysOnThisDesk": "Everything stays on this computer.",
+  "@lockFileEverythingStaysOnThisDesk": {
+    "description": "lockFileEverythingStaysOnThis as a computer shows it (linux and windows)"
+  },
   "lockFileCouldNotMakeOne": "Could not make one. Type your own.",
   "@lockFileCouldNotMakeOne": {
     "description": "screens/lock_file_screen.dart"
@@ -4483,6 +4515,10 @@
   "lockFileSaveToFiles": "Save to Files",
   "@lockFileSaveToFiles": {
     "description": "screens/lock_file_screen.dart"
+  },
+  "lockFileSaveToFilesDesk": "Save file",
+  "@lockFileSaveToFilesDesk": {
+    "description": "lockFileSaveToFiles as a computer shows it (linux and windows)"
   },
   "lockFileLockFile": "Lock file",
   "@lockFileLockFile": {
@@ -5249,6 +5285,10 @@
   "@openLockedItOpensOnThis": {
     "description": "screens/open_locked_screen.dart"
   },
+  "openLockedItOpensOnThisDesk": "It opens on this computer.",
+  "@openLockedItOpensOnThisDesk": {
+    "description": "openLockedItOpensOnThis as a computer shows it (linux and windows)"
+  },
   "openLockedLockedFile": "Locked file",
   "@openLockedLockedFile": {
     "description": "screens/open_locked_screen.dart"
@@ -5450,9 +5490,17 @@
   "@photoKnowsReadOnThisPhone": {
     "description": "screens/photo_knows_screen.dart"
   },
+  "photoKnowsReadOnThisPhoneDesk": "READ ON THIS COMPUTER · THE VIDEO WENT NOWHERE",
+  "@photoKnowsReadOnThisPhoneDesk": {
+    "description": "photoKnowsReadOnThisPhone as a computer shows it (linux and windows)"
+  },
   "photoKnowsReadOnThisPhoneThePhoto": "READ ON THIS PHONE · THE PHOTO WENT NOWHERE",
   "@photoKnowsReadOnThisPhoneThePhoto": {
     "description": "screens/photo_knows_screen.dart"
+  },
+  "photoKnowsReadOnThisPhoneThePhotoDesk": "READ ON THIS COMPUTER · THE PHOTO WENT NOWHERE",
+  "@photoKnowsReadOnThisPhoneThePhotoDesk": {
+    "description": "photoKnowsReadOnThisPhoneThePhoto as a computer shows it (linux and windows)"
   },
   "photoKnowsReadingTheFile": "Reading the file",
   "@photoKnowsReadingTheFile": {
@@ -5473,6 +5521,10 @@
   "photoKnowsEverythingStaysOnThis": "Everything stays on this phone.",
   "@photoKnowsEverythingStaysOnThis": {
     "description": "screens/photo_knows_screen.dart"
+  },
+  "photoKnowsEverythingStaysOnThisDesk": "Everything stays on this computer.",
+  "@photoKnowsEverythingStaysOnThisDesk": {
+    "description": "photoKnowsEverythingStaysOnThis as a computer shows it (linux and windows)"
   },
   "photoKnowsMapWithAPin": "Map with a pin. {place}",
   "@photoKnowsMapWithAPin": {
@@ -5678,6 +5730,10 @@
   "@qrMadeOnThisPhone": {
     "description": "screens/qr_screen.dart"
   },
+  "qrMadeOnThisPhoneDesk": "Made on this computer · no website saw the password",
+  "@qrMadeOnThisPhoneDesk": {
+    "description": "qrMadeOnThisPhone as a computer shows it (linux and windows)"
+  },
   "qrNetworkName": "Network name",
   "@qrNetworkName": {
     "description": "screens/qr_screen.dart"
@@ -5793,6 +5849,10 @@
   "qrCouldNotSaveIt": "Could not save it. Check the phone has room.",
   "@qrCouldNotSaveIt": {
     "description": "screens/qr_screen.dart"
+  },
+  "qrCouldNotSaveItDesk": "Could not save it. Check the computer has room.",
+  "@qrCouldNotSaveItDesk": {
+    "description": "qrCouldNotSaveIt as a computer shows it (linux and windows)"
   },
   "qrNoAppOnThis": "No app on this phone took the image.",
   "@qrNoAppOnThis": {
@@ -6877,6 +6937,10 @@
   "@toolsEverythingHereHappensOn": {
     "description": "screens/tools_screen.dart"
   },
+  "toolsEverythingHereHappensOnDesk": "Everything here happens on this computer. Nothing is uploaded, and nobody else has to be on Kryfo.",
+  "@toolsEverythingHereHappensOnDesk": {
+    "description": "toolsEverythingHereHappensOn as a computer shows it (linux and windows)"
+  },
   "toolsPhotoCleaner": "Photo cleaner",
   "@toolsPhotoCleaner": {
     "description": "screens/tools_screen.dart"
@@ -6888,6 +6952,10 @@
   "toolsPickAPhotoAnd": "Pick a photo or video to see what it gives away, then remove all of it with one tap. You can also share one to Kryfo from your gallery.",
   "@toolsPickAPhotoAnd": {
     "description": "screens/tools_screen.dart"
+  },
+  "toolsPickAPhotoAndDesk": "Pick a photo or video to see what it gives away, then remove all of it with one click. You can also drop one here, or paste it.",
+  "@toolsPickAPhotoAndDesk": {
+    "description": "toolsPickAPhotoAnd as a computer shows it (linux and windows)"
   },
   "toolsPickAPhoto": "Pick a photo",
   "@toolsPickAPhoto": {
@@ -14569,5 +14637,45 @@
   "onboardingAlwaysOnNotice": "Android needs one silent notification that stays, so messages arrive when Kryfo is closed.",
   "@onboardingAlwaysOnNotice": {
     "description": "screens/onboarding_screen.dart: f-droid, the third line on the always on card: why its notification stays"
+  },
+  "toolsSendToAChat": "Send to a chat",
+  "@toolsSendToAChat": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "toolsOneFileAtATime": "One file at a time",
+  "@toolsOneFileAtATime": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "toolsLockThisFile": "Lock this file",
+  "@toolsLockThisFile": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "toolsLockThisFileLine": "Kryfo can lock it with a password, so only someone who knows it can open it.",
+  "@toolsLockThisFileLine": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "toolsDropHere": "Drop a file here to open it in a tool",
+  "@toolsDropHere": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "toolsCopyPicture": "Copy picture",
+  "@toolsCopyPicture": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "toolsPictureCopied": "Picture copied",
+  "@toolsPictureCopied": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "toolsCouldNotCopy": "Could not copy the picture",
+  "@toolsCouldNotCopy": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "cleanNotYetHere": "This picture can't be cleaned here yet",
+  "@cleanNotYetHere": {
+    "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "cleanNotYetHereLine": "A coming update cleans pictures like this one on a computer. Your picture is just as it was.",
+  "@cleanNotYetHereLine": {
+    "description": "desktop tools (tools/desk_tools.dart)"
   }
 }

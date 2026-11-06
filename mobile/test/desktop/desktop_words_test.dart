@@ -853,6 +853,108 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.notificationsSoundAndVibration,
     (l) => l.notificationsSoundAndVibrationDesk,
   ),
+  (
+    'cleanCouldNotSaveIt',
+    (l) => l.cleanCouldNotSaveItShown,
+    (l) => l.cleanCouldNotSaveIt,
+    (l) => l.cleanCouldNotSaveItDesk,
+  ),
+  (
+    'cleanEverythingStaysOnThis',
+    (l) => l.cleanEverythingStaysOnThisShown,
+    (l) => l.cleanEverythingStaysOnThis,
+    (l) => l.cleanEverythingStaysOnThisDesk,
+  ),
+  (
+    'cleanNotEnoughRoomOn',
+    (l) => l.cleanNotEnoughRoomOnShown,
+    (l) => l.cleanNotEnoughRoomOn,
+    (l) => l.cleanNotEnoughRoomOnDesk,
+  ),
+  (
+    'cleanPicturesOver64Mb',
+    (l) => l.cleanPicturesOver64MbShown,
+    (l) => l.cleanPicturesOver64Mb,
+    (l) => l.cleanPicturesOver64MbDesk,
+  ),
+  (
+    'cleanSaveToGallery',
+    (l) => l.cleanSaveToGalleryShown,
+    (l) => l.cleanSaveToGallery,
+    (l) => l.cleanSaveToGalleryDesk,
+  ),
+  (
+    'cleanSavedToYourGallery',
+    (l) => l.cleanSavedToYourGalleryShown,
+    (l) => l.cleanSavedToYourGallery,
+    (l) => l.cleanSavedToYourGalleryDesk,
+  ),
+  (
+    'cleanTheAppThatShared',
+    (l) => l.cleanTheAppThatSharedShown,
+    (l) => l.cleanTheAppThatShared,
+    (l) => l.cleanTheAppThatSharedDesk,
+  ),
+  (
+    'lockFileEverythingStaysOnThis',
+    (l) => l.lockFileEverythingStaysOnThisShown,
+    (l) => l.lockFileEverythingStaysOnThis,
+    (l) => l.lockFileEverythingStaysOnThisDesk,
+  ),
+  (
+    'lockFileSaveToFiles',
+    (l) => l.lockFileSaveToFilesShown,
+    (l) => l.lockFileSaveToFiles,
+    (l) => l.lockFileSaveToFilesDesk,
+  ),
+  (
+    'openLockedItOpensOnThis',
+    (l) => l.openLockedItOpensOnThisShown,
+    (l) => l.openLockedItOpensOnThis,
+    (l) => l.openLockedItOpensOnThisDesk,
+  ),
+  (
+    'photoKnowsEverythingStaysOnThis',
+    (l) => l.photoKnowsEverythingStaysOnThisShown,
+    (l) => l.photoKnowsEverythingStaysOnThis,
+    (l) => l.photoKnowsEverythingStaysOnThisDesk,
+  ),
+  (
+    'photoKnowsReadOnThisPhone',
+    (l) => l.photoKnowsReadOnThisPhoneShown,
+    (l) => l.photoKnowsReadOnThisPhone,
+    (l) => l.photoKnowsReadOnThisPhoneDesk,
+  ),
+  (
+    'photoKnowsReadOnThisPhoneThePhoto',
+    (l) => l.photoKnowsReadOnThisPhoneThePhotoShown,
+    (l) => l.photoKnowsReadOnThisPhoneThePhoto,
+    (l) => l.photoKnowsReadOnThisPhoneThePhotoDesk,
+  ),
+  (
+    'qrCouldNotSaveIt',
+    (l) => l.qrCouldNotSaveItShown,
+    (l) => l.qrCouldNotSaveIt,
+    (l) => l.qrCouldNotSaveItDesk,
+  ),
+  (
+    'qrMadeOnThisPhone',
+    (l) => l.qrMadeOnThisPhoneShown,
+    (l) => l.qrMadeOnThisPhone,
+    (l) => l.qrMadeOnThisPhoneDesk,
+  ),
+  (
+    'toolsEverythingHereHappensOn',
+    (l) => l.toolsEverythingHereHappensOnShown,
+    (l) => l.toolsEverythingHereHappensOn,
+    (l) => l.toolsEverythingHereHappensOnDesk,
+  ),
+  (
+    'toolsPickAPhotoAnd',
+    (l) => l.toolsPickAPhotoAndShown,
+    (l) => l.toolsPickAPhotoAnd,
+    (l) => l.toolsPickAPhotoAndDesk,
+  ),
 ];
 
 Locale _locale(String tag) {

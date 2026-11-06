@@ -14,12 +14,17 @@ class PickedFile {
   final String? name;
   final int size;
   final String? deleteUri;
+
+  /// the person's own file, read where it is (a computer): never copied,
+  /// so never shred
+  final bool inPlace;
   const PickedFile({
     required this.uri,
     this.mime,
     this.name,
     this.size = -1,
     this.deleteUri,
+    this.inPlace = false,
   });
 
   bool get canDelete => deleteUri != null;
@@ -34,6 +39,7 @@ class PickedFile {
       name: raw['name'] as String?,
       size: (raw['size'] as num?)?.toInt() ?? -1,
       deleteUri: raw['deleteUri'] as String?,
+      inPlace: raw['inPlace'] == true,
     );
   }
 }

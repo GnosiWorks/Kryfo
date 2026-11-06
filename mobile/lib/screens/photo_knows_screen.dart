@@ -9,6 +9,7 @@ import '../meta/meta_reader.dart';
 import '../shred.dart';
 import '../theme.dart';
 import '../tools/cleaner.dart';
+import '../tools/desk_tools.dart' show DeskToolLock, DeskToolsIn;
 import '../tools/geo.dart';
 import '../tools/geo_assets.dart';
 import '../tools/photo_story.dart';
@@ -53,7 +54,7 @@ class PhotoKnowsScreen extends StatefulWidget {
 }
 
 class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, DeskToolLock {
   // made with the page, so a page left before a result has one to dispose
   late final AnimationController _reveal;
   StreamSubscription<CopyProgress>? _sub;
@@ -99,7 +100,8 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
 
   void _dropInput() {
     final p = _inPath;
-    if (p == null) return;
+    // the person's own file, read where it is: never ours to shred
+    if (p == null || widget.file.inPlace) return;
     // the sweep takes what will not go
     shredTree(File(p).parent.path).ignore();
   }
@@ -151,7 +153,12 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
     if (path == null) return;
     _handedOn = true;
     Navigator.of(context).pushReplacement(
-      haloRoute(CleanScreen(file: widget.file, localPath: path)),
+      haloRoute(
+        DeskToolsIn.wrap(
+          context,
+          CleanScreen(file: widget.file, localPath: path),
+        ),
+      ),
     );
   }
 
@@ -268,8 +275,8 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                   ),
                   Text(
                     video
-                        ? l10n.photoKnowsReadOnThisPhone
-                        : l10n.photoKnowsReadOnThisPhoneThePhoto,
+                        ? l10n.photoKnowsReadOnThisPhoneShown
+                        : l10n.photoKnowsReadOnThisPhoneThePhotoShown,
                     textAlign: TextAlign.center,
                     style: HaloType.mono(
                       size: 9.5,
@@ -357,7 +364,7 @@ class _Reading extends StatelessWidget {
             Text(
               total > 0 && done > 0
                   ? l10n.photoKnowsOf(prettySize(done), prettySize(total))
-                  : l10n.photoKnowsEverythingStaysOnThis,
+                  : l10n.photoKnowsEverythingStaysOnThisShown,
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),

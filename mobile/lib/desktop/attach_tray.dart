@@ -20,6 +20,7 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart' show whole;
 import '../lock_state.dart' show lockState;
 import '../open_file.dart' show nameSaysVideo;
+import '../shred.dart' show shredTree;
 import '../theme.dart';
 import '../widgets/media_bubbles.dart' show fileTooBigLine, humanFileSize;
 import '../widgets/motion.dart' show motionStill;
@@ -49,9 +50,9 @@ class TrayItem {
 
   /// a picture pasted from the clipboard, a png in memory. its path is a
   /// name for the row alone: nothing is at it
-  TrayItem.picture(Uint8List this.bytes)
+  TrayItem.picture(Uint8List this.bytes, {String? name})
     : path = 'pasted:${_pasted++}',
-      name = l10n.trayPastedPicture,
+      name = name ?? l10n.trayPastedPicture,
       size = bytes.length,
       kind = TrayKind.photo;
 
@@ -205,6 +206,7 @@ class AttachTray extends ChangeNotifier {
   Future<void> addPicture(
     Uint8List bytes, {
     required Future<int> Function() most,
+    String? name,
   }) async {
     if (lockState.locked || bytes.isEmpty) return;
     final limit = await most();
@@ -221,7 +223,7 @@ class AttachTray extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final x = TrayItem.picture(bytes);
+    final x = TrayItem.picture(bytes, name: name);
     _items.add(x);
     _line = null;
     _warn = false;
@@ -254,21 +256,31 @@ class AttachTray extends ChangeNotifier {
   void remove(TrayItem x) {
     if (!_items.remove(x)) return;
     _forget(x);
+    DeskTrays._release(x.path);
     _line = null;
     notifyListeners();
   }
 
-  /// what is staged, handed over for the send; the row is empty after
+  /// what is staged, handed over for the send; the row is empty after.
+  /// a file a tool made goes once [sent] says the send read it
   List<TrayItem> take() {
     final out = List<TrayItem>.of(_items);
-    clear();
+    clear(sending: true);
     return out;
   }
 
-  void clear() {
+  /// [items] taken for a send are read: what a tool made for them goes
+  static void sent(List<TrayItem> items) {
+    for (final x in items) {
+      DeskTrays._release(x.path);
+    }
+  }
+
+  void clear({bool sending = false}) {
     if (!shown) return;
     for (final x in _items) {
       _forget(x);
+      if (!sending) DeskTrays._release(x.path);
     }
     _items.clear();
     _line = null;
@@ -304,6 +316,73 @@ class DeskTrays {
   static void clearAll() {
     for (final t in _trays.values) {
       t.clear();
+    }
+    _waiting.clear();
+    handedIn.value++;
+    for (final f in List.of(_owned)) {
+      _release(f);
+    }
+  }
+
+  // what a tool handed to a chat that has not taken it yet, by row
+  static final _waiting = <String, List<TrayHandoff>>{};
+
+  /// files a tool made (a locked file), shredded once they leave a row,
+  /// are sent, or the app locks
+  static final _owned = <String>{};
+
+  /// says a chat may have something waiting for its row
+  static final handedIn = ValueNotifier<int>(0);
+
+  /// [what] waits for the row of [key] until that chat takes it. a locked
+  /// app takes nothing
+  static void handOff(String key, TrayHandoff what) {
+    if (lockState.locked) {
+      what.drop();
+      return;
+    }
+    if (!_watching) of(key);
+    final f = what.path;
+    if (what.owned && f != null) _owned.add(f);
+    (_waiting[key] ??= []).add(what);
+    handedIn.value++;
+  }
+
+  /// what waits for [key]'s row, taken
+  static List<TrayHandoff> takeHandedOff(String key) =>
+      _waiting.remove(key) ?? const [];
+
+  static void _release(String path) {
+    if (!_owned.remove(path)) return;
+    unawaited(shredTree(p.dirname(path)).catchError((_) {}));
+  }
+
+  /// a handed file the chat could not keep (a stranger's chat, a full row)
+  static void released(String path) => _release(path);
+}
+
+/// one result a tool sends to a chat: a file at [path], or a picture's
+/// [bytes] under [name]. an [owned] file is the tool's own, in its folder,
+/// and goes with that folder once read
+class TrayHandoff {
+  const TrayHandoff.file(String this.path, {this.owned = false})
+    : bytes = null,
+      name = null;
+  const TrayHandoff.picture(Uint8List this.bytes, {required this.name})
+    : path = null,
+      owned = false;
+
+  final String? path;
+  final Uint8List? bytes;
+  final String? name;
+  final bool owned;
+
+  /// not taken: what the tool made goes
+  void drop() {
+    final f = path;
+    if (owned && f != null) {
+      DeskTrays._owned.add(f);
+      DeskTrays._release(f);
     }
   }
 }

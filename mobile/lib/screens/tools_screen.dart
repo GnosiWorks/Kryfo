@@ -157,7 +157,7 @@ class _Head extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 310),
             child: Text(
-              l10n.toolsEverythingHereHappensOn,
+              l10n.toolsEverythingHereHappensOnShown,
               style: HaloType.sans(
                 size: 13,
                 color: HaloColors.warm,
@@ -312,7 +312,7 @@ class _PhotoCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            l10n.toolsPickAPhotoAnd,
+            l10n.toolsPickAPhotoAndShown,
             style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
           ),
           const SizedBox(height: 12),

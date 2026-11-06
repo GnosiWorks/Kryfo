@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/tools/tools_bridge.dart';
 import 'package:kryfo/desktop/desktop_channels.dart';
 import 'package:kryfo/desktop/desktop_db.dart';
 import 'package:kryfo/desktop/desktop_platform.dart';
@@ -90,7 +91,58 @@ void main() {
     final desk = {...toolsAnswered, ...toolsNotHere};
     expect(android.difference(desk), isEmpty);
     expect(desk.difference(android), isEmpty);
+    expect(toolsAnswered.intersection(toolsNotHere), isEmpty);
   });
+
+  test(
+    'a tool picks with the open dialog and reads the file in place',
+    () async {
+      final picked = File(p.join(data.path, 'holiday.jpg'))
+        ..writeAsBytesSync([1, 2, 3]);
+      final asked = <String>[];
+      String? answer = picked.path;
+      final tools = DesktopMessenger(
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger,
+        desktopAnswers(
+          DesktopHost(dataDir: data.path),
+          DesktopDb(),
+          open: (kind) async {
+            asked.add(kind);
+            return answer;
+          },
+        ),
+      );
+      Future<Object?> tool(String method, Object? args) async {
+        const codec = StandardMethodCodec();
+        final r = await tools.send(
+          'halo/tools',
+          codec.encodeMethodCall(MethodCall(method, args)),
+        );
+        return codec.decodeEnvelope(r!);
+      }
+
+      final got = await tool('pick', {'kind': 'image'}) as Map;
+      expect(asked, ['image']);
+      expect(got['uri'], picked.path);
+      expect(got['name'], 'holiday.jpg');
+      expect(got['size'], 3);
+      expect(got['inPlace'], isTrue);
+      // no delete on a computer: the person's own file stays theirs
+      expect(got['deleteUri'], isNull);
+      final f = PickedFile.from(got)!;
+      expect(f.inPlace, isTrue);
+      expect(f.canDelete, isFalse);
+      // nothing is copied in: the path is what the readers read
+      expect(await tool('copyIn', {'uri': picked.path}), picked.path);
+      expect(data.listSync(), hasLength(2));
+      await expectLater(
+        tool('copyIn', {'uri': p.join(data.path, 'gone.jpg')}),
+        throwsA(isA<PlatformException>()),
+      );
+      answer = null;
+      expect(await tool('pick', {'kind': 'any'}), isNull);
+    },
+  );
 
   test('every android channel is answered here, none reaches the runner', () {
     for (final ch in androidChannels) {

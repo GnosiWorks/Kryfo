@@ -11,7 +11,11 @@ import '../theme.dart';
 import '../tools/age_ffi.dart';
 import '../tools/lock_words.dart';
 import '../open_file.dart' show ShareEnd;
+import '../desktop/attach_tray.dart' show TrayHandoff;
+import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../tools/desk_tools.dart';
 import '../tools/tools_bridge.dart';
+import 'package:path/path.dart' as p;
 import '../widgets/ease_size.dart';
 import '../widgets/halo_switch.dart';
 import '../widgets/press_scale.dart';
@@ -187,7 +191,7 @@ class WorkingView extends StatelessWidget {
             Text(
               known
                   ? l10n.lockFileOf(prettySize(done), prettySize(total))
-                  : l10n.lockFileEverythingStaysOnThis,
+                  : l10n.lockFileEverythingStaysOnThisShown,
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
@@ -210,7 +214,8 @@ class LockFileScreen extends StatefulWidget {
   State<LockFileScreen> createState() => _LockFileScreenState();
 }
 
-class _LockFileScreenState extends State<LockFileScreen> with PinShield {
+class _LockFileScreenState extends State<LockFileScreen>
+    with PinShield, DeskToolLock {
   final _pw1 = TextEditingController();
   final _pw2 = TextEditingController();
   late PickedFile _file = widget.file;
@@ -234,6 +239,8 @@ class _LockFileScreenState extends State<LockFileScreen> with PinShield {
   String? _outPath;
   String? _outName;
   int _outBytes = 0;
+  // locked files a chat took over: its row shreds them, not this page
+  final _handed = <String>{};
 
   @override
   void initState() {
@@ -257,6 +264,11 @@ class _LockFileScreenState extends State<LockFileScreen> with PinShield {
   void dispose() {
     _timers.dispose();
     if (_working) _job.cancel();
+    // no sweep on a computer: the locked copy goes with the page
+    final out = _outPath;
+    if (onDesktop && out != null && !_handed.contains(out)) {
+      dropToolsFolder(out);
+    }
     // the listeners go first: clear() notifies, and a notify after the
     // element is defunct asserts inside setState.
     _pw1.removeListener(_typed);
@@ -298,6 +310,51 @@ class _LockFileScreenState extends State<LockFileScreen> with PinShield {
       gradePassword(_pw1.text).index >= PassGrade.weak.index &&
       _pw1.text == _pw2.text;
 
+  // a computer: the engine reads the file where it is and writes the locked
+  // copy into its own folder, by path (windows) or descriptor (linux)
+  Future<void> _lockDesk(String pass, String name, AgeJob job) async {
+    String? out;
+    AgeError? err;
+    try {
+      out = p.join((await engineToolsFolder()).path, name);
+    } on FileSystemException {
+      err = AgeError.io;
+    }
+    if (out != null) {
+      _poll.poke();
+      err = await ageLockPath(_file.uri, out, pass, job);
+      if (err != null) dropToolsFolder(out);
+    }
+    if (!mounted) {
+      if (err == null && out != null) dropToolsFolder(out);
+      return;
+    }
+    if (err != null && err != AgeError.cancelled) HapticFeedback.heavyImpact();
+    final had = _outPath;
+    setState(() {
+      _working = false;
+      if (err == null) {
+        _outPath = out;
+        _outName = name;
+        _outBytes = File(out!).lengthSync();
+        _pw1.clear();
+        _pw2.clear();
+      } else if (err != AgeError.cancelled) {
+        _error = err;
+      }
+    });
+    if (err == null && had != null && !_handed.contains(had)) {
+      dropToolsFolder(had);
+    }
+  }
+
+  Future<void> _sendIt() async {
+    final out = _outPath;
+    if (out == null || _busy) return;
+    _handed.add(out);
+    await sendToChat(context, TrayHandoff.file(out, owned: true));
+  }
+
   Future<void> _lock() async {
     if (!_ready || _working) return;
     FocusScope.of(context).unfocus();
@@ -309,6 +366,7 @@ class _LockFileScreenState extends State<LockFileScreen> with PinShield {
       _done = 0;
       _error = null;
     });
+    if (onDesktop) return _lockDesk(pass, name, job);
     final inFd = await ToolsBridge.instance.openForRead(_file.uri);
     final out = inFd < 0 ? null : await ToolsBridge.instance.openCacheOut(name);
     if (inFd < 0 || out == null) {
@@ -455,17 +513,17 @@ class _LockFileScreenState extends State<LockFileScreen> with PinShield {
             Expanded(
               child: ToolWideButton(
                 icon: _shareIcon,
-                label: l10n.commonShare,
+                label: canShareOut ? l10n.commonShare : l10n.toolsSendToAChat,
                 filled: true,
                 height: 52,
-                onTap: _busy ? null : _share,
+                onTap: _busy ? null : (canShareOut ? _share : _sendIt),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: ToolWideButton(
                 icon: _saveIcon,
-                label: l10n.lockFileSaveToFiles,
+                label: l10n.lockFileSaveToFilesShown,
                 filled: false,
                 height: 52,
                 onTap: _busy ? null : _save,

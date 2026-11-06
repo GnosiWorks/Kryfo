@@ -154,10 +154,11 @@ void main() {
     test('the chats key their rows by container and chat', () {
       final chat = sourceOf('lib/screens/chat_screen.dart');
       final group = sourceOf('lib/screens/group_chat_screen.dart');
+      expect(chat, contains('DeskTrays.of(_trayKey)'));
       expect(
         chat,
         contains(
-          "DeskTrays.of(\n    '\${session.container.id}|\${widget.peerHaloId}',",
+          "_trayKey = '\${session.container.id}|\${widget.peerHaloId}';",
         ),
       );
       expect(
@@ -536,12 +537,12 @@ void main() {
       var copied = 'https://example.org/cat.png';
       PasteFiles.clip = () async => const [];
       PasteFiles.picture = () async => pictureOf({
-            'kind': 'png',
-            'bytes': Uint8List.fromList([
-              0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, ...png, //
-            ]),
-            'text': copied,
-          });
+        'kind': 'png',
+        'bytes': Uint8List.fromList([
+          0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, ...png, //
+        ]),
+        'text': copied,
+      });
       final m = t.binding.defaultBinaryMessenger;
       m.setMockMethodCallHandler(SystemChannels.platform, (c) async {
         if (c.method == 'Clipboard.getData') return {'text': copied};

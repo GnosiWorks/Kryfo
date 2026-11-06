@@ -23,11 +23,8 @@ typedef _ProgressC = Int64 Function();
 typedef _ProgressD = int Function();
 typedef _WordsC = Pointer<Utf8> Function();
 typedef _WordsD = Pointer<Utf8> Function();
-typedef _LockPathC = Pointer<Utf8> Function(
-  Pointer<Utf8>,
-  Pointer<Utf8>,
-  Pointer<Utf8>,
-);
+typedef _LockPathC =
+    Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
 typedef _BeginPathC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef _FinishPathC = Pointer<Utf8> Function(Pointer<Utf8>);
 
@@ -244,8 +241,9 @@ void closeFd(int fd) {
 @visibleForTesting
 bool ageByPath = Platform.isWindows;
 
-/// [inPath] locked into [outPath], which must not exist yet. on desktop a
-/// sealed one on either side goes over as memory, never as a plain file
+/// [inPath] locked into [outPath], which must not exist yet: the engine
+/// makes it new, and only there. on desktop a sealed [inPath] goes over as
+/// memory, never as a plain file; what comes out is age's ciphertext
 Future<AgeError?> ageLockPath(
   String inPath,
   String outPath,
@@ -253,9 +251,8 @@ Future<AgeError?> ageLockPath(
   AgeJob? job,
 ]) => withNativeFiles(
   [inPath],
-  [outPath],
-  (i, o) => _lockPath(i.first, o.first, pass, job),
-  ok: (e) => e == null,
+  const [],
+  (i, _) => _lockPath(i.first, outPath, pass, job),
 );
 
 Future<AgeError?> _lockPath(

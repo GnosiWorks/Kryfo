@@ -1405,6 +1405,7 @@ class _ChatScreenState extends State<ChatScreen>
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
     _tray.addListener(_trayMoved);
+    if (onDesktop) DeskTrays.handedIn.addListener(_takeHandedIn);
     // a computer: the chat opens ready to type. the field takes it as soon
     // as it is built
     if (onDesktop) _composerFocus.requestFocus();
@@ -1555,6 +1556,7 @@ class _ChatScreenState extends State<ChatScreen>
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => _barSettled = true,
           );
+          if (onDesktop) _takeHandedIn();
         });
     _scrollCtrl.addListener(_onScroll);
     _scrollCtrl.addListener(_updateSticky);
@@ -5835,6 +5837,7 @@ class _ChatScreenState extends State<ChatScreen>
     _unwatchCaptures?.call();
     // the row stays with the chat for its next opening
     _tray.removeListener(_trayMoved);
+    DeskTrays.handedIn.removeListener(_takeHandedIn);
     for (final land in List.of(_flights)) {
       land();
     }
@@ -6768,9 +6771,42 @@ class _ChatScreenState extends State<ChatScreen>
 
   // this chat's row of staged files on a computer, kept by chat and
   // container so it can never go to anyone else
-  late final AttachTray _tray = DeskTrays.of(
-    '${session.container.id}|${widget.peerHaloId}',
-  );
+  late final AttachTray _tray = DeskTrays.of(_trayKey);
+  late final String _trayKey = '${session.container.id}|${widget.peerHaloId}';
+
+  // what a tool sent here ("Send to a chat") waits for this row and goes in
+  // by a drop's rules, once the bar is known
+  void _takeHandedIn() {
+    if (!mounted || !_barKnown) return;
+    final got = DeskTrays.takeHandedOff(_trayKey);
+    if (got.isNotEmpty) unawaited(_stageHanded(got));
+  }
+
+  Future<void> _stageHanded(List<TrayHandoff> got) async {
+    for (final h in got) {
+      if (!mounted || !_composerShown || _mediaWaits) {
+        if (mounted && _composerShown) {
+          _tray.say(l10n.requestSenderMediaLater);
+        }
+        h.drop();
+        continue;
+      }
+      final f = h.path, b = h.bytes;
+      if (f != null) {
+        await _tray.add([
+          f,
+        ], most: () => appState.fileLimitFor(widget.peerHaloId));
+        // too big or a full row: the line says so, the tool's file goes
+        if (!_tray.items.any((x) => x.path == f)) DeskTrays.released(f);
+      } else if (b != null) {
+        await _tray.addPicture(
+          b,
+          most: () => appState.fileLimitFor(widget.peerHaloId),
+          name: h.name,
+        );
+      }
+    }
+  }
 
   void _trayMoved() {
     if (mounted) setState(() {});
@@ -6844,18 +6880,22 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted || !await _askBig(picks) || !mounted) return;
     // a lock while it read took the row: nothing goes
     if (lockState.locked) return;
-    _tray.clear();
+    final sent = _tray.take();
     _msgCtrl.clear();
     _keepDraft();
-    if (picks.isNotEmpty) {
-      await _sendPicked(
-        MediaSendResult(items: picks, caption: caption, secure: _secureNext),
-      );
-    }
-    for (final (f, words) in plan.files) {
-      if (!mounted || lockState.locked) break;
-      final ready = await _readyFile(f.path, f.name);
-      if (ready != null) await _sendReady(ready, words);
+    try {
+      if (picks.isNotEmpty) {
+        await _sendPicked(
+          MediaSendResult(items: picks, caption: caption, secure: _secureNext),
+        );
+      }
+      for (final (f, words) in plan.files) {
+        if (!mounted || lockState.locked) break;
+        final ready = await _readyFile(f.path, f.name);
+        if (ready != null) await _sendReady(ready, words);
+      }
+    } finally {
+      AttachTray.sent(sent);
     }
   }
 

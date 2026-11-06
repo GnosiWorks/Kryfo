@@ -1872,6 +1872,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cleanNotEnoughRoomOn => '手机空间不足。';
 
   @override
+  String get cleanNotEnoughRoomOnDesk => '电脑空间不足。';
+
+  @override
   String get cleanKryfoCouldNotOpen => 'Kryfo 无法打开这个文件。';
 
   @override
@@ -1886,6 +1889,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cleanPicturesOver64Mb => '超过 64 MB 的图片不会在手机上清理。没有做任何改动。';
 
   @override
+  String get cleanPicturesOver64MbDesk => '超过 64 MB 的图片不会在电脑上清理。没有做任何改动。';
+
+  @override
   String get cleanKryfoCouldNotRead => 'Kryfo 没能把它读完，所以不会说它是干净的。没有生成副本。';
 
   @override
@@ -1898,10 +1904,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cleanTheAppThatShared => '分享它的应用可能已经把它收回了。请再分享一次。';
 
   @override
+  String get cleanTheAppThatSharedDesk => '它可能已被移动，或被其他应用占用。请再选一次。';
+
+  @override
   String get cleanNoAppOnThis => '这部手机上没有应用接收这个文件。';
 
   @override
   String get cleanCouldNotSaveIt => '无法保存。请检查手机还有没有空间。';
+
+  @override
+  String get cleanCouldNotSaveItDesk => '无法保存。请检查电脑还有没有空间。';
 
   @override
   String get cleanTheOriginalIsGone => '原件已删除。干净的副本还在。';
@@ -1919,6 +1931,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cleanSaveToGallery => '保存到相册';
 
   @override
+  String get cleanSaveToGalleryDesk => '保存干净副本';
+
+  @override
   String get commonStop => '停止';
 
   @override
@@ -1934,6 +1949,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cleanEverythingStaysOnThis => '一切都留在这部手机上。';
+
+  @override
+  String get cleanEverythingStaysOnThisDesk => '一切都留在这台电脑上。';
 
   @override
   String get cleanAlreadyClean => '本来就是干净的。';
@@ -1978,6 +1996,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cleanSavedToYourGallery => '已保存到你的相册。';
+
+  @override
+  String get cleanSavedToYourGalleryDesk => '已保存到你选择的位置。';
 
   @override
   String cleanTheOriginalIsStill(Object what) {
@@ -3417,6 +3438,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lockFileEverythingStaysOnThis => '一切都留在这部手机上。';
 
   @override
+  String get lockFileEverythingStaysOnThisDesk => '一切都留在这台电脑上。';
+
+  @override
   String get lockFileCouldNotMakeOne => '没能生成。请自己输入一个。';
 
   @override
@@ -3454,6 +3478,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lockFileSaveToFiles => '保存到“文件”';
+
+  @override
+  String get lockFileSaveToFilesDesk => '保存文件';
 
   @override
   String get lockFileLockFile => '锁定文件';
@@ -4040,6 +4067,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get openLockedItOpensOnThis => '它会在这部手机上打开。';
 
   @override
+  String get openLockedItOpensOnThisDesk => '它会在这台电脑上打开。';
+
+  @override
   String get openLockedLockedFile => '锁定的文件';
 
   @override
@@ -4191,7 +4221,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photoKnowsReadOnThisPhone => '在这部手机上读取 · 视频哪儿也没去';
 
   @override
+  String get photoKnowsReadOnThisPhoneDesk => '在这台电脑上读取 · 视频哪儿也没去';
+
+  @override
   String get photoKnowsReadOnThisPhoneThePhoto => '在这部手机上读取 · 照片哪儿也没去';
+
+  @override
+  String get photoKnowsReadOnThisPhoneThePhotoDesk => '在这台电脑上读取 · 照片哪儿也没去';
 
   @override
   String get photoKnowsReadingTheFile => '正在读取文件';
@@ -4203,6 +4239,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get photoKnowsEverythingStaysOnThis => '一切都留在这部手机上。';
+
+  @override
+  String get photoKnowsEverythingStaysOnThisDesk => '一切都留在这台电脑上。';
 
   @override
   String photoKnowsMapWithAPin(Object place) {
@@ -4359,6 +4398,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get qrMadeOnThisPhone => '在这部手机上生成 · 没有网站看到密码';
 
   @override
+  String get qrMadeOnThisPhoneDesk => '在这台电脑上生成 · 没有网站看到密码';
+
+  @override
   String get qrNetworkName => '网络名称';
 
   @override
@@ -4444,6 +4486,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get qrCouldNotSaveIt => '无法保存。请检查手机还有没有空间。';
+
+  @override
+  String get qrCouldNotSaveItDesk => '无法保存。请检查电脑还有没有空间。';
 
   @override
   String get qrNoAppOnThis => '这部手机上没有应用可以接收这张图片。';
@@ -5276,6 +5321,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '这里的一切都在这部手机上完成。不上传任何东西，别人也不需要用 Kryfo。';
 
   @override
+  String get toolsEverythingHereHappensOnDesk =>
+      '这里的一切都在这台电脑上完成。不上传任何东西，别人也不需要用 Kryfo。';
+
+  @override
   String get toolsPhotoCleaner => '照片清理';
 
   @override
@@ -5284,6 +5333,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get toolsPickAPhotoAnd =>
       '选一张照片或一段视频，看看它会泄露什么，然后一键全部去除。也可以从相册分享到 Kryfo。';
+
+  @override
+  String get toolsPickAPhotoAndDesk =>
+      '选一张照片或一段视频，看看它会泄露什么，然后一键全部去除。也可以拖到这里或直接粘贴。';
 
   @override
   String get toolsPickAPhoto => '选一张照片';
@@ -10982,6 +11035,36 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get onboardingAlwaysOnNotice =>
       'Android 需要一条常驻的静音通知，这样 Kryfo 关闭时也能收到消息。';
+
+  @override
+  String get toolsSendToAChat => '发送到聊天';
+
+  @override
+  String get toolsOneFileAtATime => '一次一个文件';
+
+  @override
+  String get toolsLockThisFile => '锁定这个文件';
+
+  @override
+  String get toolsLockThisFileLine => 'Kryfo 可以用密码锁定它，只有知道密码的人才能打开。';
+
+  @override
+  String get toolsDropHere => '把文件拖到这里，用工具打开';
+
+  @override
+  String get toolsCopyPicture => '复制图片';
+
+  @override
+  String get toolsPictureCopied => '图片已复制';
+
+  @override
+  String get toolsCouldNotCopy => '无法复制图片';
+
+  @override
+  String get cleanNotYetHere => '这张图片暂时还不能在这里清理';
+
+  @override
+  String get cleanNotYetHereLine => '即将推出的更新会在电脑上清理这样的图片。你的图片原封未动。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12851,6 +12934,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cleanNotEnoughRoomOn => '手機空間不足。';
 
   @override
+  String get cleanNotEnoughRoomOnDesk => '電腦空間不足。';
+
+  @override
   String get cleanKryfoCouldNotOpen => 'Kryfo 無法開啟那個檔案。';
 
   @override
@@ -12865,6 +12951,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cleanPicturesOver64Mb => '超過 64 MB 的圖片不會在手機上清理。沒有做任何變更。';
 
   @override
+  String get cleanPicturesOver64MbDesk => '超過 64 MB 的圖片不會在電腦上清理。沒有做任何變更。';
+
+  @override
   String get cleanKryfoCouldNotRead => 'Kryfo 無法完整讀到結尾，所以不會說它已清理乾淨。沒有產生任何副本。';
 
   @override
@@ -12877,10 +12966,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cleanTheAppThatShared => '分享它的應用程式可能已經把它收回。請再分享一次。';
 
   @override
+  String get cleanTheAppThatSharedDesk => '它可能已被移動，或被其他應用程式占用。請再選一次。';
+
+  @override
   String get cleanNoAppOnThis => '這支手機上沒有任何應用程式接收這個檔案。';
 
   @override
   String get cleanCouldNotSaveIt => '無法儲存。請確認手機還有空間。';
+
+  @override
+  String get cleanCouldNotSaveItDesk => '無法儲存。請確認電腦還有空間。';
 
   @override
   String get cleanTheOriginalIsGone => '原始檔案已刪除。乾淨的副本會保留。';
@@ -12898,6 +12993,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get cleanSaveToGallery => '儲存到相簿';
 
   @override
+  String get cleanSaveToGalleryDesk => '儲存乾淨副本';
+
+  @override
   String get commonStop => '停止';
 
   @override
@@ -12913,6 +13011,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get cleanEverythingStaysOnThis => '一切都留在這支手機上。';
+
+  @override
+  String get cleanEverythingStaysOnThisDesk => '一切都留在這台電腦上。';
 
   @override
   String get cleanAlreadyClean => '已經是乾淨的。';
@@ -12957,6 +13058,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get cleanSavedToYourGallery => '已儲存到你的相簿。';
+
+  @override
+  String get cleanSavedToYourGalleryDesk => '已儲存到你選擇的位置。';
 
   @override
   String cleanTheOriginalIsStill(Object what) {
@@ -14399,6 +14503,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get lockFileEverythingStaysOnThis => '一切都留在這支手機上。';
 
   @override
+  String get lockFileEverythingStaysOnThisDesk => '一切都留在這台電腦上。';
+
+  @override
   String get lockFileCouldNotMakeOne => '無法產生。請自己輸入。';
 
   @override
@@ -14436,6 +14543,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get lockFileSaveToFiles => '儲存到檔案';
+
+  @override
+  String get lockFileSaveToFilesDesk => '儲存檔案';
 
   @override
   String get lockFileLockFile => '鎖定檔案';
@@ -15021,6 +15131,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get openLockedItOpensOnThis => '它會在這支手機上開啟。';
 
   @override
+  String get openLockedItOpensOnThisDesk => '它會在這台電腦上開啟。';
+
+  @override
   String get openLockedLockedFile => '鎖定的檔案';
 
   @override
@@ -15173,7 +15286,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get photoKnowsReadOnThisPhone => '在這支手機上讀取 · 影片沒有傳到任何地方';
 
   @override
+  String get photoKnowsReadOnThisPhoneDesk => '在這台電腦上讀取 · 影片沒有傳到任何地方';
+
+  @override
   String get photoKnowsReadOnThisPhoneThePhoto => '在這支手機上讀取 · 照片沒有傳到任何地方';
+
+  @override
+  String get photoKnowsReadOnThisPhoneThePhotoDesk => '在這台電腦上讀取 · 照片沒有傳到任何地方';
 
   @override
   String get photoKnowsReadingTheFile => '正在讀取檔案';
@@ -15185,6 +15304,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get photoKnowsEverythingStaysOnThis => '一切都留在這支手機上。';
+
+  @override
+  String get photoKnowsEverythingStaysOnThisDesk => '一切都留在這台電腦上。';
 
   @override
   String photoKnowsMapWithAPin(Object place) {
@@ -15341,6 +15463,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get qrMadeOnThisPhone => '在這支手機上產生 · 沒有任何網站看過密碼';
 
   @override
+  String get qrMadeOnThisPhoneDesk => '在這台電腦上產生 · 沒有任何網站看過密碼';
+
+  @override
   String get qrNetworkName => '網路名稱';
 
   @override
@@ -15426,6 +15551,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get qrCouldNotSaveIt => '無法儲存。請確認手機還有空間。';
+
+  @override
+  String get qrCouldNotSaveItDesk => '無法儲存。請確認電腦還有空間。';
 
   @override
   String get qrNoAppOnThis => '這支手機上沒有任何應用程式可以接收這張圖片。';
@@ -16258,6 +16386,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '這裡的一切都在這支手機上進行。不會上傳任何東西，其他人也不必使用 Kryfo。';
 
   @override
+  String get toolsEverythingHereHappensOnDesk =>
+      '這裡的一切都在這台電腦上進行。不會上傳任何東西，其他人也不必使用 Kryfo。';
+
+  @override
   String get toolsPhotoCleaner => '照片清理';
 
   @override
@@ -16266,6 +16398,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get toolsPickAPhotoAnd =>
       '選一張照片或一段影片，看看它會洩露什麼，然後一鍵全部移除。也可以從相簿分享到 Kryfo。';
+
+  @override
+  String get toolsPickAPhotoAndDesk =>
+      '選一張照片或一段影片，看看它會洩露什麼，然後一鍵全部移除。也可以拖到這裡或直接貼上。';
 
   @override
   String get toolsPickAPhoto => '選擇照片';
@@ -21848,4 +21984,34 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get onboardingAlwaysOnNotice =>
       'Android 需要一則常駐的無聲通知，這樣 Kryfo 關閉時也能收到訊息。';
+
+  @override
+  String get toolsSendToAChat => '傳送到聊天';
+
+  @override
+  String get toolsOneFileAtATime => '一次一個檔案';
+
+  @override
+  String get toolsLockThisFile => '鎖定這個檔案';
+
+  @override
+  String get toolsLockThisFileLine => 'Kryfo 可以用密碼鎖定它，只有知道密碼的人才能開啟。';
+
+  @override
+  String get toolsDropHere => '把檔案拖到這裡，用工具開啟';
+
+  @override
+  String get toolsCopyPicture => '複製圖片';
+
+  @override
+  String get toolsPictureCopied => '圖片已複製';
+
+  @override
+  String get toolsCouldNotCopy => '無法複製圖片';
+
+  @override
+  String get cleanNotYetHere => '這張圖片目前還不能在這裡清理';
+
+  @override
+  String get cleanNotYetHereLine => '即將推出的更新會在電腦上清理這樣的圖片。你的圖片原封未動。';
 }

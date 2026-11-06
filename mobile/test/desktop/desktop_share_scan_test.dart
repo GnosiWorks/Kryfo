@@ -74,12 +74,23 @@ void a() {
     expect(canShareOut, isFalse);
   });
 
-  test('the desktop shows no tools tab, the phone does', () {
+  test('the tools tab is there on desktop too, its shares still shut', () {
     expect(shownTabs, contains(HaloTab.tools));
     onDesktop = true;
     addTearDown(() => onDesktop = false);
-    expect(shownTabs, isNot(contains(HaloTab.tools)));
+    expect(shownTabs, contains(HaloTab.tools));
     expect(shownTabs, contains(HaloTab.chats));
+    // each tool's share sheet is behind canShareOut: a computer sends to a
+    // chat instead
+    for (final f in [
+      'lib/screens/clean_screen.dart',
+      'lib/screens/qr_screen.dart',
+      'lib/screens/lock_file_screen.dart',
+    ]) {
+      final src = File(f).readAsStringSync();
+      expect(src, contains('canShareOut'), reason: f);
+      expect(src, contains('l10n.toolsSendToAChat'), reason: f);
+    }
   });
 
   test('backups and notes offer no share instead on desktop', () {

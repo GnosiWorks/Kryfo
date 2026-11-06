@@ -147,6 +147,23 @@ const deskWordKeys = [
   'photoChoose',
   'wallpaperFromYourPhotos',
   'notificationsSoundAndVibration',
+  'cleanCouldNotSaveIt',
+  'cleanEverythingStaysOnThis',
+  'cleanNotEnoughRoomOn',
+  'cleanPicturesOver64Mb',
+  'cleanSaveToGallery',
+  'cleanSavedToYourGallery',
+  'cleanTheAppThatShared',
+  'lockFileEverythingStaysOnThis',
+  'lockFileSaveToFiles',
+  'openLockedItOpensOnThis',
+  'photoKnowsEverythingStaysOnThis',
+  'photoKnowsReadOnThisPhone',
+  'photoKnowsReadOnThisPhoneThePhoto',
+  'qrCouldNotSaveIt',
+  'qrMadeOnThisPhone',
+  'toolsEverythingHereHappensOn',
+  'toolsPickAPhotoAnd',
 ];
 
 extension DeskWords on AppLocalizations {
@@ -437,4 +454,42 @@ extension DeskWords on AppLocalizations {
   String get notificationsSoundAndVibrationShown => onDesktop
       ? notificationsSoundAndVibrationDesk
       : notificationsSoundAndVibration;
+  String get cleanCouldNotSaveItShown =>
+      onDesktop ? cleanCouldNotSaveItDesk : cleanCouldNotSaveIt;
+  String get cleanEverythingStaysOnThisShown =>
+      onDesktop ? cleanEverythingStaysOnThisDesk : cleanEverythingStaysOnThis;
+  String get cleanNotEnoughRoomOnShown =>
+      onDesktop ? cleanNotEnoughRoomOnDesk : cleanNotEnoughRoomOn;
+  String get cleanPicturesOver64MbShown =>
+      onDesktop ? cleanPicturesOver64MbDesk : cleanPicturesOver64Mb;
+  String get cleanSaveToGalleryShown =>
+      onDesktop ? cleanSaveToGalleryDesk : cleanSaveToGallery;
+  String get cleanSavedToYourGalleryShown =>
+      onDesktop ? cleanSavedToYourGalleryDesk : cleanSavedToYourGallery;
+  String get cleanTheAppThatSharedShown =>
+      onDesktop ? cleanTheAppThatSharedDesk : cleanTheAppThatShared;
+  String get lockFileEverythingStaysOnThisShown => onDesktop
+      ? lockFileEverythingStaysOnThisDesk
+      : lockFileEverythingStaysOnThis;
+  String get lockFileSaveToFilesShown =>
+      onDesktop ? lockFileSaveToFilesDesk : lockFileSaveToFiles;
+  String get openLockedItOpensOnThisShown =>
+      onDesktop ? openLockedItOpensOnThisDesk : openLockedItOpensOnThis;
+  String get photoKnowsEverythingStaysOnThisShown => onDesktop
+      ? photoKnowsEverythingStaysOnThisDesk
+      : photoKnowsEverythingStaysOnThis;
+  String get photoKnowsReadOnThisPhoneShown =>
+      onDesktop ? photoKnowsReadOnThisPhoneDesk : photoKnowsReadOnThisPhone;
+  String get photoKnowsReadOnThisPhoneThePhotoShown => onDesktop
+      ? photoKnowsReadOnThisPhoneThePhotoDesk
+      : photoKnowsReadOnThisPhoneThePhoto;
+  String get qrCouldNotSaveItShown =>
+      onDesktop ? qrCouldNotSaveItDesk : qrCouldNotSaveIt;
+  String get qrMadeOnThisPhoneShown =>
+      onDesktop ? qrMadeOnThisPhoneDesk : qrMadeOnThisPhone;
+  String get toolsEverythingHereHappensOnShown => onDesktop
+      ? toolsEverythingHereHappensOnDesk
+      : toolsEverythingHereHappensOn;
+  String get toolsPickAPhotoAndShown =>
+      onDesktop ? toolsPickAPhotoAndDesk : toolsPickAPhotoAnd;
 }

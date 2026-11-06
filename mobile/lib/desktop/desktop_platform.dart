@@ -7,8 +7,11 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:io' as io show exit;
 
+import 'package:file_selector_platform_interface/file_selector_platform_interface.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
+
+import '../l10n/l10n.dart';
 
 import 'desktop_channels.dart';
 import 'desktop_db.dart';
@@ -79,7 +82,8 @@ const platformNotHere = {
   'shareFile', 'videoInfo',
 };
 
-/// the same for halo/tools: nothing is shared into a desktop app
+/// the same for halo/tools: nothing is shared into a desktop app. a pick
+/// is the system's open dialog, and the file is read where it is
 const toolsAnswered = {
   'takeShared',
   'takeSharedText',
@@ -89,16 +93,16 @@ const toolsAnswered = {
   'sweep',
   'saveToFiles',
   'saveToGallery',
-};
-
-const toolsNotHere = {
   'pick',
   'copyIn',
   'cancelCopy',
+};
+
+/// no share sheet, nothing deleted from the person's folders, and the age
+/// tools take paths on desktop (age_ffi.dart)
+const toolsNotHere = {
   'shareOut',
-  'saveToGallery',
   'deleteOriginal',
-  'saveToFiles',
   'openForRead',
   'createDocument',
   'openCreated',
@@ -106,6 +110,49 @@ const toolsNotHere = {
   'openCacheOut',
   'sdk',
 };
+
+/// the open dialog, behind a seam for the tests: a path picked, or null
+typedef PickOpen = Future<String?> Function(String kind);
+
+const _pictureTypes = [
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+  'heic',
+  'heif',
+  'avif',
+  'gif',
+];
+const _videoTypes = ['mp4', 'mov', 'm4v', '3gp'];
+
+Future<String?> _openDialog(String kind) async {
+  final groups = switch (kind) {
+    'image' => [
+      XTypeGroup(label: l10n.photoKnowsPhoto, extensions: _pictureTypes),
+    ],
+    'video' => [
+      XTypeGroup(label: l10n.photoKnowsVideo, extensions: _videoTypes),
+    ],
+    _ => const <XTypeGroup>[],
+  };
+  return (await FileSelectorPlatform.instance.openFile(
+    acceptedTypeGroups: groups,
+  ))?.path;
+}
+
+/// a file of the person's as a tool takes it: its path is its uri, it is
+/// read in place and never copied, and nothing deletes it
+Map<String, Object?>? pickedAt(String path) {
+  final f = File(path);
+  if (!f.existsSync()) return null;
+  return {
+    'uri': path,
+    'name': p.basename(path),
+    'size': f.lengthSync(),
+    'inPlace': true,
+  };
+}
 
 /// the clocks and the process, behind a seam for the tests
 class DesktopHost {
@@ -209,7 +256,9 @@ Map<String, DesktopAnswer> desktopAnswers(
   DesktopHost host,
   DesktopDb db, {
   DesktopSave? save,
+  PickOpen? open,
 }) {
+  final pickOpen = open ?? _openDialog;
   final saver = save ?? deskSaver;
   String arg(MethodCall c, String k) => '${(c.arguments as Map?)?[k] ?? ''}';
   Object? platform(MethodCall c) => switch (c.method) {
@@ -272,6 +321,16 @@ Map<String, DesktopAnswer> desktopAnswers(
     'freeBytes' => await host.freeBytes() ?? -1,
     'saveToFiles' ||
     'saveToGallery' => await saver.saveAs(arg(c, 'path'), arg(c, 'name')),
+    'pick' => switch (await pickOpen(arg(c, 'kind'))) {
+      final String path => pickedAt(path),
+      null => null,
+    },
+    // read where it is: the path is the file
+    'copyIn' =>
+      File(arg(c, 'uri')).existsSync()
+          ? arg(c, 'uri')
+          : throw PlatformException(code: 'read'),
+    'cancelCopy' => null,
     _ => notHere,
   };
 

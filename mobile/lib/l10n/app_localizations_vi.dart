@@ -1939,6 +1939,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cleanNotEnoughRoomOn => 'Điện thoại không đủ dung lượng.';
 
   @override
+  String get cleanNotEnoughRoomOnDesk => 'Máy tính không đủ dung lượng.';
+
+  @override
   String get cleanKryfoCouldNotOpen => 'Kryfo không mở được tệp đó.';
 
   @override
@@ -1952,6 +1955,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cleanPicturesOver64Mb =>
       'Ảnh trên 64 MB không được làm sạch trên điện thoại. Không có gì bị thay đổi.';
+
+  @override
+  String get cleanPicturesOver64MbDesk =>
+      'Ảnh trên 64 MB không được làm sạch trên máy tính. Không có gì bị thay đổi.';
 
   @override
   String get cleanKryfoCouldNotRead =>
@@ -1970,12 +1977,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ứng dụng đã chia sẻ tệp có thể đã lấy lại nó. Hãy thử chia sẻ lại.';
 
   @override
+  String get cleanTheAppThatSharedDesk =>
+      'Có thể tệp đã bị di chuyển, hoặc một ứng dụng khác đang mở nó. Hãy thử chọn lại.';
+
+  @override
   String get cleanNoAppOnThis =>
       'Không ứng dụng nào trên điện thoại này nhận tệp.';
 
   @override
   String get cleanCouldNotSaveIt =>
       'Không lưu được. Hãy kiểm tra xem điện thoại còn dung lượng không.';
+
+  @override
+  String get cleanCouldNotSaveItDesk =>
+      'Không lưu được. Hãy kiểm tra xem máy tính còn dung lượng không.';
 
   @override
   String get cleanTheOriginalIsGone => 'Bản gốc đã bị xóa. Bản sạch vẫn còn.';
@@ -1994,6 +2009,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cleanSaveToGallery => 'Lưu vào thư viện';
 
   @override
+  String get cleanSaveToGalleryDesk => 'Lưu bản sạch';
+
+  @override
   String get commonStop => 'Dừng';
 
   @override
@@ -2010,6 +2028,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cleanEverythingStaysOnThis =>
       'Mọi thứ đều ở lại trên điện thoại này.';
+
+  @override
+  String get cleanEverythingStaysOnThisDesk =>
+      'Mọi thứ đều ở lại trên máy tính này.';
 
   @override
   String get cleanAlreadyClean => 'Đã sạch sẵn.';
@@ -2056,6 +2078,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cleanSavedToYourGallery => 'Đã lưu vào thư viện ảnh.';
+
+  @override
+  String get cleanSavedToYourGalleryDesk => 'Đã lưu vào nơi bạn chọn.';
 
   @override
   String cleanTheOriginalIsStill(Object what) {
@@ -3574,6 +3599,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ đều ở lại trên điện thoại này.';
 
   @override
+  String get lockFileEverythingStaysOnThisDesk =>
+      'Mọi thứ đều ở lại trên máy tính này.';
+
+  @override
   String get lockFileCouldNotMakeOne => 'Không tạo được. Hãy tự nhập.';
 
   @override
@@ -3615,6 +3644,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lockFileSaveToFiles => 'Lưu vào Tệp';
+
+  @override
+  String get lockFileSaveToFilesDesk => 'Lưu tệp';
 
   @override
   String get lockFileLockFile => 'Khóa tệp';
@@ -4239,6 +4271,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get openLockedItOpensOnThis => 'Tệp được mở trên điện thoại này.';
 
   @override
+  String get openLockedItOpensOnThisDesk => 'Tệp được mở trên máy tính này.';
+
+  @override
   String get openLockedLockedFile => 'Tệp đã khóa';
 
   @override
@@ -4403,8 +4438,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'ĐỌC TRÊN ĐIỆN THOẠI NÀY · VIDEO KHÔNG ĐI ĐÂU CẢ';
 
   @override
+  String get photoKnowsReadOnThisPhoneDesk =>
+      'ĐỌC TRÊN MÁY TÍNH NÀY · VIDEO KHÔNG ĐI ĐÂU CẢ';
+
+  @override
   String get photoKnowsReadOnThisPhoneThePhoto =>
       'ĐỌC TRÊN ĐIỆN THOẠI NÀY · ẢNH KHÔNG ĐI ĐÂU CẢ';
+
+  @override
+  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
+      'ĐỌC TRÊN MÁY TÍNH NÀY · ẢNH KHÔNG ĐI ĐÂU CẢ';
 
   @override
   String get photoKnowsReadingTheFile => 'Đang đọc tệp';
@@ -4417,6 +4460,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get photoKnowsEverythingStaysOnThis =>
       'Mọi thứ đều ở lại trên điện thoại này.';
+
+  @override
+  String get photoKnowsEverythingStaysOnThisDesk =>
+      'Mọi thứ đều ở lại trên máy tính này.';
 
   @override
   String photoKnowsMapWithAPin(Object place) {
@@ -4579,6 +4626,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tạo trên điện thoại này · không trang web nào thấy mật khẩu';
 
   @override
+  String get qrMadeOnThisPhoneDesk =>
+      'Tạo trên máy tính này · không trang web nào thấy mật khẩu';
+
+  @override
   String get qrNetworkName => 'Tên mạng';
 
   @override
@@ -4670,6 +4721,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get qrCouldNotSaveIt =>
       'Không lưu được. Hãy kiểm tra xem điện thoại còn dung lượng không.';
+
+  @override
+  String get qrCouldNotSaveItDesk =>
+      'Không lưu được. Hãy kiểm tra xem máy tính còn dung lượng không.';
 
   @override
   String get qrNoAppOnThis =>
@@ -5541,6 +5596,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ ở đây diễn ra trên điện thoại này. Không có gì được tải lên, và người khác không cần dùng Kryfo.';
 
   @override
+  String get toolsEverythingHereHappensOnDesk =>
+      'Mọi thứ ở đây diễn ra trên máy tính này. Không có gì được tải lên, và người khác không cần dùng Kryfo.';
+
+  @override
   String get toolsPhotoCleaner => 'Làm sạch ảnh';
 
   @override
@@ -5550,6 +5609,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get toolsPickAPhotoAnd =>
       'Chọn một ảnh hoặc video để xem nó để lộ những gì, rồi xóa hết chỉ với một chạm. Bạn cũng có thể chia sẻ từ thư viện sang Kryfo.';
+
+  @override
+  String get toolsPickAPhotoAndDesk =>
+      'Chọn một ảnh hoặc video để xem nó để lộ những gì, rồi xóa hết chỉ với một cú nhấp. Bạn cũng có thể thả hoặc dán nó vào đây.';
 
   @override
   String get toolsPickAPhoto => 'Chọn ảnh';
@@ -11604,4 +11667,36 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get onboardingAlwaysOnNotice =>
       'Android cần một thông báo im lặng luôn hiện để tin nhắn vẫn đến khi Kryfo đã đóng.';
+
+  @override
+  String get toolsSendToAChat => 'Gửi vào một cuộc trò chuyện';
+
+  @override
+  String get toolsOneFileAtATime => 'Mỗi lần một tệp';
+
+  @override
+  String get toolsLockThisFile => 'Khóa tệp này';
+
+  @override
+  String get toolsLockThisFileLine =>
+      'Kryfo có thể khóa nó bằng mật khẩu, để chỉ người biết mật khẩu mới mở được.';
+
+  @override
+  String get toolsDropHere => 'Thả tệp vào đây để mở trong một công cụ';
+
+  @override
+  String get toolsCopyPicture => 'Sao chép ảnh';
+
+  @override
+  String get toolsPictureCopied => 'Đã sao chép ảnh';
+
+  @override
+  String get toolsCouldNotCopy => 'Không sao chép được ảnh';
+
+  @override
+  String get cleanNotYetHere => 'Ảnh này chưa làm sạch được ở đây';
+
+  @override
+  String get cleanNotYetHereLine =>
+      'Một bản cập nhật sắp tới sẽ làm sạch những ảnh như thế này trên máy tính. Ảnh của bạn vẫn y như cũ.';
 }

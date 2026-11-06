@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import '../desktop/desktop_mode.dart' show onDesktop;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -10,12 +9,10 @@ import '../l10n/l10n.dart';
 
 enum HaloTab { chats, tools, support, me }
 
-// the tabs on the bar. the desktop has no tools: they pick and hand files
-// through android. the play build's support tab is its tip jar
-List<HaloTab> get shownTabs => [
-  for (final t in HaloTab.values)
-    if (!onDesktop || t != HaloTab.tools) t,
-];
+// the tabs on the bar, the same on a computer: its tools pick, take drops
+// and save through the computer's own dialogs (tools/desk_tools.dart). the
+// play build's support tab is its tip jar
+List<HaloTab> get shownTabs => HaloTab.values;
 
 Map<HaloTab, String> get _labels => {
   HaloTab.chats: l10n.navBarChats,

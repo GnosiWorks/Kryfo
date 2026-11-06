@@ -56,7 +56,12 @@ void main() {
     final words = _body(src, 'static void clip_picture_text(');
     expect(words, contains('lone_link(text)'));
     final link = _body(src, 'static gboolean lone_link(');
-    for (final f in ['"http://"', '"https://"', 'g_ascii_isspace', 'kLinkMost']) {
+    for (final f in [
+      '"http://"',
+      '"https://"',
+      'g_ascii_isspace',
+      'kLinkMost',
+    ]) {
       expect(link, contains(f));
     }
     final got = _body(src, 'static void clip_picture_got(');
@@ -74,8 +79,7 @@ void main() {
     expect(clip, isNot(contains('"owner-change"')));
   });
 
-  test('windows puts a png and a bitmap on the clipboard, nothing on disk',
-      () {
+  test('windows puts a png and a bitmap on the clipboard, nothing on disk', () {
     final src = File('windows/runner/flutter_window.cpp').readAsStringSync();
     expect(src, contains('call.method_name() == "setClipPicture"'));
     final body = _body(src, 'bool SetClipboardPicture(');
@@ -87,45 +91,57 @@ void main() {
     }
   });
 
-  test('a bitmap made for windows reads back as the picture it came from',
-      () async {
-    final png = await _png(6, 4);
-    final px = await pngPixels(png);
-    expect(px, isNotNull);
-    final dib = rgbaToDib(px!);
-    expect(ByteData.sublistView(dib).getUint32(0, Endian.little), 124);
-    final back = dibToRgba(dib)!;
-    expect(back.width, 6);
-    expect(back.height, 4);
-    expect(back.rgba, px.rgba);
-    // red on the left, see-through green top right
-    expect(back.rgba.sublist(0, 4), [255, 0, 0, 255]);
-    expect(back.rgba[5 * 4 + 1], greaterThan(200));
-    expect(back.rgba[5 * 4 + 3], inInclusiveRange(120, 136));
-    expect(await pngPixels(Uint8List.fromList([1, 2, 3])), isNull);
-  });
+  test(
+    'a bitmap made for windows reads back as the picture it came from',
+    () async {
+      final png = await _png(6, 4);
+      final px = await pngPixels(png);
+      expect(px, isNotNull);
+      final dib = rgbaToDib(px!);
+      expect(ByteData.sublistView(dib).getUint32(0, Endian.little), 124);
+      final back = dibToRgba(dib)!;
+      expect(back.width, 6);
+      expect(back.height, 4);
+      expect(back.rgba, px.rgba);
+      // red on the left, see-through green top right
+      expect(back.rgba.sublist(0, 4), [255, 0, 0, 255]);
+      expect(back.rgba[5 * 4 + 1], greaterThan(200));
+      expect(back.rgba[5 * 4 + 3], inInclusiveRange(120, 136));
+      expect(await pngPixels(Uint8List.fromList([1, 2, 3])), isNull);
+    },
+  );
 
-  test('copy picture hands the runner the png, and says when it would not',
-      () async {
-    final calls = <MethodCall>[];
-    var answer = true;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(runChannel, (c) async {
-          calls.add(c);
-          return answer;
-        });
-    addTearDown(
-      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(runChannel, null),
-    );
-    final png = await _png(2, 2);
-    expect(await copyPicture(png), isTrue);
-    expect(calls.single.method, 'setClipPicture');
-    expect((calls.single.arguments as Map)['png'], png);
-    answer = false;
-    expect(await copyPicture(png), isFalse);
-    calls.clear();
-    expect(await copyPicture(Uint8List.fromList([1, 2, 3])), isFalse);
-    expect(calls, isEmpty);
-  });
+  test(
+    'copy picture hands the runner the png, and says when it would not',
+    () async {
+      final calls = <MethodCall>[];
+      var answer = true;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(runChannel, (c) async {
+            calls.add(c);
+            return answer;
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(runChannel, null),
+      );
+      final png = await _png(2, 2);
+      expect(await copyPicture(png), isTrue);
+      expect(calls.single.method, 'setClipPicture');
+      expect((calls.single.arguments as Map)['png'], png);
+      // a cleaned jpeg goes over as a png too
+      calls.clear();
+      final jpeg = File('test/fixtures/photo_512.jpg').readAsBytesSync();
+      expect(await copyPicture(jpeg), isTrue);
+      expect(
+        looksPng((calls.single.arguments as Map)['png'] as Uint8List),
+        isTrue,
+      );
+      answer = false;
+      expect(await copyPicture(png), isFalse);
+      calls.clear();
+      expect(await copyPicture(Uint8List.fromList([1, 2, 3])), isFalse);
+      expect(calls, isEmpty);
+    },
+  );
 }

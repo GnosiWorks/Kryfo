@@ -1958,6 +1958,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cleanNotEnoughRoomOn => 'Telefonda yeterli yer yok.';
 
   @override
+  String get cleanNotEnoughRoomOnDesk => 'Bilgisayarda yeterli yer yok.';
+
+  @override
   String get cleanKryfoCouldNotOpen => 'Kryfo bu dosyayı açamadı.';
 
   @override
@@ -1971,6 +1974,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get cleanPicturesOver64Mb =>
       '64 MB üzerindeki resimler telefonda temizlenmez. Hiçbir şey değiştirilmedi.';
+
+  @override
+  String get cleanPicturesOver64MbDesk =>
+      '64 MB üzerindeki resimler bilgisayarda temizlenmez. Hiçbir şey değiştirilmedi.';
 
   @override
   String get cleanKryfoCouldNotRead =>
@@ -1989,12 +1996,20 @@ class AppLocalizationsTr extends AppLocalizations {
       'Paylaşan uygulama dosyayı geri almış olabilir. Yeniden paylaşmayı dene.';
 
   @override
+  String get cleanTheAppThatSharedDesk =>
+      'Taşınmış olabilir ya da başka bir uygulama açık tutuyor olabilir. Yeniden seçmeyi dene.';
+
+  @override
   String get cleanNoAppOnThis =>
       'Bu telefondaki hiçbir uygulama dosyayı almadı.';
 
   @override
   String get cleanCouldNotSaveIt =>
       'Kaydedilemedi. Telefonda yer olup olmadığına bak.';
+
+  @override
+  String get cleanCouldNotSaveItDesk =>
+      'Kaydedilemedi. Bilgisayarda yer olup olmadığına bak.';
 
   @override
   String get cleanTheOriginalIsGone => 'Orijinal gitti. Temiz kopya kalıyor.';
@@ -2013,6 +2028,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cleanSaveToGallery => 'Galeriye kaydet';
 
   @override
+  String get cleanSaveToGalleryDesk => 'Temiz kopyayı kaydet';
+
+  @override
   String get commonStop => 'Durdur';
 
   @override
@@ -2028,6 +2046,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cleanEverythingStaysOnThis => 'Her şey bu telefonda kalır.';
+
+  @override
+  String get cleanEverythingStaysOnThisDesk => 'Her şey bu bilgisayarda kalır.';
 
   @override
   String get cleanAlreadyClean => 'Zaten temiz.';
@@ -2073,6 +2094,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cleanSavedToYourGallery => 'Galerine kaydedildi.';
+
+  @override
+  String get cleanSavedToYourGalleryDesk => 'Seçtiğin yere kaydedildi.';
 
   @override
   String cleanTheOriginalIsStill(Object what) {
@@ -3598,6 +3622,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get lockFileEverythingStaysOnThis => 'Her şey bu telefonda kalır.';
 
   @override
+  String get lockFileEverythingStaysOnThisDesk =>
+      'Her şey bu bilgisayarda kalır.';
+
+  @override
   String get lockFileCouldNotMakeOne => 'Oluşturulamadı. Kendin yaz.';
 
   @override
@@ -3640,6 +3668,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lockFileSaveToFiles => 'Dosyalar’a kaydet';
+
+  @override
+  String get lockFileSaveToFilesDesk => 'Dosyayı kaydet';
 
   @override
   String get lockFileLockFile => 'Dosyayı kilitle';
@@ -4271,6 +4302,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get openLockedItOpensOnThis => 'Bu telefonda açılır.';
 
   @override
+  String get openLockedItOpensOnThisDesk => 'Bu bilgisayarda açılır.';
+
+  @override
   String get openLockedLockedFile => 'Kilitli dosya';
 
   @override
@@ -4439,8 +4473,16 @@ class AppLocalizationsTr extends AppLocalizations {
       'BU TELEFONDA OKUNDU · VİDEO HİÇBİR YERE GİTMEDİ';
 
   @override
+  String get photoKnowsReadOnThisPhoneDesk =>
+      'BU BİLGİSAYARDA OKUNDU · VİDEO HİÇBİR YERE GİTMEDİ';
+
+  @override
   String get photoKnowsReadOnThisPhoneThePhoto =>
       'BU TELEFONDA OKUNDU · FOTOĞRAF HİÇBİR YERE GİTMEDİ';
+
+  @override
+  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
+      'BU BİLGİSAYARDA OKUNDU · FOTOĞRAF HİÇBİR YERE GİTMEDİ';
 
   @override
   String get photoKnowsReadingTheFile => 'Dosya okunuyor';
@@ -4452,6 +4494,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get photoKnowsEverythingStaysOnThis => 'Her şey bu telefonda kalır.';
+
+  @override
+  String get photoKnowsEverythingStaysOnThisDesk =>
+      'Her şey bu bilgisayarda kalır.';
 
   @override
   String photoKnowsMapWithAPin(Object place) {
@@ -4614,6 +4660,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu telefonda yapıldı · şifreyi hiçbir site görmedi';
 
   @override
+  String get qrMadeOnThisPhoneDesk =>
+      'Bu bilgisayarda yapıldı · şifreyi hiçbir site görmedi';
+
+  @override
   String get qrNetworkName => 'Ağ adı';
 
   @override
@@ -4703,6 +4753,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get qrCouldNotSaveIt =>
       'Kaydedilemedi. Telefonda yer olup olmadığına bak.';
+
+  @override
+  String get qrCouldNotSaveItDesk =>
+      'Kaydedilemedi. Bilgisayarda yer olup olmadığına bak.';
 
   @override
   String get qrNoAppOnThis => 'Bu telefondaki hiçbir uygulama resmi almadı.';
@@ -5568,6 +5622,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Buradaki her şey bu telefonda olur. Hiçbir şey yüklenmez ve başka kimsenin Kryfo kullanması gerekmez.';
 
   @override
+  String get toolsEverythingHereHappensOnDesk =>
+      'Buradaki her şey bu bilgisayarda olur. Hiçbir şey yüklenmez ve başka kimsenin Kryfo kullanması gerekmez.';
+
+  @override
   String get toolsPhotoCleaner => 'Fotoğraf temizleyici';
 
   @override
@@ -5577,6 +5635,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get toolsPickAPhotoAnd =>
       'Bir fotoğraf ya da video seç, neleri ele verdiğini gör, sonra hepsini tek dokunuşla kaldır. Galerinden Kryfo’ya paylaşarak da açabilirsin.';
+
+  @override
+  String get toolsPickAPhotoAndDesk =>
+      'Bir fotoğraf ya da video seç, neleri ele verdiğini gör, sonra hepsini tek tıkla kaldır. Buraya bırakabilir ya da yapıştırabilirsin de.';
 
   @override
   String get toolsPickAPhoto => 'Fotoğraf seç';
@@ -11645,4 +11707,36 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get onboardingAlwaysOnNotice =>
       'Kryfo kapalıyken de mesajların gelmesi için Android’in sessiz ve kalıcı bir bildirime ihtiyacı var.';
+
+  @override
+  String get toolsSendToAChat => 'Bir sohbete gönder';
+
+  @override
+  String get toolsOneFileAtATime => 'Her seferinde bir dosya';
+
+  @override
+  String get toolsLockThisFile => 'Bu dosyayı kilitle';
+
+  @override
+  String get toolsLockThisFileLine =>
+      'Kryfo onu bir şifreyle kilitleyebilir; böylece yalnızca şifreyi bilen biri açabilir.';
+
+  @override
+  String get toolsDropHere => 'Bir araçta açmak için dosyayı buraya bırak';
+
+  @override
+  String get toolsCopyPicture => 'Resmi kopyala';
+
+  @override
+  String get toolsPictureCopied => 'Resim kopyalandı';
+
+  @override
+  String get toolsCouldNotCopy => 'Resim kopyalanamadı';
+
+  @override
+  String get cleanNotYetHere => 'Bu resim henüz burada temizlenemiyor';
+
+  @override
+  String get cleanNotYetHereLine =>
+      'Gelecek bir güncelleme bunun gibi resimleri bilgisayarda da temizleyecek. Resmin olduğu gibi duruyor.';
 }

@@ -3139,6 +3139,12 @@ abstract class AppLocalizations {
   /// **'Not enough room on the phone.'**
   String get cleanNotEnoughRoomOn;
 
+  /// cleanNotEnoughRoomOn as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough room on the computer.'**
+  String get cleanNotEnoughRoomOnDesk;
+
   /// screens/clean_screen.dart
   ///
   /// In en, this message translates to:
@@ -3162,6 +3168,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pictures over 64 MB are not cleaned on the phone. Nothing was changed.'**
   String get cleanPicturesOver64Mb;
+
+  /// cleanPicturesOver64Mb as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Pictures over 64 MB are not cleaned on a computer. Nothing was changed.'**
+  String get cleanPicturesOver64MbDesk;
 
   /// screens/clean_screen.dart
   ///
@@ -3187,6 +3199,12 @@ abstract class AppLocalizations {
   /// **'The app that shared it may have taken it back. Try sharing it again.'**
   String get cleanTheAppThatShared;
 
+  /// cleanTheAppThatShared as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'It may have moved, or another app may hold it. Try picking it again.'**
+  String get cleanTheAppThatSharedDesk;
+
   /// screens/clean_screen.dart
   ///
   /// In en, this message translates to:
@@ -3198,6 +3216,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save it. Check the phone has room.'**
   String get cleanCouldNotSaveIt;
+
+  /// cleanCouldNotSaveIt as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save it. Check the computer has room.'**
+  String get cleanCouldNotSaveItDesk;
 
   /// screens/clean_screen.dart
   ///
@@ -3229,6 +3253,12 @@ abstract class AppLocalizations {
   /// **'Save to gallery'**
   String get cleanSaveToGallery;
 
+  /// cleanSaveToGallery as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Save clean copy'**
+  String get cleanSaveToGalleryDesk;
+
   /// screens/clean_screen.dart, screens/lock_file_screen.dart, screens/open_locked_screen.dart, screens/photo_knows_screen.dart
   ///
   /// In en, this message translates to:
@@ -3258,6 +3288,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Everything stays on this phone.'**
   String get cleanEverythingStaysOnThis;
+
+  /// cleanEverythingStaysOnThis as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Everything stays on this computer.'**
+  String get cleanEverythingStaysOnThisDesk;
 
   /// screens/clean_screen.dart
   ///
@@ -3342,6 +3378,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved to your gallery.'**
   String get cleanSavedToYourGallery;
+
+  /// cleanSavedToYourGallery as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Saved where you picked.'**
+  String get cleanSavedToYourGalleryDesk;
 
   /// screens/clean_screen.dart
   ///
@@ -5581,6 +5623,12 @@ abstract class AppLocalizations {
   /// **'Everything stays on this phone.'**
   String get lockFileEverythingStaysOnThis;
 
+  /// lockFileEverythingStaysOnThis as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Everything stays on this computer.'**
+  String get lockFileEverythingStaysOnThisDesk;
+
   /// screens/lock_file_screen.dart
   ///
   /// In en, this message translates to:
@@ -5658,6 +5706,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save to Files'**
   String get lockFileSaveToFiles;
+
+  /// lockFileSaveToFiles as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Save file'**
+  String get lockFileSaveToFilesDesk;
 
   /// screens/lock_file_screen.dart
   ///
@@ -6721,6 +6775,12 @@ abstract class AppLocalizations {
   /// **'It opens on this phone.'**
   String get openLockedItOpensOnThis;
 
+  /// openLockedItOpensOnThis as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'It opens on this computer.'**
+  String get openLockedItOpensOnThisDesk;
+
   /// screens/open_locked_screen.dart
   ///
   /// In en, this message translates to:
@@ -7015,11 +7075,23 @@ abstract class AppLocalizations {
   /// **'READ ON THIS PHONE · THE VIDEO WENT NOWHERE'**
   String get photoKnowsReadOnThisPhone;
 
+  /// photoKnowsReadOnThisPhone as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'READ ON THIS COMPUTER · THE VIDEO WENT NOWHERE'**
+  String get photoKnowsReadOnThisPhoneDesk;
+
   /// screens/photo_knows_screen.dart
   ///
   /// In en, this message translates to:
   /// **'READ ON THIS PHONE · THE PHOTO WENT NOWHERE'**
   String get photoKnowsReadOnThisPhoneThePhoto;
+
+  /// photoKnowsReadOnThisPhoneThePhoto as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'READ ON THIS COMPUTER · THE PHOTO WENT NOWHERE'**
+  String get photoKnowsReadOnThisPhoneThePhotoDesk;
 
   /// screens/photo_knows_screen.dart
   ///
@@ -7038,6 +7110,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Everything stays on this phone.'**
   String get photoKnowsEverythingStaysOnThis;
+
+  /// photoKnowsEverythingStaysOnThis as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Everything stays on this computer.'**
+  String get photoKnowsEverythingStaysOnThisDesk;
 
   /// screens/photo_knows_screen.dart
   ///
@@ -7315,6 +7393,12 @@ abstract class AppLocalizations {
   /// **'Made on this phone · no website saw the password'**
   String get qrMadeOnThisPhone;
 
+  /// qrMadeOnThisPhone as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Made on this computer · no website saw the password'**
+  String get qrMadeOnThisPhoneDesk;
+
   /// screens/qr_screen.dart
   ///
   /// In en, this message translates to:
@@ -7488,6 +7572,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save it. Check the phone has room.'**
   String get qrCouldNotSaveIt;
+
+  /// qrCouldNotSaveIt as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save it. Check the computer has room.'**
+  String get qrCouldNotSaveItDesk;
 
   /// screens/qr_screen.dart
   ///
@@ -8935,6 +9025,12 @@ abstract class AppLocalizations {
   /// **'Everything here happens on this phone. Nothing is uploaded, and nobody else has to be on Kryfo.'**
   String get toolsEverythingHereHappensOn;
 
+  /// toolsEverythingHereHappensOn as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Everything here happens on this computer. Nothing is uploaded, and nobody else has to be on Kryfo.'**
+  String get toolsEverythingHereHappensOnDesk;
+
   /// screens/tools_screen.dart
   ///
   /// In en, this message translates to:
@@ -8952,6 +9048,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick a photo or video to see what it gives away, then remove all of it with one tap. You can also share one to Kryfo from your gallery.'**
   String get toolsPickAPhotoAnd;
+
+  /// toolsPickAPhotoAnd as a computer shows it (linux and windows)
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a photo or video to see what it gives away, then remove all of it with one click. You can also drop one here, or paste it.'**
+  String get toolsPickAPhotoAndDesk;
 
   /// screens/tools_screen.dart
   ///
@@ -18600,6 +18702,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Android needs one silent notification that stays, so messages arrive when Kryfo is closed.'**
   String get onboardingAlwaysOnNotice;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Send to a chat'**
+  String get toolsSendToAChat;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'One file at a time'**
+  String get toolsOneFileAtATime;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Lock this file'**
+  String get toolsLockThisFile;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo can lock it with a password, so only someone who knows it can open it.'**
+  String get toolsLockThisFileLine;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Drop a file here to open it in a tool'**
+  String get toolsDropHere;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Copy picture'**
+  String get toolsCopyPicture;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Picture copied'**
+  String get toolsPictureCopied;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the picture'**
+  String get toolsCouldNotCopy;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'This picture can\'t be cleaned here yet'**
+  String get cleanNotYetHere;
+
+  /// desktop tools (tools/desk_tools.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'A coming update cleans pictures like this one on a computer. Your picture is just as it was.'**
+  String get cleanNotYetHereLine;
 }
 
 class _AppLocalizationsDelegate

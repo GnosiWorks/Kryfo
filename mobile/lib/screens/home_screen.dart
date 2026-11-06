@@ -22,6 +22,10 @@ import 'lock_file_screen.dart';
 import 'open_locked_screen.dart';
 import 'share_sheet.dart';
 import '../tools/tools_bridge.dart';
+import '../tools/desk_tools.dart';
+import '../desktop/attach_tray.dart' show clipboardFiles;
+import '../desktop/clip_picture.dart' show clipboardPicture;
+import '../desktop/drag_in.dart' show draggedFiles;
 import '../lock_guard.dart' show lockGuard;
 import '../lock_state.dart';
 import '../store.dart';
@@ -164,6 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // a tab opened once stays in the tree behind an Offstage, so a theme
     // switch has to repaint the tabs behind this one too
     themeRevision.addListener(_repaint);
+    if (onDesktop) HardwareKeyboard.instance.addHandler(_deskKey);
     ToolsBridge.instance.sweep();
     _sweeper.every(
       const Duration(minutes: 5),
@@ -184,6 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
     appState.removeListener(_maybeAskBridge);
     lockState.removeListener(_maybeAskBridge);
     themeRevision.removeListener(_repaint);
+    HardwareKeyboard.instance.removeHandler(_deskKey);
     _sweeper.dispose();
     super.dispose();
   }
@@ -227,10 +233,82 @@ class _HomeScreenState extends State<HomeScreen> {
       _heldTool = screen;
       return;
     }
+    if (onDesktop) {
+      // into the pane, beside the tab, as a chat opens; a drop on the page
+      // opens what was dropped in its place
+      _pick(HaloTab.tools);
+      unawaited(
+        deskPush(
+          context,
+          haloRoute<void>(
+            DeskToolsIn(onFile: _deskFile, page: true, child: screen),
+          ),
+        ),
+      );
+      return;
+    }
     final nav = Navigator.of(context);
     nav.popUntil((r) => r.isFirst);
     _pick(HaloTab.tools);
     nav.push(haloRoute(screen));
+  }
+
+  // a file dropped or pasted on the tools on a computer opens in its tool:
+  // a photo or video in the cleaner, an age file in open, anything else in
+  // lock after one plain choice
+  Future<void> _deskFile(String path) async {
+    if (!mounted || lockState.locked) return;
+    final f = deskPicked(path);
+    if (f == null) {
+      showHaloToast(context, l10n.chatCouldNotReadThat);
+      return;
+    }
+    switch (deskToolFor(path)) {
+      case DeskToolFor.picture || DeskToolFor.video:
+        _openTool(PhotoKnowsScreen(file: f));
+      case DeskToolFor.locked:
+        _openTool(OpenLockedScreen(file: f));
+      case DeskToolFor.other:
+        if (await askLockThisFile(context, f.name ?? '') && mounted) {
+          _openTool(LockFileScreen(file: f));
+        }
+    }
+  }
+
+  // ctrl and v on the tools tab or a tool's page, while no field has the
+  // keys: copied files take a drop's way, a copied picture goes to the
+  // cleaner from memory. a locked app takes nothing
+  bool _deskKey(KeyEvent e) {
+    if (!isPasteKey(e) ||
+        !mounted ||
+        lockState.locked ||
+        _tab != HaloTab.tools ||
+        typingInAField() ||
+        !(ModalRoute.of(context)?.isCurrent ?? false)) {
+      return false;
+    }
+    final pane = widePane;
+    final free =
+        pane == null || pane.depth.value == 0 || DeskToolsIn.pageInFront();
+    if (!free) return false;
+    unawaited(_deskPaste());
+    return true;
+  }
+
+  Future<void> _deskPaste() async {
+    final paths = draggedFiles(await clipboardFiles());
+    if (!mounted || lockState.locked) return;
+    if (paths.length > 1) {
+      showHaloToast(context, l10n.toolsOneFileAtATime);
+      return;
+    }
+    if (paths.length == 1) return _deskFile(paths.single);
+    final png = await clipboardPicture();
+    if (png == null || !mounted || lockState.locked) return;
+    final f = await pastedPicture(png);
+    if (f != null && mounted && !lockState.locked) {
+      _openTool(PhotoKnowsScreen(file: f));
+    }
   }
 
   void _onLock() {
@@ -271,12 +349,15 @@ class _HomeScreenState extends State<HomeScreen> {
           support: widget.support,
         );
       case HaloTab.tools:
-        return ToolsScreen(
-          onPickPhoto: () => _pickToRead('image'),
-          onPickVideo: () => _pickToRead('video'),
-          onQr: () => _openTool(const QrScreen()),
-          onLock: () => _pickFor((f) => LockFileScreen(file: f)),
-          onOpenLocked: () => _pickFor((f) => OpenLockedScreen(file: f)),
+        return DeskToolsIn(
+          onFile: _deskFile,
+          child: ToolsScreen(
+            onPickPhoto: () => _pickToRead('image'),
+            onPickVideo: () => _pickToRead('video'),
+            onQr: () => _openTool(const QrScreen()),
+            onLock: () => _pickFor((f) => LockFileScreen(file: f)),
+            onOpenLocked: () => _pickFor((f) => OpenLockedScreen(file: f)),
+          ),
         );
       case HaloTab.support:
         // the play build tips through google play, and names no other way

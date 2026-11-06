@@ -1944,6 +1944,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get cleanNotEnoughRoomOn => 'Ruang di ponsel tidak cukup.';
 
   @override
+  String get cleanNotEnoughRoomOnDesk => 'Ruang di komputer tidak cukup.';
+
+  @override
   String get cleanKryfoCouldNotOpen => 'Kryfo tidak bisa membuka file itu.';
 
   @override
@@ -1957,6 +1960,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get cleanPicturesOver64Mb =>
       'Gambar di atas 64 MB tidak dibersihkan di ponsel. Tidak ada yang diubah.';
+
+  @override
+  String get cleanPicturesOver64MbDesk =>
+      'Gambar di atas 64 MB tidak dibersihkan di komputer. Tidak ada yang diubah.';
 
   @override
   String get cleanKryfoCouldNotRead =>
@@ -1975,12 +1982,20 @@ class AppLocalizationsId extends AppLocalizations {
       'Aplikasi yang membagikannya mungkin sudah menariknya kembali. Coba bagikan lagi.';
 
   @override
+  String get cleanTheAppThatSharedDesk =>
+      'Mungkin sudah dipindah, atau aplikasi lain sedang membukanya. Coba pilih lagi.';
+
+  @override
   String get cleanNoAppOnThis =>
       'Tidak ada aplikasi di ponsel ini yang menerima file itu.';
 
   @override
   String get cleanCouldNotSaveIt =>
       'Gagal menyimpannya. Pastikan ponsel masih punya ruang.';
+
+  @override
+  String get cleanCouldNotSaveItDesk =>
+      'Gagal menyimpannya. Pastikan komputer masih punya ruang.';
 
   @override
   String get cleanTheOriginalIsGone =>
@@ -2000,6 +2015,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get cleanSaveToGallery => 'Simpan ke galeri';
 
   @override
+  String get cleanSaveToGalleryDesk => 'Simpan salinan bersih';
+
+  @override
   String get commonStop => 'Hentikan';
 
   @override
@@ -2015,6 +2033,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get cleanEverythingStaysOnThis => 'Semuanya tetap di ponsel ini.';
+
+  @override
+  String get cleanEverythingStaysOnThisDesk =>
+      'Semuanya tetap di komputer ini.';
 
   @override
   String get cleanAlreadyClean => 'Sudah bersih.';
@@ -2061,6 +2083,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get cleanSavedToYourGallery => 'Disimpan ke galerimu.';
+
+  @override
+  String get cleanSavedToYourGalleryDesk =>
+      'Disimpan di tempat yang kamu pilih.';
 
   @override
   String cleanTheOriginalIsStill(Object what) {
@@ -3581,6 +3607,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get lockFileEverythingStaysOnThis => 'Semuanya tetap di ponsel ini.';
 
   @override
+  String get lockFileEverythingStaysOnThisDesk =>
+      'Semuanya tetap di komputer ini.';
+
+  @override
   String get lockFileCouldNotMakeOne => 'Gagal membuatnya. Ketik sendiri.';
 
   @override
@@ -3623,6 +3653,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lockFileSaveToFiles => 'Simpan ke File';
+
+  @override
+  String get lockFileSaveToFilesDesk => 'Simpan file';
 
   @override
   String get lockFileLockFile => 'Kunci file';
@@ -4250,6 +4283,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get openLockedItOpensOnThis => 'File ini dibuka di ponsel ini.';
 
   @override
+  String get openLockedItOpensOnThisDesk => 'File ini dibuka di komputer ini.';
+
+  @override
   String get openLockedLockedFile => 'File terkunci';
 
   @override
@@ -4419,8 +4455,16 @@ class AppLocalizationsId extends AppLocalizations {
       'DIBACA DI PONSEL INI · VIDEONYA TIDAK DIKIRIM KE MANA PUN';
 
   @override
+  String get photoKnowsReadOnThisPhoneDesk =>
+      'DIBACA DI KOMPUTER INI · VIDEONYA TIDAK DIKIRIM KE MANA PUN';
+
+  @override
   String get photoKnowsReadOnThisPhoneThePhoto =>
       'DIBACA DI PONSEL INI · FOTONYA TIDAK DIKIRIM KE MANA PUN';
+
+  @override
+  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
+      'DIBACA DI KOMPUTER INI · FOTONYA TIDAK DIKIRIM KE MANA PUN';
 
   @override
   String get photoKnowsReadingTheFile => 'Membaca file';
@@ -4432,6 +4476,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get photoKnowsEverythingStaysOnThis => 'Semuanya tetap di ponsel ini.';
+
+  @override
+  String get photoKnowsEverythingStaysOnThisDesk =>
+      'Semuanya tetap di komputer ini.';
 
   @override
   String photoKnowsMapWithAPin(Object place) {
@@ -4594,6 +4642,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Dibuat di ponsel ini · tidak ada situs yang melihat kata sandinya';
 
   @override
+  String get qrMadeOnThisPhoneDesk =>
+      'Dibuat di komputer ini · tidak ada situs yang melihat kata sandinya';
+
+  @override
   String get qrNetworkName => 'Nama jaringan';
 
   @override
@@ -4685,6 +4737,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get qrCouldNotSaveIt =>
       'Gagal menyimpannya. Pastikan ponsel masih punya ruang.';
+
+  @override
+  String get qrCouldNotSaveItDesk =>
+      'Gagal menyimpannya. Pastikan komputer masih punya ruang.';
 
   @override
   String get qrNoAppOnThis =>
@@ -5553,6 +5609,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Semua di sini terjadi di ponsel ini. Tidak ada yang diunggah, dan orang lain tidak perlu memakai Kryfo.';
 
   @override
+  String get toolsEverythingHereHappensOnDesk =>
+      'Semua di sini terjadi di komputer ini. Tidak ada yang diunggah, dan orang lain tidak perlu memakai Kryfo.';
+
+  @override
   String get toolsPhotoCleaner => 'Pembersih foto';
 
   @override
@@ -5562,6 +5622,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get toolsPickAPhotoAnd =>
       'Pilih foto atau video untuk melihat apa yang dibocorkannya, lalu hapus semuanya dengan satu ketukan. Kamu juga bisa membagikannya ke Kryfo dari galeri.';
+
+  @override
+  String get toolsPickAPhotoAndDesk =>
+      'Pilih foto atau video untuk melihat apa yang dibocorkannya, lalu hapus semuanya dengan satu klik. Kamu juga bisa melepasnya di sini atau menempelkannya.';
 
   @override
   String get toolsPickAPhoto => 'Pilih foto';
@@ -11620,4 +11684,36 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get onboardingAlwaysOnNotice =>
       'Android butuh satu notifikasi senyap yang tetap ada agar pesan tetap masuk saat Kryfo ditutup.';
+
+  @override
+  String get toolsSendToAChat => 'Kirim ke obrolan';
+
+  @override
+  String get toolsOneFileAtATime => 'Satu file sekali jalan';
+
+  @override
+  String get toolsLockThisFile => 'Kunci file ini';
+
+  @override
+  String get toolsLockThisFileLine =>
+      'Kryfo bisa menguncinya dengan kata sandi, jadi hanya orang yang tahu kata sandinya yang bisa membukanya.';
+
+  @override
+  String get toolsDropHere => 'Lepas file di sini untuk membukanya di alat';
+
+  @override
+  String get toolsCopyPicture => 'Salin gambar';
+
+  @override
+  String get toolsPictureCopied => 'Gambar disalin';
+
+  @override
+  String get toolsCouldNotCopy => 'Gagal menyalin gambar';
+
+  @override
+  String get cleanNotYetHere => 'Gambar ini belum bisa dibersihkan di sini';
+
+  @override
+  String get cleanNotYetHereLine =>
+      'Pembaruan berikutnya membersihkan gambar seperti ini di komputer. Gambarmu tetap seperti semula.';
 }

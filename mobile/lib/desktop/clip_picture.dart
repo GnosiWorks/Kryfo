@@ -332,7 +332,9 @@ Future<DibPixels?> pngPixels(Uint8List png) async {
     codec = await ui.instantiateImageCodec(png);
     img = (await codec.getNextFrame()).image;
     if (img.width * img.height > kDibMostPixels) return null;
-    final raw = await img.toByteData(format: ui.ImageByteFormat.rawStraightRgba);
+    final raw = await img.toByteData(
+      format: ui.ImageByteFormat.rawStraightRgba,
+    );
     if (raw == null) return null;
     return DibPixels(
       img.width,
@@ -347,21 +349,40 @@ Future<DibPixels?> pngPixels(Uint8List png) async {
   }
 }
 
-/// "Copy picture": [png] on the computer's clipboard, from memory. windows
-/// gets a bitmap beside it for the apps that take no png. false when the
-/// runner would not
-Future<bool> copyPicture(Uint8List png) async {
+/// [picture] (a png, a jpeg, a webp) as png bytes, decoded in memory.
+/// null when it does not decode here (a heic on a computer)
+Future<Uint8List?> pngOf(Uint8List picture) async {
+  if (looksPng(picture)) return picture;
+  ui.Codec? codec;
+  ui.Image? img;
   try {
+    codec = await ui.instantiateImageCodec(picture);
+    img = (await codec.getNextFrame()).image;
+    if (img.width * img.height > kDibMostPixels) return null;
+    final b = await img.toByteData(format: ui.ImageByteFormat.png);
+    return b?.buffer.asUint8List(b.offsetInBytes, b.lengthInBytes);
+  } catch (_) {
+    return null;
+  } finally {
+    img?.dispose();
+    codec?.dispose();
+  }
+}
+
+/// "Copy picture": [picture] on the computer's clipboard as a png, from
+/// memory. windows gets a bitmap beside it for the apps that take no png.
+/// false when it would not decode, or the runner would not take it
+Future<bool> copyPicture(Uint8List picture) async {
+  try {
+    final png = await pngOf(picture);
+    if (png == null) return false;
     final args = <String, Object?>{'png': png};
     if (Platform.isWindows) {
       final px = await pngPixels(png);
       if (px == null) return false;
       args['dib'] = rgbaToDib(px);
-    } else if (!looksPng(png)) {
-      return false;
     }
-    return await runChannel.invokeMethod<bool>('setClipPicture', args) ??
-        false;
+    return await runChannel.invokeMethod<bool>('setClipPicture', args) ?? false;
   } catch (_) {
     return false;
   }

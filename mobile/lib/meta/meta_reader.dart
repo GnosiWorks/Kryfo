@@ -253,6 +253,9 @@ const _heifBrands = {
 /// brands of an image sequence, whose moov is the animation
 const kHeifSequences = {'msf1', 'hevc', 'hevx', 'hevm', 'hevs', 'avis'};
 
+/// what [s] is by its first bytes alone, nothing more read
+MetaKind metaKindOf(ByteSource s) => _kindOf(s);
+
 MetaKind _kindOf(ByteSource s) {
   if (s.length < 12) return MetaKind.unknown;
   final h = s.read(0, s.length < 64 ? s.length : 64);
