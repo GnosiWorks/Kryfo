@@ -64,6 +64,14 @@ Set<String> _words(WidgetTester t) => {
     if (w.data != null && !RegExp(r'^(\d|abc|123)$').hasMatch(w.data!)) w.data!,
 };
 
+// the pin there is, on the page a weakening change opens
+Future<void> _pinFirst(WidgetTester t, String pin) async {
+  expect(find.text(l10n.flowEnterYourPin), findsOneWidget);
+  await typePin(t, pin);
+  await enter(t);
+  await t.pumpAndSettle();
+}
+
 // intro, the app pin, a hidden chats pin twice
 Future<void> _toForget(WidgetTester t, String pin) async {
   await press(t, find.text(l10n.commonContinue));
@@ -297,6 +305,7 @@ void main() {
         expect(find.text(l10n.pinsThePinGoesAnd), findsOneWidget);
         await t.tap(find.text(l10n.pinsTurnOff).last);
         await t.pumpAndSettle();
+        await _pinFirst(t, appPin);
         expect(host.calls, ['destroyVault']);
         expect(lock.state.enabled, isFalse);
         expect(lock.store.m['halo.lock.table'], isNull);
@@ -323,13 +332,17 @@ void main() {
 
     testWidgets('in the decoy it takes nothing of the vault', (t) async {
       phone(t);
-      final lock = await makeLock(withVault, inDecoy: true);
+      final lock = await makeLock({
+        ...withVault,
+        PinSlot.decoy: (decoyPin, PinKind.decoy),
+      }, inDecoy: true);
       final host = FakeHost(lock: lock.state);
       await _pins(t, lock, host);
       await t.tap(find.text(l10n.pinsTurnOff));
       await t.pumpAndSettle();
       await t.tap(find.text(l10n.pinsTurnOff).last);
       await t.pumpAndSettle();
+      await _pinFirst(t, decoyPin);
       expect(host.calls, isEmpty);
       expect(lock.entries.containsKey('${PinSlot.vault}'), isTrue);
     });
@@ -347,6 +360,7 @@ void main() {
       await t.pumpAndSettle();
       await t.tap(find.text(l10n.pinsTurnOff).last);
       await t.pumpAndSettle();
+      await _pinFirst(t, decoyPin);
       expect(host.calls, isEmpty);
       expect(lock.state.lockOn, isFalse);
       expect(lock.entries['${PinSlot.decoyVault}']['p'], decoyVaultPin);

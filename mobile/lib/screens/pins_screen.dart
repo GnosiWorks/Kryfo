@@ -73,6 +73,9 @@ class _PinsScreenState extends State<PinsScreen> {
     if (_fingerTo != null) return;
     HapticFeedback.selectionClick();
     final to = !_lock.biometric;
+    // a finger in place of the pin weakens the lock: the pin first
+    if (to && !await _pinFirst()) return;
+    if (!mounted || _fingerTo != null || _lock.biometric == to) return;
     setState(() => _fingerTo = to);
     var taken = true;
     try {
@@ -84,6 +87,13 @@ class _PinsScreenState extends State<PinsScreen> {
       HapticFeedback.heavyImpact();
       showHaloToast(context, l10n.pinsFingerRefused);
     }
+  }
+
+  // a change that weakens the lock asks for the pin there is first, as a
+  // new decoy pin does. in the decoy that is the decoy's own
+  Future<bool> _pinFirst() async {
+    if (!mounted) return false;
+    return askPin(context, _lock);
   }
 
   Future<void> _turnOff() async {
@@ -108,7 +118,7 @@ class _PinsScreenState extends State<PinsScreen> {
           : l10n.pinsThePinGoesAndShown,
       yes: l10n.pinsTurnOff,
     );
-    if (!ok) return;
+    if (!ok || !await _pinFirst()) return;
     if (decoy) await _host.removeDecoy();
     // any hidden chats go with the lock, and the line above reads the same
     // whether there are any. a turn off in the decoy only pauses the lock:
@@ -152,7 +162,7 @@ class _PinsScreenState extends State<PinsScreen> {
       line: l10n.pinsTheLockScreenKeeps,
       yes: l10n.commonRemove,
     );
-    if (ok) await _lock.disablePanicPin();
+    if (ok && await _pinFirst()) await _lock.disablePanicPin();
   }
 
   Future<void> _decoyRow() async {
@@ -172,7 +182,7 @@ class _PinsScreenState extends State<PinsScreen> {
       line: l10n.pinsTheDecoyGoes,
       yes: l10n.commonRemove,
     );
-    if (!ok) return;
+    if (!ok || !await _pinFirst()) return;
     _lock.inDecoy
         ? await _lock.clearInnerDecoyPin()
         : await _host.removeDecoy();

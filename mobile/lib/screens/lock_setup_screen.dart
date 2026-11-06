@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // set or change the pin: four digits, then the same four again. a change
 // asks for the pin there is first, as the advanced flows do, with the same
-// misses and the same wipe pin
+// misses and the same wipe pin. the same check stands alone before a change
+// that weakens the lock
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
@@ -12,6 +13,7 @@ import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/motion.dart' show haloRoute;
 import '../widgets/pass_pad.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/sheet_handle.dart';
@@ -20,12 +22,28 @@ import '../wipe.dart';
 import '../l10n/l10n.dart';
 import '../wide/read_width.dart' show DeskPage;
 
+/// the pin there is, on the page a change opens with: true once taken. a
+/// miss counts as on the lock screen and the wipe pin wipes. digits or a
+/// phrase, never a finger, which may open only the decoy
+Future<bool> askPin(BuildContext context, LockState lock) async =>
+    await Navigator.of(context).push<bool>(
+      haloRoute(LockSetupScreen(lock: lock, check: true, checkOnly: true)),
+    ) ??
+    false;
+
 class LockSetupScreen extends StatefulWidget {
-  const LockSetupScreen({super.key, this.lock, this.check = false});
+  const LockSetupScreen({
+    super.key,
+    this.lock,
+    this.check = false,
+    this.checkOnly = false,
+  });
   // the app's own lock when null
   final LockState? lock;
   // a pin is set: it is entered before a new one is chosen
   final bool check;
+  // the check alone: the page closes with true once the pin is taken
+  final bool checkOnly;
   @override
   State<LockSetupScreen> createState() => _LockSetupScreenState();
 }
@@ -98,6 +116,10 @@ class _LockSetupScreenState extends State<LockSetupScreen>
       return;
     }
     HapticFeedback.selectionClick();
+    if (widget.checkOnly) {
+      Navigator.of(context).pop(true);
+      return;
+    }
     setState(() {
       _hold = false;
       _checking = false;

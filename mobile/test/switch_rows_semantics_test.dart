@@ -38,7 +38,8 @@ import 'package:kryfo/widgets/message_menu.dart';
 import 'package:kryfo/widgets/new_poll_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'pin_flow_fakes.dart' show FakeHost, MemEngine, MemStore, StillClock;
+import 'pin_flow_fakes.dart'
+    show FakeHost, appOnly, appPin, enter, makeLock, typePin;
 
 // a phone with a finger set up
 class _Bio implements LockBio {
@@ -142,6 +143,7 @@ Future<void> _flips(
   String title, {
   String? line,
   String? after,
+  Future<void> Function()? answer,
 }) async {
   SemanticsNode node() {
     final all = _toggles(t);
@@ -178,6 +180,8 @@ Future<void> _flips(
     ),
   );
   await _rest(t);
+  // a page the flip asks through first, as a pin
+  if (answer != null) await answer();
   n = node();
   expect(n, isSemantics(hasToggledState: true, isToggled: !was), reason: title);
   if (after != null) expect(_said(n), contains(after));
@@ -334,15 +338,7 @@ void main() {
 
   testWidgets('app lock: unlock with fingerprint', (t) async {
     phone(t);
-    final store = MemStore()..m['halo.lock.enabled'] = 'true';
-    final lock = LockState(
-      store: store,
-      engine: MemEngine(),
-      clock: StillClock(),
-      bio: _Bio(),
-      revealAfter: Duration.zero,
-    );
-    await lock.load();
+    final lock = (await makeLock(appOnly, bio: _Bio())).state;
     expect(lock.bioSupported, isTrue);
     await _open(
       t,
@@ -353,7 +349,16 @@ void main() {
         ),
       ),
     );
-    await _flips(t, l10n.pinsUnlockWithFingerprint);
+    // the pin first, never a finger
+    await _flips(
+      t,
+      l10n.pinsUnlockWithFingerprint,
+      answer: () async {
+        await typePin(t, appPin);
+        await enter(t);
+        await _rest(t);
+      },
+    );
     expect(lock.biometric, isTrue);
     await done(t);
   });

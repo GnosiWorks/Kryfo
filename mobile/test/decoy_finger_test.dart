@@ -496,8 +496,18 @@ void main() {
     await t.pumpAndSettle();
     bool on() => t.widget<HaloSwitch>(find.byType(HaloSwitch)).value;
     expect(on(), isFalse);
-    await t.tap(find.text(l10n.pinsUnlockWithFingerprint));
-    await t.pump();
+    // the decoy's own pin first, as anywhere a finger goes on
+    Future<void> pinFirst() async {
+      await t.tap(find.text(l10n.pinsUnlockWithFingerprint));
+      await t.pumpAndSettle();
+      await typePin(t, decoyPin);
+      await t.tap(find.byIcon(Icons.check_rounded));
+      await t.pump();
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+    }
+
+    await pinFirst();
     expect(on(), isTrue);
     // a second tap while it works changes nothing
     await t.tap(find.text(l10n.pinsUnlockWithFingerprint));
@@ -515,8 +525,7 @@ void main() {
     bio
       ..gate = Completer<void>()
       ..refuse = true;
-    await t.tap(find.text(l10n.pinsUnlockWithFingerprint));
-    await t.pump();
+    await pinFirst();
     expect(on(), isTrue);
     bio.gate.complete();
     await t.pumpAndSettle();

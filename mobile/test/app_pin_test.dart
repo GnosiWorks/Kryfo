@@ -109,6 +109,7 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text(l10n.pinsTurnOff).last);
     await t.pumpAndSettle();
+    await _pin(t, decoyPin);
     expect(lock.state.lockOn, isFalse);
     // as a turn off reads anywhere, while the owner's entry stays
     expect(lock.state.panicEnabled, isFalse);
@@ -142,6 +143,7 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text(l10n.pinsTurnOff).last);
     await t.pumpAndSettle();
+    await _pin(t, decoyPin);
     expect(lock.state.panicEnabled, isFalse);
 
     await t.tap(find.text(l10n.pinsSetAPin));
