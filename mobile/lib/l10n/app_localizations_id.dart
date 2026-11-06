@@ -1736,6 +1736,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatWaitingForThemTo => 'Menunggu dia menerima permintaanmu';
 
   @override
+  String get chatWaitsToSend => 'Menunggu dikirim';
+
+  @override
   String get chatTheyMayNotKnow => 'Dia mungkin belum tahu kamu sudah menerima';
 
   @override
@@ -1887,13 +1890,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatCompareLater => 'Nanti';
 
   @override
-  String get chatCompareFolded => 'Nomor keamanan belum dibandingkan';
-
-  @override
   String get chatCompareNow => 'Bandingkan';
-
-  @override
-  String get chatCompareDismiss => 'Sembunyikan';
 
   @override
   String chatKeyHeldLine(Object peerName) {

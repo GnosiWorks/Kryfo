@@ -59,7 +59,7 @@ class NotThemAsk extends StatelessWidget {
   const NotThemAsk({super.key, required this.onTap, this.compact = false});
 
   final VoidCallback onTap;
-  // on the compare card in a chat: smaller, as the card is
+  // on the compare card on their page: smaller, as the card is
   final bool compact;
 
   @override

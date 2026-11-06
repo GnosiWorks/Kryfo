@@ -53,7 +53,6 @@ import '../widgets/media_bubbles.dart'
 import '../widgets/voice_mic.dart';
 import '../widgets/owned_text.dart';
 import '../widgets/confirm_sheet.dart';
-import '../widgets/not_them.dart';
 import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
 import '../widgets/row_anchor.dart';
@@ -120,11 +119,7 @@ import '../main.dart'
         sendFirstContactNoted,
         AppStatePqRestart,
         AppStateFiles,
-        kNameAsk,
-        kNameLater,
         kNotSent,
-        nameAsks,
-        nameCheckOf,
         session,
         sessionQuiet,
         signalSeal,
@@ -608,17 +603,27 @@ Widget _mediaStamp(_Msg msg) {
 }
 
 // the tick on a text of ours, or a clock while it is sent and not delivered
-// yet to someone who has not added us back
+// yet to someone who has not added us back. [waits]: not sent yet, kept
+// until it can go, as for someone on an older Kryfo
 Widget _outMark(
   BuildContext context,
   _Msg msg, {
   required bool unconfirmed,
   required Color color,
+  bool waits = false,
 }) => AnimatedSwitcher(
   duration: motionStill(context)
       ? Duration.zero
       : const Duration(milliseconds: 200),
-  child: unconfirmed
+  child: waits
+      ? Icon(
+          Icons.schedule_rounded,
+          key: const ValueKey('waits'),
+          size: 10,
+          color: color,
+          semanticLabel: l10n.chatWaitsToSend,
+        )
+      : unconfirmed
       ? Icon(
           Icons.schedule_rounded,
           key: const ValueKey('unconfirmed'),
@@ -1042,16 +1047,8 @@ class _ChatScreenState extends State<ChatScreen>
   bool _keyReading = false;
   // a read asked for while one runs runs again after it
   bool _keyAgain = false;
-  // their words came with a request, an introduction or a group and
-  // nothing has checked them
-  // the chat asks for the safety number: added by a code or a link, or
-  // taken in from a request, and not verified
-  bool _nameAsks = false;
-  // the ask put off for later: a quiet line in place of the card
-  bool _nameFolded = false;
   // the accept's word to them never got through: they may not know
   bool _ackLost = false;
-  int _nameFlags = 0;
 
   // what this chat shows about their key, read again whenever a key changes
   // or a mark is set somewhere else
@@ -1096,28 +1093,16 @@ class _ChatScreenState extends State<ChatScreen>
       final verified = await session.isVerified(widget.peerHaloId);
       final held = await session.keyHeld(widget.peerHaloId);
       final heal = held ? await healHoldShown(widget.peerHaloId) : null;
-      final row = await session.getContact(widget.peerHaloId);
-      // no key held, no number to compare: nothing to ask for yet
-      final key = nameAsks(row)
-          ? await session.heldKey(widget.peerHaloId)
-          : null;
-      final asks = key != null;
       if (!mounted) return;
-      _nameFlags = nameCheckOf(row);
-      final folded = (_nameFlags & kNameLater) != 0;
       if (changed != _keyChanged ||
           verified != _verified ||
           held != _keyHeld ||
-          heal != _healHold ||
-          asks != _nameAsks ||
-          folded != _nameFolded) {
+          heal != _healHold) {
         setState(() {
           _keyChanged = changed;
           _verified = verified;
           _keyHeld = held;
           _healHold = heal;
-          _nameAsks = asks;
-          _nameFolded = folded;
         });
       }
     } catch (e) {
@@ -1225,27 +1210,6 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _dismissKeyChanged() async {
     await session.setKeyChanged(widget.peerHaloId, false);
     if (mounted) setState(() => _keyChanged = false);
-  }
-
-  // the compare card folds into a quiet line, kept until checked or closed
-  Future<void> _compareLater() async {
-    setState(() => _nameFolded = true);
-    await session.setNameCheck(widget.peerHaloId, _nameFlags | kNameLater);
-    await _readKeyState();
-  }
-
-  // the line closed: nothing asks in this chat again. the words stay not
-  // checked
-  Future<void> _compareDismiss() async {
-    setState(() {
-      _nameAsks = false;
-      _nameFolded = false;
-    });
-    await session.setNameCheck(
-      widget.peerHaloId,
-      _nameFlags & ~(kNameAsk | kNameLater),
-    );
-    await _readKeyState();
   }
 
   // request-lock state: a stranger we haven't accepted, capped at 2 sent msgs.
@@ -6360,7 +6324,7 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  Future<void> _openKeyVerification({bool notThem = false}) async {
+  Future<void> _openKeyVerification() async {
     await Navigator.of(context).push(
       haloRoute(
         KeyVerificationScreen(
@@ -6369,7 +6333,6 @@ class _ChatScreenState extends State<ChatScreen>
           myXpub: appState.sessionXPub,
           peerXpub: widget.peerXPub,
           initialVerified: _verified,
-          notThemOpen: notThem,
         ),
       ),
     );
@@ -7082,29 +7045,6 @@ class _ChatScreenState extends State<ChatScreen>
                               )
                             : const SizedBox(
                                 key: ValueKey('key-none'),
-                                width: 0,
-                              ),
-                      ),
-                      // added by a code or a link, or taken in from a request:
-                      // the safety number is what says who they are
-                      _Fold(
-                        _nameAsks &&
-                                !_keyChanged &&
-                                !_keyHeld &&
-                                !_isDev &&
-                                !widget.support
-                            ? _CompareSlot(
-                                key: const ValueKey('compare'),
-                                folded: _nameFolded,
-                                peerName: _nickname ?? widget.peerHaloId,
-                                onVerify: _openKeyVerification,
-                                onLater: _compareLater,
-                                onDismiss: _compareDismiss,
-                                onNotThem: () =>
-                                    _openKeyVerification(notThem: true),
-                              )
-                            : const SizedBox(
-                                key: ValueKey('compare-none'),
                                 width: 0,
                               ),
                       ),
@@ -8664,6 +8604,8 @@ class _Bubble extends StatelessWidget {
     // a photo, a video, a file or a voice note that came in says when, as
     // ours do: there is no text of it to place it by
     final showTime = showMeta || (!isOut && isMedia);
+    // ours kept until it can go says so in its bubble: its time and a clock
+    final showStamp = (showTime || (isOut && parked)) && !frameless;
     final showPill = isOut && pending;
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
@@ -9260,7 +9202,7 @@ class _Bubble extends StatelessWidget {
                                               // the time and tick grow in as the
                                               // sending pill under the bubble folds
                                               GrowSwap(
-                                                child: !(showTime && !frameless)
+                                                child: !showStamp
                                                     ? const SizedBox.shrink(
                                                         key: ValueKey(
                                                           'no-meta',
@@ -9342,6 +9284,7 @@ class _Bubble extends StatelessWidget {
                                                                 unconfirmed:
                                                                     unconfirmed ||
                                                                     waitsAck,
+                                                                waits: parked,
                                                                 color:
                                                                     metaColor,
                                                               ),
@@ -10477,231 +10420,6 @@ class MediaGalleryScreen extends StatelessWidget {
 // the saved mode string as the pill's enum. private is full tor, 3 hops.
 PrivacyMode _pmFrom(String m) =>
     m == 'private' ? PrivacyMode.private : PrivacyMode.fast;
-
-// the compare card, or once put off the quiet line in its place. one
-// grows or shrinks into the other while it fades, at once when the phone
-// asks for no movement
-class _CompareSlot extends StatelessWidget {
-  final bool folded;
-  final String peerName;
-  final VoidCallback onVerify;
-  final VoidCallback onLater;
-  final VoidCallback onDismiss;
-  final VoidCallback onNotThem;
-  const _CompareSlot({
-    super.key,
-    required this.folded,
-    required this.peerName,
-    required this.onVerify,
-    required this.onLater,
-    required this.onDismiss,
-    required this.onNotThem,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final shown = folded
-        ? _CompareRow(
-            key: const ValueKey('compare-row'),
-            onVerify: onVerify,
-            onDismiss: onDismiss,
-          )
-        : _CompareCard(
-            key: const ValueKey('compare-card'),
-            peerName: peerName,
-            onVerify: onVerify,
-            onLater: onLater,
-            onNotThem: onNotThem,
-          );
-    // an animated size cannot take a zero time: with no movement the swap
-    // is plain
-    if (motionStill(context)) return shown;
-    const time = Duration(milliseconds: 280);
-    return AnimatedSize(
-      duration: time,
-      curve: Curves.easeOutCubic,
-      alignment: Alignment.topCenter,
-      child: AnimatedSwitcher(
-        duration: time,
-        switchInCurve: Curves.easeOut,
-        switchOutCurve: Curves.easeIn,
-        // the one going lies under the one coming and holds no height of
-        // its own, so the size moves in one go
-        layoutBuilder: (current, previous) => Stack(
-          alignment: Alignment.topCenter,
-          clipBehavior: Clip.none,
-          children: [
-            for (final p in previous)
-              Positioned(top: 0, left: 0, right: 0, child: p),
-            ?current,
-          ],
-        ),
-        child: shown,
-      ),
-    );
-  }
-}
-
-// the compare card put off: one slim line where it was. compare opens the
-// number, the x puts it away for good
-class _CompareRow extends StatelessWidget {
-  final VoidCallback onVerify;
-  final VoidCallback onDismiss;
-  const _CompareRow({
-    super.key,
-    required this.onVerify,
-    required this.onDismiss,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      padding: const EdgeInsetsDirectional.only(start: 11),
-      decoration: BoxDecoration(
-        color: HaloColors.amber.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.verified_user_outlined, size: 14, color: HaloColors.amber),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Text(
-                l10n.chatCompareFolded,
-                style: HaloType.sans(
-                  size: 12.5,
-                  weight: FontWeight.w500,
-                  color: HaloColors.text2,
-                  height: 1.35,
-                ),
-              ),
-            ),
-          ),
-          Semantics(
-            button: true,
-            child: _ScaleTap(
-              onTap: onVerify,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.center,
-                color: Colors.transparent,
-                child: Text(
-                  l10n.chatCompareNow,
-                  style: HaloType.sans(
-                    size: 12.5,
-                    weight: FontWeight.w600,
-                    color: HaloColors.amberText,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: l10n.chatCompareDismiss,
-            iconSize: 16,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 44, height: 44),
-            color: HaloColors.text2,
-            icon: const Icon(Icons.close_rounded),
-            onPressed: onDismiss,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// at the top of a chat added by a code or a link, or taken in from a
-// request: three words prove nothing, the safety number does. it goes once
-// they are verified, and folds into a line for later. a number read out
-// that is another opens the safety number with "this isn't them" up
-class _CompareCard extends StatelessWidget {
-  final String peerName;
-  final VoidCallback onVerify;
-  final VoidCallback onLater;
-  final VoidCallback onNotThem;
-  const _CompareCard({
-    super.key,
-    required this.peerName,
-    required this.onVerify,
-    required this.onLater,
-    required this.onNotThem,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      padding: const EdgeInsets.fromLTRB(13, 11, 13, 6),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        border: Border.all(color: HaloColors.line, width: 0.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.verified_user_outlined,
-                size: 14,
-                color: HaloColors.amber,
-              ),
-              const SizedBox(width: 7),
-              Flexible(
-                child: Text(
-                  l10n.chatCompareTitle,
-                  style: HaloType.serif(size: 13, color: HaloColors.text),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Text(
-            l10n.chatCompareLine(peerName),
-            style: HaloType.sans(
-              size: 12.5,
-              color: HaloColors.text2,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 11),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: _barBtn(
-                  l10n.chatCompareLater,
-                  HaloColors.text,
-                  HaloColors.surface,
-                  onLater,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 3,
-                child: _barBtn(
-                  l10n.chatVerify,
-                  HaloColors.onAmber,
-                  HaloColors.amber,
-                  onVerify,
-                  bold: true,
-                ),
-              ),
-            ],
-          ),
-          // compared already, and their number was another
-          NotThemAsk(compact: true, onTap: onNotThem),
-        ],
-      ),
-    );
-  }
-}
 
 // shown at the top of a chat when a known contact's identity key changed.
 // a reinstall looks the same as an attack, so we prompt to verify instead

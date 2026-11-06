@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // "this isn't them" as seen: the button, its question, the Blocked page,
+// the compare card on a contact page,
 // small phones, languages and reduced motion. real database methods over
 // rows in maps
 import 'dart:io';
@@ -23,7 +24,7 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateRefresh;
 import 'package:kryfo/screens/blocked_screen.dart';
-import 'package:kryfo/screens/chat_screen.dart';
+import 'package:kryfo/screens/contact_screen.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
@@ -70,6 +71,19 @@ class _Db extends SayHiDb {
   Future<void> unblockKey(String keyHex) => real.unblockKey(keyHex);
   @override
   Future<List<Map<String, Object?>>> loadGroups() async => const [];
+  @override
+  Future<void> setNameCheck(String haloId, int flags) =>
+      real.setNameCheck(haloId, flags);
+  @override
+  Future<List<Map<String, Object?>>> vouchesFor(String haloId) async => [];
+  @override
+  Future<List<Map<String, Object?>>> mediaFor(String peerId) async => [];
+  @override
+  Future<int?> firstMessageAt(String peerId) async => null;
+  @override
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => const [];
 }
 
 void main() {
@@ -128,12 +142,8 @@ void main() {
     }
   }
 
-  const chat = ChatScreen(
-    peerHaloId: _peer,
-    peerOnion: '',
-    peerXPub: '',
-    avatarSeed: _peer,
-  );
+  // their page on its first visit carries the compare card
+  const chat = ContactScreen(haloId: _peer, avatarSeed: _peer, peerXPub: '');
 
   final number = KeyVerificationScreen(
     peerHaloId: _peer,
@@ -180,7 +190,7 @@ void main() {
     await person();
     await devOpen(t, chat);
     await settle(t);
-    await t.tap(find.text(l10n.chatVerify));
+    await t.tap(find.text(l10n.chatCompareNow));
     await settle(t);
     expect(find.byType(KeyVerificationScreen), findsOneWidget);
     await t.tap(find.text(l10n.notThemNumbersDiffer).last);

@@ -1784,6 +1784,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Чекаємо, поки співрозмовник прийме твій запит';
 
   @override
+  String get chatWaitsToSend => 'Чекає на надсилання';
+
+  @override
   String get chatTheyMayNotKnow =>
       'Співрозмовник може не знати, що запит прийнято';
 
@@ -1938,13 +1941,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatCompareLater => 'Пізніше';
 
   @override
-  String get chatCompareFolded => 'Номер безпеки ще не звірено';
-
-  @override
   String get chatCompareNow => 'Звірити';
-
-  @override
-  String get chatCompareDismiss => 'Сховати';
 
   @override
   String chatKeyHeldLine(Object peerName) {

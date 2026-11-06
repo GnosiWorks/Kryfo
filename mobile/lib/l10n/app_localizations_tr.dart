@@ -1752,6 +1752,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatWaitingForThemTo => 'İsteğini kabul etmesi bekleniyor';
 
   @override
+  String get chatWaitsToSend => 'Gönderilmeyi bekliyor';
+
+  @override
   String get chatTheyMayNotKnow => 'Kabul ettiğini bilmiyor olabilir';
 
   @override
@@ -1902,13 +1905,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatCompareLater => 'Sonra';
 
   @override
-  String get chatCompareFolded => 'Güvenlik numarası henüz karşılaştırılmadı';
-
-  @override
   String get chatCompareNow => 'Karşılaştır';
-
-  @override
-  String get chatCompareDismiss => 'Gizle';
 
   @override
   String chatKeyHeldLine(Object peerName) {

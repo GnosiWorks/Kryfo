@@ -16,11 +16,31 @@ const kHelloOld = 'old';
 /// before the chat says they may need to update
 const kOldPeerWait = Duration(minutes: 10);
 
-/// the hello again while they have not answered: twice a day the first
-/// week, daily after. the receiver keeps the newest one from a key
+/// the hello again while they have not answered, counted from the add:
+/// close together at first, as an update asked for in person or on a call
+/// comes soon, then twice a day the first week and daily after. the
+/// receiver keeps the newest one from a key
+const kOldPeerHelloFirst = [
+  Duration(minutes: 10),
+  Duration(hours: 1),
+  Duration(hours: 3),
+  Duration(hours: 6),
+];
 const kOldPeerHelloSoon = Duration(hours: 12);
 const kOldPeerHelloLater = Duration(days: 1);
 const kOldPeerSoonFor = Duration(days: 7);
+
+/// when the hello to a v3 card's owner added at [at], last owed at
+/// [went], is owed again
+int oldPeerHelloDue(int at, int went) {
+  for (final d in kOldPeerHelloFirst) {
+    if (at + d.inMilliseconds > went) return at + d.inMilliseconds;
+  }
+  final every = went - at < kOldPeerSoonFor.inMilliseconds
+      ? kOldPeerHelloSoon
+      : kOldPeerHelloLater;
+  return went + every.inMilliseconds;
+}
 
 const _kNoInvite = '00000000000000000000000000000000';
 
@@ -147,10 +167,7 @@ extension AppStateOldPeers on AppState {
       }
       final at = o['at'] as int;
       final went = o['went_at'] as int? ?? at;
-      final every = now - at < kOldPeerSoonFor.inMilliseconds
-          ? kOldPeerHelloSoon
-          : kOldPeerHelloLater;
-      if (now - went < every.inMilliseconds) continue;
+      if (now < oldPeerHelloDue(at, went)) continue;
       final owed = await db.query(
         'hellos',
         columns: ['peer'],

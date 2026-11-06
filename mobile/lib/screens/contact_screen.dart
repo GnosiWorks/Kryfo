@@ -26,7 +26,10 @@ import '../main.dart'
         AppStateContacts,
         AppStateSession,
         AppStatePhotos,
-        AppStateRefresh;
+        AppStateRefresh,
+        kNameShown,
+        nameAsks,
+        nameCheckOf;
 import '../desktop/desktop_mode.dart' show onDesktop;
 import '../photo_pick.dart';
 import '../profile_photo.dart' show photoAddOffered, photoBook;
@@ -54,6 +57,7 @@ import 'home_screen.dart' show ContactPreview;
 import 'chat_screen.dart' show MediaGalleryScreen;
 import 'key_verification_screen.dart';
 import '../widgets/key_held.dart';
+import '../widgets/not_them.dart';
 import 'vouchers_sheet.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/owned_text.dart';
@@ -203,6 +207,10 @@ class _ContactScreenState extends State<ContactScreen> {
   late final _shotsHold = ShotsPacer(appState.forceSecure);
   // read as the page opens: a change after that reads the rows again
   int _rev = 0;
+  // the safety number asked for on this visit, the first to their page.
+  // decided once, on the first read
+  bool _compare = false;
+  bool _compareRead = false;
 
   ChatShots get _shots => ChatShots.ofRow(_c, quiet: sessionQuiet);
 
@@ -277,9 +285,11 @@ class _ContactScreenState extends State<ContactScreen> {
       for (final r in rows)
         if ((r['secure'] as int? ?? 0) == 1) r['media_path'] as String,
     };
+    final compare = await _compareOnce(c, held);
     if (!mounted) return;
     setState(() {
       _c = c;
+      if (compare) _compare = true;
       _voucherNames = [
         for (final v in vs)
           (v['nickname'] as String?) ?? v['voucher_id'] as String,
@@ -294,6 +304,30 @@ class _ContactScreenState extends State<ContactScreen> {
       _loaded = true;
     });
     _shotsHold.want(_shots.blocking);
+  }
+
+  // the first visit to the page of someone added by a code or a link, or
+  // taken in from a request, asks once for the safety number. the button
+  // under the page reaches it after that. no key held, no number to show
+  Future<bool> _compareOnce(Map<String, Object?>? c, bool held) async {
+    if (_compareRead || c == null) return false;
+    _compareRead = true;
+    if (!nameAsks(c) ||
+        (nameCheckOf(c) & kNameShown) != 0 ||
+        held ||
+        (c['key_changed'] as num?)?.toInt() == 1 ||
+        (c['blocked'] as num?)?.toInt() == 1 ||
+        widget.support ||
+        isDevChat(widget.haloId)) {
+      return false;
+    }
+    try {
+      if (await session.heldKey(widget.haloId) == null) return false;
+      await session.setNameCheck(widget.haloId, nameCheckOf(c) | kNameShown);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   // a photo for them from the camera or the gallery, or yours taken off
@@ -396,7 +430,7 @@ class _ContactScreenState extends State<ContactScreen> {
     await _load();
   }
 
-  Future<void> _checkNumber(bool verified) async {
+  Future<void> _checkNumber(bool verified, {bool notThem = false}) async {
     await Navigator.of(context).push(
       haloRoute(
         KeyVerificationScreen(
@@ -405,6 +439,7 @@ class _ContactScreenState extends State<ContactScreen> {
           myXpub: appState.sessionXPub,
           peerXpub: widget.peerXPub,
           initialVerified: verified,
+          notThemOpen: notThem,
         ),
       ),
     );
@@ -635,6 +670,23 @@ class _ContactScreenState extends State<ContactScreen> {
                       ),
               ),
             ),
+            // asked once, on the first visit: the number says who they are
+            EaseSize(
+              child: FadeSwap(
+                child: _compare && !verified && !blocked && !_held
+                    ? _CompareCard(
+                        key: const ValueKey('compare'),
+                        peerName: _name,
+                        onVerify: () => _checkNumber(verified),
+                        onLater: () => setState(() => _compare = false),
+                        onNotThem: () => _checkNumber(verified, notThem: true),
+                      )
+                    : const SizedBox(
+                        key: ValueKey('compare_none'),
+                        width: double.infinity,
+                      ),
+              ),
+            ),
             const SizedBox(height: 22),
             // the cards ease in once there is something to put on them
             EaseSize(
@@ -824,6 +876,89 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
           ]),
         ),
+      ),
+    );
+  }
+}
+
+// on the first visit to the page of someone added by a code or a link, or
+// taken in from a request: three words prove nothing, the safety number
+// does. later puts it away; the button under the page stays. a number read
+// out that is another opens the safety number with "this isn't them" up
+class _CompareCard extends StatelessWidget {
+  final String peerName;
+  final VoidCallback onVerify;
+  final VoidCallback onLater;
+  final VoidCallback onNotThem;
+  const _CompareCard({
+    super.key,
+    required this.peerName,
+    required this.onVerify,
+    required this.onLater,
+    required this.onNotThem,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        border: Border.all(color: HaloColors.line, width: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                size: 15,
+                color: HaloColors.amber,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  l10n.chatCompareTitle,
+                  style: HaloType.serif(size: 14, color: HaloColors.text),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.chatCompareLine(peerName),
+            style: HaloType.sans(
+              size: 13,
+              color: HaloColors.text2,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: HaloGhostButton(
+                  quiet: true,
+                  label: l10n.chatCompareLater,
+                  onTap: onLater,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: HaloPrimaryButton(
+                  label: l10n.chatCompareNow,
+                  onTap: onVerify,
+                ),
+              ),
+            ],
+          ),
+          // compared already, and their number was another
+          NotThemAsk(compact: true, onTap: onNotThem),
+        ],
       ),
     );
   }

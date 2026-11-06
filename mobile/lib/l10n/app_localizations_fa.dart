@@ -1746,6 +1746,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatWaitingForThemTo => 'در انتظار اینکه درخواستتان را بپذیرد';
 
   @override
+  String get chatWaitsToSend => 'در انتظار ارسال';
+
+  @override
   String get chatTheyMayNotKnow => 'شاید نداند که پذیرفته‌اید';
 
   @override
@@ -1896,13 +1899,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatCompareLater => 'بعداً';
 
   @override
-  String get chatCompareFolded => 'شماره‌ی امنیتی هنوز مقایسه نشده';
-
-  @override
   String get chatCompareNow => 'مقایسه';
-
-  @override
-  String get chatCompareDismiss => 'پنهان کردن';
 
   @override
   String chatKeyHeldLine(Object peerName) {

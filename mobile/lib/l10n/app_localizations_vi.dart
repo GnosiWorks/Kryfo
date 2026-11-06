@@ -1735,6 +1735,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatWaitingForThemTo => 'Đang chờ họ chấp nhận yêu cầu của bạn';
 
   @override
+  String get chatWaitsToSend => 'Đang chờ gửi';
+
+  @override
   String get chatTheyMayNotKnow => 'Có thể họ chưa biết bạn đã chấp nhận';
 
   @override
@@ -1885,13 +1888,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCompareLater => 'Để sau';
 
   @override
-  String get chatCompareFolded => 'Chưa so sánh số an toàn';
-
-  @override
   String get chatCompareNow => 'So sánh';
-
-  @override
-  String get chatCompareDismiss => 'Ẩn';
 
   @override
   String chatKeyHeldLine(Object peerName) {

@@ -1760,6 +1760,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Warte darauf, dass die Person deine Anfrage annimmt';
 
   @override
+  String get chatWaitsToSend => 'Wartet auf Versand';
+
+  @override
   String get chatTheyMayNotKnow =>
       'Die Person weiß vielleicht nicht, dass du angenommen hast';
 
@@ -1914,13 +1917,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatCompareLater => 'Später';
 
   @override
-  String get chatCompareFolded => 'Sicherheitsnummer noch nicht verglichen';
-
-  @override
   String get chatCompareNow => 'Vergleichen';
-
-  @override
-  String get chatCompareDismiss => 'Ausblenden';
 
   @override
   String chatKeyHeldLine(Object peerName) {

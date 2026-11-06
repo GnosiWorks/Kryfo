@@ -1751,6 +1751,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपके अनुरोध को उनके स्वीकार करने का इंतज़ार';
 
   @override
+  String get chatWaitsToSend => 'भेजने के इंतज़ार में';
+
+  @override
   String get chatTheyMayNotKnow =>
       'हो सकता है उन्हें पता न हो कि आपने स्वीकार कर लिया';
 
@@ -1903,13 +1906,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatCompareLater => 'बाद में';
 
   @override
-  String get chatCompareFolded => 'सुरक्षा नंबर अभी मिलाया नहीं गया';
-
-  @override
   String get chatCompareNow => 'मिलाएँ';
-
-  @override
-  String get chatCompareDismiss => 'हटाएँ';
 
   @override
   String chatKeyHeldLine(Object peerName) {
