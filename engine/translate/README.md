@@ -23,6 +23,11 @@ screen shows translation and no part of it runs, though the opencc tables
   agent, cookies or compression. the files are checked and unpacked only
   once the last byte is in. a cut keeps what came, padding counted, and
   the next start goes on from there. a wrong hash throws the part away.
+  `resume.go`: in the app three chunks come at once, each lane on a tor
+  circuit of its own; a request that brings no byte for 45 s (or takes 5
+  min) stops, is asked again after a backoff from the byte the part holds,
+  on a fresh circuit after two misses in a row, and the download ends only
+  once no chunk came for 10 min. each stop is logged by its class.
 - `fetch.go`: one file from where it was published, for the desk tool and
   for filling the mirror.
 - `mirror.go`: what the mirror serves, made from the source and the pins.

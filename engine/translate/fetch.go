@@ -60,7 +60,7 @@ func HTTPGetter(c *http.Client) Getter {
 			return resp.Body, 0, nil
 		}
 		resp.Body.Close()
-		return nil, 0, fmt.Errorf("%w: %d", ErrStatus, resp.StatusCode)
+		return nil, 0, StatusError{resp.StatusCode}
 	}
 }
 

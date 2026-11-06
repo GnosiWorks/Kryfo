@@ -16,7 +16,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/halo/engine/translate"
@@ -29,8 +32,33 @@ var translateDial = func(name string) (dialFn, error) { return updateDial(name) 
 // nil, the system's roots; tests trust their own server
 var translateTLS *tls.Config
 
-// one chunk of 1 MiB over a slow circuit, with room to spare
-const translateChunkWait = 60 * time.Second
+// how a download gets past a slow or cut circuit. a request ends when no
+// byte came for translateStall (a whole-request cap cut every chunk slower
+// than 17 kB/s), or after translateChunkMax for its 1 MiB; then it is asked
+// again with a backoff, from the byte the part holds, on a fresh circuit
+// after two misses. it ends once no chunk came for translateGiveUp.
+// translateLanes chunks at a time, each lane on a circuit of its own: one
+// onion circuit carried 0.06-0.55 MiB/s on 2026-11-06
+const (
+	translateStall    = 45 * time.Second
+	translateChunkMax = 5 * time.Minute
+	translateLanes    = 3
+)
+
+// tests make the waits short
+var (
+	translateWait   = translate.Backoff
+	translateGiveUp = 10 * time.Minute
+)
+
+// whether tor can carry a download now
+var translateNetReady = func() bool {
+	mu.Lock()
+	up := torNode != nil
+	mu.Unlock()
+	s := torStatusNow()
+	return up && (s == "bootstrapped" || s == "publishing" || s == "reachable")
+}
 
 var translateJobs translate.Jobs
 
@@ -49,7 +77,6 @@ func translateClient() (*http.Client, error) {
 			TLSHandshakeTimeout:   20 * time.Second,
 			ResponseHeaderTimeout: 30 * time.Second,
 		},
-		Timeout: translateChunkWait,
 		// the files are where the manifest says: a redirect is not followed
 		CheckRedirect: func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -128,10 +155,47 @@ func translateFetch(lang, dir string) string {
 		return fmt.Sprintf("error: tor: %v", err)
 	}
 	translateJobs.Start(lang, func(ctx context.Context, prog translate.Progress) error {
-		defer c.CloseIdleConnections()
-		return translate.FetchBundle(ctx, translate.HTTPGetter(c), m, lang, dir, prog)
+		return translate.FetchBundleWith(ctx, translateFetcher(c), m, lang, dir, prog)
 	})
 	return "ok"
+}
+
+// the first lane takes first, already dialled; every other lane and every
+// fresh circuit gets a client of its own
+func translateFetcher(first *http.Client) translate.Fetcher {
+	var lmu sync.Mutex
+	return translate.Fetcher{
+		Lanes:    translateLanes,
+		Retry:    true,
+		Wait:     translateWait,
+		Ready:    translateNetReady,
+		GiveUp:   translateGiveUp,
+		Stall:    translateStall,
+		ChunkMax: translateChunkMax,
+		Lane: func() (translate.Getter, func()) {
+			lmu.Lock()
+			c := first
+			first = nil
+			lmu.Unlock()
+			if c == nil {
+				var err error
+				if c, err = translateClient(); err != nil {
+					return func(context.Context, string, int64, int64) (io.ReadCloser, int64, error) {
+						return nil, 0, err
+					}, nil
+				}
+			}
+			return translate.HTTPGetter(c), c.CloseIdleConnections
+		},
+		// the class of each stop, never the host or the language
+		Log: func(s translate.Stop) {
+			if s.Wait == 0 {
+				log.Printf("translate: download stopped (%s) at %d MiB, lane %d, try %d, ended", s.Why, s.At>>20, s.Lane, s.Try)
+				return
+			}
+			log.Printf("translate: download stopped (%s) at %d MiB, lane %d, try %d, again in %v", s.Why, s.At>>20, s.Lane, s.Try, s.Wait.Round(time.Second))
+		},
+	}
 }
 
 //export HaloTranslateProgress

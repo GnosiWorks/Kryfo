@@ -94,8 +94,14 @@ const (
 // FetchBundle puts both directions of lang under dir, each pair in its own
 // directory (Pair.Dir), from the mirror's one file for it. a cut keeps what
 // came, padding counted, and the next call goes on from there, so all the
-// tries together send the whole class.
+// tries together send the whole class. one request at a time, and the
+// first stop ends it; FetchBundleWith gets past stops by itself.
 func FetchBundle(ctx context.Context, get Getter, m *Manifest, lang, dir string, prog Progress) error {
+	return FetchBundleWith(ctx, Fetcher{Lane: func() (Getter, func()) { return get, nil }}, m, lang, dir, prog)
+}
+
+// FetchBundleWith is FetchBundle with f's lanes and retries.
+func FetchBundleWith(ctx context.Context, f Fetcher, m *Manifest, lang, dir string, prog Progress) error {
 	pairs := m.Bundle(lang)
 	if len(pairs) == 0 {
 		return ErrNoBundle
@@ -119,40 +125,8 @@ func FetchBundle(ctx context.Context, get Getter, m *Manifest, lang, dir string,
 	if prog != nil {
 		prog(got, wire)
 	}
-	url := m.Base + m.BundleName(lang)
-	for got < wire {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		body, start, err := get(ctx, url, got, Chunk)
-		if err != nil {
-			return err
-		}
-		if start != got {
-			// the whole file instead of the range: not taken, it would
-			// make this download unlike the others
-			body.Close()
-			return fmt.Errorf("%w: range not honoured", ErrStatus)
-		}
-		buf := make([]byte, Chunk)
-		n, err := io.ReadFull(body, buf)
-		body.Close()
-		if err != nil {
-			return fmt.Errorf("%w: chunk at %d: %d bytes", ErrShort, got, n)
-		}
-		if got < gz {
-			keep := min(int64(Chunk), gz-got)
-			if _, err := fh.WriteAt(buf[:keep], got); err != nil {
-				return err
-			}
-		}
-		got += Chunk
-		if err := os.WriteFile(gotPath, []byte(strconv.FormatInt(got, 10)), 0o600); err != nil {
-			return err
-		}
-		if prog != nil {
-			prog(got, wire)
-		}
+	if err := f.fill(ctx, m.Base+m.BundleName(lang), fh, gotPath, got, gz, wire, prog); err != nil {
+		return err
 	}
 	if err := fh.Sync(); err != nil {
 		return err
