@@ -193,6 +193,14 @@
   },
   {
    "licence": "MPL-2.0",
+   "name": "Translation model, Arabic to English",
+   "texts": [
+    3
+   ],
+   "version": "7b7af028"
+  },
+  {
+   "licence": "MPL-2.0",
    "name": "Translation model, Chinese to English",
    "texts": [
     3
@@ -201,11 +209,243 @@
   },
   {
    "licence": "MPL-2.0",
+   "name": "Translation model, English to Arabic",
+   "texts": [
+    3
+   ],
+   "version": "ae659d70"
+  },
+  {
+   "licence": "MPL-2.0",
    "name": "Translation model, English to Chinese",
    "texts": [
     3
    ],
    "version": "4e5accc1"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to French",
+   "texts": [
+    3
+   ],
+   "version": "6322e296"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to German",
+   "texts": [
+    3
+   ],
+   "version": "8df29d94"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Hindi",
+   "texts": [
+    3
+   ],
+   "version": "18682fa6"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Indonesian",
+   "texts": [
+    3
+   ],
+   "version": "f81f13ee"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Italian",
+   "texts": [
+    3
+   ],
+   "version": "248f4756"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Persian",
+   "texts": [
+    3
+   ],
+   "version": "456ad395"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Polish",
+   "texts": [
+    3
+   ],
+   "version": "b0b59716"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Portuguese",
+   "texts": [
+    3
+   ],
+   "version": "07892fd2"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Russian",
+   "texts": [
+    3
+   ],
+   "version": "184cb5cd"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Spanish",
+   "texts": [
+    3
+   ],
+   "version": "3b1c3995"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Traditional Chinese",
+   "texts": [
+    3
+   ],
+   "version": "559ab90d"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Turkish",
+   "texts": [
+    3
+   ],
+   "version": "ea3cd4ee"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Ukrainian",
+   "texts": [
+    3
+   ],
+   "version": "ed8bb4a8"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, English to Vietnamese",
+   "texts": [
+    3
+   ],
+   "version": "04fa6044"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, French to English",
+   "texts": [
+    3
+   ],
+   "version": "15f997bc"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, German to English",
+   "texts": [
+    3
+   ],
+   "version": "3e6f7c2c"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Hindi to English",
+   "texts": [
+    3
+   ],
+   "version": "c82fd6ed"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Indonesian to English",
+   "texts": [
+    3
+   ],
+   "version": "eeed3d8c"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Italian to English",
+   "texts": [
+    3
+   ],
+   "version": "21b70978"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Persian to English",
+   "texts": [
+    3
+   ],
+   "version": "aa326306"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Polish to English",
+   "texts": [
+    3
+   ],
+   "version": "06dbab3b"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Portuguese to English",
+   "texts": [
+    3
+   ],
+   "version": "7b854f1e"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Russian to English",
+   "texts": [
+    3
+   ],
+   "version": "aa0efa19"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Spanish to English",
+   "texts": [
+    3
+   ],
+   "version": "4aed7734"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Traditional Chinese to English",
+   "texts": [
+    3
+   ],
+   "version": "0aee9179"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Turkish to English",
+   "texts": [
+    3
+   ],
+   "version": "bd18594a"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Ukrainian to English",
+   "texts": [
+    3
+   ],
+   "version": "2e7b8bc9"
+  },
+  {
+   "licence": "MPL-2.0",
+   "name": "Translation model, Vietnamese to English",
+   "texts": [
+    3
+   ],
+   "version": "de4bf2b9"
   },
   {
    "licence": "MIT",
