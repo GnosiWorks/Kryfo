@@ -9,13 +9,10 @@ import 'package:flutter/services.dart';
 import '../l10n/app_locale.dart' show availableLanguages, kLanguageNames;
 import '../l10n/l10n.dart';
 import '../theme.dart';
-import '../translate/catalog.dart';
 import '../translate/downloads.dart';
 import '../translate/hub.dart';
 import '../translate/lang_names.dart';
-import '../translate/pack_sheet.dart';
 import '../translate/settings.dart';
-import '../widgets/confirm_sheet.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_rows.dart';
@@ -24,6 +21,7 @@ import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import '../wide/read_width.dart' show DeskPage;
+import 'translate_languages_screen.dart';
 
 class TranslationScreen extends StatefulWidget {
   final TranslationHub hub;
@@ -57,6 +55,15 @@ class _TranslationScreenState extends State<TranslationScreen> {
       for (final l in s.mine)
         if (l != app) langName(l),
     ].join(', ');
+  }
+
+  // the languages on the phone now, by name
+  String? _haveValue() {
+    final have = [
+      for (final l in hub.catalog.languages)
+        if (hub.langState(l).phase == DlPhase.installed) langName(l),
+    ];
+    return have.isEmpty ? null : have.join(', ');
   }
 
   String _targetValue(TranslateSettings s) =>
@@ -113,12 +120,25 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     ),
                   ),
                 ),
-                HaloSection(l10n.translatePacksSection),
-                for (final (i, b) in hub.catalog.langs.indexed)
-                  Padding(
-                    padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
-                    child: _PackCard(hub: hub, bundle: b),
+                if (hub.catalog.languages.isNotEmpty) ...[
+                  HaloSection(l10n.translatePacksSection),
+                  HaloGroup(
+                    children: [
+                      HaloRow(
+                        key: const ValueKey('translate-languages'),
+                        icon: Icons.language_rounded,
+                        label: l10n.translateLanguagesSection,
+                        hint: l10n.translateLanguagesHintShown,
+                        value: _haveValue(),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => TranslateLanguagesScreen(hub: hub),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                ],
                 // the rest only matters while translation is on: it folds
                 // away with the switch and back
                 EaseSize(
@@ -306,7 +326,8 @@ class _TranslationScreenState extends State<TranslationScreen> {
     final options = <String>[
       '',
       'en',
-      for (final b in hub.catalog.langs) b.lang,
+      for (final l in hub.catalog.languages)
+        if (l != 'en') l,
     ];
     return showHaloSheet<String>(
       context,
@@ -323,107 +344,6 @@ class _TranslationScreenState extends State<TranslationScreen> {
             ),
         ],
       ),
-    );
-  }
-}
-
-class _PackCard extends StatelessWidget {
-  final TranslationHub hub;
-  final LangBundle bundle;
-  const _PackCard({required this.hub, required this.bundle});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: hub.downloads,
-      builder: (context, _) {
-        final s = hub.downloads.of(bundle.lang);
-        final name = langName(bundle.lang);
-        final status = switch (s.phase) {
-          DlPhase.installed => l10n.translateInstalledShown(packSize(s.onDisk)),
-          DlPhase.running || DlPhase.starting => l10n.translateDownloading,
-          _ => l10n.translateNotDownloaded(packSize(bundle.gz)),
-        };
-        return Container(
-          key: ValueKey('pack-${bundle.lang}'),
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-          decoration: BoxDecoration(
-            color: HaloColors.surface2,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: HaloColors.line, width: 0.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: HaloColors.amberSoft,
-                      borderRadius: BorderRadius.circular(9),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.translate_rounded,
-                      size: 17,
-                      color: HaloColors.amber,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.translatePackPair(name),
-                          style: HaloType.sans(
-                            size: 14,
-                            color: HaloColors.text,
-                          ),
-                        ),
-                        Text(
-                          status,
-                          style: HaloType.sans(
-                            size: 12.5,
-                            color: HaloColors.text,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (s.phase == DlPhase.installed ||
-                      s.phase == DlPhase.paused ||
-                      (s.phase == DlPhase.failed && s.onDisk > 0))
-                    IconButton(
-                      tooltip: l10n.commonDelete,
-                      icon: Icon(
-                        Icons.delete_outline,
-                        size: 20,
-                        color: HaloColors.rose,
-                      ),
-                      onPressed: () async {
-                        final ok = await showConfirmSheet(
-                          context,
-                          title: l10n.translateDeleteTitle(name),
-                          line: l10n.translateDeleteLine(name),
-                          yes: l10n.commonDelete,
-                        );
-                        if (ok) await hub.downloads.remove(bundle.lang);
-                      },
-                    ),
-                ],
-              ),
-              if (s.phase != DlPhase.installed) ...[
-                const SizedBox(height: 14),
-                PackControls(hub: hub, bundle: bundle),
-              ],
-            ],
-          ),
-        );
-      },
     );
   }
 }

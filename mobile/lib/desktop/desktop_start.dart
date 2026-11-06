@@ -401,6 +401,10 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     sweepNativeCopies(p.join(root, 'tmp', 'native'));
   }
   var started = false;
+  // a frame that waits on a quiet window gets a nudge
+  DeskFrameWatch(
+    nudge: () => _desktopChannel.invokeMethod<void>('nudge'),
+  ).start();
   deskRunApp(
     DesktopLockApp(
       vault: vault,

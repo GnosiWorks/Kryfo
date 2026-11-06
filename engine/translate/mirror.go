@@ -17,7 +17,7 @@ import (
 // so the box can check its files with sha256sum -c
 const SumsName = "SHA256SUMS"
 
-// FillMirror puts what the mirror serves into dir: for each language one
+// FillMirror puts what the mirror serves into dir: for each direction one
 // file, BundleName, holding its gzips back to back as published, each
 // fetched from the manifest's source and checked against its pins packed
 // and unpacked, then noise up to the size class; and the list of hashes.
@@ -27,7 +27,7 @@ func FillMirror(ctx context.Context, get Getter, m *Manifest, dir string, say fu
 		return err
 	}
 	var sums []string
-	for _, lang := range m.Langs() {
+	for _, lang := range m.Packs() {
 		name := m.BundleName(lang)
 		final := filepath.Join(dir, name)
 		if !bundleOK(m, lang, final) {

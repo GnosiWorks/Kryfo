@@ -247,11 +247,17 @@ void main() {
       put('lock', '');
       put('trace.txt', 'start windows');
       put('engine-crash.txt', 'panic: a run before');
+      put('crash.dmp', 'MDMP');
       final copy = File(at('tmp/native/c.jpg'));
       final twin = p.join(scratch.path, 'twin');
       Process.runSync('ln', [copy.path, twin]);
       expect(await clearWithoutVault(root), isTrue);
-      expect(leftIn(root), ['engine-crash.txt', 'lock', 'trace.txt']);
+      expect(leftIn(root), [
+        'crash.dmp',
+        'engine-crash.txt',
+        'lock',
+        'trace.txt',
+      ]);
       // the plain copy was zeroed before it went
       expect(File(twin).readAsBytesSync().every((b) => b == 0), isTrue);
       // then the start goes on to onboarding: a new vault, no keys

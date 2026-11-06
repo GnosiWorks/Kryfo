@@ -53,12 +53,13 @@ TranslationHub _live() {
     onWifi: _onWifi,
     wifiOnly: () => hub.settings.wifiOnly,
     quiet: () => sessionQuiet,
+    // asked for off wi-fi: starts by itself once the phone is on it
+    wifiWait: const Duration(seconds: 5),
   );
   String? dir;
   modelsDir().then((d) => dir = d, onError: (Object _) => null);
   final translator = BergamotTranslator(
-    installed: (f, t) =>
-        downloads.installed(catalog.bundleFor(f, t)?.lang ?? ''),
+    installed: (f, t) => downloads.installed(catalog.bundleFor(f, t)?.id ?? ''),
     config: (f, t) => dir == null ? null : engine.config(f, t, dir!),
   );
   hub = TranslationHub(

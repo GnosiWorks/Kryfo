@@ -3,6 +3,7 @@
 // and the type and code places of a failure, caught or not, to
 // <data folder>/trace.txt.
 // never a message, a path or a key: those can carry what the vault holds
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -14,6 +15,16 @@ String? _file;
 void startTrace(String root) {
   if (Platform.environment['KRYFO_TRACE'] != '1') return;
   traceTo(p.join(root, 'trace.txt'));
+  // the runner's crash line names a thread by its id: this one is dart's
+  if (Platform.isWindows) {
+    try {
+      final id = DynamicLibrary.open('kernel32.dll')
+          .lookupFunction<Uint32 Function(), int Function()>(
+            'GetCurrentThreadId',
+          )();
+      trace('dart thread $id');
+    } catch (_) {}
+  }
 }
 
 /// the trace into [file], as the environment's switch turns it on

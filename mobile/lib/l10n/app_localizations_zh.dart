@@ -8838,27 +8838,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translatePacksSection => '语言包';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language和英语';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return '未下载 · 约 $size';
   }
 
   @override
   String get translateDownloading => '正在通过 Tor 下载';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return '删除$language语言包？';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return '在重新下载之前，$language消息将无法翻译。';
-  }
 
   @override
   String get translateLanguagesSection => '语言';
@@ -11109,6 +11094,86 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       '藏在像素本身里的标记（例如图像生成工具的隐藏水印）以及图片中看得见的内容，都会保持原样。';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return '下载$language（$size）？';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return '正在下载$language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return '等待 Wi-Fi 以下载$language';
+  }
+
+  @override
+  String get translateWaitsWifi => '正在等待 Wi-Fi。这部手机连上 Wi-Fi 后会自动开始下载。';
+
+  @override
+  String get translateWaitsWifiDesk => '正在等待 Wi-Fi。这台电脑连上 Wi-Fi 后会自动开始下载。';
+
+  @override
+  String get translateWaitsWifiShort => '正在等待 Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return '消息在这部手机上翻译，绝不会离开它。这需要$language和$other语言包，共约 $size，通过 Tor 下载一次。';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return '消息在这台电脑上翻译，绝不会离开它。这需要$language和$other语言包，共约 $size，通过 Tor 下载一次。';
+  }
+
+  @override
+  String get translateLanguagesHint => '每种语言下载一次，之后在这部手机上翻译';
+
+  @override
+  String get translateLanguagesHintDesk => '每种语言下载一次，之后在这台电脑上翻译';
+
+  @override
+  String get translateSuggested => '推荐';
+
+  @override
+  String get translateMoreLanguages => '更多语言';
+
+  @override
+  String get translateWaysBoth => '与英语互译';
+
+  @override
+  String get translateWaysInto => '只能译成英语';
+
+  @override
+  String get translateWaysFrom => '只能从英语翻译';
+
+  @override
+  String get translateGet => '下载';
+
+  @override
+  String get translateRemove => '移除';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return '移除$language？';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return '这会释放 $size。用它保存的翻译也会一并删除。你随时可以重新下载。';
+  }
+
+  @override
+  String get translateResumeShort => '继续';
+
+  @override
+  String get translateTagApp => '应用语言';
+
+  @override
+  String get translateTagRead => '你读的语言';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -19828,27 +19893,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get translatePacksSection => '語言包';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language和英文';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return '未下載 · 約 $size';
   }
 
   @override
   String get translateDownloading => '正在透過 Tor 下載';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return '刪除$language語言包？';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return '在重新下載之前，$language訊息將無法翻譯。';
-  }
 
   @override
   String get translateLanguagesSection => '語言';
@@ -22103,4 +22153,84 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get cleanPixelMarksStay =>
       '藏在像素本身裡的標記（例如圖像生成工具的隱藏浮水印）以及圖片中看得見的內容，都會保持原樣。';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return '下載$language（$size）？';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return '正在下載$language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return '等待 Wi-Fi 以下載$language';
+  }
+
+  @override
+  String get translateWaitsWifi => '正在等待 Wi-Fi。這支手機連上 Wi-Fi 後會自動開始下載。';
+
+  @override
+  String get translateWaitsWifiDesk => '正在等待 Wi-Fi。這台電腦連上 Wi-Fi 後會自動開始下載。';
+
+  @override
+  String get translateWaitsWifiShort => '正在等待 Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return '訊息在這支手機上翻譯，絕不會離開它。這需要$language和$other語言包，共約 $size，透過 Tor 下載一次。';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return '訊息在這台電腦上翻譯，絕不會離開它。這需要$language和$other語言包，共約 $size，透過 Tor 下載一次。';
+  }
+
+  @override
+  String get translateLanguagesHint => '每種語言下載一次，之後在這支手機上翻譯';
+
+  @override
+  String get translateLanguagesHintDesk => '每種語言下載一次，之後在這台電腦上翻譯';
+
+  @override
+  String get translateSuggested => '推薦';
+
+  @override
+  String get translateMoreLanguages => '更多語言';
+
+  @override
+  String get translateWaysBoth => '與英文互譯';
+
+  @override
+  String get translateWaysInto => '只能譯成英文';
+
+  @override
+  String get translateWaysFrom => '只能從英文翻譯';
+
+  @override
+  String get translateGet => '下載';
+
+  @override
+  String get translateRemove => '移除';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return '移除$language？';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return '這會釋出 $size。用它儲存的翻譯也會一併刪除。你隨時可以重新下載。';
+  }
+
+  @override
+  String get translateResumeShort => '繼續';
+
+  @override
+  String get translateTagApp => 'App 語言';
+
+  @override
+  String get translateTagRead => '你讀的語言';
 }

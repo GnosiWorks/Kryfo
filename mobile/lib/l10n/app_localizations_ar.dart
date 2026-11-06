@@ -9441,27 +9441,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translatePacksSection => 'حزم اللغة';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language والإنجليزية';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'غير مُنزَّلة · نحو $size';
   }
 
   @override
   String get translateDownloading => 'جارٍ التنزيل عبر Tor';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return 'حذف حزمة $language؟';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return 'لن تُترجم الرسائل باللغة $language حتى تُنزَّل الحزمة من جديد.';
-  }
 
   @override
   String get translateLanguagesSection => 'اللغات';
@@ -11895,4 +11880,88 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'العلامات المخفية في البكسلات نفسها، مثل العلامات المائية المخفية لمولّدات الصور، وكل ما يظهر في الصورة تبقى كما هي.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return 'تنزيل $language ($size)؟';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return 'جارٍ تنزيل $language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'بانتظار Wi-Fi لتنزيل $language';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'بانتظار Wi-Fi. يبدأ التنزيل من تلقاء نفسه فور اتصال هذا الهاتف بشبكة Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'بانتظار Wi-Fi. يبدأ التنزيل من تلقاء نفسه فور اتصال هذا الحاسوب بشبكة Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiShort => 'بانتظار Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'تُترجم الرسائل على هذا الهاتف ولا تغادره أبدًا. يتطلب ذلك حزمتي اللغة $language و$other، نحو $size معًا، تُنزَّلان مرة واحدة عبر Tor.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'تُترجم الرسائل على هذا الحاسوب ولا تغادره أبدًا. يتطلب ذلك حزمتي اللغة $language و$other، نحو $size معًا، تُنزَّلان مرة واحدة عبر Tor.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'تُنزَّل كل لغة مرة واحدة، ثم تترجم على هذا الهاتف';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'تُنزَّل كل لغة مرة واحدة، ثم تترجم على هذا الحاسوب';
+
+  @override
+  String get translateSuggested => 'مقترحة';
+
+  @override
+  String get translateMoreLanguages => 'لغات أخرى';
+
+  @override
+  String get translateWaysBoth => 'من الإنجليزية وإليها';
+
+  @override
+  String get translateWaysInto => 'تترجم إلى الإنجليزية فقط';
+
+  @override
+  String get translateWaysFrom => 'تترجم من الإنجليزية فقط';
+
+  @override
+  String get translateGet => 'تنزيل';
+
+  @override
+  String get translateRemove => 'إزالة';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return 'إزالة $language؟';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'يحرّر هذا $size. وتُحذف معه الترجمات المحفوظة بها. يمكنك تنزيلها مجددًا في أي وقت.';
+  }
+
+  @override
+  String get translateResumeShort => 'متابعة';
+
+  @override
+  String get translateTagApp => 'لغة التطبيق';
+
+  @override
+  String get translateTagRead => 'تقرؤها';
 }

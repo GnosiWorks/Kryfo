@@ -65,7 +65,7 @@ void main() {
     final need = await c.toggle('m1', _zh);
     expect(need, isNotNull);
     expect(need!.why, TranslateBlock.noModel);
-    expect(need.missing.single.lang, 'zh');
+    expect(need.missing.single.id, 'zh');
     expect(need.offer.seen, 'zh');
     expect(c.of('m1').phase, MsgPhase.idle);
     expect(f.backend.started, isEmpty);

@@ -9293,27 +9293,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get translatePacksSection => 'Gói ngôn ngữ';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language và tiếng Anh';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'Chưa tải · khoảng $size';
   }
 
   @override
   String get translateDownloading => 'Đang tải qua Tor';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return 'Xóa gói $language?';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return 'Tin nhắn bằng $language sẽ không dịch được cho đến khi tải lại gói.';
-  }
 
   @override
   String get translateLanguagesSection => 'Ngôn ngữ';
@@ -11745,4 +11730,88 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'Dấu ẩn trong chính các điểm ảnh, như hình mờ ẩn của công cụ tạo ảnh, và mọi thứ nhìn thấy trong ảnh vẫn giữ nguyên.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return 'Tải $language ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return 'Đang tải $language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'Đang chờ Wi-Fi để tải $language';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Đang chờ Wi-Fi. Việc tải sẽ tự bắt đầu khi điện thoại này dùng Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Đang chờ Wi-Fi. Việc tải sẽ tự bắt đầu khi máy tính này dùng Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiShort => 'Đang chờ Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'Tin nhắn được dịch trên điện thoại này và không bao giờ rời khỏi nó. Việc này cần gói ngôn ngữ $language và $other, tổng cộng khoảng $size, tải một lần qua Tor.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'Tin nhắn được dịch trên máy tính này và không bao giờ rời khỏi nó. Việc này cần gói ngôn ngữ $language và $other, tổng cộng khoảng $size, tải một lần qua Tor.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'Mỗi ngôn ngữ tải một lần, sau đó dịch trên điện thoại này';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'Mỗi ngôn ngữ tải một lần, sau đó dịch trên máy tính này';
+
+  @override
+  String get translateSuggested => 'Đề xuất';
+
+  @override
+  String get translateMoreLanguages => 'Thêm ngôn ngữ';
+
+  @override
+  String get translateWaysBoth => 'Dịch qua lại với tiếng Anh';
+
+  @override
+  String get translateWaysInto => 'Chỉ dịch sang tiếng Anh';
+
+  @override
+  String get translateWaysFrom => 'Chỉ dịch từ tiếng Anh';
+
+  @override
+  String get translateGet => 'Tải xuống';
+
+  @override
+  String get translateRemove => 'Gỡ';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return 'Gỡ $language?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'Việc này giải phóng $size. Các bản dịch đã lưu bằng gói này cũng bị xóa. Bạn có thể tải lại bất cứ lúc nào.';
+  }
+
+  @override
+  String get translateResumeShort => 'Tiếp tục';
+
+  @override
+  String get translateTagApp => 'Ngôn ngữ ứng dụng';
+
+  @override
+  String get translateTagRead => 'Bạn đọc được';
 }

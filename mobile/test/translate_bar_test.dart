@@ -13,7 +13,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/theme.dart';
-import 'package:kryfo/translate/catalog.dart';
 import 'package:kryfo/translate/chat_translation.dart';
 import 'package:kryfo/translate/lang_names.dart';
 import 'package:kryfo/translate/settings.dart';
@@ -204,7 +203,7 @@ void main() {
       wifi: false,
     );
     await open(t, f, [_zh1, _zh2]);
-    final gz = builtInCatalog.bundle('zh')!.gz;
+    final gz = zhCatalog.bundle('zh')!.gz;
     expect(find.text(packSize(gz)), findsOneWidget);
     // at the usual text size the size sits on the label's line
     expect(
@@ -220,7 +219,7 @@ void main() {
     await t.pump(const Duration(milliseconds: 150));
     await t.pumpAndSettle();
     // off wi-fi with wi-fi only on: it waits and says so
-    expect(find.text(l10n.translateNeedsWifi), findsOneWidget);
+    expect(find.text(l10n.translateWaitsWifi), findsOneWidget);
     expect(f.backend.started, isEmpty);
     await t.tap(find.text(l10n.translateDownloadAnyway));
     await t.pump(const Duration(milliseconds: 150));
@@ -359,7 +358,7 @@ void main() {
     final handle = t.ensureSemantics();
     final f = fakeHub(words: _words);
     await open(t, f, [_zh1, _zh2]);
-    final gz = builtInCatalog.bundle('zh')!.gz;
+    final gz = zhCatalog.bundle('zh')!.gz;
     expect(
       find.bySemanticsLabel(
         '${l10n.translateBarTo(langName('en'))}, ${packSize(gz)}',
@@ -460,7 +459,7 @@ void main() {
       await open(t, f, [_zh1, _zh2], scale: 2, locale: Locale(lang));
       expect(t.takeException(), isNull);
       expect(_bar(), findsOneWidget);
-      final gz = builtInCatalog.bundle('zh')!.gz;
+      final gz = zhCatalog.bundle('zh')!.gz;
       // the size is never pushed off or cut
       final size = find.text(packSize(gz));
       expect(size, findsOneWidget);

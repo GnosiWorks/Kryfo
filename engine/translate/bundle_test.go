@@ -148,6 +148,13 @@ func newBundleFix(t *testing.T) *bundleFix {
 	if err := FillMirror(context.Background(), HTTPGetter(bf.srv.Client()), bf.m, bf.mirror, nil); err != nil {
 		t.Fatal(err)
 	}
+	// and each language's older bundle of both directions, as the mirror
+	// keeps the one older builds fetch
+	for _, l := range bf.m.Langs() {
+		if err := fillBundle(context.Background(), HTTPGetter(bf.srv.Client()), bf.m, l, filepath.Join(bf.mirror, bf.m.BundleName(l))); err != nil {
+			t.Fatal(err)
+		}
+	}
 	bf.hits.Store(0)
 	return bf
 }
@@ -339,15 +346,28 @@ func TestFetchBundleUnknownLanguage(t *testing.T) {
 
 func TestPinnedLangsAndSizes(t *testing.T) {
 	m, _ := Pinned()
-	if l := m.Langs(); len(l) != 1 || l[0] != "zh" {
+	want := "ar de es fa fr hi id it pl pt ru tr uk vi zh zh_hant"
+	if l := strings.Join(m.Langs(), " "); l != want {
 		t.Fatalf("langs %v", l)
 	}
-	gz, disk := m.BundleBytes("zh")
-	// the size the app shows before a download: both directions
-	if gz < 60<<20 || gz > 90<<20 || disk <= gz {
-		t.Fatalf("zh bundle %d on the wire, %d on disk", gz, disk)
+	// every language both ways with english, each way a pack of its own in
+	// the 48 MiB class, so a download does not say which language by size
+	ids := map[string]bool{}
+	for _, l := range m.Langs() {
+		for _, k := range []string{l + "-en", "en-" + l} {
+			gz, disk := m.BundleBytes(k)
+			if gz < 10<<20 || gz > 48<<20 || disk <= 0 || m.WireBytes(k) != 48<<20 {
+				t.Fatalf("%s: %d on the wire, %d on disk", k, gz, disk)
+			}
+			id := m.BundleID(k)
+			if !hashRe.MatchString(id) || ids[id] {
+				t.Fatalf("%s: bundle id %q", k, id)
+			}
+			ids[id] = true
+		}
 	}
-	if id := m.BundleID("zh"); !hashRe.MatchString(id) || id == m.BundleID("de") {
+	// the chinese pack each way, by the pins
+	if id := m.BundleID("zh-en"); id == m.BundleID("en-zh") {
 		t.Fatalf("bundle id %q", id)
 	}
 }

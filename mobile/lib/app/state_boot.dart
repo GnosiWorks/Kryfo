@@ -208,6 +208,7 @@ extension AppStateBoot on AppState {
     }
     myXPub = engine.myXPubkey();
     dlog('boot identity +${bsw.elapsedMilliseconds}ms');
+    desk_trace.trace('boot identity +${bsw.elapsedMilliseconds}ms');
     bootPhase = l10n.appOpeningYourChats;
     notifyListeners();
     _appLinks = AppLinks();
@@ -235,6 +236,7 @@ extension AppStateBoot on AppState {
     dlog('boot contacts +${bsw.elapsedMilliseconds}ms');
     await refreshGroups();
     dlog('boot groups +${bsw.elapsedMilliseconds}ms');
+    desk_trace.trace('boot chats +${bsw.elapsedMilliseconds}ms');
     // paint the home as soon as contacts/groups are ready; notifications,
     // nostr subscriptions keep warming up in the background.
     onboardingComplete =
@@ -249,6 +251,10 @@ extension AppStateBoot on AppState {
     await markReady();
     bootPhase = l10n.appStartingTor;
     dlog('boot ready +${bsw.elapsedMilliseconds}ms');
+    desk_trace.trace(
+      'boot ready +${bsw.elapsedMilliseconds}ms '
+      '(${onboardingComplete ? 'home' : 'welcome'})',
+    );
     notifyListeners();
     // moved away: home can show what was here, and that is all. no tor,
     // no relays, no outbox. see movedAway.

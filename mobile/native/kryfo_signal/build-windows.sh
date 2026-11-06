@@ -21,12 +21,18 @@ c=$("${CARGO[@]}" tree -q -e normal,build --target "$T" --prefix none --format '
   grep -E '^(cc|cmake|bindgen|boring|boring-sys|openssl-sys|ring) v' | sort -u || true)
 [[ -z "$c" ]] || die "C code in the $T graph: $c"
 
+# the version resource, linked in as one more object
+RES="$CRATE/target/$T/version/kryfo_signal_version.o"
+mkdir -p "$(dirname "$RES")"
+"$CRATE/../../../packaging/windows/version-rc.sh" "$RES" kryfo_signal.dll "Kryfo signal library" \
+  "Copyright (C) GnosiWorks, GPL-3.0-or-later"
+
 # build paths become fixed ones, libgcc and winpthread go inside the dll so it
 # needs nothing the installer does not ship, and no pe timestamp
 export SOURCE_DATE_EPOCH=1700000000 CARGO_INCREMENTAL=0 CARGO_NET_GIT_FETCH_WITH_CLI=true
 unset CARGO_ENCODED_RUSTFLAGS CARGO_BUILD_RUSTFLAGS CARGO_TARGET_DIR RUSTFLAGS
 export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="$CC_W"
-export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="--remap-path-prefix=$CRATE=/kryfo_signal --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo -C target-feature=+crt-static -C link-arg=-Wl,--no-insert-timestamp -C link-arg=-Wl,--dynamicbase,--high-entropy-va,--nxcompat"
+export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="--remap-path-prefix=$CRATE=/kryfo_signal --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo -C target-feature=+crt-static -C link-arg=-Wl,--no-insert-timestamp -C link-arg=-Wl,--dynamicbase,--high-entropy-va,--nxcompat -C link-arg=$RES"
 "${CARGO[@]}" build --release --target "$T"
 
 DLL="target/$T/release/kryfo_signal.dll"
