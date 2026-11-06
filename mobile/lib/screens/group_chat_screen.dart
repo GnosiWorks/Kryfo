@@ -13,6 +13,7 @@ import 'package:file_picker/file_picker.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
 import '../photo_blur.dart' show makeBlurSoon;
+import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
 import '../widgets/sealed_picture.dart';
 import '../widgets/photo_shape.dart';
@@ -5851,13 +5852,7 @@ class _Composer extends StatelessWidget {
                                 ),
                                 cursorColor: HaloColors.amber,
                                 decoration: InputDecoration(
-                                  hintText: l10n.groupChatMessage,
-                                  // one line: at large text the field is narrow and the word would break
-                                  hintMaxLines: 1,
-                                  hintStyle: HaloType.sans(
-                                    size: 14,
-                                    color: HaloColors.text3,
-                                  ),
+                                  hint: ComposerHint(l10n.groupChatMessage),
                                   border: InputBorder.none,
                                   isCollapsed: true,
                                   contentPadding: const EdgeInsets.symmetric(

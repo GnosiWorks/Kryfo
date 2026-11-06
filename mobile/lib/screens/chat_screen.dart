@@ -22,6 +22,7 @@ import 'package:file_picker/file_picker.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../picked.dart';
 import '../album.dart';
+import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
@@ -10258,13 +10259,7 @@ class _Composer extends StatelessWidget {
                         minLines: 1,
                         maxLines: 4,
                         decoration: InputDecoration(
-                          hintText: l10n.chatMessage,
-                          // one line: at large text the field is narrow and the word would break
-                          hintMaxLines: 1,
-                          hintStyle: HaloType.sans(
-                            size: 14,
-                            color: HaloColors.text3,
-                          ),
+                          hint: ComposerHint(l10n.chatMessage),
                           // stickers sit inside the field: no width taken from the row
                           suffixIcon: StickerButton(onTap: onStickers),
                           suffixIconConstraints: const BoxConstraints(

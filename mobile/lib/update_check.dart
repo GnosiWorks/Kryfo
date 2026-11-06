@@ -202,7 +202,6 @@ class UpdateNotice extends ChangeNotifier {
   bool _eligible = false;
   String? _running;
   String? _latest;
-  String? _dismissed;
   // read once, then followed per session: each identity keeps its switch
   SharedPreferences? _prefs;
   bool _busy = false;
@@ -214,9 +213,15 @@ class UpdateNotice extends ChangeNotifier {
   // the open session's switch, whichever one was open at the first read
   bool get _on => _prefs?.getBool(container().key(_onKey)) ?? true;
 
-  /// the version the card offers, null when there is none to show
+  // the open session's dismissal: one identity hiding the card never
+  // hides it in another
+  String? get _dismissed => _prefs?.getString(container().key(_dismissedKey));
+
+  /// the version the card offers, null when there is none to show. a decoy
+  /// shows what the everyday side already fetched, as a fresh install would
+  /// show its own, and never asks for it
   String? get shown {
-    if (!_eligible || !_on || quiet()) return null;
+    if (!_eligible || !_on) return null;
     final v = _latest;
     if (v == null || v == _dismissed || !isNewer(v, _running)) return null;
     return v;
@@ -232,7 +237,6 @@ class UpdateNotice extends ChangeNotifier {
         parseVersion(i.version) != null;
     final prefs = await SharedPreferences.getInstance();
     _latest = prefs.getString(_latestKey);
-    _dismissed = prefs.getString(_dismissedKey);
     _prefs = prefs;
     notifyListeners();
   }
@@ -316,10 +320,11 @@ class UpdateNotice extends ChangeNotifier {
   Future<void> dismiss() async {
     final v = _latest;
     if (v == null) return;
-    _dismissed = v;
-    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_dismissedKey, v);
+    _prefs ??= prefs;
+    final done = prefs.setString(container().key(_dismissedKey), v);
+    notifyListeners();
+    await done;
   }
 }
 

@@ -28,6 +28,7 @@ import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/composer_hint.dart';
 import 'package:kryfo/widgets/desk_menu.dart';
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
 import 'package:kryfo/wide/wide_home.dart';
@@ -170,7 +171,9 @@ Future<void> _openRow(WidgetTester t, String id) async {
 Finder _composer(String id) => find.descendant(
   of: _chat(id),
   matching: find.byWidgetPredicate(
-    (w) => w is TextField && w.decoration?.hintText == l10n.chatMessage,
+    (w) =>
+        w is TextField &&
+        (w.decoration?.hint as ComposerHint?)?.text == l10n.chatMessage,
   ),
 );
 
