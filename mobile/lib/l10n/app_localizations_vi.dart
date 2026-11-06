@@ -11719,6 +11719,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get deskLinkErasingLine => 'Kryfo sẽ mở lại ngay với mã để quét.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Không thể bắt đầu liên kết. Hãy thử lại sau.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Đã liên kết với điện thoại của bạn';
 
   @override
@@ -11734,4 +11738,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Các cuộc trò chuyện trên máy tính này bị xóa. Điện thoại của bạn giữ mọi thứ.';
+
+  @override
+  String get metaReaderColourProfileName => 'tên hồ sơ màu';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Dấu ẩn trong chính các điểm ảnh, như hình mờ ẩn của công cụ tạo ảnh, và mọi thứ nhìn thấy trong ảnh vẫn giữ nguyên.';
 }

@@ -8,7 +8,8 @@
 //          crc has to be redone; an orientation goes back in alone
 //   webp   only the chunks a picture is drawn from are kept; an orientation
 //          goes back in alone and the VP8X flags say what is left
-//   gif    comments go, and every application block but the loop ones
+//   gif    comments and text blocks go, and every application block but
+//          the loop ones
 //   heif   heic and avif: only the items the picture is drawn from stay,
 //          nothing moves (heif_clean.dart)
 // true: read end to end and clean. false: not a kind known here, left alone.
@@ -24,6 +25,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'heif_clean.dart';
 import 'jpeg_strip.dart';
 import 'meta/byte_source.dart';
+import 'meta/icc.dart';
 import 'meta/meta_reader.dart';
 import 'meta/tiff.dart';
 import 'desktop/desktop_mode.dart' show runIsolated;
@@ -265,7 +267,11 @@ Uint8List? _png(Uint8List src) {
       out.add(_pngChunk('eXIf', orientationTiff(turn)));
       turned = true;
     }
-    if (_pngKeep.contains(type) ||
+    final icc = type == 'iCCP' ? _pngIcc(src, i + 8, len) : null;
+    if (icc != null) {
+      out.add(icc);
+      dropped = true;
+    } else if (_pngKeep.contains(type) ||
         (type == 'eXIf' && !turned && _isTurnOnly(src, i + 8, len, turn))) {
       out.add(src.sublist(i, end));
       if (type == 'eXIf') turned = true;
@@ -280,6 +286,26 @@ Uint8List? _png(Uint8List src) {
     }
   }
   return dropped ? out.toBytes() : src;
+}
+
+// an iCCP chunk written again with its profile's text made blank
+// (icc.dart); null when it stays as it is
+List<int>? _pngIcc(Uint8List src, int at, int len) {
+  final body = Uint8List.sublistView(src, at, at + len);
+  final z = body.indexOf(0);
+  if (z < 0 || z + 2 > body.length) return null;
+  final Uint8List p;
+  try {
+    p = Uint8List.fromList(zlib.decode(Uint8List.sublistView(body, z + 2)));
+  } catch (_) {
+    return null;
+  }
+  final clean = scrubIcc(p);
+  if (identical(clean, p)) return null;
+  return _pngChunk('iCCP', [
+    ...body.sublist(0, z + 2),
+    ...ZLibCodec(level: 9).encode(clean),
+  ]);
 }
 
 // the turn an eXIf chunk asks for, 1 when there is none. null when the
@@ -383,7 +409,16 @@ Uint8List? _webp(Uint8List src) {
     } else if (!_webpKeep.contains(type)) {
       dropped = true;
     } else {
-      chunks.add(Uint8List.fromList(src.sublist(i, stop)));
+      final c = Uint8List.fromList(src.sublist(i, stop));
+      if (type == 'ICCP' && 8 + len <= c.length) {
+        final p = Uint8List.sublistView(c, 8, 8 + len);
+        final clean = scrubIcc(p);
+        if (!identical(clean, p)) {
+          p.setAll(0, clean);
+          dropped = true;
+        }
+      }
+      chunks.add(c);
     }
     i = end;
   }
@@ -484,7 +519,8 @@ Uint8List? _gif(Uint8List src) {
       final label = src[i + 1];
       final end = subBlocks(i + 2);
       if (end == null) return null;
-      var keep = label == 0xF9 || label == 0x01; // frame timing, plain text
+      // frame timing. a plain text block goes: almost no viewer draws it
+      var keep = label == 0xF9;
       if (label == 0xFF && i + 14 <= src.length && src[i + 2] == 11) {
         keep = _gifApps.contains(latin1.decode(src.sublist(i + 3, i + 14)));
       }

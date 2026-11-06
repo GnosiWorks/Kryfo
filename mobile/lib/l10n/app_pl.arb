@@ -3086,9 +3086,12 @@
   "deskLinkConfirmYes": "Wymaż i połącz",
   "deskLinkErasing": "Wymazywanie tego komputera",
   "deskLinkErasingLine": "Kryfo za chwilę otworzy się znowu z kodem do zeskanowania.",
+  "deskLinkNotStarted": "Nie udało się rozpocząć łączenia. Spróbuj później.",
   "settingsLinkedToYourPhone": "Połączono z twoim telefonem",
   "settingsLinkedPhoneHint": "Kopie zapasowe i zaproszenia zostają na telefonie",
   "settingsUnlinkComputer": "Rozłącz ten komputer",
   "settingsUnlinkComputerTitle": "Rozłączyć ten komputer?",
-  "settingsUnlinkComputerLine": "Czaty na tym komputerze zostaną usunięte. Telefon zachowa wszystko."
+  "settingsUnlinkComputerLine": "Czaty na tym komputerze zostaną usunięte. Telefon zachowa wszystko.",
+  "metaReaderColourProfileName": "nazwa profilu kolorów",
+  "cleanPixelMarksStay": "Znaki ukryte w samych pikselach, jak ukryte znaki wodne generatorów obrazów, i wszystko, co widać na obrazie, zostają bez zmian."
 }

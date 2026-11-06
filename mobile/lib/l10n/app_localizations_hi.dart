@@ -11740,6 +11740,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kryfo थोड़ी देर में स्कैन करने के कोड के साथ फिर से खुलेगा।';
 
   @override
+  String get deskLinkNotStarted =>
+      'जोड़ना शुरू नहीं हो सका। बाद में फिर कोशिश करें।';
+
+  @override
   String get settingsLinkedToYourPhone => 'आपके फ़ोन से जुड़ा है';
 
   @override
@@ -11754,4 +11758,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'इस कंप्यूटर की चैट हटा दी जाएँगी। आपका फ़ोन सब कुछ रखता है।';
+
+  @override
+  String get metaReaderColourProfileName => 'कलर प्रोफ़ाइल का नाम';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'पिक्सल में ही छिपे निशान, जैसे इमेज बनाने वाले टूल के छिपे वॉटरमार्क, और तस्वीर में दिखने वाली हर चीज़ वैसी ही रहती है।';
 }

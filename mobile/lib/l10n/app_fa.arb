@@ -3086,9 +3086,12 @@
   "deskLinkConfirmYes": "پاک کن و پیوند بده",
   "deskLinkErasing": "در حال پاک کردن این رایانه",
   "deskLinkErasingLine": "Kryfo تا لحظه‌ای دیگر دوباره با کدی برای اسکن باز می‌شود.",
+  "deskLinkNotStarted": "پیوند شروع نشد. بعداً دوباره امتحان کنید.",
   "settingsLinkedToYourPhone": "به گوشی‌تان پیوند خورده",
   "settingsLinkedPhoneHint": "نسخه‌های پشتیبان و دعوت‌ها روی گوشی می‌مانند",
   "settingsUnlinkComputer": "جدا کردن این رایانه",
   "settingsUnlinkComputerTitle": "این رایانه جدا شود؟",
-  "settingsUnlinkComputerLine": "گفت‌وگوهای روی این رایانه حذف می‌شوند. گوشی‌تان همه چیز را نگه می‌دارد."
+  "settingsUnlinkComputerLine": "گفت‌وگوهای روی این رایانه حذف می‌شوند. گوشی‌تان همه چیز را نگه می‌دارد.",
+  "metaReaderColourProfileName": "نام نمایه‌ی رنگ",
+  "cleanPixelMarksStay": "نشانه‌هایی که در خود پیکسل‌ها پنهان‌اند، مثل واترمارک‌های پنهان سازنده‌های تصویر، و هر چه در تصویر دیده می‌شود، همان‌طور می‌مانند."
 }

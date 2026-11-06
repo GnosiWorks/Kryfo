@@ -11832,6 +11832,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Kryfo si riapre tra un momento con il codice da scansionare.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Impossibile avviare il collegamento. Riprova più tardi.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Collegato al tuo telefono';
 
   @override
@@ -11846,4 +11850,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Le chat su questo computer vengono rimosse. Il tuo telefono conserva tutto.';
+
+  @override
+  String get metaReaderColourProfileName => 'nome del profilo colore';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'I segni nascosti nei pixel stessi, come le filigrane nascoste dei generatori di immagini, e tutto ciò che si vede nell\'immagine restano come sono.';
 }

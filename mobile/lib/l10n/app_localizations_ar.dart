@@ -11870,6 +11870,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'يُفتح Kryfo من جديد بعد لحظة مع الرمز للمسح.';
 
   @override
+  String get deskLinkNotStarted => 'تعذّر بدء الربط. أعد المحاولة لاحقًا.';
+
+  @override
   String get settingsLinkedToYourPhone => 'مرتبط بهاتفك';
 
   @override
@@ -11885,4 +11888,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'تُزال المحادثات التي على هذا الحاسوب. يحتفظ هاتفك بكل شيء.';
+
+  @override
+  String get metaReaderColourProfileName => 'اسم ملف تعريف الألوان';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'العلامات المخفية في البكسلات نفسها، مثل العلامات المائية المخفية لمولّدات الصور، وكل ما يظهر في الصورة تبقى كما هي.';
 }

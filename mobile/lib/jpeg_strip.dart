@@ -4,6 +4,8 @@
 // segments before the image data; dropping them leaves the pixels untouched.
 import 'dart:typed_data';
 
+import 'meta/icc.dart';
+
 // segments kept: the picture and what decoding needs, plus a bare jfif
 // header, the colour profile and adobe's colour transform. app1 (exif, xmp),
 // app3 to app13, app15, com, a jfif thumbnail and a jfxx segment go. app2
@@ -173,11 +175,16 @@ Uint8List? stripJpegMetadata(Uint8List src) {
   // saves a sideways image and a note to turn it. it goes back in alone, in
   // an exif block built here.
   var turn = 1;
+  final icc = <(int, int, int)>[];
   final seen = _walk(src, null, (marker, a, b) {
     if (marker == 0xE1 && turn == 1) turn = _orientation(src, a, b);
+    if (marker == 0xE2 && _isIcc(src, a, b) && b - a > 18) {
+      icc.add((src[a + 16], a, b));
+    }
     return false;
   });
   if (!seen) return null;
+  final profile = _iccScrubbed(src, icc);
   final orient = turn >= 2 && turn <= 8 ? _orientationOnly(turn) : null;
   var app0 = false, app14 = false, placed = orient == null;
   final ok = _walk(src, out, (marker, a, b) {
@@ -186,6 +193,11 @@ Uint8List? stripJpegMetadata(Uint8List src) {
     if (!placed && marker != 0xE0) {
       out.add(orient!);
       placed = true;
+    }
+    final fresh = profile[a];
+    if (fresh != null) {
+      out.add(fresh);
+      return false;
     }
     if (_keeps(marker, src, a, b)) return true;
     final again = _rebuilt(marker, src, a, b);
@@ -204,6 +216,30 @@ Uint8List? stripJpegMetadata(Uint8List src) {
   });
   // no table or frame header before the scan: not a picture to vouch for
   return ok && placed ? out.toBytes() : null;
+}
+
+// the colour profile's segments written again where its text names a
+// screen or an app (icc.dart), by where each starts. a profile runs over
+// as many segments as it needs, in the order of their sequence numbers
+Map<int, Uint8List> _iccScrubbed(Uint8List src, List<(int, int, int)> segs) {
+  if (segs.isEmpty) return const {};
+  final order = [...segs]..sort((x, y) => x.$1.compareTo(y.$1));
+  final whole = BytesBuilder(copy: false);
+  for (final (_, a, b) in order) {
+    whole.add(Uint8List.sublistView(src, a + 18, b));
+  }
+  final p = whole.toBytes();
+  final clean = scrubIcc(p);
+  if (identical(clean, p)) return const {};
+  final out = <int, Uint8List>{};
+  var at = 0;
+  for (final (_, a, b) in order) {
+    final seg = Uint8List.fromList(src.sublist(a, b));
+    seg.setRange(18, seg.length, clean, at);
+    at += b - a - 18;
+    out[a] = seg;
+  }
+  return out;
 }
 
 // the orientation tag (0x0112) out of an app1 exif segment, 1 when there is

@@ -3086,9 +3086,12 @@
   "deskLinkConfirmYes": "Sil ve bağla",
   "deskLinkErasing": "Bu bilgisayar siliniyor",
   "deskLinkErasingLine": "Kryfo birazdan taranacak kodla yeniden açılır.",
+  "deskLinkNotStarted": "Bağlama başlatılamadı. Daha sonra tekrar dene.",
   "settingsLinkedToYourPhone": "Telefonuna bağlı",
   "settingsLinkedPhoneHint": "Yedekler ve davetler telefonda kalır",
   "settingsUnlinkComputer": "Bu bilgisayarın bağlantısını kes",
   "settingsUnlinkComputerTitle": "Bu bilgisayarın bağlantısı kesilsin mi?",
-  "settingsUnlinkComputerLine": "Bu bilgisayardaki sohbetler kaldırılır. Telefonun her şeyi saklar."
+  "settingsUnlinkComputerLine": "Bu bilgisayardaki sohbetler kaldırılır. Telefonun her şeyi saklar.",
+  "metaReaderColourProfileName": "renk profili adı",
+  "cleanPixelMarksStay": "Piksellerin içine gizlenmiş işaretler, örneğin görsel oluşturucuların gizli filigranları, ve resimde görülen her şey olduğu gibi kalır."
 }

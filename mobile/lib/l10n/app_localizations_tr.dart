@@ -11760,6 +11760,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo birazdan taranacak kodla yeniden açılır.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Bağlama başlatılamadı. Daha sonra tekrar dene.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Telefonuna bağlı';
 
   @override
@@ -11775,4 +11779,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Bu bilgisayardaki sohbetler kaldırılır. Telefonun her şeyi saklar.';
+
+  @override
+  String get metaReaderColourProfileName => 'renk profili adı';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Piksellerin içine gizlenmiş işaretler, örneğin görsel oluşturucuların gizli filigranları, ve resimde görülen her şey olduğu gibi kalır.';
 }

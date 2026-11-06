@@ -123,7 +123,7 @@ String? _generator(Uint8List b) {
     final n = _find(b, _name, end);
     if (n >= 0 && n - end < 64) {
       final v = _cborTextAt(b, n + _name.length);
-      if (v != null) return _product(v);
+      if (v != null) return v.replaceAll('_', ' ');
     }
     i = _find(b, _gen, end);
   }

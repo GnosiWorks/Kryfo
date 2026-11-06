@@ -12,6 +12,7 @@ import 'dart:typed_data';
 
 import 'meta/byte_source.dart';
 import 'meta/heif_items.dart';
+import 'meta/icc.dart';
 import 'meta/iso.dart';
 import 'meta/mp4_tracks.dart';
 import 'mp4_clean.dart';
@@ -255,11 +256,12 @@ List<int>? _metaBody(ByteSource s, HeifMeta m, Set<int> keep, Ranges idatUsed) {
       case 'hdlr':
         if (k.bodySize < 24) return null;
         hdlr = body.length;
-        // type and reserved stay; the name is zeroed
+        // the type stays; reserved and the name are zeroed, since some
+        // writers put text in the reserved bytes
         body.addAll(
           _box('hdlr', [
-            ...s.read(k.body, 24),
-            ...List.filled(k.bodySize - 24, 0),
+            ...s.read(k.body, 12),
+            ...List.filled(k.bodySize - 12, 0),
           ]),
         );
       case 'dinf':
@@ -349,8 +351,7 @@ List<int>? _metaBody(ByteSource s, HeifMeta m, Set<int> keep, Ranges idatUsed) {
         body.addAll(
           _box('iprp', [
             ..._box('ipco', [
-              for (final i in order)
-                ...s.read(m.props[i - 1].start, m.props[i - 1].size),
+              for (final i in order) ..._prop(s, m.props[i - 1]),
             ]),
             ..._box('ipma', [
               m.ipmaVersion,
@@ -397,6 +398,20 @@ List<int>? _metaBody(ByteSource s, HeifMeta m, Set<int> keep, Ranges idatUsed) {
     body.insertAll(end, List.filled(room, 0));
   }
   return body;
+}
+
+// a property as it was, a colour profile with its text made blank
+// (icc.dart). the size stays
+List<int> _prop(ByteSource s, IsoBox p) {
+  final b = s.read(p.start, p.size);
+  final at = p.body - p.start;
+  if (p.type != 'colr' || p.bodySize <= 4) return b;
+  final kind = latin1.decode(b.sublist(at, at + 4));
+  if (kind != 'prof' && kind != 'rICC') return b;
+  final icc = Uint8List.sublistView(b, at + 4);
+  final clean = scrubIcc(icc);
+  if (identical(clean, icc)) return b;
+  return Uint8List.fromList(b)..setRange(at + 4, b.length, clean);
 }
 
 // an item entry with its name left empty; a mime item keeps its type
