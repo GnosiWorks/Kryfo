@@ -52,6 +52,21 @@ ValveStage valveStageAt({
   return ValveStage.offer;
 }
 
+/// when a chat's wait on tor began, from [oldest], the oldest send still
+/// going. a send held for their answer waits on them, not on tor: no wait
+/// then. one their answer let go waits from the answer, so the route it
+/// takes then gets its full minute
+DateTime? valveWaitFrom(
+  DateTime? oldest, {
+  required bool awaitsAnswer,
+  int? answeredAtMs,
+}) {
+  if (oldest == null || awaitsAnswer) return null;
+  if (answeredAtMs == null) return oldest;
+  final answered = DateTime.fromMillisecondsSinceEpoch(answeredAtMs);
+  return answered.isAfter(oldest) ? answered : oldest;
+}
+
 /// one per app: every chat and the home card share it, so a reconnect done
 /// in one is not offered again in the next
 class TorValve extends ChangeNotifier {
@@ -79,7 +94,10 @@ class TorValve extends ChangeNotifier {
   /// automatic is trying a way in
   final bool Function()? passRuns;
 
-  final DateTime Function() _clock;
+  DateTime Function() _clock;
+
+  @visibleForTesting
+  set clockForTest(DateTime Function() c) => _clock = c;
 
   bool _busy = false;
   DateTime? _triedAt;

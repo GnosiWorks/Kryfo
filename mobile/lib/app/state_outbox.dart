@@ -515,7 +515,9 @@ extension AppStateOutbox on AppState {
       // a send fired seconds ago still has its own future running; leave it be.
       final now = outboxClock().millisecondsSinceEpoch;
       final age = now - (r['sent_at'] as int);
-      if (age < 45000) continue;
+      // one held for their answer has no send of its own running: it goes
+      // the moment the answer came, however young
+      if (age < 45000 && !_goesOnAnswer(to)) continue;
       // no cap: a row tries until it goes or is gone, at most ten minutes
       // apart (queueGap). a route back clears the wait (outboxRouteBack)
       final tries = _outboxTries[uid] ?? 0;
@@ -719,6 +721,15 @@ extension AppStateOutbox on AppState {
       dlog('key hold: none read (${e.runtimeType})');
       return const {};
     }
+  }
+
+  // their answer let what waited for it go a moment ago
+  bool _goesOnAnswer(String? peer) {
+    if (peer == null) return false;
+    final at = signalSession.answeredAt(peer);
+    if (at == null) return false;
+    final since = DateTime.now().millisecondsSinceEpoch - at;
+    return since >= 0 && since < 60000;
   }
 
   // their card is here: what of theirs waited goes now, from the first try

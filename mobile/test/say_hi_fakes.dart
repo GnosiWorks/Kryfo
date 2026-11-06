@@ -93,10 +93,20 @@ class SayHiDb extends DevTestDb {
     return rows.length > limit ? rows.sublist(rows.length - limit) : rows;
   }
 
+  // the outbox reads the unsent rows only when a test asks
+  bool outboxOn = false;
+
   @override
   Future<List<Map<String, Object?>>> unsentOutbox({
     Set<String> skip = const {},
-  }) async => [];
+  }) async => [
+    if (outboxOn)
+      for (final r in mem.rows('messages'))
+        if (r['direction'] == 'out' &&
+            r['sent'] == 0 &&
+            !skip.contains(r['peer_id']))
+          r,
+  ];
   @override
   Future<List<Map<String, Object?>>> messagesAfter(
     String peerId,
