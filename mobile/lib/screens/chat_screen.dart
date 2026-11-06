@@ -80,6 +80,7 @@ import '../message_envelope.dart'
     show wrapMessage, SenderInfo, grindPow, powBits;
 import '../outbox.dart' show powFits;
 import '../theme.dart';
+import '../tor_valve.dart' show valveWaitFrom;
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
 import '../transfers.dart' show fileWaitOf, fileWaits;
@@ -4917,7 +4918,12 @@ class _ChatScreenState extends State<ChatScreen>
       }
       if (oldest == null || m.when.isBefore(oldest)) oldest = m.when;
     }
-    return oldest;
+    // held for their answer (an accept) is no wait on tor
+    return valveWaitFrom(
+      oldest,
+      awaitsAnswer: signalSession.awaitsAnswer(widget.peerHaloId),
+      answeredAtMs: signalSession.answeredAt(widget.peerHaloId),
+    );
   }
 
   // the outbox's own test: a network, and in onion a tor a relay has got

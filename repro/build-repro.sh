@@ -103,7 +103,7 @@ KS_OFFLINE=${HALO_OFFLINE:+1} bash "$SRC/mobile/native/kryfo_signal/build-androi
 echo
 echo "== translation library (all three abis)"
 # from the pinned sources; with HALO_OFFLINE they come from the fetch step.
-# packaged only once translation is switched on (build.gradle.kts)
+# translation is on, so the apk carries it
 KT_JNI_LIBS_DIR="$SRC/mobile/android/app/src/main/jniLibs" \
   bash "$SRC/engine/translate/native/build.sh"
 

@@ -23,6 +23,7 @@ import 'package:kryfo/main.dart'
         openAddedChatLater,
         processPeerBundle,
         rootNavKey,
+        torValve,
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
@@ -34,6 +35,7 @@ import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/stickers/sticker_view.dart' show StickerView;
 import 'package:kryfo/theme.dart' show buildHaloTheme;
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/widgets/say_hi_card.dart';
 import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,6 +75,7 @@ void main() {
   late Directory docs;
   late StickerLibrary packs;
   late List<String> ground;
+  late SayHiDb rowsDb;
 
   setUpAll(() async {
     // a line is as wide as on a phone
@@ -112,6 +115,7 @@ void main() {
       'back_paired': knowsMe ? 1 : 0,
     });
     final db = SayHiDb(mem, container);
+    rowsDb = db;
     if (asked) db.asked.add(_peer);
     if (container.quiet) {
       final everyday = MemDb();
@@ -303,6 +307,63 @@ void main() {
     expect(find.byIcon(Icons.arrow_upward), findsNothing);
     expect(find.text(l10n.chatWaitingForThemTo), findsOneWidget);
     expect(card, findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('a wave held for their accept says no reconnect, and goes '
+      'within seconds of their answer, the route warm', (t) async {
+    // onion, tor and a relay up
+    appState.sendModeForTest = 'private';
+    appState.setTorStatusForTest(TorStatus.reachable);
+    appState.setRouteOKForTest(true);
+    var now = DateTime.now();
+    torValve.clockForTest = () => now;
+    final hold = signalSession.holdOpener;
+    // their one-time address took our opener: the rest waits for the answer
+    var held = true;
+    signalSession.holdOpener = (_) async => held;
+    addTearDown(() {
+      signalSession.holdOpener = hold;
+      torValve.clockForTest = DateTime.now;
+      appState.sendModeForTest = 'balanced';
+    });
+    rowsDb.outboxOn = true;
+    await open(t);
+    await t.tap(wave());
+    await settle(t);
+    expect(signalSession.awaitsAnswer(_peer), isTrue);
+    expect(relay.ciphers, isEmpty);
+    expect(outRows(), hasLength(1));
+    // two minutes on, still waiting for the accept: no reconnect line
+    now = now.add(const Duration(minutes: 2));
+    await t.pump(const Duration(seconds: 6));
+    await settle(t);
+    expect(find.text(l10n.valveStillConnecting), findsNothing);
+    expect(find.text(l10n.homeReconnect), findsNothing);
+    // their answer: the wave goes at once on the relay that takes it
+    held = false;
+    signalSession.answeredForTest(_peer);
+    // the outbox grinds the request's proof again on an isolate, real time
+    final sw = Stopwatch()..start();
+    for (var i = 0; i < 150 && relay.ciphers.isEmpty; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await t.pump(const Duration(milliseconds: 50));
+    }
+    // within a few seconds of the answer, the proof's grind included
+    expect(sw.elapsed, lessThan(const Duration(seconds: 10)));
+    expect(relay.ciphers, hasLength(1));
+    // five seconds after the answer by the valve's clock: still warming
+    now = DateTime.now().add(const Duration(seconds: 5));
+    await t.pump(const Duration(seconds: 6));
+    expect(find.text(l10n.valveStillConnecting), findsNothing);
+    // it is the wave that waited
+    final read = await t.runAsync(() => ambersRead(relay.ciphers.single));
+    expect(read!['m'], kWaveEmoji);
+    relay.sends.single.complete('ok');
+    await settle(t);
+    expect(find.text(l10n.valveStillConnecting), findsNothing);
     await devClose(t);
   });
 

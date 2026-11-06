@@ -89,6 +89,20 @@ func isFirstTag(tag string) bool {
 	return tag != "" && f == tag
 }
 
+// the longest turn the first-contact listener waits on our own relays at a
+// start: a card scanned in the first minute is heard there within this,
+// not after up to the whole spread. its own socket on its own lane, drawn
+// apart from every batch, so it still asks at no batch's moment
+var fcOwnSpread = 20 * time.Second
+
+// the spread a socket's turn is drawn over at a start or kick
+func spreadFor(lane string, own bool) time.Duration {
+	if lane == laneFirstContact && own {
+		return min(fcOwnSpread, subSpread)
+	}
+	return subSpread
+}
+
 // how long after an add or accept its free turn holds
 var freshFor = 15 * time.Second
 
@@ -147,6 +161,8 @@ type subTurn struct {
 	// the socket it shares, nil for one of its own: the socket's turn is
 	// drawn once for all of its addresses (sharedDelay)
 	batch *hubKey
+	// the longest turn, 0 for subSpread
+	spread time.Duration
 }
 
 // a shared socket's turn under a kick or a wake: drawn once, by the first
@@ -232,6 +248,9 @@ func (t *subTurn) take(ctx context.Context) bool {
 		}
 		if takeFirstTurn(kc) {
 			return 0
+		}
+		if t.spread > 0 {
+			return spreadDelay(t.spread, now)
 		}
 		return turnDelay(now)
 	})

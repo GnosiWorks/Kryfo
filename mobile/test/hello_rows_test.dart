@@ -920,6 +920,9 @@ void main() {
       signalSession.encryptTo(p.words, 'second'),
       throwsA(isA<WaitsForAnswer>()),
     );
+    // the chat reads it as waiting on them, not on tor
+    expect(signalSession.awaitsAnswer(p.words), isTrue);
+    final before = DateTime.now().millisecondsSinceEpoch;
     // their answer: plain messages from here
     expect(
       unpad(
@@ -939,6 +942,8 @@ void main() {
       back[0],
       Uint8List.fromList(back.sublist(1)),
     );
+    expect(signalSession.awaitsAnswer(p.words), isFalse);
+    expect(signalSession.answeredAt(p.words), greaterThanOrEqualTo(before));
     expect(
       base64Decode(await signalSession.encryptTo(p.words, 'second'))[0],
       kLsWhisper,
