@@ -123,7 +123,7 @@ class _ModesScreenState extends State<ModesScreen> {
                     l10n.modesPickHow,
                     style: HaloType.sans(
                       size: 15,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.5,
                     ),
                   ),
@@ -318,7 +318,7 @@ class _RouteCard extends StatelessWidget {
                               letter: 0.6,
                               color: active
                                   ? HaloColors.amberText
-                                  : HaloColors.text2,
+                                  : HaloColors.text,
                             ),
                           ),
                         ],
@@ -353,7 +353,8 @@ class _RouteCard extends StatelessWidget {
                       style: HaloType.sans(
                         size: 12,
                         weight: FontWeight.w500,
-                        color: HaloColors.amberText,
+                        // amberText on its tint is under 4.5:1 in light
+                        color: HaloColors.text,
                       ),
                     ),
                   ),
@@ -527,7 +528,7 @@ class _FastStatus extends StatelessWidget {
                   l10n.modesBackupReady,
                   style: HaloType.sans(
                     size: 13,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
@@ -550,7 +551,7 @@ class _PrivateBackup extends StatelessWidget {
       padding: const EdgeInsets.only(top: 10),
       child: Text(
         l10n.modesBackupReady,
-        style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.5),
+        style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
       ),
     );
   }
@@ -641,7 +642,7 @@ class _BothLine extends StatelessWidget {
                 l10n.modesBothLine,
                 style: HaloType.sans(
                   size: 13,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.55,
                 ),
               ),

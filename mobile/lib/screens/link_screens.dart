@@ -337,7 +337,7 @@ class _Title extends StatelessWidget {
         Text(
           line,
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+          style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
         ),
       ],
     );
@@ -630,7 +630,7 @@ class _ShowCode extends StatelessWidget {
         Text(
           l10n.joinCodeLife,
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+          style: HaloType.sans(size: 12.5, color: HaloColors.text),
         ),
       ],
       children: [

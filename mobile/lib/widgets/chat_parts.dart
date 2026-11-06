@@ -144,7 +144,7 @@ class DayChip extends StatelessWidget {
         maxLines: 1,
         style: HaloType.mono(
           size: 10,
-          color: HaloColors.text2,
+          color: HaloColors.text,
           weight: FontWeight.w500,
           letter: 0.06,
         ),
@@ -420,7 +420,7 @@ class _ReactionChipState extends State<ReactionChip>
               count: widget.count,
               style: HaloType.mono(
                 size: 10,
-                color: widget.mine ? HaloColors.amberText : HaloColors.text2,
+                color: widget.mine ? HaloColors.amberText : HaloColors.text,
                 weight: FontWeight.w600,
               ),
             ),

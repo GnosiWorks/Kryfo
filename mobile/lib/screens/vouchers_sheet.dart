@@ -146,7 +146,7 @@ class _VoucherRowState extends State<_VoucherRow> {
                         style: HaloType.serif(
                           size: 13,
                           italic: true,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.3,
                         ),
                       ),
@@ -156,7 +156,7 @@ class _VoucherRowState extends State<_VoucherRow> {
               const SizedBox(width: 10),
               Text(
                 widget.when(r['created_at'] as int),
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
+                style: HaloType.mono(size: 10, color: HaloColors.text),
               ),
             ],
           ),

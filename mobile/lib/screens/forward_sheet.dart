@@ -62,7 +62,7 @@ Future<String?> pickWordsChat(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                 child: Text(
                   empty,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
                 ),
               )
             else
@@ -194,7 +194,7 @@ class _WordsCard extends StatelessWidget {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     textDirection: writtenDir(words),
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    style: HaloType.sans(size: 13, color: HaloColors.text),
                   ),
                 ),
               ),

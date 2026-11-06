@@ -91,7 +91,7 @@ class ShotsLine extends StatelessWidget {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 11.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 weight: FontWeight.w500,
                 height: 1.3,
               ),

@@ -38,11 +38,7 @@ class _VoiceTxScreenState extends State<VoiceTxScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final note = HaloType.sans(
-      size: 12.5,
-      color: HaloColors.text2,
-      height: 1.4,
-    );
+    final note = HaloType.sans(size: 12.5, color: HaloColors.text, height: 1.4);
     return Scaffold(
       backgroundColor: HaloColors.surface,
       appBar: AppBar(
@@ -184,7 +180,7 @@ class _ModelCard extends StatelessWidget {
                           status,
                           style: HaloType.sans(
                             size: 12.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                             height: 1.35,
                           ),
                         ),

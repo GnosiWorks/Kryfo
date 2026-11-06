@@ -401,7 +401,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.55,
               ),
             ),
@@ -512,7 +512,7 @@ class _RequestCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         preview,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                        style: HaloType.sans(size: 13, color: HaloColors.text),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

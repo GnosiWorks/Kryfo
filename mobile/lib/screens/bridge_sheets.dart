@@ -98,7 +98,7 @@ Widget _quiet(String label, VoidCallback onTap) => PressScale(
     child: Center(
       child: Text(
         label,
-        style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+        style: HaloType.sans(size: 13.5, color: HaloColors.text),
       ),
     ),
   ),
@@ -124,7 +124,7 @@ Future<void> showTorBlockedSheet(
       Text(
         l10n.bridgesKryfoCanAskThe,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+        style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
       ),
       const SizedBox(height: 14),
       _seesNote(),
@@ -173,7 +173,7 @@ class _BlockedStart extends StatelessWidget {
     Text(
       l10n.torBootSplashNeverTriesTorPlainly,
       textAlign: TextAlign.center,
-      style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+      style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
     ),
     const SizedBox(height: 18),
     HaloPrimaryButton(
@@ -198,7 +198,7 @@ Future<void> showTorProjectConsentSheet(BuildContext context) async {
       const SizedBox(height: 8),
       Text(
         l10n.bridgesWhenTorIsBlockedAutomatic,
-        style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+        style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
       ),
       const SizedBox(height: 14),
       _seesNote(),
@@ -336,7 +336,7 @@ class _FriendSheetState extends State<_FriendSheet> {
               l10n.bridgesPasteTheLineTheyShown,
               style: HaloType.sans(
                 size: 13.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.45,
               ),
             ),

@@ -278,13 +278,13 @@ class _DesktopLockScreenState extends State<DesktopLockScreen> {
   Widget _body(String t) => Text(
     t,
     textAlign: TextAlign.center,
-    style: HaloType.sans(size: 14, height: 1.45, color: HaloColors.text2),
+    style: HaloType.sans(size: 14, height: 1.45, color: HaloColors.text),
   );
 
   Widget _small(String t) => Text(
     t,
     textAlign: TextAlign.center,
-    style: HaloType.sans(size: 12.5, height: 1.45, color: HaloColors.text3),
+    style: HaloType.sans(size: 12.5, height: 1.45, color: HaloColors.text),
   );
 
   // a spinner only while something is asked and it takes more than a moment

@@ -123,7 +123,7 @@ class _ShotsWaitingSheetState extends State<_ShotsWaitingSheet> {
               l10n.groupShotsWaitingHint,
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.4,
               ),
             ),
@@ -207,7 +207,7 @@ class _ShotsWaitingSheetState extends State<_ShotsWaitingSheet> {
                         size: 12.5,
                         color: w.blocked
                             ? HaloColors.roseText
-                            : HaloColors.text2,
+                            : HaloColors.text,
                         height: 1.35,
                       ),
                     ),

@@ -169,7 +169,7 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
                           size: 10.5,
                           color: coming
                               ? HaloColors.amberText
-                              : HaloColors.text2,
+                              : HaloColors.text,
                         ),
                       ),
                     ),

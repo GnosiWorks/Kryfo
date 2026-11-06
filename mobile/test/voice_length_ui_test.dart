@@ -307,7 +307,7 @@ void main() {
         await bubble(t, _wav(62400), out);
         await until(t, () => find.text('0:04').evaluate().isNotEmpty);
         final c = t.widget<Text>(find.text('0:04')).style!.color;
-        expect(c, out ? HaloColors.onAmber : HaloColors.text2);
+        expect(c, out ? HaloColors.onAmber : HaloColors.text);
         expect(c, isNot(HaloColors.text3));
         await t.pumpWidget(const SizedBox());
         await t.pump(const Duration(seconds: 1));

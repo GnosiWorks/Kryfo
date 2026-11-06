@@ -156,14 +156,14 @@ class _DesktopPassphraseScreenState extends State<DesktopPassphraseScreen> {
     style: HaloType.sans(
       size: 14,
       height: 1.45,
-      color: color ?? HaloColors.text2,
+      color: color ?? HaloColors.text,
     ),
   );
 
   Widget _small(String t) => Text(
     t,
     textAlign: TextAlign.center,
-    style: HaloType.sans(size: 12.5, height: 1.45, color: HaloColors.text3),
+    style: HaloType.sans(size: 12.5, height: 1.45, color: HaloColors.text),
   );
 
   SecretField _field(

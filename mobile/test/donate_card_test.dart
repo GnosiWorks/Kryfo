@@ -140,7 +140,7 @@ void main() {
     }
     expect(
       t.widget<Text>(find.text(l10n.donateCardSeesName)).style?.color,
-      HaloColors.text2,
+      HaloColors.text,
     );
     expect(t.getSize(find.text(l10n.donateCardPay)).height, greaterThan(0));
     expect(t.takeException(), isNull);

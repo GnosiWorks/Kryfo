@@ -123,7 +123,7 @@ class _HelperSheetState extends State<HelperSheet> with WidgetsBindingObserver {
             l10n.helperSheetPickLine,
             style: HaloType.sans(
               size: 13,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -183,7 +183,7 @@ class _NeedOne extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           l10n.helperSheetNeedLine,
-          style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.45),
+          style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.45),
         ),
         const SizedBox(height: 16),
         HaloPrimaryButton(

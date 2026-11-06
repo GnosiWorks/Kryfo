@@ -486,7 +486,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                   fontFamily: HaloType.sansFamily,
                   fontFamilyFallback: HaloType.sansFallback,
                   fontSize: 11.5,
-                  color: HaloColors.text3,
+                  color: HaloColors.text,
                   height: 1.55,
                 ),
               ),
@@ -504,7 +504,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                       fontFamily: HaloType.monoFamily,
                       fontFamilyFallback: HaloType.monoFallbackNow,
                       fontSize: 10.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       letterSpacing: track(0.4),
                     ),
                     children: markedSpans(

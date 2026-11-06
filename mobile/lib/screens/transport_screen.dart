@@ -82,7 +82,7 @@ class TransportScreen extends StatelessWidget {
                           l10n.transportNothingHereLeavesTheShown,
                           style: HaloType.mono(
                             size: 12,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         ),
 
@@ -153,7 +153,7 @@ class TransportScreen extends StatelessWidget {
                           l10n.transportQueuedToSend,
                           '${appState.queued}',
                           appState.queued == 0
-                              ? HaloColors.text2
+                              ? HaloColors.text
                               : HaloColors.amberText,
                         ),
 
@@ -199,7 +199,7 @@ class TransportScreen extends StatelessWidget {
 
                           '$subs',
 
-                          subs == 0 ? HaloColors.roseText : HaloColors.text2,
+                          subs == 0 ? HaloColors.roseText : HaloColors.text,
                         ),
 
                         _Line(
@@ -207,7 +207,7 @@ class TransportScreen extends StatelessWidget {
                           sx < 0
                               ? l10n.transportNever
                               : l10n.transportSAgo(whole(sx)),
-                          HaloColors.text2,
+                          HaloColors.text,
                         ),
 
                         _Line(
@@ -215,7 +215,7 @@ class TransportScreen extends StatelessWidget {
                           rx < 0
                               ? l10n.transportNever
                               : l10n.transportSAgo2(whole(rx)),
-                          HaloColors.text2,
+                          HaloColors.text,
                         ),
 
                         HaloSection(l10n.transportContacts, flush: true),
@@ -223,9 +223,7 @@ class TransportScreen extends StatelessWidget {
                         _Line(
                           l10n.transportKnown,
                           '$contacts',
-                          contacts == 0
-                              ? HaloColors.roseText
-                              : HaloColors.text2,
+                          contacts == 0 ? HaloColors.roseText : HaloColors.text,
                         ),
                         Unfold(
                           open: contacts == 0,
@@ -371,7 +369,7 @@ class _Line extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: HaloType.mono(size: 13, color: HaloColors.text2),
+                style: HaloType.mono(size: 13, color: HaloColors.text),
               ),
               const SizedBox(height: 3),
               shown(AlignmentDirectional.centerStart, TextAlign.start),
@@ -390,7 +388,7 @@ class _Line extends StatelessWidget {
               padding: start,
               child: Text(
                 label,
-                style: HaloType.mono(size: 13, color: HaloColors.text2),
+                style: HaloType.mono(size: 13, color: HaloColors.text),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -563,7 +561,7 @@ class _AliveState extends State<_Alive> {
                   ? l10n.transportExempt
                   : l10n.transportNotExemptTapTo,
               _exempt == null
-                  ? HaloColors.text2
+                  ? HaloColors.text
                   : _exempt!
                   ? HaloColors.greenText
                   : HaloColors.roseText,
@@ -587,7 +585,7 @@ class _AliveState extends State<_Alive> {
                   '${lastStopWord(exit['code'] as String?)} · ${exitAt == null ? '' : _ago(exitAt)}',
                   (exit['reason'] as int?) == 2
                       ? HaloColors.roseText
-                      : HaloColors.text2,
+                      : HaloColors.text,
                 ),
         ),
         _Line(
@@ -648,7 +646,7 @@ class _AliveState extends State<_Alive> {
           ),
           ((ctrl['ctrl_timeouts'] as int?) ?? 0) > 0
               ? HaloColors.roseText
-              : HaloColors.text2,
+              : HaloColors.text,
         ),
         // every bounce and every set of new circuits this process made,
         // by why, then the latest few. a release build logs nothing, so
@@ -662,7 +660,7 @@ class _AliveState extends State<_Alive> {
           _Line(
             bounceWhen(DateTime.fromMillisecondsSinceEpoch(b.at * 1000)),
             bounceWhy(b.why),
-            HaloColors.text2,
+            HaloColors.text,
             indent: true,
           ),
         _Line(
@@ -694,7 +692,7 @@ class _AliveState extends State<_Alive> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
                 l10n.transportClearThisRecord,
-                style: HaloType.mono(size: 11, color: HaloColors.text2),
+                style: HaloType.mono(size: 11, color: HaloColors.text),
               ),
             ),
           ),
@@ -728,7 +726,7 @@ class _AliveState extends State<_Alive> {
     return _Line(
       l10n.transportTo(t(from), t(to)),
       len,
-      HaloColors.text2,
+      HaloColors.text,
       indent: true,
     );
   }

@@ -138,7 +138,7 @@ class _Unavailable extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           l10n.chatPhotoUnavailable,
-          style: HaloType.mono(size: 11, color: HaloColors.text2),
+          style: HaloType.mono(size: 11, color: HaloColors.text),
         ),
       ],
     ),

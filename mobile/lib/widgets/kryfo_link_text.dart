@@ -370,7 +370,7 @@ class RoomInviteCard extends StatelessWidget {
 
   Widget _card(BuildContext context) {
     final fg = onAmber ? HaloColors.onAmber : HaloColors.text;
-    final sub = onAmber ? HaloColors.onAmber : HaloColors.text2;
+    final sub = onAmber ? HaloColors.onAmber : HaloColors.text;
     final closed =
         room.expiresAt <= DateTime.now().millisecondsSinceEpoch ||
         _endedHere(room);

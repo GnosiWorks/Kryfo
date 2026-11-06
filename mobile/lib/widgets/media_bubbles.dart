@@ -98,7 +98,7 @@ Widget fileCard(
               overflow: TextOverflow.ellipsis,
               style: HaloType.mono(
                 size: 9,
-                color: isOut ? HaloColors.onAmber : HaloColors.text2,
+                color: isOut ? HaloColors.onAmber : HaloColors.text,
               ),
             ),
           ],
@@ -186,7 +186,7 @@ class _FileCardState extends State<FileCard> {
         FileFacts(kindOfName(widget.name), extOf(safeFileName(widget.name)));
     final installer = facts.installer;
     final fg = isOut ? HaloColors.onAmber : HaloColors.text;
-    final sub = isOut ? HaloColors.onAmber : HaloColors.text2;
+    final sub = isOut ? HaloColors.onAmber : HaloColors.text;
     // the name it is saved and handed on under: what is seen is what is
     // saved
     final shown = safeFileName(widget.name, facts: facts);
@@ -619,7 +619,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
     final out = widget.isOut;
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final fg = out ? HaloColors.onAmber : HaloColors.amber;
-    final sub = out ? HaloColors.onAmber : HaloColors.text2;
+    final sub = out ? HaloColors.onAmber : HaloColors.text;
     final rest = out
         ? HaloColors.onAmber.withValues(alpha: 0.3)
         : HaloColors.text3.withValues(alpha: 0.45);
@@ -701,7 +701,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                                 size: 10,
                                 color: out
                                     ? HaloColors.onAmber
-                                    : HaloColors.text2,
+                                    : HaloColors.text,
                               ),
                             ),
                             if (widget.disguised) ...[

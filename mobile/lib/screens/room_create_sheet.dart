@@ -88,7 +88,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               l10n.roomCreateARoomThatEndsShown,
               style: HaloType.sans(
                 size: 12,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -142,7 +142,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               l10n.roomCreateEndsAfter,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 letter: 0.14,
               ),
             ),
@@ -186,7 +186,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                                 ),
                           style: HaloType.mono(
                             size: 9.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         ),
                       ],
@@ -283,7 +283,7 @@ class _Chip extends StatelessWidget {
             label,
             style: HaloType.mono(
               size: 12,
-              color: on ? HaloColors.violetText : HaloColors.text2,
+              color: on ? HaloColors.violetText : HaloColors.text,
             ),
           ),
         ),

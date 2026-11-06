@@ -110,7 +110,7 @@ class HaloGhostButton extends StatelessWidget {
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: quiet
-                    ? HaloType.sans(size: 14, color: HaloColors.text2)
+                    ? HaloType.sans(size: 14, color: HaloColors.text)
                     : HaloType.sans(
                         size: 14,
                         weight: FontWeight.w600,

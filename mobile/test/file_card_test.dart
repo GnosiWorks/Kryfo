@@ -164,7 +164,7 @@ void main() {
     for (final w in t.widgetList<Text>(find.byType(Text))) {
       expect(w.style?.color, isNot(HaloColors.text3), reason: w.data);
     }
-    expect(colourOf(l10n.fileInstallerLine), HaloColors.text2);
+    expect(colourOf(l10n.fileInstallerLine), HaloColors.text);
     final dark = colourOf('a');
     HaloColors.setLight(true);
     await show(t, f.path, 'a.apk');

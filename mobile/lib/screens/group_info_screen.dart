@@ -725,7 +725,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                             ),
                             style: HaloType.mono(
                               size: 11,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                               letter: 0.1,
                             ),
                           ),
@@ -769,7 +769,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                                   textAlign: TextAlign.center,
                                   style: HaloType.sans(
                                     size: 13,
-                                    color: HaloColors.text2,
+                                    color: HaloColors.text,
                                   ),
                                 ),
                               ),
@@ -1259,7 +1259,7 @@ class _MembersCardState extends State<MembersCard> {
                     m,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10, color: HaloColors.text),
                   ),
                 KeyHeldMark(on: held),
                 if (me)
@@ -1458,7 +1458,7 @@ class _OnPhoneLine extends StatelessWidget {
         Expanded(
           child: Text(
             l10n.linkedDoOnPhone,
-            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+            style: HaloType.sans(size: 12.5, color: HaloColors.text),
           ),
         ),
       ],

@@ -140,7 +140,7 @@ class _MessageMenuCardState extends State<MessageMenuCard>
                 note,
                 style: HaloType.sans(
                   size: 12,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.35,
                 ),
               ),
@@ -408,7 +408,7 @@ class _SheetRow extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         row.sub!,
-                        style: HaloType.sans(size: 12, color: HaloColors.text2),
+                        style: HaloType.sans(size: 12, color: HaloColors.text),
                       ),
                     ],
                   ],

@@ -238,7 +238,7 @@ class _SavedScreenState extends State<SavedScreen> {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.55,
               ),
             ),
@@ -333,7 +333,7 @@ class _SavedScreenState extends State<SavedScreen> {
               const SizedBox(width: 8),
               Text(
                 _time(ms),
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
+                style: HaloType.mono(size: 10, color: HaloColors.text),
               ),
               const Spacer(),
               // room for the mark, which is drawn over the corner
@@ -375,7 +375,7 @@ class _SavedScreenState extends State<SavedScreen> {
               const SizedBox(width: 5),
               Text(
                 l10n.savedViewInChat,
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
+                style: HaloType.mono(size: 10, color: HaloColors.text),
               ),
             ],
           ),
@@ -399,7 +399,7 @@ class _SavedScreenState extends State<SavedScreen> {
       const SizedBox(width: 9),
       Text(
         label,
-        style: HaloType.serif(size: 14, color: HaloColors.text2, italic: true),
+        style: HaloType.serif(size: 14, color: HaloColors.text, italic: true),
       ),
     ],
   );

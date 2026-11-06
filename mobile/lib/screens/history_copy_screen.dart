@@ -164,7 +164,7 @@ class _CopyPage extends StatelessWidget {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 14,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.45,
               ),
             ),
@@ -175,7 +175,7 @@ class _CopyPage extends StatelessWidget {
               Text(
                 l10n.historyCopySize(historyCopySize(s.bytes)),
                 textAlign: TextAlign.center,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                style: HaloType.sans(size: 13, color: HaloColors.text),
               ),
             ],
             for (final g in s.gaps)
@@ -220,7 +220,7 @@ class _CopyPage extends StatelessWidget {
                 style: HaloType.sans(
                   size: 13,
                   weight: FontWeight.w600,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                 ),
               ),
               for (final st in s.stays)
@@ -356,7 +356,7 @@ class _ChatLineState extends State<_ChatLine> {
             ),
             for (final l in lines) ...[
               const SizedBox(height: 4),
-              Text(l, style: HaloType.sans(size: 14, color: HaloColors.text2)),
+              Text(l, style: HaloType.sans(size: 14, color: HaloColors.text)),
             ],
           ],
         ),

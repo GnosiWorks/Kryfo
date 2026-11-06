@@ -728,7 +728,7 @@ class StickerSheetState extends State<StickerSheet>
                                 : FontWeight.w500,
                             color: k == _kind
                                 ? HaloColors.amberText
-                                : HaloColors.text2,
+                                : HaloColors.text,
                           ),
                         ),
                       ),
@@ -828,7 +828,7 @@ class StickerSheetState extends State<StickerSheet>
           Text(
             l10n.stickerCouldNotLoad,
             textAlign: TextAlign.center,
-            style: HaloType.sans(size: 14, color: HaloColors.text2),
+            style: HaloType.sans(size: 14, color: HaloColors.text),
           ),
           const SizedBox(height: 16),
           Center(
@@ -922,7 +922,7 @@ class StickerSheetState extends State<StickerSheet>
             style: HaloType.sans(
               size: 12.5,
               weight: FontWeight.w600,
-              color: HaloColors.text2,
+              color: HaloColors.text,
             ),
           ),
         ),

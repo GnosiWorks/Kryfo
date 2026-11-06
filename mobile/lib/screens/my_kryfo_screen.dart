@@ -213,7 +213,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                       const SizedBox(height: 6),
                       Text(
                         ltr('@$handle'),
-                        style: HaloType.sans(size: 14, color: HaloColors.text2),
+                        style: HaloType.sans(size: 14, color: HaloColors.text),
                       ),
                     ],
                     const SizedBox(height: 14),
@@ -223,7 +223,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                       style: HaloType.serif(
                         size: 15,
                         italic: true,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                       ),
                     ),
                   ],
@@ -273,7 +273,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                 padding: const EdgeInsets.fromLTRB(6, 8, 6, 0),
                 child: Text(
                   l10n.myKryfoIfThisLinkEnds,
-                  style: HaloType.mono(size: 10, color: HaloColors.text2),
+                  style: HaloType.mono(size: 10, color: HaloColors.text),
                 ),
               ),
               const SizedBox(height: 12),
@@ -295,7 +295,7 @@ class _MyKryfoScreenState extends State<MyKryfoScreen> {
                   l10n.myKryfoAlreadyShareAFriend,
                   style: HaloType.sans(
                     size: 12,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.45,
                   ),
                 ),
@@ -410,7 +410,7 @@ class _WayCard extends StatelessWidget {
                             line,
                             style: HaloType.sans(
                               size: 12.5,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                               height: 1.4,
                             ),
                           ),
@@ -548,7 +548,7 @@ class _Way2Card extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: HaloType.mono(
                         size: 9.5,
-                        color: ready ? HaloColors.amberText : HaloColors.text3,
+                        color: ready ? HaloColors.amberText : HaloColors.text,
                       ),
                     ),
                   ),
@@ -563,7 +563,7 @@ class _Way2Card extends StatelessWidget {
             l10n.myKryfoTheLinkCarriesYour,
             style: HaloType.sans(
               size: 12,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -641,7 +641,7 @@ class _Way3Card extends StatelessWidget {
               children: [
                 Text(
                   '@',
-                  style: HaloType.mono(size: 14, color: HaloColors.text2),
+                  style: HaloType.mono(size: 14, color: HaloColors.text),
                 ),
                 const SizedBox(width: 2),
                 Expanded(
@@ -677,7 +677,7 @@ class _Way3Card extends StatelessWidget {
             l10n.myKryfoTheLookupAsksFor,
             style: HaloType.sans(
               size: 12,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -787,7 +787,7 @@ class _HandleRow extends StatelessWidget {
                     claimed ? l10n.myKryfoPutItInA : l10n.myKryfoANamePeopleCan,
                     style: HaloType.sans(
                       size: 12.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.4,
                     ),
                   ),
@@ -865,7 +865,7 @@ class _Ghost extends StatelessWidget {
                   if (sub != null)
                     Text(
                       sub!,
-                      style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+                      style: HaloType.mono(size: 9.5, color: HaloColors.text),
                     ),
                 ],
               ),

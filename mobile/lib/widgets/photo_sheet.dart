@@ -56,7 +56,7 @@ Future<PhotoChoice?> showPhotoSheet(
                       line,
                       style: HaloType.sans(
                         size: 13,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.45,
                       ),
                     ),

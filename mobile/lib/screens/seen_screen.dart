@@ -50,7 +50,7 @@ class _SeenScreenState extends State<SeenScreen> {
           children: staggerAll([
             Text(
               l10n.seenEveryMessengerClaimsPrivacy,
-              style: HaloType.mono(size: 12, color: HaloColors.text2),
+              style: HaloType.mono(size: 12, color: HaloColors.text),
             ),
             const SizedBox(height: 22),
             _Header(active: col, cols: cols),
@@ -75,7 +75,7 @@ class _SeenScreenState extends State<SeenScreen> {
               ),
               child: Text(
                 l10n.seenHonestAboutTheLastShown,
-                style: HaloType.mono(size: 11.5, color: HaloColors.text2),
+                style: HaloType.mono(size: 11.5, color: HaloColors.text),
               ),
             ),
           ]),
@@ -270,7 +270,7 @@ class _Header extends StatelessWidget {
                         style: _headStyle(cols.shrink).copyWith(
                           color: i == active
                               ? HaloColors.amberText
-                              : HaloColors.text2,
+                              : HaloColors.text,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -386,7 +386,7 @@ class _RowTile extends StatelessWidget {
                         row.why,
                         style: HaloType.sans(
                           size: 12.5,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.45,
                         ),
                       ),

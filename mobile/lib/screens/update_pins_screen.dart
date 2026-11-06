@@ -153,7 +153,7 @@ class _UpdatePinsScreenState extends State<UpdatePinsScreen> with PinShield {
                     line,
                     key: ValueKey('$line$_taken'),
                     textAlign: TextAlign.center,
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    style: HaloType.sans(size: 13, color: HaloColors.text),
                   ),
                 ),
               ),

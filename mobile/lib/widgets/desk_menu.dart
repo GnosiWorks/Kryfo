@@ -466,7 +466,7 @@ class DeskMenu extends StatelessWidget {
             note!,
             style: HaloType.sans(
               size: 12,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.35,
             ),
           ),
@@ -685,7 +685,7 @@ class _Row extends StatelessWidget {
                         it.sub!,
                         style: HaloType.sans(
                           size: 11.5,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.3,
                         ),
                       ),

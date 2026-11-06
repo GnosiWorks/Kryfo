@@ -108,7 +108,7 @@ class DownloadControls extends StatelessWidget {
             t,
             style: HaloType.sans(
               size: 12.5,
-              color: color ?? HaloColors.text2,
+              color: color ?? HaloColors.text,
               height: 1.4,
             ),
           ),
@@ -129,7 +129,7 @@ class DownloadControls extends StatelessWidget {
                         packSize(s.total > 0 ? s.total : this.size),
                       ),
                 key: const ValueKey('pack-progress'),
-                style: HaloType.mono(size: 11, color: HaloColors.text2),
+                style: HaloType.mono(size: 11, color: HaloColors.text),
               ),
               const SizedBox(height: 12),
               HaloGhostButton(
@@ -222,7 +222,7 @@ Future<void> showPackSheet(
                 l10n.translatePackLineShown(langName(b.lang), packSize(b.gz)),
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.45,
                 ),
               ),
@@ -239,7 +239,7 @@ Future<void> showPackSheet(
                 l10n.translatePackNoLibShown,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.45,
                 ),
               ),

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the phone's home, chat and group chat, pixel for pixel as they were before the wide
-// desktop layout: nothing of it reaches the phone
+// desktop layout: nothing of it reaches the phone. the message field's word
+// keeps one line
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -226,6 +227,9 @@ void main() {
       find.byType(ChatScreen),
       matchesGoldenFile('goldens/phone_chat.png'),
     );
+    // the field's word keeps one line, however narrow large text makes it
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.decoration!.hintMaxLines, 1);
     await devClose(t);
   });
 

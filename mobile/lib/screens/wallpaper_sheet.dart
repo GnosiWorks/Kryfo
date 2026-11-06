@@ -116,7 +116,7 @@ class _PickerState extends State<_Picker> {
               const SizedBox(height: 4),
               Text(
                 l10n.wallpaperJustForYouThey,
-                style: HaloType.sans(size: 12, color: HaloColors.text2),
+                style: HaloType.sans(size: 12, color: HaloColors.text),
               ),
               HaloSection(l10n.wallpaperMoods, flush: true),
               _Swatches(
@@ -225,7 +225,7 @@ double _cellWidth(BuildContext context, bool withDefault) {
     for (final a in Atmo.values) atmoLabel(a),
   ]) {
     final p = TextPainter(
-      text: TextSpan(text: name, style: _Swatch.label(HaloColors.text2)),
+      text: TextSpan(text: name, style: _Swatch.label(HaloColors.text)),
       textDirection: dir,
       textScaler: scaler,
     )..layout();
@@ -450,7 +450,7 @@ class _Swatch extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: label(on ? HaloColors.amber : HaloColors.text2),
+                style: label(on ? HaloColors.amber : HaloColors.text),
               ),
             ),
           ],

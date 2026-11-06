@@ -236,19 +236,23 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                     l10n.newGroupMembers,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       letter: 0.14,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    _selected.isEmpty
-                        ? l10n.newGroupPickAtLeastOne
-                        : l10n.newGroupSelected(_selected.length),
-                    style: HaloType.mono(
-                      size: 10,
-                      color: HaloColors.text2,
-                      letter: 0.14,
+                  const SizedBox(width: 12),
+                  // the count gives way at large text rather than running off
+                  Expanded(
+                    child: Text(
+                      _selected.isEmpty
+                          ? l10n.newGroupPickAtLeastOne
+                          : l10n.newGroupSelected(_selected.length),
+                      textAlign: TextAlign.end,
+                      style: HaloType.mono(
+                        size: 10,
+                        color: HaloColors.text,
+                        letter: 0.14,
+                      ),
                     ),
                   ),
                 ],

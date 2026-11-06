@@ -92,7 +92,7 @@ class ContactPickRow extends StatelessWidget {
                         contact.haloId,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: HaloType.mono(size: 10, color: HaloColors.text2),
+                        style: HaloType.mono(size: 10, color: HaloColors.text),
                       ),
                     if (note != null)
                       Padding(

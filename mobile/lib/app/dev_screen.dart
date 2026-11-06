@@ -45,7 +45,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
                   icon: const Icon(Icons.dialpad, size: 18),
                   label: Text(l10n.appPairingCode),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: HaloColors.text2,
+                    foregroundColor: HaloColors.text,
                     side: BorderSide(color: HaloColors.line),
                   ),
                 ),
@@ -53,7 +53,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
               const SizedBox(height: 14),
               Text(
                 l10n.appOrPaste,
-                style: HaloType.sans(size: 11, color: HaloColors.text2),
+                style: HaloType.sans(size: 11, color: HaloColors.text),
               ),
               const SizedBox(height: 10),
               ShiftTapGuard(
@@ -330,12 +330,12 @@ class _DevScreenState extends State<DevScreen> {
               const SizedBox(height: 4),
               Text(
                 engine.version(),
-                style: HaloType.sans(size: 11, color: HaloColors.text2),
+                style: HaloType.sans(size: 11, color: HaloColors.text),
               ),
               const SizedBox(height: 16),
               Text(
                 l10n.appYourKryfo2,
-                style: HaloType.sans(size: 11, color: HaloColors.text2),
+                style: HaloType.sans(size: 11, color: HaloColors.text),
               ),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -398,7 +398,7 @@ class _DevScreenState extends State<DevScreen> {
               if (_peerId.isNotEmpty) ...[
                 Text(
                   l10n.appPeer,
-                  style: HaloType.sans(size: 11, color: HaloColors.text2),
+                  style: HaloType.sans(size: 11, color: HaloColors.text),
                 ),
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -423,7 +423,7 @@ class _DevScreenState extends State<DevScreen> {
                   style: HaloType.sans(color: HaloColors.text),
                   decoration: InputDecoration(
                     labelText: l10n.appMessageWillBeEncrypted,
-                    labelStyle: HaloType.sans(color: HaloColors.text2),
+                    labelStyle: HaloType.sans(color: HaloColors.text),
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -446,7 +446,7 @@ class _DevScreenState extends State<DevScreen> {
               if (_status.isNotEmpty)
                 Text(
                   l10n.appStatus(_status),
-                  style: HaloType.sans(size: 12, color: HaloColors.text2),
+                  style: HaloType.sans(size: 12, color: HaloColors.text),
                 ),
               const SizedBox(height: 24),
               GestureDetector(
@@ -479,7 +479,7 @@ class _DevScreenState extends State<DevScreen> {
                         snap.data?['got'] ?? 0,
                         snap.data?['low'] ?? 0,
                       ),
-                      style: HaloType.mono(size: 11, color: HaloColors.text2),
+                      style: HaloType.mono(size: 11, color: HaloColors.text),
                     ),
                   ),
                 ),
@@ -502,7 +502,7 @@ class _DevScreenState extends State<DevScreen> {
                           l10n.appThePinWillBe,
                           style: HaloType.sans(
                             size: 13,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         ),
                         actions: [
@@ -512,7 +512,7 @@ class _DevScreenState extends State<DevScreen> {
                               l10n.commonCancel,
                               style: HaloType.sans(
                                 size: 13,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                               ),
                             ),
                           ),

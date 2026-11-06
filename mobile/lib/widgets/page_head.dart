@@ -136,7 +136,7 @@ class PageSection extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: HaloType.mono(
                   size: 10,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   weight: FontWeight.w500,
                   letter: 0.14,
                 ),

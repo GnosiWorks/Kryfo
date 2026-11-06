@@ -36,7 +36,7 @@ class VoiceModelControls extends StatelessWidget {
 // the sheet the first "See transcription" opens while the model is not on
 // the phone
 Future<void> showVoiceModelSheet(BuildContext context, VoiceTranscripts hub) {
-  final body = HaloType.sans(size: 12.5, color: HaloColors.text2, height: 1.45);
+  final body = HaloType.sans(size: 12.5, color: HaloColors.text, height: 1.45);
   return showHaloSheet<void>(
     context,
     builder: (ctx) => SafeArea(

@@ -93,7 +93,7 @@ Future<FileSheetPick?> showFileSheet(
                       const SizedBox(height: 2),
                       Text(
                         size == null ? kind : '$kind · ${humanFileSize(size)}',
-                        style: HaloType.mono(size: 11, color: HaloColors.text2),
+                        style: HaloType.mono(size: 11, color: HaloColors.text),
                       ),
                     ],
                   ),

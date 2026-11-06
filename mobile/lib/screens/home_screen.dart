@@ -829,9 +829,17 @@ class _HomeHead extends StatelessWidget {
   // at the phone's size
   List<Widget> _name() => [
     const SizedBox(height: 8),
-    Text(
-      l10n.homeYourKryfo,
-      style: HaloType.mono(size: 9.5, color: HaloColors.text2, letter: 0.14),
+    // one line, shrunk to fit: at large text the column beside the buttons
+    // is narrow and the label would break inside its words
+    FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        l10n.homeYourKryfo,
+        maxLines: 1,
+        softWrap: false,
+        style: HaloType.mono(size: 9.5, color: HaloColors.text, letter: 0.14),
+      ),
     ),
     const SizedBox(height: 3),
     FittedBox(
@@ -996,7 +1004,7 @@ class _HomeCard extends StatelessWidget {
                     line,
                     style: HaloType.sans(
                       size: 13,
-                      color: lineColor ?? HaloColors.text2,
+                      color: lineColor ?? HaloColors.text,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1442,7 +1450,7 @@ class _NotificationsBlockedHintState extends State<_NotificationsBlockedHint>
             await dismissNotifHint();
             if (mounted) setState(() => _show = false);
           },
-          ink: HaloColors.text2,
+          ink: HaloColors.text,
         ),
       ],
     );
@@ -1495,13 +1503,13 @@ class _ShotsCardState extends State<_ShotsCard> {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
                 l10n.chatShotsWhenTheyUpdateShown,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
             ),
           CardAction(
             label: l10n.homeShotsLeaveOff,
             onTap: () => _answer(false),
-            ink: HaloColors.text2,
+            ink: HaloColors.text,
           ),
         ],
       ),
@@ -1547,7 +1555,7 @@ class _ComputerBackupCard extends StatelessWidget {
                 HapticFeedback.selectionClick();
                 unawaited(lock.backupCardSeen(decoy: decoy));
               },
-              ink: HaloColors.text2,
+              ink: HaloColors.text,
             ),
           ],
         );
@@ -1591,7 +1599,7 @@ class _RelayDownHint extends StatelessWidget {
           CardAction(
             label: l10n.homeKeepWaiting,
             onTap: () => appState.dismissRelayHint(),
-            ink: HaloColors.text2,
+            ink: HaloColors.text,
           ),
         ],
       ),
@@ -1723,7 +1731,7 @@ class _AutoOffer extends StatelessWidget {
           CardAction(
             label: l10n.bridgesNotNow,
             onTap: () => appState.dismissAutoOffer(),
-            ink: HaloColors.text2,
+            ink: HaloColors.text,
           ),
         ],
       ),
@@ -1796,7 +1804,7 @@ class _BridgeHint extends StatelessWidget {
           CardAction(
             label: l10n.homeKeepWaiting,
             onTap: () => appState.dismissBridgeHint(),
-            ink: HaloColors.text2,
+            ink: HaloColors.text,
           ),
         ],
       ),
@@ -2086,7 +2094,7 @@ class _EmptyStateState extends State<_EmptyState>
                   ? l10n.linkedAddOnPhone
                   : l10n.homeScanTheirCodeSendShown,
               textAlign: TextAlign.center,
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
+              style: HaloType.sans(size: 13, color: HaloColors.text),
             ),
             if (!linkedRole) ...[
               const SizedBox(height: 22),
@@ -2460,7 +2468,7 @@ class _SectionHead extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: HaloType.mono(
                   size: 10,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   weight: FontWeight.w500,
                   letter: 0.14,
                 ),
@@ -2510,7 +2518,8 @@ class _HeadAction extends StatelessWidget {
                 label,
                 style: HaloType.mono(
                   size: 10,
-                  color: color,
+                  // the words take the tone's text twin: the raw one is under 4.5:1 in light
+                  color: HaloColors.wordsIn(color),
                   weight: FontWeight.w500,
                   letter: 0.06,
                 ),
@@ -2724,7 +2733,7 @@ class _GroupRow extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: HaloType.sans(
                                     size: 12,
-                                    color: HaloColors.text2,
+                                    color: HaloColors.text,
                                   ).copyWith(fontStyle: slant()),
                                 )
                               : g.isRoom && g.joiningAt != null
@@ -2760,7 +2769,7 @@ class _GroupRow extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: HaloType.mono(
                                     size: 10,
-                                    color: HaloColors.text2,
+                                    color: HaloColors.text,
                                   ),
                                 ),
                         ),
@@ -3175,7 +3184,7 @@ class _DevRowTile extends StatelessWidget {
                               l10n.homeQueued,
                               style: HaloType.mono(
                                 size: 10,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                                 letter: 0.08,
                               ),
                             ),
@@ -3347,7 +3356,7 @@ class _Row extends StatelessWidget {
                                   l10n.homeQueued,
                                   style: HaloType.mono(
                                     size: 10,
-                                    color: HaloColors.text2,
+                                    color: HaloColors.text,
                                     letter: 0.08,
                                   ),
                                 )
@@ -3530,7 +3539,7 @@ class _QuickTile extends StatelessWidget {
                     line,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 10.5, color: HaloColors.text2),
+                    style: HaloType.sans(size: 10.5, color: HaloColors.text),
                   ),
                 ],
               ),

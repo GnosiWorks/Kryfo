@@ -381,7 +381,7 @@ Future<String?> showGroupEditSheet(
                 onPressed: () => Navigator.pop(ctx),
                 child: Text(
                   l10n.commonCancel,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
                 ),
               ),
               const Spacer(),
@@ -3415,7 +3415,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 const SizedBox(height: 4),
                 Text(
                   l10n.groupChatNewMessagesDisappearOnceRead,
-                  style: HaloType.mono(size: 11, color: HaloColors.text2),
+                  style: HaloType.mono(size: 11, color: HaloColors.text),
                 ),
                 const SizedBox(height: 12),
                 for (final opt in options)
@@ -4417,7 +4417,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 album
                     ? l10n.groupChatAlbumItDisappearsWithNoShown
                     : l10n.groupChatItDisappearsWithNoShown,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                style: HaloType.sans(size: 13, color: HaloColors.text),
               ),
             ),
             InkWell(
@@ -5040,7 +5040,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                               l10n.groupChatThisMessageCanT,
                                               style: HaloType.sans(
                                                 size: 12,
-                                                color: HaloColors.text2,
+                                                color: HaloColors.text,
                                               ),
                                             ),
                                           );
@@ -5208,7 +5208,7 @@ class GroupEndedBar extends StatelessWidget {
                 style: HaloType.serif(
                   size: 14,
                   italic: true,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                 ),
               ),
             ),
@@ -5491,7 +5491,7 @@ class _Header extends StatelessWidget {
                                           ),
                                           style: HaloType.mono(
                                             size: 10,
-                                            color: HaloColors.text2,
+                                            color: HaloColors.text,
                                           ),
                                         )
                                       : Text(
@@ -5501,7 +5501,7 @@ class _Header extends StatelessWidget {
                                           overflow: TextOverflow.ellipsis,
                                           style: HaloType.mono(
                                             size: 10,
-                                            color: HaloColors.text2,
+                                            color: HaloColors.text,
                                           ),
                                         ),
                                 ),
@@ -5614,14 +5614,14 @@ class _ReplyQuoteBar extends StatelessWidget {
                 if (target.sticker case final st?)
                   StickerLine(
                     st,
-                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text),
                   )
                 else
                   Text(
                     target.text,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text),
                   ),
               ],
             ),
@@ -5849,6 +5849,8 @@ class _Composer extends StatelessWidget {
                                 cursorColor: HaloColors.amber,
                                 decoration: InputDecoration(
                                   hintText: l10n.groupChatMessage,
+                                  // one line: at large text the field is narrow and the word would break
+                                  hintMaxLines: 1,
                                   hintStyle: HaloType.sans(
                                     size: 14,
                                     color: HaloColors.text3,
@@ -6058,7 +6060,7 @@ class _MentionPicker extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: HaloType.mono(
                                         size: 10,
-                                        color: HaloColors.text2,
+                                        color: HaloColors.text,
                                       ),
                                     ),
                                   ),
@@ -6239,7 +6241,9 @@ class _GroupBubble extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: HaloType.mono(
                                 size: 9.5,
-                                color: _authorColor(m.sender),
+                                color: HaloColors.wordsIn(
+                                  _authorColor(m.sender),
+                                ),
                                 letter: 0.4,
                               ),
                             ),
@@ -7113,7 +7117,7 @@ class _GroupBubble extends StatelessWidget {
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(
     size: 12.5,
-    color: isOut ? HaloColors.onAmber : HaloColors.text2,
+    color: isOut ? HaloColors.onAmber : HaloColors.text,
     height: 1.3,
   );
 
@@ -7244,7 +7248,7 @@ class _GroupBubble extends StatelessWidget {
         children: [
           Text(
             _fmtTime(m.when),
-            style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+            style: HaloType.mono(size: 9.5, color: HaloColors.text),
           ),
           if (isOut && !m.pending && !m.looksFailed) ...[
             const SizedBox(width: 3),
@@ -7358,7 +7362,7 @@ class _MissingPhoto extends StatelessWidget {
             l10n.chatPhotoUnavailable,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: HaloType.mono(size: 11, color: HaloColors.text2),
+            style: HaloType.mono(size: 11, color: HaloColors.text),
           ),
         ],
       ),
@@ -7396,7 +7400,7 @@ class _AdminGoneLine extends StatelessWidget {
                 l10n.groupAdminGoneLineShown,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.4,
                 ),
               ),

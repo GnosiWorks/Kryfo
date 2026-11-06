@@ -77,7 +77,7 @@ void main() {
       expect(taps, 1);
       final d = boxOf(t, find.text('Clear'));
       expect((d.border as Border).top.color, HaloColors.line);
-      expect(t.widget<Text>(find.text('Clear')).style!.color, HaloColors.text2);
+      expect(t.widget<Text>(find.text('Clear')).style!.color, HaloColors.text);
     });
   });
 

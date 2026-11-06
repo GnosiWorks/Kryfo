@@ -245,7 +245,7 @@ class _PairJoinState extends State<PairJoin>
                               weight: FontWeight.w600,
                               color: HaloColors.roseText,
                             )
-                          : HaloType.sans(size: 13, color: HaloColors.text2),
+                          : HaloType.sans(size: 13, color: HaloColors.text),
                     ),
                   ),
                 ],
@@ -257,7 +257,7 @@ class _PairJoinState extends State<PairJoin>
       children: [
         Text(
           l10n.pairCodeTypeTheEightDigits,
-          style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+          style: HaloType.sans(size: 13.5, color: HaloColors.text),
         ),
         const SizedBox(height: 20),
         AnimatedBuilder(
@@ -341,7 +341,7 @@ class _PairJoinState extends State<PairJoin>
         Text(
           l10n.pairCodeBothNeed06Shown,
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 12, color: HaloColors.text2),
+          style: HaloType.sans(size: 12, color: HaloColors.text),
         ),
       ],
     );
@@ -406,7 +406,7 @@ class PairMatched extends StatelessWidget {
                 child: Text(
                   l10n.pairCodeMatched,
                   textAlign: TextAlign.center,
-                  style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+                  style: HaloType.sans(size: 13.5, color: HaloColors.text),
                 ),
               ),
             ],
@@ -423,7 +423,7 @@ class PairMatched extends StatelessWidget {
                 child: Text(
                   l10n.pairCodeNotThem,
                   textAlign: TextAlign.center,
-                  style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+                  style: HaloType.sans(size: 13.5, color: HaloColors.text),
                 ),
               ),
             ),
