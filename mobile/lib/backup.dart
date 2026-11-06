@@ -1311,6 +1311,8 @@ Future<BackupDraft> _draftQuiet(
     }
   }
   final files = [...await _filesToCarry(Directory(stage)), ...hiddenFiles];
+  // the face the decoy picked, under the name an account's own file has
+  final face = await secureStore.read(key: c.key('my_avatar'));
   final manifest = <String, dynamic>{
     'v': hidden ? kBackupVersionHidden : kBackupVersion,
     'ts': DateTime.now().millisecondsSinceEpoch,
@@ -1320,7 +1322,9 @@ Future<BackupDraft> _draftQuiet(
     'xPriv': saved['x_priv'],
     'dbPassphrase': dbKey,
     'prefs': <String, dynamic>{},
-    'secure': <String, String>{},
+    'secure': <String, String>{
+      if (face != null && face.isNotEmpty) 'my_avatar': face,
+    },
     // the decoy's own settings, and the phone's as the decoy sees them
     'settings': await readCarriedSettings(c),
     // as an account's own file has it: a decoy reads no relays
