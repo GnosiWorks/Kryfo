@@ -11733,6 +11733,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo opens again in a moment with the code to scan.';
 
   @override
+  String get deskLinkNotStarted => 'Couldn\'t start the link. Try again later.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Linked to your phone';
 
   @override
@@ -11747,4 +11750,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'The chats on this computer are removed. Your phone keeps everything.';
+
+  @override
+  String get metaReaderColourProfileName => 'colour profile name';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Marks hidden in the pixels themselves, like the watermarks image generators hide there, and anything you can see in the picture stay as they are.';
 }

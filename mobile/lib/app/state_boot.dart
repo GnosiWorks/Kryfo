@@ -340,6 +340,13 @@ extension AppStateBoot on AppState {
     // why a first contact did not file, on a computer's trace: codes only
     if (onDesktop) {
       firstFails.onNote = (c) => desk_trace.trace('first contact: $c');
+      // a go panic ends the process on a stderr nobody sees: its words go
+      // next to the trace instead
+      final dir = desk_trace.traceDir;
+      if (dir != null) {
+        final on = engine.traceCrash(p.join(dir, 'engine-crash.txt'));
+        desk_trace.trace(on ? 'engine crash file on' : 'engine crash file off');
+      }
     }
     var startTicks = 0;
     var autoTicks = 0;
@@ -506,7 +513,9 @@ extension AppStateBoot on AppState {
       try {
         final ciphers = engine.drainInbox();
         if (ciphers.isEmpty) return;
+        desk_trace.trace('onion frames in (${ciphers.length})');
         await receiveOnion(ciphers);
+        desk_trace.trace('onion frames done');
       } finally {
         _draining = false;
       }
@@ -524,6 +533,7 @@ extension AppStateBoot on AppState {
         if (batch.token.isEmpty) return;
         // not confirmed when this throws: the next poll offers it again
         final held = <int, String>{};
+        desk_trace.trace('relay frames in (${batch.msgs.length})');
         final failed = await receiveRelay(
           batch.msgs,
           written: batch.written,
@@ -538,6 +548,7 @@ extension AppStateBoot on AppState {
           groups: [for (final k in keys) held[k]!],
         );
         if (r != 'ok') dlog('relay poll: ack $r');
+        desk_trace.trace('relay frames done (${failed.length} failed)');
       } finally {
         _polling = false;
       }

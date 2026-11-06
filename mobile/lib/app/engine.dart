@@ -146,6 +146,23 @@ class HaloEngine {
   String myXPubkey() => engineTake(_myXPub());
   String myEdPrivkey() => engineTakeSecret(_myEdPriv());
   String myXPrivkey() => engineTakeSecret(_myXPriv());
+  // a go panic or fatal error written into [path] (KRYFO_TRACE=1). an
+  // engine from before it has no such call: false
+  bool traceCrash(String path) {
+    final OneArgFnDart f;
+    try {
+      f = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTraceCrash');
+    } catch (_) {
+      return false;
+    }
+    final ptr = path.toNativeUtf8();
+    try {
+      return engineTake(f(ptr)) == 'ok';
+    } finally {
+      malloc.free(ptr);
+    }
+  }
+
   String startListener(String dataDir) {
     final ptr = dataDir.toNativeUtf8();
     try {

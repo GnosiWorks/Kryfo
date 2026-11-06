@@ -62,7 +62,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       ::Sleep(200);
     }
   }
-  kryfo::ClaimFolder(reopen ? 3000 : 0);
+  kryfo::Folder folder = kryfo::ClaimFolder(reopen ? 3000 : 0);
+  // after the claim: the folder is there, and a run that lost the lock says so
+  kryfo::WatchCrashes();
+  if (folder == kryfo::Folder::kLocked) kryfo::TraceLine("runner: folder locked by another run");
 
   std::wstring missing;
   if (!kryfo::LoadNatives(&missing)) {
@@ -105,6 +108,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
+  kryfo::TraceLine("runner: message loop ended");
   // no engine shutdown or dll unload after the loop: either can wait
   // forever on a native call still running (flutter_window.cpp, EndNow)
   ::TerminateProcess(::GetCurrentProcess(), EXIT_SUCCESS);

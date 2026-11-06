@@ -114,6 +114,7 @@ class AppState extends ChangeNotifier {
     // a frame held for their first answer goes once it opened: the outbox
     // runs for it, whatever it knew of them before
     signalSession.onAnswered = (peer) {
+      desk_trace.trace('answer came: held frames go');
       _cardCame(peer);
       unawaited(drainOutbox());
     };
@@ -123,6 +124,7 @@ class AppState extends ChangeNotifier {
     // their session started again (a heal, a restore): answered at once,
     // and what waited on it goes
     signalSession.onNewSession = (peer) {
+      desk_trace.trace('their session is new: answered');
       _cardCame(peer);
       unawaited(_answerNewSession(peer));
     };

@@ -28,6 +28,7 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 import '../dlog.dart';
 import '../l10n/app_locale.dart' show loadAppLocale;
 import '../l10n/l10n.dart';
+import 'desk_frames.dart';
 import 'desktop_audio.dart';
 import '../container.dart' show HaloContainer;
 import 'desktop_channels.dart';
@@ -269,7 +270,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   if (stop == null) startTrace(root);
   if (stop != null) {
     WidgetsFlutterBinding.ensureInitialized();
-    runApp(DesktopStopApp(stop: stop));
+    deskRunApp(DesktopStopApp(stop: stop));
     return;
   }
   // a run a wipe for a link started opens the link at once
@@ -288,7 +289,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   // would be plain on the disk while the app runs: linux refuses that.
   // windows has no tmpfs and keeps them in <root>/tmp (its own branch)
   if (runtime == null && !Platform.isWindows) {
-    runApp(const DesktopStopApp(stop: DesktopStop.noMemory));
+    deskRunApp(const DesktopStopApp(stop: DesktopStop.noMemory));
     return;
   }
   sweepOldRuntimeDirs(runtime, uid: uid, root: root);
@@ -364,11 +365,15 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     }
   }
   _desktopChannel.setMethodCallHandler((call) async {
-    if (call.method == 'quit') ending();
+    if (call.method == 'quit') {
+      trace('quit asked');
+      ending();
+    }
     // the first close to the tray was said: never again
     final run = desktopRun;
     if (call.method == 'hinted' && run is DesktopRun) await run.markHinted();
     if (call.method == 'sessionLock') heardSessionLock(call.arguments);
+    if (call.method == 'frame') deskWindowFrame(call.arguments);
     return null;
   });
   // windows: toasts go neutral while the session is locked
@@ -396,7 +401,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     sweepNativeCopies(p.join(root, 'tmp', 'native'));
   }
   var started = false;
-  runApp(
+  deskRunApp(
     DesktopLockApp(
       vault: vault,
       seal: seal,
@@ -435,7 +440,7 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
             // said, not left as a lock screen that never moves
             dlog('desktop start: $step ${e.runtimeType}');
             traceError(step, e, st);
-            runApp(const DesktopStopApp(stop: DesktopStop.failed));
+            deskRunApp(const DesktopStopApp(stop: DesktopStop.failed));
           }
         }());
       },

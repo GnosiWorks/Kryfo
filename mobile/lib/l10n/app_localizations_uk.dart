@@ -11918,6 +11918,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Kryfo за мить відкриється знову з кодом для сканування.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Не вдалося почати пов’язування. Спробуй пізніше.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Пов’язано з вашим телефоном';
 
   @override
@@ -11933,4 +11937,11 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Чати на цьому комп’ютері буде видалено. На телефоні лишається все.';
+
+  @override
+  String get metaReaderColourProfileName => 'назва колірного профілю';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Позначки, приховані в самих пікселях, як-от приховані водяні знаки генераторів зображень, і все, що видно на зображенні, залишаються як є.';
 }

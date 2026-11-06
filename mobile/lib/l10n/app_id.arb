@@ -3086,9 +3086,12 @@
   "deskLinkConfirmYes": "Hapus dan tautkan",
   "deskLinkErasing": "Menghapus komputer ini",
   "deskLinkErasingLine": "Sebentar lagi Kryfo terbuka lagi dengan kode untuk dipindai.",
+  "deskLinkNotStarted": "Tautan tidak bisa dimulai. Coba lagi nanti.",
   "settingsLinkedToYourPhone": "Tertaut ke ponselmu",
   "settingsLinkedPhoneHint": "Cadangan dan undangan tetap di ponsel",
   "settingsUnlinkComputer": "Lepaskan komputer ini",
   "settingsUnlinkComputerTitle": "Lepaskan komputer ini?",
-  "settingsUnlinkComputerLine": "Obrolan di komputer ini dihapus. Ponselmu tetap menyimpan semuanya."
+  "settingsUnlinkComputerLine": "Obrolan di komputer ini dihapus. Ponselmu tetap menyimpan semuanya.",
+  "metaReaderColourProfileName": "nama profil warna",
+  "cleanPixelMarksStay": "Tanda yang tersembunyi di dalam piksel itu sendiri, seperti watermark tersembunyi dari pembuat gambar, dan apa pun yang tampak di gambar tetap seperti semula."
 }

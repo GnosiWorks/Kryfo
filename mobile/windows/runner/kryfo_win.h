@@ -42,6 +42,14 @@ std::wstring AppDir();
 // the user's sid as a string, empty when the token cannot be read
 std::wstring UserSid();
 
+// with KRYFO_TRACE=1: what ends the process outside dart and go, an
+// exception nothing caught, an abort or a terminate, is one line of
+// <root>\trace.txt: its code and the module and offset it happened at
+void WatchCrashes();
+
+// one line into the trace, when it is on
+void TraceLine(const char* line);
+
 }  // namespace kryfo
 
 #endif  // RUNNER_KRYFO_WIN_H_

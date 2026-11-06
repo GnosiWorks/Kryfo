@@ -11737,6 +11737,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Sebentar lagi Kryfo terbuka lagi dengan kode untuk dipindai.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Tautan tidak bisa dimulai. Coba lagi nanti.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Tertaut ke ponselmu';
 
   @override
@@ -11751,4 +11755,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Obrolan di komputer ini dihapus. Ponselmu tetap menyimpan semuanya.';
+
+  @override
+  String get metaReaderColourProfileName => 'nama profil warna';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Tanda yang tersembunyi di dalam piksel itu sendiri, seperti watermark tersembunyi dari pembuat gambar, dan apa pun yang tampak di gambar tetap seperti semula.';
 }

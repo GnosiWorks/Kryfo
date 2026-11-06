@@ -3086,9 +3086,12 @@
   "deskLinkConfirmYes": "मिटाएँ और जोड़ें",
   "deskLinkErasing": "यह कंप्यूटर मिटाया जा रहा है",
   "deskLinkErasingLine": "Kryfo थोड़ी देर में स्कैन करने के कोड के साथ फिर से खुलेगा।",
+  "deskLinkNotStarted": "जोड़ना शुरू नहीं हो सका। बाद में फिर कोशिश करें।",
   "settingsLinkedToYourPhone": "आपके फ़ोन से जुड़ा है",
   "settingsLinkedPhoneHint": "बैकअप और न्योते फ़ोन पर ही रहते हैं",
   "settingsUnlinkComputer": "इस कंप्यूटर को अलग करें",
   "settingsUnlinkComputerTitle": "इस कंप्यूटर को अलग करें?",
-  "settingsUnlinkComputerLine": "इस कंप्यूटर की चैट हटा दी जाएँगी। आपका फ़ोन सब कुछ रखता है।"
+  "settingsUnlinkComputerLine": "इस कंप्यूटर की चैट हटा दी जाएँगी। आपका फ़ोन सब कुछ रखता है।",
+  "metaReaderColourProfileName": "कलर प्रोफ़ाइल का नाम",
+  "cleanPixelMarksStay": "पिक्सल में ही छिपे निशान, जैसे इमेज बनाने वाले टूल के छिपे वॉटरमार्क, और तस्वीर में दिखने वाली हर चीज़ वैसी ही रहती है।"
 }

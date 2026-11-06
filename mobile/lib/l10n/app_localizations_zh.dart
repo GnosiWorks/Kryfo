@@ -11086,6 +11086,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deskLinkErasingLine => 'Kryfo 马上会重新打开并显示要扫描的二维码。';
 
   @override
+  String get deskLinkNotStarted => '无法开始关联。请稍后再试。';
+
+  @override
   String get settingsLinkedToYourPhone => '已关联到你的手机';
 
   @override
@@ -11099,6 +11102,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsUnlinkComputerLine => '这台电脑上的聊天会被移除。你的手机保留所有内容。';
+
+  @override
+  String get metaReaderColourProfileName => '色彩配置文件名称';
+
+  @override
+  String get cleanPixelMarksStay =>
+      '藏在像素本身里的标记（例如图像生成工具的隐藏水印）以及图片中看得见的内容，都会保持原样。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22070,6 +22080,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get deskLinkErasingLine => 'Kryfo 馬上會重新開啟並顯示要掃描的 QR 碼。';
 
   @override
+  String get deskLinkNotStarted => '無法開始連結。請稍後再試。';
+
+  @override
   String get settingsLinkedToYourPhone => '已連結到你的手機';
 
   @override
@@ -22083,4 +22096,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsUnlinkComputerLine => '這台電腦上的聊天會被移除。你的手機保留所有內容。';
+
+  @override
+  String get metaReaderColourProfileName => '色彩描述檔名稱';
+
+  @override
+  String get cleanPixelMarksStay =>
+      '藏在像素本身裡的標記（例如圖像生成工具的隱藏浮水印）以及圖片中看得見的內容，都會保持原樣。';
 }

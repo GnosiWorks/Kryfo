@@ -43,6 +43,9 @@ void _traceUncaught() {
 /// whether lines are written
 bool get tracing => _file != null;
 
+/// the folder the trace is in, null while it is off
+String? get traceDir => _file == null ? null : p.dirname(_file!);
+
 void trace(String line) {
   final f = _file;
   if (f == null) return;
@@ -53,6 +56,43 @@ void trace(String line) {
       flush: true,
     );
   } catch (_) {}
+}
+
+/// a message filed here, as the trace says it: its kind, whose chat it is
+/// in and where it showed. never its words or who sent it
+String arrivalTraceLine({
+  required bool sticker,
+  required bool poll,
+  required bool media,
+  required bool file,
+  required bool words,
+  required bool group,
+  required bool accepted,
+  required bool reading,
+  required bool quiet,
+}) {
+  final kind = sticker
+      ? 'sticker'
+      : poll
+      ? 'poll'
+      : media
+      ? 'media'
+      : file
+      ? 'file'
+      : words
+      ? 'text'
+      : 'empty';
+  final chat = group
+      ? 'group'
+      : accepted
+      ? 'accepted'
+      : 'request';
+  final where = reading
+      ? 'chat on screen'
+      : quiet
+      ? 'no toast'
+      : 'toast';
+  return 'message in: $kind, $chat, $where';
 }
 
 /// a failure as its type and the app's own code places in [st]

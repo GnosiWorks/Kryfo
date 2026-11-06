@@ -3086,9 +3086,12 @@
   "deskLinkConfirmYes": "Borrar y vincular",
   "deskLinkErasing": "Borrando esta computadora",
   "deskLinkErasingLine": "Kryfo se abre de nuevo en un momento con el código para escanear.",
+  "deskLinkNotStarted": "No se pudo iniciar la vinculación. Vuelve a intentarlo más tarde.",
   "settingsLinkedToYourPhone": "Vinculado con tu teléfono",
   "settingsLinkedPhoneHint": "Las copias de seguridad y las invitaciones se quedan en el teléfono",
   "settingsUnlinkComputer": "Desvincular esta computadora",
   "settingsUnlinkComputerTitle": "¿Desvincular esta computadora?",
-  "settingsUnlinkComputerLine": "Se eliminan los chats de esta computadora. Tu teléfono lo conserva todo."
+  "settingsUnlinkComputerLine": "Se eliminan los chats de esta computadora. Tu teléfono lo conserva todo.",
+  "metaReaderColourProfileName": "nombre del perfil de color",
+  "cleanPixelMarksStay": "Las marcas ocultas en los propios píxeles, como las marcas de agua que esconden los generadores de imágenes, y todo lo que se ve en la imagen se quedan como están."
 }
