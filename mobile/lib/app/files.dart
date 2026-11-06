@@ -40,7 +40,10 @@ Future<void> sweepCaptures() async {
         await shredFile(f.path);
       }
       // a backup copy that never got shredded, say the app died mid-save
-      if (n.contains('/kryfo-backup-')) await shredFile(f.path);
+      if (n.contains('/kryfo-backup-') ||
+          (n.contains('/backup_') && n.endsWith('.bin'))) {
+        await shredFile(f.path);
+      }
     }
     await sweepShareCopies(tmp);
     // clean copies made for a save the app died during

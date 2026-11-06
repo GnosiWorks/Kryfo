@@ -168,7 +168,7 @@ void main() {
       final body = bodyOf(sourceOf(file), fn);
       final clean = body.indexOf('await photoToSendOffUi(raw)');
       expect(clean, greaterThan(0));
-      expect(body.indexOf('writeAsBytes(bytes'), greaterThan(clean));
+      expect(body.indexOf('await writeMadeCopy('), greaterThan(clean));
       // the raw bytes go nowhere else
       expect(RegExp(r'\braw\b').allMatches(body).length, 2);
     });

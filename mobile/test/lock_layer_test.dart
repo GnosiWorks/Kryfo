@@ -475,6 +475,25 @@ void main() {
     expect(find.text('secret home'), findsOneWidget);
   });
 
+  testWidgets('with no pin, a tap that waited while the app was away happens '
+      'once it is back', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester)..pin = false;
+    a.lock.loaded = false;
+    await a.pump();
+    var opened = false;
+    await a.guard.afterUnlock(() async => opened = true, key: 'chat:n');
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    a.lock.set(loaded: true);
+    await tester.pump();
+    expect(opened, isFalse);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(opened, isTrue);
+  });
+
   testWidgets('a toast from before the lock is dropped', (tester) async {
     final a = _App(tester);
     await a.pump();

@@ -1233,6 +1233,21 @@ void main() {
         });
     }
 
+    test('carries the decoy\'s own face, never the everyday one', () async {
+      final decoy = await decoyPhone();
+      FlutterSecureStorage.setMockInitialValues({
+        'halo.d.key': "x'${'2e' * 32}'",
+        'my_avatar': '3',
+        '${HaloContainer.decoy.key('my_avatar')}': '7',
+      });
+      useDatabasesForTest(live, Session(decoy));
+      final d = await draftQuietBackup(stage, side: side);
+      expect(d.manifest['secure'], {'my_avatar': '7'});
+      expect(identitySecurePlan(d.manifest['secure']).write, {
+        'my_avatar': '7',
+      });
+    });
+
     test('is as it was: the decoy alone, nothing hidden', () async {
       final decoy = await decoyPhone();
       useDatabasesForTest(live, Session(decoy));

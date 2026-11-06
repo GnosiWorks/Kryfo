@@ -2746,7 +2746,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final mediaDir = await session.mediaDirOf(widget.groupId);
     // a png, gif, webp or heic keeps its own kind, and its name says so
     final f = File('${mediaDir.path}/$made.${pictureExt(bytes)}');
-    await f.writeAsBytes(bytes);
+    if (!await writeMadeCopy(f, bytes)) {
+      if (mounted) showHaloToast(context, l10n.cleanFreeSomeSpaceAnd);
+      return null;
+    }
     makeBlurSoon(f.path);
     return _GReady(made, f.path);
   }

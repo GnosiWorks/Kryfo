@@ -181,4 +181,47 @@ void main() {
     expect(await t.runAsync(movedAt), isNotNull);
     await t.pumpAndSettle(const Duration(seconds: 5));
   });
+
+  testWidgets('a file the phone filled up half way is not left behind', (
+    t,
+  ) async {
+    platform(shares: 'picked');
+    phone(t);
+    final live = _Db(HaloContainer.everyday);
+    useDatabasesForTest(live, Session(live));
+    lockState.openForTest(enabled: true);
+    lockState.inDecoy = false;
+    backupForTest = (path, _) async {
+      File(path).writeAsStringSync('half');
+      throw FileSystemException(
+        'write failed',
+        path,
+        const OSError('No space left on device', 28),
+      );
+    };
+    await t.pumpWidget(
+      MaterialApp(
+        navigatorKey: rootNavKey,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const BackupScreen(),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.backupMoveToAnotherDevice));
+    await t.pumpAndSettle();
+    for (final f in find.byType(TextField).evaluate().toList()) {
+      await t.enterText(find.byWidget(f.widget), 'a long passphrase');
+    }
+    await press(t, find.text(l10n.backupMakeTheFileAnd));
+    for (var i = 0; i < 25; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump();
+    }
+    expect(asked, isNot(contains('saveDocument')));
+    expect(made(), isEmpty);
+    await t.pumpAndSettle(const Duration(seconds: 5));
+  });
 }

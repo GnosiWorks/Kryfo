@@ -126,6 +126,8 @@ class _Engine implements HaloEngine {
   final unsubscribed = <String>[];
   final subscribed = <String>[];
   final hellos = <String>[];
+  // fc -> the engine's answer for a hello to it; ok otherwise
+  final helloAnswers = <String, String>{};
   // the x keys whose pair's seed the engine was handed
   final seeded = <String>[];
   @override
@@ -166,6 +168,8 @@ class _Engine implements HaloEngine {
 
   @override
   Future<String> sendHello(int ident, String owner, String fc, String m) async {
+    final a = helloAnswers[fc];
+    if (a != null) return a;
     hellos.add(owner);
     return 'ok';
   }
@@ -440,6 +444,7 @@ void main() {
     engine.unsubscribed.clear();
     engine.subscribed.clear();
     engine.hellos.clear();
+    engine.helloAnswers.clear();
     engine.seeded.clear();
     live = _Rows(db);
     await world();
@@ -750,6 +755,35 @@ void main() {
     await live.oweHello(q.keyHex, '0' * 32, 'ab' * 32);
     await app.sendHellosOwed();
     expect(engine.hellos, isEmpty);
+  });
+
+  test('a hello the engine turns down for its own address does not hold '
+      'back the hellos after it', () async {
+    final bad = await _Phone.make('bad-fc-owed', 67);
+    await live.upsertContact(bad.words, '', bad.x);
+    await live.oweHello(bad.keyHex, '0' * 32, 'zz' * 32);
+    engine.helloAnswers['zz' * 32] = 'error: bad first-contact pubkey';
+    final good = await _Phone.make('good-fc-owed', 69);
+    await live.upsertContact(good.words, '', good.x);
+    await live.oweHello(good.keyHex, '1' * 32, 'ab' * 32);
+    await app.sendHellosOwed();
+    expect(engine.hellos, contains(good.x));
+    expect(await hellosOf('want', good.keyHex), isEmpty);
+    // the turned down one is still owed, for a later pass
+    expect(await hellosOf('want', bad.keyHex), hasLength(1));
+  });
+
+  test('no relay taking a hello stops the pass', () async {
+    final a = await _Phone.make('no-relay-a', 71);
+    await live.upsertContact(a.words, '', a.x);
+    await live.oweHello(a.keyHex, '2' * 32, 'cd' * 32);
+    engine.helloAnswers['cd' * 32] = 'error: no relays accepted';
+    final b = await _Phone.make('no-relay-b', 73);
+    await live.upsertContact(b.words, '', b.x);
+    await live.oweHello(b.keyHex, '3' * 32, 'ef' * 32);
+    await app.sendHellosOwed();
+    expect(engine.hellos, isEmpty);
+    expect(await hellosOf('want', b.keyHex), hasLength(1));
   });
 
   test('a session made again and its pair\'s seed are kept together: a '

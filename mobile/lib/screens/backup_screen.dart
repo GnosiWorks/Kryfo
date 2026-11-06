@@ -125,6 +125,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final String path;
     final String name;
     final move = _move && !widget._noMove;
+    String? begun;
     try {
       final bulk = bulkTempDir;
       final tempDir = bulk != null
@@ -133,6 +134,7 @@ class _BackupScreenState extends State<BackupScreen> {
       // a restore finds it by its contents: a plain icon's plain name too
       name = backupName(plain: savesPlain());
       path = p.join(tempDir, name);
+      begun = path;
       void onProgress(int a, int b) {
         if (mounted && b > 0) setState(() => _progress = a / b);
       }
@@ -150,6 +152,12 @@ class _BackupScreenState extends State<BackupScreen> {
       }
     } catch (e) {
       dlog('backup: not made (${e.runtimeType})');
+      // what was written of it goes, or its space holds back the next try
+      if (begun != null) {
+        try {
+          await shredFile(begun);
+        } catch (_) {}
+      }
       sayLater();
       if (mounted) {
         HapticFeedback.heavyImpact();

@@ -30,7 +30,11 @@ class MediaCleaned {
 
   /// a video, for the line a refusal shows
   final bool video;
-  const MediaCleaned(this.how, {this.video = false});
+
+  /// refused because the disk stopped it (full, gone), not for what the
+  /// file holds: such a file never goes as it is
+  final bool io;
+  const MediaCleaned(this.how, {this.video = false, this.io = false});
 }
 
 /// cleans [path] in place, off the ui thread. [name] is what the file was
@@ -58,6 +62,12 @@ Future<MediaCleaned> cleanMediaFileHere(
 }) async {
   try {
     return await _clean(path, name, raw);
+  } on FileSystemException {
+    return MediaCleaned(
+      MediaClean.refused,
+      video: videoNameNeedsStrip(name),
+      io: true,
+    );
   } catch (_) {
     return MediaCleaned(MediaClean.refused, video: videoNameNeedsStrip(name));
   }
@@ -177,7 +187,11 @@ Future<MediaCleaned> copyClean(
       if (dir != null) await shredTree(dir.path);
       if (moved && await File(dest).exists()) await shredFile(dest);
     } catch (_) {}
-    return MediaCleaned(MediaClean.refused, video: videoNameNeedsStrip(name));
+    return MediaCleaned(
+      MediaClean.refused,
+      video: videoNameNeedsStrip(name),
+      io: true,
+    );
   }
   // what is left in there is clean, and the start sweep takes it if this fails
   try {
@@ -203,12 +217,14 @@ Future<ReadyCopy> copyForSend(
   bool raw = false,
   Directory? cache,
 }) async {
+  var io = false;
   if (!raw) {
     final done = await copyClean(src, dest, name: name, cache: cache);
     if (done.how != MediaClean.refused) {
       return (path: dest, name: name, video: false);
     }
     if (done.video) return (path: null, name: name, video: true);
+    io = done.io;
   }
   final jpeg = await _drawnClean(src);
   if (jpeg != null) {
@@ -234,7 +250,11 @@ Future<ReadyCopy> copyForSend(
     if (done.how != MediaClean.refused) {
       return (path: dest, name: name, video: false);
     }
+    io = done.io;
   }
+  // a clean the disk stopped is no picture the cleaner cannot read: it
+  // would go with all it holds
+  if (io) return (path: null, name: name, video: false);
   try {
     await File(src).copy(dest);
     return (path: dest, name: name, video: false);
@@ -256,5 +276,19 @@ Future<Uint8List?> _drawnClean(String path) async {
     return await cleanJpegOf(await f.readAsBytes());
   } catch (_) {
     return null;
+  }
+}
+
+/// [bytes] written to [f] as a copy made ready to send. a write that fails,
+/// a full phone say, leaves no part of it behind and says false
+Future<bool> writeMadeCopy(File f, Uint8List bytes) async {
+  try {
+    await f.writeAsBytes(bytes, flush: true);
+    return true;
+  } catch (_) {
+    try {
+      if (await f.exists()) await shredFile(f.path);
+    } catch (_) {}
+    return false;
   }
 }
