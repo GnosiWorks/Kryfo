@@ -16,7 +16,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show albumPlan;
 import 'package:kryfo/desktop/attach_tray.dart';
-import 'package:kryfo/desktop/clip_picture.dart' show clipboardPicture;
+import 'package:kryfo/desktop/clip_picture.dart'
+    show clipboardPicture, pictureOf;
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/desktop/drag_in.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -527,6 +528,39 @@ void main() {
       PasteFiles.picture = () async => Uint8List.fromList([1]);
       await ctrlV(t);
       expect([for (final x in tray.items) x.name], ['copied.pdf']);
+    });
+
+    testWidgets('a picture that wins keeps its link out of the field; words '
+        'that win paste as words', (t) async {
+      final png = Uint8List.fromList(List.filled(2048, 1));
+      var copied = 'https://example.org/cat.png';
+      PasteFiles.clip = () async => const [];
+      PasteFiles.picture = () async => pictureOf({
+            'kind': 'png',
+            'bytes': Uint8List.fromList([
+              0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, ...png, //
+            ]),
+            'text': copied,
+          });
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.platform, (c) async {
+        if (c.method == 'Clipboard.getData') return {'text': copied};
+        if (c.method == 'Clipboard.hasStrings') return {'value': true};
+        return null;
+      });
+      addTearDown(
+        () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      await chat(t);
+      await ctrlV(t);
+      expect(tray.items.single.kind, TrayKind.photo);
+      expect(words.text, isEmpty);
+      // a sentence with the link in it: the words
+      copied = 'look at https://example.org/cat.png';
+      await ctrlV(t);
+      expect(tray.items.length, 1);
+      expect(words.text, copied);
+      tray.clear();
     });
 
     testWidgets('a picture pasted while the app is locked does nothing', (

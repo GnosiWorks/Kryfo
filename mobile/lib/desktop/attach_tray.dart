@@ -311,7 +311,9 @@ class DeskTrays {
 /// ctrl and v, or shift and insert, in a composer on a computer: files
 /// copied in explorer go to [onFiles], a copied picture (a screenshot, a
 /// browser's copy image) to [onPicture] as png bytes. words on the
-/// clipboard paste as they always have. a locked app takes nothing
+/// clipboard paste as they always have, unless they are only a link
+/// beside a picture (firefox's copy image): then the picture goes and the
+/// link stays out. a locked app takes nothing
 class PasteFiles extends StatelessWidget {
   const PasteFiles({
     super.key,
@@ -340,23 +342,45 @@ class PasteFiles extends StatelessWidget {
   }
 
   KeyEventResult _key(FocusNode _, KeyEvent e) {
-    if (e is KeyDownEvent && _isPaste(e) && !lockState.locked) {
-      unawaited(_paste());
+    if (e is! KeyDownEvent || !_isPaste(e) || lockState.locked) {
+      return KeyEventResult.ignored;
     }
-    return KeyEventResult.ignored;
+    if (onPicture == null) {
+      unawaited(_paste(null));
+      return KeyEventResult.ignored;
+    }
+    // the field's own paste waits: a picture that wins keeps its link out
+    unawaited(_paste(FocusManager.instance.primaryFocus));
+    return KeyEventResult.handled;
   }
 
-  Future<void> _paste() async {
+  Future<void> _paste(FocusNode? field) async {
     final paths = await clip();
     if (lockState.locked) return;
     if (paths.isNotEmpty) {
       onFiles(paths);
+      _words(field);
       return;
     }
     final take = onPicture;
     if (take == null) return;
     final png = await picture();
-    if (png != null && !lockState.locked) take(png);
+    if (lockState.locked) return;
+    if (png != null) {
+      take(png);
+      return;
+    }
+    _words(field);
+  }
+
+  // the paste ctrl and v would have done in the field
+  static void _words(FocusNode? field) {
+    final at = field?.context;
+    if (at == null || !at.mounted) return;
+    Actions.maybeInvoke(
+      at,
+      const PasteTextIntent(SelectionChangedCause.keyboard),
+    );
   }
 
   @override

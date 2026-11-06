@@ -129,7 +129,7 @@ class HaloRow extends StatelessWidget {
     final on = toggled;
     final v = on != null ? '' : value ?? '';
     final scaler = MediaQuery.textScalerOf(context);
-    final valueStyle = HaloType.sans(size: 13, color: HaloColors.text2);
+    final valueStyle = HaloType.sans(size: 13, color: HaloColors.text);
     final stacked =
         v.length > 16 ||
         scaler.scale(14) > 19 ||
@@ -193,7 +193,7 @@ class HaloRow extends StatelessWidget {
                         note!,
                         style: HaloType.sans(
                           size: 12,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.3,
                         ),
                       ),
