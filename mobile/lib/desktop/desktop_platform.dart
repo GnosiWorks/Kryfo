@@ -18,6 +18,7 @@ import 'desktop_db.dart';
 import 'desktop_mode.dart' show kLinkNextEnv;
 import 'desktop_posix.dart' show execSelf, setEnvHere;
 import 'desktop_save.dart';
+import 'desktop_trace.dart' show trace;
 import 'desktop_wipe.dart';
 
 /// flutter_secure_storage's channel to libsecret
@@ -192,10 +193,15 @@ class DesktopHost {
   void Function()? beforeExit;
   final _since = Stopwatch()..start();
 
-  static void _exit(int code) => io.exit(code);
+  static void _exit(int code) {
+    trace('exit $code');
+    io.exit(code);
+  }
+
   // the same process becomes the new run, so a restart never ends with no
   // app. a new process is the fallback, and it waits for this one's lock
   static Future<void> _relaunch() async {
+    trace('reopen asked');
     // windows has no exec: the new kryfo.exe waits for this one's lock
     if (!Platform.isWindows) execSelf(Platform.resolvedExecutable);
     await Process.start(
@@ -206,6 +212,7 @@ class DesktopHost {
       environment: const {kLinkNextEnv: ''},
     );
   }
+
   // the same, with the link asked of the new run
   static Future<void> _relaunchLink() async {
     if (!Platform.isWindows) {
@@ -219,7 +226,6 @@ class DesktopHost {
       environment: const {kLinkNextEnv: '1'},
     );
   }
-
 
   /// time since boot, suspend included, as android's elapsedRealtime
   int uptimeMs() {
@@ -276,6 +282,7 @@ class DesktopHost {
         await relaunchLink();
       } catch (_) {}
     }
+    trace('exit after wipe');
     exit(0);
   }
 }

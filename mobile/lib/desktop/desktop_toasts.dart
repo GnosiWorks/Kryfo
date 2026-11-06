@@ -11,6 +11,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../l10n/l10n.dart';
 import 'desktop_mode.dart' show deskSound;
+import 'desktop_trace.dart' show trace;
 import 'seal_windows.dart' show openSystemDll;
 
 /// the start menu shortcut's id (kryfo.iss), so toasts and the taskbar
@@ -175,6 +176,7 @@ class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
     return super.initialize(
       settings: settings,
       onDidReceiveNotificationResponse: (r) {
+        trace('toast clicked');
         unawaited(raise());
         onDidReceiveNotificationResponse?.call(_payloads.restore(r));
       },
@@ -190,6 +192,7 @@ class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
     WindowsNotificationDetails? notificationDetails,
   }) {
     final (t, b) = _lock.words(title, body);
+    trace('toast shown');
     return super.show(
       id: id,
       title: t,

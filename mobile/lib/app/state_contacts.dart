@@ -592,10 +592,12 @@ extension AppStateContacts on AppState {
       await refreshContacts();
       return;
     }
+    desk_trace.trace('request accepted');
     // a hello waiting here: its session first, so the ack is its opener
     try {
       await answerHello(haloId);
     } catch (e) {
+      desk_trace.trace('hello answer failed: ${e.runtimeType}');
       dlog('hello: not answered (${e.runtimeType})');
     }
     unawaited(subscribePeer(haloId, fresh: true));

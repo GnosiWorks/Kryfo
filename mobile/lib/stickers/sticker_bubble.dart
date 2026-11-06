@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_trace.dart' show trace;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
@@ -99,6 +100,7 @@ class _StickerBubbleState extends State<StickerBubble>
   @override
   void initState() {
     super.initState();
+    if (widget.arriving && !widget.isOut) trace('sticker in: bubble built');
     _now = widget.arriving || widget.landing != null;
     final l = widget.landing;
     if (l == null) return;

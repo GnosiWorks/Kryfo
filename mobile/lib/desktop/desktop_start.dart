@@ -364,7 +364,10 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     }
   }
   _desktopChannel.setMethodCallHandler((call) async {
-    if (call.method == 'quit') ending();
+    if (call.method == 'quit') {
+      trace('quit asked');
+      ending();
+    }
     // the first close to the tray was said: never again
     final run = desktopRun;
     if (call.method == 'hinted' && run is DesktopRun) await run.markHinted();

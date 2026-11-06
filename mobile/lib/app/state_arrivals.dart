@@ -526,6 +526,7 @@ extension AppStateArrivals on AppState {
       final was = await db.isBackPaired(senderHaloId);
       await db.markBackPaired(senderHaloId);
       if (!was) {
+        desk_trace.trace('added back: the outbox and the photo go');
         // their first-contact address is spent, and a card must never hand
         // on one they may reset
         unawaited(forgetPeerFc(senderHaloId));
@@ -1287,6 +1288,9 @@ extension AppStateArrivals on AppState {
       if (env.senderAvatar != null) {
         await db.setContactAvatar(senderHaloId, env.senderAvatar);
       }
+      if (desk_trace.tracing && !isGroup) {
+        desk_trace.trace('message in: a word with nothing to show');
+      }
       return to;
     }
     // a deleted (parked) peer writing again surfaces as a fresh request.
@@ -1542,6 +1546,21 @@ extension AppStateArrivals on AppState {
           : notifMediaLine(fileName, mediaPath);
       notifPayload = senderHaloId;
       suppress = reading || await db.isMuted(senderHaloId);
+    }
+    if (desk_trace.tracing) {
+      desk_trace.trace(
+        desk_trace.arrivalTraceLine(
+          sticker: sticker != null,
+          poll: env.poll != null,
+          media: mediaPath != null,
+          file: filePath != null,
+          words: said.trim().isNotEmpty,
+          group: isGroup,
+          accepted: senderAccepted,
+          reading: reading,
+          quiet: suppress,
+        ),
+      );
     }
     // support rings on its own channel: a waiting chat only as a count, an
     // answered one per message

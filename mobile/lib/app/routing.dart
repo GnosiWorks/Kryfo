@@ -227,6 +227,7 @@ HaloContainer? _chatOnScreenIn;
 String? get currentChatPeer => lockGuard.isLocked() ? null : _chatOnScreen;
 
 void claimChat(String id) {
+  if (_chatOnScreen != id) desk_trace.trace('chat open');
   _chatOnScreen = id;
   _chatOnScreenIn = session.container;
   appState.chatFirst(id);
@@ -234,6 +235,7 @@ void claimChat(String id) {
 
 void releaseChat(String id) {
   if (_chatOnScreen != id) return;
+  desk_trace.trace('chat closed');
   _chatOnScreen = null;
   _chatOnScreenIn = null;
   appState.chatFirst(null);

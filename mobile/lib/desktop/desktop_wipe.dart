@@ -13,8 +13,9 @@ import 'package:path/path.dart' as p;
 const kVaultFiles = ['vault.kv', 'vault.kv.new'];
 
 /// kept by a start's sweep: this run's lock, and the trace a run with
-/// KRYFO_TRACE writes from its first step
-const kStartKeeps = {'lock', 'trace.txt'};
+/// KRYFO_TRACE writes from its first step, and the engine's crash file
+/// beside it
+const kStartKeeps = {'lock', 'trace.txt', 'engine-crash.txt'};
 
 /// every entry under [root] deleted, children first, each on its own so
 /// one that stays never keeps the rest. tried again for [patience] while
