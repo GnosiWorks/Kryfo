@@ -3094,5 +3094,7 @@
   "settingsLinkedPhoneHint": "تبقى النسخ الاحتياطية والدعوات على الهاتف",
   "settingsUnlinkComputer": "افصل هذا الحاسوب",
   "settingsUnlinkComputerTitle": "أتفصل هذا الحاسوب؟",
-  "settingsUnlinkComputerLine": "تُزال المحادثات التي على هذا الحاسوب. يحتفظ هاتفك بكل شيء."
+  "settingsUnlinkComputerLine": "تُزال المحادثات التي على هذا الحاسوب. يحتفظ هاتفك بكل شيء.",
+  "metaReaderColourProfileName": "اسم ملف تعريف الألوان",
+  "cleanPixelMarksStay": "العلامات المخفية في البكسلات نفسها، مثل العلامات المائية المخفية لمولّدات الصور، وكل ما يظهر في الصورة تبقى كما هي."
 }

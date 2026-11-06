@@ -616,6 +616,19 @@ class _Done extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 14),
+              Opacity(
+                opacity: card,
+                child: Text(
+                  l10n.cleanPixelMarksStay,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    height: 1.5,
+                    color: HaloColors.warm,
+                  ),
+                ),
+              ),
             ],
           ),
         );

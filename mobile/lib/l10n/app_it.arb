@@ -3094,5 +3094,7 @@
   "settingsLinkedPhoneHint": "Backup e inviti restano sul telefono",
   "settingsUnlinkComputer": "Scollega questo computer",
   "settingsUnlinkComputerTitle": "Scollegare questo computer?",
-  "settingsUnlinkComputerLine": "Le chat su questo computer vengono rimosse. Il tuo telefono conserva tutto."
+  "settingsUnlinkComputerLine": "Le chat su questo computer vengono rimosse. Il tuo telefono conserva tutto.",
+  "metaReaderColourProfileName": "nome del profilo colore",
+  "cleanPixelMarksStay": "I segni nascosti nei pixel stessi, come le filigrane nascoste dei generatori di immagini, e tutto ciò che si vede nell'immagine restano come sono."
 }

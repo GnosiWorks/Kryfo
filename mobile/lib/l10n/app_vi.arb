@@ -3094,5 +3094,7 @@
   "settingsLinkedPhoneHint": "Bản sao lưu và lời mời ở lại trên điện thoại",
   "settingsUnlinkComputer": "Hủy liên kết máy tính này",
   "settingsUnlinkComputerTitle": "Hủy liên kết máy tính này?",
-  "settingsUnlinkComputerLine": "Các cuộc trò chuyện trên máy tính này bị xóa. Điện thoại của bạn giữ mọi thứ."
+  "settingsUnlinkComputerLine": "Các cuộc trò chuyện trên máy tính này bị xóa. Điện thoại của bạn giữ mọi thứ.",
+  "metaReaderColourProfileName": "tên hồ sơ màu",
+  "cleanPixelMarksStay": "Dấu ẩn trong chính các điểm ảnh, như hình mờ ẩn của công cụ tạo ảnh, và mọi thứ nhìn thấy trong ảnh vẫn giữ nguyên."
 }

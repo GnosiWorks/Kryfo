@@ -11992,4 +11992,11 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Czaty na tym komputerze zostaną usunięte. Telefon zachowa wszystko.';
+
+  @override
+  String get metaReaderColourProfileName => 'nazwa profilu kolorów';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Znaki ukryte w samych pikselach, jak ukryte znaki wodne generatorów obrazów, i wszystko, co widać na obrazie, zostają bez zmian.';
 }

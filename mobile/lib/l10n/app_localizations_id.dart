@@ -11767,4 +11767,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Obrolan di komputer ini dihapus. Ponselmu tetap menyimpan semuanya.';
+
+  @override
+  String get metaReaderColourProfileName => 'nama profil warna';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Tanda yang tersembunyi di dalam piksel itu sendiri, seperti watermark tersembunyi dari pembuat gambar, dan apa pun yang tampak di gambar tetap seperti semula.';
 }

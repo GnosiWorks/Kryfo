@@ -3094,5 +3094,7 @@
   "settingsLinkedPhoneHint": "備份和邀請會留在手機上",
   "settingsUnlinkComputer": "解除這台電腦的連結",
   "settingsUnlinkComputerTitle": "解除這台電腦的連結？",
-  "settingsUnlinkComputerLine": "這台電腦上的聊天會被移除。你的手機保留所有內容。"
+  "settingsUnlinkComputerLine": "這台電腦上的聊天會被移除。你的手機保留所有內容。",
+  "metaReaderColourProfileName": "色彩描述檔名稱",
+  "cleanPixelMarksStay": "藏在像素本身裡的標記（例如圖像生成工具的隱藏浮水印）以及圖片中看得見的內容，都會保持原樣。"
 }

@@ -11902,4 +11902,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Die Chats auf diesem Computer werden entfernt. Dein Handy behält alles.';
+
+  @override
+  String get metaReaderColourProfileName => 'Name des Farbprofils';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Markierungen in den Pixeln selbst, etwa versteckte Wasserzeichen von Bildgeneratoren, und alles, was im Bild zu sehen ist, bleiben, wie sie sind.';
 }
