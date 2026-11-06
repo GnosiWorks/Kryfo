@@ -276,8 +276,11 @@ class _WideHomeState extends State<WideHome> {
         Row(
           children: [
             rail,
+            // the whole height: a row centres a child it leaves loose, and a
+            // short tab (tools) would sit in the middle of the list
             SizedBox(
               width: w,
+              height: box.maxHeight,
               child: FocusTraversalGroup(
                 child: MediaQuery(
                   data: mq.copyWith(size: Size(w, box.maxHeight)),
