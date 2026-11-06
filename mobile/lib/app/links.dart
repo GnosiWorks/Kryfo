@@ -641,11 +641,17 @@ Future<(String, bool)> _addV3ByHello(
   final settled =
       bound != null && _eqBytes(bound, cardKey) && await hasSessionWith(id);
   // they asked first on this key: their opener or their hello, let in now,
-  // starts the session, and a hello of mine would only start a second one
+  // starts the session, and a hello of mine would only start a second one.
+  // a chat deleted or declined here asks nothing: what of theirs it held
+  // went with it, and only a hello of mine reaches them
+  final parked =
+      (row?['accepted'] as num?)?.toInt() != 1 &&
+      (row?['archived'] as num?)?.toInt() == 1;
   final waits = await appState.helloWaitsFrom(cardKey);
   final theirs =
       waits ||
       (asked &&
+          !parked &&
           ((row?['xpub'] as String?) ?? '').toLowerCase() == _keyHex(cardKey));
   // no onion until they answer, as a v4 add: their opener brings it
   await session.upsertContact(

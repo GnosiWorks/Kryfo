@@ -1251,6 +1251,27 @@ void main() {
       expect(later.update, isTrue);
     });
 
+    test('a chat deleted and added again from the same link sends a fresh '
+        'hello, and says again that they may need to update', () async {
+      final (link, p) = await v3Of('deleted-then-again', 125, classic: true);
+      await handleHaloUriAdded(link, app: app);
+      await hellosGo();
+      List<String> sent() => [...engine.hellos.where((x) => x == p.x)];
+      expect(sent(), hasLength(1));
+      await app.deleteConversation(p.words);
+      expect(await hellosOf('old', p.keyHex), isEmpty);
+      expect(await hellosOf('out', p.keyHex), isEmpty);
+      expect(live.people[p.words], containsPair('archived', 1));
+      expect(await handleHaloUriAdded(link, app: app), (
+        l10n.helloSentOld,
+        true,
+      ));
+      expect((await hellosOf('old', p.keyHex)).single['once'], 1);
+      expect((await app.helloWaitOf(p.words)).update, isTrue);
+      await hellosGo();
+      expect(sent(), hasLength(2));
+    });
+
     test('a v4 qr is a 0.6 phone\'s: its hello waits, and no update line '
         'ever shows', () async {
       final p = await _Phone.make('four-qr-owner', 115);
