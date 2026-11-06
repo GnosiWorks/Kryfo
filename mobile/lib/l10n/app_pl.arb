@@ -3051,5 +3051,6 @@
   "notesVoiceNotKept": "Twoja wiadomość głosowa nie została zachowana",
   "handleOlderKryfo": "Ta osoba używa starszego Kryfo. Poproś ją o aktualizację, a potem dodaj ją.",
   "groupMemberNeedsUpdate": "{name} używa starszego Kryfo. Musi je zaktualizować, żeby dostawać tu wiadomości.",
-  "groupMembersNeedUpdate": "Niektórzy członkowie używają starszego Kryfo. Muszą je zaktualizować, żeby dostawać tu wiadomości."
+  "groupMembersNeedUpdate": "Niektórzy członkowie używają starszego Kryfo. Muszą je zaktualizować, żeby dostawać tu wiadomości.",
+  "onboardingAlwaysOnNotice": "Android wymaga jednego cichego, stałego powiadomienia, aby wiadomości docierały, gdy Kryfo jest zamknięte."
 }

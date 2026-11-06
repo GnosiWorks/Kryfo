@@ -3051,5 +3051,6 @@
   "notesVoiceNotKept": "Sesli mesajın saklanmadı",
   "handleOlderKryfo": "Kryfo'nun eski bir sürümünü kullanıyor. Güncellemesini isteyin, sonra ekleyin.",
   "groupMemberNeedsUpdate": "{name} Kryfo'nun eski bir sürümünü kullanıyor. Buradaki mesajları alması için güncellemesi gerekecek.",
-  "groupMembersNeedUpdate": "Bazı üyeler Kryfo'nun eski bir sürümünü kullanıyor. Buradaki mesajları almaları için güncellemeleri gerekecek."
+  "groupMembersNeedUpdate": "Bazı üyeler Kryfo'nun eski bir sürümünü kullanıyor. Buradaki mesajları almaları için güncellemeleri gerekecek.",
+  "onboardingAlwaysOnNotice": "Kryfo kapalıyken de mesajların gelmesi için Android’in sessiz ve kalıcı bir bildirime ihtiyacı var."
 }

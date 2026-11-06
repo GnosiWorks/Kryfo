@@ -1683,7 +1683,12 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
             title: title,
             cost: body,
             tag: tag,
-            gain: needsOnion ? l10n.gettingMessagesHelperOnionOnly : null,
+            // f-droid: why always on keeps a notification up
+            gain: needsOnion
+                ? l10n.gettingMessagesHelperOnionOnly
+                : m == DeliveryMode.always && !playBuild
+                ? l10n.onboardingAlwaysOnNotice
+                : null,
             dim: needsOnion,
             on: _pick == m,
             onTap: needsOnion

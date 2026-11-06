@@ -11623,4 +11623,8 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get groupMembersNeedUpdate =>
       'بعضی از اعضا از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کنند. برای گرفتن پیام‌ها در اینجا باید آن را به‌روز کنند.';
+
+  @override
+  String get onboardingAlwaysOnNotice =>
+      'اندروید یک اعلان بی‌صدای ماندگار لازم دارد تا پیام‌ها وقتی Kryfo بسته است هم برسند.';
 }

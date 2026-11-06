@@ -10978,6 +10978,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupMembersNeedUpdate => '部分成员使用的是旧版 Kryfo，需要更新后才能在这里收到消息。';
+
+  @override
+  String get onboardingAlwaysOnNotice =>
+      'Android 需要一条常驻的静音通知，这样 Kryfo 关闭时也能收到消息。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -21840,4 +21844,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupMembersNeedUpdate => '部分成員使用的是舊版 Kryfo，需要更新後才能在這裡收到訊息。';
+
+  @override
+  String get onboardingAlwaysOnNotice =>
+      'Android 需要一則常駐的無聲通知，這樣 Kryfo 關閉時也能收到訊息。';
 }

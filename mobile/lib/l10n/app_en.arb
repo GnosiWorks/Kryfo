@@ -14565,5 +14565,9 @@
   "groupMembersNeedUpdate": "Some members use an older Kryfo. They'll need to update to get messages here.",
   "@groupMembersNeedUpdate": {
     "description": "screens/group_chat_screen.dart: as groupMemberNeedsUpdate, with more than one such member"
+  },
+  "onboardingAlwaysOnNotice": "Android needs one silent notification that stays, so messages arrive when Kryfo is closed.",
+  "@onboardingAlwaysOnNotice": {
+    "description": "screens/onboarding_screen.dart: f-droid, the third line on the always on card: why its notification stays"
   }
 }
