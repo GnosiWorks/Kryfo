@@ -9466,27 +9466,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get translatePacksSection => 'Мовні пакети';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language та англійська';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'Не завантажено · близько $size';
   }
 
   @override
   String get translateDownloading => 'Завантажується через Tor';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return 'Видалити пакет «$language»?';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return 'Повідомлення мовою «$language» не можна буде перекласти, доки пакет не завантажено знову.';
-  }
 
   @override
   String get translateLanguagesSection => 'Мови';
@@ -11944,4 +11929,88 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'Позначки, приховані в самих пікселях, як-от приховані водяні знаки генераторів зображень, і все, що видно на зображенні, залишаються як є.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return 'Завантажити · $language ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return 'Завантажується · $language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'Чекає на Wi-Fi · $language';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Чекає на Wi-Fi. Завантаження почнеться саме, щойно телефон підключиться до Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Чекає на Wi-Fi. Завантаження почнеться саме, щойно комп’ютер підключиться до Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiShort => 'Чекає на Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'Повідомлення перекладаються на цьому телефоні й ніколи його не залишають. Для цього потрібні мовні пакети «$language» і «$other», разом близько $size, завантажені один раз через Tor.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'Повідомлення перекладаються на цьому комп’ютері й ніколи його не залишають. Для цього потрібні мовні пакети «$language» і «$other», разом близько $size, завантажені один раз через Tor.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'Кожна завантажується один раз, а потім перекладає на цьому телефоні';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'Кожна завантажується один раз, а потім перекладає на цьому комп’ютері';
+
+  @override
+  String get translateSuggested => 'Запропоновані';
+
+  @override
+  String get translateMoreLanguages => 'Інші мови';
+
+  @override
+  String get translateWaysBoth => 'З англійської та англійською';
+
+  @override
+  String get translateWaysInto => 'Перекладає лише англійською';
+
+  @override
+  String get translateWaysFrom => 'Перекладає лише з англійської';
+
+  @override
+  String get translateGet => 'Завантажити';
+
+  @override
+  String get translateRemove => 'Вилучити';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return 'Вилучити · $language?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'Звільниться $size. Збережені з нею переклади теж видаляться. Завантажити її знову можна будь-коли.';
+  }
+
+  @override
+  String get translateResumeShort => 'Продовжити';
+
+  @override
+  String get translateTagApp => 'Мова застосунку';
+
+  @override
+  String get translateTagRead => 'Ви нею читаєте';
 }

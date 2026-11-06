@@ -9415,27 +9415,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get translatePacksSection => 'Sprachpakete';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language und Englisch';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'Nicht geladen · etwa $size';
   }
 
   @override
   String get translateDownloading => 'Wird über Tor geladen';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return 'Sprachpaket $language löschen?';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return 'Nachrichten auf $language lassen sich erst wieder übersetzen, wenn es neu geladen ist.';
-  }
 
   @override
   String get translateLanguagesSection => 'Sprachen';
@@ -11897,4 +11882,88 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'Markierungen in den Pixeln selbst, etwa versteckte Wasserzeichen von Bildgeneratoren, und alles, was im Bild zu sehen ist, bleiben, wie sie sind.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return '$language laden ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return '$language wird geladen…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'Wartet auf WLAN, um $language zu laden';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Wartet auf WLAN. Der Download startet von selbst, sobald dieses Handy im WLAN ist.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Wartet auf WLAN. Der Download startet von selbst, sobald dieser Computer im WLAN ist.';
+
+  @override
+  String get translateWaitsWifiShort => 'Wartet auf WLAN';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'Nachrichten werden auf diesem Handy übersetzt und verlassen es nie. Dafür braucht es die Sprachpakete $language und $other, zusammen etwa $size, einmal über Tor geladen.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'Nachrichten werden auf diesem Computer übersetzt und verlassen ihn nie. Dafür braucht es die Sprachpakete $language und $other, zusammen etwa $size, einmal über Tor geladen.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'Jede wird einmal geladen und dann auf diesem Handy übersetzt';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'Jede wird einmal geladen und dann auf diesem Computer übersetzt';
+
+  @override
+  String get translateSuggested => 'Vorgeschlagen';
+
+  @override
+  String get translateMoreLanguages => 'Weitere Sprachen';
+
+  @override
+  String get translateWaysBoth => 'Aus dem und ins Englische';
+
+  @override
+  String get translateWaysInto => 'Übersetzt nur ins Englische';
+
+  @override
+  String get translateWaysFrom => 'Übersetzt nur aus dem Englischen';
+
+  @override
+  String get translateGet => 'Laden';
+
+  @override
+  String get translateRemove => 'Entfernen';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return '$language entfernen?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'Das gibt $size frei. Damit gespeicherte Übersetzungen werden mit gelöscht. Du kannst es jederzeit wieder laden.';
+  }
+
+  @override
+  String get translateResumeShort => 'Fortsetzen';
+
+  @override
+  String get translateTagApp => 'App-Sprache';
+
+  @override
+  String get translateTagRead => 'Liest du';
 }

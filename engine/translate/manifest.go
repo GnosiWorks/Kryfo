@@ -208,10 +208,17 @@ func (m *Manifest) Pair(from, to string) (Pair, bool) {
 	return Pair{}, false
 }
 
-// Bundle is what to fetch for a language: both directions with english.
-// fetching them together means a download says "this person reads or
-// writes lang", which it says anyway, and not which way they translate.
+// Bundle is what one download fetches. a direction ("de-en") is one pack
+// on its own, the way the app fetches since every language has a pack
+// each way; a language alone ("zh") is both its directions with english,
+// the older bundle.
 func (m *Manifest) Bundle(lang string) []Pair {
+	if from, to, ok := strings.Cut(lang, "-"); ok {
+		if p, ok := m.Pair(from, to); ok {
+			return []Pair{p}
+		}
+		return nil
+	}
 	var out []Pair
 	for _, k := range [][2]string{{lang, "en"}, {"en", lang}} {
 		if p, ok := m.Pair(k[0], k[1]); ok {

@@ -9333,27 +9333,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get translatePacksSection => 'Dil paketleri';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language ve İngilizce';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'İndirilmedi · yaklaşık $size';
   }
 
   @override
   String get translateDownloading => 'Tor üzerinden iniyor';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return '$language paketi silinsin mi?';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return '$language mesajlar, paket yeniden indirilene kadar çevrilemez.';
-  }
 
   @override
   String get translateLanguagesSection => 'Diller';
@@ -11786,4 +11771,88 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'Piksellerin içine gizlenmiş işaretler, örneğin görsel oluşturucuların gizli filigranları, ve resimde görülen her şey olduğu gibi kalır.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return 'İndir · $language ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return 'İndiriliyor · $language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'Wi-Fi bekleniyor · $language';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Wi-Fi bekleniyor. Bu telefon Wi-Fi\'ye bağlanınca indirme kendiliğinden başlar.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Wi-Fi bekleniyor. Bu bilgisayar Wi-Fi\'ye bağlanınca indirme kendiliğinden başlar.';
+
+  @override
+  String get translateWaitsWifiShort => 'Wi-Fi bekleniyor';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'Mesajlar bu telefonda çevrilir ve telefondan hiç çıkmaz. Bunun için $language ve $other dil paketleri gerekir; toplam yaklaşık $size, Tor üzerinden bir kez indirilir.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'Mesajlar bu bilgisayarda çevrilir ve bilgisayardan hiç çıkmaz. Bunun için $language ve $other dil paketleri gerekir; toplam yaklaşık $size, Tor üzerinden bir kez indirilir.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'Her biri bir kez indirilir, sonra bu telefonda çevirir';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'Her biri bir kez indirilir, sonra bu bilgisayarda çevirir';
+
+  @override
+  String get translateSuggested => 'Önerilenler';
+
+  @override
+  String get translateMoreLanguages => 'Diğer diller';
+
+  @override
+  String get translateWaysBoth => 'İngilizceden ve İngilizceye';
+
+  @override
+  String get translateWaysInto => 'Yalnızca İngilizceye çevirir';
+
+  @override
+  String get translateWaysFrom => 'Yalnızca İngilizceden çevirir';
+
+  @override
+  String get translateGet => 'İndir';
+
+  @override
+  String get translateRemove => 'Kaldır';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return 'Kaldırılsın mı · $language?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'Bu, $size yer açar. Onunla kaydedilen çeviriler de silinir. İstediğin zaman yeniden indirebilirsin.';
+  }
+
+  @override
+  String get translateResumeShort => 'Devam et';
+
+  @override
+  String get translateTagApp => 'Uygulama dili';
+
+  @override
+  String get translateTagRead => 'Okuduğun dil';
 }

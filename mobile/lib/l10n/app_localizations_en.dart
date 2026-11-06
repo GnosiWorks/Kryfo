@@ -9302,27 +9302,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get translatePacksSection => 'Language packs';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language and English';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'Not downloaded · about $size';
   }
 
   @override
   String get translateDownloading => 'Downloading over Tor';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return 'Delete the $language pack?';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return 'Messages in $language can\'t be translated until it\'s downloaded again.';
-  }
 
   @override
   String get translateLanguagesSection => 'Languages';
@@ -11757,4 +11742,88 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'Marks hidden in the pixels themselves, like the watermarks image generators hide there, and anything you can see in the picture stay as they are.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return 'Download $language ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return 'Downloading $language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'Waiting for Wi-Fi to download $language';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Waiting for Wi-Fi. The download starts by itself once this phone is on Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Waiting for Wi-Fi. The download starts by itself once this computer is on Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiShort => 'Waiting for Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'Messages are translated on this phone and never leave it. That needs the $language and $other language packs, about $size together, downloaded once over Tor.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'Messages are translated on this computer and never leave it. That needs the $language and $other language packs, about $size together, downloaded once over Tor.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'Each one downloads once, then translates on this phone';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'Each one downloads once, then translates on this computer';
+
+  @override
+  String get translateSuggested => 'Suggested';
+
+  @override
+  String get translateMoreLanguages => 'More languages';
+
+  @override
+  String get translateWaysBoth => 'To and from English';
+
+  @override
+  String get translateWaysInto => 'Translates into English only';
+
+  @override
+  String get translateWaysFrom => 'Translates from English only';
+
+  @override
+  String get translateGet => 'Download';
+
+  @override
+  String get translateRemove => 'Remove';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return 'Remove $language?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'This frees $size. Translations saved with it are deleted too. You can download it again any time.';
+  }
+
+  @override
+  String get translateResumeShort => 'Resume';
+
+  @override
+  String get translateTagApp => 'App language';
+
+  @override
+  String get translateTagRead => 'You read it';
 }

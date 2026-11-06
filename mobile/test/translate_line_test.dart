@@ -10,7 +10,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/theme.dart';
-import 'package:kryfo/translate/catalog.dart';
 import 'package:kryfo/translate/chat_translation.dart';
 import 'package:kryfo/translate/lang_names.dart';
 import 'package:kryfo/translate/translate_bubble.dart';
@@ -203,16 +202,14 @@ void main() {
     final handle = t.ensureSemantics();
     final f = fakeHub(words: {_zh: _en});
     await open(t, f, {'u1': _zh});
-    final gz = builtInCatalog.bundle('zh')!.gz;
-    expect(_rich(packSize(gz)), findsOneWidget);
-    expect(
-      find.bySemanticsLabel('${l10n.translateAction}, ${packSize(gz)}'),
-      findsOneWidget,
-    );
+    final gz = zhCatalog.bundle('zh')!.gz;
+    final offer = l10n.translateOfferDownload(langName('zh'), packSize(gz));
+    expect(_rich(offer), findsOneWidget);
+    expect(find.bySemanticsLabel(offer), findsOneWidget);
     // nothing started on its own
     await t.pump(const Duration(seconds: 2));
     expect(f.backend.started, isEmpty);
-    await t.tap(_rich(l10n.translateAction));
+    await t.tap(_rich(offer));
     await t.pumpAndSettle();
     // the one-time download, with its size, waits for its own button
     expect(find.text(l10n.translateDownload(packSize(gz))), findsOneWidget);
@@ -227,7 +224,7 @@ void main() {
     await t.pumpAndSettle();
     // the message the tap was for
     expect(find.text(_en), findsOneWidget);
-    expect(_rich(packSize(gz)), findsNothing);
+    expect(_rich(offer), findsNothing);
     handle.dispose();
   });
 

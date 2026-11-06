@@ -11,7 +11,7 @@ import 'catalog.dart';
 import 'detect.dart';
 import 'foreign.dart';
 import 'hub.dart';
-import 'settings.dart' show KeptTranslation;
+import 'settings.dart' show KeptTranslation, cutTakes;
 import 'translator.dart';
 
 // what the chat knows a message by: its uid, or its arrival for one that
@@ -45,13 +45,30 @@ class PackNeed {
 class ChatTranslation extends ChangeNotifier {
   final TranslationHub hub;
   final String chatId;
-  ChatTranslation(this.hub, this.chatId) : _seenWipes = hub.wipes {
+  ChatTranslation(this.hub, this.chatId)
+    : _seenWipes = hub.wipes,
+      _seenCuts = hub.settings.cuts {
     hub.addListener(_hubChanged);
     unawaited(_load());
   }
 
   // the hub's lock count this chat last wiped for
   int _seenWipes;
+  // the pack removals this chat last dropped for
+  Map<String, int> _seenCuts;
+
+  // a pack removed: what was made with it goes, kept or shown
+  void _cut(Iterable<String> keys) {
+    bool takes(String way) => keys.any((k) => cutTakes(k, way));
+    _kept.removeWhere((_, k) => takes(k.way));
+    for (final e in _msgs.entries.toList()) {
+      final o = e.value.offer;
+      if (o == null || e.value.text == null || !takes(_wayOf(o))) continue;
+      _msgs.remove(e.key);
+      _byAuto.remove(e.key);
+      _autoTried.remove(e.key);
+    }
+  }
 
   // the app locked: nothing of what was translated or guessed stays
   void _wipe() {
@@ -116,6 +133,8 @@ class ChatTranslation extends ChangeNotifier {
 
   bool? _barHidden;
   bool? _hasLib;
+  // false when this build cannot translate: no pack is offered then
+  bool? get hasLib => _hasLib;
 
   // whether messages translate on their own here: the chat's own switch
   bool autoOn(Offer o) => _auto == true;
@@ -186,6 +205,15 @@ class ChatTranslation extends ChangeNotifier {
       _seenWipes = hub.wipes;
       _wipe();
     }
+    final cuts = hub.settings.cuts;
+    if (!identical(cuts, _seenCuts)) {
+      final now = [
+        for (final e in cuts.entries)
+          if (e.value > (_seenCuts[e.key] ?? 0)) e.key,
+      ];
+      _seenCuts = cuts;
+      if (now.isNotEmpty) _cut(now);
+    }
     // turned off: what was kept is deleted, so none of it stays here
     if (!hub.on && (_keptRead || _msgs.isNotEmpty)) {
       _kept = {};
@@ -251,6 +279,12 @@ class ChatTranslation extends ChangeNotifier {
     }
     final o = offer(text);
     if (o == null || _wayOf(o) != k.way) return;
+    // made with a pack taken off the phone since, here or in another
+    // identity: it goes as a removal here would have taken it
+    if (hub.packsGone(o)) {
+      _unkeep(key);
+      return;
+    }
     _msgs[key] = MsgTranslation(MsgPhase.idle, text: k.text, offer: o);
     _source[key] = text;
   }

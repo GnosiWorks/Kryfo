@@ -3698,14 +3698,8 @@ void main() {
     expect(l.translateSettingsRow, "Translate messages");
     expect(l.translateSettingsHint, "On this phone, never on a server");
     expect(l.translatePacksSection, "Language packs");
-    expect(l.translatePackPair("<language>"), "<language> and English");
     expect(l.translateNotDownloaded("<size>"), "Not downloaded · about <size>");
     expect(l.translateDownloading, "Downloading over Tor");
-    expect(l.translateDeleteTitle("<language>"), "Delete the <language> pack?");
-    expect(
-      l.translateDeleteLine("<language>"),
-      "Messages in <language> can't be translated until it's downloaded again.",
-    );
     expect(l.translateLanguagesSection, "Languages");
     expect(l.translateMyLanguages, "Languages I read");
     expect(
@@ -3748,6 +3742,55 @@ void main() {
       l.translateOffDeletes,
       "Turning this off deletes saved translations.",
     );
+    expect(
+      l.translateOfferDownload("<language>", "<size>"),
+      "Download <language> (<size>)?",
+    );
+    expect(l.translateLineDownloading("<language>"), "Downloading <language>…");
+    expect(
+      l.translateLineWaitsWifi("<language>"),
+      "Waiting for Wi-Fi to download <language>",
+    );
+    expect(
+      l.translateWaitsWifi,
+      "Waiting for Wi-Fi. The download starts by itself once this phone is on Wi-Fi.",
+    );
+    expect(
+      l.translateWaitsWifiDesk,
+      "Waiting for Wi-Fi. The download starts by itself once this computer is on Wi-Fi.",
+    );
+    expect(l.translateWaitsWifiShort, "Waiting for Wi-Fi");
+    expect(
+      l.translatePackLineTwo("<language>", "<other>", "<size>"),
+      "Messages are translated on this phone and never leave it. That needs the <language> and <other> language packs, about <size> together, downloaded once over Tor.",
+    );
+    expect(
+      l.translatePackLineTwoDesk("<language>", "<other>", "<size>"),
+      "Messages are translated on this computer and never leave it. That needs the <language> and <other> language packs, about <size> together, downloaded once over Tor.",
+    );
+    expect(
+      l.translateLanguagesHint,
+      "Each one downloads once, then translates on this phone",
+    );
+    expect(
+      l.translateLanguagesHintDesk,
+      "Each one downloads once, then translates on this computer",
+    );
+    expect(l.translateSuggested, "Suggested");
+    expect(l.translateMoreLanguages, "More languages");
+    expect(l.translateWaysBoth, "To and from English");
+    expect(l.translateWaysInto, "Translates into English only");
+    expect(l.translateWaysFrom, "Translates from English only");
+    expect(l.translateGet, "Download");
+    expect(l.translateRemove, "Remove");
+    expect(l.translateRemoveTitle("<language>"), "Remove <language>?");
+    expect(
+      l.translateRemoveLine("<size>"),
+      "This frees <size>. Translations saved with it are deleted too. You can download it again any time.",
+    );
+    expect(l.translateResumeShort, "Resume");
+    expect(l.translateTagApp, "App language");
+    expect(l.translateTagRead, "You read it");
     expect(l.voiceSeeTranscription, "See transcription");
     expect(l.voiceTranscribing, "Transcribing…");
     expect(l.voiceHideTranscription, "Hide");

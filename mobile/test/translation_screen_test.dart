@@ -7,7 +7,6 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/screens/translation_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/translate/auto_translate_row.dart';
-import 'package:kryfo/translate/catalog.dart';
 import 'package:kryfo/translate/lang_names.dart';
 import 'package:kryfo/translate/settings.dart';
 import 'package:kryfo/widgets/halo_rows.dart';
@@ -35,7 +34,7 @@ HaloRow row(WidgetTester t, String label) =>
     t.widget<HaloRow>(find.widgetWithText(HaloRow, label));
 
 void main() {
-  final zh = builtInCatalog.bundle('zh')!;
+  final zh = zhCatalog.bundle('zh')!;
 
   void tall(WidgetTester t) {
     t.view.physicalSize = const Size(720, 3200);
@@ -43,37 +42,48 @@ void main() {
     addTearDown(t.view.reset);
   }
 
+  Future<void> languages(WidgetTester t) async {
+    await t.tap(find.byKey(const ValueKey('translate-languages')));
+    await t.pumpAndSettle();
+  }
+
   testWidgets('a pack not downloaded: its size, then a download', (t) async {
     tall(t);
     final f = fakeHub();
     await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
     await t.pumpAndSettle();
-    expect(find.text(l10n.translatePackPair(l10n.translateLangZh)), findsOne);
+    expect(row(t, l10n.translateLanguagesSection).value, isNull);
+    await languages(t);
     expect(find.text(l10n.translateNotDownloaded(packSize(zh.gz))), findsOne);
-    await t.tap(find.text(l10n.translateDownload(packSize(zh.gz))));
+    await t.tap(find.byKey(const ValueKey('act-zh')));
     await settle(t);
     expect(f.backend.started, ['zh']);
-    expect(find.text(l10n.translateDownloading), findsOneWidget);
+    expect(find.byKey(const ValueKey('act-zh')), findsOne);
+    expect(find.text(l10n.commonCancel), findsOneWidget);
     f.backend.finish('zh');
     await settle(t);
     expect(find.text(l10n.translateInstalled(packSize(zh.disk))), findsOne);
+    await t.pageBack();
+    await t.pumpAndSettle();
+    expect(row(t, l10n.translateLanguagesSection).value, langName('zh'));
   });
 
-  testWidgets('a pack on the phone: its size, and deleted after a yes', (
+  testWidgets('a pack on the phone: its size, and removed after a yes', (
     t,
   ) async {
     tall(t);
     final f = fakeHub(installed: true);
     await t.pumpWidget(framed(TranslationScreen(hub: f.hub)));
     await t.pumpAndSettle();
+    await languages(t);
     expect(find.text(l10n.translateInstalled(packSize(zh.disk))), findsOne);
-    await t.tap(find.byTooltip(l10n.commonDelete));
+    await t.tap(find.text(l10n.translateRemove));
     await t.pumpAndSettle();
     expect(
-      find.text(l10n.translateDeleteTitle(l10n.translateLangZh)),
+      find.text(l10n.translateRemoveTitle(l10n.translateLangZh)),
       findsOneWidget,
     );
-    await t.tap(find.text(l10n.commonDelete).last);
+    await t.tap(find.text(l10n.translateRemove).last);
     await t.pumpAndSettle();
     expect(f.backend.have, isEmpty);
     expect(find.text(l10n.translateNotDownloaded(packSize(zh.gz))), findsOne);
@@ -131,7 +141,9 @@ void main() {
     expect(find.byType(TextField), findsNothing);
     await t.tap(find.text(l10n.translateWifiOnly));
     await t.pumpAndSettle();
-    await t.tap(find.text(l10n.translateDownload(packSize(zh.gz))));
+    await languages(t);
+    expect(find.byType(TextField), findsNothing);
+    await t.tap(find.byKey(const ValueKey('act-zh')));
     await settle(t);
     expect(f.backend.started, ['zh']);
     f.backend.finish('zh');
@@ -208,7 +220,7 @@ void main() {
     expect(f.store.settings.on, isFalse);
     expect(find.text(l10n.translateMyLanguages), findsNothing);
     expect(find.text(l10n.translateAutoDefault), findsNothing);
-    expect(find.byKey(const ValueKey('pack-zh')), findsOneWidget);
+    expect(find.byKey(const ValueKey('translate-languages')), findsOneWidget);
     await t.tap(on);
     await t.pumpAndSettle();
     expect(f.store.settings.on, isTrue);

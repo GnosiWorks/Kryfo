@@ -244,9 +244,6 @@ void main() {
       expect(f.store.keptRows['heron']!['u1']!.text, _en);
       a.dispose();
       final asked = f.translator.asked.length;
-      // the pack gone since: the kept one still shows
-      await f.backend.remove('zh');
-      await f.hub.downloads.refresh('zh');
       final b = ChatTranslation(f.hub, 'heron');
       addTearDown(b.dispose);
       await Future<void>.delayed(Duration.zero);
@@ -257,13 +254,26 @@ void main() {
       expect(f.translator.asked.length, asked);
     });
 
+    test('the pack gone since, removed elsewhere: the kept one goes', () async {
+      final f = fakeHub(installed: true, words: {_zh: _en});
+      await f.hub.ready();
+      f.store.keptRows['heron'] = {'u1': _k(_zh, _en)};
+      await f.backend.remove('zh');
+      await f.hub.downloads.refresh('zh');
+      final c = ChatTranslation(f.hub, 'heron');
+      addTearDown(c.dispose);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(c.of('u1', _zh).text, isNull);
+      await Future<void>.delayed(Duration.zero);
+      expect(f.store.keptRows['heron'], isEmpty);
+    });
+
     test('a chat that always translates shows kept ones at once', () async {
       final f = fakeHub(installed: true, words: {_zh: _en});
       await f.hub.ready();
       f.store.keptRows['heron'] = {'u1': _k(_zh, _en)};
       await f.hub.setChatAuto('heron', true);
-      await f.backend.remove('zh');
-      await f.hub.downloads.refresh('zh');
       final c = ChatTranslation(f.hub, 'heron');
       addTearDown(c.dispose);
       await Future<void>.delayed(Duration.zero);
