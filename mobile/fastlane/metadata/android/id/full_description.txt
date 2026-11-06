@@ -22,7 +22,7 @@ Fitur:
 * Kunci aplikasi dengan PIN atau biometrik, PIN umpan yang membuka Kryfo kosong, dan obrolan tersembunyi di balik PIN tersendiri
 * Hapus total darurat yang menghapus semuanya, termasuk media yang tersimpan di perangkat
 * Obrolan dengan orang yang membuat Kryfo, secara anonim kalau kamu mau
-* 15 bahasa
+* 17 bahasa
 * Tanpa analitik atau telemetri
 
 Pendanaan: tanpa iklan, tanpa investor. Kryfo hidup dari pemberian para
