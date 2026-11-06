@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // cards that come in one by one are there whatever the ticker does: motion
-// off, a screen reader, a held ticker, frames with no clock time. on a small
+// off, a screen reader, a held ticker, frames with no clock time. the
+// settings route page and onboarding's route step alike. on a small
 // phone with large text the page scrolls and says there is more below.
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -16,6 +17,7 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute;
 import 'package:kryfo/screens/modes_screen.dart';
+import 'package:kryfo/screens/onboarding_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/fit_column.dart';
 import 'package:kryfo/widgets/stagger_in.dart';
@@ -295,4 +297,54 @@ void main() {
     );
     expect(seen(t, more()), 1.0);
   });
+
+  // onboarding's route step: the same two cards through the same entrance
+  for (final s in const [Size(320, 568), Size(360, 640)]) {
+    for (final (scale, held) in const [
+      (1.3, false),
+      (2.0, false),
+      (2.0, true),
+    ]) {
+      testWidgets(
+        'onboarding route step ${s.width.toInt()}x${s.height.toInt()} '
+        'at x$scale${held ? ', ticker held' : ''}: both cards reachable',
+        (t) async {
+          quiet(t);
+          size(t, s);
+          final errors = <String>[];
+          final was = FlutterError.onError;
+          FlutterError.onError = (d) => errors.add(d.exceptionAsString());
+          final sem = t.ensureSemantics();
+          try {
+            final screen = OnboardingScreen(
+              appState: appState,
+              onComplete: () {},
+            );
+            await t.pumpWidget(
+              devApp(
+                held ? TickerMode(enabled: false, child: screen) : screen,
+                scale: scale,
+              ),
+            );
+            await settle(t);
+            t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
+            await settle(t);
+            there(t, private(), 'private');
+            await t.ensureVisible(fast());
+            await settle(t);
+            there(t, fast(), 'fast after scrolling');
+            await t.tap(fast());
+            await settle(t);
+            expect(t.getSemantics(fast()), isSemantics(isChecked: true));
+            await t.pumpWidget(const SizedBox());
+            await settle(t);
+          } finally {
+            FlutterError.onError = was;
+            sem.dispose();
+          }
+          expect(errors, isEmpty, reason: errors.join('\n'));
+        },
+      );
+    }
+  }
 }

@@ -2562,11 +2562,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'Сообщения приходят сразу. Ничто не выходит за пределы Tor. Батарею расходует сильнее всего.';
+      'Тратит больше всего заряда.\nСразу, и ничто не выходит за пределы Tor.';
 
   @override
   String get gettingMessagesArriveInstantlyFast =>
-      'На режиме «Быстрый» сообщения приходят сразу. Батарею расходует сильнее всего.';
+      'Тратит больше всего заряда.\nСразу на режиме «Быстрый».';
 
   @override
   String get gettingMessagesCheckIns => 'Проверки';
@@ -2576,7 +2576,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo проверяет сообщения каждые 15 минут. Бережёт батарею, но сообщения могут опаздывать.';
+      'Kryfo проверяет каждые 15 минут, поэтому сообщения могут опаздывать.\nБережёт батарею.';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -4241,7 +4241,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notesExportSubject => 'Заметки Kryfo';
 
   @override
-  String get onboardingPrivateByDefault => 'ПРИВАТНО ПО УМОЛЧАНИЮ';
+  String get onboardingPrivateByDefault => 'Приватно по умолчанию';
 
   @override
   String get onboardingPrivateMessaging =>
@@ -4249,15 +4249,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingYourNameIsThree =>
-      '*Твоё имя — три слова.* Без телефона, без почты, без адресной книги.';
+      '*Твоё имя состоит из трёх слов.*\nБез телефона, без почты, без адресной книги.';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Никто не войдёт, пока ты не впустишь.* Найти тебя можно, только если ты займёшь публичное имя пользователя. Люди добавляют друг друга вручную, с обеих сторон.';
+      '*Никто не войдёт, пока ты не впустишь.*\nБез публичного @имени тебя никто не найдёт.\nНезнакомцы могут только постучаться.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*Первое подключение занимает минуту.* Kryfo строит приватный маршрут, прежде чем отправлять. Потом всё быстро.';
+      '*Первое подключение занимает минуту.*\nСначала Kryfo строит приватный маршрут. Потом всё быстро.';
 
   @override
   String get onboardingBegin => 'Начать';
@@ -4270,15 +4270,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Код Kryfo открыт';
 
   @override
-  String get onboardingYourKryfoId => 'ТВОЁ ИМЯ';
+  String get onboardingYourKryfoId => 'Твоё имя';
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Создан из ключа, который есть только на этом телефоне. *Больше ни у кого нет этих слов.*';
+      'Создано из ключа, который есть только на этом телефоне.\n*Больше ни у кого нет этих слов.*';
 
   @override
   String get onboardingGeneratedFromAKeyDesk =>
-      'Создан из ключа, который есть только на этом компьютере. *Больше ни у кого нет этих слов.*';
+      'Создано из ключа, который есть только на этом компьютере.\n*Больше ни у кого нет этих слов.*';
 
   @override
   String get onboardingTryAnother => 'Другой вариант';
@@ -4298,25 +4298,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn =>
-      'Твой профиль живёт на этом телефоне. Сделай резервную копию в настройках, когда будет удобно.';
+      'Твой профиль живёт на этом телефоне.\nСделай резервную копию в настройках, когда будет удобно.';
 
   @override
   String get onboardingYourIdentityLivesOnDesk =>
-      'Твой профиль живёт на этом компьютере. Сделай резервную копию в настройках, когда будет удобно.';
-
-  @override
-  String get onboardingOneQuiet => 'Одно тихое *уведомление*.';
-
-  @override
-  String get onboardingAndroidNeedsAVisible =>
-      'Android требует видимое уведомление, пока приложение слушает в фоне. Так сообщения доходят до тебя, когда Kryfo закрыт.';
+      'Твой профиль живёт на этом компьютере.\nСделай резервную копию в настройках, когда будет удобно.';
 
   @override
   String get onboardingSilentAndAtThe => 'Беззвучное, в самом низу шторки';
 
   @override
   String get onboardingItNeverBuzzesTurn =>
-      'Оно никогда не вибрирует. Выключишь его — сообщения будут ждать, пока ты снова не откроешь приложение.';
+      'Оно никогда не вибрирует.\nВыключишь его, и сообщения будут ждать, пока ты не откроешь Kryfo.';
 
   @override
   String get onboardingGotIt => 'Ясно →';
@@ -4326,7 +4319,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingShowYourCodeSend =>
-      'Покажи свой код, отправь ссылку или введи @имя пользователя, которое тебе дали.';
+      'Покажи свой код, поделись ссылкой или введи @имя человека.';
 
   @override
   String get onboardingScanTheirs => 'Сканировать код';
@@ -7931,11 +7924,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get handleRegistryFailed =>
-      'Реестр не ответил. Попробуй через минуту.';
+      'Реестр не ответил.\nПопробуй через минуту.';
 
   @override
   String get handleStillReaching =>
-      'Связываемся с реестром. Через Tor это может занять до минуты.';
+      'Всё ещё связываемся с реестром.\nЧерез Tor это может занять время.';
 
   @override
   String get handleSearchNeedsTor =>
@@ -9125,7 +9118,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Сразу и легко. Его сервер видит ваш IP и когда приходят сообщения, но не их содержание.';
+      'Его сервер видит твой IP-адрес и когда приходят сообщения.\nНо не их содержание. Сразу и легко.';
 
   @override
   String get gettingMessagesHelperUseOnion => 'Перейти на Onion';
@@ -9138,7 +9131,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'К настоящим пробуждениям подмешиваются ложные, поэтому серверу помощника сложнее понять, когда приходят настоящие сообщения. Собственный сервер помощника сообщает нашему ретранслятору свой адрес. Скрытые чаты, комнаты сверх первых нескольких и время от времени обычный контакт, примерно один месяц из пяти, ждут проверки, которую Kryfo всё равно делает каждые 15 минут.';
 
   @override
-  String get gettingMessagesHelperOnionOnly => 'Доступно на маршруте Onion';
+  String get gettingMessagesHelperOnionOnly => 'Нужен маршрут «Приватный»';
 
   @override
   String get gettingMessagesHelperChecking => 'Проверяем…';
@@ -9810,7 +9803,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notificationsGoogleBody =>
-      'Сразу и легко. Google видит, когда телефон будят, но не кто написал и что сказано.';
+      'Google видит, когда твой телефон просыпается.\nНо не кто написал и что сказано.\nСразу и бережно к батарее.';
 
   @override
   String get notificationsGoogleStarting => 'Включаем…';
@@ -9849,7 +9842,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationsMakerSwitch => 'Переключатель производителя';
 
   @override
-  String get onboardingDeliveryHeadline => 'Как до тебя *доходят* сообщения.';
+  String get onboardingHowYourMessages => 'Как *путешествуют* твои сообщения.';
+
+  @override
+  String get onboardingRouteLead =>
+      'Это можно изменить в любой момент в настройках.';
+
+  @override
+  String get onboardingRoutePrivateCost =>
+      'Через Tor. Сообщение идёт несколько секунд.';
+
+  @override
+  String get onboardingRoutePrivateGain =>
+      'Никто не узнаёт твой IP-адрес, даже наши серверы.';
+
+  @override
+  String get onboardingRouteFastCost =>
+      'Наши серверы видят твой IP-адрес, пока ты подключён.\nТвоя сеть может видеть, что ты пользуешься Kryfo.';
+
+  @override
+  String get onboardingRouteFastGain =>
+      'Без Tor: быстрее и бережнее к батарее.';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo остаётся в Tor, если нужно, через мост.\n«Быстрый» есть в настройках, если понадобится.';
+
+  @override
+  String get onboardingRouteBlockedGain => 'Сам находит обход блокировок.';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Когда *приходят* сообщения.';
 
   @override
   String get onboardingDeliveryLead =>
@@ -10516,16 +10539,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get desktopTrayRow => 'Работать в области уведомлений';
 
   @override
-  String get desktopTrayHint =>
-      'Если закрыть окно, Kryfo остаётся в области уведомлений, и сообщения продолжают приходить.';
+  String get desktopTrayHint => 'Сообщения приходят и при закрытом окне.';
 
   @override
   String get desktopTrayOffLine =>
-      'Если закрыть окно, Kryfo завершится. Сообщения придут, когда откроешь его снова.';
+      'Если закрыть окно, Kryfo завершится.\nСообщения придут, когда откроешь его снова.';
 
   @override
   String get desktopTrayNoneLine =>
-      'Этот рабочий стол не показывает значки в области уведомлений, поэтому закрытие окна завершает Kryfo.';
+      'У этого рабочего стола нет значка в области уведомлений.\nЕсли закрыть окно, Kryfo завершится.';
 
   @override
   String get desktopStartRow => 'Запускать вместе с компьютером';
@@ -10536,11 +10558,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get desktopStartRefused =>
-      'Этот компьютер не разрешил Kryfo запускаться вместе с ним. Kryfo откроется, когда ты запустишь его сам.';
+      'Этот компьютер не дал Kryfo запускаться вместе с ним.\nKryfo откроется, когда ты запустишь его сам.';
 
   @override
   String get desktopStartHeldOff =>
-      'Windows отключил Kryfo в приложениях автозагрузки. Включи его там: Параметры, Приложения, Автозагрузка.';
+      'Windows отключил Kryfo в приложениях автозагрузки.\nВключи его в Параметрах Windows, Приложения, Автозагрузка.';
 
   @override
   String get desktopMicBlocked =>
@@ -10765,7 +10787,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingNameLine =>
-      'Публичное имя помогает людям найти тебя. Без него ты приватнее, а добавить его можно в любой момент.';
+      'Публичное @имя помогает людям найти тебя.\nБез него ты приватнее.\nДобавить его можно позже.';
 
   @override
   String get onboardingNameSkip => 'Пока пропустить →';
@@ -10780,7 +10802,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingInviteLead =>
-      'Отправь ссылку в любом мессенджере. Она откроет Kryfo или покажет, где его скачать.';
+      'Отправь ссылку в любом мессенджере.\nОна откроет Kryfo или покажет, где его скачать.';
 
   @override
   String get onboardingInviteSomeone => 'Пригласить →';
@@ -11378,7 +11400,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingDeskRunLead =>
-      'Закрой окно, и Kryfo останется в области уведомлений, а сообщения продолжат приходить. Оба параметра можно изменить позже в настройках, в разделе «Уведомления».';
+      'Закрой окно, и Kryfo будет ждать в области уведомлений.\nСообщения продолжат приходить.\nОба параметра можно изменить в настройках, в разделе «Уведомления».';
 
   @override
   String get savedLongPressAnyMessageDesk =>

@@ -2509,11 +2509,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'मैसेज तुरंत आते हैं। कुछ भी Tor से बाहर नहीं जाता। बैटरी सबसे ज़्यादा लगती है।';
+      'बैटरी सबसे ज़्यादा लगती है।\nतुरंत, और कुछ भी Tor से बाहर नहीं जाता।';
 
   @override
   String get gettingMessagesArriveInstantlyFast =>
-      'तेज़ पर मैसेज तुरंत आते हैं। बैटरी सबसे ज़्यादा लगती है।';
+      'बैटरी सबसे ज़्यादा लगती है।\nतेज़ पर तुरंत।';
 
   @override
   String get gettingMessagesCheckIns => 'समय-समय पर जाँच';
@@ -2523,7 +2523,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo हर 15 मिनट में मैसेज देखता है। बैटरी कम लगती है, पर मैसेज देर से आ सकते हैं।';
+      'Kryfo हर 15 मिनट में देखता है, इसलिए मैसेज देर से आ सकते हैं।\nबैटरी कम लगती है।';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -4157,15 +4157,15 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingYourNameIsThree =>
-      '*आपका नाम तीन शब्द है।* न फ़ोन नंबर, न ईमेल, न एड्रेस बुक।';
+      '*आपका नाम तीन शब्द है।*\nन फ़ोन नंबर, न ईमेल, न एड्रेस बुक।';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*आपकी मर्ज़ी के बिना कोई अंदर नहीं आता।* जब तक आप सार्वजनिक यूज़रनेम न लें, कोई आपको खोज नहीं सकता। लोग हाथ से जोड़े जाते हैं, दोनों तरफ़ से।';
+      '*आपकी मर्ज़ी के बिना कोई अंदर नहीं आता।*\nसार्वजनिक @नाम के बिना कोई आपको खोज नहीं सकता।\nअनजान लोग सिर्फ़ दस्तक दे सकते हैं।';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*पहली बार जुड़ने में एक मिनट लगता है।* भेजने से पहले Kryfo एक निजी रास्ता बनाता है। उसके बाद जल्दी।';
+      '*पहली बार जुड़ने में एक मिनट लगता है।*\nKryfo पहले एक निजी रास्ता बनाता है। उसके बाद जल्दी।';
 
   @override
   String get onboardingBegin => 'शुरू करें';
@@ -4181,11 +4181,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'एक कुंजी से बना, जो सिर्फ़ इसी फ़ोन पर रहती है। *ये शब्द किसी और के पास नहीं हैं।*';
+      'एक कुंजी से बना, जो सिर्फ़ इसी फ़ोन पर रहती है।\n*ये शब्द किसी और के पास नहीं हैं।*';
 
   @override
   String get onboardingGeneratedFromAKeyDesk =>
-      'एक कुंजी से बना, जो सिर्फ़ इसी कंप्यूटर पर रहती है। *ये शब्द किसी और के पास नहीं हैं।*';
+      'एक कुंजी से बना, जो सिर्फ़ इसी कंप्यूटर पर रहती है।\n*ये शब्द किसी और के पास नहीं हैं।*';
 
   @override
   String get onboardingTryAnother => 'दूसरा देखें';
@@ -4205,25 +4205,18 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn =>
-      'आपकी पहचान इसी फ़ोन पर रहती है। जब तैयार हों, सेटिंग से इसका बैकअप लें।';
+      'आपकी पहचान इसी फ़ोन पर रहती है।\nजब तैयार हों, सेटिंग में इसका बैकअप लें।';
 
   @override
   String get onboardingYourIdentityLivesOnDesk =>
-      'आपकी पहचान इसी कंप्यूटर पर रहती है। जब तैयार हों, सेटिंग से इसका बैकअप लें।';
+      'आपकी पहचान इसी कंप्यूटर पर रहती है।\nजब तैयार हों, सेटिंग में इसका बैकअप लें।';
 
   @override
-  String get onboardingOneQuiet => 'एक शांत *सूचना*।';
-
-  @override
-  String get onboardingAndroidNeedsAVisible =>
-      'जब कोई ऐप बैकग्राउंड में सुनता है, Android को एक दिखने वाली सूचना चाहिए। इसी से Kryfo बंद होने पर भी मैसेज आप तक पहुँचते हैं।';
-
-  @override
-  String get onboardingSilentAndAtThe => 'बिना आवाज़, और सूचनाओं में सबसे नीचे';
+  String get onboardingSilentAndAtThe => 'बिना आवाज़, सूचनाओं में सबसे नीचे';
 
   @override
   String get onboardingItNeverBuzzesTurn =>
-      'यह कभी वाइब्रेट नहीं करती। इसे बंद करें, तो मैसेज तब तक रुके रहेंगे जब तक आप ऐप फिर न खोलें।';
+      'यह कभी वाइब्रेट नहीं करती।\nइसे बंद करें, तो मैसेज तब तक रुके रहेंगे जब तक आप Kryfo न खोलें।';
 
   @override
   String get onboardingGotIt => 'ठीक है →';
@@ -4233,7 +4226,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingShowYourCodeSend =>
-      'अपना कोड दिखाएँ, उन्हें लिंक भेजें, या उनका दिया @यूज़रनेम लिखें।';
+      'अपना कोड दिखाएँ, लिंक शेयर करें, या उनका @नाम लिखें।';
 
   @override
   String get onboardingScanTheirs => 'उनका स्कैन करें';
@@ -7789,11 +7782,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get handleRegistryFailed =>
-      'रजिस्ट्री तक नहीं पहुँच पाए। एक मिनट में फिर कोशिश करें।';
+      'रजिस्ट्री तक नहीं पहुँच पाए।\nएक मिनट में फिर कोशिश करें।';
 
   @override
   String get handleStillReaching =>
-      'अभी रजिस्ट्री तक पहुँच रहे हैं। Tor पर इसमें एक मिनट तक लग सकता है।';
+      'अभी रजिस्ट्री तक पहुँच रहे हैं।\nTor पर इसमें कुछ समय लग सकता है।';
 
   @override
   String get handleSearchNeedsTor =>
@@ -8969,7 +8962,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'तुरंत और हल्का। इसका सर्वर आपका IP और मैसेज आने का समय देखता है, यह कभी नहीं कि उनमें क्या है।';
+      'इसका सर्वर आपका IP पता और मैसेज आने का समय देखता है।\nयह कभी नहीं कि उनमें क्या है। तुरंत और हल्का।';
 
   @override
   String get gettingMessagesHelperUseOnion => 'Onion पर जाएँ';
@@ -8982,7 +8975,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'इसमें झूठे जगाने के संकेत भी मिलाए जाते हैं, जिससे सहायक के सर्वर के लिए यह बताना मुश्किल होता है कि असली मैसेज कब आते हैं। आपका अपना सहायक सर्वर हमारे रिले को अपना पता बताता है। छिपी चैट, शुरुआती कुछ के बाद के रूम, और कभी-कभी कोई आम संपर्क, लगभग पाँच में से एक महीने, उस जाँच का इंतज़ार करते हैं जो Kryfo अब भी हर 15 मिनट में करता है।';
 
   @override
-  String get gettingMessagesHelperOnionOnly => 'Onion रास्ते पर उपलब्ध';
+  String get gettingMessagesHelperOnionOnly => 'प्राइवेट रास्ता चाहिए';
 
   @override
   String get gettingMessagesHelperChecking => 'जाँच हो रही है…';
@@ -9651,7 +9644,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get notificationsGoogleBody =>
-      'तुरंत और हल्का। Google देख सकता है कि आपका फ़ोन कब जगाया गया, यह कभी नहीं कि किसने लिखा या क्या कहा।';
+      'Google देख सकता है कि आपका फ़ोन कब जागता है।\nयह कभी नहीं कि किसने लिखा या क्या कहा।\nतुरंत और बैटरी पर हल्का।';
 
   @override
   String get notificationsGoogleStarting => 'चालू हो रहा है…';
@@ -9690,7 +9683,37 @@ class AppLocalizationsHi extends AppLocalizations {
   String get notificationsMakerSwitch => 'आपके फ़ोन बनाने वाली कंपनी का स्विच';
 
   @override
-  String get onboardingDeliveryHeadline => 'मैसेज *आप तक* कैसे पहुँचते हैं।';
+  String get onboardingHowYourMessages => 'आपके मैसेज कैसे *सफ़र* करते हैं।';
+
+  @override
+  String get onboardingRouteLead => 'आप इसे कभी भी सेटिंग में बदल सकते हैं।';
+
+  @override
+  String get onboardingRoutePrivateCost =>
+      'Tor के ज़रिए। एक मैसेज में कुछ सेकंड लगते हैं।';
+
+  @override
+  String get onboardingRoutePrivateGain =>
+      'आपका IP पता कोई नहीं जान पाता, हमारे सर्वर भी नहीं।';
+
+  @override
+  String get onboardingRouteFastCost =>
+      'जब आप जुड़े होते हैं, हमारे सर्वर आपका IP पता देखते हैं।\nआपका नेटवर्क देख सकता है कि आप Kryfo इस्तेमाल करते हैं।';
+
+  @override
+  String get onboardingRouteFastGain =>
+      'Tor को छोड़ देता है: तेज़ और बैटरी पर हल्का।';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo Tor पर ही रहता है, ज़रूरत हो तो ब्रिज के ज़रिए।\nतेज़ आपको सेटिंग में मिलेगा, अगर चाहिए।';
+
+  @override
+  String get onboardingRouteBlockedGain =>
+      'रोक के आसपास रास्ता ख़ुद ढूँढ लेता है।';
+
+  @override
+  String get onboardingDeliveryHeadline => 'मैसेज कब *पहुँचते* हैं।';
 
   @override
   String get onboardingDeliveryLead =>
@@ -10350,16 +10373,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get desktopTrayRow => 'सिस्टम ट्रे में चलता रहे';
 
   @override
-  String get desktopTrayHint =>
-      'विंडो बंद करने पर Kryfo सिस्टम ट्रे में रहता है, ताकि संदेश आते रहें।';
+  String get desktopTrayHint => 'विंडो बंद होने पर भी मैसेज आते रहते हैं।';
 
   @override
   String get desktopTrayOffLine =>
-      'विंडो बंद करने पर Kryfo बंद हो जाता है। दोबारा खोलने पर संदेश आ जाते हैं।';
+      'विंडो बंद करने पर Kryfo बंद हो जाता है।\nदोबारा खोलने पर मैसेज आ जाते हैं।';
 
   @override
   String get desktopTrayNoneLine =>
-      'यह डेस्कटॉप सिस्टम ट्रे आइकन नहीं दिखाता, इसलिए विंडो बंद करने पर Kryfo बंद हो जाता है।';
+      'इस डेस्कटॉप में ट्रे आइकन नहीं है।\nविंडो बंद करने पर Kryfo बंद हो जाता है।';
 
   @override
   String get desktopStartRow => 'कंप्यूटर के साथ शुरू हो';
@@ -10370,11 +10392,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopStartRefused =>
-      'इस कंप्यूटर ने Kryfo को अपने साथ शुरू होने नहीं दिया। जब भी आप ख़ुद शुरू करें, Kryfo खुल जाता है।';
+      'इस कंप्यूटर ने Kryfo को अपने साथ शुरू होने नहीं दिया।\nजब आप ख़ुद शुरू करें, Kryfo खुल जाता है।';
 
   @override
   String get desktopStartHeldOff =>
-      'Windows ने स्टार्टअप ऐप्स में Kryfo बंद कर रखा है। उसे वहीं चालू करें: सेटिंग्स, ऐप्स, स्टार्टअप।';
+      'Windows ने स्टार्टअप ऐप्स में Kryfo बंद कर रखा है।\nइसे Windows सेटिंग, ऐप्स, स्टार्टअप में चालू करें।';
 
   @override
   String get desktopMicBlocked =>
@@ -10600,7 +10622,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingNameLine =>
-      'सार्वजनिक नाम से लोग आपको ढूँढ सकते हैं। इसे छोड़ने से आप ज़्यादा निजी रहते हैं, आप इसे बाद में कभी भी जोड़ सकते हैं।';
+      'सार्वजनिक @नाम से लोग आपको ढूँढ सकते हैं।\nइसे छोड़ने से आप ज़्यादा निजी रहते हैं।\nआप इसे बाद में जोड़ सकते हैं।';
 
   @override
   String get onboardingNameSkip => 'अभी छोड़ें →';
@@ -10615,7 +10637,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingInviteLead =>
-      'किसी भी मैसेंजर में एक लिंक भेजें। वह Kryfo खोलता है, या दिखाता है कि उसे कहाँ से पाएँ।';
+      'किसी भी मैसेंजर में एक लिंक भेजें।\nवह Kryfo खोलता है, या दिखाता है कि उसे कहाँ से पाएँ।';
 
   @override
   String get onboardingInviteSomeone => 'किसी को बुलाएँ →';
@@ -11200,7 +11222,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingDeskRunLead =>
-      'विंडो बंद करने पर Kryfo सिस्टम ट्रे में रहता है, ताकि संदेश आते रहें। दोनों को बाद में सेटिंग्स में, सूचनाएँ के नीचे बदल सकते हैं।';
+      'विंडो बंद करें, Kryfo सिस्टम ट्रे में इंतज़ार करेगा।\nमैसेज आते रहेंगे।\nदोनों को सेटिंग, सूचनाएँ में बदल सकते हैं।';
 
   @override
   String get savedLongPressAnyMessageDesk =>

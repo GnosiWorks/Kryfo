@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a new install that says tor is blocked or watched: bridges only, no relay
-// or fast on the way in, while relay stays in settings and in the offer when
+// or fast on the way in (the route step shows private alone), while relay stays in settings and in the offer when
 // nothing got through, after the bridge way. closing the sheet leaves the
 // question
 import 'package:flutter/material.dart';
@@ -89,29 +89,43 @@ void main() {
     await t.pump(const Duration(seconds: 2));
   }
 
-  // the welcome and the name steps, on to the @name step
-  Future<void> throughName(WidgetTester t) async {
+  // the route step: [check] sees the cards, [pick] is tapped, then continue
+  // writes the route
+  Future<void> throughRoute(
+    WidgetTester t, {
+    void Function()? check,
+    String? pick,
+  }) async {
     phone(t);
     await t.pumpWidget(
       devApp(OnboardingScreen(appState: appState, onComplete: () {})),
     );
     await t.pump(const Duration(seconds: 6));
     final pages = t.widget<PageView>(find.byType(PageView)).controller!;
-    pages.jumpToPage(1);
+    pages.jumpToPage(3);
     await t.pump();
-    await t.pump(const Duration(seconds: 4));
-    await t.tap(find.text(l10n.onboardingUseThisName));
+    await t.pump(const Duration(seconds: 2));
+    expect(find.text(l10n.modesPrivate), findsOneWidget);
+    check?.call();
+    if (pick != null) {
+      await t.tap(find.text(pick));
+      await t.pump(const Duration(milliseconds: 300));
+    }
+    await t.tap(find.text(l10n.onboardingContinue));
     await t.pump();
-    // the face and the route are written first, then the step moves on
-    for (var i = 0; i < 30 && pages.page != 2; i++) {
+    // the route is written first, then the step moves on
+    for (var i = 0; i < 30 && pages.page != 4; i++) {
       await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 100)),
       );
       await t.pump(const Duration(milliseconds: 300));
     }
-    expect(pages.page, 2);
-    expect(find.text(l10n.onboardingNameSkip), findsOneWidget);
+    expect(pages.page, 4);
   }
+
+  // the card picked on the route step, or not
+  void routeOn(WidgetTester t, String title, bool on) =>
+      expect(t.getSemantics(find.text(title)), isSemantics(isChecked: on));
 
   group('the first start', () {
     for (final still in [false, true]) {
@@ -260,9 +274,18 @@ void main() {
     }
     expect(appState.sendMode, 'balanced');
     await done(t);
-    // the route is not asked in setup: the name step keeps relay
-    await throughName(t);
+    // the route step offers fast beside private here, and keeps it picked
+    final sem = t.ensureSemantics();
+    await throughRoute(
+      t,
+      check: () {
+        expect(find.text(l10n.modesFast), findsOneWidget);
+        routeOn(t, l10n.modesFast, true);
+        routeOn(t, l10n.modesPrivate, false);
+      },
+    );
     expect(appState.sendMode, 'balanced');
+    sem.dispose();
     await done(t);
   });
 
@@ -288,7 +311,10 @@ void main() {
     // back to onion before the send step: relay is not the mode now
     await t.runAsync(() => appState.setSendMode('private'));
     expect(appState.sendMode, 'private');
-    await throughName(t);
+    await throughRoute(
+      t,
+      check: () => expect(find.text(l10n.modesFast), findsNothing),
+    );
     expect(appState.sendMode, 'private');
     await done(t);
   });
@@ -351,18 +377,34 @@ void main() {
     await done(t);
   });
 
-  // the route left setup: the name step writes private, or fast where the
-  // first start took it, and nothing in setup offers a route
+  // the route step: private picked and written on continue. blocked or
+  // watched, it is the only card, with no radio: fast is a plain line a
+  // watcher sees, and stays in settings
   for (final risky in [false, true]) {
-    testWidgets('setup asks no route, private kept (blocked: $risky)', (
-      t,
-    ) async {
+    testWidgets('the route step keeps private (blocked: $risky)', (t) async {
       await appState.pickFirstRun(risky: risky);
-      await throughName(t);
+      final sem = t.ensureSemantics();
+      await throughRoute(
+        t,
+        check: () {
+          expect(find.text(l10n.modesFast), risky ? findsNothing : findsOne);
+          expect(
+            find.text(l10n.onboardingRouteBlockedLead),
+            risky ? findsOne : findsNothing,
+          );
+          routeOn(t, l10n.modesPrivate, !risky);
+        },
+      );
       expect(appState.sendMode, 'private');
-      expect(find.text(l10n.modesFast), findsNothing);
-      expect(find.text(l10n.modesPrivate), findsNothing);
+      sem.dispose();
       await done(t);
     });
   }
+
+  testWidgets('fast picked on the route step is written', (t) async {
+    await appState.pickFirstRun(risky: false);
+    await throughRoute(t, pick: l10n.modesFast);
+    expect(appState.sendMode, 'balanced');
+    await done(t);
+  });
 }

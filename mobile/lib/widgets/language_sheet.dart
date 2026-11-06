@@ -528,7 +528,7 @@ class LanguageRow extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.expand_more_rounded, size: 20, color: HaloColors.text2),
+            Icon(Icons.expand_more_rounded, size: 20, color: HaloColors.text),
           ],
         ),
       ),
