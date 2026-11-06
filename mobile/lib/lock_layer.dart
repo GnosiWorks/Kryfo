@@ -259,6 +259,9 @@ const lockWindowChannel = BasicMessageChannel<String>(
 class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
   // android said the app was left, and it has not come back since
   bool _away = false;
+  // a lift that came while the app was away and locked nothing (no pin):
+  // what waited for it runs once the app is back
+  bool _liftOwed = false;
 
   @override
   void initState() {
@@ -311,7 +314,10 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       widget.returned();
       // back with no lock up: an app without a pin, left while the lock was
       // read, never lifted one, and its pictures open here
-      if (widget.loaded() && !widget.locked()) openPictures();
+      if (widget.loaded() && !widget.locked()) {
+        openPictures();
+        if (_liftOwed) _lift();
+      }
       widget.inFront?.call(true);
     }
   }
@@ -338,15 +344,21 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       if (_away ||
           life == AppLifecycleState.paused ||
           life == AppLifecycleState.hidden) {
+        _liftOwed = true;
         widget.leaving();
         return;
       }
       openPictures();
-      widget.revealed?.call();
-      // what waited happens in an everyday session and is dropped in a decoy
-      widget.quiet() ? widget.guard.dropHeld() : widget.guard.lifted();
+      _lift();
     },
   );
+
+  void _lift() {
+    _liftOwed = false;
+    widget.revealed?.call();
+    // what waited happens in an everyday session and is dropped in a decoy
+    widget.quiet() ? widget.guard.dropHeld() : widget.guard.lifted();
+  }
 }
 
 // back, while the lock is up, goes nowhere. android sends it to dart only
