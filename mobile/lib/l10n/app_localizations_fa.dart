@@ -4455,22 +4455,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'همین‌طور بماند';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'روی همین گوشی خوانده شد · ویدیو جایی نرفت';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'روی همین رایانه خوانده شد · ویدیو جایی نرفت';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'روی همین گوشی خوانده شد · عکس جایی نرفت';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'روی همین رایانه خوانده شد · عکس جایی نرفت';
-
-  @override
   String get photoKnowsReadingTheFile => 'خواندن فایل';
 
   @override

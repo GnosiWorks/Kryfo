@@ -4492,22 +4492,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Lascia com\'è';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'LETTO SU QUESTO TELEFONO · IL VIDEO È RIMASTO QUI';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'LETTO SU QUESTO COMPUTER · IL VIDEO È RIMASTO QUI';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'LETTA SU QUESTO TELEFONO · LA FOTO È RIMASTA QUI';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'LETTA SU QUESTO COMPUTER · LA FOTO È RIMASTA QUI';
-
-  @override
   String get photoKnowsReadingTheFile => 'Lettura del file';
 
   @override

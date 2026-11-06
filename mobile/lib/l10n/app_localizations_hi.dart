@@ -4456,22 +4456,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'जैसा है वैसा रखें';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'इसी फ़ोन पर पढ़ा गया · वीडियो कहीं नहीं गया';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'इसी कंप्यूटर पर पढ़ा गया · वीडियो कहीं नहीं गया';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'इसी फ़ोन पर पढ़ा गया · फ़ोटो कहीं नहीं गई';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'इसी कंप्यूटर पर पढ़ा गया · फ़ोटो कहीं नहीं गई';
-
-  @override
   String get photoKnowsReadingTheFile => 'फ़ाइल पढ़ी जा रही है';
 
   @override

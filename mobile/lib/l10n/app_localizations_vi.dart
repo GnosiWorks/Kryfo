@@ -4431,22 +4431,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Giữ nguyên';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'ĐỌC TRÊN ĐIỆN THOẠI NÀY · VIDEO KHÔNG ĐI ĐÂU CẢ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'ĐỌC TRÊN MÁY TÍNH NÀY · VIDEO KHÔNG ĐI ĐÂU CẢ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'ĐỌC TRÊN ĐIỆN THOẠI NÀY · ẢNH KHÔNG ĐI ĐÂU CẢ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'ĐỌC TRÊN MÁY TÍNH NÀY · ẢNH KHÔNG ĐI ĐÂU CẢ';
-
-  @override
   String get photoKnowsReadingTheFile => 'Đang đọc tệp';
 
   @override

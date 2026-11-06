@@ -4492,22 +4492,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Dejarlo como está';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'LEÍDO EN ESTE TELÉFONO · EL VIDEO NO SALIÓ DE AQUÍ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'LEÍDO EN ESTE ORDENADOR · EL VIDEO NO SALIÓ DE AQUÍ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'LEÍDO EN ESTE TELÉFONO · LA FOTO NO SALIÓ DE AQUÍ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'LEÍDO EN ESTE ORDENADOR · LA FOTO NO SALIÓ DE AQUÍ';
-
-  @override
   String get photoKnowsReadingTheFile => 'Leyendo el archivo';
 
   @override

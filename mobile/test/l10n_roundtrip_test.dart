@@ -2002,14 +2002,6 @@ void main() {
     expect(l.photoKnowsPhotoCleaner, "Photo cleaner");
     expect(l.photoKnowsRemoveAllOfIt, "Remove all of it");
     expect(l.photoKnowsKeepItAsIt, "Keep it as it is");
-    expect(
-      l.photoKnowsReadOnThisPhone,
-      "READ ON THIS PHONE · THE VIDEO WENT NOWHERE",
-    );
-    expect(
-      l.photoKnowsReadOnThisPhoneThePhoto,
-      "READ ON THIS PHONE · THE PHOTO WENT NOWHERE",
-    );
     expect(l.photoKnowsReadingTheFile, "Reading the file");
     expect(
       l.photoKnowsOf("<prettySize>", "<prettySize2>"),

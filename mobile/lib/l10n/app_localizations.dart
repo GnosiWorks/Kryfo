@@ -7066,30 +7066,6 @@ abstract class AppLocalizations {
   /// screens/photo_knows_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'READ ON THIS PHONE · THE VIDEO WENT NOWHERE'**
-  String get photoKnowsReadOnThisPhone;
-
-  /// photoKnowsReadOnThisPhone as a computer shows it (linux and windows)
-  ///
-  /// In en, this message translates to:
-  /// **'READ ON THIS COMPUTER · THE VIDEO WENT NOWHERE'**
-  String get photoKnowsReadOnThisPhoneDesk;
-
-  /// screens/photo_knows_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'READ ON THIS PHONE · THE PHOTO WENT NOWHERE'**
-  String get photoKnowsReadOnThisPhoneThePhoto;
-
-  /// photoKnowsReadOnThisPhoneThePhoto as a computer shows it (linux and windows)
-  ///
-  /// In en, this message translates to:
-  /// **'READ ON THIS COMPUTER · THE PHOTO WENT NOWHERE'**
-  String get photoKnowsReadOnThisPhoneThePhotoDesk;
-
-  /// screens/photo_knows_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Reading the file'**
   String get photoKnowsReadingTheFile;
 

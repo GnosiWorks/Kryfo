@@ -4554,22 +4554,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Zostaw bez zmian';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'ODCZYTANE NA TYM TELEFONIE · WIDEO NIGDZIE NIE POSZŁO';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'ODCZYTANE NA TYM KOMPUTERZE · WIDEO NIGDZIE NIE POSZŁO';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'ODCZYTANE NA TYM TELEFONIE · ZDJĘCIE NIGDZIE NIE POSZŁO';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'ODCZYTANE NA TYM KOMPUTERZE · ZDJĘCIE NIGDZIE NIE POSZŁO';
-
-  @override
   String get photoKnowsReadingTheFile => 'Czytam plik';
 
   @override

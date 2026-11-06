@@ -1667,12 +1667,6 @@ final _calls = <_Call>[
   ('photoKnowsPhotoCleaner', [], (l) => l.photoKnowsPhotoCleaner),
   ('photoKnowsRemoveAllOfIt', [], (l) => l.photoKnowsRemoveAllOfIt),
   ('photoKnowsKeepItAsIt', [], (l) => l.photoKnowsKeepItAsIt),
-  ('photoKnowsReadOnThisPhone', [], (l) => l.photoKnowsReadOnThisPhone),
-  (
-    'photoKnowsReadOnThisPhoneThePhoto',
-    [],
-    (l) => l.photoKnowsReadOnThisPhoneThePhoto,
-  ),
   ('photoKnowsReadingTheFile', [], (l) => l.photoKnowsReadingTheFile),
   (
     'photoKnowsOf',

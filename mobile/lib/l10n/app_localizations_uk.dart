@@ -4538,22 +4538,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Лишити як є';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'ПРОЧИТАНО НА ЦЬОМУ ТЕЛЕФОНІ · ВІДЕО НІКУДИ НЕ НАДСИЛАЛОСЯ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'ПРОЧИТАНО НА ЦЬОМУ КОМП’ЮТЕРІ · ВІДЕО НІКУДИ НЕ НАДСИЛАЛОСЯ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'ПРОЧИТАНО НА ЦЬОМУ ТЕЛЕФОНІ · ФОТО НІКУДИ НЕ НАДСИЛАЛОСЯ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'ПРОЧИТАНО НА ЦЬОМУ КОМП’ЮТЕРІ · ФОТО НІКУДИ НЕ НАДСИЛАЛОСЯ';
-
-  @override
   String get photoKnowsReadingTheFile => 'Читаємо файл';
 
   @override
