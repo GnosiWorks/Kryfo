@@ -1,7 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -223,5 +228,25 @@ func TestFileSliceSweepBatches(t *testing.T) {
 	}
 	if marks(t, db) != 0 {
 		t.Fatal("marks left")
+	}
+}
+
+// a handler's panic is logged by net/http with the peer's address: both
+// listeners send those lines nowhere
+func TestServerErrorsNameNoPeer(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+	h := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { panic("boom") })
+	s := httptest.NewUnstartedServer(h)
+	s.Config = relayServer("", h)
+	s.Start()
+	t.Cleanup(s.Close)
+	if r, err := http.Get(s.URL); err == nil {
+		r.Body.Close()
+	}
+	s.Close()
+	if buf.Len() > 0 {
+		t.Fatalf("the server logged: %q", buf.String())
 	}
 }
