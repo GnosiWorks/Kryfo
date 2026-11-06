@@ -11870,6 +11870,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'يُفتح Kryfo من جديد بعد لحظة مع الرمز للمسح.';
 
   @override
+  String get deskLinkNotStarted => 'تعذّر بدء الربط. أعد المحاولة لاحقًا.';
+
+  @override
   String get settingsLinkedToYourPhone => 'مرتبط بهاتفك';
 
   @override

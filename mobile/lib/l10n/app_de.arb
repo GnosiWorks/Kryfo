@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "Löschen und verknüpfen",
   "deskLinkErasing": "Dieser Computer wird gelöscht",
   "deskLinkErasingLine": "Kryfo öffnet sich gleich wieder mit dem Code zum Scannen.",
+  "deskLinkNotStarted": "Die Verknüpfung konnte nicht starten. Versuche es später erneut.",
   "settingsLinkedToYourPhone": "Mit deinem Handy verknüpft",
   "settingsLinkedPhoneHint": "Backups und Einladungen bleiben auf dem Handy",
   "settingsUnlinkComputer": "Diesen Computer trennen",

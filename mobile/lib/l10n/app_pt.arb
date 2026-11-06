@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "Apagar e conectar",
   "deskLinkErasing": "Apagando este computador",
   "deskLinkErasingLine": "O Kryfo abre de novo em instantes com o código para escanear.",
+  "deskLinkNotStarted": "Não deu para iniciar a conexão. Tente de novo mais tarde.",
   "settingsLinkedToYourPhone": "Conectado ao seu celular",
   "settingsLinkedPhoneHint": "Backups e convites ficam no celular",
   "settingsUnlinkComputer": "Desconectar este computador",

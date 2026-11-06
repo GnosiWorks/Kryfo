@@ -11822,6 +11822,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'O Kryfo abre de novo em instantes com o código para escanear.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Não deu para iniciar a conexão. Tente de novo mais tarde.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Conectado ao seu celular';
 
   @override

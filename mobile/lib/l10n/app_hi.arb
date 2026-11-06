@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "मिटाएँ और जोड़ें",
   "deskLinkErasing": "यह कंप्यूटर मिटाया जा रहा है",
   "deskLinkErasingLine": "Kryfo थोड़ी देर में स्कैन करने के कोड के साथ फिर से खुलेगा।",
+  "deskLinkNotStarted": "जोड़ना शुरू नहीं हो सका। बाद में फिर कोशिश करें।",
   "settingsLinkedToYourPhone": "आपके फ़ोन से जुड़ा है",
   "settingsLinkedPhoneHint": "बैकअप और न्योते फ़ोन पर ही रहते हैं",
   "settingsUnlinkComputer": "इस कंप्यूटर को अलग करें",

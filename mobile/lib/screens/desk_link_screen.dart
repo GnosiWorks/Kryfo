@@ -10,28 +10,39 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../container.dart' show HaloContainer;
 import '../l10n/l10n.dart';
 import '../last_backup.dart' show backupWhen, loadLastBackup;
 import '../theme.dart';
 import '../wide/read_width.dart' show DeskPage;
 import '../widgets/confirm_sheet.dart' show showInputSheet;
+import '../widgets/ease_size.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_rows.dart';
 import '../widgets/onion_loader.dart';
 import '../widgets/page_head.dart' show PageBar;
 import '../widgets/stagger_in.dart';
-import '../widgets/swap.dart' show FadeSwap;
+import '../widgets/swap.dart' show FadeSwap, RiseSwap;
 import '../wipe_word.dart' show isWipeWord;
 import 'backup_screen.dart';
 import '../widgets/motion.dart' show haloRoute;
 
 class DeskLinkScreen extends StatefulWidget {
-  const DeskLinkScreen({super.key, required this.erase, this.backup});
+  const DeskLinkScreen({
+    super.key,
+    required this.erase,
+    this.backup,
+    this.side = HaloContainer.everyday,
+  });
 
   /// the erase, once the word is typed: the app ends in it and comes back
-  /// at the code
-  final Future<void> Function() erase;
+  /// at the code. null: the link does not start here, the word only brings
+  /// a plain error and nothing changes
+  final Future<void> Function()? erase;
+
+  /// the side whose last backup the row shows
+  final HaloContainer side;
 
   /// the backup page, a copy to keep and never a move
   final Widget Function()? backup;
@@ -44,6 +55,7 @@ class _DeskLinkScreenState extends State<DeskLinkScreen> {
   bool _read = false;
   DateTime? _last;
   bool _erasing = false;
+  bool _notStarted = false;
 
   @override
   void initState() {
@@ -52,7 +64,7 @@ class _DeskLinkScreenState extends State<DeskLinkScreen> {
   }
 
   void _readLast() {
-    loadLastBackup().then((v) {
+    loadLastBackup(widget.side).then((v) {
       if (mounted) {
         setState(() {
           _read = true;
@@ -83,8 +95,13 @@ class _DeskLinkScreenState extends State<DeskLinkScreen> {
     );
     if (!mounted || !isWipeWord(typed, l10n.settingsWipeWord)) return;
     HapticFeedback.mediumImpact();
+    final erase = widget.erase;
+    if (erase == null) {
+      setState(() => _notStarted = true);
+      return;
+    }
     setState(() => _erasing = true);
-    await widget.erase();
+    await erase();
   }
 
   @override
@@ -157,6 +174,33 @@ class _DeskLinkScreenState extends State<DeskLinkScreen> {
           ),
           const Spacer(),
           const SizedBox(height: 24),
+          // the link did not start: a plain line, nothing changed
+          EaseSize(
+            child: RiseSwap(
+              alignment: Alignment.topCenter,
+              child: !_notStarted
+                  ? const SizedBox(
+                      key: ValueKey(false),
+                      width: double.infinity,
+                    )
+                  : Semantics(
+                      key: const ValueKey(true),
+                      liveRegion: true,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          l10n.deskLinkNotStarted,
+                          textAlign: TextAlign.center,
+                          style: HaloType.sans(
+                            size: 13.5,
+                            color: HaloColors.roseText,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
           HaloPrimaryButton(label: l10n.commonContinue, onTap: _go),
         ]),
       ),

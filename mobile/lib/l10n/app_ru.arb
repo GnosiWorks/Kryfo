@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "Стереть и связать",
   "deskLinkErasing": "Компьютер стирается",
   "deskLinkErasingLine": "Kryfo скоро откроется снова с кодом для сканирования.",
+  "deskLinkNotStarted": "Не удалось начать связывание. Попробуй позже.",
   "settingsLinkedToYourPhone": "Связано с вашим телефоном",
   "settingsLinkedPhoneHint": "Резервные копии и приглашения остаются на телефоне",
   "settingsUnlinkComputer": "Отвязать этот компьютер",

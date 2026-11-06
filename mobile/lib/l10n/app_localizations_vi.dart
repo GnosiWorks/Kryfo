@@ -11719,6 +11719,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get deskLinkErasingLine => 'Kryfo sẽ mở lại ngay với mã để quét.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Không thể bắt đầu liên kết. Hãy thử lại sau.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Đã liên kết với điện thoại của bạn';
 
   @override

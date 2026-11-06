@@ -14702,6 +14702,10 @@
   "@deskLinkErasingLine": {
     "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
   },
+  "deskLinkNotStarted": "Couldn't start the link. Try again later.",
+  "@deskLinkNotStarted": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
   "settingsLinkedToYourPhone": "Linked to your phone",
   "@settingsLinkedToYourPhone": {
     "description": "desktop settings, linked devices rows (screens/settings_screen.dart)"

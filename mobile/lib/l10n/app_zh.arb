@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "抹除并关联",
   "deskLinkErasing": "正在抹除这台电脑",
   "deskLinkErasingLine": "Kryfo 马上会重新打开并显示要扫描的二维码。",
+  "deskLinkNotStarted": "无法开始关联。请稍后再试。",
   "settingsLinkedToYourPhone": "已关联到你的手机",
   "settingsLinkedPhoneHint": "备份和邀请留在手机上",
   "settingsUnlinkComputer": "解除这台电脑的关联",

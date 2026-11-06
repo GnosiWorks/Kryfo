@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "Sil ve bağla",
   "deskLinkErasing": "Bu bilgisayar siliniyor",
   "deskLinkErasingLine": "Kryfo birazdan taranacak kodla yeniden açılır.",
+  "deskLinkNotStarted": "Bağlama başlatılamadı. Daha sonra tekrar dene.",
   "settingsLinkedToYourPhone": "Telefonuna bağlı",
   "settingsLinkedPhoneHint": "Yedekler ve davetler telefonda kalır",
   "settingsUnlinkComputer": "Bu bilgisayarın bağlantısını kes",

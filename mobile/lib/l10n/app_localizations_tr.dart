@@ -11760,6 +11760,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kryfo birazdan taranacak kodla yeniden açılır.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Bağlama başlatılamadı. Daha sonra tekrar dene.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Telefonuna bağlı';
 
   @override

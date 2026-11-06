@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "Hapus dan tautkan",
   "deskLinkErasing": "Menghapus komputer ini",
   "deskLinkErasingLine": "Sebentar lagi Kryfo terbuka lagi dengan kode untuk dipindai.",
+  "deskLinkNotStarted": "Tautan tidak bisa dimulai. Coba lagi nanti.",
   "settingsLinkedToYourPhone": "Tertaut ke ponselmu",
   "settingsLinkedPhoneHint": "Cadangan dan undangan tetap di ponsel",
   "settingsUnlinkComputer": "Lepaskan komputer ini",

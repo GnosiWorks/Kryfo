@@ -11918,6 +11918,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Kryfo за мить відкриється знову з кодом для сканування.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Не вдалося почати пов’язування. Спробуй пізніше.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Пов’язано з вашим телефоном';
 
   @override

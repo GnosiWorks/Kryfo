@@ -18799,6 +18799,12 @@ abstract class AppLocalizations {
   /// **'Kryfo opens again in a moment with the code to scan.'**
   String get deskLinkErasingLine;
 
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the link. Try again later.'**
+  String get deskLinkNotStarted;
+
   /// desktop settings, linked devices rows (screens/settings_screen.dart)
   ///
   /// In en, this message translates to:

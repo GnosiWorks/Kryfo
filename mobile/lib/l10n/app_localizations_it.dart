@@ -11832,6 +11832,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Kryfo si riapre tra un momento con il codice da scansionare.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Impossibile avviare il collegamento. Riprova più tardi.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Collegato al tuo telefono';
 
   @override

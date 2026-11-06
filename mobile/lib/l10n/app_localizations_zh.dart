@@ -11086,6 +11086,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deskLinkErasingLine => 'Kryfo 马上会重新打开并显示要扫描的二维码。';
 
   @override
+  String get deskLinkNotStarted => '无法开始关联。请稍后再试。';
+
+  @override
   String get settingsLinkedToYourPhone => '已关联到你的手机';
 
   @override
@@ -22068,6 +22071,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get deskLinkErasingLine => 'Kryfo 馬上會重新開啟並顯示要掃描的 QR 碼。';
+
+  @override
+  String get deskLinkNotStarted => '無法開始連結。請稍後再試。';
 
   @override
   String get settingsLinkedToYourPhone => '已連結到你的手機';

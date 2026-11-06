@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "امسح واربط",
   "deskLinkErasing": "جارٍ مسح هذا الحاسوب",
   "deskLinkErasingLine": "يُفتح Kryfo من جديد بعد لحظة مع الرمز للمسح.",
+  "deskLinkNotStarted": "تعذّر بدء الربط. أعد المحاولة لاحقًا.",
   "settingsLinkedToYourPhone": "مرتبط بهاتفك",
   "settingsLinkedPhoneHint": "تبقى النسخ الاحتياطية والدعوات على الهاتف",
   "settingsUnlinkComputer": "افصل هذا الحاسوب",

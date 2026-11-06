@@ -11961,6 +11961,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Kryfo za chwilę otworzy się znowu z kodem do zeskanowania.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Nie udało się rozpocząć łączenia. Spróbuj później.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Połączono z twoim telefonem';
 
   @override

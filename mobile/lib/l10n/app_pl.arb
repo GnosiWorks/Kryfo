@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "Wymaż i połącz",
   "deskLinkErasing": "Wymazywanie tego komputera",
   "deskLinkErasingLine": "Kryfo za chwilę otworzy się znowu z kodem do zeskanowania.",
+  "deskLinkNotStarted": "Nie udało się rozpocząć łączenia. Spróbuj później.",
   "settingsLinkedToYourPhone": "Połączono z twoim telefonem",
   "settingsLinkedPhoneHint": "Kopie zapasowe i zaproszenia zostają na telefonie",
   "settingsUnlinkComputer": "Rozłącz ten komputer",

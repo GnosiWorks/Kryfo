@@ -11871,6 +11871,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo öffnet sich gleich wieder mit dem Code zum Scannen.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Die Verknüpfung konnte nicht starten. Versuche es später erneut.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Mit deinem Handy verknüpft';
 
   @override

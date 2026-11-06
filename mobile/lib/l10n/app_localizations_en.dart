@@ -11733,6 +11733,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Kryfo opens again in a moment with the code to scan.';
 
   @override
+  String get deskLinkNotStarted => 'Couldn\'t start the link. Try again later.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Linked to your phone';
 
   @override

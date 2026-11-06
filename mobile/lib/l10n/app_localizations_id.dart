@@ -11737,6 +11737,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Sebentar lagi Kryfo terbuka lagi dengan kode untuk dipindai.';
 
   @override
+  String get deskLinkNotStarted =>
+      'Tautan tidak bisa dimulai. Coba lagi nanti.';
+
+  @override
   String get settingsLinkedToYourPhone => 'Tertaut ke ponselmu';
 
   @override

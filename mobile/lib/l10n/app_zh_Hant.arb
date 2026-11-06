@@ -3086,6 +3086,7 @@
   "deskLinkConfirmYes": "抹除並連結",
   "deskLinkErasing": "正在抹除這台電腦",
   "deskLinkErasingLine": "Kryfo 馬上會重新開啟並顯示要掃描的 QR 碼。",
+  "deskLinkNotStarted": "無法開始連結。請稍後再試。",
   "settingsLinkedToYourPhone": "已連結到你的手機",
   "settingsLinkedPhoneHint": "備份和邀請會留在手機上",
   "settingsUnlinkComputer": "解除這台電腦的連結",

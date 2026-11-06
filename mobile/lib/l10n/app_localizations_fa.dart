@@ -11744,6 +11744,9 @@ class AppLocalizationsFa extends AppLocalizations {
       'Kryfo تا لحظه‌ای دیگر دوباره با کدی برای اسکن باز می‌شود.';
 
   @override
+  String get deskLinkNotStarted => 'پیوند شروع نشد. بعداً دوباره امتحان کنید.';
+
+  @override
   String get settingsLinkedToYourPhone => 'به گوشی‌تان پیوند خورده';
 
   @override

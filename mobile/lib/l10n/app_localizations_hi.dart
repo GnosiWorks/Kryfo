@@ -11740,6 +11740,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kryfo थोड़ी देर में स्कैन करने के कोड के साथ फिर से खुलेगा।';
 
   @override
+  String get deskLinkNotStarted =>
+      'जोड़ना शुरू नहीं हो सका। बाद में फिर कोशिश करें।';
+
+  @override
   String get settingsLinkedToYourPhone => 'आपके फ़ोन से जुड़ा है';
 
   @override
