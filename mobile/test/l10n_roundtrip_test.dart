@@ -1143,13 +1143,13 @@ void main() {
     expect(l.gettingMessagesMostPrivate, "Most private");
     expect(
       l.gettingMessagesMessagesArriveInstantlyNothing,
-      "Messages arrive instantly. Nothing leaves Tor. Uses the most battery.",
+      "Uses the most battery.\nInstant, and nothing leaves Tor.",
     );
     expect(l.gettingMessagesCheckIns, "Check-ins");
     expect(l.gettingMessagesLightest, "Lightest");
     expect(
       l.gettingMessagesKryfoLooksForMessages,
-      "Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.",
+      "Kryfo checks every 15 minutes, so messages can be late.\nEasy on battery.",
     );
     expect(
       l.gettingMessagesAGenericAlertWith,
@@ -1837,30 +1837,30 @@ void main() {
       "Jot anything down. It stays on this phone and never leaves.",
     );
     expect(l.notesJotSomethingDown, "Jot something down…");
-    expect(l.onboardingPrivateByDefault, "PRIVATE BY DEFAULT");
+    expect(l.onboardingPrivateByDefault, "Private by default");
     expect(
       l.onboardingPrivateMessaging,
       "Private messaging,\n*without the catch*.",
     );
     expect(
       l.onboardingYourNameIsThree,
-      "*Your name is three words.* No phone, no email, no address book.",
+      "*Your name is three words.*\nNo phone, no email, no address book.",
     );
     expect(
       l.onboardingNobodyGetsInUnless,
-      "*Nobody gets in unless you let them.* No one can look you up unless you claim a public handle. People are added by hand, both ways.",
+      "*Nobody gets in unless you let them.*\nWithout a public @name, nobody can look you up.\nStrangers can only knock.",
     );
     expect(
       l.onboardingTheFirstConnectionTakes,
-      "*The first connection takes a minute.* Kryfo builds a private route before it sends. Quick after.",
+      "*The first connection takes a minute.*\nKryfo builds a private route first. Then it's quick.",
     );
     expect(l.onboardingBegin, "Begin");
     expect(l.onboardingHaveABackupRestore, "Have a backup? Restore →");
     expect(l.onboardingKryfoIsOpenSource, "Kryfo is open source");
-    expect(l.onboardingYourKryfoId, "YOUR NAME");
+    expect(l.onboardingYourKryfoId, "Your name");
     expect(
       l.onboardingGeneratedFromAKey,
-      "Generated from a key that lives only on this phone. *No one else has these words.*",
+      "Made from a key only this phone holds.\n*No one else has these words.*",
     );
     expect(l.onboardingTryAnother, "Try another");
     expect(l.onboardingUseThisName, "Use this name →");
@@ -1869,14 +1869,14 @@ void main() {
     expect(l.onboardingNameHeadline, "A public *@name*, if you like.");
     expect(
       l.onboardingNameLine,
-      "A public name lets people find you. Skipping keeps you more private, you can always add one later.",
+      "A public @name lets people find you.\nSkipping keeps you more private.\nYou can add one later.",
     );
     expect(l.onboardingNameSkip, "Skip for now →");
     expect(l.onboardingNameClaim("<handle>"), "Claim @<handle> →");
     expect(l.onboardingInviteHeadline, "Now, *invite someone*.");
     expect(
       l.onboardingInviteLead,
-      "Send a link in any messenger. It opens Kryfo, or shows them where to get it.",
+      "Send a link in any messenger.\nIt opens Kryfo, or shows where to get it.",
     );
     expect(l.onboardingInviteSomeone, "Invite someone →");
     expect(l.onboardingInviteGettingReady, "Getting your link ready…");
@@ -1894,26 +1894,18 @@ void main() {
     );
     expect(
       l.onboardingYourIdentityLivesOn,
-      "Your identity lives on this phone. Back it up from settings when you are ready.",
+      "Your identity lives on this phone.\nBack it up in Settings when you're ready.",
     );
-    expect(l.onboardingOneQuiet, "One quiet *notification*.");
-    expect(
-      l.onboardingAndroidNeedsAVisible,
-      "Android needs a visible notification while an app listens in the background. That is how messages reach you when Kryfo is closed.",
-    );
-    expect(
-      l.onboardingSilentAndAtThe,
-      "Silent, and at the bottom of the shade",
-    );
+    expect(l.onboardingSilentAndAtThe, "Silent, at the bottom of the shade");
     expect(
       l.onboardingItNeverBuzzesTurn,
-      "It never buzzes. Turn it off and messages wait until you open the app again.",
+      "It never buzzes.\nTurn it off and messages wait until you open Kryfo.",
     );
     expect(l.onboardingGotIt, "Got it →");
     expect(l.onboardingEveryWayToAdd, "Every way to add someone");
     expect(
       l.onboardingShowYourCodeSend,
-      "Show your code, send them a link, or type the @handle they gave you.",
+      "Show your code, share a link, or type their @name.",
     );
     expect(l.onboardingScanTheirs, "Scan theirs");
     expect(l.onboardingPointTheCameraAt, "Point the camera at their code");
@@ -3493,7 +3485,7 @@ void main() {
     expect(l.appWaitingForARelay, "Waiting for a relay");
     expect(
       l.handleStillReaching,
-      "Still reaching the registry. Over Tor this can take up to a minute.",
+      "Still reaching the registry.\nOver Tor this can take a while.",
     );
     expect(l.supportTitle, "Inbox");
     expect(l.supportWaiting(0), "No one waiting");
@@ -3655,9 +3647,9 @@ void main() {
     );
     expect(
       l.gettingMessagesHelperBody,
-      "Instant and light. Its server sees your IP and when messages come, never what they say.",
+      "Its server sees your IP address and when messages come.\nNever what they say. Instant and light.",
     );
-    expect(l.gettingMessagesHelperOnionOnly, "Available on the Onion route");
+    expect(l.gettingMessagesHelperOnionOnly, "Needs the Private route");
     expect(
       l.gettingMessagesHelperRelayNotYet,
       "Our relay does not offer this yet",
@@ -3927,7 +3919,7 @@ void main() {
     expect(l.notificationsRecommended, "Recommended");
     expect(
       l.notificationsGoogleBody,
-      "Instant and light. Google can see when your phone is woken, never who wrote or what was said.",
+      "Google sees when your phone wakes up.\nNever who wrote or what was said.\nInstant and light on battery.",
     );
     expect(l.notificationsGoogleStarting, "Turning on…");
     expect(
@@ -3949,7 +3941,7 @@ void main() {
     expect(l.notificationsBatteryAllowed, "Allowed");
     expect(l.notificationsBatteryNotYet, "Not allowed");
     expect(l.notificationsMakerSwitch, "Your phone maker’s switch");
-    expect(l.onboardingDeliveryHeadline, "How messages *reach you*.");
+    expect(l.onboardingDeliveryHeadline, "When messages *arrive*.");
     expect(
       l.onboardingDeliveryLead,
       "You can change this any time in Notifications.",

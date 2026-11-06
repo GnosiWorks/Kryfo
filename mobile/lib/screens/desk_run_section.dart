@@ -19,6 +19,7 @@ class DeskRunSection extends StatefulWidget {
     required this.run,
     this.edge = 16,
     this.lineInset = 12,
+    this.hintColor,
   });
   final DesktopRunView run;
 
@@ -28,6 +29,9 @@ class DeskRunSection extends StatefulWidget {
   /// how far the lines under the card sit in from its edge: the
   /// onboarding's sit flush with its words above
   final double lineInset;
+
+  /// the rows' hints: the onboarding draws every word in the text colour
+  final Color? hintColor;
 
   @override
   State<DeskRunSection> createState() => _DeskRunSectionState();
@@ -96,7 +100,7 @@ class _DeskRunSectionState extends State<DeskRunSection> {
           style: HaloType.sans(
             size: 12.5,
             height: 1.45,
-            color: color ?? HaloColors.warm,
+            color: color ?? HaloColors.text,
           ),
         ),
       ),
@@ -133,6 +137,7 @@ class _DeskRunSectionState extends State<DeskRunSection> {
                 icon: Icons.move_to_inbox_outlined,
                 label: l10n.desktopTrayRow,
                 hint: l10n.desktopTrayHint,
+                hintColor: widget.hintColor,
                 toggled: trayOn,
                 onTap: _tray,
               ),
@@ -142,6 +147,7 @@ class _DeskRunSectionState extends State<DeskRunSection> {
                   icon: Icons.power_settings_new_rounded,
                   label: l10n.desktopStartRow,
                   hint: l10n.desktopStartHint,
+                  hintColor: widget.hintColor,
                   toggled: startOn,
                   pending: start == null,
                   onTap: _start,

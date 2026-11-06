@@ -2531,11 +2531,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'Nachrichten kommen sofort an. Nichts verlässt Tor. Braucht am meisten Akku.';
+      'Braucht am meisten Akku.\nSofort, und nichts verlässt Tor.';
 
   @override
   String get gettingMessagesArriveInstantlyFast =>
-      'Nachrichten kommen auf Schnell sofort an. Braucht am meisten Akku.';
+      'Braucht am meisten Akku.\nSofort auf Schnell.';
 
   @override
   String get gettingMessagesCheckIns => 'Check-ins';
@@ -2545,7 +2545,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo sucht alle 15 Minuten nach Nachrichten. Schont den Akku, aber Nachrichten können verspätet ankommen.';
+      'Kryfo schaut alle 15 Minuten nach, Nachrichten können also später kommen.\nSchont den Akku.';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -4190,7 +4190,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesExportSubject => 'Kryfo-Notizen';
 
   @override
-  String get onboardingPrivateByDefault => 'PRIVAT VON ANFANG AN';
+  String get onboardingPrivateByDefault => 'Privat von Anfang an';
 
   @override
   String get onboardingPrivateMessaging =>
@@ -4198,15 +4198,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingYourNameIsThree =>
-      '*Dein Name besteht aus drei Wörtern.* Keine Telefonnummer, keine E-Mail, kein Adressbuch.';
+      '*Dein Name besteht aus drei Wörtern.*\nKeine Telefonnummer, keine E-Mail, kein Adressbuch.';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Niemand kommt rein, außer du lässt es zu.* Suchen kann man dich nur, wenn du dir einen öffentlichen Benutzernamen sicherst. Leute werden von Hand hinzugefügt, in beide Richtungen.';
+      '*Niemand kommt rein, außer du lässt es zu.*\nOhne öffentlichen @Namen kann dich niemand suchen.\nFremde können nur anklopfen.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*Die erste Verbindung dauert eine Minute.* Kryfo baut eine private Route auf, bevor es sendet. Danach geht es schnell.';
+      '*Die erste Verbindung dauert eine Minute.*\nKryfo baut zuerst eine private Route auf. Danach geht es schnell.';
 
   @override
   String get onboardingBegin => 'Loslegen';
@@ -4219,15 +4219,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo ist Open Source';
 
   @override
-  String get onboardingYourKryfoId => 'DEIN NAME';
+  String get onboardingYourKryfoId => 'Dein Name';
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Erzeugt aus einem Schlüssel, der nur auf diesem Handy liegt. *Niemand sonst hat diese Wörter.*';
+      'Erzeugt aus einem Schlüssel, der nur auf diesem Handy liegt.\n*Niemand sonst hat diese Wörter.*';
 
   @override
   String get onboardingGeneratedFromAKeyDesk =>
-      'Erzeugt aus einem Schlüssel, der nur auf diesem Computer liegt. *Niemand sonst hat diese Wörter.*';
+      'Erzeugt aus einem Schlüssel, der nur auf diesem Computer liegt.\n*Niemand sonst hat diese Wörter.*';
 
   @override
   String get onboardingTryAnother => 'Andere probieren';
@@ -4247,26 +4247,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn =>
-      'Deine Identität liegt auf diesem Handy. Sichere sie in den Einstellungen, wenn du so weit bist.';
+      'Deine Identität liegt auf diesem Handy.\nSichere sie in den Einstellungen, wenn du so weit bist.';
 
   @override
   String get onboardingYourIdentityLivesOnDesk =>
-      'Deine Identität liegt auf diesem Computer. Sichere sie in den Einstellungen, wenn du so weit bist.';
-
-  @override
-  String get onboardingOneQuiet => 'Eine stille *Benachrichtigung*.';
-
-  @override
-  String get onboardingAndroidNeedsAVisible =>
-      'Android verlangt eine sichtbare Benachrichtigung, solange eine App im Hintergrund lauscht. So erreichen dich Nachrichten, wenn Kryfo geschlossen ist.';
+      'Deine Identität liegt auf diesem Computer.\nSichere sie in den Einstellungen, wenn du so weit bist.';
 
   @override
   String get onboardingSilentAndAtThe =>
-      'Lautlos und ganz unten in der Benachrichtigungsleiste';
+      'Lautlos, ganz unten in der Benachrichtigungsleiste';
 
   @override
   String get onboardingItNeverBuzzesTurn =>
-      'Sie vibriert nie. Schaltest du sie aus, warten Nachrichten, bis du die App wieder öffnest.';
+      'Sie vibriert nie.\nSchaltest du sie aus, warten Nachrichten, bis du Kryfo öffnest.';
 
   @override
   String get onboardingGotIt => 'Alles klar →';
@@ -4276,7 +4269,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingShowYourCodeSend =>
-      'Zeig deinen Code, schick einen Link oder gib den @Benutzernamen ein, den du bekommen hast.';
+      'Zeig deinen Code, teil einen Link oder gib den @Namen ein.';
 
   @override
   String get onboardingScanTheirs => 'Code scannen';
@@ -7871,11 +7864,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get handleRegistryFailed =>
-      'Das Verzeichnis war nicht erreichbar. Versuch es gleich noch mal.';
+      'Das Verzeichnis war nicht erreichbar.\nVersuch es in einer Minute noch mal.';
 
   @override
   String get handleStillReaching =>
-      'Das Verzeichnis wird noch erreicht. Über Tor kann das bis zu einer Minute dauern.';
+      'Das Verzeichnis wird noch erreicht.\nÜber Tor kann das eine Weile dauern.';
 
   @override
   String get handleSearchNeedsTor =>
@@ -9065,7 +9058,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      'Sofort und sparsam. Sein Server sieht deine IP und wann Nachrichten kommen, nie, was darin steht.';
+      'Sein Server sieht deine IP-Adresse und wann Nachrichten kommen.\nNie, was darin steht. Sofort und sparsam.';
 
   @override
   String get gettingMessagesHelperUseOnion => 'Zu Onion wechseln';
@@ -9078,7 +9071,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dazwischen kommen falsche Weckrufe. So kann der Server der Hilfs-App schwerer erkennen, wann echte Nachrichten ankommen. Ein eigener Server für die Hilfs-App verrät unserem Relais seine Adresse. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.';
 
   @override
-  String get gettingMessagesHelperOnionOnly => 'Verfügbar auf der Onion-Route';
+  String get gettingMessagesHelperOnionOnly => 'Braucht die Route Privat';
 
   @override
   String get gettingMessagesHelperChecking => 'Prüfe…';
@@ -9751,7 +9744,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationsGoogleBody =>
-      'Sofort und sparsam. Google sieht, wann dein Handy geweckt wird, nie, wer geschrieben hat oder was darin steht.';
+      'Google sieht, wann dein Handy aufwacht.\nNie, wer geschrieben hat oder was darin steht.\nSofort und sparsam beim Akku.';
 
   @override
   String get notificationsGoogleStarting => 'Wird eingeschaltet…';
@@ -9790,7 +9783,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notificationsMakerSwitch => 'Der Schalter deines Herstellers';
 
   @override
-  String get onboardingDeliveryHeadline => 'Wie Nachrichten *dich erreichen*.';
+  String get onboardingHowYourMessages => 'Wie deine Nachrichten *reisen*.';
+
+  @override
+  String get onboardingRouteLead =>
+      'Du kannst das jederzeit in den Einstellungen ändern.';
+
+  @override
+  String get onboardingRoutePrivateCost =>
+      'Über Tor. Eine Nachricht braucht ein paar Sekunden.';
+
+  @override
+  String get onboardingRoutePrivateGain =>
+      'Niemand erfährt deine IP-Adresse, nicht einmal unsere Server.';
+
+  @override
+  String get onboardingRouteFastCost =>
+      'Unsere Server sehen deine IP-Adresse, solange du verbunden bist.\nDein Netz kann sehen, dass du Kryfo nutzt.';
+
+  @override
+  String get onboardingRouteFastGain =>
+      'Ohne Tor: schneller und sparsamer beim Akku.';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo bleibt auf Tor, wenn nötig über eine Brücke.\nSchnell findest du in den Einstellungen, falls du es brauchst.';
+
+  @override
+  String get onboardingRouteBlockedGain =>
+      'Findet selbst einen Weg um Sperren herum.';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Wann Nachrichten *ankommen*.';
 
   @override
   String get onboardingDeliveryLead =>
@@ -10454,15 +10478,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get desktopTrayHint =>
-      'Wenn du das Fenster schließt, bleibt Kryfo im Infobereich, und Nachrichten kommen weiter an.';
+      'Nachrichten kommen auch bei geschlossenem Fenster an.';
 
   @override
   String get desktopTrayOffLine =>
-      'Wenn du das Fenster schließt, wird Kryfo beendet. Nachrichten kommen an, sobald du es wieder öffnest.';
+      'Wenn du das Fenster schließt, wird Kryfo beendet.\nNachrichten kommen an, sobald du es wieder öffnest.';
 
   @override
   String get desktopTrayNoneLine =>
-      'Diese Oberfläche zeigt kein Symbol im Infobereich, deshalb beendet das Schließen des Fensters Kryfo.';
+      'Diese Oberfläche hat kein Symbol im Infobereich.\nWenn du das Fenster schließt, wird Kryfo beendet.';
 
   @override
   String get desktopStartRow => 'Mit dem Computer starten';
@@ -10473,11 +10497,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get desktopStartRefused =>
-      'Dieser Computer lässt Kryfo nicht mitstarten. Kryfo öffnet sich, wann immer du es selbst startest.';
+      'Dieser Computer lässt Kryfo nicht mitstarten.\nKryfo öffnet sich, wenn du es selbst startest.';
 
   @override
   String get desktopStartHeldOff =>
-      'Windows hat Kryfo in den Autostart-Apps ausgeschaltet. Schalte es dort ein, unter Einstellungen, Apps, Autostart.';
+      'Windows hat Kryfo in den Autostart-Apps ausgeschaltet.\nSchalte es ein unter Windows-Einstellungen, Apps, Autostart.';
 
   @override
   String get desktopMicBlocked =>
@@ -10708,7 +10732,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingNameLine =>
-      'Mit einem öffentlichen Namen können dich Leute finden. Ohne bleibst du privater, du kannst jederzeit später einen hinzufügen.';
+      'Mit einem öffentlichen @Namen können dich Leute finden.\nOhne bleibst du privater.\nDu kannst später einen hinzufügen.';
 
   @override
   String get onboardingNameSkip => 'Erst mal überspringen →';
@@ -10723,7 +10747,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingInviteLead =>
-      'Schick einen Link in einem beliebigen Messenger. Er öffnet Kryfo oder zeigt, wo es Kryfo gibt.';
+      'Schick einen Link in einem beliebigen Messenger.\nEr öffnet Kryfo oder zeigt, wo es Kryfo gibt.';
 
   @override
   String get onboardingInviteSomeone => 'Jemanden einladen →';
@@ -11317,7 +11341,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingDeskRunLead =>
-      'Schließt du das Fenster, wartet Kryfo im Infobereich, und Nachrichten kommen weiter an. Beides kannst du später in den Einstellungen unter Benachrichtigungen ändern.';
+      'Schließ das Fenster, und Kryfo wartet im Infobereich.\nNachrichten kommen weiter an.\nBeides kannst du in Einstellungen, Benachrichtigungen ändern.';
 
   @override
   String get savedLongPressAnyMessageDesk =>

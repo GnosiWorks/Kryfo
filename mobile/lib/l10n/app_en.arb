@@ -3100,11 +3100,11 @@
   "@gettingMessagesMostPrivate": {
     "description": "screens/notifications_screen.dart"
   },
-  "gettingMessagesMessagesArriveInstantlyNothing": "Messages arrive instantly. Nothing leaves Tor. Uses the most battery.",
+  "gettingMessagesMessagesArriveInstantlyNothing": "Uses the most battery.\nInstant, and nothing leaves Tor.",
   "@gettingMessagesMessagesArriveInstantlyNothing": {
     "description": "screens/notifications_screen.dart"
   },
-  "gettingMessagesArriveInstantlyFast": "Messages arrive instantly on Fast. Uses the most battery.",
+  "gettingMessagesArriveInstantlyFast": "Uses the most battery.\nInstant on Fast.",
   "@gettingMessagesArriveInstantlyFast": {
     "description": "screens/notifications_screen.dart, screens/onboarding_screen.dart: the always-on card on the Fast route (settingsFast), where messages do not go through Tor"
   },
@@ -3116,7 +3116,7 @@
   "@gettingMessagesLightest": {
     "description": "screens/notifications_screen.dart"
   },
-  "gettingMessagesKryfoLooksForMessages": "Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.",
+  "gettingMessagesKryfoLooksForMessages": "Kryfo checks every 15 minutes, so messages can be late.\nEasy on battery.",
   "@gettingMessagesKryfoLooksForMessages": {
     "description": "screens/notifications_screen.dart"
   },
@@ -5113,7 +5113,7 @@
   "@notesExportSubject": {
     "description": "screens/notes_export_screen.dart. subject line when the file is shared"
   },
-  "onboardingPrivateByDefault": "PRIVATE BY DEFAULT",
+  "onboardingPrivateByDefault": "Private by default",
   "@onboardingPrivateByDefault": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -5121,15 +5121,15 @@
   "@onboardingPrivateMessaging": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourNameIsThree": "*Your name is three words.* No phone, no email, no address book.",
+  "onboardingYourNameIsThree": "*Your name is three words.*\nNo phone, no email, no address book.",
   "@onboardingYourNameIsThree": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingNobodyGetsInUnless": "*Nobody gets in unless you let them.* No one can look you up unless you claim a public handle. People are added by hand, both ways.",
+  "onboardingNobodyGetsInUnless": "*Nobody gets in unless you let them.*\nWithout a public @name, nobody can look you up.\nStrangers can only knock.",
   "@onboardingNobodyGetsInUnless": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingTheFirstConnectionTakes": "*The first connection takes a minute.* Kryfo builds a private route before it sends. Quick after.",
+  "onboardingTheFirstConnectionTakes": "*The first connection takes a minute.*\nKryfo builds a private route first. Then it's quick.",
   "@onboardingTheFirstConnectionTakes": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -5145,15 +5145,15 @@
   "@onboardingKryfoIsOpenSource": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourKryfoId": "YOUR NAME",
+  "onboardingYourKryfoId": "Your name",
   "@onboardingYourKryfoId": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingGeneratedFromAKey": "Generated from a key that lives only on this phone. *No one else has these words.*",
+  "onboardingGeneratedFromAKey": "Made from a key only this phone holds.\n*No one else has these words.*",
   "@onboardingGeneratedFromAKey": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingGeneratedFromAKeyDesk": "Generated from a key that lives only on this computer. *No one else has these words.*",
+  "onboardingGeneratedFromAKeyDesk": "Made from a key only this computer holds.\n*No one else has these words.*",
   "@onboardingGeneratedFromAKeyDesk": {
     "description": "onboardingGeneratedFromAKey as a computer shows it (linux and windows)"
   },
@@ -5177,27 +5177,19 @@
   "@onboardingKryfoBuildsAPrivateRouteBefore": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourIdentityLivesOn": "Your identity lives on this phone. Back it up from settings when you are ready.",
+  "onboardingYourIdentityLivesOn": "Your identity lives on this phone.\nBack it up in Settings when you're ready.",
   "@onboardingYourIdentityLivesOn": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourIdentityLivesOnDesk": "Your identity lives on this computer. Back it up from settings when you are ready.",
+  "onboardingYourIdentityLivesOnDesk": "Your identity lives on this computer.\nBack it up in Settings when you're ready.",
   "@onboardingYourIdentityLivesOnDesk": {
     "description": "onboardingYourIdentityLivesOn as a computer shows it (linux and windows)"
   },
-  "onboardingOneQuiet": "One quiet *notification*.",
-  "@onboardingOneQuiet": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingAndroidNeedsAVisible": "Android needs a visible notification while an app listens in the background. That is how messages reach you when Kryfo is closed.",
-  "@onboardingAndroidNeedsAVisible": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingSilentAndAtThe": "Silent, and at the bottom of the shade",
+  "onboardingSilentAndAtThe": "Silent, at the bottom of the shade",
   "@onboardingSilentAndAtThe": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingItNeverBuzzesTurn": "It never buzzes. Turn it off and messages wait until you open the app again.",
+  "onboardingItNeverBuzzesTurn": "It never buzzes.\nTurn it off and messages wait until you open Kryfo.",
   "@onboardingItNeverBuzzesTurn": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -5209,7 +5201,7 @@
   "@onboardingEveryWayToAdd": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingShowYourCodeSend": "Show your code, send them a link, or type the @handle they gave you.",
+  "onboardingShowYourCodeSend": "Show your code, share a link, or type their @name.",
   "@onboardingShowYourCodeSend": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -9788,11 +9780,11 @@
       }
     }
   },
-  "handleRegistryFailed": "Couldn't reach the registry. Try again in a minute.",
+  "handleRegistryFailed": "Couldn't reach the registry.\nTry again in a minute.",
   "@handleRegistryFailed": {
     "description": "toast when the registry did not answer"
   },
-  "handleStillReaching": "Still reaching the registry. Over Tor this can take up to a minute.",
+  "handleStillReaching": "Still reaching the registry.\nOver Tor this can take a while.",
   "@handleStillReaching": {
     "description": "handle page, while a registry call has taken more than a few seconds"
   },
@@ -11176,7 +11168,7 @@
   "@voiceStoppedAtLimit": {
     "description": "widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself"
   },
-  "gettingMessagesHelperBody": "Instant and light. Its server sees your IP and when messages come, never what they say.",
+  "gettingMessagesHelperBody": "Its server sees your IP address and when messages come.\nNever what they say. Instant and light.",
   "@gettingMessagesHelperBody": {
     "description": "screens/notifications_screen.dart: the helper app card"
   },
@@ -11192,7 +11184,7 @@
   "@gettingMessagesHelperNote": {
     "description": "screens/notifications_screen.dart: under the status line in helper app mode"
   },
-  "gettingMessagesHelperOnionOnly": "Available on the Onion route",
+  "gettingMessagesHelperOnionOnly": "Needs the Private route",
   "@gettingMessagesHelperOnionOnly": {
     "description": "screens/notifications_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion"
   },
@@ -12097,7 +12089,7 @@
   "@notificationsRecommended": {
     "description": "screens/notifications_screen.dart, screens/onboarding_screen.dart: tag on google push"
   },
-  "notificationsGoogleBody": "Instant and light. Google can see when your phone is woken, never who wrote or what was said.",
+  "notificationsGoogleBody": "Google sees when your phone wakes up.\nNever who wrote or what was said.\nInstant and light on battery.",
   "@notificationsGoogleBody": {
     "description": "google push card: what it does and what google sees"
   },
@@ -12145,7 +12137,39 @@
   "@notificationsMakerSwitch": {
     "description": "screens/notifications_screen.dart: row, the maker's own background switch"
   },
-  "onboardingDeliveryHeadline": "How messages *reach you*.",
+  "onboardingHowYourMessages": "How your messages *travel*.",
+  "@onboardingHowYourMessages": {
+    "description": "screens/onboarding_screen.dart: the route step headline. *marked* words are italic"
+  },
+  "onboardingRouteLead": "You can change it any time in Settings.",
+  "@onboardingRouteLead": {
+    "description": "screens/onboarding_screen.dart: the route step, under the headline"
+  },
+  "onboardingRoutePrivateCost": "Over Tor. A message takes a few seconds.",
+  "@onboardingRoutePrivateCost": {
+    "description": "screens/onboarding_screen.dart: the route step, the Private card, what it costs"
+  },
+  "onboardingRoutePrivateGain": "Nobody learns your IP address, not even our servers.",
+  "@onboardingRoutePrivateGain": {
+    "description": "screens/onboarding_screen.dart: the route step, the Private card, what it gives"
+  },
+  "onboardingRouteFastCost": "Our servers see your IP address while you're connected.\nYour network can see you use Kryfo.",
+  "@onboardingRouteFastCost": {
+    "description": "screens/onboarding_screen.dart: the route step, the Fast card, what it costs"
+  },
+  "onboardingRouteFastGain": "Skips Tor: quicker and easier on battery.",
+  "@onboardingRouteFastGain": {
+    "description": "screens/onboarding_screen.dart: the route step, the Fast card, what it gives"
+  },
+  "onboardingRouteBlockedLead": "Kryfo stays on Tor, through a bridge when needed.\nFast is in Settings if you need it.",
+  "@onboardingRouteBlockedLead": {
+    "description": "screens/onboarding_screen.dart: the route step where Tor is blocked or watched: only the Private card shows"
+  },
+  "onboardingRouteBlockedGain": "Finds a way around blocks by itself.",
+  "@onboardingRouteBlockedGain": {
+    "description": "screens/onboarding_screen.dart: the route step where Tor is blocked or watched, the Private card"
+  },
+  "onboardingDeliveryHeadline": "When messages *arrive*.",
   "@onboardingDeliveryHeadline": {
     "description": "screens/onboarding_screen.dart: play builds, the step that asks how messages arrive. *marked* words are italic"
   },
@@ -12942,15 +12966,15 @@
   "@desktopTrayRow": {
     "description": "switch: closing the window hides kryfo to the tray instead of quitting"
   },
-  "desktopTrayHint": "Closing the window keeps Kryfo in the tray, so messages keep arriving.",
+  "desktopTrayHint": "Messages keep arriving with the window closed.",
   "@desktopTrayHint": {
     "description": "under the tray switch"
   },
-  "desktopTrayOffLine": "Closing the window quits Kryfo. Messages arrive when you open it again.",
+  "desktopTrayOffLine": "Closing the window quits Kryfo.\nMessages arrive when you open it again.",
   "@desktopTrayOffLine": {
     "description": "shown while the tray switch is off"
   },
-  "desktopTrayNoneLine": "This desktop shows no tray icon, so closing the window quits Kryfo.",
+  "desktopTrayNoneLine": "This desktop has no tray icon.\nClosing the window quits Kryfo.",
   "@desktopTrayNoneLine": {
     "description": "the desktop shows no tray icons (many wayland desktops): closing quits even with the switch on"
   },
@@ -12962,11 +12986,11 @@
   "@desktopStartHint": {
     "description": "under the start switch"
   },
-  "desktopStartRefused": "This computer did not let Kryfo start with it. Kryfo opens whenever you start it yourself.",
+  "desktopStartRefused": "This computer didn't let Kryfo start with it.\nKryfo opens when you start it yourself.",
   "@desktopStartRefused": {
     "description": "the computer refused to add kryfo to its startup (portal said no, file or registry not writable)"
   },
-  "desktopStartHeldOff": "Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.",
+  "desktopStartHeldOff": "Windows has Kryfo off in its startup apps.\nTurn it on in Windows Settings, Apps, Startup.",
   "@desktopStartHeldOff": {
     "description": "windows: kryfo is listed but switched off in the startup apps of windows settings or task manager"
   },
@@ -13235,7 +13259,7 @@
   "@onboardingNameHeadline": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingNameLine": "A public name lets people find you. Skipping keeps you more private, you can always add one later.",
+  "onboardingNameLine": "A public @name lets people find you.\nSkipping keeps you more private.\nYou can add one later.",
   "@onboardingNameLine": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -13256,7 +13280,7 @@
   "@onboardingInviteHeadline": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingInviteLead": "Send a link in any messenger. It opens Kryfo, or shows them where to get it.",
+  "onboardingInviteLead": "Send a link in any messenger.\nIt opens Kryfo, or shows where to get it.",
   "@onboardingInviteLead": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -14043,7 +14067,7 @@
   "@onboardingDeskRunTitle": {
     "description": "screens/onboarding_screen.dart: the computer's step in place of the notification one"
   },
-  "onboardingDeskRunLead": "Close the window and Kryfo waits in the tray, so messages keep arriving. You can change both later in Settings, under Notifications.",
+  "onboardingDeskRunLead": "Close the window and Kryfo waits in the tray.\nMessages keep arriving.\nYou can change both in Settings, Notifications.",
   "@onboardingDeskRunLead": {
     "description": "screens/onboarding_screen.dart: the computer's step in place of the notification one"
   },

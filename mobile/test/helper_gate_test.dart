@@ -271,9 +271,11 @@ void main() {
       await t.pumpWidget(const SizedBox());
     });
 
-    test('the card says it in one short line', () {
+    test('the card says it in two short lines, the cost first', () {
       expect(l10n.gettingMessagesHelperBody.length, lessThan(100));
-      expect('.'.allMatches(l10n.gettingMessagesHelperBody).length, 2);
+      final lines = l10n.gettingMessagesHelperBody.split('\n');
+      expect(lines, hasLength(2));
+      expect(lines.first, contains('IP'));
     });
   });
 

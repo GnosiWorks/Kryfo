@@ -493,7 +493,7 @@ class HandleSlowLine extends StatelessWidget {
                 l10n.handleStillReaching,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.4,
                 ),
               ),
@@ -516,20 +516,20 @@ class HandleAvailability extends StatelessWidget {
     late final Color c;
     if (state == 'checking') {
       txt = slow ? l10n.handleStillReaching : l10n.handleChecking;
-      c = HaloColors.text2;
+      c = HaloColors.text;
     } else if (state == 'free') {
       txt = l10n.handleAvailable;
-      c = HaloColors.green;
+      c = HaloColors.greenText;
     } else if (state == 'taken') {
       txt = l10n.handleAlreadyTaken;
-      c = HaloColors.rose;
+      c = HaloColors.roseText;
     } else if (state == 'shape') {
       txt = l10n.handleNameRule;
-      c = HaloColors.amber;
+      c = HaloColors.amberText;
     } else {
       // a fixed line, whatever the engine or the registry said
       txt = l10n.handleRegistryFailed;
-      c = HaloColors.amber;
+      c = HaloColors.amberText;
     }
     // each answer rises in over the last as the name is typed; a longer
     // one makes room for itself
@@ -592,7 +592,8 @@ class _RiskBlock extends StatelessWidget {
 // lights up while it is typed in, as the add someone sheet's field does
 class HandleField extends StatefulWidget {
   final TextEditingController ctrl;
-  final String hint;
+  // null: no hint, the field's prefix and the page say what goes in
+  final String? hint;
   final String? prefix;
   final ValueChanged<String>? onChanged;
   final int max;
@@ -600,7 +601,7 @@ class HandleField extends StatefulWidget {
   const HandleField({
     super.key,
     required this.ctrl,
-    required this.hint,
+    this.hint,
     this.prefix,
     this.onChanged,
     this.max = 40,
@@ -647,10 +648,7 @@ class _HandleFieldState extends State<HandleField> {
                   padding: const EdgeInsetsDirectional.only(top: 14, end: 2),
                   child: Text(
                     widget.prefix!,
-                    style: HaloType.mono(
-                      size: 14,
-                      color: _lit ? HaloColors.amberText : HaloColors.text3,
-                    ),
+                    style: HaloType.mono(size: 14, color: HaloColors.amberText),
                   ),
                 ),
               Expanded(

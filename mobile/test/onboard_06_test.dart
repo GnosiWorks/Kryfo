@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the 0.6 onboarding: five steps by name, play and foss apart, the @name step
-// skipped by default, the invite text with a page link and the download page,
+// the 0.6 onboarding: six steps by name, the route step with two cards (one
+// where tor is blocked), the @name step skipped by default, the invite text with a page link and the download page,
 // and a message typed while tor starts reads as sending
 import 'dart:async';
 import 'dart:convert';
@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/google_push.dart';
 import 'package:kryfo/handle_claim.dart';
 import 'package:kryfo/invite_share.dart';
 import 'package:kryfo/invites.dart' show kInviteLinkPrefix;
@@ -24,10 +25,12 @@ import 'package:kryfo/main.dart'
         useDatabasesForTest,
         useEngineForTest,
         AppStateRoute,
-        AppStateProfile;
+        AppStateProfile,
+        AppStateDelivery;
 import 'package:kryfo/rooms.dart' show firstKryfoLink;
 import 'package:kryfo/screens/onboarding_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/store.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,20 +76,27 @@ Widget _framed(Widget home) => MaterialApp(
 
 void main() {
   group('the steps', () {
-    test('five, in order, the same count on play and foss', () {
-      expect(onboardingSteps(play: false), [
+    test('six, in order: the route before the way messages arrive', () {
+      expect(onboardingSteps(), [
         OnboardStep.welcome,
         OnboardStep.identity,
         OnboardStep.name,
-        OnboardStep.notify,
-        OnboardStep.invite,
-      ]);
-      expect(onboardingSteps(play: true), [
-        OnboardStep.welcome,
-        OnboardStep.identity,
-        OnboardStep.name,
+        OnboardStep.route,
         OnboardStep.delivery,
         OnboardStep.invite,
+      ]);
+    });
+
+    test('the routes on offer: fast only where tor got through, or where '
+        'the first start took it', () {
+      expect(onboardingRoutes(blocked: false, fast: false), [
+        'private',
+        'balanced',
+      ]);
+      expect(onboardingRoutes(blocked: true, fast: false), ['private']);
+      expect(onboardingRoutes(blocked: true, fast: true), [
+        'private',
+        'balanced',
       ]);
     });
   });
@@ -346,6 +356,137 @@ void main() {
       expect(await done, isNot('ok'));
       expect(_Engine.claims, hasLength(1));
       expect(appState.myHandle, isNull);
+    });
+  });
+
+  group('the way messages arrive', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({
+        'battery_opt_prompt_seen': true,
+        'miui_autostart_prompt_seen': true,
+      });
+      FlutterSecureStorage.setMockInitialValues({});
+      final db = _Db();
+      useDatabasesForTest(db, Session(db));
+      useEngineForTest(_Engine());
+      appState.myId = 'amber-river-lantern-x';
+      appState.sendModeForTest = 'private';
+    });
+    tearDown(() {
+      playBuildForTest = null;
+      appState.sendModeForTest = 'private';
+      appState.googleAvailableForTest = false;
+    });
+
+    Future<void> toDelivery(WidgetTester t, {required bool play}) async {
+      t.view.physicalSize = const Size(411, 1400);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
+      const g = MethodChannel('halo/gpush');
+      m.setMockMethodCallHandler(
+        g,
+        (c) async => c.method == 'available' ? play : null,
+      );
+      addTearDown(() {
+        m.setMockMethodCallHandler(SystemChannels.platform, null);
+        m.setMockMethodCallHandler(g, null);
+      });
+      playBuildForTest = play;
+      GooglePush.instance.forgetAvailable();
+      appState.googleAvailableForTest = play;
+      await t.pumpWidget(
+        _framed(OnboardingScreen(appState: appState, onComplete: () {})),
+      );
+      t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(4);
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+    }
+
+    Matcher radio(bool on) => isSemantics(
+      isInMutuallyExclusiveGroup: true,
+      hasCheckedState: true,
+      isChecked: on,
+    );
+
+    testWidgets('play on private: google push picked', (t) async {
+      final sem = t.ensureSemantics();
+      await toDelivery(t, play: true);
+      expect(
+        t.getSemantics(find.text(l10n.deliveryModeGooglePush)),
+        radio(true),
+      );
+      expect(find.text(l10n.gettingMessagesHelperOnionOnly), findsNothing);
+      await t.pumpWidget(const SizedBox());
+      sem.dispose();
+    });
+
+    testWidgets('play on fast: google push and the helper app say why they '
+        'cannot be picked, always on is picked', (t) async {
+      appState.sendModeForTest = 'balanced';
+      final sem = t.ensureSemantics();
+      await toDelivery(t, play: true);
+      expect(find.text(l10n.gettingMessagesHelperOnionOnly), findsNWidgets(2));
+      final google = t.getSemantics(find.text(l10n.deliveryModeGooglePush));
+      expect(google, isNot(radio(true)));
+      expect(google, isNot(radio(false)));
+      expect(
+        t.getSemantics(find.text(l10n.gettingMessagesAlwaysOn)),
+        radio(true),
+      );
+      // a tap on google push picks nothing new
+      await t.tap(find.text(l10n.deliveryModeGooglePush));
+      await t.pump();
+      expect(
+        t.getSemantics(find.text(l10n.gettingMessagesAlwaysOn)),
+        radio(true),
+      );
+      await t.pumpWidget(const SizedBox());
+      sem.dispose();
+    });
+
+    testWidgets('google push picked, then fast on the route step: always on '
+        'is picked, never nothing', (t) async {
+      final sem = t.ensureSemantics();
+      await toDelivery(t, play: true);
+      await t.tap(find.text(l10n.gettingMessagesCheckIns));
+      await t.tap(find.text(l10n.deliveryModeGooglePush));
+      await t.pump();
+      expect(
+        t.getSemantics(find.text(l10n.deliveryModeGooglePush)),
+        radio(true),
+      );
+      appState.sendModeForTest = 'balanced';
+      appState.notifyListeners();
+      await t.pump();
+      expect(
+        t.getSemantics(find.text(l10n.gettingMessagesAlwaysOn)),
+        radio(true),
+      );
+      await t.pumpWidget(const SizedBox());
+      sem.dispose();
+    });
+
+    testWidgets('foss: always on picked, check-ins and the helper app beside '
+        'it, no google push', (t) async {
+      final sem = t.ensureSemantics();
+      await toDelivery(t, play: false);
+      expect(find.text(l10n.deliveryModeGooglePush), findsNothing);
+      expect(
+        t.getSemantics(find.text(l10n.gettingMessagesAlwaysOn)),
+        radio(true),
+      );
+      expect(
+        t.getSemantics(find.text(l10n.gettingMessagesCheckIns)),
+        radio(false),
+      );
+      expect(
+        t.getSemantics(find.text(l10n.deliveryModeThroughAHelperApp)),
+        radio(false),
+      );
+      await t.pumpWidget(const SizedBox());
+      sem.dispose();
     });
   });
 

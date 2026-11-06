@@ -2376,10 +2376,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      '消息即时到达。任何东西都不会离开 Tor。最耗电。';
+      '最耗电。\n即时送达，任何东西都不会离开 Tor。';
 
   @override
-  String get gettingMessagesArriveInstantlyFast => '在快速模式下，消息即时到达。最耗电。';
+  String get gettingMessagesArriveInstantlyFast => '最耗电。\n在快速模式下即时送达。';
 
   @override
   String get gettingMessagesCheckIns => '定时查收';
@@ -2389,7 +2389,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo 每 15 分钟查收一次消息。省电，但消息可能会晚到。';
+      'Kryfo 每 15 分钟查收一次，所以消息可能会晚到。\n省电。';
 
   @override
   String get gettingMessagesAGenericAlertWith => '一条通用提醒，不显示发送者和消息内容';
@@ -3939,15 +3939,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingPrivateMessaging => '私密聊天，\n*没有套路*。';
 
   @override
-  String get onboardingYourNameIsThree => '*你的名字就是三个词。*不要手机号，不要邮箱，不要通讯录。';
+  String get onboardingYourNameIsThree => '*你的名字就是三个词。*\n不要手机号，不要邮箱，不要通讯录。';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*除非你允许，否则谁也进不来。*只有认领了公开用户名，别人才能搜到你。人都是手动添加的，双方都要主动添加。';
+      '*除非你允许，否则谁也进不来。*\n没有公开的 @名字，谁也搜不到你。\n陌生人只能敲门。';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*首次连接需要一分钟。*Kryfo 在发送前会先建立一条私密路线。之后就快了。';
+      '*首次连接需要一分钟。*\nKryfo 会先建立一条私密路线。之后就快了。';
 
   @override
   String get onboardingBegin => '开始';
@@ -3962,10 +3962,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingYourKryfoId => '你的名字';
 
   @override
-  String get onboardingGeneratedFromAKey => '由一把只存在于这部手机上的密钥生成。*别人都没有这组词。*';
+  String get onboardingGeneratedFromAKey => '由一把只存在于这部手机上的密钥生成。\n*别人都没有这组词。*';
 
   @override
-  String get onboardingGeneratedFromAKeyDesk => '由一把只存在于这台电脑上的密钥生成。*别人都没有这组词。*';
+  String get onboardingGeneratedFromAKeyDesk =>
+      '由一把只存在于这台电脑上的密钥生成。\n*别人都没有这组词。*';
 
   @override
   String get onboardingTryAnother => '换一个';
@@ -3984,24 +3985,17 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kryfo 在发送任何内容之前，都会先建立一条私密路线。你离线时，消息会等着，等你回来再送达。';
 
   @override
-  String get onboardingYourIdentityLivesOn => '你的身份保存在这部手机上。准备好后，可以在设置里备份它。';
+  String get onboardingYourIdentityLivesOn => '你的身份保存在这部手机上。\n准备好后，可以在设置里备份它。';
 
   @override
   String get onboardingYourIdentityLivesOnDesk =>
-      '你的身份保存在这台电脑上。准备好后，可以在设置里备份它。';
+      '你的身份保存在这台电脑上。\n准备好后，可以在设置里备份它。';
 
   @override
-  String get onboardingOneQuiet => '一条安静的*通知*。';
+  String get onboardingSilentAndAtThe => '静音，位于通知栏最底部';
 
   @override
-  String get onboardingAndroidNeedsAVisible =>
-      '应用在后台监听时，Android 要求显示一条可见的通知。Kryfo 关闭时，消息就是这样送到你这里的。';
-
-  @override
-  String get onboardingSilentAndAtThe => '静音，而且在通知栏最底部';
-
-  @override
-  String get onboardingItNeverBuzzesTurn => '它从不振动。关掉它的话，消息会一直等到你再次打开应用。';
+  String get onboardingItNeverBuzzesTurn => '它从不振动。\n关掉它的话，消息会一直等到你打开 Kryfo。';
 
   @override
   String get onboardingGotIt => '知道了 →';
@@ -4010,7 +4004,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingEveryWayToAdd => '所有添加方式';
 
   @override
-  String get onboardingShowYourCodeSend => '出示你的二维码、给对方发链接，或者输入对方给你的 @用户名。';
+  String get onboardingShowYourCodeSend => '出示你的二维码、分享链接，或者输入对方的 @名字。';
 
   @override
   String get onboardingScanTheirs => '扫描对方的';
@@ -7425,10 +7419,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get handleRegistryFailed => '联系不上登记处。请一分钟后再试。';
+  String get handleRegistryFailed => '联系不上登记处。\n请一分钟后再试。';
 
   @override
-  String get handleStillReaching => '仍在联系登记处。通过 Tor 可能需要一分钟左右。';
+  String get handleStillReaching => '仍在联系登记处。\n通过 Tor 可能需要一些时间。';
 
   @override
   String get handleSearchNeedsTor => '按用户名搜索需要 Tor。在此之前，可以用 QR 码或链接添加。';
@@ -8516,7 +8510,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gettingMessagesHelperBody =>
-      '即时且省电。它的服务器能看到你的 IP 和消息到达的时间，但从不知道内容。';
+      '它的服务器能看到你的 IP 地址和消息到达的时间。\n但从不知道内容。即时且省电。';
 
   @override
   String get gettingMessagesHelperUseOnion => '切换到 Onion';
@@ -8529,7 +8523,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '其中混有假的唤醒，让辅助应用的服务器更难分辨真消息何时到达。自建的辅助服务器会让我们的中继知道它的地址。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。';
 
   @override
-  String get gettingMessagesHelperOnionOnly => '在 Onion 线路上可用';
+  String get gettingMessagesHelperOnionOnly => '需要私密路线';
 
   @override
   String get gettingMessagesHelperChecking => '正在检查…';
@@ -9157,7 +9151,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationsGoogleBody =>
-      '即时且省电。Google 能看到你的手机何时被唤醒，但从不知道是谁写的或说了什么。';
+      'Google 能看到你的手机何时被唤醒。\n但从不知道是谁写的或说了什么。\n即时且省电。';
 
   @override
   String get notificationsGoogleStarting => '正在开启…';
@@ -9195,7 +9189,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notificationsMakerSwitch => '手机厂商的开关';
 
   @override
-  String get onboardingDeliveryHeadline => '消息如何*送达*。';
+  String get onboardingHowYourMessages => '你的消息如何*传递*。';
+
+  @override
+  String get onboardingRouteLead => '你随时可以在设置里更改。';
+
+  @override
+  String get onboardingRoutePrivateCost => '通过 Tor。一条消息需要几秒钟。';
+
+  @override
+  String get onboardingRoutePrivateGain => '没有人能知道你的 IP 地址，连我们的服务器也不能。';
+
+  @override
+  String get onboardingRouteFastCost =>
+      '你连接期间，我们的服务器能看到你的 IP 地址。\n你的网络能看到你在用 Kryfo。';
+
+  @override
+  String get onboardingRouteFastGain => '不经过 Tor：更快，也更省电。';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo 会留在 Tor 上，需要时通过网桥。\n如有需要，快速模式在设置里。';
+
+  @override
+  String get onboardingRouteBlockedGain => '遇到封锁会自己找到出路。';
+
+  @override
+  String get onboardingDeliveryHeadline => '消息何时*送达*。';
 
   @override
   String get onboardingDeliveryLead => '你可以随时在“通知”里更改。';
@@ -9798,13 +9818,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopTrayRow => '在系统托盘中保持运行';
 
   @override
-  String get desktopTrayHint => '关闭窗口后，Kryfo 留在系统托盘中，消息照常到达。';
+  String get desktopTrayHint => '关闭窗口后，消息照常到达。';
 
   @override
-  String get desktopTrayOffLine => '关闭窗口会退出 Kryfo。再次打开时，消息就会到达。';
+  String get desktopTrayOffLine => '关闭窗口会退出 Kryfo。\n再次打开时，消息就会到达。';
 
   @override
-  String get desktopTrayNoneLine => '这个桌面不显示托盘图标，所以关闭窗口会退出 Kryfo。';
+  String get desktopTrayNoneLine => '这个桌面没有托盘图标。\n关闭窗口会退出 Kryfo。';
 
   @override
   String get desktopStartRow => '随电脑启动';
@@ -9813,10 +9833,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopStartHint => '登录这台电脑时，Kryfo 会在系统托盘中启动。';
 
   @override
-  String get desktopStartRefused => '这台电脑不允许 Kryfo 随它启动。你自己启动时，Kryfo 照常打开。';
+  String get desktopStartRefused => '这台电脑不允许 Kryfo 随它启动。\n你自己启动时，Kryfo 照常打开。';
 
   @override
-  String get desktopStartHeldOff => 'Windows 在启动应用中关闭了 Kryfo。请到设置、应用、启动中打开它。';
+  String get desktopStartHeldOff =>
+      'Windows 在启动应用中关闭了 Kryfo。\n请到 Windows 设置、应用、启动中打开它。';
 
   @override
   String get desktopMicBlocked => '在设置、隐私和安全性、麦克风中允许桌面应用使用麦克风后，Kryfo 即可录音。';
@@ -10025,7 +10046,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingNameHeadline => '如果你愿意，起一个公开的 *@名字*。';
 
   @override
-  String get onboardingNameLine => '公开名字能让别人找到你。跳过会更私密，你随时可以以后再加。';
+  String get onboardingNameLine => '公开的 @名字能让别人找到你。\n跳过会更私密。\n你以后可以再加。';
 
   @override
   String get onboardingNameSkip => '先跳过 →';
@@ -10039,7 +10060,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingInviteHeadline => '现在，*邀请一个人*。';
 
   @override
-  String get onboardingInviteLead => '用任何聊天软件发一个链接。它会打开 Kryfo，或告诉对方去哪里下载。';
+  String get onboardingInviteLead => '用任何聊天软件发一个链接。\n它会打开 Kryfo，或告诉对方去哪里下载。';
 
   @override
   String get onboardingInviteSomeone => '邀请一个人 →';
@@ -10595,7 +10616,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onboardingDeskRunLead =>
-      '关闭窗口后，Kryfo 在系统托盘中等候，消息照常到达。之后可以在“设置”的“通知”里更改这两项。';
+      '关闭窗口后，Kryfo 会在系统托盘中等候。\n消息照常到达。\n这两项都可以在“设置”的“通知”里更改。';
 
   @override
   String get savedLongPressAnyMessageDesk => '右键点击任意消息，选“保存”，就能把它留在这里。';
@@ -13327,10 +13348,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      '訊息即時送達。任何東西都不會離開 Tor。最耗電。';
+      '最耗電。\n即時送達，任何東西都不會離開 Tor。';
 
   @override
-  String get gettingMessagesArriveInstantlyFast => '在快速模式下，訊息即時送達。最耗電。';
+  String get gettingMessagesArriveInstantlyFast => '最耗電。\n在快速模式下即時送達。';
 
   @override
   String get gettingMessagesCheckIns => '定時查收';
@@ -13340,7 +13361,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo 每 15 分鐘查收一次訊息。省電，但訊息可能會晚到。';
+      'Kryfo 每 15 分鐘查收一次，所以訊息可能會晚到。\n省電。';
 
   @override
   String get gettingMessagesAGenericAlertWith => '只顯示一般提醒，不顯示傳送者和訊息內容';
@@ -14893,15 +14914,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingPrivateMessaging => '私密通訊，\n*沒有隱藏代價*。';
 
   @override
-  String get onboardingYourNameIsThree => '*你的名字就是三個詞。*不用手機號碼，不用電子郵件，不用通訊錄。';
+  String get onboardingYourNameIsThree => '*你的名字就是三個詞。*\n不用手機號碼，不用電子郵件，不用通訊錄。';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*除非你允許，沒有人能進來。*只有認領了公開使用者名稱，別人才能搜尋到你。聯絡人都由雙方主動新增。';
+      '*除非你允許，沒有人能進來。*\n沒有公開的 @名字，就沒有人能搜尋到你。\n陌生人只能敲門。';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*第一次連線需要一分鐘。*Kryfo 會先建立私密路線再傳送。之後就快了。';
+      '*第一次連線需要一分鐘。*\nKryfo 會先建立私密路線。之後就快了。';
 
   @override
   String get onboardingBegin => '開始';
@@ -14916,10 +14937,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingYourKryfoId => '你的名字';
 
   @override
-  String get onboardingGeneratedFromAKey => '由只存在這支手機上的金鑰產生。*沒有其他人有這組詞。*';
+  String get onboardingGeneratedFromAKey => '由只存在這支手機上的金鑰產生。\n*沒有其他人有這組詞。*';
 
   @override
-  String get onboardingGeneratedFromAKeyDesk => '由只存在這台電腦上的金鑰產生。*沒有其他人有這組詞。*';
+  String get onboardingGeneratedFromAKeyDesk => '由只存在這台電腦上的金鑰產生。\n*沒有其他人有這組詞。*';
 
   @override
   String get onboardingTryAnother => '換一個';
@@ -14938,23 +14959,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       'Kryfo 在傳送任何東西之前，會先建立一條私密路線。你離線時，訊息會先等著，等你回來再送達。';
 
   @override
-  String get onboardingYourIdentityLivesOn => '你的身分存在這支手機上。準備好時，可以從設定中備份。';
+  String get onboardingYourIdentityLivesOn => '你的身分存在這支手機上。\n準備好時，可以從設定中備份。';
 
   @override
-  String get onboardingYourIdentityLivesOnDesk => '你的身分存在這台電腦上。準備好時，可以從設定中備份。';
+  String get onboardingYourIdentityLivesOnDesk =>
+      '你的身分存在這台電腦上。\n準備好時，可以從設定中備份。';
 
   @override
-  String get onboardingOneQuiet => '一則安靜的*通知*。';
+  String get onboardingSilentAndAtThe => '無聲，放在通知欄最底下';
 
   @override
-  String get onboardingAndroidNeedsAVisible =>
-      '應用程式在背景監聽時，Android 需要顯示一則通知。Kryfo 關閉時，訊息就是這樣送到你手上的。';
-
-  @override
-  String get onboardingSilentAndAtThe => '無聲，而且放在通知欄最底下';
-
-  @override
-  String get onboardingItNeverBuzzesTurn => '它從不震動。把它關掉的話，訊息會等到你再次開啟應用程式。';
+  String get onboardingItNeverBuzzesTurn => '它從不震動。\n把它關掉的話，訊息會等到你開啟 Kryfo。';
 
   @override
   String get onboardingGotIt => '知道了 →';
@@ -14963,7 +14978,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingEveryWayToAdd => '所有新增聯絡人的方式';
 
   @override
-  String get onboardingShowYourCodeSend => '出示你的 QR 碼、傳連結給對方，或輸入對方給你的 @使用者名稱。';
+  String get onboardingShowYourCodeSend => '出示你的 QR 碼、分享連結，或輸入對方的 @名字。';
 
   @override
   String get onboardingScanTheirs => '掃描對方的';
@@ -18379,10 +18394,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get handleRegistryFailed => '聯絡不上註冊處。請一分鐘後再試。';
+  String get handleRegistryFailed => '聯絡不上註冊處。\n請一分鐘後再試。';
 
   @override
-  String get handleStillReaching => '仍在聯絡註冊處。透過 Tor 可能需要約一分鐘。';
+  String get handleStillReaching => '仍在聯絡註冊處。\n透過 Tor 可能需要一點時間。';
 
   @override
   String get handleSearchNeedsTor => '以使用者名稱搜尋需要 Tor。在此之前，可以用 QR 碼或連結新增。';
@@ -19351,7 +19366,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get gettingMessagesHelperBody =>
-      '即時且省電。它的伺服器能看到你的 IP 和訊息送達的時間，但從不知道內容。';
+      '它的伺服器能看到你的 IP 位址和訊息送達的時間。\n但從不知道內容。即時且省電。';
 
   @override
   String get gettingMessagesHelperUseOnion => '改用 Onion';
@@ -19364,7 +19379,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '其中混有假的喚醒，讓輔助應用程式的伺服器更難分辨真訊息何時送達。自架的輔助伺服器會讓我們的中繼知道它的位址。隱藏聊天、前幾個之後的房間，以及偶爾（大約五個月中有一個月）某位一般聯絡人，要等 Kryfo 每 15 分鐘一次的定時查收。';
 
   @override
-  String get gettingMessagesHelperOnionOnly => '在 Onion 路線上可用';
+  String get gettingMessagesHelperOnionOnly => '需要私密路線';
 
   @override
   String get gettingMessagesHelperChecking => '檢查中…';
@@ -19993,7 +20008,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notificationsGoogleBody =>
-      '即時且省電。Google 能看到你的手機何時被喚醒，但從不知道是誰寫的或說了什麼。';
+      'Google 能看到你的手機何時被喚醒。\n但從不知道是誰寫的或說了什麼。\n即時且省電。';
 
   @override
   String get notificationsGoogleStarting => '正在開啟…';
@@ -20031,7 +20046,33 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get notificationsMakerSwitch => '手機廠商的開關';
 
   @override
-  String get onboardingDeliveryHeadline => '訊息如何*送達*。';
+  String get onboardingHowYourMessages => '你的訊息如何*傳遞*。';
+
+  @override
+  String get onboardingRouteLead => '你隨時可以在設定中變更。';
+
+  @override
+  String get onboardingRoutePrivateCost => '透過 Tor。一則訊息需要幾秒鐘。';
+
+  @override
+  String get onboardingRoutePrivateGain => '沒有人能知道你的 IP 位址，連我們的伺服器也不能。';
+
+  @override
+  String get onboardingRouteFastCost =>
+      '你連線期間，我們的伺服器能看到你的 IP 位址。\n你的網路能看到你在用 Kryfo。';
+
+  @override
+  String get onboardingRouteFastGain => '不經過 Tor：更快，也更省電。';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo 會留在 Tor 上，需要時透過橋接。\n如有需要，快速模式在設定中。';
+
+  @override
+  String get onboardingRouteBlockedGain => '遇到封鎖會自己找到出路。';
+
+  @override
+  String get onboardingDeliveryHeadline => '訊息何時*送達*。';
 
   @override
   String get onboardingDeliveryLead => '你可以隨時在「通知」中更改。';
@@ -20634,13 +20675,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopTrayRow => '在系統匣中保持執行';
 
   @override
-  String get desktopTrayHint => '關閉視窗後，Kryfo 留在系統匣中，訊息照常送達。';
+  String get desktopTrayHint => '關閉視窗後，訊息照常送達。';
 
   @override
-  String get desktopTrayOffLine => '關閉視窗會結束 Kryfo。再次開啟時，訊息就會送達。';
+  String get desktopTrayOffLine => '關閉視窗會結束 Kryfo。\n再次開啟時，訊息就會送達。';
 
   @override
-  String get desktopTrayNoneLine => '這個桌面不顯示系統匣圖示，所以關閉視窗會結束 Kryfo。';
+  String get desktopTrayNoneLine => '這個桌面沒有系統匣圖示。\n關閉視窗會結束 Kryfo。';
 
   @override
   String get desktopStartRow => '隨電腦啟動';
@@ -20649,11 +20690,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get desktopStartHint => '登入這台電腦時，Kryfo 會在系統匣中啟動。';
 
   @override
-  String get desktopStartRefused => '這台電腦不允許 Kryfo 隨它啟動。你自己啟動時，Kryfo 照常開啟。';
+  String get desktopStartRefused => '這台電腦不允許 Kryfo 隨它啟動。\n你自己啟動時，Kryfo 照常開啟。';
 
   @override
   String get desktopStartHeldOff =>
-      'Windows 在啟動應用程式中關閉了 Kryfo。請到設定、應用程式、啟動中開啟它。';
+      'Windows 在啟動應用程式中關閉了 Kryfo。\n請到 Windows 設定、應用程式、啟動中開啟它。';
 
   @override
   String get desktopMicBlocked => '在設定、隱私權與安全性、麥克風中允許桌面應用程式使用麥克風後，Kryfo 即可錄音。';
@@ -20862,7 +20903,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingNameHeadline => '如果你願意，取一個公開的 *@名字*。';
 
   @override
-  String get onboardingNameLine => '公開名字能讓別人找到你。跳過會更私密，你隨時可以之後再加。';
+  String get onboardingNameLine => '公開的 @名字能讓別人找到你。\n跳過會更私密。\n你之後可以再加。';
 
   @override
   String get onboardingNameSkip => '先跳過 →';
@@ -20876,7 +20917,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get onboardingInviteHeadline => '現在，*邀請一個人*。';
 
   @override
-  String get onboardingInviteLead => '用任何通訊軟體傳一個連結。它會開啟 Kryfo，或告訴對方去哪裡下載。';
+  String get onboardingInviteLead => '用任何通訊軟體傳一個連結。\n它會開啟 Kryfo，或告訴對方去哪裡下載。';
 
   @override
   String get onboardingInviteSomeone => '邀請一個人 →';
@@ -21433,7 +21474,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get onboardingDeskRunLead =>
-      '關閉視窗後，Kryfo 在系統匣中等候，訊息照常送達。之後可以在「設定」的「通知」裡變更這兩項。';
+      '關閉視窗後，Kryfo 會在系統匣中等候。\n訊息照常送達。\n這兩項都可以在「設定」的「通知」裡變更。';
 
   @override
   String get savedLongPressAnyMessageDesk => '在任何訊息上按右鍵，再選「儲存」，就能收藏在這裡。';

@@ -11,7 +11,7 @@
 - linked devices: link a computer to your phone. scan the code it shows, compare six digits, and pick what comes over: every chat, text only, or contacts and groups only. new messages reach the phone and the computer, read and deleted ones stay in step, and your supporter badge shows on both. hidden chats, the decoy, invites, rooms and group changes stay on the phone. remove a computer from the phone at any time; one left unused for 30 days erases itself.
 
 ### Changed
-- setup is shorter: five steps. your face is drawn from your name (change it in your profile), the route stays private (change it in settings), and the battery guide comes right after notifications.
+- setup is shorter: six steps. your face is drawn from your name (change it in your profile), you choose the route in setup (private is picked, change it later in settings), and the battery guide comes right after notifications.
 - a message you write while Kryfo is still connecting shows as sending and goes as soon as the route is up.
 - on Android 13 and newer, screenshots work again with a PIN set, in chats that don't block them, and Kryfo stays hidden in recent apps. the lock screen, PIN and passphrase screens, hidden chats and blocking chats still block them. on older Android a PIN keeps screenshots blocked, as before.
 - your PINs now only work on this phone: they are tied to the phone's security chip, so they can't be tried on another device. your encrypted backup is the way back in if the chip ever loses its key. thanks to Ami (SleepingAmi) for suggesting it.
