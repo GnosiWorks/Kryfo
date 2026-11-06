@@ -1760,6 +1760,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Warte darauf, dass die Person deine Anfrage annimmt';
 
   @override
+  String get chatWaitsToSend => 'Wartet auf Versand';
+
+  @override
   String get chatTheyMayNotKnow =>
       'Die Person weiß vielleicht nicht, dass du angenommen hast';
 

@@ -538,6 +538,7 @@
   "chatMessageRequest": "Запрос на переписку",
   "chatTheyNeedToAccept": "Собеседник должен принять запрос, чтобы вы могли продолжить общение.",
   "chatWaitingForThemTo": "Ждём, когда собеседник примет твой запрос",
+  "chatWaitsToSend": "Ждёт отправки",
   "chatTheyMayNotKnow": "Собеседник может не знать, что запрос принят",
   "chatYouBlockedThisContact": "Этот контакт заблокирован",
   "chatSupporter": "Сторонник",

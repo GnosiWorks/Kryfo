@@ -1736,6 +1736,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatWaitingForThemTo => 'Menunggu dia menerima permintaanmu';
 
   @override
+  String get chatWaitsToSend => 'Menunggu dikirim';
+
+  @override
   String get chatTheyMayNotKnow => 'Dia mungkin belum tahu kamu sudah menerima';
 
   @override

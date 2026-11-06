@@ -1746,6 +1746,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatWaitingForThemTo => 'Waiting for them to accept your request';
 
   @override
+  String get chatWaitsToSend => 'Waiting to send';
+
+  @override
   String get chatTheyMayNotKnow => 'They may not know you accepted';
 
   @override

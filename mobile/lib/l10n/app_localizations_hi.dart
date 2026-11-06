@@ -1751,6 +1751,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपके अनुरोध को उनके स्वीकार करने का इंतज़ार';
 
   @override
+  String get chatWaitsToSend => 'भेजने के इंतज़ार में';
+
+  @override
   String get chatTheyMayNotKnow =>
       'हो सकता है उन्हें पता न हो कि आपने स्वीकार कर लिया';
 

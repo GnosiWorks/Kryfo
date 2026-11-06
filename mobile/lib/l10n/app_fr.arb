@@ -538,6 +538,7 @@
   "chatMessageRequest": "Demande de message",
   "chatTheyNeedToAccept": "La personne doit accepter avant que vous puissiez continuer à discuter.",
   "chatWaitingForThemTo": "En attente de l’acceptation de votre demande",
+  "chatWaitsToSend": "En attente d’envoi",
   "chatTheyMayNotKnow": "Cette personne ne sait peut-être pas que vous avez accepté",
   "chatYouBlockedThisContact": "Vous avez bloqué ce contact",
   "chatSupporter": "Soutien",

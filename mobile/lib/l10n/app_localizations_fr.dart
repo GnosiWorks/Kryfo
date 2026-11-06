@@ -1762,6 +1762,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'En attente de l’acceptation de votre demande';
 
   @override
+  String get chatWaitsToSend => 'En attente d’envoi';
+
+  @override
   String get chatTheyMayNotKnow =>
       'Cette personne ne sait peut-être pas que vous avez accepté';
 

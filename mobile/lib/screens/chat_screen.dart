@@ -603,17 +603,27 @@ Widget _mediaStamp(_Msg msg) {
 }
 
 // the tick on a text of ours, or a clock while it is sent and not delivered
-// yet to someone who has not added us back
+// yet to someone who has not added us back. [waits]: not sent yet, kept
+// until it can go, as for someone on an older Kryfo
 Widget _outMark(
   BuildContext context,
   _Msg msg, {
   required bool unconfirmed,
   required Color color,
+  bool waits = false,
 }) => AnimatedSwitcher(
   duration: motionStill(context)
       ? Duration.zero
       : const Duration(milliseconds: 200),
-  child: unconfirmed
+  child: waits
+      ? Icon(
+          Icons.schedule_rounded,
+          key: const ValueKey('waits'),
+          size: 10,
+          color: color,
+          semanticLabel: l10n.chatWaitsToSend,
+        )
+      : unconfirmed
       ? Icon(
           Icons.schedule_rounded,
           key: const ValueKey('unconfirmed'),
@@ -8594,6 +8604,8 @@ class _Bubble extends StatelessWidget {
     // a photo, a video, a file or a voice note that came in says when, as
     // ours do: there is no text of it to place it by
     final showTime = showMeta || (!isOut && isMedia);
+    // ours kept until it can go says so in its bubble: its time and a clock
+    final showStamp = (showTime || (isOut && parked)) && !frameless;
     final showPill = isOut && pending;
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
@@ -9190,7 +9202,7 @@ class _Bubble extends StatelessWidget {
                                               // the time and tick grow in as the
                                               // sending pill under the bubble folds
                                               GrowSwap(
-                                                child: !(showTime && !frameless)
+                                                child: !showStamp
                                                     ? const SizedBox.shrink(
                                                         key: ValueKey(
                                                           'no-meta',
@@ -9272,6 +9284,7 @@ class _Bubble extends StatelessWidget {
                                                                 unconfirmed:
                                                                     unconfirmed ||
                                                                     waitsAck,
+                                                                waits: parked,
                                                                 color:
                                                                     metaColor,
                                                               ),

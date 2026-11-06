@@ -443,6 +443,7 @@
   "chatMessageRequest": "Prośba o rozmowę",
   "chatTheyNeedToAccept": "Ta osoba musi zaakceptować, zanim będzie można pisać dalej.",
   "chatWaitingForThemTo": "Oczekiwanie, aż ta osoba zaakceptuje twoją prośbę",
+  "chatWaitsToSend": "Czeka na wysłanie",
   "chatTheyMayNotKnow": "Ta osoba może nie wiedzieć, że ją zaakceptowano",
   "chatYouBlockedThisContact": "Zablokowano ten kontakt",
   "chatSupporter": "Wspierający",

@@ -1784,6 +1784,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Чекаємо, поки співрозмовник прийме твій запит';
 
   @override
+  String get chatWaitsToSend => 'Чекає на надсилання';
+
+  @override
   String get chatTheyMayNotKnow =>
       'Співрозмовник може не знати, що запит прийнято';
 

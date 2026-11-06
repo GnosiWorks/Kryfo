@@ -2173,6 +2173,10 @@
   "@chatWaitingForThemTo": {
     "description": "screens/chat_screen.dart"
   },
+  "chatWaitsToSend": "Waiting to send",
+  "@chatWaitsToSend": {
+    "description": "screens/chat_screen.dart: screen reader label of the clock on a message of ours kept until it can go, for example to someone on an older Kryfo"
+  },
   "chatTheyMayNotKnow": "They may not know you accepted",
   "@chatTheyMayNotKnow": {
     "description": "screens/chat_screen.dart"

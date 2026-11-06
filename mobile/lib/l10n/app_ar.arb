@@ -538,6 +538,7 @@
   "chatMessageRequest": "طلب مراسلة",
   "chatTheyNeedToAccept": "يجب أن يقبل قبل أن تتمكن من مواصلة المحادثة.",
   "chatWaitingForThemTo": "بانتظار قبوله لطلبك",
+  "chatWaitsToSend": "بانتظار الإرسال",
   "chatTheyMayNotKnow": "ربما لا يعرف أنك قبلت",
   "chatYouBlockedThisContact": "لقد حظرت جهة الاتصال هذه",
   "chatSupporter": "داعم",

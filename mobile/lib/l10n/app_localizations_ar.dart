@@ -1798,6 +1798,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatWaitingForThemTo => 'بانتظار قبوله لطلبك';
 
   @override
+  String get chatWaitsToSend => 'بانتظار الإرسال';
+
+  @override
   String get chatTheyMayNotKnow => 'ربما لا يعرف أنك قبلت';
 
   @override

@@ -1787,6 +1787,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ждём, когда собеседник примет твой запрос';
 
   @override
+  String get chatWaitsToSend => 'Ждёт отправки';
+
+  @override
   String get chatTheyMayNotKnow =>
       'Собеседник может не знать, что запрос принят';
 

@@ -1788,6 +1788,9 @@ class AppLocalizationsPl extends AppLocalizations {
       'Oczekiwanie, aż ta osoba zaakceptuje twoją prośbę';
 
   @override
+  String get chatWaitsToSend => 'Czeka na wysłanie';
+
+  @override
   String get chatTheyMayNotKnow =>
       'Ta osoba może nie wiedzieć, że ją zaakceptowano';
 

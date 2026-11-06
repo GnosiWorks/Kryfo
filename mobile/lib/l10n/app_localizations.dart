@@ -2785,6 +2785,12 @@ abstract class AppLocalizations {
   /// **'Waiting for them to accept your request'**
   String get chatWaitingForThemTo;
 
+  /// screens/chat_screen.dart: screen reader label of the clock on a message of ours kept until it can go, for example to someone on an older Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to send'**
+  String get chatWaitsToSend;
+
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
