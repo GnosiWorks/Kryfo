@@ -625,3 +625,43 @@ func TestAFailingRelayTakesOneDialAtATime(t *testing.T) {
 		t.Fatalf("%d dials out at once to a failing relay, want 1", n)
 	}
 }
+
+// the first-contact listener draws its turn on our relays over a short
+// spread, the public relays keep the whole one, and each relay dials on its
+// own: a card scanned at the start is heard on ours within seconds
+func TestTheFirstContactListenerOnOursTakesAShortTurn(t *testing.T) {
+	if spreadFor(laneFirstContact, true) > spreadFor(laneFirstContact, false) ||
+		spreadFor(laneEveryday, true) != subSpread {
+		t.Fatal("only the first-contact lane on our relays draws a shorter turn")
+	}
+	oldSpread, oldFc := subSpread, fcOwnSpread
+	subSpread, fcOwnSpread = 40*time.Second, time.Second
+	defer func() { subSpread, fcOwnSpread = oldSpread, oldFc }()
+	if spreadFor(laneFirstContact, true) != time.Second || spreadFor(laneFirstContact, false) != 40*time.Second {
+		t.Fatal("the first-contact spreads are not the ones set")
+	}
+	own := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own)
+	freshInbox(t)
+	freshStart(t)
+	pub, dead := newRelayStandIn(t, 0), newBlackHole(t, true)
+	ownRelayHost.put(strings.TrimPrefix(own.url(), "ws://"))
+	setRelays([]string{own.url(), dead.url(), pub.url()})
+	// the start's free turn went to another socket
+	spendFirstTurn()
+	_, fcPk, err := mainFirstContactKeys(mainIdent, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	own.store(fcHelloTo(t, fcPk, "scanned at the start"))
+	began := time.Now()
+	if err := subscribeFirstContact(mainIdent, 0); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, "the hello on our relay", 6*time.Second, func() bool { return fsInbox()["firstcontact"]["scanned at the start"] })
+	if d := time.Since(began); d > 4*time.Second {
+		t.Fatalf("the first-contact listener took %s on our relay, its turn is at most %s", d, fcOwnSpread)
+	}
+	// a public relay's turn is the whole spread: almost never up by now
+	_ = pub
+}
