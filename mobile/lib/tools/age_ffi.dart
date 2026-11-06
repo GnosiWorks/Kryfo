@@ -7,6 +7,7 @@ import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
+import '../desktop/desktop_mode.dart' show withNativeFiles;
 import '../engine_strings.dart';
 import '../native_libs.dart';
 
@@ -22,6 +23,13 @@ typedef _ProgressC = Int64 Function();
 typedef _ProgressD = int Function();
 typedef _WordsC = Pointer<Utf8> Function();
 typedef _WordsD = Pointer<Utf8> Function();
+typedef _LockPathC = Pointer<Utf8> Function(
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+);
+typedef _BeginPathC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef _FinishPathC = Pointer<Utf8> Function(Pointer<Utf8>);
 
 DynamicLibrary _lib() => haloLibrary();
 
@@ -231,20 +239,135 @@ void closeFd(int fd) {
   _libc().lookupFunction<_CloseFdC, _CloseFdD>('close')(fd);
 }
 
-/// [inPath] locked into [outPath], which must not exist yet
+/// windows hands the engine paths, as it has no descriptors to hand over.
+/// a test sets it to run the same on linux
+@visibleForTesting
+bool ageByPath = Platform.isWindows;
+
+/// [inPath] locked into [outPath], which must not exist yet. on desktop a
+/// sealed one on either side goes over as memory, never as a plain file
 Future<AgeError?> ageLockPath(
   String inPath,
   String outPath,
   String pass, [
   AgeJob? job,
-]) {
+]) => withNativeFiles(
+  [inPath],
+  [outPath],
+  (i, o) => _lockPath(i.first, o.first, pass, job),
+  ok: (e) => e == null,
+);
+
+Future<AgeError?> _lockPath(
+  String inPath,
+  String outPath,
+  String pass,
+  AgeJob? job,
+) {
+  if (ageByPath) {
+    return _inTurn(
+      job ?? AgeJob(),
+      stopped: () => AgeError.cancelled,
+      () => _byPath(
+        () => _lib().lookupFunction<_LockPathC, _LockPathC>('HaloAgeLockPath'),
+        (f, a) => f(a[0], a[1], a[2]),
+        [inPath, outPath, pass],
+      ),
+    );
+  }
   final inFd = openFd(inPath);
   final outFd = inFd < 0 ? -1 : openFd(outPath, write: true);
   if (outFd < 0) {
     if (inFd >= 0) closeFd(inFd);
     return Future.value(AgeError.io);
   }
-  return ageLock(inFd, outFd, pass, job);
+  return ageLock(inFd, outFd, pass, job).then((e) {
+    if (e != null) _dropOut(outPath);
+    return e;
+  });
+}
+
+// what a failed lock or open began is not left: it was made new for it
+void _dropOut(String path) {
+  try {
+    File(path).deleteSync();
+  } catch (_) {}
+}
+
+// one engine call by path off the ui thread. the last argument is a secret
+// where there is one: it is zeroed after
+Future<AgeError?> _byPath<F extends Function>(
+  F Function() look,
+  Pointer<Utf8> Function(F f, List<Pointer<Utf8>> args) call,
+  List<String> args,
+) async {
+  try {
+    return await Isolate.run(() {
+      final ps = <Pointer<Utf8>>[];
+      try {
+        final f = look();
+        for (final a in args) {
+          ps.add(a.toNativeUtf8());
+        }
+        return ageErrorOf(engineTake(call(f, ps)));
+      } catch (_) {
+        return AgeError.io;
+      } finally {
+        for (final (i, p) in ps.indexed) {
+          i == args.length - 1 && args.length > 1
+              ? freeSecret(p)
+              : calloc.free(p);
+        }
+      }
+    });
+  } catch (_) {
+    return AgeError.io;
+  }
+}
+
+/// the password checked against [inPath]'s header, the file kept open by
+/// the engine for [ageOpenFinishPath]
+Future<AgeError?> ageOpenBeginPath(String inPath, String pass) {
+  if (ageByPath) {
+    return _byPath(
+      () => _lib().lookupFunction<_BeginPathC, _BeginPathC>(
+        'HaloAgeOpenBeginPath',
+      ),
+      (f, a) => f(a[0], a[1]),
+      [inPath, pass],
+    );
+  }
+  final fd = openFd(inPath);
+  if (fd < 0) return Future.value(AgeError.io);
+  return ageOpenBegin(fd, pass);
+}
+
+/// the file begun opened into [outPath], made new. a failed one leaves
+/// nothing there
+Future<AgeError?> ageOpenFinishPath(String outPath, [AgeJob? job]) {
+  if (ageByPath) {
+    return _inTurn(
+      job ?? AgeJob(),
+      stopped: () => AgeError.cancelled,
+      inTurn: ageOpenDrop,
+      () => _byPath(
+        () => _lib().lookupFunction<_FinishPathC, _FinishPathC>(
+          'HaloAgeOpenFinishPath',
+        ),
+        (f, a) => f(a[0]),
+        [outPath],
+      ),
+    );
+  }
+  final fd = openFd(outPath, write: true);
+  if (fd < 0) {
+    ageOpenDrop();
+    return Future.value(AgeError.io);
+  }
+  return ageOpenFinish(fd, job).then((e) {
+    if (e != null) _dropOut(outPath);
+    return e;
+  });
 }
 
 void ageOpenDrop() =>
