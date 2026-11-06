@@ -32,6 +32,14 @@ abstract class Translator {
     required String to,
   });
 
+  // several texts of one direction in one call, an answer for each in
+  // order; as translate otherwise
+  Future<List<String>> translateAll(
+    List<String> texts, {
+    required String from,
+    required String to,
+  });
+
   // the models out of memory, say when the app goes to the background
   Future<void> close();
 }

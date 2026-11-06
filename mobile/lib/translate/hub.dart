@@ -13,6 +13,7 @@ import 'downloads.dart';
 import 'engine_bridge.dart';
 import 'foreign.dart';
 import 'hant.dart';
+import 'segment.dart';
 import 'settings.dart';
 import 'translator.dart';
 
@@ -129,20 +130,27 @@ class TranslationHub extends ChangeNotifier {
     return null;
   }
 
-  // through english when there is no model straight across
+  // the whole message in one call per step (segment.dart), through
+  // english when there is no model straight across
   Future<String> translate(String text, Offer o) async {
     final route = catalog.route(o.from, o.to);
     if (route == null) {
       throw const TranslateUnavailable(TranslateBlock.noModel);
     }
-    var out = text;
+    final plan = planMessage(text);
+    if (plan.asks.isEmpty) return text;
+    var out = plan.asks;
     for (final (f, t) in route) {
-      out = await translator.translate(out, from: f, to: t);
+      out = await translator.translateAll(out, from: f, to: t);
+      if (out.length != plan.asks.length) {
+        throw StateError('translate: ${out.length} answers');
+      }
     }
     if (o.hant != HantForm.none) {
-      out = (await (_hant ??= loadHant())).convert(out, o.hant);
+      final h = await (_hant ??= loadHant());
+      out = [for (final s in out) h.convert(s, o.hant)];
     }
-    return out;
+    return plan.fill(out);
   }
 
   Future<HantConverter>? _hant;

@@ -57,6 +57,18 @@ class FakeTranslator implements Translator {
     return words[text] ?? '[$to] $text';
   }
 
+  // each text as translate would, in one go
+  final List<int> batches = [];
+  @override
+  Future<List<String>> translateAll(
+    List<String> texts, {
+    required String from,
+    required String to,
+  }) async {
+    batches.add(texts.length);
+    return [for (final t in texts) await translate(t, from: from, to: to)];
+  }
+
   @override
   Future<void> close() async => closes++;
 }

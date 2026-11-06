@@ -95,13 +95,25 @@ class BergamotTranslator implements Translator {
     String text, {
     required String from,
     required String to,
+  }) async => (await translateAll([text], from: from, to: to)).single;
+
+  // one kt_translate call for all of them: one batch is about three times
+  // quicker per line than a call each
+  @override
+  Future<List<String>> translateAll(
+    List<String> texts, {
+    required String from,
+    required String to,
   }) async {
     final block = await blockFor(from, to);
     if (block != null) throw TranslateUnavailable(block);
     final cfg = config(from, to);
     if (cfg == null) throw const TranslateUnavailable(TranslateBlock.noLib);
-    final out = await (await _worker()).ask('$from-$to', cfg, text);
-    if (out is String) return out;
+    if (texts.isEmpty) return const [];
+    final out = await (await _worker()).ask('$from-$to', cfg, texts);
+    if (out is List && out.length == texts.length) {
+      return [for (final s in out) s as String];
+    }
     throw StateError('translate: ${out is Map ? out['err'] : 'no answer'}');
   }
 
@@ -160,7 +172,7 @@ class _Worker {
     }
   }
 
-  Future<Object?> ask(String key, String cfg, String text) async {
+  Future<Object?> ask(String key, String cfg, List<String> texts) async {
     final done = Completer<Object?>();
     if (_dead) return const {'err': 'worker gone'};
     final reply = RawReceivePort((Object? m) {
@@ -168,7 +180,7 @@ class _Worker {
     });
     _waiting.add(done);
     try {
-      port.send((reply.sendPort, key, cfg, text));
+      port.send((reply.sendPort, key, cfg, texts));
       return await done.future;
     } finally {
       _waiting.remove(done);
@@ -200,7 +212,8 @@ void _run((SendPort, String) args) {
       inbox.close();
       Isolate.exit();
     }
-    final (reply, key, cfg, text) = m as (SendPort, String, String, String);
+    final (reply, key, cfg, texts) =
+        m as (SendPort, String, String, List<String>);
     final err = calloc<Pointer<Utf8>>();
     try {
       var h = models[key];
@@ -217,17 +230,22 @@ void _run((SendPort, String) args) {
         }
         models[key] = h;
       }
-      final t = text.toNativeUtf8();
-      final ins = calloc<Pointer<Utf8>>()..value = t;
-      final outs = calloc<Pointer<Utf8>>();
+      final n = texts.length;
+      final ins = calloc<Pointer<Utf8>>(n);
+      final outs = calloc<Pointer<Utf8>>(n);
       try {
-        if (tr(h, ins, 1, outs, err) != 0) {
+        for (var i = 0; i < n; i++) {
+          ins[i] = texts[i].toNativeUtf8();
+        }
+        if (tr(h, ins, n, outs, err) != 0) {
           reply.send({'err': take(err.value)});
           return;
         }
-        reply.send(take(outs.value));
+        reply.send([for (var i = 0; i < n; i++) take(outs[i])]);
       } finally {
-        freeSecret(t);
+        for (var i = 0; i < n; i++) {
+          if (ins[i] != nullptr) freeSecret(ins[i]);
+        }
         calloc.free(ins);
         calloc.free(outs);
       }
