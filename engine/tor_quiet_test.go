@@ -463,14 +463,12 @@ func TestAQuietSubscriptionIsMadeAgain(t *testing.T) {
 			time.Sleep(100 * time.Millisecond)
 			eventReset()
 		}
-		// the watch unsubscribes as it ends, so the upload is said until
-		// someone heard it
-		heard := false
+		// said again until the status moves: a connection just dropped can
+		// still be on the port's list, and an upload said there alone is
+		// heard by no one
 		waitFor(t, "a subscription that hears", 5*time.Second, func() bool {
-			if !heard {
-				heard = q.uploaded(onion) > 0
-			}
-			return heard && torStatusNow() == "reachable"
+			q.uploaded(onion)
+			return torStatusNow() == "reachable"
 		})
 		select {
 		case <-done:
