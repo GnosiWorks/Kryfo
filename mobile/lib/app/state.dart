@@ -168,8 +168,7 @@ class AppState extends ChangeNotifier {
   // uids with a send running, the outbox's and the chat's alike: whoever
   // claims one first sends it, and nobody else does until it is let go
   final Set<String> _outboxInflight = <String>{};
-  // re-fire count per uid this session. caps the loop so an unreachable peer
-  // stops grinding; tap-to-retry in the chat still forces a send.
+  // re-fire count per uid this session: it sets the gap before the next try
   final Map<String, int> _outboxTries = <String, int>{};
   // earliest ms a uid may be tried again. every retry builds a fresh gift
   // wrap, so a flat cadence leaves one copy per attempt sitting on every
@@ -185,6 +184,10 @@ class AppState extends ChangeNotifier {
   _Queue _vq = _Queue.none;
   Timer? _outboxTimer;
   bool _outboxWasReady = false;
+  // when a route back last cleared the outbox's waits
+  int? _outboxKickAt;
+  // whether a relay answered at the last read, null before one was read
+  bool? _relaysAnswered;
   // storage said a decoy was open as this run started, and no pin has
   // opened a session since
   bool _quietMarked = false;

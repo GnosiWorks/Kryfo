@@ -355,6 +355,9 @@ extension AppStateRoute on AppState {
       _routeOK = rok;
       _routeGen = rgen;
       _bootstrapPct = pct;
+      // tor down, even between outbox ticks: its return starts a pass
+      // (flushOnRouteUp, right after this read)
+      if (!torReady) _outboxWasReady = false;
       _noteTorProgress(at);
       changed = true;
       // a repoint waiting on tor goes once tor carries
@@ -612,9 +615,14 @@ extension AppStateRoute on AppState {
   // what is true now. benched means it is in backoff. down is: nothing in
   // the list is usable.
   void _noteRelayHealth(List? relays, {DateTime? now}) {
-    if (relaysAnswer(relays)) {
+    final answers = relaysAnswer(relays);
+    if (answers) {
       _relayUpAt = (now ?? DateTime.now()).millisecondsSinceEpoch;
     }
+    // a relay answering again after none did: the outbox goes now
+    final was = _relaysAnswered;
+    if (relays != null && relays.isNotEmpty) _relaysAnswered = answers;
+    if (answers && was == false) outboxRouteBack();
     if (_sendMode != 'balanced') {
       _relayDownSince = null;
       return;
@@ -774,6 +782,7 @@ extension AppStateRoute on AppState {
     engine.networkChanged();
     _newTorTry();
     checkFirstListener();
+    outboxRouteBack();
   }
 
   // the route just became usable: flush anything the outbox is holding
@@ -781,7 +790,7 @@ extension AppStateRoute on AppState {
   // so outside onion this never waits on a bootstrap
   @visibleForTesting
   void flushOnRouteUp() {
-    if (linkUp && !_outboxWasReady) unawaited(drainOutbox());
+    if (linkUp && !_outboxWasReady) outboxRouteBack();
   }
 
   static const _offlineSpell = Duration(seconds: 60);
