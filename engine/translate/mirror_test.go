@@ -19,11 +19,22 @@ func TestFillMirror(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// a fresh fill: one file per direction and the sums
+	if err := os.RemoveAll(bf.mirror); err != nil {
+		t.Fatal(err)
+	}
+	if err := FillMirror(context.Background(), bf.get(), m, bf.mirror, nil); err != nil {
+		t.Fatal(err)
+	}
+	sums, err = os.ReadFile(filepath.Join(bf.mirror, SumsName))
+	if err != nil {
+		t.Fatal(err)
+	}
 	left, _ := filepath.Glob(filepath.Join(bf.mirror, "*"))
-	if len(left) != len(m.Langs())+1 {
+	if len(left) != len(m.Packs())+1 {
 		t.Fatalf("mirror holds %v", left)
 	}
-	for _, lang := range m.Langs() {
+	for _, lang := range m.Packs() {
 		p := filepath.Join(bf.mirror, m.BundleName(lang))
 		st, err := os.Stat(p)
 		if err != nil || st.Size() != m.WireBytes(lang) {
@@ -47,7 +58,7 @@ func TestFillMirror(t *testing.T) {
 	if err := FillMirror(context.Background(), bf.get(), m, other, nil); err != nil {
 		t.Fatal(err)
 	}
-	for _, lang := range m.Langs() {
+	for _, lang := range m.Packs() {
 		a, _ := os.ReadFile(filepath.Join(bf.mirror, m.BundleName(lang)))
 		b, _ := os.ReadFile(filepath.Join(other, m.BundleName(lang)))
 		if !bytes.Equal(a, b) {
@@ -68,7 +79,7 @@ func TestFillMirrorRefusesWrongBytes(t *testing.T) {
 	if err := FillMirror(context.Background(), bf.get(), m, dir, nil); err == nil {
 		t.Fatal("filled from a wrong file")
 	}
-	if _, err := os.Stat(filepath.Join(dir, m.BundleName("zh"))); err == nil {
+	if _, err := os.Stat(filepath.Join(dir, m.BundleName("zh-en"))); err == nil {
 		t.Fatal("a wrong bundle is on the mirror")
 	}
 }

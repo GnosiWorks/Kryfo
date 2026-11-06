@@ -14,6 +14,9 @@ went into it.
    `mobile/native/kryfo_signal/build-windows.sh`,
    `mobile/windows/build-sqlcipher.sh`, `packaging/windows/stage-tor.sh`.
    Each one checks its PE flags, imports and exports with `check-pe.sh`.
+   Each dll carries a version resource (ProductName Kryfo, the app's version
+   from `mobile/pubspec.yaml`), made by `version-rc.sh` from fixed text, with
+   no date or path in it.
 2. **app** (Windows Server 2022): Flutter builds `kryfo.exe` from the source
    at a fixed path (`C:\kryfo`), `check-bundle.ps1` checks the folder against
    the natives job's sums, and Inno Setup makes the installer.

@@ -70,9 +70,9 @@ class TranslationHub extends ChangeNotifier {
       }
       // made after the vault opened, no switch heard: catch up before a read
       await dropKept();
-      for (final b in catalog.langs) {
+      for (final b in catalog.packs) {
         try {
-          await downloads.refresh(b.lang);
+          await downloads.refresh(b.id);
         } catch (_) {}
       }
       notifyListeners();
@@ -112,10 +112,60 @@ class TranslationHub extends ChangeNotifier {
   }
 
   // the packs an offer needs that are not on the phone yet
-  List<LangBundle> missing(Offer o) => [
-    for (final b in catalog.bundlesFor(catalog.route(o.from, o.to) ?? const []))
-      if (!downloads.installed(b.lang)) b,
+  List<LangBundle> missing(Offer o) => catalog.bundlesFor(
+    catalog.route(o.from, o.to) ?? const [],
+    have: downloads.installed,
+  );
+
+  // a pack the offer's way needs was taken off the phone, or is coming
+  // again: what was made with it is not shown. not looked at yet is not
+  // gone
+  bool packsGone(Offer o) {
+    for (final b in catalog.bundlesFor(catalog.route(o.from, o.to) ?? [])) {
+      final p = downloads.of(b.id).phase;
+      if (p != DlPhase.installed && p != DlPhase.unknown) return true;
+    }
+    return false;
+  }
+
+  // a language's own download: its packs to and from english, as one
+  List<String> packIds(String lang) => [
+    for (final b in catalog.packsOf(lang)) b.id,
   ];
+
+  DlState langState(String lang) {
+    final packs = catalog.packsOf(lang);
+    return downloads.ofMany(
+      [for (final b in packs) b.id],
+      [for (final b in packs) b.gz],
+    );
+  }
+
+  // what is left to fetch of a language, on the wire
+  int langLeft(String lang) => [
+    for (final b in catalog.packsOf(lang))
+      if (!downloads.installed(b.id)) b.gz,
+  ].fold(0, (n, g) => n + g);
+
+  Future<void> downloadLang(String lang, {bool anyNetwork = false}) =>
+      downloads.startMany(packIds(lang), anyNetwork: anyNetwork);
+
+  void cancelLang(String lang) => downloads.cancelMany(packIds(lang));
+
+  // a language's packs off the phone, and every translation kept that was
+  // made with one of them, as an off deletes them: in each container open
+  // now, and in a vault when it next opens
+  Future<bool> removeLang(String lang) async {
+    final packs = catalog.packsOf(lang);
+    final ok = await downloads.removeMany([for (final b in packs) b.id]);
+    final cuts = {..._settings.cuts};
+    for (final k in cutKeys(packs)) {
+      cuts[k] = (cuts[k] ?? 0) + 1;
+    }
+    await saveSettings(_settings.copyWith(cuts: cuts));
+    await dropKept();
+    return ok;
+  }
 
   Future<TranslateBlock?> blockFor(Offer o) async {
     final route = catalog.route(o.from, o.to);
@@ -150,7 +200,7 @@ class TranslationHub extends ChangeNotifier {
       final h = await (_hant ??= loadHant());
       out = [for (final s in out) h.convert(s, o.hant)];
     }
-    return plan.fill(out);
+    return plan.fill(out, to: o.to);
   }
 
   Future<HantConverter>? _hant;
@@ -292,9 +342,9 @@ class TranslationHub extends ChangeNotifier {
   // kept translations of the times it was turned off, gone from every
   // container open now
   Future<void> dropKept() async {
-    if (_settings.offs == 0) return;
+    if (_settings.offs == 0 && _settings.cuts.isEmpty) return;
     try {
-      await store.dropKept(_settings.offs);
+      await store.dropKept(_settings.offs, cuts: _settings.cuts);
     } catch (_) {}
   }
 

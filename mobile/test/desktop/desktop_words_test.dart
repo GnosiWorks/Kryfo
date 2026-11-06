@@ -631,6 +631,24 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.translatePackLineDesk('LANGUAGE', 'SIZE'),
   ),
   (
+    'translatePackLineTwo',
+    (l) => l.translatePackLineTwoShown('LANGUAGE', 'OTHER', 'SIZE'),
+    (l) => l.translatePackLineTwo('LANGUAGE', 'OTHER', 'SIZE'),
+    (l) => l.translatePackLineTwoDesk('LANGUAGE', 'OTHER', 'SIZE'),
+  ),
+  (
+    'translateWaitsWifi',
+    (l) => l.translateWaitsWifiShown,
+    (l) => l.translateWaitsWifi,
+    (l) => l.translateWaitsWifiDesk,
+  ),
+  (
+    'translateLanguagesHint',
+    (l) => l.translateLanguagesHintShown,
+    (l) => l.translateLanguagesHint,
+    (l) => l.translateLanguagesHintDesk,
+  ),
+  (
     'translatePackNoLib',
     (l) => l.translatePackNoLibShown,
     (l) => l.translatePackNoLib,

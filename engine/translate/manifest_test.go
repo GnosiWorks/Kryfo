@@ -29,8 +29,18 @@ func TestPinnedParses(t *testing.T) {
 	if b := m.Bundle("zh"); len(b) != 2 || b[0].From != "zh" || b[1].To != "zh" {
 		t.Fatalf("bundle %+v", b)
 	}
-	if b := m.Bundle("fr"); len(b) != 0 {
+	if b := m.Bundle("xx"); len(b) != 0 {
 		t.Fatalf("bundle for a language with no models: %+v", b)
+	}
+	// one direction is a pack of its own
+	if b := m.Bundle("de-en"); len(b) != 1 || b[0].From != "de" || b[0].To != "en" {
+		t.Fatalf("pack %+v", b)
+	}
+	if b := m.Bundle("de-fr"); len(b) != 0 {
+		t.Fatalf("pack for a direction with no model: %+v", b)
+	}
+	if len(m.Packs()) != 32 {
+		t.Fatalf("packs %v", m.Packs())
 	}
 }
 
@@ -75,15 +85,23 @@ func TestManifestRefuses(t *testing.T) {
 			firstFile(v)["kind"] = KindLex
 		},
 		"two vocabs kinds": func(v map[string]any) {
-			p := v["pairs"].([]any)[1].(map[string]any)
-			p["files"].([]any)[2].(map[string]any)["kind"] = KindVocab
+			for _, p := range v["pairs"].([]any) {
+				for _, f := range p.(map[string]any)["files"].([]any) {
+					if f.(map[string]any)["kind"] == KindSrcVocab {
+						f.(map[string]any)["kind"] = KindVocab
+						return
+					}
+				}
+			}
+			t.Fatal("no pair with two vocabs")
 		},
 		"same pair twice": func(v map[string]any) {
 			ps := v["pairs"].([]any)
 			v["pairs"] = append(ps, ps[0])
 		},
 		"same lang both sides": func(v map[string]any) {
-			v["pairs"].([]any)[0].(map[string]any)["to"] = "zh"
+			p := v["pairs"].([]any)[0].(map[string]any)
+			p["to"] = p["from"]
 		},
 		"bad lang": func(v map[string]any) {
 			v["pairs"].([]any)[0].(map[string]any)["from"] = "zh-Hans"

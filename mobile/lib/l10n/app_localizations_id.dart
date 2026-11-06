@@ -9306,27 +9306,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get translatePacksSection => 'Paket bahasa';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language dan Inggris';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'Belum diunduh · sekitar $size';
   }
 
   @override
   String get translateDownloading => 'Mengunduh lewat Tor';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return 'Hapus paket $language?';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return 'Pesan berbahasa $language tidak bisa diterjemahkan sampai paketnya diunduh lagi.';
-  }
 
   @override
   String get translateLanguagesSection => 'Bahasa';
@@ -11762,4 +11747,88 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'Tanda yang tersembunyi di dalam piksel itu sendiri, seperti watermark tersembunyi dari pembuat gambar, dan apa pun yang tampak di gambar tetap seperti semula.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return 'Unduh $language ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return 'Mengunduh $language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'Menunggu Wi-Fi untuk mengunduh $language';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Menunggu Wi-Fi. Unduhan mulai sendiri begitu ponsel ini tersambung ke Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Menunggu Wi-Fi. Unduhan mulai sendiri begitu komputer ini tersambung ke Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiShort => 'Menunggu Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'Pesan diterjemahkan di ponsel ini dan tidak pernah keluar darinya. Untuk itu perlu paket bahasa $language dan $other, total sekitar $size, diunduh sekali lewat Tor.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'Pesan diterjemahkan di komputer ini dan tidak pernah keluar darinya. Untuk itu perlu paket bahasa $language dan $other, total sekitar $size, diunduh sekali lewat Tor.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'Masing-masing diunduh sekali, lalu menerjemahkan di ponsel ini';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'Masing-masing diunduh sekali, lalu menerjemahkan di komputer ini';
+
+  @override
+  String get translateSuggested => 'Disarankan';
+
+  @override
+  String get translateMoreLanguages => 'Bahasa lainnya';
+
+  @override
+  String get translateWaysBoth => 'Dari dan ke bahasa Inggris';
+
+  @override
+  String get translateWaysInto => 'Hanya menerjemahkan ke bahasa Inggris';
+
+  @override
+  String get translateWaysFrom => 'Hanya menerjemahkan dari bahasa Inggris';
+
+  @override
+  String get translateGet => 'Unduh';
+
+  @override
+  String get translateRemove => 'Hapus';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return 'Hapus $language?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'Ini mengosongkan $size. Terjemahan yang disimpan dengannya juga dihapus. Kamu bisa mengunduhnya lagi kapan saja.';
+  }
+
+  @override
+  String get translateResumeShort => 'Lanjutkan';
+
+  @override
+  String get translateTagApp => 'Bahasa aplikasi';
+
+  @override
+  String get translateTagRead => 'Kamu membacanya';
 }

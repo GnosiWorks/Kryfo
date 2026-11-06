@@ -63,6 +63,12 @@ ossl=$work/os
   make sqlite3.c >make.log 2>&1 || { tail -20 make.log >&2; exit 1; }
 )
 
+# the version resource. the notice is sqlcipher's own, from its licence
+lic=$(head -1 "$work/sq/LICENSE.md" | tr -d '\r')
+[[ "$lic" == Copyright* ]] || die "no copyright line in sqlcipher's LICENSE.md"
+"$here/../../packaging/windows/version-rc.sh" "$work/version.o" sqlcipher.dll "SQLCipher for Kryfo" \
+  "$lic. BSD-style license" "SQLCipher $sq_ver with OpenSSL $os_ver (Apache-2.0)"
+
 # the linux build's feature flags (configure's defaults plus --fts5 and
 # --with-tempstore=yes), the codec, and an export list of sqlite's api only
 cd "$work/sq"
@@ -72,7 +78,7 @@ cd "$work/sq"
   -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_PERCENTILE \
   -DSQLITE_HAS_CODEC -DSQLCIPHER_CRYPTO_OPENSSL \
   -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown \
-  -I"$ossl/include" "$ossl/libcrypto.a" -lws2_32 -lgdi32 -lcrypt32 -ladvapi32 -luser32 \
+  -I"$ossl/include" "$work/version.o" "$ossl/libcrypto.a" -lws2_32 -lgdi32 -lcrypt32 -ladvapi32 -luser32 \
   -static-libgcc -Wl,--exclude-libs,ALL \
   -Wl,--dynamicbase,--high-entropy-va,--nxcompat,--no-insert-timestamp >cc.log 2>&1 ||
   { tail -20 cc.log >&2; exit 1; }

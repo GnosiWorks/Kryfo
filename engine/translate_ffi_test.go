@@ -59,12 +59,14 @@ func TestTranslateCatalog(t *testing.T) {
 	}
 	// our mirror, over its onion
 	if !strings.HasPrefix(c.Base, "http://") || !strings.HasSuffix(c.Base, ".onion/models/") ||
-		len(c.Langs) != 1 || c.Langs[0].Lang != "zh" {
+		len(c.Langs) != 32 {
 		t.Fatalf("%+v", c)
 	}
-	// the size on the wire is the padded one
-	if b := c.Langs[0]; len(b.Pairs) != 2 || b.Gz != 96<<20 || b.Disk <= b.Gz {
-		t.Fatalf("%+v", b)
+	// one pack per direction, named by it, the size on the wire the padded one
+	for _, b := range c.Langs {
+		if len(b.Pairs) != 1 || b.Pairs[0] != b.Lang || b.Gz != 48<<20 || b.Disk <= 0 {
+			t.Fatalf("%+v", b)
+		}
 	}
 }
 
@@ -136,7 +138,7 @@ func TestTranslateFetchOnlyThePinnedMirror(t *testing.T) {
 			t.Fatalf("dialled %q, not the mirror %q", a, u.Host)
 		}
 	}
-	if out := translateFetch("fr", t.TempDir()); !strings.HasPrefix(out, "error: no models") {
+	if out := translateFetch("xx", t.TempDir()); !strings.HasPrefix(out, "error: no models") {
 		t.Fatalf("got %q", out)
 	}
 }
