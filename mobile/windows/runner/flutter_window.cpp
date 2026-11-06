@@ -6,6 +6,7 @@
 #include <wtsapi32.h>
 
 #include <cstring>
+#include <cwctype>
 #include <memory>
 #include <new>
 #include <optional>
@@ -49,12 +50,66 @@ flutter::EncodableList ClipboardFiles(HWND owner) {
 // past this a copied picture is not read: a dib of 8192 by 4096 at 32 bits
 constexpr SIZE_T kPictureMost = 160u * 1024 * 1024;
 
+// past this many characters words are no link (kLinkMost in dart)
+constexpr size_t kLinkMost = 8192;
+
+// the words on the clipboard as utf-8 when, trimmed, they are only a link:
+// http or https, no space, no other word. firefox's copy image puts the
+// picture's address beside it. dart checks the link again
+bool ClipboardLink(HWND owner, std::string* link) {
+  if (!::OpenClipboard(owner)) return false;
+  std::wstring w;
+  bool fits = false;
+  HANDLE h = ::GetClipboardData(CF_UNICODETEXT);
+  SIZE_T size = h ? ::GlobalSize(h) : 0;
+  const wchar_t* at = size ? static_cast<const wchar_t*>(::GlobalLock(h)) : nullptr;
+  if (at) {
+    size_t most = size / sizeof(wchar_t);
+    size_t n = ::wcsnlen(at, most);
+    if (n < most && n <= kLinkMost + 64) {
+      w.assign(at, n);
+      fits = true;
+    }
+    ::GlobalUnlock(h);
+  }
+  ::CloseClipboard();
+  if (!fits) return false;
+  size_t from = 0;
+  size_t to = w.size();
+  while (from < to && std::iswspace(w[from])) ++from;
+  while (to > from && std::iswspace(w[to - 1])) --to;
+  w = w.substr(from, to - from);
+  if (w.empty() || w.size() > kLinkMost) return false;
+  for (wchar_t c : w) {
+    if (std::iswspace(c) || c == 0x200B || c == 0xFEFF) return false;
+  }
+  auto starts = [&w](const wchar_t* head) {
+    size_t n = std::wcslen(head);
+    if (w.size() <= n) return false;
+    for (size_t i = 0; i < n; ++i) {
+      if (std::towlower(w[i]) != head[i]) return false;
+    }
+    return true;
+  };
+  if (!starts(L"http://") && !starts(L"https://")) return false;
+  int m = ::WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), nullptr, 0,
+                                nullptr, nullptr);
+  if (m <= 0) return false;
+  link->assign(m, '\0');
+  ::WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), link->data(), m,
+                        nullptr, nullptr);
+  return true;
+}
+
 // a picture copied (a screenshot, a browser's copy image), its bytes as
 // they are on the clipboard and in memory only: the png a copy carries,
 // else its dib (windows makes one from a plain bitmap). none while words
-// are there too: they paste as words
+// are there too (they paste as words), unless the words are only a link
 flutter::EncodableValue ClipboardPicture(HWND owner) {
-  if (::IsClipboardFormatAvailable(CF_UNICODETEXT)) return flutter::EncodableValue();
+  std::string link;
+  if (::IsClipboardFormatAvailable(CF_UNICODETEXT) && !ClipboardLink(owner, &link)) {
+    return flutter::EncodableValue();
+  }
   static const UINT png = ::RegisterClipboardFormatW(L"PNG");
   static const UINT mime = ::RegisterClipboardFormatW(L"image/png");
   UINT pick = 0;
@@ -87,11 +142,15 @@ flutter::EncodableValue ClipboardPicture(HWND owner) {
   }
   ::CloseClipboard();
   if (n == 0) return flutter::EncodableValue();
-  return flutter::EncodableValue(flutter::EncodableMap{
+  flutter::EncodableMap got{
       {flutter::EncodableValue("kind"), flutter::EncodableValue(std::string(kind))},
       {flutter::EncodableValue("bytes"),
        flutter::EncodableValue(std::vector<uint8_t>(buf.get(), buf.get() + n))},
-  });
+  };
+  if (!link.empty()) {
+    got[flutter::EncodableValue("text")] = flutter::EncodableValue(link);
+  }
+  return flutter::EncodableValue(got);
 }
 
 // the session's lock now. no answer counts as locked: the first unlock
