@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # checks a windows dll or exe the app ships:
 #   check-pe.sh <file>             x64, aslr and dep flags, zero timestamp,
-#                                  only windows' own dlls imported, no build path
+#                                  only windows' own dlls imported, no build path,
+#                                  a version resource with ProductName Kryfo
 #   check-pe.sh --exports <file>   prints the exported names, one per line
 # OBJDUMP_W picks the objdump; the host's reads pe files too.
 set -euo pipefail
@@ -10,6 +11,8 @@ die() { echo "FAIL: $*" >&2; exit 1; }
 
 OBJDUMP_W="${OBJDUMP_W:-x86_64-w64-mingw32-objdump}"
 command -v "$OBJDUMP_W" >/dev/null || OBJDUMP_W=objdump
+OBJCOPY_W="${OBJCOPY_W:-x86_64-w64-mingw32-objcopy}"
+command -v "$OBJCOPY_W" >/dev/null || OBJCOPY_W=objcopy
 
 exports=0
 if [ "${1:-}" = --exports ]; then exports=1; shift; fi
@@ -34,4 +37,13 @@ bad=$(sed -n 's/^\s*DLL Name: //p' <<<"$dump" | tr 'A-Z' 'a-z' |
 [ -z "$bad" ] || die "$f imports $(echo $bad)"
 
 grep -qaE '/home/|/tmp/|/root/' "$f" && die "a build path is left in $f"
+
+# a version resource (type 16) whose ProductName is Kryfo, as signpath wants
+grep -qE '^[0-9a-f]+   Entry: ID: 0x000010,' <<<"$dump" || die "$f has no version resource"
+rsrc="$(mktemp)"
+trap 'rm -f "$rsrc"' EXIT
+"$OBJCOPY_W" -O binary --only-section=.rsrc "$f" "$rsrc" || die "$OBJCOPY_W cannot read $f"
+u16() { sed 's/./&\\x00/g' <<<"$1"; }
+LC_ALL=C grep -qaP "$(u16 ProductName)(\\x00\\x00)+$(u16 Kryfo)\\x00\\x00" "$rsrc" ||
+  die "$f has no ProductName Kryfo in its version resource"
 echo "pe ok: $f"

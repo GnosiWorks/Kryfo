@@ -42,6 +42,13 @@ export CGO_CFLAGS="-O2 -g"
 export CGO_LDFLAGS="-Wl,--no-insert-timestamp -Wl,--dynamicbase,--high-entropy-va,--nxcompat"
 export SOURCE_DATE_EPOCH=1700000000
 
+# the version resource goes in as a .syso, which go hands to the linker as is
+SYSO="$ENGINE_DIR/zz_version_windows_amd64.syso"
+trap 'rm -f "$SYSO" "${SYSO%.syso}.rc"' EXIT
+"$ENGINE_DIR/../packaging/windows/version-rc.sh" "${SYSO%.syso}.o" halo.dll "Kryfo engine" \
+  "Copyright (C) GnosiWorks, GPL-3.0-or-later"
+mv "${SYSO%.syso}.o" "$SYSO"
+
 echo "windows amd64"
 go build ${HALO_FULL:+-a} -buildvcs=false -buildmode=c-shared \
   -ldflags "$LDFLAGS" -o "$OUT/halo.dll" .
