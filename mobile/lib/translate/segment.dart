@@ -28,7 +28,7 @@ final _han = RegExp(r'[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]', u
 final _upper = RegExp(r'^[\p{Lu}\p{Lt}]', unicode: true);
 final _lower = RegExp(r'^\p{Ll}', unicode: true);
 final _ends = RegExp(r'''[.!?…。！？‼⁉]["'”’»」』）)\]]*$''');
-final _goesOn = RegExp(r'[,，、;；:：\-–—(（]$');
+final _goesOn = RegExp(r'[,，、;；:：\-\u2013\u2014(（]$');
 final _bullet = RegExp(r'^(?:[-*•·]|\d+[.)])\s');
 final _space = RegExp(r'\s');
 // where a long text may be cut: after a sentence, else a clause, else a space
