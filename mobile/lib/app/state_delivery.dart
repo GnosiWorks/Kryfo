@@ -634,6 +634,8 @@ extension AppStateDelivery on AppState {
       unawaited(refreshHelperOffer());
     }
     if (front) {
+      // what waits goes as the app comes back, not at its gap
+      outboxRouteBack();
       unawaited(_recheckNetwork());
       // tor may be asleep or the status a beat old: automatic is looked at
       // again as the status comes in, for a little while

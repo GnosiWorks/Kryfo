@@ -3,6 +3,14 @@
 
 part of '../main.dart';
 
+/// the clock the outbox's gaps read. a test hands in its own
+@visibleForTesting
+DateTime Function() outboxClock = DateTime.now;
+
+// a route back starts a pass with the waits cleared, once a minute at most:
+// a route that flaps cannot turn it into a loop
+const kOutboxKickGap = 60000;
+
 extension AppStateOutbox on AppState {
   bool claimSend(String uid) => _outboxInflight.add(uid);
   void releaseSend(String uid) => _outboxInflight.remove(uid);
@@ -474,10 +482,10 @@ extension AppStateOutbox on AppState {
     // the sends this pass starts, and the 1:1 chats they are in
     final going = <Future<void>>[];
     final chats = <String>{};
-    for (final (r, d, paired) in [
-      for (final r in rows) (r, live, q.paired),
+    for (final (r, d) in [
+      for (final r in rows) (r, live),
       if (v != null)
-        for (final r in vRows) (r, v, vq.paired),
+        for (final r in vRows) (r, v),
     ]) {
       final uid = r['msg_uid'] as String?;
       if (uid == null || _outboxInflight.contains(uid)) continue;
@@ -505,16 +513,12 @@ extension AppStateOutbox on AppState {
       // held rows stay out of the window; one that came in anyway waits too
       if (held.contains(r['peer_id'])) continue;
       // a send fired seconds ago still has its own future running; leave it be.
-      final age = DateTime.now().millisecondsSinceEpoch - (r['sent_at'] as int);
+      final now = outboxClock().millisecondsSinceEpoch;
+      final age = now - (r['sent_at'] as int);
       if (age < 45000) continue;
+      // no cap: a row tries until it goes or is gone, at most ten minutes
+      // apart (queueGap). a route back clears the wait (outboxRouteBack)
       final tries = _outboxTries[uid] ?? 0;
-      // the cap is for a route that exists and fails. a peer who has not
-      // added us back yet keeps their rows going at the ten-minute gap.
-      if (tries >= 8) {
-        final peer = r['peer_id'] as String?;
-        if (peer == null || (paired[peer] ?? true)) continue;
-      }
-      final now = DateTime.now().millisecondsSinceEpoch;
       final nextAt = _outboxNextAt[uid];
       if (nextAt != null && now < nextAt) continue;
       // the chat may have taken it while this pass read
@@ -570,6 +574,32 @@ extension AppStateOutbox on AppState {
   }
 
   bool waitsForCard(String peer) => _waitingCard.contains(peer);
+
+  // the route came back: tor ready again, a relay answering again, a new
+  // network, the app in front. what waits goes now, not when its gap runs
+  // out. the tries stay, so a route that flaps keeps its gap after the next
+  // failure. with no route yet the route-up flush takes it
+  void outboxRouteBack() {
+    if (haloWiping) return;
+    if (!linkUp) {
+      _outboxWasReady = false;
+      return;
+    }
+    final now = outboxClock().millisecondsSinceEpoch;
+    final last = _outboxKickAt;
+    if (last == null || now - last >= kOutboxKickGap || now < last) {
+      _outboxKickAt = now;
+      // one waiting on their card keeps the ask's time
+      _outboxNextAt.removeWhere(
+        (uid, _) => !_waitingCard.contains(_outboxPeer[uid]),
+      );
+    }
+    unawaited(
+      drainOutbox().catchError(
+        (Object e) => dlog('outbox: route back (${e.runtimeType})'),
+      ),
+    );
+  }
 
   // a contact verified under another key than they hold now: nothing goes
   // to them until the new number is checked or the new key accepted. the

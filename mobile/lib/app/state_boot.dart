@@ -352,7 +352,11 @@ extension AppStateBoot on AppState {
     var autoTicks = 0;
     Timer.periodic(const Duration(seconds: 1), (t) {
       if (haloWiping) return;
-      if (_sendMode == 'balanced' && ++ticks % 5 == 0) sampleRelayHealth();
+      // and while rows wait in the other modes, to see a relay come back
+      if ((_sendMode == 'balanced' || _outboxTries.isNotEmpty) &&
+          ++ticks % 5 == 0) {
+        sampleRelayHealth();
+      }
       // the start's steps, read before the status so a ready route never
       // shows ready before it says getting new messages: whether the new
       // messages are in, and on a computer the trace's lines. watched until
