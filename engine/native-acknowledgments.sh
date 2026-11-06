@@ -119,21 +119,61 @@ translation = [
 ]
 # the models: mozilla publishes every model file of its translations bucket
 # under the mpl 2.0 (mozilla/translations readme, "the model files are
-# distributed under the MPL 2.0 license"), the repo's own text. a new pair
-# fails here until its licence is checked too
+# distributed under the MPL 2.0 license"), the repo's own text. the packs on
+# our mirror are those gzips byte for byte, one direction a pack, picked from
+# firefox's translations-models records. one row a checked direction, named
+# by the first bytes of the model's sha256; a pair in models.json that is
+# not here, or with another model, fails until its licence is checked too
 tm = json.loads(read('translate/models.json'))
 if not tm['source'].startswith('https://storage.googleapis.com/moz-fx-translations-data--303e-prod-translations-data/'):
     sys.exit('translate/models.json: a source whose licence is not checked here')
-langs = {'en': 'English', 'zh': 'Chinese'}
-pairs = sorted((p['from'], p['to']) for p in tm['pairs'])
-if pairs != [('en', 'zh'), ('zh', 'en')]:
-    sys.exit('translate/models.json: a pair whose licence is not checked here')
+langs = {'ar': 'Arabic', 'de': 'German', 'en': 'English', 'es': 'Spanish', 'fa': 'Persian',
+         'fr': 'French', 'hi': 'Hindi', 'id': 'Indonesian', 'it': 'Italian', 'pl': 'Polish',
+         'pt': 'Portuguese', 'ru': 'Russian', 'tr': 'Turkish', 'uk': 'Ukrainian',
+         'vi': 'Vietnamese', 'zh': 'Chinese', 'zh_hant': 'Traditional Chinese'}
+checked = [
+    ('ar', 'en', '7b7af0282dc5f4d8805b9a298c2fa828967e3f09ca10f1942ebeea0b2cfc12fa'),
+    ('de', 'en', '3e6f7c2c2425d10824797270b382bee718ff34af2cab9308841c82ca46dc6f20'),
+    ('en', 'ar', 'ae659d7045fc2e5d6ba50583586a5d94ee4358d92c019847e37b57a0e627faa8'),
+    ('en', 'de', '8df29d9494d19f47fd5d97c6a73474c6f657e9f81c1a607c431d02befdf3810f'),
+    ('en', 'es', '3b1c399511c01c84c36fae5c0524df44096288efdc8236e182b5c97d7ad2244c'),
+    ('en', 'fa', '456ad3952bcc59d208c76baba4dcef340ee4239416bd760d6fec27f9a16228f8'),
+    ('en', 'fr', '6322e296d4fecfe395a8d5723da4ec37ecbe6d7613bb1dfcf4b28e2a47498b68'),
+    ('en', 'hi', '18682fa6aa1c1b2f78a6fcbcb354755094d623e65436ef7821720c5213e11a49'),
+    ('en', 'id', 'f81f13eef703a4e0650ffc3138a0f4bab7b6c8bfd173ef1b7bda68d16b8bc7e8'),
+    ('en', 'it', '248f47568788ecc351da7e5e07064d4153b4f71e011364ae2c931ffeec4d1cc2'),
+    ('en', 'pl', 'b0b59716bcc8f46b8dc6ab5c32a2732acaad42a5a6d9ae9b472526a1bb0d71d4'),
+    ('en', 'pt', '07892fd2544ee79dcb643615d8f2debb9793fae16842e87c328e27a3dd26a770'),
+    ('en', 'ru', '184cb5cda528eeefc0f75f5d0035d787b71d74af135e3c5608d01ae02ecfb920'),
+    ('en', 'tr', 'ea3cd4ee09de190df265c78d84260e277a9a8a3ddff05eb55d72afe7fc0fdbf4'),
+    ('en', 'uk', 'ed8bb4a811e1c45a259e91052080d25e5c8b4e2df0e59cb1521c04a57855ef97'),
+    ('en', 'vi', '04fa6044593a404c2aa02b3096f203880852df6f8f41e5eb966ed9f2b4366737'),
+    ('en', 'zh', '4e5accc141373565ddc8fa1565bceaa8d0c3482a82cab8131c719ebcc6c2157c'),
+    ('en', 'zh_hant', '559ab90d723a58c1f1e2ab7cc12137bc667af5ba3e325e3eb30b5cdc930db520'),
+    ('es', 'en', '4aed7734152ae0045d1a69ae49c86cfda18f53c61f90e95e1d1de1c7c7c3b033'),
+    ('fa', 'en', 'aa326306c177e11129de5bfeba518abc499c0b6005492766748a9c9ea6f4c712'),
+    ('fr', 'en', '15f997bc0d13808b0b0fbd0786e684a3c8a52adcd8071844b76123fdacbf2b90'),
+    ('hi', 'en', 'c82fd6ed3794b79fb9dde0718a22324502a408a9eca73497b5d0a4b8024ec6de'),
+    ('id', 'en', 'eeed3d8c2c78ec7011b31b2419e1d2dfdf2a7cc0ee0dbb1fcd164c934cb5d328'),
+    ('it', 'en', '21b70978ce2f3b4da7a06b5de86a09abe3acd30b9eee1b2ebb3582b9bad790bf'),
+    ('pl', 'en', '06dbab3baa3bbceab746bc6a3bba807878f38536382c03acddf59d3edf3b5d94'),
+    ('pt', 'en', '7b854f1ec5a485dd33efd7c1bc01dd7d5a57f566957c5e47722af333f0ce9157'),
+    ('ru', 'en', 'aa0efa194b3dbd2da129ba0b8db8ef139126cb0914e57072f62061294746f1e2'),
+    ('tr', 'en', 'bd18594ac5a7f1d9997e7ea5bd80272082219cf8b1ce604766e4f207eb86abbf'),
+    ('uk', 'en', '2e7b8bc9d2569d8b4ae244e964cdc343a0aa3735cc83ecb664be84a37cb45f48'),
+    ('vi', 'en', 'de4bf2b9ffb4d910e32720ec3a43655fb6f4062ce5219332f824fc1bdca7a5f4'),
+    ('zh', 'en', '5cd149601802fc8a18124a1c1306144dbbedc058630c4ddb2d53aa76fa9c7c06'),
+    ('zh_hant', 'en', '0aee91790894458f5d367551f6edcd4c9cb97852c34f221bcbf9f4701ebcf0cd'),
+]
+models = {(f, t): m for f, t, m in checked}
 for p in tm['pairs']:
     model = [x for x in p['files'] if x['kind'] == 'model']
     if len(model) != 1:
         sys.exit('translate/models.json: %s-%s has no one model file' % (p['from'], p['to']))
-    translation.append(part('Translation model, %s to %s' % (langs[p['from']], langs[p['to']]),
-                            model[0]['sha256'][:8], 'MPL-2.0', [root]))
+    if models.get((p['from'], p['to'])) != model[0]['sha256']:
+        sys.exit('translate/models.json: %s-%s is a model whose licence is not checked here' % (p['from'], p['to']))
+for f, t, m in checked:
+    translation.append(part('Translation model, %s to %s' % (langs[f], langs[t]), m[:8], 'MPL-2.0', [root]))
 translation.sort(key=lambda p: p['name'].lower())
 
 doc = {
