@@ -201,6 +201,36 @@ mixin _FirstContactRows {
     return true;
   }
 
+  // someone whose hello was answered here, or who handed a one-time invite
+  // in a pairing: they know this phone, though nothing of theirs came yet.
+  // the open row stays until they add us back
+  Future<bool> theyAsked(String peerId) async {
+    try {
+      final db = await open();
+      final c = await db.query(
+        'contacts',
+        columns: ['xpub', 'ident'],
+        where: 'halo_id = ?',
+        whereArgs: [peerId],
+        limit: 1,
+      );
+      if (c.isEmpty) return false;
+      final key = identityKeyHex(c.first['xpub'] as String?);
+      if (key == null) return false;
+      final o = await db.query(
+        'hellos',
+        columns: ['peer'],
+        where: 'ident = ? AND way = ? AND peer = ? AND once = 1',
+        whereArgs: [c.first['ident'] as int? ?? kMainIdent, kHelloOpen, key],
+        limit: 1,
+      );
+      return o.isNotEmpty;
+    } catch (e) {
+      dlog('hello: asked not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
   // every kept opener, oldest first
   Future<List<FirstKept>> firstKept() async {
     final db = await open();

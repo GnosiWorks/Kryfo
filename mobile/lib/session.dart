@@ -360,6 +360,7 @@ class Session {
   Future<bool> isAccepted(String haloId) => _ofPeer(haloId).isAccepted(haloId);
   Future<bool> isBackPaired(String peerId) =>
       _ofPeer(peerId).isBackPaired(peerId);
+  Future<bool> theyAsked(String peerId) => _ofPeer(peerId).theyAsked(peerId);
   Future<bool> isBlocked(String haloId) => _ofPeer(haloId).isBlocked(haloId);
   Future<bool> isMuted(String haloId) => _ofPeer(haloId).isMuted(haloId);
   Future<bool> isVerified(String haloId) => _ofPeer(haloId).isVerified(haloId);

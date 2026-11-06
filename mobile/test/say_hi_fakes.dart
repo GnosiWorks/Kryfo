@@ -44,6 +44,10 @@ class SayHiDb extends DevTestDb {
   @override
   Future<bool> isBackPaired(String peerId) async =>
       _flag(peerId, 'back_paired');
+  // whose hello was answered here: they know this phone
+  final asked = <String>{};
+  @override
+  Future<bool> theyAsked(String peerId) async => asked.contains(peerId);
   @override
   Future<bool> isBlocked(String haloId) async => _flag(haloId, 'blocked');
   @override
