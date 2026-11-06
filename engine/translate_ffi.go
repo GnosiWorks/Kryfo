@@ -115,7 +115,7 @@ func translateCatalog() string {
 		Base  string       `json:"base"`
 		Langs []bundleInfo `json:"langs"`
 	}{Base: m.Base}
-	for _, l := range m.Langs() {
+	for _, l := range m.Packs() {
 		_, disk := m.BundleBytes(l)
 		b := bundleInfo{Lang: l, Gz: m.WireBytes(l), Disk: disk}
 		for _, p := range m.Bundle(l) {

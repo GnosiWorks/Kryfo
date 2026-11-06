@@ -109,6 +109,9 @@ const deskWordKeys = [
   'voiceNoRoom',
   'translatePackTitle',
   'translatePackLine',
+  'translatePackLineTwo',
+  'translateWaitsWifi',
+  'translateLanguagesHint',
   'translatePackNoLib',
   'translateInstalled',
   'translateNeedsWifi',
@@ -384,6 +387,17 @@ extension DeskWords on AppLocalizations {
       onDesktop ? translatePackNoLibDesk : translatePackNoLib;
   String translateInstalledShown(Object size) =>
       onDesktop ? translateInstalledDesk(size) : translateInstalled(size);
+  String translatePackLineTwoShown(
+    Object language,
+    Object other,
+    Object size,
+  ) => onDesktop
+      ? translatePackLineTwoDesk(language, other, size)
+      : translatePackLineTwo(language, other, size);
+  String get translateWaitsWifiShown =>
+      onDesktop ? translateWaitsWifiDesk : translateWaitsWifi;
+  String get translateLanguagesHintShown =>
+      onDesktop ? translateLanguagesHintDesk : translateLanguagesHint;
   String get translateNeedsWifiShown =>
       onDesktop ? translateNeedsWifiDesk : translateNeedsWifi;
   String get translateFailNoEngineShown =>

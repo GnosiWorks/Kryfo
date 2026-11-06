@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/theme.dart';
-import 'package:kryfo/translate/catalog.dart';
 import 'package:kryfo/translate/chat_translation.dart';
 import 'package:kryfo/translate/downloads.dart';
 import 'package:kryfo/translate/engine_bridge.dart';
@@ -48,7 +47,7 @@ Widget bubble(ChatTranslation c, String text, {String key = 'm1'}) =>
     );
 
 void main() {
-  final zhGz = builtInCatalog.bundle('zh')!.gz;
+  final zhGz = zhCatalog.bundle('zh')!.gz;
 
   Future<ChatTranslation> open(
     WidgetTester t,
@@ -137,7 +136,9 @@ void main() {
       'the message translated once it is in', (t) async {
     final f = fakeHub(words: {_zh: _en});
     await open(t, f, (c) => bubble(c, _zh));
-    await t.tap(rich(l10n.translateAction));
+    await t.tap(
+      rich(l10n.translateOfferDownload(l10n.translateLangZh, packSize(zhGz))),
+    );
     await t.pumpAndSettle();
     expect(find.text(l10n.translatePackTitle(l10n.translateLangZh)), findsOne);
     final download = l10n.translateDownload(packSize(zhGz));
@@ -179,8 +180,8 @@ void main() {
     f.backend.startAnswer = 'error: tor: not started';
     final c = ChatTranslation(f.hub, 'heron');
     addTearDown(c.dispose);
-    final b = builtInCatalog.bundle('zh')!;
-    await t.pumpWidget(framed(PackControls(hub: f.hub, bundle: b)));
+    final b = zhCatalog.bundle('zh')!;
+    await t.pumpWidget(framed(PackControls(hub: f.hub, packs: [b])));
     await t.pump();
     await t.tap(find.text(l10n.translateDownload(packSize(b.gz))));
     await settle(t);
@@ -212,12 +213,12 @@ void main() {
       settings: const TranslateSettings(wifiOnly: true),
       wifi: false,
     );
-    final b = builtInCatalog.bundle('zh')!;
+    final b = zhCatalog.bundle('zh')!;
     await f.hub.ready();
-    await t.pumpWidget(framed(PackControls(hub: f.hub, bundle: b)));
+    await t.pumpWidget(framed(PackControls(hub: f.hub, packs: [b])));
     await t.tap(find.text(l10n.translateDownload(packSize(b.gz))));
     await settle(t);
-    expect(find.text(l10n.translateNeedsWifi), findsOneWidget);
+    expect(find.text(l10n.translateWaitsWifi), findsOneWidget);
     expect(f.backend.started, isEmpty);
     await t.tap(find.text(l10n.translateDownloadAnyway));
     await settle(t);
@@ -234,6 +235,11 @@ void main() {
   testWidgets('no library: the sheet says so, and offers no pack', (t) async {
     final f = fakeHub(lib: false);
     await open(t, f, (c) => bubble(c, _zh));
+    // no download is offered for a build that cannot use it
+    expect(
+      rich(l10n.translateOfferDownload(l10n.translateLangZh, packSize(zhGz))),
+      findsNothing,
+    );
     await t.tap(rich(l10n.translateAction));
     await t.pumpAndSettle();
     expect(find.text(l10n.translatePackNoLib), findsOneWidget);

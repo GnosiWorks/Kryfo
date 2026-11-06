@@ -9311,27 +9311,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get translatePacksSection => 'भाषा पैक';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language और अंग्रेज़ी';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'डाउनलोड नहीं हुआ · लगभग $size';
   }
 
   @override
   String get translateDownloading => 'Tor से डाउनलोड हो रहा है';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return '$language पैक डिलीट करें?';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return 'दोबारा डाउनलोड होने तक $language के मैसेज का अनुवाद नहीं हो सकेगा।';
-  }
 
   @override
   String get translateLanguagesSection => 'भाषाएँ';
@@ -11765,4 +11750,88 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'पिक्सल में ही छिपे निशान, जैसे इमेज बनाने वाले टूल के छिपे वॉटरमार्क, और तस्वीर में दिखने वाली हर चीज़ वैसी ही रहती है।';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return '$language डाउनलोड करें ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return '$language डाउनलोड हो रही है…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return '$language डाउनलोड करने के लिए Wi-Fi का इंतज़ार';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Wi-Fi का इंतज़ार है। यह फ़ोन Wi-Fi पर आते ही डाउनलोड अपने आप शुरू हो जाएगा।';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Wi-Fi का इंतज़ार है। यह कंप्यूटर Wi-Fi पर आते ही डाउनलोड अपने आप शुरू हो जाएगा।';
+
+  @override
+  String get translateWaitsWifiShort => 'Wi-Fi का इंतज़ार';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'मैसेज का अनुवाद इसी फ़ोन पर होता है और वे इससे कभी बाहर नहीं जाते। इसके लिए $language और $other भाषा पैक चाहिए, कुल लगभग $size, Tor से एक बार डाउनलोड होते हैं।';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'मैसेज का अनुवाद इसी कंप्यूटर पर होता है और वे इससे कभी बाहर नहीं जाते। इसके लिए $language और $other भाषा पैक चाहिए, कुल लगभग $size, Tor से एक बार डाउनलोड होते हैं।';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'हर भाषा एक बार डाउनलोड होती है, फिर इसी फ़ोन पर अनुवाद करती है';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'हर भाषा एक बार डाउनलोड होती है, फिर इसी कंप्यूटर पर अनुवाद करती है';
+
+  @override
+  String get translateSuggested => 'सुझाई गई';
+
+  @override
+  String get translateMoreLanguages => 'और भाषाएँ';
+
+  @override
+  String get translateWaysBoth => 'अंग्रेज़ी से और अंग्रेज़ी में';
+
+  @override
+  String get translateWaysInto => 'सिर्फ़ अंग्रेज़ी में अनुवाद करती है';
+
+  @override
+  String get translateWaysFrom => 'सिर्फ़ अंग्रेज़ी से अनुवाद करती है';
+
+  @override
+  String get translateGet => 'डाउनलोड करें';
+
+  @override
+  String get translateRemove => 'हटाएँ';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return '$language हटाएँ?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'इससे $size जगह खाली होगी। इससे सेव किए गए अनुवाद भी डिलीट हो जाएँगे। आप इसे कभी भी फिर से डाउनलोड कर सकते हैं।';
+  }
+
+  @override
+  String get translateResumeShort => 'जारी रखें';
+
+  @override
+  String get translateTagApp => 'ऐप की भाषा';
+
+  @override
+  String get translateTagRead => 'आप इसे पढ़ते हैं';
 }

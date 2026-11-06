@@ -11655,15 +11655,6 @@
   "@translatePacksSection": {
     "description": "translation page: the section of language packs"
   },
-  "translatePackPair": "{language} and English",
-  "@translatePackPair": {
-    "description": "a pack on the translation page: both directions with english",
-    "placeholders": {
-      "language": {
-        "type": "Object"
-      }
-    }
-  },
   "translateNotDownloaded": "Not downloaded · about {size}",
   "@translateNotDownloaded": {
     "description": "a pack not on the phone, with its download size",
@@ -11676,24 +11667,6 @@
   "translateDownloading": "Downloading over Tor",
   "@translateDownloading": {
     "description": "a pack being downloaded, on the translation page"
-  },
-  "translateDeleteTitle": "Delete the {language} pack?",
-  "@translateDeleteTitle": {
-    "description": "the sheet that asks before a pack is deleted",
-    "placeholders": {
-      "language": {
-        "type": "Object"
-      }
-    }
-  },
-  "translateDeleteLine": "Messages in {language} can't be translated until it's downloaded again.",
-  "@translateDeleteLine": {
-    "description": "under that title",
-    "placeholders": {
-      "language": {
-        "type": "Object"
-      }
-    }
   },
   "translateLanguagesSection": "Languages",
   "@translateLanguagesSection": {
@@ -14733,5 +14706,143 @@
   "cleanPixelMarksStay": "Marks hidden in the pixels themselves, like the watermarks image generators hide there, and anything you can see in the picture stay as they are.",
   "@cleanPixelMarksStay": {
     "description": "photo cleaner result, under the removed list (screens/clean_screen.dart)"
+  },
+  "translateOfferDownload": "Download {language} ({size})?",
+  "@translateOfferDownload": {
+    "description": "the line under a message whose language needs packs not on the phone: its language and what the packs it needs take on the wire",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      },
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateLineDownloading": "Downloading {language}…",
+  "@translateLineDownloading": {
+    "description": "the line under a message while the packs it needs come in",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateLineWaitsWifi": "Waiting for Wi-Fi to download {language}",
+  "@translateLineWaitsWifi": {
+    "description": "the line under a message while its packs wait for wi-fi (wi-fi only is on)",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateWaitsWifi": "Waiting for Wi-Fi. The download starts by itself once this phone is on Wi-Fi.",
+  "@translateWaitsWifi": {
+    "description": "a download asked for off wi-fi, with wi-fi only on: it goes on by itself"
+  },
+  "translateWaitsWifiDesk": "Waiting for Wi-Fi. The download starts by itself once this computer is on Wi-Fi.",
+  "@translateWaitsWifiDesk": {
+    "description": "translateWaitsWifi on a computer"
+  },
+  "translateWaitsWifiShort": "Waiting for Wi-Fi",
+  "@translateWaitsWifiShort": {
+    "description": "a language row while its download waits for wi-fi"
+  },
+  "translatePackLineTwo": "Messages are translated on this phone and never leave it. That needs the {language} and {other} language packs, about {size} together, downloaded once over Tor.",
+  "@translatePackLineTwo": {
+    "description": "the pack sheet when a message needs two languages packs (through english): both names and their total size",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      },
+      "other": {
+        "type": "Object"
+      },
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translatePackLineTwoDesk": "Messages are translated on this computer and never leave it. That needs the {language} and {other} language packs, about {size} together, downloaded once over Tor.",
+  "@translatePackLineTwoDesk": {
+    "description": "translatePackLineTwo on a computer",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      },
+      "other": {
+        "type": "Object"
+      },
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateLanguagesHint": "Each one downloads once, then translates on this phone",
+  "@translateLanguagesHint": {
+    "description": "under the languages row on the translation page"
+  },
+  "translateLanguagesHintDesk": "Each one downloads once, then translates on this computer",
+  "@translateLanguagesHintDesk": {
+    "description": "translateLanguagesHint on a computer"
+  },
+  "translateSuggested": "Suggested",
+  "@translateSuggested": {
+    "description": "languages screen: the section with the app language and the ones the person reads"
+  },
+  "translateMoreLanguages": "More languages",
+  "@translateMoreLanguages": {
+    "description": "languages screen: the section with every other language"
+  },
+  "translateWaysBoth": "To and from English",
+  "@translateWaysBoth": {
+    "description": "languages screen: a language that translates both ways with english"
+  },
+  "translateWaysInto": "Translates into English only",
+  "@translateWaysInto": {
+    "description": "languages screen: a language whose models go only into english"
+  },
+  "translateWaysFrom": "Translates from English only",
+  "@translateWaysFrom": {
+    "description": "languages screen: a language whose models go only out of english"
+  },
+  "translateGet": "Download",
+  "@translateGet": {
+    "description": "languages screen: the button that downloads a language"
+  },
+  "translateRemove": "Remove",
+  "@translateRemove": {
+    "description": "languages screen: the button that takes a language off the phone"
+  },
+  "translateRemoveTitle": "Remove {language}?",
+  "@translateRemoveTitle": {
+    "description": "confirm sheet title before removing a language",
+    "placeholders": {
+      "language": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateRemoveLine": "This frees {size}. Translations saved with it are deleted too. You can download it again any time.",
+  "@translateRemoveLine": {
+    "description": "confirm sheet line before removing a language: the space it frees",
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "translateResumeShort": "Resume",
+  "@translateResumeShort": {
+    "description": "languages screen: the button that goes on with a paused download"
+  },
+  "translateTagApp": "App language",
+  "@translateTagApp": {
+    "description": "languages screen: a mark on the app language"
+  },
+  "translateTagRead": "You read it",
+  "@translateTagRead": {
+    "description": "languages screen: a mark on a language the person reads"
   }
 }

@@ -9378,27 +9378,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get translatePacksSection => 'Pacotes de idioma';
 
   @override
-  String translatePackPair(Object language) {
-    return '$language e inglês';
-  }
-
-  @override
   String translateNotDownloaded(Object size) {
     return 'Não baixado · cerca de $size';
   }
 
   @override
   String get translateDownloading => 'Baixando pelo Tor';
-
-  @override
-  String translateDeleteTitle(Object language) {
-    return 'Apagar o pacote $language?';
-  }
-
-  @override
-  String translateDeleteLine(Object language) {
-    return 'Mensagens em $language não poderão ser traduzidas até você baixar de novo.';
-  }
 
   @override
   String get translateLanguagesSection => 'Idiomas';
@@ -11847,4 +11832,88 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get cleanPixelMarksStay =>
       'Marcas escondidas nos próprios pixels, como as marcas d\'água escondidas de geradores de imagens, e tudo o que se vê na imagem ficam como estão.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return 'Baixar · $language ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return 'Baixando · $language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'Aguardando Wi-Fi · $language';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Aguardando Wi-Fi. O download começa sozinho assim que este celular estiver no Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Aguardando Wi-Fi. O download começa sozinho assim que este computador estiver no Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiShort => 'Aguardando Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'As mensagens são traduzidas neste celular e nunca saem dele. Para isso são necessários os pacotes de idioma $language e $other, cerca de $size no total, baixados uma vez pelo Tor.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'As mensagens são traduzidas neste computador e nunca saem dele. Para isso são necessários os pacotes de idioma $language e $other, cerca de $size no total, baixados uma vez pelo Tor.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'Cada um é baixado uma vez e depois traduz neste celular';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'Cada um é baixado uma vez e depois traduz neste computador';
+
+  @override
+  String get translateSuggested => 'Sugeridos';
+
+  @override
+  String get translateMoreLanguages => 'Mais idiomas';
+
+  @override
+  String get translateWaysBoth => 'De e para o inglês';
+
+  @override
+  String get translateWaysInto => 'Traduz só para o inglês';
+
+  @override
+  String get translateWaysFrom => 'Traduz só a partir do inglês';
+
+  @override
+  String get translateGet => 'Baixar';
+
+  @override
+  String get translateRemove => 'Remover';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return 'Remover · $language?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'Isso libera $size. As traduções salvas com ele também são apagadas. Você pode baixar de novo quando quiser.';
+  }
+
+  @override
+  String get translateResumeShort => 'Continuar';
+
+  @override
+  String get translateTagApp => 'Idioma do app';
+
+  @override
+  String get translateTagRead => 'Você lê';
 }

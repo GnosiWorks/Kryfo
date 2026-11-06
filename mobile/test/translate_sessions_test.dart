@@ -51,6 +51,7 @@ void main() {
       store: DbTranslateStore(() async => db()),
       translator: FakeTranslator(words: {_zh: 'Hello'}),
       downloads: downloads,
+      catalog: zhCatalog,
       appLang: () => 'en',
       scope: () => now,
     );

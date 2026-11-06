@@ -15,6 +15,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import 'catalog.dart' show LangBundle;
 import 'chat_translation.dart';
+import 'downloads.dart' show DlPhase;
 import 'lang_names.dart';
 import 'pack_sheet.dart';
 import 'translate_menu.dart';
@@ -98,10 +99,17 @@ class _TranslatedBodyState extends State<TranslatedBody> {
         }
 
         // a pack not on the phone: its size, fetched only from the sheet
-        final missing = o == null || m.text != null
+        final missing = o == null || m.text != null || chat.hasLib == false
             ? const <LangBundle>[]
             : chat.hub.missing(o);
         final size = missing.fold<int>(0, (n, b) => n + b.gz);
+        final got = missing.isEmpty
+            ? null
+            : chat.hub.downloads.ofMany(
+                [for (final b in missing) b.id],
+                [for (final b in missing) b.gz],
+              );
+        final name = o == null ? '' : langName(o.seen);
         final Widget? foot = o == null
             ? null
             : switch (m.phase) {
@@ -124,11 +132,33 @@ class _TranslatedBodyState extends State<TranslatedBody> {
                   onTap: tap,
                   onMenu: menu,
                 ),
+                // the packs it needs are coming, or wait for wi-fi
+                MsgPhase.idle when got != null && got.busy => _Foot(
+                  key: const ValueKey('tr-getting'),
+                  icon: true,
+                  lead: l10n.translateLineDownloading(name),
+                  onTap: tap,
+                  onMenu: menu,
+                ),
+                MsgPhase.idle when got?.phase == DlPhase.wifiNeeded => _Foot(
+                  key: const ValueKey('tr-wifi'),
+                  icon: true,
+                  lead: l10n.translateLineWaitsWifi(name),
+                  onTap: tap,
+                  onMenu: menu,
+                ),
+                // packs to fetch first: the offer says what and how much
+                MsgPhase.idle when size > 0 => _Foot(
+                  key: const ValueKey('tr-offer'),
+                  icon: true,
+                  action: l10n.translateOfferDownload(name, packSize(size)),
+                  onTap: tap,
+                  onMenu: menu,
+                ),
                 MsgPhase.idle => _Foot(
                   key: const ValueKey('tr-idle'),
                   icon: true,
                   action: l10n.translateAction,
-                  size: size > 0 ? packSize(size) : null,
                   onTap: tap,
                   onMenu: menu,
                 ),
@@ -189,8 +219,6 @@ class _TranslatedBodyState extends State<TranslatedBody> {
 class _Foot extends StatelessWidget {
   final String? lead;
   final String? action;
-  // a pack's size when it is not on the phone yet
-  final String? size;
   final bool icon;
   final VoidCallback? onTap;
   final VoidCallback? onMenu;
@@ -198,7 +226,6 @@ class _Foot extends StatelessWidget {
     super.key,
     this.lead,
     this.action,
-    this.size,
     this.icon = false,
     this.onTap,
     this.onMenu,
@@ -236,7 +263,6 @@ class _Foot extends StatelessWidget {
           if (lead != null && action != null)
             TextSpan(text: ' · ', style: quiet),
           if (action != null) TextSpan(text: action, style: act),
-          if (size != null) TextSpan(text: ' · $size', style: quiet),
         ],
       ),
     );
@@ -250,7 +276,7 @@ class _Foot extends StatelessWidget {
     final menu = onMenu;
     return Semantics(
       button: true,
-      label: [?lead, ?action, ?size].join(', '),
+      label: [?lead, ?action].join(', '),
       excludeSemantics: true,
       onTap: onTap,
       onLongPress: menu,

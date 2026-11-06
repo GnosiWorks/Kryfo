@@ -14917,12 +14917,6 @@ abstract class AppLocalizations {
   /// **'Language packs'**
   String get translatePacksSection;
 
-  /// a pack on the translation page: both directions with english
-  ///
-  /// In en, this message translates to:
-  /// **'{language} and English'**
-  String translatePackPair(Object language);
-
   /// a pack not on the phone, with its download size
   ///
   /// In en, this message translates to:
@@ -14934,18 +14928,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Downloading over Tor'**
   String get translateDownloading;
-
-  /// the sheet that asks before a pack is deleted
-  ///
-  /// In en, this message translates to:
-  /// **'Delete the {language} pack?'**
-  String translateDeleteTitle(Object language);
-
-  /// under that title
-  ///
-  /// In en, this message translates to:
-  /// **'Messages in {language} can\'t be translated until it\'s downloaded again.'**
-  String translateDeleteLine(Object language);
 
   /// translation page: the section of the person's languages
   ///
@@ -18846,6 +18828,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Marks hidden in the pixels themselves, like the watermarks image generators hide there, and anything you can see in the picture stay as they are.'**
   String get cleanPixelMarksStay;
+
+  /// the line under a message whose language needs packs not on the phone: its language and what the packs it needs take on the wire
+  ///
+  /// In en, this message translates to:
+  /// **'Download {language} ({size})?'**
+  String translateOfferDownload(Object language, Object size);
+
+  /// the line under a message while the packs it needs come in
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading {language}…'**
+  String translateLineDownloading(Object language);
+
+  /// the line under a message while its packs wait for wi-fi (wi-fi only is on)
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Wi-Fi to download {language}'**
+  String translateLineWaitsWifi(Object language);
+
+  /// a download asked for off wi-fi, with wi-fi only on: it goes on by itself
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Wi-Fi. The download starts by itself once this phone is on Wi-Fi.'**
+  String get translateWaitsWifi;
+
+  /// translateWaitsWifi on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Wi-Fi. The download starts by itself once this computer is on Wi-Fi.'**
+  String get translateWaitsWifiDesk;
+
+  /// a language row while its download waits for wi-fi
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Wi-Fi'**
+  String get translateWaitsWifiShort;
+
+  /// the pack sheet when a message needs two languages packs (through english): both names and their total size
+  ///
+  /// In en, this message translates to:
+  /// **'Messages are translated on this phone and never leave it. That needs the {language} and {other} language packs, about {size} together, downloaded once over Tor.'**
+  String translatePackLineTwo(Object language, Object other, Object size);
+
+  /// translatePackLineTwo on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Messages are translated on this computer and never leave it. That needs the {language} and {other} language packs, about {size} together, downloaded once over Tor.'**
+  String translatePackLineTwoDesk(Object language, Object other, Object size);
+
+  /// under the languages row on the translation page
+  ///
+  /// In en, this message translates to:
+  /// **'Each one downloads once, then translates on this phone'**
+  String get translateLanguagesHint;
+
+  /// translateLanguagesHint on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Each one downloads once, then translates on this computer'**
+  String get translateLanguagesHintDesk;
+
+  /// languages screen: the section with the app language and the ones the person reads
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get translateSuggested;
+
+  /// languages screen: the section with every other language
+  ///
+  /// In en, this message translates to:
+  /// **'More languages'**
+  String get translateMoreLanguages;
+
+  /// languages screen: a language that translates both ways with english
+  ///
+  /// In en, this message translates to:
+  /// **'To and from English'**
+  String get translateWaysBoth;
+
+  /// languages screen: a language whose models go only into english
+  ///
+  /// In en, this message translates to:
+  /// **'Translates into English only'**
+  String get translateWaysInto;
+
+  /// languages screen: a language whose models go only out of english
+  ///
+  /// In en, this message translates to:
+  /// **'Translates from English only'**
+  String get translateWaysFrom;
+
+  /// languages screen: the button that downloads a language
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get translateGet;
+
+  /// languages screen: the button that takes a language off the phone
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get translateRemove;
+
+  /// confirm sheet title before removing a language
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {language}?'**
+  String translateRemoveTitle(Object language);
+
+  /// confirm sheet line before removing a language: the space it frees
+  ///
+  /// In en, this message translates to:
+  /// **'This frees {size}. Translations saved with it are deleted too. You can download it again any time.'**
+  String translateRemoveLine(Object size);
+
+  /// languages screen: the button that goes on with a paused download
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get translateResumeShort;
+
+  /// languages screen: a mark on the app language
+  ///
+  /// In en, this message translates to:
+  /// **'App language'**
+  String get translateTagApp;
+
+  /// languages screen: a mark on a language the person reads
+  ///
+  /// In en, this message translates to:
+  /// **'You read it'**
+  String get translateTagRead;
 }
 
 class _AppLocalizationsDelegate
