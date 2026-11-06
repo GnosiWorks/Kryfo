@@ -2956,6 +2956,7 @@
   "chatDropHereToAdd": "Eklemek için buraya bırakın",
   "trayRemove": "{name} öğesini kaldır",
   "trayReadyToSend": "Göndermeye hazır: {count}",
+  "trayPastedPicture": "Yapıştırılan resim",
   "voiceSeeTranscription": "Metni gör",
   "voiceTranscribing": "Metne çevriliyor…",
   "voiceHideTranscription": "Gizle",

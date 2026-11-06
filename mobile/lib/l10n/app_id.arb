@@ -2956,6 +2956,7 @@
   "chatDropHereToAdd": "Lepas di sini untuk menambah",
   "trayRemove": "Hapus {name}",
   "trayReadyToSend": "Siap dikirim: {count}",
+  "trayPastedPicture": "Gambar yang ditempel",
   "voiceSeeTranscription": "Lihat transkrip",
   "voiceTranscribing": "Mentranskrip…",
   "voiceHideTranscription": "Sembunyikan",

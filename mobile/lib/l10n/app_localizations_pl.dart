@@ -11468,6 +11468,9 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Wklejony obraz';
+
+  @override
   String get voiceSeeTranscription => 'Pokaż transkrypcję';
 
   @override

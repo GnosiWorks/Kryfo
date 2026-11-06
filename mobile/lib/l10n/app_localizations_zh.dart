@@ -10647,6 +10647,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => '粘贴的图片';
+
+  @override
   String get voiceSeeTranscription => '查看文字';
 
   @override
@@ -21510,6 +21513,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String trayReadyToSend(Object count) {
     return '待傳送：$count';
   }
+
+  @override
+  String get trayPastedPicture => '貼上的圖片';
 
   @override
   String get voiceSeeTranscription => '查看文字';

@@ -11228,6 +11228,9 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Ảnh đã dán';
+
+  @override
   String get voiceSeeTranscription => 'Xem bản chép lời';
 
   @override

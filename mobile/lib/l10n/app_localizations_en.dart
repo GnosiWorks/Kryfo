@@ -11245,6 +11245,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Pasted picture';
+
+  @override
   String get voiceSeeTranscription => 'See transcription';
 
   @override

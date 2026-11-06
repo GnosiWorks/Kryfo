@@ -5,8 +5,12 @@
 #include <shellapi.h>
 #include <wtsapi32.h>
 
+#include <cstring>
+#include <memory>
+#include <new>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "flutter/generated_plugin_registrant.h"
 #include "kryfo_audio.h"
@@ -17,10 +21,7 @@ constexpr UINT_PTR kHiddenTimer = 0x4B53;
 // how long a hidden start waits for its tray icon before the window shows
 constexpr UINT kHiddenWaitMs = 10000;
 
-// the session's lock now. no answer counts as locked: the first unlock
-// says otherwise
-// the files copied in explorer, as utf-8 paths. nothing else on the
-// clipboard is read
+// the files copied in explorer, as utf-8 paths
 flutter::EncodableList ClipboardFiles(HWND owner) {
   flutter::EncodableList files;
   if (!::IsClipboardFormatAvailable(CF_HDROP) || !::OpenClipboard(owner)) return files;
@@ -45,6 +46,56 @@ flutter::EncodableList ClipboardFiles(HWND owner) {
   return files;
 }
 
+// past this a copied picture is not read: a dib of 8192 by 4096 at 32 bits
+constexpr SIZE_T kPictureMost = 160u * 1024 * 1024;
+
+// a picture copied (a screenshot, a browser's copy image), its bytes as
+// they are on the clipboard and in memory only: the png a copy carries,
+// else its dib (windows makes one from a plain bitmap). none while words
+// are there too: they paste as words
+flutter::EncodableValue ClipboardPicture(HWND owner) {
+  if (::IsClipboardFormatAvailable(CF_UNICODETEXT)) return flutter::EncodableValue();
+  static const UINT png = ::RegisterClipboardFormatW(L"PNG");
+  static const UINT mime = ::RegisterClipboardFormatW(L"image/png");
+  UINT pick = 0;
+  const char* kind = "dib";
+  if (png && ::IsClipboardFormatAvailable(png)) {
+    pick = png;
+    kind = "png";
+  } else if (mime && ::IsClipboardFormatAvailable(mime)) {
+    pick = mime;
+    kind = "png";
+  } else if (::IsClipboardFormatAvailable(CF_DIBV5)) {
+    pick = CF_DIBV5;
+  } else if (::IsClipboardFormatAvailable(CF_DIB)) {
+    pick = CF_DIB;
+  }
+  if (!pick || !::OpenClipboard(owner)) return flutter::EncodableValue();
+  // copied out and the clipboard let go before the bytes go over to dart
+  std::unique_ptr<uint8_t[]> buf;
+  SIZE_T n = 0;
+  HANDLE h = ::GetClipboardData(pick);
+  SIZE_T size = h ? ::GlobalSize(h) : 0;
+  if (size > 0 && size <= kPictureMost) {
+    buf.reset(new (std::nothrow) uint8_t[size]);
+    const void* at = buf ? ::GlobalLock(h) : nullptr;
+    if (at) {
+      std::memcpy(buf.get(), at, size);
+      ::GlobalUnlock(h);
+      n = size;
+    }
+  }
+  ::CloseClipboard();
+  if (n == 0) return flutter::EncodableValue();
+  return flutter::EncodableValue(flutter::EncodableMap{
+      {flutter::EncodableValue("kind"), flutter::EncodableValue(std::string(kind))},
+      {flutter::EncodableValue("bytes"),
+       flutter::EncodableValue(std::vector<uint8_t>(buf.get(), buf.get() + n))},
+  });
+}
+
+// the session's lock now. no answer counts as locked: the first unlock
+// says otherwise
 bool SessionLockedNow() {
   WTSINFOEXW* info = nullptr;
   DWORD n = 0;
@@ -133,6 +184,9 @@ bool FlutterWindow::OnCreate() {
     } else if (call.method_name() == "clipFiles") {
       // ctrl and v in a composer: files copied in explorer wait in its row
       result->Success(flutter::EncodableValue(ClipboardFiles(GetHandle())));
+    } else if (call.method_name() == "clipPicture") {
+      // ctrl and v in a composer: a copied picture waits in its row
+      result->Success(ClipboardPicture(GetHandle()));
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();

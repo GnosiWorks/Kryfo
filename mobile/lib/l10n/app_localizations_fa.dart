@@ -11256,6 +11256,9 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'تصویر چسبانده‌شده';
+
+  @override
   String get voiceSeeTranscription => 'دیدن متن';
 
   @override

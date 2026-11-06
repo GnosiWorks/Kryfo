@@ -11425,6 +11425,9 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Вставлене зображення';
+
+  @override
   String get voiceSeeTranscription => 'Показати текст';
 
   @override

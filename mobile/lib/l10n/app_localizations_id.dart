@@ -11244,6 +11244,9 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Gambar yang ditempel';
+
+  @override
   String get voiceSeeTranscription => 'Lihat transkrip';
 
   @override

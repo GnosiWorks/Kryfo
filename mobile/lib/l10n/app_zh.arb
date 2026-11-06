@@ -2956,6 +2956,7 @@
   "chatDropHereToAdd": "拖到这里松开即可添加",
   "trayRemove": "移除 {name}",
   "trayReadyToSend": "待发送：{count}",
+  "trayPastedPicture": "粘贴的图片",
   "voiceSeeTranscription": "查看文字",
   "voiceTranscribing": "正在转成文字…",
   "voiceHideTranscription": "收起",

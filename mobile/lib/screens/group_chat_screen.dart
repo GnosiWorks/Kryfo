@@ -4759,6 +4759,17 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
   }
 
+  // a picture pasted from the clipboard waits there too, in memory only
+  void _stagePicture(Uint8List png) {
+    if (_end != null || _waiting) return;
+    unawaited(
+      _tray.addPicture(
+        png,
+        most: () => appState.fileLimitForGroup(widget.groupId),
+      ),
+    );
+  }
+
   // enter with files staged: photos and videos as albums with the caption
   // on the first, as a pick goes, then each file. a file alone takes it
   Future<void> _sendTray() async {
@@ -4785,7 +4796,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         continue;
       }
       try {
-        picks.add(PickedMedia.photo(await File(x.path).readAsBytes()));
+        picks.add(PickedMedia.photo(await trayBytes(x)));
       } catch (_) {
         if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       }
@@ -5124,6 +5135,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             TrayStrip(tray: _tray),
                             PasteFiles(
                               onFiles: _stage,
+                              onPicture: _stagePicture,
                               child: _Composer(
                                 staged: !_tray.isEmpty,
                                 controller: _msgCtrl,

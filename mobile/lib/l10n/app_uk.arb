@@ -2956,6 +2956,7 @@
   "chatDropHereToAdd": "Відпустіть тут, щоб додати",
   "trayRemove": "Прибрати {name}",
   "trayReadyToSend": "Готово до надсилання: {count}",
+  "trayPastedPicture": "Вставлене зображення",
   "voiceSeeTranscription": "Показати текст",
   "voiceTranscribing": "Розпізнаємо…",
   "voiceHideTranscription": "Сховати",

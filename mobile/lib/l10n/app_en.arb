@@ -14113,6 +14113,10 @@
       }
     }
   },
+  "trayPastedPicture": "Pasted picture",
+  "@trayPastedPicture": {
+    "description": "a computer: the name under a picture pasted from the clipboard (a screenshot, a copied image) while it waits above the composer"
+  },
   "voiceSeeTranscription": "See transcription",
   "@voiceSeeTranscription": {
     "description": "the link under a voice message that shows its words"

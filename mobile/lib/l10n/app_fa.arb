@@ -2956,6 +2956,7 @@
   "chatDropHereToAdd": "برای افزودن اینجا رها کنید",
   "trayRemove": "برداشتن {name}",
   "trayReadyToSend": "آماده فرستادن: {count}",
+  "trayPastedPicture": "تصویر چسبانده‌شده",
   "voiceSeeTranscription": "دیدن متن",
   "voiceTranscribing": "در حال تبدیل به متن…",
   "voiceHideTranscription": "پنهان کردن",

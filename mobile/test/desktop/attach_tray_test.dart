@@ -4,7 +4,8 @@
 // the row and enter sends it, photos as one album and files one after
 // another. each chat keeps its own row, a lock empties all of them with
 // their thumbs, a stranger's request keeps nothing, and a file too big
-// stays out with a line
+// stays out with a line. a copied picture pastes in as a photo held in
+// memory, never as a file
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -15,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show albumPlan;
 import 'package:kryfo/desktop/attach_tray.dart';
+import 'package:kryfo/desktop/clip_picture.dart' show clipboardPicture;
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/desktop/drag_in.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -48,11 +50,14 @@ void main() {
     root = Directory.systemTemp.createTempSync('attach_tray');
     lockState.openForTest();
     AttachTray.decode = (_) async => null;
+    AttachTray.decodePicture = (_) async => null;
   });
   tearDown(() {
     onDesktop = false;
     AttachTray.decode = decodeTrayThumb;
     PasteFiles.clip = clipboardFiles;
+    PasteFiles.picture = clipboardPicture;
+    AttachTray.decodePicture = decodeTrayBytes;
     DeskTrays.clearAll();
     lockState.openForTest();
     root.deleteSync(recursive: true);
@@ -236,6 +241,36 @@ void main() {
       }
     });
 
+    test('the chats and note to self take a pasted picture, and send it '
+        'from its bytes', () {
+      for (final f in [
+        'lib/screens/chat_screen.dart',
+        'lib/screens/group_chat_screen.dart',
+        'lib/screens/notes_screen.dart',
+      ]) {
+        final src = sourceOf(f);
+        expect(src, contains('onPicture: _stagePicture,'), reason: f);
+        expect(src, contains('await trayBytes(x)'), reason: f);
+        expect(src, isNot(contains('File(x.path).readAsBytes()')), reason: f);
+      }
+      // a stranger's request says media waits, as a drop does
+      final chat = bodyOf(
+        sourceOf('lib/screens/chat_screen.dart'),
+        'void _stagePicture(',
+      );
+      expect(
+        chat.indexOf('_tray.say(l10n.requestSenderMediaLater)'),
+        lessThan(chat.indexOf('_tray.addPicture(')),
+      );
+      expect(
+        bodyOf(
+          sourceOf('lib/screens/group_chat_screen.dart'),
+          'void _stagePicture(',
+        ),
+        contains('if (_end != null || _waiting) return;'),
+      );
+    });
+
     test('a stranger\'s request stages nothing and says why', () {
       final body = bodyOf(
         sourceOf('lib/screens/chat_screen.dart'),
@@ -300,6 +335,7 @@ void main() {
                     TrayStrip(tray: tray),
                     PasteFiles(
                       onFiles: (f) => tray.add(f, most: _fifty),
+                      onPicture: (png) => tray.addPicture(png, most: _fifty),
                       child: EnterSends(
                         controller: words,
                         onSend: send,
@@ -403,6 +439,139 @@ void main() {
       await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
       await t.pumpAndSettle();
       expect(tray.items.length, 2);
+    });
+
+    Future<void> ctrlV(WidgetTester t) async {
+      await t.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyV);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('ctrl and v of a copied picture puts it in the row, held in '
+        'memory, and enter sends it as a photo', (t) async {
+      final png = Uint8List.fromList(List.filled(2048, 1));
+      PasteFiles.clip = () async => const [];
+      PasteFiles.picture = () async => png;
+      final before = root.listSync(recursive: true).length;
+      await chat(t);
+      await ctrlV(t);
+      expect(find.byKey(const ValueKey('attach-tray')), findsOneWidget);
+      expect(find.text('Pasted picture'), findsOneWidget);
+      expect(find.text('2 kb'), findsOneWidget);
+      final x = tray.items.single;
+      expect(x.kind, TrayKind.photo);
+      expect(identical(x.bytes, png), isTrue);
+      expect(await trayBytes(x), same(png));
+      // nothing written for it
+      expect(File(x.path).existsSync(), isFalse);
+      expect(root.listSync(recursive: true).length, before);
+      // a second paste is a second picture
+      await ctrlV(t);
+      expect(tray.items.length, 2);
+      await t.enterText(find.byType(TextField), 'look');
+      await t.sendKeyEvent(LogicalKeyboardKey.enter);
+      await t.pumpAndSettle();
+      expect(sent, ['album:Pasted picture', 'album:Pasted picture']);
+      expect(tray.isEmpty, isTrue);
+    });
+
+    testWidgets('a pasted picture shows its thumb, decoded from its bytes', (
+      t,
+    ) async {
+      final img = (await t.runAsync(
+        () => createTestImage(width: 4, height: 4),
+      ))!;
+      Uint8List? seen;
+      AttachTray.decodePicture = (b) async {
+        seen = b;
+        return img.clone();
+      };
+      final png = Uint8List.fromList([1, 2, 3]);
+      PasteFiles.clip = () async => const [];
+      PasteFiles.picture = () async => png;
+      await chat(t);
+      await ctrlV(t);
+      expect(seen, same(png));
+      expect(tray.items.single.thumb, isNotNull);
+      expect(find.byType(RawImage), findsOneWidget);
+      tray.clear();
+      img.dispose();
+    });
+
+    testWidgets('words on the clipboard paste as words, files go before a '
+        'picture', (t) async {
+      var asked = 0;
+      PasteFiles.picture = () async {
+        asked++;
+        return null;
+      };
+      final copied = <String>[];
+      PasteFiles.clip = () async => copied;
+      final m = t.binding.defaultBinaryMessenger;
+      m.setMockMethodCallHandler(SystemChannels.platform, (c) async {
+        if (c.method == 'Clipboard.getData') return {'text': 'hi'};
+        if (c.method == 'Clipboard.hasStrings') return {'value': true};
+        return null;
+      });
+      addTearDown(
+        () => m.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      await chat(t);
+      await ctrlV(t);
+      expect(words.text, 'hi');
+      expect(tray.isEmpty, isTrue);
+      expect(asked, 1);
+      // files copied: they go, and no picture is asked for
+      copied.add(file('copied.pdf').path);
+      PasteFiles.picture = () async => Uint8List.fromList([1]);
+      await ctrlV(t);
+      expect([for (final x in tray.items) x.name], ['copied.pdf']);
+    });
+
+    testWidgets('a picture pasted while the app is locked does nothing', (
+      t,
+    ) async {
+      var asked = 0;
+      PasteFiles.clip = () async => const [];
+      PasteFiles.picture = () async {
+        asked++;
+        return Uint8List.fromList([1, 2, 3]);
+      };
+      await chat(t);
+      lockState.openForTest(enabled: true);
+      lockState.lock();
+      await ctrlV(t);
+      expect(tray.isEmpty, isTrue);
+      expect(asked, 0);
+      // nor one that lands after a lock came while it was read
+      lockState.openForTest();
+      PasteFiles.picture = () async {
+        lockState.openForTest(enabled: true);
+        lockState.lock();
+        return Uint8List.fromList([1, 2, 3]);
+      };
+      await ctrlV(t);
+      expect(tray.isEmpty, isTrue);
+      await tray.addPicture(Uint8List.fromList([1]), most: _fifty);
+      expect(tray.isEmpty, isTrue);
+    });
+
+    testWidgets('a pasted picture too big, or one past ten, stays out with '
+        'a line', (t) async {
+      await chat(t);
+      await tray.addPicture(Uint8List(4096), most: () async => 1024);
+      await t.pumpAndSettle();
+      expect(tray.isEmpty, isTrue);
+      expect(find.textContaining('kb'), findsOneWidget);
+      for (var i = 0; i < kDragInMost; i++) {
+        await tray.addPicture(Uint8List.fromList([i + 1]), most: _fifty);
+      }
+      expect(tray.line, isNull);
+      await tray.addPicture(Uint8List.fromList([99]), most: _fifty);
+      expect(tray.items.length, kDragInMost);
+      expect(tray.line, l10n.mediaSendUpTo('10'));
+      expect(tray.warns, isTrue);
     });
 
     testWidgets('enter sends the row with the caption; shift and enter is a '

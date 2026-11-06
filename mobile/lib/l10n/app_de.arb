@@ -2956,6 +2956,7 @@
   "chatDropHereToAdd": "Hier ablegen zum Hinzufügen",
   "trayRemove": "{name} entfernen",
   "trayReadyToSend": "Bereit zum Senden: {count}",
+  "trayPastedPicture": "Eingefügtes Bild",
   "voiceSeeTranscription": "Transkript anzeigen",
   "voiceTranscribing": "Wird transkribiert…",
   "voiceHideTranscription": "Ausblenden",
