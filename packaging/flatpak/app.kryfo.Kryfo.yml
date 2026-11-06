@@ -48,6 +48,8 @@ modules:
       - --disable-tcl
       - --disable-static
       - --disable-readline
+      # no /usr/local/lib run path in the library
+      - --disable-rpath
       # libsqlcipher.so next to the runtime's libsqlite3, not in its place
       - --dll-basename=libsqlcipher
       - --soname=legacy

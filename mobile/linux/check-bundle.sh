@@ -35,5 +35,16 @@ if [ -f "$B/lib/libsqlcipher.so.0" ] && ldd "$B/lib/libsqlcipher.so.0" | grep -q
 fi
 ls "$B/lib" | grep -q '^libsqlite3' && no "a plain sqlite is in lib/"
 [ -f "$B/data/kryfo.png" ] || no "data/kryfo.png missing"
+[ -e "$B/lib/libdartjni.so" ] && no "lib/libdartjni.so is in the bundle (it needs a java vm)"
+# run paths only inside the bundle, and no home folder in any file
+for f in "$B/kryfo" "$B"/lib/*.so*; do
+  rp=$(readelf -d "$f" | sed -n 's/.*(R\(UN\)\{0,1\}PATH).*\[\(.*\)\]/\2/p')
+  for p in $(echo "$rp" | tr ':' ' '); do
+    case "$p" in '$ORIGIN'*) ;; *) no "$(basename "$f") has the run path $p" ;; esac
+  done
+done
+if [ -n "${HOME:-}" ] && [ "$HOME" != / ] && grep -rlaF "$HOME/" "$B" >/dev/null; then
+  no "the bundle carries $HOME: $(grep -rlaF "$HOME/" "$B" | tr '\n' ' ')"
+fi
 [ "$fail" = 0 ] && echo "bundle ok: $B"
 exit "$fail"

@@ -49,6 +49,12 @@ set_target_properties(${BINARY_NAME}
 
 include(flutter/generated_plugins.cmake)
 
+# the plugins are copied into lib/ as they were built, so a build run path
+# would ship the build folder's name; the runner has loaded flutter already
+foreach(plugin ${FLUTTER_PLUGIN_LIST})
+  set_target_properties(${plugin}_plugin PROPERTIES SKIP_BUILD_RPATH TRUE)
+endforeach()
+
 set(BUILD_BUNDLE_DIR "${PROJECT_BINARY_DIR}/bundle")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${BUILD_BUNDLE_DIR}" CACHE PATH "..." FORCE)
@@ -71,6 +77,10 @@ install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
 include(engine.cmake)
+
+# jni comes in with android plugins and needs a java vm, which nothing on
+# the desktop starts
+list(FILTER PLUGIN_BUNDLED_LIBRARIES EXCLUDE REGEX "TARGET_FILE:jni>$")
 
 foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
   install(FILES "${bundled_library}"

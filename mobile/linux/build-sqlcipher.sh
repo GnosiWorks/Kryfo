@@ -29,7 +29,7 @@ export SOURCE_DATE_EPOCH=0
 export CFLAGS="-O2 ${EXTRA_CFLAGS:-} -ffile-prefix-map=$work=/sqlcipher -DSQLITE_HAS_CODEC -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown"
 export LDFLAGS="${EXTRA_LDFLAGS:-} -lcrypto"
 ./configure --with-tempstore=yes --fts5 --disable-tcl --disable-static \
-  --disable-readline --dll-basename=libsqlcipher --soname=legacy >configure.log 2>&1 || {
+  --disable-readline --disable-rpath --dll-basename=libsqlcipher --soname=legacy >configure.log 2>&1 || {
   tail -20 configure.log >&2
   exit 1
 }
