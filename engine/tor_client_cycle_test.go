@@ -18,14 +18,14 @@ import (
 	"github.com/cretz/bine/tor"
 )
 
-// the services bine's connection owns, as tor lists them. tor drops one only
-// on the connection that added it, so this is what is published
+// the services the onion connection owns, as tor lists them. tor drops one
+// only on the connection that added it, so this is what is published
 func onionsOwned(t *testing.T, n *tor.Tor) string {
 	t.Helper()
 	var kv []*control.KeyVal
-	err := ctrlFallback(n, "GETINFO onions/current", func(c *control.Conn) error {
+	err := onionDo(n, "GETINFO onions/current", ctrlDeadline(), func(tc *tor.Tor) error {
 		var gerr error
-		kv, gerr = c.GetInfo("onions/current")
+		kv, gerr = tc.Control.GetInfo("onions/current")
 		return gerr
 	})
 	if err != nil {

@@ -15,6 +15,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fiatjaf/eventstore/sqlite3"
@@ -28,8 +30,9 @@ const (
 )
 
 // store connections for reads, kept open between uses. a read holds one
-// only while its query runs. a catch-up scans every wrap in its window, so
-// more than the cpus can run at once only helps while the disk is read
+// only while its query runs. a catch-up the recipient index cannot answer
+// scans every wrap in its window, so more than the cpus can run at once
+// only helps while the disk is read
 var storeConns = envInt("RELAY_STORE_CONNS", 32)
 
 // saves, deletes and the sweep have connections of their own, so a storm
@@ -43,6 +46,15 @@ type store struct {
 	w *sqlite3.SQLite3Backend
 	// a connection of its own with no busy wait, for checkpoints
 	ckpt *sql.DB
+	// the recipient index's fill (recipients.go): wraps stamped at or
+	// after below are listed, and all of them once filled
+	below  atomic.Int64
+	filled atomic.Bool
+	stop   context.Context
+	halt   context.CancelFunc
+	fillWG sync.WaitGroup
+	// catch-ups answered by the index and by the backend's query
+	byIndex, byScan atomic.Int64
 }
 
 // the store as the relay runs it, its page size left at the backend's own.
@@ -87,9 +99,16 @@ func openStore(path string) (*store, error) {
 		db.Close()
 		return nil, err
 	}
-	return &store{db, w, ckpt}, nil
+	s := &store{SQLite3Backend: db, w: w, ckpt: ckpt}
+	s.stop, s.halt = context.WithCancel(context.Background())
+	if err := s.initRecipients(); err != nil {
+		s.Close()
+		return nil, err
+	}
+	return s, nil
 }
 
+// its recipient rows go with it, by the wrap_to_gone trigger
 func (s *store) DeleteEvent(ctx context.Context, ev *nostr.Event) error {
 	return s.w.DeleteEvent(ctx, ev)
 }
@@ -102,13 +121,9 @@ func (s *store) ExecContext(ctx context.Context, query string, args ...any) (sql
 // a page is read to its end before the first event goes out, which gives
 // its connection back at once. the store caps a page at 100 events
 func (s *store) QueryEvents(ctx context.Context, f nostr.Filter) (chan *nostr.Event, error) {
-	ch, err := s.SQLite3Backend.QueryEvents(ctx, f)
+	page, err := s.page(ctx, f)
 	if err != nil {
 		return nil, err
-	}
-	var page []*nostr.Event
-	for ev := range ch {
-		page = append(page, ev)
 	}
 	out := make(chan *nostr.Event)
 	go func() {
@@ -124,6 +139,31 @@ func (s *store) QueryEvents(ctx context.Context, f nostr.Filter) (chan *nostr.Ev
 		}
 	}()
 	return out, nil
+}
+
+// a catch-up through the recipient index when it can be sure of it, else
+// the backend's query
+func (s *store) page(ctx context.Context, f nostr.Filter) ([]*nostr.Event, error) {
+	if s.listable(f) {
+		page, err := s.pageByRecipient(ctx, f)
+		if err == nil {
+			s.byIndex.Add(1)
+			return page, nil
+		}
+		if err != errUnlisted {
+			return nil, err
+		}
+	}
+	s.byScan.Add(1)
+	ch, err := s.SQLite3Backend.QueryEvents(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+	var page []*nostr.Event
+	for ev := range ch {
+		page = append(page, ev)
+	}
+	return page, nil
 }
 
 // a file slice's id and the day it came, for its shorter week (sweepBig).
@@ -147,10 +187,11 @@ func isBig(ev *nostr.Event) bool { return len(ev.Content) > bigContent }
 // the start of the utc day of t, in unix seconds
 func dayOf(t time.Time) int64 { return t.Unix() / 86400 * 86400 }
 
-// saved as the backend saves it, and marked when it is a file slice. a
-// mark that fails leaves it the fourteen days of any wrap
+// saved as the backend saves it, with its recipient rows in the same
+// write, and marked when it is a file slice. a mark that fails leaves it
+// the fourteen days of any wrap
 func (s *store) SaveEvent(ctx context.Context, ev *nostr.Event) error {
-	if err := s.w.SaveEvent(ctx, ev); err != nil {
+	if err := s.saveListed(ctx, ev); err != nil {
 		return err
 	}
 	if isBig(ev) {
@@ -163,6 +204,8 @@ func (s *store) SaveEvent(ctx context.Context, ev *nostr.Event) error {
 }
 
 func (s *store) Close() {
+	s.halt()
+	s.fillWG.Wait()
 	s.ckpt.Close()
 	s.w.Close()
 	s.SQLite3Backend.Close()

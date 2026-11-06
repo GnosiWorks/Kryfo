@@ -192,10 +192,19 @@ func TestOnlyWrapsToOneAddress(t *testing.T) {
 			}
 		},
 		"a long tag": func(e *nostr.Event) { e.Tags = append(e.Tags, make(nostr.Tag, maxTagLen+1)) },
+		"listed for everyone": func(e *nostr.Event) {
+			e.Tags = append(e.Tags, nostr.Tag{"x", counting(100)})
+		},
 	} {
 		if err := publish(t, r, wrap(t, to, mod)); err == nil {
 			t.Errorf("%s was taken", name)
 		}
+	}
+	// other keys in its tags, short of maxRuns, are taken
+	if err := publish(t, r, wrap(t, to, func(e *nostr.Event) {
+		e.Tags = append(e.Tags, nostr.Tag{"x", addr(), addr(), addr()})
+	})); err != nil {
+		t.Errorf("a wrap with three more keys was refused: %v", err)
 	}
 }
 

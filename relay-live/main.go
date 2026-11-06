@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -37,6 +38,7 @@ func main() {
 	}
 	startSweeper(db)
 	startCheckpoints(db)
+	db.startFill()
 
 	onion, what, err := onionServer(relay)
 	if err != nil {
@@ -66,5 +68,8 @@ func relayServer(addr string, h http.Handler) *http.Server {
 		WriteTimeout:      writeWait,
 		ReadHeaderTimeout: headerWait,
 		IdleTimeout:       idleWait,
+		// net/http's own lines (a handler's panic, a bad request) name the
+		// peer: they go nowhere, like the other services'
+		ErrorLog: log.New(io.Discard, "", 0),
 	}
 }
