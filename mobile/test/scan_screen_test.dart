@@ -150,13 +150,19 @@ void main() {
 
   // the frame, its line and the way back stay off the cutout and the bars
   testWidgets('the scanner clears the bars', (t) async {
-    for (final nav in [gestureBar, buttonBar]) {
-      barsPhone(t, nav: nav);
+    for (final (nav, top) in [
+      (gestureBar, cutoutTop),
+      (buttonBar, cutoutTop),
+      // android 15 and 16
+      (gestureThin, statusLow),
+      (buttonBar, statusTall),
+    ]) {
+      barsPhone(t, nav: nav, status: top);
       listen(t);
       await t.pumpWidget(framed(still: true));
       await t.pump(const Duration(milliseconds: 500));
       expect(find.text(l10n.scanPointAtAKryfo), findsOneWidget);
-      expectClearOfBars(t, reason: 'nav $nav');
+      expectClearOfBars(t, reason: 'nav $nav top $top');
       await t.pumpWidget(const SizedBox());
     }
   });

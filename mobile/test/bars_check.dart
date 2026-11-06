@@ -14,20 +14,27 @@ const gestureBar = 24.0;
 const buttonBar = 48.0;
 const keyboardUp = 300.0;
 
+// android 15 and 16 draw every app edge to edge: a status bar from 24 to 48,
+// a gesture handle from 16 to 24, three buttons at 48
+const statusLow = 24.0;
+const statusTall = 48.0;
+const gestureThin = 16.0;
+
 // a 360x780 phone in portrait, or on its side with the cutout on the left
 void barsPhone(
   WidgetTester t, {
   double nav = gestureBar,
   double keyboard = 0,
   bool landscape = false,
+  double status = cutoutTop,
 }) {
   const ratio = 3.0;
   t.view.devicePixelRatio = ratio;
   t.view.physicalSize = landscape
       ? const Size(780 * ratio, 360 * ratio)
       : const Size(360 * ratio, 780 * ratio);
-  final top = (landscape ? 24.0 : cutoutTop) * ratio;
-  final left = (landscape ? cutoutTop : 0.0) * ratio;
+  final top = (landscape ? 24.0 : status) * ratio;
+  final left = (landscape ? status : 0.0) * ratio;
   // on its side, the buttons stand at the right edge. the gesture handle
   // stays at the bottom
   final side = landscape && nav >= buttonBar;
@@ -129,16 +136,20 @@ List<String> underBars(WidgetTester t) {
       return;
     }
     var nv = v, nh = h;
-    if (o is RenderViewportBase) {
-      final off = o.offset;
+    // a list's viewport, or a SingleChildScrollView's, whose render object
+    // is private but says the same
+    if (o is RenderAbstractViewport) {
+      final d = o as dynamic;
+      final ViewportOffset off = d.offset;
+      final AxisDirection dir = d.axisDirection;
       if (off.hasPixels) {
         final s = off is ScrollPosition
             ? _Scroll(
-                axisDirectionToAxis(o.axisDirection),
+                axisDirectionToAxis(dir),
                 off.pixels <= off.minScrollExtent + 0.5,
                 off.pixels >= off.maxScrollExtent - 0.5,
               )
-            : _Scroll(axisDirectionToAxis(o.axisDirection), true, true);
+            : _Scroll(axisDirectionToAxis(dir), true, true);
         if (s.axis == Axis.vertical) {
           nv = s;
         } else {
@@ -182,4 +193,17 @@ void expectClearOfBars(WidgetTester t, {String? reason}) {
 double gapAboveBottom(WidgetTester t, Finder f) {
   final bars = Bars.of(t);
   return bars.screen.height - bars.bottom - t.getRect(f).bottom;
+}
+
+// every vertical list and scroll view moved to its end, where its last row
+// must clear the bars
+Future<void> scrollAllToEnd(WidgetTester t) async {
+  for (final s in t.stateList<ScrollableState>(find.byType(Scrollable))) {
+    final p = s.position;
+    if (p.axis != Axis.vertical || !p.hasContentDimensions) continue;
+    if (p.maxScrollExtent <= p.pixels) continue;
+    p.jumpTo(p.maxScrollExtent);
+  }
+  await t.pump();
+  await t.pump(const Duration(milliseconds: 400));
 }

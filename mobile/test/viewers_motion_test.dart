@@ -109,6 +109,25 @@ void main() {
       expect(find.byType(PhotoViewer), findsOneWidget);
     });
 
+    // its close and share stay off the cutout and the bars
+    testWidgets('its controls clear the bars', (t) async {
+      for (final (nav, top) in [
+        (gestureBar, cutoutTop),
+        (buttonBar, cutoutTop),
+        // android 15 and 16
+        (gestureThin, statusLow),
+        (buttonBar, statusTall),
+      ]) {
+        barsPhone(t, nav: nav, status: top);
+        await open(t);
+        await settles(t);
+        expect(find.byType(PhotoViewer), findsOneWidget);
+        expectClearOfBars(t, reason: 'nav $nav top $top');
+        await t.pumpWidget(const SizedBox());
+        await t.pump(const Duration(seconds: 1));
+      }
+    });
+
     testWidgets('a tap flies it home and nothing is left moving', (t) async {
       await open(t);
       await settles(t);
@@ -410,8 +429,14 @@ void main() {
 
     // close, play and the timeline stay off the cutout and the bars
     testWidgets('its controls clear the bars', (t) async {
-      for (final nav in [gestureBar, buttonBar]) {
-        barsPhone(t, nav: nav);
+      for (final (nav, top) in [
+        (gestureBar, cutoutTop),
+        (buttonBar, cutoutTop),
+        // android 15 and 16
+        (gestureThin, statusLow),
+        (buttonBar, statusTall),
+      ]) {
+        barsPhone(t, nav: nav, status: top);
         quiet(t);
         player(t);
         await t.pumpWidget(
@@ -434,7 +459,7 @@ void main() {
         await t.pump();
         await t.pump(const Duration(milliseconds: 400));
         expect(find.bySemanticsLabel(l10n.commonClose), findsWidgets);
-        expectClearOfBars(t, reason: 'nav $nav');
+        expectClearOfBars(t, reason: 'nav $nav top $top');
         await t.tap(find.bySemanticsLabel(l10n.commonClose).first);
         await t.pumpAndSettle();
       }

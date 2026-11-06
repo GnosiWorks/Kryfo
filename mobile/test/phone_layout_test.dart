@@ -30,6 +30,7 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/composer_hint.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'bars_check.dart';
 import 'dev_chat_fakes.dart';
 import 'mem_db.dart';
 import 'say_hi_fakes.dart';
@@ -354,4 +355,96 @@ void main() {
     await _wholeHint(t, l10n.groupChatMessage);
     await devClose(t);
   });
+
+  // android 15 and 16 draw the app under the bars: the backgrounds run under
+  // them and nothing to read or press does
+  for (final (name, nav, top) in [
+    ('gesture', gestureThin, statusLow),
+    ('buttons', buttonBar, statusTall),
+  ]) {
+    testWidgets('android 15 home, $name', (t) async {
+      _prefs();
+      lockState.openForTest();
+      await t.runAsync(
+        () =>
+            devWorld(chats: [('amber-new-river', 5, false), (_peer, 3, false)]),
+      );
+      barsPhone(t, nav: nav, status: top);
+      await devOpen(
+        t,
+        devHome(
+          groups: const [
+            GroupSummary(groupId: 'g1', name: 'Hikers', memberCount: 3),
+          ],
+        ),
+        size: _phone,
+        ratio: 3,
+        still: true,
+      );
+      await _settle(t);
+      expectClearOfBars(t);
+      await expectLater(
+        find.byType(HomeScreen),
+        matchesGoldenFile('goldens/a15_home_$name.png'),
+      );
+      await devClose(t);
+    });
+
+    for (final kb in [0.0, keyboardUp]) {
+      final up = kb > 0 ? '_keyboard' : '';
+      testWidgets('android 15 chat, $name${kb > 0 ? ', keyboard' : ''}', (
+        t,
+      ) async {
+        await _chatWorld(t);
+        barsPhone(t, nav: nav, keyboard: kb, status: top);
+        await devOpen(
+          t,
+          const ChatScreen(
+            peerHaloId: _peer,
+            peerOnion: '',
+            peerXPub: 'abab',
+            avatarSeed: _peer,
+          ),
+          size: _phone,
+          ratio: 3,
+          still: true,
+        );
+        await _settle(t);
+        expectClearOfBars(t);
+        await expectLater(
+          find.byType(ChatScreen),
+          matchesGoldenFile('goldens/a15_chat_$name$up.png'),
+        );
+        await devClose(t);
+      });
+    }
+
+    testWidgets('android 15 group chat, $name', (t) async {
+      _prefs();
+      lockState.openForTest();
+      final docs = Directory.systemTemp.createTempSync('phone_layout');
+      addTearDown(() => docs.deleteSync(recursive: true));
+      mockChannel('plugins.flutter.io/path_provider', (_) async => docs.path);
+      addTearDown(() => mockChannel('plugins.flutter.io/path_provider', null));
+      mockChannel('com.llfbandit.record/messages', (_) async => null);
+      useLibrary();
+      final db = _GroupDb();
+      useDatabasesForTest(db, Session(db));
+      barsPhone(t, nav: nav, status: top);
+      await devOpen(
+        t,
+        const GroupChatScreen(groupId: 'g1'),
+        size: _phone,
+        ratio: 3,
+        still: true,
+      );
+      await _settle(t);
+      expectClearOfBars(t);
+      await expectLater(
+        find.byType(GroupChatScreen),
+        matchesGoldenFile('goldens/a15_group_$name.png'),
+      );
+      await devClose(t);
+    });
+  }
 }

@@ -4,6 +4,7 @@
 // no style carries a bar colour, which would reach window setters android 15
 // deprecates
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -140,5 +141,25 @@ void main() {
     s = SystemChrome.latestStyle!;
     expect(s.statusBarIconBrightness, Brightness.dark);
     expectNoColours();
+  });
+
+  // flutter's own light and dark styles carry a black navigation bar, and
+  // any colour here reaches a window setter android 15 deprecates
+  test('no style in the app names a bar colour', () {
+    final bad = RegExp(
+      r'SystemUiOverlayStyle\.(light|dark)\b|'
+      r'(statusBarColor|systemNavigationBarColor|'
+      r'systemNavigationBarDividerColor)\s*:',
+    );
+    final hits = <String>[];
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      final lines = f.readAsLinesSync();
+      for (final (i, l) in lines.indexed) {
+        if (l.trimLeft().startsWith('//')) continue;
+        if (bad.hasMatch(l)) hits.add('${f.path}:${i + 1}: ${l.trim()}');
+      }
+    }
+    expect(hits, isEmpty, reason: hits.join('\n'));
   });
 }

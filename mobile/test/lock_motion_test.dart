@@ -152,8 +152,14 @@ void main() {
   testWidgets('the lock, the pin setup and the splash clear the bars', (
     t,
   ) async {
-    for (final (nav, kb) in [(gestureBar, 0.0), (buttonBar, 0.0)]) {
-      barsPhone(t, nav: nav, keyboard: kb);
+    for (final (nav, kb, top) in [
+      (gestureBar, 0.0, cutoutTop),
+      (buttonBar, 0.0, cutoutTop),
+      // android 15 and 16
+      (gestureThin, 0.0, statusLow),
+      (buttonBar, 0.0, statusTall),
+    ]) {
+      barsPhone(t, nav: nav, keyboard: kb, status: top);
       final lock = await makeLock(appOnly);
       await t.pumpWidget(framed(LockScreen(lock: lock.state)));
       await t.pump(const Duration(seconds: 2));
