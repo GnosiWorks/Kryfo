@@ -613,6 +613,12 @@ class _NotesScreenState extends State<NotesScreen> {
     unawaited(_tray.add(files, most: () async => kNoteFileMost));
   }
 
+  // a picture pasted from the clipboard: kept as a photo note, never on
+  // disk in plain while it waits
+  void _stagePicture(Uint8List png) {
+    unawaited(_tray.addPicture(png, most: () async => kNoteFileMost));
+  }
+
   // enter with files waiting: each kept as its own note in the order
   // staged, a photo as a photo and a gif as a gif, the words with the first
   Future<void> _keepTray() async {
@@ -633,7 +639,7 @@ class _NotesScreenState extends State<NotesScreen> {
     }
     final Uint8List bytes;
     try {
-      bytes = await File(x.path).readAsBytes();
+      bytes = await trayBytes(x);
     } catch (_) {
       return (item: null, line: l10n.chatCouldNotReadThat);
     }
@@ -893,7 +899,11 @@ class _NotesScreenState extends State<NotesScreen> {
                       : const SizedBox(width: double.infinity),
                 ),
                 TrayStrip(tray: _tray),
-                PasteFiles(onFiles: _stage, child: _inputBar()),
+                PasteFiles(
+                  onFiles: _stage,
+                  onPicture: _stagePicture,
+                  child: _inputBar(),
+                ),
               ],
             ),
           ),

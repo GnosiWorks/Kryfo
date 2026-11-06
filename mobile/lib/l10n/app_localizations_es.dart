@@ -11325,6 +11325,9 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Imagen pegada';
+
+  @override
   String get voiceSeeTranscription => 'Ver transcripción';
 
   @override

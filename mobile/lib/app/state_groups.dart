@@ -575,7 +575,7 @@ extension AppStateGroups on AppState {
     AlbumTag? album,
   }) async {
     final written = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
-    // a gif shows no share on either side: it just appears
+    // a gif or a voice note shows no share on either side: it just appears
     final gif = quietMedia(path, fileName: fileName, voice: voice);
     // one send per media at a time, the same set the 1:1 path holds. the
     // drainer picks up any row older than 45 s, and a video to a group is

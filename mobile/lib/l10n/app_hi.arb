@@ -2955,6 +2955,7 @@
   "chatDropHereToAdd": "जोड़ने के लिए यहाँ छोड़ें",
   "trayRemove": "{name} हटाएँ",
   "trayReadyToSend": "भेजने के लिए तैयार: {count}",
+  "trayPastedPicture": "चिपकाई गई तस्वीर",
   "voiceSeeTranscription": "लिखित रूप देखें",
   "voiceTranscribing": "लिखा जा रहा है…",
   "voiceHideTranscription": "छिपाएँ",

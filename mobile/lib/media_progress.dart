@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // live progress for chunked media, both directions: a big file over tor
 // takes minutes, so the sender's bubble shows a percentage and the receiver
-// gets a slim banner above the composer. a gif shows none: it just appears.
+// gets a slim banner above the composer. a gif and a voice note show none:
+// they just appear.
 // plain maps and one global tick. the widgets stay mounted and hide
 // themselves, so it does not matter whether the widget or the entry comes
 // first.
@@ -22,13 +23,13 @@ final Map<String, double> mediaSendProgress = {};
 /// byte goes: the strip says preparing, not 0%
 final Set<String> mediaPreparing = {};
 
-// sends that show no share: a gif's
+// sends that show no share: a gif's and a voice note's
 final Set<String> _quiet = {};
 
-/// a gif goes as a picture, in slices or through the files service: true
-/// when [path] is one, by the name its bytes gave it
+/// a voice note, or a gif going as a picture (in slices or through the
+/// files service, told by the name its bytes gave it): no share shows
 bool quietMedia(String path, {String? fileName, bool voice = false}) =>
-    fileName == null && !voice && path.toLowerCase().endsWith('.gif');
+    voice || (fileName == null && path.toLowerCase().endsWith('.gif'));
 
 /// whether [msgUid]'s send shows no share
 bool mediaQuiet(String msgUid) => _quiet.contains(msgUid);
@@ -138,7 +139,7 @@ void stopMediaSweeper() {
   _sweeper = null;
 }
 
-/// [quiet]: a gif's, which shows no share anywhere
+/// [quiet]: a gif's or a voice note's, which shows no share anywhere
 void mediaProgressStart(
   String msgUid, {
   String? chatKey,

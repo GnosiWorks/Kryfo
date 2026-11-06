@@ -6,7 +6,8 @@
 // thumb in memory, and a lock lets go of all of it. the copy into the
 // sealed media folder is made on send, the way a pick's is. note to self
 // has its row too (DeskTrays.of('<container>|notes')): enter keeps each
-// staged file as a note
+// staged file as a note. a pasted picture has no path: its bytes wait in
+// memory, never on disk, and go the photo's way
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -23,6 +24,7 @@ import '../theme.dart';
 import '../widgets/media_bubbles.dart' show fileTooBigLine, humanFileSize;
 import '../widgets/motion.dart' show motionStill;
 import 'desktop_mode.dart' show onDesktop;
+import 'clip_picture.dart' show clipboardPicture;
 import 'desktop_run.dart' show runChannel;
 import 'drag_in.dart' show draggedFiles, kDragInMost;
 
@@ -42,12 +44,26 @@ TrayKind trayKindOf(String name) {
 class TrayItem {
   TrayItem(this.path, this.size)
     : name = p.basename(path),
-      kind = trayKindOf(path);
+      kind = trayKindOf(path),
+      bytes = null;
+
+  /// a picture pasted from the clipboard, a png in memory. its path is a
+  /// name for the row alone: nothing is at it
+  TrayItem.picture(Uint8List this.bytes)
+    : path = 'pasted:${_pasted++}',
+      name = l10n.trayPastedPicture,
+      size = bytes.length,
+      kind = TrayKind.photo;
+
+  static var _pasted = 0;
 
   final String path;
   final String name;
   final int size;
   final TrayKind kind;
+
+  /// a pasted picture's bytes; null for a file, read from its path
+  final Uint8List? bytes;
 
   /// a photo's small picture, decoded here and dropped with the row
   ui.Image? thumb;
@@ -79,11 +95,22 @@ class TrayItem {
   );
 }
 
+/// what a staged photo is: a pasted one's bytes, or its file's
+Future<Uint8List> trayBytes(TrayItem x) async =>
+    x.bytes ?? await File(x.path).readAsBytes();
+
 /// a photo's thumb, a small decode of its bytes. null for one that will
 /// not decode, which then shows as a file does
 Future<ui.Image?> decodeTrayThumb(String path) async {
   try {
-    final bytes = await File(path).readAsBytes();
+    return await decodeTrayBytes(await File(path).readAsBytes());
+  } catch (_) {
+    return null;
+  }
+}
+
+Future<ui.Image?> decodeTrayBytes(Uint8List bytes) async {
+  try {
     final codec = await ui.instantiateImageCodec(bytes, targetWidth: 160);
     try {
       return (await codec.getNextFrame()).image;
@@ -97,7 +124,7 @@ Future<ui.Image?> decodeTrayThumb(String path) async {
 
 /// files copied in explorer, as paths, read off the clipboard by the
 /// runner. none where the runner has no such call (linux for now).
-/// a copied picture's own data is a 0.6.1 item: it would come in here
+/// a copied picture's own data comes with clipboardPicture
 Future<List<String>> clipboardFiles() async {
   try {
     return await runChannel.invokeListMethod<String>('clipFiles') ?? const [];
@@ -110,6 +137,8 @@ Future<List<String>> clipboardFiles() async {
 class AttachTray extends ChangeNotifier {
   /// set by tests
   static Future<ui.Image?> Function(String path) decode = decodeTrayThumb;
+  static Future<ui.Image?> Function(Uint8List bytes) decodePicture =
+      decodeTrayBytes;
 
   final List<TrayItem> _items = [];
   String? _line;
@@ -170,8 +199,41 @@ class AttachTray extends ChangeNotifier {
     }
   }
 
+  /// a picture pasted, as png [bytes], staged as a photo. one over [most]
+  /// bytes, or past the count a send takes, stays out and the line says
+  /// why. nothing goes in while the app is locked
+  Future<void> addPicture(
+    Uint8List bytes, {
+    required Future<int> Function() most,
+  }) async {
+    if (lockState.locked || bytes.isEmpty) return;
+    final limit = await most();
+    if (lockState.locked) return;
+    if (_items.length >= kDragInMost) {
+      _line = l10n.mediaSendUpTo(whole(kDragInMost));
+      _warn = true;
+      notifyListeners();
+      return;
+    }
+    if (bytes.length > limit) {
+      _line = fileTooBigLine(bytes.length, limit);
+      _warn = true;
+      notifyListeners();
+      return;
+    }
+    final x = TrayItem.picture(bytes);
+    _items.add(x);
+    _line = null;
+    _warn = false;
+    notifyListeners();
+    unawaited(_thumb(x));
+  }
+
   Future<void> _thumb(TrayItem x) async {
-    final img = await decode(x.path);
+    final pasted = x.bytes;
+    final img = pasted != null
+        ? await decodePicture(pasted)
+        : await decode(x.path);
     if (img == null) return;
     // gone while it decoded: a lock, a remove, a send
     if (!_items.contains(x)) {
@@ -247,16 +309,24 @@ class DeskTrays {
 }
 
 /// ctrl and v, or shift and insert, in a composer on a computer: files
-/// copied in explorer go to [onFiles]. words on the clipboard paste as
-/// they always have
+/// copied in explorer go to [onFiles], a copied picture (a screenshot, a
+/// browser's copy image) to [onPicture] as png bytes. words on the
+/// clipboard paste as they always have. a locked app takes nothing
 class PasteFiles extends StatelessWidget {
-  const PasteFiles({super.key, required this.onFiles, required this.child});
+  const PasteFiles({
+    super.key,
+    required this.onFiles,
+    this.onPicture,
+    required this.child,
+  });
 
   final void Function(List<String> paths) onFiles;
+  final void Function(Uint8List png)? onPicture;
   final Widget child;
 
   /// set by tests
   static Future<List<String>> Function() clip = clipboardFiles;
+  static Future<Uint8List?> Function() picture = clipboardPicture;
 
   static bool _isPaste(KeyEvent e) {
     final keys = HardwareKeyboard.instance;
@@ -270,12 +340,23 @@ class PasteFiles extends StatelessWidget {
   }
 
   KeyEventResult _key(FocusNode _, KeyEvent e) {
-    if (e is KeyDownEvent && _isPaste(e)) {
-      clip().then((paths) {
-        if (paths.isNotEmpty && !lockState.locked) onFiles(paths);
-      });
+    if (e is KeyDownEvent && _isPaste(e) && !lockState.locked) {
+      unawaited(_paste());
     }
     return KeyEventResult.ignored;
+  }
+
+  Future<void> _paste() async {
+    final paths = await clip();
+    if (lockState.locked) return;
+    if (paths.isNotEmpty) {
+      onFiles(paths);
+      return;
+    }
+    final take = onPicture;
+    if (take == null) return;
+    final png = await picture();
+    if (png != null && !lockState.locked) take(png);
   }
 
   @override

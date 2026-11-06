@@ -11269,6 +11269,9 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Yapıştırılan resim';
+
+  @override
   String get voiceSeeTranscription => 'Metni gör';
 
   @override

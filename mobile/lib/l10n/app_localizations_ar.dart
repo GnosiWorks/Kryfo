@@ -11385,6 +11385,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'صورة ملصقة';
+
+  @override
   String get voiceSeeTranscription => 'عرض النص';
 
   @override

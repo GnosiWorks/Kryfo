@@ -11248,6 +11248,9 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'चिपकाई गई तस्वीर';
+
+  @override
   String get voiceSeeTranscription => 'लिखित रूप देखें';
 
   @override

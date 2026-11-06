@@ -11370,6 +11370,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Eingefügtes Bild';
+
+  @override
   String get voiceSeeTranscription => 'Transkript anzeigen';
 
   @override

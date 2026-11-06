@@ -11426,6 +11426,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Вставленное изображение';
+
+  @override
   String get voiceSeeTranscription => 'Показать текст';
 
   @override

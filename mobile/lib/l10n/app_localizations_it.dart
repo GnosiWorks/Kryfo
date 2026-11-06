@@ -11333,6 +11333,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get trayPastedPicture => 'Immagine incollata';
+
+  @override
   String get voiceSeeTranscription => 'Vedi trascrizione';
 
   @override

@@ -2955,6 +2955,7 @@
   "chatDropHereToAdd": "Отпустите здесь, чтобы добавить",
   "trayRemove": "Убрать {name}",
   "trayReadyToSend": "Готово к отправке: {count}",
+  "trayPastedPicture": "Вставленное изображение",
   "voiceSeeTranscription": "Показать текст",
   "voiceTranscribing": "Распознаём…",
   "voiceHideTranscription": "Скрыть",

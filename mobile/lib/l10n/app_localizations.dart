@@ -18013,6 +18013,12 @@ abstract class AppLocalizations {
   /// **'Ready to send: {count}'**
   String trayReadyToSend(Object count);
 
+  /// a computer: the name under a picture pasted from the clipboard (a screenshot, a copied image) while it waits above the composer
+  ///
+  /// In en, this message translates to:
+  /// **'Pasted picture'**
+  String get trayPastedPicture;
+
   /// the link under a voice message that shows its words
   ///
   /// In en, this message translates to:

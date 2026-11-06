@@ -6789,6 +6789,21 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
+  // a picture pasted from the clipboard waits there too, in memory only
+  void _stagePicture(Uint8List png) {
+    if (!_composerShown) return;
+    if (_mediaWaits) {
+      _tray.say(l10n.requestSenderMediaLater);
+      return;
+    }
+    unawaited(
+      _tray.addPicture(
+        png,
+        most: () => appState.fileLimitFor(widget.peerHaloId),
+      ),
+    );
+  }
+
   // enter with files staged: the photos and videos as albums with the
   // caption on the first, the phone's way, then each file after it. a file
   // alone takes the caption itself
@@ -6820,7 +6835,7 @@ class _ChatScreenState extends State<ChatScreen>
         continue;
       }
       try {
-        picks.add(PickedMedia.photo(await File(x.path).readAsBytes()));
+        picks.add(PickedMedia.photo(await trayBytes(x)));
       } catch (_) {
         if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
       }
@@ -7420,6 +7435,7 @@ class _ChatScreenState extends State<ChatScreen>
                             TrayStrip(tray: _tray),
                             PasteFiles(
                               onFiles: _stage,
+                              onPicture: _stagePicture,
                               child: _Composer(
                                 media: !_mediaWaits,
                                 staged: !_tray.isEmpty,

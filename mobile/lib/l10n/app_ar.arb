@@ -2955,6 +2955,7 @@
   "chatDropHereToAdd": "أفلِت هنا للإضافة",
   "trayRemove": "إزالة {name}",
   "trayReadyToSend": "جاهز للإرسال: {count}",
+  "trayPastedPicture": "صورة ملصقة",
   "voiceSeeTranscription": "عرض النص",
   "voiceTranscribing": "جارٍ التحويل إلى نص…",
   "voiceHideTranscription": "إخفاء",
