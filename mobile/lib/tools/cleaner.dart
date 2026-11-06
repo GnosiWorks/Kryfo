@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
+import '../desktop/desktop_mode.dart' show runIsolated;
 import '../image_strip.dart';
 import '../meta/file_source.dart';
 import '../meta/meta_reader.dart';
@@ -96,15 +96,17 @@ MetaReport readFile(String path) {
   }
 }
 
+// runIsolated: on desktop the new isolate reads a sealed copy through the
+// same seal, and writes its own copy sealed
 Future<MetaReport> readFileOffUi(String path) =>
-    Isolate.run(() => readFile(path));
+    runIsolated(() => readFile(path));
 
 Future<CleanResult> cleanFile(
   String inPath,
   String outRoot, {
   String? originalName,
 }) async => drawnWhereBetter(
-  await Isolate.run(() => cleanFileHere(inPath, outRoot, originalName)),
+  await runIsolated(() => cleanFileHere(inPath, outRoot, originalName)),
   inPath,
   outRoot,
   originalName,
@@ -219,7 +221,9 @@ Future<CleanResult> cleanFileHere(
 
   try {
     final ok = before.kind == MetaKind.mp4
-        ? await stripMp4Metadata(out.path)
+        // already off the ui thread: a nested isolate would not have the
+        // desktop's seal over the copy
+        ? stripMp4Sync(out.path)
         : await stripPictureFile(out.path);
     if (ok != true) {
       await _drop(dir);
