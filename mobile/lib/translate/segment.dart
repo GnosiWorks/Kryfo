@@ -24,7 +24,10 @@ final _linkTail = RegExp(r'''[.,;:!?'"”’»]+$''');
 final _mentionTail = RegExp(r'[.\-]+$');
 
 final _letter = RegExp(r'[\p{L}]', unicode: true);
-final _han = RegExp(r'[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]', unicode: true);
+final _han = RegExp(
+  r'[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]',
+  unicode: true,
+);
 final _upper = RegExp(r'^[\p{Lu}\p{Lt}]', unicode: true);
 final _lower = RegExp(r'^\p{Ll}', unicode: true);
 final _ends = RegExp(r'''[.!?…。！？‼⁉]["'”’»」』）)\]]*$''');
@@ -63,16 +66,66 @@ class MessagePlan {
   final List<Object> parts;
   const MessagePlan._(this.asks, this.parts);
 
-  String fill(List<String> answers) {
+  // [to]: the language the answers are in. its own gap goes between
+  // sentences, not the source's: a space after . ! ? in spaced scripts,
+  // none after 。！？ in chinese and japanese. line breaks stay as they are
+  String fill(List<String> answers, {String? to}) {
     if (answers.length != asks.length) {
       throw ArgumentError('${answers.length} answers for ${asks.length}');
     }
+    final close = to != null && closedUp(to);
+    final out = [
+      for (final p in parts) p is int ? _regap(answers[p].trim(), to) : p,
+    ];
     final b = StringBuffer();
-    for (final p in parts) {
-      b.write(p is int ? answers[p].trim() : p);
+    for (var i = 0; i < out.length; i++) {
+      var piece = out[i] as String;
+      final prev = i > 0 && parts[i - 1] is int ? out[i - 1] as String : null;
+      if (to != null && prev != null) {
+        if (parts[i] is int) {
+          // two answers with nothing kept between: a cut at a sentence end
+          if (!close && _latinEnd.hasMatch(prev)) b.write(' ');
+        } else if (close &&
+            i + 1 < out.length &&
+            parts[i + 1] is int &&
+            piece.trim().isEmpty &&
+            !piece.contains('\n') &&
+            _cjkEnd.hasMatch(prev)) {
+          piece = '';
+        }
+      }
+      b.write(piece);
     }
     return b.toString();
   }
+}
+
+// languages written with no gap between sentences
+bool closedUp(String lang) {
+  final l = lang.toLowerCase();
+  return l == 'zh' ||
+      l.startsWith('zh_') ||
+      l.startsWith('zh-') ||
+      l == 'ja' ||
+      l.startsWith('ja_');
+}
+
+// a sentence end, with the quotes and brackets that close it
+final _latinEnd = RegExp(r'''[.!?…؟]["'”’»)\]]*$''');
+final _cjkEnd = RegExp(r'[。！？][」』）]*$');
+// a sentence end with a capital or a caseless letter right after it, and
+// a full-width one with spaces after it
+final _tightEnd = RegExp(
+  r'''([.!?…؟]["'”’»)\]]*)(?=[\p{Lu}\p{Lt}\p{Lo}])''',
+  unicode: true,
+);
+final _looseCjk = RegExp(r'([。！？][」』）]*)[ \t\u3000]+(?=\S)');
+
+// one answer with its target's gaps between sentences
+String _regap(String s, String? to) {
+  if (to == null) return s;
+  if (closedUp(to)) return s.replaceAllMapped(_looseCjk, (m) => m[1]!);
+  return s.replaceAllMapped(_tightEnd, (m) => '${m[1]} ');
 }
 
 MessagePlan planMessage(String text, {int limit = kModelLimit}) {
@@ -196,7 +249,9 @@ List<(String, String)> _pieces(String s, String gap, int limit, int level) {
     return [
       for (var k = 0; k < runes.length; k += limit)
         (
-          String.fromCharCodes(runes.sublist(k, (k + limit).clamp(0, runes.length))),
+          String.fromCharCodes(
+            runes.sublist(k, (k + limit).clamp(0, runes.length)),
+          ),
           k + limit >= runes.length ? gap : '',
         ),
     ];
@@ -221,7 +276,10 @@ List<(String, String)> _split(String s, RegExp re) {
   for (final m in re.allMatches(s)) {
     if (m.end >= s.length) break;
     final mark = m[0]!.trimRight();
-    out.add((s.substring(at, m.start + mark.length), m[0]!.substring(mark.length)));
+    out.add((
+      s.substring(at, m.start + mark.length),
+      m[0]!.substring(mark.length),
+    ));
     at = m.end;
   }
   out.add((s.substring(at), ''));
