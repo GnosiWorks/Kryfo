@@ -1,0 +1,5 @@
+Novo: criptografia pós-quântica entre celulares com 0.6 e aparelhos conectados para usar o Kryfo também no computador. Fotos de perfil, indicador de digitação, bloqueio de capturas em grupos e arquivos até 50 MB que pausam e retomam.
+
+Mudou: configuração em seis passos, códigos de pareamento de oito dígitos, e fotos e arquivos criptografados também no celular. O Kryfo agora tem hindi e polonês.
+
+Contatos com 0.5 precisam atualizar para vocês se adicionarem. Suas conversas continuam funcionando.

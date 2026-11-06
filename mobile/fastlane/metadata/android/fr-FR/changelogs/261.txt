@@ -1,0 +1,5 @@
+Nouveau : chiffrement post-quantique entre téléphones en 0.6, et appareils associés : Kryfo aussi sur ordinateur. Photos de profil, indicateur de saisie, blocage des captures en groupe, fichiers jusqu’à 50 Mo avec pause et reprise.
+
+Changé : configuration en six étapes, codes d’appairage à huit chiffres, photos et fichiers chiffrés aussi sur le téléphone. Kryfo existe en hindi et en polonais.
+
+Un contact en 0.5 doit mettre à jour avant que vous puissiez vous ajouter. Vos discussions continuent.
