@@ -811,6 +811,9 @@ class _GearButton extends StatelessWidget {
   }
 }
 
+/// the text size from which home's id line sits under the header buttons
+const kIdUnderScale = 1.3;
+
 class _HomeHead extends StatelessWidget {
   final DateTime now;
   final String haloId;
@@ -861,6 +864,10 @@ class _HomeHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // at large text the column beside the buttons is too narrow for the
+    // id: it goes under them, as on a computer
+    final under =
+        onDesktop || MediaQuery.textScalerOf(context).scale(1) >= kIdUnderScale;
     final row = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -902,7 +909,7 @@ class _HomeHead extends StatelessWidget {
                   ),
                 ),
               ),
-              if (!onDesktop) ..._name(),
+              if (!under) ..._name(),
             ],
           ),
         ),
@@ -918,7 +925,7 @@ class _HomeHead extends StatelessWidget {
     );
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-      child: !onDesktop
+      child: !under
           ? row
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the update check: who gets it, what it accepts, how often it asks, and
-// that it asks nothing with the switch off, in a decoy or without tor
+// that it asks nothing with the switch off, in a decoy or without tor, and
+// that a decoy shows the card the everyday side fetched, as an install would
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -371,7 +372,10 @@ void main() {
       expect(asked, isEmpty);
     });
 
-    test('no request in a decoy, and no card there', () async {
+    // until 2026-11 the decoy showed no card at all, while the everyday app on
+    // the same phone did: a tell. it now shows what the everyday side already
+    // fetched, and still never asks
+    test('no request in a decoy, but the same card there', () async {
       final n = make();
       await n.check();
       expect(n.shown, '0.5.1');
@@ -381,7 +385,53 @@ void main() {
       now = now.add(const Duration(days: 2));
       expect(await n.check(), isFalse);
       expect(asked, isEmpty);
+      expect(n.shown, '0.5.1');
+      // a cold start straight into the decoy reads it too, still asking nothing
+      final cold = make();
+      expect(await cold.check(), isFalse);
+      expect(asked, isEmpty);
+      expect(cold.shown, '0.5.1');
+    });
+
+    test('a dismissal stays in the identity that made it', () async {
+      final n = make();
+      await n.check();
+      // dismissed in the decoy: the everyday card stays
+      quiet = true;
+      c = HaloContainer.decoy;
+      await n.dismiss();
       expect(n.shown, isNull);
+      quiet = false;
+      c = HaloContainer.everyday;
+      expect(n.shown, '0.5.1');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('kryfo.update.dismissed'), isNull);
+      // dismissed here: the decoy's card stays
+      await n.dismiss();
+      expect(n.shown, isNull);
+      expect(prefs.getString('kryfo.update.dismissed'), '0.5.1');
+      SharedPreferences.setMockInitialValues({
+        'kryfo.update.latest': '0.5.1',
+        'kryfo.update.dismissed': '0.5.1',
+      });
+      quiet = true;
+      c = HaloContainer.decoy;
+      final fresh = make();
+      await fresh.ready();
+      expect(fresh.shown, '0.5.1');
+      // and the decoy writes nothing the everyday side reads
+      final before = Map.of({
+        for (final k in (await SharedPreferences.getInstance()).getKeys())
+          k: (await SharedPreferences.getInstance()).get(k),
+      });
+      now = now.add(const Duration(days: 3));
+      await fresh.check();
+      await fresh.dismiss();
+      final after = await SharedPreferences.getInstance();
+      for (final k in after.getKeys()) {
+        if (k.startsWith('d.')) continue;
+        expect(after.get(k), before[k], reason: k);
+      }
     });
 
     test('the decoy has a switch of its own', () async {
