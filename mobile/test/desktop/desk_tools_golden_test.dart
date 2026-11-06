@@ -98,10 +98,7 @@ void main() {
     final file = deskPicked(photo.path)!;
     await t.pumpWidget(framed(PhotoKnowsScreen(file: file)));
     await settle(t, find.text(l10n.photoKnowsRemoveAllOfIt));
-    expect(
-      find.text(l10n.photoKnowsReadOnThisPhoneThePhotoDesk),
-      findsOneWidget,
-    );
+    expect(find.textContaining('WENT NOWHERE'), findsNothing);
     await t.tap(find.text(l10n.photoKnowsRemoveAllOfIt));
     await t.pump();
     await t.pump(const Duration(milliseconds: 400));

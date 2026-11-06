@@ -4446,22 +4446,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Keep it as it is';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'READ ON THIS PHONE · THE VIDEO WENT NOWHERE';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'READ ON THIS COMPUTER · THE VIDEO WENT NOWHERE';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'READ ON THIS PHONE · THE PHOTO WENT NOWHERE';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'READ ON THIS COMPUTER · THE PHOTO WENT NOWHERE';
-
-  @override
   String get photoKnowsReadingTheFile => 'Reading the file';
 
   @override

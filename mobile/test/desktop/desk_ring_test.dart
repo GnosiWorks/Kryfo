@@ -211,6 +211,9 @@ Future<void> _openRow(WidgetTester t, String id) async {
 Finder _words(String id) =>
     find.descendant(of: _chat(id), matching: find.text('hello from $id'));
 
+// a bare spot in the chat, the same place in the pane whatever the list's width
+const _blank = Offset(kRailWidth + kListStart + 428, 120);
+
 void main() {
   setUp(() {
     onDesktop = true;
@@ -277,8 +280,8 @@ void main() {
           case 'esc':
             await t.sendKeyEvent(LogicalKeyboardKey.escape);
           default:
-            await g.moveTo(const Offset(900, 120));
-            await g.down(const Offset(900, 120));
+            await g.moveTo(_blank);
+            await g.down(_blank);
             await g.up();
         }
         await _settle(t);
@@ -306,8 +309,8 @@ void main() {
     await t.pump();
     expect(ring, findsWidgets);
     final g = await t.createGesture(kind: PointerDeviceKind.mouse);
-    await g.addPointer(location: const Offset(900, 120));
-    await g.down(const Offset(900, 120));
+    await g.addPointer(location: _blank);
+    await g.down(_blank);
     await g.up();
     await _settle(t);
     expect(FocusManager.instance.highlightMode, FocusHighlightMode.traditional);

@@ -4215,18 +4215,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photoKnowsKeepItAsIt => '保持原样';
 
   @override
-  String get photoKnowsReadOnThisPhone => '在这部手机上读取 · 视频哪儿也没去';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk => '在这台电脑上读取 · 视频哪儿也没去';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto => '在这部手机上读取 · 照片哪儿也没去';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk => '在这台电脑上读取 · 照片哪儿也没去';
-
-  @override
   String get photoKnowsReadingTheFile => '正在读取文件';
 
   @override
@@ -15324,18 +15312,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get photoKnowsKeepItAsIt => '保持原樣';
-
-  @override
-  String get photoKnowsReadOnThisPhone => '在這支手機上讀取 · 影片沒有傳到任何地方';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk => '在這台電腦上讀取 · 影片沒有傳到任何地方';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto => '在這支手機上讀取 · 照片沒有傳到任何地方';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk => '在這台電腦上讀取 · 照片沒有傳到任何地方';
 
   @override
   String get photoKnowsReadingTheFile => '正在讀取檔案';

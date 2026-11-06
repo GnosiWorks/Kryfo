@@ -5482,22 +5482,6 @@
   "@photoKnowsKeepItAsIt": {
     "description": "screens/photo_knows_screen.dart"
   },
-  "photoKnowsReadOnThisPhone": "READ ON THIS PHONE · THE VIDEO WENT NOWHERE",
-  "@photoKnowsReadOnThisPhone": {
-    "description": "screens/photo_knows_screen.dart"
-  },
-  "photoKnowsReadOnThisPhoneDesk": "READ ON THIS COMPUTER · THE VIDEO WENT NOWHERE",
-  "@photoKnowsReadOnThisPhoneDesk": {
-    "description": "photoKnowsReadOnThisPhone as a computer shows it (linux and windows)"
-  },
-  "photoKnowsReadOnThisPhoneThePhoto": "READ ON THIS PHONE · THE PHOTO WENT NOWHERE",
-  "@photoKnowsReadOnThisPhoneThePhoto": {
-    "description": "screens/photo_knows_screen.dart"
-  },
-  "photoKnowsReadOnThisPhoneThePhotoDesk": "READ ON THIS COMPUTER · THE PHOTO WENT NOWHERE",
-  "@photoKnowsReadOnThisPhoneThePhotoDesk": {
-    "description": "photoKnowsReadOnThisPhoneThePhoto as a computer shows it (linux and windows)"
-  },
   "photoKnowsReadingTheFile": "Reading the file",
   "@photoKnowsReadingTheFile": {
     "description": "screens/photo_knows_screen.dart"
