@@ -47,7 +47,12 @@ func TestARemovalIsSignedWithoutTheDevice(t *testing.T) {
 	if out := remove(1); out.Err != "phone" {
 		t.Fatalf("the phone removed: %+v", out)
 	}
-	if out := remove(99); out.Err != "not_listed" {
+	// an id the list does not hold: the devices' ids are drawn at random
+	unlisted := 99
+	for unlisted == int(desk.ID) || unlisted == int(lap.ID) {
+		unlisted++
+	}
+	if out := remove(unlisted); out.Err != "not_listed" {
 		t.Fatalf("an unlisted id: %+v", out)
 	}
 	if out := remove(); out.Err != "malformed" {

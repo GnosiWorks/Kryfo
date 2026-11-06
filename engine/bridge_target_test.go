@@ -146,6 +146,15 @@ func useBridges(t *testing.T, on bool, lines ...string) {
 	})
 }
 
+// the app has said no decoy is open, as it does before it reads the
+// checks: they are hidden while that is unknown
+func noDecoy(t *testing.T) {
+	t.Helper()
+	old := decoyState.Load()
+	decoyState.Store(decoyOff)
+	t.Cleanup(func() { decoyState.Store(old) })
+}
+
 func randomCert() string {
 	raw := make([]byte, 52)
 	rand.Read(raw)
@@ -457,6 +466,7 @@ func TestTorLogLinesLoseBridgeAddresses(t *testing.T) {
 // the listener dials them.
 func TestStoredLinesFrom050SurviveBoot(t *testing.T) {
 	useBridges(t, false)
+	noDecoy(t)
 	bridge, toBridge := knocks(t)
 	cert := randomCert()
 	stored := strings.Join([]string{
@@ -486,6 +496,7 @@ func TestStoredLinesFrom050SurviveBoot(t *testing.T) {
 // the list, without its contents in the reason
 func TestBrokenStoredLineKeptAndMarked(t *testing.T) {
 	useBridges(t, false)
+	noDecoy(t)
 	stored := strings.Join([]string{
 		tbObfs4,
 		"obfs4 198.51.100.7:443 cert=tooshort iat-mode=0",
