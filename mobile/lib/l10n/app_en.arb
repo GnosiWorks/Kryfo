@@ -1934,10 +1934,6 @@
   "@chatCouldNotCleanThat": {
     "description": "screens/chat_screen.dart"
   },
-  "chatCouldNotCleanThatPictureSend": "Could not clean that picture · send it as a photo",
-  "@chatCouldNotCleanThatPictureSend": {
-    "description": "screens/chat_screen.dart"
-  },
   "chatGifTooBig8": "Gif too big · 8 mb max",
   "@chatGifTooBig8": {
     "description": "screens/chat_screen.dart"
@@ -3108,11 +3104,11 @@
   "@gettingMessagesMostPrivate": {
     "description": "screens/notifications_screen.dart"
   },
-  "gettingMessagesMessagesArriveInstantlyNothing": "Messages arrive instantly. Nothing leaves Tor. Uses the most battery.",
+  "gettingMessagesMessagesArriveInstantlyNothing": "Uses the most battery.\nInstant, and nothing leaves Tor.",
   "@gettingMessagesMessagesArriveInstantlyNothing": {
     "description": "screens/notifications_screen.dart"
   },
-  "gettingMessagesArriveInstantlyFast": "Messages arrive instantly on Fast. Uses the most battery.",
+  "gettingMessagesArriveInstantlyFast": "Uses the most battery.\nInstant on Fast.",
   "@gettingMessagesArriveInstantlyFast": {
     "description": "screens/notifications_screen.dart, screens/onboarding_screen.dart: the always-on card on the Fast route (settingsFast), where messages do not go through Tor"
   },
@@ -3124,7 +3120,7 @@
   "@gettingMessagesLightest": {
     "description": "screens/notifications_screen.dart"
   },
-  "gettingMessagesKryfoLooksForMessages": "Kryfo looks for messages every 15 minutes. Easy on battery, but messages can be late.",
+  "gettingMessagesKryfoLooksForMessages": "Kryfo checks every 15 minutes, so messages can be late.\nEasy on battery.",
   "@gettingMessagesKryfoLooksForMessages": {
     "description": "screens/notifications_screen.dart"
   },
@@ -3214,10 +3210,6 @@
   },
   "groupChatCouldNotCleanThatVideo": "Could not clean that video",
   "@groupChatCouldNotCleanThatVideo": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatCouldNotCleanThatPictureSend": "Could not clean that picture · send it as a photo",
-  "@groupChatCouldNotCleanThatPictureSend": {
     "description": "screens/group_chat_screen.dart"
   },
   "groupChat30Seconds": "30 seconds",
@@ -5125,7 +5117,7 @@
   "@notesExportSubject": {
     "description": "screens/notes_export_screen.dart. subject line when the file is shared"
   },
-  "onboardingPrivateByDefault": "PRIVATE BY DEFAULT",
+  "onboardingPrivateByDefault": "Private by default",
   "@onboardingPrivateByDefault": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -5133,15 +5125,15 @@
   "@onboardingPrivateMessaging": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourNameIsThree": "*Your name is three words.* No phone, no email, no address book.",
+  "onboardingYourNameIsThree": "*Your name is three words.*\nNo phone, no email, no address book.",
   "@onboardingYourNameIsThree": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingNobodyGetsInUnless": "*Nobody gets in unless you let them.* No one can look you up unless you claim a public handle. People are added by hand, both ways.",
+  "onboardingNobodyGetsInUnless": "*Nobody gets in unless you let them.*\nWithout a public @name, nobody can look you up.\nStrangers can only knock.",
   "@onboardingNobodyGetsInUnless": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingTheFirstConnectionTakes": "*The first connection takes a minute.* Kryfo builds a private route before it sends. Quick after.",
+  "onboardingTheFirstConnectionTakes": "*The first connection takes a minute.*\nKryfo builds a private route first. Then it's quick.",
   "@onboardingTheFirstConnectionTakes": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -5157,15 +5149,15 @@
   "@onboardingKryfoIsOpenSource": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourKryfoId": "YOUR NAME",
+  "onboardingYourKryfoId": "Your name",
   "@onboardingYourKryfoId": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingGeneratedFromAKey": "Generated from a key that lives only on this phone. *No one else has these words.*",
+  "onboardingGeneratedFromAKey": "Made from a key only this phone holds.\n*No one else has these words.*",
   "@onboardingGeneratedFromAKey": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingGeneratedFromAKeyDesk": "Generated from a key that lives only on this computer. *No one else has these words.*",
+  "onboardingGeneratedFromAKeyDesk": "Made from a key only this computer holds.\n*No one else has these words.*",
   "@onboardingGeneratedFromAKeyDesk": {
     "description": "onboardingGeneratedFromAKey as a computer shows it (linux and windows)"
   },
@@ -5189,27 +5181,19 @@
   "@onboardingKryfoBuildsAPrivateRouteBefore": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourIdentityLivesOn": "Your identity lives on this phone. Back it up from settings when you are ready.",
+  "onboardingYourIdentityLivesOn": "Your identity lives on this phone.\nBack it up in Settings when you're ready.",
   "@onboardingYourIdentityLivesOn": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingYourIdentityLivesOnDesk": "Your identity lives on this computer. Back it up from settings when you are ready.",
+  "onboardingYourIdentityLivesOnDesk": "Your identity lives on this computer.\nBack it up in Settings when you're ready.",
   "@onboardingYourIdentityLivesOnDesk": {
     "description": "onboardingYourIdentityLivesOn as a computer shows it (linux and windows)"
   },
-  "onboardingOneQuiet": "One quiet *notification*.",
-  "@onboardingOneQuiet": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingAndroidNeedsAVisible": "Android needs a visible notification while an app listens in the background. That is how messages reach you when Kryfo is closed.",
-  "@onboardingAndroidNeedsAVisible": {
-    "description": "screens/onboarding_screen.dart"
-  },
-  "onboardingSilentAndAtThe": "Silent, and at the bottom of the shade",
+  "onboardingSilentAndAtThe": "Silent, at the bottom of the shade",
   "@onboardingSilentAndAtThe": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingItNeverBuzzesTurn": "It never buzzes. Turn it off and messages wait until you open the app again.",
+  "onboardingItNeverBuzzesTurn": "It never buzzes.\nTurn it off and messages wait until you open Kryfo.",
   "@onboardingItNeverBuzzesTurn": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -5221,7 +5205,7 @@
   "@onboardingEveryWayToAdd": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingShowYourCodeSend": "Show your code, send them a link, or type the @handle they gave you.",
+  "onboardingShowYourCodeSend": "Show your code, share a link, or type their @name.",
   "@onboardingShowYourCodeSend": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -8883,14 +8867,6 @@
   "@settingsConnected": {
     "description": "screens/settings_screen.dart"
   },
-  "settingsScreenshots": "Screenshots",
-  "@settingsScreenshots": {
-    "description": "screens/settings_screen.dart"
-  },
-  "settingsBlocked2": "Blocked",
-  "@settingsBlocked2": {
-    "description": "screens/settings_screen.dart"
-  },
   "settingsOn": "On",
   "@settingsOn": {
     "description": "screens/settings_screen.dart"
@@ -8914,6 +8890,31 @@
   "settingsBackup": "Backup",
   "@settingsBackup": {
     "description": "screens/settings_screen.dart"
+  },
+  "settingsProtectBackup": "Backup",
+  "@settingsProtectBackup": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, its label"
+  },
+  "settingsBackupNotYet": "Not yet",
+  "@settingsBackupNotYet": {
+    "description": "screens/settings_screen.dart: the backup line of your protections when no backup was made on this side"
+  },
+  "settingsBackupToday": "Today",
+  "@settingsBackupToday": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, a backup made today"
+  },
+  "settingsBackupYesterday": "Yesterday",
+  "@settingsBackupYesterday": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, a backup made yesterday"
+  },
+  "settingsBackupDaysAgo": "{count, plural, one{{count} day ago} other{{count} days ago}}",
+  "@settingsBackupDaysAgo": {
+    "description": "screens/settings_screen.dart: the backup line of your protections, days since the last backup (2 to 30)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "settingsVoice": "Voice",
   "@settingsVoice": {
@@ -9783,11 +9784,11 @@
       }
     }
   },
-  "handleRegistryFailed": "Couldn't reach the registry. Try again in a minute.",
+  "handleRegistryFailed": "Couldn't reach the registry.\nTry again in a minute.",
   "@handleRegistryFailed": {
     "description": "toast when the registry did not answer"
   },
-  "handleStillReaching": "Still reaching the registry. Over Tor this can take up to a minute.",
+  "handleStillReaching": "Still reaching the registry.\nOver Tor this can take a while.",
   "@handleStillReaching": {
     "description": "handle page, while a registry call has taken more than a few seconds"
   },
@@ -11016,10 +11017,6 @@
   "@roomShotsAlwaysOnDesk": {
     "description": "roomShotsAlwaysOn as a computer shows it (linux and windows): a computer cannot block screenshots, so only the copying, forwarding and saving limits are its own"
   },
-  "settingsPerChat": "Per chat",
-  "@settingsPerChat": {
-    "description": "screens/settings_screen.dart: the screenshots line of your protections: each chat has its own switch, with an app lock too on android 13 and newer"
-  },
   "homeShotsPerChat": "Screenshot blocking is now per chat.",
   "@homeShotsPerChat": {
     "description": "screens/home_screen.dart: title of the one-time card for people who had the old switch for the whole app on"
@@ -11171,19 +11168,11 @@
   "@fileGoesAsItIs": {
     "description": "screens/chat_screen.dart: second line on the send sheet for a big file of a kind Kryfo does not clean (anything but photos and videos)"
   },
-  "fileRawPictureTitle": "Send this picture as it is?",
-  "@fileRawPictureTitle": {
-    "description": "chat and group: title of the sheet before sending a picture Kryfo cannot clean (raw, tiff, psd, svg, jpeg xl)"
-  },
-  "fileRawPictureLine": "This picture can't be cleaned. Details like where it was taken go with it. Send it as a photo to clean it.",
-  "@fileRawPictureLine": {
-    "description": "chat and group: line on that sheet, shown whatever the size. sending it as a photo re-encodes it, which removes its details"
-  },
   "voiceStoppedAtLimit": "Voice notes stop at 30 minutes. Listen to it, then send it.",
   "@voiceStoppedAtLimit": {
     "description": "widgets/voice_mic.dart: toast when a recording reaches the longest a voice note may be (kVoiceMax, 30 minutes) and stops into the preview by itself"
   },
-  "gettingMessagesHelperBody": "Instant and light. Its server sees your IP and when messages come, never what they say.",
+  "gettingMessagesHelperBody": "Its server sees your IP address and when messages come.\nNever what they say. Instant and light.",
   "@gettingMessagesHelperBody": {
     "description": "screens/notifications_screen.dart: the helper app card"
   },
@@ -11199,7 +11188,7 @@
   "@gettingMessagesHelperNote": {
     "description": "screens/notifications_screen.dart: under the status line in helper app mode"
   },
-  "gettingMessagesHelperOnionOnly": "Available on the Onion route",
+  "gettingMessagesHelperOnionOnly": "Needs the Private route",
   "@gettingMessagesHelperOnionOnly": {
     "description": "screens/notifications_screen.dart: under the helper app card, greyed out while the route is not Onion. a tap switches the route to Onion"
   },
@@ -11838,6 +11827,14 @@
   "@licencesLoadFailed": {
     "description": "screens/licences_screen.dart: the value of a row whose list or text failed to load"
   },
+  "licencesInVoice": "In voice transcription",
+  "@licencesInVoice": {
+    "description": "screens/licences_screen.dart: the parts inside the voice transcription library (whisper.cpp, ggml, the speech model)"
+  },
+  "licencesInTranslation": "In message translation",
+  "@licencesInTranslation": {
+    "description": "screens/licences_screen.dart: the parts inside the offline message translation library (bergamot and what it builds in)"
+  },
   "settingsCopyLinkHint": "Copy link",
   "@settingsCopyLinkHint": {
     "description": "screens/settings_screen.dart, screens/licences_screen.dart: what a screen reader says a tap on a source link row does"
@@ -12096,7 +12093,7 @@
   "@notificationsRecommended": {
     "description": "screens/notifications_screen.dart, screens/onboarding_screen.dart: tag on google push"
   },
-  "notificationsGoogleBody": "Instant and light. Google can see when your phone is woken, never who wrote or what was said.",
+  "notificationsGoogleBody": "Google sees when your phone wakes up.\nNever who wrote or what was said.\nInstant and light on battery.",
   "@notificationsGoogleBody": {
     "description": "google push card: what it does and what google sees"
   },
@@ -12144,7 +12141,39 @@
   "@notificationsMakerSwitch": {
     "description": "screens/notifications_screen.dart: row, the maker's own background switch"
   },
-  "onboardingDeliveryHeadline": "How messages *reach you*.",
+  "onboardingHowYourMessages": "How your messages *travel*.",
+  "@onboardingHowYourMessages": {
+    "description": "screens/onboarding_screen.dart: the route step headline. *marked* words are italic"
+  },
+  "onboardingRouteLead": "You can change it any time in Settings.",
+  "@onboardingRouteLead": {
+    "description": "screens/onboarding_screen.dart: the route step, under the headline"
+  },
+  "onboardingRoutePrivateCost": "Over Tor. A message takes a few seconds.",
+  "@onboardingRoutePrivateCost": {
+    "description": "screens/onboarding_screen.dart: the route step, the Private card, what it costs"
+  },
+  "onboardingRoutePrivateGain": "Nobody learns your IP address, not even our servers.",
+  "@onboardingRoutePrivateGain": {
+    "description": "screens/onboarding_screen.dart: the route step, the Private card, what it gives"
+  },
+  "onboardingRouteFastCost": "Our servers see your IP address while you're connected.\nYour network can see you use Kryfo.",
+  "@onboardingRouteFastCost": {
+    "description": "screens/onboarding_screen.dart: the route step, the Fast card, what it costs"
+  },
+  "onboardingRouteFastGain": "Skips Tor: quicker and easier on battery.",
+  "@onboardingRouteFastGain": {
+    "description": "screens/onboarding_screen.dart: the route step, the Fast card, what it gives"
+  },
+  "onboardingRouteBlockedLead": "Kryfo stays on Tor, through a bridge when needed.\nFast is in Settings if you need it.",
+  "@onboardingRouteBlockedLead": {
+    "description": "screens/onboarding_screen.dart: the route step where Tor is blocked or watched: only the Private card shows"
+  },
+  "onboardingRouteBlockedGain": "Finds a way around blocks by itself.",
+  "@onboardingRouteBlockedGain": {
+    "description": "screens/onboarding_screen.dart: the route step where Tor is blocked or watched, the Private card"
+  },
+  "onboardingDeliveryHeadline": "When messages *arrive*.",
   "@onboardingDeliveryHeadline": {
     "description": "screens/onboarding_screen.dart: play builds, the step that asks how messages arrive. *marked* words are italic"
   },
@@ -12941,15 +12970,15 @@
   "@desktopTrayRow": {
     "description": "switch: closing the window hides kryfo to the tray instead of quitting"
   },
-  "desktopTrayHint": "Closing the window keeps Kryfo in the tray, so messages keep arriving.",
+  "desktopTrayHint": "Messages keep arriving with the window closed.",
   "@desktopTrayHint": {
     "description": "under the tray switch"
   },
-  "desktopTrayOffLine": "Closing the window quits Kryfo. Messages arrive when you open it again.",
+  "desktopTrayOffLine": "Closing the window quits Kryfo.\nMessages arrive when you open it again.",
   "@desktopTrayOffLine": {
     "description": "shown while the tray switch is off"
   },
-  "desktopTrayNoneLine": "This desktop shows no tray icon, so closing the window quits Kryfo.",
+  "desktopTrayNoneLine": "This desktop has no tray icon.\nClosing the window quits Kryfo.",
   "@desktopTrayNoneLine": {
     "description": "the desktop shows no tray icons (many wayland desktops): closing quits even with the switch on"
   },
@@ -12961,13 +12990,21 @@
   "@desktopStartHint": {
     "description": "under the start switch"
   },
-  "desktopStartRefused": "This computer did not let Kryfo start with it. Kryfo opens whenever you start it yourself.",
+  "desktopStartRefused": "This computer didn't let Kryfo start with it.\nKryfo opens when you start it yourself.",
   "@desktopStartRefused": {
     "description": "the computer refused to add kryfo to its startup (portal said no, file or registry not writable)"
   },
-  "desktopStartHeldOff": "Windows has Kryfo switched off in its startup apps. Switch it on there, in Settings, Apps, Startup.",
+  "desktopStartHeldOff": "Windows has Kryfo off in its startup apps.\nTurn it on in Windows Settings, Apps, Startup.",
   "@desktopStartHeldOff": {
     "description": "windows: kryfo is listed but switched off in the startup apps of windows settings or task manager"
+  },
+  "desktopMicBlocked": "Kryfo can record once Windows lets desktop apps use the microphone, in Settings, Privacy and security, Microphone.",
+  "@desktopMicBlocked": {
+    "description": "windows: the mic did not open because windows' privacy settings keep desktop apps from it"
+  },
+  "desktopMicNone": "Connect a microphone to record a voice note.",
+  "@desktopMicNone": {
+    "description": "windows: no microphone is connected, or it went away"
   },
   "desktopNoCamera": "Kryfo cannot use a camera on this computer yet. Use the link or the code instead.",
   "@desktopNoCamera": {
@@ -13226,7 +13263,7 @@
   "@onboardingNameHeadline": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingNameLine": "A public name lets people find you. Skipping keeps you more private, you can always add one later.",
+  "onboardingNameLine": "A public @name lets people find you.\nSkipping keeps you more private.\nYou can add one later.",
   "@onboardingNameLine": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -13247,7 +13284,7 @@
   "@onboardingInviteHeadline": {
     "description": "screens/onboarding_screen.dart"
   },
-  "onboardingInviteLead": "Send a link in any messenger. It opens Kryfo, or shows them where to get it.",
+  "onboardingInviteLead": "Send a link in any messenger.\nIt opens Kryfo, or shows where to get it.",
   "@onboardingInviteLead": {
     "description": "screens/onboarding_screen.dart"
   },
@@ -13857,6 +13894,14 @@
   "@desktopPassRow": {
     "description": "screens/settings_screen.dart: settings row and page title, desktop only"
   },
+  "desktopPassWindowsAccount": "Locked by your Windows account",
+  "@desktopPassWindowsAccount": {
+    "description": "screens/settings_screen.dart: your protections on windows, no passphrase: the windows account (and its security chip) keeps the key"
+  },
+  "desktopPassKeyring": "Locked by your keyring",
+  "@desktopPassKeyring": {
+    "description": "screens/settings_screen.dart: your protections on linux, no passphrase: the system keyring keeps the key"
+  },
   "desktopPassOffBody": "Kryfo opens with your computer account.",
   "@desktopPassOffBody": {
     "description": "desktop/desktop_passphrase_screen.dart: when no passphrase is set"
@@ -14014,10 +14059,6 @@
       }
     }
   },
-  "settingsShotsNotHereYet": "Not on this computer yet",
-  "@settingsShotsNotHereYet": {
-    "description": "screens/settings_screen.dart: the screenshots line on a computer"
-  },
   "settingsDeskInTray": "Running in the tray",
   "@settingsDeskInTray": {
     "description": "screens/settings_screen.dart: how messages arrive on a computer, kept in the tray"
@@ -14030,7 +14071,7 @@
   "@onboardingDeskRunTitle": {
     "description": "screens/onboarding_screen.dart: the computer's step in place of the notification one"
   },
-  "onboardingDeskRunLead": "Close the window and Kryfo waits in the tray, so messages keep arriving. You can change both later in Settings, under Notifications.",
+  "onboardingDeskRunLead": "Close the window and Kryfo waits in the tray.\nMessages keep arriving.\nYou can change both in Settings, Notifications.",
   "@onboardingDeskRunLead": {
     "description": "screens/onboarding_screen.dart: the computer's step in place of the notification one"
   },
@@ -14050,9 +14091,27 @@
   "@chatDropHereToSend": {
     "description": "a computer: files dragged over a chat, the line on the wash before they are let go"
   },
-  "notesDropKeepsWords": "Note to self keeps words. Send files in a chat.",
-  "@notesDropKeepsWords": {
-    "description": "a computer: files dropped on note to self, which keeps text only"
+  "chatDropHereToAdd": "Drop here to add",
+  "@chatDropHereToAdd": {
+    "description": "a computer: files dragged over a chat, the line on the wash; let go, they wait in a row above the composer until enter sends them"
+  },
+  "trayRemove": "Remove {name}",
+  "@trayRemove": {
+    "description": "a computer: the x on a file waiting above the composer, said by a screen reader and on hover",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "trayReadyToSend": "Ready to send: {count}",
+  "@trayReadyToSend": {
+    "description": "a computer: what a screen reader says of the row of files waiting above the composer; enter sends them",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
   },
   "voiceSeeTranscription": "See transcription",
   "@voiceSeeTranscription": {
@@ -14328,6 +14387,10 @@
   "@linkedLinkOnPhone": {
     "description": "widgets/kryfo_link_text.dart: on a linked device, an invite or room link opened there; such links are the phone's"
   },
+  "linkedDoOnPhone": "Do this on your phone.",
+  "@linkedDoOnPhone": {
+    "description": "group_info_screen.dart and the group menu: on a linked device, where a group's rename, add, remove, end, leave and screenshot switch would be; they are the phone's"
+  },
   "tipsTitle": "Support Kryfo",
   "@tipsTitle": {
     "description": "screens/tip_screen.dart: the play build support tab title and the section on me"
@@ -14426,5 +14489,81 @@
   "tipsProfileCard": "Leave a tip to keep Kryfo independent",
   "@tipsProfileCard": {
     "description": "screens/profile_screen.dart: the card on me in the play build"
+  },
+  "chatDeviceLinked": "{name} linked a new device",
+  "@chatDeviceLinked": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's verified device list added a device. no device names, calm",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatDeviceRemoved": "{name} removed a device",
+  "@chatDeviceRemoved": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's verified device list dropped a device. no device names, calm",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "chatDeviceListUnchecked": "{name}'s device list could not be checked",
+  "@chatDeviceListUnchecked": {
+    "description": "screens/chat_screen.dart: the quiet line where a contact's device list could not be checked (two lists at one version, or a key another holds). calm, never claims an attack",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "notesDropToKeep": "Drop here to keep it",
+  "@notesDropToKeep": {
+    "description": "notes to self on a computer: the line on the wash while files are dragged over it"
+  },
+  "notesOnAllDevices": "On all your devices",
+  "@notesOnAllDevices": {
+    "description": "note to self's line under its title when it reaches the person's other devices"
+  },
+  "notesKeepAnything": "Keep words, photos and files here. They show on all your devices.",
+  "@notesKeepAnything": {
+    "description": "note to self's empty page when it reaches the person's other devices"
+  },
+  "notesGoneEverywhere": "It goes from all your devices, for good.",
+  "@notesGoneEverywhere": {
+    "description": "the confirm line for deleting one note that reaches the person's other devices"
+  },
+  "notesDeleteAllEverywhere": "Every note goes from all your devices, for good.",
+  "@notesDeleteAllEverywhere": {
+    "description": "the confirm line for deleting every note from the phone, which reaches the person's other devices"
+  },
+  "notesDeleteAllHereOnly": "Every note goes from this device only. Your phone keeps them.",
+  "@notesDeleteAllHereOnly": {
+    "description": "the confirm line for deleting every note on a linked device: only that device's notes go"
+  },
+  "notesAddItem": "Add a photo or a file",
+  "@notesAddItem": {
+    "description": "the label of the button that adds a photo or a file to note to self"
+  },
+  "notesVoiceNotKept": "Your voice note was not kept",
+  "@notesVoiceNotKept": {
+    "description": "a voice note that could not be kept in note to self"
+  },
+  "handleOlderKryfo": "They use an older Kryfo. Ask them to update, then add them.",
+  "@handleOlderKryfo": {
+    "description": "app/links.dart, handleHaloUriAdded: the handle's registry card comes from a phone on Kryfo 0.5 or older, which 0.6 cannot start a chat with; nothing is added"
+  },
+  "groupMemberNeedsUpdate": "{name} uses an older Kryfo. They'll need to update to get messages here.",
+  "@groupMemberNeedsUpdate": {
+    "description": "screens/group_chat_screen.dart: a line in a group with one member on an older Kryfo whom no session of this phone reaches and none can form with",
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "groupMembersNeedUpdate": "Some members use an older Kryfo. They'll need to update to get messages here.",
+  "@groupMembersNeedUpdate": {
+    "description": "screens/group_chat_screen.dart: as groupMemberNeedsUpdate, with more than one such member"
   }
 }

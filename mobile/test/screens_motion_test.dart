@@ -616,11 +616,11 @@ void main() {
         ),
       );
       final pages = t.widget<PageView>(find.byType(PageView)).controller!;
-      pages.jumpToPage(4);
+      pages.jumpToPage(5);
       await t.pump();
       await t.binding.handlePopRoute();
       await t.pump();
-      expect(pages.page, 3);
+      expect(pages.page, 4);
       expect(t.hasRunningAnimations, isFalse);
       await t.pumpWidget(const SizedBox());
     });
@@ -680,7 +680,7 @@ void main() {
           still: true,
         ),
       );
-      t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(4);
+      t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(5);
       await t.pump();
       await t.pump(const Duration(milliseconds: 500));
       final arrows = find.text('→');

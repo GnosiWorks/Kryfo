@@ -156,7 +156,7 @@ class MemoryTranslateStore implements TranslateStore {
 }
 
 // two small tables, made when first used. a chat's rows go with its
-// contact, a kept translation with its message or its words
+// contact or its group, a kept translation with its message or its words
 class DbTranslateStore implements TranslateStore {
   // the identity's database, and the one a chat lives in (a hidden chat's
   // is the vault's)
@@ -228,6 +228,26 @@ class DbTranslateStore implements TranslateStore {
         'contacts BEGIN DELETE FROM translate_kept WHERE chat = old.halo_id; '
         'END',
       );
+    // a group's go with its row too: deleted, or moved into or out of the
+    // hidden chats
+    final groups = await d.query(
+      'sqlite_master',
+      columns: ['name'],
+      where: "type = 'table' AND name = 'groups'",
+    );
+    if (groups.isNotEmpty) {
+      b
+        ..execute(
+          'CREATE TRIGGER IF NOT EXISTS translate_prefs_group_follow AFTER '
+          'DELETE ON groups BEGIN DELETE FROM translate_prefs WHERE k IN '
+          "('chat:' || old.group_id, 'bar:' || old.group_id); END",
+        )
+        ..execute(
+          'CREATE TRIGGER IF NOT EXISTS translate_kept_group_follow AFTER '
+          'DELETE ON groups BEGIN DELETE FROM translate_kept WHERE chat = '
+          'old.group_id; END',
+        );
+    }
     await b.commit(noResult: true);
   }
 

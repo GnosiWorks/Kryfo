@@ -1545,10 +1545,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Gagal membersihkan video itu';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Gagal membersihkan gambar itu · kirim sebagai foto';
-
-  @override
   String get chatGifTooBig8 => 'Gif terlalu besar · maks 8 mb';
 
   @override
@@ -2505,11 +2501,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'Pesan masuk seketika. Tidak ada yang keluar dari Tor. Paling boros baterai.';
+      'Paling boros baterai.\nSeketika, dan tidak ada yang keluar dari Tor.';
 
   @override
   String get gettingMessagesArriveInstantlyFast =>
-      'Di Cepat, pesan masuk seketika. Paling boros baterai.';
+      'Paling boros baterai.\nSeketika di Cepat.';
 
   @override
   String get gettingMessagesCheckIns => 'Cek berkala';
@@ -2519,7 +2515,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo mencari pesan setiap 15 menit. Hemat baterai, tapi pesan bisa terlambat.';
+      'Kryfo mengecek setiap 15 menit, jadi pesan bisa terlambat.\nHemat baterai.';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -2592,10 +2588,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Gagal membersihkan video itu';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Gagal membersihkan gambar itu · kirim sebagai foto';
 
   @override
   String get groupChat30Seconds => '30 detik';
@@ -4147,22 +4139,22 @@ class AppLocalizationsId extends AppLocalizations {
   String get notesExportSubject => 'Catatan Kryfo';
 
   @override
-  String get onboardingPrivateByDefault => 'PRIVAT SEJAK AWAL';
+  String get onboardingPrivateByDefault => 'Privat sejak awal';
 
   @override
   String get onboardingPrivateMessaging => 'Pesan privat,\n*tanpa jebakan*.';
 
   @override
   String get onboardingYourNameIsThree =>
-      '*Namamu tiga kata.* Tanpa nomor ponsel, tanpa email, tanpa buku alamat.';
+      '*Namamu tiga kata.*\nTanpa nomor ponsel, tanpa email, tanpa buku alamat.';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Tak ada yang masuk tanpa izinmu.* Kamu hanya bisa dicari kalau kamu mengklaim nama pengguna publik. Orang ditambahkan secara manual, dari dua arah.';
+      '*Tak ada yang masuk tanpa izinmu.*\nTanpa @nama publik, tak ada yang bisa mencarimu.\nOrang asing hanya bisa mengetuk.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*Koneksi pertama butuh satu menit.* Kryfo membangun rute privat sebelum mengirim. Setelahnya cepat.';
+      '*Koneksi pertama butuh satu menit.*\nKryfo membangun rute privat dulu. Setelahnya cepat.';
 
   @override
   String get onboardingBegin => 'Mulai';
@@ -4174,15 +4166,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo bersumber terbuka';
 
   @override
-  String get onboardingYourKryfoId => 'NAMAMU';
+  String get onboardingYourKryfoId => 'Namamu';
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Dibuat dari kunci yang hanya ada di ponsel ini. *Tidak ada orang lain yang memiliki kata-kata ini.*';
+      'Dibuat dari kunci yang hanya ada di ponsel ini.\n*Tak ada orang lain yang punya kata-kata ini.*';
 
   @override
   String get onboardingGeneratedFromAKeyDesk =>
-      'Dibuat dari kunci yang hanya ada di komputer ini. *Tidak ada orang lain yang memiliki kata-kata ini.*';
+      'Dibuat dari kunci yang hanya ada di komputer ini.\n*Tak ada orang lain yang punya kata-kata ini.*';
 
   @override
   String get onboardingTryAnother => 'Coba yang lain';
@@ -4202,26 +4194,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn =>
-      'Identitasmu tinggal di ponsel ini. Cadangkan dari pengaturan saat kamu siap.';
+      'Identitasmu tinggal di ponsel ini.\nCadangkan di Pengaturan saat kamu siap.';
 
   @override
   String get onboardingYourIdentityLivesOnDesk =>
-      'Identitasmu tinggal di komputer ini. Cadangkan dari pengaturan saat kamu siap.';
-
-  @override
-  String get onboardingOneQuiet => 'Satu *notifikasi* senyap.';
-
-  @override
-  String get onboardingAndroidNeedsAVisible =>
-      'Android butuh notifikasi yang terlihat selama aplikasi mendengarkan di latar belakang. Dengan cara itulah pesan sampai ke kamu saat Kryfo ditutup.';
+      'Identitasmu tinggal di komputer ini.\nCadangkan di Pengaturan saat kamu siap.';
 
   @override
   String get onboardingSilentAndAtThe =>
-      'Senyap, dan ada di bagian bawah panel notifikasi';
+      'Senyap, di bagian bawah panel notifikasi';
 
   @override
   String get onboardingItNeverBuzzesTurn =>
-      'Tidak pernah bergetar. Kalau dimatikan, pesan menunggu sampai kamu membuka aplikasi lagi.';
+      'Tidak pernah bergetar.\nKalau dimatikan, pesan menunggu sampai kamu membuka Kryfo.';
 
   @override
   String get onboardingGotIt => 'Mengerti →';
@@ -4231,7 +4216,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingShowYourCodeSend =>
-      'Tunjukkan kodemu, kirimi dia tautan, atau ketik @nama pengguna yang dia berikan.';
+      'Tunjukkan kodemu, bagikan tautan, atau ketik @nama mereka.';
 
   @override
   String get onboardingScanTheirs => 'Pindai kodenya';
@@ -7062,12 +7047,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get settingsConnected => 'Terhubung';
 
   @override
-  String get settingsScreenshots => 'Tangkapan layar';
-
-  @override
-  String get settingsBlocked2 => 'Diblokir';
-
-  @override
   String get settingsOn => 'Aktif';
 
   @override
@@ -7084,6 +7063,28 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Cadangan';
+
+  @override
+  String get settingsProtectBackup => 'Cadangan';
+
+  @override
+  String get settingsBackupNotYet => 'Belum';
+
+  @override
+  String get settingsBackupToday => 'Hari ini';
+
+  @override
+  String get settingsBackupYesterday => 'Kemarin';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hari lalu',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Suara';
@@ -7772,11 +7773,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get handleRegistryFailed =>
-      'Tidak bisa menghubungi registri. Coba lagi semenit lagi.';
+      'Tidak bisa menghubungi registri.\nCoba lagi semenit lagi.';
 
   @override
   String get handleStillReaching =>
-      'Masih menghubungi registri. Lewat Tor ini bisa makan waktu hingga semenit.';
+      'Masih menghubungi registri.\nLewat Tor ini bisa makan waktu.';
 
   @override
   String get handleSearchNeedsTor =>
@@ -8822,9 +8823,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Selalu menyala di ruang, di Kryfo untuk Android';
 
   @override
-  String get settingsPerChat => 'Per obrolan';
-
-  @override
   String get homeShotsPerChat =>
       'Blokir tangkapan layar sekarang diatur per obrolan.';
 
@@ -8951,19 +8949,12 @@ class AppLocalizationsId extends AppLocalizations {
       'File ini dikirim apa adanya. Kryfo hanya membersihkan JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4, dan MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Kirim gambar ini apa adanya?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Gambar ini tidak bisa dibersihkan. Detail seperti tempat diambilnya ikut terkirim. Kirim sebagai foto untuk membersihkannya.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Pesan suara berhenti di 30 menit. Dengarkan dulu, lalu kirim.';
 
   @override
   String get gettingMessagesHelperBody =>
-      'Seketika dan ringan. Servernya melihat IP-mu dan kapan pesan datang, tidak pernah isinya.';
+      'Servernya melihat alamat IP-mu dan kapan pesan datang.\nTidak pernah isinya. Seketika dan ringan.';
 
   @override
   String get gettingMessagesHelperUseOnion => 'Beralih ke Onion';
@@ -8976,7 +8967,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Ada juga panggilan bangun palsu, jadi server aplikasi pembantu lebih sulit tahu kapan pesan asli masuk. Server pembantu milikmu sendiri memberi tahu relay kami alamatnya. Obrolan tersembunyi, ruang setelah beberapa ruang pertama, dan sesekali kontak biasa, kira-kira satu dari lima bulan, menunggu cek yang tetap dilakukan Kryfo setiap 15 menit.';
 
   @override
-  String get gettingMessagesHelperOnionOnly => 'Tersedia di rute Onion';
+  String get gettingMessagesHelperOnionOnly => 'Butuh rute Privat';
 
   @override
   String get gettingMessagesHelperChecking => 'Mengecek…';
@@ -9441,6 +9432,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get licencesLoadFailed => 'Tidak dapat dimuat';
 
   @override
+  String get licencesInVoice => 'Di transkrip suara';
+
+  @override
+  String get licencesInTranslation => 'Di terjemahan pesan';
+
+  @override
   String get settingsCopyLinkHint => 'Salin tautan';
 
   @override
@@ -9639,7 +9636,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notificationsGoogleBody =>
-      'Seketika dan ringan. Google bisa melihat kapan ponselmu dibangunkan, tidak pernah siapa yang menulis atau apa isinya.';
+      'Google melihat kapan ponselmu bangun.\nTidak pernah siapa yang menulis atau apa isinya.\nSeketika dan hemat baterai.';
 
   @override
   String get notificationsGoogleStarting => 'Menyalakan…';
@@ -9678,7 +9675,38 @@ class AppLocalizationsId extends AppLocalizations {
   String get notificationsMakerSwitch => 'Tombol dari pembuat ponselmu';
 
   @override
-  String get onboardingDeliveryHeadline => 'Cara pesan *sampai padamu*.';
+  String get onboardingHowYourMessages => 'Cara pesanmu *berjalan*.';
+
+  @override
+  String get onboardingRouteLead =>
+      'Kamu bisa mengubahnya kapan saja di Pengaturan.';
+
+  @override
+  String get onboardingRoutePrivateCost =>
+      'Lewat Tor. Satu pesan butuh beberapa detik.';
+
+  @override
+  String get onboardingRoutePrivateGain =>
+      'Tak ada yang tahu alamat IP-mu, bahkan server kami.';
+
+  @override
+  String get onboardingRouteFastCost =>
+      'Server kami melihat alamat IP-mu selama kamu terhubung.\nJaringanmu bisa melihat kamu memakai Kryfo.';
+
+  @override
+  String get onboardingRouteFastGain =>
+      'Melewati Tor: lebih cepat dan lebih hemat baterai.';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo tetap di Tor, lewat jembatan bila perlu.\nCepat ada di Pengaturan kalau kamu butuh.';
+
+  @override
+  String get onboardingRouteBlockedGain =>
+      'Mencari jalan sendiri melewati blokir.';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Kapan pesan *sampai*.';
 
   @override
   String get onboardingDeliveryLead =>
@@ -10341,16 +10369,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get desktopTrayRow => 'Tetap berjalan di area notifikasi';
 
   @override
-  String get desktopTrayHint =>
-      'Menutup jendela membuat Kryfo tetap di area notifikasi, jadi pesan terus masuk.';
+  String get desktopTrayHint => 'Pesan terus masuk meski jendela ditutup.';
 
   @override
   String get desktopTrayOffLine =>
-      'Menutup jendela akan menutup Kryfo. Pesan masuk saat kamu membukanya lagi.';
+      'Menutup jendela akan menutup Kryfo.\nPesan masuk saat kamu membukanya lagi.';
 
   @override
   String get desktopTrayNoneLine =>
-      'Desktop ini tidak menampilkan ikon di area notifikasi, jadi menutup jendela akan menutup Kryfo.';
+      'Desktop ini tidak punya ikon di area notifikasi.\nMenutup jendela akan menutup Kryfo.';
 
   @override
   String get desktopStartRow => 'Mulai bersama komputer';
@@ -10361,11 +10388,18 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get desktopStartRefused =>
-      'Komputer ini tidak mengizinkan Kryfo ikut mulai. Kryfo terbuka setiap kali kamu sendiri membukanya.';
+      'Komputer ini tidak mengizinkan Kryfo ikut mulai.\nKryfo terbuka saat kamu sendiri membukanya.';
 
   @override
   String get desktopStartHeldOff =>
-      'Windows mematikan Kryfo di aplikasi startup-nya. Nyalakan di sana, di Pengaturan, Aplikasi, Startup.';
+      'Windows mematikan Kryfo di aplikasi startup-nya.\nNyalakan di Pengaturan Windows, Aplikasi, Startup.';
+
+  @override
+  String get desktopMicBlocked =>
+      'Kryfo bisa merekam setelah Windows mengizinkan aplikasi desktop memakai mikrofon, di Pengaturan, Privasi & keamanan, Mikrofon.';
+
+  @override
+  String get desktopMicNone => 'Sambungkan mikrofon untuk merekam pesan suara.';
 
   @override
   String get desktopNoCamera =>
@@ -10585,7 +10619,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingNameLine =>
-      'Nama publik membuat orang bisa menemukanmu. Melewatinya membuatmu lebih privat, kamu selalu bisa menambahkannya nanti.';
+      'Dengan @nama publik, orang bisa menemukanmu.\nMelewatinya membuatmu lebih privat.\nKamu bisa menambahkannya nanti.';
 
   @override
   String get onboardingNameSkip => 'Lewati dulu →';
@@ -10600,7 +10634,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingInviteLead =>
-      'Kirim tautan lewat aplikasi pesan apa pun. Tautan itu membuka Kryfo, atau menunjukkan tempat mengunduhnya.';
+      'Kirim tautan lewat aplikasi pesan apa pun.\nTautan itu membuka Kryfo, atau menunjukkan tempat mengunduhnya.';
 
   @override
   String get onboardingInviteSomeone => 'Undang seseorang →';
@@ -11060,6 +11094,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get desktopPassRow => 'Frasa sandi di komputer ini';
 
   @override
+  String get desktopPassWindowsAccount => 'Dikunci dengan akun Windows-mu';
+
+  @override
+  String get desktopPassKeyring => 'Dikunci dengan ring kuncimu';
+
+  @override
   String get desktopPassOffBody => 'Kryfo terbuka dengan akun penggunamu.';
 
   @override
@@ -11165,9 +11205,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get settingsShotsNotHereYet => 'Belum ada di komputer ini';
-
-  @override
   String get settingsDeskInTray => 'Berjalan di area notifikasi';
 
   @override
@@ -11178,7 +11215,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get onboardingDeskRunLead =>
-      'Tutup jendela dan Kryfo menunggu di area notifikasi, jadi pesan terus masuk. Keduanya bisa kamu ubah nanti di Pengaturan, bagian Notifikasi.';
+      'Tutup jendela dan Kryfo menunggu di area notifikasi.\nPesan terus masuk.\nKeduanya bisa kamu ubah di Pengaturan, Notifikasi.';
 
   @override
   String get savedLongPressAnyMessageDesk =>
@@ -11194,8 +11231,17 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatDropHereToSend => 'Lepaskan di sini untuk mengirim';
 
   @override
-  String get notesDropKeepsWords =>
-      'Catatan pribadi menyimpan kata. Kirim file di sebuah chat.';
+  String get chatDropHereToAdd => 'Lepas di sini untuk menambah';
+
+  @override
+  String trayRemove(String name) {
+    return 'Hapus $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Siap dikirim: $count';
+  }
 
   @override
   String get voiceSeeTranscription => 'Lihat transkrip';
@@ -11410,6 +11456,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get linkedLinkOnPhone => 'Buka tautan ini di ponselmu.';
 
   @override
+  String get linkedDoOnPhone => 'Lakukan ini di ponselmu.';
+
+  @override
   String get tipsTitle => 'Dukung Kryfo';
 
   @override
@@ -11511,4 +11560,60 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Beri tip agar Kryfo tetap mandiri';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name menautkan perangkat baru';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name menghapus sebuah perangkat';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Daftar perangkat $name tidak dapat diperiksa';
+  }
+
+  @override
+  String get notesDropToKeep => 'Lepaskan di sini untuk menyimpannya';
+
+  @override
+  String get notesOnAllDevices => 'Di semua perangkatmu';
+
+  @override
+  String get notesKeepAnything =>
+      'Simpan tulisan, foto, dan file di sini. Semuanya muncul di semua perangkatmu.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Catatan ini terhapus dari semua perangkatmu untuk selamanya.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Semua catatan terhapus dari semua perangkatmu untuk selamanya.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Semua catatan hanya terhapus dari perangkat ini. Ponselmu tetap menyimpannya.';
+
+  @override
+  String get notesAddItem => 'Tambah foto atau file';
+
+  @override
+  String get notesVoiceNotKept => 'Pesan suaramu tidak disimpan';
+
+  @override
+  String get handleOlderKryfo =>
+      'Mereka memakai Kryfo versi lama. Minta mereka memperbarui, lalu tambahkan mereka.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name memakai Kryfo versi lama. Mereka perlu memperbarui untuk menerima pesan di sini.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Beberapa anggota memakai Kryfo versi lama. Mereka perlu memperbarui untuk menerima pesan di sini.';
 }

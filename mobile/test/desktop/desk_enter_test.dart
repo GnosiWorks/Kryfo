@@ -3,7 +3,9 @@
 // composer: a chat's and a group's (composer_cursor_test), the caption
 // (media_send_screen_test), note to self and the edit sheet here. a field
 // that is no composer keeps its own enter, and the phone keeps its
-// keyboard's. a file dropped on note to self is told where files go
+// keyboard's. files dropped or pasted on note to self wait in the row
+// above the bar, as in a chat, and enter keeps each as a note, the dropped
+// file only read
 import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -11,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/desktop/attach_tray.dart';
 import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart' show HaloDb, useDatabasesForTest;
@@ -36,6 +39,9 @@ class _Db implements HaloDb {
         'rowid': notes.length + 1,
         'msg_uid': 'n${notes.length + 1}',
         'plaintext': i.positionalArguments[2],
+        'file_path': i.namedArguments[#filePath],
+        'file_name': i.namedArguments[#fileName],
+        'media_path': i.namedArguments[#mediaPath],
         'sent_at': DateTime.now().millisecondsSinceEpoch,
       });
       return Future<void>.value();
@@ -79,7 +85,12 @@ Future<void> _drain(WidgetTester t) async {
 }
 
 void main() {
-  tearDown(() => onDesktop = false);
+  tearDown(() {
+    onDesktop = false;
+    AttachTray.decode = decodeTrayThumb;
+    PasteFiles.clip = clipboardFiles;
+    DeskTrays.clearAll();
+  });
 
   testWidgets('note to self: enter keeps the note, shift and enter is a '
       'new line', (t) async {
@@ -106,15 +117,45 @@ void main() {
     await _drain(t);
   });
 
-  testWidgets('a file dropped on note to self is told where files go', (
-    t,
-  ) async {
-    onDesktop = true;
-    DesktopDrop.scale = () => 1;
-    await _notes(t);
+  // the notes' media folder for [t], under a folder of its own
+  Directory folder(WidgetTester t) {
     final dir = Directory.systemTemp.createTempSync('notes_drop');
     addTearDown(() => dir.deleteSync(recursive: true));
-    final f = File('${dir.path}/photo.jpg')..writeAsStringSync('p');
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/path_provider'),
+      (_) async => dir.path,
+    );
+    addTearDown(
+      () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/path_provider'),
+        null,
+      ),
+    );
+    return dir;
+  }
+
+  // cleaned off the ui thread: real time passes for it
+  Future<void> kept(WidgetTester t, _Db db, int n) async {
+    for (var i = 0; i < 200 && db.notes.length < n; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await t.pump();
+    }
+    await t.pump(const Duration(milliseconds: 300));
+  }
+
+  testWidgets('files dropped on note to self wait in the row; enter keeps '
+      'each, a photo as a photo, the words with the first', (t) async {
+    onDesktop = true;
+    DesktopDrop.scale = () => 1;
+    AttachTray.decode = (_) async => null;
+    final dir = folder(t);
+    final db = await _notes(t);
+    final f = File('${dir.path}/list.txt')..writeAsStringSync('p');
+    final photo = File('test/fixtures/photo_512.jpg').copySync(
+      '${dir.path}/view.jpg',
+    );
     Future<void> say(String method, Object? args) async {
       await t.binding.defaultBinaryMessenger.handlePlatformMessage(
         DesktopDrop.channel.name,
@@ -124,20 +165,70 @@ void main() {
       await t.pump();
     }
 
-    // while held: the line on the wash says it, not "drop here to send"
+    // while held: the line on the wash says it is kept, not sent
     await say('updated', [500.0, 400.0]);
     await t.pump(const Duration(milliseconds: 200));
-    expect(find.text(l10n.notesDropKeepsWords), findsOneWidget);
+    expect(find.text(l10n.notesDropToKeep), findsOneWidget);
     expect(find.text(l10n.chatDropHereToSend), findsNothing);
     await say('dropped', [
-      [f.path],
+      [f.path, photo.path],
       500.0,
       400.0,
     ]);
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
     await t.pump(const Duration(milliseconds: 300));
-    // and after the drop, as a toast: never nothing
-    expect(find.text(l10n.notesDropKeepsWords), findsWidgets);
+    // staged, nothing kept yet
+    expect(find.byKey(const ValueKey('attach-tray')), findsOneWidget);
+    expect(find.text('list.txt'), findsOneWidget);
+    expect(db.notes, isEmpty);
+    // the save is lit with nothing written
+    expect(find.bySemanticsLabel(l10n.commonSave), findsOneWidget);
+    await t.enterText(find.byType(TextField), 'for later');
+    expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isTrue);
+    await kept(t, db, 2);
+    expect(db.notes, hasLength(2));
+    final file = db.notes.first;
+    expect(file['file_name'], 'list.txt');
+    expect(file['plaintext'], 'for later');
+    final copy = file['file_path'] as String;
+    expect(copy, isNot(f.path));
+    expect(File(copy).readAsStringSync(), 'p');
+    // the photo is a photo, not a file
+    final pic = db.notes.last;
+    expect(pic['media_path'], isNotNull);
+    expect(pic['file_path'], isNull);
+    expect(pic['plaintext'], '');
+    // the row is empty, the dropped files left as they were
+    expect(find.byKey(const ValueKey('attach-tray')), findsNothing);
     expect(f.readAsStringSync(), 'p');
+    expect(photo.existsSync(), isTrue);
+    await _drain(t);
+  });
+
+  testWidgets('ctrl and v of files copied in a file manager stages them in '
+      'note to self', (t) async {
+    onDesktop = true;
+    AttachTray.decode = (_) async => null;
+    final dir = folder(t);
+    final f = File('${dir.path}/plan.pdf')..writeAsStringSync('%PDF-1.4');
+    PasteFiles.clip = () async => [f.path];
+    final db = await _notes(t);
+    await t.tap(find.byType(TextField));
+    await t.pump();
+    await t.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await t.sendKeyEvent(LogicalKeyboardKey.keyV);
+    await t.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text('plan.pdf'), findsOneWidget);
+    expect(db.notes, isEmpty);
+    expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isTrue);
+    await kept(t, db, 1);
+    expect(db.notes.single['file_name'], 'plan.pdf');
     await _drain(t);
   });
 

@@ -28,11 +28,17 @@ import 'package:kryfo/main.dart'
         AppState,
         AppStateContacts,
         AppStateInvites,
+        AppStateOldPeers,
         AppStatePairCodes,
         AppStateProfile,
         AppStateReceive,
+        AppStateRoute,
         HaloEngine,
+        handleFetchForTest,
         handleHaloUriAdded,
+        hasSessionWith,
+        kNoHelloWait,
+        kOldPeerWait,
         haloUriV3,
         openAddedChatLater,
         openDevChatLater,
@@ -45,6 +51,7 @@ import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/wire_pad.dart' show unpad;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
@@ -953,6 +960,36 @@ void main() {
     expect(engine.unsubscribed, contains(once.id));
   });
 
+  test('a start before the onion is known listens on the invites people '
+      'hold, and keeps them once it is there', () async {
+    final t0 = DateTime.now().millisecondsSinceEpoch;
+    final main = await myMain();
+    // the next start: the upkeep runs before tor hands the onion back
+    await world();
+    app.myOnion = '';
+    engine.subscribed.clear();
+    final held = [for (final r in await invitesOf(db, kMainIdent)) r.id];
+    await app.keepMyInvites(nowMs: t0);
+    expect(engine.subscribed, unorderedEquals(held));
+    expect(engine.subscribed, contains(main.id));
+    expect((await currentMainInvite(db, kMainIdent))!.id, main.id);
+    // nothing to keep before the hour while there is still no onion
+    await app.keepMyInvitesDue(nowMs: t0 + 60 * 1000);
+    expect(engine.subscribed, unorderedEquals(held));
+    // the onion came: the next tick keeps them
+    app.myOnion = _onionOf(_onionKey);
+    final once = await makeInvite(
+      db,
+      signalSession,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+      nowMs: t0,
+    );
+    await app.keepMyInvitesDue(nowMs: t0 + 2 * 60 * 1000);
+    expect(engine.subscribed, containsAll([main.id, once.id]));
+    expect((await currentMainInvite(db, kMainIdent))!.id, main.id);
+  });
+
   test('a start and a tick keeping the invites at once make one main '
       'invite, and a reset during an upkeep leaves only its own', () async {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -1141,5 +1178,182 @@ void main() {
       nowMs: DateTime.now().millisecondsSinceEpoch + 31 * 60 * 1000,
     );
     expect(await hellosOf('pair', p.keyHex), isEmpty);
+  });
+
+  // contacts on an older Kryfo (identity v4 11 step 7): no classic first
+  // contact, so the chat says so and its hello goes again until they answer
+  group('a v3 card\'s owner', () {
+    // a card as a 0.5.x phone makes it: no kyber prekey
+    String classicOf(String b64) {
+      final j =
+          jsonDecode(utf8.decode(base64Decode(b64))) as Map<String, dynamic>
+            ..remove('kyberPreKeyPublic')
+            ..remove('kyberPreKeyId')
+            ..remove('kyberPreKeySignature');
+      return base64Encode(utf8.encode(jsonEncode(j)));
+    }
+
+    Future<(String, _Phone)> v3Of(
+      String words,
+      int seed, {
+      required bool classic,
+    }) async {
+      final p = await _Phone.make(words, seed);
+      final b = await p.ss.makeBundleB64();
+      final link = haloUriV3(
+        p.words,
+        _onionOf(_onionKeyOf(seed + 1)),
+        Uri.encodeQueryComponent(classic ? classicOf(b) : b),
+        _hex(List.filled(32, seed)),
+      );
+      return (link, p);
+    }
+
+    Future<void> hellosGo({int? nowMs}) async {
+      await _settle();
+      await app.sendHellosOwed(nowMs: nowMs);
+      await app.sendHellosOwed(nowMs: nowMs);
+    }
+
+    const hour = 3600 * 1000;
+
+    test('a link whose card has no post-quantum prekey: the chat says at '
+        'once that they may need to update, and a hello goes', () async {
+      final (link, p) = await v3Of('old-card-link', 111, classic: true);
+      expect(await handleHaloUriAdded(link, app: app), (
+        l10n.helloSentOld,
+        true,
+      ));
+      final w = await app.helloWaitOf(p.words);
+      expect(w.waits, isTrue);
+      expect(w.update, isTrue);
+      expect((await hellosOf('old', p.keyHex)).single['once'], 1);
+      await hellosGo();
+      expect(engine.hellos, contains(p.x));
+    });
+
+    test('a card with the prekey: what is written waits at once, the line '
+        'comes only once the hello had a while without an answer', () async {
+      final (link, p) = await v3Of('new-card-link', 113, classic: false);
+      expect(await handleHaloUriAdded(link, app: app), (
+        l10n.helloSentOld,
+        true,
+      ));
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final w = await app.helloWaitOf(p.words, nowMs: now);
+      expect(w.waits, isTrue);
+      expect(w.update, isFalse);
+      expect(w.updateAt, greaterThan(now));
+      final later = await app.helloWaitOf(
+        p.words,
+        nowMs: now + kOldPeerWait.inMilliseconds + 1000,
+      );
+      expect(later.update, isTrue);
+    });
+
+    test('a v4 qr is a 0.6 phone\'s: its hello waits, and no update line '
+        'ever shows', () async {
+      final p = await _Phone.make('four-qr-owner', 115);
+      final qr = inviteLink((await p.mainInvite()).qr!);
+      expect(await handleHaloUriAdded(qr, app: app), (l10n.helloSent, true));
+      final far = DateTime.now().millisecondsSinceEpoch + 40 * 24 * hour;
+      final w = await app.helloWaitOf(p.words, nowMs: far);
+      expect(w.waits, isTrue);
+      expect(w.update, isFalse);
+      expect(w.updateAt, isNull);
+      expect(await hellosOf('old', p.keyHex), isEmpty);
+    });
+
+    test('a handle still on a 0.5.x card says so on the add and adds no '
+        'one; one on a card with the prekey is added', () async {
+      app.setTorStatusForTest(TorStatus.bootstrapped);
+      app.setRouteOKForTest(true);
+      final reg = <String, (String, String)>{};
+      handleFetchForTest = (url) async {
+        final h = Uri.parse(url).queryParameters['name']!;
+        final r = reg[h];
+        if (r == null) return 'error: status 404';
+        return jsonEncode({
+          'names': {h: r.$1},
+          'invite': r.$2,
+        });
+      };
+      addTearDown(() => handleFetchForTest = null);
+      final (old, p) = await v3Of('handle-old-card', 117, classic: true);
+      reg['oldcard'] = (_hex(p.face.face), old);
+      expect(await handleHaloUriAdded('@oldcard', app: app), (
+        l10n.handleOlderKryfo,
+        false,
+      ));
+      expect(live.people.containsKey(p.words), isFalse);
+      await hellosGo();
+      expect(engine.hellos, isNot(contains(p.x)));
+      expect(
+        await db.query('hellos', where: 'peer = ?', whereArgs: [p.keyHex]),
+        isEmpty,
+      );
+      final (fresh, q) = await v3Of('handle-new-card', 119, classic: false);
+      reg['newcard'] = (_hex(q.face.face), fresh);
+      expect(await handleHaloUriAdded('@newcard', app: app), (
+        l10n.helloSentOld,
+        true,
+      ));
+      expect(live.people[q.words], containsPair('accepted', 1));
+    });
+
+    test('no answer: the hello goes again twice a day the first week, then '
+        'daily; only the newest one-time invite out stays beside it', () async {
+      final (link, p) = await v3Of('never-answers-back', 121, classic: true);
+      await handleHaloUriAdded(link, app: app);
+      // a pass of an earlier test may still be under way: theirs alone
+      List<String> sent() => [...engine.hellos.where((x) => x == p.x)];
+      await hellosGo();
+      expect(sent(), hasLength(1));
+      final t0 = DateTime.now().millisecondsSinceEpoch;
+      await hellosGo(nowMs: t0 + 6 * hour);
+      expect(sent(), hasLength(1));
+      await hellosGo(nowMs: t0 + 13 * hour);
+      expect(sent(), hasLength(2));
+      await hellosGo(nowMs: t0 + 26 * hour);
+      expect(sent(), hasLength(3));
+      expect(await hellosOf('out', p.keyHex), hasLength(2));
+      expect(engine.unsubscribed, hasLength(1));
+      await hellosGo(nowMs: t0 + 8 * 24 * hour);
+      expect(sent(), hasLength(4));
+      await hellosGo(nowMs: t0 + 8 * 24 * hour + 13 * hour);
+      expect(sent(), hasLength(4));
+      await hellosGo(nowMs: t0 + 9 * 24 * hour + hour);
+      expect(sent(), hasLength(5));
+      expect(await hellosOf('out', p.keyHex), hasLength(2));
+      // the line stays the whole time
+      expect(
+        (await app.helloWaitOf(p.words, nowMs: t0 + 9 * 24 * hour)).update,
+        isTrue,
+      );
+    });
+
+    test('once they update and answer the hello, their chat starts and '
+        'nothing waits any more', () async {
+      await myMain();
+      final (link, p) = await v3Of('updates-them-later', 123, classic: true);
+      await handleHaloUriAdded(link, app: app);
+      await hellosGo();
+      expect((await app.helloWaitOf(p.words)).update, isTrue);
+      final out = (await hellosOf('out', p.keyHex)).single;
+      final once = (await inviteOf(
+        db,
+        kMainIdent,
+        out['invite_id'] as String,
+      ))!;
+      final opener = await p.openerTo(once, 'u-updated');
+      await app.receiveRelay([(peer: 'f0:${once.id}', cipher: opener)]);
+      await _settle();
+      expect(await hasSessionWith(p.words), isTrue);
+      expect(await hellosOf('old', p.keyHex), isEmpty);
+      expect(await app.helloWaitOf(p.words), kNoHelloWait);
+      // no hello goes to them again
+      await hellosGo(nowMs: DateTime.now().millisecondsSinceEpoch + 30 * hour);
+      expect(engine.hellos.where((x) => x == p.x), hasLength(1));
+    });
   });
 }

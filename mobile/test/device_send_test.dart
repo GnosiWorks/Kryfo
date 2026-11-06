@@ -206,14 +206,16 @@ void main() {
     return d.open();
   }
 
-  test('the switch is off in this build: no devices word goes out', () {
-    expect(linkedDevicesOn, isFalse);
+  test('the switch is on in this build: the devices word goes out; off, '
+      'as only a test turns it, none', () {
+    linkedDevicesForTest = null;
+    expect(linkedDevicesOn, isTrue);
+    expect(myCaps, [...kMyCaps, kCapDevices]);
+    expect(capsFromWire(['ty', kCapDevices]), ['ty', kCapDevices]);
+    linkedDevicesForTest = false;
     expect(identical(myCaps, kMyCaps), isTrue);
     expect(myCaps, isNot(contains(kCapDevices)));
     expect(capsFromWire(['ty', kCapDevices]), ['ty']);
-    linkedDevicesForTest = true;
-    expect(myCaps, [...kMyCaps, kCapDevices]);
-    expect(capsFromWire(['ty', kCapDevices]), ['ty', kCapDevices]);
   });
 
   // ana's phone, her desk (9), bob's phone and devices 5 and 17, and cat on

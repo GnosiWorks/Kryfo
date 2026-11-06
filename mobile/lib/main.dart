@@ -20,6 +20,7 @@ import 'devices/history_open.dart' show endHistoryCopies;
 import 'devices/link_calls.dart' show EngineLinkCalls;
 import 'devices/link_flow.dart';
 import 'devices/own_device_store.dart';
+import 'devices/own_gone.dart';
 import 'devices/own_sync.dart';
 import 'devices/own_unlink.dart';
 import 'devices/linked_lock.dart';
@@ -84,6 +85,7 @@ import 'group_shots.dart';
 import 'group_media_send.dart';
 import 'media_names.dart' show mediaNamesAtOpen;
 import 'media_progress.dart';
+import 'media_trace.dart' show traceCode;
 import 'transfers.dart';
 import 'transfer_note.dart';
 import 'media_send.dart';
@@ -250,6 +252,7 @@ part 'app/devices_send_app.dart';
 part 'app/devices_unlink_app.dart';
 part 'app/devices_vault_app.dart';
 part 'app/link_app.dart';
+part 'app/notes_own_app.dart';
 part 'app/history_app.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
@@ -257,6 +260,7 @@ part 'app/gates.dart';
 part 'app/group_hellos.dart';
 part 'app/groups.dart';
 part 'app/links.dart';
+part 'app/old_peers.dart';
 part 'app/invites_app.dart';
 part 'app/pair_codes_app.dart';
 part 'app/pairs.dart';
@@ -268,6 +272,7 @@ part 'app/signal.dart';
 part 'app/door.dart';
 part 'app/state.dart';
 part 'app/state_arrivals.dart';
+part 'app/state_bench.dart';
 part 'app/state_boot.dart';
 part 'app/state_bridges.dart';
 part 'app/state_contacts.dart';
@@ -349,6 +354,8 @@ void main() async {
       why: why,
     );
   });
+  // debug and profile builds: the reliability harness's sender (state_bench)
+  benchListen();
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started
   await loadAppLocale();

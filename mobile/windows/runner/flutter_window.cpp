@@ -2,16 +2,63 @@
 
 #include <flutter/method_result_functions.h>
 #include <flutter/standard_method_codec.h>
+#include <shellapi.h>
+#include <wtsapi32.h>
 
 #include <optional>
+#include <string>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "kryfo_audio.h"
 
 namespace {
 constexpr UINT_PTR kQuitTimer = 0x4B51;
 constexpr UINT_PTR kHiddenTimer = 0x4B53;
 // how long a hidden start waits for its tray icon before the window shows
 constexpr UINT kHiddenWaitMs = 10000;
+
+// the session's lock now. no answer counts as locked: the first unlock
+// says otherwise
+// the files copied in explorer, as utf-8 paths. nothing else on the
+// clipboard is read
+flutter::EncodableList ClipboardFiles(HWND owner) {
+  flutter::EncodableList files;
+  if (!::IsClipboardFormatAvailable(CF_HDROP) || !::OpenClipboard(owner)) return files;
+  HDROP drop = static_cast<HDROP>(::GetClipboardData(CF_HDROP));
+  if (drop) {
+    UINT n = ::DragQueryFileW(drop, 0xFFFFFFFF, nullptr, 0);
+    for (UINT i = 0; i < n; ++i) {
+      UINT len = ::DragQueryFileW(drop, i, nullptr, 0);
+      if (len == 0) continue;
+      std::wstring w(len + 1, L'\0');
+      ::DragQueryFileW(drop, i, w.data(), len + 1);
+      w.resize(len);
+      int m = ::WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), nullptr,
+                                    0, nullptr, nullptr);
+      std::string s(m, '\0');
+      ::WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), s.data(), m,
+                            nullptr, nullptr);
+      if (!s.empty()) files.push_back(flutter::EncodableValue(s));
+    }
+  }
+  ::CloseClipboard();
+  return files;
+}
+
+bool SessionLockedNow() {
+  WTSINFOEXW* info = nullptr;
+  DWORD n = 0;
+  bool locked = true;
+  if (::WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, WTS_CURRENT_SESSION,
+                                    WTSSessionInfoEx, reinterpret_cast<LPWSTR*>(&info),
+                                    &n)) {
+    if (info && n >= sizeof(WTSINFOEXW) && info->Level == 1) {
+      locked = info->Data.WTSInfoExLevel1.SessionFlags != WTS_SESSIONSTATE_UNLOCK;
+    }
+    ::WTSFreeMemory(info);
+  }
+  return locked;
+}
 }  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
@@ -35,6 +82,12 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+
+  // lock and unlock come as WM_WTSSESSION_CHANGE from here on, so the
+  // state read after it misses none
+  session_watched_ =
+      ::WTSRegisterSessionNotification(GetHandle(), NOTIFY_FOR_THIS_SESSION) != FALSE;
+  session_locked_ = SessionLockedNow();
 
   desktop_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
       flutter_controller_->engine()->messenger(), "kryfo/desktop",
@@ -69,6 +122,17 @@ bool FlutterWindow::OnCreate() {
       result->Success(flutter::EncodableValue(start_hidden_));
     } else if (call.method_name() == "trayState") {
       result->Success(flutter::EncodableValue(tray_.shown()));
+    } else if (call.method_name() == "audio") {
+      // the mic and speaker calls for dart's ffi, by address
+      flutter::EncodableList calls;
+      for (int64_t a : kryfo::AudioCalls()) calls.push_back(flutter::EncodableValue(a));
+      result->Success(flutter::EncodableValue(calls));
+    } else if (call.method_name() == "sessionLocked") {
+      // toasts say only kryfo and new message while it is
+      result->Success(flutter::EncodableValue(session_locked_));
+    } else if (call.method_name() == "clipFiles") {
+      // ctrl and v in a composer: files copied in explorer wait in its row
+      result->Success(flutter::EncodableValue(ClipboardFiles(GetHandle())));
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();
@@ -162,6 +226,10 @@ void FlutterWindow::Quit() {
 
 void FlutterWindow::OnDestroy() {
   tray_.Hide();
+  if (session_watched_) {
+    ::WTSUnRegisterSessionNotification(GetHandle());
+    session_watched_ = false;
+  }
   desktop_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
@@ -203,6 +271,17 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
       break;
     case WM_APP + 2:
       EndNow();
+      return 0;
+    case WM_WTSSESSION_CHANGE:
+      if (wparam == static_cast<WPARAM>(WTS_SESSION_LOCK) ||
+          wparam == static_cast<WPARAM>(WTS_SESSION_UNLOCK)) {
+        session_locked_ = wparam == static_cast<WPARAM>(WTS_SESSION_LOCK);
+        if (desktop_) {
+          desktop_->InvokeMethod(
+              "sessionLock",
+              std::make_unique<flutter::EncodableValue>(session_locked_));
+        }
+      }
       return 0;
   }
 

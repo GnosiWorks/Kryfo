@@ -1559,10 +1559,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatCouldNotCleanThat => 'उस वीडियो को साफ़ नहीं कर पाए';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'उस तस्वीर को साफ़ नहीं कर पाए · इसे फ़ोटो की तरह भेजें';
-
-  @override
   String get chatGifTooBig8 => 'GIF बहुत बड़ा है · अधिकतम 8 MB';
 
   @override
@@ -2513,11 +2509,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'मैसेज तुरंत आते हैं। कुछ भी Tor से बाहर नहीं जाता। बैटरी सबसे ज़्यादा लगती है।';
+      'बैटरी सबसे ज़्यादा लगती है।\nतुरंत, और कुछ भी Tor से बाहर नहीं जाता।';
 
   @override
   String get gettingMessagesArriveInstantlyFast =>
-      'तेज़ पर मैसेज तुरंत आते हैं। बैटरी सबसे ज़्यादा लगती है।';
+      'बैटरी सबसे ज़्यादा लगती है।\nतेज़ पर तुरंत।';
 
   @override
   String get gettingMessagesCheckIns => 'समय-समय पर जाँच';
@@ -2527,7 +2523,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo हर 15 मिनट में मैसेज देखता है। बैटरी कम लगती है, पर मैसेज देर से आ सकते हैं।';
+      'Kryfo हर 15 मिनट में देखता है, इसलिए मैसेज देर से आ सकते हैं।\nबैटरी कम लगती है।';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -2600,10 +2596,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'उस वीडियो को साफ़ नहीं कर पाए';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'उस तस्वीर को साफ़ नहीं कर पाए · इसे फ़ोटो की तरह भेजें';
 
   @override
   String get groupChat30Seconds => '30 सेकंड';
@@ -4165,15 +4157,15 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingYourNameIsThree =>
-      '*आपका नाम तीन शब्द है।* न फ़ोन नंबर, न ईमेल, न एड्रेस बुक।';
+      '*आपका नाम तीन शब्द है।*\nन फ़ोन नंबर, न ईमेल, न एड्रेस बुक।';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*आपकी मर्ज़ी के बिना कोई अंदर नहीं आता।* जब तक आप सार्वजनिक यूज़रनेम न लें, कोई आपको खोज नहीं सकता। लोग हाथ से जोड़े जाते हैं, दोनों तरफ़ से।';
+      '*आपकी मर्ज़ी के बिना कोई अंदर नहीं आता।*\nसार्वजनिक @नाम के बिना कोई आपको खोज नहीं सकता।\nअनजान लोग सिर्फ़ दस्तक दे सकते हैं।';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*पहली बार जुड़ने में एक मिनट लगता है।* भेजने से पहले Kryfo एक निजी रास्ता बनाता है। उसके बाद जल्दी।';
+      '*पहली बार जुड़ने में एक मिनट लगता है।*\nKryfo पहले एक निजी रास्ता बनाता है। उसके बाद जल्दी।';
 
   @override
   String get onboardingBegin => 'शुरू करें';
@@ -4189,11 +4181,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'एक कुंजी से बना, जो सिर्फ़ इसी फ़ोन पर रहती है। *ये शब्द किसी और के पास नहीं हैं।*';
+      'एक कुंजी से बना, जो सिर्फ़ इसी फ़ोन पर रहती है।\n*ये शब्द किसी और के पास नहीं हैं।*';
 
   @override
   String get onboardingGeneratedFromAKeyDesk =>
-      'एक कुंजी से बना, जो सिर्फ़ इसी कंप्यूटर पर रहती है। *ये शब्द किसी और के पास नहीं हैं।*';
+      'एक कुंजी से बना, जो सिर्फ़ इसी कंप्यूटर पर रहती है।\n*ये शब्द किसी और के पास नहीं हैं।*';
 
   @override
   String get onboardingTryAnother => 'दूसरा देखें';
@@ -4213,25 +4205,18 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn =>
-      'आपकी पहचान इसी फ़ोन पर रहती है। जब तैयार हों, सेटिंग से इसका बैकअप लें।';
+      'आपकी पहचान इसी फ़ोन पर रहती है।\nजब तैयार हों, सेटिंग में इसका बैकअप लें।';
 
   @override
   String get onboardingYourIdentityLivesOnDesk =>
-      'आपकी पहचान इसी कंप्यूटर पर रहती है। जब तैयार हों, सेटिंग से इसका बैकअप लें।';
+      'आपकी पहचान इसी कंप्यूटर पर रहती है।\nजब तैयार हों, सेटिंग में इसका बैकअप लें।';
 
   @override
-  String get onboardingOneQuiet => 'एक शांत *सूचना*।';
-
-  @override
-  String get onboardingAndroidNeedsAVisible =>
-      'जब कोई ऐप बैकग्राउंड में सुनता है, Android को एक दिखने वाली सूचना चाहिए। इसी से Kryfo बंद होने पर भी मैसेज आप तक पहुँचते हैं।';
-
-  @override
-  String get onboardingSilentAndAtThe => 'बिना आवाज़, और सूचनाओं में सबसे नीचे';
+  String get onboardingSilentAndAtThe => 'बिना आवाज़, सूचनाओं में सबसे नीचे';
 
   @override
   String get onboardingItNeverBuzzesTurn =>
-      'यह कभी वाइब्रेट नहीं करती। इसे बंद करें, तो मैसेज तब तक रुके रहेंगे जब तक आप ऐप फिर न खोलें।';
+      'यह कभी वाइब्रेट नहीं करती।\nइसे बंद करें, तो मैसेज तब तक रुके रहेंगे जब तक आप Kryfo न खोलें।';
 
   @override
   String get onboardingGotIt => 'ठीक है →';
@@ -4241,7 +4226,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingShowYourCodeSend =>
-      'अपना कोड दिखाएँ, उन्हें लिंक भेजें, या उनका दिया @यूज़रनेम लिखें।';
+      'अपना कोड दिखाएँ, लिंक शेयर करें, या उनका @नाम लिखें।';
 
   @override
   String get onboardingScanTheirs => 'उनका स्कैन करें';
@@ -7067,12 +7052,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsConnected => 'जुड़ा हुआ';
 
   @override
-  String get settingsScreenshots => 'स्क्रीनशॉट';
-
-  @override
-  String get settingsBlocked2 => 'रोके गए';
-
-  @override
   String get settingsOn => 'चालू';
 
   @override
@@ -7089,6 +7068,29 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsBackup => 'बैकअप';
+
+  @override
+  String get settingsProtectBackup => 'बैकअप';
+
+  @override
+  String get settingsBackupNotYet => 'अभी नहीं';
+
+  @override
+  String get settingsBackupToday => 'आज';
+
+  @override
+  String get settingsBackupYesterday => 'कल';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count दिन पहले',
+      one: '$count दिन पहले',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'आवाज़';
@@ -7780,11 +7782,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get handleRegistryFailed =>
-      'रजिस्ट्री तक नहीं पहुँच पाए। एक मिनट में फिर कोशिश करें।';
+      'रजिस्ट्री तक नहीं पहुँच पाए।\nएक मिनट में फिर कोशिश करें।';
 
   @override
   String get handleStillReaching =>
-      'अभी रजिस्ट्री तक पहुँच रहे हैं। Tor पर इसमें एक मिनट तक लग सकता है।';
+      'अभी रजिस्ट्री तक पहुँच रहे हैं।\nTor पर इसमें कुछ समय लग सकता है।';
 
   @override
   String get handleSearchNeedsTor =>
@@ -8830,9 +8832,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'रूम में हमेशा चालू, Android के लिए Kryfo में';
 
   @override
-  String get settingsPerChat => 'हर चैट के लिए अलग';
-
-  @override
   String get homeShotsPerChat => 'स्क्रीनशॉट रोकना अब हर चैट के लिए अलग है।';
 
   @override
@@ -8958,19 +8957,12 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह फ़ाइल बिल्कुल जैसी है वैसी जाती है। Kryfo सिर्फ़ JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 और MOV साफ़ करता है।';
 
   @override
-  String get fileRawPictureTitle => 'यह तस्वीर जैसी है वैसी भेजें?';
-
-  @override
-  String get fileRawPictureLine =>
-      'इस तस्वीर को साफ़ नहीं किया जा सकता। यह कहाँ खींची गई, जैसी जानकारी इसके साथ जाती है। इसे साफ़ करने के लिए फ़ोटो की तरह भेजें।';
-
-  @override
   String get voiceStoppedAtLimit =>
       'वॉइस नोट 30 मिनट पर रुक जाते हैं। इसे सुनें, फिर भेजें।';
 
   @override
   String get gettingMessagesHelperBody =>
-      'तुरंत और हल्का। इसका सर्वर आपका IP और मैसेज आने का समय देखता है, यह कभी नहीं कि उनमें क्या है।';
+      'इसका सर्वर आपका IP पता और मैसेज आने का समय देखता है।\nयह कभी नहीं कि उनमें क्या है। तुरंत और हल्का।';
 
   @override
   String get gettingMessagesHelperUseOnion => 'Onion पर जाएँ';
@@ -8983,7 +8975,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'इसमें झूठे जगाने के संकेत भी मिलाए जाते हैं, जिससे सहायक के सर्वर के लिए यह बताना मुश्किल होता है कि असली मैसेज कब आते हैं। आपका अपना सहायक सर्वर हमारे रिले को अपना पता बताता है। छिपी चैट, शुरुआती कुछ के बाद के रूम, और कभी-कभी कोई आम संपर्क, लगभग पाँच में से एक महीने, उस जाँच का इंतज़ार करते हैं जो Kryfo अब भी हर 15 मिनट में करता है।';
 
   @override
-  String get gettingMessagesHelperOnionOnly => 'Onion रास्ते पर उपलब्ध';
+  String get gettingMessagesHelperOnionOnly => 'प्राइवेट रास्ता चाहिए';
 
   @override
   String get gettingMessagesHelperChecking => 'जाँच हो रही है…';
@@ -9448,6 +9440,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get licencesLoadFailed => 'लोड नहीं हो पाया';
 
   @override
+  String get licencesInVoice => 'आवाज़ से लिखित में';
+
+  @override
+  String get licencesInTranslation => 'मैसेज के अनुवाद में';
+
+  @override
   String get settingsCopyLinkHint => 'लिंक कॉपी करें';
 
   @override
@@ -9646,7 +9644,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get notificationsGoogleBody =>
-      'तुरंत और हल्का। Google देख सकता है कि आपका फ़ोन कब जगाया गया, यह कभी नहीं कि किसने लिखा या क्या कहा।';
+      'Google देख सकता है कि आपका फ़ोन कब जागता है।\nयह कभी नहीं कि किसने लिखा या क्या कहा।\nतुरंत और बैटरी पर हल्का।';
 
   @override
   String get notificationsGoogleStarting => 'चालू हो रहा है…';
@@ -9685,7 +9683,37 @@ class AppLocalizationsHi extends AppLocalizations {
   String get notificationsMakerSwitch => 'आपके फ़ोन बनाने वाली कंपनी का स्विच';
 
   @override
-  String get onboardingDeliveryHeadline => 'मैसेज *आप तक* कैसे पहुँचते हैं।';
+  String get onboardingHowYourMessages => 'आपके मैसेज कैसे *सफ़र* करते हैं।';
+
+  @override
+  String get onboardingRouteLead => 'आप इसे कभी भी सेटिंग में बदल सकते हैं।';
+
+  @override
+  String get onboardingRoutePrivateCost =>
+      'Tor के ज़रिए। एक मैसेज में कुछ सेकंड लगते हैं।';
+
+  @override
+  String get onboardingRoutePrivateGain =>
+      'आपका IP पता कोई नहीं जान पाता, हमारे सर्वर भी नहीं।';
+
+  @override
+  String get onboardingRouteFastCost =>
+      'जब आप जुड़े होते हैं, हमारे सर्वर आपका IP पता देखते हैं।\nआपका नेटवर्क देख सकता है कि आप Kryfo इस्तेमाल करते हैं।';
+
+  @override
+  String get onboardingRouteFastGain =>
+      'Tor को छोड़ देता है: तेज़ और बैटरी पर हल्का।';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo Tor पर ही रहता है, ज़रूरत हो तो ब्रिज के ज़रिए।\nतेज़ आपको सेटिंग में मिलेगा, अगर चाहिए।';
+
+  @override
+  String get onboardingRouteBlockedGain =>
+      'रोक के आसपास रास्ता ख़ुद ढूँढ लेता है।';
+
+  @override
+  String get onboardingDeliveryHeadline => 'मैसेज कब *पहुँचते* हैं।';
 
   @override
   String get onboardingDeliveryLead =>
@@ -10345,16 +10373,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get desktopTrayRow => 'सिस्टम ट्रे में चलता रहे';
 
   @override
-  String get desktopTrayHint =>
-      'विंडो बंद करने पर Kryfo सिस्टम ट्रे में रहता है, ताकि संदेश आते रहें।';
+  String get desktopTrayHint => 'विंडो बंद होने पर भी मैसेज आते रहते हैं।';
 
   @override
   String get desktopTrayOffLine =>
-      'विंडो बंद करने पर Kryfo बंद हो जाता है। दोबारा खोलने पर संदेश आ जाते हैं।';
+      'विंडो बंद करने पर Kryfo बंद हो जाता है।\nदोबारा खोलने पर मैसेज आ जाते हैं।';
 
   @override
   String get desktopTrayNoneLine =>
-      'यह डेस्कटॉप सिस्टम ट्रे आइकन नहीं दिखाता, इसलिए विंडो बंद करने पर Kryfo बंद हो जाता है।';
+      'इस डेस्कटॉप में ट्रे आइकन नहीं है।\nविंडो बंद करने पर Kryfo बंद हो जाता है।';
 
   @override
   String get desktopStartRow => 'कंप्यूटर के साथ शुरू हो';
@@ -10365,11 +10392,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get desktopStartRefused =>
-      'इस कंप्यूटर ने Kryfo को अपने साथ शुरू होने नहीं दिया। जब भी आप ख़ुद शुरू करें, Kryfo खुल जाता है।';
+      'इस कंप्यूटर ने Kryfo को अपने साथ शुरू होने नहीं दिया।\nजब आप ख़ुद शुरू करें, Kryfo खुल जाता है।';
 
   @override
   String get desktopStartHeldOff =>
-      'Windows ने स्टार्टअप ऐप्स में Kryfo बंद कर रखा है। उसे वहीं चालू करें: सेटिंग्स, ऐप्स, स्टार्टअप।';
+      'Windows ने स्टार्टअप ऐप्स में Kryfo बंद कर रखा है।\nइसे Windows सेटिंग, ऐप्स, स्टार्टअप में चालू करें।';
+
+  @override
+  String get desktopMicBlocked =>
+      'जब Windows डेस्कटॉप ऐप्स को माइक्रोफ़ोन इस्तेमाल करने देगा, Kryfo रिकॉर्ड कर सकेगा: सेटिंग्स, गोपनीयता और सुरक्षा, माइक्रोफ़ोन।';
+
+  @override
+  String get desktopMicNone =>
+      'वॉइस नोट रिकॉर्ड करने के लिए माइक्रोफ़ोन जोड़ें।';
 
   @override
   String get desktopNoCamera =>
@@ -10587,7 +10622,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingNameLine =>
-      'सार्वजनिक नाम से लोग आपको ढूँढ सकते हैं। इसे छोड़ने से आप ज़्यादा निजी रहते हैं, आप इसे बाद में कभी भी जोड़ सकते हैं।';
+      'सार्वजनिक @नाम से लोग आपको ढूँढ सकते हैं।\nइसे छोड़ने से आप ज़्यादा निजी रहते हैं।\nआप इसे बाद में जोड़ सकते हैं।';
 
   @override
   String get onboardingNameSkip => 'अभी छोड़ें →';
@@ -10602,7 +10637,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingInviteLead =>
-      'किसी भी मैसेंजर में एक लिंक भेजें। वह Kryfo खोलता है, या दिखाता है कि उसे कहाँ से पाएँ।';
+      'किसी भी मैसेंजर में एक लिंक भेजें।\nवह Kryfo खोलता है, या दिखाता है कि उसे कहाँ से पाएँ।';
 
   @override
   String get onboardingInviteSomeone => 'किसी को बुलाएँ →';
@@ -11066,6 +11101,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get desktopPassRow => 'इस कंप्यूटर पर पासफ़्रेज़';
 
   @override
+  String get desktopPassWindowsAccount => 'आपके Windows अकाउंट से लॉक है';
+
+  @override
+  String get desktopPassKeyring => 'आपकी कीरिंग से लॉक है';
+
+  @override
   String get desktopPassOffBody => 'Kryfo आपके यूज़र अकाउंट से खुलता है।';
 
   @override
@@ -11171,9 +11212,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get settingsShotsNotHereYet => 'इस कंप्यूटर पर अभी नहीं';
-
-  @override
   String get settingsDeskInTray => 'सिस्टम ट्रे में चल रहा है';
 
   @override
@@ -11184,7 +11222,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingDeskRunLead =>
-      'विंडो बंद करने पर Kryfo सिस्टम ट्रे में रहता है, ताकि संदेश आते रहें। दोनों को बाद में सेटिंग्स में, सूचनाएँ के नीचे बदल सकते हैं।';
+      'विंडो बंद करें, Kryfo सिस्टम ट्रे में इंतज़ार करेगा।\nमैसेज आते रहेंगे।\nदोनों को सेटिंग, सूचनाएँ में बदल सकते हैं।';
 
   @override
   String get savedLongPressAnyMessageDesk =>
@@ -11200,8 +11238,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatDropHereToSend => 'भेजने के लिए यहाँ छोड़ें';
 
   @override
-  String get notesDropKeepsWords =>
-      'अपने लिए नोट में शब्द रहते हैं। फ़ाइलें किसी चैट में भेजें।';
+  String get chatDropHereToAdd => 'जोड़ने के लिए यहाँ छोड़ें';
+
+  @override
+  String trayRemove(String name) {
+    return '$name हटाएँ';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'भेजने के लिए तैयार: $count';
+  }
 
   @override
   String get voiceSeeTranscription => 'लिखित रूप देखें';
@@ -11415,6 +11462,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get linkedLinkOnPhone => 'यह लिंक अपने फ़ोन पर खोलें।';
 
   @override
+  String get linkedDoOnPhone => 'यह अपने फ़ोन पर करें।';
+
+  @override
   String get tipsTitle => 'Kryfo का सहयोग करें';
 
   @override
@@ -11514,4 +11564,60 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tipsProfileCard => 'Kryfo को स्वतंत्र रखने के लिए टिप दें';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name ने एक नया डिवाइस जोड़ा';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name ने एक डिवाइस हटाया';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return '$name की डिवाइस सूची जाँची नहीं जा सकी';
+  }
+
+  @override
+  String get notesDropToKeep => 'रखने के लिए यहाँ छोड़ें';
+
+  @override
+  String get notesOnAllDevices => 'आपके सभी डिवाइस पर';
+
+  @override
+  String get notesKeepAnything =>
+      'शब्द, फ़ोटो और फ़ाइलें यहाँ रखें। ये आपके सभी डिवाइस पर दिखते हैं।';
+
+  @override
+  String get notesGoneEverywhere =>
+      'यह आपके सभी डिवाइस से हमेशा के लिए हट जाता है।';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'हर नोट आपके सभी डिवाइस से हमेशा के लिए हट जाएगा।';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'हर नोट सिर्फ़ इसी डिवाइस से हटेगा। आपका फ़ोन उन्हें रखता है।';
+
+  @override
+  String get notesAddItem => 'फ़ोटो या फ़ाइल जोड़ें';
+
+  @override
+  String get notesVoiceNotKept => 'आपका वॉइस नोट नहीं रखा गया';
+
+  @override
+  String get handleOlderKryfo =>
+      'वे Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनसे अपडेट करने को कहें, फिर उन्हें जोड़ें।';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name Kryfo का पुराना संस्करण इस्तेमाल करते हैं। यहाँ संदेश पाने के लिए उन्हें अपडेट करना होगा।';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'कुछ सदस्य Kryfo का पुराना संस्करण इस्तेमाल करते हैं। यहाँ संदेश पाने के लिए उन्हें अपडेट करना होगा।';
 }

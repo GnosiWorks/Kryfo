@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- the flutter tool talks to the app over it: breakpoints, hot reload -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- the reliability harness's sender (src/bench): only adb's shell holds DUMP -->
+    <application>
+        <receiver
+            android:name="app.kryfo.BenchReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP" />
+    </application>
 </manifest>

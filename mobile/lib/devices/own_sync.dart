@@ -78,6 +78,16 @@ typedef OwnChat = ({String id, bool group});
 
 String ownChatName(OwnChat c) => '${c.group ? 'g' : 'p'}:${c.id}';
 
+/// note to self as own frames name it: each device's own notes, kept in
+/// step with my others ('p:_notes_self_', a name no contact can have)
+const OwnChat kOwnNotes = (id: '_notes_self_', group: false);
+
+/// whether [c] is note to self
+bool isOwnNotes(OwnChat c) => !c.group && c.id == kOwnNotes.id;
+
+/// the ops a note to self takes: one note deleted, all of them cleared
+const kOwnNoteOps = {'del', 'clear'};
+
 final _chatShape = RegExp(r'^[pg]:[A-Za-z0-9_.:\-]{1,128}$');
 
 /// the chat [c] names; null for anything else
@@ -114,6 +124,105 @@ bool ownFrameNames(String plain, OwnChat chat) {
   }
   final inGroup = g is String && g.isNotEmpty;
   return chat.group ? g == chat.id : !inGroup && of['h'] == chat.id;
+}
+
+/// the note an own copy [plain] carries: its uid (a sliced one's media id),
+/// null for any other own frame. a note gone here drops the copies of it
+/// still waiting unsealed (notes_own_app.dart)
+String? ownNoteUidOf(String plain) {
+  Object? body(String s) {
+    if (!s.startsWith(kEnvelopePrefix)) return null;
+    try {
+      return jsonDecode(s.substring(kEnvelopePrefix.length));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  final j = body(plain);
+  if (j is! Map) return null;
+  final oc = j['oc'];
+  if (oc is! Map || oc['c'] != ownChatName(kOwnNotes)) return null;
+  final f = oc['f'];
+  final b = f is String ? body(f) : null;
+  if (b is! Map) return null;
+  final u = b['mid'] ?? b['u'];
+  return u is String && u.isNotEmpty ? u : null;
+}
+
+/// the messages a frame [frame] carries or speaks of: its uid, a sliced
+/// one's media id, and the uid an edit, a reaction, a pin, a vote or a poll
+/// close names. a take-back names none: it still has to go
+Set<String> frameMessageUids(String frame) {
+  if (!frame.startsWith(kEnvelopePrefix)) return const {};
+  final Object? b;
+  try {
+    b = jsonDecode(frame.substring(kEnvelopePrefix.length));
+  } catch (_) {
+    return const {};
+  }
+  if (b is! Map || b.containsKey('un')) return const {};
+  return {
+    for (final v in [
+      b['u'],
+      b['mid'],
+      for (final k in const ['ed', 'r', 'pn', 'vt', 'pc'])
+        if (b[k] is Map) (b[k] as Map)['u'],
+    ])
+      if (v is String && v.isNotEmpty) v,
+  };
+}
+
+/// the chat an own copy or a passed-on frame [plain] (oc or of) is of, as
+/// ownChatName names it, and the messages it carries or speaks of; whether
+/// it is a linked device's group copy its phone passes on to members (n).
+/// null for any other own frame: an op, a beat, a receipt
+({String chat, Set<String> uids, bool passOn})? ownFrameMessages(String plain) {
+  if (!plain.startsWith(kEnvelopePrefix)) return null;
+  final Object? j;
+  try {
+    j = jsonDecode(plain.substring(kEnvelopePrefix.length));
+  } catch (_) {
+    return null;
+  }
+  if (j is! Map) return null;
+  final oc = j['oc'];
+  if (oc is Map && oc['c'] is String && oc['f'] is String) {
+    final n = oc['n'];
+    return (
+      chat: oc['c'] as String,
+      uids: frameMessageUids(oc['f'] as String),
+      passOn: n is List && n.isNotEmpty,
+    );
+  }
+  final of = j['of'];
+  if (of is Map && of['h'] is String && of['f'] is String) {
+    final f = of['f'] as String;
+    Object? g;
+    if (f.startsWith(kEnvelopePrefix)) {
+      try {
+        final b = jsonDecode(f.substring(kEnvelopePrefix.length));
+        if (b is Map) g = b['g'];
+      } catch (_) {}
+    }
+    final chat = g is String && g.isNotEmpty
+        ? ownChatName((id: g, group: true))
+        : ownChatName((id: of['h'] as String, group: false));
+    return (chat: chat, uids: frameMessageUids(f), passOn: false);
+  }
+  return null;
+}
+
+/// whether a frame [plain] waiting for a contact's device is of group
+/// [groupId]: a hide drops the ones still unsealed (vault_life)
+bool frameOfGroup(String plain, String groupId) {
+  if (!plain.startsWith(kEnvelopePrefix)) return false;
+  try {
+    final j = jsonDecode(plain.substring(kEnvelopePrefix.length));
+    return j is Map && j['g'] == groupId;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// what the person did on a chat here, told by the session (session.dart)
@@ -228,17 +337,22 @@ class OwnSync {
 
   /// my own [frame] in [chat], to every other device of mine: one copy of
   /// a group's frame, whichever members it went to. [notReached], in a
-  /// group, the members this device could not reach
+  /// group, the members this device could not reach. [only]: to that
+  /// device of mine alone, when it is still on my list
   Future<bool> copy(
     int ident,
     OwnChat chat,
     String frame, {
     List<String> notReached = const [],
+    OwnPeer? only,
   }) async {
     if (!linkedDevicesOn || frame.length > kOwnFrameMost) return false;
     final m = await me(ident);
     if (m == null) return false;
-    final to = await others(ident);
+    final to = [
+      for (final p in await others(ident))
+        if (only == null || (p.id == only.id && p.key == only.key)) p,
+    ];
     if (to.isEmpty) return false;
     final oc = {
       'i': ident,

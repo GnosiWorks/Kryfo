@@ -149,7 +149,7 @@ void main() {
         await t.pump(const Duration(seconds: 1));
         final bad = <String>[];
         final pages = t.widget<PageView>(find.byType(PageView)).controller!;
-        for (var step = 0; step < 5; step++) {
+        for (var step = 0; step < 6; step++) {
           pages.jumpToPage(step);
           await t.pump();
           await t.pump(const Duration(seconds: 1));

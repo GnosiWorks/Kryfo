@@ -80,13 +80,15 @@ void main() {
         l10n.onboardingBegin,
         l10n.onboardingUseThisName,
         l10n.onboardingNameSkip,
-        l10n.onboardingGotIt,
+        l10n.onboardingContinue,
+        l10n.onboardingContinue,
         l10n.onboardingNotNowAddPeople,
       ];
-      // what the last two steps say, and a card each one fades in
+      // what the last three steps say, and a card each one fades in
       final says = <int, (String, String)>{
-        3: (l10n.onboardingAndroidNeedsAVisible, l10n.onboardingSilentAndAtThe),
-        4: (l10n.onboardingInviteLead, l10n.onboardingEveryWayToAdd),
+        3: (l10n.onboardingRouteLead, l10n.onboardingRoutePrivateCost),
+        4: (l10n.onboardingDeliveryLead, l10n.onboardingSilentAndAtThe),
+        5: (l10n.onboardingInviteLead, l10n.onboardingEveryWayToAdd),
       };
       for (var step = 0; step < buttons.length; step++) {
         final label = buttons[step];

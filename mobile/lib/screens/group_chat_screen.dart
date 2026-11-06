@@ -15,6 +15,7 @@ import '../forward.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../widgets/desk_menu.dart';
 import '../widgets/sealed_picture.dart';
+import '../widgets/photo_shape.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
@@ -27,7 +28,6 @@ import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/owned_text.dart';
-import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
@@ -42,6 +42,12 @@ import '../file_kind.dart'
         readFileFactsFresh;
 import '../file_save.dart' show saveReceivedFile;
 import '../widgets/media_bubbles.dart';
+import '../translate/chat_translation.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
+import '../translate/translate_bubble.dart';
+import '../translate/foreign.dart' show Offer;
+import '../translate/translate_menu.dart' show neverOffer;
+import '../translate/lang_names.dart' show langName;
 import '../voice/chat_transcripts.dart';
 import '../voice/ui/transcript_line.dart';
 import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
@@ -51,7 +57,8 @@ import '../atmosphere.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart' show SearchHead, firstUrl;
-import 'package:flutter/foundation.dart' show ValueListenable, setEquals;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, listEquals, setEquals;
 import 'package:flutter/material.dart';
 import '../drafts.dart';
 import '../wallpaper.dart';
@@ -70,6 +77,7 @@ import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
         typeLeaf,
+        linkedRole,
         appState,
         AppStateFiles,
         kNotSent,
@@ -84,6 +92,8 @@ import '../main.dart'
         kAdminGone,
         themeRevision,
         AppStateOutbox,
+        AppStateOldPeers,
+        kOldPeerWait,
         AppStateMessages,
         AppStateRoute,
         AppStatePrefs,
@@ -176,6 +186,7 @@ import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/attach_tray.dart';
 import '../desktop/drag_in.dart' show DragInZone;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
@@ -525,6 +536,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // its admin was taken off this phone ("this isn't them"): no change to
   // the group reaches it any more
   bool _adminGone = false;
+  // members on an older Kryfo whom no session here reaches: they get
+  // nothing from this phone until they update
+  List<String> _needUpdate = const [];
+
+  // a member counts only after a while in the group: read again as it
+  // passes
+  Future<void> _needUpdateTick() async {
+    final now = await appState.groupWaitsForUpdate(widget.groupId);
+    if (!mounted || listEquals(now, _needUpdate)) return;
+    setState(() => _needUpdate = now);
+  }
+
   // its admin ended it: what it held is gone, and nothing is written here
   GroupEnd? _end;
   // its screenshot block, and this screen's hold on the window's flag:
@@ -630,8 +653,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     null => null,
   };
 
-  // a note that went: its words go from memory now, a run for it stops
+  // theirs in other languages, translated on the phone
+  late final ChatTranslation? _translation = switch (translationHubIfOn()) {
+    final hub? => ChatTranslation(hub, widget.groupId),
+    null => null,
+  };
+
+  // a message that went: its translation and its note's words go from
+  // memory now, a run for it stops
   void _forgetTranscript(_GMsg m) {
+    _translation?.forget(trKeyOf(m.msgUid, m.came), m.text);
     final uid = m.msgUid;
     if (uid != null && isVoiceName(m.fileName)) _transcripts?.forget(uid);
   }
@@ -653,6 +684,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.initState();
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.groupId);
+    _tray.addListener(_trayMoved);
     // a computer: the chat opens ready to type
     if (onDesktop) _composerFocus.requestFocus();
     _loadWall();
@@ -734,6 +766,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     groupOwedTick.addListener(_reachMoved);
     fileWaits.addListener(_waitsMoved);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
+    _timers.every(kOldPeerWait, () => unawaited(_needUpdateTick()));
     _burn = _timers.until(_burnWait, _burnTick);
     // back in view: what shows now has been read
     _reads.keepTime(_timers);
@@ -1127,6 +1160,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final reactions = await session.loadReactionsFor(uids);
       final votes = await session.pollVotesFor(uids);
       final reach = await session.groupFileReach(widget.groupId);
+      final needUpdate = await appState.groupWaitsForUpdate(widget.groupId);
       // local nickname is the display source of truth. fall back to the 3-word
       // id when we have no nickname for that member.
       final nickById = <String, String>{};
@@ -1159,6 +1193,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _joiningAt = joining;
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
         _adminGone = g['admin_id'] == kAdminGone && g['room_pub'] == null;
+        _needUpdate = needUpdate;
         _end = groupEndOf(g);
         _shots = GroupShots.ofRow(g, quiet: sessionQuiet);
         _adminId = g['admin_id'] as String?;
@@ -1917,6 +1952,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     child: _GroupBubble(
                       m: m,
                       transcripts: _transcripts,
+                      translation: _translation,
                       album: run,
                       showSender: showSender,
                       kept: _keeps(m),
@@ -2094,6 +2130,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _send() async {
+    if (onDesktop && !_tray.isEmpty) {
+      _composerFocus.requestFocus();
+      return _sendTray();
+    }
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
     // the words stay in the field until someone is here
@@ -3080,22 +3120,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
-    // a picture the lane cannot clean goes only once the sender has read
-    // that its details go with it
+    // a picture the lane cannot clean is drawn again as a clean jpeg, or
+    // goes as it is, never asked about (copyForSend)
     final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
-    if (raw && mounted) {
-      final ok = await showConfirmSheet(
-        context,
-        title: l10n.fileRawPictureTitle,
-        figure: humanFileSize(size),
-        line: l10n.fileRawPictureLine,
-        yes: l10n.chatSendIt,
-        keep: l10n.commonCancel,
-        rose: false,
-      );
-      if (mounted) FocusManager.instance.primaryFocus?.unfocus();
-      if (!ok) return null;
-    }
     // ended while it was picked: nothing is copied
     if (!await _stillHere()) return null;
     final made = uid ?? newMsgUid();
@@ -3108,20 +3135,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // one that cannot be read through, or still reads as anything after,
     // is not sent. a raw picture is never walked as a video. the copy is
     // made and cleaned out of the media folder and only moved in clean
-    final done = await copyClean(src, dest.path, name: name, raw: raw);
-    if (done.how == MediaClean.refused) {
+    final done = await copyForSend(src, dest.path, name: name, raw: raw);
+    final at = done.path;
+    if (at == null) {
       if (mounted) {
         showHaloToast(
           context,
           done.video
               ? l10n.groupChatCouldNotCleanThatVideo
-              : l10n.groupChatCouldNotCleanThatPictureSend,
+              : l10n.groupChatCouldNotReadThat,
         );
       }
       return null;
     }
-    makeBlurSoon(dest.path);
-    return _GReady(made, dest.path, fileName: name);
+    makeBlurSoon(at);
+    return _GReady(made, at, fileName: done.name);
   }
 
   // the group is still here to send into. one gone closes the screen
@@ -3524,6 +3552,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final rows =
         2 +
         (words ? 2 : 0) +
+        (_trOffer(target) != null ? 3 : 0) +
         (target.filePath != null && !isVoiceName(target.fileName) ? 1 : 0) +
         (isOut ? (words ? 2 : 1) : 0);
     final rowH = 20 + math.max(17.0, mq.textScaler.scale(13.5) * 1.3);
@@ -3639,6 +3668,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             child: _GroupBubble(
                               m: target,
                               transcripts: _transcripts,
+                              translation: _translation,
                               album: album,
                               showSender: showSender,
                               faceOf: _faceOf,
@@ -3793,6 +3823,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       ? l10n.roomShotsMenuNote
       : l10n.groupShotsMenuNote;
 
+  // theirs in a language the person does not read, when translation is on
+  Offer? _trOffer(_GMsg t) {
+    final tr = _translation;
+    if (tr == null || t.direction == 'out' || t.sticker != null) return null;
+    if (t.text.isEmpty) return null;
+    return tr.offer(t.text);
+  }
+
   // what the menu can do, the phone's card and the computer's menu alike
   List<MenuAction> _menuActions(
     _GMsg target,
@@ -3806,6 +3844,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final anchor = album?.anchor ?? target;
     final saveOn = held ?? anchor;
     final shareOn = album == null ? target : held;
+    final translation = _translation;
+    final trOffer = _trOffer(target);
+    final trKey = trKeyOf(target.msgUid, target.came);
     return [
       MenuAction(
         icon: anchor.pinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -3839,6 +3880,38 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 showHaloToast(context, l10n.commonCopied);
               },
       ),
+      if (translation != null && trOffer != null) ...[
+        MenuAction(
+          icon: Icons.translate_rounded,
+          label: translation.shown(trKey, target.text)
+              ? l10n.translateShowOriginal
+              : l10n.translateAction,
+          onTap: () {
+            dismiss();
+            unawaited(askTranslate(context, translation, trKey, target.text));
+          },
+        ),
+        // the translate line's own menu, in rows of their own here
+        MenuAction(
+          icon: Icons.all_inclusive_rounded,
+          label: l10n.translateAlwaysChat,
+          checked: translation.auto == true,
+          onTap: () {
+            dismiss();
+            unawaited(
+              translation.setAuto(translation.auto != true).catchError((_) {}),
+            );
+          },
+        ),
+        MenuAction(
+          icon: Icons.do_not_disturb_on_outlined,
+          label: l10n.translateBarNever(langName(trOffer.seen)),
+          onTap: () {
+            dismiss();
+            unawaited(neverOffer(context, translation.hub, trOffer));
+          },
+        ),
+      ],
       MenuAction(
         icon: Icons.forward_rounded,
         label: l10n.groupChatForward,
@@ -4609,8 +4682,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    // the row stays with the group for its next opening
+    _tray.removeListener(_trayMoved);
     _composerFocus.dispose();
     _transcripts?.dispose();
+    _translation?.dispose();
     _find.detach();
     _unwatchCaptures?.call();
     wallpaperRevision.removeListener(_loadWall);
@@ -4659,22 +4735,85 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       },
       child: DragInZone(
         enabled: _end == null && !_waiting,
-        send: (path, name) async {
-          if (_nobodyToRead()) return;
-          await _sendGroupFileFrom(path, name);
-        },
+        stage: _stage,
         couldNotRead: () => l10n.groupChatCouldNotReadThat,
         child: _page(context),
       ),
     ),
   );
 
-  // esc on a computer lets go of the quote, then the search, and only then
-  // closes the chat
-  bool get _escHolds => onDesktop && (_replyTo != null || _searching);
+  // this group's row of staged files on a computer, kept by group and
+  // container so it can never go anywhere else
+  late final AttachTray _tray = DeskTrays.of(
+    '${session.container.id}|group:${widget.groupId}',
+  );
+
+  void _trayMoved() {
+    if (mounted) setState(() {});
+  }
+
+  void _stage(List<String> files) {
+    if (_end != null || _waiting) return;
+    unawaited(
+      _tray.add(files, most: () => appState.fileLimitForGroup(widget.groupId)),
+    );
+  }
+
+  // enter with files staged: photos and videos as albums with the caption
+  // on the first, as a pick goes, then each file. a file alone takes it
+  Future<void> _sendTray() async {
+    if (_sending || _nobodyToRead()) return;
+    // a second enter while the first reads finds the row taken
+    if (_trayBusy) return;
+    _trayBusy = true;
+    try {
+      await _sendTrayNow();
+    } finally {
+      _trayBusy = false;
+    }
+  }
+
+  bool _trayBusy = false;
+
+  Future<void> _sendTrayNow() async {
+    final caption = _msgCtrl.text.trim();
+    final plan = trayPlan(_tray.items, caption);
+    final picks = <PickedMedia>[];
+    for (final x in plan.media) {
+      if (x.kind == TrayKind.video) {
+        picks.add(PickedMedia.video(XFile(x.path, name: x.name)));
+        continue;
+      }
+      try {
+        picks.add(PickedMedia.photo(await File(x.path).readAsBytes()));
+      } catch (_) {
+        if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
+      }
+    }
+    // a lock while it read took the row: nothing goes
+    if (!mounted || lockState.locked) return;
+    _tray.clear();
+    _msgCtrl.clear();
+    _keepDraft();
+    if (picks.isNotEmpty) {
+      await _sendPicked(MediaSendResult(items: picks, caption: caption));
+    }
+    for (final (f, words) in plan.files) {
+      if (!mounted || lockState.locked) break;
+      final ready = await _readyGroupFile(f.path, f.name);
+      if (ready != null) await _sendGroupReady(ready, words);
+    }
+  }
+
+  // esc on a computer lets go of the staged files, then the quote, then
+  // the search, and only then closes the chat
+  bool get _escHolds =>
+      onDesktop && (_tray.shown || _replyTo != null || _searching);
 
   void _escOne() {
-    if (_replyTo != null) {
+    if (_tray.shown) {
+      _tray.clear();
+    } else if (_replyTo != null) {
       setState(() => _replyTo = null);
       _keepDraft();
     } else if (_searching) {
@@ -4766,10 +4905,30 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       )
                     : const SizedBox(width: double.infinity, height: 0),
               ),
+              // a member on an older Kryfo: no session here reaches them yet
+              EaseSize(
+                child: _needUpdate.isNotEmpty && _end == null && !_isRoom
+                    ? NoticeBanner(
+                        key: const ValueKey('group-old'),
+                        glyph: NoticeGlyph.clock,
+                        text: _needUpdate.length == 1
+                            ? l10n.groupMemberNeedsUpdate(
+                                _nameOf(_needUpdate.first),
+                              )
+                            : l10n.groupMembersNeedUpdate,
+                        color: HaloColors.warn,
+                        textColor: HaloColors.warnText,
+                        margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+                      )
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
               // its admin went with "this isn't them": the group is frozen here
               EaseSize(
                 child: _adminGone && _end == null
-                    ? _AdminGoneLine(onLeave: _leaveAdminGone)
+                    ? _AdminGoneLine(
+                        // a linked device leaves on its phone (GroupOnPhone)
+                        onLeave: linkedRole ? null : _leaveAdminGone,
+                      )
                     : const SizedBox(width: double.infinity, height: 0),
               ),
               // a send that has waited on tor a minute gets a way out
@@ -4959,26 +5118,36 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       )
                     : KeyedSubtree(
                         key: const ValueKey('composer'),
-                        child: _Composer(
-                          controller: _msgCtrl,
-                          focusNode: _composerFocus,
-                          members: _mentionable,
-                          sending: _sending,
-                          ghost: _ghost,
-                          burnSeconds: _burnSeconds,
-                          disguise: _disguise,
-                          onToggleGhost: () {
-                            setState(() => _ghost = !_ghost);
-                            appState.saveGhostPref(_ghost, _burnSeconds);
-                            _keepDraft(clock: true);
-                          },
-                          onLongPressGhost: _showBurnPicker,
-                          onSend: _send,
-                          onAttach: _showAttachSheet,
-                          onStickers: _showStickers,
-                          onCamera: _openGroupCamera,
-                          onVoice: _onVoice,
-                          mayRecord: () => !_nobodyToRead(),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TrayStrip(tray: _tray),
+                            PasteFiles(
+                              onFiles: _stage,
+                              child: _Composer(
+                                staged: !_tray.isEmpty,
+                                controller: _msgCtrl,
+                                focusNode: _composerFocus,
+                                members: _mentionable,
+                                sending: _sending,
+                                ghost: _ghost,
+                                burnSeconds: _burnSeconds,
+                                disguise: _disguise,
+                                onToggleGhost: () {
+                                  setState(() => _ghost = !_ghost);
+                                  appState.saveGhostPref(_ghost, _burnSeconds);
+                                  _keepDraft(clock: true);
+                                },
+                                onLongPressGhost: _showBurnPicker,
+                                onSend: _send,
+                                onAttach: _showAttachSheet,
+                                onStickers: _showStickers,
+                                onCamera: _openGroupCamera,
+                                onVoice: _onVoice,
+                                mayRecord: () => !_nobodyToRead(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
               ),
@@ -5473,8 +5642,11 @@ class _Composer extends StatelessWidget {
   final bool Function() mayRecord;
   // who @ can offer
   final List<MentionCandidate> members;
+  // files wait in the row above: send shows with nothing typed
+  final bool staged;
   const _Composer({
     this.members = const [],
+    this.staged = false,
     required this.controller,
     this.focusNode,
     required this.sending,
@@ -5695,7 +5867,7 @@ class _Composer extends StatelessWidget {
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: controller,
                 builder: (context, value, _) {
-                  final hasText = value.text.trim().isNotEmpty;
+                  final hasText = value.text.trim().isNotEmpty || staged;
                   // empty field: voice lane. text: the send pill. the two
                   // trade places with a small pop instead of a cut
                   return AnimatedSwitcher(
@@ -5942,9 +6114,12 @@ class _GroupBubble extends StatelessWidget {
   final void Function(BuildContext, int)? onLongPressTile;
   // the group's voice note transcripts
   final ChatTranscripts? transcripts;
+  // theirs in other languages, translated on the phone
+  final ChatTranslation? translation;
   const _GroupBubble({
     required this.m,
     this.transcripts,
+    this.translation,
     this.album,
     this.onLongPressTile,
     required this.showSender,
@@ -6007,7 +6182,6 @@ class _GroupBubble extends StatelessWidget {
         !isVoiceName(m.fileName) &&
         shape == FileShape.video;
     final frameless = m.mediaPath != null || isVideo;
-    final onAmberText = isOut && m.mediaPath == null;
     final reacted = m.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
     return LeaveFold(
@@ -6459,52 +6633,54 @@ class _GroupBubble extends StatelessWidget {
                                                           ),
                                                       child: Stack(
                                                         children: [
-                                                          ConstrainedBox(
-                                                            constraints:
-                                                                const BoxConstraints(
-                                                                  maxHeight:
-                                                                      280,
-                                                                  maxWidth: 240,
-                                                                ),
-                                                            child: RememberedHeight(
-                                                              id: m.mediaPath!,
-                                                              child: HaloHero(
-                                                                tag: photoHeroTag(
-                                                                  m.mediaPath!,
-                                                                  'chat',
-                                                                ),
-                                                                child: ChatPicture(
+                                                          // the photo's own shape, its blur
+                                                          // the same, before the file decodes
+                                                          PhotoShape(
+                                                            path: m.mediaPath!,
+                                                            image: mediaImage(
+                                                              m.mediaPath!,
+                                                              decodePx(
+                                                                context,
+                                                                240,
+                                                              ),
+                                                            ),
+                                                            maxWidth: 240,
+                                                            maxHeight: 280,
+                                                            child: HaloHero(
+                                                              tag: photoHeroTag(
+                                                                m.mediaPath!,
+                                                                'chat',
+                                                              ),
+                                                              child: ChatPicture(
+                                                                path: m
+                                                                    .mediaPath!,
+                                                                child: SealedPicture(
                                                                   path: m
                                                                       .mediaPath!,
-                                                                  child: SealedPicture(
-                                                                    path: m
-                                                                        .mediaPath!,
-                                                                    shaped:
-                                                                        true,
-                                                                    decodeWidth:
-                                                                        decodePx(
-                                                                          context,
-                                                                          240,
-                                                                        ),
-                                                                    image: mediaImage(
-                                                                      m.mediaPath!,
+                                                                  shaped: false,
+                                                                  decodeWidth:
                                                                       decodePx(
                                                                         context,
                                                                         240,
                                                                       ),
+                                                                  image: mediaImage(
+                                                                    m.mediaPath!,
+                                                                    decodePx(
+                                                                      context,
+                                                                      240,
                                                                     ),
-                                                                    semanticLabel:
-                                                                        l10n.appPhoto,
-                                                                    // the file is gone:
-                                                                    // say so, not a gap
-                                                                    errorBuilder:
-                                                                        (
-                                                                          _,
-                                                                          _,
-                                                                          _,
-                                                                        ) =>
-                                                                            const _MissingPhoto(),
                                                                   ),
+                                                                  semanticLabel:
+                                                                      l10n.appPhoto,
+                                                                  // the file is gone:
+                                                                  // say so, not a gap
+                                                                  errorBuilder:
+                                                                      (
+                                                                        _,
+                                                                        _,
+                                                                        _,
+                                                                      ) =>
+                                                                          const _MissingPhoto(),
                                                                 ),
                                                               ),
                                                             ),
@@ -6546,110 +6722,24 @@ class _GroupBubble extends StatelessWidget {
                                                       : () => onLongPress!(ctx),
                                                   child: writtenStart(
                                                     m.text,
-                                                    Padding(
-                                                      padding:
-                                                          m.mediaPath != null
-                                                          ? const EdgeInsets.fromLTRB(
-                                                              4,
-                                                              6,
-                                                              4,
-                                                              0,
-                                                            )
-                                                          : EdgeInsets.zero,
-                                                      // a search marks its hits; else
-                                                      // a kryfo link is drawn as one,
-                                                      // otherwise @three-words in amber
-                                                      child: query.isNotEmpty
-                                                          ? Text.rich(
-                                                              TextSpan(
-                                                                style:
-                                                                    _bodyStyle(
-                                                                      isOut,
-                                                                    ),
-                                                                children: searchLit(
-                                                                  m.text,
-                                                                  query,
-                                                                  onAmber:
-                                                                      onAmberText,
-                                                                ),
-                                                              ),
-                                                              textDirection:
-                                                                  writtenDir(
-                                                                    m.text,
-                                                                  ),
-                                                            )
-                                                          : m.text.contains(
-                                                              'kryfo://',
-                                                            )
-                                                          ? KryfoLinkText(
-                                                              text: m.text,
-                                                              style: HaloType.sans(
-                                                                size: 14,
-                                                                color:
-                                                                    (isOut &&
-                                                                        m.mediaPath ==
-                                                                            null)
-                                                                    ? HaloColors
-                                                                          .onAmber
-                                                                    : HaloColors
-                                                                          .text,
-                                                                height: 1.35,
-                                                              ),
-                                                              onAmber:
-                                                                  isOut &&
-                                                                  m.mediaPath ==
-                                                                      null,
-                                                              linkColor:
-                                                                  (isOut &&
-                                                                      m.mediaPath ==
-                                                                          null)
-                                                                  ? HaloColors
-                                                                        .onAmber
-                                                                  : HaloColors
-                                                                        .amber,
-                                                            )
-                                                          : Text.rich(
-                                                              mentionRich(
-                                                                m.text,
-                                                                HaloType.sans(
-                                                                  size: 14,
-                                                                  // captions get more
-                                                                  // weight to read over
-                                                                  // busy images
-                                                                  weight:
-                                                                      m.mediaPath !=
-                                                                          null
-                                                                      ? FontWeight
-                                                                            .w600
-                                                                      : FontWeight
-                                                                            .w400,
-                                                                  // a photo caption sits
-                                                                  // on a transparent
-                                                                  // bubble, where onAmber
-                                                                  // is invisible
-                                                                  color:
-                                                                      (isOut &&
-                                                                          m.mediaPath ==
-                                                                              null)
-                                                                      ? HaloColors
-                                                                            .onAmber
-                                                                      : HaloColors
-                                                                            .text,
-                                                                  height: 1.35,
-                                                                ),
-                                                                accent:
-                                                                    (isOut &&
-                                                                        m.mediaPath ==
-                                                                            null)
-                                                                    ? HaloColors
-                                                                          .onAmber
-                                                                    : null,
-                                                              ),
-                                                              textDirection:
-                                                                  writtenDir(
-                                                                    m.text,
-                                                                  ),
-                                                            ),
+                                                    TranslatedBody(
+                                                      chat: translation,
+                                                      msgKey: trKeyOf(
+                                                        m.msgUid,
+                                                        m.came,
+                                                      ),
+                                                      text: m.text,
+                                                      // theirs only, and not while a search marks its hits
+                                                      enabled:
+                                                          !isOut &&
+                                                          query.isEmpty &&
+                                                          m.sticker == null,
+                                                      original: _words(
+                                                        m.text,
+                                                        isOut,
+                                                      ),
+                                                      translated: (t) =>
+                                                          _words(t, isOut),
                                                     ),
                                                   ),
                                                 ),
@@ -6965,6 +7055,68 @@ class _GroupBubble extends StatelessWidget {
   }
 
   // the words of a bubble: weightier on a photo's caption, dark on ours
+  // the words of a message, or of its translation in their place
+  Widget _words(String text, bool isOut) {
+    final onAmberText = isOut && m.mediaPath == null;
+    return Padding(
+      padding: m.mediaPath != null
+          ? const EdgeInsets.fromLTRB(4, 6, 4, 0)
+          : EdgeInsets.zero,
+      // a search marks its hits; else
+      // a kryfo link is drawn as one,
+      // otherwise @three-words in amber
+      child: query.isNotEmpty
+          ? Text.rich(
+              TextSpan(
+                style: _bodyStyle(isOut),
+                children: searchLit(text, query, onAmber: onAmberText),
+              ),
+              textDirection: writtenDir(text),
+            )
+          : text.contains('kryfo://')
+          ? KryfoLinkText(
+              text: text,
+              style: HaloType.sans(
+                size: 14,
+                color: (isOut && m.mediaPath == null)
+                    ? HaloColors.onAmber
+                    : HaloColors.text,
+                height: 1.35,
+              ),
+              onAmber: isOut && m.mediaPath == null,
+              linkColor: (isOut && m.mediaPath == null)
+                  ? HaloColors.onAmber
+                  : HaloColors.amber,
+            )
+          : Text.rich(
+              mentionRich(
+                text,
+                HaloType.sans(
+                  size: 14,
+                  // captions get more
+                  // weight to read over
+                  // busy images
+                  weight: m.mediaPath != null
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                  // a photo caption sits
+                  // on a transparent
+                  // bubble, where onAmber
+                  // is invisible
+                  color: (isOut && m.mediaPath == null)
+                      ? HaloColors.onAmber
+                      : HaloColors.text,
+                  height: 1.35,
+                ),
+                accent: (isOut && m.mediaPath == null)
+                    ? HaloColors.onAmber
+                    : null,
+              ),
+              textDirection: writtenDir(text),
+            ),
+    );
+  }
+
   TextStyle _bodyStyle(bool isOut) => HaloType.sans(
     size: 14,
     weight: m.mediaPath != null ? FontWeight.w600 : FontWeight.w400,
@@ -7232,7 +7384,7 @@ class _MissingPhoto extends StatelessWidget {
 // the line in a group whose admin "this isn't them" took off this phone:
 // nothing it changes reaches here, and the way out
 class _AdminGoneLine extends StatelessWidget {
-  final VoidCallback onLeave;
+  final VoidCallback? onLeave;
   const _AdminGoneLine({required this.onLeave});
 
   @override
@@ -7265,26 +7417,30 @@ class _AdminGoneLine extends StatelessWidget {
               ),
             ),
           ),
-          Semantics(
-            button: true,
-            child: PressScale(
-              onTap: onLeave,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                alignment: Alignment.center,
-                color: Colors.transparent,
-                child: Text(
-                  l10n.groupInfoLeave,
-                  style: HaloType.sans(
-                    size: 13,
-                    weight: FontWeight.w600,
-                    color: HaloColors.roseText,
+          if (onLeave != null)
+            Semantics(
+              button: true,
+              child: PressScale(
+                onTap: onLeave,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  alignment: Alignment.center,
+                  color: Colors.transparent,
+                  child: Text(
+                    l10n.groupInfoLeave,
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: HaloColors.roseText,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

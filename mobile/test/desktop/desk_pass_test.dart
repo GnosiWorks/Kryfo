@@ -113,15 +113,16 @@ Future<void> _gone(WidgetTester t) async {
 }
 
 void main() {
-  test('a computer swaps the notification step for the tray one', () {
-    expect(onboardingSteps(play: false, desk: true), [
+  test('a computer swaps the delivery step for the tray one', () {
+    expect(onboardingSteps(desk: true), [
       OnboardStep.welcome,
       OnboardStep.identity,
       OnboardStep.name,
+      OnboardStep.route,
       OnboardStep.desk,
       OnboardStep.invite,
     ]);
-    expect(onboardingSteps(play: false), contains(OnboardStep.notify));
+    expect(onboardingSteps(), contains(OnboardStep.delivery));
   });
 
   testWidgets('onboarding keeps a centred column on a computer', (t) async {
@@ -147,8 +148,8 @@ void main() {
 
   testWidgets('the tray step offers both switches', (t) async {
     final run = await _world(t);
-    final steps = onboardingSteps(play: false, desk: true);
-    expect(steps.indexOf(OnboardStep.desk), 3);
+    final steps = onboardingSteps(desk: true);
+    expect(steps.indexOf(OnboardStep.desk), 4);
     // the step on its own, as the pager shows it
     await t.pumpWidget(
       devApp(
@@ -158,7 +159,7 @@ void main() {
     );
     await _settle(t);
     final pages = t.widget<PageView>(find.byType(PageView)).controller!;
-    pages.jumpToPage(3);
+    pages.jumpToPage(4);
     await _settle(t);
     expect(find.text(l10n.desktopTrayRow), findsOneWidget);
     expect(find.text(l10n.desktopStartRow), findsOneWidget);
@@ -181,8 +182,8 @@ void main() {
     await _settle(t);
     final row = t.getRect(find.text(l10n.languageTitle));
     expect(row.left, greaterThan((1280 - 720) / 2));
-    expect(find.text(l10n.settingsShotsNotHereYet), findsOneWidget);
-    expect(find.text(l10n.settingsPerChat), findsNothing);
+    expect(find.text('Not on this computer yet'), findsNothing);
+    expect(find.text('Screenshots'), findsNothing);
     expect(find.text(l10n.settingsVersionAlpha(kAppVersion)), findsOneWidget);
     expect(find.text(l10n.settingsTheOfflineMapIn), findsNothing);
     expect(find.textContaining(l10n.settingsDeskInTray), findsOneWidget);

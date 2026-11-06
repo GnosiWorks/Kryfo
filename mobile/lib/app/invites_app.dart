@@ -234,6 +234,7 @@ extension AppStateInvites on AppState {
     if (row != null && cipher.startsWith(kHelloWireStart)) {
       final hw = helloOfWire(cipher);
       if (hw == null) {
+        firstFails.note('wire');
         await live.markSeenLong(h);
         arrived();
         return;
@@ -245,6 +246,7 @@ extension AppStateInvites on AppState {
     try {
       w = base64Decode(cipher);
     } catch (_) {
+      firstFails.note('wire');
       await live.markSeenLong(h);
       arrived();
       return;
@@ -258,6 +260,7 @@ extension AppStateInvites on AppState {
         w.isEmpty ||
         w[0] != kLsPreKey) {
       dlog('invite: a line dropped');
+      firstFails.note(row == null ? 'invite' : 'line');
       await live.markSeenLong(h);
       arrived();
       return;
@@ -326,7 +329,10 @@ extension AppStateInvites on AppState {
     if (AppState._shown(paired.$2)) arrived();
     // my hello's one-time invite: its owner holds what follows the opener
     // until I answer (3c), so the empty answer goes now
-    if (out.isNotEmpty) unawaited(_answerNewSession(paired.$1));
+    if (out.isNotEmpty) {
+      unawaited(_answerNewSession(paired.$1));
+      unawaited(_helloAnswered(paired.$1));
+    }
   }
 
   // my face on the main invite: the onion key, F and F's signature
@@ -359,8 +365,10 @@ extension AppStateInvites on AppState {
   /// months, without waiting for a start
   Future<void> keepMyInvitesDue({int? nowMs}) {
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    final owed = _invitesFaceOwed && _mainInviteFace() != null;
     if (_invitesKeep != null ||
-        (now - _invitesKeptAt).abs() < kInviteUpkeep.inMilliseconds) {
+        (!owed &&
+            (now - _invitesKeptAt).abs() < kInviteUpkeep.inMilliseconds)) {
       return Future.value();
     }
     return keepMyInvites(
@@ -381,11 +389,15 @@ extension AppStateInvites on AppState {
     if (sessionQuiet || !signalSession.ready) return;
     _invitesKeptAt = nowMs ?? DateTime.now().millisecondsSinceEpoch;
     final face = _mainInviteFace();
+    final db = await live.open();
+    // the onion comes after the start's upkeep: the invites people hold
+    // are listened on now, and made or dropped once it is there
+    _invitesFaceOwed = face == null;
     if (face == null) {
-      dlog('invites: no face yet, kept next start');
+      dlog('invites: no face yet, listened on and kept once it is there');
+      if (!linkedRole) await _listenMyInvites(db, nowMs: nowMs);
       return;
     }
-    final db = await live.open();
     final up = await keepInvites(
       db,
       signalSession,
@@ -717,6 +729,8 @@ extension AppStateInvites on AppState {
         where: 'way = ? AND at < ?',
         whereArgs: [kHelloWant, now - kHelloWantDays * 24 * 3600 * 1000],
       );
+      // a v3 card's owner who has not answered is owed one again
+      await _oweOldPeerHellos(db, now);
       final rows = await db.query(
         'hellos',
         where: 'ident = ? AND way = ?',
@@ -797,7 +811,7 @@ extension AppStateInvites on AppState {
       'peer': peer,
       'invite_id': once.id,
       'fc': fc,
-      'at': DateTime.now().millisecondsSinceEpoch,
+      'at': nowMs ?? DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     final sk = (await fcKeysOf(db, kMainIdent))[once.id];
     if (sk != null) {

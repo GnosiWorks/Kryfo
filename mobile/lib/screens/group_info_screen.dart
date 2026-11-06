@@ -6,6 +6,7 @@ import '../lock_state.dart' show lockState;
 import '../main.dart'
     show
         ownClearLine,
+        linkedRole,
         appState,
         session,
         sessionQuiet,
@@ -56,6 +57,8 @@ import '../chat_shots.dart' show ShotsPacer;
 import '../group_shots.dart';
 import '../widgets/group_shots_sheet.dart';
 import '../wide/read_width.dart' show DeskPage;
+import '../translate/auto_translate_row.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
 
 // a member as the screens name them: a room key by its short tag
 String memberLabel(String id) => looksLikeRoomKey(id) ? roomTag(id) : id;
@@ -108,6 +111,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   final _scroll = ScrollController();
   String _name = '';
   bool _isAdmin = false;
+  // a group's controls are its phone's on a linked device (GroupOnPhone):
+  // the admin's ways to change it are not offered here
+  bool get _changes => _isAdmin && !_ended && !linkedRole;
   // room fields, null for a plain group
   String? _roomPub;
   bool get _isRoom => _roomPub != null;
@@ -677,7 +683,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     ),
                     const SizedBox(height: 14),
                     PressScale(
-                      onTap: _isAdmin && !_isRoom && !_ended ? _rename : null,
+                      onTap: _changes && !_isRoom ? _rename : null,
                       scale: 0.97,
                       haptic: false,
                       child: Row(
@@ -696,7 +702,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                               ),
                             ),
                           ),
-                          if (_isAdmin && !_isRoom && !_ended) ...[
+                          if (_changes && !_isRoom) ...[
                             const SizedBox(width: 8),
                             Icon(
                               Icons.edit_outlined,
@@ -806,6 +812,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     label: l10n.groupInfoWallpaper,
                     onTap: _pickAtmosphere,
                   ),
+                  // the same switch as "always translate this chat" in it
+                  if (translationHubIfOn() case final hub? when hub.on)
+                    AutoTranslateRow(chatId: widget.groupId, hub: hub),
                   // a group's: its admin's switch, read only for the rest
                   if (!_isRoom && !_roomAtOpen) _shotsRow(),
                   // always on in a room, on every phone in it
@@ -880,7 +889,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                             }
                           },
                         ),
-                      if (_isAdmin && !_isRoom && !_ended)
+                      if (_changes && !_isRoom)
                         _Pill(
                           icon: Icons.add_rounded,
                           label: l10n.commonAdd,
@@ -901,7 +910,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                               members: _members,
                               isMe: (m) =>
                                   m == myId || (_isRoom && m == _roomPub),
-                              canRemove: _isAdmin && !_ended,
+                              canRemove: _changes,
                               onRemove: _confirmRemove,
                               contactOf: _contactOf,
                               onOpen: _openMember,
@@ -914,6 +923,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                             ),
                     ),
                   ),
+                  // where the admin's add, remove and rename would be
+                  if (linkedRole && _isAdmin && !_ended && !_isRoom)
+                    const _OnPhoneLine(key: ValueKey('members-on-phone')),
                 ],
               ),
             ),
@@ -930,7 +942,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     onTap: _confirmClear,
                   ),
                 // the admin's, while it runs and an admin is on record
-                if (_mayEnd && !_ended)
+                if (_mayEnd && !_ended && !linkedRole)
                   HaloRow(
                     icon: Icons.stop_circle_outlined,
                     label: l10n.groupInfoEndGroup,
@@ -938,16 +950,28 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                     pending: _ending,
                     onTap: _confirmEnd,
                   ),
-                HaloRow(
-                  icon: _ended ? Icons.delete_outline : Icons.logout_rounded,
-                  label: _ended
-                      ? l10n.groupInfoDeleteGroup
-                      : _isRoom
-                      ? l10n.groupInfoLeaveRoom2
-                      : l10n.groupInfoLeaveGroup2,
-                  rose: true,
-                  onTap: _confirmLeave,
-                ),
+                // a linked device leaves and ends on its phone; an ended
+                // group still goes from here alone
+                if (linkedRole && !_ended)
+                  HaloRow(
+                    key: const ValueKey('leave-on-phone'),
+                    icon: Icons.smartphone_outlined,
+                    label: _isRoom
+                        ? l10n.groupInfoLeaveRoom2
+                        : l10n.groupInfoLeaveGroup2,
+                    hint: l10n.linkedDoOnPhone,
+                  )
+                else
+                  HaloRow(
+                    icon: _ended ? Icons.delete_outline : Icons.logout_rounded,
+                    label: _ended
+                        ? l10n.groupInfoDeleteGroup
+                        : _isRoom
+                        ? l10n.groupInfoLeaveRoom2
+                        : l10n.groupInfoLeaveGroup2,
+                    rose: true,
+                    onTap: _confirmLeave,
+                  ),
               ],
             ),
           ]),
@@ -976,10 +1000,15 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         HaloRow(
           icon: Icons.phonelink_lock_outlined,
           label: l10n.chatBlockScreenshots,
-          hint: groupShotsHint(shown, admin: admin),
+          // the admin's switch is the phone's on a linked device
+          hint: admin && linkedRole
+              ? l10n.linkedDoOnPhone
+              : groupShotsHint(shown, admin: admin),
           toggled: on,
           pending: !_loaded,
-          onTap: _mayShots && _shotsNow == null ? _flipShots : null,
+          onTap: _mayShots && _shotsNow == null && !linkedRole
+              ? _flipShots
+              : null,
         ),
         EaseSize(
           child: FadeSwap(
@@ -1412,4 +1441,27 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
       ),
     );
   }
+}
+
+// a linked device's line where a group's controls would be: they are the
+// phone's (GroupOnPhone)
+class _OnPhoneLine extends StatelessWidget {
+  const _OnPhoneLine({super.key});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsetsDirectional.fromSTEB(4, 10, 4, 0),
+    child: Row(
+      children: [
+        Icon(Icons.smartphone_outlined, size: 15, color: HaloColors.text2),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            l10n.linkedDoOnPhone,
+            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+          ),
+        ),
+      ],
+    ),
+  );
 }

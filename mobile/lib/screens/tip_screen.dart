@@ -18,6 +18,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart' show haloRoute, motionStill;
 import '../widgets/press_scale.dart';
+import '../widgets/entrance.dart';
 
 const _tiers = [
   SupporterTier.supporter,
@@ -384,20 +385,18 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
     vsync: this,
     duration: const Duration(milliseconds: 620),
   );
+  final _entrance = Entrance();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_in.isAnimating || _in.isCompleted) return;
-    if (motionStill(context)) {
-      _in.value = 1;
-    } else {
-      _in.forward();
-    }
+    _entrance.play(context, _in);
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }

@@ -1565,10 +1565,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Impossibile ripulire il video';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Impossibile ripulire l\'immagine · inviala come foto';
-
-  @override
   String get chatGifTooBig8 => 'Gif troppo grande · max 8 mb';
 
   @override
@@ -2534,11 +2530,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'I messaggi arrivano subito. Niente esce da Tor. Consuma più batteria di tutti.';
+      'Consuma più batteria di tutti.\nImmediato, e niente esce da Tor.';
 
   @override
   String get gettingMessagesArriveInstantlyFast =>
-      'Su Veloce i messaggi arrivano subito. Consuma più batteria di tutti.';
+      'Consuma più batteria di tutti.\nImmediato su Veloce.';
 
   @override
   String get gettingMessagesCheckIns => 'Controlli';
@@ -2548,7 +2544,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo cerca messaggi ogni 15 minuti. Leggero sulla batteria, ma i messaggi possono arrivare in ritardo.';
+      'Kryfo controlla ogni 15 minuti, quindi i messaggi possono arrivare in ritardo.\nLeggero sulla batteria.';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -2621,10 +2617,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Impossibile ripulire il video';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Impossibile ripulire l\'immagine · inviala come foto';
 
   @override
   String get groupChat30Seconds => '30 secondi';
@@ -4192,7 +4184,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notesExportSubject => 'Note di Kryfo';
 
   @override
-  String get onboardingPrivateByDefault => 'PRIVATO DI SERIE';
+  String get onboardingPrivateByDefault => 'Privato di serie';
 
   @override
   String get onboardingPrivateMessaging =>
@@ -4200,15 +4192,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onboardingYourNameIsThree =>
-      '*Il tuo nome: tre parole.* Niente telefono, niente email, niente rubrica.';
+      '*Il tuo nome: tre parole.*\nNiente telefono, niente email, niente rubrica.';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Nessuno entra se non lo fai entrare tu.* Ti si può cercare solo se registri un nome utente pubblico. Le persone si aggiungono a mano, da entrambe le parti.';
+      '*Nessuno entra se non lo fai entrare tu.*\nSenza un @nome pubblico, nessuno può cercarti.\nGli sconosciuti possono solo bussare.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*La prima connessione richiede un minuto.* Kryfo costruisce un percorso privato prima di inviare. Poi è veloce.';
+      '*La prima connessione richiede un minuto.*\nKryfo costruisce prima un percorso privato. Poi è veloce.';
 
   @override
   String get onboardingBegin => 'Inizia';
@@ -4220,15 +4212,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo è open source';
 
   @override
-  String get onboardingYourKryfoId => 'IL TUO NOME';
+  String get onboardingYourKryfoId => 'Il tuo nome';
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Generato da una chiave che esiste solo su questo telefono. *Nessun altro ha queste parole.*';
+      'Generato da una chiave che esiste solo su questo telefono.\n*Nessun altro ha queste parole.*';
 
   @override
   String get onboardingGeneratedFromAKeyDesk =>
-      'Generato da una chiave che esiste solo su questo computer. *Nessun altro ha queste parole.*';
+      'Generato da una chiave che esiste solo su questo computer.\n*Nessun altro ha queste parole.*';
 
   @override
   String get onboardingTryAnother => 'Provane un altro';
@@ -4248,25 +4240,18 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn =>
-      'La tua identità vive su questo telefono. Fanne un backup dalle impostazioni quando te la senti.';
+      'La tua identità vive su questo telefono.\nFanne un backup in Impostazioni quando te la senti.';
 
   @override
   String get onboardingYourIdentityLivesOnDesk =>
-      'La tua identità vive su questo computer. Fanne un backup dalle impostazioni quando te la senti.';
+      'La tua identità vive su questo computer.\nFanne un backup in Impostazioni quando te la senti.';
 
   @override
-  String get onboardingOneQuiet => 'Una *notifica* discreta.';
-
-  @override
-  String get onboardingAndroidNeedsAVisible =>
-      'Android richiede una notifica visibile mentre un\'app resta in ascolto in background. È così che i messaggi ti raggiungono quando Kryfo è chiuso.';
-
-  @override
-  String get onboardingSilentAndAtThe => 'Silenziosa, e in fondo alla tendina';
+  String get onboardingSilentAndAtThe => 'Silenziosa, in fondo alla tendina';
 
   @override
   String get onboardingItNeverBuzzesTurn =>
-      'Non vibra mai. Se la disattivi, i messaggi aspettano finché non riapri l\'app.';
+      'Non vibra mai.\nSe la disattivi, i messaggi aspettano finché non apri Kryfo.';
 
   @override
   String get onboardingGotIt => 'Capito →';
@@ -4276,7 +4261,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onboardingShowYourCodeSend =>
-      'Mostra il tuo codice, mandagli un link o scrivi il @nome utente che ti ha dato.';
+      'Mostra il tuo codice, condividi un link o scrivi il suo @nome.';
 
   @override
   String get onboardingScanTheirs => 'Scansiona il suo';
@@ -7129,12 +7114,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsConnected => 'Connesso';
 
   @override
-  String get settingsScreenshots => 'Screenshot';
-
-  @override
-  String get settingsBlocked2 => 'Bloccati';
-
-  @override
   String get settingsOn => 'Attivo';
 
   @override
@@ -7151,6 +7130,29 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Backup';
+
+  @override
+  String get settingsProtectBackup => 'Backup';
+
+  @override
+  String get settingsBackupNotYet => 'Non ancora';
+
+  @override
+  String get settingsBackupToday => 'Oggi';
+
+  @override
+  String get settingsBackupYesterday => 'Ieri';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count giorni fa',
+      one: '$count giorno fa',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Voce';
@@ -7845,11 +7847,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get handleRegistryFailed =>
-      'Il registro non ha risposto. Riprova tra un minuto.';
+      'Il registro non ha risposto.\nRiprova tra un minuto.';
 
   @override
   String get handleStillReaching =>
-      'Sto ancora raggiungendo il registro. Via Tor può volerci fino a un minuto.';
+      'Sto ancora raggiungendo il registro.\nVia Tor può volerci un po\'.';
 
   @override
   String get handleSearchNeedsTor =>
@@ -8899,9 +8901,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Sempre attivo in una stanza, in Kryfo per Android';
 
   @override
-  String get settingsPerChat => 'Per ogni chat';
-
-  @override
   String get homeShotsPerChat => 'Il blocco degli screenshot ora è per chat.';
 
   @override
@@ -9028,19 +9027,12 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questo file parte così com\'è. Kryfo pulisce solo JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 e MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Inviare questa immagine così com\'è?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Questa immagine non si può pulire. Dettagli come il luogo dello scatto partono con lei. Inviala come foto per pulirla.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'I messaggi vocali si fermano a 30 minuti. Ascoltalo, poi invialo.';
 
   @override
   String get gettingMessagesHelperBody =>
-      'Immediato e leggero. Il suo server vede il tuo IP e quando arrivano i messaggi, mai cosa dicono.';
+      'Il suo server vede il tuo indirizzo IP e quando arrivano i messaggi.\nMai cosa dicono. Immediato e leggero.';
 
   @override
   String get gettingMessagesHelperUseOnion => 'Passa a Onion';
@@ -9053,7 +9045,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Vengono mescolati falsi risvegli, così per il server dell\'app di supporto è più difficile capire quando arrivano i messaggi veri. Un server di supporto tuo rivela il suo indirizzo al nostro relay. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.';
 
   @override
-  String get gettingMessagesHelperOnionOnly => 'Disponibile sul percorso Onion';
+  String get gettingMessagesHelperOnionOnly => 'Richiede il percorso Privato';
 
   @override
   String get gettingMessagesHelperChecking => 'Controllo…';
@@ -9520,6 +9512,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get licencesLoadFailed => 'Impossibile caricare';
 
   @override
+  String get licencesInVoice => 'Nella trascrizione vocale';
+
+  @override
+  String get licencesInTranslation => 'Nella traduzione dei messaggi';
+
+  @override
   String get settingsCopyLinkHint => 'Copia link';
 
   @override
@@ -9718,7 +9716,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notificationsGoogleBody =>
-      'Immediato e leggero. Google può vedere quando il tuo telefono viene svegliato, mai chi ha scritto o cosa è stato detto.';
+      'Google vede quando il tuo telefono si sveglia.\nMai chi ha scritto o cosa è stato detto.\nImmediato e leggero sulla batteria.';
 
   @override
   String get notificationsGoogleStarting => 'Attivazione…';
@@ -9757,7 +9755,38 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notificationsMakerSwitch => 'L’interruttore del produttore';
 
   @override
-  String get onboardingDeliveryHeadline => 'Come ti *arrivano* i messaggi.';
+  String get onboardingHowYourMessages => 'Come *viaggiano* i tuoi messaggi.';
+
+  @override
+  String get onboardingRouteLead =>
+      'Puoi cambiarlo quando vuoi in Impostazioni.';
+
+  @override
+  String get onboardingRoutePrivateCost =>
+      'Via Tor. Un messaggio impiega qualche secondo.';
+
+  @override
+  String get onboardingRoutePrivateGain =>
+      'Nessuno scopre il tuo indirizzo IP, nemmeno i nostri server.';
+
+  @override
+  String get onboardingRouteFastCost =>
+      'I nostri server vedono il tuo indirizzo IP mentre sei connesso.\nLa tua rete può vedere che usi Kryfo.';
+
+  @override
+  String get onboardingRouteFastGain =>
+      'Salta Tor: più veloce e consuma meno batteria.';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo resta su Tor, tramite un bridge quando occorre.\nVeloce è in Impostazioni, se ti serve.';
+
+  @override
+  String get onboardingRouteBlockedGain =>
+      'Trova da solo un modo per aggirare i blocchi.';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Quando *arrivano* i messaggi.';
 
   @override
   String get onboardingDeliveryLead =>
@@ -10422,15 +10451,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get desktopTrayHint =>
-      'Chiudendo la finestra Kryfo resta nell\'area di notifica, e i messaggi continuano ad arrivare.';
+      'I messaggi continuano ad arrivare a finestra chiusa.';
 
   @override
   String get desktopTrayOffLine =>
-      'Chiudendo la finestra Kryfo si chiude. I messaggi arrivano quando lo riapri.';
+      'Chiudendo la finestra Kryfo si chiude.\nI messaggi arrivano quando lo riapri.';
 
   @override
   String get desktopTrayNoneLine =>
-      'Questo desktop non mostra icone nell\'area di notifica, quindi chiudere la finestra chiude Kryfo.';
+      'Questo desktop non ha un\'icona nell\'area di notifica.\nChiudendo la finestra Kryfo si chiude.';
 
   @override
   String get desktopStartRow => 'Avvia insieme al computer';
@@ -10441,11 +10470,19 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get desktopStartRefused =>
-      'Questo computer non ha permesso a Kryfo di avviarsi con lui. Kryfo si apre ogni volta che lo avvii tu.';
+      'Questo computer non ha permesso a Kryfo di avviarsi con lui.\nKryfo si apre quando lo avvii tu.';
 
   @override
   String get desktopStartHeldOff =>
-      'Windows ha disattivato Kryfo nelle app di avvio. Attivalo lì, in Impostazioni, App, Avvio.';
+      'Windows ha disattivato Kryfo nelle app di avvio.\nAttivalo in Impostazioni di Windows, App, Avvio.';
+
+  @override
+  String get desktopMicBlocked =>
+      'Kryfo può registrare quando Windows consente alle app desktop di usare il microfono, in Impostazioni, Privacy e sicurezza, Microfono.';
+
+  @override
+  String get desktopMicNone =>
+      'Collega un microfono per registrare una nota vocale.';
 
   @override
   String get desktopNoCamera =>
@@ -10664,7 +10701,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onboardingNameLine =>
-      'Un nome pubblico permette alle persone di trovarti. Saltando resti più riservato, puoi sempre aggiungerne uno più tardi.';
+      'Un @nome pubblico permette alle persone di trovarti.\nSaltare ti dà più privacy.\nPuoi aggiungerne uno più tardi.';
 
   @override
   String get onboardingNameSkip => 'Salta per ora →';
@@ -10679,7 +10716,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onboardingInviteLead =>
-      'Manda un link in qualsiasi app di messaggi. Apre Kryfo, o mostra dove scaricarlo.';
+      'Manda un link in qualsiasi app di messaggi.\nApre Kryfo, o mostra dove scaricarlo.';
 
   @override
   String get onboardingInviteSomeone => 'Invita qualcuno →';
@@ -11143,6 +11180,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get desktopPassRow => 'Passphrase su questo computer';
 
   @override
+  String get desktopPassWindowsAccount => 'Bloccato con il tuo account Windows';
+
+  @override
+  String get desktopPassKeyring => 'Bloccato con il tuo portachiavi';
+
+  @override
   String get desktopPassOffBody => 'Kryfo si apre con il tuo account utente.';
 
   @override
@@ -11254,9 +11297,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get settingsShotsNotHereYet => 'Non ancora su questo computer';
-
-  @override
   String get settingsDeskInTray => 'Attivo nell\'area di notifica';
 
   @override
@@ -11267,7 +11307,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get onboardingDeskRunLead =>
-      'Chiudi la finestra e Kryfo aspetta nell\'area di notifica, così i messaggi continuano ad arrivare. Puoi cambiare entrambe le cose più tardi in Impostazioni, sotto Notifiche.';
+      'Chiudi la finestra e Kryfo aspetta nell\'area di notifica.\nI messaggi continuano ad arrivare.\nPuoi cambiare entrambe le cose in Impostazioni, Notifiche.';
 
   @override
   String get savedLongPressAnyMessageDesk =>
@@ -11283,8 +11323,17 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatDropHereToSend => 'Rilascia qui per inviare';
 
   @override
-  String get notesDropKeepsWords =>
-      'Note conserva parole. Invia i file in una chat.';
+  String get chatDropHereToAdd => 'Rilascia qui per aggiungere';
+
+  @override
+  String trayRemove(String name) {
+    return 'Rimuovi $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Pronti da inviare: $count';
+  }
 
   @override
   String get voiceSeeTranscription => 'Vedi trascrizione';
@@ -11498,6 +11547,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get linkedLinkOnPhone => 'Apri questo link sul tuo telefono.';
 
   @override
+  String get linkedDoOnPhone => 'Fallo dal tuo telefono.';
+
+  @override
   String get tipsTitle => 'Sostieni Kryfo';
 
   @override
@@ -11601,4 +11653,60 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get tipsProfileCard =>
       'Lascia una mancia per mantenere Kryfo indipendente';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name ha collegato un nuovo dispositivo';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name ha rimosso un dispositivo';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Non è stato possibile verificare l’elenco dei dispositivi di $name';
+  }
+
+  @override
+  String get notesDropToKeep => 'Rilascia qui per tenerlo';
+
+  @override
+  String get notesOnAllDevices => 'Su tutti i tuoi dispositivi';
+
+  @override
+  String get notesKeepAnything =>
+      'Tieni qui testi, foto e file. Compaiono su tutti i tuoi dispositivi.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Viene cancellata da tutti i tuoi dispositivi per sempre.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Tutte le note vengono cancellate da tutti i tuoi dispositivi per sempre.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Tutte le note vengono cancellate solo da questo dispositivo. Il tuo telefono le tiene.';
+
+  @override
+  String get notesAddItem => 'Aggiungi una foto o un file';
+
+  @override
+  String get notesVoiceNotKept => 'Il tuo messaggio vocale non è stato salvato';
+
+  @override
+  String get handleOlderKryfo =>
+      'Usa una versione precedente di Kryfo. Chiedigli di aggiornarla, poi aggiungilo.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name usa una versione precedente di Kryfo. Dovrà aggiornarla per ricevere i messaggi qui.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Alcuni membri usano una versione precedente di Kryfo. Dovranno aggiornarla per ricevere i messaggi qui.';
 }

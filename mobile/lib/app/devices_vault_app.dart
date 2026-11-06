@@ -287,6 +287,7 @@ extension AppStateVaultDevices on AppState {
         sessions: vs,
         wire: _EngineDeviceWire(),
         listen: listen.listen,
+        door: _devDoor,
       );
       _vaultDevOf = v;
       _vaultDevSend = send;
@@ -314,6 +315,7 @@ extension AppStateVaultDevices on AppState {
           if (AppState._shown(went)) notifyListeners();
         },
       );
+      _vaultDevReceive?.lined = chatChanged;
       await _vaultDevReceive?.listenAll();
       if (await shut()) return;
       await _vaultListsOwed(v);

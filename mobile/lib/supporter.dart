@@ -68,6 +68,14 @@ String tierLabel(SupporterTier t) => switch (t) {
   SupporterTier.none => '',
 };
 
+/// told when the everyday badge or one of its choices moved: my phone
+/// passes it on to my linked devices (devices_own_app.dart)
+void Function()? supporterMoved;
+
+void _moved(HaloContainer c) {
+  if (c == HaloContainer.everyday) supporterMoved?.call();
+}
+
 Future<SupporterTier> loadSupporterTier([
   HaloContainer c = HaloContainer.everyday,
 ]) async {
@@ -81,6 +89,7 @@ Future<void> saveSupporterTier(
 ]) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString(c.key(_tierKey), t.name);
+  _moved(c);
 }
 
 // the signed receipt from the bitcoin path: the badge stays provable offline,
@@ -117,6 +126,7 @@ Future<void> saveShowBadgeSelf(
 ]) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool(c.key(_showSelfKey), on);
+  _moved(c);
 }
 
 // let contacts see it (rides in the envelope only if true). off by default.
@@ -131,6 +141,7 @@ Future<void> saveShareBadge(
 ]) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool(c.key(_shareKey), on);
+  _moved(c);
 }
 
 // the bitcoin invoices opened and never seen to settle, one line each:

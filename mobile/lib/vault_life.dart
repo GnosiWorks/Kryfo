@@ -16,7 +16,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import 'container.dart';
 import 'devices/device_state.dart' show linkedDevicesOn;
-import 'devices/own_sync.dart' show ownFrameNames;
+import 'devices/own_sync.dart' show frameOfGroup, ownFrameNames;
 import 'heal.dart' show vaultMadeAfterRestore;
 import 'lock_state.dart' show LockState, lockState;
 import 'main.dart' show HaloDb, deviceState, engine, shredFile;
@@ -346,6 +346,12 @@ const _ownRows = {
   'own_held': 'chat = {c}',
 };
 
+// what went of a chat, kept from my devices' late copies (own_gone.dart):
+// it goes with the chat both ways, so none of a hidden one's stays behind
+Map<String, String> _goneOf(ChatRef c) => {
+  'own_gone': c.group ? "chat = 'g:' || ?1" : "chat = 'p:' || ?1",
+};
+
 Map<String, String> _ownOf(ChatRef c) => {
   for (final e in _ownRows.entries)
     e.key: e.value.replaceAll('{c}', c.group ? "'g:' || ?1" : "'p:' || ?1"),
@@ -365,6 +371,7 @@ const _mayLack = {
   'roster_invites',
   'heal_lines',
   'heal_nonces',
+  'own_gone',
   'dev_lists',
   'dev_proven',
   'dev_pq',
@@ -638,7 +645,10 @@ class SqlChatMover implements ChatMover {
       'ORDER BY m.id',
       [c.id],
     );
-    for (final e in (c.group ? _groupRows : _peerRows).entries) {
+    for (final e in {
+      ...(c.group ? _groupRows : _peerRows),
+      ..._goneOf(c),
+    }.entries) {
       await _put(t, e.key, e.value, c, src, dst, from, to);
     }
     if (!c.group) {
@@ -693,6 +703,7 @@ class SqlChatMover implements ChatMover {
     ];
     for (final e in {
       ...(c.group ? _groupRows : _peerRows),
+      ..._goneOf(c),
       if (!c.group) ..._devicesOf,
     }.entries) {
       if (_mayLack.contains(e.key) && (await _cols(t, s, e.key)).isEmpty) {
@@ -717,6 +728,17 @@ class SqlChatMover implements ChatMover {
       )) {
         if (!ownFrameNames(r['plain'] as String, chat)) continue;
         await t.execute('DELETE FROM $s.dev_out WHERE rowid = ?', [r['r']]);
+      }
+      // and a group's frames waiting unsealed for its members' devices:
+      // their phones had them, nothing of the group stays readable here
+      if (c.group) {
+        for (final r in await t.rawQuery(
+          'SELECT rowid AS r, plain FROM $s.dev_out '
+          'WHERE own = 0 AND plain IS NOT NULL',
+        )) {
+          if (!frameOfGroup(r['plain'] as String, c.id)) continue;
+          await t.execute('DELETE FROM $s.dev_out WHERE rowid = ?', [r['r']]);
+        }
       }
     }
     await t.execute('DELETE FROM $s.messages WHERE ${_chatMsgs(c)}', [c.id]);

@@ -2,10 +2,11 @@
 // onboarding, shown once. three things in the first minute, everything else
 // when it is needed: your name is three words, nobody gets in unless you let
 // them, the first connection takes a minute.
-// the steps: welcome, your name and its face, a public @name if wanted, how
-// messages reach you, invite someone. the route stays private unless the
-// first start took fast; settings change it. play builds pick how messages
-// arrive where the others explain the one quiet notification
+// the steps: welcome, your name and its face, a public @name if wanted, the
+// route, when messages arrive, invite someone. the route starts on private,
+// or fast where the first start took it; settings change it later. a
+// computer says it keeps running in the tray where a phone picks how
+// messages arrive
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -27,6 +28,7 @@ import '../main.dart'
         AppStateRefresh,
         AppStateIdentity,
         AppStateDelivery,
+        AppStateBridges,
         newJoinFlow;
 import '../devices/linked_switch.dart' show kLinkedDevicesOn;
 import 'link_screens.dart' show JoinScreen;
@@ -42,6 +44,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/motion.dart'
     show haloRoute, motionStill, kHouseCurve, kHouseTime;
+import '../widgets/entrance.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
@@ -55,20 +58,17 @@ import '../desktop/desktop_mode.dart' show desktopRun, onDesktop;
 import 'desk_run_section.dart';
 
 /// the onboarding's steps, by name: a step is never found by its place
-enum OnboardStep { welcome, identity, name, delivery, notify, desk, invite }
+enum OnboardStep { welcome, identity, name, route, delivery, desk, invite }
 
-/// the steps in order. play asks how messages reach the phone; the others
-/// say what the one quiet notification is. a computer has no notification
-/// to explain: it says it keeps running in the tray
-List<OnboardStep> onboardingSteps({required bool play, bool desk = false}) => [
+/// the steps in order. the route comes before the way messages arrive:
+/// google push and the helper app need the private route. a phone picks how
+/// messages arrive; a computer says it keeps running in the tray
+List<OnboardStep> onboardingSteps({bool desk = false}) => [
   OnboardStep.welcome,
   OnboardStep.identity,
   OnboardStep.name,
-  desk
-      ? OnboardStep.desk
-      : play
-      ? OnboardStep.delivery
-      : OnboardStep.notify,
+  OnboardStep.route,
+  desk ? OnboardStep.desk : OnboardStep.delivery,
   OnboardStep.invite,
 ];
 
@@ -106,7 +106,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardStep> _steps = onboardingSteps(
-    play: playBuild,
     desk: onDesktop && desktopRun != null,
   );
   final _ctrl = PageController();
@@ -119,17 +118,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _go(int to) {
     if (to < 0 || to >= _steps.length) return;
     setState(() => _to = to);
+    _settle?.cancel();
     // reduced motion: the step without animation
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (entranceOff(context)) {
       _ctrl.jumpToPage(to);
       return;
     }
-    _ctrl.animateToPage(
-      to,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeInOutCubic,
-    );
+    const d = Duration(milliseconds: 320);
+    _ctrl.animateToPage(to, duration: d, curve: Curves.easeInOutCubic);
+    // a held ticker leaves the pager between two steps, both faded and
+    // neither taking taps: the step lands anyway
+    _settle = Timer(d + const Duration(milliseconds: 300), () {
+      if (mounted && _ctrl.hasClients && _ctrl.page != to.toDouble()) {
+        _ctrl.jumpToPage(to);
+      }
+    });
   }
+
+  Timer? _settle;
 
   int get _at => (_ctrl.page ?? _page.toDouble()).round();
 
@@ -169,6 +175,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   void dispose() {
+    _settle?.cancel();
     _ctrl.dispose();
     super.dispose();
   }
@@ -188,11 +195,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         enter: enter,
       ),
       OnboardStep.name => _NameScreen(onContinue: _next),
-      OnboardStep.delivery => _DeliveryScreen(onContinue: _next),
-      OnboardStep.notify => _NotificationScreen(
+      OnboardStep.route => _RouteScreen(
+        appState: widget.appState,
         onContinue: _next,
-        enter: enter,
       ),
+      OnboardStep.delivery => _DeliveryScreen(onContinue: _next),
       OnboardStep.desk => _DeskRunScreen(onContinue: _next),
       OnboardStep.invite => _InviteScreen(onComplete: widget.onComplete),
     };
@@ -366,7 +373,7 @@ class _StepBar extends StatelessWidget {
                     icon: Icon(
                       Icons.chevron_left,
                       size: 26,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                     ),
                   ),
                 ),
@@ -448,6 +455,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
   late final AnimationController _ctl;
   // the page comes up in order: the light, the line, the promises, the button
   late final AnimationController _in;
+  final _entrance = Entrance();
 
   @override
   void initState() {
@@ -471,11 +479,11 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
     // someone reads
     if (_glowed) return;
     _glowed = true;
-    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
+    if (!widget.enter || entranceOff(context)) {
       _in.value = 1;
       return;
     }
-    _in.forward();
+    _entrance.play(context, _in);
     // a whole number of glows ends where it began
     _ctl.repeat(count: 2).whenComplete(() {
       if (mounted) _ctl.value = 0;
@@ -484,6 +492,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
 
   @override
   void dispose() {
+    _entrance.dispose();
     _ctl.dispose();
     _in.dispose();
     super.dispose();
@@ -605,7 +614,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               l10n.onboardingYourIdentityLivesOnShown,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.warm,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -622,7 +631,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
               textAlign: TextAlign.center,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.text2,
+                color: HaloColors.text,
               ).copyWith(letterSpacing: track(2)),
             ),
           ),
@@ -665,8 +674,8 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
     );
   }
 
-  // the lead words carry the weight. the rest is warm, a step brighter than
-  // the usual second line: this page has to be read
+  // the lead words carry the weight in bold; the rest is in the same full
+  // text colour
   Widget _bullet(String msg) {
     const size = 14.0;
     const height = 1.55;
@@ -688,7 +697,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen>
             TextSpan(
               style: HaloType.sans(
                 size: size,
-                color: HaloColors.warm,
+                color: HaloColors.text,
                 height: height,
               ),
               children: markedSpans(
@@ -733,6 +742,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
   // a new name: the old words lift away, the new ones land one by one
   late final AnimationController _roll;
   late final AnimationController _spin;
+  final _entrance = Entrance();
   bool _leaving = false;
 
   @override
@@ -770,11 +780,11 @@ class _IdentityScreenState extends State<_IdentityScreen>
     _shown = true;
     // the name writes itself in, the shine and the ring play twice, then
     // stop. reduced motion, or back on this step: no animation
-    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
+    if (!widget.enter || entranceOff(context)) {
       _reveal.value = 1;
       return;
     }
-    _reveal.forward(from: 0);
+    _entrance.play(context, _reveal, from: 0);
     _shimmer.repeat(count: 2);
     _breath.repeat(count: 2).whenComplete(() {
       if (mounted) _breath.value = 0;
@@ -783,6 +793,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
 
   @override
   void dispose() {
+    _entrance.dispose();
     _shimmer.dispose();
     _reveal.dispose();
     _breath.dispose();
@@ -857,25 +868,10 @@ class _IdentityScreenState extends State<_IdentityScreen>
       if (id.isNotEmpty) {
         await widget.appState.setMyAvatar(autoFace(id));
       }
-      if (!await _settleRoute()) return;
     } finally {
       _saving = false;
     }
     if (mounted) widget.onContinue();
-  }
-
-  // the route is not asked in setup: private, or fast when the first start
-  // took it where nothing got through. written either way, so what this
-  // phone starts on is what was said here
-  Future<bool> _settleRoute() async {
-    final m = widget.appState.sendMode == 'balanced' ? 'balanced' : 'private';
-    try {
-      await widget.appState.setSendMode(m);
-      return true;
-    } catch (_) {
-      if (mounted) showHaloToast(context, l10n.modesNotChanged);
-      return false;
-    }
   }
 
   // the name on screen: the old one stays until the new one lands
@@ -947,7 +943,7 @@ class _IdentityScreenState extends State<_IdentityScreen>
               TextSpan(
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.55,
                 ),
                 children: markedSpans(
@@ -970,46 +966,42 @@ class _IdentityScreenState extends State<_IdentityScreen>
   }
 
   Widget _tryAnother() {
-    final still = motionStill(context);
+    // with reduced motion nothing turns: the words stay as they are and taps
+    // change nothing until the new name is ready
     final b = PressScale(
       scale: 0.97,
       onTap: _regenerate,
-      child: AnimatedOpacity(
-        // with reduced motion nothing turns: the button dims while it works
-        opacity: _busy && still ? 0.5 : 1,
-        duration: const Duration(milliseconds: 150),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-          decoration: BoxDecoration(
-            border: Border.all(color: HaloColors.line2),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              RotationTransition(
-                turns: _spin,
-                child: Icon(
-                  Icons.refresh_rounded,
-                  key: _busy ? const ValueKey('regenerating') : null,
-                  size: 17,
-                  color: HaloColors.amber,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+        decoration: BoxDecoration(
+          border: Border.all(color: HaloColors.line2),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            RotationTransition(
+              turns: _spin,
+              child: Icon(
+                Icons.refresh_rounded,
+                key: _busy ? const ValueKey('regenerating') : null,
+                size: 17,
+                color: HaloColors.amber,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                l10n.onboardingTryAnother,
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 14,
+                  color: HaloColors.text,
+                  weight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  l10n.onboardingTryAnother,
-                  textAlign: TextAlign.center,
-                  style: HaloType.sans(
-                    size: 14,
-                    color: HaloColors.text,
-                    weight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1235,7 +1227,10 @@ class _IdentityScreenState extends State<_IdentityScreen>
     delayMs,
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 9),
-      child: Text('·', style: HaloType.mono(size: 15, color: HaloColors.text2)),
+      child: Text(
+        '·',
+        style: HaloType.mono(size: 15, color: HaloColors.amberText),
+      ),
     ),
   );
 
@@ -1292,7 +1287,7 @@ class _ModeCard extends StatelessWidget {
   final bool on;
   // null: the only way, shown as a card with no radio
   final VoidCallback? onTap;
-  // there, but not on this route: faded, its line says why
+  // there, but not on this route: no radio, its line says why in the accent
   final bool dim;
   const _ModeCard({
     super.key,
@@ -1366,12 +1361,14 @@ class _ModeCard extends StatelessWidget {
                           color: HaloColors.amber.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(999),
                         ),
+                        // in the text colour: the accent's words on its own
+                        // tint fall under 4.5:1 in the light theme
                         child: Text(
                           tag!,
                           style: HaloType.mono(
                             size: 10,
                             letter: 0.06,
-                            color: HaloColors.amberText,
+                            color: HaloColors.text,
                           ),
                         ),
                       ),
@@ -1394,7 +1391,7 @@ class _ModeCard extends StatelessWidget {
                     gain!,
                     style: HaloType.sans(
                       size: 13,
-                      color: dim ? HaloColors.amberText : HaloColors.text2,
+                      color: dim ? HaloColors.amberText : HaloColors.text,
                       height: 1.45,
                     ),
                   ),
@@ -1406,16 +1403,7 @@ class _ModeCard extends StatelessWidget {
       ),
     );
     if (dim) {
-      return MergeSemantics(
-        child: Semantics(
-          enabled: false,
-          child: AnimatedOpacity(
-            opacity: 0.5,
-            duration: Duration.zero,
-            child: card,
-          ),
-        ),
-      );
+      return MergeSemantics(child: Semantics(enabled: false, child: card));
     }
     if (tap == null) return MergeSemantics(child: card);
     // read as one radio: the title, the cost, the gain, and whether it is on
@@ -1445,7 +1433,7 @@ class _Radio extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: on ? HaloColors.amber : HaloColors.text3,
+          color: on ? HaloColors.amber : HaloColors.text,
           width: 1.5,
         ),
       ),
@@ -1466,11 +1454,116 @@ class _Radio extends StatelessWidget {
   }
 }
 
-// ---- how messages reach you, play builds ----
+// ---- 04 how your messages travel ----
 //
-// google push first and picked already: instant and light, with what
-// google sees said plainly. the other ways are a tap away here and later
-// in notifications. phones without play services do not see it.
+// two cards, private picked, one tap on. fast is picked where the first
+// start already took it. tor blocked or watched at the first start: private
+// alone, fast stays in settings. the names are the ones settings uses
+
+/// the routes the step offers, by send mode: fast only where tor was not
+/// blocked or watched, or where the first start took it anyway
+List<String> onboardingRoutes({required bool blocked, required bool fast}) => [
+  'private',
+  if (!blocked || fast) 'balanced',
+];
+
+class _RouteScreen extends StatefulWidget {
+  final AppState appState;
+  final VoidCallback onContinue;
+  const _RouteScreen({required this.appState, required this.onContinue});
+  @override
+  State<_RouteScreen> createState() => _RouteScreenState();
+}
+
+class _RouteScreenState extends State<_RouteScreen> {
+  // null until a card is tapped: what this phone is on holds till then
+  String? _chosen;
+  bool _saving = false;
+
+  String get _pick =>
+      _chosen ??
+      (widget.appState.sendMode == 'balanced' ? 'balanced' : 'private');
+
+  Future<void> _continue() async {
+    if (_saving) return;
+    _saving = true;
+    try {
+      if (!await _settleRoute(_pick)) return;
+    } finally {
+      _saving = false;
+    }
+    if (mounted) widget.onContinue();
+  }
+
+  // written whatever is picked, so what this phone starts on is what was
+  // said here
+  Future<bool> _settleRoute(String m) async {
+    try {
+      await widget.appState.setSendMode(m);
+      return true;
+    } catch (_) {
+      if (mounted) showHaloToast(context, l10n.modesNotChanged);
+      return false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final routes = onboardingRoutes(
+      blocked: widget.appState.bridge.skipDirect,
+      fast: widget.appState.sendMode == 'balanced',
+    );
+    final alone = routes.length == 1;
+    Widget card(String m) {
+      final private = m == 'private';
+      return _ModeCard(
+        key: ValueKey('routeCard-$m'),
+        title: private ? l10n.modesPrivate : l10n.modesFast,
+        tag: private ? l10n.modesDefault : null,
+        cost: private
+            ? l10n.onboardingRoutePrivateCost
+            : l10n.onboardingRouteFastCost,
+        gain: !private
+            ? l10n.onboardingRouteFastGain
+            : alone
+            ? l10n.onboardingRouteBlockedGain
+            : l10n.onboardingRoutePrivateGain,
+        on: !alone && _pick == m,
+        onTap: alone
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                setState(() => _chosen = m);
+              },
+      );
+    }
+
+    return _StepPage(
+      footer: [_Cta(label: l10n.onboardingContinue, onTap: _continue)],
+      children: [
+        _Headline(l10n.onboardingHowYourMessages),
+        const SizedBox(height: 12),
+        _lead(
+          alone ? l10n.onboardingRouteBlockedLead : l10n.onboardingRouteLead,
+        ),
+        const SizedBox(height: 24),
+        ...staggerAll([
+          for (var i = 0; i < routes.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            card(routes[i]),
+          ],
+        ]),
+      ],
+    );
+  }
+}
+
+// ---- 05 when messages arrive ----
+//
+// play with play services: google push first and picked already on the
+// private route, with what google sees said plainly. everywhere else, and
+// on fast: always on picked, check-ins and the helper app beside it. the
+// other ways are a tap away here and later in notifications.
 
 /// the ways the step lists, in order
 List<DeliveryMode> onboardingModes({required bool google}) => [
@@ -1481,9 +1574,14 @@ List<DeliveryMode> onboardingModes({required bool google}) => [
 ];
 
 /// what the step starts on: google push where it can be used now. it and
-/// the helper app register over the onion route only
+/// the helper app register over the private route only
 DeliveryMode onboardingPick({required bool google, required bool onion}) =>
     google && onion ? DeliveryMode.google : DeliveryMode.always;
+
+/// google push and the helper app register over tor: on fast they are shown,
+/// with why, and never picked
+bool needsPrivateRoute(DeliveryMode m) =>
+    m == DeliveryMode.google || m == DeliveryMode.helper;
 
 class _DeliveryScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -1497,12 +1595,19 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
   DeliveryMode? _chosen;
   bool _busy = false;
 
-  DeliveryMode get _pick =>
-      _chosen ??
-      onboardingPick(
-        google: appState.googleOffered,
-        onion: appState.sendMode == 'private',
-      );
+  // a pick the route no longer allows (fast taken after it, back on step 4)
+  // falls back to the step's own: something is always picked
+  DeliveryMode get _pick {
+    final onion = appState.sendMode == 'private';
+    final c = _chosen;
+    final ok =
+        c != null &&
+        onboardingModes(google: appState.googleOffered).contains(c) &&
+        (onion || !needsPrivateRoute(c));
+    return ok
+        ? c
+        : onboardingPick(google: appState.googleOffered, onion: onion);
+  }
 
   // the background sheets are up: a second tap waits for them
   bool _asking = false;
@@ -1548,8 +1653,7 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
         final onion = appState.sendMode == 'private';
         final modes = onboardingModes(google: appState.googleOffered);
         Widget card(DeliveryMode m) {
-          final needsOnion =
-              (m == DeliveryMode.google || m == DeliveryMode.helper) && !onion;
+          final needsOnion = needsPrivateRoute(m) && !onion;
           final (title, body, tag) = switch (m) {
             DeliveryMode.google => (
               l10n.deliveryModeGooglePush,
@@ -1641,57 +1745,7 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
   }
 }
 
-// ---- 06 one notification ----
-//
-// the one android fact worth a page: a background listener needs a visible
-// notification, so the tray will show one. two lines and the shade, then on.
-
-class _NotificationScreen extends StatefulWidget {
-  final VoidCallback onContinue;
-  final bool enter;
-  const _NotificationScreen({required this.onContinue, required this.enter});
-
-  @override
-  State<_NotificationScreen> createState() => _NotificationScreenState();
-}
-
-class _NotificationScreenState extends State<_NotificationScreen> {
-  bool _asking = false;
-
-  // then the battery and the maker's switch, which keep it listening
-  Future<void> _go() async {
-    if (_asking) return;
-    _asking = true;
-    await _askBackground(context, DeliveryMode.always);
-    _asking = false;
-    if (mounted) widget.onContinue();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final enter = widget.enter;
-    return _StepPage(
-      footer: [_Cta(label: l10n.onboardingGotIt, onTap: _go)],
-      children: [
-        _Headline(l10n.onboardingOneQuiet),
-        const SizedBox(height: 12),
-        _lead(l10n.onboardingAndroidNeedsAVisible),
-        const SizedBox(height: 24),
-        Center(child: _ShadeArt(enter: enter)),
-        const SizedBox(height: 16),
-        ...staggerAll([
-          _Card(
-            icon: Icons.notifications_none_rounded,
-            title: l10n.onboardingSilentAndAtThe,
-            desc: l10n.onboardingItNeverBuzzesTurn,
-          ),
-        ], from: 1),
-      ],
-    );
-  }
-}
-
-// ---- 06 on a computer: keep running ----
+// ---- 05 on a computer: keep running ----
 //
 // where the phone explains its one notification, a computer says it stays
 // in the tray, and offers the two switches the notifications page keeps
@@ -1710,243 +1764,19 @@ class _DeskRunScreen extends StatelessWidget {
         _lead(l10n.onboardingDeskRunLead),
         const SizedBox(height: 20),
         ...staggerAll([
-          DeskRunSection(run: desktopRun!, edge: 0, lineInset: 0),
+          DeskRunSection(
+            run: desktopRun!,
+            edge: 0,
+            lineInset: 0,
+            hintColor: HaloColors.text,
+          ),
         ], from: 1),
       ],
     );
   }
 }
 
-// the shade as the phone shows it: a message as kryfo posts it, its preview
-// hidden, and under it the quiet one folded to a line. it pulls down once as
-// the step comes in, then rests
-class _ShadeArt extends StatefulWidget {
-  final bool enter;
-  const _ShadeArt({required this.enter});
-  @override
-  State<_ShadeArt> createState() => _ShadeArtState();
-}
-
-class _ShadeArtState extends State<_ShadeArt>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _in = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1200),
-  );
-  bool _started = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_started) return;
-    _started = true;
-    // reduced motion, or back on this step: no animation
-    if (!widget.enter || MediaQuery.disableAnimationsOf(context)) {
-      _in.value = 1;
-      return;
-    }
-    _in.forward();
-  }
-
-  @override
-  void dispose() {
-    _in.dispose();
-    super.dispose();
-  }
-
-  // a piece fades in and slides into place between [from] and [to]
-  Widget _part(double from, double to, double by, Widget child) {
-    final curve = Interval(from, to, curve: Curves.easeOutCubic);
-    return AnimatedBuilder(
-      animation: _in,
-      child: child,
-      builder: (_, child) {
-        final v = curve.transform(_in.value);
-        return Opacity(
-          opacity: v,
-          child: Transform.translate(
-            offset: Offset(0, (1 - v) * by),
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-
-  // the small icon as android draws it: the ring on the notification colour
-  Widget _icon(double d) => Container(
-    width: d,
-    height: d,
-    alignment: Alignment.center,
-    decoration: BoxDecoration(shape: BoxShape.circle, color: HaloColors.amber),
-    child: Container(
-      width: d * 0.5,
-      height: d * 0.5,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: HaloColors.onAmber, width: d * 0.08),
-      ),
-    ),
-  );
-
-  Widget _bar(double w, double h) => Container(
-    width: w,
-    height: h,
-    decoration: BoxDecoration(
-      color: HaloColors.line2,
-      borderRadius: BorderRadius.circular(h / 2),
-    ),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    // a picture: its words grow less than the page's
-    final scale = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
-    final title = HaloType.sans(
-      size: 12.5,
-      color: HaloColors.text,
-      weight: FontWeight.w600,
-      height: 1.3,
-    );
-    final line = HaloType.sans(size: 12, color: HaloColors.text2, height: 1.35);
-    final status = Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 6, 10),
-      child: Row(
-        children: [
-          _bar(24, 6),
-          const Spacer(),
-          _bar(8, 6),
-          const SizedBox(width: 4),
-          _bar(8, 6),
-          const SizedBox(width: 4),
-          _bar(14, 7),
-        ],
-      ),
-    );
-    final message = Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 12, 10),
-      decoration: BoxDecoration(
-        color: HaloColors.surface2,
-        border: Border.all(color: HaloColors.line, width: 0.5),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          _icon(24),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Kryfo',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textScaler: scale,
-                  style: title,
-                ),
-                Text(
-                  l10n.notificationsNewMessage,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textScaler: scale,
-                  style: line,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-    final quiet = Row(
-      children: [
-        _icon(18),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(text: l10n.androidServiceTitle, style: title),
-                TextSpan(text: '  ${l10n.androidServiceText}', style: line),
-              ],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textScaler: scale,
-          ),
-        ),
-      ],
-    );
-    // the quiet one lands last and glows once to be seen
-    const glow = Interval(0.62, 1);
-    final art = Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-      decoration: BoxDecoration(
-        color: HaloColors.surface,
-        border: Border.all(color: HaloColors.line, width: 0.5),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          status,
-          _part(0.18, 0.55, -10, message),
-          const SizedBox(height: 8),
-          _part(
-            0.45,
-            0.85,
-            10,
-            AnimatedBuilder(
-              animation: _in,
-              child: quiet,
-              builder: (_, child) {
-                final g = math.sin(glow.transform(_in.value) * math.pi);
-                return Container(
-                  padding: const EdgeInsetsDirectional.fromSTEB(10, 9, 12, 9),
-                  decoration: BoxDecoration(
-                    color: Color.alphaBlend(
-                      HaloColors.amberSoft,
-                      HaloColors.surface2,
-                    ),
-                    border: Border.all(
-                      color: HaloColors.amber.withValues(alpha: 0.55),
-                      width: 0.5,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: HaloColors.amber.withValues(alpha: 0.3 * g),
-                        blurRadius: 16,
-                      ),
-                    ],
-                  ),
-                  child: child,
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 10),
-          Center(child: _bar(28, 3)),
-        ],
-      ),
-    );
-    // read as the notification's own words
-    return Semantics(
-      container: true,
-      image: true,
-      label: '${l10n.androidServiceTitle}. ${l10n.androidServiceText}',
-      child: ExcludeSemantics(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 380),
-          child: _part(0, 0.4, -14, art),
-        ),
-      ),
-    );
-  }
-}
-
-// ---- 05 invite someone ----
+// ---- 06 invite someone ----
 //
 // the link goes out in whatever messenger they already share: it opens
 // Kryfo, or a page that says what Kryfo is and where to get it. the code and
@@ -2146,17 +1976,12 @@ class _NameScreenState extends State<_NameScreen> {
         const SizedBox(height: 12),
         Text(
           l10n.onboardingNameLine,
-          style: HaloType.sans(size: 14, color: HaloColors.warm, height: 1.55),
+          style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.55),
         ),
         const SizedBox(height: 24),
         ...staggerAll([
-          HandleField(
-            ctrl: _ctrl,
-            hint: l10n.handleHintName,
-            prefix: '@',
-            onChanged: _c.onTyped,
-            max: 20,
-          ),
+          // no hint: the @ and the headline already say what goes here
+          HandleField(ctrl: _ctrl, prefix: '@', onChanged: _c.onTyped, max: 20),
           const SizedBox(height: 8),
           HandleAvailability(state: _c.state, slow: _c.slow),
           HandleSlowLine(show: busy && _c.slow),
@@ -2191,25 +2016,17 @@ class _StepPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          // what scrolls under the bar or the buttons fades out at the
-          // edge instead of being cut
+          // what scrolls under the bar fades out at the edge instead of
+          // being cut. the bottom edge is the column's own: it fades and
+          // shows the arrow only while more is below, so two fades never
+          // stack there on a small screen
           child: ShaderMask(
             blendMode: BlendMode.dstIn,
             shaderCallback: (r) => LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: const [
-                Color(0x00000000),
-                Color(0xFF000000),
-                Color(0xFF000000),
-                Color(0x00000000),
-              ],
-              stops: [
-                0,
-                math.min(8 / r.height, 0.2),
-                math.max(1 - 16 / r.height, 0.8),
-                1,
-              ],
+              colors: const [Color(0x00000000), Color(0xFF000000)],
+              stops: [0, math.min(8 / r.height, 0.2)],
             ).createShader(r),
             child: FitColumn(
               padding: _pagePad.copyWith(top: top, bottom: 16),
@@ -2274,7 +2091,7 @@ class _Headline extends StatelessWidget {
 
 Widget _lead(String msg) => Text(
   msg,
-  style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.55),
+  style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.55),
 );
 
 // the amber tile a card leads with: its number or its icon
@@ -2342,7 +2159,7 @@ class _Card extends StatelessWidget {
                     desc,
                     style: HaloType.sans(
                       size: 13,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.5,
                     ),
                   ),
@@ -2403,7 +2220,7 @@ class _Path extends StatelessWidget {
                     desc,
                     style: HaloType.sans(
                       size: 12.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.5,
                     ),
                   ),
@@ -2417,7 +2234,7 @@ class _Path extends StatelessWidget {
                 flipX: Directionality.of(context) == TextDirection.rtl,
                 child: Text(
                   '→',
-                  style: HaloType.sans(size: 18, color: HaloColors.text2),
+                  style: HaloType.sans(size: 18, color: HaloColors.amberText),
                 ),
               ),
             ),
@@ -2496,7 +2313,7 @@ class _TextLink extends StatelessWidget {
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 13,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               weight: FontWeight.w500,
             ),
           ),

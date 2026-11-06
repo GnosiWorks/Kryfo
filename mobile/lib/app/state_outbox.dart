@@ -453,6 +453,8 @@ extension AppStateOutbox on AppState {
     unawaited(_askAfresh());
     // linked devices: copies owed to one device, list pushes due
     if (linkedDevicesOn) unawaited(pumpDeviceSends());
+    // and note to self kept here, for my other devices
+    if (linkedDevicesOn) unawaited(_ownNotesGo());
     if (rows.isEmpty && vRows.isEmpty) {
       if (_outboxTries.isNotEmpty) {
         _outboxTries.clear();

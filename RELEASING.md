@@ -149,6 +149,24 @@ agree with the release:
   ours only: no `Builds:` block and no `VercodeOperation` for it
 - the signature is a pure insertion, release.sh passes `--alignment-preserved`
 - `AllowedAPKSigningKeys` is the certificate sha-256 that release.sh prints
+- the translation library, in every block: `bash ../engine/translate/native/fetch-bergamot.sh`
+  in `prebuild:` (it fetches the eight tarballs bergamot.lock pins and checks each sha256,
+  then unpacks them with their tests, docs and tools left out), `scandelete:
+  engine/translate/native/.third_party/dl` (the tarballs; the unpacked tree scans clean with
+  fdroid scanner 2.4.5), and in `build:` before the apk
+  `KT_JNI_LIBS_DIR=$(pwd)/android/app/src/main/jniLibs bash ../engine/translate/native/build.sh`.
+  gradle leaves it out of the apk until offline translation is switched on
+- the voice library, in every block: the srclib `whisper.cpp@d1be6fde11ac6e0407606b4e42fe72d34add8037`
+  (whisper.lock's commit, v1.9.5; fdroiddata's `srclibs/whisper.cpp.yml` is `RepoType: git`,
+  `Repo: https://github.com/ggml-org/whisper.cpp.git`), in `prebuild:`
+  `KV_WHISPER_DIR=$$whisper.cpp$$ bash ../engine/voice/native/fetch-whisper.sh` (it checks the
+  checkout is the pinned commit and clean, then unpacks it with git archive), `scandelete:`
+  `engine/voice/native/.third_party/whisper.cpp-d1be6fde11ac6e0407606b4e42fe72d34add8037/models`,
+  `.../examples` and `.../bindings` (the test models, three gradle files and a package.json
+  without a lock: fdroid scanner 2.4.5 flags nothing else, and the library builds the same
+  bytes without them), and in `build:` before the apk
+  `KV_JNI_LIBS_DIR=$(pwd)/android/app/src/main/jniLibs bash ../engine/voice/native/build.sh`.
+  gradle leaves it out of the apk until voice transcripts are switched on
 
 then check the tag is up: `git ls-remote --tags origin | grep vX.Y.Z`
 

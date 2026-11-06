@@ -35,6 +35,7 @@ import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
 import '../wide/wide_pane.dart';
 import '../wide/read_width.dart' show DeskPage;
+import '../widgets/entrance.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onOpenSupport;
@@ -54,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   late final AnimationController _intro;
   late final AnimationController _pulse;
+  final _entrance = Entrance();
 
   @override
   void initState() {
@@ -74,15 +76,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_intro.isAnimating || _intro.isCompleted) return;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _intro.value = 1;
-    } else {
-      _intro.forward();
-    }
+    _entrance.play(context, _intro);
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _intro.dispose();
     _pulse.dispose();
     super.dispose();

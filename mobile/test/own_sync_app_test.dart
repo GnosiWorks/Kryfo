@@ -20,6 +20,8 @@ import 'package:kryfo/devices/device_receive.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
 import 'package:kryfo/devices/device_store.dart' show deviceTables;
+import 'package:kryfo/devices/own_gone.dart';
+import 'package:kryfo/heal.dart' show restoreCutsLinkedDevices;
 import 'package:kryfo/devices/own_sync.dart';
 import 'package:kryfo/main.dart'
     show
@@ -33,6 +35,8 @@ import 'package:kryfo/main.dart'
         linkedRoleForTest,
         ownApplyForTest,
         ownPassForTest,
+        ownTellMeForTest,
+        AppStateRefresh,
         ownHeldGoForTest,
         ownNoteForTest,
         ownAroundHideForTest,
@@ -51,6 +55,7 @@ import 'package:kryfo/main.dart'
         AppStateContacts;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/supporter.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
@@ -123,6 +128,7 @@ class _Told extends OwnSync {
     OwnChat chat,
     String frame, {
     List<String> notReached = const [],
+    OwnPeer? only,
   }) async => true;
 }
 
@@ -551,6 +557,83 @@ void main() {
     expect(told.ops.where((o) => o.$2 == 'p:hid'), isEmpty);
   }, skip: skip);
 
+  test('my badge rides my profile to my devices: at once to a device just '
+      'linked, and when it moves', () async {
+    await saveSupporterTier(SupporterTier.patron);
+    await saveShareBadge(true);
+    await ownPassForTest();
+    expect(told.ops, isEmpty);
+    await ownTellMeForTest();
+    expect(told.ops.single.$1, 'profile');
+    expect(told.ops.single.$2, isNull);
+    expect(told.ops.single.$3['h'], 'me');
+    expect(told.ops.single.$3['bg'], {'t': 'patron', 's': false, 'c': true});
+    // told once: the next pass has nothing new
+    await ownPassForTest();
+    expect(told.ops, hasLength(1));
+    // a choice that moves goes at the next pass, and so does a tier
+    await saveShowBadgeSelf(true);
+    await ownPassForTest();
+    expect(told.ops.last.$3['bg'], {'t': 'patron', 's': true, 'c': true});
+    await saveSupporterTier(SupporterTier.guardian);
+    await ownPassForTest();
+    expect(told.ops.last.$3['bg'], {'t': 'guardian', 's': true, 'c': true});
+    expect(told.ops, hasLength(3));
+  }, skip: skip);
+
+  test('a badge or a choice that moves on the everyday side asks for a pass; '
+      'the decoy\'s or the vault\'s never', () async {
+    var moved = 0;
+    supporterMoved = () => moved++;
+    addTearDown(() => supporterMoved = null);
+    await saveSupporterTier(SupporterTier.patron);
+    await saveShowBadgeSelf(true);
+    await saveShareBadge(true);
+    expect(moved, 3);
+    for (final c in [HaloContainer.decoy, HaloContainer.vault]) {
+      await saveSupporterTier(SupporterTier.guardian, c);
+      await saveShowBadgeSelf(false, c);
+      await saveShareBadge(false, c);
+    }
+    expect(moved, 3);
+  }, skip: skip);
+
+  test('a linked device wears and shares my badge as my phone does, so what '
+      'it sends carries it and clears it at no contact', () async {
+    linkedRoleForTest = true;
+    expect(await app.sharedBadge(), isNull);
+    expect(
+      await op('profile', null, {
+        'h': 'my-phone',
+        'bg': {'t': 'patron', 's': true, 'c': true},
+      }),
+      isTrue,
+    );
+    expect(await loadSupporterTier(), SupporterTier.patron);
+    expect(await loadShowBadgeSelf(), isTrue);
+    expect(await app.sharedBadge(), 'patron');
+    // the phone stops sharing it, or holds a tier this build does not know
+    await op('profile', null, {
+      'h': 'my-phone',
+      'bg': {'t': 'patron', 's': true, 'c': false},
+    });
+    expect(await app.sharedBadge(), isNull);
+    await op('profile', null, {
+      'h': 'my-phone',
+      'bg': {'t': 'emperor', 'c': true},
+    });
+    expect(await loadSupporterTier(), SupporterTier.none);
+    expect(await loadShowBadgeSelf(), isTrue);
+    expect(await app.sharedBadge(), isNull);
+    // a profile op on the phone moves nothing
+    linkedRoleForTest = false;
+    await op('profile', null, {
+      'h': 'x',
+      'bg': {'t': 'guardian', 'c': true},
+    });
+    expect(await loadSupporterTier(), SupporterTier.none);
+  }, skip: skip);
+
   test('nothing is told while the decoy is open', () async {
     final decoy = _Rows(s, HaloContainer.decoy);
     useDatabasesForTest(db, Session(decoy));
@@ -909,7 +992,7 @@ void main() {
   );
 
   test('L5 a delete here lets go of own_gone rows past their time', () async {
-    await s.insert('own_gone', {'uid': 'u-very-old', 'at': 1});
+    await s.insert('own_gone', {'chat': 'p:bob', 'uid': 'u-very-old', 'at': 1});
     await copy('p:bob', _f({'u': 'u-dd', 'm': 'x', 'w': 2}));
     expect(
       await op('del', 'p:bob', {
@@ -920,4 +1003,346 @@ void main() {
     final kept = {for (final r in await s.query('own_gone')) r['uid']};
     expect(kept, {'u-dd'});
   }, skip: skip);
+
+  group('a copy that comes after its message went stays out', () {
+    int now() => DateTime.now().millisecondsSinceEpoch;
+    Future<Set<Object?>> gone() async => {
+      for (final r in await s.query('own_gone')) '${r['chat']} ${r['uid']}',
+    };
+    // the phone with a desk linked: what goes here is kept too
+    Future<void> deskLinked() =>
+        s.insert('own_devices', {'uid': 'desk', 'linked_at': 1});
+
+    test(
+      'a delete from my phone before its copy, and only in its chat',
+      () async {
+        linkedRoleForTest = true;
+        expect(
+          await op('del', 'p:bob', {
+            'u': ['u-late'],
+          }),
+          isFalse,
+        );
+        expect(
+          await copy('p:bob', _f({'u': 'u-late', 'm': 'gone', 'w': 2})),
+          isFalse,
+        );
+        expect(await rows('u-late'), isEmpty);
+        // the same uid in another chat is that chat's
+        expect(
+          await copy('p:old-friend', _f({'u': 'u-late', 'm': 'other', 'w': 2})),
+          isTrue,
+        );
+        // a reaction or an edit of it after the delete files nothing either
+        await op('del', 'p:bob', {
+          'u': ['u-e'],
+        });
+        await copy(
+          'p:bob',
+          _f({
+            'ed': {'u': 'u-e', 'm': 'changed'},
+            'w': 3,
+          }),
+        );
+        await copy('p:bob', _f({'u': 'u-e', 'm': 'first', 'w': 2}));
+        expect(await rows('u-e'), isEmpty);
+      },
+      skip: skip,
+    );
+
+    test('my phone: a delete from my desk before its copy', () async {
+      expect(
+        await op('del', 'p:bob', {
+          'u': ['u-desk'],
+        }),
+        isFalse,
+      );
+      expect(
+        await copy('p:bob', _f({'u': 'u-desk', 'm': 'gone', 'w': 2})),
+        isFalse,
+      );
+      expect(await rows('u-desk'), isEmpty);
+      // a chat hidden on the phone keeps nothing of it on the everyday side
+      expect(
+        await op('del', 'p:hid', {
+          'u': ['u-h'],
+        }),
+        isFalse,
+      );
+      expect(await gone(), {'p:bob u-desk'});
+    }, skip: skip);
+
+    test('a take-back before its copy', () async {
+      linkedRoleForTest = true;
+      expect(await copy('p:bob', _f({'un': 'u-tb'})), isFalse);
+      expect(
+        await copy('p:bob', _f({'u': 'u-tb', 'm': 'taken', 'w': 2})),
+        isFalse,
+      );
+      expect(await rows('u-tb'), isEmpty);
+    }, skip: skip);
+
+    test('a copy sent again after a delete, a clear or a burn here', () async {
+      linkedRoleForTest = true;
+      final f = _f({'u': 'u-again', 'm': 'mine', 'w': now()});
+      expect(await copy('p:bob', f), isTrue);
+      await db.deleteMessage('u-again');
+      expect(await copy('p:bob', f), isFalse);
+      expect(await rows('u-again'), isEmpty);
+      // a contact's message my phone passed on, burned here, sent on again
+      final b = _f({'u': 'u-burn', 'm': 'his', 'b': 30, 'w': now()});
+      expect(await ownApplyForTest.forward(0, 'bob', b, now()), isTrue);
+      await s.update('messages', {
+        'burn_at': 1,
+        'sent': 1,
+      }, where: "msg_uid = 'u-burn'");
+      await db.purgeExpired();
+      expect(await rows('u-burn'), isEmpty);
+      expect(await ownApplyForTest.forward(0, 'bob', b, now()), isFalse);
+      expect(await rows('u-burn'), isEmpty);
+      // the phone does the same once a device is linked, and not before
+      linkedRoleForTest = false;
+      final p = _f({'u': 'u-p', 'm': 'from the desk', 'w': now()});
+      expect(await copy('p:bob', p), isTrue);
+      await db.deleteMessage('u-p');
+      expect(await gone(), isNot(contains('p:bob u-p')));
+      await deskLinked();
+      expect(await copy('p:bob', p), isTrue);
+      await db.deleteMessage('u-p');
+      expect(await copy('p:bob', p), isFalse);
+    }, skip: skip);
+
+    test('a timed copy of mine whose time ran out, or that my phone burned '
+        'first', () async {
+      linkedRoleForTest = true;
+      final t = now();
+      expect(
+        await copy(
+          'p:bob',
+          _f({'u': 'u-t0', 'm': 'old', 'b': 5, 'w': t - 6000}),
+        ),
+        isFalse,
+      );
+      expect(await rows('u-t0'), isEmpty);
+      expect(
+        await copy('p:bob', _f({'u': 'u-t1', 'm': 'new', 'b': 60, 'w': t})),
+        isTrue,
+      );
+      expect((await rows('u-t1')).single['burn_at'], t + 60000);
+      // read on my phone: his message burns there, and here when it comes
+      await op('lit', 'p:bob', {
+        'b': {'u-l0': t - 1, 'u-l1': t + 9000},
+      });
+      expect(
+        await ownApplyForTest.forward(
+          0,
+          'bob',
+          _f({'u': 'u-l0', 'm': 'burned', 'b': 10, 'w': t}),
+          t,
+        ),
+        isFalse,
+      );
+      expect(await rows('u-l0'), isEmpty);
+      expect(
+        await ownApplyForTest.forward(
+          0,
+          'bob',
+          _f({'u': 'u-l1', 'm': 'burning', 'b': 10, 'w': t}),
+          t,
+        ),
+        isTrue,
+      );
+      expect((await rows('u-l1')).single['burn_at'], t + 9000);
+    }, skip: skip);
+
+    test('a clear before the copies of what it took', () async {
+      linkedRoleForTest = true;
+      expect(await op('clear', 'p:bob', {'t': 1000}), isTrue);
+      expect(
+        await copy('p:bob', _f({'u': 'u-c0', 'm': 'before', 'w': 500})),
+        isFalse,
+      );
+      expect(
+        await copy('p:bob', _f({'u': 'u-c1', 'm': 'after', 'w': 1500})),
+        isTrue,
+      );
+      // a contact's frame my phone took before the clear, and after it
+      expect(
+        await ownApplyForTest.forward(
+          0,
+          'bob',
+          _f({'u': 'u-c2', 'm': 'x'}),
+          900,
+        ),
+        isFalse,
+      );
+      expect(
+        await ownApplyForTest.forward(
+          0,
+          'bob',
+          _f({'u': 'u-c3', 'm': 'y'}),
+          1100,
+        ),
+        isTrue,
+      );
+      // a clear here
+      final t = now();
+      await Session(db).clearConversation('bob');
+      expect(
+        await copy('p:bob', _f({'u': 'u-c4', 'm': 'late', 'w': t - 10})),
+        isFalse,
+      );
+      expect(await rows('u-c4'), isEmpty);
+      // one for a chat not here yet is kept for when it comes
+      expect(await op('clear', 'p:dan', {'t': 1000}), isTrue);
+      expect(await gone(), contains('p:dan *'));
+    }, skip: skip);
+
+    test(
+      'a chat deleted, then back: what was written before stays out',
+      () async {
+        linkedRoleForTest = true;
+        await copy('p:bob', _f({'u': 'u-g0', 'm': 'held', 'w': 1}));
+        await op('del', 'p:bob', {
+          'u': ['u-g1'],
+        });
+        expect(await op('gone', 'p:bob', {'t': 2000}), isTrue);
+        // one row for the chat stands for its uids
+        expect(await gone(), {'p:bob *'});
+        // my phone adds him again: the group kept his key-only row
+        await s.update('contacts', {'accepted': 1}, where: "halo_id = 'bob'");
+        expect(
+          await copy('p:bob', _f({'u': 'u-g2', 'm': 'before', 'w': 1500})),
+          isFalse,
+        );
+        expect(
+          await copy('p:bob', _f({'u': 'u-g1', 'm': 'deleted', 'w': 1800})),
+          isFalse,
+        );
+        expect(
+          await copy('p:bob', _f({'u': 'u-g3', 'm': 'after', 'w': 2500})),
+          isTrue,
+        );
+        // a group ended on my phone
+        await op('del', 'g:g1', {
+          'u': ['u-gg'],
+        });
+        expect(await op('ungroup', 'g:g1', {'t': 3000}), isTrue);
+        expect(await gone(), {'p:bob *', 'g:g1 *'});
+      },
+      skip: skip,
+    );
+
+    test(
+      'a contact\'s frame that reaches my phone after my desk deleted it',
+      () async {
+        await op('del', 'p:bob', {
+          'u': ['u-direct'],
+        });
+        await comes('bob', _f({'u': 'u-direct', 'm': 'deleted on my desk'}));
+        expect(await rows('u-direct'), isEmpty);
+        await comes('bob', _f({'u': 'u-other', 'm': 'still here'}));
+        expect(await rows('u-other'), hasLength(1));
+      },
+      skip: skip,
+    );
+
+    test('the decoy keeps its own and the vault a hidden chat\'s; nothing '
+        'lands on the everyday side', () async {
+      await deskLinked();
+      // the everyday side learns a device is linked
+      await copy('p:bob', _f({'u': 'u-e0', 'm': 'x', 'w': now()}));
+      await db.deleteMessage('u-e0');
+      expect(await gone(), {'p:bob u-e0'});
+      for (final (c, file) in [
+        (HaloContainer.decoy, 'decoy.db'),
+        (HaloContainer.vault, 'vault.db'),
+      ]) {
+        final o = SqliteMem.open(path: p.join(docs.path, file))!;
+        await appSchemaOn(o);
+        await deviceTables(o, (d, sql) async {
+          try {
+            await d.execute(sql);
+          } catch (_) {}
+        });
+        await o.insert('messages', {
+          'peer_id': 'hid',
+          'direction': 'out',
+          'plaintext': 'there',
+          'sent_at': now(),
+          'msg_uid': 'u-$file',
+        });
+        final side = _Rows(o, c);
+        await side.deleteMessage('u-$file');
+        await side.clearConversation('hid');
+        final there = {
+          for (final r in await o.query('own_gone')) '${r['chat']} ${r['uid']}',
+        };
+        expect(
+          there,
+          c == HaloContainer.decoy ? isEmpty : {'p:hid u-$file', 'p:hid *'},
+        );
+        await o.close();
+      }
+      expect(await gone(), {'p:bob u-e0'});
+    }, skip: skip);
+
+    test('they go with the last device and with a restore', () async {
+      await deskLinked();
+      await op('del', 'p:bob', {
+        'u': ['u-x'],
+      });
+      await ownGoneDropIfAlone(s);
+      expect(await gone(), isNotEmpty);
+      await s.update('own_devices', {'removed_at': 5});
+      await ownGoneDropIfAlone(s);
+      expect(await gone(), isEmpty);
+      await op('del', 'p:bob', {
+        'u': ['u-y'],
+      });
+      await restoreCutsLinkedDevices(s);
+      expect(await gone(), isEmpty);
+    }, skip: skip);
+
+    test(
+      'an earlier build\'s rows by uid alone make way for rows by chat',
+      () async {
+        final o = SqliteMem.open(path: p.join(docs.path, 'old.db'))!;
+        await o.execute(
+          'CREATE TABLE own_gone (uid TEXT PRIMARY KEY, at INTEGER NOT NULL)',
+        );
+        await o.insert('own_gone', {'uid': 'u', 'at': 1});
+        await deviceTables(o, (d, sql) async {
+          try {
+            await d.execute(sql);
+          } catch (_) {}
+        });
+        final cols = {
+          for (final c in await o.rawQuery("PRAGMA table_info('own_gone')"))
+            c['name'],
+        };
+        expect(cols, {'chat', 'uid', 'at', 'upto'});
+        await o.close();
+      },
+      skip: skip,
+    );
+
+    test('a row lasts the copy window and a relay\'s fortnight', () async {
+      expect(kOwnGoneFor, const Duration(days: 22));
+      final t = now();
+      await ownGoneNote(s, 'p:bob', ['u-w'], now: t);
+      expect(
+        (await ownGoneOf(s, 'p:bob', [
+          'u-w',
+        ], now: t + kOwnGoneFor.inMilliseconds - 1)).gone,
+        isTrue,
+      );
+      expect(
+        (await ownGoneOf(s, 'p:bob', [
+          'u-w',
+        ], now: t + kOwnGoneFor.inMilliseconds + 1)).gone,
+        isFalse,
+      );
+    }, skip: skip);
+  });
 }

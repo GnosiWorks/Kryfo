@@ -27,6 +27,16 @@ if ((project.findProperty("dart-defines") as String?)
     throw GradleException("KRYFO_STORE is gone. build the play bundle with --flavor play")
 }
 
+// linked devices are in every android build (lib/devices/linked_switch.dart).
+// a script that passes KRYFO_LINKED=0 would ship a phone that cannot link
+if ((project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.map { String(Base64.getDecoder().decode(it)).trim() }
+        ?.any { it == "KRYFO_LINKED=0" || it == "KRYFO_LINKED=false" } == true
+) {
+    throw GradleException("linked devices are in every android build: drop KRYFO_LINKED")
+}
+
 // google push in the play build: the firebase project's google-services.json
 // lives outside the repo (BUILDING.md), and only its few public values go into
 // the play build's resources, which FirebaseApp reads. no google-services
@@ -102,12 +112,22 @@ android {
             keepDebugSymbols += "**/libhalo.so"
             // voice transcripts are off: a stray copy in jniLibs never ships
             excludes += "**/libkryfo_voice.so"
+            // offline translation is off: the release builds the library
+            // (engine/translate/native/build.sh) but it ships only once the
+            // switch is on, when this line goes with it
+            excludes += "**/libkryfo_translate.so"
             // the shim's build script checks these exact bytes
             keepDebugSymbols += "**/libkryfo_signal.so"
         }
     }
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
+
+    // the reliability harness's sender, in debug and profile builds only
+    sourceSets {
+        getByName("debug").java.srcDir("src/bench/kotlin")
+        getByName("profile").java.srcDir("src/bench/kotlin")
+    }
 
     // robolectric tests read the app's strings
     testOptions {

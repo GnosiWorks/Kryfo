@@ -24,6 +24,7 @@ import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devices/device_receive.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/heal.dart';
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/invites.dart' show bundleBlock;
 import 'package:kryfo/main.dart'
@@ -244,6 +245,7 @@ void main() {
   // its KDB1, as a list push would hand them out
   Future<_World> world({
     bool desk = false,
+    bool baseline = true,
     String gate = 'open',
     Future<Uint8List> Function(int ident, Uint8List body)? sign,
   }) async {
@@ -303,12 +305,14 @@ void main() {
       'device': 1,
       'pq': true,
     }, bobRemote);
-    await ds.session(db, 'accept', {
-      'identity': devHex(bob.identity.public),
-      'list': base64Encode(
-        _list(bobId, bob.registrationId, 7000, [b5.entry, b17.entry]),
-      ),
-    }, bobRemote);
+    if (baseline) {
+      await ds.session(db, 'accept', {
+        'identity': devHex(bob.identity.public),
+        'list': base64Encode(
+          _list(bobId, bob.registrationId, 7000, [b5.entry, b17.entry]),
+        ),
+      }, bobRemote);
+    }
     final w = _World(
       db: db,
       ana: ana,
@@ -322,7 +326,7 @@ void main() {
       b9: b9,
       desk: deskDev,
       ds: ds,
-    );
+    )..gate = gate;
     w.send = DeviceSend(
       state: ds,
       db: () async => db,
@@ -350,11 +354,11 @@ void main() {
       open: deviceOpenAt,
       me: (_) async => me,
       contact: (ident, identity) async =>
-          identity == toBob.identity && gate == 'open'
+          identity == toBob.identity && w.gate == 'open'
           ? (me: me, c: toBob)
           : null,
       blockedChat: (ident, identity) async =>
-          identity == toBob.identity && gate == 'blocked'
+          identity == toBob.identity && w.gate == 'blocked'
           ? (me: me, c: toBob)
           : null,
       phone: (me, c, frame) async {
@@ -1594,6 +1598,160 @@ void main() {
     );
     expect(_json(back!.frame)['m'], 'after');
   });
+
+  // bob's phone sends his list at [v] with [devs]
+  Future<void> bobList(
+    _World w,
+    int v,
+    List<_Dev> devs, {
+    DeviceReceive? on,
+  }) => (on ?? w.recv).takePhone(
+    kMainIdent,
+    w.toBob.identity,
+    'halo/1:${jsonEncode({
+      'dl': base64Encode(_list(w.bobId, w.bob.registrationId, v, [for (final d in devs) d.entry])),
+    })}',
+    w.bobRemote,
+  );
+
+  List<int> lineKinds(List<({int at, int kind})> l) => [
+    for (final x in l) x.kind,
+  ];
+
+  test('a contact\'s verified list that adds a device and one that drops a '
+      'device each leave one quiet line in his chat, nothing else', () async {
+    if (skip()) return;
+    final w = await world();
+    final lined = <String>[];
+    w.recv.lined = lined.add;
+    await bobList(w, 7001, [w.b5, w.b9, w.b17]);
+    expect(lineKinds(await healLinesOf(w.db, _bobChat)), [kDeviceLineLinked]);
+    w.clock += 1000;
+    await bobList(w, 7002, [w.b5, w.b9]);
+    expect(lineKinds(await healLinesOf(w.db, _bobChat)), [
+      kDeviceLineLinked,
+      kDeviceLineRemoved,
+    ]);
+    expect(lined, [_bobChat, _bobChat]);
+    // a line holds nothing and names no device
+    final rows = await w.db.query('heal_lines');
+    expect(rows.every((r) => r['held'] == 0 && r['peer'] == _bobChat), isTrue);
+    expect(rows.first.keys.toSet(), {'peer', 'at', 'kind', 'held'});
+    expect(w.alarms, isEmpty);
+  });
+
+  test('his first list (the baseline), the same list again, an older one '
+      'and my own list leave no line', () async {
+    if (skip()) return;
+    final w = await world(baseline: false, desk: true);
+    var lined = 0;
+    w.recv.lined = (_) => lined++;
+    await bobList(w, 7000, [w.b5, w.b17]);
+    await bobList(w, 7000, [w.b5, w.b17]);
+    await bobList(w, 6999, [w.b5]);
+    // my own list, signed above mine and handed back by bob: no line
+    final laptop = await testStore();
+    await w.recv.takePhone(
+      kMainIdent,
+      w.toBob.identity,
+      'halo/1:${jsonEncode({
+        'dh': base64Encode(_list(w.anaId, w.ana.registrationId, 4100, [w.desk.entry, (dev: 6, key: laptop.identity.public, reg: laptop.registrationId)])),
+      })}',
+      w.bobRemote,
+    );
+    expect(await w.db.query('heal_lines'), isEmpty);
+    expect(lined, 0);
+  });
+
+  test('two lists of his at one version: one calm line that they could not '
+      'be checked, once a day', () async {
+    if (skip()) return;
+    final w = await world();
+    await bobList(w, 7001, [w.b5, w.b9, w.b17]);
+    await bobList(w, 7001, [w.b5]);
+    await bobList(w, 7001, [w.b17]);
+    expect(lineKinds(await healLinesOf(w.db, _bobChat)), [
+      kDeviceLineLinked,
+      kDeviceLineUnchecked,
+    ]);
+    w.clock += const Duration(days: 1, minutes: 1).inMilliseconds;
+    await bobList(w, 7001, [w.b5]);
+    expect(
+      lineKinds(await healLinesOf(w.db, _bobChat)).last,
+      kDeviceLineUnchecked,
+    );
+    expect(await healLinesOf(w.db, _bobChat), hasLength(3));
+  });
+
+  test('the decoy holds none of the lines, and a hidden contact\'s go into '
+      'the vault alone', () async {
+    if (skip()) return;
+    final w = await world();
+    final decoy = HaloDb(HaloContainer.decoy);
+    opened.add(decoy);
+    final ddb = await decoy.open();
+    await bobList(w, 7001, [w.b5, w.b9, w.b17]);
+    expect(await healLinesOf(w.db, _bobChat), hasLength(1));
+    expect(await healLinesOf(ddb, _bobChat), isEmpty);
+
+    // hidden: his rows go into the vault; the everyday side takes nothing
+    final ikey = w.toBob.identity;
+    final vault = HaloDb.withKey(HaloContainer.vault, 'ab' * 32);
+    opened.add(vault);
+    final vdb = await vault.open();
+    await w.recv.unlistenAll(kMainIdent, ikey);
+    final keys = w.ana.database;
+    await moveDevices(w.db, vdb, _bobChat, ikey, fromKeys: keys, toKeys: vdb);
+    for (final r in await w.db.query('heal_lines')) {
+      await vdb.insert('heal_lines', r);
+    }
+    await w.db.delete('heal_lines');
+    await w.ds.call(w.db, 'drop_peers', {
+      'peers': [ikey],
+    });
+    await w.ds.call(vdb, 'load_peers', await devPeerLoadArgs(vdb));
+    w.gate = 'hidden';
+    await bobList(w, 7002, [w.b5]);
+    expect(await w.db.query('heal_lines'), isEmpty);
+    final vds = DeviceSessions(w.ana, store: vdb);
+    final vsend = DeviceSend(
+      state: w.ds,
+      db: () async => vdb,
+      mine: () async => w.db,
+      noOwn: true,
+      sessions: (_) async => vds,
+      wire: w.wire,
+      listen: w.listen.listen,
+      clock: () => w.clock,
+      random: Random(9),
+    );
+    final vrecv = DeviceReceive(
+      state: w.ds,
+      db: () async => vdb,
+      mine: () async => w.db,
+      ownHome: w.recv,
+      sessions: (_) async => vds,
+      send: vsend,
+      listener: w.listen,
+      open: deviceOpenAt,
+      me: (_) async => w.me,
+      contact: (ident, identity) async =>
+          identity == ikey ? (me: w.me, c: w.toBob) : null,
+      phone: (me, c, frame) async => true,
+      sign: (_, body) async =>
+          shim!.sign(w.anaId, LsSigContext.deviceList, body),
+      clock: () => w.clock,
+    );
+    w.clock += 1000;
+    await bobList(w, 7002, [w.b5], on: vrecv);
+    expect(lineKinds(await healLinesOf(vdb, _bobChat)), [
+      kDeviceLineLinked,
+      kDeviceLineRemoved,
+      kDeviceLineRemoved,
+    ]);
+    expect(await w.db.query('heal_lines'), isEmpty);
+    expect(await healLinesOf(ddb, _bobChat), isEmpty);
+  });
 }
 
 class _World {
@@ -1628,6 +1786,8 @@ class _World {
   final toPhone = <String>[];
   final shown = <DevCopyIn>[];
   final alarms = <DevAlarm>[];
+  // whose chat bob's is: 'open' on the everyday side, 'blocked', 'hidden'
+  String gate = 'open';
   int clock = 1_780_000_000_000;
   late DeviceSend send;
   late DeviceReceive recv;

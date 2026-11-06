@@ -142,7 +142,7 @@ if [[ "${1:-}" == "--twice" ]]; then
   T="$(mktemp -d)"
   trap 'rm -rf "$T"' EXIT
   mkdir -p "$T/elsewhere/native"
-  cp -a CMakeLists.txt exports.map kryfo_voice.c kryfo_voice.h whisper.lock fetch-whisper.sh build.sh check-imports.sh test .third_party "$T/elsewhere/native/"
+  cp -a CMakeLists.txt exports.map kryfo_voice.c kryfo_voice.h whisper.lock fetch-whisper.sh build.sh check-imports.sh check-wraps.sh test .third_party "$T/elsewhere/native/"
   echo "again from $T/elsewhere/native"
   KV_OUT="$T/out" KV_JNI_LIBS_DIR= "$T/elsewhere/native/build.sh"
   if (cd "$T/out" && sha256sum -c --quiet "$OUT/SHA256SUMS"); then
