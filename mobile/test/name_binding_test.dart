@@ -1107,7 +1107,8 @@ void main() {
         Uri.encodeQueryComponent(await makePreKeyBundleB64(them.ss)),
         'ab' * 32,
       );
-      expect(await handleHaloUriAdded(card), ('', true));
+      // nothing of theirs is kept from the decline: a hello of mine goes
+      expect(await handleHaloUriAdded(card), (_sent, true));
       await _settle();
       expect(live.people[parked], containsPair('accepted', 1));
       expect(live.people[parked], containsPair('archived', 0));
