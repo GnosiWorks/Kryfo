@@ -830,7 +830,9 @@ extension AppStateInvites on AppState {
       where: 'ident = ? AND way = ? AND invite_id = ?',
       whereArgs: [kMainIdent, kHelloOut, once.id],
     );
-    return false;
+    // a failure of this row alone (its address cannot be sealed to) stays
+    // owed and lets the rest go; only no relay stops the pass
+    return helloFailsAlone(res);
   }
 
   /// a hello at invite [at] of mine (null: my v3 first-contact address),
@@ -1175,3 +1177,8 @@ Future<String> helloWire(Uint8List hello) async {
   helloWireOf(hello, 0);
   return helloWireOf(hello, await compute(_helloGrind, helloPowSeed(hello)));
 }
+
+/// an engine answer to a hello that only that hello's own address earns
+/// (a first-contact key that is not one), so the pass goes on past it
+bool helloFailsAlone(String res) =>
+    res.startsWith('error: bad ') || res.startsWith('error: wrap: ');
