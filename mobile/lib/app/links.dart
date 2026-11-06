@@ -855,7 +855,7 @@ Future<(LinkKin, String)> linkKinOf(
   @visibleForTesting AppState? app,
 }) async {
   final appState = app ?? _app;
-  final parsed = parseHaloUri(link);
+  final parsed = linkPartsOf(link);
   if (parsed == null) return (LinkKin.stranger, '');
   final id = parsed['id']!;
   try {
@@ -965,6 +965,22 @@ Map<String, String>? v4Parsed(LsInvite inv, {bool bundle = true}) {
     'fc': _hexOf(inv.firstContact),
     'v': '4',
   };
+}
+
+/// the parts an add reads off [link], whatever its version: a v4 one as the
+/// door reads it, with its card or without (a qr). null for one no add takes
+Map<String, String>? linkPartsOf(String link) {
+  final parsed = parseHaloUri(link);
+  if (parsed != null || !isV4Link(link)) return parsed;
+  try {
+    final got = v4OfLink(link);
+    if (got is! LsInvite) return null;
+    return v4Parsed(got) ??
+        (got.block == null ? v4Parsed(got, bundle: false) : null);
+  } catch (e) {
+    dlog('link parts: ${e.runtimeType}');
+    return null;
+  }
 }
 
 /// the face key (hex) of a v4 link that passes every reader check and

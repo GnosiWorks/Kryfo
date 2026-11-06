@@ -16,7 +16,7 @@ import '../main.dart'
         handleHaloUri,
         linkKinOf,
         linkedRole,
-        parseHaloUri,
+        linkPartsOf,
         rootNavKey,
         session,
         AppStateSession,
@@ -143,7 +143,7 @@ Future<String?> takeOutsideLink(
   // the door then does
   final link = firstKryfoLink(raw.trim());
   final room = link == null ? null : RoomLink.parse(link);
-  final who = link == null || room != null ? null : parseHaloUri(link)?['id'];
+  final who = link == null || room != null ? null : linkPartsOf(link)?['id'];
   if (link == null || (room == null && who == null)) {
     return l10n.kryfoLinkTextThatLinkIsNot;
   }
@@ -301,7 +301,7 @@ class _KryfoLinkTextState extends State<KryfoLinkText> {
   static String _label(String link) {
     final room = RoomLink.parse(link);
     if (room != null) return l10n.kryfoLinkTextJoin(room.name);
-    final who = parseHaloUri(link)?['id'];
+    final who = linkPartsOf(link)?['id'];
     return who == null
         ? l10n.kryfoLinkTextKryfoLink
         : l10n.kryfoLinkTextAdd2(who);

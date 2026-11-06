@@ -37,6 +37,9 @@ import 'package:kryfo/main.dart'
         handleFetchForTest,
         handleHaloUriAdded,
         hasSessionWith,
+        LinkKin,
+        linkKinOf,
+        linkPartsOf,
         kNoHelloWait,
         kOldPeerWait,
         oldPeerHelloDue,
@@ -592,6 +595,22 @@ void main() {
       [h.once.id],
     );
     expect(await hellosOf('in', q.keyHex), isEmpty);
+  });
+
+  test('a v4 link tapped or opened from outside is read as the door reads '
+      'it: its words, and who they are here', () async {
+    final q = await _Phone.make('four-tapped-link', 131);
+    final link = inviteLink((await q.mainInvite()).link);
+    final qr = inviteLink((await q.mainInvite()).qr!);
+    expect(linkPartsOf(link)?['id'], q.words);
+    expect(linkPartsOf(qr)?['id'], q.words);
+    expect(linkPartsOf('kryfo://share?v=4&i=AAAA'), isNull);
+    final (_, added) = await handleHaloUriAdded(link, app: app);
+    expect(added, isTrue);
+    await _settle();
+    final (kin, name) = await linkKinOf(link, app: app);
+    expect(name, q.words);
+    expect(kin, isNot(LinkKin.stranger));
   });
 
   test('in a decoy a qr and a v3 link with its first-contact address say '
