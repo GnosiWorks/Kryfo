@@ -231,5 +231,57 @@ void main() {
         expect(src.canLink, isFalse);
       },
     );
+
+    test('a removed computer linked again is a new device: its key on its '
+        'own row, the old one gone with its notice', () async {
+      if (sql == null) return;
+      final oldKey = '05${'ab' * 32}';
+      final newKey = '05${'cd' * 32}';
+      Future<void> add(String uid, String key, int dev) => db.transaction(
+        (tx) => addOwnDevice(
+          tx,
+          uid: uid,
+          name: 'Desk',
+          kind: DeviceKind.computer,
+          linkedAt: DateTime(2026, 11, 6, 9),
+          keys: [(ident: 0, dev: dev, key: key, reg: 77)],
+          stream: Uint8List(32),
+        ),
+      );
+      await add('u1', oldKey, 9);
+      final src = StoredOwnDevices(db: db, thisName: 'This phone');
+      await src.opened();
+      await markOwnDevicesGone(
+        db,
+        ['u1'],
+        why: 'removed',
+        at: DateTime(2026, 11, 6, 10).millisecondsSinceEpoch,
+        notice: true,
+      );
+      expect(await ownDevicesWithKeys(db, 0, [(id: 9, key: oldKey)]), isEmpty);
+      // the same computer, erased and linked again: a fresh key, a fresh
+      // id, maybe the old id drawn again
+      await add('u2', newKey, 9);
+      expect(await ownDevicesWithKeys(db, 0, [(id: 9, key: newKey)]), ['u2']);
+      expect(await ownDevicesWithKeys(db, 0, [(id: 9, key: oldKey)]), isEmpty);
+      final n = await readLinkNotices(db);
+      expect(
+        [for (final x in n) (x.uid, x.why)],
+        [('u1', 'removed'), ('u2', null)],
+      );
+      final all = await src.load();
+      expect(all.where((d) => !d.thisDevice).length, 1);
+      // a removed key linked again (no erase) is taken as a new device too
+      await markOwnDevicesGone(
+        db,
+        ['u2'],
+        why: 'removed',
+        at: DateTime(2026, 11, 6, 11).millisecondsSinceEpoch,
+        notice: true,
+      );
+      await add('u3', newKey, 12);
+      expect(await ownDevicesWithKeys(db, 0, [(id: 12, key: newKey)]), ['u3']);
+      await expectLater(add('u4', newKey, 13), throwsA(isA<StateError>()));
+    });
   });
 }
