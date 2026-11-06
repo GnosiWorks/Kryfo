@@ -400,6 +400,15 @@ class HaloType {
     letterSpacing: track(letter),
   );
 
+  // a message's words, in a bubble or under its photo: one style for both,
+  // dark only on the amber of ours
+  static TextStyle message({required bool onAmber, double height = 1.4}) =>
+      sans(
+        size: 14,
+        color: onAmber ? HaloColors.onAmber : HaloColors.text,
+        height: height,
+      );
+
   static TextStyle mono({
     double size = 11,
     FontWeight weight = FontWeight.w500,

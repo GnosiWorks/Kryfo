@@ -243,6 +243,35 @@ void main() {
     await close(t);
   });
 
+  // a caption reads as the words of a text bubble: upright, same face and size
+  testWidgets('a group caption is drawn as a text bubble\'s words', (t) async {
+    await open(t, (db) {
+      item(db, 0, 2, caption: 'album words');
+      item(db, 1, 2);
+      final f = File('${dir.path}/single.png')..writeAsBytesSync(_png);
+      db.add(
+        'me-single',
+        'photo words',
+        from: 'me',
+        direction: 'out',
+        more: {'media_path': f.path},
+      );
+    });
+    TextStyle of(String words) => drawnIn(
+      t.widget<RichText>(find.text(words, findRichText: true)).text,
+      words,
+    )!;
+    final body = of('hello all');
+    for (final c in [of('album words'), of('photo words')]) {
+      expect(c.fontStyle, isNot(FontStyle.italic));
+      expect(c.fontFamily, body.fontFamily);
+      expect(c.fontSize, body.fontSize);
+      expect(c.fontWeight, body.fontWeight);
+      expect(c, body);
+    }
+    await close(t);
+  });
+
   testWidgets('ours asks with the album line, not the message one', (t) async {
     await open(t, (db) {
       for (var i = 0; i < 2; i++) {
@@ -291,4 +320,17 @@ void main() {
     expect(at.single, isNotNull);
     await close(t);
   });
+}
+
+// the style the words are drawn in: the spans' styles merged down to them
+TextStyle? drawnIn(InlineSpan span, String words, [TextStyle? up]) {
+  final here = up == null ? span.style : up.merge(span.style);
+  if (span is TextSpan) {
+    if (span.text != null && span.text!.contains(words)) return here;
+    for (final c in span.children ?? const <InlineSpan>[]) {
+      final s = drawnIn(c, words, here);
+      if (s != null) return s;
+    }
+  }
+  return null;
 }

@@ -568,6 +568,49 @@ void main() {
     await devClose(t);
   });
 
+  // a caption reads as the words of a text bubble: upright, same face and size
+  TextStyle wordsOf(WidgetTester t, String words) => drawnIn(
+    t.widget<RichText>(find.text(words, findRichText: true)).text,
+    words,
+  )!;
+
+  void sameAsText(TextStyle caption, TextStyle body) {
+    expect(caption.fontStyle, isNot(FontStyle.italic));
+    expect(caption.fontFamily, body.fontFamily);
+    expect(caption.fontFamilyFallback, body.fontFamilyFallback);
+    expect(caption.fontSize, body.fontSize);
+    expect(caption.fontWeight, body.fontWeight);
+    expect(caption.height, body.height);
+    expect(caption.color, body.color);
+    expect(caption, body);
+  }
+
+  testWidgets('a caption is drawn as a text bubble\'s words', (t) async {
+    await text('t0', 'plain words', base);
+    await item(0, 2, caption: 'album words');
+    await item(1, 2);
+    // one photo of ours, no album, its caption on the photo's card
+    final f = File('${docs.path}/single.png')..writeAsBytesSync(_png);
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'out',
+      'plaintext': 'photo words',
+      'sent_at': base + 120000,
+      'written_at': base + 120000,
+      'msg_uid': 'out-single',
+      'media_path': f.path,
+      'sent': 1,
+      'delivered': 1,
+    });
+    await devOpen(t, chat());
+    await settle(t);
+    final body = wordsOf(t, 'plain words');
+    expect(body.fontStyle, isNot(FontStyle.italic));
+    sameAsText(wordsOf(t, 'album words'), body);
+    sameAsText(wordsOf(t, 'photo words'), body);
+    await devClose(t);
+  });
+
   testWidgets('with its first places missing, what came is drawn and '
       'opens', (t) async {
     await item(2, 4);
@@ -624,4 +667,17 @@ void main() {
     expect(y, lessThan(t.getCenter(find.text('after', findRichText: true)).dy));
     await devClose(t);
   });
+}
+
+// the style the words are drawn in: the spans' styles merged down to them
+TextStyle? drawnIn(InlineSpan span, String words, [TextStyle? up]) {
+  final here = up == null ? span.style : up.merge(span.style);
+  if (span is TextSpan) {
+    if (span.text != null && span.text!.contains(words)) return here;
+    for (final c in span.children ?? const <InlineSpan>[]) {
+      final s = drawnIn(c, words, here);
+      if (s != null) return s;
+    }
+  }
+  return null;
 }

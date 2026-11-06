@@ -7066,7 +7066,6 @@ class _GroupBubble extends StatelessWidget {
     );
   }
 
-  // the words of a bubble: weightier on a photo's caption, dark on ours
   // the words of a message, or of its translation in their place
   Widget _words(String text, bool isOut) {
     final onAmberText = isOut && m.mediaPath == null;
@@ -7088,13 +7087,7 @@ class _GroupBubble extends StatelessWidget {
           : text.contains('kryfo://')
           ? KryfoLinkText(
               text: text,
-              style: HaloType.sans(
-                size: 14,
-                color: (isOut && m.mediaPath == null)
-                    ? HaloColors.onAmber
-                    : HaloColors.text,
-                height: 1.35,
-              ),
+              style: _bodyStyle(isOut),
               onAmber: isOut && m.mediaPath == null,
               linkColor: (isOut && m.mediaPath == null)
                   ? HaloColors.onAmber
@@ -7103,23 +7096,7 @@ class _GroupBubble extends StatelessWidget {
           : Text.rich(
               mentionRich(
                 text,
-                HaloType.sans(
-                  size: 14,
-                  // captions get more
-                  // weight to read over
-                  // busy images
-                  weight: m.mediaPath != null
-                      ? FontWeight.w600
-                      : FontWeight.w400,
-                  // a photo caption sits
-                  // on a transparent
-                  // bubble, where onAmber
-                  // is invisible
-                  color: (isOut && m.mediaPath == null)
-                      ? HaloColors.onAmber
-                      : HaloColors.text,
-                  height: 1.35,
-                ),
+                _bodyStyle(isOut),
                 accent: (isOut && m.mediaPath == null)
                     ? HaloColors.onAmber
                     : null,
@@ -7129,14 +7106,10 @@ class _GroupBubble extends StatelessWidget {
     );
   }
 
-  TextStyle _bodyStyle(bool isOut) => HaloType.sans(
-    size: 14,
-    weight: m.mediaPath != null ? FontWeight.w600 : FontWeight.w400,
-    color: (isOut && m.mediaPath == null)
-        ? HaloColors.onAmber
-        : HaloColors.text,
-    height: 1.35,
-  );
+  // a caption is the words of a text bubble; under a photo there is no
+  // amber behind them
+  TextStyle _bodyStyle(bool isOut) =>
+      HaloType.message(onAmber: isOut && m.mediaPath == null, height: 1.35);
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(
     size: 12.5,

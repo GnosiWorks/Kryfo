@@ -8550,13 +8550,9 @@ class _Bubble extends StatelessWidget {
   // builds the message body, underlining query matches in amber. plain
   // Text when there's no active query.
   Widget _body(bool isOut, {bool image = false, String? words}) {
-    final base = image
-        ? HaloType.serif(size: 13.5, italic: true, color: HaloColors.text)
-        : HaloType.sans(
-            size: 14,
-            color: (isOut && !image) ? HaloColors.onAmber : HaloColors.text,
-            height: 1.4,
-          );
+    // a caption is the words of a text bubble; under a photo there is no
+    // amber behind them
+    final base = HaloType.message(onAmber: isOut && !image);
     if (query.isEmpty && plainLinks) {
       final t = words ?? msg.text;
       return Text(t, style: base, textDirection: writtenDir(t));
