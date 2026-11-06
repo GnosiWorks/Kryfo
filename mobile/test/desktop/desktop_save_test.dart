@@ -74,15 +74,58 @@ void main() {
     expect((await a)['state'], 'saved');
   });
 
-  test('bytes the camera made go through the same dialog', () async {
-    final to = p.join(tmp.path, 'shot.jpg');
+  test('bytes in memory go only to the place picked', () async {
+    final to = p.join(tmp.path, 'out', 'shot.jpg');
+    Directory(p.dirname(to)).createSync();
     final s = DesktopSave(pick: (_) async => to);
-    expect(await s.saveBytes([1, 2, 3], 'shot.jpg', tmp.path), isTrue);
+    expect(await s.saveBytes([1, 2, 3], 'shot.jpg'), 'saved');
     expect(File(to).readAsBytesSync(), [1, 2, 3]);
-    // its own working copy is gone
+    // nothing of it anywhere else, not even for a moment: no working copy
+    // in a folder of kryfo's, and the part became the file
+    final all = tmp.listSync(recursive: true).whereType<File>();
     expect(
-      tmp.listSync().whereType<File>().map((f) => p.basename(f.path)),
-      unorderedEquals(['in_ab12', 'shot.jpg']),
+      all.map((f) => p.relative(f.path, from: tmp.path)),
+      unorderedEquals(['in_ab12', p.join('out', 'shot.jpg')]),
+    );
+    expect(
+      await DesktopSave(pick: (_) async => null).saveBytes([1], 'x'),
+      'kept',
     );
   });
+
+  test(
+    'a writer saves straight to the place, and a failed one leaves nothing',
+    () async {
+      final to = p.join(tmp.path, 'opened.txt');
+      final s = DesktopSave(pick: (_) async => to);
+      expect(
+        await s.saveWith('opened.txt', (part) async {
+          expect(part, '$to.part');
+          File(part).writeAsStringSync('plain');
+          return true;
+        }),
+        'saved',
+      );
+      expect(File(to).readAsStringSync(), 'plain');
+      final bad = p.join(tmp.path, 'bad.txt');
+      final b = DesktopSave(pick: (_) async => bad);
+      expect(
+        await b.saveWith('bad.txt', (part) async {
+          File(part).writeAsStringSync('half');
+          return false;
+        }),
+        'failed',
+      );
+      expect(File(bad).existsSync(), isFalse);
+      expect(File('$bad.part').existsSync(), isFalse);
+      expect(
+        await b.saveWith(
+          'bad.txt',
+          (part) async => throw const FileSystemException('x'),
+        ),
+        'failed',
+      );
+      expect(File('$bad.part').existsSync(), isFalse);
+    },
+  );
 }

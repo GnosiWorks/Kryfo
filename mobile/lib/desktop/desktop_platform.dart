@@ -210,7 +210,7 @@ Map<String, DesktopAnswer> desktopAnswers(
   DesktopDb db, {
   DesktopSave? save,
 }) {
-  final saver = save ?? DesktopSave();
+  final saver = save ?? deskSaver;
   String arg(MethodCall c, String k) => '${(c.arguments as Map?)?[k] ?? ''}';
   Object? platform(MethodCall c) => switch (c.method) {
     'askNotifications' => null,
@@ -258,7 +258,7 @@ Map<String, DesktopAnswer> desktopAnswers(
       case 'saveToPictures':
         final b = (c.arguments as Map?)?['bytes'];
         if (b is! List<int>) return false;
-        return saver.saveBytes(b, arg(c, 'name'), p.join(host.dataDir, 'tmp'));
+        return await saver.saveBytes(b, arg(c, 'name')) == 'saved';
       // nothing outside opens a file kryfo holds: it goes to a save
       case 'openFile':
         return 'refused';
