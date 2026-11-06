@@ -1,0 +1,5 @@
+Neu: Post-Quanten-Verschlüsselung zwischen Handys mit 0.6 und verknüpfte Geräte, um Kryfo auch am Computer zu nutzen. Profilbilder, eine Tippanzeige, Screenshot-Sperre in Gruppen und Dateien bis 50 MB mit Pause und Fortsetzen.
+
+Geändert: sechs Schritte zum Einrichten, Kopplungscodes mit acht Ziffern, Fotos und Dateien auch auf dem Handy verschlüsselt. Kryfo gibt es jetzt auf Hindi und Polnisch.
+
+Kontakte mit 0.5 müssen erst aktualisieren, bevor ihr euch hinzufügt. Deine Chats laufen weiter.
