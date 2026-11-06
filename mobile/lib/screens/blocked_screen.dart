@@ -183,7 +183,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                     c.haloId,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10, color: HaloColors.text),
                   ),
               ],
             ),
@@ -241,7 +241,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                         dayMonthMaybeYear(
                           DateTime.fromMillisecondsSinceEpoch(at),
                         ),
-                        style: HaloType.sans(size: 12, color: HaloColors.text2),
+                        style: HaloType.sans(size: 12, color: HaloColors.text),
                       ),
                     ],
                   ),
@@ -258,7 +258,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                         overflow: TextOverflow.ellipsis,
                         style: HaloType.mono(
                           size: 10.5,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                         ),
                       ),
                     ),
@@ -340,7 +340,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
               style: HaloType.serif(
                 size: 20,
                 italic: true,
-                color: HaloColors.text2,
+                color: HaloColors.text,
               ),
             ),
           ]),

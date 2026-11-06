@@ -204,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               appState.sessionOnion,
                               style: HaloType.mono(
                                 size: 10.5,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -240,7 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       l10n.profileYouAreAThank(tierKey(_tier)),
                                       style: HaloType.sans(
                                         size: 13,
-                                        color: HaloColors.text2,
+                                        color: HaloColors.text,
                                       ),
                                     ),
                                   ),
@@ -705,7 +705,7 @@ class _Section extends StatelessWidget {
       padding: const EdgeInsetsDirectional.fromSTEB(2, 0, 0, 10),
       child: Text(
         label,
-        style: HaloType.mono(size: 10, color: HaloColors.text2),
+        style: HaloType.mono(size: 10, color: HaloColors.text),
       ),
     );
   }

@@ -108,7 +108,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     l10n.translateOffDeletes,
                     style: HaloType.sans(
                       size: 12.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.4,
                     ),
                   ),
@@ -167,7 +167,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                           '${l10n.translatePrivacyKeptShown}',
                           style: HaloType.sans(
                             size: 12.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                             height: 1.45,
                           ),
                         ),
@@ -387,7 +387,7 @@ class _PackCard extends StatelessWidget {
                           status,
                           style: HaloType.sans(
                             size: 12.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                             height: 1.35,
                           ),
                         ),
@@ -458,7 +458,7 @@ class _SheetFrame extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 line!,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
             ],
             const SizedBox(height: 12),
@@ -519,7 +519,7 @@ class _PickRow extends StatelessWidget {
               if (sub != null)
                 Text(
                   sub!,
-                  style: HaloType.sans(size: 12.5, color: HaloColors.text3),
+                  style: HaloType.sans(size: 12.5, color: HaloColors.text),
                 ),
             ],
           ),

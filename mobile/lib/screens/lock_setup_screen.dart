@@ -183,7 +183,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                   const SizedBox(height: 8),
                   Text(
                     l10n.lockSetupThePinStillWorks,
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    style: HaloType.sans(size: 13, color: HaloColors.text),
                   ),
                   const SizedBox(height: 16),
                   HaloPrimaryButton(
@@ -297,7 +297,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                         size: 13,
                         color: _mismatch
                             ? HaloColors.roseText
-                            : HaloColors.text2,
+                            : HaloColors.text,
                       ),
                     ),
                   ),

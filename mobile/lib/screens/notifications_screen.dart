@@ -465,7 +465,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         key: ValueKey(bridgeNote),
                         style: HaloType.mono(
                           size: 11.5,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                         ),
                       ),
                     ),

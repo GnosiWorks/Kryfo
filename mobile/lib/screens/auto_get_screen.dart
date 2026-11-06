@@ -92,7 +92,7 @@ class _AutoGetScreenState extends State<AutoGetScreen> {
               padding: const EdgeInsets.fromLTRB(4, 4, 4, 14),
               child: Text(
                 l10n.autoGetLine,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                style: HaloType.sans(size: 13, color: HaloColors.text),
               ),
             ),
             HaloGroup(
@@ -111,7 +111,7 @@ class _AutoGetScreenState extends State<AutoGetScreen> {
               padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
               child: Text(
                 l10n.autoGetVoice,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
             ),
           ]),

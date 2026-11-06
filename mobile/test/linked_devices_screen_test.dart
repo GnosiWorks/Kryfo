@@ -475,7 +475,7 @@ void main() {
       final name = t.widget<Text>(find.text('Desk'));
       expect(name.style!.color, HaloColors.text);
       final line = t.widget<Text>(find.text(l10n.devicesContactsSeeNothing));
-      expect(line.style!.color, HaloColors.text2);
+      expect(line.style!.color, HaloColors.text);
     });
   }
 }

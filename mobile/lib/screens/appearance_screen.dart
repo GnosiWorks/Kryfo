@@ -152,7 +152,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
               padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
               child: Text(
                 l10n.appearanceAccentHint,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
             ),
             HaloSection(l10n.appearanceChatWallpaper),
@@ -170,7 +170,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
               padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
               child: Text(
                 l10n.appearanceWallpaperHintShown,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
             ),
           ]),
@@ -275,7 +275,7 @@ class AccentSwatch extends StatelessWidget {
                 style: HaloType.sans(
                   size: 11.5,
                   weight: on ? FontWeight.w600 : FontWeight.w400,
-                  color: on ? HaloColors.text : HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.25,
                 ),
               ),

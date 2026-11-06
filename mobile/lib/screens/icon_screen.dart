@@ -295,7 +295,7 @@ class _IconScreenState extends State<IconScreen> {
                     key: ValueKey(_shown == AppFace.kryfo),
                     style: HaloType.sans(
                       size: 12.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.4,
                     ),
                   ),
@@ -620,7 +620,7 @@ class _FaceTile extends StatelessWidget {
                   style: HaloType.sans(
                     size: 11.5,
                     weight: on ? FontWeight.w600 : FontWeight.w400,
-                    color: on ? HaloColors.text : HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.25,
                   ),
                 ),
@@ -686,7 +686,7 @@ class _ShowChoices extends StatelessWidget {
                     l10n.notifHeaderLimit,
                     style: HaloType.sans(
                       size: 12,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.4,
                     ),
                   ),
@@ -757,7 +757,7 @@ class _ShowRow extends StatelessWidget {
                           hint!,
                           style: HaloType.sans(
                             size: 12.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                             height: 1.35,
                           ),
                         ),
@@ -862,7 +862,7 @@ class _PlainLook extends StatelessWidget {
               children: [
                 Text(
                   'Kryfo',
-                  style: HaloType.sans(size: 11.5, color: HaloColors.text2),
+                  style: HaloType.sans(size: 11.5, color: HaloColors.text),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -897,7 +897,7 @@ class _ChangesSheet extends StatelessWidget {
     );
     Widget body(String t) => Text(
       t,
-      style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.45),
+      style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.45),
     );
     return SafeArea(
       child: Padding(

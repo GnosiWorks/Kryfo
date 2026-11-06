@@ -312,7 +312,7 @@ class _About extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.5,
                 ),
               ),
@@ -403,7 +403,7 @@ class _KeyCard extends StatelessWidget {
             l10n.devKeyLabel,
             style: HaloType.mono(
               size: 10,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               letter: 0.14,
             ),
           ),

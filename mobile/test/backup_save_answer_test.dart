@@ -508,7 +508,7 @@ void main() {
     expect(textOf(reached).style!.color, HaloColors.text);
     expect(
       textOf(find.text(l10n.backupMoveReachedLine)).style!.color,
-      HaloColors.text2,
+      HaloColors.text,
     );
     expect(await movedAt(t), isNull);
     await t.tap(find.text(l10n.backupNotYet));

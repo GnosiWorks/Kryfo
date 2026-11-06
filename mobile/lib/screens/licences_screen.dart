@@ -189,7 +189,7 @@ class _LicencesScreenState extends State<LicencesScreen> {
                   l10n.licencesSignalLine(kLibsignalTag),
                   style: HaloType.sans(
                     size: 13,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
@@ -326,7 +326,7 @@ class _PartsScreen extends StatelessWidget {
                                     sub,
                                     style: HaloType.sans(
                                       size: 12.5,
-                                      color: HaloColors.text2,
+                                      color: HaloColors.text,
                                       height: 1.35,
                                     ),
                                   ),

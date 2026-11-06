@@ -528,7 +528,7 @@ class _BackupScreenState extends State<BackupScreen> {
                               textAlign: TextAlign.center,
                               style: HaloType.sans(
                                 size: 12.5,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                                 height: 1.4,
                               ),
                             ),
@@ -600,7 +600,7 @@ class ChoiceCard extends StatelessWidget {
                       line,
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.4,
                       ),
                     ),
@@ -735,7 +735,7 @@ class _About extends StatelessWidget {
                     : l10n.backupOneEncryptedFileYourIdentityYourShown,
                 style: HaloType.sans(
                   size: 13.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.5,
                 ),
               ),
@@ -910,7 +910,7 @@ class _MoveDoneSheet extends StatelessWidget {
               l10n.backupMoveReachedLineShown,
               style: HaloType.sans(
                 size: 13.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.45,
               ),
             ),

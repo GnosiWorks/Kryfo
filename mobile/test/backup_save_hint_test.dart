@@ -130,7 +130,7 @@ void main() {
       expect(find.text(l10n.backupWriting('25%')), findsOneWidget);
       expect(hint, findsOneWidget);
       final style = t.widget<Text>(hint).style!;
-      expect(style.color, HaloColors.text2);
+      expect(style.color, HaloColors.text);
       // the same line through the rest of the writing
       progress(3, 4);
       await t.pump();

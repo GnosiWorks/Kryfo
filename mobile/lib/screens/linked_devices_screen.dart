@@ -417,7 +417,7 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
                             textAlign: TextAlign.center,
                             style: HaloType.sans(
                               size: 12.5,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                               height: 1.4,
                             ),
                           ),
@@ -499,7 +499,7 @@ class _DeviceRow extends StatelessWidget {
                       deviceLine(d, now, linked: linked),
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.35,
                       ),
                     ),
@@ -560,7 +560,7 @@ class _Empty extends StatelessWidget {
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 13,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -595,7 +595,7 @@ class _Note extends StatelessWidget {
                 text,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.45,
                 ),
               ),
@@ -635,7 +635,7 @@ class _DeviceSheet extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               deviceLine(d, now),
-              style: HaloType.sans(size: 13, color: HaloColors.text2),
+              style: HaloType.sans(size: 13, color: HaloColors.text),
             ),
             if (d.code.isNotEmpty) ...[
               const SizedBox(height: 18),
@@ -674,7 +674,7 @@ class _DeviceSheet extends StatelessWidget {
                 l10n.devicesDeviceCodeLine,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.4,
                 ),
               ),
