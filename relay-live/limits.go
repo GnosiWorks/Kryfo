@@ -62,10 +62,10 @@ const (
 	// what a stored wrap costs beyond its content and tags: id, key,
 	// signature and the index entries
 	rowOverhead = 512
-	// what a save writes to the wal beside the wrap: the table's page, one
-	// per index and room for a split, 4 kB each. counted toward the
-	// recheck, so the floor holds while a long read keeps the wal full
-	walPages = 8 << 12
+	// what a wrap's row in the recipient index costs (recipients.go), in
+	// its table and its id index. a wrap has one, or one per hex run it
+	// carries, up to maxRuns
+	indexRowBytes = 320
 	// a client gets this long to take each frame, then it is closed
 	writeWait = 10 * time.Second
 	// and this long for a page of stored wraps in all, which waits in memory
@@ -328,15 +328,24 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if !ok {
 		return true, "rate-limited: the relay is busy, try later"
 	}
-	l.noteWritten(size + walPages)
+	l.noteWritten(size + walBytes(ev))
 	return false, ""
 }
 
 // the tags are stored as the json the store writes for them, escapes and
-// all
+// all, and the wrap's rows in the recipient index with them
 func storedSize(ev *nostr.Event) int {
 	tags, _ := json.Marshal(ev.Tags)
-	return rowOverhead + len(ev.Content) + len(tags)
+	return rowOverhead + len(ev.Content) + len(tags) + indexRowBytes*len(listAs(tags))
+}
+
+// what a save writes to the wal beside the wrap: the table's page, one
+// per index, two per row in the recipient index and room for a split,
+// 4 kB each. counted toward the recheck, so the floor holds while a long
+// read keeps the wal full
+func walBytes(ev *nostr.Event) int {
+	tags, _ := json.Marshal(ev.Tags)
+	return (1 + 5 + 2*len(listAs(tags)) + 2) << 12
 }
 
 func (l *limits) noteWritten(n int) {
