@@ -36,8 +36,8 @@ Future<bool> _onWifi() async {
 
 TranslationHub translationHub() => TranslationHub.instance ??= _live();
 
-// off until the translation library is in the build
-const kOfflineTranslation = false;
+// on: the translation library ships in the build
+const kOfflineTranslation = true;
 
 // the hub while translation is on, or one a test set. null: no screen
 // shows translation and nothing of it is built
