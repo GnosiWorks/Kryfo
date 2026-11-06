@@ -301,6 +301,24 @@ void main() {
       expect(File('${tmp.path}/f_5.mp4').existsSync(), isFalse);
     });
 
+    test(
+      'a picture the disk has no room to clean never goes as it is',
+      () async {
+        onDesktop = true;
+        final src = put('g.jpg', photo);
+        // the clean copy cannot even be begun: a file where its folder goes
+        final full = File('${tmp.path}/full')..writeAsStringSync('x');
+        final r = await copyForSend(
+          src,
+          '${tmp.path}/f_8.jpg',
+          name: 'g.jpg',
+          cache: Directory(full.path),
+        );
+        expect(r.path, isNull);
+        expect(File('${tmp.path}/f_8.jpg').existsSync(), isFalse);
+      },
+    );
+
     test('a picture it cleans is never drawn', () async {
       drawn = photo;
       final src = put('b.jpg', jpeg(tiff: cameraTiff(), xmp: xmpGps));
