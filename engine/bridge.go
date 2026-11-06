@@ -386,7 +386,7 @@ func startListener(dataDir string) string {
 	// goes again on the same tor, never on a second one
 	if up != nil {
 		log.Println("halo: tor is up, listening again")
-		return onionOn(up, dataDir, false)
+		return onionIn(up, dataDir, false)
 	}
 	torDataDir := dataDir + "/tor"
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
@@ -419,6 +419,8 @@ func startListener(dataDir string) string {
 			// torArgs names the port itself when the pin holds; bine would
 			// otherwise add "--SocksPort auto" alongside it.
 			NoAutoSocksPort: socksPin() != 0,
+			// bine's handshake has no deadline: done below, bounded
+			DisableEagerAuth: true,
 		})
 	}
 	t, err := start()
@@ -443,7 +445,15 @@ func startListener(dataDir string) string {
 	// and so did the socks port any cached http client was built against.
 	ctrlReset()
 	eventReset()
+	onionReset()
 	nostrResetClient()
+	// bine's own connection, only the fallback of ctrlDo now. a tor that
+	// does not answer leaves it as it is and the start goes on
+	if err := ctrlFallback(t, "AUTHENTICATE", func(c *control.Conn) error {
+		return c.Authenticate("")
+	}); err != nil {
+		log.Printf("halo: bine's control connection: %v", err)
+	}
 	// stay "starting": tor.Start returns before any circuit exists. the
 	// bootstrap watcher owns the flip at a real 100%.
 	goWatchBootstrap(t)
@@ -454,21 +464,17 @@ func startListener(dataDir string) string {
 		log.Println("halo: tor runs as a client, no onion of its own")
 		return torClientAddr
 	}
-	return onionOn(t, dataDir, true)
+	return onionIn(t, dataDir, true)
 }
 
 // tor's own start, the tests' to stand in for
 var startTor = tor.Start
 
-// our onion on tor t, with the key kept in dataDir. [first]: the start that
-// made t, which also puts it on the network
-func onionOn(t *tor.Tor, dataDir string, first bool) string {
+// our onion on tor t, with the key kept in dataDir
+func onionIn(t *tor.Tor, dataDir string, first bool) string {
 	if t.Control == nil {
 		return "error: listen: no control connection"
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
 	keyPath := dataDir + "/onion.key"
 	var key ed25519.PrivateKey
 	var err error
@@ -486,7 +492,16 @@ func onionOn(t *tor.Tor, dataDir string, first bool) string {
 			log.Println("halo: generated and saved new onion key")
 		}
 	}
+	return onionOn(t, key, first)
+}
 
+// our onion on tor t with key. [first]: the start that made t, which also
+// puts it on the network. one that does not go up is tried again later
+// with the same key: a retry never reads or makes one
+func onionOn(t *tor.Tor, key ed25519.PrivateKey, first bool) string {
+	if t.Control == nil {
+		return "error: listen: no control connection"
+	}
 	// no status flip here: publishing means nothing while bootstrap is at
 	// 50%. the watcher sets it when tor is actually there.
 	hsCh, hsSubbed := listenForUploads(t)
@@ -499,23 +514,24 @@ func onionOn(t *tor.Tor, dataDir string, first bool) string {
 	}
 
 	listenStart := time.Now()
-	onion, err := t.Listen(ctx, &tor.ListenConf{
-		NoWait:      true,
-		Version3:    true,
-		RemotePorts: []int{80},
-		Key:         key,
+	var onion *tor.OnionService
+	err := onionDo(t, "ADD_ONION", onionAddDeadline(), func(tc *tor.Tor) error {
+		var lerr error
+		onion, lerr = tc.Listen(context.Background(), &tor.ListenConf{
+			NoWait:      true,
+			Version3:    true,
+			RemotePorts: []int{80},
+			Key:         key,
+		})
+		return lerr
 	})
 	if err != nil {
 		log.Printf("halo: listen failed after %.0fs: %v", time.Since(listenStart).Seconds(), err)
-		// the next start listens again and subscribes afresh
+		// the next try listens again and subscribes afresh
 		if hsSubbed {
-			evMu.Lock()
-			c := evConn
-			evMu.Unlock()
-			if c != nil {
-				c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
-			}
+			unlistenUploads(hsCh)
 		}
+		onionLater(t, key)
 		return fmt.Sprintf("error: listen: %v", err)
 	}
 	log.Printf("halo: listen returned in %.0fs", time.Since(listenStart).Seconds())
@@ -598,7 +614,11 @@ func networkOn(t *tor.Tor, before func()) (string, error) {
 		netWentOn()
 		return nil
 	})
-	return why, err
+	// a fallback call that timed out may still write why
+	if err != nil {
+		return "", err
+	}
+	return why, nil
 }
 
 // tor answered and said no, as against a control port that did not answer
@@ -704,35 +724,78 @@ func goWatchPublished(t *tor.Tor, onionID string) {
 // sitting out the full fallback.
 func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 	hsCh := make(chan control.Event, 16)
+	return hsCh, subscribeUploads(t, hsCh)
+}
+
+// the event connection each HS_DESC watch subscribed on. a SETEVENTS that
+// runs out anywhere closes the shared one, and a watch on it hears nothing
+// more: it subscribes again (watchPublishedOn)
+var uploadSubs sync.Map // chan control.Event -> *control.Conn
+
+func subscribeUploads(t *tor.Tor, hsCh chan control.Event) bool {
 	if t == nil || t.Control == nil {
-		return hsCh, false
+		return false
 	}
 	// on the event connection, never on bine's: see control_events.go
 	c, err := eventConn(t)
 	if err != nil {
 		log.Printf("halo: HSDesc subscribe failed: %v", err)
-		return hsCh, false
+		return false
 	}
-	if aerr := c.AddEventListener(hsCh, control.EventCodeHSDesc); aerr != nil {
+	if aerr := evDo(c, "SETEVENTS HS_DESC", func() error {
+		return c.AddEventListener(hsCh, control.EventCodeHSDesc)
+	}); aerr != nil {
 		log.Printf("halo: HSDesc subscribe failed: %v", aerr)
-		return hsCh, false
+		uploadSubs.Delete(hsCh)
+		return false
 	}
-	return hsCh, true
+	uploadSubs.Store(hsCh, c)
+	return true
+}
+
+// whether hsCh still hears HS_DESC: subscribed, on the event connection up
+// now. a channel subscribed elsewhere (the tests') counts as heard
+func uploadsHeard(hsCh chan control.Event, subbed bool) bool {
+	if !subbed {
+		return false
+	}
+	v, known := uploadSubs.Load(hsCh)
+	if !known {
+		return true
+	}
+	evMu.Lock()
+	defer evMu.Unlock()
+	return evConn != nil && evConn == v.(*control.Conn)
+}
+
+// the HS_DESC subscription of hsCh goes. one whose connection went, went
+// with it
+func unlistenUploads(hsCh chan control.Event) {
+	v, known := uploadSubs.LoadAndDelete(hsCh)
+	evMu.Lock()
+	c := evConn
+	evMu.Unlock()
+	if c == nil || (known && v.(*control.Conn) != c) {
+		return
+	}
+	_ = evDo(c, "SETEVENTS", func() error {
+		return c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
+	})
 }
 
 func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionID string) {
 	gone := torGoneCh()
-	if hsSubbed {
-		defer func() {
-			evMu.Lock()
-			c := evConn
-			evMu.Unlock()
-			if c != nil {
-				c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
-			}
-		}()
-	}
+	defer func() {
+		if hsSubbed {
+			unlistenUploads(hsCh)
+		}
+	}()
 	for {
+		// a subscription that failed or went with its event connection is
+		// made again, or the status stays publishing with the onion up
+		if !uploadsHeard(hsCh, hsSubbed) {
+			hsSubbed = subscribeUploads(t, hsCh)
+		}
 		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
 			// a client by now: that onion was taken down
 			if torClientOnly() {
@@ -1770,11 +1833,22 @@ func openChunkAt(h int64, index uint64, typ byte, sealed, dst []byte) int {
 	return len(plain)
 }
 
+// how long one watch waits for an upload before it looks again. set by the
+// tests alone
+var hsdirWaitNs atomic.Int64
+
+func hsdirWait() time.Duration {
+	if d := hsdirWaitNs.Load(); d > 0 {
+		return time.Duration(d)
+	}
+	return 120 * time.Second
+}
+
 // watchHSDirUpload reads tor's HS_DESC events and returns true as soon as
-// our descriptor is uploaded, or false after 120s. most networks upload
-// within 5-15 seconds.
+// our descriptor is uploaded, or false after hsdirWait. most networks
+// upload within 5-15 seconds.
 func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string, gone chan struct{}) bool {
-	timeout := time.After(120 * time.Second)
+	timeout := time.After(hsdirWait())
 	if t == nil || t.Control == nil || !subbed {
 		select {
 		case <-gone:
@@ -1824,7 +1898,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 		case <-gone:
 			return false
 		case <-timeout:
-			log.Printf("halo: no hsdir upload confirmed in 120s, staying in publishing and still trying")
+			log.Printf("halo: no hsdir upload confirmed in %s, staying in publishing and still trying", hsdirWait())
 			return false
 		}
 	}

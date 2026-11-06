@@ -332,6 +332,8 @@ extension AppStateBoot on AppState {
     // poll bootstrap so the app is not held up while the listener warms up.
     // it runs for the life of the app and doubles as the watchdog.
     var torKickedAt = DateTime.now();
+    var onionAskedAt = DateTime.now();
+    var onionAsking = false;
     var ticks = 0;
     var startWatch = true;
     var traceLeft = onDesktop;
@@ -384,6 +386,29 @@ extension AppStateBoot on AppState {
             notifyListeners();
           }
         });
+      }
+      // tor is up without our address: the engine tries it again on the
+      // same tor, and a start hands it back once it is there
+      if (myOnion.isEmpty &&
+          !linkedRole &&
+          !_torHeld &&
+          !onionAsking &&
+          st != TorStatus.off &&
+          st != TorStatus.starting &&
+          DateTime.now().difference(onionAskedAt).inSeconds > 30) {
+        onionAskedAt = DateTime.now();
+        onionAsking = true;
+        startEngineIn(docsDir.path, engine.startListenerBg)
+            .then((addr) {
+              if (addr.isNotEmpty && !addr.startsWith('error')) {
+                myOnion = onionOfStart(addr);
+                if (myOnion.isNotEmpty) {
+                  _maybeRepoint();
+                  notifyListeners();
+                }
+              }
+            })
+            .whenComplete(() => onionAsking = false);
       }
     });
     _initConnectivity();

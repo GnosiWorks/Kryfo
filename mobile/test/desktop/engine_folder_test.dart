@@ -48,13 +48,14 @@ void main() {
       expect(found, ['app/engine.dart: _startListenerOnIsolate(dataDir);']);
     });
 
-    test('the boot, the watchdog and the dev screen hand it docs', () {
+    test('the boot, the watchdog, the address ask and the dev screen hand '
+        'it docs', () {
       final src = _sources();
       expect(
         'startEngineIn(docsDir.path, engine.startListenerBg)'
             .allMatches(src['app/state_boot.dart']!)
             .length,
-        2,
+        3,
       );
       expect(
         src['app/dev_screen.dart'],
