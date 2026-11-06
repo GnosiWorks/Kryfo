@@ -141,9 +141,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'ينتظر في الطلبات';
 
   @override
-  String get contactStatusAddedByHand => 'أُضيف يدويًا';
-
-  @override
   String get deliveryModeAlwaysOn => 'متصل دائمًا';
 
   @override

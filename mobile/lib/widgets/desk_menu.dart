@@ -14,7 +14,7 @@ import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../theme.dart';
 import 'halo_sheet.dart';
-import 'key_ring.dart' show KeyRing;
+import 'key_ring.dart' show KeyLead, KeyRing;
 import 'message_menu.dart';
 
 /// asks the focused item for its menu
@@ -243,6 +243,8 @@ Future<T?> showDeskMenu<T>(
     return await nav.push(route);
   } finally {
     unguard();
+    // a right click's menu: what it was for keeps no ring once it went
+    if (at.point != null) KeyLead.pointerMenuClosed();
   }
 }
 

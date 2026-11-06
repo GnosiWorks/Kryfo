@@ -41,7 +41,6 @@
   "contactStatusBlocked": "محظور",
   "contactStatusKeysVerifiedInPerson": "تم التحقق من المفاتيح وجهًا لوجه",
   "contactStatusWaitingInRequests": "ينتظر في الطلبات",
-  "contactStatusAddedByHand": "أُضيف يدويًا",
   "deliveryModeAlwaysOn": "متصل دائمًا",
   "deliveryModeCheckIns": "تفقّد دوري",
   "deliveryModeThroughAHelperApp": "عبر تطبيق مساعد",

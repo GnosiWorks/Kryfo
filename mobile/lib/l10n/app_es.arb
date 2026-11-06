@@ -41,7 +41,6 @@
   "contactStatusBlocked": "Bloqueado",
   "contactStatusKeysVerifiedInPerson": "Claves verificadas en persona",
   "contactStatusWaitingInRequests": "Esperando en solicitudes",
-  "contactStatusAddedByHand": "Añadido a mano",
   "deliveryModeAlwaysOn": "Siempre activo",
   "deliveryModeCheckIns": "Consultas",
   "deliveryModeThroughAHelperApp": "Con una app auxiliar",

@@ -142,9 +142,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'Menunggu di permintaan';
 
   @override
-  String get contactStatusAddedByHand => 'Ditambahkan manual';
-
-  @override
   String get deliveryModeAlwaysOn => 'Selalu aktif';
 
   @override

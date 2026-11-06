@@ -128,6 +128,19 @@ void main() {
     await close(t);
   });
 
+  testWidgets('a plain accepted contact has no status line', (t) async {
+    await open(t, null);
+    for (final s in [
+      'Added by hand',
+      l10n.contactStatusBlocked,
+      l10n.contactStatusKeysVerifiedInPerson,
+      l10n.contactStatusWaitingInRequests,
+    ]) {
+      expect(find.text(s), findsNothing);
+    }
+    await close(t);
+  });
+
   testWidgets('a tier from a newer app reads as a supporter', (t) async {
     await open(t, 'founder');
     expect(find.text(l10n.chatSupporter), findsOneWidget);

@@ -41,7 +41,6 @@
   "contactStatusBlocked": "已封鎖",
   "contactStatusKeysVerifiedInPerson": "已當面驗證金鑰",
   "contactStatusWaitingInRequests": "在請求中等待",
-  "contactStatusAddedByHand": "手動新增",
   "deliveryModeAlwaysOn": "始終在線",
   "deliveryModeCheckIns": "定時查收",
   "deliveryModeThroughAHelperApp": "透過輔助應用程式",

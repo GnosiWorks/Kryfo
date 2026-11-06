@@ -41,7 +41,6 @@
   "contactStatusBlocked": "Заблокирован",
   "contactStatusKeysVerifiedInPerson": "Ключи проверены лично",
   "contactStatusWaitingInRequests": "Ждёт в запросах",
-  "contactStatusAddedByHand": "Добавлен вручную",
   "deliveryModeAlwaysOn": "Всегда на связи",
   "deliveryModeCheckIns": "Проверки",
   "deliveryModeThroughAHelperApp": "Через приложение-помощник",

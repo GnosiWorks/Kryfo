@@ -41,7 +41,6 @@
   "contactStatusBlocked": "ब्लॉक किया गया",
   "contactStatusKeysVerifiedInPerson": "कुंजियाँ आमने-सामने जाँची गईं",
   "contactStatusWaitingInRequests": "अनुरोधों में इंतज़ार में",
-  "contactStatusAddedByHand": "ख़ुद जोड़ा गया",
   "deliveryModeAlwaysOn": "हमेशा चालू",
   "deliveryModeCheckIns": "समय-समय पर जाँच",
   "deliveryModeThroughAHelperApp": "सहायक ऐप से",

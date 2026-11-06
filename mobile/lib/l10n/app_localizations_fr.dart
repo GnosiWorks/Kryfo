@@ -143,9 +143,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'En attente dans les demandes';
 
   @override
-  String get contactStatusAddedByHand => 'Ajouté à la main';
-
-  @override
   String get deliveryModeAlwaysOn => 'Toujours actif';
 
   @override

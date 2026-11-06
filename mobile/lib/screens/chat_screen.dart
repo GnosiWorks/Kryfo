@@ -1214,7 +1214,8 @@ class _ChatScreenState extends State<ChatScreen>
 
   // request-lock state: a stranger we haven't accepted, capped at 2 sent msgs.
   bool _accepted = true; // assume ok until loaded, so normal chats don't flash
-  bool _peerEngaged = false; // they've replied/back-paired -> lock lifts
+  bool _peerEngaged =
+      false; // they replied, added us back or asked -> lock lifts
   int _sentCount = 0;
   int _recvCount =
       0; // messages they've sent us; >0 + unaccepted = a request TO us
@@ -1532,7 +1533,7 @@ class _ChatScreenState extends State<ChatScreen>
       session.isAccepted(widget.peerHaloId).then((v) {
         if (mounted) setState(() => _accepted = v);
       }),
-      session.isBackPaired(widget.peerHaloId).then((v) {
+      _readEngaged().then((v) {
         if (mounted) setState(() => _peerEngaged = v);
       }),
       session.countMessagesTo(widget.peerHaloId).then((v) {
@@ -1780,6 +1781,17 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) setState(() => _flag = null);
   }
 
+  // they added us back, or their hello was answered here: either way they
+  // know this phone, so nothing here is a request of mine and no card waves
+  Future<bool> _readEngaged() async {
+    if (await session.isBackPaired(widget.peerHaloId)) return true;
+    try {
+      return await session.theyAsked(widget.peerHaloId);
+    } catch (_) {
+      return false;
+    }
+  }
+
   // a reply can land while the sender sits in the locked chat, so re-check
   // whenever something arrives
   void _refreshRequestState() {
@@ -1787,7 +1799,7 @@ class _ChatScreenState extends State<ChatScreen>
     session.isAccepted(widget.peerHaloId).then((v) {
       if (mounted && v != _accepted) setState(() => _accepted = v);
     });
-    session.isBackPaired(widget.peerHaloId).then((v) {
+    _readEngaged().then((v) {
       if (mounted && v != _peerEngaged) setState(() => _peerEngaged = v);
     });
     session.countMessagesFrom(widget.peerHaloId).then((v) {
@@ -6400,6 +6412,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) {
       setState(() {
         _accepted = true;
+        // they asked: they know this phone, whatever has come from them
+        _peerEngaged = true;
         _flag = null;
       });
     }

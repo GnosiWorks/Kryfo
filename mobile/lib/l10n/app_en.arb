@@ -169,10 +169,6 @@
   "@contactStatusWaitingInRequests": {
     "description": "contact_status.dart"
   },
-  "contactStatusAddedByHand": "Added by hand",
-  "@contactStatusAddedByHand": {
-    "description": "contact_status.dart"
-  },
   "deliveryModeAlwaysOn": "Always on",
   "@deliveryModeAlwaysOn": {
     "description": "delivery_mode.dart"

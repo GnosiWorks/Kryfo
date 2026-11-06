@@ -41,7 +41,6 @@
   "contactStatusBlocked": "已屏蔽",
   "contactStatusKeysVerifiedInPerson": "已当面验证密钥",
   "contactStatusWaitingInRequests": "在请求中等待",
-  "contactStatusAddedByHand": "手动添加",
   "deliveryModeAlwaysOn": "始终在线",
   "deliveryModeCheckIns": "定时查收",
   "deliveryModeThroughAHelperApp": "通过辅助应用",

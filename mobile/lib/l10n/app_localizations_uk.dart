@@ -142,9 +142,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'Чекає в запитах';
 
   @override
-  String get contactStatusAddedByHand => 'Додано вручну';
-
-  @override
   String get deliveryModeAlwaysOn => 'Завжди на зв’язку';
 
   @override

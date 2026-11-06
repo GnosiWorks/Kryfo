@@ -136,9 +136,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get contactStatusWaitingInRequests => '在请求中等待';
 
   @override
-  String get contactStatusAddedByHand => '手动添加';
-
-  @override
   String get deliveryModeAlwaysOn => '始终在线';
 
   @override
@@ -11197,9 +11194,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get contactStatusWaitingInRequests => '在請求中等待';
-
-  @override
-  String get contactStatusAddedByHand => '手動新增';
 
   @override
   String get deliveryModeAlwaysOn => '始終在線';

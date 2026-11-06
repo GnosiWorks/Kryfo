@@ -141,9 +141,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'Đang chờ ở mục yêu cầu';
 
   @override
-  String get contactStatusAddedByHand => 'Đã thêm thủ công';
-
-  @override
   String get deliveryModeAlwaysOn => 'Luôn bật';
 
   @override

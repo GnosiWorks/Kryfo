@@ -142,9 +142,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'अनुरोधों में इंतज़ार में';
 
   @override
-  String get contactStatusAddedByHand => 'ख़ुद जोड़ा गया';
-
-  @override
   String get deliveryModeAlwaysOn => 'हमेशा चालू';
 
   @override

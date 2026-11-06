@@ -141,9 +141,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'در صف درخواست‌ها';
 
   @override
-  String get contactStatusAddedByHand => 'دستی اضافه شده';
-
-  @override
   String get deliveryModeAlwaysOn => 'همیشه روشن';
 
   @override

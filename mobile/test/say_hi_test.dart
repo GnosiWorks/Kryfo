@@ -98,6 +98,7 @@ void main() {
   Future<void> world({
     HaloContainer container = HaloContainer.everyday,
     bool knowsMe = false,
+    bool asked = false,
   }) async {
     mem = MemDb();
     await devChatTables(mem, now: 1);
@@ -111,6 +112,7 @@ void main() {
       'back_paired': knowsMe ? 1 : 0,
     });
     final db = SayHiDb(mem, container);
+    if (asked) db.asked.add(_peer);
     if (container.quiet) {
       final everyday = MemDb();
       await devChatTables(everyday);
@@ -416,6 +418,30 @@ void main() {
     await open(t);
     expect(card, findsNothing);
     expect(find.text('are you there'), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('someone whose hello was answered here gets no card, and '
+      'nothing of mine to them waits as a request', (t) async {
+    // their qr hello accepted: nothing of theirs has come yet, and they
+    // have not added us back on the relays, but they know this computer
+    await t.runAsync(() => world(asked: true));
+    await open(t);
+    expect(card, findsNothing);
+    expect(find.text(l10n.chatSayHi), findsOneWidget);
+    for (final w in ['one', 'two', 'three']) {
+      await t.enterText(find.byType(TextField).last, w);
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.byIcon(Icons.arrow_upward));
+      await settle(t);
+      relay.sends.last.complete('ok');
+      await settle(t);
+    }
+    // a request of mine would lock after two
+    expect(relay.ciphers, hasLength(3));
+    expect(find.text(l10n.chatWaitingForThemTo), findsNothing);
+    expect(card, findsNothing);
     await devClose(t);
   });
 

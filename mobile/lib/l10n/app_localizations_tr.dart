@@ -141,9 +141,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'İsteklerde bekliyor';
 
   @override
-  String get contactStatusAddedByHand => 'Elle eklendi';
-
-  @override
   String get deliveryModeAlwaysOn => 'Hep açık';
 
   @override

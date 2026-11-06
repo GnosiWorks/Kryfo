@@ -35,7 +35,7 @@ void main() {
       'Blocked',
     );
   });
-  test('words plain and pending contacts', () {
+  test('a plain accepted contact gets no line', () {
     expect(
       contactStatusLine(
         verified: false,
@@ -43,8 +43,10 @@ void main() {
         blocked: false,
         accepted: true,
       ),
-      'Added by hand',
+      isNull,
     );
+  });
+  test('words pending contacts', () {
     expect(
       contactStatusLine(
         verified: false,
