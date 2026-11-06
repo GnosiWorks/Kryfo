@@ -1549,8 +1549,8 @@ func nostrSubscribeRunnerFc(ctx context.Context, tag, fcSk, fcPk string) {
 }
 
 // a hello (KHL1, base64) on the v3 first-contact address goes to the app
-// with the key its seal was signed with, which the app checks (identity
-// v4 3.3, 11 step 7); anything else as it came
+// with the key its seal was signed with, which the app checks;
+// anything else as it came
 func helloLine(content, sealPk string) string {
 	if strings.HasPrefix(content, khl1B64) {
 		return "khl:" + sealPk + "|" + content

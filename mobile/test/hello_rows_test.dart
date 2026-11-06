@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// v4 invites and hellos in the app (identity v4 2.3, 3.1, 3.3): a reset
+// v4 invites and hellos in the app: a reset
 // takes the link people hold with it; a hello is routed and named as a
 // first contact is, on both sides; one session and one open row per peer
 // when a hello and a link add meet; a key's hellos go with its delete or
@@ -75,7 +75,7 @@ final _p = BigInt.parse(
   radix: 16,
 );
 
-// whether x is the x of a secp256k1 point, as the shim asks (2.4)
+// whether x is the x of a secp256k1 point, as the shim asks
 bool _lifts(List<int> x) {
   final v = BigInt.parse(_hex(x), radix: 16);
   if (v >= _p) return false;
@@ -1044,7 +1044,7 @@ void main() {
         [row.id],
       );
       expect(await hellosOf('pair', p.keyHex), isEmpty);
-      // the sharer starts nothing: the joiner does (3.4b)
+      // the sharer starts nothing: the joiner does
       expect(engine.seeded, isEmpty);
       // anyone else at that invite is dropped before decrypt, unspent
       final q = await _Phone.make('pair-code-stranger', 93);
@@ -1114,48 +1114,45 @@ void main() {
     expect(pairPeerOf(main.link), isNull);
   });
 
-  test(
-    'a pairing\'s invites are held from their making: no upkeep listens on '
-    'them, and the joiner\'s opener arriving before the sharer\'s Add opens '
-    'nothing and spends nothing, then opens once the Add came (review F2)',
-    () async {
-      await myMain();
-      final mine = (await app.pairInvite())!;
-      final row = mine.row as InviteRow;
-      final p = await _Phone.make('pair-code-early', 99);
-      // the joiner's own invite on this phone is held the same way
-      final joinerSide = (await app.pairInvite())!.row as InviteRow;
-      engine.subscribed.clear();
-      await app.keepMyInvites();
-      expect(engine.subscribed, isNot(contains(row.id)));
-      expect(engine.subscribed, isNot(contains(joinerSide.id)));
-      final peer = pairPeerOf((await p.pairInvite()).link)!;
-      await app.pairHold(mine, peer);
-      expect(engine.unsubscribed, contains(row.id));
-      // their Add came first: the opener is here before mine
-      final early = await p.openerTo(row, 'u-early');
-      // not acked: the engine fetches it again once the add listens
-      expect(await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]), {
-        0,
-      });
-      await _settle();
-      expect(firstFails.codes, contains('held'));
-      expect(live.people[p.words], isNull);
-      expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNull);
-      expect(engine.seeded, isEmpty);
-      // the Add: the same opener, fetched again, opens and files them
-      await handleHaloUriAdded(peer.link, pairOut: row, app: app);
-      await _settle();
-      await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]);
-      await _settle();
-      expect(live.people[p.words]?['accepted'], 1);
-      expect(engine.seeded, [p.x]);
-      expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNotNull);
-    },
-  );
+  test('a pairing\'s invites are held from their making: no upkeep listens on '
+      'them, and the joiner\'s opener arriving before the sharer\'s Add opens '
+      'nothing and spends nothing, then opens once the Add came', () async {
+    await myMain();
+    final mine = (await app.pairInvite())!;
+    final row = mine.row as InviteRow;
+    final p = await _Phone.make('pair-code-early', 99);
+    // the joiner's own invite on this phone is held the same way
+    final joinerSide = (await app.pairInvite())!.row as InviteRow;
+    engine.subscribed.clear();
+    await app.keepMyInvites();
+    expect(engine.subscribed, isNot(contains(row.id)));
+    expect(engine.subscribed, isNot(contains(joinerSide.id)));
+    final peer = pairPeerOf((await p.pairInvite()).link)!;
+    await app.pairHold(mine, peer);
+    expect(engine.unsubscribed, contains(row.id));
+    // their Add came first: the opener is here before mine
+    final early = await p.openerTo(row, 'u-early');
+    // not acked: the engine fetches it again once the add listens
+    expect(await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]), {
+      0,
+    });
+    await _settle();
+    expect(firstFails.codes, contains('held'));
+    expect(live.people[p.words], isNull);
+    expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNull);
+    expect(engine.seeded, isEmpty);
+    // the Add: the same opener, fetched again, opens and files them
+    await handleHaloUriAdded(peer.link, pairOut: row, app: app);
+    await _settle();
+    await app.receiveRelay([(peer: 'f0:${row.id}', cipher: early)]);
+    await _settle();
+    expect(live.people[p.words]?['accepted'], 1);
+    expect(engine.seeded, [p.x]);
+    expect((await inviteOf(db, kMainIdent, row.id))?.usedAt, isNotNull);
+  });
 
   test('a pairing held at a late match keeps its half hour from the match, '
-      'not from the invite\'s making (review L2)', () async {
+      'not from the invite\'s making', () async {
     await myMain();
     final mine = (await app.pairInvite())!;
     final row = mine.row as InviteRow;
@@ -1182,7 +1179,7 @@ void main() {
     expect(await hellosOf('pair', p.keyHex), isEmpty);
   });
 
-  // contacts on an older Kryfo (identity v4 11 step 7): no classic first
+  // contacts on an older Kryfo: no classic first
   // contact, so the chat says so and its hello goes again until they answer
   group('a v3 card\'s owner', () {
     // a card as a 0.5.x phone makes it: no kyber prekey

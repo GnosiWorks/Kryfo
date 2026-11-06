@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// sending to every device (linked devices step 7, job 4): one copy per slot
+// sending to every device: one copy per slot
 // the engine's Fanout names, the phone's too, all filled to one size and
 // handed out at once in the fanout's random order. a copy that cannot go
 // now (no session, its device waits for an answer or a fresh bundle, the

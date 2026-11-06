@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pq restart of held chats (identity v4 11 steps 5 and 6). a chat made
+// the pq restart of held chats. a chat made
 // before 0.6 runs on a classic session. once both phones say they take a
 // restart (caps 'pq'), the one with the smaller identity key sends a KDB1
 // of its phone inside that session; the other starts a pqxdh session on it
@@ -154,7 +154,7 @@ extension AppStatePqRestart on AppState {
         final their = info?.remoteIdentity;
         if (info == null || their == null || info.current == null) continue;
         // a session a restore brought back waits for its heal, which
-        // builds a pq one (identity v4 8, 3.8): no KDB1 for it
+        // builds a pq one: no KDB1 for it
         if (await signalSession.sealsOnRestored(id)) continue;
         final key = _hexOf(their);
         final row = await _pqRow(db, id, key);

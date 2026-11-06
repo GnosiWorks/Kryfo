@@ -569,7 +569,7 @@ void main() {
     test('a hello lands on a v4 opener\'s gift wrap and cells, whatever '
         'its nonce, and reads back without its filler', () {
       // KHL1, a version, the invite answered, the owner, a one-time
-      // invite with its bundle and the signature (3.3)
+      // invite with its bundle and the signature
       final hello = Uint8List.fromList([
         ...ascii.encode('KHL1'),
         ...List.filled(1 + 16 + 33 + 2069 + 64, 7),

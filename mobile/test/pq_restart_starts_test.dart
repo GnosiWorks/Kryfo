@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pq restart on the side that starts it (identity v4 11 step 5): the
+// the pq restart on the side that starts it: the
 // app is bob, whose key is the smaller. nothing goes to a contact whose
 // phone does not say 'pq' (every 0.5.x phone, and 0.6 builds before this),
 // or who has not added us back. once alice's frame says it, bob's KDB1 goes

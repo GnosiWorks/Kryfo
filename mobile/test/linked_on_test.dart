@@ -90,7 +90,7 @@ void main() {
 
   test('nothing in the app says linking is off or not wired yet', () {
     final stale = RegExp(
-      r'off in every (release )?build|until job 10|until linking is wired|'
+      r'off in every (release )?build|until linking is wired|'
       r'linking is not wired|off in 0\.6',
       caseSensitive: false,
     );

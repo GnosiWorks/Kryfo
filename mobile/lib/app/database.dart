@@ -2080,9 +2080,9 @@ Future<void> identityTables(DatabaseExecutor db) async {
   ''');
 }
 
-// v4 invites (identity v4 2.3): a row per invite with its times (unix
+// v4 invites: a row per invite with its times (unix
 // hours), its keys by id and its signed frames, with and without the
-// bundle. hellos (3.3): one in, waiting for the person's accept, or one
+// bundle. hellos: one in, waiting for the person's accept, or one
 // out, waiting for the opener to my one-time invite inside it. the hellos
 // seen, by hash, for 16 days
 Future<void> inviteTables(DatabaseExecutor db) async {
@@ -2129,7 +2129,7 @@ Future<void> inviteTables(DatabaseExecutor db) async {
   await rosterTable(db);
 }
 
-/// each group's members' roster invites (4.3), in the container the group
+/// each group's members' roster invites, in the container the group
 /// is in. pushed (kRosterPassed and the rest): an admin's, still to go to
 /// the other members or not. kept: when, by this phone's clock
 Future<void> rosterTable(DatabaseExecutor db) => db.execute('''

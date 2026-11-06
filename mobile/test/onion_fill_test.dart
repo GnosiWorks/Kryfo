@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a v4 first contact keeps no onion until they answer (identity v4 3.1):
+// a v4 first contact keeps no onion until they answer:
 // their first frame on the session gives it, a held one is never replaced,
 // and someone who only asked gets none. the database methods are the real
 // ones over rows kept in maps; the wire and signal are stand-ins

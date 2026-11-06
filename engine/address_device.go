@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// addresses of a device pair (identity v4 3.6, section 5 R9): one of my
+// addresses of a device pair: one of my
 // devices of an identity with one device of a contact's identity, or with
 // another device of my own. the seeded pair is 3.6's formula with the two
 // device keys; the identity pair (device 1 to device 1, D = I) is today's
 // v4 pair and keeps its form byte for byte.
 //
 // the first opener of a device pair goes before the receiver holds the
-// pair's seed, so it goes to an opener address with no seed in it (D1):
+// pair's seed, so it goes to an opener address with no seed in it:
 //
 //   ikm  = X25519(my device key, their device key)
 //   salt = sha256(min(u_Ia, u_Ib) || max(u_Ia, u_Ib))[0:16]
@@ -190,7 +190,7 @@ func setDeviceKeys(s deviceKeySource) {
 
 // what a linked container holds of an identity besides its device key:
 // the identity key I and this device's id. a phone holds neither (its
-// device key is I, its id 1). job 6 (the linked container) sets it
+// device key is I, its id 1). the linked container sets it
 type linkedIdent struct {
 	pub [32]byte
 	dev uint8

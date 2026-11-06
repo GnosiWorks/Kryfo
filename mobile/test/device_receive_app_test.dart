@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// linked devices, receiving in the app (step 7 job 5, review fixes): a
+// linked devices, receiving in the app: a
 // contact's device's copy never moves their caps, and a frame of device
 // words alone is never filed on any route: not on the everyday side, not
 // into an open vault, not as a shut one opens. a hidden chat's contact's

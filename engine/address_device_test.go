@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// device-pair addresses (identity v4 3.6, 5 R9, D1 of the step 7 plan):
+// device-pair addresses:
 // pinned outputs in testdata/address_device.json, both sides agree, every
 // role apart from every other, device 1 to device 1 unchanged. the same
 // write rule as address_v4_test.go: KRYFO_WRITE_VECTORS=1 writes it

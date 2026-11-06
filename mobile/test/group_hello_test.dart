@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// group member pairs through the hello (identity v4 4.3): a roster invite of
+// group member pairs through the hello: a roster invite of
 // my own, kept and made again; mine to the admin as I join, and the
 // members' ones kept from the admin's roster; a hello from the smaller key
 // to the other's roster invite, taken there without a request or the work,

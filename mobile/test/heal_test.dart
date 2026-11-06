@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the heal (KHB1, identity v4 3.8) as this phone makes and checks it, the
+// the heal (KHB1) as this phone makes and checks it, the
 // tables it keeps, and who a restore pauses (Q20). the frames go through
 // the shim's own parser; without the host library those tests skip
 import 'dart:convert';
@@ -36,7 +36,7 @@ void main() {
         final ben = await testStore();
         final now = DateTime.now().millisecondsSinceEpoch;
         final b = await makeHeal(ana, peer: ben.identity.public, nowMs: now);
-        // 1,904 bytes from a phone (3.8)
+        // 1,904 bytes from a phone
         expect(b.length, 1904);
         final h = ana.lib.parseHeal(b);
         expect(h.restored, isFalse);
@@ -377,7 +377,7 @@ void main() {
       var db = await open();
       expect(await tables(db), containsAll(['heal_lines', 'heal_nonces']));
       // as a file at this version would be that never made them: one that
-      // phase 6 or linked step 7 numbered first is the same to the open
+      // either migration numbered first is the same to the open
       await db.execute('DROP TABLE heal_lines');
       await db.execute('DROP TABLE heal_nonces');
       for (final d in opened) {

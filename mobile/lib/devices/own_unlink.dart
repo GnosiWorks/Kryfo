@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// removing my own devices (linked devices step 7, job 9), on the phone: my
+// removing my own devices, on the phone: my
 // list signed without them goes to every contact that reads lists at once,
 // to my other devices, and as a last word to each device removed, which
 // wipes on it. their sessions, keys, pool, copies, seeds, history copy and

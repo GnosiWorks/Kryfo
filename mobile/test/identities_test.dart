@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// identities as rows (identity v4 4.1, 2.5): two identities in one
+// identities as rows: two identities in one
 // database keep apart every session, prekey, key held and opener read;
 // one peer reached on both keeps two sessions; each identity's session
 // prekeys rotate on their first use after 30 days, the pair they replace

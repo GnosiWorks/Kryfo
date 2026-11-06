@@ -995,7 +995,7 @@ void main() {
         throwsA(isA<StartingAfresh>()),
       );
       await _settle();
-      // one side builds, the other opens (identity v4 3.8): a heal from a
+      // one side builds, the other opens: a heal from a
       // key that is not the one held is refused, so no card moves it here
       expect(vmem.rows('contacts').single['key_changed'], 0);
     },

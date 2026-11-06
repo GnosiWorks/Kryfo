@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the dev chat's pq restart on the pinned card (DECIDED 2026-10-28: his
-// main invite never expires): a chat started on a classic card goes over
+// the dev chat's pq restart on the pinned card (his main
+// invite never expires): a chat started on a classic card goes over
 // to pq at its next seal once the pinned card carries a kyber prekey, his
 // phone opens the opener on its held record and the invite's keys, his
 // answer says so on the seat, and the classic states can go after it. a

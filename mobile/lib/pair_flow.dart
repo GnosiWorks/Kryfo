@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a pairing by an eight digit code (identity v4 6): the sharer shows the
+// a pairing by an eight digit code: the sharer shows the
 // code, the joiner types it, the engine runs cpace over the relays and each
 // side gets the other's one-time invite once both tags held. then each
 // person sees who it is and adds them: the joiner starts the session, the
-// sharer waits for its opener on the invite it sealed (3.4b). the code,
+// sharer waits for its opener on the invite it sealed. the code,
 // the keys and the run stay in the engine; this side holds a handle.
 import 'dart:async';
 import 'dart:convert';

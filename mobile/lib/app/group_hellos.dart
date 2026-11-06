@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// group member pairs through the hello (identity v4 4.3): a member's roster
+// group member pairs through the hello: a member's roster
 // invite goes to the admin inside their 1:1 session, the admin passes the
 // members' ones on, and a pair with no session forms by a hello from the
 // smaller key to the other's roster invite, on v4 addresses from its first
@@ -21,7 +21,7 @@ const kHelloTaken = 'taken';
 /// how often a roster hello from one key is taken
 const kRosterHelloEvery = Duration(days: 1);
 
-/// whether [a] is below [b] as bytes: the smaller key says hello (3.4b)
+/// whether [a] is below [b] as bytes: the smaller key says hello
 bool keyBelow(List<int> a, List<int> b) => answerTheirs(b, a);
 
 extension AppStateGroupHellos on AppState {
@@ -312,7 +312,7 @@ extension AppStateGroupHellos on AppState {
   }
 
   // a hello owed to [r]'s member, true when one is: no session with them,
-  // my key the smaller (3.4b), nothing between us waiting already. a
+  // my key the smaller, nothing between us waiting already. a
   // roster invite past its life takes none, nor one I know on another
   // identity
   Future<bool> _oweRosterHello(DatabaseExecutor file, RosterInviteRow r) async {
@@ -377,7 +377,7 @@ extension AppStateGroupHellos on AppState {
   }
 
   /// whether a hello to invite [answers] goes to a group member's roster
-  /// invite: taken there without a proof of work (4.3)
+  /// invite: taken there without a proof of work
   Future<bool> _rosterHelloTo(DatabaseExecutor file, String answers) async =>
       (await rosterInviteHolders(file, answers)).isNotEmpty;
 

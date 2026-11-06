@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// own-device sync (linked devices step 7, job 8): what one device of mine
+// own-device sync: what one device of mine
 // does reaches my others, on the own device sessions alone. 'oc' is a frame
 // I sent, as sent, filed in its chat as mine; 'os' a state op (read, a
 // burn clock lit, delete for me, clear, a contact's or a group's rows, a

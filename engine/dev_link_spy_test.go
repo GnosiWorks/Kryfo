@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// the one door's spy over the link channel (identity v4 4.2, step 7 job
-// 10): the rendezvous relays and the onion door see nothing of the account
+// the one door's spy over the link channel: the rendezvous relays and the onion door see nothing of the account
 // in the clear. no key of the phone or the new device, no key number, no
 // onion of the phone in any form: only the link's own one-off keys and what
 // is sealed under them

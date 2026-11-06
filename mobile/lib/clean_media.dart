@@ -195,7 +195,7 @@ typedef ReadyCopy = ({String? path, String name, bool video});
 /// cleaned on our copy (copyClean). a picture the cleaner cannot clean, a
 /// [raw] one first of all, is drawn again as a clean jpeg (cleanJpegOf)
 /// and goes as a .jpg; one that cannot be drawn goes as it is, never asked
-/// about (mario 2026-11-05). a video that cannot be cleaned does not go
+/// about. a video that cannot be cleaned does not go
 Future<ReadyCopy> copyForSend(
   String src,
   String dest, {

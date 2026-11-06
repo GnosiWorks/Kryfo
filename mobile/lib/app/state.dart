@@ -299,7 +299,7 @@ class AppState extends ChangeNotifier {
   Timer? _repointTimer;
 
   late HandleRepoint _handleRepoint = HandleRepoint(
-    // the main v4 invite once it is made (identity v4 7): a registry
+    // the main v4 invite once it is made: a registry
     // without the v=4 change refuses it, and the handle keeps the v3 one
     invite: () async {
       try {

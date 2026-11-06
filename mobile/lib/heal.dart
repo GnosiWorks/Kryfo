@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the heal (KHB1, identity v4 3.8): the one frame that builds a session
+// the heal (KHB1): the one frame that builds a session
 // outside a first contact. one side sends its phone's bundle with a
 // one-time kyber made for this heal, signed by its identity; the other
 // builds from it and answers inside the new session. what a heal leaves in
@@ -60,7 +60,7 @@ bool isDeviceLine(int kind) =>
     kind == kDeviceLineUnchecked;
 
 /// set as a restore lands, with when its file was made (0 when unknown),
-/// and cleared once the next start ran what follows a restore (8)
+/// and cleared once the next start ran what follows a restore
 const kRestoreAfterPref = 'restore.after';
 
 /// when this phone's last restore landed. what the relays still hold from
@@ -277,7 +277,7 @@ HealRefused? checkHeal(
   if (!_eq(h.identity, held)) return HealRefused.notTheirs;
   if (!_eq(h.peer, mine)) return HealRefused.notMine;
   // the phone of every identity signs with the identity itself; a device
-  // key on their list is taken once lists are (linked step 7)
+  // key on their list is taken once lists are
   if (h.block.deviceId != 1 || !_eq(h.signer, h.identity)) {
     return HealRefused.device;
   }
@@ -508,7 +508,7 @@ Future<void> dropHealHold(DatabaseExecutor db, String peer) async {
 }
 
 /// the UTC day, in unix hours, of the last message from [peer] in [db],
-/// [fallbackMs]'s day when there is none: a heal's since (8, R6)
+/// [fallbackMs]'s day when there is none: a heal's since
 Future<int> healSinceFor(
   DatabaseExecutor db,
   String peer, {

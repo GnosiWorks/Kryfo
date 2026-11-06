@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// people on an older Kryfo (identity v4 11 step 7, 12). 0.6 starts no
+// people on an older Kryfo. 0.6 starts no
 // classic session, so a hello to a v3 card waits until its owner runs 0.6:
 // their chat says so, what is written there waits, and the hello goes again
 // now and then, so an owner who updates hears it. a group says which

@@ -35,7 +35,7 @@ import 'voice_models.dart';
 // off until the model is packaged, mirrored and measured on the phones
 const kVoiceTranscripts = false;
 
-/// the one model there is (mario, base only)
+/// the one model there is
 const kVoiceModelId = 'base';
 
 /// its size as pinned in engine/voice/models.json, until the engine says

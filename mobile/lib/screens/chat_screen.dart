@@ -1041,7 +1041,7 @@ class _ChatScreenState extends State<ChatScreen>
   List<({int at, int kind})> _healLines = const [];
   bool _pausedForUpdate = false;
   // added by a hello that waits for its answer: what is written waits, and
-  // a v3 card's owner may need to update first (identity v4 11 step 7)
+  // a v3 card's owner may need to update first
   HelloWait _helloWait = kNoHelloWait;
   Timer? _helloWaitTimer;
   bool _keyReading = false;

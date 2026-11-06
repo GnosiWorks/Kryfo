@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// linked devices, own-device sync (step 7 job 8): what one device of mine
+// linked devices, own-device sync: what one device of mine
 // sends my others rides their own sessions alone. a copy of mine is taken
 // once, as sent, and only when its uid names its frame; a state op goes
 // in its device's order, a late or replayed one never undoes a newer; a

@@ -194,8 +194,8 @@ class DevLane {
 
   // a chat started on a classic card goes over to pq on the pinned card
   // once it carries a kyber prekey: a session on the card in front of the
-  // held one, whose next seal is the opener. his main invite never expires
-  // (DECIDED 2026-10-28), so the card's keys are there to open it, and the
+  // held one, whose next seal is the opener. his main invite never expires,
+  // so the card's keys are there to open it, and the
   // classic states go 16 days after his first pq message (pqUpkeep)
   Future<void> _pqFromCard(DevSeat s, String peer) async {
     if (!devCardStarts(s.key)) return;
@@ -287,7 +287,7 @@ Uint8List _bytes(String hex) => Uint8List.fromList([
 ]);
 
 /// whether a dev chat started on a classic card goes over to pq on the
-/// pinned card (identity v4 11 step 5 for the dev chat). nothing runs
+/// pinned card. nothing runs
 /// until a card with a kyber prekey is pinned (RELEASING.md)
 const kDevPqRestart = true;
 

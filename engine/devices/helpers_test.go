@@ -16,7 +16,7 @@ import (
 
 // a stand-in for the shim's ks_sign and ks_verify_ctx: randomised 64-byte
 // signatures that only the key's holder can make, the same prefix and
-// context text, the same context table, and the body rules phase 2 adds
+// context text, the same context table, and the shim's body rules
 // (the body parses, and its identity is the signer)
 type shim struct {
 	mu      sync.Mutex

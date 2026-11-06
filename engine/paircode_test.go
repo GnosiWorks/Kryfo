@@ -20,7 +20,7 @@ func keptEvents(r *relayStandIn) int {
 	return len(r.events)
 }
 
-// pinned against ~/kryfo-notes/pake/boxref.py (python hmac and secp256k1)
+// pinned against an outside python reference (hmac and secp256k1)
 func TestPairBoxKeysVector(t *testing.T) {
 	for _, v := range []struct {
 		box    string
@@ -256,7 +256,7 @@ func TestPairThreeWrongKillTheCode(t *testing.T) {
 	}
 }
 
-// a code typed again goes on from its tries (review F3): a fake sharer at
+// a code typed again goes on from its tries: a fake sharer at
 // the box gets three guesses at it, however often it is typed
 func TestPairRetypedCodeKeepsItsTries(t *testing.T) {
 	pairFast(t)
@@ -503,7 +503,7 @@ func TestPairQueryUnreachedAndSlow(t *testing.T) {
 }
 
 // the match is said on every step until finish or cancel: a step dart gave
-// up on never loses it (review F1)
+// up on never loses it
 func TestPairDoneKeptUntilFinish(t *testing.T) {
 	pairFast(t)
 	pairRelays(t, 1)
@@ -526,7 +526,7 @@ func TestPairDoneKeptUntilFinish(t *testing.T) {
 
 // the sharer's finish lands on the relay but its ok comes after the step's
 // deadline: the joiner matches, the sharer says finishing, goes on past the
-// code's life, and matches on the next step. never one-sided (review F1)
+// code's life, and matches on the next step. never one-sided
 func TestPairLateFinishStillMatchesBoth(t *testing.T) {
 	pairFast(t)
 	rs := pairRelays(t, 1)

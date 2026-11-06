@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the decoy as the app opens it (identity v4 10, R17): its identity read off
+// the decoy as the app opens it: its identity read off
 // its own rows makes a v4 invite on its own store, link and qr the size of
 // the everyday ones, born once at a point between this phone's setup and
 // its own, its identity rows and set-up prekeys carrying that time. the
