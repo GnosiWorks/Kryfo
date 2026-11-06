@@ -241,9 +241,43 @@ void main() {
       // no runner call here: no picture, nothing thrown
       expect(await clipboardPicture(), isNull);
     });
+
+    test('a link beside a picture gives the picture; a sentence with a link, '
+        'or a link alone, gives the words', () async {
+      final png = Uint8List.fromList([
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, //
+      ]);
+      Future<Uint8List?> beside(Object? text) =>
+          pictureOf({'kind': 'png', 'bytes': png, 'text': text});
+      // firefox's copy image
+      expect(await beside('https://example.org/cat.png'), same(png));
+      expect(await beside('  http://example.org/a?b=c#d\r\n'), same(png));
+      expect(await beside('HTTPS://Example.org/x'), same(png));
+      for (final words in [
+        'look https://example.org/cat.png',
+        'https://example.org/cat.png is nice',
+        'https://a.org https://b.org',
+        'https://example.org/a\nb',
+        'ftp://example.org/cat.png',
+        'example.org/cat.png',
+        'https://',
+        'hi',
+        '',
+        '   ',
+        'https://example.org/${'a' * kLinkMost}',
+      ]) {
+        expect(await beside(words), isNull, reason: words);
+      }
+      expect(await beside(3), isNull);
+      // a link alone: no picture to win
+      expect(await pictureOf({'text': 'https://example.org/cat.png'}), isNull);
+      expect(loneLink('https://example.org/cat.png'), isTrue);
+      expect(loneLink('a link: https://example.org'), isFalse);
+    });
   });
 
-  test('the runner reads the picture in memory, not with words there, and '
+  test('the runner reads the picture in memory, not with words there but a '
+      'link, and '
       'writes no file', () {
     final src = File('windows/runner/flutter_window.cpp').readAsStringSync();
     final at = src.indexOf('flutter::EncodableValue ClipboardPicture(');
@@ -261,5 +295,22 @@ void main() {
     }
     expect(body, contains('new (std::nothrow)'));
     expect(src, contains('call.method_name() == "clipPicture"'));
+    // words there too: read only when they are a lone link, and handed over
+    // for dart to check again
+    expect(
+      body.indexOf('ClipboardLink(owner, &link)'),
+      lessThan(body.indexOf('OpenClipboard')),
+    );
+    expect(body, contains('EncodableValue("text")'));
+    final link = src.substring(
+      src.indexOf('bool ClipboardLink('),
+      src.indexOf('flutter::EncodableValue ClipboardPicture('),
+    );
+    for (final f in ['L"http://"', 'L"https://"', 'iswspace', 'kLinkMost']) {
+      expect(link, contains(f));
+    }
+    for (final disk in ['CreateFile', 'GetTempPath', 'fopen', 'ofstream']) {
+      expect(link, isNot(contains(disk)));
+    }
   });
 }

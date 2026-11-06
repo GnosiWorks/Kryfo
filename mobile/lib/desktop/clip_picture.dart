@@ -241,7 +241,8 @@ Future<Uint8List?> dibToPng(Uint8List dib) async {
 }
 
 /// the picture on the clipboard as png bytes, or null: none there, words
-/// there too (they paste as words), or no runner call (linux for now)
+/// there too (they paste as words, unless only a link), or no runner call
+/// (linux for now)
 Future<Uint8List?> clipboardPicture() async {
   final Map<Object?, Object?>? got;
   try {
@@ -253,10 +254,13 @@ Future<Uint8List?> clipboardPicture() async {
 }
 
 /// what the runner handed over, as png bytes: a png as it is, a dib made
-/// one. anything else is no picture
+/// one. anything else is no picture, and so are words beside it that are
+/// more than a link
 Future<Uint8List?> pictureOf(Map<Object?, Object?>? got) async {
   final bytes = got?['bytes'];
   if (bytes is! Uint8List || bytes.isEmpty) return null;
+  final words = got?['text'];
+  if (words != null && (words is! String || !loneLink(words))) return null;
   switch (got?['kind']) {
     case 'png':
       return looksPng(bytes) ? bytes : null;
@@ -264,4 +268,20 @@ Future<Uint8List?> pictureOf(Map<Object?, Object?>? got) async {
       return dibToPng(bytes);
   }
   return null;
+}
+
+/// past this many characters words are no link
+const kLinkMost = 8192;
+
+/// words that are only a link once trimmed: http or https, no space and
+/// no other word. firefox's copy image puts the picture's address beside it
+bool loneLink(String words) {
+  final t = words.trim();
+  if (t.isEmpty || t.length > kLinkMost || RegExp(r'\s').hasMatch(t)) {
+    return false;
+  }
+  final u = Uri.tryParse(t);
+  return u != null &&
+      (u.scheme == 'http' || u.scheme == 'https') &&
+      u.host.isNotEmpty;
 }
