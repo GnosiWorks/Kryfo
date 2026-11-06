@@ -11779,4 +11779,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Bu bilgisayardaki sohbetler kaldırılır. Telefonun her şeyi saklar.';
+
+  @override
+  String get metaReaderColourProfileName => 'renk profili adı';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Piksellerin içine gizlenmiş işaretler, örneğin görsel oluşturucuların gizli filigranları, ve resimde görülen her şey olduğu gibi kalır.';
 }

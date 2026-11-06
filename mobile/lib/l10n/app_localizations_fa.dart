@@ -11762,4 +11762,11 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'گفت‌وگوهای روی این رایانه حذف می‌شوند. گوشی‌تان همه چیز را نگه می‌دارد.';
+
+  @override
+  String get metaReaderColourProfileName => 'نام نمایه‌ی رنگ';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'نشانه‌هایی که در خود پیکسل‌ها پنهان‌اند، مثل واترمارک‌های پنهان سازنده‌های تصویر، و هر چه در تصویر دیده می‌شود، همان‌طور می‌مانند.';
 }

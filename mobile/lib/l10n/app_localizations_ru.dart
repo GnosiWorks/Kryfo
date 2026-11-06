@@ -11939,4 +11939,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Чаты на этом компьютере удаляются. На телефоне остаётся всё.';
+
+  @override
+  String get metaReaderColourProfileName => 'название цветового профиля';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Метки, скрытые в самих пикселях, например скрытые водяные знаки генераторов изображений, и всё, что видно на картинке, остаются как есть.';
 }

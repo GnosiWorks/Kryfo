@@ -14725,5 +14725,13 @@
   "settingsUnlinkComputerLine": "The chats on this computer are removed. Your phone keeps everything.",
   "@settingsUnlinkComputerLine": {
     "description": "desktop settings, linked devices rows (screens/settings_screen.dart)"
+  },
+  "metaReaderColourProfileName": "colour profile name",
+  "@metaReaderColourProfileName": {
+    "description": "meta/meta_reader.dart"
+  },
+  "cleanPixelMarksStay": "Marks hidden in the pixels themselves, like the watermarks image generators hide there, and anything you can see in the picture stay as they are.",
+  "@cleanPixelMarksStay": {
+    "description": "photo cleaner result, under the removed list (screens/clean_screen.dart)"
   }
 }

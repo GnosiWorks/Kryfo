@@ -11840,4 +11840,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'As conversas deste computador são removidas. Seu celular guarda tudo.';
+
+  @override
+  String get metaReaderColourProfileName => 'nome do perfil de cor';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Marcas escondidas nos próprios pixels, como as marcas d\'água escondidas de geradores de imagens, e tudo o que se vê na imagem ficam como estão.';
 }

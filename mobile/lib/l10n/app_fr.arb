@@ -3091,5 +3091,7 @@
   "settingsLinkedPhoneHint": "Les sauvegardes et les invitations restent sur le téléphone",
   "settingsUnlinkComputer": "Dissocier cet ordinateur",
   "settingsUnlinkComputerTitle": "Dissocier cet ordinateur ?",
-  "settingsUnlinkComputerLine": "Les discussions de cet ordinateur sont supprimées. Votre téléphone garde tout."
+  "settingsUnlinkComputerLine": "Les discussions de cet ordinateur sont supprimées. Votre téléphone garde tout.",
+  "metaReaderColourProfileName": "nom du profil de couleur",
+  "cleanPixelMarksStay": "Les marques cachées dans les pixels eux-mêmes, comme les filigranes que des générateurs d'images y cachent, et tout ce qu'on voit sur l'image restent tels quels."
 }

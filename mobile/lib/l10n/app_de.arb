@@ -3091,5 +3091,7 @@
   "settingsLinkedPhoneHint": "Backups und Einladungen bleiben auf dem Handy",
   "settingsUnlinkComputer": "Diesen Computer trennen",
   "settingsUnlinkComputerTitle": "Diesen Computer trennen?",
-  "settingsUnlinkComputerLine": "Die Chats auf diesem Computer werden entfernt. Dein Handy behält alles."
+  "settingsUnlinkComputerLine": "Die Chats auf diesem Computer werden entfernt. Dein Handy behält alles.",
+  "metaReaderColourProfileName": "Name des Farbprofils",
+  "cleanPixelMarksStay": "Markierungen in den Pixeln selbst, etwa versteckte Wasserzeichen von Bildgeneratoren, und alles, was im Bild zu sehen ist, bleiben, wie sie sind."
 }

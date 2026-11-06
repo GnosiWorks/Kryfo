@@ -11750,4 +11750,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'The chats on this computer are removed. Your phone keeps everything.';
+
+  @override
+  String get metaReaderColourProfileName => 'colour profile name';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Marks hidden in the pixels themselves, like the watermarks image generators hide there, and anything you can see in the picture stay as they are.';
 }

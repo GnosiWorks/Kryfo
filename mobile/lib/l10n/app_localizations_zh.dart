@@ -11102,6 +11102,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsUnlinkComputerLine => '这台电脑上的聊天会被移除。你的手机保留所有内容。';
+
+  @override
+  String get metaReaderColourProfileName => '色彩配置文件名称';
+
+  @override
+  String get cleanPixelMarksStay =>
+      '藏在像素本身里的标记（例如图像生成工具的隐藏水印）以及图片中看得见的内容，都会保持原样。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22089,4 +22096,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsUnlinkComputerLine => '這台電腦上的聊天會被移除。你的手機保留所有內容。';
+
+  @override
+  String get metaReaderColourProfileName => '色彩描述檔名稱';
+
+  @override
+  String get cleanPixelMarksStay =>
+      '藏在像素本身裡的標記（例如圖像生成工具的隱藏浮水印）以及圖片中看得見的內容，都會保持原樣。';
 }

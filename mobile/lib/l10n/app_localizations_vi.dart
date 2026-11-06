@@ -11738,4 +11738,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'Các cuộc trò chuyện trên máy tính này bị xóa. Điện thoại của bạn giữ mọi thứ.';
+
+  @override
+  String get metaReaderColourProfileName => 'tên hồ sơ màu';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Dấu ẩn trong chính các điểm ảnh, như hình mờ ẩn của công cụ tạo ảnh, và mọi thứ nhìn thấy trong ảnh vẫn giữ nguyên.';
 }

@@ -11758,4 +11758,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'इस कंप्यूटर की चैट हटा दी जाएँगी। आपका फ़ोन सब कुछ रखता है।';
+
+  @override
+  String get metaReaderColourProfileName => 'कलर प्रोफ़ाइल का नाम';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'पिक्सल में ही छिपे निशान, जैसे इमेज बनाने वाले टूल के छिपे वॉटरमार्क, और तस्वीर में दिखने वाली हर चीज़ वैसी ही रहती है।';
 }

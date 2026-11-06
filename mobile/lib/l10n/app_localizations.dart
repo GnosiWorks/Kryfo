@@ -18834,6 +18834,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The chats on this computer are removed. Your phone keeps everything.'**
   String get settingsUnlinkComputerLine;
+
+  /// meta/meta_reader.dart
+  ///
+  /// In en, this message translates to:
+  /// **'colour profile name'**
+  String get metaReaderColourProfileName;
+
+  /// photo cleaner result, under the removed list (screens/clean_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Marks hidden in the pixels themselves, like the watermarks image generators hide there, and anything you can see in the picture stay as they are.'**
+  String get cleanPixelMarksStay;
 }
 
 class _AppLocalizationsDelegate

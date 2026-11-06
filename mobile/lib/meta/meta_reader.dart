@@ -8,6 +8,7 @@ import 'dart:typed_data';
 
 import 'byte_source.dart';
 import 'c2pa.dart';
+import 'icc.dart';
 import 'heif_items.dart';
 import 'iso.dart';
 import 'mp4_tracks.dart';
@@ -405,6 +406,11 @@ void _takeCredentials(Credentials cr, MetaReport r) {
   }
 }
 
+// a colour profile whose text names a screen or an app (icc.dart)
+void _takeIcc(Uint8List p, MetaReport r) {
+  if (iccNamesSomething(p)) r.extra.add(l10n.metaReaderColourProfileName);
+}
+
 bool _startsWith(Uint8List b, List<int> p, [int at = 0]) {
   if (b.length < at + p.length) return false;
   for (var i = 0; i < p.length; i++) {
@@ -425,6 +431,7 @@ final _jfxxHead = [...latin1.encode('JFXX'), 0];
 
 class _JpegNotes {
   final credentials = BytesBuilder(copy: false);
+  final icc = <(int, Uint8List)>[];
   int mpfImages = 0;
 }
 
@@ -470,6 +477,14 @@ void _jpeg(ByteSource s, MetaReport r) {
       r.extra.add('app11');
     }
   }
+  if (notes.icc.isNotEmpty) {
+    notes.icc.sort((a, b) => a.$1.compareTo(b.$1));
+    final p = BytesBuilder(copy: false);
+    for (final (_, b) in notes.icc) {
+      p.add(b);
+    }
+    _takeIcc(p.toBytes(), r);
+  }
   if (notes.mpfImages > 1) {
     var more = notes.mpfImages - 1;
     if (r.hdrLayer) more--;
@@ -490,7 +505,12 @@ void _jpegSegment(int m, Uint8List body, MetaReport r, _JpegNotes notes) {
       r.extra.add('app1');
     }
   } else if (m == 0xE2) {
-    if (_startsWith(body, _iccHead)) return;
+    if (_startsWith(body, _iccHead)) {
+      if (body.length > 14) {
+        notes.icc.add((body[12], Uint8List.sublistView(body, 14)));
+      }
+      return;
+    }
     if (_startsWith(body, _mpfHead)) {
       r.secondImage = true;
       final n = _mpfCount(Uint8List.sublistView(body, 4));
@@ -759,6 +779,11 @@ void _png(ByteSource s, MetaReport r) {
         }
         if (kSyntheticSourceTypes.any(text.contains)) r.syntheticLabel = true;
       }
+    } else if (type == 'iCCP') {
+      final body = s.read(i + 8, len < _maxBlock ? len : _maxBlock);
+      final z = body.indexOf(0);
+      final p = z < 0 ? null : _inflate(Uint8List.sublistView(body, z + 2));
+      if (p != null) _takeIcc(p, r);
     } else if (type == 'tIME') {
       r.savedTime = true;
     } else if (type == 'caBX') {
@@ -870,6 +895,8 @@ void _webp(ByteSource s, MetaReport r) {
         s.read(i + 8, len < _maxBlock ? len : _maxBlock),
       );
       _takeCredentials(cr, r);
+    } else if (type == 'ICCP') {
+      _takeIcc(s.read(i + 8, len < _maxBlock ? len : _maxBlock), r);
     } else if (type == 'VP8X' && len >= 1) {
       final f = s.read(i + 8, 1)[0];
       if (f & 0x08 != 0) exifFlag = true;
@@ -915,23 +942,41 @@ void _gif(ByteSource s, MetaReport r) {
       i = sub(p + 1);
     } else if (b == 0x21) {
       final label = s.read(i + 1, 1)[0];
-      if (label == 0xFE) {
+      final end = sub(i + 2);
+      // a plain text block is drawn by almost no viewer: hidden text
+      if (label == 0xFE || label == 0x01) {
         r.comment = true;
       } else if (label == 0xFF) {
         final id = latin1.decode(s.read(i + 3, 11), allowInvalid: true);
         if (id == 'XMP DataXMP') {
+          // xmp is written raw, its length bytes are part of the text
+          final n = end - i - 14;
+          _takeXmp(s.read(i + 14, n < _maxBlock ? n : _maxBlock), r);
           r.xmp = true;
         } else if (id.startsWith('C2PA_GIF')) {
           r.credentials = true;
+          _takeCredentials(readCredentials(_gifData(s, i + 14, end)), r);
         } else if (id != 'NETSCAPE2.0' && id != 'ANIMEXTS1.0') {
           r.extra.add(l10n.metaReaderAppBlock(id));
         }
       }
-      i = sub(i + 2);
+      i = end;
     } else {
       throw const _Unreadable('not a gif block');
     }
   }
+}
+
+// the sub-blocks from [p] to [end] joined, up to a megabyte
+Uint8List _gifData(ByteSource s, int p, int end) {
+  final out = BytesBuilder(copy: false);
+  while (p < end && out.length < _maxBlock) {
+    final n = s.read(p, 1)[0];
+    if (n == 0 || p + 1 + n > end) break;
+    out.add(s.read(p + 1, n));
+    p += 1 + n;
+  }
+  return out.toBytes();
 }
 
 String _printable(String tag) => tag.replaceAll(RegExp(r'[^A-Za-z0-9]'), '?');
@@ -1002,6 +1047,13 @@ void _heif(ByteSource s, MetaReport r) {
   for (final p in m.props) {
     if (!kHeifPropKeep.contains(p.type) && nonZero(s, p.body, p.bodySize)) {
       r.extra.add(l10n.metaReaderBox(_printable(p.type)));
+    }
+    if (p.type == 'colr' && p.bodySize > 4 && p.bodySize < _maxBlock) {
+      final b = s.read(p.body, p.bodySize);
+      final kind = _tag(b, 0);
+      if (kind == 'prof' || kind == 'rICC') {
+        _takeIcc(Uint8List.sublistView(b, 4), r);
+      }
     }
   }
   final idat = m.idat;

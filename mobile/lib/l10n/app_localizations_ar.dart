@@ -11888,4 +11888,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsUnlinkComputerLine =>
       'تُزال المحادثات التي على هذا الحاسوب. يحتفظ هاتفك بكل شيء.';
+
+  @override
+  String get metaReaderColourProfileName => 'اسم ملف تعريف الألوان';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'العلامات المخفية في البكسلات نفسها، مثل العلامات المائية المخفية لمولّدات الصور، وكل ما يظهر في الصورة تبقى كما هي.';
 }

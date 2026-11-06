@@ -3091,5 +3091,7 @@
   "settingsLinkedPhoneHint": "Backups e convites ficam no celular",
   "settingsUnlinkComputer": "Desconectar este computador",
   "settingsUnlinkComputerTitle": "Desconectar este computador?",
-  "settingsUnlinkComputerLine": "As conversas deste computador são removidas. Seu celular guarda tudo."
+  "settingsUnlinkComputerLine": "As conversas deste computador são removidas. Seu celular guarda tudo.",
+  "metaReaderColourProfileName": "nome do perfil de cor",
+  "cleanPixelMarksStay": "Marcas escondidas nos próprios pixels, como as marcas d'água escondidas de geradores de imagens, e tudo o que se vê na imagem ficam como estão."
 }
