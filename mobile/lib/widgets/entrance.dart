@@ -52,6 +52,8 @@ class Entrance {
     final c = _c;
     if (_gone || c == null || c.status != AnimationStatus.forward) return;
     c.value = c.upperBound;
+    // drawn even where no frame was coming: the end state must show
+    SchedulerBinding.instance.scheduleForcedFrame();
   }
 
   void dispose() {

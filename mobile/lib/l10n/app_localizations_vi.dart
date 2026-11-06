@@ -4431,22 +4431,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Giữ nguyên';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'ĐỌC TRÊN ĐIỆN THOẠI NÀY · VIDEO KHÔNG ĐI ĐÂU CẢ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'ĐỌC TRÊN MÁY TÍNH NÀY · VIDEO KHÔNG ĐI ĐÂU CẢ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'ĐỌC TRÊN ĐIỆN THOẠI NÀY · ẢNH KHÔNG ĐI ĐÂU CẢ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'ĐỌC TRÊN MÁY TÍNH NÀY · ẢNH KHÔNG ĐI ĐÂU CẢ';
-
-  @override
   String get photoKnowsReadingTheFile => 'Đang đọc tệp';
 
   @override
@@ -11733,6 +11717,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get deskLinkErasingLine => 'Kryfo sẽ mở lại ngay với mã để quét.';
+
+  @override
+  String get deskLinkNotStarted =>
+      'Không thể bắt đầu liên kết. Hãy thử lại sau.';
 
   @override
   String get settingsLinkedToYourPhone => 'Đã liên kết với điện thoại của bạn';

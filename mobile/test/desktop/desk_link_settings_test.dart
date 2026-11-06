@@ -2,9 +2,10 @@
 // a computer's link rows in settings: its own Kryfo offers the link to a
 // phone (what goes, a backup first, the wipe word, the erase that comes
 // back at the code), a linked one says so and unlinks by the devices
-// page's own path. none on a phone, in the decoy or a vault. after the
-// erase the next run opens onboarding's link, and a cancel or a failed
-// link there is a clean start
+// page's own path. none on a phone. the decoy, a quiet session and a vault
+// show the same rows; the decoy's and a quiet session's word ends in a
+// plain error that erases nothing. after the erase the next run opens
+// onboarding's link, and a cancel or a failed link there is a clean start
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ import 'package:kryfo/screens/link_screens.dart' show JoinScreen;
 import 'package:kryfo/screens/onboarding_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
 import 'package:kryfo/store.dart' show playBuildForTest;
+import 'package:kryfo/widgets/halo_rows.dart' show HaloGroup, HaloSection;
 import 'package:kryfo/wipe.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,7 +62,11 @@ class _Flow extends LinkFlow {
   void cancel() {}
 }
 
-Future<void> _world(WidgetTester t, {bool desk = true}) async {
+Future<void> _world(
+  WidgetTester t, {
+  bool desk = true,
+  HaloContainer side = HaloContainer.everyday,
+}) async {
   SharedPreferences.setMockInitialValues({
     'battery_opt_prompt_seen': true,
     'miui_autostart_prompt_seen': true,
@@ -70,7 +76,7 @@ Future<void> _world(WidgetTester t, {bool desk = true}) async {
   addTearDown(() => playBuildForTest = null);
   appState.sendModeForTest = 'private';
   useEngineForTest(_Engine());
-  await devWorld();
+  await devWorld(container: side);
   setL10nLocale(const Locale('en'));
   lockState.openForTest(enabled: false);
   addTearDown(lockState.openForTest);
@@ -104,6 +110,56 @@ Future<void> _settle(WidgetTester t) async {
 Future<void> _gone(WidgetTester t) async {
   await t.pumpWidget(const SizedBox());
   await _settle(t);
+}
+
+// the devices section as drawn: every widget under its title and its group
+// by type, key, words and icon, and where the group sits under the title.
+// with the sections before and after it
+List<String> _devicesTree(WidgetTester t) {
+  final out = <String>[];
+  void walk(Element e) {
+    final w = e.widget;
+    final words = switch (w) {
+      Text(:final data) => ' "$data"',
+      RichText(:final text) => ' "${text.toPlainText()}"',
+      Icon(:final icon) => ' icon ${icon?.codePoint}',
+      _ => '',
+    };
+    // a global key's hash is new on every build: its kind is what counts
+    final key = w.key is GlobalKey ? 'GlobalKey' : '${w.key}';
+    out.add('${w.runtimeType} $key$words');
+    e.visitChildren(walk);
+  }
+
+  final head = find.widgetWithText(HaloSection, l10n.settingsDevices);
+  expect(head, findsOneWidget);
+  final group = find.ancestor(
+    of: find.text(l10n.onboardingLinkToMyPhone),
+    matching: find.byType(HaloGroup),
+  );
+  expect(group, findsOneWidget);
+  walk(t.element(head));
+  walk(t.element(group));
+  final h = t.getRect(head);
+  final g = t.getRect(group);
+  out.add('head ${h.size} group ${g.size} gap ${g.top - h.bottom}');
+  final titles = [
+    for (final s in t.widgetList<HaloSection>(find.byType(HaloSection)))
+      s.label,
+  ];
+  final at = titles.indexOf(l10n.settingsDevices);
+  out.add('between ${titles[at - 1]} and ${titles[at + 1]}');
+  return out;
+}
+
+Future<List<String>> _settingsDevices(WidgetTester t) async {
+  await t.pumpWidget(devApp(const SettingsScreen(), still: true));
+  await _settle(t);
+  await t.ensureVisible(find.text(l10n.onboardingLinkToMyPhone));
+  await _settle(t);
+  final tree = _devicesTree(t);
+  await _gone(t);
+  return tree;
 }
 
 // the erases asked, by their arguments
@@ -200,19 +256,149 @@ void main() {
       await _gone(t);
     });
 
-    testWidgets('the decoy and a vault show no link row', (t) async {
+    testWidgets('the decoy, a quiet session and a vault show the same rows', (
+      t,
+    ) async {
       await _world(t);
+      final real = await _settingsDevices(t);
+      expect(real, isNotEmpty);
+      // the decoy
+      await _world(t, side: HaloContainer.decoy);
       lockState.inDecoy = true;
-      await t.pumpWidget(devApp(const SettingsScreen(), still: true));
-      await _settle(t);
-      expect(find.text(l10n.onboardingLinkToMyPhone), findsNothing);
-      expect(find.text(l10n.settingsUnlinkComputer), findsNothing);
+      addTearDown(() => lockState.inDecoy = false);
+      expect(deskLinkRows, isTrue);
+      expect(await _settingsDevices(t), real);
+      // a quiet session
       lockState.inDecoy = false;
+      expect(await _settingsDevices(t), real);
+      // a vault over the everyday side
+      await _world(t);
       lockState.inVault = true;
       addTearDown(() => lockState.inVault = false);
-      expect(deskLinkRows, isFalse);
-      lockState.inVault = false;
-      expect(deskLinkRows, isTrue);
+      expect(await _settingsDevices(t), real);
+      expect(find.text(l10n.settingsUnlinkComputer), findsNothing);
+    });
+  });
+
+  group('the decoy\'s link', () {
+    late Directory data;
+    setUp(() => data = Directory.systemTemp.createTempSync('decoylink'));
+    tearDown(() {
+      if (data.existsSync()) data.deleteSync(recursive: true);
+    });
+
+    Map<String, String> folder() => {
+      for (final f in data.listSync(recursive: true).whereType<File>())
+        p.relative(f.path, from: data.path): f.readAsStringSync(),
+    };
+
+    Future<void> decoyEnds(WidgetTester t, {required bool decoy}) async {
+      await _world(t, side: HaloContainer.decoy);
+      if (decoy) {
+        lockState.inDecoy = true;
+        addTearDown(() => lockState.inDecoy = false);
+      }
+      File(p.join(data.path, 'vault.kv')).writeAsStringSync('keys');
+      File(p.join(data.path, 'halo.db')).writeAsStringSync('chats');
+      File(p.join(data.path, 'k2.db')).writeAsStringSync('decoy');
+      final before = folder();
+      // an erase would empty the folder, a wipe would ask the host
+      final erases = _erases();
+      deskLinkErase = ({bool releaseHandle = false, bool thenLink = false}) async {
+        erases.add('erase');
+        data.deleteSync(recursive: true);
+      };
+      final calls = <String>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (c) async {
+          calls.add(c.method);
+          return c.method == 'isBatteryExempt' ? true : null;
+        },
+      );
+      final prefs = await SharedPreferences.getInstance();
+      final kept = {for (final k in prefs.getKeys()) k: prefs.get(k)};
+      await _openLink(t);
+      // the same page as the real one
+      expect(find.text(l10n.deskLinkHead), findsOneWidget);
+      expect(find.text(l10n.deskLinkGoesLine), findsOneWidget);
+      expect(find.text(l10n.deskLinkBackupRow), findsOneWidget);
+      expect(find.text(l10n.deskLinkNotStarted), findsNothing);
+      // the wrong word: nothing, as in the real flow
+      await _typeWord(t, 'link');
+      expect(find.text(l10n.deskLinkNotStarted), findsNothing);
+      // the word: a plain error, the page stays, nothing erased
+      await _typeWord(t, l10n.settingsWipeWord);
+      expect(find.text(l10n.deskLinkNotStarted), findsOneWidget);
+      expect(find.text(l10n.deskLinkErasing), findsNothing);
+      expect(find.text(l10n.deskLinkHead), findsOneWidget);
+      expect(erases, isEmpty);
+      expect(calls, isNot(contains('wipe')));
+      expect(folder(), before);
+      expect({for (final k in prefs.getKeys()) k: prefs.get(k)}, kept);
+      // again: the same error, still nothing
+      await _typeWord(t, l10n.settingsWipeWord);
+      expect(find.text(l10n.deskLinkNotStarted), findsOneWidget);
+      expect(erases, isEmpty);
+      expect(folder(), before);
+      // back out to settings
+      await t.tap(find.byTooltip(l10n.commonBack).first);
+      await _settle(t);
+      expect(find.byType(DeskLinkScreen), findsNothing);
+      expect(erases, isEmpty);
+      await _gone(t);
+    }
+
+    testWidgets('the decoy: a plain error after the word, nothing wiped', (
+      t,
+    ) async {
+      await decoyEnds(t, decoy: true);
+    });
+
+    testWidgets('a quiet session: the same', (t) async {
+      await decoyEnds(t, decoy: false);
+    });
+
+    testWidgets('its backup is the decoy side\'s own, a copy to keep', (
+      t,
+    ) async {
+      await _world(t, side: HaloContainer.decoy);
+      lockState.inDecoy = true;
+      addTearDown(() => lockState.inDecoy = false);
+      final erases = _erases();
+      // the everyday side's date never shows here
+      await keepLastBackup(HaloContainer.everyday);
+      await _openLink(t);
+      expect(find.text(l10n.settingsBackupNotYet), findsOneWidget);
+      expect(find.text(l10n.settingsBackupToday), findsNothing);
+      await t.tap(find.text(l10n.deskLinkBackupRow));
+      await _settle(t);
+      final page = t.widget<BackupScreen>(find.byType(BackupScreen));
+      expect(page.keepOnly, isTrue);
+      expect(page.withHiddenChats, isFalse);
+      expect(find.text(l10n.backupMoveToAnotherDevice), findsNothing);
+      await t.tap(find.byType(BackButton));
+      await _settle(t);
+      expect(find.text(l10n.deskLinkHead), findsOneWidget);
+      expect(erases, isEmpty);
+      await _gone(t);
+      // its own date does
+      await keepLastBackup(HaloContainer.decoy);
+      await _openLink(t);
+      expect(find.text(l10n.settingsBackupToday), findsOneWidget);
+      await _gone(t);
+    });
+
+    testWidgets('a vault links for real', (t) async {
+      await _world(t);
+      lockState.inVault = true;
+      addTearDown(() => lockState.inVault = false);
+      final erases = _erases();
+      await _openLink(t);
+      await _typeWord(t, l10n.settingsWipeWord);
+      expect(erases, ['handle true link true']);
+      expect(find.text(l10n.deskLinkErasing), findsOneWidget);
+      expect(find.text(l10n.deskLinkNotStarted), findsNothing);
       await _gone(t);
     });
   });
@@ -291,6 +477,7 @@ void main() {
       expect(erases, ['handle true link true']);
       expect(find.text(l10n.deskLinkErasing), findsOneWidget);
       expect(find.text(l10n.deskLinkErasingLine), findsOneWidget);
+      expect(find.text(l10n.deskLinkNotStarted), findsNothing);
       // no way back out of an erase under way
       final pop = await t.binding.handlePopRoute();
       await _settle(t);

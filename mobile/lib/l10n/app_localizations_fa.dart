@@ -4455,22 +4455,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'همین‌طور بماند';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'روی همین گوشی خوانده شد · ویدیو جایی نرفت';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'روی همین رایانه خوانده شد · ویدیو جایی نرفت';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'روی همین گوشی خوانده شد · عکس جایی نرفت';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'روی همین رایانه خوانده شد · عکس جایی نرفت';
-
-  @override
   String get photoKnowsReadingTheFile => 'خواندن فایل';
 
   @override
@@ -11758,6 +11742,9 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get deskLinkErasingLine =>
       'Kryfo تا لحظه‌ای دیگر دوباره با کدی برای اسکن باز می‌شود.';
+
+  @override
+  String get deskLinkNotStarted => 'پیوند شروع نشد. بعداً دوباره امتحان کنید.';
 
   @override
   String get settingsLinkedToYourPhone => 'به گوشی‌تان پیوند خورده';

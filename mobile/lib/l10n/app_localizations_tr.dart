@@ -4466,22 +4466,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Olduğu gibi kalsın';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'BU TELEFONDA OKUNDU · VİDEO HİÇBİR YERE GİTMEDİ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'BU BİLGİSAYARDA OKUNDU · VİDEO HİÇBİR YERE GİTMEDİ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'BU TELEFONDA OKUNDU · FOTOĞRAF HİÇBİR YERE GİTMEDİ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'BU BİLGİSAYARDA OKUNDU · FOTOĞRAF HİÇBİR YERE GİTMEDİ';
-
-  @override
   String get photoKnowsReadingTheFile => 'Dosya okunuyor';
 
   @override
@@ -11774,6 +11758,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get deskLinkErasingLine =>
       'Kryfo birazdan taranacak kodla yeniden açılır.';
+
+  @override
+  String get deskLinkNotStarted =>
+      'Bağlama başlatılamadı. Daha sonra tekrar dene.';
 
   @override
   String get settingsLinkedToYourPhone => 'Telefonuna bağlı';

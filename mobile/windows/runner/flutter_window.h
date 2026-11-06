@@ -51,6 +51,12 @@ class FlutterWindow : public Win32Window {
   // started with the computer (--hidden)
   bool start_hidden_ = false;
 
+  // a frame asked of dart now and of the engine, for a window that just
+  // came up or forward: coalesced, sent from the message loop
+  bool frame_asked_ = false;
+  void AskFrame();
+  void FrameNow();
+
   void ShowAndRaise();
   void HideToTray();
   void Quit();

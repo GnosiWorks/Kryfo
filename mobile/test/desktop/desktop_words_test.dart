@@ -920,18 +920,6 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.photoKnowsEverythingStaysOnThisDesk,
   ),
   (
-    'photoKnowsReadOnThisPhone',
-    (l) => l.photoKnowsReadOnThisPhoneShown,
-    (l) => l.photoKnowsReadOnThisPhone,
-    (l) => l.photoKnowsReadOnThisPhoneDesk,
-  ),
-  (
-    'photoKnowsReadOnThisPhoneThePhoto',
-    (l) => l.photoKnowsReadOnThisPhoneThePhotoShown,
-    (l) => l.photoKnowsReadOnThisPhoneThePhoto,
-    (l) => l.photoKnowsReadOnThisPhoneThePhotoDesk,
-  ),
-  (
     'qrCouldNotSaveIt',
     (l) => l.qrCouldNotSaveItShown,
     (l) => l.qrCouldNotSaveIt,

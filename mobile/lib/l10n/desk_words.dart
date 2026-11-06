@@ -158,8 +158,6 @@ const deskWordKeys = [
   'lockFileSaveToFiles',
   'openLockedItOpensOnThis',
   'photoKnowsEverythingStaysOnThis',
-  'photoKnowsReadOnThisPhone',
-  'photoKnowsReadOnThisPhoneThePhoto',
   'qrCouldNotSaveIt',
   'qrMadeOnThisPhone',
   'toolsEverythingHereHappensOn',
@@ -478,11 +476,6 @@ extension DeskWords on AppLocalizations {
   String get photoKnowsEverythingStaysOnThisShown => onDesktop
       ? photoKnowsEverythingStaysOnThisDesk
       : photoKnowsEverythingStaysOnThis;
-  String get photoKnowsReadOnThisPhoneShown =>
-      onDesktop ? photoKnowsReadOnThisPhoneDesk : photoKnowsReadOnThisPhone;
-  String get photoKnowsReadOnThisPhoneThePhotoShown => onDesktop
-      ? photoKnowsReadOnThisPhoneThePhotoDesk
-      : photoKnowsReadOnThisPhoneThePhoto;
   String get qrCouldNotSaveItShown =>
       onDesktop ? qrCouldNotSaveItDesk : qrCouldNotSaveIt;
   String get qrMadeOnThisPhoneShown =>

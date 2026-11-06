@@ -24,6 +24,8 @@ constexpr UINT_PTR kQuitTimer = 0x4B51;
 constexpr UINT_PTR kHiddenTimer = 0x4B53;
 // how long a hidden start waits for its tray icon before the window shows
 constexpr UINT kHiddenWaitMs = 10000;
+// the coalesced frame ask (AskFrame)
+constexpr UINT kFrameMsg = WM_APP + 3;
 
 // the files copied in explorer, as utf-8 paths
 flutter::EncodableList ClipboardFiles(HWND owner) {
@@ -348,7 +350,31 @@ void FlutterWindow::ShowAndRaise() {
   }
   if (joined) ::AttachThreadInput(mine, theirs, FALSE);
   // what was drawn while hidden is stale: one new frame
-  if (flutter_controller_) flutter_controller_->ForceRedraw();
+  FrameNow();
+}
+
+void FlutterWindow::AskFrame() {
+  HWND w = GetHandle();
+  if (frame_asked_ || !w) return;
+  frame_asked_ = ::PostMessageW(w, kFrameMsg, 0, 0) != FALSE;
+}
+
+// the engine's redraw is skipped while a resize waits for its frame, and
+// dart schedules nothing while it thinks the window hidden: dart is asked
+// for a forced frame as well, which it draws either way
+void FlutterWindow::FrameNow() {
+  frame_asked_ = false;
+  if (!flutter_controller_) return;
+  flutter_controller_->ForceRedraw();
+  if (!desktop_) return;
+  HWND w = GetHandle();
+  bool shown = w && ::IsWindowVisible(w) && !::IsIconic(w);
+  auto args = std::make_unique<flutter::EncodableValue>(flutter::EncodableMap{
+      {flutter::EncodableValue("shown"), flutter::EncodableValue(shown)},
+      {flutter::EncodableValue("active"),
+       flutter::EncodableValue(shown && ::GetForegroundWindow() == w)},
+  });
+  desktop_->InvokeMethod("frame", std::move(args));
 }
 
 // closing with the tray up only hides; the first time, the tray says so
@@ -437,6 +463,9 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_APP + 2:
       EndNow();
       return 0;
+    case kFrameMsg:
+      FrameNow();
+      return 0;
     case WM_WTSSESSION_CHANGE:
       if (wparam == static_cast<WPARAM>(WTS_SESSION_LOCK) ||
           wparam == static_cast<WPARAM>(WTS_SESSION_UNLOCK)) {
@@ -448,6 +477,13 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
         }
       }
       return 0;
+  }
+
+  // the window up, forward or back from the taskbar: a frame for it
+  if ((message == WM_SHOWWINDOW && wparam) ||
+      (message == WM_ACTIVATE && LOWORD(wparam) != WA_INACTIVE) ||
+      (message == WM_SIZE && (wparam == SIZE_RESTORED || wparam == SIZE_MAXIMIZED))) {
+    AskFrame();
   }
 
   // Give Flutter, including plugins, an opportunity to handle window messages.

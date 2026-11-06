@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../theme.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
@@ -112,7 +113,8 @@ class _Head extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 30, 22, 6),
+      // a computer has no status bar above: the chats tab's top
+      padding: EdgeInsets.fromLTRB(22, onDesktop ? 14 : 30, 22, 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

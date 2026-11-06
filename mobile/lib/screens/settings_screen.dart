@@ -321,13 +321,9 @@ class ProtectionMeter extends StatelessWidget {
   }
 }
 
-/// the computer's link rows show: on a computer, outside the decoy, a
-/// quiet session and a vault
-bool get deskLinkRows =>
-    kLinkedDevicesOn &&
-    onDesktop &&
-    !appState.inDecoyView &&
-    !lockState.inVault;
+/// the computer's link rows show on every computer, the decoy, a quiet
+/// session and a vault too: a missing section would tell them apart
+bool get deskLinkRows => kLinkedDevicesOn && onDesktop;
 
 /// the erase before a computer links to a phone, a stand-in in tests
 @visibleForTesting
@@ -466,14 +462,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) await _readDevices();
   }
 
-  // this computer's own Kryfo goes and the next run shows the code
+  // this computer's own Kryfo goes and the next run shows the code. the
+  // decoy and a quiet session see the same pages up to the word, which
+  // then erases nothing and starts no link. a vault is the everyday side's
   Future<void> _linkToPhone() async {
     HapticFeedback.selectionClick();
+    final quiet = appState.inDecoyView;
     await Navigator.of(context).push(
       haloRoute(
         DeskLinkScreen(
-          erase: () =>
-              deskLinkErase(releaseHandle: !sessionQuiet, thenLink: true),
+          side: session.container,
+          erase: quiet
+              ? null
+              : () => deskLinkErase(
+                  releaseHandle: !sessionQuiet,
+                  thenLink: true,
+                ),
         ),
       ),
     );
@@ -906,7 +910,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
             // a computer: linked to a phone, or its own Kryfo that may link
-            // to one. never in the decoy, a quiet session or a vault
+            // to one. the decoy, a quiet session and a vault show the same
             if (deskLinkRows) ...[
               HaloSection(l10n.settingsDevices),
               if (linkedRole) ...[

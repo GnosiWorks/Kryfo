@@ -273,17 +273,6 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                       ),
                     ),
                   ),
-                  Text(
-                    video
-                        ? l10n.photoKnowsReadOnThisPhoneShown
-                        : l10n.photoKnowsReadOnThisPhoneThePhotoShown,
-                    textAlign: TextAlign.center,
-                    style: HaloType.mono(
-                      size: 9.5,
-                      letter: 0.12,
-                      color: HaloColors.warm,
-                    ),
-                  ),
                 ],
               ),
             ),
