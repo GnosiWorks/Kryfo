@@ -235,8 +235,8 @@ extension AppStateFiles on AppState {
       if (!gets) {
         return (await _waitingPath(env, db, uid, kFetchAsks), waits: true);
       }
-      // a gif shows no share: it just appears
-      if (!env.gif) {
+      // a gif or a voice note shows no share: it just appears
+      if (!env.gif && !env.voice) {
         incomingMediaUpdate(
           db.container.chatKey(env.groupId ?? sender),
           0,
@@ -509,7 +509,13 @@ extension AppStateFiles on AppState {
         } else {
           // a blind fetch may have finished since the frame was kept
           await takeHeld(await d.container.mediaDir(), frame.token!, f.path);
-          final r = await _fetchOne(d, f, frame, chat, quiet: env.gif);
+          final r = await _fetchOne(
+            d,
+            f,
+            frame,
+            chat,
+            quiet: env.gif || env.voice,
+          );
           // the chat was cleared or put away while it came: nothing of it
           // is filed, and the service hears this phone is done with it
           final after = await fetchOf(db, f.uid);
@@ -685,7 +691,14 @@ extension AppStateFiles on AppState {
       ),
     );
     if (state != kFetchComing) return;
-    final r = await _fetchOne(d, f, frame, chat, waiting: true, quiet: env.gif);
+    final r = await _fetchOne(
+      d,
+      f,
+      frame,
+      chat,
+      waiting: true,
+      quiet: env.gif || env.voice,
+    );
     final after = await fetchOf(db, f.uid);
     if (after == null || await d.incomingFilePath(f.uid) == null) {
       setFileWait(f.uid, null);
@@ -745,7 +758,7 @@ extension AppStateFiles on AppState {
     DropFrame frame,
     String chat, {
     bool waiting = false,
-    // a gif: no share shows
+    // a gif or a voice note: no share shows
     bool quiet = false,
   }) async {
     final key = 'f:${frame.id}';

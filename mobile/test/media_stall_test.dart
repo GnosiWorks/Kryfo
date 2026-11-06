@@ -24,7 +24,7 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateOutbox,
         AppStateRoute;
-import 'package:kryfo/media_progress.dart' show mediaSendProgress;
+import 'package:kryfo/media_progress.dart' show mediaQuiet, mediaSendProgress;
 import 'package:kryfo/media_send.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/session.dart';
@@ -223,8 +223,10 @@ void main() {
     final going = send('v-stall');
     await _until(() => wire.hung.length == 4);
     expect(mediaInflight, contains('v-stall'));
-    // a voice note shows how far it is, as a photo does
+    // a voice note keeps its share for the stall, but shows none, as a
+    // gif does
     expect(mediaSendProgress['v-stall'], closeTo(3 / 7, 0.001));
+    expect(mediaQuiet('v-stall'), isTrue);
     final r = await going.timeout(const Duration(seconds: 10));
     expect(r, kMediaStalled);
     expect(mediaInflight, isNot(contains('v-stall')));

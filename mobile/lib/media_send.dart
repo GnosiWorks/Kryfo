@@ -217,7 +217,7 @@ Future<String> _sendChunkedMediaInner({
   }
   if (mediaCancelled.contains(msgUid)) return 'cancelled';
   if (!appState.torReady) return 'error: tor not ready';
-  // a gif shows no share on either side: it just appears
+  // a gif or a voice note shows no share on either side: it just appears
   final gif = quietMedia(path, fileName: fileName, voice: voice);
   // a photo is cleaned on every send, retries and the outbox included
   if (fileName == null && !voice) {
