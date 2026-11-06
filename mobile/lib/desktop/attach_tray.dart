@@ -122,8 +122,8 @@ Future<ui.Image?> decodeTrayBytes(Uint8List bytes) async {
   }
 }
 
-/// files copied in explorer, as paths, read off the clipboard by the
-/// runner. none where the runner has no such call (linux for now).
+/// files copied in explorer or a file manager, as paths, read off the
+/// clipboard by the runner. none where the runner has no such call.
 /// a copied picture's own data comes with clipboardPicture
 Future<List<String>> clipboardFiles() async {
   try {

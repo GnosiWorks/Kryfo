@@ -1,6 +1,7 @@
 #include "my_application.h"
 
 #include <flutter_linux/flutter_linux.h>
+#include <string.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
@@ -280,6 +281,164 @@ static void ask_portal(FlMethodCall* call, gboolean on, const gchar* reason) {
       G_DBUS_CALL_FLAGS_NONE, -1, nullptr, portal_called_cb, ask);
 }
 
+// ctrl and v in a composer or on the tools tab, as windows' runner answers
+// it: the files a file manager copied as paths, a copied picture as png
+// bytes. the clipboard is read when asked, never watched
+static const gsize kPictureMost = 160u * 1024 * 1024;
+// past this many characters words are no link (kLinkMost in dart)
+static const gsize kLinkMost = 8192;
+
+typedef struct {
+  FlMethodCall* call;
+  gchar* link;
+} ClipAsk;
+
+static ClipAsk* clip_ask_new(FlMethodCall* call) {
+  ClipAsk* ask = g_new0(ClipAsk, 1);
+  ask->call = FL_METHOD_CALL(g_object_ref(call));
+  return ask;
+}
+
+static void clip_answer(ClipAsk* ask, FlValue* result) {
+  g_autoptr(FlValue) owned = result;
+  fl_method_call_respond_success(ask->call, result, nullptr);
+  g_object_unref(ask->call);
+  g_free(ask->link);
+  g_free(ask);
+}
+
+static gboolean has_target(GdkAtom* atoms, gint n, const gchar* name) {
+  for (gint i = 0; i < n; i++) {
+    g_autofree gchar* a = gdk_atom_name(atoms[i]);
+    if (g_strcmp0(a, name) == 0) return TRUE;
+  }
+  return FALSE;
+}
+
+static void clip_files_got(GtkClipboard*, GtkSelectionData* data,
+                           gpointer user_data) {
+  ClipAsk* ask = static_cast<ClipAsk*>(user_data);
+  FlValue* files = fl_value_new_list();
+  const guchar* raw = data ? gtk_selection_data_get_data(data) : nullptr;
+  gint n = data ? gtk_selection_data_get_length(data) : 0;
+  if (raw != nullptr && n > 0) {
+    g_autofree gchar* text = g_strndup(reinterpret_cast<const gchar*>(raw), n);
+    g_auto(GStrv) lines = g_strsplit(text, "\n", -1);
+    // gnome's list starts with copy or cut, a uri list may hold comments:
+    // only local files are taken
+    for (gchar** l = lines; *l != nullptr; ++l) {
+      g_strstrip(*l);
+      if (!g_str_has_prefix(*l, "file://")) continue;
+      g_autofree gchar* path = g_filename_from_uri(*l, nullptr, nullptr);
+      if (path == nullptr) continue;
+      g_autofree gchar* utf8 =
+          g_filename_to_utf8(path, -1, nullptr, nullptr, nullptr);
+      if (utf8 != nullptr) fl_value_append_take(files, fl_value_new_string(utf8));
+    }
+  }
+  clip_answer(ask, files);
+}
+
+static void clip_files_targets(GtkClipboard* clip, GdkAtom* atoms, gint n,
+                               gpointer user_data) {
+  ClipAsk* ask = static_cast<ClipAsk*>(user_data);
+  const gchar* pick = nullptr;
+  if (has_target(atoms, n, "x-special/gnome-copied-files")) {
+    pick = "x-special/gnome-copied-files";
+  } else if (has_target(atoms, n, "text/uri-list")) {
+    pick = "text/uri-list";
+  }
+  if (pick == nullptr) {
+    clip_answer(ask, fl_value_new_list());
+    return;
+  }
+  gtk_clipboard_request_contents(clip, gdk_atom_intern(pick, FALSE),
+                                 clip_files_got, ask);
+}
+
+// words that are only a link once trimmed: firefox's copy image puts the
+// picture's address beside it. dart checks the link again
+static gboolean lone_link(const gchar* words) {
+  if (words == nullptr) return FALSE;
+  g_autofree gchar* t = g_strstrip(g_strdup(words));
+  gsize n = strlen(t);
+  if (n == 0 || n > kLinkMost) return FALSE;
+  for (const gchar* c = t; *c != '\0'; ++c) {
+    if (g_ascii_isspace(*c)) return FALSE;
+  }
+  return g_str_has_prefix(t, "http://") || g_str_has_prefix(t, "https://");
+}
+
+static void clip_picture_got(GtkClipboard*, GtkSelectionData* data,
+                             gpointer user_data) {
+  ClipAsk* ask = static_cast<ClipAsk*>(user_data);
+  const guchar* raw = data ? gtk_selection_data_get_data(data) : nullptr;
+  gint n = data ? gtk_selection_data_get_length(data) : 0;
+  if (raw == nullptr || n <= 0 || static_cast<gsize>(n) > kPictureMost) {
+    clip_answer(ask, fl_value_new_null());
+    return;
+  }
+  FlValue* got = fl_value_new_map();
+  fl_value_set_string_take(got, "kind", fl_value_new_string("png"));
+  fl_value_set_string_take(got, "bytes", fl_value_new_uint8_list(raw, n));
+  if (ask->link != nullptr) {
+    fl_value_set_string_take(got, "text", fl_value_new_string(ask->link));
+  }
+  clip_answer(ask, got);
+}
+
+static void clip_picture_text(GtkClipboard* clip, const gchar* text,
+                              gpointer user_data) {
+  ClipAsk* ask = static_cast<ClipAsk*>(user_data);
+  // words beside a picture paste as words, unless only a link
+  if (text != nullptr && !lone_link(text)) {
+    clip_answer(ask, fl_value_new_null());
+    return;
+  }
+  if (text != nullptr) ask->link = g_strstrip(g_strdup(text));
+  gtk_clipboard_request_contents(clip, gdk_atom_intern("image/png", FALSE),
+                                 clip_picture_got, ask);
+}
+
+static void clip_picture_targets(GtkClipboard* clip, GdkAtom* atoms, gint n,
+                                 gpointer user_data) {
+  ClipAsk* ask = static_cast<ClipAsk*>(user_data);
+  // files copied in a file manager are files, not a picture
+  if (atoms == nullptr || !has_target(atoms, n, "image/png") ||
+      has_target(atoms, n, "x-special/gnome-copied-files") ||
+      has_target(atoms, n, "text/uri-list")) {
+    clip_answer(ask, fl_value_new_null());
+    return;
+  }
+  if (gtk_targets_include_text(atoms, n)) {
+    gtk_clipboard_request_text(clip, clip_picture_text, ask);
+    return;
+  }
+  clip_picture_text(clip, nullptr, ask);
+}
+
+// "Copy picture": a png kryfo made (a qr, a cleaned picture), kept by this
+// app on the clipboard until something else is copied
+static gboolean set_clip_picture(FlValue* args) {
+  FlValue* png = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP
+                     ? fl_value_lookup_string(args, "png")
+                     : nullptr;
+  if (png == nullptr || fl_value_get_type(png) != FL_VALUE_TYPE_UINT8_LIST) {
+    return FALSE;
+  }
+  gsize n = fl_value_get_length(png);
+  if (n == 0 || n > kPictureMost) return FALSE;
+  g_autoptr(GdkPixbufLoader) loader = gdk_pixbuf_loader_new_with_type("png", nullptr);
+  if (loader == nullptr) return FALSE;
+  gboolean ok = gdk_pixbuf_loader_write(loader, fl_value_get_uint8_list(png), n,
+                                        nullptr);
+  ok = gdk_pixbuf_loader_close(loader, nullptr) && ok;
+  GdkPixbuf* pixbuf = ok ? gdk_pixbuf_loader_get_pixbuf(loader) : nullptr;
+  if (pixbuf == nullptr) return FALSE;
+  gtk_clipboard_set_image(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), pixbuf);
+  return TRUE;
+}
+
 static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
                             gpointer user_data) {
   MyApplication* self = MY_APPLICATION(user_data);
@@ -316,6 +475,18 @@ static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
   } else if (g_strcmp0(fl_method_call_get_name(call), "startHidden") == 0) {
     g_autoptr(FlValue) hidden = fl_value_new_bool(self->start_hidden);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(hidden));
+  } else if (g_strcmp0(fl_method_call_get_name(call), "clipFiles") == 0) {
+    gtk_clipboard_request_targets(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
+                                  clip_files_targets, clip_ask_new(call));
+    return;
+  } else if (g_strcmp0(fl_method_call_get_name(call), "clipPicture") == 0) {
+    gtk_clipboard_request_targets(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD),
+                                  clip_picture_targets, clip_ask_new(call));
+    return;
+  } else if (g_strcmp0(fl_method_call_get_name(call), "setClipPicture") == 0) {
+    g_autoptr(FlValue) ok =
+        fl_value_new_bool(set_clip_picture(fl_method_call_get_args(call)));
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(ok));
   } else if (g_strcmp0(fl_method_call_get_name(call), "show") == 0) {
     show_window(self);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
