@@ -1833,15 +1833,22 @@ func openChunkAt(h int64, index uint64, typ byte, sealed, dst []byte) int {
 	return len(plain)
 }
 
-// how long one watch waits for an upload before it looks again. a var for
-// the tests
-var hsdirWait = 120 * time.Second
+// how long one watch waits for an upload before it looks again. set by the
+// tests alone
+var hsdirWaitNs atomic.Int64
+
+func hsdirWait() time.Duration {
+	if d := hsdirWaitNs.Load(); d > 0 {
+		return time.Duration(d)
+	}
+	return 120 * time.Second
+}
 
 // watchHSDirUpload reads tor's HS_DESC events and returns true as soon as
 // our descriptor is uploaded, or false after hsdirWait. most networks
 // upload within 5-15 seconds.
 func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string, gone chan struct{}) bool {
-	timeout := time.After(hsdirWait)
+	timeout := time.After(hsdirWait())
 	if t == nil || t.Control == nil || !subbed {
 		select {
 		case <-gone:
@@ -1891,7 +1898,7 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 		case <-gone:
 			return false
 		case <-timeout:
-			log.Printf("halo: no hsdir upload confirmed in %s, staying in publishing and still trying", hsdirWait)
+			log.Printf("halo: no hsdir upload confirmed in %s, staying in publishing and still trying", hsdirWait())
 			return false
 		}
 	}

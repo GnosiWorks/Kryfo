@@ -428,9 +428,13 @@ func TestAQuietWakeHoldsNoStart(t *testing.T) {
 // again and the onion that is up turns reachable
 func TestAQuietSubscriptionIsMadeAgain(t *testing.T) {
 	setCtrlDeadline(t, 200*time.Millisecond)
-	old := hsdirWait
-	hsdirWait = 300 * time.Millisecond
-	t.Cleanup(func() { hsdirWait = old })
+	hsdirWaitNs.Store(int64(300 * time.Millisecond))
+	t.Cleanup(func() { hsdirWaitNs.Store(0) })
+	// no other test's watch starts meanwhile
+	waitFor(t, "the watcher slot", 5*time.Second, func() bool {
+		return atomic.CompareAndSwapInt32(&publishWatching, 0, 1)
+	})
+	t.Cleanup(func() { atomic.StoreInt32(&publishWatching, 0) })
 	q := newQuietPort(t, "")
 	n := fakeTor(t, q.port())
 	t.Cleanup(eventReset)
