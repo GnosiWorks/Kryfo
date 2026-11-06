@@ -76,7 +76,7 @@ extension AppStateRooms on AppState {
     required Duration expiry,
     int? cap,
   }) async {
-    // burner rooms stay on the phone (mario 2026-10-30)
+    // burner rooms stay on the phone
     if (linkedRole) throw StateError('no rooms on a linked device');
     final k = engine.roomKeygen();
     if (k == null) throw StateError('could not make a room key');

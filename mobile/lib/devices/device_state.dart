@@ -123,7 +123,7 @@ class DeviceState {
   int skipped = 0;
 
   /// the contacts whose lists name a key someone else holds, from the
-  /// last call that said: the alarm goes on them (step 8)
+  /// last call that said: the alarm goes on them
   List<String> claimants = const [];
 
   Map<String, dynamic> _answer(String raw) {

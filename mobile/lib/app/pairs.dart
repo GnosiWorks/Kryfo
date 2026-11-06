@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the pair each relay call runs on, read from the containers at the call:
 // the engine takes the mode (v3 or seeded) from the call alone, so it never
-// depends on what sits in engine memory (identity v4 3.6)
+// depends on what sits in engine memory
 
 part of '../main.dart';
 

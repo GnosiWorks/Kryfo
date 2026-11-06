@@ -2,7 +2,7 @@
 // contacts never see how many devices you have: no message counts devices,
 // and the devices words and model reach only your own settings pages,
 // never a contact's page, a chat or a group. a contact's chat says only
-// that their verified list added or dropped a device (mario 2026-11-05)
+// that their verified list added or dropped a device
 import 'dart:convert';
 import 'dart:io';
 

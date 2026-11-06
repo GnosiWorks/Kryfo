@@ -149,7 +149,7 @@ extension AppStateHeal on AppState {
     _waitingCard.add(peer);
     // only marked: the next pass sends it first, inside its budget of
     // eight, so a busy start does not put out a heal to everyone it
-    // touches at once (8, R6)
+    // touches at once
     _healWanted.add(peer);
     return null;
   }
@@ -185,7 +185,7 @@ extension AppStateHeal on AppState {
 
   // the gap between two passes: 10 to 30 minutes at random, so the heals
   // of one restore go out over hours and two contacts comparing when
-  // theirs came learn little (8, R6)
+  // theirs came learn little
   static int _afreshGap(Random r) =>
       const Duration(minutes: 10).inMilliseconds +
       r.nextInt(const Duration(minutes: 20).inMilliseconds);
@@ -558,8 +558,8 @@ extension AppStateHeal on AppState {
     return ok;
   }
 
-  /// what follows a restore or a move, once, on the first start after it
-  /// (8), with every store open: each identity's unused one-time invites
+  /// what follows a restore or a move, once, on the first start after it,
+  /// with every store open: each identity's unused one-time invites
   /// go (one may have been answered since the file was made) and its
   /// session prekeys are made again, and pool identities retire. the main
   /// invites stay: links and the handle keep working. true when every
@@ -728,7 +728,7 @@ extension AppStateHeal on AppState {
       }
       // a card builds a first session only (an introduction). with one held
       // the heal is a KHB1, which shows and holds: a json card would
-      // rebuild quietly whatever the sender chose (11 step 8, 3.8)
+      // rebuild quietly whatever the sender chose
       if (await ss.hasSession(from)) {
         dlog('bundle ctl: a session is held with $from, refused');
         return;

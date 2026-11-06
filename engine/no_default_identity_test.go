@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// no default identity (identity v4 4.2): nothing that seals, opens,
+// no default identity: nothing that seals, opens,
 // listens or derives an address reads the main identity's key from the
 // globals, and the forms that did are gone, so a call that forgets the
 // identity does not compile. the globals are read only where the face is

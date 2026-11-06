@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// linked devices, receiving (step 7 job 5): bob's devices write to ana's
+// linked devices, receiving: bob's devices write to ana's
 // phone on their own device pairs. a copy opens only on its device's
 // session and only once the engine admitted it; a device off the list is
 // refused at once and its session goes with the list; an opener from a

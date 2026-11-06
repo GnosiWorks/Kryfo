@@ -400,7 +400,7 @@ func TestOnlyTheIdentitySigns(t *testing.T) {
 	if _, err := ReadList(forged, s); !errors.Is(err, ErrSignature) {
 		t.Fatalf("a foreign signature: %v", err)
 	}
-	// the stand-in, like the shim after phase 2, will not sign a body that
+	// the stand-in, like the shim, will not sign a body that
 	// names another identity
 	if _, err := b.id.Sign(ContextList, a.list.Body()); err == nil {
 		t.Fatal("signed another identity's body")

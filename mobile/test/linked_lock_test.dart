@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a linked device's own end (linked step 7, job 9): unused for 30 days by
+// a linked device's own end: unused for 30 days by
 // its clock it ends, a person's use starts the count again, a clock set
 // back ends it (a thief cannot buy time that way), and a lock state that
 // does not read under its key ends it too. a fake clock and a folder of its

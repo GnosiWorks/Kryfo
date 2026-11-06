@@ -97,7 +97,7 @@ class SignalSession {
     );
 
     // the v3 invite's keys went with the first v4 main invite's year: none
-    // is made again (identity v4 2.3, R23)
+    // is made again
     final legacy = !await _legacyGone();
     // a signed prekey the old library made reads here as it is
     final spk = legacy ? await signedPreKeyStore.load(1) : null;
@@ -224,7 +224,7 @@ class SignalSession {
 
   /// after a restore or a move: the session prekeys the file brought may
   /// have gone out from the old phone since, so a new pair is made now.
-  /// the one it replaces still opens for its grace (identity v4 8)
+  /// the one it replaces still opens for its grace
   Future<void> replaceSessionPreKeys({int? now}) =>
       _newSessionPreKeys(now ?? _now());
 
@@ -428,7 +428,7 @@ class SignalSession {
 
   /// told when a message from [peer] opened on a post-quantum state of a
   /// record that still holds classic ones: their side of a pq restart is
-  /// done (identity v4 11 step 6). told on each, until the drop
+  /// done. told on each, until the drop
   void Function(String peer)? onPqOver;
 
   /// asked before a seal that would be an opener: true when one went
@@ -909,7 +909,7 @@ class SignalSession {
   }
 
   /// [peer]'s held classic session started again on [bundle], the KDB1
-  /// their phone sent inside it (identity v4 11 step 5): a pqxdh session
+  /// their phone sent inside it: a pqxdh session
   /// on the identity the held one runs on, in front of it, the classic
   /// state archived so what was sealed on it still opens. the next seal is
   /// its opener. false when nothing is held, or the held one runs on
@@ -942,7 +942,7 @@ class SignalSession {
   });
 
   /// [peer]'s record without its classic states, once their side of the pq
-  /// restart is 15 days done (identity v4 11 step 6): what was sealed on
+  /// restart is 15 days done: what was sealed on
   /// them has left every relay. how many went, or null when the record is
   /// kept as it is (none held, a pq state not in front, or an opener of it
   /// not answered yet: the shim refuses those, and the next try asks again)
@@ -1296,7 +1296,7 @@ class SignalSession {
     }
   }
 
-  /// the keys of v4 invite [inviteId] (identity v4 2.1): a signed prekey
+  /// the keys of v4 invite [inviteId]: a signed prekey
   /// and a last resort kyber prekey with random ids, named by the invite,
   /// and with [ec] a one-time ec prekey (a one-time invite's). they live
   /// and go with the invite, never with the session prekeys
@@ -1344,7 +1344,7 @@ class SignalSession {
   }
 
   /// the keys an invite named, gone with every opener read on its kyber
-  /// key: nothing sealed to them opens here again (R23)
+  /// key: nothing sealed to them opens here again
   Future<void> dropInviteKeys({
     required int? spkId,
     required int? kyberId,

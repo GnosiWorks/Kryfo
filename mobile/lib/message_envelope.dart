@@ -88,13 +88,13 @@ class UnwrappedMessage {
   // 'cp': what the sender's phone understands, on every 1:1 and group
   // frame. null from a version without it
   final List<String>? caps;
-  // a v4 opener's (identity v4 3.1): 'pg' the protocol generation, 'as'
+  // a v4 opener's: 'pg' the protocol generation, 'as'
   // the pair's address seed in hex, 'fs' the face signature in hex
   final int? protoGen;
   final String? addrSeed;
   final String? faceSig;
   // 'rq': a KDB1 of the sender's phone in base64, inside a held classic
-  // session: the pq restart (identity v4 11 step 5). nothing else in the
+  // session: the pq restart. nothing else in the
   // frame counts
   final String? pqRestart;
   // 'pp': a slice of the sender's profile photo, or its take-back

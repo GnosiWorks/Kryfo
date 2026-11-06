@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// receiving from devices (linked devices step 7, job 5): a copy on a device
+// receiving from devices: a copy on a device
 // pair is opened on that device's session and admitted by the engine
 // (Admit, AdmitOpener) before anything of it is kept or shown; a refused
 // one is wiped. the four list and bundle frames ('dl', 'db', 'dq', 'dh')
@@ -184,7 +184,7 @@ class DeviceReceive {
   blockedChat;
   final int Function() _clock;
 
-  /// what my own devices send beyond lists and bundles (job 8): set once
+  /// what my own devices send beyond lists and bundles: set once
   /// the app can file them
   OwnSync? ownSync;
 

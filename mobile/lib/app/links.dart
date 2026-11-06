@@ -229,7 +229,7 @@ Future<(String, bool)> handleHaloUriAdded(
   // can start on it, so nothing here changes for it
   final card = parsed['bundle'];
   // a v3 link with its first-contact address: a hello goes there, which an
-  // owner on 0.6 answers whatever card the link carries (11 step 7)
+  // owner on 0.6 answers whatever card the link carries
   final helloFc = parsed['v'] == '3' ? parsed['fc'] : null;
   if (card != null && helloFc == null && bundleFault(card) is ClassicRefused) {
     return (
@@ -532,7 +532,7 @@ Future<(String, bool)> handleHaloUriAdded(
   }
 }
 
-// a pair code's sharer adding the joiner (identity v4 6, 3.4b): the joiner
+// a pair code's sharer adding the joiner: the joiner
 // starts the one session, so their row is written and their opener waited
 // for on [mine], the one-time invite the code sealed to them, from their
 // key alone. one with a session on their key already goes on as it is
@@ -591,7 +591,7 @@ Future<(String, bool)> _addByPairCode(
   return (already ? l10n.appAlreadySaved(id) : '', true);
 }
 
-// an add from a v3 link (11 step 7), or a v4 qr answering its invite
+// an add from a v3 link, or a v4 qr answering its invite
 // [answers]: their row, and a hello to the first-contact address that waits
 // for their accept. one with a session on their key already is taken in as
 // it is, and one whose hello waits here is answered: nothing to ask

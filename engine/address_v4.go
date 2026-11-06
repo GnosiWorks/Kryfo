@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// conversation addresses of a v4 pair (identity v4 3.6): the pair a v4
+// conversation addresses of a v4 pair: the pair a v4
 // first contact made. as v3 they name their owner and hold both keys in
 // the salt; the key material also takes S, the 32-byte seed the opener
 // carried inside the post-quantum session, so relay logs recorded today

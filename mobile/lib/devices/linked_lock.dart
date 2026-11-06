@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a linked device's own end (linked devices step 7, job 9): when a person
+// a linked device's own end: when a person
 // last used it and the highest clock it has seen, readable before any
 // unlock and kept under a mac whose key is in the secret store. a device
 // not used for 30 days by its clock, one whose clock went back, and one

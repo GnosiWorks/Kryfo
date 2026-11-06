@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pq restart on the side that builds it (identity v4 11 steps 5 and
-// 6): the app is alice, whose key is the larger; bob's KDB1 comes inside
+// the pq restart on the side that builds it: the app is alice, whose key is the larger; bob's KDB1 comes inside
 // their held classic session. one too old, or from a 0.5.x shaped frame,
 // starts nothing. a fresh one starts the pq session and its opener goes at
 // once; bob's answer notes the time, the chat gets its line, and 15 days

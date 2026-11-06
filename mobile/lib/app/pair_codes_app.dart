@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// eight digit pair codes in the app (identity v4 6, 3.4b): each side seals
+// eight digit pair codes in the app: each side seals
 // a fresh one-time invite of its own into the run; once the code matched,
 // the joiner adds the sharer as from a v4 link (it starts the session) and
 // the sharer adds the joiner and waits for that opener on the invite it

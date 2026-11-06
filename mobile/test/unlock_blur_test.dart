@@ -30,7 +30,10 @@ import 'desktop/sealed_file_test.dart' show ToyCrypto;
 import 'host_engine.dart';
 import 'sqlite_ffi.dart' show holds;
 
-const _corpus = '/home/mario/kryfo-notes/cleaner-corpus/samsung';
+// real phone files stay outside the repo: KRYFO_CORPUS names their folder
+final _root = Platform.environment['KRYFO_CORPUS'];
+final _noCorpus = _root == null ? 'needs KRYFO_CORPUS' : null;
+final _corpus = p.join(_root ?? '', 'cleaner-corpus', 'samsung');
 final _wide = p.join(_corpus, '20261022_135215.jpg');
 final _other = p.join(_corpus, '20261022_135238.jpg');
 final _tall = p.join(_corpus, 'Screenshot_20261022-135445_Camera.jpg');
@@ -77,7 +80,9 @@ class _Alive {
   }
 }
 
-void main() {
+void main() => group('real photos', _main, skip: _noCorpus);
+
+void _main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final engine = loadHostEngine();
   final ChunkCrypto crypto = engine ? const EngineChunkCrypto() : ToyCrypto();

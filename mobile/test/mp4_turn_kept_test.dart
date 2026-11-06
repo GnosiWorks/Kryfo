@@ -9,9 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/clean_media.dart';
 import 'package:kryfo/mp4_strip.dart';
 
-// a real upright clip from the samsung's own camera: 1920x1080 and a turn
-const _upright =
-    '/home/mario/kryfo-notes/cleaner-corpus/samsung/20261022_135332.mp4';
+// real phone files stay outside the repo: KRYFO_CORPUS names their folder
+final _root = Platform.environment['KRYFO_CORPUS'];
+final _noCorpus = _root == null ? 'needs KRYFO_CORPUS' : null;
+
+// a real upright clip from a phone camera: 1920x1080 and a turn
+final _upright = '${_root ?? ''}/cleaner-corpus/samsung/20261022_135332.mp4';
 
 Uint8List box(String type, List<int> payload) {
   final size = 8 + payload.length;
@@ -141,7 +144,7 @@ void main() {
     final out = await f.readAsBytes();
     expect(turnsOf(out).toString(), before.toString());
     expect(await mp4MetadataCount(f.path), 0);
-  });
+  }, skip: _noCorpus);
 }
 
 int _be(Uint8List b, int at) =>

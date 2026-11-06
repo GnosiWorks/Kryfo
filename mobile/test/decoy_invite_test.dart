@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the decoy's main v4 invite (identity v4 10, R17) beside the everyday one:
+// the decoy's main v4 invite beside the everyday one:
 // the same code on its own store, the same sizes and flags, read back the
 // same way. its times are an everyday phone's: never before the decoy was
 // born or the phone first ran v4, never older than a reissue, made again

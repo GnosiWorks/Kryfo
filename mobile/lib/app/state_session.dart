@@ -37,7 +37,7 @@ extension AppStateSession on AppState {
 
   // a counter that did not read is never taken as 0: an invite to an
   // address nobody listens on loses every first message sent to it
-  // the main v4 invite once it is made (identity v4 2.1)
+  // the main v4 invite once it is made
   Future<String> _everydayInvite() async {
     try {
       final v4 = await myV4Invite();
@@ -184,7 +184,7 @@ extension AppStateSession on AppState {
     );
   }
 
-  // the decoy's main v4 invite kept on its own store (identity v4 10, R17),
+  // the decoy's main v4 invite kept on its own store,
   // signed with its own face key. read from the everyday side: only when
   // this phone was set up and first ran v4, so its times fit the app's
   Future<InviteRow> _decoyInvite(
@@ -218,7 +218,7 @@ extension AppStateSession on AppState {
     }
   }
 
-  // when the decoy's identity says it was made (R17): once, a random point
+  // when the decoy's identity says it was made: once, a random point
   // between when this phone was set up and the decoy's oldest message or
   // its own making, then kept. its identity rows carry it
   Future<int> _decoyBorn(Database raw) async {

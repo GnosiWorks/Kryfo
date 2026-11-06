@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// removing linked devices (step 7 job 9): the phone signs its list without
+// removing linked devices: the phone signs its list without
 // the device, its last word (that list) is sealed on its session before the
 // session goes and handed to the relay until it takes it, and the device
 // loses every way back in here (session, pool, copies, seeds, history copy,
@@ -954,7 +954,6 @@ void main() {
     expect(s, hasLength(1));
     expect(s.single['rebuild'], isTrue);
   });
-  // ---- the job 9 review ----
 
   const bobPeer = 'bob-quiet-river';
   DevMe meOf(_Phone w) =>

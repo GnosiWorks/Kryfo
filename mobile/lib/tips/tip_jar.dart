@@ -16,7 +16,7 @@ import '../supporter.dart';
 import 'tip_billing.dart';
 
 /// the products, made in the play console as one-time products under these
-/// ids, with the badge each one gives. the ids are mario's to make there
+/// ids, with the badge each one gives
 const kTipProducts = {
   'tip_supporter': SupporterTier.supporter,
   'tip_patron': SupporterTier.patron,
