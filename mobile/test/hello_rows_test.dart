@@ -1422,7 +1422,9 @@ void main() {
         (await app.helloWaitOf(p.words, nowMs: t0 + 9 * 24 * hour)).update,
         isTrue,
       );
-    });
+      // thirteen hellos, each with its real proof of work: about 1.5 s a
+      // grind on average but some take 10 s or more, past the default 30 s
+    }, timeout: const Timeout(Duration(minutes: 3)));
 
     test('a phone asleep past the first steps sends one hello, not the '
         'ones it missed', () async {
