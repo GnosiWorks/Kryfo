@@ -57,7 +57,9 @@ TranslationHub _live() {
     wifiWait: const Duration(seconds: 5),
   );
   String? dir;
-  modelsDir().then((d) => dir = d, onError: (Object _) => null);
+  // no storage folder to ask (a test, a broken plugin): no config, so
+  // nothing translates, and nothing throws
+  modelsDir().then<void>((d) => dir = d, onError: (Object _) {});
   final translator = BergamotTranslator(
     installed: (f, t) => downloads.installed(catalog.bundleFor(f, t)?.id ?? ''),
     config: (f, t) => dir == null ? null : engine.config(f, t, dir!),
