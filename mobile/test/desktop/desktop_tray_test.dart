@@ -908,4 +908,43 @@ void main() {
       );
     });
   });
+
+  group('linux tray on gnome', () {
+    final cc = File('linux/runner/my_application.cc').readAsStringSync();
+    final cmake = File('linux/runner/CMakeLists.txt').readAsStringSync() +
+        File('linux/CMakeLists.txt').readAsStringSync();
+
+    test('a statusnotifieritem comes first, the status icon after', () {
+      final make = cc.indexOf('static void make_tray(');
+      final indicated = cc.indexOf('make_indicator(self, open_item)', make);
+      final status = cc.indexOf('gtk_status_icon_new_from_file', make);
+      expect(indicated, greaterThan(make));
+      expect(status, greaterThan(indicated));
+      expect(cc.indexOf('if (indicated) return;', indicated),
+          lessThan(status));
+    });
+
+    test('the indicator library is opened at run time, never linked', () {
+      expect(cc, contains('dlopen(name, RTLD_NOW | RTLD_LOCAL)'));
+      expect(cc, contains('"libayatana-appindicator3.so.1"'));
+      expect(cmake, isNot(contains('appindicator')));
+    });
+
+    test('shown only while a host watches for items', () {
+      expect(cc, contains('"org.kde.StatusNotifierWatcher"'));
+      final shown = cc.indexOf('static gboolean tray_shown(');
+      expect(cc.indexOf('return sni_host();', shown), greaterThan(shown));
+      final make = cc.indexOf('static gboolean make_indicator(');
+      expect(cc.indexOf('if (!sni_host()) return FALSE;', make),
+          greaterThan(make));
+    });
+
+    test('the tray switch off and the end drop the indicator', () {
+      final drop = cc.indexOf('static void drop_tray(');
+      expect(cc.indexOf('drop_indicator(self);', drop), greaterThan(drop));
+      final dispose = cc.indexOf('static void my_application_dispose(');
+      expect(cc.indexOf('drop_indicator(self);', dispose),
+          greaterThan(dispose));
+    });
+  });
 }

@@ -1,6 +1,7 @@
 #include "my_application.h"
 
 #include <flutter_linux/flutter_linux.h>
+#include <dlfcn.h>
 #include <string.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
@@ -13,6 +14,9 @@ struct _MyApplication {
   char** dart_entrypoint_arguments;
   GtkWindow* window;
   GtkStatusIcon* tray;
+  // a statusnotifieritem through libayatana-appindicator, when the desktop
+  // has a host for one (gnome's appindicator extension, kde, xfce)
+  GObject* indicator;
   GtkWidget* tray_menu;
   FlMethodChannel* desktop_channel;
   guint quit_timer;
@@ -29,8 +33,9 @@ static const guint kHiddenWaitSeconds = 10;
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 // the tray keeps the app running with the window closed, so messages keep
-// arriving. gtk's status icon is the one tray every x11 desktop shows; on a
-// desktop without a tray, closing the window ends the app as before
+// arriving. a statusnotifieritem first (gnome on wayland shows only that,
+// through its appindicator extension), else gtk's status icon for x11 trays;
+// on a desktop without a tray, closing the window ends the app as before
 G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 
 static void show_window(MyApplication* self) {
@@ -43,7 +48,68 @@ static void show_window(MyApplication* self) {
   gtk_window_present(self->window);
 }
 
+// libayatana-appindicator3 is opened at run time, so the app starts without
+// it and falls back to gtk's status icon
+typedef struct {
+  GObject* (*new_with_path)(const gchar*, const gchar*, int, const gchar*);
+  void (*set_status)(GObject*, int);
+  void (*set_menu)(GObject*, GtkMenu*);
+  void (*set_title)(GObject*, const gchar*);
+  void (*set_secondary)(GObject*, GtkWidget*);
+} Indicator;
+
+static const int kIndicatorCommunications = 1;
+static const int kIndicatorPassive = 0;
+static const int kIndicatorActive = 1;
+
+static const Indicator* indicator_lib() {
+  static Indicator lib;
+  static int state = 0;
+  if (state != 0) return state > 0 ? &lib : nullptr;
+  state = -1;
+  const char* names[] = {"libayatana-appindicator3.so.1",
+                         "libappindicator3.so.1"};
+  for (const char* name : names) {
+    void* h = dlopen(name, RTLD_NOW | RTLD_LOCAL);
+    if (h == nullptr) continue;
+    lib.new_with_path = reinterpret_cast<decltype(lib.new_with_path)>(
+        dlsym(h, "app_indicator_new_with_path"));
+    lib.set_status = reinterpret_cast<decltype(lib.set_status)>(
+        dlsym(h, "app_indicator_set_status"));
+    lib.set_menu = reinterpret_cast<decltype(lib.set_menu)>(
+        dlsym(h, "app_indicator_set_menu"));
+    lib.set_title = reinterpret_cast<decltype(lib.set_title)>(
+        dlsym(h, "app_indicator_set_title"));
+    lib.set_secondary = reinterpret_cast<decltype(lib.set_secondary)>(
+        dlsym(h, "app_indicator_set_secondary_activate_target"));
+    if (lib.new_with_path != nullptr && lib.set_status != nullptr &&
+        lib.set_menu != nullptr) {
+      state = 1;
+      return &lib;
+    }
+    dlclose(h);
+  }
+  return nullptr;
+}
+
+// someone on the session bus shows statusnotifieritems
+static gboolean sni_host() {
+  g_autoptr(GDBusConnection) bus =
+      g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, nullptr);
+  if (bus == nullptr) return FALSE;
+  g_autoptr(GVariant) r = g_dbus_connection_call_sync(
+      bus, "org.freedesktop.DBus", "/org/freedesktop/DBus",
+      "org.freedesktop.DBus", "NameHasOwner",
+      g_variant_new("(s)", "org.kde.StatusNotifierWatcher"),
+      G_VARIANT_TYPE("(b)"), G_DBUS_CALL_FLAGS_NONE, 1000, nullptr, nullptr);
+  if (r == nullptr) return FALSE;
+  gboolean owned = FALSE;
+  g_variant_get(r, "(b)", &owned);
+  return owned;
+}
+
 static gboolean tray_shown(MyApplication* self) {
+  if (self->indicator != nullptr) return sni_host();
   return self->tray != nullptr && gtk_status_icon_is_embedded(self->tray);
 }
 
@@ -98,17 +164,50 @@ static void tray_popup_cb(GtkStatusIcon* icon, guint button, guint time,
                  gtk_status_icon_position_menu, icon, button, time);
 }
 
-static gchar* icon_path() {
+static gchar* data_dir() {
   g_autofree gchar* exe = g_file_read_link("/proc/self/exe", nullptr);
   if (exe == nullptr) return nullptr;
   g_autofree gchar* dir = g_path_get_dirname(exe);
-  return g_build_filename(dir, "data", "kryfo.png", nullptr);
+  return g_build_filename(dir, "data", nullptr);
+}
+
+static gchar* icon_path() {
+  g_autofree gchar* dir = data_dir();
+  if (dir == nullptr) return nullptr;
+  return g_build_filename(dir, "kryfo.png", nullptr);
+}
+
+// data/kryfo.png is the indicator's icon, found by name in data/
+static gboolean make_indicator(MyApplication* self, GtkWidget* open_item) {
+  const Indicator* lib = indicator_lib();
+  if (lib == nullptr) return FALSE;
+  if (self->indicator == nullptr) {
+    if (!sni_host()) return FALSE;
+    g_autofree gchar* dir = data_dir();
+    self->indicator = lib->new_with_path(APPLICATION_ID, "kryfo",
+                                         kIndicatorCommunications, dir);
+    if (self->indicator == nullptr) return FALSE;
+  }
+  lib->set_menu(self->indicator, GTK_MENU(self->tray_menu));
+  if (lib->set_title != nullptr) lib->set_title(self->indicator, "Kryfo");
+  if (lib->set_secondary != nullptr) {
+    lib->set_secondary(self->indicator, open_item);
+  }
+  lib->set_status(self->indicator, kIndicatorActive);
+  return TRUE;
+}
+
+static void drop_indicator(MyApplication* self) {
+  if (self->indicator == nullptr) return;
+  const Indicator* lib = indicator_lib();
+  if (lib != nullptr) lib->set_status(self->indicator, kIndicatorPassive);
+  g_clear_object(&self->indicator);
 }
 
 // dart sends the menu's words in the app's language once it knows them
 static void make_tray(MyApplication* self, const gchar* open,
                       const gchar* quit, const gchar* tip) {
-  if (self->tray_menu != nullptr) gtk_widget_destroy(self->tray_menu);
+  GtkWidget* old_menu = self->tray_menu;
   self->tray_menu = gtk_menu_new();
   GtkWidget* open_item = gtk_menu_item_new_with_label(open);
   GtkWidget* quit_item = gtk_menu_item_new_with_label(quit);
@@ -117,6 +216,10 @@ static void make_tray(MyApplication* self, const gchar* open,
   gtk_menu_shell_append(GTK_MENU_SHELL(self->tray_menu), open_item);
   gtk_menu_shell_append(GTK_MENU_SHELL(self->tray_menu), quit_item);
   gtk_widget_show_all(self->tray_menu);
+  // the indicator takes the new menu before the old one goes
+  gboolean indicated = self->tray == nullptr && make_indicator(self, open_item);
+  if (old_menu != nullptr) gtk_widget_destroy(old_menu);
+  if (indicated) return;
   if (self->tray == nullptr) {
     g_autofree gchar* path = icon_path();
     self->tray = path != nullptr && g_file_test(path, G_FILE_TEST_EXISTS)
@@ -144,6 +247,7 @@ static const gchar* map_string(FlValue* args, const gchar* key) {
 
 // the tray switch off: the icon goes, and closing the window quits
 static void drop_tray(MyApplication* self) {
+  drop_indicator(self);
   if (self->tray != nullptr) {
     G_GNUC_BEGIN_IGNORE_DEPRECATIONS
     gtk_status_icon_set_visible(self->tray, FALSE);
@@ -647,6 +751,7 @@ static void my_application_dispose(GObject* object) {
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   g_clear_pointer(&self->tray_hint, g_free);
   g_clear_object(&self->desktop_channel);
+  drop_indicator(self);
   g_clear_object(&self->tray);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
