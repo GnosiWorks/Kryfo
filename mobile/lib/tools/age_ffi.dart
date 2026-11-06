@@ -265,11 +265,20 @@ Future<AgeError?> _lockPath(
     return _inTurn(
       job ?? AgeJob(),
       stopped: () => AgeError.cancelled,
-      () => _byPath(
-        () => _lib().lookupFunction<_LockPathC, _LockPathC>('HaloAgeLockPath'),
-        (f, a) => f(a[0], a[1], a[2]),
-        [inPath, outPath, pass],
-      ),
+      () => _offUi(() {
+        final fn = _lib().lookupFunction<_LockPathC, _LockPathC>(
+          'HaloAgeLockPath',
+        );
+        final a = inPath.toNativeUtf8(), b = outPath.toNativeUtf8();
+        final k = pass.toNativeUtf8();
+        try {
+          return ageErrorOf(engineTake(fn(a, b, k)));
+        } finally {
+          calloc.free(a);
+          calloc.free(b);
+          freeSecret(k);
+        }
+      }),
     );
   }
   final inFd = openFd(inPath);
@@ -291,30 +300,15 @@ void _dropOut(String path) {
   } catch (_) {}
 }
 
-// one engine call by path off the ui thread. the last argument is a secret
-// where there is one: it is zeroed after
-Future<AgeError?> _byPath<F extends Function>(
-  F Function() look,
-  Pointer<Utf8> Function(F f, List<Pointer<Utf8>> args) call,
-  List<String> args,
-) async {
+// one engine call by path off the ui thread; anything thrown is an io
+// failure, as a descriptor that would not open is
+Future<AgeError?> _offUi(AgeError? Function() body) async {
   try {
     return await Isolate.run(() {
-      final ps = <Pointer<Utf8>>[];
       try {
-        final f = look();
-        for (final a in args) {
-          ps.add(a.toNativeUtf8());
-        }
-        return ageErrorOf(engineTake(call(f, ps)));
+        return body();
       } catch (_) {
         return AgeError.io;
-      } finally {
-        for (final (i, p) in ps.indexed) {
-          i == args.length - 1 && args.length > 1
-              ? freeSecret(p)
-              : calloc.free(p);
-        }
       }
     });
   } catch (_) {
@@ -326,13 +320,18 @@ Future<AgeError?> _byPath<F extends Function>(
 /// the engine for [ageOpenFinishPath]
 Future<AgeError?> ageOpenBeginPath(String inPath, String pass) {
   if (ageByPath) {
-    return _byPath(
-      () => _lib().lookupFunction<_BeginPathC, _BeginPathC>(
+    return _offUi(() {
+      final fn = _lib().lookupFunction<_BeginPathC, _BeginPathC>(
         'HaloAgeOpenBeginPath',
-      ),
-      (f, a) => f(a[0], a[1]),
-      [inPath, pass],
-    );
+      );
+      final a = inPath.toNativeUtf8(), k = pass.toNativeUtf8();
+      try {
+        return ageErrorOf(engineTake(fn(a, k)));
+      } finally {
+        calloc.free(a);
+        freeSecret(k);
+      }
+    });
   }
   final fd = openFd(inPath);
   if (fd < 0) return Future.value(AgeError.io);
@@ -347,13 +346,17 @@ Future<AgeError?> ageOpenFinishPath(String outPath, [AgeJob? job]) {
       job ?? AgeJob(),
       stopped: () => AgeError.cancelled,
       inTurn: ageOpenDrop,
-      () => _byPath(
-        () => _lib().lookupFunction<_FinishPathC, _FinishPathC>(
+      () => _offUi(() {
+        final fn = _lib().lookupFunction<_FinishPathC, _FinishPathC>(
           'HaloAgeOpenFinishPath',
-        ),
-        (f, a) => f(a[0]),
-        [outPath],
-      ),
+        );
+        final a = outPath.toNativeUtf8();
+        try {
+          return ageErrorOf(engineTake(fn(a)));
+        } finally {
+          calloc.free(a);
+        }
+      }),
     );
   }
   final fd = openFd(outPath, write: true);
