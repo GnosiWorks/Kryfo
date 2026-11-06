@@ -7,8 +7,10 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart' show PointerEnterEvent;
+import 'package:flutter/gestures.dart'
+    show GestureBinding, PointerDownEvent, PointerEnterEvent, PointerEvent;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../desktop/desktop_mode.dart' show onDesktop;
 import '../theme.dart';
@@ -50,6 +52,23 @@ class KeyRing extends StatefulWidget {
 class _KeyRingState extends State<KeyRing> {
   bool _ring = false;
   bool _hover = false;
+
+  @override
+  void initState() {
+    super.initState();
+    KeyLead.watch();
+    KeyLead.on.addListener(_led);
+  }
+
+  @override
+  void dispose() {
+    KeyLead.on.removeListener(_led);
+    super.dispose();
+  }
+
+  void _led() {
+    if (mounted && _ring) setState(() {});
+  }
 
   void _hovered(bool v) {
     if (v != _hover) setState(() => _hover = v);
@@ -117,7 +136,7 @@ class _KeyRingState extends State<KeyRing> {
                 ),
               ),
             ),
-          if (_ring && reach)
+          if (_ring && reach && KeyLead.on.value)
             Positioned(
               left: -3,
               top: -3,
@@ -152,6 +171,47 @@ class _KeyRingState extends State<KeyRing> {
     if (tip == null || tip.isEmpty) return w;
     return HoverTip(message: tip, child: w);
   }
+}
+
+/// whether the keyboard moved the focus last. a mouse keeps flutter's
+/// keyboard look, so the ring asks this too: tab, the arrows and the menu
+/// keys lead, a press of the mouse, a touch or a menu closed after a right
+/// click ends it until the next of those
+abstract final class KeyLead {
+  static final on = ValueNotifier<bool>(false);
+  static bool _watching = false;
+
+  static final _keys = {
+    LogicalKeyboardKey.tab,
+    LogicalKeyboardKey.arrowUp,
+    LogicalKeyboardKey.arrowDown,
+    LogicalKeyboardKey.arrowLeft,
+    LogicalKeyboardKey.arrowRight,
+    LogicalKeyboardKey.contextMenu,
+    LogicalKeyboardKey.f10,
+  };
+
+  static void watch() {
+    // once in the list, whatever let go of the handlers before
+    HardwareKeyboard.instance
+      ..removeHandler(_key)
+      ..addHandler(_key);
+    if (_watching) return;
+    _watching = true;
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_pointer);
+  }
+
+  static bool _key(KeyEvent e) {
+    if (e is KeyDownEvent && _keys.contains(e.logicalKey)) on.value = true;
+    return false;
+  }
+
+  static void _pointer(PointerEvent e) {
+    if (e is PointerDownEvent) on.value = false;
+  }
+
+  /// a menu the mouse opened went: the item it was for shows no ring
+  static void pointerMenuClosed() => on.value = false;
 }
 
 /// the hover wash: the words' own colour, faint, so it lifts on dark and
