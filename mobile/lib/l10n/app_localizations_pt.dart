@@ -142,9 +142,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'Esperando nos pedidos';
 
   @override
-  String get contactStatusAddedByHand => 'Adicionado à mão';
-
-  @override
   String get deliveryModeAlwaysOn => 'Sempre ativo';
 
   @override

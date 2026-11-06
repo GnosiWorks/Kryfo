@@ -373,12 +373,6 @@ abstract class AppLocalizations {
   /// **'Waiting in requests'**
   String get contactStatusWaitingInRequests;
 
-  /// contact_status.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Added by hand'**
-  String get contactStatusAddedByHand;
-
   /// delivery_mode.dart
   ///
   /// In en, this message translates to:

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the one line under a person's name on their page. pure, so the order of
-// precedence is pinned: verified beats vouched beats anything else.
+// precedence is pinned: verified beats vouched beats anything else. a plain
+// accepted contact gets no line, since nothing records how they were added.
 import 'vouch_text.dart';
 import 'l10n/l10n.dart';
 
-String contactStatusLine({
+String? contactStatusLine({
   required bool verified,
   required List<String> voucherNames,
   required bool blocked,
@@ -14,5 +15,5 @@ String contactStatusLine({
   if (verified) return l10n.contactStatusKeysVerifiedInPerson;
   if (voucherNames.isNotEmpty) return vouchedByLine(voucherNames);
   if (!accepted) return l10n.contactStatusWaitingInRequests;
-  return l10n.contactStatusAddedByHand;
+  return null;
 }

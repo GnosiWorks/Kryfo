@@ -141,9 +141,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get contactStatusWaitingInRequests => 'Czeka w prośbach';
 
   @override
-  String get contactStatusAddedByHand => 'Dodany ręcznie';
-
-  @override
   String get deliveryModeAlwaysOn => 'Zawsze włączone';
 
   @override
