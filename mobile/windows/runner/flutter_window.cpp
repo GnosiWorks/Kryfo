@@ -1,5 +1,7 @@
 #include "flutter_window.h"
 
+#include "kryfo_win.h"
+
 #include <flutter/method_result_functions.h>
 #include <flutter/standard_method_codec.h>
 #include <shellapi.h>
@@ -361,6 +363,7 @@ void FlutterWindow::HideToTray() {
 // unload that can wait forever on a native call still running. tor.exe is
 // in kryfo's job and ends with it
 void FlutterWindow::EndNow() {
+  kryfo::TraceLine("runner: ends now");
   HWND w = GetHandle();
   if (w) {
     ::KillTimer(w, kQuitTimer);

@@ -6,6 +6,10 @@
 #include <shlobj.h>
 #include <werapi.h>
 
+#include <csignal>
+#include <cstring>
+#include <cstdio>
+#include <exception>
 #include <vector>
 
 namespace kryfo {
@@ -270,6 +274,95 @@ const wchar_t* FolderWord(Folder f) {
   }
   return L"nofolder";
 }
+
+namespace {
+
+// set once, before anything can crash: the filter makes no string of its own
+wchar_t g_trace[MAX_PATH] = {};
+LPTOP_LEVEL_EXCEPTION_FILTER g_before = nullptr;
+
+// as dart writes its lines: local time, then the line. no heap
+void WriteTrace(const char* line) {
+  if (g_trace[0] == 0) return;
+  HANDLE h = ::CreateFileW(g_trace, FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                           nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (h == INVALID_HANDLE_VALUE) return;
+  SYSTEMTIME t;
+  ::GetLocalTime(&t);
+  char buf[512];
+  int n = ::_snprintf_s(buf, sizeof(buf), _TRUNCATE, "%04u-%02u-%02uT%02u:%02u:%02u.%03u %s\n",
+                        t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond,
+                        t.wMilliseconds, line);
+  if (n < 0) n = static_cast<int>(::strlen(buf));
+  DWORD put = 0;
+  ::WriteFile(h, buf, static_cast<DWORD>(n), &put, nullptr);
+  ::FlushFileBuffers(h);
+  ::CloseHandle(h);
+}
+
+// the module's file name alone, never its folder
+void ModuleAt(const void* at, char* name, size_t size, unsigned long long* offset) {
+  ::strcpy_s(name, size, "unknown");
+  *offset = reinterpret_cast<unsigned long long>(at);
+  HMODULE m = nullptr;
+  if (!::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            static_cast<LPCWSTR>(at), &m) ||
+      m == nullptr) {
+    return;
+  }
+  *offset = reinterpret_cast<unsigned long long>(at) - reinterpret_cast<unsigned long long>(m);
+  wchar_t path[MAX_PATH];
+  DWORD n = ::GetModuleFileNameW(m, path, MAX_PATH);
+  if (n == 0 || n >= MAX_PATH) return;
+  const wchar_t* base = path;
+  for (const wchar_t* c = path; *c; c++) {
+    if (*c == L'\\' || *c == L'/') base = c + 1;
+  }
+  ::WideCharToMultiByte(CP_UTF8, 0, base, -1, name, static_cast<int>(size), nullptr, nullptr);
+}
+
+LONG WINAPI OnCrash(EXCEPTION_POINTERS* e) {
+  char name[128];
+  unsigned long long offset = 0;
+  const EXCEPTION_RECORD* r = e ? e->ExceptionRecord : nullptr;
+  ModuleAt(r ? r->ExceptionAddress : nullptr, name, sizeof(name), &offset);
+  char line[256];
+  ::_snprintf_s(line, sizeof(line), _TRUNCATE, "native crash 0x%08lx at %s+0x%llx thread %lu",
+                r ? r->ExceptionCode : 0UL, name, offset, ::GetCurrentThreadId());
+  WriteTrace(line);
+  return g_before ? g_before(e) : EXCEPTION_CONTINUE_SEARCH;
+}
+
+void OnAbort(int) {
+  char line[64];
+  ::_snprintf_s(line, sizeof(line), _TRUNCATE, "native abort thread %lu", ::GetCurrentThreadId());
+  WriteTrace(line);
+}
+
+void OnTerminate() {
+  WriteTrace("native terminate");
+  std::abort();
+}
+
+}  // namespace
+
+void WatchCrashes() {
+  wchar_t on[8] = {};
+  DWORD n = ::GetEnvironmentVariableW(L"KRYFO_TRACE", on, 8);
+  if (n != 1 || on[0] != L'1') return;
+  std::wstring path = DataDir();
+  if (path.empty()) return;
+  path += L"\\trace.txt";
+  if (path.size() >= MAX_PATH) return;
+  ::wcscpy_s(g_trace, path.c_str());
+  g_before = ::SetUnhandledExceptionFilter(OnCrash);
+  std::signal(SIGABRT, OnAbort);
+  std::set_terminate(OnTerminate);
+  WriteTrace("runner watches native crashes");
+}
+
+void TraceLine(const char* line) { WriteTrace(line); }
 
 bool LoadNatives(std::wstring* missing) {
   std::wstring dir = AppDir();
