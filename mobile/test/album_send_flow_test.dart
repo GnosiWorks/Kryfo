@@ -4,7 +4,11 @@
 // preview too; to a stranger before they accept none opens, and the dev
 // chat's takes only the slots left;
 // a big file is asked about inside the preview, not after it
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/clean_media.dart' show writeMadeCopy;
 
 import 'source_body.dart';
 
@@ -112,5 +116,26 @@ void main() {
     final gone = photo.indexOf('if (!mounted) return null;');
     expect(gone, greaterThan(0));
     expect(gone, lessThan(photo.indexOf('mediaDirOf')));
+  });
+
+  test('a photo the phone has no room for leaves no part behind, and its '
+      'bubble goes', () async {
+    for (final (src, ready) in [
+      (chat, 'Future<_Ready?> _readyPhoto('),
+      (group, 'Future<_GReady?> _readyGroupPhoto('),
+    ]) {
+      final body = bodyOf(src, ready);
+      expect(body, contains('await writeMadeCopy('), reason: ready);
+      expect(body, isNot(contains('.writeAsBytes(')), reason: ready);
+    }
+    final dir = Directory.systemTemp.createTempSync('made_copy');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final ok = File('${dir.path}/a.jpg');
+    expect(await writeMadeCopy(ok, Uint8List.fromList([1, 2, 3])), isTrue);
+    expect(ok.readAsBytesSync(), [1, 2, 3]);
+    // a write that fails, as a full phone's does
+    final no = File('${dir.path}/gone/b.jpg');
+    expect(await writeMadeCopy(no, Uint8List.fromList([1, 2, 3])), isFalse);
+    expect(no.existsSync(), isFalse);
   });
 }

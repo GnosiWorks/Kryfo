@@ -4427,7 +4427,10 @@ class _ChatScreenState extends State<ChatScreen>
     final mediaDir = await session.mediaDirOf(widget.peerHaloId);
     // a png, gif, webp or heic keeps its own kind, and its name says so
     final mediaFile = File('${mediaDir.path}/$msgUid.${pictureExt(bytes)}');
-    await mediaFile.writeAsBytes(bytes);
+    if (!await writeMadeCopy(mediaFile, bytes)) {
+      if (mounted) showHaloToast(context, l10n.cleanFreeSomeSpaceAnd);
+      return null;
+    }
     makeBlurSoon(mediaFile.path);
     return _Ready(msgUid, mediaFile.path);
   }

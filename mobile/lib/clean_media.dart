@@ -258,3 +258,17 @@ Future<Uint8List?> _drawnClean(String path) async {
     return null;
   }
 }
+
+/// [bytes] written to [f] as a copy made ready to send. a write that fails,
+/// a full phone say, leaves no part of it behind and says false
+Future<bool> writeMadeCopy(File f, Uint8List bytes) async {
+  try {
+    await f.writeAsBytes(bytes, flush: true);
+    return true;
+  } catch (_) {
+    try {
+      if (await f.exists()) await shredFile(f.path);
+    } catch (_) {}
+    return false;
+  }
+}
