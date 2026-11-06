@@ -1910,13 +1910,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatCompareLater => 'Più tardi';
 
   @override
-  String get chatCompareFolded => 'Numero di sicurezza non ancora confrontato';
-
-  @override
   String get chatCompareNow => 'Confronta';
-
-  @override
-  String get chatCompareDismiss => 'Nascondi';
 
   @override
   String chatKeyHeldLine(Object peerName) {

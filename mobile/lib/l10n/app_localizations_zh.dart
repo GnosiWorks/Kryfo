@@ -1818,13 +1818,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatCompareLater => '稍后';
 
   @override
-  String get chatCompareFolded => '尚未核对安全码';
-
-  @override
   String get chatCompareNow => '核对';
-
-  @override
-  String get chatCompareDismiss => '隐藏';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -12772,13 +12766,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatCompareLater => '稍後';
 
   @override
-  String get chatCompareFolded => '尚未核對安全碼';
-
-  @override
   String get chatCompareNow => '核對';
-
-  @override
-  String get chatCompareDismiss => '隱藏';
 
   @override
   String chatKeyHeldLine(Object peerName) {

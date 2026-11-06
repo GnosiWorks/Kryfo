@@ -1902,13 +1902,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatCompareLater => 'Sonra';
 
   @override
-  String get chatCompareFolded => 'Güvenlik numarası henüz karşılaştırılmadı';
-
-  @override
   String get chatCompareNow => 'Karşılaştır';
-
-  @override
-  String get chatCompareDismiss => 'Gizle';
 
   @override
   String chatKeyHeldLine(Object peerName) {

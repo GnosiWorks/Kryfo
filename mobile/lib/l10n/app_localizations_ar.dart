@@ -1951,13 +1951,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatCompareLater => 'لاحقًا';
 
   @override
-  String get chatCompareFolded => 'لم يُقارَن رقم الأمان بعد';
-
-  @override
   String get chatCompareNow => 'قارن';
-
-  @override
-  String get chatCompareDismiss => 'إخفاء';
 
   @override
   String chatKeyHeldLine(Object peerName) {

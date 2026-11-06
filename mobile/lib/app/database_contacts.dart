@@ -1330,16 +1330,19 @@ Future<void> acceptNewKeyIn(DatabaseExecutor db, String haloId) => db.update(
   whereArgs: [haloId],
 );
 
-/// a name's flags (contacts.name_check). ask: their chat asks for the
-/// safety number. says: the name came with a request, an introduction or
-/// a group, and shows as not checked. later: the ask is put off, a quiet
-/// line in place of the card. a verified key outranks them all, and an add
-/// from a qr read with the camera clears them
+/// a name's flags (contacts.name_check). ask: the safety number is asked
+/// for once, on their page. says: the name came with a request, an
+/// introduction or a group, and shows as not checked. later: older builds
+/// put a chat's card off with it, read by nothing now. shown: their page
+/// asked already. a verified key outranks them all, and an add from a qr
+/// read with the camera clears them
 const kNameAsk = 1;
 
 const kNameSays = 2;
 
 const kNameLater = 4;
+
+const kNameShown = 8;
 
 int nameCheckOf(Map<String, Object?>? row) =>
     (row?['name_check'] as num?)?.toInt() ?? 0;
@@ -1352,7 +1355,7 @@ bool nameUnchecked(Map<String, Object?>? row) =>
     (row['verified'] as num?)?.toInt() != 1 &&
     !isDevId(row['halo_id'] as String? ?? '');
 
-/// [row]'s chat asks for the safety number: added by a code or a link, or
+/// [row]'s page asks for the safety number: added by a code or a link, or
 /// taken in from a request, and not verified yet
 bool nameAsks(Map<String, Object?>? row) =>
     row != null &&

@@ -1885,13 +1885,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCompareLater => 'Để sau';
 
   @override
-  String get chatCompareFolded => 'Chưa so sánh số an toàn';
-
-  @override
   String get chatCompareNow => 'So sánh';
-
-  @override
-  String get chatCompareDismiss => 'Ẩn';
 
   @override
   String chatKeyHeldLine(Object peerName) {

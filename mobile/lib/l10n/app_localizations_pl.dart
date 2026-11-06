@@ -1941,13 +1941,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chatCompareLater => 'Później';
 
   @override
-  String get chatCompareFolded => 'Numer bezpieczeństwa jeszcze nieporównany';
-
-  @override
   String get chatCompareNow => 'Porównaj';
-
-  @override
-  String get chatCompareDismiss => 'Odrzuć';
 
   @override
   String chatKeyHeldLine(Object peerName) {

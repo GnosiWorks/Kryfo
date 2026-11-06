@@ -1941,13 +1941,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatCompareLater => 'Позже';
 
   @override
-  String get chatCompareFolded => 'Код безопасности ещё не сверен';
-
-  @override
   String get chatCompareNow => 'Сверить';
-
-  @override
-  String get chatCompareDismiss => 'Скрыть';
 
   @override
   String chatKeyHeldLine(Object peerName) {

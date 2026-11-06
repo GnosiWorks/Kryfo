@@ -3025,41 +3025,29 @@ abstract class AppLocalizations {
   /// **'Security code changed'**
   String get chatSecurityCodeChanged;
 
-  /// screens/chat_screen.dart: card at the top of a chat added by a pairing code or a link, or taken in from a request, until the safety number is verified
+  /// screens/contact_screen.dart: card on the first visit to the page of someone added by a pairing code or a link, or taken in from a request, until the safety number is verified
   ///
   /// In en, this message translates to:
   /// **'Compare the safety number'**
   String get chatCompareTitle;
 
-  /// screens/chat_screen.dart: under chatCompareTitle
+  /// screens/contact_screen.dart: under chatCompareTitle
   ///
   /// In en, this message translates to:
   /// **'Three words can be copied. To know this chat is really with {peerName}, compare the safety number with them, in person or on a call.'**
   String chatCompareLine(Object peerName);
 
-  /// screens/chat_screen.dart: button on the compare card, puts it away for this chat
+  /// screens/contact_screen.dart: button on the compare card, puts it away; the safety number stays under the page
   ///
   /// In en, this message translates to:
   /// **'Later'**
   String get chatCompareLater;
 
-  /// screens/chat_screen.dart: the compare card after later, folded into one quiet line until the number is compared or the line closed
-  ///
-  /// In en, this message translates to:
-  /// **'Safety number not compared yet'**
-  String get chatCompareFolded;
-
-  /// screens/chat_screen.dart: text button on the folded compare line, opens the safety number
+  /// screens/contact_screen.dart: main button on the compare card, opens the safety number
   ///
   /// In en, this message translates to:
   /// **'Compare'**
   String get chatCompareNow;
-
-  /// screens/chat_screen.dart: screen reader label and tooltip of the x on the folded compare line, puts it away for good
-  ///
-  /// In en, this message translates to:
-  /// **'Dismiss'**
-  String get chatCompareDismiss;
 
   /// screens/chat_screen.dart
   ///
@@ -13627,7 +13615,7 @@ abstract class AppLocalizations {
   /// **'You blocked {id}. Unblock them under Blocked in Settings to add them again.'**
   String appTheyAreBlocked(Object id);
 
-  /// widgets/not_them.dart: under the safety number, and on the compare card in a chat: the number they read out is not the one on this screen. a tap brings up notThemButton
+  /// widgets/not_them.dart: under the safety number, and on the compare card on a contact page: the number they read out is not the one on this screen. a tap brings up notThemButton
   ///
   /// In en, this message translates to:
   /// **'The numbers are different'**

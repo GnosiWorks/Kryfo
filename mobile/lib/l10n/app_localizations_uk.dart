@@ -1938,13 +1938,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatCompareLater => 'Пізніше';
 
   @override
-  String get chatCompareFolded => 'Номер безпеки ще не звірено';
-
-  @override
   String get chatCompareNow => 'Звірити';
-
-  @override
-  String get chatCompareDismiss => 'Сховати';
 
   @override
   String chatKeyHeldLine(Object peerName) {

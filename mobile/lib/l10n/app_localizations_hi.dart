@@ -1903,13 +1903,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatCompareLater => 'बाद में';
 
   @override
-  String get chatCompareFolded => 'सुरक्षा नंबर अभी मिलाया नहीं गया';
-
-  @override
   String get chatCompareNow => 'मिलाएँ';
-
-  @override
-  String get chatCompareDismiss => 'हटाएँ';
 
   @override
   String chatKeyHeldLine(Object peerName) {

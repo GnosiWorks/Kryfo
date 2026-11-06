@@ -2350,11 +2350,11 @@
   },
   "chatCompareTitle": "Compare the safety number",
   "@chatCompareTitle": {
-    "description": "screens/chat_screen.dart: card at the top of a chat added by a pairing code or a link, or taken in from a request, until the safety number is verified"
+    "description": "screens/contact_screen.dart: card on the first visit to the page of someone added by a pairing code or a link, or taken in from a request, until the safety number is verified"
   },
   "chatCompareLine": "Three words can be copied. To know this chat is really with {peerName}, compare the safety number with them, in person or on a call.",
   "@chatCompareLine": {
-    "description": "screens/chat_screen.dart: under chatCompareTitle",
+    "description": "screens/contact_screen.dart: under chatCompareTitle",
     "placeholders": {
       "peerName": {
         "type": "Object"
@@ -2363,19 +2363,11 @@
   },
   "chatCompareLater": "Later",
   "@chatCompareLater": {
-    "description": "screens/chat_screen.dart: button on the compare card, puts it away for this chat"
-  },
-  "chatCompareFolded": "Safety number not compared yet",
-  "@chatCompareFolded": {
-    "description": "screens/chat_screen.dart: the compare card after later, folded into one quiet line until the number is compared or the line closed"
+    "description": "screens/contact_screen.dart: button on the compare card, puts it away; the safety number stays under the page"
   },
   "chatCompareNow": "Compare",
   "@chatCompareNow": {
-    "description": "screens/chat_screen.dart: text button on the folded compare line, opens the safety number"
-  },
-  "chatCompareDismiss": "Dismiss",
-  "@chatCompareDismiss": {
-    "description": "screens/chat_screen.dart: screen reader label and tooltip of the x on the folded compare line, puts it away for good"
+    "description": "screens/contact_screen.dart: main button on the compare card, opens the safety number"
   },
   "chatKeyHeldLine": "You verified {peerName} before. Nothing is sent until you check the new number or accept the new key. Their messages still arrive.",
   "@chatKeyHeldLine": {
@@ -10619,7 +10611,7 @@
   },
   "notThemNumbersDiffer": "The numbers are different",
   "@notThemNumbersDiffer": {
-    "description": "widgets/not_them.dart: under the safety number, and on the compare card in a chat: the number they read out is not the one on this screen. a tap brings up notThemButton"
+    "description": "widgets/not_them.dart: under the safety number, and on the compare card on a contact page: the number they read out is not the one on this screen. a tap brings up notThemButton"
   },
   "notThemLine": "If the numbers really differ, someone else may be using their name or sitting between you.",
   "@notThemLine": {
