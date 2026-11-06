@@ -4,6 +4,7 @@
 // the png a copy carries, or else its dib, which is made a png here. nothing
 // of it is written anywhere: it waits in the row like a dropped photo and
 // goes the photo's way on send, cleaned and sealed
+import 'dart:io' show Platform;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -242,7 +243,6 @@ Future<Uint8List?> dibToPng(Uint8List dib) async {
 
 /// the picture on the clipboard as png bytes, or null: none there, words
 /// there too (they paste as words, unless only a link), or no runner call
-/// (linux for now)
 Future<Uint8List?> clipboardPicture() async {
   final Map<Object?, Object?>? got;
   try {
@@ -284,4 +284,85 @@ bool loneLink(String words) {
   return u != null &&
       (u.scheme == 'http' || u.scheme == 'https') &&
       u.host.isNotEmpty;
+}
+
+/// [px] as a CF_DIBV5: a v5 header with masks and alpha, srgb, rows bottom
+/// up, then bgra. what windows' paint and office take when they take no png
+Uint8List rgbaToDib(DibPixels px) {
+  const head = 124;
+  final w = px.width, h = px.height;
+  final out = Uint8List(head + w * h * 4);
+  final d = ByteData.sublistView(out);
+  d.setUint32(0, head, Endian.little);
+  d.setInt32(4, w, Endian.little);
+  d.setInt32(8, h, Endian.little);
+  d.setUint16(12, 1, Endian.little);
+  d.setUint16(14, 32, Endian.little);
+  d.setUint32(16, _bitfields, Endian.little);
+  d.setUint32(20, w * h * 4, Endian.little);
+  d.setUint32(40, 0x00FF0000, Endian.little);
+  d.setUint32(44, 0x0000FF00, Endian.little);
+  d.setUint32(48, 0x000000FF, Endian.little);
+  d.setUint32(52, 0xFF000000, Endian.little);
+  // LCS_sRGB
+  d.setUint32(56, 0x73524742, Endian.little);
+  // LCS_GM_IMAGES
+  d.setUint32(108, 4, Endian.little);
+  for (var y = 0; y < h; y++) {
+    var o = head + (h - 1 - y) * w * 4;
+    var s = y * w * 4;
+    for (var x = 0; x < w; x++) {
+      out[o] = px.rgba[s + 2];
+      out[o + 1] = px.rgba[s + 1];
+      out[o + 2] = px.rgba[s];
+      out[o + 3] = px.rgba[s + 3];
+      o += 4;
+      s += 4;
+    }
+  }
+  return out;
+}
+
+/// [png] decoded to rgba, or null when it is none or too big
+Future<DibPixels?> pngPixels(Uint8List png) async {
+  if (!looksPng(png)) return null;
+  ui.Codec? codec;
+  ui.Image? img;
+  try {
+    codec = await ui.instantiateImageCodec(png);
+    img = (await codec.getNextFrame()).image;
+    if (img.width * img.height > kDibMostPixels) return null;
+    final raw = await img.toByteData(format: ui.ImageByteFormat.rawStraightRgba);
+    if (raw == null) return null;
+    return DibPixels(
+      img.width,
+      img.height,
+      raw.buffer.asUint8List(raw.offsetInBytes, raw.lengthInBytes),
+    );
+  } catch (_) {
+    return null;
+  } finally {
+    img?.dispose();
+    codec?.dispose();
+  }
+}
+
+/// "Copy picture": [png] on the computer's clipboard, from memory. windows
+/// gets a bitmap beside it for the apps that take no png. false when the
+/// runner would not
+Future<bool> copyPicture(Uint8List png) async {
+  try {
+    final args = <String, Object?>{'png': png};
+    if (Platform.isWindows) {
+      final px = await pngPixels(png);
+      if (px == null) return false;
+      args['dib'] = rgbaToDib(px);
+    } else if (!looksPng(png)) {
+      return false;
+    }
+    return await runChannel.invokeMethod<bool>('setClipPicture', args) ??
+        false;
+  } catch (_) {
+    return false;
+  }
 }

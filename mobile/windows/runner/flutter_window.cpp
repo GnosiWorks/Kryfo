@@ -11,6 +11,7 @@
 #include <new>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "flutter/generated_plugin_registrant.h"
@@ -153,6 +154,52 @@ flutter::EncodableValue ClipboardPicture(HWND owner) {
   return flutter::EncodableValue(got);
 }
 
+// a block of [n] bytes the clipboard owns once handed over
+HGLOBAL GlobalCopy(const std::vector<uint8_t>& bytes) {
+  HGLOBAL h = ::GlobalAlloc(GMEM_MOVEABLE, bytes.size());
+  if (!h) return nullptr;
+  void* at = ::GlobalLock(h);
+  if (!at) {
+    ::GlobalFree(h);
+    return nullptr;
+  }
+  std::memcpy(at, bytes.data(), bytes.size());
+  ::GlobalUnlock(h);
+  return h;
+}
+
+// "Copy picture": a png kryfo made (a qr, a cleaned picture) and the same
+// as a dib dart drew from it, for the apps that take only a bitmap
+bool SetClipboardPicture(HWND owner, const flutter::EncodableValue* args) {
+  const auto* map = std::get_if<flutter::EncodableMap>(args);
+  if (!map) return false;
+  auto bytes = [map](const char* key) -> const std::vector<uint8_t>* {
+    auto it = map->find(flutter::EncodableValue(key));
+    if (it == map->end()) return nullptr;
+    const auto* b = std::get_if<std::vector<uint8_t>>(&it->second);
+    return b && !b->empty() && b->size() <= kPictureMost ? b : nullptr;
+  };
+  const auto* png = bytes("png");
+  const auto* dib = bytes("dib");
+  if (!png || !dib) return false;
+  static const UINT png_format = ::RegisterClipboardFormatW(L"PNG");
+  if (!png_format || !::OpenClipboard(owner)) return false;
+  bool ok = ::EmptyClipboard() != 0;
+  for (auto [format, data] : {std::pair<UINT, const std::vector<uint8_t>*>{CF_DIBV5, dib},
+                              std::pair<UINT, const std::vector<uint8_t>*>{png_format, png}}) {
+    if (!ok) break;
+    HGLOBAL h = GlobalCopy(*data);
+    // the clipboard owns a block it took; one it refused is still ours
+    if (!h || !::SetClipboardData(format, h)) {
+      if (h) ::GlobalFree(h);
+      ok = false;
+    }
+  }
+  if (!ok) ::EmptyClipboard();
+  ::CloseClipboard();
+  return ok;
+}
+
 // the session's lock now. no answer counts as locked: the first unlock
 // says otherwise
 bool SessionLockedNow() {
@@ -246,6 +293,8 @@ bool FlutterWindow::OnCreate() {
     } else if (call.method_name() == "clipPicture") {
       // ctrl and v in a composer: a copied picture waits in its row
       result->Success(ClipboardPicture(GetHandle()));
+    } else if (call.method_name() == "setClipPicture") {
+      result->Success(flutter::EncodableValue(SetClipboardPicture(GetHandle(), call.arguments())));
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();
