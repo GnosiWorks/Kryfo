@@ -266,7 +266,7 @@ class _PinsScreenState extends State<PinsScreen> {
                 _PinCard(
                   name: l10n.pinsYourPin,
                   state: on ? l10n.commonOn : l10n.commonOff,
-                  stateColor: on ? HaloColors.green : HaloColors.text3,
+                  stateColor: on ? HaloColors.green : HaloColors.text,
                   outcome: l10n.pinsOpensKryfoFourDigits,
                   primary: on ? l10n.pinsChangePin : l10n.pinsSetAPin,
                   onPrimary: () async {
@@ -321,7 +321,7 @@ class _PinsScreenState extends State<PinsScreen> {
                           : l10n.commonOff,
                       stateColor: on && wipe
                           ? HaloColors.rose
-                          : HaloColors.text3,
+                          : HaloColors.text,
                       onTap: on ? _wipeRow : null,
                     ),
                     if (_host.decoyAndVault)
@@ -337,7 +337,7 @@ class _PinsScreenState extends State<PinsScreen> {
                             : l10n.commonOff,
                         stateColor: on && decoy
                             ? HaloColors.amber
-                            : HaloColors.text3,
+                            : HaloColors.text,
                         onTap: on ? _decoyRow : null,
                       ),
                     if (_host.decoyAndVault)
@@ -353,7 +353,7 @@ class _PinsScreenState extends State<PinsScreen> {
                             : l10n.pinsSetUp,
                         stateColor: on && vault
                             ? HaloColors.violet
-                            : HaloColors.text3,
+                            : HaloColors.text,
                         onTap: on ? _hiddenRow : null,
                       ),
                     if (_host.decoyAndVault)
@@ -425,7 +425,7 @@ class _UpdateCard extends StatelessWidget {
                       l10n.cardLine,
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.4,
                       ),
                     ),
@@ -480,7 +480,7 @@ class _CardButton extends StatelessWidget {
           style: HaloType.sans(
             size: 13.5,
             weight: FontWeight.w600,
-            color: strong ? HaloColors.amberText : HaloColors.text2,
+            color: strong ? HaloColors.amberText : HaloColors.text,
           ),
         ),
       ),
@@ -519,7 +519,7 @@ class _KeyLine extends StatelessWidget {
               words,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.45,
               ),
             ),
@@ -589,7 +589,7 @@ class _Advanced extends StatelessWidget {
                             l10n.pinsAdvancedLineShown,
                             style: HaloType.sans(
                               size: 12.5,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                             ),
                           ),
                         ],
@@ -701,7 +701,7 @@ class _ExtraRow extends StatelessWidget {
                       line,
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.4,
                       ),
                     ),
@@ -873,7 +873,7 @@ class _PinCard extends StatelessWidget {
             outcome,
             style: HaloType.sans(
               size: 12.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -979,7 +979,7 @@ class _Toggle extends StatelessWidget {
                       why,
                       style: HaloType.sans(
                         size: 12,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.35,
                       ),
                     ),

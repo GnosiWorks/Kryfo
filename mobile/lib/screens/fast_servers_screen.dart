@@ -83,11 +83,7 @@ class _FastServersScreenState extends State<FastServersScreen> {
         children: staggerAll([
           Text(
             l10n.serversLine,
-            style: HaloType.sans(
-              size: 14,
-              color: HaloColors.text2,
-              height: 1.5,
-            ),
+            style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.5),
           ),
           const SizedBox(height: 18),
           _ServerRow(
@@ -212,7 +208,7 @@ class _ServerRow extends StatelessWidget {
                     style: HaloType.mono(
                       size: 13,
                       weight: FontWeight.w600,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                     ),
                   ),
               ],
@@ -260,11 +256,7 @@ class _BackupRow extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             l10n.serversBackupsLine,
-            style: HaloType.sans(
-              size: 13,
-              color: HaloColors.text2,
-              height: 1.5,
-            ),
+            style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
           ),
         ],
       ),

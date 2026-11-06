@@ -836,7 +836,7 @@ extension AppStateReceive on AppState {
       arrived();
       return;
     }
-    // a hello on my v3 first-contact address: zero answers only (11 step 7)
+    // a hello on my v3 first-contact address: zero answers only
     if (m.peer == 'firstcontact' && m.cipher.startsWith('khl:')) {
       final bar = m.cipher.indexOf('|');
       final hw = bar == 68 ? helloOfWire(m.cipher.substring(69)) : null;

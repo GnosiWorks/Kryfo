@@ -311,7 +311,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 ),
               ),
               textAlign: TextAlign.center,
-              style: HaloType.mono(size: 11, color: HaloColors.text2),
+              style: HaloType.mono(size: 11, color: HaloColors.text),
             ),
           ),
         ],
@@ -471,7 +471,7 @@ class _DonateScreenState extends State<DonateScreen> {
                   l10n.donateCardNoBadge,
                   style: HaloType.mono(
                     size: 10.5,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                   ).copyWith(height: 1.4),
                 ),
               ],
@@ -572,7 +572,7 @@ class _DonateScreenState extends State<DonateScreen> {
                       : const Duration(milliseconds: 220),
                   style: HaloType.mono(
                     size: 10.5,
-                    color: sel ? HaloColors.amberText : HaloColors.text2,
+                    color: sel ? HaloColors.amberText : HaloColors.text,
                   ),
                   // one word, shrunk rather than broken mid-word
                   child: FittedBox(
@@ -703,7 +703,7 @@ class _DonateScreenState extends State<DonateScreen> {
                     if (c.note.isNotEmpty)
                       Text(
                         c.note,
-                        style: HaloType.mono(size: 10, color: HaloColors.text2),
+                        style: HaloType.mono(size: 10, color: HaloColors.text),
                       ),
                   ],
                 ),
@@ -777,7 +777,7 @@ class _DonateScreenState extends State<DonateScreen> {
               l10n.donateCardSeesName,
               style: HaloType.mono(
                 size: 11,
-                color: HaloColors.text2,
+                color: HaloColors.text,
               ).copyWith(height: 1.45),
             ),
           ),
@@ -849,7 +849,7 @@ class _DonateScreenState extends State<DonateScreen> {
           const SizedBox(height: 12),
           Text(
             l10n.donateAddressCheckItAgainst(coin.name),
-            style: HaloType.mono(size: 10, color: HaloColors.text2),
+            style: HaloType.mono(size: 10, color: HaloColors.text),
           ),
           const SizedBox(height: 8),
           Container(
@@ -893,7 +893,7 @@ class _DonateScreenState extends State<DonateScreen> {
                     : l10n.donateWeCanTVerify,
                 style: HaloType.mono(
                   size: 11,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                 ).copyWith(height: 1.45),
               ),
             ),
@@ -904,7 +904,7 @@ class _DonateScreenState extends State<DonateScreen> {
               Text(
                 l10n.donateBitcoinBadgesNeedOnion,
                 textAlign: TextAlign.center,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                style: HaloType.sans(size: 13, color: HaloColors.text),
               ),
               const SizedBox(height: 8),
               PressScale(
@@ -1295,14 +1295,14 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 18),
           Text(
             l10n.donateReachingThePaymentService,
-            style: HaloType.mono(size: 11, color: HaloColors.text2),
+            style: HaloType.mono(size: 11, color: HaloColors.text),
           ),
           const SizedBox(height: 8),
           Text(
             _waited < 5
                 ? l10n.donateThisCanTakeUp
                 : l10n.donateSThisCanTake(whole(_waited)),
-            style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+            style: HaloType.mono(size: 10.5, color: HaloColors.text),
           ),
           // held back until the wait is long enough to doubt
           if (_waited >= 20 && widget.fallbackAddress.isNotEmpty) ...[
@@ -1344,7 +1344,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -1470,11 +1470,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
         Text(
           l10n.donateAddressOnTap,
           textAlign: TextAlign.center,
-          style: HaloType.sans(
-            size: 12.5,
-            color: HaloColors.text2,
-            height: 1.5,
-          ),
+          style: HaloType.sans(size: 12.5, color: HaloColors.text, height: 1.5),
         ),
         const Spacer(),
         const SizedBox(height: 24),
@@ -1537,7 +1533,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
                 l10n.donateBusyPlainAddress,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.5,
                 ),
               ),
@@ -1580,7 +1576,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
                   : l10n.donateThePaymentServiceIsHavingTrouble,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -1613,7 +1609,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           Center(
             child: Text(
               l10n.donateSendExactlyThisAmount(_fmtLeft()),
-              style: HaloType.mono(size: 10, color: HaloColors.text2),
+              style: HaloType.mono(size: 10, color: HaloColors.text),
             ),
           ),
           const SizedBox(height: 16),
@@ -1680,7 +1676,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             child: Text(
               l10n.donateThisScreenUpdatesItself,
               textAlign: TextAlign.center,
-              style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+              style: HaloType.mono(size: 10.5, color: HaloColors.text),
             ),
           ),
         ],
@@ -1714,7 +1710,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             const SizedBox(width: 10),
             Text(
               l10n.donateWatchingTheChainFor,
-              style: HaloType.mono(size: 11, color: HaloColors.text2),
+              style: HaloType.mono(size: 11, color: HaloColors.text),
             ),
           ],
         ),
@@ -1741,7 +1737,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -1770,7 +1766,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(label, style: HaloType.mono(size: 10, color: HaloColors.text2)),
+          Text(label, style: HaloType.mono(size: 10, color: HaloColors.text)),
           const SizedBox(height: 6),
           Text(
             chunkAddress(value),
@@ -1919,7 +1915,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.55,
               ),
             ),
@@ -1942,7 +1938,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
                               l10n.donateJustGladToHelp,
                               style: HaloType.sans(
                                 size: 14,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                               ),
                             ),
                           ),

@@ -163,7 +163,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                 l10n.introduceBothOfThemGet,
                 style: HaloType.sans(
                   size: 12,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.5,
                 ),
               ),
@@ -174,7 +174,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                       padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                       child: Text(
                         l10n.introduceNoOneElseTo,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                        style: HaloType.sans(size: 13, color: HaloColors.text),
                       ),
                     )
                   : ListView.builder(
@@ -227,10 +227,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                     suffixText: _noteCtrl.text.isEmpty
                         ? null
                         : '${_noteCtrl.text.length}/$_noteMax',
-                    suffixStyle: HaloType.mono(
-                      size: 9,
-                      color: HaloColors.text2,
-                    ),
+                    suffixStyle: HaloType.mono(size: 9, color: HaloColors.text),
                     isDense: true,
                     filled: true,
                     fillColor: HaloColors.surface,
@@ -305,7 +302,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
         textAlign: TextAlign.center,
         style: HaloType.mono(
           size: 10,
-          color: refill == null ? HaloColors.text3 : HaloColors.amberText,
+          color: refill == null ? HaloColors.text : HaloColors.amberText,
         ),
       ),
     );

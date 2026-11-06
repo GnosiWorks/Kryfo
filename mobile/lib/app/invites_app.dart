@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// v4 invites in the app (identity v4 2.3, 3.1): the main invite kept and
+// v4 invites in the app: the main invite kept and
 // listened on, the link and qr handed out, a first contact made from a
 // link's bundle, and an opener at one of my invites checked before it opens
 
@@ -54,7 +54,7 @@ class InviteArrival {
   final String sealPk;
 }
 
-/// [arrival]'s opener checked before anything is decrypted (3.1, 3.4): its
+/// [arrival]'s opener checked before anything is decrypted: its
 /// seal is the hello seal key of my identity and the key it names, and it
 /// is on the invite's own prekeys. false drops it, and spends nothing
 bool inviteOpenerHolds(
@@ -82,7 +82,7 @@ bool inviteOpenerHolds(
       info.preKeyId == inv.ecId;
 }
 
-/// a v4 opener's envelope checked after it opened (3.1): it carries the
+/// a v4 opener's envelope checked after it opened: it carries the
 /// pair's seed, and a face signature over its own key and my invite's id
 /// whenever it shows a face. the seed, or null to refuse it
 Uint8List? inviteOpenerSeed(
@@ -192,7 +192,7 @@ Future<bool> onInviteKeys(
 }
 
 /// a one-time invite something opened on: its keys, its address and my
-/// hello row for it go, whatever becomes of the opener (2.3, 3.1). none
+/// hello row for it go, whatever becomes of the opener. none
 /// that fails stops the opener: its filing spends it again
 Future<void> spendOpenedInvite(InviteArrival a) async {
   if (!a.invite.oneTime) return;
@@ -213,7 +213,7 @@ Future<void> spendOpenedInvite(InviteArrival a) async {
 extension AppStateInvites on AppState {
   /// a line from one of my invites' first-contact addresses: the seal's
   /// key, a bar and what came. an opener is opened only when its seal and
-  /// its keys are the invite's (3.1); one that fails a check is dropped and
+  /// its keys are the invite's; one that fails a check is dropped and
   /// spends nothing; a one-time invite goes with its first opener
   Future<void> _receiveAtInvite(
     int ident,
@@ -361,7 +361,7 @@ extension AppStateInvites on AppState {
 
   /// the upkeep again once kInviteUpkeep has passed since the last, from
   /// the outbox's tick: an always-on phone lets an expired invite's keys
-  /// and the v3 keys go on time (R23), and makes the main one again at six
+  /// and the v3 keys go on time, and makes the main one again at six
   /// months, without waiting for a start
   Future<void> keepMyInvitesDue({int? nowMs}) {
     final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
@@ -561,7 +561,7 @@ extension AppStateInvites on AppState {
 
   /// a v4 first contact to [peer] waits for its answer: every frame to them
   /// until then carries the pair's seed and my face signature for their
-  /// invite (3.1). the frame as it goes
+  /// invite. the frame as it goes
   Future<String> v4OpenerFields(String peer, String frame) async {
     if (!frame.startsWith(kEnvelopePrefix)) return frame;
     // rows that do not read add nothing: the far side refuses an opener
@@ -694,7 +694,7 @@ extension AppStateInvites on AppState {
   }
 
   /// a hello to [owner], answering their invite [answers] (all zero: a v3
-  /// link) at its first-contact key [fc] (3.3, 11 step 7): kept until it
+  /// link) at its first-contact key [fc]: kept until it
   /// went, and sent now when it can be
   Future<void> wantHello({
     required List<int> owner,
@@ -850,7 +850,7 @@ extension AppStateInvites on AppState {
     void Function() arrived,
   ) async {
     // a roster invite takes hellos from the members of my groups alone,
-    // who grind no proof of work for it (4.3). anywhere else the proof of
+    // who grind no proof of work for it. anywhere else the proof of
     // work comes first: one hash, before the shim reads anything
     final roster = at?.kind == kInviteRoster;
     if (!roster && !helloPowHolds(bytes, nonce)) {
@@ -1015,7 +1015,7 @@ extension AppStateInvites on AppState {
 
   /// the person accepted [haloId]: a hello of theirs waiting here is
   /// answered, the session started from the one-time invite inside it and
-  /// the first message sent to its first-contact address (3.3)
+  /// the first message sent to its first-contact address
   Future<void> answerHello(String haloId) async {
     final db = await live.open();
     final c = await db.query(
@@ -1170,7 +1170,7 @@ const kHelloRetry = Duration(minutes: 5);
 
 int _helloGrind(String seed) => grindPow(seed, powBits);
 
-/// [hello] as it goes on the wire, with its proof of work (3.3): ground
+/// [hello] as it goes on the wire, with its proof of work: ground
 /// off the ui's isolate. one too long to pad throws, before the grind if
 /// it can
 Future<String> helloWire(Uint8List hello) async {

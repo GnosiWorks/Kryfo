@@ -279,7 +279,7 @@ class _Translated extends StatelessWidget {
                       l10n.translateFrom(from),
                       style: HaloType.sans(
                         size: 11.5,
-                        color: out ? HaloColors.onAmber : HaloColors.text2,
+                        color: out ? HaloColors.onAmber : HaloColors.text,
                         height: 1.3,
                       ),
                     ),
@@ -298,7 +298,7 @@ class _Translated extends StatelessWidget {
 
 TextStyle _leadStyle(bool out) => HaloType.sans(
   size: 12,
-  color: out ? HaloColors.onAmber : HaloColors.text2,
+  color: out ? HaloColors.onAmber : HaloColors.text,
   height: 1.3,
 );
 

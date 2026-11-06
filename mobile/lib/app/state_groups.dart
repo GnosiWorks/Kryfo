@@ -271,7 +271,7 @@ extension AppStateGroups on AppState {
           }
         }
         // the members' roster invites, and mine to the admin in our own
-        // session (4.3)
+        // session
         if (!isRoom) {
           await _takeRosterInvites(
             groupId,
@@ -1060,7 +1060,7 @@ extension AppStateGroups on AppState {
   // (or for our own kryfo). used to give group invites enough info that
   // recipients can fan-out to members they don't yet know.
   // [invites]: a control's roster, which carries each member's roster
-  // invite the group holds, and mine, beside their keys (4.3). an older
+  // invite the group holds, and mine, beside their keys. an older
   // version reads the keys and leaves the rest
   Future<List<Map<String, String>>> _buildParticipants(
     List<String> haloIds, {

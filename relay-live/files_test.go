@@ -259,7 +259,7 @@ func TestOnionListenerConfig(t *testing.T) {
 	if s, _, err := onionServer(relay); s != nil || err != nil {
 		t.Fatalf("unset addr: %v %v", s, err)
 	}
-	for _, a := range []string{"0.0.0.0:3339", ":3339", "57.129.122.187:3339", "localhost:3339", "127.0.0.1", "[::]:3339"} {
+	for _, a := range []string{"0.0.0.0:3339", ":3339", "192.0.2.10:3339", "localhost:3339", "127.0.0.1", "[::]:3339"} {
 		t.Setenv("RELAY_ONION_ADDR", a)
 		if s, _, err := onionServer(relay); s != nil || err == nil {
 			t.Fatalf("%s taken", a)

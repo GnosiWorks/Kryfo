@@ -133,7 +133,7 @@ void main() {
           expect(_textColour(t, mode), HaloColors.greenText);
           expect(_lockColour(t), HaloColors.greenText);
         } else {
-          expect(_textColour(t, mode), HaloColors.text2);
+          expect(_textColour(t, mode), HaloColors.text);
           // tor wears its own violet, never the accent
           expect(_lockColour(t), HaloColors.violet);
         }

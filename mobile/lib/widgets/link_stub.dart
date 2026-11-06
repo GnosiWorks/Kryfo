@@ -96,7 +96,7 @@ class LinkStub extends StatelessWidget {
                                 size: 9.5,
                                 color: isOut
                                     ? HaloColors.onAmber
-                                    : HaloColors.text2,
+                                    : HaloColors.text,
                                 letter: 0.02,
                               ),
                             ),

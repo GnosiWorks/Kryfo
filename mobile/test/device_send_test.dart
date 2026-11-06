@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// linked devices, the send loop (step 7 job 4): one message from ana's
+// linked devices, the send loop: one message from ana's
 // phone to bob's phone and two devices and to ana's own desk, all on one
 // gift wrap size, each on its own device pair; a copy that fails goes again
 // alone; receipts from two devices count once; a device with no session
@@ -502,7 +502,7 @@ void main() {
       final j = _json(text);
       expect(j['as'], devHex(seed));
       if (own) {
-        // job 8: the own copy's uid names its frame, its chat by kryfo id
+        // the own copy's uid names its frame, its chat by kryfo id
         expect(j['u'], 'oc:${ownHash(frame)}');
         expect((j['oc'] as Map)['f'], frame);
         expect((j['oc'] as Map)['c'], 'p:${w.toBob.peer}');
@@ -512,7 +512,7 @@ void main() {
       }
     }
     // owed to bob's devices until their receipts, and the desk's own copy
-    // until the desk answers it (job 8)
+    // until the desk answers it
     final out = await w.db.query('dev_out', orderBy: 'device');
     expect([for (final o in out) o['device']], [5, 9, 17]);
     expect({for (final o in out) o['state']}, {'sent'});
@@ -713,7 +713,7 @@ void main() {
     final (t2, b2) = _wireOf(r2!.phone!);
     final j2 = _json(unpad(utf8.decode(await w.bob.open('ana-words', t2, b2))));
     expect(j2.containsKey('dq'), isFalse);
-    // the bundle comes (job 5 builds it): the first copy goes, at its size
+    // the bundle comes: the first copy goes, at its size
     await w.anaDs.build(
       'bob-quiet-river',
       40,

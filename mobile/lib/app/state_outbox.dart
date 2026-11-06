@@ -1152,7 +1152,7 @@ extension AppStateOutbox on AppState {
       // timeout on it every send: skip fast so live members deliver now.
       if (!await _io.hasSession(memberId) && to.bundle == null) {
         // a member whose roster invite a group gave: the hello makes the
-        // pair (4.3), no bundle swap. an introduced peer whose bundle swap
+        // pair, no bundle swap. an introduced peer whose bundle swap
         // never landed: ask again, the user's tap-to-retry goes through
         // once it does.
         if (await _rosterPairWaits(memberId, to.on)) {
@@ -1182,7 +1182,7 @@ extension AppStateOutbox on AppState {
       } catch (e) {
         // a corrupt session (a bad state) can't encrypt. the dev chat's is
         // rebuilt from its pinned card and tried once more. anyone else is
-        // sent a heal (3.8): they build a session to us from it, and this
+        // sent a heal: they build a session to us from it, and this
         // waits for their answer to open, as a restored session's does
         if (!isDevId(memberId)) {
           if (await _askToStartAfresh(memberId)) {

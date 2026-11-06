@@ -185,7 +185,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
         if (!widget.compact) ...[
           Text(
             l10n.pairCodePanelReadEightDigitsOut,
-            style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+            style: HaloType.sans(size: 13.5, color: HaloColors.text),
           ),
           const SizedBox(height: 22),
         ],
@@ -223,7 +223,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
                               weight: FontWeight.w600,
                               color: HaloColors.roseText,
                             )
-                          : HaloType.mono(size: 10.5, color: HaloColors.text2),
+                          : HaloType.mono(size: 10.5, color: HaloColors.text),
                     ),
                   ),
                 ),
@@ -233,7 +233,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
           Text(
             l10n.pairCodeBothNeed06Shown,
             textAlign: TextAlign.center,
-            style: HaloType.sans(size: 12, color: HaloColors.text2),
+            style: HaloType.sans(size: 12, color: HaloColors.text),
           ),
         ],
       ],
@@ -270,7 +270,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
             const SizedBox(width: 8),
             Text(
               l10n.pairCodePanelBurnsIn(mm, ss),
-              style: HaloType.mono(size: 11, color: HaloColors.text2),
+              style: HaloType.mono(size: 11, color: HaloColors.text),
             ),
           ],
         ),
@@ -280,7 +280,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
               ? l10n.pairCodePanelTheyTapAddChoose
               : l10n.pairCodePanelTheyOpenKryfoEight,
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+          style: HaloType.sans(size: 12.5, color: HaloColors.text),
         ),
         // a wrong try, said in the warning colour until the next line
         EaseSize(
@@ -300,7 +300,7 @@ class _PairCodePanelState extends State<PairCodePanel> {
                               weight: FontWeight.w600,
                               color: HaloColors.roseText,
                             )
-                          : HaloType.sans(size: 12.5, color: HaloColors.text2),
+                          : HaloType.sans(size: 12.5, color: HaloColors.text),
                     ),
                   ),
                 ),

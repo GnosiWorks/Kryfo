@@ -85,7 +85,7 @@ class UnlinkedScreen extends StatelessWidget {
                     l10n.unlinkedAgainLine,
                     style: HaloType.sans(
                       size: 14.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.5,
                     ),
                   ),

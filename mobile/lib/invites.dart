@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// v4 invites (identity v4 2.1-2.3): KIN4 frames made here, signed by the
+// v4 invites: KIN4 frames made here, signed by the
 // shim after its own parse, read back through the shim's parser. a row per
 // invite with its keys; the main one lives a year and is made again at six
 // months, a one-time one lives seven days and goes on its first opener. the
-// developer's main invite never expires (DECIDED 2026-10-28)
+// developer's main invite never expires
 
 import 'dart:convert';
 import 'dart:math' show Random, max, min;
@@ -168,7 +168,7 @@ Uint8List bundleBlock({
   return o.done();
 }
 
-/// "kryfo-face-v4:" || I || the invite id: what a face signs (2.1, 3.1)
+/// "kryfo-face-v4:" || I || the invite id: what a face signs
 Uint8List faceText(List<int> identity, List<int> inviteId) =>
     Uint8List.fromList([
       ...utf8.encode('kryfo-face-v4:'),
@@ -220,7 +220,7 @@ Uint8List kin4Body({
   return o.done();
 }
 
-/// a KHL1 body without its signature (3.3): the invite id answered (all
+/// a KHL1 body without its signature: the invite id answered (all
 /// zero for a v3 link), the owner's identity key and my signed one-time
 /// invite
 Uint8List khl1Body({
@@ -271,7 +271,7 @@ Future<InviteRow> makeInvite(
   final r = random ?? Random.secure();
   final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
   final oneTime = kind == kInviteOneTime;
-  // a roster invite has no bundle: its hellos carry one (4.3)
+  // a roster invite has no bundle: its hellos carry one
   final roster = kind == kInviteRoster;
   if (face != null && (roster || ss.ident != kMainIdent)) {
     throw ArgumentError('only the main identity shows its face');
@@ -403,7 +403,7 @@ Future<InviteRow?> currentRosterInvite(DatabaseExecutor db, int ident) async {
   return null;
 }
 
-/// a member's roster invite as a group holds it (4.3): the admin keeps the
+/// a member's roster invite as a group holds it: the admin keeps the
 /// one each member sent, a member the ones the admin passed on
 class RosterInviteRow {
   const RosterInviteRow(
@@ -554,7 +554,7 @@ Future<void> rosterInvitesPassed(
 }
 
 /// a one-time invite took its first opener: its keys and its address go,
-/// so a forwarded copy reaches nothing (2.3)
+/// so a forwarded copy reaches nothing
 Future<void> spendOneTime(
   Database db,
   SignalSession ss,
@@ -581,7 +581,7 @@ Future<void> spendOneTime(
 }
 
 /// an invite past its expiry and a day of grace, or a one-time one used:
-/// its keys, its first-contact key and its row go (R23). never one that
+/// its keys, its first-contact key and its row go. never one that
 /// never expires
 Future<void> dropInvite(Database db, SignalSession ss, InviteRow row) async {
   if (row.neverExpires) return;
@@ -638,7 +638,7 @@ Future<InviteUpkeep> keepInvites(
   final live = mains.where((r) => r.retiredAt == null).toList();
   final made = await _mainMade(db, ss.ident);
   if (dev) {
-    // made once (11 step 4), never replaced, never dropped: a phone that
+    // made once, never replaced, never dropped: a phone that
     // made it and lost it makes none, so the pinned card is never silently
     // replaced
     if (mains.isEmpty && !made) {
@@ -721,7 +721,7 @@ Future<InviteUpkeep> keepInvites(
   return out;
 }
 
-/// "reset my invite link" (2.3): every main invite of [ss]'s identity
+/// "reset my invite link": every main invite of [ss]'s identity
 /// handed out goes now with its keys, its first-contact key and its row,
 /// none answered until it expires, and a new one is made when there is a
 /// [face] to show (else the next upkeep makes it). never the developer's,
@@ -754,16 +754,16 @@ Future<InviteUpkeep> resetMainInvite(
   return out;
 }
 
-// 11 step 4 ran: a main v4 invite was made once. kept in the store's
+// a main v4 invite was made once. kept in the store's
 // meta, which every later migration and the phone's own backup keep
 String _mainMadeKey(int ident) =>
     ident == kMainIdent ? kMainMadeMeta : 'i$ident:$kMainMadeMeta';
 
 /// the store's meta key of when its main identity's first main invite was
-/// made (11 step 4)
+/// made
 const kMainMadeMeta = 'kin4_main_made';
 
-/// the decoy store's meta key of when its identity says it was made (R17)
+/// the decoy store's meta key of when its identity says it was made
 const kDecoyBornMeta = 'decoy_born';
 
 Future<bool> _mainMade(DatabaseExecutor db, int ident) async => (await db.query(
@@ -797,7 +797,7 @@ const _hourMs = 3600 * 1000;
 int _between(Random r, int lo, int hi) =>
     hi <= lo ? hi : lo + (r.nextDouble() * (hi - lo)).floor();
 
-/// the decoy's main invite (identity v4 10, R17), made by the same code as
+/// the decoy's main invite, made by the same code as
 /// the everyday one on the decoy's own store and never listened on. its
 /// times are the ones an everyday phone born at [bornMs] would show: the
 /// first one issued at a random point since then, though never before
@@ -869,7 +869,7 @@ Future<InviteRow> keepDecoyInvite(
   return (await currentMainInvite(db, ss.ident))!;
 }
 
-/// why a reader turns an invite away (2.3, 3.4)
+/// why a reader turns an invite away
 enum InviteFault {
   // does not parse, a key in another form, a signature that does not hold
   damaged,
@@ -888,8 +888,8 @@ class InviteRefused implements Exception {
 
 /// [bytes] as a reader takes them: the shim's parse and every signature,
 /// then the times with a day of skew both ways. [timeless] reads one
-/// without them: the developer's, whose main invite never expires
-/// (DECIDED 2026-10-28), whatever carries it, a link, a qr or his handle
+/// without them: the developer's, whose main invite never expires,
+/// whatever carries it, a link, a qr or his handle
 LsInvite readInvite(
   KryfoSignal lib,
   List<int> bytes, {
@@ -954,7 +954,7 @@ bool isV4Link(String raw) {
   }
 }
 
-/// how long a hello's hash is kept, so a copy is taken once (3.3 rule 5)
+/// how long a hello's hash is kept, so a copy is taken once
 const kHelloSeenDays = 16;
 
 /// a hello's name in the seen store
@@ -964,7 +964,7 @@ String helloHash(List<int> hello) => sha256.convert(hello).toString();
 const kHelloWireStart = 'S0hMMQ';
 
 /// what a hello's proof of work is ground over: its hash, so the work is
-/// the same for every hello and binds all of it (3.3, as a first contact)
+/// the same for every hello and binds all of it (as a first contact)
 String helloPowSeed(List<int> hello) => 'khl1:${helloHash(hello)}';
 
 /// whether [nonce] is the proof of work for [hello]
@@ -973,7 +973,7 @@ bool helloPowHolds(List<int> hello, int nonce) =>
 
 /// what a hello's wire line is filled to: the second rumor size, the gift
 /// wrap a v4 opener lands on, so the relay tells neither from the other at
-/// one first-contact address (3.3)
+/// one first-contact address
 final kHelloWireLength = kRumorSizes[1];
 
 /// [hello] as it goes on the wire: base64, a dot and its nonce, then a dot
@@ -1037,7 +1037,7 @@ Future<(Uint8List, InviteRow)> makeHello(
   return (hello, once);
 }
 
-/// why a hello is dropped (3.3); nothing of it is shown or kept
+/// why a hello is dropped; nothing of it is shown or kept
 enum HelloFault { shape, invite, answers, seal, used, seen }
 
 /// [bytes] as an owner takes a hello at invite [at] of mine (null: my v3
@@ -1121,7 +1121,7 @@ Future<void> noteHelloSeen(
   'at': nowMs ?? DateTime.now().millisecondsSinceEpoch,
 }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
-/// crossed hellos (3.4b, R22): with my hello to them out and theirs in,
+/// crossed hellos: with my hello to them out and theirs in,
 /// the one whose sender key is smaller as bytes is answered. true when
 /// theirs is the one to answer
 bool answerTheirs(List<int> mine, List<int> theirs) {

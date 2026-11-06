@@ -179,10 +179,7 @@ class _DeskLinkScreenState extends State<DeskLinkScreen> {
             child: RiseSwap(
               alignment: Alignment.topCenter,
               child: !_notStarted
-                  ? const SizedBox(
-                      key: ValueKey(false),
-                      width: double.infinity,
-                    )
+                  ? const SizedBox(key: ValueKey(false), width: double.infinity)
                   : Semantics(
                       key: const ValueKey(true),
                       liveRegion: true,

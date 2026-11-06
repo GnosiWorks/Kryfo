@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the one door (identity v4 4.2): every frame to a contact is sealed here,
+// the one door: every frame to a contact is sealed here,
 // on the identity that contact knows. the sender fields and my own entry in
 // a roster are filled from that identity's row; a frame that still names
 // another identity of mine (its key in any form, its words, onion, handle

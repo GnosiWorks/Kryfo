@@ -69,7 +69,7 @@ class MovedScreen extends StatelessWidget {
               l10n.movedIsNowOnAnotherShown(appState.sessionId),
               style: HaloType.sans(
                 size: 14.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -99,7 +99,7 @@ class MovedScreen extends StatelessWidget {
                   ),
                   child: Text(
                     l10n.movedIMNotMoving,
-                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text),
                   ),
                 ),
               ),

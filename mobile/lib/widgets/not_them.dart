@@ -88,7 +88,7 @@ class NotThemAsk extends StatelessWidget {
                   style: HaloType.sans(
                     size: compact ? 12.5 : 13.5,
                     weight: FontWeight.w500,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                   ),
                 ),
               ),
@@ -184,7 +184,7 @@ class _NotThemFoldState extends State<NotThemFold> {
             l10n.notThemLine,
             style: HaloType.sans(
               size: 13.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),

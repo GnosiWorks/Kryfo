@@ -467,7 +467,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                   key: ValueKey(_count),
                   style: HaloType.sans(
                     size: 13.5,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
@@ -511,7 +511,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                               l10n.notesExportLockLine,
                               style: HaloType.sans(
                                 size: 12.5,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                                 height: 1.4,
                               ),
                             ),
@@ -664,7 +664,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
     final color = switch (grade) {
       _ when short => HaloColors.warnText,
       PassGrade.strong => HaloColors.green,
-      PassGrade.none => HaloColors.text2,
+      PassGrade.none => HaloColors.text,
       _ => HaloColors.amber,
     };
     return Column(

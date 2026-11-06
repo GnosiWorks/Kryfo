@@ -404,7 +404,7 @@ void main() {
   });
 
   testWidgets('a sharer whose code matched while its finish is still going '
-      'out does not burn, and matches once it went (review F1)', (t) async {
+      'out does not burn, and matches once it went', (t) async {
     final f = _Fake()
       ..steps.addAll(['wait 0', 'finishing', 'finishing', _done('late')]);
     final r = PairRun.share(f.hooks(), gap: const Duration(minutes: 4));

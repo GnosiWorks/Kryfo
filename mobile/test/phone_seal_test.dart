@@ -23,9 +23,12 @@ import 'desktop/sealed_file_test.dart' show ToyCrypto;
 import 'host_engine.dart';
 import 'sqlite_ffi.dart';
 
-const _corpus = '/home/mario/kryfo-notes/cleaner-corpus/samsung';
-const _voices = '/home/mario/kryfo-notes/voice-samples';
-const _trailers = '/home/mario/kryfo-notes/trailers';
+// real phone files stay outside the repo: KRYFO_CORPUS names their folder
+final _root = Platform.environment['KRYFO_CORPUS'];
+final _noCorpus = _root == null ? 'needs KRYFO_CORPUS' : null;
+final _corpus = p.join(_root ?? '', 'cleaner-corpus', 'samsung');
+final _voices = p.join(_root ?? '', 'voice-samples');
+final _trailers = p.join(_root ?? '', 'trailers');
 
 // a dart-only stand-in that fails on its [n]th seal: a stop part way
 class _FailingCrypto implements ChunkCrypto {
@@ -161,7 +164,7 @@ void main() {
     // the everyday key never opens them
     openEveryday();
     expect(() => File(at).readAsBytesSync(), throwsA(isA<SealedLocked>()));
-  });
+  }, skip: _noCorpus);
 
   group('the files of before, sealed in place', () {
     Map<String, Uint8List> realFiles() => {
@@ -301,7 +304,7 @@ void main() {
       expect((await sweepContainer(HaloContainer.everyday))!.sealed, 1);
       expect(_sum(File(at).readAsBytesSync()), _sum(video));
     });
-  });
+  }, skip: _noCorpus);
 
   group('names that say nothing', () {
     late SqliteMem db;
@@ -458,6 +461,7 @@ void main() {
         File(out).writeAsBytesSync(wav);
         expect(plainViewOf(out).path, out);
       },
+      skip: _noCorpus,
     );
 
     test('where memory will not reopen, a copy in the cache goes at once', () {
@@ -492,7 +496,7 @@ void main() {
       expect(String.fromCharCodes(_raw(back).sublist(0, 4)), 'RIFF');
       // nothing plain was left in the cache on the way
       expect(Directory(p.join(cache, kNativeCopies)).existsSync(), isFalse);
-    });
+    }, skip: _noCorpus);
 
     test('a file sealed by another program opens here, and its key for the '
         'phone\'s own readers is the one they read it with', () {

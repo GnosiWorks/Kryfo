@@ -38,7 +38,7 @@ var translateTLS *tls.Config
 // again with a backoff, from the byte the part holds, on a fresh circuit
 // after two misses. it ends once no chunk came for translateGiveUp.
 // translateLanes chunks at a time, each lane on a circuit of its own: one
-// onion circuit carried 0.06-0.55 MiB/s on 2026-11-06
+// onion circuit carries about 0.06-0.55 MiB/s
 const (
 	translateStall    = 45 * time.Second
 	translateChunkMax = 5 * time.Minute

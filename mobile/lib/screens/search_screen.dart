@@ -721,10 +721,7 @@ class _Morph extends StatelessWidget {
                           textDirection: typed ? writtenDir(query) : null,
                           style: typed
                               ? HaloType.sans(size: 15, color: HaloColors.text)
-                              : HaloType.sans(
-                                  size: 14,
-                                  color: HaloColors.text2,
-                                ),
+                              : HaloType.sans(size: 14, color: HaloColors.text),
                         ),
                       ),
                     ),
@@ -955,7 +952,7 @@ class _SearchFiltersState extends State<SearchFilters> {
                                 : FontWeight.w400,
                             color: k == kind
                                 ? HaloColors.onAmber
-                                : HaloColors.text2,
+                                : HaloColors.text,
                           ),
                           child: Text(label),
                         ),
@@ -995,7 +992,7 @@ class _FillLine extends StatelessWidget {
                     children: [
                       Text(
                         l10n.searchFilling(percent(share)),
-                        style: HaloType.mono(size: 10, color: HaloColors.text2),
+                        style: HaloType.mono(size: 10, color: HaloColors.text),
                       ),
                       const SizedBox(height: 5),
                       HaloBar(value: share, height: 3),
@@ -1084,7 +1081,7 @@ class _Centre extends StatelessWidget {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.45,
               ),
             ),
@@ -1106,7 +1103,7 @@ class _Label extends StatelessWidget {
       text,
       style: HaloType.mono(
         size: 10,
-        color: HaloColors.text2,
+        color: HaloColors.text,
         weight: FontWeight.w500,
         letter: 0.14,
       ),
@@ -1266,7 +1263,7 @@ class _People extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 l10n.handleStillReaching,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                style: HaloType.sans(size: 13, color: HaloColors.text),
               ),
             ],
           ],
@@ -1281,7 +1278,7 @@ class _People extends StatelessWidget {
           PeopleError.busy => l10n.searchPeopleBusy,
           PeopleError.unreachable => l10n.searchPeopleUnreachable,
           PeopleError.none => l10n.searchPeopleNone,
-        }, style: HaloType.sans(size: 13, color: HaloColors.text2)),
+        }, style: HaloType.sans(size: 13, color: HaloColors.text)),
       );
     } else {
       inner = Column(
@@ -1306,7 +1303,7 @@ class _People extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
           child: Text(
             l10n.searchPeopleLine,
-            style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+            style: HaloType.mono(size: 9.5, color: HaloColors.text),
           ),
         ),
       ],
@@ -1425,7 +1422,7 @@ class _PersonRow extends StatelessWidget {
                       textAlign: startOf(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(size: 12, color: HaloColors.text2),
+                      style: HaloType.sans(size: 12, color: HaloColors.text),
                     ),
                 ],
               ),
@@ -1539,7 +1536,7 @@ class _PersonSheetState extends State<_PersonSheet>
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.45,
                 ),
               ),
@@ -1566,7 +1563,7 @@ class _PersonSheetState extends State<_PersonSheet>
                     Text(
                       l10n.peopleFingerprintLine,
                       textAlign: TextAlign.center,
-                      style: HaloType.sans(size: 11.5, color: HaloColors.text2),
+                      style: HaloType.sans(size: 11.5, color: HaloColors.text),
                     ),
                   ],
                 ),
@@ -1711,7 +1708,7 @@ class _NameRow extends StatelessWidget {
                     n.sub,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10.5, color: HaloColors.text),
                   ),
                 ],
               ),
@@ -1811,7 +1808,7 @@ class _ChatBlockState extends State<_ChatBlock> {
                     padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
                     child: Text(
                       l10n.searchKeptMatches(c.kept),
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
                     ),
                   ),
                 )
@@ -1986,7 +1983,7 @@ class _HitRow extends StatelessWidget {
                               size: 10,
                               color: hit.out
                                   ? HaloColors.amberText
-                                  : HaloColors.text2,
+                                  : HaloColors.text,
                             ),
                           ),
                         )
@@ -1995,7 +1992,7 @@ class _HitRow extends StatelessWidget {
                       if (group) const Spacer(),
                       Text(
                         when,
-                        style: HaloType.mono(size: 10, color: HaloColors.text2),
+                        style: HaloType.mono(size: 10, color: HaloColors.text),
                       ),
                     ],
                   ),

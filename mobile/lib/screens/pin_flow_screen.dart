@@ -599,9 +599,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13,
-                  color: _error != null
-                      ? HaloColors.roseText
-                      : HaloColors.text2,
+                  color: _error != null ? HaloColors.roseText : HaloColors.text,
                 ),
               ),
             ),
@@ -710,7 +708,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       Text(
         l10n.flowVaultBackupLine,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+        style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
       ),
       const Spacer(flex: 3),
       _button(l10n.flowVaultBackupNow, () async {
@@ -769,7 +767,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         Text(
           line,
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+          style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
         ),
         const Spacer(flex: 3),
         _button(l10n.commonDone, () => Navigator.of(context).pop(true)),
@@ -790,7 +788,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         alignment: Alignment.center,
         child: Text(
           label,
-          style: HaloType.sans(size: 14, color: HaloColors.text2),
+          style: HaloType.sans(size: 14, color: HaloColors.text),
         ),
       ),
     ),

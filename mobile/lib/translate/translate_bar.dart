@@ -159,7 +159,7 @@ class TranslateBar extends StatelessWidget {
                                   key: const ValueKey('tr-bar-size'),
                                   style: HaloType.mono(
                                     size: 11,
-                                    color: HaloColors.text2,
+                                    color: HaloColors.text,
                                   ),
                                 ),
                             ],

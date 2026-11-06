@@ -419,7 +419,7 @@ class HaloType {
     fontFamilyFallback: monoFallbackNow,
     fontSize: size,
     fontWeight: weight,
-    color: color ?? HaloColors.text2,
+    color: color ?? HaloColors.text,
     letterSpacing: track(letter),
   );
 }

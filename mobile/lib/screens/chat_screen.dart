@@ -312,7 +312,7 @@ Future<bool> showNoteSheet(
             const SizedBox(height: 4),
             Text(
               l10n.chatJustForYouNeverShown,
-              style: HaloType.sans(size: 12, color: HaloColors.text2),
+              style: HaloType.sans(size: 12, color: HaloColors.text),
             ),
             const SizedBox(height: 16),
             ShiftTapGuard(
@@ -1041,7 +1041,7 @@ class _ChatScreenState extends State<ChatScreen>
   List<({int at, int kind})> _healLines = const [];
   bool _pausedForUpdate = false;
   // added by a hello that waits for its answer: what is written waits, and
-  // a v3 card's owner may need to update first (identity v4 11 step 7)
+  // a v3 card's owner may need to update first
   HelloWait _helloWait = kNoHelloWait;
   Timer? _helloWaitTimer;
   bool _keyReading = false;
@@ -7209,7 +7209,7 @@ class _ChatScreenState extends State<ChatScreen>
                                               l10n.chatThisMessageCanT,
                                               style: HaloType.sans(
                                                 size: 12,
-                                                color: HaloColors.text2,
+                                                color: HaloColors.text,
                                               ),
                                             ),
                                           );
@@ -7330,7 +7330,7 @@ class _ChatScreenState extends State<ChatScreen>
                                   link.chatLine!,
                                   style: HaloType.sans(
                                     size: 10.5,
-                                    color: HaloColors.text2,
+                                    color: HaloColors.text,
                                   ).copyWith(height: 1.35),
                                 ),
                               ),
@@ -7661,7 +7661,7 @@ class _AcceptRequestBar extends StatelessWidget {
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 12.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.5,
             ),
           ),
@@ -7673,7 +7673,7 @@ class _AcceptRequestBar extends StatelessWidget {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -7797,7 +7797,7 @@ class _IntroBanner extends StatelessWidget {
             l10n.chatIntroducedYouSayHello(vouchNames(names)),
             style: HaloType.sans(
               size: 12.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.5,
             ),
           ),
@@ -7855,7 +7855,7 @@ class _RequestBanner extends StatelessWidget {
             overflow: compact ? TextOverflow.ellipsis : null,
             style: HaloType.sans(
               size: 12.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.5,
             ),
           ),
@@ -7865,7 +7865,7 @@ class _RequestBanner extends StatelessWidget {
               l10n.requestSenderMediaLater,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -7908,7 +7908,7 @@ class _RequestLockBar extends StatelessWidget {
               Expanded(
                 child: Text(
                   line ?? l10n.chatWaitingForThemTo,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
                 ),
               ),
             ],
@@ -7966,7 +7966,7 @@ class _BlockedBar extends StatelessWidget {
               style: HaloType.serif(
                 size: 14,
                 italic: true,
-                color: HaloColors.text2,
+                color: HaloColors.text,
               ),
             ),
           ),
@@ -8130,7 +8130,7 @@ class _ChatHead extends StatelessWidget {
                   if (nickname != null)
                     Text(
                       haloId,
-                      style: HaloType.mono(size: 10, color: HaloColors.text2),
+                      style: HaloType.mono(size: 10, color: HaloColors.text),
                     ),
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
@@ -8167,7 +8167,7 @@ class _ChatHead extends StatelessWidget {
                                 size: 10,
                                 color: fast
                                     ? HaloColors.greenText
-                                    : HaloColors.text2,
+                                    : HaloColors.text,
                               ),
                             ),
                           ),
@@ -8419,7 +8419,7 @@ class _SearchHeadState extends State<SearchHead> {
                             TextSpan(
                               style: HaloType.mono(
                                 size: 10,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                               ),
                               children: widget.matchCount == 0
                                   ? [
@@ -8427,7 +8427,7 @@ class _SearchHeadState extends State<SearchHead> {
                                         text: l10n.chatNoMatches,
                                         style: HaloType.mono(
                                           size: 10,
-                                          color: HaloColors.text2,
+                                          color: HaloColors.text,
                                           weight: FontWeight.w500,
                                         ),
                                       ),
@@ -8682,7 +8682,7 @@ class _Bubble extends StatelessWidget {
     // behind the message
     final metaColor = (isOut && !frameless)
         ? HaloColors.onAmber
-        : HaloColors.text3;
+        : HaloColors.text;
     // under a photo or a video there is no amber behind the words
     final onAmberText = isOut && !frameless;
     final remainingMs = msg.burnAt != null
@@ -9547,7 +9547,7 @@ class _Bubble extends StatelessWidget {
                             _fmtFull(msg.when),
                             style: HaloType.mono(
                               size: 9.5,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                               letter: 0.3,
                             ),
                           ),
@@ -9625,7 +9625,7 @@ class _Bubble extends StatelessWidget {
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(
     size: 12.5,
-    color: isOut ? HaloColors.onAmber : HaloColors.text2,
+    color: isOut ? HaloColors.onAmber : HaloColors.text,
     height: 1.25,
   );
 
@@ -9931,7 +9931,7 @@ class _ReplyQuoteBar extends StatelessWidget {
                     st,
                     style: HaloType.sans(
                       size: 13,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.3,
                     ),
                   )
@@ -9942,7 +9942,7 @@ class _ReplyQuoteBar extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: HaloType.sans(
                       size: 13,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.3,
                     ),
                   ),
@@ -10033,7 +10033,7 @@ class _EmptyConversation extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: HaloType.sans(
                     size: 13,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
@@ -10157,7 +10157,7 @@ class _Composer extends StatelessWidget {
                                       ' · ${l10n.chatMessagesBurnAfter(_humanBurn(burnSeconds))}',
                                   style: HaloType.mono(
                                     size: 10.5,
-                                    color: HaloColors.text2,
+                                    color: HaloColors.text,
                                   ),
                                 ),
                               ],
@@ -10259,6 +10259,8 @@ class _Composer extends StatelessWidget {
                         maxLines: 4,
                         decoration: InputDecoration(
                           hintText: l10n.chatMessage,
+                          // one line: at large text the field is narrow and the word would break
+                          hintMaxLines: 1,
                           hintStyle: HaloType.sans(
                             size: 14,
                             color: HaloColors.text3,
@@ -10422,7 +10424,7 @@ class MediaGalleryScreen extends StatelessWidget {
             ),
             Text(
               l10n.chatSharedPhotoCount(paths.length, title),
-              style: HaloType.mono(size: 10, color: HaloColors.text2),
+              style: HaloType.mono(size: 10, color: HaloColors.text),
             ),
           ],
         ),
@@ -10593,7 +10595,7 @@ class _KeyChangedBanner extends StatelessWidget {
             l10n.chatMayHaveReinstalledOr(peerName),
             style: HaloType.sans(
               size: 12.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.5,
             ),
           ),

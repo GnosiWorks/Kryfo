@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// linked devices, receiving with the switch off (step 7 job 5): what a
+// linked devices, receiving with the switch off: what a
 // phone keeps from the relays is what it kept before. frames carrying the
 // device words ('dl', 'dq', ...) are filed exactly as the same frames
 // without them, and a line on a device-pair tag goes the way any line with

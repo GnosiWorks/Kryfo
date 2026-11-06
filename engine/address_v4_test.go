@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// v4 conversation addresses (identity v4 3.6, section 16 item 6): fixed
+// v4 conversation addresses: fixed
 // keys, pinned outputs in testdata/address_v4.json, and the equalities
 // and inequalities R1 asks for. KRYFO_WRITE_VECTORS=1 writes the file
 // again; it is checked in and never written by a normal run
@@ -190,7 +190,7 @@ func TestAddressV4WrapOpensOnItsPair(t *testing.T) {
 
 // the call names the pair's mode: a seed in the call moves its addresses
 // to v4, for that identity and peer only, and once seen the pair is
-// refused without it (review finding 2: never by what the engine holds)
+// refused without it
 func TestPairModeComesWithTheCall(t *testing.T) {
 	a, b := fixedXid(t, v4Keys["a"]), fixedXid(t, v4Keys["b"])
 	putIdentity(41, a)

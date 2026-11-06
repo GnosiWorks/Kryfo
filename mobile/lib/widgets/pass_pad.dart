@@ -262,7 +262,7 @@ class _ModeKey extends StatelessWidget {
             textDirection: TextDirection.ltr,
             style: HaloType.mono(
               size: 13,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               weight: FontWeight.w600,
               letter: 1.2,
             ),
@@ -312,7 +312,7 @@ class PassStrength extends StatelessWidget {
             child: Text(
               words[level],
               key: ValueKey(level),
-              style: HaloType.sans(size: 12, color: HaloColors.text2),
+              style: HaloType.sans(size: 12, color: HaloColors.text),
             ),
           ),
         ],

@@ -344,7 +344,7 @@ class _TipScreenState extends State<TipScreen> {
                       l10n.tipsRestoreLine,
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.4,
                       ),
                     ),
@@ -582,7 +582,7 @@ class _TierCard extends StatelessWidget {
                     maxLines: 2,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 12, color: HaloColors.text2),
+                    style: HaloType.sans(size: 12, color: HaloColors.text),
                   ),
                 ],
               ),

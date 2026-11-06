@@ -208,7 +208,7 @@ class _Foot extends StatelessWidget {
   Widget build(BuildContext context) {
     final quiet = HaloType.sans(
       size: 11.5,
-      color: HaloColors.text3,
+      color: HaloColors.text,
       height: 1.3,
     );
     final act = HaloType.sans(

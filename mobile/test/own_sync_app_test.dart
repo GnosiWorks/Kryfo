@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// linked devices, own-device sync in the app (step 7 job 8): a copy of
+// linked devices, own-device sync in the app: a copy of
 // mine is filed once, as mine, in its chat, and never in a hidden chat, a
 // chat with screenshots blocked or a chat it does not name; my words on a
 // message land only on mine; read state, deletes and clears converge and a

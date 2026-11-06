@@ -878,7 +878,7 @@ void main() {
     );
   });
 
-  group('review round 2', () {
+  group('second pass', () {
     test(
       'with the key failing, a real pin a step does not take answers as any other',
       () async {

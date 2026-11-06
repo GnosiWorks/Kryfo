@@ -323,7 +323,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         l10n.pollMaxLine,
-                        style: HaloType.sans(size: 12, color: HaloColors.text2),
+                        style: HaloType.sans(size: 12, color: HaloColors.text),
                       ),
                     )
                   : const SizedBox(width: double.infinity),
@@ -357,7 +357,7 @@ class _NewPollSheetState extends State<_NewPollSheet> {
                             l10n.pollMultipleLine,
                             style: HaloType.sans(
                               size: 12,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                             ),
                           ),
                         ],

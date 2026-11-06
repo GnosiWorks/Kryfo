@@ -133,7 +133,7 @@ class _RoomPreviewState extends State<_RoomPreview> {
                   child: Center(
                     child: Text(
                       l10n.kryfoLinkTextNotNow,
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
                     ),
                   ),
                 ),
@@ -213,14 +213,14 @@ class _Open extends StatelessWidget {
         child: SlotLine(
           msg: l10n.kryfoLinkTextClosesIn,
           slot: RoomCountdown(expiresAt: link.expiresAt, size: 11),
-          style: HaloType.mono(size: 11, color: HaloColors.text2),
+          style: HaloType.mono(size: 11, color: HaloColors.text),
         ),
       ),
       const SizedBox(height: 14),
       Text(
         l10n.kryfoLinkTextYouJoinUnderA,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.45),
+        style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.45),
       ),
       // on fast a room still goes through tor, and waits for it
       if (torWaitLine() case final wait?) ...[

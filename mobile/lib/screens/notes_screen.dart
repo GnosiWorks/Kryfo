@@ -815,7 +815,7 @@ class _NotesScreenState extends State<NotesScreen> {
                         : l10n.notesOnlyOnThisPhoneShown,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10, color: HaloColors.text),
                   ),
                   actions: [
                     if (_notes.isNotEmpty)
@@ -1041,7 +1041,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.55,
                 ),
               ),
@@ -1390,7 +1390,7 @@ class _NoteBubble extends StatelessWidget {
                     time,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 9, color: HaloColors.text2),
+                    style: HaloType.mono(size: 9, color: HaloColors.text),
                   ),
                 ),
                 // large text in a long language: the toggle never takes
@@ -1510,7 +1510,7 @@ class _NoteBubble extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.mono(
                               size: 9,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                             ),
                           ),
                         ),

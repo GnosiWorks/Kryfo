@@ -613,7 +613,7 @@ class VoiceRecordBar extends StatelessWidget {
                 slideLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: HaloType.mono(size: 11, color: HaloColors.text2),
+                style: HaloType.mono(size: 11, color: HaloColors.text),
               ),
             ),
           ];

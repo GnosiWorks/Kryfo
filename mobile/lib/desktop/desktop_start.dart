@@ -516,7 +516,7 @@ Future<void> openSeal({
   final io = SealedIO(areas, const EngineChunkCrypto());
   IOOverrides.global = io;
   // where code outside dart gets its copies when there is no memfd: on
-  // windows <root>/tmp, on the disk (B9), each gone when its reader is
+  // windows <root>/tmp, on the disk, each gone when its reader is
   final spill = runtime == null ? p.join(root, 'tmp', 'native') : null;
   isolateRunner = <R>(FutureOr<R> Function() f) => runSealed(f);
   nativeFiles =

@@ -84,7 +84,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                 l10n.roomLinkTheyWillKnowThis,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.45,
                 ),
               ),
@@ -94,7 +94,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 22),
                 child: Text(
                   l10n.roomLinkNoContactsYet,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
                 ),
               )
             else
@@ -188,7 +188,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                       expiresAt: widget.link.expiresAt,
                       size: 10,
                     ),
-                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10, color: HaloColors.text),
                   )
                 : Row(
                     children: [
@@ -253,7 +253,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),

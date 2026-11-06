@@ -183,7 +183,7 @@ class _HandleScreenState extends State<HandleScreen> {
     return [
       Text(
         l10n.handleOptionalYourThreeWords,
-        style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+        style: HaloType.sans(size: 13.5, color: HaloColors.text),
       ),
       const SizedBox(height: 20),
       HandleField(
@@ -300,7 +300,7 @@ class _ListingCardState extends State<_ListingCard> {
                       l10n.handleShowInSearchLine,
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.4,
                       ),
                     ),
@@ -408,7 +408,7 @@ class _ClaimedCardState extends State<_ClaimedCard> {
           const SizedBox(height: 12),
           Text(
             l10n.handleAnyoneWithThisLink,
-            style: HaloType.sans(size: 13, color: HaloColors.text2),
+            style: HaloType.sans(size: 13, color: HaloColors.text),
           ),
           const SizedBox(height: 14),
           PressScale(
@@ -431,7 +431,7 @@ class _ClaimedCardState extends State<_ClaimedCard> {
                     child: Text(
                       url,
                       textDirection: TextDirection.ltr,
-                      style: HaloType.mono(size: 11, color: HaloColors.text2),
+                      style: HaloType.mono(size: 11, color: HaloColors.text),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -581,7 +581,7 @@ class _RiskBlock extends StatelessWidget {
           const SizedBox(height: 9),
           Text(
             l10n.handleAnyoneWhoKnowsIt,
-            style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+            style: HaloType.sans(size: 12.5, color: HaloColors.text),
           ),
         ],
       ),
@@ -710,11 +710,7 @@ class _ForeignCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             l10n.handleTheRegistryHoldsItShown(handle),
-            style: HaloType.sans(
-              size: 13,
-              color: HaloColors.text2,
-              height: 1.5,
-            ),
+            style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
           ),
           const SizedBox(height: 14),
           PressScale(

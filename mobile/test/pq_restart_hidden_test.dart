@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pq restart of a hidden chat (identity v4 10, phase 6 left it): the
+// the pq restart of a hidden chat: the
 // app is alice, the larger key, and bob's chat is in the vault. while it is
 // open his KDB1 starts pq as an everyday one does, his answer notes the
 // time and the line, and the classic states go 16 days on with the vault

@@ -173,7 +173,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                     index: 0,
                     child: Text(
                       l10n.keyVerificationWith(widget.peerName),
-                      style: HaloType.sans(size: 14, color: HaloColors.text2),
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
                     ),
                   ),
                   EaseSize(
@@ -227,7 +227,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                         l10n.keyVerificationCompareAll(widget.peerName),
                         style: HaloType.sans(
                           size: 13,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.5,
                         ),
                       ),

@@ -73,7 +73,7 @@ class WhyKryfoScreen extends StatelessWidget {
                   l10n.whyKryfoKryfoIsPreAlpha,
                   style: HaloType.sans(
                     size: 13,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
@@ -107,7 +107,7 @@ Widget _principle(IconData icon, String title, String body) {
                 body,
                 style: HaloType.sans(
                   size: 13,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.55,
                 ),
               ),

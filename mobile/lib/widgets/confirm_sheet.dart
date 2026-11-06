@@ -49,7 +49,7 @@ Widget _title(String t, {Color? color, int? lines}) => Text(
 
 Widget _line(String t) => Text(
   t,
-  style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.45),
+  style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.45),
 );
 
 // one numbered step: the number in its own column so wrapped lines stay
@@ -139,7 +139,7 @@ Widget _quiet(String label, VoidCallback onTap, {Color? color}) => PressScale(
     child: Center(
       child: Text(
         label,
-        style: HaloType.sans(size: 13, color: color ?? HaloColors.text2),
+        style: HaloType.sans(size: 13, color: color ?? HaloColors.text),
       ),
     ),
   ),
@@ -245,7 +245,7 @@ Future<bool> showConfirmSheet(
             detail,
             style: HaloType.sans(
               size: 11.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.4,
             ),
           ),
@@ -291,11 +291,7 @@ Future<String?> showConfirmOrMoreSheet(
         const SizedBox(height: 6),
         Text(
           detail,
-          style: HaloType.sans(
-            size: 11.5,
-            color: HaloColors.text2,
-            height: 1.4,
-          ),
+          style: HaloType.sans(size: 11.5, color: HaloColors.text, height: 1.4),
         ),
       ],
       const SizedBox(height: 16),
@@ -473,7 +469,7 @@ Future<T?> showChoiceSheet<T>(
                         c.hint!,
                         style: HaloType.sans(
                           size: 12,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.35,
                         ),
                       ),

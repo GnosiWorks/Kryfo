@@ -359,7 +359,7 @@ class IncomingMediaBanner extends StatelessWidget {
                 line,
                 style: HaloType.mono(
                   size: 10.5,
-                  color: stalled ? HaloColors.text2 : HaloColors.amberText,
+                  color: stalled ? HaloColors.text : HaloColors.amberText,
                 ),
               ),
             ),
@@ -410,7 +410,7 @@ class _StripAction extends StatelessWidget {
               style: HaloType.mono(
                 size: 10.5,
                 weight: FontWeight.w700,
-                color: HaloColors.text2,
+                color: HaloColors.text,
               ),
             ),
           ),

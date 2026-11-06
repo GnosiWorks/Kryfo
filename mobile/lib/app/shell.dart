@@ -44,7 +44,7 @@ class _RootShellState extends State<RootShell> {
             appState.onboardingComplete
                 ? l10n.appBooting
                 : l10n.appSettingUpYourIdentity,
-            style: HaloType.mono(size: 11, color: HaloColors.text2),
+            style: HaloType.mono(size: 11, color: HaloColors.text),
           ),
         ),
       );
@@ -217,7 +217,7 @@ class _AddSheetState extends State<_AddSheet>
             const SizedBox(height: 6),
             Text(
               l10n.appScanTheirCodeOrShown,
-              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+              style: HaloType.sans(size: 12.5, color: HaloColors.text),
             ),
             // no camera on a computer: the field below is the way in
             if (!onDesktop) ...[
@@ -395,7 +395,7 @@ class _AddSheetState extends State<_AddSheet>
                             l10n.appShowYourCodeSend,
                             style: HaloType.sans(
                               size: 11.5,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                             ),
                           ),
                         ],

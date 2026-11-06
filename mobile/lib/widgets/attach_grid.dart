@@ -109,7 +109,7 @@ class _AttachGridState extends State<AttachGrid>
                           textAlign: TextAlign.center,
                           style: HaloType.sans(
                             size: 11.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         ),
                       ),
@@ -187,7 +187,7 @@ class _Tile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
             ],
           ),

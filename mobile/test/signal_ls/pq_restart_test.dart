@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the pq restart of a held classic chat (identity v4 11 steps 5 and 6) on
+// the pq restart of a held classic chat on
 // the stores themselves: the smaller key's KDB1, the other side's session
 // on it in front of the held one, the opener and its answer, classic
 // messages still on their way read and never taking the front back, the

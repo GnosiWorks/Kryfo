@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// the engine's side of the one door (identity v4 4.2, 16 item 10): what
+// the engine's side of the one door: what
 // it publishes and listens on for a peer reached on an identity of its
 // own carries nothing of the main one. every address, seal key and tag is
 // that identity's, on a relay stand-in that keeps what it is sent

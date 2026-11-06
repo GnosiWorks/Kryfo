@@ -94,7 +94,7 @@ Future<String?> showRenameSheet(
               const SizedBox(height: 6),
               Text(
                 l10n.contactStaysOnThisPhoneShown,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
               const SizedBox(height: 14),
               Container(
@@ -481,7 +481,7 @@ class _ContactScreenState extends State<ContactScreen> {
         ? HaloColors.green
         : _voucherNames.isNotEmpty
         ? HaloColors.amber
-        : HaloColors.text2;
+        : HaloColors.text;
     final note = c?['note'] as String?;
     // the tier they share, as their last message carried it
     final badge = c != null
@@ -647,7 +647,7 @@ class _ContactScreenState extends State<ContactScreen> {
                                 style: HaloType.serif(
                                   size: 14,
                                   italic: true,
-                                  color: HaloColors.text2,
+                                  color: HaloColors.text,
                                 ),
                               ),
                             )
@@ -936,11 +936,7 @@ class _CompareCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             l10n.chatCompareLine(peerName),
-            style: HaloType.sans(
-              size: 13,
-              color: HaloColors.text2,
-              height: 1.5,
-            ),
+            style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
           ),
           const SizedBox(height: 12),
           Row(
@@ -1099,7 +1095,7 @@ class _StatCard extends StatelessWidget {
               label,
               style: HaloType.mono(
                 size: 9.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 letter: 0.12,
               ),
             ),

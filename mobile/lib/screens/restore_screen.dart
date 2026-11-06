@@ -512,7 +512,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
                 about,
                 style: HaloType.sans(
                   size: 13.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.45,
                 ),
               ),
@@ -559,7 +559,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Text(
                       l10n.restoreNotNow,
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
                     ),
                   ),
                 ),
@@ -593,7 +593,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
             t,
             style: HaloType.sans(
               size: 13.5,
-              color: strong ? HaloColors.text : HaloColors.text2,
+              color: strong ? HaloColors.text : HaloColors.text,
               weight: strong ? FontWeight.w600 : FontWeight.w400,
               height: 1.45,
             ),
@@ -653,7 +653,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
                   l10n.restoreABackupBringsBackShown,
                   style: HaloType.sans(
                     size: 13,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
@@ -846,7 +846,7 @@ class _RestoreScreenState extends State<RestoreScreen> with PinShield {
                                   l10n.restoreNotThisOne,
                                   style: HaloType.sans(
                                     size: 13,
-                                    color: HaloColors.text2,
+                                    color: HaloColors.text,
                                   ),
                                 ),
                               ),
@@ -1002,11 +1002,7 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             l10n.restoreMessagesSentOrReceived,
-            style: HaloType.sans(
-              size: 12,
-              color: HaloColors.text2,
-              height: 1.4,
-            ),
+            style: HaloType.sans(size: 12, color: HaloColors.text, height: 1.4),
           ),
         ],
       ),
@@ -1019,7 +1015,7 @@ class _SummaryCard extends StatelessWidget {
         padding: const EdgeInsetsDirectional.only(end: 12, bottom: 4),
         child: Text(
           k,
-          style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+          style: HaloType.mono(size: 10.5, color: HaloColors.text),
         ),
       ),
       Padding(

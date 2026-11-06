@@ -2305,7 +2305,7 @@ void main() {
         HaloColors.setLight(light);
         themeRevision.value++;
         await t.pump();
-        expect(ink(), HaloColors.text2, reason: '$light');
+        expect(ink(), HaloColors.text, reason: '$light');
       }
     });
 

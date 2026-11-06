@@ -77,7 +77,7 @@ class BootFailedScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.4,
               ),
             ),
@@ -91,7 +91,7 @@ class BootFailedScreen extends StatelessWidget {
               ),
               child: SelectableText(
                 error,
-                style: HaloType.mono(size: 11, color: HaloColors.text2),
+                style: HaloType.mono(size: 11, color: HaloColors.text),
               ),
             ),
             const SizedBox(height: 14),
@@ -107,7 +107,7 @@ class BootFailedScreen extends StatelessWidget {
                     onPressed: onRetry,
                     child: Text(
                       l10n.commonTryAgain,
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
                     ),
                   ),
                 ],
@@ -126,7 +126,7 @@ class BootFailedScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.4,
                 ),
               ),
@@ -164,7 +164,7 @@ class BootFailedScreen extends StatelessWidget {
     onPressed: () => Clipboard.setData(ClipboardData(text: error)),
     child: Text(
       l10n.commonCopy,
-      style: HaloType.mono(size: 12, color: HaloColors.text2),
+      style: HaloType.mono(size: 12, color: HaloColors.text),
     ),
   );
 

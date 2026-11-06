@@ -8,7 +8,7 @@ import (
 	"github.com/halo/engine/devices"
 )
 
-// removing my own devices (linked step 7, job 9): the phone's next list
+// removing my own devices: the phone's next list
 // without them, the list a restored phone signs first, and the keys of a
 // device just removed that its last word still goes to. only the phone
 // signs; dart signs the body with ks_sign and takes it with own_mine

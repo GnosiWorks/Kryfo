@@ -39,7 +39,7 @@ class ContactCard extends StatelessWidget {
             l10n.contactCardMessageMeOn,
             style: HaloType.mono(
               size: 10,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               letter: 0.18,
             ),
           ),
@@ -87,7 +87,7 @@ class ContactCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 11,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),

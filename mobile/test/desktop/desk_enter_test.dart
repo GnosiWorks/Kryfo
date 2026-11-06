@@ -153,9 +153,9 @@ void main() {
     final dir = folder(t);
     final db = await _notes(t);
     final f = File('${dir.path}/list.txt')..writeAsStringSync('p');
-    final photo = File('test/fixtures/photo_512.jpg').copySync(
-      '${dir.path}/view.jpg',
-    );
+    final photo = File(
+      'test/fixtures/photo_512.jpg',
+    ).copySync('${dir.path}/view.jpg');
     Future<void> say(String method, Object? args) async {
       await t.binding.defaultBinaryMessenger.handlePlatformMessage(
         DesktopDrop.channel.name,

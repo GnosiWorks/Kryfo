@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// first-contact keys per invite (identity v4 3.6): a random secp256k1 key
+// first-contact keys per invite: a random secp256k1 key
 // the app makes for each invite and keeps with it, so no address comes
 // from an identity's key. the engine listens on the ones the app hands it
 // and opens what lands there with that key alone. the main identity still
@@ -93,7 +93,7 @@ func subscribeFcKey(ident int, invite, skHex string) error {
 
 // an invite's first-contact address: each line is the key the seal was
 // signed with, a bar and what the wrap carried, so the app checks the seal
-// is the hello seal key before anything is opened (identity v4 3.1, 3.3)
+// is the hello seal key before anything is opened
 func nostrSubscribeRunnerInvite(ctx context.Context, tag, fcSk, fcPk string) {
 	nostrSubscribeRunnerAt(ctx, laneFirstContact, tag, fcPk, func(gw nostr2.Event) (string, nostr2.Timestamp, error) {
 		content, sealPk, at, err := nip17UnwrapFirstContactWithStamped(fcSk, gw)

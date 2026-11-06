@@ -828,7 +828,7 @@ func TestJoinerAfterKeepsTries(t *testing.T) {
 }
 
 // the marks around digits that ar and fa fields and copy-paste add are
-// skipped like spaces (review I3); anything else still fails closed
+// skipped like spaces; anything else still fails closed
 func TestCodesSkipMarks(t *testing.T) {
 	for _, m := range []string{"‎", "‏", "؜", "⁦", "⁧", "⁨", "⁩", " ", "‑", " "} {
 		in := m + "07" + m + "123" + m + "456" + m

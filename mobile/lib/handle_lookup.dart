@@ -30,7 +30,7 @@ String? handleFromInput(String raw) {
 // only a kryfo invite for the handle we asked about is accepted. with
 // [idOf], only one whose id is the three words of the key that claimed it.
 // a v4 invite only when [v4FaceOf] reads it with every reader check and
-// its face is the key that claimed the handle (identity v4 7, R11)
+// its face is the key that claimed the handle
 String? inviteFromRegistryJson(
   String body,
   String handle, {

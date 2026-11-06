@@ -187,7 +187,7 @@ release's own code:
    the dev card self-check (`flutter test test/dev_key_test.dart` with the card as the current key,
    both prekey signatures under his key, a pq session builds), and pin it as the current key's
    bundle (same key id).
-4. remind Mario to make an encrypted backup of the developer's phone right away: the pinned keys live
+4. make an encrypted backup of the developer's phone right away: the pinned keys live
    only there. never reset its invite link, regenerate its identity or restore an older backup on it.
 5. build and verify the final from the pinned commit (without KRYFO_RC), with
    `KRYFO_RELEASE=1 flutter test test/dev_key_test.dart` passing (the card's signatures and a pq

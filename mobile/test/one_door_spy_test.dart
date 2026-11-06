@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the one door (identity v4, 4.2): a contact on an identity of its own
+// the one door: a contact on an identity of its own
 // gets nothing of the main one. every frame the app sends them, inside
 // the session and outside it, is caught where it leaves for the engine
 // and read on their side: no key, words, onion, first-contact key or

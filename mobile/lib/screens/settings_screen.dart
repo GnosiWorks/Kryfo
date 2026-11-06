@@ -474,10 +474,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           side: session.container,
           erase: quiet
               ? null
-              : () => deskLinkErase(
-                  releaseHandle: !sessionQuiet,
-                  thenLink: true,
-                ),
+              : () =>
+                    deskLinkErase(releaseHandle: !sessionQuiet, thenLink: true),
         ),
       ),
     );

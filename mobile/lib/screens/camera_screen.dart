@@ -558,7 +558,7 @@ class _CameraScreenState extends State<CameraScreen>
     final note = Text(
       _video ? l10n.cameraNeverSavedToYour : l10n.cameraNoExifNeverSaved,
       textAlign: TextAlign.center,
-      style: HaloType.mono(size: 10.5, color: HaloColors.text2, letter: 0.06),
+      style: HaloType.mono(size: 10.5, color: HaloColors.text, letter: 0.06),
     );
     // the bars cross with the picture
     final bars = EaseSize(
@@ -956,7 +956,7 @@ class _CameraScreenState extends State<CameraScreen>
                     size: 11,
                     letter: 0.12,
                     weight: FontWeight.w600,
-                    color: on ? HaloColors.amberText : HaloColors.text2,
+                    color: on ? HaloColors.amberText : HaloColors.text,
                   ),
                   child: ExcludeSemantics(child: Text(label)),
                 ),

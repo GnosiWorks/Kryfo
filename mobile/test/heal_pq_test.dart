@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a heal on a chat that was still classic (identity v4 3.8 with 11 step 5):
+// a heal on a chat that was still classic:
 // the session it builds is pq, so the restart counts as done there and
 // then. its 15 days begin, the upkeep sends no KDB1 for it, and the line
 // and the answer go as for any heal

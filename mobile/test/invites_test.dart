@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// v4 invites (identity v4 2.1-2.3, R23, DECIDED 2026-10-28): the main
+// v4 invites: the main
 // invite and a one-time one made, signed by the shim and read back through
 // its parser at the sizes 2.1 computes; a session built from the link's
 // bundle opens on the invite's own keys; the link form; the reader's day of
@@ -40,7 +40,7 @@ final _p = BigInt.parse(
   radix: 16,
 );
 
-// whether x is the x of a secp256k1 point, as the shim asks (2.4)
+// whether x is the x of a secp256k1 point, as the shim asks
 bool _lifts(List<int> x) {
   final v = BigInt.parse(
     x.map((b) => b.toRadixString(16).padLeft(2, '0')).join(),

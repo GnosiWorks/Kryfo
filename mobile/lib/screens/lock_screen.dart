@@ -218,7 +218,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                   child: Text(
                     line,
                     textAlign: TextAlign.center,
-                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text),
                   ),
                 ),
                 // Reset only once the key read as gone twice: a busy
@@ -319,7 +319,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       child: Text(
         l10n.lockFingerAfterPin,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+        style: HaloType.sans(size: 12.5, color: HaloColors.text),
       ),
     );
   }
@@ -343,7 +343,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
             child: Text(
               line,
               textAlign: TextAlign.center,
-              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+              style: HaloType.sans(size: 12.5, color: HaloColors.text),
             ),
           );
     // reduced motion: no animation
@@ -438,7 +438,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                         size: 13,
                         color: _wrong || _held
                             ? HaloColors.roseText
-                            : HaloColors.text2,
+                            : HaloColors.text,
                       ),
                     ),
                   ),

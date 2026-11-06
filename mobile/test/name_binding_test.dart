@@ -84,7 +84,7 @@ Future<_Phone> _phone() async {
 
 List<int> _keyOf(_Phone p) => p.ss.identity.public;
 
-// what a v3 link add says now: a hello went to its owner (11 step 7)
+// what a v3 link add says now: a hello went to its owner
 String get _sent => l10n.helloSentOld;
 
 // the three words an ed key stands for, as the engine derives them

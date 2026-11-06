@@ -554,7 +554,7 @@ class _Head extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: HaloType.mono(
                   size: 10.5,
-                  color: waiting > 0 ? HaloColors.amberText : HaloColors.text2,
+                  color: waiting > 0 ? HaloColors.amberText : HaloColors.text,
                   letter: 0.06,
                 ),
               ),
@@ -594,7 +594,7 @@ class _SectionHead extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 weight: FontWeight.w500,
                 letter: 0.14,
               ),
@@ -603,7 +603,7 @@ class _SectionHead extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             whole(count),
-            style: HaloType.mono(size: 10, color: HaloColors.text2),
+            style: HaloType.mono(size: 10, color: HaloColors.text),
           ),
         ],
       ),
@@ -681,7 +681,7 @@ class _DoneHeadState extends State<_DoneHead>
                     overflow: TextOverflow.ellipsis,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       weight: FontWeight.w500,
                       letter: 0.14,
                     ),
@@ -691,7 +691,7 @@ class _DoneHeadState extends State<_DoneHead>
                 CountBadge(
                   count: widget.count,
                   color: HaloColors.surface3,
-                  ink: HaloColors.text2,
+                  ink: HaloColors.text,
                   fontSize: 9.5,
                 ),
                 const Spacer(),
@@ -1007,7 +1007,7 @@ class _Empty extends StatelessWidget {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.55,
               ),
             ),

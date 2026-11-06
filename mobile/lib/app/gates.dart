@@ -581,7 +581,7 @@ class TorSheet extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text(
                     l10n.appRelayAndFastModes,
-                    style: HaloType.sans(size: 11, color: HaloColors.text2),
+                    style: HaloType.sans(size: 11, color: HaloColors.text),
                   ),
                 ],
               ],

@@ -144,7 +144,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
             child: Text(
               widget.caption ?? l10n.avatarPickerThePeopleYouMessage,
               textAlign: TextAlign.center,
-              style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+              style: HaloType.mono(size: 10.5, color: HaloColors.text),
             ),
           ),
           const SizedBox(height: 26),
@@ -287,7 +287,7 @@ class _Label extends StatelessWidget {
     text,
     style: HaloType.mono(
       size: 11,
-      color: HaloColors.text2,
+      color: HaloColors.text,
       letter: 0.14,
       weight: FontWeight.w600,
     ),

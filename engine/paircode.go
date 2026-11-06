@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package main
 
-// eight digit pair codes (identity v4 6, IDENTITY-V4.md 4.3 and 5.4). the
+// eight digit pair codes. the
 // first two digits are a public box, which with the ten-minute window names
 // a rendezvous address; the last six are the cpace password (engine/pake)
 // and never leave this process. the sharer puts an offer at the box, the
@@ -284,7 +284,7 @@ func (r *pairRun) close() {
 
 // the offers a code answered, by a mac of the code under a key of this
 // process, kept for as long as the code can live: a code typed again goes
-// on from its tries (review F3), so a fake sharer never gets more than
+// on from its tries, so a fake sharer never gets more than
 // pake.MaxTries guesses at it. lost when the app restarts
 var (
 	pairTriedMu  sync.Mutex
