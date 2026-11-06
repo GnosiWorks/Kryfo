@@ -349,9 +349,15 @@ done
 ls "$OUT"/app-*-release*.apk >/dev/null 2>&1 || { echo "the container produced no apks" >&2; exit 1; }
 echo
 echo "== $OUT/"
-( cd "$OUT" && sha256sum app-*.apk libkryfo_signal-*-source*.tar.gz )
+if [ -n "$RC" ]; then
+  ( cd "$OUT" && sha256sum app-*.apk libkryfo_signal-*-source*.tar.gz )
+else
+  # SHA256SUMS now; run it again once the windows and linux files are in $OUT
+  version=$(git -C "$REPO" show "$COMMIT:mobile/pubspec.yaml" | sed -n 's/^version: *\([^+ ]*\).*/\1/p')
+  ./sums.sh "$OUT" "$version"
+fi
 echo
-echo "these are the release. attach them and the shim's source tarball to"
-echo "the github release."
+echo "these are the release. attach them, the shim's source tarball and"
+echo "SHA256SUMS to the github release."
 echo "to have someone else confirm them, or to check them later:"
 echo "  ${BUILD_NAME:+HALO_BUILD_NAME=$BUILD_NAME }./verify.sh --ref $REF $OUT/app-*-release*.apk"
