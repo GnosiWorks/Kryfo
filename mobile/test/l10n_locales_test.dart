@@ -119,7 +119,6 @@ final _calls = <_Call>[
     [],
     (l) => l.contactStatusWaitingInRequests,
   ),
-  ('contactStatusAddedByHand', [], (l) => l.contactStatusAddedByHand),
   ('deliveryModeAlwaysOn', [], (l) => l.deliveryModeAlwaysOn),
   ('deliveryModeCheckIns', [], (l) => l.deliveryModeCheckIns),
   ('deliveryModeThroughAHelperApp', [], (l) => l.deliveryModeThroughAHelperApp),

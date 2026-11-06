@@ -120,7 +120,6 @@ void main() {
     expect(l.contactStatusBlocked, "Blocked");
     expect(l.contactStatusKeysVerifiedInPerson, "Keys verified in person");
     expect(l.contactStatusWaitingInRequests, "Waiting in requests");
-    expect(l.contactStatusAddedByHand, "Added by hand");
     expect(l.deliveryModeAlwaysOn, "Always on");
     expect(l.deliveryModeCheckIns, "Check-ins");
     expect(l.deliveryModeThroughAHelperApp, "Through a helper app");

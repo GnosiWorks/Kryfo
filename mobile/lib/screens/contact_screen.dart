@@ -615,21 +615,27 @@ class _ContactScreenState extends State<ContactScreen> {
                             )
                           : const SizedBox(width: double.infinity),
                     ),
-                    const SizedBox(height: 10),
                     // a new status rises in over the last, and the note eases
                     // in once it loads instead of shoving the page down
-                    RiseSwap(
-                      alignment: Alignment.center,
-                      child: Text(
-                        status,
-                        key: ValueKey(status),
-                        textAlign: TextAlign.center,
-                        style: HaloType.mono(
-                          size: 11,
-                          color: statusColor,
-                          letter: 0.04,
-                        ),
-                      ),
+                    EaseSize(
+                      child: status != null
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: RiseSwap(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  status,
+                                  key: ValueKey(status),
+                                  textAlign: TextAlign.center,
+                                  style: HaloType.mono(
+                                    size: 11,
+                                    color: statusColor,
+                                    letter: 0.04,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const SizedBox(width: double.infinity),
                     ),
                     EaseSize(
                       child: note != null && note.isNotEmpty
