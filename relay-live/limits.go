@@ -311,6 +311,11 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if addrs != 1 {
 		return true, "invalid: a wrap goes to one address"
 	}
+	// one the recipient index would hand every catch-up ("*"): a few
+	// hundred of them would send every catch-up back to the full scan
+	if tags, _ := json.Marshal(ev.Tags); listAs(tags)[0] == anyAddr {
+		return true, "invalid: too many keys in the tags"
+	}
 	now := time.Now()
 	if ev.CreatedAt.Time().After(now.Add(futureSlack)) {
 		return true, "invalid: created_at is in the future"
