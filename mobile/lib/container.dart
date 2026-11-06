@@ -321,6 +321,8 @@ const containerKeys = {
   'kryfo.gif.on',
   'kryfo.gif.asked',
   'kryfo.update.on',
+  // each identity hides the card for itself
+  'kryfo.update.dismissed',
   'kryfo.get.photo',
   'kryfo.get.video',
   'kryfo.get.file',
@@ -398,7 +400,6 @@ const deviceKeys = {
   'gpush_offer',
   'kryfo.update.checked',
   'kryfo.update.latest',
-  'kryfo.update.dismissed',
   // plain notifications and the line after an icon switch: the icon is the
   // phone's, so what goes with it is too
   'notif_plain',
