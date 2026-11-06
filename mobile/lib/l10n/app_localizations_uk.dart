@@ -11796,4 +11796,8 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get groupMembersNeedUpdate =>
       'У деяких учасників старіша версія Kryfo. Їм треба оновитися, щоб отримувати тут повідомлення.';
+
+  @override
+  String get onboardingAlwaysOnNotice =>
+      'Android потрібне одне беззвучне постійне сповіщення, щоб повідомлення надходили, коли Kryfo закрито.';
 }

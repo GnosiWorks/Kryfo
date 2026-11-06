@@ -11613,4 +11613,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get groupMembersNeedUpdate =>
       'Some members use an older Kryfo. They\'ll need to update to get messages here.';
+
+  @override
+  String get onboardingAlwaysOnNotice =>
+      'Android needs one silent notification that stays, so messages arrive when Kryfo is closed.';
 }

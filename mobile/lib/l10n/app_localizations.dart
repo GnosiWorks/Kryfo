@@ -18594,6 +18594,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some members use an older Kryfo. They\'ll need to update to get messages here.'**
   String get groupMembersNeedUpdate;
+
+  /// screens/onboarding_screen.dart: f-droid, the third line on the always on card: why its notification stays
+  ///
+  /// In en, this message translates to:
+  /// **'Android needs one silent notification that stays, so messages arrive when Kryfo is closed.'**
+  String get onboardingAlwaysOnNotice;
 }
 
 class _AppLocalizationsDelegate

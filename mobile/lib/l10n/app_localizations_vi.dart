@@ -11600,4 +11600,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get groupMembersNeedUpdate =>
       'Một số thành viên đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây.';
+
+  @override
+  String get onboardingAlwaysOnNotice =>
+      'Android cần một thông báo im lặng luôn hiện để tin nhắn vẫn đến khi Kryfo đã đóng.';
 }

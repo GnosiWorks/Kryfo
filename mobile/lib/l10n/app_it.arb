@@ -3051,5 +3051,6 @@
   "notesVoiceNotKept": "Il tuo messaggio vocale non è stato salvato",
   "handleOlderKryfo": "Usa una versione precedente di Kryfo. Chiedigli di aggiornarla, poi aggiungilo.",
   "groupMemberNeedsUpdate": "{name} usa una versione precedente di Kryfo. Dovrà aggiornarla per ricevere i messaggi qui.",
-  "groupMembersNeedUpdate": "Alcuni membri usano una versione precedente di Kryfo. Dovranno aggiornarla per ricevere i messaggi qui."
+  "groupMembersNeedUpdate": "Alcuni membri usano una versione precedente di Kryfo. Dovranno aggiornarla per ricevere i messaggi qui.",
+  "onboardingAlwaysOnNotice": "Android richiede una notifica silenziosa fissa perché i messaggi arrivino anche con Kryfo chiuso."
 }

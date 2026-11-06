@@ -3051,5 +3051,6 @@
   "notesVoiceNotKept": "你的語音訊息沒有保存",
   "handleOlderKryfo": "對方使用的是舊版 Kryfo。請對方先更新，然後再新增。",
   "groupMemberNeedsUpdate": "{name} 使用的是舊版 Kryfo，需要更新後才能在這裡收到訊息。",
-  "groupMembersNeedUpdate": "部分成員使用的是舊版 Kryfo，需要更新後才能在這裡收到訊息。"
+  "groupMembersNeedUpdate": "部分成員使用的是舊版 Kryfo，需要更新後才能在這裡收到訊息。",
+  "onboardingAlwaysOnNotice": "Android 需要一則常駐的無聲通知，這樣 Kryfo 關閉時也能收到訊息。"
 }

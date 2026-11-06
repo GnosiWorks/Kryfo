@@ -86,7 +86,7 @@ class HaloRow extends StatelessWidget {
   final String? value;
   // one plain line under the label saying what the switch does
   final String? hint;
-  // the hint's colour where a page draws every word in the text colour
+  // the hint's colour: the text colour unless a page asks for another
   final Color? hintColor;
   // a line under the hint while the setting does nothing where the phone
   // is now, as off the route it needs
@@ -178,7 +178,7 @@ class HaloRow extends StatelessWidget {
                         hint!,
                         style: HaloType.sans(
                           size: 12.5,
-                          color: hintColor ?? HaloColors.text2,
+                          color: hintColor ?? HaloColors.text,
                           height: 1.35,
                         ),
                       ),

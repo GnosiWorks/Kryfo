@@ -3051,5 +3051,6 @@
   "notesVoiceNotKept": "Tin nhắn thoại của bạn chưa được giữ lại",
   "handleOlderKryfo": "Họ đang dùng Kryfo phiên bản cũ. Hãy nhờ họ cập nhật, rồi thêm họ.",
   "groupMemberNeedsUpdate": "{name} đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây.",
-  "groupMembersNeedUpdate": "Một số thành viên đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây."
+  "groupMembersNeedUpdate": "Một số thành viên đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây.",
+  "onboardingAlwaysOnNotice": "Android cần một thông báo im lặng luôn hiện để tin nhắn vẫn đến khi Kryfo đã đóng."
 }

@@ -418,6 +418,7 @@ void main() {
         radio(true),
       );
       expect(find.text(l10n.gettingMessagesHelperOnionOnly), findsNothing);
+      expect(find.text(l10n.onboardingAlwaysOnNotice), findsNothing);
       await t.pumpWidget(const SizedBox());
       sem.dispose();
     });
@@ -484,6 +485,23 @@ void main() {
       expect(
         t.getSemantics(find.text(l10n.deliveryModeThroughAHelperApp)),
         radio(false),
+      );
+      // the always on card says why its notification stays, in the text
+      // colour, right under the card's own lines
+      final notice = find.text(l10n.onboardingAlwaysOnNotice);
+      expect(notice, findsOneWidget);
+      expect(t.widget<Text>(notice).style?.color, HaloColors.text);
+      final always = find.byKey(const ValueKey('deliveryCard-always'));
+      expect(find.descendant(of: always, matching: notice), findsOneWidget);
+      expect(
+        t.getRect(notice).top,
+        greaterThan(
+          t
+              .getRect(
+                find.text(l10n.gettingMessagesMessagesArriveInstantlyNothing),
+              )
+              .top,
+        ),
       );
       await t.pumpWidget(const SizedBox());
       sem.dispose();
