@@ -4551,22 +4551,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'إبقاؤه كما هو';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'قُرئ على هذا الهاتف · لم يذهب الفيديو إلى أي مكان';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'قُرئ على هذا الحاسوب · لم يذهب الفيديو إلى أي مكان';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'قُرئت على هذا الهاتف · لم تذهب الصورة إلى أي مكان';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'قُرئت على هذا الحاسوب · لم تذهب الصورة إلى أي مكان';
-
-  @override
   String get photoKnowsReadingTheFile => 'جارٍ قراءة الملف';
 
   @override
@@ -11884,6 +11868,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get deskLinkErasingLine =>
       'يُفتح Kryfo من جديد بعد لحظة مع الرمز للمسح.';
+
+  @override
+  String get deskLinkNotStarted => 'تعذّر بدء الربط. أعد المحاولة لاحقًا.';
 
   @override
   String get settingsLinkedToYourPhone => 'مرتبط بهاتفك';

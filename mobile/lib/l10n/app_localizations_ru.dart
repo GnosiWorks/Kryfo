@@ -4547,22 +4547,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Оставить как есть';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'ПРОЧИТАНО НА ЭТОМ ТЕЛЕФОНЕ · ВИДЕО НИКУДА НЕ УХОДИЛО';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'ПРОЧИТАНО НА ЭТОМ КОМПЬЮТЕРЕ · ВИДЕО НИКУДА НЕ УХОДИЛО';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'ПРОЧИТАНО НА ЭТОМ ТЕЛЕФОНЕ · ФОТО НИКУДА НЕ УХОДИЛО';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'ПРОЧИТАНО НА ЭТОМ КОМПЬЮТЕРЕ · ФОТО НИКУДА НЕ УХОДИЛО';
-
-  @override
   String get photoKnowsReadingTheFile => 'Читаем файл';
 
   @override
@@ -11934,6 +11918,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get deskLinkErasingLine =>
       'Kryfo скоро откроется снова с кодом для сканирования.';
+
+  @override
+  String get deskLinkNotStarted =>
+      'Не удалось начать связывание. Попробуй позже.';
 
   @override
   String get settingsLinkedToYourPhone => 'Связано с вашим телефоном';

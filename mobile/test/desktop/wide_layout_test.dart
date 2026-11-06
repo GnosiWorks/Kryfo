@@ -200,14 +200,14 @@ void main() {
   ) async {
     await _open(t);
     final divider = find.byType(ListDivider);
-    // a tenth wider than the least, at first
-    expect(kListStart, 396);
+    // wider than the least, at first
+    expect(kListStart, 460);
     expect(_rect(t, find.byType(WideEmpty)).left, kRailWidth + kListStart + 1);
     await _drag(t, divider, 20);
     await _settle(t);
-    expect(_rect(t, find.byType(WideEmpty)).left, kRailWidth + 416 + 1);
+    expect(_rect(t, find.byType(WideEmpty)).left, kRailWidth + 480 + 1);
     final p = await SharedPreferences.getInstance();
-    expect(p.getDouble('wide_list_width'), 416);
+    expect(p.getDouble('wide_list_width'), 480);
     // never past its widest
     await _drag(t, divider, 300);
     await _settle(t);

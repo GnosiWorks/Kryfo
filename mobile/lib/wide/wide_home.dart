@@ -26,9 +26,9 @@ const kWideLeave = 840.0;
 
 const kRailWidth = 76.0;
 const kListMin = 320.0;
-const kListMax = 420.0;
-// telegram's and whatsapp's list is a little wider than the least
-const kListStart = 396.0;
+const kListMax = 520.0;
+// a little over telegram's and whatsapp's: at 1280 the chat keeps 740
+const kListStart = 460.0;
 // the least the pane keeps beside the list
 const kPaneMin = 380.0;
 

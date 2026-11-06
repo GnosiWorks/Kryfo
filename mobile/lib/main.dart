@@ -28,6 +28,7 @@ import 'devices/own_devices.dart'
     show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
 import 'photo_blur.dart' show makeBlurSoon;
 import 'secure_store.dart';
+import 'desktop/desk_frames.dart' show deskRunApp;
 import 'desktop/desktop_trace.dart' as desk_trace;
 import 'desktop/desktop_mode.dart'
     show
@@ -396,7 +397,7 @@ void main() async {
       t.cancel();
       dlog('launch window arrived');
       WidgetsBinding.instance.addObserver(lockBack);
-      runApp(const HaloApp());
+      onDesktop ? deskRunApp(const HaloApp()) : runApp(const HaloApp());
       WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());
     });
     return;
@@ -404,7 +405,8 @@ void main() async {
   WidgetsBinding.instance.addPostFrameCallback((_) => dlog('launch frame'));
   // before runApp, so it is asked about back before the app's navigator
   WidgetsBinding.instance.addObserver(lockBack);
-  runApp(const HaloApp());
+  // desktop: a frame once the app replaces the lock screen's root
+  onDesktop ? deskRunApp(const HaloApp()) : runApp(const HaloApp());
   dlog('launch runApp returned');
   // cold-start: if launched from a notification tap, open the chat
   // after the first frame so rootNavKey has a navigator.

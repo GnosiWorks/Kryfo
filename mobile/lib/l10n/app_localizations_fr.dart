@@ -4499,22 +4499,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'La garder telle quelle';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'LU SUR CE TÉLÉPHONE · LA VIDÉO N’EST ALLÉE NULLE PART';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'LU SUR CET ORDINATEUR · LA VIDÉO N’EST ALLÉE NULLE PART';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'LU SUR CE TÉLÉPHONE · LA PHOTO N’EST ALLÉE NULLE PART';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'LU SUR CET ORDINATEUR · LA PHOTO N’EST ALLÉE NULLE PART';
-
-  @override
   String get photoKnowsReadingTheFile => 'Lecture du fichier';
 
   @override
@@ -11875,6 +11859,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get deskLinkErasingLine =>
       'Kryfo se rouvre dans un instant avec le code à scanner.';
+
+  @override
+  String get deskLinkNotStarted =>
+      'Impossible de lancer l’association. Réessayez plus tard.';
 
   @override
   String get settingsLinkedToYourPhone => 'Associé à votre téléphone';

@@ -4448,22 +4448,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Biarkan apa adanya';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'DIBACA DI PONSEL INI · VIDEONYA TIDAK DIKIRIM KE MANA PUN';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'DIBACA DI KOMPUTER INI · VIDEONYA TIDAK DIKIRIM KE MANA PUN';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'DIBACA DI PONSEL INI · FOTONYA TIDAK DIKIRIM KE MANA PUN';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'DIBACA DI KOMPUTER INI · FOTONYA TIDAK DIKIRIM KE MANA PUN';
-
-  @override
   String get photoKnowsReadingTheFile => 'Membaca file';
 
   @override
@@ -11751,6 +11735,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get deskLinkErasingLine =>
       'Sebentar lagi Kryfo terbuka lagi dengan kode untuk dipindai.';
+
+  @override
+  String get deskLinkNotStarted =>
+      'Tautan tidak bisa dimulai. Coba lagi nanti.';
 
   @override
   String get settingsLinkedToYourPhone => 'Tertaut ke ponselmu';

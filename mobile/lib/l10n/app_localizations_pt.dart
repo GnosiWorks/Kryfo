@@ -4482,22 +4482,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Deixar como está';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'LIDO NESTE CELULAR · O VÍDEO NÃO FOI PARA LUGAR NENHUM';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'LIDO NESTE COMPUTADOR · O VÍDEO NÃO FOI PARA LUGAR NENHUM';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'LIDO NESTE CELULAR · A FOTO NÃO FOI PARA LUGAR NENHUM';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'LIDO NESTE COMPUTADOR · A FOTO NÃO FOI PARA LUGAR NENHUM';
-
-  @override
   String get photoKnowsReadingTheFile => 'Lendo o arquivo';
 
   @override
@@ -11836,6 +11820,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get deskLinkErasingLine =>
       'O Kryfo abre de novo em instantes com o código para escanear.';
+
+  @override
+  String get deskLinkNotStarted =>
+      'Não deu para iniciar a conexão. Tente de novo mais tarde.';
 
   @override
   String get settingsLinkedToYourPhone => 'Conectado ao seu celular';

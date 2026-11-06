@@ -4215,18 +4215,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photoKnowsKeepItAsIt => '保持原样';
 
   @override
-  String get photoKnowsReadOnThisPhone => '在这部手机上读取 · 视频哪儿也没去';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk => '在这台电脑上读取 · 视频哪儿也没去';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto => '在这部手机上读取 · 照片哪儿也没去';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk => '在这台电脑上读取 · 照片哪儿也没去';
-
-  @override
   String get photoKnowsReadingTheFile => '正在读取文件';
 
   @override
@@ -11098,6 +11086,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deskLinkErasingLine => 'Kryfo 马上会重新打开并显示要扫描的二维码。';
 
   @override
+  String get deskLinkNotStarted => '无法开始关联。请稍后再试。';
+
+  @override
   String get settingsLinkedToYourPhone => '已关联到你的手机';
 
   @override
@@ -15331,18 +15322,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get photoKnowsKeepItAsIt => '保持原樣';
-
-  @override
-  String get photoKnowsReadOnThisPhone => '在這支手機上讀取 · 影片沒有傳到任何地方';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk => '在這台電腦上讀取 · 影片沒有傳到任何地方';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto => '在這支手機上讀取 · 照片沒有傳到任何地方';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk => '在這台電腦上讀取 · 照片沒有傳到任何地方';
 
   @override
   String get photoKnowsReadingTheFile => '正在讀取檔案';
@@ -22099,6 +22078,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get deskLinkErasingLine => 'Kryfo 馬上會重新開啟並顯示要掃描的 QR 碼。';
+
+  @override
+  String get deskLinkNotStarted => '無法開始連結。請稍後再試。';
 
   @override
   String get settingsLinkedToYourPhone => '已連結到你的手機';

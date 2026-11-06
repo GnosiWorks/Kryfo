@@ -4492,22 +4492,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get photoKnowsKeepItAsIt => 'Dejarlo como está';
 
   @override
-  String get photoKnowsReadOnThisPhone =>
-      'LEÍDO EN ESTE TELÉFONO · EL VIDEO NO SALIÓ DE AQUÍ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneDesk =>
-      'LEÍDO EN ESTE ORDENADOR · EL VIDEO NO SALIÓ DE AQUÍ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'LEÍDO EN ESTE TELÉFONO · LA FOTO NO SALIÓ DE AQUÍ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhotoDesk =>
-      'LEÍDO EN ESTE ORDENADOR · LA FOTO NO SALIÓ DE AQUÍ';
-
-  @override
   String get photoKnowsReadingTheFile => 'Leyendo el archivo';
 
   @override
@@ -11838,6 +11822,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get deskLinkErasingLine =>
       'Kryfo se abre de nuevo en un momento con el código para escanear.';
+
+  @override
+  String get deskLinkNotStarted =>
+      'No se pudo iniciar la vinculación. Vuelve a intentarlo más tarde.';
 
   @override
   String get settingsLinkedToYourPhone => 'Vinculado con tu teléfono';

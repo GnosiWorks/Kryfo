@@ -7066,30 +7066,6 @@ abstract class AppLocalizations {
   /// screens/photo_knows_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'READ ON THIS PHONE · THE VIDEO WENT NOWHERE'**
-  String get photoKnowsReadOnThisPhone;
-
-  /// photoKnowsReadOnThisPhone as a computer shows it (linux and windows)
-  ///
-  /// In en, this message translates to:
-  /// **'READ ON THIS COMPUTER · THE VIDEO WENT NOWHERE'**
-  String get photoKnowsReadOnThisPhoneDesk;
-
-  /// screens/photo_knows_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'READ ON THIS PHONE · THE PHOTO WENT NOWHERE'**
-  String get photoKnowsReadOnThisPhoneThePhoto;
-
-  /// photoKnowsReadOnThisPhoneThePhoto as a computer shows it (linux and windows)
-  ///
-  /// In en, this message translates to:
-  /// **'READ ON THIS COMPUTER · THE PHOTO WENT NOWHERE'**
-  String get photoKnowsReadOnThisPhoneThePhotoDesk;
-
-  /// screens/photo_knows_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Reading the file'**
   String get photoKnowsReadingTheFile;
 
@@ -18822,6 +18798,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo opens again in a moment with the code to scan.'**
   String get deskLinkErasingLine;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start the link. Try again later.'**
+  String get deskLinkNotStarted;
 
   /// desktop settings, linked devices rows (screens/settings_screen.dart)
   ///
