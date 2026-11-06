@@ -43,6 +43,7 @@ import 'package:kryfo/main.dart'
         haloUriV3,
         openAddedChatLater,
         openDevChatLater,
+        outsideLinkText,
         pairPeerOf,
         sendFirstContactNoted,
         unboundIdOf,
@@ -1231,6 +1232,31 @@ void main() {
       expect((await hellosOf('old', p.keyHex)).single['once'], 1);
       await hellosGo();
       expect(engine.hellos, contains(p.x));
+    });
+
+    test('a link handed over with the line end it was copied with: the '
+        'fc stays, and the hello goes', () async {
+      final (link, p) = await v3Of('copied-line-end', 129, classic: true);
+      for (final end in ['\r', '\n', '\r\n', ' ']) {
+        final uri = Uri.parse('$link$end');
+        // as a uri the line end is part of the fc, and the card reads as
+        // one without its first-contact address
+        expect(uri.queryParameters['fc'], isNot(_hex(List.filled(32, 129))));
+        expect(outsideLinkText(uri), link);
+      }
+      // the uri's own text is what the door was handed before: refused
+      expect(
+        await handleHaloUriAdded(Uri.parse('$link\r').toString(), app: app),
+        (l10n.appLinkNeedsUpdate(p.words), false),
+      );
+      expect(
+        await handleHaloUriAdded(
+          outsideLinkText(Uri.parse('$link\r')),
+          app: app,
+        ),
+        (l10n.helloSentOld, true),
+      );
+      expect((await app.helloWaitOf(p.words)).waits, isTrue);
     });
 
     test('a card with the prekey: what is written waits at once, the line '

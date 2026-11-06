@@ -495,7 +495,7 @@ extension AppStateContacts on AppState {
         }
         final result = await takeOutsideLink(
           ctx,
-          uri.toString(),
+          outsideLinkText(uri),
           selfId: sessionId,
         );
         dlog('$how: ${result ?? 'not taken'}');

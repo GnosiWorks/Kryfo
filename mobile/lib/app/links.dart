@@ -6,6 +6,15 @@ part of '../main.dart';
 Future<String> handleHaloUri(String raw, {bool scanned = false}) async =>
     (await handleHaloUriAdded(raw, scanned: scanned)).$1;
 
+// whitespace a link was copied with, a line end above all, which a uri
+// writes as %0D or %0A: read as part of its last value, it spoils the fc
+final _encodedTail = RegExp(r'(?:%(?:0[9ADad]|20))+$');
+
+/// the text of a link android or windows handed over, as a pasted one is
+/// read: without the whitespace it was copied with
+String outsideLinkText(Uri uri) =>
+    uri.toString().replaceFirst(_encodedTail, '');
+
 /// asked when a link names someone here under a name a request, an
 /// introduction or a group gave, never checked, or a deleted chat's, on
 /// another key: true lets the link take the name. [chat] says the other one
