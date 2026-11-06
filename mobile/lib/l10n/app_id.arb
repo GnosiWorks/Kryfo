@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "Gambar disalin",
   "toolsCouldNotCopy": "Gagal menyalin gambar",
   "cleanNotYetHere": "Gambar ini belum bisa dibersihkan di sini",
-  "cleanNotYetHereLine": "Pembaruan berikutnya membersihkan gambar seperti ini di komputer. Gambarmu tetap seperti semula."
+  "cleanNotYetHereLine": "Pembaruan berikutnya membersihkan gambar seperti ini di komputer. Gambarmu tetap seperti semula.",
+  "deskLinkRowHint": "Pakai Kryfo di ponselmu di sini",
+  "deskLinkHead": "Pakai Kryfo di ponselmu di sini",
+  "deskLinkLine": "Komputer ini lalu menampilkan obrolan dan kontak di ponselmu dan mengirim sebagai kamu.",
+  "deskLinkGoesTitle": "Pertama, komputer ini dihapus",
+  "deskLinkGoesLine": "Identitasnya sendiri dan semua obrolan di dalamnya dihapus. Obrolan tersembunyi, umpan, dan Catatan pribadi juga ikut terhapus. File yang kamu simpan di foldermu sendiri tetap ada.",
+  "deskLinkBackupRow": "Cadangkan dulu",
+  "deskLinkBackupHint": "Menyimpan obrolan komputer ini dalam file, dengan frasa sandi 12 karakter atau lebih",
+  "deskLinkConfirmLine": "Identitas dan obrolan komputer ini dihapus. Lalu Kryfo terbuka lagi dengan kode untuk dipindai.",
+  "deskLinkConfirmYes": "Hapus dan tautkan",
+  "deskLinkErasing": "Menghapus komputer ini",
+  "deskLinkErasingLine": "Sebentar lagi Kryfo terbuka lagi dengan kode untuk dipindai.",
+  "settingsLinkedToYourPhone": "Tertaut ke ponselmu",
+  "settingsLinkedPhoneHint": "Cadangan dan undangan tetap di ponsel",
+  "settingsUnlinkComputer": "Lepaskan komputer ini",
+  "settingsUnlinkComputerTitle": "Lepaskan komputer ini?",
+  "settingsUnlinkComputerLine": "Obrolan di komputer ini dihapus. Ponselmu tetap menyimpan semuanya."
 }

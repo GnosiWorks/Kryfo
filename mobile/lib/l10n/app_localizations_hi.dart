@@ -11716,4 +11716,58 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'आने वाला अपडेट ऐसी तस्वीरें कंप्यूटर पर भी साफ़ करेगा। आपकी तस्वीर बिल्कुल वैसी ही है जैसी थी।';
+
+  @override
+  String get deskLinkRowHint => 'अपने फ़ोन का Kryfo यहाँ इस्तेमाल करें';
+
+  @override
+  String get deskLinkHead => 'अपने फ़ोन का Kryfo यहाँ इस्तेमाल करें';
+
+  @override
+  String get deskLinkLine =>
+      'इसके बाद यह कंप्यूटर आपके फ़ोन की चैट और संपर्क दिखाएगा और आपकी ओर से भेजेगा।';
+
+  @override
+  String get deskLinkGoesTitle => 'पहले यह कंप्यूटर मिटाया जाएगा';
+
+  @override
+  String get deskLinkGoesLine =>
+      'इसकी अपनी पहचान और इस पर हर चैट हटा दी जाएगी। छिपी चैट, नकली Kryfo और अपने लिए नोट भी चले जाएँगे। आपके अपने फ़ोल्डरों में सहेजी फ़ाइलें रहेंगी।';
+
+  @override
+  String get deskLinkBackupRow => 'पहले बैकअप लें';
+
+  @override
+  String get deskLinkBackupHint =>
+      'इस कंप्यूटर की चैट एक फ़ाइल में रखता है, 12 या अधिक अक्षरों के पासफ़्रेज़ के साथ';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'इस कंप्यूटर की पहचान और चैट मिटा दी जाएँगी। फिर Kryfo स्कैन करने के कोड के साथ फिर से खुलेगा।';
+
+  @override
+  String get deskLinkConfirmYes => 'मिटाएँ और जोड़ें';
+
+  @override
+  String get deskLinkErasing => 'यह कंप्यूटर मिटाया जा रहा है';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo थोड़ी देर में स्कैन करने के कोड के साथ फिर से खुलेगा।';
+
+  @override
+  String get settingsLinkedToYourPhone => 'आपके फ़ोन से जुड़ा है';
+
+  @override
+  String get settingsLinkedPhoneHint => 'बैकअप और न्योते फ़ोन पर ही रहते हैं';
+
+  @override
+  String get settingsUnlinkComputer => 'इस कंप्यूटर को अलग करें';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'इस कंप्यूटर को अलग करें?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'इस कंप्यूटर की चैट हटा दी जाएँगी। आपका फ़ोन सब कुछ रखता है।';
 }

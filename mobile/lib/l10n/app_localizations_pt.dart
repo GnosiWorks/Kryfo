@@ -11798,4 +11798,58 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Uma próxima atualização limpa imagens como esta no computador. Sua imagem continua do jeito que estava.';
+
+  @override
+  String get deskLinkRowHint => 'Use aqui o Kryfo do seu celular';
+
+  @override
+  String get deskLinkHead => 'Use aqui o Kryfo do seu celular';
+
+  @override
+  String get deskLinkLine =>
+      'Este computador passa a mostrar as conversas e os contatos do seu celular e envia como você.';
+
+  @override
+  String get deskLinkGoesTitle => 'Antes, este computador é apagado';
+
+  @override
+  String get deskLinkGoesLine =>
+      'A identidade dele e todas as conversas nele são removidas. As conversas ocultas, o disfarce e Notas também vão. Os arquivos que você salvou nas suas pastas ficam.';
+
+  @override
+  String get deskLinkBackupRow => 'Fazer backup antes';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Guarda as conversas deste computador num arquivo, com uma frase-senha de 12 caracteres ou mais';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'A identidade e as conversas deste computador são apagadas. Depois o Kryfo abre de novo com o código para escanear.';
+
+  @override
+  String get deskLinkConfirmYes => 'Apagar e conectar';
+
+  @override
+  String get deskLinkErasing => 'Apagando este computador';
+
+  @override
+  String get deskLinkErasingLine =>
+      'O Kryfo abre de novo em instantes com o código para escanear.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Conectado ao seu celular';
+
+  @override
+  String get settingsLinkedPhoneHint => 'Backups e convites ficam no celular';
+
+  @override
+  String get settingsUnlinkComputer => 'Desconectar este computador';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Desconectar este computador?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'As conversas deste computador são removidas. Seu celular guarda tudo.';
 }

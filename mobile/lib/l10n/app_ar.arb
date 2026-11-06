@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "نُسخت الصورة",
   "toolsCouldNotCopy": "تعذّر نسخ الصورة",
   "cleanNotYetHere": "لا يمكن تنظيف هذه الصورة هنا بعد",
-  "cleanNotYetHereLine": "تحديث قادم ينظّف صورًا كهذه على الحاسوب. صورتك كما كانت تمامًا."
+  "cleanNotYetHereLine": "تحديث قادم ينظّف صورًا كهذه على الحاسوب. صورتك كما كانت تمامًا.",
+  "deskLinkRowHint": "استخدم Kryfo الذي على هاتفك هنا",
+  "deskLinkHead": "استخدم Kryfo هاتفك هنا",
+  "deskLinkLine": "سيعرض هذا الحاسوب بعدها المحادثات وجهات الاتصال التي على هاتفك ويُرسل باسمك.",
+  "deskLinkGoesTitle": "أولًا، يُمسح هذا الحاسوب",
+  "deskLinkGoesLine": "تُزال هويته الخاصة وكل محادثة عليه. وتُزال أيضًا المحادثات المخفية والتمويه وملاحظة لنفسي. تبقى الملفات التي حفظتها في مجلداتك.",
+  "deskLinkBackupRow": "انسخ احتياطيًا أولًا",
+  "deskLinkBackupHint": "يحفظ محادثات هذا الحاسوب في ملف، بعبارة مرور من ١٢ حرفًا أو أكثر",
+  "deskLinkConfirmLine": "تُمسح هوية هذا الحاسوب ومحادثاته. ثم يُفتح Kryfo من جديد مع الرمز للمسح.",
+  "deskLinkConfirmYes": "امسح واربط",
+  "deskLinkErasing": "جارٍ مسح هذا الحاسوب",
+  "deskLinkErasingLine": "يُفتح Kryfo من جديد بعد لحظة مع الرمز للمسح.",
+  "settingsLinkedToYourPhone": "مرتبط بهاتفك",
+  "settingsLinkedPhoneHint": "تبقى النسخ الاحتياطية والدعوات على الهاتف",
+  "settingsUnlinkComputer": "افصل هذا الحاسوب",
+  "settingsUnlinkComputerTitle": "أتفصل هذا الحاسوب؟",
+  "settingsUnlinkComputerLine": "تُزال المحادثات التي على هذا الحاسوب. يحتفظ هاتفك بكل شيء."
 }

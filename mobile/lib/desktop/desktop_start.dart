@@ -244,6 +244,13 @@ Future<DesktopStop?> claimFolder(
   return null;
 }
 
+/// a wipe for a link asked this run for the link, and the folder holds no
+/// vault: nothing is set up here, so the link replaces nothing
+@visibleForTesting
+bool linkAsked(String root, Map<String, String> env) =>
+    env[kLinkNextEnv] == '1' &&
+    !kVaultFiles.any((f) => File(p.join(root, f)).existsSync());
+
 /// on windows kryfo.exe checks, closes and locks the folder before dart
 /// runs (runner/kryfo_win.cpp) and says how it went in KRYFO_FOLDER
 @visibleForTesting
@@ -265,6 +272,9 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     runApp(DesktopStopApp(stop: stop));
     return;
   }
+  // a run a wipe for a link started opens the link at once
+  deskLinkAtStart = linkAsked(root, Platform.environment);
+  unsetEnvHere(kLinkNextEnv);
   // what a wipe could not take while its process ran (a file windows held)
   // goes before anything reads the folder: with no vault nothing opens
   await clearWithoutVault(root);

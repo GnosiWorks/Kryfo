@@ -11894,4 +11894,59 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'В одному з наступних оновлень такі зображення очищатимуться і на комп’ютері. Твоє зображення лишилося як було.';
+
+  @override
+  String get deskLinkRowHint => 'Користуйтеся тут Kryfo з вашого телефона';
+
+  @override
+  String get deskLinkHead => 'Користуйтеся тут Kryfo з вашого телефона';
+
+  @override
+  String get deskLinkLine =>
+      'Цей комп’ютер показуватиме чати й контакти з вашого телефона та надсилатиме від вашого імені.';
+
+  @override
+  String get deskLinkGoesTitle => 'Спершу цей комп’ютер буде стерто';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Його власну ідентичність і всі чати на ньому буде видалено. Приховані чати, приманка й Нотатки для себе теж зникнуть. Файли, збережені у ваших власних теках, лишаться.';
+
+  @override
+  String get deskLinkBackupRow => 'Спершу резервна копія';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Зберігає чати цього комп’ютера у файл під парольною фразою від 12 символів';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Ідентичність і чати цього комп’ютера буде стерто. Потім Kryfo відкриється знову з кодом для сканування.';
+
+  @override
+  String get deskLinkConfirmYes => 'Стерти й пов’язати';
+
+  @override
+  String get deskLinkErasing => 'Комп’ютер стирається';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo за мить відкриється знову з кодом для сканування.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Пов’язано з вашим телефоном';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'Резервні копії та запрошення лишаються на телефоні';
+
+  @override
+  String get settingsUnlinkComputer => 'Відв’язати цей комп’ютер';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Відв’язати цей комп’ютер?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Чати на цьому комп’ютері буде видалено. На телефоні лишається все.';
 }

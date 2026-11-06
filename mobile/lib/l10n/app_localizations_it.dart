@@ -11808,4 +11808,58 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Un prossimo aggiornamento ripulisce immagini come questa sul computer. La tua immagine è rimasta com\'era.';
+
+  @override
+  String get deskLinkRowHint => 'Usa qui il Kryfo del tuo telefono';
+
+  @override
+  String get deskLinkHead => 'Usa qui il Kryfo del tuo telefono';
+
+  @override
+  String get deskLinkLine =>
+      'Questo computer mostrerà le chat e i contatti del tuo telefono e invierà come te.';
+
+  @override
+  String get deskLinkGoesTitle => 'Prima questo computer viene cancellato';
+
+  @override
+  String get deskLinkGoesLine =>
+      'La sua identità e tutte le sue chat vengono rimosse. Anche le chat nascoste, l’esca e Note se ne vanno. I file salvati nelle tue cartelle restano.';
+
+  @override
+  String get deskLinkBackupRow => 'Fai prima un backup';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Tiene le chat di questo computer in un file, con una passphrase di 12 caratteri o più';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'L’identità e le chat di questo computer vengono cancellate. Poi Kryfo si riapre con il codice da scansionare.';
+
+  @override
+  String get deskLinkConfirmYes => 'Cancella e collega';
+
+  @override
+  String get deskLinkErasing => 'Cancellazione di questo computer';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo si riapre tra un momento con il codice da scansionare.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Collegato al tuo telefono';
+
+  @override
+  String get settingsLinkedPhoneHint => 'Backup e inviti restano sul telefono';
+
+  @override
+  String get settingsUnlinkComputer => 'Scollega questo computer';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Scollegare questo computer?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Le chat su questo computer vengono rimosse. Il tuo telefono conserva tutto.';
 }

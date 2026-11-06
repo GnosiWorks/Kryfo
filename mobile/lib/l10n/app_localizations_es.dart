@@ -11800,4 +11800,59 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Una próxima actualización limpia imágenes como esta en el ordenador. Tu imagen sigue tal como estaba.';
+
+  @override
+  String get deskLinkRowHint => 'Usa aquí el Kryfo de tu teléfono';
+
+  @override
+  String get deskLinkHead => 'Usa aquí el Kryfo de tu teléfono';
+
+  @override
+  String get deskLinkLine =>
+      'Esta computadora mostrará los chats y contactos de tu teléfono y enviará como tú.';
+
+  @override
+  String get deskLinkGoesTitle => 'Primero se borra esta computadora';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Se eliminan su propia identidad y todos sus chats. Los chats ocultos, el señuelo y Notas también se van. Los archivos que guardaste en tus propias carpetas se quedan.';
+
+  @override
+  String get deskLinkBackupRow => 'Hacer copia primero';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Guarda los chats de esta computadora en un archivo, con una frase de contraseña de 12 caracteres o más';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Se borran la identidad y los chats de esta computadora. Luego Kryfo se abre de nuevo con el código para escanear.';
+
+  @override
+  String get deskLinkConfirmYes => 'Borrar y vincular';
+
+  @override
+  String get deskLinkErasing => 'Borrando esta computadora';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo se abre de nuevo en un momento con el código para escanear.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Vinculado con tu teléfono';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'Las copias de seguridad y las invitaciones se quedan en el teléfono';
+
+  @override
+  String get settingsUnlinkComputer => 'Desvincular esta computadora';
+
+  @override
+  String get settingsUnlinkComputerTitle => '¿Desvincular esta computadora?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Se eliminan los chats de esta computadora. Tu teléfono lo conserva todo.';
 }

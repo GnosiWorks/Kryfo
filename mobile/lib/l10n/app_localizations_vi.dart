@@ -11696,4 +11696,58 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Một bản cập nhật sắp tới sẽ làm sạch những ảnh như thế này trên máy tính. Ảnh của bạn vẫn y như cũ.';
+
+  @override
+  String get deskLinkRowHint => 'Dùng Kryfo trên điện thoại của bạn ở đây';
+
+  @override
+  String get deskLinkHead => 'Dùng Kryfo của điện thoại ở đây';
+
+  @override
+  String get deskLinkLine =>
+      'Máy tính này sau đó hiện các cuộc trò chuyện và danh bạ trên điện thoại của bạn và gửi với tư cách là bạn.';
+
+  @override
+  String get deskLinkGoesTitle => 'Trước hết, máy tính này được xóa';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Danh tính riêng của nó và mọi cuộc trò chuyện trên đó bị xóa. Trò chuyện ẩn, phần ngụy trang và Ghi chú riêng cũng bị xóa. Các tệp bạn đã lưu vào thư mục của mình vẫn còn.';
+
+  @override
+  String get deskLinkBackupRow => 'Sao lưu trước';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Giữ các cuộc trò chuyện của máy tính này trong một tệp, với cụm mật khẩu từ 12 ký tự trở lên';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Danh tính và các cuộc trò chuyện của máy tính này bị xóa. Sau đó Kryfo mở lại với mã để quét.';
+
+  @override
+  String get deskLinkConfirmYes => 'Xóa và liên kết';
+
+  @override
+  String get deskLinkErasing => 'Đang xóa máy tính này';
+
+  @override
+  String get deskLinkErasingLine => 'Kryfo sẽ mở lại ngay với mã để quét.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Đã liên kết với điện thoại của bạn';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'Bản sao lưu và lời mời ở lại trên điện thoại';
+
+  @override
+  String get settingsUnlinkComputer => 'Hủy liên kết máy tính này';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Hủy liên kết máy tính này?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Các cuộc trò chuyện trên máy tính này bị xóa. Điện thoại của bạn giữ mọi thứ.';
 }

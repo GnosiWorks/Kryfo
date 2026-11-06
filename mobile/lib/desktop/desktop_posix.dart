@@ -26,6 +26,10 @@ typedef _Uid = int Function();
 typedef _StatC = Int32 Function(Pointer<Utf8>, Pointer<Uint8>);
 typedef _Stat = int Function(Pointer<Utf8>, Pointer<Uint8>);
 typedef _ExecC = Int32 Function(Pointer<Utf8>, Pointer<Pointer<Utf8>>);
+typedef _SetEnvC = Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32);
+typedef _SetEnv = int Function(Pointer<Utf8>, Pointer<Utf8>, int);
+typedef _UnsetEnvC = Int32 Function(Pointer<Utf8>);
+typedef _UnsetEnv = int Function(Pointer<Utf8>);
 typedef _Exec = int Function(Pointer<Utf8>, Pointer<Pointer<Utf8>>);
 
 int _open(String path, int flags, [int mode = 0]) {
@@ -98,5 +102,29 @@ void execSelf(String exe) {
   } finally {
     calloc.free(argv);
     calloc.free(path);
+  }
+}
+
+/// [name] set in this process's environment, for a run [execSelf] makes
+void setEnvHere(String name, String value) {
+  if (!Platform.isLinux) return;
+  final n = name.toNativeUtf8();
+  final v = value.toNativeUtf8();
+  try {
+    _libc.lookupFunction<_SetEnvC, _SetEnv>('setenv')(n, v, 1);
+  } finally {
+    calloc.free(n);
+    calloc.free(v);
+  }
+}
+
+/// [name] gone from this process's environment: a later run never sees it
+void unsetEnvHere(String name) {
+  if (!Platform.isLinux) return;
+  final n = name.toNativeUtf8();
+  try {
+    _libc.lookupFunction<_UnsetEnvC, _UnsetEnv>('unsetenv')(n);
+  } finally {
+    calloc.free(n);
   }
 }

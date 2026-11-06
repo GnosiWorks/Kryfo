@@ -11846,4 +11846,59 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'تحديث قادم ينظّف صورًا كهذه على الحاسوب. صورتك كما كانت تمامًا.';
+
+  @override
+  String get deskLinkRowHint => 'استخدم Kryfo الذي على هاتفك هنا';
+
+  @override
+  String get deskLinkHead => 'استخدم Kryfo هاتفك هنا';
+
+  @override
+  String get deskLinkLine =>
+      'سيعرض هذا الحاسوب بعدها المحادثات وجهات الاتصال التي على هاتفك ويُرسل باسمك.';
+
+  @override
+  String get deskLinkGoesTitle => 'أولًا، يُمسح هذا الحاسوب';
+
+  @override
+  String get deskLinkGoesLine =>
+      'تُزال هويته الخاصة وكل محادثة عليه. وتُزال أيضًا المحادثات المخفية والتمويه وملاحظة لنفسي. تبقى الملفات التي حفظتها في مجلداتك.';
+
+  @override
+  String get deskLinkBackupRow => 'انسخ احتياطيًا أولًا';
+
+  @override
+  String get deskLinkBackupHint =>
+      'يحفظ محادثات هذا الحاسوب في ملف، بعبارة مرور من ١٢ حرفًا أو أكثر';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'تُمسح هوية هذا الحاسوب ومحادثاته. ثم يُفتح Kryfo من جديد مع الرمز للمسح.';
+
+  @override
+  String get deskLinkConfirmYes => 'امسح واربط';
+
+  @override
+  String get deskLinkErasing => 'جارٍ مسح هذا الحاسوب';
+
+  @override
+  String get deskLinkErasingLine =>
+      'يُفتح Kryfo من جديد بعد لحظة مع الرمز للمسح.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'مرتبط بهاتفك';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'تبقى النسخ الاحتياطية والدعوات على الهاتف';
+
+  @override
+  String get settingsUnlinkComputer => 'افصل هذا الحاسوب';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'أتفصل هذا الحاسوب؟';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'تُزال المحادثات التي على هذا الحاسوب. يحتفظ هاتفك بكل شيء.';
 }

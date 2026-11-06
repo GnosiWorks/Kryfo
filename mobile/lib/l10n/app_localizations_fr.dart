@@ -11837,4 +11837,59 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Une prochaine mise à jour nettoie les images comme celle-ci sur ordinateur. Votre image est restée telle quelle.';
+
+  @override
+  String get deskLinkRowHint => 'Utiliser ici le Kryfo de votre téléphone';
+
+  @override
+  String get deskLinkHead => 'Utilisez ici le Kryfo de votre téléphone';
+
+  @override
+  String get deskLinkLine =>
+      'Cet ordinateur affichera alors les discussions et les contacts de votre téléphone, et enverra en votre nom.';
+
+  @override
+  String get deskLinkGoesTitle => 'D’abord, cet ordinateur est effacé';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Sa propre identité et toutes ses discussions sont supprimées. Les discussions masquées, le leurre et Note pour moi partent aussi. Les fichiers enregistrés dans vos propres dossiers restent.';
+
+  @override
+  String get deskLinkBackupRow => 'Sauvegarder d’abord';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Garde les discussions de cet ordinateur dans un fichier, sous une phrase secrète de 12 caractères ou plus';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'L’identité et les discussions de cet ordinateur sont effacées. Puis Kryfo se rouvre avec le code à scanner.';
+
+  @override
+  String get deskLinkConfirmYes => 'Effacer et associer';
+
+  @override
+  String get deskLinkErasing => 'Effacement de cet ordinateur';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo se rouvre dans un instant avec le code à scanner.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Associé à votre téléphone';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'Les sauvegardes et les invitations restent sur le téléphone';
+
+  @override
+  String get settingsUnlinkComputer => 'Dissocier cet ordinateur';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Dissocier cet ordinateur ?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Les discussions de cet ordinateur sont supprimées. Votre téléphone garde tout.';
 }

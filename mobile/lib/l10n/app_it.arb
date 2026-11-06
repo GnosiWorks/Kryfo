@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "Immagine copiata",
   "toolsCouldNotCopy": "Impossibile copiare l'immagine",
   "cleanNotYetHere": "Questa immagine non si può ancora ripulire qui",
-  "cleanNotYetHereLine": "Un prossimo aggiornamento ripulisce immagini come questa sul computer. La tua immagine è rimasta com'era."
+  "cleanNotYetHereLine": "Un prossimo aggiornamento ripulisce immagini come questa sul computer. La tua immagine è rimasta com'era.",
+  "deskLinkRowHint": "Usa qui il Kryfo del tuo telefono",
+  "deskLinkHead": "Usa qui il Kryfo del tuo telefono",
+  "deskLinkLine": "Questo computer mostrerà le chat e i contatti del tuo telefono e invierà come te.",
+  "deskLinkGoesTitle": "Prima questo computer viene cancellato",
+  "deskLinkGoesLine": "La sua identità e tutte le sue chat vengono rimosse. Anche le chat nascoste, l’esca e Note se ne vanno. I file salvati nelle tue cartelle restano.",
+  "deskLinkBackupRow": "Fai prima un backup",
+  "deskLinkBackupHint": "Tiene le chat di questo computer in un file, con una passphrase di 12 caratteri o più",
+  "deskLinkConfirmLine": "L’identità e le chat di questo computer vengono cancellate. Poi Kryfo si riapre con il codice da scansionare.",
+  "deskLinkConfirmYes": "Cancella e collega",
+  "deskLinkErasing": "Cancellazione di questo computer",
+  "deskLinkErasingLine": "Kryfo si riapre tra un momento con il codice da scansionare.",
+  "settingsLinkedToYourPhone": "Collegato al tuo telefono",
+  "settingsLinkedPhoneHint": "Backup e inviti restano sul telefono",
+  "settingsUnlinkComputer": "Scollega questo computer",
+  "settingsUnlinkComputerTitle": "Scollegare questo computer?",
+  "settingsUnlinkComputerLine": "Le chat su questo computer vengono rimosse. Il tuo telefono conserva tutto."
 }

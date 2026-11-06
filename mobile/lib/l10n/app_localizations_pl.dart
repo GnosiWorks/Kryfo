@@ -11937,4 +11937,59 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Nadchodząca aktualizacja czyści takie obrazy także na komputerze. Twój obraz jest dokładnie taki jak był.';
+
+  @override
+  String get deskLinkRowHint => 'Używaj tu Kryfo ze swojego telefonu';
+
+  @override
+  String get deskLinkHead => 'Używaj tu Kryfo ze swojego telefonu';
+
+  @override
+  String get deskLinkLine =>
+      'Ten komputer pokaże wtedy czaty i kontakty z twojego telefonu i będzie wysyłać jako ty.';
+
+  @override
+  String get deskLinkGoesTitle => 'Najpierw ten komputer zostanie wymazany';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Jego własna tożsamość i wszystkie czaty na nim zostaną usunięte. Ukryte czaty, przynęta i Notatka dla siebie też znikną. Pliki zapisane w twoich własnych folderach zostaną.';
+
+  @override
+  String get deskLinkBackupRow => 'Najpierw kopia zapasowa';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Zachowuje czaty z tego komputera w pliku, pod hasłem z co najmniej 12 znaków';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Tożsamość i czaty tego komputera zostaną wymazane. Potem Kryfo otworzy się znowu z kodem do zeskanowania.';
+
+  @override
+  String get deskLinkConfirmYes => 'Wymaż i połącz';
+
+  @override
+  String get deskLinkErasing => 'Wymazywanie tego komputera';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo za chwilę otworzy się znowu z kodem do zeskanowania.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Połączono z twoim telefonem';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'Kopie zapasowe i zaproszenia zostają na telefonie';
+
+  @override
+  String get settingsUnlinkComputer => 'Rozłącz ten komputer';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Rozłączyć ten komputer?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Czaty na tym komputerze zostaną usunięte. Telefon zachowa wszystko.';
 }

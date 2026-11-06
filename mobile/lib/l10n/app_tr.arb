@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "Resim kopyalandı",
   "toolsCouldNotCopy": "Resim kopyalanamadı",
   "cleanNotYetHere": "Bu resim henüz burada temizlenemiyor",
-  "cleanNotYetHereLine": "Gelecek bir güncelleme bunun gibi resimleri bilgisayarda da temizleyecek. Resmin olduğu gibi duruyor."
+  "cleanNotYetHereLine": "Gelecek bir güncelleme bunun gibi resimleri bilgisayarda da temizleyecek. Resmin olduğu gibi duruyor.",
+  "deskLinkRowHint": "Telefonundaki Kryfo’yu burada kullan",
+  "deskLinkHead": "Telefonundaki Kryfo’yu burada kullan",
+  "deskLinkLine": "Bu bilgisayar bundan sonra telefonundaki sohbetleri ve kişileri gösterir ve senin adına gönderir.",
+  "deskLinkGoesTitle": "Önce bu bilgisayar silinir",
+  "deskLinkGoesLine": "Kendi kimliği ve üzerindeki her sohbet kaldırılır. Gizli sohbetler, yem ve Kendime not da gider. Kendi klasörlerine kaydettiğin dosyalar kalır.",
+  "deskLinkBackupRow": "Önce yedekle",
+  "deskLinkBackupHint": "Bu bilgisayarın sohbetlerini en az 12 karakterlik bir parola ifadesiyle bir dosyada saklar",
+  "deskLinkConfirmLine": "Bu bilgisayarın kimliği ve sohbetleri silinir. Sonra Kryfo taranacak kodla yeniden açılır.",
+  "deskLinkConfirmYes": "Sil ve bağla",
+  "deskLinkErasing": "Bu bilgisayar siliniyor",
+  "deskLinkErasingLine": "Kryfo birazdan taranacak kodla yeniden açılır.",
+  "settingsLinkedToYourPhone": "Telefonuna bağlı",
+  "settingsLinkedPhoneHint": "Yedekler ve davetler telefonda kalır",
+  "settingsUnlinkComputer": "Bu bilgisayarın bağlantısını kes",
+  "settingsUnlinkComputerTitle": "Bu bilgisayarın bağlantısı kesilsin mi?",
+  "settingsUnlinkComputerLine": "Bu bilgisayardaki sohbetler kaldırılır. Telefonun her şeyi saklar."
 }

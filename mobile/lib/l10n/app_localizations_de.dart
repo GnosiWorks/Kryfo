@@ -11847,4 +11847,59 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Ein kommendes Update bereinigt solche Bilder auch auf dem Computer. Dein Bild ist genau wie vorher.';
+
+  @override
+  String get deskLinkRowHint => 'Das Kryfo auf deinem Handy hier nutzen';
+
+  @override
+  String get deskLinkHead => 'Das Kryfo deines Handys hier nutzen';
+
+  @override
+  String get deskLinkLine =>
+      'Dieser Computer zeigt dann die Chats und Kontakte auf deinem Handy und sendet als du.';
+
+  @override
+  String get deskLinkGoesTitle => 'Zuerst wird dieser Computer gelöscht';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Seine eigene Identität und jeder Chat darauf werden entfernt. Versteckte Chats, die Tarnung und Notiz an mich gehen auch. Dateien, die du in deinen eigenen Ordnern gespeichert hast, bleiben.';
+
+  @override
+  String get deskLinkBackupRow => 'Zuerst sichern';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Speichert die Chats dieses Computers in einer Datei, mit einer Passphrase aus 12 oder mehr Zeichen';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Identität und Chats dieses Computers werden gelöscht. Dann öffnet sich Kryfo wieder mit dem Code zum Scannen.';
+
+  @override
+  String get deskLinkConfirmYes => 'Löschen und verknüpfen';
+
+  @override
+  String get deskLinkErasing => 'Dieser Computer wird gelöscht';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo öffnet sich gleich wieder mit dem Code zum Scannen.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Mit deinem Handy verknüpft';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'Backups und Einladungen bleiben auf dem Handy';
+
+  @override
+  String get settingsUnlinkComputer => 'Diesen Computer trennen';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Diesen Computer trennen?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Die Chats auf diesem Computer werden entfernt. Dein Handy behält alles.';
 }

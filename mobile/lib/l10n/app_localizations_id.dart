@@ -11713,4 +11713,58 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Pembaruan berikutnya membersihkan gambar seperti ini di komputer. Gambarmu tetap seperti semula.';
+
+  @override
+  String get deskLinkRowHint => 'Pakai Kryfo di ponselmu di sini';
+
+  @override
+  String get deskLinkHead => 'Pakai Kryfo di ponselmu di sini';
+
+  @override
+  String get deskLinkLine =>
+      'Komputer ini lalu menampilkan obrolan dan kontak di ponselmu dan mengirim sebagai kamu.';
+
+  @override
+  String get deskLinkGoesTitle => 'Pertama, komputer ini dihapus';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Identitasnya sendiri dan semua obrolan di dalamnya dihapus. Obrolan tersembunyi, umpan, dan Catatan pribadi juga ikut terhapus. File yang kamu simpan di foldermu sendiri tetap ada.';
+
+  @override
+  String get deskLinkBackupRow => 'Cadangkan dulu';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Menyimpan obrolan komputer ini dalam file, dengan frasa sandi 12 karakter atau lebih';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Identitas dan obrolan komputer ini dihapus. Lalu Kryfo terbuka lagi dengan kode untuk dipindai.';
+
+  @override
+  String get deskLinkConfirmYes => 'Hapus dan tautkan';
+
+  @override
+  String get deskLinkErasing => 'Menghapus komputer ini';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Sebentar lagi Kryfo terbuka lagi dengan kode untuk dipindai.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Tertaut ke ponselmu';
+
+  @override
+  String get settingsLinkedPhoneHint => 'Cadangan dan undangan tetap di ponsel';
+
+  @override
+  String get settingsUnlinkComputer => 'Lepaskan komputer ini';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Lepaskan komputer ini?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Obrolan di komputer ini dihapus. Ponselmu tetap menyimpan semuanya.';
 }

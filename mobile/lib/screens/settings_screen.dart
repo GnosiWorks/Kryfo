@@ -65,6 +65,7 @@ import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
 import 'auto_get_screen.dart';
 import 'follow_section.dart';
 import 'linked_devices_screen.dart';
+import 'desk_link_screen.dart';
 import '../devices/own_devices.dart' show kLinkedDevicesOn, OwnDevices;
 import '../widgets/stagger_in.dart';
 import '../widgets/unfold.dart';
@@ -320,6 +321,24 @@ class ProtectionMeter extends StatelessWidget {
   }
 }
 
+/// the computer's link rows show: on a computer, outside the decoy, a
+/// quiet session and a vault
+bool get deskLinkRows =>
+    kLinkedDevicesOn &&
+    onDesktop &&
+    !appState.inDecoyView &&
+    !lockState.inVault;
+
+/// the erase before a computer links to a phone, a stand-in in tests
+@visibleForTesting
+Future<void> Function({bool releaseHandle, bool thenLink}) deskLinkErase =
+    wipeHalo;
+
+/// a linked computer's unlink, the devices page's own, a stand-in in tests
+@visibleForTesting
+Future<void> Function() deskUnlinkHere = () async =>
+    (await ownDevicesSource()).leaveHere();
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
   @override
@@ -445,6 +464,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
       haloRoute(LinkedDevicesScreen(source: src, copyPage: historyCopyPage)),
     );
     if (mounted) await _readDevices();
+  }
+
+  // this computer's own Kryfo goes and the next run shows the code
+  Future<void> _linkToPhone() async {
+    HapticFeedback.selectionClick();
+    await Navigator.of(context).push(
+      haloRoute(
+        DeskLinkScreen(
+          erase: () =>
+              deskLinkErase(releaseHandle: !sessionQuiet, thenLink: true),
+        ),
+      ),
+    );
+    if (mounted) _readLastBackup();
+  }
+
+  // the linked computer's own unlink: its last word, the erase, the page
+  Future<void> _unlinkComputer() async {
+    final yes = await showConfirmSheet(
+      context,
+      title: l10n.settingsUnlinkComputerTitle,
+      line: l10n.settingsUnlinkComputerLine,
+      yes: l10n.devicesLeaveYes,
+    );
+    if (!yes || !mounted) return;
+    HapticFeedback.mediumImpact();
+    await deskUnlinkHere();
   }
 
   Future<void> _readUpdateOn() async {
@@ -843,7 +889,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
               ],
             ),
-            if (kLinkedDevicesOn) ...[
+            if (kLinkedDevicesOn && !onDesktop) ...[
               HaloSection(l10n.settingsDevices),
               HaloGroup(
                 children: [
@@ -858,6 +904,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
+            ],
+            // a computer: linked to a phone, or its own Kryfo that may link
+            // to one. never in the decoy, a quiet session or a vault
+            if (deskLinkRows) ...[
+              HaloSection(l10n.settingsDevices),
+              if (linkedRole) ...[
+                HaloGroup(
+                  children: [
+                    HaloRow(
+                      icon: Icons.smartphone_rounded,
+                      label: l10n.settingsLinkedToYourPhone,
+                      hint: l10n.settingsLinkedPhoneHint,
+                      onTap: _openDevices,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                HaloGroup(
+                  rose: true,
+                  children: [
+                    HaloRow(
+                      icon: Icons.link_off_rounded,
+                      label: l10n.settingsUnlinkComputer,
+                      rose: true,
+                      onTap: _unlinkComputer,
+                    ),
+                  ],
+                ),
+              ] else
+                HaloGroup(
+                  children: [
+                    HaloRow(
+                      icon: Icons.smartphone_rounded,
+                      label: l10n.onboardingLinkToMyPhone,
+                      hint: l10n.deskLinkRowHint,
+                      onTap: _linkToPhone,
+                    ),
+                  ],
+                ),
             ],
             HaloSection(l10n.settingsAppearance),
             HaloGroup(

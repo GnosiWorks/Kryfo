@@ -11720,4 +11720,59 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'به‌روزرسانی بعدی تصویرهایی مثل این را روی رایانه هم تمیز می‌کند. تصویرتان دقیقاً همان‌طور که بود مانده است.';
+
+  @override
+  String get deskLinkRowHint => 'Kryfo گوشی‌تان را اینجا به کار ببرید';
+
+  @override
+  String get deskLinkHead => 'Kryfo گوشی‌تان را اینجا به کار ببرید';
+
+  @override
+  String get deskLinkLine =>
+      'این رایانه از آن پس گفت‌وگوها و مخاطبان گوشی‌تان را نشان می‌دهد و از طرف شما می‌فرستد.';
+
+  @override
+  String get deskLinkGoesTitle => 'اول، این رایانه پاک می‌شود';
+
+  @override
+  String get deskLinkGoesLine =>
+      'هویت خودش و همه گفت‌وگوهای رویش حذف می‌شوند. گفت‌وگوهای پنهان، فریب و یادداشت برای خود هم می‌روند. فایل‌هایی که در پوشه‌های خودتان ذخیره کرده‌اید می‌مانند.';
+
+  @override
+  String get deskLinkBackupRow => 'اول پشتیبان بگیرید';
+
+  @override
+  String get deskLinkBackupHint =>
+      'گفت‌وگوهای این رایانه را در یک فایل نگه می‌دارد، با عبارت عبوری از ۱۲ کاراکتر یا بیشتر';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'هویت و گفت‌وگوهای این رایانه پاک می‌شوند. بعد Kryfo دوباره با کدی برای اسکن باز می‌شود.';
+
+  @override
+  String get deskLinkConfirmYes => 'پاک کن و پیوند بده';
+
+  @override
+  String get deskLinkErasing => 'در حال پاک کردن این رایانه';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo تا لحظه‌ای دیگر دوباره با کدی برای اسکن باز می‌شود.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'به گوشی‌تان پیوند خورده';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'نسخه‌های پشتیبان و دعوت‌ها روی گوشی می‌مانند';
+
+  @override
+  String get settingsUnlinkComputer => 'جدا کردن این رایانه';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'این رایانه جدا شود؟';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'گفت‌وگوهای روی این رایانه حذف می‌شوند. گوشی‌تان همه چیز را نگه می‌دارد.';
 }

@@ -11709,4 +11709,58 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'A coming update cleans pictures like this one on a computer. Your picture is just as it was.';
+
+  @override
+  String get deskLinkRowHint => 'Use the Kryfo on your phone here';
+
+  @override
+  String get deskLinkHead => 'Use your phone\'s Kryfo here';
+
+  @override
+  String get deskLinkLine =>
+      'This computer then shows the chats and contacts on your phone and sends as you.';
+
+  @override
+  String get deskLinkGoesTitle => 'First, this computer is erased';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Its own identity and every chat on it are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.';
+
+  @override
+  String get deskLinkBackupRow => 'Back up first';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Keeps this computer\'s chats in a file, under a passphrase of 12 characters or more';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'This computer\'s identity and chats are erased. Then Kryfo opens again with the code to scan.';
+
+  @override
+  String get deskLinkConfirmYes => 'Erase and link';
+
+  @override
+  String get deskLinkErasing => 'Erasing this computer';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo opens again in a moment with the code to scan.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Linked to your phone';
+
+  @override
+  String get settingsLinkedPhoneHint => 'Backups and invites stay on the phone';
+
+  @override
+  String get settingsUnlinkComputer => 'Unlink this computer';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Unlink this computer?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'The chats on this computer are removed. Your phone keeps everything.';
 }

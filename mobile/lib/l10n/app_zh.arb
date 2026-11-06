@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "图片已复制",
   "toolsCouldNotCopy": "无法复制图片",
   "cleanNotYetHere": "这张图片暂时还不能在这里清理",
-  "cleanNotYetHereLine": "即将推出的更新会在电脑上清理这样的图片。你的图片原封未动。"
+  "cleanNotYetHereLine": "即将推出的更新会在电脑上清理这样的图片。你的图片原封未动。",
+  "deskLinkRowHint": "在这里使用你手机上的 Kryfo",
+  "deskLinkHead": "在这里使用你手机上的 Kryfo",
+  "deskLinkLine": "之后这台电脑会显示你手机上的聊天和联系人，并以你的身份发送。",
+  "deskLinkGoesTitle": "首先，这台电脑会被抹除",
+  "deskLinkGoesLine": "它自己的身份和上面的每个聊天都会被移除。隐藏聊天、伪装和给自己的笔记也会一起移除。你存到自己文件夹里的文件会保留。",
+  "deskLinkBackupRow": "先备份",
+  "deskLinkBackupHint": "把这台电脑的聊天存进一个文件，用 12 个字符或更长的密码短语保护",
+  "deskLinkConfirmLine": "这台电脑的身份和聊天会被抹除。然后 Kryfo 会重新打开并显示要扫描的二维码。",
+  "deskLinkConfirmYes": "抹除并关联",
+  "deskLinkErasing": "正在抹除这台电脑",
+  "deskLinkErasingLine": "Kryfo 马上会重新打开并显示要扫描的二维码。",
+  "settingsLinkedToYourPhone": "已关联到你的手机",
+  "settingsLinkedPhoneHint": "备份和邀请留在手机上",
+  "settingsUnlinkComputer": "解除这台电脑的关联",
+  "settingsUnlinkComputerTitle": "解除这台电脑的关联？",
+  "settingsUnlinkComputerLine": "这台电脑上的聊天会被移除。你的手机保留所有内容。"
 }

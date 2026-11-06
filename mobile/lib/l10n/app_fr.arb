@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "Image copiée",
   "toolsCouldNotCopy": "Impossible de copier l’image",
   "cleanNotYetHere": "Cette image ne peut pas encore être nettoyée ici",
-  "cleanNotYetHereLine": "Une prochaine mise à jour nettoie les images comme celle-ci sur ordinateur. Votre image est restée telle quelle."
+  "cleanNotYetHereLine": "Une prochaine mise à jour nettoie les images comme celle-ci sur ordinateur. Votre image est restée telle quelle.",
+  "deskLinkRowHint": "Utiliser ici le Kryfo de votre téléphone",
+  "deskLinkHead": "Utilisez ici le Kryfo de votre téléphone",
+  "deskLinkLine": "Cet ordinateur affichera alors les discussions et les contacts de votre téléphone, et enverra en votre nom.",
+  "deskLinkGoesTitle": "D’abord, cet ordinateur est effacé",
+  "deskLinkGoesLine": "Sa propre identité et toutes ses discussions sont supprimées. Les discussions masquées, le leurre et Note pour moi partent aussi. Les fichiers enregistrés dans vos propres dossiers restent.",
+  "deskLinkBackupRow": "Sauvegarder d’abord",
+  "deskLinkBackupHint": "Garde les discussions de cet ordinateur dans un fichier, sous une phrase secrète de 12 caractères ou plus",
+  "deskLinkConfirmLine": "L’identité et les discussions de cet ordinateur sont effacées. Puis Kryfo se rouvre avec le code à scanner.",
+  "deskLinkConfirmYes": "Effacer et associer",
+  "deskLinkErasing": "Effacement de cet ordinateur",
+  "deskLinkErasingLine": "Kryfo se rouvre dans un instant avec le code à scanner.",
+  "settingsLinkedToYourPhone": "Associé à votre téléphone",
+  "settingsLinkedPhoneHint": "Les sauvegardes et les invitations restent sur le téléphone",
+  "settingsUnlinkComputer": "Dissocier cet ordinateur",
+  "settingsUnlinkComputerTitle": "Dissocier cet ordinateur ?",
+  "settingsUnlinkComputerLine": "Les discussions de cet ordinateur sont supprimées. Votre téléphone garde tout."
 }

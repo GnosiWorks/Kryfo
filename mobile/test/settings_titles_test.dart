@@ -88,6 +88,8 @@ const _notSettings = {
   'desk_run_section',
   // a link's own pages, opened from Linked devices: steps, not settings
   'link_screens',
+  // a computer's link to a phone from settings: one step page, no sections
+  'desk_link_screen',
   // one bridge as a code, or into a chat: a sheet with no sections
   'bridge_share_sheet',
 };

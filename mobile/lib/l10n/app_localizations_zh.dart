@@ -11062,6 +11062,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cleanNotYetHereLine => '即将推出的更新会在电脑上清理这样的图片。你的图片原封未动。';
+
+  @override
+  String get deskLinkRowHint => '在这里使用你手机上的 Kryfo';
+
+  @override
+  String get deskLinkHead => '在这里使用你手机上的 Kryfo';
+
+  @override
+  String get deskLinkLine => '之后这台电脑会显示你手机上的聊天和联系人，并以你的身份发送。';
+
+  @override
+  String get deskLinkGoesTitle => '首先，这台电脑会被抹除';
+
+  @override
+  String get deskLinkGoesLine =>
+      '它自己的身份和上面的每个聊天都会被移除。隐藏聊天、伪装和给自己的笔记也会一起移除。你存到自己文件夹里的文件会保留。';
+
+  @override
+  String get deskLinkBackupRow => '先备份';
+
+  @override
+  String get deskLinkBackupHint => '把这台电脑的聊天存进一个文件，用 12 个字符或更长的密码短语保护';
+
+  @override
+  String get deskLinkConfirmLine => '这台电脑的身份和聊天会被抹除。然后 Kryfo 会重新打开并显示要扫描的二维码。';
+
+  @override
+  String get deskLinkConfirmYes => '抹除并关联';
+
+  @override
+  String get deskLinkErasing => '正在抹除这台电脑';
+
+  @override
+  String get deskLinkErasingLine => 'Kryfo 马上会重新打开并显示要扫描的二维码。';
+
+  @override
+  String get settingsLinkedToYourPhone => '已关联到你的手机';
+
+  @override
+  String get settingsLinkedPhoneHint => '备份和邀请留在手机上';
+
+  @override
+  String get settingsUnlinkComputer => '解除这台电脑的关联';
+
+  @override
+  String get settingsUnlinkComputerTitle => '解除这台电脑的关联？';
+
+  @override
+  String get settingsUnlinkComputerLine => '这台电脑上的聊天会被移除。你的手机保留所有内容。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22008,4 +22057,54 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get cleanNotYetHereLine => '即將推出的更新會在電腦上清理這樣的圖片。你的圖片原封未動。';
+
+  @override
+  String get deskLinkRowHint => '在這裡使用你手機上的 Kryfo';
+
+  @override
+  String get deskLinkHead => '在這裡使用你手機上的 Kryfo';
+
+  @override
+  String get deskLinkLine => '之後這台電腦會顯示你手機上的聊天和聯絡人，並以你的身分傳送。';
+
+  @override
+  String get deskLinkGoesTitle => '首先，這台電腦會被抹除';
+
+  @override
+  String get deskLinkGoesLine =>
+      '它自己的身分和上面的每個聊天都會被移除。隱藏聊天、偽裝和給自己的筆記也會一起移除。你存到自己資料夾裡的檔案會保留。';
+
+  @override
+  String get deskLinkBackupRow => '先備份';
+
+  @override
+  String get deskLinkBackupHint => '把這台電腦的聊天存進一個檔案，用 12 個字元或更長的密碼短語保護';
+
+  @override
+  String get deskLinkConfirmLine =>
+      '這台電腦的身分和聊天會被抹除。然後 Kryfo 會重新開啟並顯示要掃描的 QR 碼。';
+
+  @override
+  String get deskLinkConfirmYes => '抹除並連結';
+
+  @override
+  String get deskLinkErasing => '正在抹除這台電腦';
+
+  @override
+  String get deskLinkErasingLine => 'Kryfo 馬上會重新開啟並顯示要掃描的 QR 碼。';
+
+  @override
+  String get settingsLinkedToYourPhone => '已連結到你的手機';
+
+  @override
+  String get settingsLinkedPhoneHint => '備份和邀請會留在手機上';
+
+  @override
+  String get settingsUnlinkComputer => '解除這台電腦的連結';
+
+  @override
+  String get settingsUnlinkComputerTitle => '解除這台電腦的連結？';
+
+  @override
+  String get settingsUnlinkComputerLine => '這台電腦上的聊天會被移除。你的手機保留所有內容。';
 }

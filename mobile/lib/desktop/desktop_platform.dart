@@ -15,7 +15,8 @@ import '../l10n/l10n.dart';
 
 import 'desktop_channels.dart';
 import 'desktop_db.dart';
-import 'desktop_posix.dart' show execSelf;
+import 'desktop_mode.dart' show kLinkNextEnv;
+import 'desktop_posix.dart' show execSelf, setEnvHere;
 import 'desktop_save.dart';
 import 'desktop_wipe.dart';
 
@@ -160,12 +161,16 @@ class DesktopHost {
     required this.dataDir,
     this.exit = _exit,
     this.relaunch = _relaunch,
+    this.relaunchLink = _relaunchLink,
     this.destroyKeys,
   });
 
   final String dataDir;
   final void Function(int) exit;
   final Future<void> Function() relaunch;
+
+  /// a new run after a wipe for a link: it opens onboarding's link at once
+  final Future<void> Function() relaunchLink;
 
   /// the vault overwritten before the folder goes
   void Function()? destroyKeys;
@@ -197,8 +202,24 @@ class DesktopHost {
       Platform.resolvedExecutable,
       Platform.isWindows ? const ['--reopen'] : const [],
       mode: ProcessStartMode.detached,
+      // a link asked of an earlier run is never asked again
+      environment: const {kLinkNextEnv: ''},
     );
   }
+  // the same, with the link asked of the new run
+  static Future<void> _relaunchLink() async {
+    if (!Platform.isWindows) {
+      setEnvHere(kLinkNextEnv, '1');
+      execSelf(Platform.resolvedExecutable);
+    }
+    await Process.start(
+      Platform.resolvedExecutable,
+      Platform.isWindows ? const ['--reopen'] : const [],
+      mode: ProcessStartMode.detached,
+      environment: const {kLinkNextEnv: '1'},
+    );
+  }
+
 
   /// time since boot, suspend included, as android's elapsedRealtime
   int uptimeMs() {
@@ -228,8 +249,9 @@ class DesktopHost {
   /// vault is overwritten and what the account kept for it cleared, keys
   /// first, then the start with the computer goes, every file is let go of
   /// and every file goes, and the process ends. a file windows still holds
-  /// goes at the next start (clearWithoutVault)
-  Future<void> wipe() async {
+  /// goes at the next start (clearWithoutVault). [link]: a new run starts
+  /// once every file is gone, at onboarding's link
+  Future<void> wipe({bool link = false}) async {
     try {
       destroyKeys?.call();
     } catch (_) {}
@@ -248,6 +270,12 @@ class DesktopHost {
     try {
       await clearDataDir(dataDir);
     } catch (_) {}
+    if (link) {
+      // no run after it is still a clean start: onboarding
+      try {
+        await relaunchLink();
+      } catch (_) {}
+    }
     exit(0);
   }
 }
@@ -294,7 +322,7 @@ Map<String, DesktopAnswer> desktopAnswers(
         host.exit(0);
         return null;
       case 'wipe':
-        await host.wipe();
+        await host.wipe(link: (c.arguments as Map?)?['link'] == true);
         return false;
       // the dialog and kryfo's own copy, in the phone's answer shapes
       case 'saveDocument':

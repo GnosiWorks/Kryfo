@@ -32,6 +32,7 @@ import '../main.dart'
         newJoinFlow;
 import '../devices/linked_switch.dart' show kLinkedDevicesOn;
 import 'link_screens.dart' show JoinScreen;
+import '../devices/link_flow.dart' show LinkFlow;
 import '../widgets/kryfo_link_text.dart' show addScanned, takeOwnLink;
 import 'scan_screen.dart';
 import 'handle_screen.dart'
@@ -54,7 +55,8 @@ import '../delivery_mode.dart';
 import '../store.dart' show playBuild;
 import '../desktop/desktop_mode.dart' show canShareOut;
 import 'helper_sheet.dart' show showHelperSheet;
-import '../desktop/desktop_mode.dart' show desktopRun, onDesktop;
+import '../desktop/desktop_mode.dart'
+    show desktopRun, onDesktop, takeDeskLinkAtStart;
 import 'desk_run_section.dart';
 
 /// the onboarding's steps, by name: a step is never found by its place
@@ -71,6 +73,10 @@ List<OnboardStep> onboardingSteps({bool desk = false}) => [
   desk ? OnboardStep.desk : OnboardStep.delivery,
   OnboardStep.invite,
 ];
+
+/// the link's flow from the first step, a stand-in in tests
+@visibleForTesting
+LinkFlow Function() onboardingJoinFlow = newJoinFlow;
 
 /// the onboarding's column on a computer: a phone's width, centred
 const kDeskOnboardWidth = 520.0;
@@ -146,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     nav.push(
       haloRoute(
         JoinScreen(
-          newFlow: newJoinFlow,
+          newFlow: onboardingJoinFlow,
           // onboarding is done already, when the link was: this only
           // leaves the page
           onLinked: () => nav.pop(),
@@ -171,6 +177,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.initState();
     // whether the phone has play services, known by the time its step comes
     if (playBuild) unawaited(appState.lookForGoogle());
+    // a computer wiped for a link from settings: the code shows at once.
+    // back or a failed link lands here, on a clean start
+    if (kLinkedDevicesOn && onDesktop && takeDeskLinkAtStart()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _link();
+      });
+    }
   }
 
   @override

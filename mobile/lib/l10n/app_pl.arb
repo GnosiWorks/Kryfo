@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "Skopiowano obraz",
   "toolsCouldNotCopy": "Nie udało się skopiować obrazu",
   "cleanNotYetHere": "Tego obrazu nie da się tu jeszcze wyczyścić",
-  "cleanNotYetHereLine": "Nadchodząca aktualizacja czyści takie obrazy także na komputerze. Twój obraz jest dokładnie taki jak był."
+  "cleanNotYetHereLine": "Nadchodząca aktualizacja czyści takie obrazy także na komputerze. Twój obraz jest dokładnie taki jak był.",
+  "deskLinkRowHint": "Używaj tu Kryfo ze swojego telefonu",
+  "deskLinkHead": "Używaj tu Kryfo ze swojego telefonu",
+  "deskLinkLine": "Ten komputer pokaże wtedy czaty i kontakty z twojego telefonu i będzie wysyłać jako ty.",
+  "deskLinkGoesTitle": "Najpierw ten komputer zostanie wymazany",
+  "deskLinkGoesLine": "Jego własna tożsamość i wszystkie czaty na nim zostaną usunięte. Ukryte czaty, przynęta i Notatka dla siebie też znikną. Pliki zapisane w twoich własnych folderach zostaną.",
+  "deskLinkBackupRow": "Najpierw kopia zapasowa",
+  "deskLinkBackupHint": "Zachowuje czaty z tego komputera w pliku, pod hasłem z co najmniej 12 znaków",
+  "deskLinkConfirmLine": "Tożsamość i czaty tego komputera zostaną wymazane. Potem Kryfo otworzy się znowu z kodem do zeskanowania.",
+  "deskLinkConfirmYes": "Wymaż i połącz",
+  "deskLinkErasing": "Wymazywanie tego komputera",
+  "deskLinkErasingLine": "Kryfo za chwilę otworzy się znowu z kodem do zeskanowania.",
+  "settingsLinkedToYourPhone": "Połączono z twoim telefonem",
+  "settingsLinkedPhoneHint": "Kopie zapasowe i zaproszenia zostają na telefonie",
+  "settingsUnlinkComputer": "Rozłącz ten komputer",
+  "settingsUnlinkComputerTitle": "Rozłączyć ten komputer?",
+  "settingsUnlinkComputerLine": "Czaty na tym komputerze zostaną usunięte. Telefon zachowa wszystko."
 }

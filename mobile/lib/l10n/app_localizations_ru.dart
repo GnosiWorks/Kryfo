@@ -11896,4 +11896,59 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'В одном из следующих обновлений такие изображения будут очищаться и на компьютере. Твоё изображение осталось как было.';
+
+  @override
+  String get deskLinkRowHint => 'Пользуйтесь здесь Kryfo с вашего телефона';
+
+  @override
+  String get deskLinkHead => 'Пользуйтесь здесь Kryfo с вашего телефона';
+
+  @override
+  String get deskLinkLine =>
+      'Этот компьютер будет показывать чаты и контакты с вашего телефона и отправлять от вашего имени.';
+
+  @override
+  String get deskLinkGoesTitle => 'Сначала этот компьютер будет стёрт';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Его собственный профиль и все чаты на нём удаляются. Скрытые чаты, приманка и Заметки удаляются тоже. Файлы, сохранённые в ваших папках, останутся.';
+
+  @override
+  String get deskLinkBackupRow => 'Сначала резервная копия';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Сохраняет чаты этого компьютера в файл под парольной фразой не короче 12 символов';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Профиль и чаты этого компьютера будут стёрты. Затем Kryfo откроется снова с кодом для сканирования.';
+
+  @override
+  String get deskLinkConfirmYes => 'Стереть и связать';
+
+  @override
+  String get deskLinkErasing => 'Компьютер стирается';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo скоро откроется снова с кодом для сканирования.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Связано с вашим телефоном';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'Резервные копии и приглашения остаются на телефоне';
+
+  @override
+  String get settingsUnlinkComputer => 'Отвязать этот компьютер';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Отвязать этот компьютер?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Чаты на этом компьютере удаляются. На телефоне остаётся всё.';
 }

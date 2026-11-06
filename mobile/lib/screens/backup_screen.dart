@@ -46,7 +46,14 @@ class BackupScreen extends StatefulWidget {
   // from the hidden chats setup: a copy to keep that holds the chats just
   // hidden, never a move
   final bool withHiddenChats;
-  const BackupScreen({super.key, this.withHiddenChats = false});
+  // before a computer links to a phone: a copy to keep, never a move
+  final bool keepOnly;
+  const BackupScreen({
+    super.key,
+    this.withHiddenChats = false,
+    this.keepOnly = false,
+  });
+  bool get _noMove => withHiddenChats || keepOnly;
   @override
   State<BackupScreen> createState() => _BackupScreenState();
 }
@@ -117,7 +124,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final sayLater = _notMadeLater();
     final String path;
     final String name;
-    final move = _move && !widget.withHiddenChats;
+    final move = _move && !widget._noMove;
     try {
       final bulk = bulkTempDir;
       final tempDir = bulk != null
@@ -375,7 +382,7 @@ class _BackupScreenState extends State<BackupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: staggerAllIn(context, [
               // a setup's backup holds the chats it just hid: never a move
-              if (!widget.withHiddenChats) ...[
+              if (!widget._noMove) ...[
                 ChoiceCard(
                   on: !_move,
                   title: l10n.backupBackUp,
@@ -392,8 +399,8 @@ class _BackupScreenState extends State<BackupScreen> {
                 const SizedBox(height: 16),
               ],
               _About(
-                move: _move && !widget.withHiddenChats,
-                canMove: !widget.withHiddenChats,
+                move: _move && !widget._noMove,
+                canMove: !widget._noMove,
                 hidden: _hidden,
               ),
               const SizedBox(height: 24),

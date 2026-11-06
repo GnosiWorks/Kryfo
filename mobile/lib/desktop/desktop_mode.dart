@@ -15,6 +15,20 @@ import '../container.dart' show HaloContainer;
 /// and test the phone's behaviour there
 bool onDesktop = false;
 
+/// what a computer's wipe for a link hands its next run, in the
+/// environment: that run opens onboarding's link at once
+const kLinkNextEnv = 'KRYFO_LINK_NEXT';
+
+/// set at the start of a run a wipe for a link made: taken once
+bool deskLinkAtStart = false;
+
+/// whether onboarding opens the link at once, asked once
+bool takeDeskLinkAtStart() {
+  final v = deskLinkAtStart;
+  deskLinkAtStart = false;
+  return v;
+}
+
 /// this app keeps its window out of screenshots, and so may say it blocks
 /// them: a chat's 'ss', a group's 'gs'. a computer cannot yet
 bool get shotsHonouredHere => !onDesktop;

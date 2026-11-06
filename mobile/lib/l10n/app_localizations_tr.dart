@@ -11736,4 +11736,59 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get cleanNotYetHereLine =>
       'Gelecek bir güncelleme bunun gibi resimleri bilgisayarda da temizleyecek. Resmin olduğu gibi duruyor.';
+
+  @override
+  String get deskLinkRowHint => 'Telefonundaki Kryfo’yu burada kullan';
+
+  @override
+  String get deskLinkHead => 'Telefonundaki Kryfo’yu burada kullan';
+
+  @override
+  String get deskLinkLine =>
+      'Bu bilgisayar bundan sonra telefonundaki sohbetleri ve kişileri gösterir ve senin adına gönderir.';
+
+  @override
+  String get deskLinkGoesTitle => 'Önce bu bilgisayar silinir';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Kendi kimliği ve üzerindeki her sohbet kaldırılır. Gizli sohbetler, yem ve Kendime not da gider. Kendi klasörlerine kaydettiğin dosyalar kalır.';
+
+  @override
+  String get deskLinkBackupRow => 'Önce yedekle';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Bu bilgisayarın sohbetlerini en az 12 karakterlik bir parola ifadesiyle bir dosyada saklar';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Bu bilgisayarın kimliği ve sohbetleri silinir. Sonra Kryfo taranacak kodla yeniden açılır.';
+
+  @override
+  String get deskLinkConfirmYes => 'Sil ve bağla';
+
+  @override
+  String get deskLinkErasing => 'Bu bilgisayar siliniyor';
+
+  @override
+  String get deskLinkErasingLine =>
+      'Kryfo birazdan taranacak kodla yeniden açılır.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Telefonuna bağlı';
+
+  @override
+  String get settingsLinkedPhoneHint => 'Yedekler ve davetler telefonda kalır';
+
+  @override
+  String get settingsUnlinkComputer => 'Bu bilgisayarın bağlantısını kes';
+
+  @override
+  String get settingsUnlinkComputerTitle =>
+      'Bu bilgisayarın bağlantısı kesilsin mi?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Bu bilgisayardaki sohbetler kaldırılır. Telefonun her şeyi saklar.';
 }

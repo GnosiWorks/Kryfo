@@ -75,11 +75,13 @@ Future<void> get wipeShredding => _shredding;
 // gone and before the engine is taken off the network (a linked device's
 // last word to its phone, sealed before the wipe began), a few seconds at
 // most. [stay]: the process lives on for a page that says what happened,
-// and android's erase and the exit wait for [wipeFinish]
+// and android's erase and the exit wait for [wipeFinish]. [thenLink]: a
+// computer's next run starts at onboarding's link to a phone
 Future<void> wipeHalo({
   bool releaseHandle = false,
   Future<void> Function()? afterErase,
   bool stay = false,
+  bool thenLink = false,
 }) async {
   // read before anything goes: a quiet session has no handle and reaches
   // nobody on the everyday identity's behalf
@@ -149,12 +151,12 @@ Future<void> wipeHalo({
     await Future.any([_shredding, Future<void>.delayed(wait)]);
   }
   if (stay) return;
-  await wipeFinish();
+  await wipeFinish(link: thenLink);
 }
 
 /// the end of a wipe: android's erase, else the exit. a page shown after a
 /// wipe that stayed calls it when the person closes it
-Future<void> wipeFinish() async {
+Future<void> wipeFinish({bool link = false}) async {
   // the call that finishes the job kills this process before it can
   // answer, so a reply at all means it did not happen.
   var native = false;
@@ -162,7 +164,9 @@ Future<void> wipeFinish() async {
     native = await Future.any([
       const MethodChannel(
         'halo/platform',
-      ).invokeMethod<bool>('wipe').then((v) => v ?? false),
+      ).invokeMethod<bool>('wipe', link ? {'link': true} : null).then(
+        (v) => v ?? false,
+      ),
       Future.delayed(const Duration(seconds: 5), () => false),
     ]);
   } catch (e) {

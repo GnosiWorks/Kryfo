@@ -18756,6 +18756,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A coming update cleans pictures like this one on a computer. Your picture is just as it was.'**
   String get cleanNotYetHereLine;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Kryfo on your phone here'**
+  String get deskLinkRowHint;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Use your phone\'s Kryfo here'**
+  String get deskLinkHead;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'This computer then shows the chats and contacts on your phone and sends as you.'**
+  String get deskLinkLine;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'First, this computer is erased'**
+  String get deskLinkGoesTitle;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Its own identity and every chat on it are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.'**
+  String get deskLinkGoesLine;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Back up first'**
+  String get deskLinkBackupRow;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps this computer\'s chats in a file, under a passphrase of 12 characters or more'**
+  String get deskLinkBackupHint;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'This computer\'s identity and chats are erased. Then Kryfo opens again with the code to scan.'**
+  String get deskLinkConfirmLine;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Erase and link'**
+  String get deskLinkConfirmYes;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Erasing this computer'**
+  String get deskLinkErasing;
+
+  /// desktop settings, link to a phone (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo opens again in a moment with the code to scan.'**
+  String get deskLinkErasingLine;
+
+  /// desktop settings, linked devices rows (screens/settings_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Linked to your phone'**
+  String get settingsLinkedToYourPhone;
+
+  /// desktop settings, linked devices rows (screens/settings_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Backups and invites stay on the phone'**
+  String get settingsLinkedPhoneHint;
+
+  /// desktop settings, linked devices rows (screens/settings_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink this computer'**
+  String get settingsUnlinkComputer;
+
+  /// desktop settings, linked devices rows (screens/settings_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink this computer?'**
+  String get settingsUnlinkComputerTitle;
+
+  /// desktop settings, linked devices rows (screens/settings_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'The chats on this computer are removed. Your phone keeps everything.'**
+  String get settingsUnlinkComputerLine;
 }
 
 class _AppLocalizationsDelegate

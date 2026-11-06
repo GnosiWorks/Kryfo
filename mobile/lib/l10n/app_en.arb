@@ -14673,5 +14673,69 @@
   "cleanNotYetHereLine": "A coming update cleans pictures like this one on a computer. Your picture is just as it was.",
   "@cleanNotYetHereLine": {
     "description": "desktop tools (tools/desk_tools.dart)"
+  },
+  "deskLinkRowHint": "Use the Kryfo on your phone here",
+  "@deskLinkRowHint": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkHead": "Use your phone's Kryfo here",
+  "@deskLinkHead": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkLine": "This computer then shows the chats and contacts on your phone and sends as you.",
+  "@deskLinkLine": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkGoesTitle": "First, this computer is erased",
+  "@deskLinkGoesTitle": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkGoesLine": "Its own identity and every chat on it are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.",
+  "@deskLinkGoesLine": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkBackupRow": "Back up first",
+  "@deskLinkBackupRow": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkBackupHint": "Keeps this computer's chats in a file, under a passphrase of 12 characters or more",
+  "@deskLinkBackupHint": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkConfirmLine": "This computer's identity and chats are erased. Then Kryfo opens again with the code to scan.",
+  "@deskLinkConfirmLine": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkConfirmYes": "Erase and link",
+  "@deskLinkConfirmYes": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkErasing": "Erasing this computer",
+  "@deskLinkErasing": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkErasingLine": "Kryfo opens again in a moment with the code to scan.",
+  "@deskLinkErasingLine": {
+    "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "settingsLinkedToYourPhone": "Linked to your phone",
+  "@settingsLinkedToYourPhone": {
+    "description": "desktop settings, linked devices rows (screens/settings_screen.dart)"
+  },
+  "settingsLinkedPhoneHint": "Backups and invites stay on the phone",
+  "@settingsLinkedPhoneHint": {
+    "description": "desktop settings, linked devices rows (screens/settings_screen.dart)"
+  },
+  "settingsUnlinkComputer": "Unlink this computer",
+  "@settingsUnlinkComputer": {
+    "description": "desktop settings, linked devices rows (screens/settings_screen.dart)"
+  },
+  "settingsUnlinkComputerTitle": "Unlink this computer?",
+  "@settingsUnlinkComputerTitle": {
+    "description": "desktop settings, linked devices rows (screens/settings_screen.dart)"
+  },
+  "settingsUnlinkComputerLine": "The chats on this computer are removed. Your phone keeps everything.",
+  "@settingsUnlinkComputerLine": {
+    "description": "desktop settings, linked devices rows (screens/settings_screen.dart)"
   }
 }

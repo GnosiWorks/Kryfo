@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "Imagem copiada",
   "toolsCouldNotCopy": "Não foi possível copiar a imagem",
   "cleanNotYetHere": "Esta imagem ainda não pode ser limpa aqui",
-  "cleanNotYetHereLine": "Uma próxima atualização limpa imagens como esta no computador. Sua imagem continua do jeito que estava."
+  "cleanNotYetHereLine": "Uma próxima atualização limpa imagens como esta no computador. Sua imagem continua do jeito que estava.",
+  "deskLinkRowHint": "Use aqui o Kryfo do seu celular",
+  "deskLinkHead": "Use aqui o Kryfo do seu celular",
+  "deskLinkLine": "Este computador passa a mostrar as conversas e os contatos do seu celular e envia como você.",
+  "deskLinkGoesTitle": "Antes, este computador é apagado",
+  "deskLinkGoesLine": "A identidade dele e todas as conversas nele são removidas. As conversas ocultas, o disfarce e Notas também vão. Os arquivos que você salvou nas suas pastas ficam.",
+  "deskLinkBackupRow": "Fazer backup antes",
+  "deskLinkBackupHint": "Guarda as conversas deste computador num arquivo, com uma frase-senha de 12 caracteres ou mais",
+  "deskLinkConfirmLine": "A identidade e as conversas deste computador são apagadas. Depois o Kryfo abre de novo com o código para escanear.",
+  "deskLinkConfirmYes": "Apagar e conectar",
+  "deskLinkErasing": "Apagando este computador",
+  "deskLinkErasingLine": "O Kryfo abre de novo em instantes com o código para escanear.",
+  "settingsLinkedToYourPhone": "Conectado ao seu celular",
+  "settingsLinkedPhoneHint": "Backups e convites ficam no celular",
+  "settingsUnlinkComputer": "Desconectar este computador",
+  "settingsUnlinkComputerTitle": "Desconectar este computador?",
+  "settingsUnlinkComputerLine": "As conversas deste computador são removidas. Seu celular guarda tudo."
 }

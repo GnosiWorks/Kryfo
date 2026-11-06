@@ -3078,5 +3078,21 @@
   "toolsPictureCopied": "Bild kopiert",
   "toolsCouldNotCopy": "Das Bild ließ sich nicht kopieren",
   "cleanNotYetHere": "Dieses Bild lässt sich hier noch nicht bereinigen",
-  "cleanNotYetHereLine": "Ein kommendes Update bereinigt solche Bilder auch auf dem Computer. Dein Bild ist genau wie vorher."
+  "cleanNotYetHereLine": "Ein kommendes Update bereinigt solche Bilder auch auf dem Computer. Dein Bild ist genau wie vorher.",
+  "deskLinkRowHint": "Das Kryfo auf deinem Handy hier nutzen",
+  "deskLinkHead": "Das Kryfo deines Handys hier nutzen",
+  "deskLinkLine": "Dieser Computer zeigt dann die Chats und Kontakte auf deinem Handy und sendet als du.",
+  "deskLinkGoesTitle": "Zuerst wird dieser Computer gelöscht",
+  "deskLinkGoesLine": "Seine eigene Identität und jeder Chat darauf werden entfernt. Versteckte Chats, die Tarnung und Notiz an mich gehen auch. Dateien, die du in deinen eigenen Ordnern gespeichert hast, bleiben.",
+  "deskLinkBackupRow": "Zuerst sichern",
+  "deskLinkBackupHint": "Speichert die Chats dieses Computers in einer Datei, mit einer Passphrase aus 12 oder mehr Zeichen",
+  "deskLinkConfirmLine": "Identität und Chats dieses Computers werden gelöscht. Dann öffnet sich Kryfo wieder mit dem Code zum Scannen.",
+  "deskLinkConfirmYes": "Löschen und verknüpfen",
+  "deskLinkErasing": "Dieser Computer wird gelöscht",
+  "deskLinkErasingLine": "Kryfo öffnet sich gleich wieder mit dem Code zum Scannen.",
+  "settingsLinkedToYourPhone": "Mit deinem Handy verknüpft",
+  "settingsLinkedPhoneHint": "Backups und Einladungen bleiben auf dem Handy",
+  "settingsUnlinkComputer": "Diesen Computer trennen",
+  "settingsUnlinkComputerTitle": "Diesen Computer trennen?",
+  "settingsUnlinkComputerLine": "Die Chats auf diesem Computer werden entfernt. Dein Handy behält alles."
 }
