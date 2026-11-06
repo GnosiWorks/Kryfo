@@ -158,6 +158,7 @@ class AppIo {
     if (id == null || msgUid == null) return;
     try {
       await on.noteRing(id, payload, msgUid);
+      desk_trace.trace('toast ring kept');
     } catch (e) {
       dlog('ring: not kept (${e.runtimeType})');
     }

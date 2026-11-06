@@ -35,12 +35,22 @@ typedef _CoInit = int Function(Pointer<Void>, int);
 /// policy), one com was never set up on, and the plugin's toast calls are
 /// com. this thread joins the multithreaded apartment first: a click comes
 /// in on com's own threads and needs no message loop here
-void joinComApartment({DynamicLibrary Function(String name)? open}) {
+/// the answer, null when ole32 could not be asked
+int? joinComApartment({DynamicLibrary Function(String name)? open}) {
   try {
     final ole = (open ?? openSystemDll)('ole32.dll');
     // S_FALSE when already in it; another apartment stays as it is
-    ole.lookupFunction<_CoInitC, _CoInit>('CoInitializeEx')(nullptr, 0);
-  } catch (_) {}
+    final hr = ole.lookupFunction<_CoInitC, _CoInit>('CoInitializeEx')(
+      nullptr,
+      0,
+    );
+    // RPC_E_CHANGED_MODE says the thread was in a single threaded one
+    trace('toast com 0x${(hr & 0xffffffff).toRadixString(16)}');
+    return hr;
+  } catch (_) {
+    trace('toast com not asked');
+    return null;
+  }
 }
 
 /// a plain post comes without a title and keeps its neutral line. any other
@@ -192,13 +202,39 @@ class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
     WindowsNotificationDetails? notificationDetails,
   }) {
     final (t, b) = _lock.words(title, body);
-    trace('toast shown');
-    return super.show(
-      id: id,
-      title: t,
-      body: b,
-      notificationDetails: toastDetails(),
-      payload: _payloads.hide(payload),
+    return toastBoundary(
+      () => super.show(
+        id: id,
+        title: t,
+        body: b,
+        notificationDetails: toastDetails(),
+        payload: _payloads.hide(payload),
+      ),
     );
+  }
+
+  @override
+  Future<void> cancelAll() => toastBoundary(super.cancelAll, what: 'clear');
+}
+
+/// a toast's native call between its trace lines: with the trace on, a
+/// crash in it leaves "call" with no "back", a crash after it leaves both.
+/// a failure is said and thrown on as before
+@visibleForTesting
+Future<void> toastBoundary(
+  Future<void> Function() native, {
+  String what = 'shown',
+}) async {
+  trace('toast $what');
+  trace('toast native call');
+  // the plugin's ffi call runs synchronously inside its async body, before
+  // the future comes back: back means the call returned, windows has it
+  final done = native();
+  trace('toast native back');
+  try {
+    await done;
+  } catch (e) {
+    trace('toast failed: ${e.runtimeType}');
+    rethrow;
   }
 }

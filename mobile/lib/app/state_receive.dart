@@ -717,7 +717,13 @@ extension AppStateReceive on AppState {
     );
     final failed = <int>{};
     final left = <int, ShelfFull>{};
+    var n = 0;
     for (final m in ordered) {
+      // with the trace on, a crash names the frame it was in
+      final k = ++n;
+      if (desk_trace.tracing) {
+        desk_trace.trace('relay frame $k of ${ordered.length}');
+      }
       // each on its own: one that throws comes again, the rest stay kept
       try {
         await _receiveRelayOne(
@@ -726,6 +732,7 @@ extension AppStateReceive on AppState {
           wrappedAt: m.at < written.length ? written[m.at] : null,
           reached: m.at < reached.length ? reached[m.at] : null,
         );
+        if (desk_trace.tracing) desk_trace.trace('relay frame $k filed');
       } on _KnockWaits {
         failed.add(m.at);
       } on _FirstWaits {
