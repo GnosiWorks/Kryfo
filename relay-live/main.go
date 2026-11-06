@@ -37,6 +37,7 @@ func main() {
 	}
 	startSweeper(db)
 	startCheckpoints(db)
+	db.startFill()
 
 	onion, what, err := onionServer(relay)
 	if err != nil {
