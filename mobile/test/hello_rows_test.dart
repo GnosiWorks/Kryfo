@@ -39,6 +39,7 @@ import 'package:kryfo/main.dart'
         hasSessionWith,
         kNoHelloWait,
         kOldPeerWait,
+        oldPeerHelloDue,
         haloUriV3,
         openAddedChatLater,
         openDevChatLater,
@@ -1322,8 +1323,9 @@ void main() {
       expect(live.people[q.words], containsPair('accepted', 1));
     });
 
-    test('no answer: the hello goes again twice a day the first week, then '
-        'daily; only the newest one-time invite out stays beside it', () async {
+    test('no answer: the hello goes again soon at first, then twice a day '
+        'the first week, then daily; only the newest one-time invite out '
+        'stays beside it', () async {
       final (link, p) = await v3Of('never-answers-back', 121, classic: true);
       await handleHaloUriAdded(link, app: app);
       // a pass of an earlier test may still be under way: theirs alone
@@ -1331,26 +1333,65 @@ void main() {
       await hellosGo();
       expect(sent(), hasLength(1));
       final t0 = DateTime.now().millisecondsSinceEpoch;
-      await hellosGo(nowMs: t0 + 6 * hour);
-      expect(sent(), hasLength(1));
-      await hellosGo(nowMs: t0 + 13 * hour);
-      expect(sent(), hasLength(2));
-      await hellosGo(nowMs: t0 + 26 * hour);
-      expect(sent(), hasLength(3));
+      const min = 60 * 1000;
+      // an update asked for now comes soon: 10 min, 1 h, 3 h, 6 h
+      for (final (at, n) in [
+        (5 * min, 1),
+        (11 * min, 2),
+        (30 * min, 2),
+        (61 * min, 3),
+        (2 * hour, 3),
+        (3 * hour + min, 4),
+        (6 * hour + 2 * min, 5),
+        // twice a day after, from the last one
+        (12 * hour, 5),
+        (18 * hour + 3 * min, 6),
+        (30 * hour + 4 * min, 7),
+      ]) {
+        await hellosGo(nowMs: t0 + at);
+        expect(sent(), hasLength(n), reason: 'at ${at ~/ min} min');
+      }
       expect(await hellosOf('out', p.keyHex), hasLength(2));
-      expect(engine.unsubscribed, hasLength(1));
+      expect(engine.unsubscribed, hasLength(5));
       await hellosGo(nowMs: t0 + 8 * 24 * hour);
-      expect(sent(), hasLength(4));
+      expect(sent(), hasLength(8));
       await hellosGo(nowMs: t0 + 8 * 24 * hour + 13 * hour);
-      expect(sent(), hasLength(4));
+      expect(sent(), hasLength(8));
       await hellosGo(nowMs: t0 + 9 * 24 * hour + hour);
-      expect(sent(), hasLength(5));
+      expect(sent(), hasLength(9));
       expect(await hellosOf('out', p.keyHex), hasLength(2));
       // the line stays the whole time
       expect(
         (await app.helloWaitOf(p.words, nowMs: t0 + 9 * 24 * hour)).update,
         isTrue,
       );
+    });
+
+    test('a phone asleep past the first steps sends one hello, not the '
+        'ones it missed', () async {
+      final (link, p) = await v3Of('asleep-past-steps', 127, classic: true);
+      await handleHaloUriAdded(link, app: app);
+      List<String> sent() => [...engine.hellos.where((x) => x == p.x)];
+      await hellosGo();
+      expect(sent(), hasLength(1));
+      final t0 = DateTime.now().millisecondsSinceEpoch;
+      await hellosGo(nowMs: t0 + 7 * hour);
+      expect(sent(), hasLength(2));
+      await hellosGo(nowMs: t0 + 7 * hour + 10 * 60 * 1000);
+      expect(sent(), hasLength(2));
+      await hellosGo(nowMs: t0 + 19 * hour + 60 * 1000);
+      expect(sent(), hasLength(3));
+    });
+
+    test('the steps: front-loaded, then twice a day, then daily', () {
+      const m = 60 * 1000;
+      expect(oldPeerHelloDue(0, 0), 10 * m);
+      expect(oldPeerHelloDue(0, 10 * m), hour);
+      expect(oldPeerHelloDue(0, hour), 3 * hour);
+      expect(oldPeerHelloDue(0, 3 * hour), 6 * hour);
+      expect(oldPeerHelloDue(0, 6 * hour), 18 * hour);
+      expect(oldPeerHelloDue(0, 7 * hour), 19 * hour);
+      expect(oldPeerHelloDue(0, 8 * 24 * hour), 9 * 24 * hour);
     });
 
     test('once they update and answer the hello, their chat starts and '
