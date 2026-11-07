@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// translation stays off until its library ships: no screen shows it and no
-// hub is built
+// translation is on and its library ships: screens reach the hub through
+// the switch only, the release keeps the library in, and a chat builds the
+// phone's hub and offers translate under a chinese message
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
@@ -32,11 +34,8 @@ const _peer = 'calm-grey-heron';
 const _zh = '你好，我们明天见吧';
 
 void main() {
-  test('the switch is off and nothing builds a hub', () {
-    expect(kOfflineTranslation, isFalse);
-    TranslationHub.instance = null;
-    expect(translationHubIfOn(), isNull);
-    expect(TranslationHub.instance, isNull);
+  test('the switch is on', () {
+    expect(kOfflineTranslation, isTrue);
   });
 
   test('screens reach translation only through the switch', () {
@@ -50,7 +49,7 @@ void main() {
     expect(bad, isEmpty);
   });
 
-  test('while off, the release builds the library and leaves it out', () {
+  test('the release builds the library and ships it', () {
     // the switch and the gradle line go together: on, the library ships
     final gradle = File('android/app/build.gradle.kts').readAsStringSync();
     expect(
@@ -71,7 +70,7 @@ void main() {
     expect(repro, contains('KT_JNI_LIBS_DIR='));
   });
 
-  testWidgets('a chinese message in a chat shows no translate', (t) async {
+  testWidgets('a chinese message in a chat offers translate', (t) async {
     SharedPreferences.setMockInitialValues({
       'battery_opt_prompt_seen': true,
       'miui_autostart_prompt_seen': true,
@@ -88,6 +87,7 @@ void main() {
     addTearDown(() => mockChannel('com.llfbandit.record/messages', null));
     useLibrary();
     TranslationHub.instance = null;
+    addTearDown(() => TranslationHub.instance = null);
     await t.runAsync(() async {
       final m = MemDb();
       await devChatTables(m, now: 1);
@@ -128,15 +128,22 @@ void main() {
       await t.pump(const Duration(milliseconds: 100));
     }
     expect(find.text(_zh), findsOneWidget);
-    final line = find.textContaining(l10n.translateAction, findRichText: true);
-    expect(line, findsNothing);
+    // the chat built the phone's own hub through the switch
+    expect(TranslationHub.instance, isNotNull);
+    // the line under it: translate, or first the download its route needs
+    // (the packs are not on this phone yet)
+    final line = find.byWidgetPredicate(
+      (w) =>
+          w.key == const ValueKey('tr-idle') ||
+          w.key == const ValueKey('tr-offer'),
+    );
+    expect(line, findsOneWidget);
 
     await t.longPress(find.text(_zh));
     await t.pump();
     await t.pump(const Duration(milliseconds: 400));
     expect(find.byType(MenuBackdrop), findsOneWidget);
-    expect(find.text(l10n.translateAction), findsNothing);
-    expect(TranslationHub.instance, isNull);
+    expect(find.text(l10n.translateAction), findsWidgets);
     await devClose(t);
   });
 }

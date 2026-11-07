@@ -2,6 +2,7 @@
 #include "kryfo_win.h"
 
 #include <aclapi.h>
+#include <dbghelp.h>
 #include <sddl.h>
 #include <shlobj.h>
 #include <werapi.h>
@@ -279,7 +280,16 @@ namespace {
 
 // set once, before anything can crash: the filter makes no string of its own
 wchar_t g_trace[MAX_PATH] = {};
+wchar_t g_dump[MAX_PATH] = {};
 LPTOP_LEVEL_EXCEPTION_FILTER g_before = nullptr;
+
+using WriteDumpFn = BOOL(WINAPI*)(HANDLE, DWORD, HANDLE, MINIDUMP_TYPE,
+                                  PMINIDUMP_EXCEPTION_INFORMATION, PMINIDUMP_USER_STREAM_INFORMATION,
+                                  PMINIDUMP_CALLBACK_INFORMATION);
+using ThreadNameFn = HRESULT(WINAPI*)(HANDLE, PWSTR*);
+// looked up before anything can crash: no library loads in the filter
+WriteDumpFn g_write_dump = nullptr;
+ThreadNameFn g_thread_name = nullptr;
 
 // as dart writes its lines: local time, then the line. no heap
 void WriteTrace(const char* line) {
@@ -289,7 +299,7 @@ void WriteTrace(const char* line) {
   if (h == INVALID_HANDLE_VALUE) return;
   SYSTEMTIME t;
   ::GetLocalTime(&t);
-  char buf[512];
+  char buf[768];
   int n = ::_snprintf_s(buf, sizeof(buf), _TRUNCATE, "%04u-%02u-%02uT%02u:%02u:%02u.%03u %s\n",
                         t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond,
                         t.wMilliseconds, line);
@@ -322,15 +332,129 @@ void ModuleAt(const void* at, char* name, size_t size, unsigned long long* offse
   ::WideCharToMultiByte(CP_UTF8, 0, base, -1, name, static_cast<int>(size), nullptr, nullptr);
 }
 
+bool Runs(DWORD protect) {
+  return (protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                     PAGE_EXECUTE_WRITECOPY)) != 0;
+}
+
+// code at [at]: a module's name and offset, or, for code no module holds
+// (dart's own, loaded from app.so by dart), its block's base and offset
+bool CodeAt(unsigned long long at, char* out, size_t size) {
+  MEMORY_BASIC_INFORMATION mi = {};
+  if (at < 0x10000 || !::VirtualQuery(reinterpret_cast<const void*>(at), &mi, sizeof(mi)) ||
+      mi.State != MEM_COMMIT || !Runs(mi.Protect)) {
+    return false;
+  }
+  unsigned long long base = reinterpret_cast<unsigned long long>(mi.AllocationBase);
+  if (mi.Type == MEM_IMAGE) {
+    char name[128];
+    unsigned long long off = 0;
+    ModuleAt(reinterpret_cast<const void*>(at), name, sizeof(name), &off);
+    ::_snprintf_s(out, size, _TRUNCATE, "%s+0x%llx", name, off);
+  } else {
+    ::_snprintf_s(out, size, _TRUNCATE, "code@0x%llx+0x%llx", base, at - base);
+  }
+  return true;
+}
+
+// what the faulting address is: the kind of memory, its block, its rights
+void Region(const void* at, char* out, size_t size) {
+  MEMORY_BASIC_INFORMATION mi = {};
+  if (!::VirtualQuery(at, &mi, sizeof(mi))) {
+    ::strcpy_s(out, size, "no region");
+    return;
+  }
+  const char* kind = mi.State != MEM_COMMIT  ? "free"
+                     : mi.Type == MEM_IMAGE  ? "image"
+                     : mi.Type == MEM_MAPPED ? "mapped"
+                                             : "private";
+  unsigned long long base = reinterpret_cast<unsigned long long>(mi.AllocationBase);
+  ::_snprintf_s(out, size, _TRUNCATE, "%s, rights 0x%lx, block 0x%llx+0x%llx, size 0x%llx", kind,
+                mi.Protect, base, reinterpret_cast<unsigned long long>(at) - base,
+                static_cast<unsigned long long>(mi.RegionSize));
+}
+
+// the return addresses on the faulting thread's stack, as code places
+void StackScan(const CONTEXT* c, char* out, size_t size) {
+  ::strcpy_s(out, size, "native stack:");
+  if (!c) return;
+  ULONG_PTR low = 0, high = 0;
+  ::GetCurrentThreadStackLimits(&low, &high);
+  unsigned long long sp = c->Rsp;
+  if (sp < low || sp >= high) return;
+  const unsigned long long* q = reinterpret_cast<const unsigned long long*>(sp);
+  const unsigned long long* end = reinterpret_cast<const unsigned long long*>(high);
+  int hits = 0;
+  for (int i = 0; q + i < end && i < 4096 && hits < 14; i++) {
+    char one[96];
+    if (!CodeAt(q[i], one, sizeof(one))) continue;
+    size_t used = ::strlen(out);
+    if (used + ::strlen(one) + 2 >= size) break;
+    ::strcat_s(out, size, " ");
+    ::strcat_s(out, size, one);
+    hits++;
+  }
+}
+
+// the thread's name, as flutter and dart give theirs: io.flutter.ui and so on
+void ThreadName(char* out, size_t size) {
+  ::strcpy_s(out, size, "unnamed");
+  PWSTR w = nullptr;
+  if (!g_thread_name || FAILED(g_thread_name(::GetCurrentThread(), &w)) || !w) return;
+  if (w[0]) ::WideCharToMultiByte(CP_UTF8, 0, w, -1, out, static_cast<int>(size), nullptr, nullptr);
+  ::LocalFree(w);
+}
+
+// every thread's stack and the module list, for windbg. stacks can hold
+// key bytes: written only with the trace on, into the private folder
+bool WriteDump(EXCEPTION_POINTERS* e) {
+  if (!g_write_dump || g_dump[0] == 0) return false;
+  HANDLE h = ::CreateFileW(g_dump, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                           FILE_ATTRIBUTE_NORMAL, nullptr);
+  if (h == INVALID_HANDLE_VALUE) return false;
+  MINIDUMP_EXCEPTION_INFORMATION x = {};
+  x.ThreadId = ::GetCurrentThreadId();
+  x.ExceptionPointers = e;
+  x.ClientPointers = FALSE;
+  auto type = static_cast<MINIDUMP_TYPE>(MiniDumpNormal | MiniDumpWithUnloadedModules |
+                                         MiniDumpWithThreadInfo);
+  BOOL ok = g_write_dump(::GetCurrentProcess(), ::GetCurrentProcessId(), h, type, e ? &x : nullptr,
+                         nullptr, nullptr);
+  ::CloseHandle(h);
+  return ok != FALSE;
+}
+
 LONG WINAPI OnCrash(EXCEPTION_POINTERS* e) {
   char name[128];
   unsigned long long offset = 0;
   const EXCEPTION_RECORD* r = e ? e->ExceptionRecord : nullptr;
   ModuleAt(r ? r->ExceptionAddress : nullptr, name, sizeof(name), &offset);
-  char line[256];
+  char line[512];
   ::_snprintf_s(line, sizeof(line), _TRUNCATE, "native crash 0x%08lx at %s+0x%llx thread %lu",
                 r ? r->ExceptionCode : 0UL, name, offset, ::GetCurrentThreadId());
   WriteTrace(line);
+  if (r) {
+    char where[192];
+    Region(r->ExceptionAddress, where, sizeof(where));
+    // an access violation says what it tried and where: 0 read, 1 write,
+    // 8 ran memory that holds no code
+    if (r->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && r->NumberParameters >= 2) {
+      ULONG_PTR how = r->ExceptionInformation[0];
+      ::_snprintf_s(line, sizeof(line), _TRUNCATE, "native crash: %s 0x%llx, code in %s",
+                    how == 0 ? "reading" : how == 1 ? "writing" : how == 8 ? "running" : "using",
+                    static_cast<unsigned long long>(r->ExceptionInformation[1]), where);
+    } else {
+      ::_snprintf_s(line, sizeof(line), _TRUNCATE, "native crash: code in %s", where);
+    }
+    WriteTrace(line);
+  }
+  StackScan(e ? e->ContextRecord : nullptr, line, sizeof(line));
+  WriteTrace(line);
+  char thread[64];
+  ThreadName(thread, sizeof(thread));
+  ::_snprintf_s(line, sizeof(line), _TRUNCATE, "native crash thread name %s", thread);
+  WriteTrace(line);
+  WriteTrace(WriteDump(e) ? "native crash dump written" : "native crash dump failed");
   return g_before ? g_before(e) : EXCEPTION_CONTINUE_SEARCH;
 }
 
@@ -353,13 +477,26 @@ void WatchCrashes() {
   if (n != 1 || on[0] != L'1') return;
   std::wstring path = DataDir();
   if (path.empty()) return;
+  std::wstring dump = path + L"\\crash.dmp";
   path += L"\\trace.txt";
-  if (path.size() >= MAX_PATH) return;
+  if (path.size() >= MAX_PATH || dump.size() >= MAX_PATH) return;
   ::wcscpy_s(g_trace, path.c_str());
+  ::wcscpy_s(g_dump, dump.c_str());
+  HMODULE help = ::LoadLibraryExW(L"dbghelp.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+  if (help) {
+    g_write_dump = reinterpret_cast<WriteDumpFn>(::GetProcAddress(help, "MiniDumpWriteDump"));
+  }
+  HMODULE k32 = ::GetModuleHandleW(L"kernel32.dll");
+  if (k32) {
+    g_thread_name = reinterpret_cast<ThreadNameFn>(::GetProcAddress(k32, "GetThreadDescription"));
+  }
   g_before = ::SetUnhandledExceptionFilter(OnCrash);
   std::signal(SIGABRT, OnAbort);
   std::set_terminate(OnTerminate);
-  WriteTrace("runner watches native crashes");
+  char line[96];
+  ::_snprintf_s(line, sizeof(line), _TRUNCATE, "runner watches native crashes, main thread %lu",
+                ::GetCurrentThreadId());
+  WriteTrace(line);
 }
 
 void TraceLine(const char* line) { WriteTrace(line); }

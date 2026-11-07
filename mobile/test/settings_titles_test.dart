@@ -74,6 +74,7 @@ const _settingsFiles = {
   'follow_section',
   'dev_about_sheet',
   'translation_screen',
+  'translate_languages_screen',
   'auto_get_screen',
   'licences_screen',
   'linked_devices_screen',

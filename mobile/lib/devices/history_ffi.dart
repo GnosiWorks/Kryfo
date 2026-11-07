@@ -236,6 +236,8 @@ Uint8List _readBuf(int Function(Pointer<Uint8>, int) fn, [int start = 4096]) {
     final out = calloc<Uint8>(cap);
     try {
       final n = fn(out, cap);
+      // never more than the buffer holds, whatever the engine says
+      if (n > cap) throw const HistoryRefused('buffer');
       if (n >= 0) return Uint8List.fromList(out.asTypedList(n));
       if (n == -1) throw const HistoryRefused('engine');
       cap = -n - 1;

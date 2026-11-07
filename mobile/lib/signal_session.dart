@@ -10,6 +10,7 @@ import 'dart:math' show Random, min;
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' show sha256;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -410,6 +411,15 @@ class SignalSession {
 
   // peers a frame waits on: too big for an opener, it goes once they answer
   final Set<String> _awaiting = {};
+
+  // when each awaited peer's answer came, ms: what waited goes from then
+  final Map<String, int> _answeredAt = {};
+
+  /// a frame for [peer] waits on their answer, not on the network
+  bool awaitsAnswer(String peer) => _awaiting.contains(peer);
+
+  /// when [peer]'s answer let a waiting frame go, ms, null for none
+  int? answeredAt(String peer) => _answeredAt[peer];
 
   // the session each peer had a post-quantum opener sealed on, by base key
   final Map<String, String> _openerOut = {};
@@ -864,8 +874,14 @@ class SignalSession {
     return o.plaintext;
   });
 
+  @visibleForTesting
+  void answeredForTest(String peer) => _answered(peer);
+
   void _answered(String peer) {
-    if (_awaiting.remove(peer)) onAnswered?.call(peer);
+    if (!_awaiting.remove(peer)) return;
+    if (_answeredAt.length > 200) _answeredAt.clear();
+    _answeredAt[peer] = _now();
+    onAnswered?.call(peer);
   }
 
   // [opened], the record a message from [peer] just opened on, kept on

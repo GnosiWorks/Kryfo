@@ -14,18 +14,22 @@ extension AppStateBoot on AppState {
       'launch lifecycle at boot request: '
       '${WidgetsBinding.instance.lifecycleState}',
     );
-    if (await bootsNow(_hasLocalData)) {
+    final life = WidgetsBinding.instance.lifecycleState?.name ?? 'none';
+    if (await bootsNow(_hasLocalData, desktop: onDesktop)) {
+      desk_trace.trace('boot asked (life $life)');
       await boot();
       return;
     }
     // no await from the last state read to here: a resume cannot slip between
     if (_seen != null) return;
     dlog('launch nothing here and not in front: boot waits');
+    desk_trace.trace('boot waits for the window in front (life $life)');
     _seen = AppLifecycleListener(
       onResume: () {
         _seen?.dispose();
         _seen = null;
         dlog('launch in front now, booting');
+        desk_trace.trace('boot in front now');
         unawaited(boot());
       },
     );
@@ -208,6 +212,7 @@ extension AppStateBoot on AppState {
     }
     myXPub = engine.myXPubkey();
     dlog('boot identity +${bsw.elapsedMilliseconds}ms');
+    desk_trace.trace('boot identity +${bsw.elapsedMilliseconds}ms');
     bootPhase = l10n.appOpeningYourChats;
     notifyListeners();
     _appLinks = AppLinks();
@@ -235,6 +240,7 @@ extension AppStateBoot on AppState {
     dlog('boot contacts +${bsw.elapsedMilliseconds}ms');
     await refreshGroups();
     dlog('boot groups +${bsw.elapsedMilliseconds}ms');
+    desk_trace.trace('boot chats +${bsw.elapsedMilliseconds}ms');
     // paint the home as soon as contacts/groups are ready; notifications,
     // nostr subscriptions keep warming up in the background.
     onboardingComplete =
@@ -249,6 +255,10 @@ extension AppStateBoot on AppState {
     await markReady();
     bootPhase = l10n.appStartingTor;
     dlog('boot ready +${bsw.elapsedMilliseconds}ms');
+    desk_trace.trace(
+      'boot ready +${bsw.elapsedMilliseconds}ms '
+      '(${onboardingComplete ? 'home' : 'welcome'})',
+    );
     notifyListeners();
     // moved away: home can show what was here, and that is all. no tor,
     // no relays, no outbox. see movedAway.

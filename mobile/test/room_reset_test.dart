@@ -1132,7 +1132,7 @@ void main() {
       final rows = screenRows();
       final engine = await open(t, rows);
       final remove = find.byTooltip(l10n.groupInfoRemoveFromGroup);
-      await t.ensureVisible(remove);
+      await t.scrollUntilVisible(remove, 200);
       await t.pump(const Duration(milliseconds: 300));
       await t.tap(remove);
       await t.pump();

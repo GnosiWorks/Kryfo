@@ -6,6 +6,10 @@ bool _inFront() =>
 
 // whether a cold start boots now: the app is in front, or [setUp] finds the
 // phone set up. the state is read again after the check, since a resume that
-// lands while it runs reaches no listener
-Future<bool> bootsNow(Future<bool> Function() setUp) async =>
-    _inFront() || await setUp() || _inFront();
+// lands while it runs reaches no listener. a desktop window is never
+// relaunched unseen, and its lifecycle may not say resumed until a focus
+// change: it boots at once
+Future<bool> bootsNow(
+  Future<bool> Function() setUp, {
+  bool desktop = false,
+}) async => desktop || _inFront() || await setUp() || _inFront();

@@ -7,6 +7,8 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart' show sha256;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'catalog.dart' show LangBundle;
+
 class TranslateSettings {
   // translation offered at all
   final bool on;
@@ -23,6 +25,9 @@ class TranslateSettings {
   // times translation was turned off: each container drops its kept
   // translations once for each
   final int offs;
+  // times a pack was removed, by what it takes ("from:de", "to:de"): each
+  // container drops the kept translations those made, once for each
+  final Map<String, int> cuts;
 
   const TranslateSettings({
     this.on = true,
@@ -32,6 +37,7 @@ class TranslateSettings {
     this.wifiOnly = true,
     this.never = const [],
     this.offs = 0,
+    this.cuts = const {},
   });
 
   TranslateSettings copyWith({
@@ -42,6 +48,7 @@ class TranslateSettings {
     bool? wifiOnly,
     List<String>? never,
     int? offs,
+    Map<String, int>? cuts,
   }) => TranslateSettings(
     on: on ?? this.on,
     mine: mine ?? this.mine,
@@ -50,6 +57,7 @@ class TranslateSettings {
     wifiOnly: wifiOnly ?? this.wifiOnly,
     never: never ?? this.never,
     offs: offs ?? this.offs,
+    cuts: cuts ?? this.cuts,
   );
 
   Map<String, Object?> toJson() => {
@@ -60,6 +68,7 @@ class TranslateSettings {
     'wifi': wifiOnly,
     'never': never,
     'offs': offs,
+    'cuts': cuts,
   };
 
   static TranslateSettings fromJson(String? s) {
@@ -74,6 +83,11 @@ class TranslateSettings {
         wifiOnly: j['wifi'] as bool? ?? true,
         never: [for (final l in (j['never'] as List? ?? const [])) l as String],
         offs: (j['offs'] as num?)?.toInt() ?? 0,
+        cuts: {
+          for (final e
+              in (j['cuts'] as Map<String, dynamic>? ?? const {}).entries)
+            if (e.value is num) e.key: (e.value as num).toInt(),
+        },
       );
     } catch (_) {
       return const TranslateSettings();
@@ -107,8 +121,9 @@ abstract class TranslateStore {
   // [words] are only checked against the message, never stored
   Future<void> keep(String chatId, String uid, KeptTranslation t, String words);
   Future<void> unkeep(String chatId, String uid);
-  // every kept translation in the open containers goes, once per [offs]
-  Future<void> dropKept(int offs);
+  // every kept translation in the open containers goes, once per [offs];
+  // and the ones each of [cuts] takes, once per its count
+  Future<void> dropKept(int offs, {Map<String, int> cuts = const {}});
 }
 
 class MemoryTranslateStore implements TranslateStore {
@@ -147,11 +162,20 @@ class MemoryTranslateStore implements TranslateStore {
   Future<void> unkeep(String chatId, String uid) async =>
       keptRows[chatId]?.remove(uid);
   int dropped = 0;
+  final Map<String, int> cutDone = {};
   @override
-  Future<void> dropKept(int offs) async {
-    if (offs <= dropped) return;
-    dropped = offs;
-    keptRows.clear();
+  Future<void> dropKept(int offs, {Map<String, int> cuts = const {}}) async {
+    if (offs > dropped) {
+      dropped = offs;
+      keptRows.clear();
+    }
+    for (final e in cuts.entries) {
+      if ((cutDone[e.key] ?? 0) >= e.value) continue;
+      cutDone[e.key] = e.value;
+      for (final rows in keptRows.values) {
+        rows.removeWhere((_, t) => cutTakes(e.key, t.way));
+      }
+    }
   }
 }
 
@@ -351,25 +375,53 @@ class DbTranslateStore implements TranslateStore {
   // each container keeps the count it last dropped for, so a vault that
   // was shut catches up when it opens
   @override
-  Future<void> dropKept(int offs) async {
+  Future<void> dropKept(int offs, {Map<String, int> cuts = const {}}) async {
     for (final d in await open()) {
       await _ready(d);
       await d.transaction((t) async {
-        final r = await t.query(
-          'translate_prefs',
-          columns: ['v'],
-          where: 'k = ?',
-          whereArgs: ['offs'],
-        );
-        final had = r.isEmpty ? 0 : int.tryParse('${r.first['v']}') ?? 0;
-        if (had >= offs) return;
-        await t.delete('translate_kept');
-        await t.insert('translate_prefs', {
-          'k': 'offs',
-          'v': '$offs',
+        Future<int> had(String k) async {
+          final r = await t.query(
+            'translate_prefs',
+            columns: ['v'],
+            where: 'k = ?',
+            whereArgs: [k],
+          );
+          return r.isEmpty ? 0 : int.tryParse('${r.first['v']}') ?? 0;
+        }
+
+        Future<void> mark(String k, int n) => t.insert('translate_prefs', {
+          'k': k,
+          'v': '$n',
         }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+        if (offs > 0 && await had('offs') < offs) {
+          await t.delete('translate_kept');
+          await mark('offs', offs);
+        }
+        for (final e in cuts.entries) {
+          final k = 'cut:${e.key}';
+          if (await had(k) >= e.value) continue;
+          final glob = _cutGlob(e.key);
+          if (glob != null) {
+            await t.delete(
+              'translate_kept',
+              where: 'way GLOB ?',
+              whereArgs: [glob],
+            );
+          }
+          await mark(k, e.value);
+        }
       });
     }
+  }
+
+  // the ways a cut takes, as a glob over "from>to>hant"; language tags
+  // hold no glob signs, anything else takes nothing
+  static String? _cutGlob(String key) {
+    final ok = RegExp(r'^(from|to):[A-Za-z_]+$');
+    if (!ok.hasMatch(key)) return null;
+    final lang = key.substring(key.indexOf(':') + 1);
+    return key.startsWith('from:') ? '$lang>*' : '*>$lang>*';
   }
 }
 
@@ -396,4 +448,24 @@ Future<void> forgetChatTranslate(
       ],
     );
   } catch (_) {}
+}
+
+// what removing [packs] takes from the kept translations: the ones from a
+// language a pack translated out of, and the ones into a language it
+// translated into ("from:de", "to:de")
+Set<String> cutKeys(Iterable<LangBundle> packs) => {
+  for (final b in packs)
+    for (final p in b.pairs) ...[
+      if (p.split('-').first != 'en') 'from:${p.split('-').first}',
+      if (p.split('-').last != 'en') 'to:${p.split('-').last}',
+    ],
+};
+
+// whether a kept translation's way ("de>en>none") is one [key] takes
+bool cutTakes(String key, String way) {
+  final parts = way.split('>');
+  if (parts.length < 2) return false;
+  if (key.startsWith('from:')) return parts[0] == key.substring(5);
+  if (key.startsWith('to:')) return parts[1] == key.substring(3);
+  return false;
 }

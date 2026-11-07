@@ -97,6 +97,8 @@ T _withIn<T>(Uint8List input, T Function(Pointer<Uint8>, int) call) {
     final said = call(out, outLen);
     if (out.value == nullptr) return (said, null);
     final len = outLen.value;
+    // a length the engine never makes is said, never read
+    if (len < 0 || len >= 1 << 31) throw StateError('voice: bad length');
     final b = Uint8List.fromList(out.value.asTypedList(len));
     _lib().lookupFunction<_FreeBytesC, _FreeBytesD>('HaloFreeBytes')(
       out.value,

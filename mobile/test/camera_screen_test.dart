@@ -898,13 +898,19 @@ void main() {
 
   // the shutter, the switches and the notes stay off the cutout and the bars
   testWidgets('the camera clears the bars', (t) async {
-    for (final nav in [gestureBar, buttonBar]) {
-      barsPhone(t, nav: nav);
+    for (final (nav, top) in [
+      (gestureBar, cutoutTop),
+      (buttonBar, cutoutTop),
+      // android 15 and 16
+      (gestureThin, statusLow),
+      (buttonBar, statusTall),
+    ]) {
+      barsPhone(t, nav: nav, status: top);
       plugin(t);
       await t.pumpWidget(framed());
       await settle(t);
       expect(find.byType(Texture), findsOneWidget);
-      expectClearOfBars(t, reason: 'nav $nav');
+      expectClearOfBars(t, reason: 'nav $nav top $top');
       await t.pumpWidget(const SizedBox());
       await settle(t);
     }
