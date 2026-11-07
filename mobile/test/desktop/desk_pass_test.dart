@@ -233,7 +233,7 @@ void main() {
     expect(find.text(l10n.updateReady('9.0.0')), findsOneWidget);
     await t.tap(find.text(l10n.updateOpenPage));
     await _settle(t);
-    expect(opened.single.toString(), 'https://kryfo.app/download');
+    expect(opened.single.toString(), 'https://kryfo.app/download#computer');
 
     // the same version
     served = kAppVersion;

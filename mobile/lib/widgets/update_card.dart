@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../l10n/app_locale.dart' show currentLanguage;
 import '../l10n/l10n.dart';
 import '../main.dart' show appState;
@@ -208,7 +209,7 @@ class _ArrowPainter extends CustomPainter {
 /// the download page in a browser, or its link on the clipboard when no
 /// browser takes it
 Future<void> openDownloadPage(BuildContext context) async {
-  final url = downloadPageFor(currentLanguage);
+  final url = updatePageFor(currentLanguage, desktop: onDesktop);
   if (await openOutside(Uri.parse(url))) return;
   await Clipboard.setData(ClipboardData(text: url));
   if (context.mounted) showHaloToast(context, l10n.settingsLinkCopied);

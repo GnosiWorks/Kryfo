@@ -160,6 +160,12 @@ void main() {
       expect(downloadPageFor('de'), 'https://kryfo.app/de/download');
       expect(downloadPageFor('zh_Hant'), 'https://kryfo.app/zh-hant/download');
       expect(downloadPageFor('xx'), 'https://kryfo.app/download');
+      // an update on a computer lands on the page's computer block
+      expect(
+        updatePageFor('de', desktop: true),
+        'https://kryfo.app/de/download#computer',
+      );
+      expect(updatePageFor('de', desktop: false), downloadPageFor('de'));
     });
   });
 

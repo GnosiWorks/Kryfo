@@ -137,6 +137,11 @@ String? verifiedVersion(String body, String sigText, String pubKeyB64) {
 }
 
 /// the download page in the language the app is in, when the site has it
+/// where an update sends a person: the download page, on a computer at its
+/// own part of the page (the site's #computer block)
+String updatePageFor(String lang, {required bool desktop}) =>
+    desktop ? '${downloadPageFor(lang)}#computer' : downloadPageFor(lang);
+
 String downloadPageFor(String lang) {
   const folders = {
     'de',
