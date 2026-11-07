@@ -314,12 +314,16 @@ void main() {
   // a cutout, a gesture or button bar, a keyboard: every step clear of them
   testWidgets('every step clears the bars and the keyboard', (t) async {
     quiet(t);
-    for (final (nav, kb) in [
-      (gestureBar, 0.0),
-      (buttonBar, 0.0),
-      (gestureBar, keyboardUp),
+    for (final (nav, kb, top) in [
+      (gestureBar, 0.0, cutoutTop),
+      (buttonBar, 0.0, cutoutTop),
+      (gestureBar, keyboardUp, cutoutTop),
+      // android 15 and 16
+      (gestureThin, 0.0, statusLow),
+      (buttonBar, 0.0, statusTall),
+      (buttonBar, keyboardUp, statusTall),
     ]) {
-      barsPhone(t, nav: nav, keyboard: kb);
+      barsPhone(t, nav: nav, keyboard: kb, status: top);
       await t.pumpWidget(onboarding(still: true));
       await t.pump(const Duration(seconds: 6));
       final pos = pages(t).position;
@@ -329,7 +333,7 @@ void main() {
         pages(t).jumpToPage(i);
         await t.pump();
         await t.pump(const Duration(seconds: 1));
-        expectClearOfBars(t, reason: 'step $i, nav $nav keyboard $kb');
+        expectClearOfBars(t, reason: 'step $i, nav $nav keyboard $kb top $top');
       }
       await t.pumpWidget(const SizedBox());
       await t.pump(const Duration(seconds: 1));

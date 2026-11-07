@@ -43,4 +43,25 @@ void main() {
     await t.pump();
     expect(heard, isFalse);
   });
+
+  testWidgets('a desktop window boots with nothing here and no resume', (
+    t,
+  ) async {
+    var asked = false;
+    for (final s in [AppLifecycleState.inactive, AppLifecycleState.hidden]) {
+      t.binding.handleAppLifecycleStateChanged(s);
+      expect(
+        await bootsNow(() async => asked = true, desktop: true),
+        isTrue,
+      );
+    }
+    // none heard yet, as windows leaves it until a focus change
+    t.binding.resetInternalState();
+    expect(await bootsNow(() async => asked = true, desktop: true), isTrue);
+    expect(asked, isFalse);
+    // the phone still waits
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    expect(await bootsNow(() async => false), isFalse);
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+  });
 }

@@ -211,7 +211,7 @@ class _PhotoCropScreenState extends State<PhotoCropScreen>
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: haloOverlayOnDark,
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
