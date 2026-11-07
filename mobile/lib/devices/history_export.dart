@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// what the phone sends a newly linked device: every text and voice note,
-// and the last 30 days of photos, videos and files unless they are skipped.
+// what the phone sends a newly linked device: every text, and the last 30
+// days of photos, videos, voice notes and files (voice notes alone when the
+// rest is skipped). a file sealed at rest goes as it lies on the disk, with
+// its own key beside its row, so the device opens that file and no other.
 // read from the everyday database alone, every everyday chat as this phone
 // holds it. hidden chats (whole, by id), the decoy, the chat with the
 // developer, burner rooms, timed messages and chats with screenshots
@@ -296,6 +298,10 @@ bool _isDev(Object? id) => id is String && id.startsWith('dev:');
 /// meanwhile (AppState.withVaultStill)
 typedef HistoryHold = Future<void> Function(Future<void> Function() work);
 
+/// the key one media file is sealed under at rest, null when it lies plain
+/// (phone_seal.dart fileKeyOf)
+typedef HistoryFileKey = Uint8List? Function(String path);
+
 /// a chat was hidden while the copy read the chats: nothing of it goes
 class HistoryHiddenMeanwhile implements Exception {
   const HistoryHiddenMeanwhile();
@@ -368,6 +374,7 @@ Future<HistoryOutgoing> exportHistory({
   DateTime? now,
   int chunk = 0,
   HistoryHold? hold,
+  HistoryFileKey? fileKeyOf,
 }) async {
   if (container != HaloContainer.everyday) {
     throw const HistoryNotHere('container');
@@ -629,6 +636,13 @@ Future<HistoryOutgoing> exportHistory({
               continue;
             }
             if (media.add(rel)) s.media(n, at, rel);
+            // the engine sends the bytes as they lie: a sealed file's key
+            // goes with its row, or the device holds bytes it cannot open
+            final k = fileKeyOf?.call(path);
+            if (k != null) {
+              ((row['x_keys'] ??= <String, String>{}) as Map)[rel] =
+                  base64Encode(k);
+            }
           }
           final uid = m['msg_uid'];
           if (uid is String) {

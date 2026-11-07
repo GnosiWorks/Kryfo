@@ -3,14 +3,18 @@
 // lock is up nothing of it is decoded or drawn and it keeps its size. once
 // it lifts the blur is there in the first frame, at the photo's shape, and
 // the photo fades up over it when decoded; under reduced motion it swaps
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/material.dart' show CircularProgressIndicator;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
+import '../devices/history_files.dart' show historyFilesComing;
+import '../l10n/l10n.dart';
 import '../media_trace.dart' show traceDecode;
 import '../photo_blur.dart';
 import '../picture_lock.dart';
@@ -72,11 +76,14 @@ class _SealedPictureState extends State<SealedPicture> {
   bool _asked = false;
   // what would not decode, drawn without the frame from the next build
   (Object, StackTrace?)? _failed;
+  // the history copy still brings this file: it waits, never "unavailable"
+  late bool _coming = historyFilesComing.coming(widget.path);
 
   @override
   void initState() {
     super.initState();
     picturesShut.addListener(_changed);
+    historyFilesComing.addListener(_comingChanged);
   }
 
   @override
@@ -85,13 +92,27 @@ class _SealedPictureState extends State<SealedPicture> {
     if (old.path != widget.path || old.image != widget.image) {
       _asked = false;
       _failed = null;
+      _coming = historyFilesComing.coming(widget.path);
     }
   }
 
   @override
   void dispose() {
     picturesShut.removeListener(_changed);
+    historyFilesComing.removeListener(_comingChanged);
     super.dispose();
+  }
+
+  void _comingChanged() {
+    final now = historyFilesComing.coming(widget.path);
+    if (now == _coming || !mounted) return;
+    // landed: a failed try from before it came is not kept
+    if (!now) unawaited(widget.image?.evict());
+    setState(() {
+      _coming = now;
+      _failed = null;
+      _asked = false;
+    });
   }
 
   void _changed() {
@@ -130,6 +151,10 @@ class _SealedPictureState extends State<SealedPicture> {
   }
 
   Widget _open(BuildContext context) {
+    if (_coming) {
+      final framed = widget.framed ?? (Widget w) => w;
+      return framed(const MediaArriving());
+    }
     final f = _failed;
     if (f != null && widget.framed != null) {
       return _error(context, f.$1, f.$2)!;
@@ -183,6 +208,47 @@ class _SealedPictureState extends State<SealedPicture> {
         ? w
         : math.min(widget.decodeWidth!.toDouble(), w);
     return ShapedBox(natural: Size(across, across * h / w), child: layers);
+  }
+}
+
+/// a file the history copy still brings: a quiet ring where it will be, the
+/// size of a photo when nothing gives one. still under reduced motion
+class MediaArriving extends StatelessWidget {
+  const MediaArriving({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return LayoutBuilder(
+      builder: (context, c) {
+        final w = c.hasBoundedWidth ? c.maxWidth : 220.0;
+        final h = c.hasBoundedHeight
+            ? c.maxHeight
+            : (w * 0.75).clamp(120.0, 240.0);
+        return Semantics(
+          label: l10n.albumOnItsWay,
+          child: SizedBox(
+            width: w,
+            height: h,
+            child: ColoredBox(
+              color: HaloColors.surface2,
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    value: still ? 0.3 : null,
+                    color: HaloColors.amber,
+                    backgroundColor: HaloColors.line,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

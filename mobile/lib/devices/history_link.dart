@@ -19,6 +19,7 @@ import '../engine_strings.dart' show engineTakeSecret;
 import '../native_libs.dart';
 import 'history_export.dart';
 import 'history_ffi.dart';
+import 'history_files.dart';
 import 'history_import.dart';
 import 'own_device_store.dart'
     show historyCopiesKept, historyCopyAnyOf, historyCopyOf, keepHistoryCopy;
@@ -744,6 +745,8 @@ class DeviceHistoryCopy {
     required this.landed,
     required this.forgetKey,
     this.unlanded,
+    this.coming,
+    this.rowsIn,
     Duration? retry,
     Duration? pause,
     DateTime Function()? clock,
@@ -762,6 +765,12 @@ class DeviceHistoryCopy {
 
   /// the link's stream key goes: the copy is over
   final Future<void> Function() forgetKey;
+
+  /// the files still on their way, for the bubbles
+  final HistoryFilesComing? coming;
+
+  /// chats or messages came in: the lists show them now, not at the end
+  final void Function()? rowsIn;
   final Duration retry;
   final Duration pause;
   final DateTime Function() clock;
@@ -859,6 +868,7 @@ class DeviceHistoryCopy {
   Future<void> _end(HistoryCopyStage s) async {
     final imp = _imp;
     _imp = null;
+    coming?.clear();
     final made = await HistoryImport.madeContacts(db);
     if (made.isNotEmpty) {
       try {
@@ -885,6 +895,8 @@ class DeviceHistoryCopy {
     );
     await _keep(s);
     await forgetKey();
+    // what it brought goes from the lists too
+    rowsIn?.call();
   }
 
   // the tally owed to the phone, kept until it holds it
@@ -918,6 +930,15 @@ class DeviceHistoryCopy {
       if (!heard) {
         heard = true;
         await _loadHeard();
+        // what a copy under way still brings waits as such from the start,
+        // not from the phone's first answer
+        if (over == null && coming != null) {
+          try {
+            coming!.add(await HistoryImport.comingOf(db, mediaDir));
+          } catch (_) {
+            // the bubbles learn it from the copy itself
+          }
+        }
       }
       if (over != null && owed != null) {
         // every record is in: the tally goes before the bookkeeping does,
@@ -1014,6 +1035,7 @@ class DeviceHistoryCopy {
         bindHex: bindHex,
         idHex: h.id,
         identityHex: identityHex,
+        coming: coming,
       );
     } on HistoryRefused {
       await _end(const HistoryCopyStage(HistoryCopyStep.failed));
@@ -1065,8 +1087,9 @@ class DeviceHistoryCopy {
         continue;
       }
       _refusals = 0;
+      final HistoryEvent ev;
       try {
-        await imp.take(rec);
+        ev = await imp.take(rec);
       } on HistoryRefused catch (e) {
         if (e.forGood) {
           await _end(const HistoryCopyStage(HistoryCopyStep.failed));
@@ -1079,6 +1102,7 @@ class DeviceHistoryCopy {
         }
         continue;
       }
+      if (ev.kind == 'chat' || ev.kind == 'messages') rowsIn?.call();
       show(HistoryCopyStep.copying);
     }
     // every record is in: what the phone deleted since it made the copy
@@ -1125,6 +1149,8 @@ class DeviceHistoryCopy {
     _refusals = 0;
     final res = await imp.finish();
     await landed(await imp.lists());
+    coming?.clear();
+    rowsIn?.call();
     final head = imp.head;
     imp.close();
     _imp = null;
@@ -1171,5 +1197,6 @@ class DeviceHistoryCopy {
     _sleep.wake();
     _imp?.close();
     _imp = null;
+    coming?.clear();
   }
 }
