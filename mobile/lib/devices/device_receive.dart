@@ -394,7 +394,11 @@ class DeviceReceive {
       await _takeSeed(d, t, m, identity, key, s);
     }
     await send.sessionCame(t.ident, identity, t.their);
-    if (!t.opener) listener.unlisten(t.ident, '${t.peerX}/${t.their}/${t.my}');
+    // my phone's opener address stays watched here (listenAll)
+    final phone = t.their == 1 && identity == devHex(m.identity);
+    if (!t.opener && !phone) {
+      listener.unlisten(t.ident, '${t.peerX}/${t.their}/${t.my}');
+    }
   }
 
   static const _pairWhere =
@@ -1092,7 +1096,10 @@ class DeviceReceive {
         } on Object {
           answered = false;
         }
-        if (!answered) listener.listen(p.ident, pair);
+        // a linked device watches its phone's opener address always: the
+        // phone's last word goes there too, so a pair whose seeds went
+        // apart still wipes it
+        if (!answered || (own && e.id == 1)) listener.listen(p.ident, pair);
       }
     }
   }

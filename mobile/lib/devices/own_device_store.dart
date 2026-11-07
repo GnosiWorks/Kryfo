@@ -56,6 +56,7 @@ Future<void> addOwnDevice(
   required List<OwnDeviceKey> keys,
   Uint8List? stream,
   String? hist,
+  DateTime? heardAt,
 }) async {
   // a device key already on a device of mine is that device again: refused
   // with its notice, whatever uid it came under
@@ -73,6 +74,7 @@ Future<void> addOwnDevice(
     'kind': kind == DeviceKind.phone ? 'phone' : 'computer',
     'linked_at': linkedAt.millisecondsSinceEpoch,
     'notice': 1,
+    'heard_at': ?heardAt?.millisecondsSinceEpoch,
     'stream': ?stream,
     'hist': ?hist,
   }, conflictAlgorithm: ConflictAlgorithm.abort);
@@ -272,6 +274,19 @@ Future<Map<String, String>> ownDevicesOwed(
 /// and its time in touch with a relay since (own_unlink.dart's clock)
 const kPhoneHeardMeta = 'own_phone_heard';
 const kPhoneQuietMeta = 'own_phone_quiet';
+
+/// a linked device: whether it still holds its phone's list of [ident].
+/// its phone's signed list without it drops the list here (the engine's
+/// 'removed') before the wipe begins, and nothing else drops it once
+/// linked, so none held means a removal came whose wipe is still owed
+Future<bool> ownListHeld(DatabaseExecutor db, int ident) async =>
+    (await db.query(
+      'dev_lists',
+      columns: ['ident'],
+      where: "ident = ? AND owner = 'me'",
+      whereArgs: [ident],
+      limit: 1,
+    )).isNotEmpty;
 
 /// a linked device copies what it sends to my other devices only while
 /// its phone was heard this recently: one whose list may have moved since
@@ -569,7 +584,12 @@ class StoredOwnDevices implements OwnDevices {
     return [
       OwnDevice(id: 'this', name: thisName, kind: thisKind, thisDevice: true),
       if (phoneName != null)
-        OwnDevice(id: 'phone', name: phoneName!, kind: DeviceKind.phone),
+        OwnDevice(
+          id: 'phone',
+          name: phoneName!,
+          kind: DeviceKind.phone,
+          lastUsed: await _phoneHeardAt(db),
+        ),
       for (final r in await db.query(
         'own_devices',
         where: 'removed_at IS NULL',
@@ -595,6 +615,16 @@ class StoredOwnDevices implements OwnDevices {
           },
         ),
     ];
+  }
+
+  // when this linked device last heard its phone, the link first
+  static Future<DateTime?> _phoneHeardAt(DatabaseExecutor db) async {
+    try {
+      final t = int.tryParse(await devMeta(db, kPhoneHeardMeta) ?? '');
+      return t != null && t > 0 ? DateTime.fromMillisecondsSinceEpoch(t) : null;
+    } on DatabaseException {
+      return null;
+    }
   }
 
   @override

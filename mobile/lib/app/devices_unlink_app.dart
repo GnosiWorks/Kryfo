@@ -142,6 +142,9 @@ Future<void> _quietTick() async {
   final u = _ownUnlink;
   if (u == null || !linkedRole || deviceUnlinked.value != null) return;
   try {
+    // a removal taken and not finished ends it now, not at the hour
+    final end = await _linkedStanding();
+    if (end != null) return _linkedEnds(end);
     if (await u.quietTick(online: _relayInTouch(u.lastQuiet))) {
       await _linkedEnds(LinkedEnd.silent);
     }
@@ -192,9 +195,29 @@ void linkedUsed() {
 Future<LinkedEnd?> _linkedPeek() async {
   if (!linkedRole) return null;
   try {
-    return await linkedLock.check();
+    return await _linkedStanding() ?? await linkedLock.check();
   } catch (_) {
     return LinkedEnd.broken;
+  }
+}
+
+@visibleForTesting
+Future<LinkedEnd?> linkedStandingForTest() => _linkedStanding();
+
+// a linked device's standing with its phone: its phone's signed list
+// without it was taken (the list held went with it) and the wipe did not
+// finish, a kill or a cut start in between. only that list drops it, so
+// nobody else can bring this on
+Future<LinkedEnd?> _linkedStanding() async {
+  if (!linkedRole) return null;
+  try {
+    return await ownListHeld(await live.open(), kMainIdent)
+        ? null
+        : LinkedEnd.removed;
+  } catch (e) {
+    // not read: asked again at the next tick, never a wipe for it
+    dlog('devices: the standing not read (${e.runtimeType})');
+    return null;
   }
 }
 
@@ -214,7 +237,7 @@ Future<void> _linkedCheck() async {
   if (!linkedRole || haloWiping || deviceUnlinked.value != null) return;
   final LinkedEnd? end;
   try {
-    end = await linkedLock.check();
+    end = await _linkedStanding() ?? await linkedLock.check();
   } catch (_) {
     return _linkedEnds(LinkedEnd.broken);
   }
