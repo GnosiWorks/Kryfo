@@ -40,7 +40,10 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
     posted.removeWhere((p) => p.$1 == id && p.$2 == tag);
     posted.add((id, tag, notificationDetails?.channelId));
     shown.add((id: id, title: title, body: body, d: notificationDetails!));
+    payloads.add(payload);
   }
+
+  final payloads = <String?>[];
 
   @override
   Future<void> createNotificationChannel(AndroidNotificationChannel c) async {}
@@ -256,7 +259,8 @@ void main() {
     expect(last.title, 'Kryfo');
     expect(last.body, l10n.notificationsNewMessage);
     expect(_lines(last.d), [l10n.notificationsNewMessage]);
-    expect(last.d.number, 2);
+    // no count anywhere
+    expect(last.d.number, isNull);
   });
 
   test('a hidden chat folds without its earlier words', () async {
@@ -548,5 +552,103 @@ void main() {
     await back;
     expect(shade.shown, hasLength(before));
     expect(shade.up, isEmpty);
+  });
+
+  test(
+    'previews off, three chats: one notification, its tap the list',
+    () async {
+      final shade = _start(hide: true);
+      await _ring('bob', 'meet at six', uid: 'a');
+      await _ring('amy', 'the address', title: 'Amy', uid: 'b');
+      await _ring('cy', 'call me', title: 'Cy', uid: 'c');
+      await _ring('cy', 'now', title: 'Cy', uid: 'd');
+      expect(shade.up, hasLength(1));
+      expect(shade.up.single, sharedNotifId);
+      expect(shade.payloads.toSet(), {kListPayload});
+      // the same words, tag and id whoever wrote and however many
+      final words = {for (final s in shade.shown) _words(s)};
+      expect(words, hasLength(1));
+      for (final s in shade.shown) {
+        for (final w in ['Bob', 'Amy', 'Cy', 'six', 'address', '2', '3', '4']) {
+          expect(_words(s), isNot(contains(w)));
+        }
+        expect(s.d.number, isNull);
+        expect(s.d.tag, isNot(anyOf('t-bob', 't-amy', 't-cy')));
+        expect(s.d.visibility, NotificationVisibility.private);
+      }
+    },
+  );
+
+  test(
+    'previews off: the last chat opened takes the shared one down',
+    () async {
+      final shade = _start(hide: true);
+      await _ring('bob', 'one', uid: 'a');
+      await _ring('amy', 'two', title: 'Amy', uid: 'b');
+      await clearNotificationsFor('bob');
+      expect(shade.up, [sharedNotifId]);
+      await clearMessageNotification('b');
+      expect(shade.up, isEmpty);
+    },
+  );
+
+  test(
+    'previews turned off folds every named one into the shared one',
+    () async {
+      final shade = _start();
+      await _ring('bob', 'meet at six', uid: 'a');
+      await _ring('amy', 'the address', title: 'Amy', uid: 'b');
+      // one an earlier process left goes in too
+      shade.posted.add((9, 't-old', 'halo_messages_v2'));
+      expect(shade.up, hasLength(3));
+      await setHideNotifContent(true);
+      expect(shade.up, [sharedNotifId]);
+      final last = shade.shown.last;
+      expect(last.d.silent, isTrue);
+      expect(_words(last), isNot(contains('Bob')));
+      expect(_words(last), isNot(contains('six')));
+      expect(shade.payloads.last, kListPayload);
+      // opening every chat it stands for takes it down
+      await clearNotificationsFor('bob');
+      await clearNotificationsFor('amy');
+      expect(shade.up, [sharedNotifId]);
+      await clearNotificationsFor('old', tags: {'t-old'});
+      expect(shade.up, isEmpty);
+    },
+  );
+
+  test('previews turned on: per chat from the next message', () async {
+    final shade = _start(hide: true);
+    await _ring('bob', 'one', uid: 'a');
+    await setHideNotifContent(false);
+    await _ring('amy', 'the address', title: 'Amy', uid: 'b');
+    expect(shade.up, hasLength(2));
+    expect(shade.up, contains(sharedNotifId));
+    expect(_lastOf(shade, 'amy').body, 'the address');
+    // and back off: the named one folds in again
+    await setHideNotifContent(true);
+    expect(shade.up, [sharedNotifId]);
+  });
+
+  test('previews off, a decoy open: nothing, shared or not', () async {
+    final shade = _start(hide: true);
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.lock.state': '{"q":true}',
+    });
+    expect(await _ring('bob', 'hi'), isNull);
+    expect(shade.shown, isEmpty);
+  });
+
+  test('a shared ring keeps no ring row', () async {
+    _start(hide: true);
+    final rows = _Rows();
+    await const AppIo().notify(
+      title: 'Bob',
+      body: 'hi',
+      payload: 'bob',
+      on: rows,
+      msgUid: 'a',
+    );
+    expect(rows.rings, isEmpty);
   });
 }

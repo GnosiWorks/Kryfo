@@ -16,6 +16,7 @@ import 'package:kryfo/main.dart'
         openChatForNotif,
         openFromNotifForTest,
         openNotifChat,
+        openNotifList,
         session,
         useDatabasesForTest;
 import 'package:kryfo/notifications.dart';
@@ -93,7 +94,8 @@ void main() {
 
   setUp(() {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    SharedPreferences.setMockInitialValues({});
+    // previews on: each chat its own, under its tag
+    SharedPreferences.setMockInitialValues({'notif_hide_content': false});
     FlutterSecureStorage.setMockInitialValues({});
     shade = _Shade();
     FlutterLocalNotificationsPlatform.instance = shade;
@@ -251,5 +253,21 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(live.rings, isEmpty);
     expect(await session.ringOf(id, 'calm-orbit-lantern'), isNull);
+  });
+
+  test('a tap on the shared one opens the chat list, after the lock', () async {
+    var listed = 0;
+    final had = openNotifList;
+    addTearDown(() => openNotifList = had);
+    openNotifList = () async => listed++;
+    lockState.openForTest(enabled: true);
+    lockState.lock();
+    await openChatForNotif(kListPayload, sharedNotifId);
+    expect(listed, 0);
+    lockState.openForTest();
+    lockGuard.lifted();
+    await Future<void>.delayed(Duration.zero);
+    expect(listed, 1);
+    expect(opened, isEmpty);
   });
 }

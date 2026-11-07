@@ -55,7 +55,8 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
 _Shade _start() {
   debugDefaultTargetPlatformOverride = TargetPlatform.android;
   addTearDown(() => debugDefaultTargetPlatformOverride = null);
-  SharedPreferences.setMockInitialValues({});
+  // previews on: each chat its own, under its tag
+  SharedPreferences.setMockInitialValues({'notif_hide_content': false});
   FlutterSecureStorage.setMockInitialValues({});
   final shade = _Shade();
   FlutterLocalNotificationsPlatform.instance = shade;

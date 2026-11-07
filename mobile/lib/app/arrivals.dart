@@ -156,7 +156,9 @@ class AppIo {
       hidden: on.container.wrapped,
     );
     // a folded one keeps the ring of the first message it holds
-    if (id == null || msgUid == null || !ringIsFirst(payload)) return;
+    // the shared one opens the chat list, on no message
+    if (id == null || msgUid == null || id == sharedNotifId) return;
+    if (!ringIsFirst(payload)) return;
     try {
       await on.noteRing(id, payload, msgUid);
       desk_trace.trace('toast ring kept');

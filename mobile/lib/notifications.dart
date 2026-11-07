@@ -249,8 +249,16 @@ Future<void> setHideNotifContent(
   await prefs.setBool(c.key(_hideContentKey), v);
   _hideKnown[c.key(_hideContentKey)] = v;
   hideNotifRevision.value++;
-  // words already folded never show again: a later repost says only kryfo
-  if (v) _maskFolds();
+  if (v) {
+    // words already folded never show again: a later repost says only kryfo
+    _maskFolds();
+    // the phone's own setting is the one notifications read
+    if (c != HaloContainer.everyday) return;
+    // a ring already on its way under the old setting lands nothing, and
+    // what is up folds into the one shared notification at once
+    _clearGen++;
+    await _sharedOverNamed();
+  }
 }
 
 // the phone's: no name, no words, no colour, whoever is unlocked
@@ -385,7 +393,8 @@ Future<int?> _postPlain({
     id: id,
     body: l10n.notifPlainLine,
     notificationDetails: NotificationDetails(android: details),
-    payload: tag,
+    // the tap opens the chat list: no chat is named anywhere in it
+    payload: kListPayload,
   );
   return id;
 }
@@ -402,6 +411,9 @@ Future<void> _plainOverNamed() async {
   for (final e in [..._folds.entries]) {
     if (e.value.channel == _messagesChannel) _dropFold(e.key);
   }
+  // the shared one goes with them, below, by its channel
+  _sharedChats.clear();
+  _sharedUids.clear();
   if (await quietNow()) return;
   final named = <ActiveNotification>[];
   try {
@@ -500,6 +512,7 @@ Future<void> _clearChatNow(String chat, {Set<String>? tags}) async {
   } catch (e) {
     dlog('shade: tags not read (${e.runtimeType})');
   }
+  await _leaveShared({chat, ...all});
   if (all.isEmpty) return;
   try {
     final active = await notifPlugin.getActiveNotifications();
@@ -548,6 +561,17 @@ Future<void> _clearMessage(String msgUid) async {
   final gen = _clearGen;
   final gens = {..._chatGen};
   unawaited(_forgetRings(msgUid: msgUid));
+  final inShared = _sharedUids.remove(msgUid);
+  if (inShared != null) {
+    // the words were never in it: only the last of a chat takes it out
+    final n = (_sharedChats[inShared] ?? 1) - 1;
+    if (n > 0) {
+      _sharedChats[inShared] = n;
+    } else {
+      await _leaveShared({inShared});
+    }
+    return;
+  }
   final shown = _shownForMsg.remove(msgUid);
   // the folds are looked in directly: the map above forgets the oldest
   final at = _folds.entries
@@ -730,6 +754,156 @@ void forgetFolds() {
   _folds.clear();
   _shownFor.clear();
   _shownForMsg.clear();
+  _sharedChats.clear();
+  _sharedUids.clear();
+}
+
+/// what a tap on the shared or the plain notification opens: the chat list
+const kListPayload = 'l';
+
+// previews off: one notification for every chat, under a fixed tag. it
+// never says whose, how many chats or how many messages
+const _sharedTag = 's';
+final int _sharedId = notifIdFor(_sharedTag);
+
+/// the id the shared notification goes under
+int get sharedNotifId => _sharedId;
+
+// what it stands for, by chat (or by tag, for one an earlier process
+// left): messages in it. memory only
+final Map<String, int> _sharedChats = {};
+final Map<String, String> _sharedUids = {};
+
+Future<int?> _ringShared({required String chat, String? msgUid}) =>
+    _foldTurnOf<int?>(() async {
+      if (await quietNow()) return null;
+      final gen = _clearGen;
+      final chatGen = _chatGen[chat];
+      bool stale() => gen != _clearGen || chatGen != _chatGen[chat];
+      // per chat ones still up go into it first
+      await _sharedOverNamed(post: false);
+      // swiped away or tapped: it starts over
+      if (!await _isUp(_sharedId, _sharedTag)) {
+        _sharedChats.clear();
+        _sharedUids.clear();
+      }
+      if (stale()) return null;
+      _sharedChats[chat] = (_sharedChats[chat] ?? 0) + 1;
+      if (msgUid != null) {
+        _sharedUids[msgUid] = chat;
+        if (_sharedUids.length > 500) {
+          _sharedUids.remove(_sharedUids.keys.first);
+        }
+      }
+      if (await quietNow() || stale()) {
+        _sharedChats.remove(chat);
+        return null;
+      }
+      await _postShared(alert: true);
+      return _sharedId;
+    });
+
+// previews just went off, or a shared one is about to post: every chat's
+// own notification goes, and the shared one stands for them, quietly
+Future<void> _sharedOverNamed({bool post = true}) async {
+  final named = <ActiveNotification>[];
+  try {
+    for (final a in await notifPlugin.getActiveNotifications()) {
+      if (a.id != null &&
+          a.tag != null &&
+          a.tag != _sharedTag &&
+          a.channelId == _messagesChannel) {
+        named.add(a);
+      }
+    }
+  } catch (e) {
+    dlog('shared: shade not read (${e.runtimeType})');
+  }
+  final chatOf = <String, String>{};
+  for (final e in [..._folds.entries]) {
+    if (e.value.channel != _messagesChannel) continue;
+    chatOf[e.value.tag] = e.key;
+    _dropFold(e.key);
+  }
+  if (named.isEmpty) return;
+  if (!await _isUp(_sharedId, _sharedTag)) {
+    _sharedChats.clear();
+    _sharedUids.clear();
+  }
+  for (final a in named) {
+    await cancelWithRetry(
+      () => notifPlugin.cancel(id: a.id!, tag: a.tag),
+      'shared',
+    );
+    final key = chatOf[a.tag] ?? a.tag!;
+    _sharedChats[key] = (_sharedChats[key] ?? 0) + 1;
+  }
+  if (post && !await quietNow()) await _postShared(alert: false);
+}
+
+// a chat opened or cleared leaves it; the last one out takes it down. it
+// says the same for one chat as for many, so it is not posted again
+Future<void> _leaveShared(Set<String> keys) async {
+  if (_sharedChats.isEmpty) return;
+  var left = false;
+  for (final k in keys) {
+    left = _sharedChats.remove(k) != null || left;
+  }
+  _sharedUids.removeWhere((_, c) => keys.contains(c));
+  if (left && _sharedChats.isEmpty) {
+    await cancelWithRetry(
+      () => notifPlugin.cancel(id: _sharedId, tag: _sharedTag),
+      'shared',
+    );
+  }
+}
+
+Future<bool> _isUp(int id, String tag) async {
+  try {
+    for (final a in await notifPlugin.getActiveNotifications()) {
+      if (a.id == id && a.tag == tag) return true;
+    }
+  } catch (e) {
+    dlog('shade: not read (${e.runtimeType})');
+  }
+  return false;
+}
+
+Future<void> _postShared({required bool alert}) async {
+  final title = 'Kryfo';
+  final body = l10n.notificationsNewMessage;
+  final details = AndroidNotificationDetails(
+    _messagesChannel,
+    l10n.notificationsChannelName,
+    tag: _sharedTag,
+    channelDescription: l10n.notificationsNewEncryptedMessagesFromYourContacts,
+    importance: Importance.max,
+    priority: Priority.high,
+    fullScreenIntent: false,
+    category: AndroidNotificationCategory.message,
+    icon: 'ic_halo_notification',
+    color: const Color(0xFFF59E0B),
+    visibility: NotificationVisibility.private,
+    vibrationPattern: Int64List.fromList(<int>[0, 120, 90, 120]),
+    enableLights: true,
+    ledColor: const Color(0xFFF59E0B),
+    ledOnMs: 600,
+    ledOffMs: 2000,
+    ticker: l10n.notificationsNewMessage2,
+    autoCancel: true,
+    when: DateTime.now().millisecondsSinceEpoch,
+    // no number: a badge would count what the words do not
+    onlyAlertOnce: !alert,
+    silent: !alert,
+    styleInformation: BigTextStyleInformation(body, contentTitle: title),
+  );
+  await notifPlugin.show(
+    id: _sharedId,
+    title: title,
+    body: body,
+    notificationDetails: NotificationDetails(android: details),
+    payload: kListPayload,
+  );
 }
 
 Future<int?> _ringFold({
@@ -1000,9 +1174,12 @@ Future<int?> showMessageNotification({
   if (await loadNotifPlain()) {
     return _showPlain(chat: chat, tag: tag, msgUid: msgUid);
   }
+  // previews off: the one shared notification, for every chat
+  if (await loadHideNotifContent()) {
+    return _ringShared(chat: chat, msgUid: msgUid);
+  }
   // a hidden chat's never says whose or what, whatever the preview setting:
   // android's history and watches keep what a notification said
-  hidden = hidden || await loadHideNotifContent();
   if (hidden) {
     title = 'Kryfo';
     body = l10n.notificationsNewMessage;
