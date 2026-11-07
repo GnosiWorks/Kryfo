@@ -155,7 +155,7 @@ agree with the release:
   engine/translate/native/.third_party/dl` (the tarballs; the unpacked tree scans clean with
   fdroid scanner 2.4.5), and in `build:` before the apk
   `KT_JNI_LIBS_DIR=$(pwd)/android/app/src/main/jniLibs bash ../engine/translate/native/build.sh`.
-  gradle leaves it out of the apk until offline translation is switched on
+  offline translation is on, so the apk carries it
 - the voice library, in every block: the srclib `whisper.cpp@d1be6fde11ac6e0407606b4e42fe72d34add8037`
   (whisper.lock's commit, v1.9.5; fdroiddata's `srclibs/whisper.cpp.yml` is `RepoType: git`,
   `Repo: https://github.com/ggml-org/whisper.cpp.git`), in `prebuild:`
