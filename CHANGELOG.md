@@ -8,7 +8,7 @@
 - post-quantum encryption: a chat between two 0.6 phones starts with pqxdh and runs with spqr, signal's post-quantum ratchet. an older chat moves over by itself once both sides have 0.6, and the chat shows a line when it has. a new chat needs 0.6 on both sides.
 - pair codes have eight digits, and both phones need 0.6. the six digit code is gone.
 - typing indicator: in a 1:1 chat you see "Typing" under your contact's name and in the chat list while they write, and they see yours. it goes straight to them over tor, never through a relay, and only while you both have it on. it is on for everyone, also after the update, and off by itself while tor goes through a bridge or the chat is archived. turn it off under settings, privacy.
-- linked devices: link a computer to your phone. scan the code it shows, compare six digits, and pick what comes over: every chat, text only, or contacts and groups only. new messages reach the phone and the computer, read and deleted ones stay in step, and your supporter badge shows on both. hidden chats, the decoy, invites, rooms and group changes stay on the phone. remove a computer from the phone at any time; one left unused for 30 days erases itself.
+- linked devices: link a computer to your phone. scan the code it shows, compare six digits, and pick what comes over: every chat, text only, or contacts and groups only. new messages reach the phone and the computer, read and deleted ones stay in step, and your supporter badge shows on both. hidden chats, the decoy, invites, rooms and group changes stay on the phone. remove a computer from the phone at any time and it erases itself; one left unused for 30 days erases itself too.
 - test builds for windows and linux. use Kryfo on a computer on its own or link it to your phone. it keeps its data encrypted, locked by your windows account, the linux keyring or a passphrase.
 - a quiet line in the chat when a contact links a new device or removes one.
 - profile photos: pick one in your profile. only contacts you have both added see it, and it never shows in notifications.
@@ -33,7 +33,9 @@
 - photos, voice notes and files are encrypted on the phone too, under names that say nothing about them, and no photo stays decoded once Kryfo locks.
 - a request from someone you don't know shows only words until you accept, and links in it stay plain.
 - the safety number card shows once, on a contact's page, instead of in the chat.
+- new contacts need 0.6 on both phones. existing chats with 0.5.3 users keep working; ask them to update before you add each other. a 0.5.3 phone reads a 0.6 qr code as invalid.
 - when a contact still needs to update before you can add each other, Kryfo says so plainly.
+- with message previews off, notifications are one shared "New message" alert for all chats, so nobody can count them. with previews on, each chat gets its own.
 - voice notes go as opus to phones that play it, smaller at the same sound. older phones still get them as before.
 - a heic photo is sent as a jpeg, so every device can show it.
 - the clipboard is cleared when hidden chats or the decoy lock, and copied messages are marked as sensitive.
