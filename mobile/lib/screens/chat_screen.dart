@@ -34,6 +34,7 @@ import '../sent_name.dart';
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
 import '../desktop/attach_tray.dart';
 import '../desktop/drag_in.dart' show DragInZone;
+import '../desktop/desktop_trace.dart' show TraceSteps;
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -6418,8 +6419,11 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _acceptRequestPeer() async {
     HapticFeedback.selectionClick();
+    final steps = TraceSteps('accept tap');
     await session.acceptRequest(widget.peerHaloId);
+    steps.step('row written');
     await appState.afterAccept(widget.peerHaloId);
+    steps.step('accepted');
     if (mounted) {
       setState(() {
         _accepted = true;

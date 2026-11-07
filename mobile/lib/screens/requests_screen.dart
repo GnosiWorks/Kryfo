@@ -28,6 +28,7 @@ import '../scam_shield.dart' show ShieldFlag, requestTitle;
 import '../widgets/motion.dart' show haloRoute;
 import '../l10n/l10n.dart';
 import '../wide/read_width.dart' show DeskPage;
+import '../desktop/desktop_trace.dart' show TraceSteps;
 
 // the requests screens open in the stack: a request's tap goes back to one
 // rather than stacking another
@@ -227,11 +228,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final row = _rows.rows.where((r) => r['halo_id'] == id).firstOrNull;
     // the card answers once more only after the list read again, so a tap
     // on a card still shown answers nothing twice
+    final steps = TraceSteps('accept tap');
     try {
       await session.acceptRequest(id);
+      steps.step('row written');
       await appState.afterAccept(id);
+      steps.step('accepted');
       if (mounted) showHaloToast(context, l10n.requestsAccepted);
       await _load();
+      steps.step('requests read');
     } finally {
       _answering.remove(id);
     }
@@ -239,6 +244,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     // not under the lock, nor once they went somewhere else
     if (row == null || !mounted || lockGuard.isLocked()) return;
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    steps.step('chat asked');
     if (_pending == 0) {
       unawaited(Navigator.of(context).pushReplacement(requestChatRoute(row)));
       return;

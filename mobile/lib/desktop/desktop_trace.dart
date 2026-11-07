@@ -69,6 +69,19 @@ void trace(String line) {
   } catch (_) {}
 }
 
+/// one job's steps, each line with the ms since it began: "[name]: [what]
+/// +12ms". nothing is timed while the trace is off
+class TraceSteps {
+  TraceSteps(this.name) : _w = tracing ? (Stopwatch()..start()) : null;
+  final String name;
+  final Stopwatch? _w;
+
+  void step(String what) {
+    final w = _w;
+    if (w != null) trace('$name: $what +${w.elapsedMilliseconds}ms');
+  }
+}
+
 /// a message filed here, as the trace says it: its kind, whose chat it is
 /// in and where it showed. never its words or who sent it
 String arrivalTraceLine({

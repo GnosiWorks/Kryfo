@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
+import 'dart:ui' show FramePhase, FrameTiming;
 
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
@@ -44,9 +45,32 @@ void deskWindowFrame(Object? args) {
   deskFrameNow();
 }
 
+/// a frame's phases past [kSlowFrame] as one line: the wait from its vsync
+/// to its build, the build, the wait for the raster thread and the raster.
+/// the raster's own share names a held raster thread (a shader compiled,
+/// a present stuck); the queue names work there that was not a frame. null
+/// when every phase was quick
+const kSlowFrame = Duration(milliseconds: 250);
+
+String? slowFrameLine(FrameTiming t) {
+  int ms(FramePhase a, FramePhase b) =>
+      (t.timestampInMicroseconds(b) - t.timestampInMicroseconds(a)) ~/ 1000;
+  final vsync = ms(FramePhase.vsyncStart, FramePhase.buildStart);
+  final build = ms(FramePhase.buildStart, FramePhase.buildFinish);
+  final queue = ms(FramePhase.buildFinish, FramePhase.rasterStart);
+  final raster = ms(FramePhase.rasterStart, FramePhase.rasterFinish);
+  final slow = kSlowFrame.inMilliseconds;
+  if (vsync < slow && build < slow && queue < slow && raster < slow) {
+    return null;
+  }
+  return 'frame slow: vsync to build ${vsync}ms, build ${build}ms, '
+      'raster queue ${queue}ms, raster ${raster}ms';
+}
+
 /// a frame asked for that does not begin: one forced, and a round trip to
 /// the runner, which wakes its thread as a mouse move does. with the trace
-/// on, the wait, how long it took and every lifecycle change are lines
+/// on, the wait, how long it took, the runner's slowest answer meanwhile,
+/// every slow frame and every lifecycle change are lines
 class DeskFrameWatch with WidgetsBindingObserver {
   DeskFrameWatch({
     required this.nudge,
@@ -66,6 +90,8 @@ class DeskFrameWatch with WidgetsBindingObserver {
   Duration _waited = Duration.zero;
   bool _stuck = false;
   Timer? _tick;
+  // the runner's slowest answer to a nudge in this wait
+  int _answerMs = 0;
 
   /// frames begun so far
   @visibleForTesting
@@ -79,12 +105,24 @@ class DeskFrameWatch with WidgetsBindingObserver {
     final b = WidgetsBinding.instance;
     b.addPersistentFrameCallback((_) => _begun++);
     b.addObserver(this);
+    if (tracing) b.addTimingsCallback(timings);
     _tick = Timer.periodic(every, (_) => check());
   }
 
   void stop() {
     _tick?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
+    final b = WidgetsBinding.instance;
+    b.removeObserver(this);
+    b.removeTimingsCallback(timings);
+  }
+
+  /// the engine's timings of drawn frames: a slow one is a line
+  @visibleForTesting
+  void timings(List<FrameTiming> list) {
+    for (final t in list) {
+      final line = slowFrameLine(t);
+      if (line != null) trace(line);
+    }
   }
 
   @override
@@ -97,9 +135,15 @@ class DeskFrameWatch with WidgetsBindingObserver {
   void check() {
     final b = SchedulerBinding.instance;
     if (!b.hasScheduledFrame || _begun != _seen) {
-      if (_stuck) trace('frame came after ${_waited.inMilliseconds}ms');
+      if (_stuck) {
+        trace(
+          'frame came after ${_waited.inMilliseconds}ms '
+          '(runner answered within ${_answerMs}ms)',
+        );
+      }
       _stuck = false;
       _waited = Duration.zero;
+      _answerMs = 0;
       _seen = _begun;
       return;
     }
@@ -114,6 +158,12 @@ class DeskFrameWatch with WidgetsBindingObserver {
     }
     deskFrameNow();
     nudges++;
-    unawaited(nudge().catchError((Object _) {}));
+    final asked = Stopwatch()..start();
+    unawaited(
+      nudge().then((_) {
+        final ms = asked.elapsedMilliseconds;
+        if (ms > _answerMs) _answerMs = ms;
+      }, onError: (Object _) {}),
+    );
   }
 }

@@ -593,6 +593,7 @@ extension AppStateContacts on AppState {
       return;
     }
     desk_trace.trace('request accepted');
+    final steps = desk_trace.TraceSteps('accept');
     // a hello waiting here: its session first, so the ack is its opener
     try {
       await answerHello(haloId);
@@ -600,23 +601,34 @@ extension AppStateContacts on AppState {
       desk_trace.trace('hello answer failed: ${e.runtimeType}');
       dlog('hello: not answered (${e.runtimeType})');
     }
-    unawaited(subscribePeer(haloId, fresh: true));
-    unawaited(_ackOnAccept(haloId));
+    steps.step('hello answered');
+    unawaited(
+      subscribePeer(
+        haloId,
+        fresh: true,
+      ).whenComplete(() => steps.step('listening')),
+    );
+    unawaited(_ackOnAccept(haloId).whenComplete(() => steps.step('ack sent')));
     final s = session;
     // let go of on the relay's side before the shelf goes: a death in
     // between would leave what waits there for two weeks
     await _relayLeft(haloId, 'mark');
-    await _letHeldIn(
-      haloId,
-      () => s.heldOf(haloId),
-      (id) => s.forgetHeld(haloId, id),
-    );
+    steps.step('relay marked');
+    var held = 0;
+    await _letHeldIn(haloId, () async {
+      final rows = await s.heldOf(haloId);
+      held = rows.length;
+      return rows;
+    }, (id) => s.forgetHeld(haloId, id));
+    steps.step('held let in ($held)');
     // what came past the shelf waited on the relay, and comes after it
     await _relayLeft(haloId, 'free');
+    steps.step('relay freed');
     _bumpChatRev(haloId);
     await refreshContacts();
     notifyListeners();
-    unawaited(photoSweep());
+    steps.step('list read');
+    unawaited(photoSweep().whenComplete(() => steps.step('photos swept')));
   }
 
   // what a full shelf left on the relay for them: let go of for the next

@@ -6,6 +6,7 @@
 // call is a stand-in here (it needs windows); the real dll was run in a
 // burst on the pc on its own. real database methods over rows in maps
 import 'dart:io';
+import 'dart:ui' show FrameTiming;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -276,7 +277,42 @@ void main() {
       await tester.pump();
       // a frame began: the next look says how long it waited
       w.check();
-      expect(lines().last, matches(RegExp(r'^frame came after \d+ms$')));
+      expect(
+        lines().last,
+        matches(
+          RegExp(r'^frame came after \d+ms \(runner answered within \d+ms\)$'),
+        ),
+      );
+    });
+
+    test('a slow frame names its slow phase; a quick one leaves no line', () {
+      FrameTiming at(List<int> ms) => FrameTiming(
+        vsyncStart: ms[0] * 1000,
+        buildStart: ms[1] * 1000,
+        buildFinish: ms[2] * 1000,
+        rasterStart: ms[3] * 1000,
+        rasterFinish: ms[4] * 1000,
+        rasterFinishWallTime: ms[4] * 1000,
+      );
+      expect(slowFrameLine(at([0, 2, 10, 11, 20])), isNull);
+      expect(
+        slowFrameLine(at([0, 2, 10, 11, 3511])),
+        'frame slow: vsync to build 2ms, build 8ms, raster queue 1ms, '
+        'raster 3500ms',
+      );
+      expect(
+        slowFrameLine(at([0, 2, 10, 3010, 3020])),
+        contains('raster queue 3000ms'),
+      );
+      final w = DeskFrameWatch(nudge: () async {});
+      w.timings([
+        at([0, 2, 10, 11, 20]),
+        at([0, 1, 900, 901, 910]),
+      ]);
+      expect(lines().where((l) => l.startsWith('frame slow')), [
+        'frame slow: vsync to build 1ms, build 899ms, raster queue 1ms, '
+            'raster 9ms',
+      ]);
     });
 
     testWidgets('frames that come leave no line and no nudge', (
