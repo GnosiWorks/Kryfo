@@ -31,6 +31,22 @@ class _EngineDeviceWire implements DeviceWire {
       _held ? 'held' : engine.nostrSendDevice(ident, arg, cipher, opener: true);
 }
 
+// the device sessions the send and receive loops use. on a linked device
+// a contact's phone, and mine, are devices here: built as the phone's own
+// identity they were refused, and nothing from device 1 ever opened
+Future<DeviceSessions> _appDeviceSessions(int ident) async {
+  final ss = await signalOfIdent(ident);
+  final held = _devSessions[ident];
+  if (held != null && identical(held.s, ss) && held.linked == linkedRole) {
+    return held;
+  }
+  return _devSessions[ident] = DeviceSessions(ss, linked: linkedRole);
+}
+
+@visibleForTesting
+Future<DeviceSessions> appDeviceSessionsForTest(int ident) =>
+    _appDeviceSessions(ident);
+
 // after the state loaded: the engine takes device-pair args from now on
 void _bootDeviceSend(DeviceState ds) {
   final r = engine.devicePairsOn(true);
@@ -39,12 +55,7 @@ void _bootDeviceSend(DeviceState ds) {
   _deviceSend = DeviceSend(
     state: ds,
     db: live.open,
-    sessions: (ident) async {
-      final ss = await signalOfIdent(ident);
-      final held = _devSessions[ident];
-      if (held != null && identical(held.s, ss)) return held;
-      return _devSessions[ident] = DeviceSessions(ss);
-    },
+    sessions: _appDeviceSessions,
     wire: _EngineDeviceWire(),
     listen: engine.deviceListenBg,
     door: _devDoor,
@@ -412,6 +423,7 @@ Future<void> _devForget(String haloId, {bool sessions = false}) async {
     if (sessions) {
       final dss = DeviceSessions(
         await signalOfIdent(ident),
+        linked: linkedRole,
         store: vault ? await home.open() : null,
       );
       for (final h in await dss.held(haloId)) {

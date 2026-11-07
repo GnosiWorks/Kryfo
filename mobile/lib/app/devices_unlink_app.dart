@@ -318,7 +318,9 @@ DeviceSend _wordSend(DeviceState ds) {
   return DeviceSend(
     state: ds,
     db: live.open,
-    sessions: (ident) async => DeviceSessions(await signalOfIdent(ident)),
+    // its last word goes to its phone, device 1 here
+    sessions: (ident) async =>
+        DeviceSessions(await signalOfIdent(ident), linked: linkedRole),
     wire: _EngineDeviceWire(),
   );
 }

@@ -275,7 +275,11 @@ extension AppStateVaultDevices on AppState {
         final ss = await signalOfIdent(ident);
         final held = sessions[ident];
         if (held != null && identical(held.s, ss)) return held;
-        return sessions[ident] = DeviceSessions(ss, store: vdb);
+        return sessions[ident] = DeviceSessions(
+          ss,
+          linked: linkedRole,
+          store: vdb,
+        );
       }
 
       final listen = _VaultDeviceListen();
