@@ -9,6 +9,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Log
+import androidx.annotation.RequiresApi
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
@@ -323,6 +324,7 @@ object BioKey {
         }.start()
     }
 
+    @RequiresApi(28)
     private fun prompt(
         activity: Activity,
         title: String,

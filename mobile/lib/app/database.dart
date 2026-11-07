@@ -43,6 +43,9 @@ class HaloDb
 
   static const _storage = secureStore;
 
+  // the schema open() upgrades every file to
+  static const schema = 96;
+
   Database? _db;
   String? _given;
   // its files' key was handed to the desktop, once per open
@@ -158,7 +161,7 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: 96,
+      version: schema,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
