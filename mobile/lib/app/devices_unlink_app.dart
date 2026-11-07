@@ -85,14 +85,11 @@ void _bootUnlink(DeviceState ds, DeviceSend send, DeviceReceive recv) {
     }());
   });
   _onlineTimer?.cancel();
-  _onlineTimer = Timer.periodic(
-    kOnlineTickEvery,
-    (_) {
-      // nothing of it while this device is being erased
-      if (haloWiping) return;
-      unawaited(linkedRole ? _quietTick() : _onlineTick());
-    },
-  );
+  _onlineTimer = Timer.periodic(kOnlineTickEvery, (_) {
+    // nothing of it while this device is being erased
+    if (haloWiping) return;
+    unawaited(linkedRole ? _quietTick() : _onlineTick());
+  });
   if (!linkedRole) {
     unawaited(_onlineTick());
     // a removal a kill cut short, or one that waited, is finished now
@@ -210,6 +207,22 @@ Future<LinkedEnd?> _linkedPeek() async {
 @visibleForTesting
 Future<LinkedEnd?> linkedStandingForTest() => _linkedStanding();
 
+/// a test's stand-in for a linked device's erase
+@visibleForTesting
+Future<void> Function()? linkedWipeForTest;
+
+/// a linked device's 5-minute tick, as its timer runs it
+@visibleForTesting
+Future<void> linkedTickForTest() => _quietTick();
+
+/// a linked device that ended, as before it did
+@visibleForTesting
+void linkedEndResetForTest() {
+  _linkedEnding = false;
+  _linkedWipe = null;
+  deviceUnlinked.value = null;
+}
+
 // a linked device's standing with its phone: its phone's signed list
 // without it was taken (the list held went with it) and the wipe did not
 // finish, a kill or a cut start in between. only that list drops it, so
@@ -284,14 +297,17 @@ Future<void> _linkedEnds(LinkedEnd why) async {
   _onlineTimer?.cancel();
   deviceUnlinked.value = why;
   final told = last;
-  final wipe = wipeHalo(
-    stay: true,
-    afterErase: told == null || send == null
-        ? null
-        : () async {
-            await send.handLast(kMainIdent, told);
-          },
-  );
+  final fake = linkedWipeForTest;
+  final wipe = fake != null
+      ? fake()
+      : wipeHalo(
+          stay: true,
+          afterErase: told == null || send == null
+              ? null
+              : () async {
+                  await send.handLast(kMainIdent, told);
+                },
+        );
   _linkedWipe = wipe;
   await wipe;
 }

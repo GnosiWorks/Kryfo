@@ -25,7 +25,8 @@ import 'package:kryfo/devices/device_receive.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
 import 'package:kryfo/devices/own_device_store.dart';
-import 'package:kryfo/devices/linked_lock.dart' show LinkedEnd;
+import 'package:kryfo/devices/device_store.dart' show applyDevRows;
+import 'package:kryfo/devices/linked_lock.dart' show LinkedEnd, LinkedLock;
 import 'package:kryfo/devices/own_devices.dart'
     show DeviceKind, DeviceUse, deviceUseOf;
 import 'package:kryfo/devices/own_sync.dart' show OwnApply, OwnSync;
@@ -49,8 +50,16 @@ import 'package:kryfo/main.dart'
         devAddedForTest,
         devForgetForTest,
         devMineOf,
+        bootDevices,
+        deviceReceive,
+        deviceUnlinked,
+        linkedEndResetForTest,
+        linkedLockForTest,
         linkedRoleForTest,
         linkedStandingForTest,
+        linkedTickForTest,
+        linkedWipeForTest,
+        linkedLock,
         useDatabasesForTest,
         vaultCutWaitsForTest,
         vaultRestoreCutForTest;
@@ -242,6 +251,7 @@ class _Phone {
   late DeviceSessions anaDs;
   late DeviceSessions deskDs;
   late OwnUnlink unlink;
+  late TestKeyPair deskKp;
   late String bob;
   late Uint8List b5Key;
   late DeviceSessions b5;
@@ -333,7 +343,8 @@ void main() {
     final ana = await testStore(keys: anaKp);
     final anaId = lib.identityFromPrivate(anaKp.privateKey.serialize());
     await putMainIdentity(db, anaKp.privateKey.serialize());
-    final desk = await testStore();
+    final deskKp = testKeyPair();
+    final desk = await testStore(keys: deskKp);
     final bobKp = testKeyPair();
     final bobStore = await testStore(keys: bobKp);
     final bobId = lib.identityFromPrivate(bobKp.privateKey.serialize());
@@ -379,6 +390,7 @@ void main() {
       'list': base64Encode(bobList),
     }, bobRemote);
     final w = _Phone(db, ana, anaId, desk, ds)
+      ..deskKp = deskKp
       ..bob = devHex(bobStore.identity.public)
       ..b5Key = b5.s.identity.public
       ..b5 = b5
@@ -2077,6 +2089,193 @@ void main() {
     );
     final row = (await db.query('own_devices', where: "uid = 'u9'")).single;
     expect(row['heard_at'], at.millisecondsSinceEpoch);
+  });
+
+  test('end to end: a computer linked on the engine\'s rows stays through a '
+      'restart and a tick; removed while offline, its phone hands the last '
+      'word again by its steps, the one copy that comes days later wipes it, '
+      'and a removal taken before a kill wipes it at the next start', () async {
+    if (skip()) return;
+    final lib = shim!;
+    final w = await phone();
+    final anaHex = devHex(w.ana.identity.public);
+    final shimPath = KryfoSignal.loadedFrom!;
+    Future<void> loadOn(Database db) async => DeviceState(
+      DeviceEngine(),
+    ).load(db, await devMineOf(db, lib), shimPath: shimPath);
+
+    final phoneList = await currentList(w);
+    // the computer's own container, placed as a link places it
+    final deskHome = HaloDb(HaloContainer.decoy);
+    opened.add(deskHome);
+    final deskDb = await deskHome.open();
+    await putMainIdentity(deskDb, w.deskKp.privateKey.serialize());
+    final deskState = DeviceState(DeviceEngine());
+    await deskState.load(deskDb, [
+      (
+        ident: kMainIdent,
+        identity: w.ana.identity.public,
+        key: w.desk.identity.public,
+      ),
+    ], shimPath: shimPath);
+    // the rows the engine gives for my phone's list, written by the join
+    List<dynamic> linkRows = const [];
+    try {
+      await deskDb.transaction((t) async {
+        final j = await deskState.session(t, 'own_set', {
+          'ident': kMainIdent,
+          'identity': anaHex,
+          'list': base64Encode(phoneList),
+        }, SessionRemote.opened(w.ana.identity.public));
+        linkRows = j['rows'] as List;
+        throw StateError('kept for the join');
+      });
+    } on StateError {
+      // rolled back: the join writes them
+    }
+    expect(linkRows, isNotEmpty);
+    await joinedRows(
+      deskDb,
+      identity: w.ana.identity.public,
+      device: 4,
+      rows: linkRows,
+      stream: Uint8List(32),
+    );
+    useDatabasesForTest(deskHome, Session(deskHome));
+    linkedRoleForTest = true;
+    final lockDir = Directory('${docs.path}/lock')..createSync();
+    final keys = <String, String>{};
+    linkedLockForTest = LinkedLock(
+      dir: () async => lockDir.path,
+      readKey: (k) async => keys[k],
+      writeKey: (k, v) async => keys[k] = v,
+    );
+    await linkedLock.start();
+    var wipes = 0;
+    linkedWipeForTest = () async => wipes++;
+    linkedEndResetForTest();
+    addTearDown(() {
+      linkedRoleForTest = false;
+      linkedWipeForTest = null;
+      linkedLockForTest = null;
+      linkedEndResetForTest();
+    });
+    expect(await linkedStandingForTest(), isNull);
+    // a restart and a tick: nothing ends
+    await bootDevices();
+    await linkedTickForTest();
+    expect(wipes, 0);
+    expect(deviceUnlinked.value, isNull);
+
+    // the computer is offline: its phone removes it
+    await loadOn(w.db);
+    final t0 = w.clock;
+    expect(await w.unlink.remove(['u4'], why: kGoneRemoved), ['u4']);
+    final removal = await currentList(w);
+    int words() => w.wire.sent.where((s) => s.arg.contains('/4/1.')).length;
+    final hands = <int>[];
+    final openers = <int>[];
+    var seen = words(), seenOpeners = w.wire.openers.length;
+    Future<void> step(Duration by) async {
+      w.clock += by.inMilliseconds;
+      await w.send.pump();
+      if (words() > seen) hands.add(w.clock - t0);
+      if (w.wire.openers.length > seenOpeners) openers.add(w.clock - t0);
+      seen = words();
+      seenOpeners = w.wire.openers.length;
+    }
+
+    await step(Duration.zero);
+    while (w.clock - t0 < const Duration(hours: 1).inMilliseconds) {
+      await step(const Duration(seconds: 30));
+    }
+    while (w.clock - t0 < _day) {
+      await step(const Duration(minutes: 10));
+    }
+    while (w.clock - t0 < 3 * _day) {
+      await step(const Duration(hours: 1));
+    }
+    // every wait drawn from the second half of its step, and the opener
+    // address only for the first day
+    expect(hands.first, 0);
+    for (var i = 1; i < hands.length; i++) {
+      final age = Duration(milliseconds: hands[i - 1]);
+      final most = farewellAgainAfter(age).inMilliseconds;
+      final gap = hands[i] - hands[i - 1];
+      // the loop's own tick where the copy came
+      final at = hands[i];
+      final tick = at <= const Duration(hours: 1).inMilliseconds
+          ? 30000
+          : at <= _day + 600000
+          ? 600000
+          : 3600000;
+      expect(gap, greaterThanOrEqualTo(most ~/ 2), reason: 'gap $i');
+      expect(gap, lessThanOrEqualTo(most + tick), reason: 'gap $i');
+    }
+    expect(hands.where((h) => h <= 2 * 60000).length, inInclusiveRange(2, 3));
+    expect(
+      hands.where((h) => h < 15 * 60000).length,
+      inInclusiveRange(6, 12),
+    );
+    expect(hands.where((h) => h > 2 * _day), isNotEmpty);
+    expect(openers.every((h) => h < _day + 600000), isTrue);
+    expect(openers.length, lessThan(hands.length));
+    // every copy the same bytes
+    final copies = {
+      for (final x in w.wire.sent)
+        if (x.arg.contains('/4/1.')) x.cipher,
+    };
+    expect(copies, hasLength(1));
+
+    // a kill: the computer takes my list without it and stops before the
+    // wipe. its next start wipes it
+    await loadOn(deskDb);
+    await expectLater(
+      deskState.session(deskDb, 'own_set', {
+        'ident': kMainIdent,
+        'identity': anaHex,
+        'list': base64Encode(removal),
+      }, SessionRemote.opened(w.ana.identity.public)),
+      throwsA(isA<DevRefused>().having((e) => e.why, 'why', 'removed')),
+    );
+    expect(await linkedStandingForTest(), LinkedEnd.removed);
+    await bootDevices();
+    expect(wipes, 1);
+    expect(deviceUnlinked.value, LinkedEnd.removed);
+
+    // as linked again, then online: the early copies are lost, the one of
+    // day three comes on its pair, and the wipe runs at once
+    linkedEndResetForTest();
+    await deskDb.transaction((t) => applyDevRows(t, linkRows));
+    await bootDevices();
+    expect(wipes, 1);
+    final recv = DeviceReceive(
+      state: deskState,
+      db: () async => deskDb,
+      sessions: (_) async => w.deskDs,
+      send: DeviceSend(
+        state: deskState,
+        db: () async => deskDb,
+        sessions: (_) async => w.deskDs,
+        wire: _Wire(),
+      ),
+      listener: _Listen(),
+      open: deviceOpenAt,
+      me: (_) async => (
+        ident: kMainIdent,
+        identity: w.ana.identity.public,
+        device: 4,
+      ),
+      contact: (_, _) async => null,
+      phone: (_, _, _) async => false,
+      sign: (_, _) async => throw StateError('a linked device never signs'),
+    );
+    recv.ownRemoved = deviceReceive!.ownRemoved;
+    final day3 = w.wire.sent.lastWhere((s) => s.arg.contains('/4/1.'));
+    await recv.receive('${anaHex.substring(2)}/1/4', day3.cipher);
+    expect(wipes, 2);
+    expect(deviceUnlinked.value, LinkedEnd.removed);
+    expect(await linkedStandingForTest(), LinkedEnd.removed);
   });
 
   test('a linked device counts its time in touch with a relay without a '
