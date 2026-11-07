@@ -394,9 +394,11 @@ class DeviceReceive {
       await _takeSeed(d, t, m, identity, key, s);
     }
     await send.sessionCame(t.ident, identity, t.their);
-    // my phone's opener address stays watched here (listenAll)
-    final phone = t.their == 1 && identity == devHex(m.identity);
-    if (!t.opener && !phone) {
+    // an opener address of my own devices stays watched (listenAll): two
+    // of mine that opened at once settle on one seed only if each hears
+    // the other's opener
+    final mine = identity == devHex(m.identity);
+    if (!t.opener && !mine) {
       listener.unlisten(t.ident, '${t.peerX}/${t.their}/${t.my}');
     }
   }
@@ -1096,10 +1098,11 @@ class DeviceReceive {
         } on Object {
           answered = false;
         }
-        // a linked device watches its phone's opener address always: the
+        // the opener addresses of my own devices stay watched always: the
         // phone's last word goes there too, so a pair whose seeds went
-        // apart still wipes it
-        if (!answered || (own && e.id == 1)) listener.listen(p.ident, pair);
+        // apart still wipes it, and two of mine that opened at once each
+        // hear the other's seed and settle on the lower
+        if (!answered || own) listener.listen(p.ident, pair);
       }
     }
   }
