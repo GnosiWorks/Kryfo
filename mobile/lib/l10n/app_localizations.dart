@@ -16288,7 +16288,7 @@ abstract class AppLocalizations {
   /// screens/linked_devices_screen.dart: under the first history choice
   ///
   /// In en, this message translates to:
-  /// **'All your messages, with photos and videos from the last 30 days.'**
+  /// **'Your messages, with photos, videos and voice notes from the last 30 days.'**
   String get devicesHistoryCopyHint;
 
   /// screens/linked_devices_screen.dart: the second history choice

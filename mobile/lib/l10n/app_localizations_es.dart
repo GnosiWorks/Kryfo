@@ -10231,7 +10231,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Todos tus mensajes, con las fotos y los videos de los últimos 30 días.';
+      'Tus mensajes, con las fotos, los videos y las notas de voz de los últimos 30 días.';
 
   @override
   String get devicesHistoryNone => 'Solo contactos y grupos';

@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "Prüfe, ob beide Bildschirme dieselben sechs Ziffern zeigen.",
   "devicesHistory": "Verlauf",
   "devicesHistoryCopy": "Meine Chats übertragen",
-  "devicesHistoryCopyHint": "Alle deine Nachrichten, mit Fotos und Videos der letzten 30 Tage.",
+  "devicesHistoryCopyHint": "Deine Nachrichten, mit Fotos, Videos und Sprachnachrichten der letzten 30 Tage.",
   "devicesHistoryNone": "Nur Kontakte und Gruppen",
   "devicesHistoryNoneHint": "Sie kommen ohne Nachrichten mit.",
   "devicesSkipMedia": "Fotos und Videos auslassen",

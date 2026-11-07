@@ -10232,7 +10232,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Todas as suas mensagens, com fotos e vídeos dos últimos 30 dias.';
+      'Suas mensagens, com fotos, vídeos e mensagens de voz dos últimos 30 dias.';
 
   @override
   String get devicesHistoryNone => 'Só contatos e grupos';

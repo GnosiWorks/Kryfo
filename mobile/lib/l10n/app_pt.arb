@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "Confira se as duas telas mostram os mesmos seis números.",
   "devicesHistory": "Histórico",
   "devicesHistoryCopy": "Copiar minhas conversas",
-  "devicesHistoryCopyHint": "Todas as suas mensagens, com fotos e vídeos dos últimos 30 dias.",
+  "devicesHistoryCopyHint": "Suas mensagens, com fotos, vídeos e mensagens de voz dos últimos 30 dias.",
   "devicesHistoryNone": "Só contatos e grupos",
   "devicesHistoryNoneHint": "Eles vêm sem nenhuma mensagem.",
   "devicesSkipMedia": "Pular fotos e vídeos",

@@ -10323,7 +10323,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Усі ваші повідомлення, а також фото й відео за останні 30 днів.';
+      'Ваші повідомлення, а також фото, відео й голосові за останні 30 днів.';
 
   @override
   String get devicesHistoryNone => 'Лише контакти й групи';

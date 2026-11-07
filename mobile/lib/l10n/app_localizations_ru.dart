@@ -10326,7 +10326,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Все ваши сообщения, а также фото и видео за последние 30 дней.';
+      'Ваши сообщения, а также фото, видео и голосовые за последние 30 дней.';
 
   @override
   String get devicesHistoryNone => 'Только контакты и группы';

@@ -9622,7 +9622,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesHistoryCopy => '复制我的聊天';
 
   @override
-  String get devicesHistoryCopyHint => '所有消息，以及最近 30 天的照片和视频。';
+  String get devicesHistoryCopyHint => '你的消息，以及最近 30 天的照片、视频和语音消息。';
 
   @override
   String get devicesHistoryNone => '仅联系人和群组';
@@ -20678,7 +20678,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesHistoryCopy => '複製我的聊天';
 
   @override
-  String get devicesHistoryCopyHint => '所有訊息，以及最近 30 天的照片和影片。';
+  String get devicesHistoryCopyHint => '你的訊息，以及最近 30 天的照片、影片和語音訊息。';
 
   @override
   String get devicesHistoryNone => '僅聯絡人和群組';

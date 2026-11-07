@@ -10162,7 +10162,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'आपके सारे मैसेज, पिछले 30 दिन की फ़ोटो और वीडियो के साथ।';
+      'आपके मैसेज, पिछले 30 दिन की फ़ोटो, वीडियो और वॉइस नोट के साथ।';
 
   @override
   String get devicesHistoryNone => 'सिर्फ़ संपर्क और ग्रुप';

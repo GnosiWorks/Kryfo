@@ -12692,7 +12692,7 @@
   "@devicesHistoryCopy": {
     "description": "screens/linked_devices_screen.dart: the first history choice, picked to start"
   },
-  "devicesHistoryCopyHint": "All your messages, with photos and videos from the last 30 days.",
+  "devicesHistoryCopyHint": "Your messages, with photos, videos and voice notes from the last 30 days.",
   "@devicesHistoryCopyHint": {
     "description": "screens/linked_devices_screen.dart: under the first history choice"
   },

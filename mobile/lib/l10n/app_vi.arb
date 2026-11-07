@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "Kiểm tra cả hai màn hình hiện cùng sáu chữ số.",
   "devicesHistory": "Lịch sử",
   "devicesHistoryCopy": "Sao chép các cuộc trò chuyện",
-  "devicesHistoryCopyHint": "Tất cả tin nhắn, kèm ảnh và video trong 30 ngày qua.",
+  "devicesHistoryCopyHint": "Tin nhắn của bạn, kèm ảnh, video và tin nhắn thoại trong 30 ngày qua.",
   "devicesHistoryNone": "Chỉ danh bạ và nhóm",
   "devicesHistoryNoneHint": "Chúng được chuyển sang không kèm tin nhắn nào.",
   "devicesSkipMedia": "Bỏ qua ảnh và video",

@@ -10347,7 +10347,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Wszystkie twoje wiadomości, ze zdjęciami i filmami z ostatnich 30 dni.';
+      'Twoje wiadomości, ze zdjęciami, filmami i nagraniami głosowymi z ostatnich 30 dni.';
 
   @override
   String get devicesHistoryNone => 'Tylko kontakty i grupy';

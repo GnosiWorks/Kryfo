@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "Controlla che i due schermi mostrino gli stessi sei numeri.",
   "devicesHistory": "Cronologia",
   "devicesHistoryCopy": "Copia le mie chat",
-  "devicesHistoryCopyHint": "Tutti i tuoi messaggi, con foto e video degli ultimi 30 giorni.",
+  "devicesHistoryCopyHint": "I tuoi messaggi, con foto, video e messaggi vocali degli ultimi 30 giorni.",
   "devicesHistoryNone": "Solo contatti e gruppi",
   "devicesHistoryNoneHint": "Arrivano senza alcun messaggio.",
   "devicesSkipMedia": "Salta foto e video",

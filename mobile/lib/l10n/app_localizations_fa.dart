@@ -10169,7 +10169,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'همه‌ی پیام‌هایتان، با عکس‌ها و ویدیوهای ۳۰ روز گذشته.';
+      'پیام‌هایتان، با عکس‌ها، ویدیوها و پیام‌های صوتی ۳۰ روز گذشته.';
 
   @override
   String get devicesHistoryNone => 'فقط مخاطبان و گروه‌ها';

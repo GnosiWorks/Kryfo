@@ -10269,7 +10269,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Alle deine Nachrichten, mit Fotos und Videos der letzten 30 Tage.';
+      'Deine Nachrichten, mit Fotos, Videos und Sprachnachrichten der letzten 30 Tage.';
 
   @override
   String get devicesHistoryNone => 'Nur Kontakte und Gruppen';
