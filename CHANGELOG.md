@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.0] - unreleased
+## [0.6.0] - 2026-11-08
 
 ### Added
 - invite someone from the first minute: the link you share opens a page that says what Kryfo is and where to get it, then opens Kryfo. it works in any messenger, also for people without Kryfo.
