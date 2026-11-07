@@ -157,11 +157,12 @@ class LinkView {
       kind == LinkKind.ready || kind == LinkKind.relay || kind == LinkKind.fast;
 
   /// a chat's line over its composer while the route is not up: its long
-  /// words only while tor is still coming up, the pill's otherwise. null
-  /// while connected
+  /// words only while tor is still coming up, the pill's otherwise (tor up
+  /// and the first relay on its way is no first connect). null while
+  /// connected
   String? get chatLine => connected
       ? null
-      : pulsing
+      : kind == LinkKind.connecting || kind == LinkKind.climbing
       ? l10n.chatBuildingAPrivateRoute
       : text;
 
