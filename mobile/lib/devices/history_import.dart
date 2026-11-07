@@ -372,7 +372,10 @@ class HistoryImport {
         size: f['size'] as int,
         ok: f['ok'] as int,
       );
-      if (f['ok'] == _fileWhole) await _settle(n);
+      if (f['ok'] == _fileWhole) {
+        await _settle(n);
+        _landed(n);
+      }
     }
     _done = _r.done;
   }
@@ -567,16 +570,19 @@ class HistoryImport {
     );
     final key = keys.isEmpty ? null : _blob(keys.first['key']);
     if (key == null || key.length != 32) {
+      // sealed on the phone after its key was read: bytes no one here opens
+      if (await _sealedPart(part)) {
+        await _db.transaction((t) => _fileOk(t, file, _fileLost));
+        await part.delete();
+        return;
+      }
       await part.rename(to.path);
       return;
     }
     final open = File('${_part(file)}.open');
-    bool ok;
-    try {
-      ok = await _unseal(part, open, key);
-    } on FileSystemException {
-      ok = false;
-    }
+    // a disk that fails or a seal that is locked here is no lost file: the
+    // part and its key stay, and the next take or start tries again
+    final ok = await _unseal(part, open, key);
     if (ok) {
       await open.rename(to.path);
     } else {
@@ -594,9 +600,10 @@ class HistoryImport {
   // the phone's sealed bytes in [from] to their plaintext in [to], chunk by
   // chunk. false when any chunk does not open under [fk]
   Future<bool> _unseal(File from, File to, Uint8List fk) async {
-    final src = await from.open();
-    final dst = await to.open(mode: FileMode.write);
+    RandomAccessFile? src, dst;
     try {
+      src = await from.open();
+      dst = await to.open(mode: FileMode.write);
       final size = await src.length();
       if (size < sealedHead || !isSealedHead(await src.read(sealedHead))) {
         return false;
@@ -614,9 +621,23 @@ class HistoryImport {
       await dst.flush();
       return true;
     } finally {
-      await src.close();
-      await dst.close();
       fk.fillRange(0, fk.length, 0);
+      try {
+        await src?.close();
+      } finally {
+        await dst?.close();
+      }
+    }
+  }
+
+  // a part that starts as a sealed file does
+  static Future<bool> _sealedPart(File part) async {
+    final r = await part.open();
+    try {
+      if (await r.length() < sealedHead) return false;
+      return isSealedHead(await r.read(sealedHead));
+    } finally {
+      await r.close();
     }
   }
 

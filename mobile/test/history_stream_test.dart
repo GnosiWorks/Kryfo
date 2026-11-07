@@ -13,6 +13,7 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/devices/history_export.dart';
 import 'package:kryfo/desktop/sealed_file.dart' show SealedRandomAccessFile;
 import 'package:kryfo/desktop/sealed_format.dart';
+import 'package:kryfo/desktop/sealed_io.dart' show SealedAreas, SealedIO;
 import 'package:kryfo/devices/history_ffi.dart';
 import 'package:kryfo/devices/history_files.dart';
 import 'package:kryfo/devices/history_import.dart';
@@ -1646,7 +1647,11 @@ void main() {
       HistoryFilesComing coming,
     })
   >
-  sealedCopy({bool spoil = false}) async {
+  sealedCopy({
+    bool spoil = false,
+    bool noKey = false,
+    String? deviceMedia,
+  }) async {
     final ph = await _phone();
     final area = Uint8List.fromList(List.generate(32, (i) => i + 1));
     const crypto = EngineChunkCrypto();
@@ -1670,6 +1675,7 @@ void main() {
       expect(isSealedHead(head), isTrue);
       final k = fileKey(area, head);
       if (spoil && name == 'p1.jpg') k[0] ^= 1;
+      if (noKey && name == 'p1.jpg') continue;
       keys[path] = k;
     }
     final l = _Link();
@@ -1685,7 +1691,9 @@ void main() {
       chunk: 1024,
       fileKeyOf: (path) => keys[path],
     );
-    final d = await _device();
+    final d = deviceMedia == null
+        ? await _device()
+        : _Device(await _schema(), deviceMedia);
     final coming = HistoryFilesComing();
     final imp = await HistoryImport.open(
       db: d.db,
@@ -1755,6 +1763,101 @@ void main() {
     await _pump(c.out, c.imp, c.out.head.text + 1);
     c.imp.close();
     expect(await HistoryImport.comingOf(c.d.db, c.d.media), contains(photo));
+    c.out.close();
+  }, skip: skip);
+
+  test(
+    'a sealed file sealed after its key was read counts as not come',
+    () async {
+      final c = await sealedCopy(noKey: true);
+      await _pump(c.out, c.imp);
+      expect(File(p.join(c.d.media, 'p1.jpg')).existsSync(), isFalse);
+      final res = await c.imp.finish();
+      expect([for (final g in res.gaps) g.chat.id], [_ana]);
+      await c.imp.clear();
+      c.out.close();
+    },
+    skip: skip,
+  );
+
+  test(
+    'a disk that fails while a file opens keeps it for the next try',
+    () async {
+      final c = await sealedCopy();
+      // where the opened bytes go cannot be written
+      final held = Directory(p.join(c.d.media, '.history'))
+        ..createSync(recursive: true);
+      for (var n = 0; n < 32; n++) {
+        Directory(p.join(held.path, '$n.part.open')).createSync();
+      }
+      var failed = 0;
+      while (c.imp.next < c.out.head.records) {
+        try {
+          await c.imp.take(c.out.record(c.imp.next));
+        } on FileSystemException {
+          failed++;
+        }
+      }
+      expect(failed, 2);
+      expect(File(p.join(c.d.media, 'p1.jpg')).existsSync(), isFalse);
+      expect(await c.d.db.query('history_keys'), hasLength(2));
+      final photo = p.join(c.d.media, 'p1.jpg');
+      final coming = HistoryFilesComing()
+        ..add(await HistoryImport.comingOf(c.d.db, c.d.media));
+      expect(coming.coming(photo), isTrue);
+      c.imp.close();
+      for (var n = 0; n < 32; n++) {
+        Directory(p.join(held.path, '$n.part.open')).deleteSync();
+      }
+      // the next start opens it, and its bubble stops waiting
+      final imp = await HistoryImport.open(
+        db: c.d.db,
+        mediaDir: c.d.media,
+        keyHex: c.l.key,
+        bindHex: c.l.bind,
+        idHex: c.out.id,
+        identityHex: _identity,
+        coming: coming,
+      );
+      expect(coming.any, isFalse);
+      expect(File(photo).readAsBytesSync(), c.ph.files['p1.jpg']);
+      final res = await imp.finish();
+      expect(res.gaps, isEmpty);
+      expect(await c.d.db.query('history_keys'), isEmpty);
+      await imp.clear();
+      c.out.close();
+    },
+    skip: skip,
+  );
+
+  test('a desktop sealing its own files opens the phone\'s', () async {
+    final docs = Directory.systemTemp.createTempSync('hist-desk').path;
+    final media = p.join(docs, 'media');
+    Directory(media).createSync();
+    final areas = SealedAreas(docs: docs, support: p.join(docs, 'support'))
+      ..containerKeys[''] = Uint8List.fromList(
+        List.generate(32, (i) => 200 - i),
+      );
+    final io = SealedIO(areas, const EngineChunkCrypto());
+    final c = await sealedCopy(deviceMedia: media);
+    await IOOverrides.runWithIOOverrides(() async {
+      await _pump(c.out, c.imp);
+      for (final f in ['p1.jpg', 'vn1.ogg', 'v1.mp4']) {
+        expect(
+          File(p.join(media, f)).readAsBytesSync(),
+          c.ph.files[f],
+          reason: f,
+        );
+      }
+      final res = await c.imp.finish();
+      expect(res.gaps, isEmpty);
+      expect(c.out.checkTally(res.tally), isEmpty);
+      await c.imp.clear();
+    }, io);
+    // on the disk under the desktop's own seal, never plain
+    final raw = File(p.join(media, 'p1.jpg')).readAsBytesSync();
+    expect(isSealedHead(raw), isTrue);
+    expect(raw.length, isNot(c.ph.files['p1.jpg']!.length));
     c.out.close();
   }, skip: skip);
 }
