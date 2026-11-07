@@ -1459,6 +1459,25 @@ void main() {
     expect(await send.pushNow(kMainIdent, last), isFalse);
     clock += const Duration(days: 1, minutes: 1).inMilliseconds;
     expect(await send.pushNow(kMainIdent, last), isTrue);
+    // fresh bundles again for at most kPushAgainMost contacts a day, kept
+    // in the marks over restarts
+    await db.delete('dev_pushes', where: 'peer = ?', whereArgs: [key(3)]);
+    for (var i = 0; i < kPushAgainMost - 1; i++) {
+      await db.insert('dev_marks', {
+        'ident': kMainIdent,
+        'peer': key(100 + i),
+        'kind': 'dp',
+        'key': '',
+        'at': clock - 1000,
+      });
+    }
+    expect(await send.pushNow(kMainIdent, key(3)), isFalse);
+    expect(
+      await db.query('dev_pushes', where: 'peer = ?', whereArgs: [key(3)]),
+      isEmpty,
+    );
+    await db.delete('dev_marks', where: 'peer = ?', whereArgs: [key(100)]);
+    expect(await send.pushNow(kMainIdent, key(3)), isTrue);
     // no list reader, a blocked contact, someone else: nothing
     expect(await send.pushNow(kMainIdent, key(19)), isFalse);
     expect(await send.pushNow(kMainIdent, key(18)), isFalse);

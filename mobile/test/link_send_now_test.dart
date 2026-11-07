@@ -279,6 +279,7 @@ void main() {
         listen: bobListen.listen,
         clock: () => clock,
         random: Random(11),
+        jitter: () => Duration.zero,
       );
       final bobRecv = DeviceReceive(
         state: ds,
@@ -317,6 +318,7 @@ void main() {
         listen: deskListen.listen,
         clock: () => clock,
         random: Random(12),
+        jitter: () => Duration.zero,
       );
       final reached = <String>[];
       final deskRecv = DeviceReceive(
@@ -349,6 +351,7 @@ void main() {
         wire: anaWire,
         clock: () => clock,
         random: Random(13),
+        jitter: () => Duration.zero,
       );
       var pushDue = 0;
       final anaRecv = DeviceReceive(
@@ -554,5 +557,279 @@ void main() {
       expect(there!.peer, _bobChat);
       expect(_json(there.frame)['m'], 'hi both');
     },
+  );
+
+  for (final (order, mine) in [('lower', 0x00), ('higher', 0xff)]) {
+    test('a two-device contact: the desk reached through their laptop, a copy '
+        'waiting for their phone, then the phone\'s starter: both sides end on '
+        'the phone\'s seed and the copy opens (the desk\'s unsent seed '
+        '$order)', () async {
+      if (sql == null || shim == null || !_engine) {
+        markTestSkipped('needs sqlite, the host engine and the shim');
+        return;
+      }
+      final lib = shim!;
+      final anaKp = testKeyPair();
+      final deskKp = testKeyPair();
+      final bobKp = testKeyPair();
+      final ana = await testStore(keys: anaKp);
+      final desk = await testStore(keys: deskKp);
+      final bob = await testStore(keys: bobKp);
+      final laptop = await testStore();
+      final anaId = lib.identityFromPrivate(anaKp.privateKey.serialize());
+      final bobId = lib.identityFromPrivate(bobKp.privateKey.serialize());
+      final anaHex = devHex(ana.identity.public);
+      final bobHex = devHex(bob.identity.public);
+      final anaX = anaHex.substring(2);
+      final bobX = bobHex.substring(2);
+      final anaRemote = SessionRemote.opened(ana.identity.public);
+      final anaList = _list(anaId, ana.registrationId, 4000, [
+        (dev: 4, key: desk.identity.public, reg: desk.registrationId),
+      ]);
+      final bobList = _list(bobId, bob.registrationId, 7000, [
+        (dev: 5, key: laptop.identity.public, reg: laptop.registrationId),
+      ]);
+      Future<Database> side(
+        HaloDb h,
+        Uint8List priv,
+        String peer,
+        String ikey,
+      ) async {
+        opened.add(h);
+        final db = await h.open();
+        await putMainIdentity(db, priv);
+        await db.insert('contacts', {
+          'halo_id': peer,
+          'onion': '',
+          'xpub': ikey.substring(2),
+          'first_seen': 0,
+          'last_seen': 0,
+          'ident': kMainIdent,
+          'ikey': ikey,
+          'caps': 'dv,pq,ty',
+          'accepted': 1,
+        });
+        return db;
+      }
+
+      final bobDb = await side(
+        HaloDb(HaloContainer.everyday),
+        bobKp.privateKey.serialize(),
+        _anaChat,
+        anaHex,
+      );
+      final deskDb = await side(
+        HaloDb(HaloContainer.decoy),
+        deskKp.privateKey.serialize(),
+        _bobChat,
+        bobHex,
+      );
+      await deskDb.update('identities', {
+        'ident_pub': ana.identity.public,
+        'dev_id': 4,
+      });
+      final ds = DeviceState(DeviceEngine());
+      linkedDevicesForTest = true;
+      deviceStateForTest(ds);
+      Future<void> as(Database db) async => ds.load(
+        db,
+        await devMineOf(db, lib),
+        shimPath: KryfoSignal.loadedFrom!,
+      );
+      const clock = 1_780_000_000_000;
+      final bobMe = (
+        ident: kMainIdent,
+        identity: bob.identity.public,
+        device: 1,
+      );
+      final toAna = (
+        peer: _anaChat,
+        identity: anaHex,
+        devices: true,
+        phoneClassic: false,
+      );
+      final deskMe = (
+        ident: kMainIdent,
+        identity: ana.identity.public,
+        device: 4,
+      );
+      final toBob = (
+        peer: _bobChat,
+        identity: bobHex,
+        devices: true,
+        phoneClassic: false,
+      );
+      DeviceReceive party(
+        Database db,
+        DeviceSessions dss,
+        _Wire w,
+        DevMe me,
+        DevContact c,
+      ) {
+        final send = DeviceSend(
+          state: ds,
+          db: () async => db,
+          sessions: (_) async => dss,
+          wire: w,
+          listen: (_, _) {},
+          clock: () => clock,
+          random: Random(mine),
+          jitter: () => Duration.zero,
+        );
+        return DeviceReceive(
+          state: ds,
+          db: () async => db,
+          sessions: (_) async => dss,
+          send: send,
+          listener: _Listen(),
+          open: deviceOpenAt,
+          me: (_) async => me,
+          contact: (_, identity) async =>
+              identity == c.identity ? (me: me, c: c) : null,
+          phone: (_, _, _) async => true,
+          sign: (_, _) async => throw StateError('no list signed here'),
+          clock: () => clock,
+        );
+      }
+
+      final bobDs = DeviceSessions(bob);
+      final deskDs = DeviceSessions(desk, linked: true);
+      final bobWire = _Wire();
+      final deskWire = _Wire();
+      final bobRecv = party(bobDb, bobDs, bobWire, bobMe, toAna);
+      final deskRecv = party(deskDb, deskDs, deskWire, deskMe, toBob);
+
+      // the desk holds its list and bob's (his phone and laptop, from its
+      // phone), and his laptop opened to it first
+      await as(deskDb);
+      await ds.session(deskDb, 'own_set', {
+        'ident': kMainIdent,
+        'identity': anaHex,
+        'list': base64Encode(anaList),
+      }, anaRemote);
+      await ds.session(deskDb, 'phone_list', {
+        'ident': kMainIdent,
+        'identity': bobHex,
+        'list': base64Encode(bobList),
+      }, anaRemote);
+      final lapDs = DeviceSessions(laptop, linked: true);
+      await lapDs.build(
+        _anaChat,
+        4,
+        lib.parseDeviceBundle(await deskDs.makeBundle(4), ana.identity.public),
+        desk.identity.public,
+        desk.registrationId,
+      );
+      final lap = await lapDs.seal(
+        _anaChat,
+        4,
+        'halo/1:${jsonEncode({'as': 'ab' * 32})}',
+        desk.identity.public,
+      );
+      expect(await deskRecv.receive('$bobX/5/4/opn', lap), isNull);
+      // a seed of the desk's for bob's phone that never went
+      final unsent = List.filled(32, mine);
+      await deskDb.insert('pairs', {
+        'ident': kMainIdent,
+        'peer': bobHex,
+        'their_device': 1,
+        'my_device': 4,
+        'conv': 4,
+        'seed': Uint8List.fromList(unsent),
+      });
+      await deskDb.insert('dev_openers', {
+        'ident': kMainIdent,
+        'peer': bobHex,
+        'their_device': 1,
+        'my_device': 4,
+        'key': bobHex,
+        'at': 0,
+      });
+      // the desk writes: the laptop's copy goes, the phone's waits
+      final b = await deskRecv.send.burst(
+        deskMe,
+        toBob,
+        'halo/1:{"u":"m-2","m":"hello both","w":1}',
+        force: true,
+        ownCopy: false,
+        mustReach: true,
+      );
+      expect(b!.copies, 2);
+      final waiting = (await deskDb.query(
+        'dev_out',
+        where: "device = 1 AND state = 'wait'",
+      )).single;
+      expect(_json(waiting['plain'] as String)['as'], devHex(unsent));
+
+      // bob's phone takes ana's push and starts its pair with the desk
+      await as(bobDb);
+      await ds.session(bobDb, 'opened', {
+        'ident': kMainIdent,
+        'identity': anaHex,
+        'device': 1,
+        'pq': true,
+      }, anaRemote);
+      await bobRecv.takePhone(
+        kMainIdent,
+        anaHex,
+        'halo/1:${jsonEncode({
+          'dl': base64Encode(anaList),
+          'db': [base64Encode(await deskDs.makeBundle(4))],
+        })}',
+        anaRemote,
+      );
+      await settle(bobWire, 1);
+      final starter = bobWire.sent.single;
+      final theirs = starter.arg.split('.').last;
+
+      // the desk takes the phone's seed; its answer and the copy that
+      // waited both go on it, the waiting copy naming it
+      await as(deskDb);
+      deskWire.sent.clear();
+      expect(await deskRecv.receive('$bobX/1/4/opn', starter.cipher), isNull);
+      await settle(deskWire, 2);
+      final toPhone = [
+        for (final s in deskWire.sent)
+          if (s.arg.startsWith('$bobX/1/4.')) s,
+      ];
+      expect(toPhone, hasLength(2));
+      expect({for (final s in toPhone) s.arg}, {'$bobX/1/4.$theirs'});
+
+      // bob's phone opens both on the pair it started, its seed kept
+      await as(bobDb);
+      final said = <String>[];
+      for (final s in toPhone) {
+        final got = await bobRecv.receive('$anaX/4/1', s.cipher);
+        if (got != null) said.add(_json(got.frame)['m'] as String);
+      }
+      expect(said, ['hello both']);
+      final held = (await bobDb.query(
+        'pairs',
+        where: 'their_device = 4 AND my_device = 1',
+      )).single;
+      expect(devHex(held['seed'] as List<int>), theirs);
+    });
+  }
+
+  test(
+    'a starter and its answer wait 2 to 30 seconds, as the send says',
+    () {
+      final waits = [
+        for (var i = 0; i < 200; i++)
+          DeviceSend(
+            state: DeviceState(DeviceEngine()),
+            db: () async => throw StateError('no db'),
+            sessions: (_) async => throw StateError('no sessions'),
+            wire: _Wire(),
+            random: Random(i),
+          ).startWait(),
+      ];
+      for (final w in waits) {
+        expect(w, greaterThanOrEqualTo(kStartWaitLeast));
+        expect(w, lessThanOrEqualTo(kStartWaitMost));
+      }
+      expect(waits.toSet().length, greaterThan(100));
+    },
+    skip: !_engine ? 'needs the host engine' : false,
   );
 }

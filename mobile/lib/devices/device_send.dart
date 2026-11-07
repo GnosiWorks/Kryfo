@@ -82,6 +82,14 @@ const kHiddenRemovalMeta = 'hidden_removal_owed:';
 /// how often a contact's phone is asked for a fresh bundle of one device
 const kAskEvery = Duration(days: 1);
 
+/// how many lists a device of mine may have sent again with fresh bundles
+/// in a day, over every contact ('dp'): each one spends a pool bundle
+const kPushAgainMost = 20;
+
+/// a pair's starter and its answer wait this long at least and at most
+const kStartWaitLeast = Duration(seconds: 2);
+const kStartWaitMost = Duration(seconds: 30);
+
 // a copy that failed at the relay goes again after these, then every last
 const _again = [
   Duration(seconds: 30),
@@ -154,9 +162,11 @@ class DeviceSend {
     this.door,
     int Function()? clock,
     Random? random,
+    Duration Function()? jitter,
   }) : mine = mine ?? db,
        _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch),
-       _rand = random ?? Random.secure();
+       _rand = random ?? Random.secure(),
+       _jitter = jitter;
 
   final DeviceState state;
 
@@ -197,6 +207,30 @@ class DeviceSend {
   final void Function(int ident, String arg)? listen;
   final int Function() _clock;
   final Random _rand;
+  final Duration Function()? _jitter;
+
+  /// how long a pair's starter or its answer waits before it goes, so it
+  /// does not leave in step with what it answers: [kStartWaitLeast] to
+  /// [kStartWaitMost]
+  Duration startWait() {
+    final j = _jitter;
+    if (j != null) return j();
+    final least = kStartWaitLeast.inMilliseconds;
+    return Duration(
+      milliseconds:
+          least + _rand.nextInt(kStartWaitMost.inMilliseconds - least + 1),
+    );
+  }
+
+  // [run] after [wait]; the row's next_at says the same, so a pump after a
+  // restart takes it if the timer is lost
+  void _later(Duration wait, Future<void> Function() run) {
+    if (wait <= Duration.zero) {
+      unawaited(run().catchError((Object _) {}));
+      return;
+    }
+    Timer(wait, () => unawaited(run().catchError((Object _) {})));
+  }
 
   // when each (ident, contact, device) was last asked for a fresh bundle
   final _asked = <String, int>{};
@@ -804,6 +838,29 @@ class DeviceSend {
     }
   }
 
+  // [plain] with its 'as' set to the pair's seed held now, when it has one
+  Future<String> _seedNow(
+    Database d,
+    Map<String, Object?> r,
+    String plain,
+  ) async {
+    final b = _bodyOf(plain);
+    if (b == null || b['as'] is! String) return plain;
+    final ident = r['ident'] as int;
+    final seeds = await d.query(
+      'pairs',
+      columns: ['seed'],
+      where: _pairWhere,
+      whereArgs: [ident, r['peer'], r['device'], await _myDevice(d, ident)],
+      limit: 1,
+    );
+    final seed = seeds.isEmpty ? null : seeds.first['seed'];
+    if (seed is! List<int> || seed.length != 32) return plain;
+    final hex = devHex(seed);
+    if (b['as'] == hex) return plain;
+    return _with(plain, (j) => j['as'] = hex);
+  }
+
   Future<void> _sealWaiting(Database d, Map<String, Object?> r) async {
     final ident = r['ident'] as int;
     final addr = r['addr'] as String;
@@ -827,12 +884,15 @@ class DeviceSend {
       );
       return;
     }
+    // the pair's seed as it is now: one taken from their opener since the
+    // copy was made takes the place of the one it was made with
+    final framed = await _seedNow(d, r, plain);
     final String w;
     try {
       w = await ds.seal(
         addr,
         device,
-        plain,
+        framed,
         _bytes(r['pin'] as String),
         size: r['size'] as int? ?? 0,
       );
@@ -931,8 +991,10 @@ class DeviceSend {
       _clock(),
     );
     if (st == null) return;
-    await d.insert('dev_out', st, conflictAlgorithm: ConflictAlgorithm.ignore);
-    unawaited(_go(d, st));
+    final wait = startWait();
+    final row = {...st, 'next_at': _clock() + wait.inMilliseconds};
+    await d.insert('dev_out', row, conflictAlgorithm: ConflictAlgorithm.ignore);
+    _later(wait, () => _go(d, row));
   }
 
   /// whether a copy to [identity]'s [device] waits for its session: a
@@ -963,6 +1025,8 @@ class DeviceSend {
     // and never let go for its age: a chat's end, until the device answers
     // or is removed
     bool keep = false,
+    // how long it waits before it goes (a pair's answer, startWait)
+    Duration after = Duration.zero,
   }) async {
     final body = _bodyOf(frame);
     if (body == null) return;
@@ -984,9 +1048,9 @@ class DeviceSend {
       'receipt': receipt ? 1 : 0,
       'plain': frame,
       'state': 'wait',
-      'next_at': now,
+      'next_at': now + after.inMilliseconds,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
-    unawaited(pump());
+    _later(after, pump);
   }
 
   // ---- last words ----
@@ -1443,6 +1507,15 @@ class DeviceSend {
         limit: 1,
       );
       if (again.isNotEmpty) return false;
+      // a rogue device asking for every contact spends at most this many
+      // pool bundles a day
+      final today = await d.query(
+        'dev_marks',
+        columns: ['peer'],
+        where: "ident = ? AND kind = 'dp' AND at > ?",
+        whereArgs: [ident, now - kAskEvery.inMilliseconds],
+      );
+      if (today.length >= kPushAgainMost) return false;
       await d.insert('dev_marks', {
         'ident': ident,
         'peer': identity,

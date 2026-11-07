@@ -360,6 +360,7 @@ class DeviceReceive {
             pin: entry.key,
             reg: entry.reg,
             frame: '$kEnvelopePrefix{}',
+            after: send.startWait(),
           );
         } catch (e) {
           _note('a starter not answered (${e.runtimeType})');
@@ -430,18 +431,11 @@ class DeviceReceive {
       limit: 1,
     );
     if (held is List<int> && held.length == 32) {
-      // a seed of mine that never went (a send that kept nothing, before
-      // the device reached me) and no copy waiting with it: theirs is the
-      // only one they know
+      // only a seed of mine whose opener went is one they may know: one
+      // that never went (a copy that waits, a send that kept nothing)
+      // gives way, and what waits takes theirs as it is sealed
       final went = rec.isNotEmpty && (rec.first['at'] as int? ?? 0) > 0;
-      final owed = (await d.query(
-        'dev_out',
-        columns: ['uid'],
-        where: 'ident = ? AND peer = ? AND device = ? AND own = 0',
-        whereArgs: [t.ident, identity, t.their],
-        limit: 1,
-      )).isNotEmpty;
-      if ((went || owed) && _lower(held, seed) <= 0) return;
+      if (went && _lower(held, seed) <= 0) return;
     }
     final heldFor = rec.isEmpty ? null : rec.first['key'] as String?;
     await d.transaction((tx) async {
