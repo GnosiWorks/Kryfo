@@ -187,6 +187,18 @@ void main() {
       await drain(t);
     });
 
+    testWidgets('side by side, the qr and the code say both need 0.6: a 0.5.3 '
+        'phone reads the qr as an invalid link', (t) async {
+      phone(t);
+      await t.pumpWidget(framed(const MyKryfoScreen()));
+      await rest(t);
+      expect(find.text(l10n.pairCodeBothNeed06), findsNothing);
+      await t.tap(find.text(l10n.myKryfoTheyReHereWith));
+      await rest(t);
+      expect(find.text(l10n.pairCodeBothNeed06), findsOneWidget);
+      await drain(t);
+    });
+
     testWidgets('in the light theme the code is dark on light', (t) async {
       phone(t);
       HaloColors.setLight(true);

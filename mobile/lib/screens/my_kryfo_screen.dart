@@ -474,6 +474,14 @@ class _Way1Card extends StatelessWidget {
           _QrFrame(uri: uri),
           const SizedBox(height: 16),
           const PairCodePanel(compact: true),
+          // a 0.5.x phone reads this qr as an invalid link and has no
+          // field for these eight digits: this side says why
+          const SizedBox(height: 12),
+          Text(
+            l10n.pairCodeBothNeed06Shown,
+            textAlign: TextAlign.center,
+            style: HaloType.sans(size: 12, color: HaloColors.text),
+          ),
           const SizedBox(height: 14),
           // no camera on a computer: they scan this one instead
           if (!onDesktop) ...[
