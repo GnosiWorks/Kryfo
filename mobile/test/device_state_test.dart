@@ -15,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/devices/device_store.dart' show devLoadArgs;
 import 'package:kryfo/devices/own_devices.dart' show kLinkedDevicesOn;
 import 'package:kryfo/identities.dart';
 import 'package:kryfo/main.dart'
@@ -335,6 +336,54 @@ void main() {
 
     Future<int> count(Database db, String t) async =>
         Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM $t'))!;
+
+    // the engine derives every address as the device the load names: a
+    // linked container that loads as a phone listens where nothing comes
+    test(
+      'a linked container loads as its device, a phone as device 1',
+      () async {
+        if (skipEngine()) return;
+        final lib = shim!;
+        final db = await open();
+        final mePriv = testKeyPair().privateKey.serialize();
+        await putMainIdentity(db, Uint8List.fromList(mePriv));
+        final key = lib.identityFromPrivate(mePriv).public;
+        var mine = await devMineOf(db, lib);
+        expect(mine.single.dev, 1);
+        expect(mine.single.identity, key);
+        expect((await devLoadArgs(db, mine))['mine'], [
+          {
+            'ident': kMainIdent,
+            'identity': devHex(key),
+            'key': devHex(key),
+            'dev': 1,
+          },
+        ]);
+        // joined as device 9 of a phone's identity (joinedRows)
+        final phone = lib.identityGenerate().public;
+        await db.update(
+          'identities',
+          {'ident_pub': phone, 'dev_id': 9},
+          where: 'id = ?',
+          whereArgs: [kMainIdent],
+        );
+        mine = await devMineOf(db, lib);
+        expect(mine.single.dev, 9);
+        expect(mine.single.identity, phone);
+        expect(mine.single.key, key);
+        expect((await devLoadArgs(db, mine))['mine'], [
+          {
+            'ident': kMainIdent,
+            'identity': devHex(phone),
+            'key': devHex(key),
+            'dev': 9,
+          },
+        ]);
+        final ds = DeviceState(DeviceEngine());
+        await ds.load(db, mine, shimPath: KryfoSignal.loadedFrom!);
+        expect(ds.skipped, 0);
+      },
+    );
 
     test(
       'rows written, the engine started again from them, the same state',

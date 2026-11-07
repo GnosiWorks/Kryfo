@@ -256,7 +256,12 @@ class _JoinLinkApp implements JoinLinkHooks {
     final key = signalSession.identity.public;
     final ds = DeviceState(DeviceEngine());
     await ds.load(db, [
-      (ident: kMainIdent, identity: _linkUnhex(p.identity), key: key),
+      (
+        ident: kMainIdent,
+        identity: _linkUnhex(p.identity),
+        key: key,
+        dev: p.device,
+      ),
     ], shimPath: path);
     _deviceState = ds;
   }

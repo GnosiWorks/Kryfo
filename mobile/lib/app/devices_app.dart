@@ -11,12 +11,13 @@ DeviceState? _deviceState;
 DeviceState? get deviceState => _deviceState;
 
 /// my identities for the engine: each one's key (ident_pub on a linked
-/// device, else the key of its x_priv) and this device's key for it
+/// device, else the key of its x_priv), this device's key for it and its
+/// id on the list, so the engine derives every address as this device
 Future<List<DevMine>> devMineOf(DatabaseExecutor db, KryfoSignal lib) async {
   final out = <DevMine>[];
   for (final r in await db.query(
     'identities',
-    columns: ['id', 'x_priv', 'ident_pub'],
+    columns: ['id', 'x_priv', 'ident_pub', 'dev_id'],
     where: 'retired_at IS NULL',
     orderBy: 'id',
   )) {
@@ -24,10 +25,12 @@ Future<List<DevMine>> devMineOf(DatabaseExecutor db, KryfoSignal lib) async {
     if (priv is! List<int>) continue;
     final key = lib.identityFromPrivate(priv).public;
     final pub = r['ident_pub'];
+    final linked = pub is List<int>;
     out.add((
       ident: r['id'] as int,
-      identity: pub is List<int> ? Uint8List.fromList(pub) : key,
+      identity: linked ? Uint8List.fromList(pub) : key,
       key: key,
+      dev: linked ? (r['dev_id'] as int? ?? 1) : 1,
     ));
   }
   return out;

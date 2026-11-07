@@ -311,6 +311,8 @@ type devLoad struct {
 		Ident    int    `json:"ident"`
 		Identity string `json:"identity"`
 		Key      string `json:"key"`
+		// this device's id on the identity's list: 1 (or none) on the phone
+		Dev int `json:"dev"`
 	} `json:"mine"`
 	Contacts []struct {
 		Ident    int    `json:"ident"`
@@ -357,6 +359,32 @@ type devLoad struct {
 }
 
 // a fresh state from the stored rows, and how many rows did not load: a
+// the address layer's linked identities as a load names them: a container
+// that is device 2..127 of an identity derives every address as that
+// device, never as a phone. one load replaces all of them
+func linkedFromLoad(in *devLoad) error {
+	next := map[int]linkedIdent{}
+	for _, m := range in.Mine {
+		if m.Dev <= phoneDevice {
+			continue
+		}
+		if m.Dev > maxDevice || m.Key == "" || m.Key == m.Identity {
+			return devices.ErrMalformed
+		}
+		id, err := parseHexKey(m.Identity)
+		if err != nil {
+			return err
+		}
+		var pub [32]byte
+		copy(pub[:], id[1:])
+		next[m.Ident] = linkedIdent{pub: pub, dev: uint8(m.Dev)}
+	}
+	identsMu.Lock()
+	linkedIdents = next
+	identsMu.Unlock()
+	return nil
+}
+
 // row of a contact gone, a list that no longer reads. such a row stays in
 // the database untouched; nothing is deleted at the start
 func loadDevState(in *devLoad, v devVerifier) (*devState, []devices.Key, int, error) {

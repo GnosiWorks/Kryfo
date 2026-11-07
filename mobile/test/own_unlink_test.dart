@@ -2115,6 +2115,7 @@ void main() {
         ident: kMainIdent,
         identity: w.ana.identity.public,
         key: w.desk.identity.public,
+        dev: 4,
       ),
     ], shimPath: shimPath);
     // the rows the engine gives for my phone's list, written by the join
@@ -2212,10 +2213,7 @@ void main() {
       expect(gap, lessThanOrEqualTo(most + tick), reason: 'gap $i');
     }
     expect(hands.where((h) => h <= 2 * 60000).length, inInclusiveRange(2, 3));
-    expect(
-      hands.where((h) => h < 15 * 60000).length,
-      inInclusiveRange(6, 12),
-    );
+    expect(hands.where((h) => h < 15 * 60000).length, inInclusiveRange(6, 12));
     expect(hands.where((h) => h > 2 * _day), isNotEmpty);
     // the opener address with every hand: after the first day, once a day
     expect(openers, hands);
@@ -2270,11 +2268,8 @@ void main() {
       ),
       listener: _Listen(),
       open: deviceOpenAt,
-      me: (_) async => (
-        ident: kMainIdent,
-        identity: w.ana.identity.public,
-        device: 4,
-      ),
+      me: (_) async =>
+          (ident: kMainIdent, identity: w.ana.identity.public, device: 4),
       contact: (_, _) async => null,
       phone: (_, _, _) async => false,
       sign: (_, _) async => throw StateError('a linked device never signs'),
