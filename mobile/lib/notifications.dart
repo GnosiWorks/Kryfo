@@ -412,8 +412,7 @@ Future<void> _plainOverNamed() async {
     if (e.value.channel == _messagesChannel) _dropFold(e.key);
   }
   // the shared one goes with them, below, by its channel
-  _sharedChats.clear();
-  _sharedUids.clear();
+  _sharedReset();
   if (await quietNow()) return;
   final named = <ActiveNotification>[];
   try {
@@ -754,8 +753,7 @@ void forgetFolds() {
   _folds.clear();
   _shownFor.clear();
   _shownForMsg.clear();
-  _sharedChats.clear();
-  _sharedUids.clear();
+  _sharedReset();
 }
 
 /// what a tap on the shared or the plain notification opens: the chat list
@@ -773,8 +771,26 @@ int get sharedNotifId => _sharedId;
 // left): messages in it. memory only
 final Map<String, int> _sharedChats = {};
 final Map<String, String> _sharedUids = {};
+// the latest burn of what it stands for, while every one of them is timed
+int? _sharedBurn;
+bool _sharedUntimed = false;
 
-Future<int?> _ringShared({required String chat, String? msgUid}) =>
+void _sharedReset() {
+  _sharedChats.clear();
+  _sharedUids.clear();
+  _sharedBurn = null;
+  _sharedUntimed = false;
+}
+
+void _sharedTimes(int? burnAt) {
+  if (burnAt == null) {
+    _sharedUntimed = true;
+  } else if (_sharedBurn == null || burnAt > _sharedBurn!) {
+    _sharedBurn = burnAt;
+  }
+}
+
+Future<int?> _ringShared({required String chat, String? msgUid, int? burnAt}) =>
     _foldTurnOf<int?>(() async {
       if (await quietNow()) return null;
       final gen = _clearGen;
@@ -784,11 +800,11 @@ Future<int?> _ringShared({required String chat, String? msgUid}) =>
       await _sharedOverNamed(post: false);
       // swiped away or tapped: it starts over
       if (!await _isUp(_sharedId, _sharedTag)) {
-        _sharedChats.clear();
-        _sharedUids.clear();
+        _sharedReset();
       }
       if (stale()) return null;
       _sharedChats[chat] = (_sharedChats[chat] ?? 0) + 1;
+      _sharedTimes(burnAt);
       if (msgUid != null) {
         _sharedUids[msgUid] = chat;
         if (_sharedUids.length > 500) {
@@ -820,15 +836,16 @@ Future<void> _sharedOverNamed({bool post = true}) async {
     dlog('shared: shade not read (${e.runtimeType})');
   }
   final chatOf = <String, String>{};
+  final burns = <String, List<int?>>{};
   for (final e in [..._folds.entries]) {
     if (e.value.channel != _messagesChannel) continue;
     chatOf[e.value.tag] = e.key;
+    burns[e.value.tag] = [for (final l in e.value.lines) l.burnAt];
     _dropFold(e.key);
   }
   if (named.isEmpty) return;
   if (!await _isUp(_sharedId, _sharedTag)) {
-    _sharedChats.clear();
-    _sharedUids.clear();
+    _sharedReset();
   }
   for (final a in named) {
     await cancelWithRetry(
@@ -837,6 +854,13 @@ Future<void> _sharedOverNamed({bool post = true}) async {
     );
     final key = chatOf[a.tag] ?? a.tag!;
     _sharedChats[key] = (_sharedChats[key] ?? 0) + 1;
+    // one whose messages are not known counts as untimed
+    final b = burns[a.tag];
+    if (b == null || b.isEmpty) {
+      _sharedTimes(null);
+    } else {
+      b.forEach(_sharedTimes);
+    }
   }
   if (post && !await quietNow()) await _postShared(alert: false);
 }
@@ -851,6 +875,7 @@ Future<void> _leaveShared(Set<String> keys) async {
   }
   _sharedUids.removeWhere((_, c) => keys.contains(c));
   if (left && _sharedChats.isEmpty) {
+    _sharedReset();
     await cancelWithRetry(
       () => notifPlugin.cancel(id: _sharedId, tag: _sharedTag),
       'shared',
@@ -891,6 +916,10 @@ Future<void> _postShared({required bool alert}) async {
     ledOffMs: 2000,
     ticker: l10n.notificationsNewMessage2,
     autoCancel: true,
+    // all of it timed: it goes with the last to burn
+    timeoutAfter: _sharedUntimed || _sharedBurn == null
+        ? null
+        : max(1, _sharedBurn! - DateTime.now().millisecondsSinceEpoch),
     when: DateTime.now().millisecondsSinceEpoch,
     // no number: a badge would count what the words do not
     onlyAlertOnce: !alert,
@@ -1176,7 +1205,7 @@ Future<int?> showMessageNotification({
   }
   // previews off: the one shared notification, for every chat
   if (await loadHideNotifContent()) {
-    return _ringShared(chat: chat, msgUid: msgUid);
+    return _ringShared(chat: chat, msgUid: msgUid, burnAt: burnAt);
   }
   // a hidden chat's never says whose or what, whatever the preview setting:
   // android's history and watches keep what a notification said

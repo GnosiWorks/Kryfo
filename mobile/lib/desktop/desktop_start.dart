@@ -117,7 +117,8 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
 
   Future<void> _inTurn(Future<void> Function() job) {
     final done = _turn.then((_) => job());
-    _turn = done.catchError((_) {});
+    // a call the server never answers holds the rest only this long
+    _turn = done.timeout(deskCallLimit).catchError((_) {});
     return done;
   }
 
@@ -150,6 +151,10 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
     payload: payload,
   );
 }
+
+/// how long one call to the desktop's notification server holds the next
+@visibleForTesting
+Duration deskCallLimit = const Duration(seconds: 5);
 
 /// a post's details: its sound as the notifications page's switch has it
 @visibleForTesting

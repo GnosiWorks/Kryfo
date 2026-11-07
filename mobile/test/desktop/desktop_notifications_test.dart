@@ -81,6 +81,8 @@ Future<void> _ring({bool hidden = false}) => showMessageNotification(
 class _Slow extends QuietLinuxNotifications {
   final events = <String>[];
   final answer = Completer<void>();
+  // a post the server never answers
+  bool hang = false;
 
   @override
   Future<void> post({
@@ -90,6 +92,7 @@ class _Slow extends QuietLinuxNotifications {
     String? payload,
   }) async {
     events.add('post $id');
+    if (hang) await Completer<void>().future;
     await answer.future;
     events.add('posted $id');
   }
@@ -193,5 +196,16 @@ void main() {
     n.answer.complete();
     await Future.wait([shown, gone, all]);
     expect(n.events, ['post 7', 'posted 7', 'drop 7', 'drop all']);
+  });
+
+  test('a post that never comes back holds the rest only so long', () async {
+    final n = _Slow()..hang = true;
+    deskCallLimit = const Duration(milliseconds: 50);
+    addTearDown(() => deskCallLimit = const Duration(seconds: 5));
+    unawaited(n.show(id: 7, title: 'Wren', body: 'hi'));
+    final gone = n.cancel(id: 7);
+    final all = n.cancelAll();
+    await Future.wait([gone, all]).timeout(const Duration(seconds: 2));
+    expect(n.events, ['post 7', 'drop 7', 'drop all']);
   });
 }

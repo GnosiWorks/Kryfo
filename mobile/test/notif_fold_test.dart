@@ -651,4 +651,36 @@ void main() {
     );
     expect(rows.rings, isEmpty);
   });
+
+  test(
+    'the shared one goes with the last burn, when all of it is timed',
+    () async {
+      final shade = _start(hide: true);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await _ring('bob', 'a', uid: 'a', burnAt: now + 30000);
+      expect(shade.shown.last.d.timeoutAfter, inInclusiveRange(28000, 30000));
+      await _ring('amy', 'b', title: 'Amy', uid: 'b', burnAt: now + 60000);
+      expect(shade.shown.last.d.timeoutAfter, inInclusiveRange(58000, 60000));
+      // an earlier burn does not shorten it
+      await _ring('cy', 'c', title: 'Cy', uid: 'c', burnAt: now + 10000);
+      expect(shade.shown.last.d.timeoutAfter, inInclusiveRange(58000, 60000));
+      // one untimed: it stays
+      await _ring('bob', 'd', uid: 'd');
+      expect(shade.shown.last.d.timeoutAfter, isNull);
+      await _ring('amy', 'e', title: 'Amy', uid: 'e', burnAt: now + 90000);
+      expect(shade.shown.last.d.timeoutAfter, isNull);
+    },
+  );
+
+  test('a timed fold folded in keeps its burn, an untimed one none', () async {
+    final shade = _start();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _ring('bob', 'a', uid: 'a', burnAt: now + 30000);
+    await setHideNotifContent(true);
+    expect(shade.shown.last.d.timeoutAfter, inInclusiveRange(28000, 30000));
+    await setHideNotifContent(false);
+    await _ring('amy', 'b', title: 'Amy', uid: 'b');
+    await setHideNotifContent(true);
+    expect(shade.shown.last.d.timeoutAfter, isNull);
+  });
 }
