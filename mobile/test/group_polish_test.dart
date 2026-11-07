@@ -2338,21 +2338,25 @@ void main() {
   // the composer sits as far above each as above the others
   testWidgets('the group clears the bars and the keyboard', (t) async {
     final gaps = <double>[];
-    for (final (nav, kb) in [
-      (gestureBar, 0.0),
-      (buttonBar, 0.0),
-      (gestureBar, keyboardUp),
+    for (final (nav, kb, top) in [
+      (gestureBar, 0.0, cutoutTop),
+      (buttonBar, 0.0, cutoutTop),
+      (gestureBar, keyboardUp, cutoutTop),
+      // android 15 and 16
+      (gestureThin, 0.0, statusLow),
+      (buttonBar, 0.0, statusTall),
+      (buttonBar, keyboardUp, statusTall),
     ]) {
       _use(t, _Db(rows: [_in(1, _anna, 'hello')]));
-      barsPhone(t, nav: nav, keyboard: kb);
+      barsPhone(t, nav: nav, keyboard: kb, status: top);
       await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
       expect(find.text('hello'), findsOneWidget);
-      expectClearOfBars(t, reason: 'nav $nav keyboard $kb');
+      expectClearOfBars(t, reason: 'nav $nav keyboard $kb top $top');
       gaps.add(gapAboveBottom(t, find.byType(TextField).last));
       final head = t.getRect(find.byTooltip(l10n.commonBack).first);
-      expect(head.top, greaterThanOrEqualTo(cutoutTop));
-      expect(head.top, lessThan(cutoutTop + 24), reason: 'padded twice');
+      expect(head.top, greaterThanOrEqualTo(top));
+      expect(head.top, lessThan(top + 24), reason: 'padded twice');
       await _close(t);
     }
     expect(gaps.first, greaterThanOrEqualTo(0));

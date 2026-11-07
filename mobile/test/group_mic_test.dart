@@ -15,6 +15,7 @@ import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic;
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 
+import 'bars_check.dart';
 import 'dev_chat_fakes.dart';
 
 void _mock(String channel, Future<Object?> Function(MethodCall c)? h) =>
@@ -189,6 +190,26 @@ void main() {
     await devClose(t);
     await settle(t);
   });
+
+  // android 15 and 16 sizes: the bar, its timer and its cancel clear them
+  for (final (nav, top) in [
+    (gestureThin, statusLow),
+    (buttonBar, statusTall),
+  ]) {
+    testWidgets('the bar clears the bars, nav $nav top $top', (t) async {
+      starting.complete();
+      barsPhone(t, nav: nav, status: top);
+      await openSafe(t);
+      final g = await hold(t);
+      await settle(t);
+      expect(find.byType(VoiceRecordBar), findsOneWidget);
+      expectClearOfBars(t);
+      await g.up();
+      await settle(t);
+      await devClose(t);
+      await settle(t);
+    });
+  }
 
   testWidgets('the bar sits on the keyboard', (t) async {
     starting.complete();

@@ -29,6 +29,9 @@ Future<T?> showHaloSheet<T>(
     backgroundColor: HaloColors.surface2,
     barrierColor: HaloColors.ink.withValues(alpha: 0.62),
     isScrollControlled: true,
+    // a tall sheet stops below the status bar and the cutout, as android 15
+    // draws the app under them
+    useSafeArea: true,
     // a computer's window is wide: a sheet keeps a phone's width, centred
     constraints: onDesktop
         ? const BoxConstraints(maxWidth: kDeskSheetWidth)
