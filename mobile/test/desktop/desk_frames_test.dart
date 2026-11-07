@@ -136,6 +136,20 @@ void main() {
     expect(t.binding.lifecycleState, AppLifecycleState.hidden);
     await t.pump();
   });
+
+  testWidgets('a shown window with no lifecycle heard yet is put right', (
+    t,
+  ) async {
+    await t.pumpWidget(const SizedBox());
+    t.binding.resetInternalState();
+    addTearDown(
+      () => t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed),
+    );
+    expect(t.binding.lifecycleState, isNull);
+    deskWindowFrame(const {'shown': true, 'active': true});
+    expect(t.binding.lifecycleState, AppLifecycleState.resumed);
+    await t.pump();
+  });
 }
 
 class _Db implements HaloDb {
