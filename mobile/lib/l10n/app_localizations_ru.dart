@@ -8928,6 +8928,21 @@ class AppLocalizationsRu extends AppLocalizations {
       'Раз в день через Tor. Спрашивает у kryfo.app номер новой версии и ничего не отправляет о тебе.';
 
   @override
+  String get settingsCheckNow => 'Проверить сейчас';
+
+  @override
+  String get settingsCheckNowBusy => 'Проверяем…';
+
+  @override
+  String get updateOpenPage => 'Открыть страницу загрузки';
+
+  @override
+  String get updateNewest => 'У тебя самый новый Kryfo';
+
+  @override
+  String get updateCouldNotCheck => 'Не удалось проверить. Попробуй позже.';
+
+  @override
   String get voiceDisguiseHere => 'Изменять мой голос здесь';
 
   @override

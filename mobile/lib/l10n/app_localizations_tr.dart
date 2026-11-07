@@ -8797,6 +8797,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'Günde bir kez Tor üzerinden en yeni sürümü kryfo.app’e sorar. Senin hakkında hiçbir şey göndermez.';
 
   @override
+  String get settingsCheckNow => 'Şimdi denetle';
+
+  @override
+  String get settingsCheckNowBusy => 'Kontrol ediliyor…';
+
+  @override
+  String get updateOpenPage => 'İndirme sayfasını aç';
+
+  @override
+  String get updateNewest => 'En yeni Kryfo sende';
+
+  @override
+  String get updateCouldNotCheck => 'Denetlenemedi. Daha sonra tekrar dene.';
+
+  @override
   String get voiceDisguiseHere => 'Burada sesimi gizle';
 
   @override

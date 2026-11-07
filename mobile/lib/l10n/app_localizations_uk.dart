@@ -8923,6 +8923,21 @@ class AppLocalizationsUk extends AppLocalizations {
       'Раз на день через Tor. Питає в kryfo.app номер нової версії й нічого не надсилає про тебе.';
 
   @override
+  String get settingsCheckNow => 'Перевірити зараз';
+
+  @override
+  String get settingsCheckNowBusy => 'Перевіряємо…';
+
+  @override
+  String get updateOpenPage => 'Відкрити сторінку завантаження';
+
+  @override
+  String get updateNewest => 'У тебе найновіший Kryfo';
+
+  @override
+  String get updateCouldNotCheck => 'Не вдалося перевірити. Спробуй пізніше.';
+
+  @override
   String get voiceDisguiseHere => 'Змінювати мій голос тут';
 
   @override

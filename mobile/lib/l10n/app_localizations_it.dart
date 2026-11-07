@@ -8845,6 +8845,22 @@ class AppLocalizationsIt extends AppLocalizations {
       'Una volta al giorno tramite Tor. Chiede a kryfo.app l\'ultima versione e non invia nulla su di te.';
 
   @override
+  String get settingsCheckNow => 'Controlla ora';
+
+  @override
+  String get settingsCheckNowBusy => 'Controllo…';
+
+  @override
+  String get updateOpenPage => 'Apri la pagina di download';
+
+  @override
+  String get updateNewest => 'Hai il Kryfo più recente';
+
+  @override
+  String get updateCouldNotCheck =>
+      'Impossibile controllare. Riprova più tardi.';
+
+  @override
   String get voiceDisguiseHere => 'Camuffa la mia voce qui';
 
   @override

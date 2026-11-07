@@ -8343,6 +8343,21 @@ class AppLocalizationsZh extends AppLocalizations {
       '每天一次，通过 Tor。只向 kryfo.app 询问最新版本，不发送任何关于你的信息。';
 
   @override
+  String get settingsCheckNow => '立即检查';
+
+  @override
+  String get settingsCheckNowBusy => '正在检查…';
+
+  @override
+  String get updateOpenPage => '打开下载页面';
+
+  @override
+  String get updateNewest => '你已在使用最新的 Kryfo';
+
+  @override
+  String get updateCouldNotCheck => '无法检查。请稍后再试。';
+
+  @override
   String get voiceDisguiseHere => '在这里给我的语音变声';
 
   @override
@@ -19406,6 +19421,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get settingsCheckForUpdatesHint =>
       '每天一次，透過 Tor。只向 kryfo.app 詢問最新版本，不傳送任何關於你的資訊。';
+
+  @override
+  String get settingsCheckNow => '立即檢查';
+
+  @override
+  String get settingsCheckNowBusy => '檢查中…';
+
+  @override
+  String get updateOpenPage => '開啟下載頁面';
+
+  @override
+  String get updateNewest => '你已在使用最新的 Kryfo';
+
+  @override
+  String get updateCouldNotCheck => '無法檢查。請稍後再試。';
 
   @override
   String get voiceDisguiseHere => '在這裡給我的語音變聲';

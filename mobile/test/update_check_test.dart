@@ -8,7 +8,9 @@ import 'dart:math';
 
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/app_version.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
 import 'package:kryfo/update_check.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -210,6 +212,7 @@ void main() {
       install: () async => InstallInfo(installer: installer, version: running),
       now: () => now,
       pause: pause ?? () async {},
+      stall: () async {},
       pubKeyB64: s.pub,
     );
 
@@ -495,6 +498,95 @@ void main() {
       final updated = make(running: '0.5.1');
       await updated.ready();
       expect(updated.shown, isNull);
+    });
+
+    // before 0.6 a computer asked android's installer channel, got nothing,
+    // had no version and so never checked at all
+    test('a computer checks, with its own version and no installer', () async {
+      onDesktop = true;
+      addTearDown(() => onDesktop = false);
+      final n = UpdateNotice(
+        get: (url) async {
+          asked.add(url);
+          final body = _file('9.0.0');
+          return url == kVersionUrl ? body : s.sign(body);
+        },
+        torUp: () => tor,
+        quiet: () => quiet,
+        container: () => c,
+        playBuild: false,
+        now: () => now,
+        pause: () async {},
+        pubKeyB64: s.pub,
+      );
+      await n.ready();
+      expect(n.eligible, isTrue);
+      expect(await n.check(), isTrue);
+      expect(asked, [kVersionUrl, kVersionSigUrl]);
+      expect(n.shown, '9.0.0');
+      expect(parseVersion(kAppVersion), isNotNull);
+    });
+
+    group('check by hand', () {
+      test('a newer signed version: ready', () async {
+        final n = make();
+        expect(await n.checkNow(), UpdateAnswer.ready);
+        expect(asked, [kVersionUrl, kVersionSigUrl]);
+        expect(n.latest, '0.5.1');
+        expect(n.shown, '0.5.1');
+      });
+
+      test('the same version: the newest', () async {
+        served = '0.5.0';
+        expect(await make().checkNow(), UpdateAnswer.newest);
+      });
+
+      test('no tor, no answer or a bad signature: could not check', () async {
+        tor = false;
+        expect(await make().checkNow(), UpdateAnswer.failed);
+        expect(asked, isEmpty);
+        tor = true;
+        final dead = make(answer: (_) => 'error: get: tor circuit failed');
+        expect(await dead.checkNow(), UpdateAnswer.failed);
+        final other = _Signer();
+        final forged = make(
+          answer: (url) =>
+              url == kVersionUrl ? _file('9.9.9') : other.sign(_file('9.9.9')),
+        );
+        expect(await forged.checkNow(), UpdateAnswer.failed);
+        expect(forged.latest, isNull);
+        expect(forged.shown, isNull);
+      });
+
+      test('asks at once, past the day and the switch', () async {
+        final n = make(pause: () => Completer<void>().future);
+        await n.setOn(false);
+        expect(await n.checkNow(), UpdateAnswer.ready);
+        expect(await n.checkNow(), UpdateAnswer.ready);
+        expect(asked, hasLength(4));
+        // and it counts as the day's check
+        await n.setOn(true);
+        expect(await n.check(), isFalse);
+        expect(asked, hasLength(4));
+      });
+
+      test('a decoy asks nothing and answers from what was fetched', () async {
+        quiet = true;
+        c = HaloContainer.decoy;
+        expect(await make().checkNow(), UpdateAnswer.failed);
+        SharedPreferences.setMockInitialValues({
+          'kryfo.update.latest': '0.5.1',
+        });
+        expect(await make().checkNow(), UpdateAnswer.ready);
+        expect(await make(running: '0.5.1').checkNow(), UpdateAnswer.newest);
+        expect(asked, isEmpty);
+      });
+
+      test('an f-droid copy never asks', () async {
+        final f = make(installer: 'org.fdroid.fdroid');
+        expect(await f.checkNow(), UpdateAnswer.failed);
+        expect(asked, isEmpty);
+      });
     });
   });
 }

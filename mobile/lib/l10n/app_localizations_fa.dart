@@ -8778,6 +8778,21 @@ class AppLocalizationsFa extends AppLocalizations {
       'روزی یک بار از راه Tor. فقط تازه‌ترین نسخه را از kryfo.app می‌پرسد و چیزی درباره‌ی شما نمی‌فرستد.';
 
   @override
+  String get settingsCheckNow => 'الان بررسی کن';
+
+  @override
+  String get settingsCheckNowBusy => 'در حال بررسی…';
+
+  @override
+  String get updateOpenPage => 'باز کردن صفحه‌ی دانلود';
+
+  @override
+  String get updateNewest => 'تازه‌ترین Kryfo را دارید';
+
+  @override
+  String get updateCouldNotCheck => 'بررسی نشد. بعداً دوباره امتحان کنید.';
+
+  @override
   String get voiceDisguiseHere => 'تغییر صدای من در اینجا';
 
   @override
