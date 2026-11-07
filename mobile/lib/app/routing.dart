@@ -86,6 +86,11 @@ Future<void> openChatForHalo(String? haloId) =>
 // the app lock is open, in the containers of the session it opened to
 Future<void> openChatForNotif(String? tag, [int? id]) async {
   if (tag == null || tag.isEmpty) return;
+  // the shared or the plain one: the chat list, never a chat
+  if (tag == kListPayload) {
+    await lockGuard.afterUnlock(openNotifList, key: 'notif:list');
+    return;
+  }
   await lockGuard.afterUnlock(() async {
     final chat = await notifChatFor(tag);
     if (chat == null) return;
@@ -101,6 +106,15 @@ Future<void> openChatForNotif(String? tag, [int? id]) async {
     }
     await openNotifChat(chat, uid);
   }, key: 'notif:$tag');
+}
+
+// the chat list a shared tap opens: whatever was on top goes. tests watch
+// it here
+@visibleForTesting
+Future<void> Function() openNotifList = _openChatList;
+
+Future<void> _openChatList() async {
+  rootNavKey.currentState?.popUntil((r) => r.isFirst);
 }
 
 // what a resolved tap opens, on the message it rang for. tests watch it

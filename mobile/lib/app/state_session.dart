@@ -510,7 +510,7 @@ extension AppStateSession on AppState {
     // and the decoy would show later than the everyday app does
     unawaited(
       Future.delayed(_afterReveal, () async {
-        if (decoy) await cancelWithRetry(notifPlugin.cancelAll, 'decoy shade');
+        if (decoy) await clearAllNotifications('decoy shade');
         await refreshContacts();
         await refreshGroups();
       }),
@@ -638,7 +638,7 @@ extension AppStateSession on AppState {
   // nothing is sealed to it and nothing in it sends
   Future<void> _decoyVaultShown(HaloDb v) async {
     if (!identical(_session.vault, v)) return;
-    await cancelWithRetry(notifPlugin.cancelAll, 'decoy shade');
+    await clearAllNotifications('decoy shade');
     try {
       await v.purgeExpired(blocked: _session.blockedIds);
       await refreshContacts();

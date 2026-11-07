@@ -100,6 +100,7 @@ _Shade _start({Map<String, Object> prefs = const {}, bool quiet = false}) {
     if (quiet) 'halo.lock.state': '{"q":true}',
   });
   forgetNotifPlain();
+  forgetFolds();
   forgetAppFace();
   _faces.face = AppFace.kryfo;
   appFaceChannel = _faces;
@@ -297,8 +298,8 @@ void main() {
     final tags = {for (final s in shade.shown) s.d.tag};
     expect(tags, hasLength(1));
     expect(tags.single, isNot(anyOf('t-bob', 't-amy')));
-    // the tap still opens the newest one's chat
-    expect(shade.payloads.last, 't-amy');
+    // the tap opens the chat list, whoever wrote
+    expect(shade.payloads.last, kListPayload);
   });
 
   test('two arriving together still leave one line', () async {
@@ -326,8 +327,8 @@ void main() {
     expect(last.d.silent, isTrue);
     expect(last.body, l10n.notifPlainLine);
     expect(last.title, isNull);
-    // for the newest one's chat
-    expect(shade.payloads.last, 't-amy');
+    // its tap opens the chat list
+    expect(shade.payloads.last, kListPayload);
     // opening that chat takes it down
     await clearNotificationsFor('amy');
     expect(shade.up, isEmpty);
@@ -361,7 +362,7 @@ void main() {
     expect(await stuck, isNull);
     await _ring('amy', 'two');
     expect(shade.up, hasLength(1));
-    expect(shade.payloads.last, 't-amy');
+    expect(shade.payloads.last, kListPayload);
   });
 
   test('a post queued before a decoy opens never lands', () async {
