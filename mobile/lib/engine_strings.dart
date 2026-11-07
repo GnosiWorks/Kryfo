@@ -22,7 +22,7 @@ void Function(Pointer<Utf8>)? engineFreeForTest;
 
 // looked up once per isolate
 final void Function(Pointer<Utf8>) _engineFree = lookupEngineFree(
-  haloLibrary,
+  () => haloLibrary(),
   windows: Platform.isWindows,
 );
 
