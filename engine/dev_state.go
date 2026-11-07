@@ -361,19 +361,33 @@ type devLoad struct {
 // a fresh state from the stored rows, and how many rows did not load: a
 // the address layer's linked identities as a load names them: a container
 // that is device 2..127 of an identity derives every address as that
-// device, never as a phone. one load replaces all of them
+// device, never as a phone. a device key of its own goes with an id of
+// 2..127 and only with one. one load replaces all of them
 func linkedFromLoad(in *devLoad) error {
 	next := map[int]linkedIdent{}
 	for _, m := range in.Mine {
-		if m.Dev <= phoneDevice {
-			continue
-		}
-		if m.Dev > maxDevice || m.Key == "" || m.Key == m.Identity {
-			return devices.ErrMalformed
-		}
 		id, err := parseHexKey(m.Identity)
 		if err != nil {
 			return err
+		}
+		own := false
+		if m.Key != "" {
+			k, err := parseHexKey(m.Key)
+			if err != nil {
+				return err
+			}
+			own = k != id
+		}
+		// no id, or 1, is the phone
+		if m.Dev < 0 || m.Dev > maxDevice {
+			return devices.ErrMalformed
+		}
+		linked := m.Dev > phoneDevice
+		if linked != own {
+			return devices.ErrMalformed
+		}
+		if !linked {
+			continue
 		}
 		var pub [32]byte
 		copy(pub[:], id[1:])
@@ -385,6 +399,7 @@ func linkedFromLoad(in *devLoad) error {
 	return nil
 }
 
+// a fresh state from the stored rows, and how many rows did not load: a
 // row of a contact gone, a list that no longer reads. such a row stays in
 // the database untouched; nothing is deleted at the start
 func loadDevState(in *devLoad, v devVerifier) (*devState, []devices.Key, int, error) {

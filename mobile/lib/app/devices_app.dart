@@ -42,7 +42,13 @@ Future<void> bootDevices() async {
   if (!linkedDevicesOn) return;
   try {
     final db = await live.open();
-    await readLinkedRole(db);
+    // a role not read leaves the one held: the engine's load below still
+    // runs, so a link that failed never leaves it as the device it was to be
+    try {
+      await readLinkedRole(db);
+    } catch (e) {
+      dlog('devices: the role not read (${e.runtimeType})');
+    }
     // a role the boot could not read before tor started
     if (linkedRole) unawaited(torAsLinked(at: 'load'));
     // a linked device past its end ends before anything of it runs: no

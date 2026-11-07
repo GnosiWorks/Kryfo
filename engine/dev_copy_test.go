@@ -12,7 +12,7 @@ func TestACopiedListOnlyOnALinkedDevice(t *testing.T) {
 	l := devTestShim(t)
 	me, bob, cy := newDevAcct(t, l), newDevAcct(t, l), newDevAcct(t, l)
 	desk := newDevSigner(t, l)
-	me.link(t, desk.pub, false)
+	deskE := me.link(t, desk.pub, false)
 	outcome := func(answer string) string {
 		var out devOut
 		if err := json.Unmarshal([]byte(answer), &out); err != nil {
@@ -38,7 +38,7 @@ func TestACopiedListOnlyOnALinkedDevice(t *testing.T) {
 	}
 	// the desk: bob's first list, the same again, never cy's
 	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
-		"mine":     []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(desk.pub)}},
+		"mine":     []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(desk.pub), "dev": int(deskE.ID)}},
 		"contacts": []map[string]any{{"ident": 0, "identity": hexKey(bob.id.pub)}},
 	})))
 	if got := copyList(bob); got != "first" {
@@ -63,7 +63,7 @@ func TestAListFromMyPhoneOnlyOnItsSession(t *testing.T) {
 	l := devTestShim(t)
 	me, bob, cy := newDevAcct(t, l), newDevAcct(t, l), newDevAcct(t, l)
 	desk := newDevSigner(t, l)
-	me.link(t, desk.pub, false)
+	deskE := me.link(t, desk.pub, false)
 	outcome := func(answer string) string {
 		var out devOut
 		if err := json.Unmarshal([]byte(answer), &out); err != nil {
@@ -88,7 +88,7 @@ func TestAListFromMyPhoneOnlyOnItsSession(t *testing.T) {
 		t.Fatalf("a passed list on the phone: %s", got)
 	}
 	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
-		"mine":     []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(desk.pub)}},
+		"mine":     []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(desk.pub), "dev": int(deskE.ID)}},
 		"contacts": []map[string]any{{"ident": 0, "identity": hexKey(bob.id.pub)}},
 	})))
 	first := bob.wire
