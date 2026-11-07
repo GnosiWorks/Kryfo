@@ -70,6 +70,18 @@ void main() {
       expect(lsOutputSound(0x7ff612340000, -1), isFalse);
       expect(lsOutputSound(0x7ff612340000, 1 << 30), isFalse);
     });
+
+    // android tags heap pointers in the top byte (0xb4...), which dart's
+    // signed int reads below zero: those are real, never bad
+    const tagged = -0x4bffff882237f400; // 0xb4000077ddc80c00
+    test('an android tagged pointer is a real address', () {
+      expect(lowAddress(tagged), isFalse);
+      expect(lowAddress(0x40), isTrue);
+      expect(lowAddress(0xffff), isTrue);
+      expect(lowAddress(0x10000), isFalse);
+      expect(lsOutputSound(tagged, 4), isTrue);
+      expect(lsOutputSound(tagged, -1), isFalse);
+    });
   });
 
   group('windows x64 layout', () {
