@@ -54,6 +54,7 @@ import 'seal_windows.dart';
 import 'sealed_setup.dart';
 import 'system_seal.dart';
 import 'win_audio.dart';
+import 'linux_mic.dart';
 import 'win_record.dart';
 
 /// the binding whose messenger answers the android channels
@@ -319,6 +320,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     FlutterLocalNotificationsPlatform.instance = QuietLinuxNotifications();
     Gst.registryDir = (await paths.getApplicationCachePath())!;
     JustAudioPlatform.instance = DesktopAudio();
+    // record_linux encodes through ffmpeg, which ubuntu does not ship
+    RecordPlatform.instance = WinRecord(ProcessMic.here());
   }
   if (Platform.isWindows) {
     FlutterLocalNotificationsPlatform.instance = QuietWindowsNotifications(
