@@ -139,9 +139,13 @@ func TestTheFirstChatsBatchGoesFirst(t *testing.T) {
 	waitFor(t, "the first batch on both relays", 10*time.Second, func() bool {
 		return listensOn(own, byBatch[first]) == 2 && listensOn(pub, byBatch[first]) == 2
 	})
-	time.Sleep(time.Second)
 	rest := append(append([]string(nil), byBatch[batchLane(contactSet(mainIdent), 0)]...), hidRcv)
-	if n := listensOn(own, rest) + listensOn(pub, rest); n != 0 {
+	// on our relay every socket goes at once at the start
+	waitFor(t, "the other sockets on our relay", 10*time.Second, func() bool {
+		return listensOn(own, rest) == len(rest)
+	})
+	time.Sleep(time.Second)
+	if n := listensOn(pub, rest); n != 0 {
 		t.Fatalf("%d addresses of other sockets went at once beside the first batch", n)
 	}
 	// told once the turns began, a new list waits for the next start
@@ -664,4 +668,36 @@ func TestTheFirstContactListenerOnOursTakesAShortTurn(t *testing.T) {
 	}
 	// a public relay's turn is the whole spread: almost never up by now
 	_ = pub
+}
+
+// with no first batch, as on a linked device, our relays still go at once
+// at the start; a public relay and any later kick draw their turns
+func TestOurRelaysTakeNoTurnAtTheStart(t *testing.T) {
+	freshStart(t)
+	old := subSpread
+	subSpread = time.Hour
+	t.Cleanup(func() { subSpread = old })
+	turnIn := func(tr *subTurn, within time.Duration) bool {
+		ctx, cancel := context.WithTimeout(context.Background(), within)
+		defer cancel()
+		defer tr.done()
+		begun := time.Now()
+		return tr.take(ctx) && time.Since(begun) < within
+	}
+	// the start's free turn went to another socket
+	spendFirstTurn()
+	if !turnIn(&subTurn{own: true}, 2*time.Second) {
+		t.Fatal("a socket on our relay waited a turn at the start")
+	}
+	if !turnIn(&subTurn{own: true, batch: &hubKey{lane: "everyday:0:0", url: "ws://ours"}}, 2*time.Second) {
+		t.Fatal("a batch on our relay waited a turn at the start")
+	}
+	if turnIn(&subTurn{}, 300*time.Millisecond) {
+		t.Fatal("a public relay's socket took no turn at the start")
+	}
+	kickRelays()
+	spendFirstTurn()
+	if turnIn(&subTurn{own: true}, 300*time.Millisecond) {
+		t.Fatal("a socket on our relay took no turn at a later kick")
+	}
 }

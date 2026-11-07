@@ -5,7 +5,8 @@ package main
 // start and after each wake, so a relay does not see all of one phone's
 // addresses ask in the same instant. only the first goes at once, and the
 // open chat's address, and a just-added one's first ask right after the add,
-// go with no turn.
+// go with no turn. at the start, every socket on our own relays goes at once
+// too: they are ours, and a linked device has no first batch to go first.
 
 import (
 	"context"
@@ -90,9 +91,9 @@ func isFirstTag(tag string) bool {
 }
 
 // the longest turn the first-contact listener waits on our own relays at a
-// start: a card scanned in the first minute is heard there within this,
-// not after up to the whole spread. its own socket on its own lane, drawn
-// apart from every batch, so it still asks at no batch's moment
+// kick after the start (at the start it goes at once, as all of ours do): a
+// card scanned then is heard there within this, not after up to the whole
+// spread. its own socket on its own lane, drawn apart from every batch
 var fcOwnSpread = 20 * time.Second
 
 // the spread a socket's turn is drawn over at a start or kick
@@ -243,6 +244,10 @@ func (t *subTurn) take(ctx context.Context) bool {
 	}
 	now := autoNow()
 	d := t.sharedDelay(kc, 0, now, func() time.Duration {
+		// ours at the start: no turn, and the free one is left to the rest
+		if t.own && isStartKick(kc) {
+			return 0
+		}
 		if t.batch != nil && startFirstFor(t.batch.lane, kc) {
 			return 0
 		}
