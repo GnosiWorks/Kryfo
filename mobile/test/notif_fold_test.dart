@@ -2,6 +2,8 @@
 // one notification per chat, updated in place: android keeps about 25 up
 // per app and drops the rest without a word. a folded one never shows more
 // than each message would have shown alone
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -23,6 +25,8 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
       <({int id, String? title, String? body, AndroidNotificationDetails d})>[];
 
   List<int> get up => [for (final p in posted) p.$1];
+  // the next shade read waits for this
+  Completer<void>? holdRead;
 
   @override
   Future<void> show({
@@ -49,10 +53,17 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
   Future<void> cancelAll() async => posted.clear();
 
   @override
-  Future<List<ActiveNotification>> getActiveNotifications() async => [
-    for (final (id, tag, channel) in posted)
-      ActiveNotification(id: id, tag: tag, channelId: channel),
-  ];
+  Future<List<ActiveNotification>> getActiveNotifications() async {
+    final hold = holdRead;
+    if (hold != null) {
+      holdRead = null;
+      await hold.future;
+    }
+    return [
+      for (final (id, tag, channel) in posted)
+        ActiveNotification(id: id, tag: tag, channelId: channel),
+    ];
+  }
 }
 
 _Shade _start({bool hide = false}) {
@@ -459,5 +470,53 @@ void main() {
     expect(rows.rings.map((r) => r.$3), ['a', 'c']);
     await say('d');
     expect(rows.rings.map((r) => r.$3), ['a', 'c', 'd']);
+  });
+
+  test('a take-back of a swiped fold leaves the next one up', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    shade.posted.clear();
+    await _ring('bob', 'see you', uid: 'b');
+    await clearMessageNotification('a');
+    expect(shade.posted.map((p) => p.$2), ['t-bob']);
+    expect(_lastOf(shade, 'bob').body, 'see you');
+  });
+
+  test('a decoy clear during a ring posts nothing and keeps no fold', () async {
+    final shade = _start();
+    final hold = Completer<void>();
+    shade.holdRead = hold;
+    final ring = _ring('bob', 'meet at six', uid: 'a');
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    // the decoy opens and clears while the shade read waits
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.lock.state': '{"q":true}',
+    });
+    final cleared = clearAllNotifications('decoy shade');
+    hold.complete();
+    expect(await ring, isNull);
+    await cleared;
+    expect(shade.shown, isEmpty);
+    expect(shade.up, isEmpty);
+    // back in the real app, nothing of it comes back
+    FlutterSecureStorage.setMockInitialValues({});
+    await _ring('bob', 'later', uid: 'b');
+    expect(_words(shade.shown.last), isNot(contains('six')));
+    expect(shade.shown.last.d.number, 1);
+  });
+
+  test('a chat cleared during its ring keeps no fold', () async {
+    final shade = _start();
+    final hold = Completer<void>();
+    shade.holdRead = hold;
+    final ring = _ring('bob', 'meet at six', uid: 'a');
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    final cleared = clearNotificationsFor('bob');
+    hold.complete();
+    expect(await ring, isNull);
+    await cleared;
+    expect(shade.up, isEmpty);
+    await _ring('bob', 'later', uid: 'b');
+    expect(_words(shade.shown.last), isNot(contains('six')));
   });
 }

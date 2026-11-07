@@ -469,7 +469,16 @@ final Map<String, List<(int, String?)>> _shownFor = {};
 final Map<String, (String, int, String?)> _shownForMsg = {};
 
 // [tags]: read before the chat's rows went, when they are gone already
-Future<void> clearNotificationsFor(String chat, {Set<String>? tags}) async {
+Future<void> clearNotificationsFor(String chat, {Set<String>? tags}) {
+  // a ring already on its way for this chat lands nothing
+  // at once, never queued behind a turn: a turn reads its generation with
+  // nothing between that and its post, and a post already sent reaches
+  // android before this cancel does
+  _chatGen[chat] = (_chatGen[chat] ?? 0) + 1;
+  return _clearChatNow(chat, tags: tags);
+}
+
+Future<void> _clearChatNow(String chat, {Set<String>? tags}) async {
   unawaited(_forgetRings(chat: chat));
   _shownForMsg.removeWhere((_, v) => v.$1 == chat);
   final fold = _folds.remove(chat);
@@ -554,7 +563,7 @@ Future<void> _clearMessage(String msgUid) async {
       await _postFold(fold, alert: false);
       return;
     }
-    _folds.remove(chat);
+    _dropFold(chat!);
     await cancelWithRetry(
       () => notifPlugin.cancel(id: fold.id, tag: fold.tag),
       'shade',
@@ -690,10 +699,23 @@ bool ringIsFirst(String chat) => (_folds[chat]?.count ?? 0) <= 1;
 
 /// the shade is cleared as a whole: what the folds hold goes with it
 Future<void> clearAllNotifications(String where) async {
-  _folds.clear();
-  _shownFor.clear();
-  _shownForMsg.clear();
+  // a ring already on its way lands nothing
+  // at once, as clearNotificationsFor: a decoy's shade never waits on a turn
+  _clearGen++;
+  forgetFolds();
   await cancelWithRetry(notifPlugin.cancelAll, where);
+}
+
+// moved by every clear, as a whole and by chat: a ring that began before
+// one posts nothing and keeps no fold
+int _clearGen = 0;
+final Map<String, int> _chatGen = {};
+
+// a fold that goes takes what is kept by message with it, so a later
+// take-back cannot match a new fold under the same id and tag
+void _dropFold(String chat) {
+  _folds.remove(chat);
+  _shownForMsg.removeWhere((_, v) => v.$1 == chat);
 }
 
 @visibleForTesting
@@ -720,9 +742,13 @@ Future<int?> _ringFoldNow({
   required _Line line,
   required bool support,
 }) async {
-  var fold = _folds.remove(chat);
+  final gen = _clearGen;
+  final chatGen = _chatGen[chat];
+  bool stale() => gen != _clearGen || chatGen != _chatGen[chat];
+  var fold = _folds[chat];
   // a chat whose tag changed starts over
   if (fold != null && fold.tag != tag) {
+    _dropFold(chat);
     await cancelWithRetry(
       () => notifPlugin.cancel(id: fold!.id, tag: fold.tag),
       'shade',
@@ -731,11 +757,17 @@ Future<int?> _ringFoldNow({
   }
   // swiped away, or tapped with the chat never opened: what it held is not
   // posted again
-  if (fold != null && !await _foldUp(fold)) fold = null;
+  if (fold != null && !await _foldUp(fold)) {
+    _dropFold(chat);
+    fold = null;
+  }
   if (fold == null) {
     await _makeRoom();
     fold = _Fold(tag, support ? _supportChannel : _messagesChannel);
   }
+  if (stale()) return null;
+  // the one rung last at the end
+  _folds.remove(chat);
   _folds[chat] = fold;
   fold.count++;
   fold.lines.add(line);
@@ -747,8 +779,7 @@ Future<int?> _ringFoldNow({
       _shownForMsg.remove(_shownForMsg.keys.first);
     }
   }
-  await _postFold(fold, alert: true);
-  return fold.id;
+  return await _postFold(fold, alert: true, stale: stale) ? fold.id : null;
 }
 
 // a new chat's notification: the oldest chat's goes first when the shade
@@ -782,7 +813,7 @@ Future<void> _makeRoom() async {
   }
   while (_folds.length >= kMaxChatNotifs) {
     final chat = _folds.keys.first;
-    await clearNotificationsFor(chat, tags: const {});
+    await _clearChatNow(chat, tags: const {});
   }
 }
 
@@ -790,16 +821,20 @@ Future<void> _makeRoom() async {
 // shown alone, and above it the earlier ones that came under the same rules.
 // a hidden one shows no earlier lines, and a timed one only while newest,
 // so no words outlive their message or a stricter setting
-Future<void> _postFold(_Fold fold, {required bool alert}) async {
+Future<bool> _postFold(
+  _Fold fold, {
+  required bool alert,
+  bool Function()? stale,
+}) async {
   final now = DateTime.now().millisecondsSinceEpoch;
   fold.lines.removeWhere((l) => l.burnAt != null && l.burnAt! <= now);
   if (fold.lines.isEmpty) {
-    _folds.removeWhere((_, f) => identical(f, fold));
+    _dropFoldOf(fold);
     await cancelWithRetry(
       () => notifPlugin.cancel(id: fold.id, tag: fold.tag),
       'shade',
     );
-    return;
+    return false;
   }
   final last = fold.lines.last;
   final shown = <_Line>[
@@ -886,6 +921,12 @@ Future<void> _postFold(_Fold fold, {required bool alert}) async {
       styleInformation: style,
     );
   }
+  // a clear or a decoy since this began: nothing posted, nothing kept
+  // stale is read after the await, so nothing comes between it and the post
+  if (await quietNow() || (stale?.call() ?? false)) {
+    _dropFoldOf(fold);
+    return false;
+  }
   await notifPlugin.show(
     id: fold.id,
     title: title,
@@ -893,6 +934,16 @@ Future<void> _postFold(_Fold fold, {required bool alert}) async {
     notificationDetails: NotificationDetails(android: details),
     payload: fold.tag,
   );
+  return true;
+}
+
+void _dropFoldOf(_Fold fold) {
+  for (final e in _folds.entries) {
+    if (identical(e.value, fold)) {
+      _dropFold(e.key);
+      return;
+    }
+  }
 }
 
 void _noteShown(String chat, String tag, String? msgUid, int id) {
