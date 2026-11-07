@@ -189,10 +189,18 @@ Future<bool> _deviceSealHere(
   }
 }
 
+Future<bool> Function(String peer)? _reachesForTest;
+
+@visibleForTesting
+set deviceReachesForTest(Future<bool> Function(String peer)? f) =>
+    _reachesForTest = f;
+
 /// on a linked device, whether this device reaches [peer] itself: a device
 /// of theirs holds a session with it. false sends from the phone
 Future<bool> deviceReaches(String peer) async {
   if (!linkedDevicesOn || !linkedRole || isDevId(peer)) return false;
+  final f = _reachesForTest;
+  if (f != null) return f(peer);
   final send = _deviceSend;
   if (send == null || !identical(_devHomeDb(peer), live)) return false;
   try {

@@ -1732,6 +1732,8 @@ class _ChatScreenState extends State<ChatScreen>
       unawaited(_loadPqLine());
       // their badge rides their messages: one that came now may change it
       unawaited(_loadBadge());
+      // a copy of theirs to this device opens the pair: the composer comes
+      if (_phoneOnly != null) unawaited(_readPhoneOnly());
     }
     _refreshRequestState();
     unawaited(_readKeyState());
