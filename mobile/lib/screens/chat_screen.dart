@@ -2063,17 +2063,23 @@ class _ChatScreenState extends State<ChatScreen>
     }
     // no new row we don't already hold means a full reload: covers edits,
     // reactions and deletes
+    // a held row's place is read once, before any loop: windows' aot hoists
+    // a field of a nullable above its null check, and a load through null
+    // there reads unmapped memory (crash 4)
+    final top = oldest == null
+        ? null
+        : (at: oldest.when.millisecondsSinceEpoch, rowid: oldest.rowid);
     final brandNew = rows
         .where(
           (r) =>
               (r['msg_uid'] as String?) != null &&
               !have.contains(r['msg_uid'] as String?) &&
-              (oldest == null ||
+              (top == null ||
                   byWritten(
                         rowWrittenAt(r),
                         (r['rowid'] as int?) ?? 0,
-                        oldest.when.millisecondsSinceEpoch,
-                        oldest.rowid,
+                        top.at,
+                        top.rowid,
                       ) >
                       0),
         )
@@ -2133,14 +2139,12 @@ class _ChatScreenState extends State<ChatScreen>
     // one that came late goes up the thread, where it was written: it is
     // neither followed nor counted as new below
     final last = _messages.lastOrNull;
+    final end = last == null
+        ? null
+        : (at: last.when.millisecondsSinceEpoch, rowid: last.rowid);
     bool below(_Msg m) =>
-        last == null ||
-        byWritten(
-              m.when.millisecondsSinceEpoch,
-              m.rowid,
-              last.when.millisecondsSinceEpoch,
-              last.rowid,
-            ) >
+        end == null ||
+        byWritten(m.when.millisecondsSinceEpoch, m.rowid, end.at, end.rowid) >
             0;
     final theirs = fresh.where((m) => m.direction != 'out' && below(m)).length;
     final ours = fresh.any((m) => m.direction == 'out');
@@ -2148,11 +2152,8 @@ class _ChatScreenState extends State<ChatScreen>
     for (final m in fresh) {
       if (m.direction != 'out' &&
           m.msgUid != null &&
-          last != null &&
-          cameEarlier(
-            m.when.millisecondsSinceEpoch,
-            last.when.millisecondsSinceEpoch,
-          )) {
+          end != null &&
+          cameEarlier(m.when.millisecondsSinceEpoch, end.at)) {
         _earlier.add(m.msgUid!);
       }
     }

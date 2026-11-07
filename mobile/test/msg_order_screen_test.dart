@@ -38,6 +38,7 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
+import 'package:kryfo/stickers/sticker_bubble.dart' show StickerBubble;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/chat_parts.dart'
@@ -830,6 +831,46 @@ void main() {
       findsOneWidget,
     );
     expect(find.descendant(of: line, matching: text('late two')), findsNothing);
+    await devClose(t);
+  });
+
+  // crash 4: the pc's aot read the last held row's time before its null
+  // check, so the first message into an empty open chat crashed. the chat
+  // of a contact just accepted holds nothing yet
+  Future<void> sticker(String uid, int at) => mem.insert('messages', {
+    'peer_id': _peer,
+    'direction': 'in',
+    'plaintext': '',
+    'sticker': 'fokia:3:1',
+    'sent_at': at,
+    'written_at': at,
+    'msg_uid': uid,
+    'sent': 1,
+  });
+
+  testWidgets('a sticker into an empty open chat, then a burst, then words', (
+    t,
+  ) async {
+    await devOpen(t, chat());
+    await settle(t);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await sticker('st0', now);
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(t.takeException(), isNull);
+    expect(find.byType(StickerBubble), findsOneWidget);
+    // eight in one poll, each told on its own
+    for (var i = 1; i <= 8; i++) {
+      await sticker('st$i', now + i);
+      appState.chatChanged(_peer);
+    }
+    await settle(t);
+    // and one written before the first: it goes up, not below
+    await cameLate('early', 'early words', now - 60000);
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(t.takeException(), isNull);
+    expect(find.byType(StickerBubble), findsWidgets);
     await devClose(t);
   });
 
