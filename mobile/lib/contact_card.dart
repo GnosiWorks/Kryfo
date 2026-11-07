@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'invites.dart' show isV4Link;
 import 'open_file.dart' show shareFileOut;
 import 'shred.dart' show shredFile;
 
@@ -152,11 +153,18 @@ Future<void> shareContactCard({
     await _handOutCard(
       cardName(plain: savesPlain(), haloId: haloId, ext: 'png'),
       (f) => f.writeAsBytes(bytes.buffer.asUint8List(), flush: true),
-      text: l10n.contactCardMessageMeOnKryfo(haloId),
+      text: cardShareText(haloId, uri),
     );
   } finally {
     overlay.remove();
   }
+}
+
+/// the text beside a shared card: for a v4 invite the line saying it needs
+/// 0.6, as 0.5.x reads its qr as an invalid link
+String cardShareText(String haloId, String uri) {
+  final text = l10n.contactCardMessageMeOnKryfo(haloId);
+  return isV4Link(uri) ? '$text\n${l10n.inviteNeeds06}' : text;
 }
 
 // the same card as a vcard, for people who live in a contacts app. the note
