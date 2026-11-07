@@ -214,6 +214,75 @@ Future<bool> deviceReaches(String peer) async {
   }
 }
 
+/// how long a contact may go without writing before a linked device's
+/// bar says so: their app may not be opened for a while
+const kDeviceQuietAfter = Duration(days: 14);
+
+bool Function(String peer)? _quietForTest;
+
+@visibleForTesting
+set deviceQuietForTest(bool Function(String peer)? f) => _quietForTest = f;
+
+/// on a linked device, whether [peer]'s newest message here is older than
+/// [kDeviceQuietAfter]. none at all says nothing: false
+Future<bool> deviceQuiet(String peer) async {
+  final f = _quietForTest;
+  if (f != null) return f(peer);
+  try {
+    final at = await session.lastHeardAt(peer);
+    if (at == null) return false;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return now - at > kDeviceQuietAfter.inMilliseconds;
+  } catch (e) {
+    dlog('devices: quiet not read (${e.runtimeType})');
+    return false;
+  }
+}
+
+/// on a linked device, a 0.6 contact this device does not reach yet: my
+/// phone is asked to push my list to them now, so their app opens a pair
+/// to this one as soon as it is online
+Future<void> deviceAskReach(String peer) async {
+  if (!linkedDevicesOn || !linkedRole || isDevId(peer)) return;
+  final r = _deviceReceive;
+  if (r == null || !identical(_devHomeDb(peer), live)) return;
+  try {
+    final ident = identOfPeer(peer);
+    final row = await (await live.open()).query(
+      'contacts',
+      columns: ['ikey'],
+      where: 'halo_id = ? AND accepted = 1 AND blocked = 0',
+      whereArgs: [peer],
+      limit: 1,
+    );
+    final ikey = row.isEmpty ? null : row.first['ikey'] as String?;
+    if (ikey == null) return;
+    await r.askPush(ident, ikey);
+  } catch (e) {
+    dlog('devices: push not asked (${e.runtimeType})');
+  }
+}
+
+/// a linked device's line in place of the composer in [peer]'s chat
+/// ([name] as the chat shows it), kept here as the desk words are, out of
+/// the contact pages: an older Kryfo ([older]), one whose version is not
+/// known here ([unknown]), or a 0.6 contact this device does not reach yet.
+/// for that one my phone is asked to push my list to them now, and the
+/// line says whether they wrote lately
+Future<String> deviceReplyLine(
+  String peer,
+  String name, {
+  required bool older,
+  bool unknown = false,
+}) async {
+  if (older) return l10n.chatDeviceOlderKryfo(name);
+  if (unknown) return l10n.chatDeviceNotYet(name);
+  unawaited(deviceAskReach(peer));
+  return await deviceQuiet(peer)
+      ? l10n.chatDeviceQuietAWhile(name)
+      : l10n.chatDeviceWaitingForApp(name);
+}
+
 /// the copies owed to devices and the list pushes due, with the outbox:
 /// the everyday side's, and the open vault's
 Future<void> pumpDeviceSends() async {

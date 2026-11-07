@@ -82,6 +82,14 @@ const kHiddenRemovalMeta = 'hidden_removal_owed:';
 /// how often a contact's phone is asked for a fresh bundle of one device
 const kAskEvery = Duration(days: 1);
 
+/// how many lists a device of mine may have sent again with fresh bundles
+/// in a day, over every contact ('dp'): each one spends a pool bundle
+const kPushAgainMost = 20;
+
+/// a pair's starter and its answer wait this long at least and at most
+const kStartWaitLeast = Duration(seconds: 2);
+const kStartWaitMost = Duration(seconds: 30);
+
 // a copy that failed at the relay goes again after these, then every last
 const _again = [
   Duration(seconds: 30),
@@ -154,9 +162,11 @@ class DeviceSend {
     this.door,
     int Function()? clock,
     Random? random,
+    Duration Function()? jitter,
   }) : mine = mine ?? db,
        _clock = clock ?? (() => DateTime.now().millisecondsSinceEpoch),
-       _rand = random ?? Random.secure();
+       _rand = random ?? Random.secure(),
+       _jitter = jitter;
 
   final DeviceState state;
 
@@ -197,9 +207,36 @@ class DeviceSend {
   final void Function(int ident, String arg)? listen;
   final int Function() _clock;
   final Random _rand;
+  final Duration Function()? _jitter;
+
+  /// how long a pair's starter or its answer waits before it goes, so it
+  /// does not leave in step with what it answers: [kStartWaitLeast] to
+  /// [kStartWaitMost]
+  Duration startWait() {
+    final j = _jitter;
+    if (j != null) return j();
+    final least = kStartWaitLeast.inMilliseconds;
+    return Duration(
+      milliseconds:
+          least + _rand.nextInt(kStartWaitMost.inMilliseconds - least + 1),
+    );
+  }
+
+  // [run] after [wait]; the row's next_at says the same, so a pump after a
+  // restart takes it if the timer is lost
+  void _later(Duration wait, Future<void> Function() run) {
+    if (wait <= Duration.zero) {
+      unawaited(run().catchError((Object _) {}));
+      return;
+    }
+    Timer(wait, () => unawaited(run().catchError((Object _) {})));
+  }
 
   // when each (ident, contact, device) was last asked for a fresh bundle
   final _asked = <String, int>{};
+  // contacts ("ident/identity") whose list push a device of mine asked
+  // for now: on the next pump, ahead of the spread
+  final _urgent = <String>{};
   // uids a receipt came for, so the second device's is dropped
   final _receipts = <String>{};
   // one pump at a time, one hand-off of a copy at a time
@@ -801,6 +838,29 @@ class DeviceSend {
     }
   }
 
+  // [plain] with its 'as' set to the pair's seed held now, when it has one
+  Future<String> _seedNow(
+    Database d,
+    Map<String, Object?> r,
+    String plain,
+  ) async {
+    final b = _bodyOf(plain);
+    if (b == null || b['as'] is! String) return plain;
+    final ident = r['ident'] as int;
+    final seeds = await d.query(
+      'pairs',
+      columns: ['seed'],
+      where: _pairWhere,
+      whereArgs: [ident, r['peer'], r['device'], await _myDevice(d, ident)],
+      limit: 1,
+    );
+    final seed = seeds.isEmpty ? null : seeds.first['seed'];
+    if (seed is! List<int> || seed.length != 32) return plain;
+    final hex = devHex(seed);
+    if (b['as'] == hex) return plain;
+    return _with(plain, (j) => j['as'] = hex);
+  }
+
   Future<void> _sealWaiting(Database d, Map<String, Object?> r) async {
     final ident = r['ident'] as int;
     final addr = r['addr'] as String;
@@ -824,12 +884,15 @@ class DeviceSend {
       );
       return;
     }
+    // the pair's seed as it is now: one taken from their opener since the
+    // copy was made takes the place of the one it was made with
+    final framed = await _seedNow(d, r, plain);
     final String w;
     try {
       w = await ds.seal(
         addr,
         device,
-        plain,
+        framed,
         _bytes(r['pin'] as String),
         size: r['size'] as int? ?? 0,
       );
@@ -891,6 +954,49 @@ class DeviceSend {
     );
   }
 
+  /// a session with [identity]'s [device] ([key], [reg]) at [addr], built
+  /// here from a bundle their phone pushed: when nothing of mine waits for
+  /// it and the device never answered, the pair's starter goes at once, so
+  /// the new device can write to me before I write to it
+  Future<void> start(
+    DevMe me,
+    String identity,
+    int device,
+    String addr,
+    String key,
+    int reg,
+  ) async {
+    if (!linkedDevicesOn) return;
+    if (device == 1 && me.device == 1) return;
+    if (await waitsFor(me.ident, identity, device)) return;
+    final d = await db();
+    final ds = await sessions(me.ident);
+    final pin = _bytes(key);
+    if (!await ds.has(addr, device) || await ds.answered(addr, device, pin)) {
+      return;
+    }
+    final st = await _starter(
+      d,
+      ds,
+      me,
+      (
+        identity: identity,
+        device: device,
+        key: key,
+        reg: reg,
+        own: addr == kOwnDevices,
+        rebuild: false,
+      ),
+      (peer: addr, device: device, pin: pin, plain: ''),
+      _clock(),
+    );
+    if (st == null) return;
+    final wait = startWait();
+    final row = {...st, 'next_at': _clock() + wait.inMilliseconds};
+    await d.insert('dev_out', row, conflictAlgorithm: ConflictAlgorithm.ignore);
+    _later(wait, () => _go(d, row));
+  }
+
   /// whether a copy to [identity]'s [device] waits for its session: a
   /// bundle that comes now answers an ask (a Rebuild's), not a push
   Future<bool> waitsFor(int ident, String identity, int device) async =>
@@ -919,6 +1025,8 @@ class DeviceSend {
     // and never let go for its age: a chat's end, until the device answers
     // or is removed
     bool keep = false,
+    // how long it waits before it goes (a pair's answer, startWait)
+    Duration after = Duration.zero,
   }) async {
     final body = _bodyOf(frame);
     if (body == null) return;
@@ -940,9 +1048,9 @@ class DeviceSend {
       'receipt': receipt ? 1 : 0,
       'plain': frame,
       'state': 'wait',
-      'next_at': now,
+      'next_at': now + after.inMilliseconds,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
-    unawaited(pump());
+    _later(after, pump);
   }
 
   // ---- last words ----
@@ -1347,7 +1455,89 @@ class DeviceSend {
   /// devices for each of theirs, a few minutes on
   Future<void> devicesShown(int ident, String identity) async {
     if (!linkedDevicesOn) return;
+    await _queueAdd(
+      await db(),
+      ident,
+      identity,
+      _clock() + _rand.nextInt(10 * 60000),
+    );
+  }
+
+  /// a device of mine opened [identity]'s chat and their app does not
+  /// reach it yet: my list goes to them on the next pump, ahead of the
+  /// spread, one contact at a time as any message goes. a push owed and not
+  /// sent is brought forward; with none owed, or one sent and not answered,
+  /// it goes again, once a day at most. true when one is due now
+  Future<bool> pushNow(int ident, String identity) async {
+    if (!linkedDevicesOn) return false;
     final d = await db();
+    final now = _clock();
+    final c = await d.query(
+      'contacts',
+      columns: ['caps'],
+      where: 'ident = ? AND ikey = ? AND accepted = 1 AND blocked = 0',
+      whereArgs: [ident, identity],
+      limit: 1,
+    );
+    if (c.isEmpty ||
+        !(c.first['caps'] as String? ?? '').split(',').contains(kCapDevices)) {
+      return false;
+    }
+    final owed = await d.query(
+      'dev_pushes',
+      where: "ident = ? AND peer = ? AND kind = 'add' AND sent_at = 0",
+      whereArgs: [ident, identity],
+    );
+    if (owed.isNotEmpty) {
+      await _pushRows(d, owed, {'next_at': 0});
+      await d.update(
+        'dev_pushes',
+        {'due_at': now},
+        where:
+            "ident = ? AND peer = ? AND kind = 'add' AND sent_at = 0 AND "
+            'due_at > ?',
+        whereArgs: [ident, identity, now],
+      );
+    } else {
+      final again = await d.query(
+        'dev_marks',
+        columns: ['at'],
+        where: "ident = ? AND peer = ? AND kind = 'dp' AND at > ?",
+        whereArgs: [ident, identity, now - kAskEvery.inMilliseconds],
+        limit: 1,
+      );
+      if (again.isNotEmpty) return false;
+      // a rogue device asking for every contact spends at most this many
+      // pool bundles a day
+      final today = await d.query(
+        'dev_marks',
+        columns: ['peer'],
+        where: "ident = ? AND kind = 'dp' AND at > ?",
+        whereArgs: [ident, now - kAskEvery.inMilliseconds],
+      );
+      if (today.length >= kPushAgainMost) return false;
+      await d.insert('dev_marks', {
+        'ident': ident,
+        'peer': identity,
+        'kind': 'dp',
+        'key': '',
+        'at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      if (!await _queueAdd(d, ident, identity, now, again: true)) return false;
+    }
+    _urgent.add('$ident/$identity');
+    return true;
+  }
+
+  // an addition of my list's devices to [identity], due at [due]; [again]
+  // takes the place of one sent, so it goes once more with fresh bundles
+  Future<bool> _queueAdd(
+    Database d,
+    int ident,
+    String identity,
+    int due, {
+    bool again = false,
+  }) async {
     final held = await (await mine()).query(
       'dev_lists',
       columns: ['version'],
@@ -1356,26 +1546,34 @@ class DeviceSend {
       limit: 1,
     );
     // no list of mine yet: it goes with the first one
-    if (held.isEmpty) return;
+    if (held.isEmpty) return false;
     final version = held.first['version'] as int;
     final Map<String, dynamic> own;
     try {
       own = await state.call(d, 'current', {'ident': ident});
     } on DevRefused {
-      return;
+      return false;
     }
     final devs = [
       for (final e in (own['devices'] as List? ?? const []))
         if ((e as Map)['phone'] != true) e['id'] as int,
     ];
-    await d.insert('dev_pushes', {
-      'ident': ident,
-      'peer': identity,
-      'version': version,
-      'kind': 'add',
-      'due_at': _clock() + _rand.nextInt(10 * 60000),
-      'devs': devs.join(','),
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    if (again && devs.isEmpty) return false;
+    await d.insert(
+      'dev_pushes',
+      {
+        'ident': ident,
+        'peer': identity,
+        'version': version,
+        'kind': 'add',
+        'due_at': due,
+        'devs': devs.join(','),
+      },
+      conflictAlgorithm: again
+          ? ConflictAlgorithm.replace
+          : ConflictAlgorithm.ignore,
+    );
+    return true;
   }
 
   /// a message from [identity] opened at [at]: every addition that went to
@@ -1446,8 +1644,10 @@ class DeviceSend {
     }
     // a removal goes at once; the rest at most a pass a pump, so a phone
     // that was off through the spread does not send its backlog in one go
+    // and one a device of mine asked for now (pushNow)
     bool removal(List<Map<String, Object?>> rs) =>
-        rs.any((r) => r['kind'] == 'remove' && r['sent_at'] == 0);
+        rs.any((r) => r['kind'] == 'remove' && r['sent_at'] == 0) ||
+        _urgent.contains('${rs.first['ident']}/${rs.first['peer']}');
     final now1 = [
       for (final rs in byContact.values)
         if (removal(rs)) rs,
@@ -1466,6 +1666,7 @@ class DeviceSend {
     for (final rs in go) {
       final ident = rs.first['ident'] as int;
       final identity = rs.first['peer'] as String;
+      _urgent.remove('$ident/$identity');
       // one not a contact now gets nothing: a removal owed to one deleted
       // since goes, a list waits for a request to be accepted
       if (!await _current(d, ident, identity)) {
@@ -1965,7 +2166,8 @@ String? ownCopyOf(int ident, String peer, String frame) {
 // devices' own words, a profile photo's slices, a slice ask, a card
 const _notCopied = {
   'dr', 'dl', 'db', 'dq', 'dh', 'dn', 'dk', 'dz', 'da', 'dw', 'dy', 'fl', //
-  'oc', 'os', 'of', 'ob', 'hs', 'ou', 'ty', 'pp', 'rq', 'nd', 'in', 'gc',
+  'dp', 'oc', 'os', 'of', 'ob', 'hs', 'ou', 'ty', 'pp', 'rq', 'nd', 'in', //
+  'gc',
 };
 
 // my words on a message that carry its uid inside

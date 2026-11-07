@@ -17305,17 +17305,29 @@ abstract class AppLocalizations {
   /// **'This chat stays on your phone because screenshots are blocked in it.'**
   String get historyChatStaysShots;
 
-  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages come through the phone
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages go through the phone until they update
   ///
   /// In en, this message translates to:
-  /// **'{name} uses an older Kryfo. Reply from your phone.'**
-  String chatDeviceReplyFromPhone(String name);
+  /// **'{name} uses an older Kryfo. Reply from your phone until they update.'**
+  String chatDeviceOlderKryfo(String name);
 
-  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact none of whose devices has written to this one yet, whose messages go from the phone for now
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact whose app has not said which Kryfo it runs yet, so this computer cannot write to them
   ///
   /// In en, this message translates to:
-  /// **'Reply to {name} from your phone for now.'**
-  String chatDeviceReplyFromPhoneForNow(String name);
+  /// **'{name} can\'t get messages from this computer yet. Reply from your phone.'**
+  String chatDeviceNotYet(String name);
+
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on Kryfo 0.6 whose app has not opened a pair to this computer yet (it does once it is online and has this computer's details from the phone)
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {name}\'s app to see this computer. Reply from your phone for now.'**
+  String chatDeviceWaitingForApp(String name);
+
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on Kryfo 0.6 whose app has not opened a pair to this computer yet and whose newest message here is two weeks old or more
+  ///
+  /// In en, this message translates to:
+  /// **'{name} hasn\'t written in a while. Reply from your phone for now.'**
+  String chatDeviceQuietAWhile(String name);
 
   /// screens/chat_screen.dart, screens/group_info_screen.dart: on a linked device, the clear confirm: a clear there stays on that device
   ///

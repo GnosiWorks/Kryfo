@@ -115,6 +115,7 @@ import '../main.dart'
         typeLeaf,
         linkedRole,
         deviceReaches,
+        deviceReplyLine,
         deviceSealOutcome,
         ownClearLine,
         ownBlockLine,
@@ -1062,18 +1063,27 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final row = await session.getContact(widget.peerHaloId);
       if (row == null || !mounted) return;
+      // a long name cut, so the line stays a few lines on a narrow window
+      final full =
+          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId;
+      final c = full.characters;
+      final name = c.length > 24 ? '${c.take(22)}\u2026' : full;
       final String? line;
       if (row['shots_on'] == 1) {
         line = l10n.historyChatStaysShots;
       } else if (!capsOfText(row['caps'] as String?).contains(kCapDevices)) {
-        line = l10n.chatDeviceReplyFromPhone(
-          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
+        // their caps came without the devices word: an older Kryfo. none
+        // came yet: nothing is known of their version
+        final known = capsOfText(row['caps'] as String?).isNotEmpty;
+        line = await deviceReplyLine(
+          widget.peerHaloId,
+          name,
+          older: known,
+          unknown: !known,
         );
       } else if (!await deviceReaches(widget.peerHaloId)) {
-        // none of their devices wrote to this one yet: the phone answers
-        line = l10n.chatDeviceReplyFromPhoneForNow(
-          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
-        );
+        // none of their devices opened to this one yet
+        line = await deviceReplyLine(widget.peerHaloId, name, older: false);
       } else {
         line = null;
       }

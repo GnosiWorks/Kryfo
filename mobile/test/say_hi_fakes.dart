@@ -40,6 +40,16 @@ class SayHiDb extends DevTestDb {
   Future<Map<String, Object?>?> getContact(String haloId) async =>
       _contact(haloId);
   @override
+  Future<int?> lastHeardAt(String peerId) async {
+    int? at;
+    for (final r in mem.rows('messages')) {
+      if (r['peer_id'] != peerId || r['direction'] != 'in') continue;
+      final t = r['sent_at'] as int;
+      if (at == null || t > at) at = t;
+    }
+    return at;
+  }
+  @override
   Future<bool> isAccepted(String haloId) async => _flag(haloId, 'accepted');
   @override
   Future<bool> isBackPaired(String peerId) async =>

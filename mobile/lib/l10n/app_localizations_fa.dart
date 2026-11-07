@@ -10759,13 +10759,23 @@ class AppLocalizationsFa extends AppLocalizations {
       'این گفت‌وگو روی گوشی شما می‌ماند، چون اسکرین‌شات در آن مسدود است.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کند. از گوشی خود پاسخ دهید.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name از نسخهٔ قدیمی‌تر Kryfo استفاده می‌کند. تا وقتی به‌روزرسانی کند، از گوشی خود پاسخ دهید.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'فعلاً از گوشی خود به $name پاسخ دهید.';
+  String chatDeviceNotYet(String name) {
+    return '$name هنوز نمی‌تواند از این رایانه پیام بگیرد. از گوشی خود پاسخ دهید.';
+  }
+
+  @override
+  String chatDeviceWaitingForApp(String name) {
+    return 'در انتظار اینکه برنامهٔ $name این رایانه را ببیند. فعلاً از گوشی خود پاسخ دهید.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name مدتی است چیزی ننوشته. فعلاً از گوشی خود پاسخ دهید.';
   }
 
   @override

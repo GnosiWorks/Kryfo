@@ -10876,13 +10876,23 @@ class AppLocalizationsAr extends AppLocalizations {
       'تبقى هذه المحادثة على هاتفك لأن لقطات الشاشة محظورة فيها.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name يستخدم إصدارًا أقدم من Kryfo. ردّ من هاتفك.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name يستخدم إصدارًا أقدم من Kryfo. ردّ من هاتفك حتى يحدّثه.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'ردّ على $name من هاتفك في الوقت الحالي.';
+  String chatDeviceNotYet(String name) {
+    return 'لا يمكن لـ $name استلام الرسائل من هذا الحاسوب بعد. ردّ من هاتفك.';
+  }
+
+  @override
+  String chatDeviceWaitingForApp(String name) {
+    return 'بانتظار أن يرى تطبيق $name هذا الحاسوب. ردّ من هاتفك في الوقت الحالي.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return 'لم يكتب $name منذ مدة. ردّ من هاتفك في الوقت الحالي.';
   }
 
   @override

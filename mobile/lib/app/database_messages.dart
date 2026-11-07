@@ -819,6 +819,18 @@ mixin _MessageRows {
     return r.isEmpty ? null : r.first['t'] as int?;
   }
 
+  /// when [peerId] last wrote anything here, a group's message too: null
+  /// when nothing of theirs is held
+  Future<int?> lastHeardAt(String peerId) async {
+    final db = await open();
+    final r = await db.rawQuery(
+      'SELECT MAX(sent_at) t FROM messages '
+      "WHERE peer_id = ? AND direction = 'in'",
+      [peerId],
+    );
+    return r.isEmpty ? null : r.first['t'] as int?;
+  }
+
   Future<Map<String, Object?>?> lastMessageFor(String peerId) async {
     final db = await open();
     // the newest in the chat's order. group_id IS NULL: a group message is
