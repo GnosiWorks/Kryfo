@@ -376,7 +376,25 @@ void main() {
                 File('../engine/translate/models.json').readAsStringSync(),
               )['pairs']
               as List<dynamic>;
-      const lang = {'en': 'English', 'zh': 'Chinese'};
+      const lang = {
+        'ar': 'Arabic',
+        'de': 'German',
+        'en': 'English',
+        'es': 'Spanish',
+        'fa': 'Persian',
+        'fr': 'French',
+        'hi': 'Hindi',
+        'id': 'Indonesian',
+        'it': 'Italian',
+        'pl': 'Polish',
+        'pt': 'Portuguese',
+        'ru': 'Russian',
+        'tr': 'Turkish',
+        'uk': 'Ukrainian',
+        'vi': 'Vietnamese',
+        'zh': 'Chinese',
+        'zh_hant': 'Traditional Chinese',
+      };
       for (final m in models.cast<Map<String, dynamic>>()) {
         final name =
             'Translation model, ${lang[m['from']]} to ${lang[m['to']]}';
@@ -386,6 +404,23 @@ void main() {
         expect(by[name]!.licence, 'MPL-2.0', reason: name);
         expect(by[name]!.version, (model['sha256'] as String).substring(0, 8));
         expect(by[name]!.texts.single, by['Bergamot translator']!.texts.single);
+      }
+      // every direction with english for the app's languages, each both ways
+      final rows = n.translation
+          .where((p) => p.name.startsWith('Translation model, '))
+          .toList();
+      expect(rows, hasLength(32));
+      for (final l in lang.keys.where((l) => l != 'en')) {
+        for (final name in [
+          'Translation model, ${lang[l]} to English',
+          'Translation model, English to ${lang[l]}',
+        ]) {
+          expect(by[name]?.licence, 'MPL-2.0', reason: name);
+          expect(
+            by[name]!.texts.single,
+            by['Bergamot translator']!.texts.single,
+          );
+        }
       }
       for (final p in n.translation) {
         expect(p.texts, isNotEmpty, reason: p.name);

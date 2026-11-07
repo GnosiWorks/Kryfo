@@ -71,6 +71,62 @@ void main() {
     expect(at(const Duration(seconds: 61)), ValveStage.offer);
   });
 
+  test('a send held for their accept is no wait on tor: no way out, and '
+      'once their answer lets it go it gets a minute from there', () {
+    ValveStage stage(DateTime? from, DateTime now) => valveStageAt(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: from,
+      now: now,
+      linkUp: true,
+      busy: false,
+      triedAt: null,
+      triedFailed: false,
+    );
+    final written = t0;
+    // held two minutes for the accept: nothing shown
+    final held = valveWaitFrom(written, awaitsAnswer: true);
+    expect(held, isNull);
+    expect(
+      stage(held, t0.add(const Duration(minutes: 2))),
+      ValveStage.hidden,
+    );
+    // the answer came at two minutes: the send is warming, not stuck
+    final answered = t0.add(const Duration(minutes: 2));
+    final going = valveWaitFrom(
+      written,
+      awaitsAnswer: false,
+      answeredAtMs: answered.millisecondsSinceEpoch,
+    );
+    expect(going, answered);
+    expect(
+      stage(going, answered.add(const Duration(seconds: 5))),
+      ValveStage.hidden,
+    );
+    expect(
+      stage(going, answered.add(const Duration(seconds: 59))),
+      ValveStage.hidden,
+    );
+    // still not out a minute after the answer: then it is the route
+    expect(
+      stage(going, answered.add(const Duration(seconds: 61))),
+      ValveStage.offer,
+    );
+    // an answer from before the send changes nothing
+    expect(
+      valveWaitFrom(
+        written,
+        awaitsAnswer: false,
+        answeredAtMs: t0
+            .subtract(const Duration(minutes: 5))
+            .millisecondsSinceEpoch,
+      ),
+      written,
+    );
+    expect(valveWaitFrom(null, awaitsAnswer: false), isNull);
+  });
+
   test('never in a decoy, never outside onion, never offline', () {
     expect(at(const Duration(minutes: 5), quiet: true), ValveStage.hidden);
     expect(at(const Duration(minutes: 5), private: false), ValveStage.hidden);

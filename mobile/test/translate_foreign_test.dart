@@ -11,6 +11,8 @@ import 'package:kryfo/translate/detect.dart';
 import 'package:kryfo/translate/foreign.dart';
 import 'package:kryfo/translate/hant.dart' show HantForm;
 
+import 'translate_fakes.dart';
+
 const _cat = builtInCatalog;
 
 Offer? _offer(
@@ -18,9 +20,10 @@ Offer? _offer(
   String app = 'en',
   String chosen = '',
   List<String> mine = const [],
+  TranslateCatalog cat = _cat,
 }) => offerFor(
   detectLanguage(text),
-  _cat,
+  cat,
   appLang: app,
   chosen: chosen,
   mine: readLangs(app, mine),
@@ -62,11 +65,12 @@ void main() {
   });
 
   test('the target: the chosen one, the app\'s, or english when read', () {
-    // a german reader: no zh-de model, and english is not theirs
-    expect(_offer('你好，我们明天见吧', app: 'de'), isNull);
+    // a german reader with chinese alone: no way into german, and english
+    // is not theirs
+    expect(_offer('你好，我们明天见吧', app: 'de', cat: zhCatalog), isNull);
     // unless they read english too
     expect(
-      _offer('你好，我们明天见吧', app: 'de', mine: ['en']),
+      _offer('你好，我们明天见吧', app: 'de', mine: ['en'], cat: zhCatalog),
       const Offer('zh', 'en'),
     );
     // a chosen target wins over the app's
@@ -74,21 +78,23 @@ void main() {
       _offer('你好，我们明天见吧', app: 'de', chosen: 'en'),
       const Offer('zh', 'en'),
     );
+    // with every language: into german, through english
+    expect(_offer('你好，我们明天见吧', app: 'de'), const Offer('zh', 'de'));
   });
 
   test('routes go through english when both legs are there', () {
     const cat = TranslateCatalog(
       base: 'https://example.invalid/',
-      langs: [
+      packs: [
         LangBundle(
-          lang: 'zh',
+          id: 'zh',
           gz: 1,
           disk: 1,
           pairs: ['zh-en', 'en-zh'],
           dirs: ['a', 'b'],
         ),
         LangBundle(
-          lang: 'de',
+          id: 'de',
           gz: 1,
           disk: 1,
           pairs: ['de-en', 'en-de'],
@@ -97,7 +103,7 @@ void main() {
       ],
     );
     expect(cat.route('zh', 'de'), [('zh', 'en'), ('en', 'de')]);
-    expect(cat.bundlesFor(cat.route('zh', 'de')!).map((b) => b.lang), [
+    expect(cat.bundlesFor(cat.route('zh', 'de')!).map((b) => b.id), [
       'zh',
       'de',
     ]);
@@ -110,28 +116,36 @@ void main() {
         jsonDecode(File('../engine/translate/models.json').readAsStringSync())
             as Map<String, dynamic>;
     expect(_cat.base, m['base']);
-    var gz = 0, disk = 0;
-    final pairs = <String>[];
-    final dirs = <String>[];
+    // the engine's size classes (engine/translate/pad.go)
+    const classes = [48 << 20, 96 << 20];
+    final ids = <String>[];
     for (final p in m['pairs'] as List) {
-      pairs.add('${p['from']}-${p['to']}');
-      dirs.add('${p['from']}${p['to']}-${p['arch']}');
+      final id = '${p['from']}-${p['to']}';
+      ids.add(id);
+      var gz = 0, disk = 0;
       for (final f in p['files'] as List) {
         gz += f['gzSize'] as int;
         disk += f['size'] as int;
       }
+      final b = _cat.bundle(id)!;
+      final wire = classes.firstWhere(
+        (c) => gz <= c,
+        orElse: () => (gz + classes.last - 1) ~/ classes.last * classes.last,
+      );
+      expect(b.gz, wire, reason: id);
+      expect(b.disk, disk, reason: id);
+      expect(b.pairs, [id]);
+      expect(b.dirs, ['${p['from']}${p['to']}-${p['arch']}']);
     }
-    final zh = _cat.bundle('zh')!;
-    // the engine's size classes (engine/translate/pad.go)
-    const classes = [48 << 20, 96 << 20];
-    final wire = classes.firstWhere(
-      (c) => gz <= c,
-      orElse: () => (gz + classes.last - 1) ~/ classes.last * classes.last,
-    );
-    expect(zh.gz, wire);
-    expect(zh.disk, disk);
-    expect(zh.pairs, pairs);
-    expect(zh.dirs, dirs);
+    expect([for (final b in _cat.packs) b.id]..sort(), ids..sort());
+    // every app language both ways; traditional chinese not apart
+    expect(_cat.languages.toSet(), {
+      'ar', 'de', 'es', 'fa', 'fr', 'hi', 'id', 'it', 'pl', 'pt', 'ru', //
+      'tr', 'uk', 'vi', 'zh',
+    });
+    for (final l in _cat.languages) {
+      expect(_cat.waysOf(l), LangWays.both, reason: l);
+    }
   });
 
   test('the engine catalog parses, and junk does not', () {

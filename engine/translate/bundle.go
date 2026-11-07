@@ -32,6 +32,15 @@ func (m *Manifest) Langs() []string {
 	return out
 }
 
+// Packs is every direction there is a pack for, "de-en", in manifest order.
+func (m *Manifest) Packs() []string {
+	out := make([]string, 0, len(m.Pairs))
+	for _, p := range m.Pairs {
+		out = append(out, p.From+"-"+p.To)
+	}
+	return out
+}
+
 // BundleBytes is what a language's bundle costs on the wire and on disk.
 func (m *Manifest) BundleBytes(lang string) (gz, disk int64) {
 	for _, p := range m.Bundle(lang) {

@@ -6,6 +6,8 @@ import 'dart:async';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
+import '../desktop/desktop_trace.dart' show trace;
+
 // motion off on the phone, a screen reader, or a held ticker (a page under
 // the lock or another route): no entrance would be seen through
 bool entranceOff(BuildContext context) =>
@@ -52,6 +54,8 @@ class Entrance {
     final c = _c;
     if (_gone || c == null || c.status != AnimationStatus.forward) return;
     c.value = c.upperBound;
+    // the ticker did not get there: with the trace on, a line says so
+    trace('entrance put at its end');
     // drawn even where no frame was coming: the end state must show
     SchedulerBinding.instance.scheduleForcedFrame();
   }

@@ -16,9 +16,12 @@ screen shows translation and no part of it runs, though the opencc tables
   different file loaded, which matters because the files are parsed by
   c++. `Parse` refuses unknown fields, a base that is not https or an
   onion, paths that leave the source, and odd names, hashes or sizes.
-- `bundle.go`, `pad.go`, `jobs.go`: the download. a language's bundle is
-  both directions, so the host cannot tell which way the person
-  translates, and it is one file on the mirror padded to a size class.
+- `bundle.go`, `pad.go`, `jobs.go`: the download. the app fetches one
+  pack per direction ("de-en", "en-de"), each one file on the mirror
+  padded to the same 48 MiB class, so the size says nothing about the
+  language; the languages page asks for both of a language. a language
+  alone ("zh") is still both its directions in one bundle, the older
+  shape.
   every request is one whole 1 MiB range of it, in order, with no user
   agent, cookies or compression. the files are checked and unpacked only
   once the last byte is in. a cut keeps what came, padding counted, and
@@ -101,7 +104,7 @@ pcre2 BSD. all of them can ship in a GPL-3.0-or-later app.
 the box serves, under `/models/` on the relay onion (plain http on the
 onion, which tor encrypts and authenticates), these files and nothing else:
 
-- one file per language, named by `BundleID` (a hash of the pins) plus
+- one file per direction, named by `BundleID` (a hash of the pins) plus
   `.bin`: the published gzips back to back in manifest order, then noise
   up to the size class (sha256 in counter mode over the id, so every fill
   makes the same bytes);

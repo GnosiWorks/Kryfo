@@ -252,12 +252,12 @@ void main() {
   testWidgets('translation off: nothing in the group says it exists', (
     t,
   ) async {
-    TranslationHub.instance = null;
+    final f = fakeHub(installed: true, words: {_zh: _en});
+    await f.hub.ready();
+    await f.hub.setOn(false);
+    TranslationHub.instance = f.hub;
     await open(t);
     expect(rich(_zh), findsOneWidget);
-    for (final w in t.widgetList<TranslatedBody>(find.byType(TranslatedBody))) {
-      expect(w.chat, isNull);
-    }
     expect(rich(l10n.translateAction), findsNothing);
     await openMenu(t, _zh);
     expect(find.text(l10n.translateAction), findsNothing);

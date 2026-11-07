@@ -2205,6 +2205,8 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
+      // with translation on the page runs a row longer while it folds
+      await t.scrollUntilVisible(find.text(l10n.groupInfoDeleteGroup), 200);
       expect(find.text(l10n.groupInfoDeleteGroup), findsOneWidget);
       expect(find.text(l10n.groupInfoLeaveGroup2), findsNothing);
       expect(find.text(l10n.groupInfoClearConversation), findsNothing);
@@ -2245,6 +2247,7 @@ void main() {
       expect(find.text(l10n.groupInfo1Member(2)), findsNothing);
       expect(find.byType(MembersCard), findsNothing);
       expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
+      await t.scrollUntilVisible(find.text(l10n.groupInfoDeleteGroup), 200);
       expect(find.text(l10n.groupInfoDeleteGroup), findsOneWidget);
       await _close(t);
     });

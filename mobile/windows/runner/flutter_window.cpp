@@ -302,6 +302,11 @@ bool FlutterWindow::OnCreate() {
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();
+    } else if (call.method_name() == "nudge") {
+      // dart's frame waits: this call has woken the thread, one redraw more
+      kryfo::TraceLine("runner: nudged");
+      flutter_controller_->ForceRedraw();
+      result->Success();
     } else {
       result->NotImplemented();
     }
@@ -311,6 +316,7 @@ bool FlutterWindow::OnCreate() {
   // the first frame is there: the window comes up in front with the view
   // focused, so nothing waits for a click to be drawn or typed into
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
+    kryfo::TraceLine("runner: first frame");
     // a hidden start stays in the tray; ShowAndRaise brings it up
     if (start_hidden_) return;
     this->Show();

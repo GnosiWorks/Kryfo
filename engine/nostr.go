@@ -1914,7 +1914,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					storeFailed(anchorKey)
 				}
 			}
-			turn := subTurn{tag: tag, fresh: freshOf(ctx), own: ownEntry}
+			turn := subTurn{tag: tag, fresh: freshOf(ctx), own: ownEntry, spread: spreadFor(lane, ownEntry)}
 			defer turn.done()
 			// the socket this address shares, if it shares one: its turn ends
 			// once another address got it up

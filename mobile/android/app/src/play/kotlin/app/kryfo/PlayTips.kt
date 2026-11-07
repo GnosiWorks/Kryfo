@@ -61,6 +61,17 @@ object PlayTips : PurchasesUpdatedListener {
         else -> "other"
     }
 
+    // the option the price and the payment sheet come from: the "buy" option
+    // at its base price, never a discount offer play may list first
+    const val BUY_OPTION = "buy"
+
+    fun baseOffer(d: ProductDetails): ProductDetails.OneTimePurchaseOfferDetails? {
+        val all = d.oneTimePurchaseOfferDetailsList ?: return null
+        return all.firstOrNull { it.purchaseOptionId == BUY_OPTION && it.offerId.isNullOrEmpty() }
+            ?: all.firstOrNull { it.offerId.isNullOrEmpty() }
+            ?: all.firstOrNull()
+    }
+
     // a purchase as dart sees it: the order id stays here
     fun purchaseMap(p: Purchase): Map<String, Any> = mapOf(
         "products" to p.products.toList(),
@@ -148,7 +159,7 @@ object PlayTips : PurchasesUpdatedListener {
                 }
                 val items = mutableListOf<Map<String, String>>()
                 for (d in got.productDetailsList) {
-                    val offer = d.oneTimePurchaseOfferDetailsList?.firstOrNull() ?: continue
+                    val offer = baseOffer(d) ?: continue
                     main.post { details[d.productId] = d }
                     items.add(mapOf("id" to d.productId, "price" to offer.formattedPrice))
                 }
@@ -161,7 +172,7 @@ object PlayTips : PurchasesUpdatedListener {
     // id, no profile id
     private fun buy(c: Context, id: String, result: MethodChannel.Result) {
         val d = details[id]
-        val token = d?.oneTimePurchaseOfferDetailsList?.firstOrNull()?.offerToken
+        val token = d?.let { baseOffer(it) }?.offerToken
         val activity = shown?.get()
         if (d == null || token == null || activity == null || activity.isFinishing) {
             return answer(result, "failed")

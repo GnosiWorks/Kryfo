@@ -166,12 +166,16 @@ class ModelDownloads extends ChangeNotifier {
   // download there fetches nothing and stops as a cut one would
   final bool Function() quiet;
   final Duration poll;
+  // how often one waiting for wi-fi looks again, null for never: it then
+  // waits for a tap
+  final Duration? wifiWait;
   ModelDownloads({
     required this.backend,
     required this.onWifi,
     required this.wifiOnly,
     this.quiet = _loud,
     this.poll = const Duration(milliseconds: 500),
+    this.wifiWait,
   });
 
   static bool _loud() => false;
@@ -179,6 +183,7 @@ class ModelDownloads extends ChangeNotifier {
   final Map<String, DlState> _st = {};
   final Map<String, DlState> _quiet = {};
   final Map<String, Timer> _timers = {};
+  final Map<String, Timer> _waits = {};
   bool _gone = false;
 
   DlState of(String lang) =>
@@ -235,8 +240,10 @@ class ModelDownloads extends ChangeNotifier {
     final was = _real(lang);
     if (wifiOnly() && !anyNetwork && !await onWifi()) {
       _set(lang, was.copyWith(phase: DlPhase.wifiNeeded));
+      _waitWifi(lang);
       return;
     }
+    _unwait(lang);
     _set(lang, was.copyWith(phase: DlPhase.starting));
     final out = await backend.start(lang);
     if (out != 'ok') {
@@ -256,13 +263,40 @@ class ModelDownloads extends ChangeNotifier {
     if (was.busy) return;
     if (wifiOnly() && !anyNetwork && !await onWifi()) {
       _setQuiet(lang, was.copyWith(phase: DlPhase.wifiNeeded));
+      _waitWifi(lang);
       return;
     }
+    _unwait(lang);
     _setQuiet(lang, was.copyWith(phase: DlPhase.starting));
     await Future<void>.delayed(poll * 4);
     if (_quiet[lang]?.phase != DlPhase.starting) return;
     _setQuiet(lang, was.copyWith(phase: DlPhase.failed, fail: DlFail.network));
   }
+
+  // asked for while off wi-fi: it goes on by itself once the phone is on
+  // wi-fi, or wi-fi only is turned off. a cancel or a remove ends the wait
+  void _waitWifi(String lang) {
+    final every = wifiWait;
+    if (every == null || _waits[lang] != null) return;
+    var looking = false;
+    _waits[lang] = Timer.periodic(every, (_) async {
+      if (looking || _gone) return;
+      if (of(lang).phase != DlPhase.wifiNeeded) return _unwait(lang);
+      looking = true;
+      try {
+        if (!wifiOnly() || await onWifi()) {
+          _unwait(lang);
+          if (of(lang).phase == DlPhase.wifiNeeded) await start(lang);
+        }
+      } finally {
+        looking = false;
+      }
+    });
+  }
+
+  void _unwait(String lang) => _waits.remove(lang)?.cancel();
+
+  bool waiting(String lang) => _waits[lang] != null;
 
   static DlFail _startFail(String out) {
     if (out.startsWith('error: tor')) return DlFail.noTor;
@@ -314,6 +348,16 @@ class ModelDownloads extends ChangeNotifier {
   }
 
   void cancel(String lang) {
+    // one waiting for wi-fi stops waiting
+    if (of(lang).phase == DlPhase.wifiNeeded) {
+      _unwait(lang);
+      final now = of(lang);
+      final back = now.onDisk > 0
+          ? now.copyWith(phase: DlPhase.paused)
+          : DlState(DlPhase.absent, onDisk: now.onDisk);
+      quiet() ? _setQuiet(lang, back) : _set(lang, back);
+      return;
+    }
     if (quiet()) {
       final q = _quiet[lang];
       if (q != null && q.busy) {
@@ -327,6 +371,7 @@ class ModelDownloads extends ChangeNotifier {
   }
 
   Future<bool> remove(String lang) async {
+    _unwait(lang);
     if (quiet()) {
       _setQuiet(lang, const DlState(DlPhase.absent));
       return true;
@@ -338,13 +383,75 @@ class ModelDownloads extends ChangeNotifier {
     return true;
   }
 
+  // several packs as one download, a language's or a route's: what
+  // [sizes] gives for one not looked at yet
+  DlState ofMany(List<String> ids, List<int> sizes) {
+    final all = [for (final id in ids) of(id)];
+    var done = 0, total = 0, disk = 0;
+    for (final (i, s) in all.indexed) {
+      final t = s.total > 0 ? s.total : sizes[i];
+      total += t;
+      done += s.phase == DlPhase.installed ? t : s.done.clamp(0, t);
+      disk += s.onDisk;
+    }
+    DlPhase? first(bool Function(DlState s) f) {
+      for (final s in all) {
+        if (f(s)) return s.phase;
+      }
+      return null;
+    }
+
+    DlFail? fail;
+    for (final s in all) {
+      if (s.phase == DlPhase.failed) {
+        fail = s.fail;
+        break;
+      }
+    }
+    final phase = all.isEmpty
+        ? DlPhase.absent
+        : all.every((s) => s.phase == DlPhase.installed)
+        ? DlPhase.installed
+        : first((s) => s.phase == DlPhase.running) ??
+              first((s) => s.phase == DlPhase.starting) ??
+              first((s) => s.phase == DlPhase.wifiNeeded) ??
+              first((s) => s.phase == DlPhase.failed) ??
+              first((s) => s.phase == DlPhase.paused) ??
+              first((s) => s.phase == DlPhase.unknown) ??
+              DlPhase.absent;
+    return DlState(phase, done: done, total: total, fail: fail, onDisk: disk);
+  }
+
+  // each one not on the phone yet, side by side
+  Future<void> startMany(List<String> ids, {bool anyNetwork = false}) =>
+      Future.wait([
+        for (final id in ids)
+          if (!installed(id)) start(id, anyNetwork: anyNetwork),
+      ]);
+
+  void cancelMany(List<String> ids) {
+    for (final id in ids) {
+      cancel(id);
+    }
+  }
+
+  // true once every one is gone
+  Future<bool> removeMany(List<String> ids) async {
+    var ok = true;
+    for (final id in ids) {
+      if (!await remove(id)) ok = false;
+    }
+    return ok;
+  }
+
   @override
   void dispose() {
     _gone = true;
-    for (final t in _timers.values) {
+    for (final t in [..._timers.values, ..._waits.values]) {
       t.cancel();
     }
     _timers.clear();
+    _waits.clear();
     super.dispose();
   }
 }
