@@ -25,13 +25,16 @@ void deskRunApp(Widget app) {
 /// the runner's 'frame' call: the window came up, forward or back from the
 /// taskbar. a window on the screen is never hidden to dart: a lifecycle
 /// that says so (a hide heard before a show it never heard) would keep
-/// every frame back, the entrances' with them
+/// every frame back, the entrances' with them. none heard yet counts as
+/// hidden
 void deskWindowFrame(Object? args) {
   final m = args is Map ? args : const {};
   final binding = WidgetsBinding.instance;
   final life = binding.lifecycleState;
   if (m['shown'] == true &&
-      (life == AppLifecycleState.hidden || life == AppLifecycleState.paused)) {
+      (life == null ||
+          life == AppLifecycleState.hidden ||
+          life == AppLifecycleState.paused)) {
     binding.handleAppLifecycleStateChanged(
       m['active'] == true
           ? AppLifecycleState.resumed
