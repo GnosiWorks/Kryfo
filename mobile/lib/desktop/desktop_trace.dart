@@ -54,6 +54,18 @@ void _traceUncaught() {
 /// whether lines are written
 bool get tracing => _file != null;
 
+/// the engine's own log (engine-debug.log, 0600, in its folder): a debug
+/// build, or a computer started with KRYFO_TRACE=1. never a phone's release
+bool engineLogWanted({
+  required bool debug,
+  bool? desktop,
+  Map<String, String>? env,
+}) {
+  if (debug) return true;
+  if (!(desktop ?? (Platform.isLinux || Platform.isWindows))) return false;
+  return (env ?? Platform.environment)['KRYFO_TRACE'] == '1';
+}
+
 /// the folder the trace is in, null while it is off
 String? get traceDir => _file == null ? null : p.dirname(_file!);
 
