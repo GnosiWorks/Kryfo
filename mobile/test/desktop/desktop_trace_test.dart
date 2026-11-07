@@ -41,4 +41,17 @@ void main() {
     expect(File(file).readAsStringSync(), isNot(contains('more words')));
     expect(seen, hasLength(1));
   });
+
+  test('the engine log: debug, or a computer with KRYFO_TRACE=1', () {
+    const on = {'KRYFO_TRACE': '1'};
+    expect(engineLogWanted(debug: true, desktop: false, env: {}), isTrue);
+    expect(engineLogWanted(debug: false, desktop: true, env: on), isTrue);
+    expect(engineLogWanted(debug: false, desktop: true, env: {}), isFalse);
+    expect(
+      engineLogWanted(debug: false, desktop: true, env: {'KRYFO_TRACE': '0'}),
+      isFalse,
+    );
+    // a phone's release never, whatever its environment says
+    expect(engineLogWanted(debug: false, desktop: false, env: on), isFalse);
+  });
 }
