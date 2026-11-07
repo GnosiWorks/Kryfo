@@ -382,8 +382,10 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   // windows: toasts go neutral while the session is locked
   if (Platform.isWindows) unawaited(readSessionLock(_desktopChannel));
   // a run before's temporary files: its key died with it, they go unread
-  // tor's own folder stays: its state is no secret of the run
-  if (Platform.isWindows) {
+  // tor's own folder stays: its state is no secret of the run. on linux
+  // with a memory folder the disk's tmp holds only what a cut run left of
+  // a backup or a locked file
+  if (Platform.isWindows || runtime != null) {
     clearFolder(
       p.join(root, 'tmp'),
       keep: [p.join(root, 'tmp', kEngineFolder, 'tor')],

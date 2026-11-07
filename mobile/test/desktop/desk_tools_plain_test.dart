@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/desktop/desktop_paths.dart';
 import 'package:kryfo/desktop/desktop_save.dart';
+import 'package:kryfo/desktop/desktop_start.dart' show clearFolder;
 import 'package:kryfo/desktop/sealed_io.dart';
 import 'package:kryfo/desktop/sealed_native.dart';
 import 'package:kryfo/lock_state.dart';
@@ -228,6 +229,42 @@ void main() {
     );
     expect(File(picked).readAsStringSync(), 'the plan, in full');
     expect(plainIn(words: ['the plan']), isEmpty);
+  }, skip: !engine);
+
+  test('linux: a locked file is age on the disk\'s tmp, not in memory, and '
+      'a start clears what a cut run left', () async {
+    final mem = Directory.systemTemp.createTempSync('desk_tools_mem');
+    addTearDown(() => mem.deleteSync(recursive: true));
+    final areas = SealedAreas(
+      docs: p.join(root.path, 'docs'),
+      support: p.join(root.path, 'support'),
+      runtime: mem.path,
+    );
+    final linux = SealedIO(areas, ToyCrypto());
+    PathProviderPlatform.instance = DesktopPaths(root.path, runtime: mem.path);
+    engineDirOf = (_) => p.join(mem.path, kEngineFolder);
+    final disk = p.join(root.path, 'tmp');
+    bulkTempDir = () async {
+      makePrivateDir(disk);
+      return disk;
+    };
+    addTearDown(() => bulkTempDir = null);
+    final plain = File(p.join(home.path, 'big.txt'))
+      ..writeAsStringSync('the plan, in full, ' * 200);
+    final locked = await IOOverrides.runWithIOOverrides(() async {
+      final d = await engineToolsFolder();
+      final out = p.join(d.path, 'big.txt.age');
+      expect(await ageLockPath(plain.path, out, _pass), isNull);
+      return out;
+    }, linux);
+    expect(p.isWithin(disk, locked), isTrue);
+    expect(plainIn(words: ['the plan']), isEmpty);
+    expect(
+      String.fromCharCodes(File(locked).readAsBytesSync().take(21)),
+      'age-encryption.org/v1',
+    );
+    clearFolder(disk);
+    expect(File(locked).existsSync(), isFalse);
   }, skip: !engine);
 }
 
