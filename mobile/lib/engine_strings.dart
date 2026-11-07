@@ -5,6 +5,7 @@
 // freed native memory.
 
 import 'dart:ffi';
+import 'dart:io' show Platform;
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
@@ -20,16 +21,35 @@ typedef _FreeD = void Function(Pointer<Utf8>);
 void Function(Pointer<Utf8>)? engineFreeForTest;
 
 // looked up once per isolate
-final void Function(Pointer<Utf8>) _engineFree = _lookupFree();
+final void Function(Pointer<Utf8>) _engineFree = lookupEngineFree(
+  haloLibrary,
+  windows: Platform.isWindows,
+);
 
-void Function(Pointer<Utf8>) _lookupFree() {
+/// the engine's own free. with no engine in the process (host tests) the
+/// strings were made by the same libc malloc, so its free does. never on
+/// windows: dart's malloc there is CoTaskMemFree, and the engine's strings
+/// come from its own crt's heap, so a free by the wrong one corrupts the heap
+@visibleForTesting
+void Function(Pointer<Utf8>) lookupEngineFree(
+  DynamicLibrary Function() open, {
+  required bool windows,
+}) {
   try {
-    final lib = haloLibrary();
-    return lib.lookupFunction<_FreeC, _FreeD>('HaloFree');
+    return open().lookupFunction<_FreeC, _FreeD>('HaloFree');
   } on ArgumentError {
-    // no engine in this process (host tests): what is taken here was made
-    // by the same libc malloc
+    if (windows) rethrow;
     return malloc.free;
+  }
+}
+
+// no real string sits in windows' first 64 KiB, which is never mapped: a
+// pointer there is a broken call, said rather than read
+const _lowest = 0x10000;
+
+void _checkAddress(Pointer p) {
+  if (p.address < _lowest) {
+    throw StateError('engine string at a bad address');
   }
 }
 
@@ -38,6 +58,7 @@ void _free(Pointer<Utf8> p) => (engineFreeForTest ?? _engineFree)(p);
 /// the engine's string, copied into dart and freed
 String engineTake(Pointer<Utf8> p) {
   if (p == nullptr) return '';
+  _checkAddress(p);
   try {
     return p.toDartString();
   } finally {
@@ -48,6 +69,7 @@ String engineTake(Pointer<Utf8> p) {
 /// as [engineTake], with the native bytes zeroed before they are freed
 String engineTakeSecret(Pointer<Utf8> p) {
   if (p == nullptr) return '';
+  _checkAddress(p);
   try {
     return p.toDartString();
   } finally {
@@ -62,6 +84,7 @@ String engineTakeSecret(Pointer<Utf8> p) {
 /// error the engine said)
 Uint8List? engineTakeSecretKey(Pointer<Utf8> p) {
   if (p == nullptr) return null;
+  _checkAddress(p);
   final n = p.length;
   final h = p.cast<Uint8>().asTypedList(n);
   try {

@@ -59,6 +59,12 @@ const kLsOneTime = 0;
 const kLsSigned = 1;
 const kLsKyber = 2;
 
+/// an output a call handed back that can be read: an empty one may sit
+/// anywhere (rust's empty box is a dangling address), a full one never in
+/// the first 64 KiB, which windows never maps, nor past 1 GiB
+bool lsOutputSound(int address, int length) =>
+    length == 0 || (address >= 0x10000 && length > 0 && length < 1 << 30);
+
 /// the abi these bindings were written for
 const kLsAbi = 4;
 
@@ -600,6 +606,8 @@ class KryfoSignal {
         if (code != 0) throw LsError(code);
         final p = out.value;
         final n = outLen.value;
+        // an output nothing real holds is said, never read or freed
+        if (!lsOutputSound(p.address, n)) throw const LsError(LsError.internal);
         final copy = Uint8List.fromList(p.asTypedList(n));
         _free(p, n);
         try {
