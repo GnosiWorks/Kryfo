@@ -135,6 +135,10 @@ void _bootDeviceReceive(DeviceState ds, DeviceSend send) {
   );
   // a contact's device line: their open chat reads it again
   _deviceReceive!.lined = appState.chatChanged;
+  // a device of theirs opened a pair to this one: the composer may come
+  _deviceReceive!.opened = appState.chatChanged;
+  // a device of mine asked for a contact's list push now
+  _deviceReceive!.pushDue = () => unawaited(pumpDeviceSends());
   _bootOwnSync(ds, send, _deviceReceive!);
   _bootUnlink(ds, send, _deviceReceive!);
   unawaited(() async {

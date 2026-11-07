@@ -89,8 +89,12 @@ typedef DevAlarm = ({int ident, String peer, String kind, String key});
 /// the device frames: lists, bundles, asks, handbacks, the own frames
 const kDeviceWords = {
   'as', 'dl', 'db', 'dq', 'dh', 'dw', 'dn', 'dz', 'dk', 'da', 'dy', 'fl', //
-  'oc', 'os', 'of', 'ob', 'hs', 'ou',
+  'oc', 'os', 'of', 'ob', 'hs', 'ou', 'dp',
 };
+
+/// how often a linked device asks its phone to push my list to one
+/// contact now ('dp'): the phone keeps its own once a day on top
+const kPushAskEvery = Duration(minutes: 10);
 
 /// why a linked device says it unlinked itself ('ou'): not opened for 30
 /// days, its clock set back, its lock state unreadable, or the person
@@ -207,6 +211,16 @@ class DeviceReceive {
 
   /// a quiet line went into [peer]'s chat (heal.dart's kDeviceLine kinds)
   void Function(String peer)? lined;
+
+  /// a linked device: a device of [peer]'s opened a pair to this one, so
+  /// it reaches them now (the chat's bar reads it again)
+  void Function(String peer)? opened;
+
+  /// the phone: a list push was brought forward ('dp'), the pump runs
+  void Function()? pushDue;
+
+  // when this linked device last asked its phone for each contact's push
+  final _pushAsked = <String, int>{};
 
   final _alarms = StreamController<DevAlarm>.broadcast();
 
@@ -333,6 +347,26 @@ class DeviceReceive {
     } catch (e) {
       _note('a device not noted as heard (${e.runtimeType})');
     }
+    if (!own && type == kLsPreKey) {
+      // a pair's starter is answered at once with an empty frame, so both
+      // sides hold it as answered before anyone writes
+      if (j.isNotEmpty && j.keys.every((k) => k == 'as')) {
+        try {
+          await send.toOne(
+            ident: t.ident,
+            identity: identity,
+            device: t.their,
+            addr: who!.c.peer,
+            pin: entry.key,
+            reg: entry.reg,
+            frame: '$kEnvelopePrefix{}',
+          );
+        } catch (e) {
+          _note('a starter not answered (${e.runtimeType})');
+        }
+      }
+      if (m.device != 1) opened?.call(who!.c.peer);
+    }
     if (own) {
       try {
         await _ownWords(d, t, m, identity, j, o.remote, entry);
@@ -388,16 +422,27 @@ class DeviceReceive {
       limit: 1,
     );
     final held = r.isEmpty ? null : r.first['seed'];
-    if (held is List<int> && held.length == 32) {
-      if (_lower(held, seed) <= 0) return;
-    }
     final rec = await d.query(
       'dev_openers',
-      columns: ['key'],
+      columns: ['key', 'at'],
       where: _pairWhere,
       whereArgs: at,
       limit: 1,
     );
+    if (held is List<int> && held.length == 32) {
+      // a seed of mine that never went (a send that kept nothing, before
+      // the device reached me) and no copy waiting with it: theirs is the
+      // only one they know
+      final went = rec.isNotEmpty && (rec.first['at'] as int? ?? 0) > 0;
+      final owed = (await d.query(
+        'dev_out',
+        columns: ['uid'],
+        where: 'ident = ? AND peer = ? AND device = ? AND own = 0',
+        whereArgs: [t.ident, identity, t.their],
+        limit: 1,
+      )).isNotEmpty;
+      if ((went || owed) && _lower(held, seed) <= 0) return;
+    }
     final heldFor = rec.isEmpty ? null : rec.first['key'] as String?;
     await d.transaction((tx) async {
       await tx.delete('pairs', where: _pairWhere, whereArgs: at);
@@ -509,6 +554,16 @@ class DeviceReceive {
     final fl = j['fl'];
     if (fl is Map && m.device != 1 && t.their == 1) {
       await _fromMyPhone(m, fl, remote);
+    }
+    // a device of mine opened a contact's chat its app does not reach
+    // yet: my list's push to them goes now
+    final dp = j['dp'];
+    if (dp is String && m.device == 1 && t.their != 1 && ownHome == null) {
+      try {
+        if (await send.pushNow(m.ident, dp)) pushDue?.call();
+      } catch (e) {
+        _note('a push not brought forward (${e.runtimeType})');
+      }
     }
     // a device of mine unlinked itself: the phone takes it off my list
     final ou = j['ou'];
@@ -1103,6 +1158,9 @@ class DeviceReceive {
           reg,
           rebuild: fresh || asked,
         );
+        // a device new to me: its pair starts now, so it reaches me
+        // before I write. a pair held and never answered starts again
+        await send.start(m, identity, dev, c.peer, key, reg);
         if (!built) continue;
         if (asked) {
           await state.call(d, 'quiet', {
@@ -1245,6 +1303,36 @@ class DeviceReceive {
     }
     await _mark(d, m.ident, identity, 'dw', '', now);
     await send.devicesShown(m.ident, identity);
+  }
+
+  /// a linked device: [identity]'s app does not reach this device yet, so
+  /// my phone is asked to push my list to them now ('dp' on its own
+  /// session), at most once every [kPushAskEvery] a contact. true when the
+  /// ask was queued
+  Future<bool> askPush(int ident, String identity) async {
+    if (!linkedDevicesOn || ownHome != null) return false;
+    final m = await me(ident);
+    if (m == null || m.device == 1) return false;
+    final now = _clock();
+    final k = '$ident/$identity';
+    final at = _pushAsked[k];
+    if (at != null && now >= at && now - at < kPushAskEvery.inMilliseconds) {
+      return false;
+    }
+    final phone = await _entry(await db(), ident, null, 1);
+    if (phone == null) return false;
+    _pushAsked[k] = now;
+    await send.toOne(
+      ident: ident,
+      identity: devHex(m.identity),
+      device: 1,
+      addr: kOwnDevices,
+      pin: phone.key,
+      reg: phone.reg,
+      own: true,
+      frame: '$kEnvelopePrefix${jsonEncode({'dp': identity})}',
+    );
+    return true;
   }
 
   /// [identity], a contact of my [ident], showed they read lists and no
