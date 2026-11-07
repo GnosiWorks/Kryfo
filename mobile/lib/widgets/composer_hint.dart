@@ -19,6 +19,7 @@ class ComposerHint extends StatelessWidget {
       text,
       maxLines: 1,
       softWrap: false,
+      // the field's hint: grey like every placeholder
       style: HaloType.sans(size: 14, color: HaloColors.text3),
     ),
   );
