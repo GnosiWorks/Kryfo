@@ -2,7 +2,7 @@
 // a phone still on 0.5.3 and a phone on this version keep talking, both
 // ways, on real stores: the 0.5.3 side runs 0.5.3's own signal layer and
 // libsignal_protocol_dart 0.8.2 on its file as 0.5.3 left it; this side
-// opens its file through the app's schema (the upgrades to 91 and 92 included) and
+// opens its file through the app's schema, every upgrade since 0.5.3, and
 // runs the shim. the files are the 0.5.3 fixtures of the app's tests
 import 'dart:convert';
 import 'dart:io';
@@ -219,7 +219,7 @@ void main() {
       if (sql == null) return markTestSkipped('no sqlite on this host');
       final aDb = await raw('$_phone/a.db', 'a053.db');
       final bDb = await updated('$_phone/b.db', HaloContainer.decoy);
-      expect(await bDb.getVersion(), 92);
+      expect(await bDb.getVersion(), HaloDb.schema);
       expect(await aDb.getVersion(), 85);
       final a = await Phone053.open(
         aDb,
@@ -268,7 +268,7 @@ void main() {
         'halo.db.passphrase': 'not asked for',
       });
       final bDb = await keep(HaloDb().open());
-      expect(await bDb.getVersion(), 92);
+      expect(await bDb.getVersion(), HaloDb.schema);
       // the everyday store, as the app opens it, and its own decrypt
       await now.signalSession.bootstrap(
         database: bDb,
@@ -331,7 +331,7 @@ void main() {
         'halo.db.passphrase': keys['everyday']!,
       });
       final mineDb = await keep(HaloDb().open());
-      expect(await mineDb.getVersion(), 92);
+      expect(await mineDb.getVersion(), HaloDb.schema);
       final mine = _New(await onShim(mineDb, _keys(me)));
       final aliceDb = await raw('$_host/halo_d.db', 'alice053.db');
       final hers = _Old(
