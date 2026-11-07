@@ -204,6 +204,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.15"
+  desktop_drop:
+    dependency: transitive
+    description:
+      path: "../../third_party/desktop_drop"
+      relative: true
+    source: path
+    version: "0.8.4+kryfo.1"
   ed25519_edwards:
     dependency: transitive
     description:
