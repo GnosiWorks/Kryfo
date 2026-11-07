@@ -1,4 +1,4 @@
-Nowe: szyfrowanie postkwantowe między telefonami z 0.6 i połączone urządzenia, by używać Kryfo także na komputerze. Zdjęcia profilowe, wskaźnik pisania, blokada zrzutów ekranu w grupach i pliki do 50 MB z pauzą i wznawianiem.
+Nowe: szyfrowanie postkwantowe między telefonami z 0.6 i połączone urządzenia, by używać Kryfo także na komputerze. Zdjęcia profilowe, wskaźnik pisania, blokada zrzutów ekranu w grupach i pliki do 50 MB z pauzą i wznawianiem. Tłumacz offline.
 
 Zmiany: konfiguracja w sześciu krokach, kody parowania z ośmiu cyfr, zdjęcia i pliki szyfrowane także na telefonie. Kryfo jest teraz po hindi i po polsku.
 

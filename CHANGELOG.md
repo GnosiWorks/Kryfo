@@ -20,7 +20,7 @@
 - google push, in the google play build only and off until you pick it.
 - tips in the google play build. a tip gives a supporter badge and nothing else.
 - if Kryfo can't start, it offers to restore a backup or start fresh.
-- [IF ON] offline translation: translate a message on your phone, never on a server. a language pack downloads once, over tor.
+- offline translation: translate a message on your phone, never on a server. a language pack downloads once, over tor.
 - a universal apk with both arm builds in one file, on github and the site. it installs on every arm phone, so nobody has to know which one they need.
 - Kryfo in hindi, the 16th language.
 - Kryfo in polish, the 17th language. thanks to padrian772 for reviewing the translation.

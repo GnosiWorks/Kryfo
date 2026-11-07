@@ -1,4 +1,4 @@
-Mới: mã hóa hậu lượng tử giữa các điện thoại dùng 0.6, và thiết bị đã liên kết để dùng Kryfo cả trên máy tính. Ảnh hồ sơ, chỉ báo đang nhập, chặn chụp màn hình trong nhóm, và tệp đến 50 MB có thể tạm dừng rồi tiếp tục.
+Mới: mã hóa hậu lượng tử giữa các điện thoại dùng 0.6, và thiết bị đã liên kết để dùng Kryfo cả trên máy tính. Ảnh hồ sơ, chỉ báo đang nhập, chặn chụp màn hình trong nhóm, và tệp đến 50 MB có thể tạm dừng rồi tiếp tục. Dịch ngoại tuyến.
 
 Thay đổi: thiết lập còn sáu bước, mã ghép nối có tám chữ số, ảnh và tệp được mã hóa cả trên điện thoại. Kryfo nay có tiếng Hindi và tiếng Ba Lan.
 
