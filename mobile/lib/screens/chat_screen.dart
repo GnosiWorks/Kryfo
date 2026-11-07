@@ -34,6 +34,7 @@ import '../sent_name.dart';
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
 import '../desktop/attach_tray.dart';
 import '../desktop/drag_in.dart' show DragInZone;
+import '../desktop/desktop_trace.dart' show TraceSteps;
 import 'dart:io';
 import 'dart:convert';
 import 'key_verification_screen.dart';
@@ -114,6 +115,7 @@ import '../main.dart'
         typeLeaf,
         linkedRole,
         deviceReaches,
+        deviceReplyLine,
         deviceSealOutcome,
         ownClearLine,
         ownBlockLine,
@@ -1061,18 +1063,27 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final row = await session.getContact(widget.peerHaloId);
       if (row == null || !mounted) return;
+      // a long name cut, so the line stays a few lines on a narrow window
+      final full =
+          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId;
+      final c = full.characters;
+      final name = c.length > 24 ? '${c.take(22)}\u2026' : full;
       final String? line;
       if (row['shots_on'] == 1) {
         line = l10n.historyChatStaysShots;
       } else if (!capsOfText(row['caps'] as String?).contains(kCapDevices)) {
-        line = l10n.chatDeviceReplyFromPhone(
-          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
+        // their caps came without the devices word: an older Kryfo. none
+        // came yet: nothing is known of their version
+        final known = capsOfText(row['caps'] as String?).isNotEmpty;
+        line = await deviceReplyLine(
+          widget.peerHaloId,
+          name,
+          older: known,
+          unknown: !known,
         );
       } else if (!await deviceReaches(widget.peerHaloId)) {
-        // none of their devices wrote to this one yet: the phone answers
-        line = l10n.chatDeviceReplyFromPhoneForNow(
-          _nickname ?? (row['nickname'] as String?) ?? widget.peerHaloId,
-        );
+        // none of their devices opened to this one yet
+        line = await deviceReplyLine(widget.peerHaloId, name, older: false);
       } else {
         line = null;
       }
@@ -1224,6 +1235,9 @@ class _ChatScreenState extends State<ChatScreen>
   // sender-side lock: messaging a stranger who hasn't accepted, past the cap.
   // once they engage (reply/back-pair) or we accept them, it clears.
   bool get _requestPending => !_peerEngaged && _recvCount == 0;
+  // ours to someone who has not accepted: the pill says so, not the route
+  bool get _waitsAccept =>
+      _requestPending && !_vouched && !_isDev && !widget.support;
   bool get _requestLocked =>
       _requestPending && _sentCount >= (_isDev ? kDevCap : 2) && !_vouched;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
@@ -1728,6 +1742,8 @@ class _ChatScreenState extends State<ChatScreen>
       unawaited(_loadPqLine());
       // their badge rides their messages: one that came now may change it
       unawaited(_loadBadge());
+      // a copy of theirs to this device opens the pair: the composer comes
+      if (_phoneOnly != null) unawaited(_readPhoneOnly());
     }
     _refreshRequestState();
     unawaited(_readKeyState());
@@ -2676,6 +2692,7 @@ class _ChatScreenState extends State<ChatScreen>
                             translation: _translation,
                             transcripts: _transcripts,
                             plainLinks: _plainLinks,
+                            waitsAccept: _waitsAccept,
                           ),
                         ),
                         builder: (_, t, child) => Transform.scale(
@@ -5707,6 +5724,7 @@ class _ChatScreenState extends State<ChatScreen>
           linkTitle: _linkPreview(m)?['title'],
           linkBySender: _linkPreview(m)?['by'] == 'sender',
           plainLinks: _plainLinks,
+          waitsAccept: _waitsAccept,
           firstInGroup: firstInGroup,
           lastInGroup: lastInGroup,
           revealed: m.msgUid != null && m.msgUid == _revealedUid,
@@ -6418,8 +6436,11 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _acceptRequestPeer() async {
     HapticFeedback.selectionClick();
+    final steps = TraceSteps('accept tap');
     await session.acceptRequest(widget.peerHaloId);
+    steps.step('row written');
     await appState.afterAccept(widget.peerHaloId);
+    steps.step('accepted');
     if (mounted) {
       setState(() {
         _accepted = true;
@@ -8038,7 +8059,10 @@ class _ChatHead extends StatelessWidget {
     Theme.of(context);
     final fast = appState.sendMode != 'private';
     return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
+      // a computer's header stands a little roomier, a phone's as it was
+      padding: onDesktop
+          ? const EdgeInsetsDirectional.fromSTEB(8, 10, 12, 14)
+          : const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
@@ -8061,7 +8085,11 @@ class _ChatHead extends StatelessWidget {
               // the same face flies in from the list row
               child: HaloHero(
                 tag: 'face-$avatarSeed',
-                child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
+                child: KryfoAvatar(
+                  seed: avatarSeed,
+                  size: onDesktop ? 40 : 36,
+                  choice: face,
+                ),
               ),
             ),
           ),
@@ -8096,7 +8124,7 @@ class _ChatHead extends StatelessWidget {
                             key: ValueKey<String>(nickname ?? haloId),
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.sans(
-                              size: 14,
+                              size: onDesktop ? 15.5 : 14,
                               weight: FontWeight.w500,
                             ),
                           ),
@@ -8560,6 +8588,8 @@ class _Bubble extends StatelessWidget {
   final bool linkBySender;
   // a request's links: shown as the words they are, never tappable
   final bool plainLinks;
+  // a request they have not accepted: the pill waits, nothing turns
+  final bool waitsAccept;
   // a sticker row: the chat's budget, its place in it, and its flight
   final StickerBudget? stickers;
   final int stickerOrder;
@@ -8606,6 +8636,7 @@ class _Bubble extends StatelessWidget {
     this.linkTitle,
     this.linkBySender = false,
     this.plainLinks = false,
+    this.waitsAccept = false,
     this.firstInGroup = true,
     this.lastInGroup = true,
     this.unconfirmed = false,
@@ -9582,7 +9613,10 @@ class _Bubble extends StatelessWidget {
                                   SendProgressLabel(msgUid: msg.msgUid!),
                                   const SizedBox(width: 6),
                                 ],
-                                SendPill(mode: _pmFrom(appState.sendMode)),
+                                SendPill(
+                                  mode: _pmFrom(appState.sendMode),
+                                  waiting: waitsAccept,
+                                ),
                               ],
                             ),
                           ),
@@ -9790,7 +9824,10 @@ class _Bubble extends StatelessWidget {
                               top: 4,
                               end: 4,
                             ),
-                            child: SendPill(mode: _pmFrom(appState.sendMode)),
+                            child: SendPill(
+                              mode: _pmFrom(appState.sendMode),
+                              waiting: waitsAccept,
+                            ),
                           ),
                   ),
               ],
@@ -10104,7 +10141,9 @@ class _Composer extends StatelessWidget {
     if (appState.movedAway) return const MovedStrip();
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: onDesktop
+          ? const EdgeInsets.fromLTRB(20, 12, 20, 16)
+          : const EdgeInsets.fromLTRB(16, 8, 16, 12),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -10274,9 +10313,9 @@ class _Composer extends StatelessWidget {
                             minHeight: 36,
                           ),
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: onDesktop ? 16 : 14,
+                            vertical: onDesktop ? 13 : 10,
                           ),
                           filled: true,
                           fillColor: HaloColors.surface2,

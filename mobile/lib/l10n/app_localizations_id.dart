@@ -10158,7 +10158,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Semua pesanmu, dengan foto dan video dari 30 hari terakhir.';
+      'Pesanmu, dengan foto, video, dan pesan suara dari 30 hari terakhir.';
 
   @override
   String get devicesHistoryNone => 'Hanya kontak dan grup';
@@ -10747,13 +10747,23 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolan ini tetap di ponselmu karena tangkapan layar diblokir di sini.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name memakai Kryfo versi lama. Balas dari ponselmu.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name memakai Kryfo versi lama. Balas dari ponselmu sampai mereka memperbarui.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'Untuk sekarang, balas $name dari ponselmu.';
+  String chatDeviceNotYet(String name) {
+    return '$name belum bisa menerima pesan dari komputer ini. Balas dari ponselmu.';
+  }
+
+  @override
+  String chatDeviceWaitingForApp(String name) {
+    return 'Menunggu aplikasi $name mengenali komputer ini. Untuk sekarang, balas dari ponselmu.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name sudah lama tidak menulis. Untuk sekarang, balas dari ponselmu.';
   }
 
   @override

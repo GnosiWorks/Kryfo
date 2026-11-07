@@ -308,6 +308,8 @@ class Session {
   Future<void> dropHeld(String peerId) => _ofPeer(peerId).dropHeld(peerId);
   Future<int?> firstMessageAt(String peerId) =>
       _ofPeer(peerId).firstMessageAt(peerId);
+  Future<int?> lastHeardAt(String peerId) =>
+      _ofPeer(peerId).lastHeardAt(peerId);
   Future<String?> getAtmosphere(String peerId) =>
       _ofPeer(peerId).getAtmosphere(peerId);
   // a chat's wallpaper, in the container that holds the chat

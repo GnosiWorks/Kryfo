@@ -155,6 +155,13 @@ func startFirstHolds(kc chan struct{}) bool {
 	return startFirst.lane != "" && k == kc
 }
 
+// kc is the start's kick: the one the process's first turn is drawn under
+func isStartKick(kc chan struct{}) bool {
+	startFirst.Lock()
+	defer startFirst.Unlock()
+	return startKickLocked(kc) == kc
+}
+
 // the start's first batch, "" for none
 func startFirstLane() string {
 	startFirst.Lock()

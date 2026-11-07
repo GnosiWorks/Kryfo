@@ -68,6 +68,10 @@ type rig struct {
 func newRig(t *testing.T, cfg config) *rig {
 	t.Helper()
 	dir := t.TempDir()
+	r := &rig{t: t, dir: dir, clock: time.Date(2026, 10, 28, 12, 0, 0, 0, time.UTC)}
+	// a restart starts on the rig's clock, not today's
+	clockNow = func() time.Time { return r.clock }
+	t.Cleanup(func() { clockNow = time.Now })
 	ds, err := newDiskStore(filepath.Join(dir, "blobs"))
 	if err != nil {
 		t.Fatal(err)
@@ -77,8 +81,7 @@ func newRig(t *testing.T, cfg config) *rig {
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := &rig{t: t, s: s, store: st, dir: dir, clock: time.Date(2026, 10, 28, 12, 0, 0, 0, time.UTC)}
-	s.now = func() time.Time { return r.clock }
+	r.s, r.store = s, st
 	r.srv = httptest.NewServer(s.routes())
 	t.Cleanup(r.srv.Close)
 	return r

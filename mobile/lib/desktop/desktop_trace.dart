@@ -54,6 +54,18 @@ void _traceUncaught() {
 /// whether lines are written
 bool get tracing => _file != null;
 
+/// the engine's own log (engine-debug.log, 0600, in its folder): a debug
+/// build, or a computer started with KRYFO_TRACE=1. never a phone's release
+bool engineLogWanted({
+  required bool debug,
+  bool? desktop,
+  Map<String, String>? env,
+}) {
+  if (debug) return true;
+  if (!(desktop ?? (Platform.isLinux || Platform.isWindows))) return false;
+  return (env ?? Platform.environment)['KRYFO_TRACE'] == '1';
+}
+
 /// the folder the trace is in, null while it is off
 String? get traceDir => _file == null ? null : p.dirname(_file!);
 
@@ -67,6 +79,19 @@ void trace(String line) {
       flush: true,
     );
   } catch (_) {}
+}
+
+/// one job's steps, each line with the ms since it began: "[name]: [what]
+/// +12ms". nothing is timed while the trace is off
+class TraceSteps {
+  TraceSteps(this.name) : _w = tracing ? (Stopwatch()..start()) : null;
+  final String name;
+  final Stopwatch? _w;
+
+  void step(String what) {
+    final w = _w;
+    if (w != null) trace('$name: $what +${w.elapsedMilliseconds}ms');
+  }
 }
 
 /// a message filed here, as the trace says it: its kind, whose chat it is

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // supporter badge: the tier, its signed receipt, and whether to show it to me
 // and to contacts. all local; nothing here tracks who donated.
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'badge_client.dart'
@@ -72,7 +73,12 @@ String tierLabel(SupporterTier t) => switch (t) {
 /// passes it on to my linked devices (devices_own_app.dart)
 void Function()? supporterMoved;
 
+/// bumped whenever a badge or one of its choices moved, in any container:
+/// a screen that shows the badge reads it again
+final badgeMoves = ValueNotifier<int>(0);
+
 void _moved(HaloContainer c) {
+  badgeMoves.value++;
   if (c == HaloContainer.everyday) supporterMoved?.call();
 }
 

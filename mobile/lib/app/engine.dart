@@ -132,8 +132,9 @@ class HaloEngine {
     );
     _setDebug = _lib.lookupFunction<IntArgFn, IntArgFnDart>('HaloSetDebug');
     // engine logs to logcat only in debug. release builds stay silent so no
-    // onion address, peer id, or tor timing ever lands in the log.
-    _setDebug(kDebugMode ? 1 : 0);
+    // onion address, peer id, or tor timing ever lands in the log. a
+    // computer started with KRYFO_TRACE=1 writes it to its 0600 file
+    _setDebug(desk_trace.engineLogWanted(debug: kDebugMode) ? 1 : 0);
   }
 
   // every string back from the engine is copied and freed through

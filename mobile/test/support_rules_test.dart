@@ -411,6 +411,7 @@ class _Bell implements SupportBell {
     required String tag,
     required String title,
     required String body,
+    String? msgUid,
   }) async {
     calls.add('chat $chatId $title: $body');
     tags.add(tag);

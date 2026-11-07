@@ -54,6 +54,7 @@ import 'seal_windows.dart';
 import 'sealed_setup.dart';
 import 'system_seal.dart';
 import 'win_audio.dart';
+import 'linux_mic.dart';
 import 'win_record.dart';
 
 /// the binding whose messenger answers the android channels
@@ -98,15 +99,42 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
   }) {
     // a plain post has no title: still only that something came
     final named = title != null;
-    return post(
-      id: id,
-      title: named ? title : 'Kryfo',
-      body: named
-          ? (body ?? l10n.notificationsNewMessage)
-          : l10n.notificationsNewMessage,
-      payload: payload,
+    return _inTurn(
+      () => post(
+        id: id,
+        title: named ? title : 'Kryfo',
+        body: named
+            ? (body ?? l10n.notificationsNewMessage)
+            : l10n.notificationsNewMessage,
+        payload: payload,
+      ),
     );
   }
+
+  // the plugin records a post only after a storage read and the server's
+  // reply: a cancel sent meanwhile would miss it, so these go in order
+  Future<void> _turn = Future.value();
+
+  Future<void> _inTurn(Future<void> Function() job) {
+    final done = _turn.then((_) => job());
+    // a call the server never answers holds the rest only this long
+    _turn = done.timeout(deskCallLimit).catchError((_) {});
+    return done;
+  }
+
+  @override
+  Future<void> cancel({required int id}) => _inTurn(() => drop(id));
+
+  @override
+  Future<void> cancelAll() => _inTurn(dropAll);
+
+  /// what takes one down at the desktop's notification server
+  @visibleForTesting
+  Future<void> drop(int id) => super.cancel(id: id);
+
+  /// what takes all of kryfo's down there
+  @visibleForTesting
+  Future<void> dropAll() => super.cancelAll();
 
   /// what reaches the desktop's notification server
   @visibleForTesting
@@ -123,6 +151,10 @@ class QuietLinuxNotifications extends LinuxFlutterLocalNotificationsPlugin {
     payload: payload,
   );
 }
+
+/// how long one call to the desktop's notification server holds the next
+@visibleForTesting
+Duration deskCallLimit = const Duration(seconds: 5);
 
 /// a post's details: its sound as the notifications page's switch has it
 @visibleForTesting
@@ -319,6 +351,8 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
     FlutterLocalNotificationsPlatform.instance = QuietLinuxNotifications();
     Gst.registryDir = (await paths.getApplicationCachePath())!;
     JustAudioPlatform.instance = DesktopAudio();
+    // record_linux encodes through ffmpeg, which ubuntu does not ship
+    RecordPlatform.instance = WinRecord(ProcessMic.here());
   }
   if (Platform.isWindows) {
     FlutterLocalNotificationsPlatform.instance = QuietWindowsNotifications(
@@ -379,8 +413,10 @@ Future<void> startDesktop(Future<void> Function() appMain) async {
   // windows: toasts go neutral while the session is locked
   if (Platform.isWindows) unawaited(readSessionLock(_desktopChannel));
   // a run before's temporary files: its key died with it, they go unread
-  // tor's own folder stays: its state is no secret of the run
-  if (Platform.isWindows) {
+  // tor's own folder stays: its state is no secret of the run. on linux
+  // with a memory folder the disk's tmp holds only what a cut run left of
+  // a backup or a locked file
+  if (Platform.isWindows || runtime != null) {
     clearFolder(
       p.join(root, 'tmp'),
       keep: [p.join(root, 'tmp', kEngineFolder, 'tor')],

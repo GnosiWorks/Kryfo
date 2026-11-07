@@ -70,6 +70,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       duration: const Duration(milliseconds: 1800),
     );
     _loadBadge();
+    // a tip or a restore while this screen is up shows here at once
+    badgeMoves.addListener(_loadBadge);
   }
 
   @override
@@ -81,6 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   void dispose() {
+    badgeMoves.removeListener(_loadBadge);
     _entrance.dispose();
     _intro.dispose();
     _pulse.dispose();

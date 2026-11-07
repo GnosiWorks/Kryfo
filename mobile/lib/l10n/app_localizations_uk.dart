@@ -10323,7 +10323,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Усі ваші повідомлення, а також фото й відео за останні 30 днів.';
+      'Ваші повідомлення, а також фото, відео й голосові за останні 30 днів.';
 
   @override
   String get devicesHistoryNone => 'Лише контакти й групи';
@@ -10914,13 +10914,23 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цей чат лишається на твоєму телефоні, бо в ньому заблоковано знімки екрана.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name користується старішою версією Kryfo. Відповідай з телефона.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name користується старішою версією Kryfo. Відповідай з телефона до оновлення.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'Поки що відповідай $name з телефона.';
+  String chatDeviceNotYet(String name) {
+    return '$name поки не може отримувати повідомлення з цього комп’ютера. Відповідай з телефона.';
+  }
+
+  @override
+  String chatDeviceWaitingForApp(String name) {
+    return 'Чекаємо, поки Kryfo у $name побачить цей комп’ютер. Поки що відповідай з телефона.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return 'Від $name давно не було повідомлень. Поки що відповідай з телефона.';
   }
 
   @override

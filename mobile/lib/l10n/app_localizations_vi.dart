@@ -10140,7 +10140,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Tất cả tin nhắn, kèm ảnh và video trong 30 ngày qua.';
+      'Tin nhắn của bạn, kèm ảnh, video và tin nhắn thoại trong 30 ngày qua.';
 
   @override
   String get devicesHistoryNone => 'Chỉ danh bạ và nhóm';
@@ -10729,13 +10729,23 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name dùng phiên bản Kryfo cũ hơn. Hãy trả lời từ điện thoại của bạn.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name dùng phiên bản Kryfo cũ hơn. Hãy trả lời từ điện thoại của bạn cho đến khi họ cập nhật.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'Tạm thời hãy trả lời $name từ điện thoại của bạn.';
+  String chatDeviceNotYet(String name) {
+    return '$name chưa thể nhận tin nhắn từ máy tính này. Hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
+  String chatDeviceWaitingForApp(String name) {
+    return 'Đang chờ ứng dụng của $name nhận ra máy tính này. Tạm thời hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name đã lâu chưa nhắn tin. Tạm thời hãy trả lời từ điện thoại của bạn.';
   }
 
   @override

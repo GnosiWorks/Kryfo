@@ -925,6 +925,71 @@ void main() {
   });
 
   // the last here: the store stays marked restored after it
+  // before the restore below, which marks this phone restored for the rest
+  testWidgets(
+    'a text to someone who has not added us back waits for them in '
+    'its pill, not on the route, and the pill goes back to the route once they have',
+    (t) async {
+      await mem.update(
+        'contacts',
+        {'back_paired': 0},
+        where: 'halo_id = ?',
+        whereArgs: [_peer],
+      );
+      await mem.delete('messages', where: 'peer_id = ?', whereArgs: [_peer]);
+      Future<void> send(String text) async {
+        await t.enterText(find.byType(TextField).last, text);
+        await t.pump();
+        await t.pump(const Duration(seconds: 1));
+        await t.tap(find.byIcon(Icons.arrow_upward));
+        await settle(t);
+      }
+
+      await devOpen(
+        t,
+        ChatScreen(
+          peerHaloId: _peer,
+          peerOnion: '',
+          peerXPub: 'ab' * 32,
+          avatarSeed: _peer,
+        ),
+      );
+      await settle(t);
+      await send('hello there');
+      expect(relay.sends, hasLength(1));
+      // fast shows no route at all, so a waiting one is the only label here
+      expect(find.text(l10n.pairCodeWaitingForThem), findsOneWidget);
+      await devClose(t);
+
+      await mem.update(
+        'contacts',
+        {'back_paired': 1},
+        where: 'halo_id = ?',
+        whereArgs: [_peer],
+      );
+      await devOpen(
+        t,
+        ChatScreen(
+          peerHaloId: _peer,
+          peerOnion: '',
+          peerXPub: 'ab' * 32,
+          avatarSeed: _peer,
+        ),
+      );
+      await settle(t);
+      await send('still there');
+      expect(find.text(l10n.pairCodeWaitingForThem), findsNothing);
+      final pills = t.widgetList<SendPill>(find.byType(SendPill));
+      expect(pills, isNotEmpty);
+      expect(pills.any((p) => p.waiting), isFalse);
+      for (final c in relay.sends) {
+        if (!c.isCompleted) c.complete('');
+      }
+      await settle(t);
+      await devClose(t);
+    },
+  );
+
   testWidgets('after a restore, a text waiting on their card stays going '
       'through the retries and the reloads, and a new one goes on as going', (
     t,

@@ -25,7 +25,10 @@ import 'package:kryfo/devices/device_receive.dart';
 import 'package:kryfo/devices/device_send.dart';
 import 'package:kryfo/devices/device_state.dart';
 import 'package:kryfo/devices/own_device_store.dart';
-import 'package:kryfo/devices/own_devices.dart' show DeviceKind;
+import 'package:kryfo/devices/device_store.dart' show applyDevRows;
+import 'package:kryfo/devices/linked_lock.dart' show LinkedEnd, LinkedLock;
+import 'package:kryfo/devices/own_devices.dart'
+    show DeviceKind, DeviceUse, deviceUseOf;
 import 'package:kryfo/devices/own_sync.dart' show OwnApply, OwnSync;
 import 'package:kryfo/devices/own_unlink.dart';
 import 'package:kryfo/heal.dart'
@@ -47,6 +50,16 @@ import 'package:kryfo/main.dart'
         devAddedForTest,
         devForgetForTest,
         devMineOf,
+        bootDevices,
+        deviceReceive,
+        deviceUnlinked,
+        linkedEndResetForTest,
+        linkedLockForTest,
+        linkedRoleForTest,
+        linkedStandingForTest,
+        linkedTickForTest,
+        linkedWipeForTest,
+        linkedLock,
         useDatabasesForTest,
         vaultCutWaitsForTest,
         vaultRestoreCutForTest;
@@ -113,6 +126,7 @@ class _Sent {
 
 class _Wire implements DeviceWire {
   final sent = <_Sent>[];
+  final openers = <String>[];
   bool up = true;
   @override
   Future<String> send(int ident, String arg, String cipher) async {
@@ -121,14 +135,17 @@ class _Wire implements DeviceWire {
   }
 
   @override
-  Future<String> sendOpener(int ident, String arg, String cipher) =>
-      send(ident, arg, cipher);
+  Future<String> sendOpener(int ident, String arg, String cipher) {
+    openers.add(arg);
+    return send(ident, arg, cipher);
+  }
 }
 
 class _Listen implements DeviceListen {
+  final on = <String>[];
   final off = <String>[];
   @override
-  void listen(int ident, String arg) {}
+  void listen(int ident, String arg) => on.add(arg);
   @override
   void unlisten(int ident, String arg) => off.add(arg);
   @override
@@ -162,6 +179,7 @@ class _Killed extends DeviceSend {
     required String pin,
     required int reg,
     required String frame,
+    bool once = false,
   }) async {
     if (at == 'farewell') throw StateError('killed');
     return super.farewell(
@@ -170,6 +188,7 @@ class _Killed extends DeviceSend {
       pin: pin,
       reg: reg,
       frame: frame,
+      once: once,
     );
   }
 }
@@ -232,6 +251,7 @@ class _Phone {
   late DeviceSessions anaDs;
   late DeviceSessions deskDs;
   late OwnUnlink unlink;
+  late TestKeyPair deskKp;
   late String bob;
   late Uint8List b5Key;
   late DeviceSessions b5;
@@ -323,7 +343,8 @@ void main() {
     final ana = await testStore(keys: anaKp);
     final anaId = lib.identityFromPrivate(anaKp.privateKey.serialize());
     await putMainIdentity(db, anaKp.privateKey.serialize());
-    final desk = await testStore();
+    final deskKp = testKeyPair();
+    final desk = await testStore(keys: deskKp);
     final bobKp = testKeyPair();
     final bobStore = await testStore(keys: bobKp);
     final bobId = lib.identityFromPrivate(bobKp.privateKey.serialize());
@@ -369,6 +390,7 @@ void main() {
       'list': base64Encode(bobList),
     }, bobRemote);
     final w = _Phone(db, ana, anaId, desk, ds)
+      ..deskKp = deskKp
       ..bob = devHex(bobStore.identity.public)
       ..b5Key = b5.s.identity.public
       ..b5 = b5
@@ -476,11 +498,14 @@ void main() {
     expect(await w.unlink.remove(['u4'], why: kGoneRemoved), ['u4']);
     await w.settle();
     expect(w.ended, ['u4']);
-    // the last word went to the desk's own pair, and opens there to my list
-    // without it, signed above the one it holds
+    // the last word went to the desk's own pair and its opener address, the
+    // same bytes, and opens there to my list without it, signed above the
+    // one it holds
     final last = w.wire.sent.where((s) => s.arg.startsWith('${w.anaX}/4/1.'));
-    expect(last, hasLength(1));
-    final (t, b) = _wireOf(last.single.cipher);
+    expect(last, hasLength(2));
+    expect(last.first.cipher, last.last.cipher);
+    expect(w.wire.openers, contains(last.first.arg));
+    final (t, b) = _wireOf(last.first.cipher);
     final plain = await w.deskDs.open(
       kOwnDevices,
       1,
@@ -510,7 +535,8 @@ void main() {
       0,
     );
     expect(await w.count('SELECT COUNT(*) FROM dev_pool WHERE device = 4'), 0);
-    expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 0);
+    // the relay took it, and it is kept to go again
+    expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 1);
     expect(await w.count('SELECT COUNT(*) FROM own_device_keys'), 0);
     expect(w.listen.off, contains('${w.anaX}/4/1'));
     final row = (await w.db.query('own_devices')).single;
@@ -541,9 +567,31 @@ void main() {
     w.wire.up = true;
     w.clock += const Duration(minutes: 1).inMilliseconds;
     await w.settle();
-    expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 0);
     expect(w.wire.sent.last.cipher, tried.first.cipher);
     expect(w.wire.sent.last.arg, tried.first.arg);
+    // taken, and still handed again now and then: a relay that dropped it
+    // or a device that missed it gets a later copy
+    expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 1);
+    int words() => w.wire.sent.where((s) => s.arg.contains('/4/1.')).length;
+    final n = words();
+    final openers = w.wire.openers.length;
+    // the next copy in the second half of two minutes, never sooner
+    w.clock += const Duration(seconds: 59).inMilliseconds;
+    await w.settle();
+    expect(words(), n);
+    w.clock += const Duration(minutes: 2).inMilliseconds;
+    await w.settle();
+    expect(words(), n + 2);
+    expect(w.wire.openers, hasLength(openers + 1));
+    expect(w.wire.sent.last.cipher, tried.first.cipher);
+    // a day on, once more on both; past two weeks it is let go
+    w.clock += _day;
+    await w.settle();
+    expect(words(), n + 4);
+    expect(w.wire.openers, hasLength(openers + 2));
+    w.clock += 14 * _day;
+    await w.settle();
+    expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 0);
   });
 
   test('a last word the relay never takes is let go after two weeks, and '
@@ -648,6 +696,15 @@ void main() {
     expect(row['gone_why'], kGoneItself);
     expect(row['notice'], 2);
     expect(await w.anaDs.has(kOwnDevices, 4), isFalse);
+    // wiped already: its last word goes until a relay takes it, never again
+    await w.settle();
+    expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 0);
+    int words() => w.wire.sent.where((s) => s.arg.contains('/4/1.')).length;
+    final n = words();
+    expect(n, greaterThan(0));
+    w.clock += _day;
+    await w.settle();
+    expect(words(), n);
   });
 
   test('my phone\'s list without this device wipes it; an older list, one '
@@ -1284,6 +1341,7 @@ void main() {
       deviceSendForTest(null);
       deviceReceiveForTest(null);
     });
+    await w.settle();
     final wired = w.wire.sent.length;
     await devForgetForTest(carolId);
     await w.db.update(
@@ -1866,6 +1924,363 @@ void main() {
     now += const Duration(days: 15).inMilliseconds;
     expect(await others(), [1]);
     expect(await ownPhoneFresh(db, now), isFalse);
+  });
+
+  test('a linked device watches its phone\'s opener address always and '
+      'wipes on its phone\'s list without it there; a forged, replayed or '
+      'older list does nothing, and a removal taken stays owed', () async {
+    if (skip()) return;
+    final lib = shim!;
+    final home = HaloDb(HaloContainer.everyday);
+    opened.add(home);
+    final db = await home.open();
+    useDatabasesForTest(home, Session(home));
+    final anaKp = testKeyPair();
+    final ana = await testStore(keys: anaKp);
+    final anaId = lib.identityFromPrivate(anaKp.privateKey.serialize());
+    final deskKp = testKeyPair();
+    final deskStore = await testStore(keys: deskKp);
+    final lap = await testStore();
+    await putMainIdentity(db, deskKp.privateKey.serialize());
+    await db.update('identities', {
+      'ident_pub': ana.identity.public,
+      'dev_id': 4,
+    });
+    final ds = DeviceState(DeviceEngine());
+    await ds.load(
+      db,
+      await devMineOf(db, lib),
+      shimPath: KryfoSignal.loadedFrom!,
+    );
+    linkedDevicesForTest = true;
+    linkedRoleForTest = true;
+    addTearDown(() => linkedRoleForTest = false);
+    deviceStateForTest(ds);
+    final deskE = (
+      dev: 4,
+      key: deskStore.identity.public,
+      reg: deskStore.registrationId,
+    );
+    final lapE = (dev: 6, key: lap.identity.public, reg: lap.registrationId);
+    await ds.session(db, 'own_set', {
+      'ident': kMainIdent,
+      'identity': devHex(ana.identity.public),
+      'list': base64Encode(
+        _list(anaId, ana.registrationId, 4000, [deskE, lapE]),
+      ),
+    }, SessionRemote.opened(ana.identity.public));
+    expect(await ownListHeld(db, kMainIdent), isTrue);
+    expect(await linkedStandingForTest(), isNull);
+    final deskDs = DeviceSessions(deskStore, linked: true);
+    final phoneDs = DeviceSessions(ana);
+    await phoneDs.build(
+      kOwnDevices,
+      4,
+      lib.parseDeviceBundle(await deskDs.makeBundle(4), ana.identity.public),
+      deskStore.identity.public,
+      deskStore.registrationId,
+    );
+    final send = DeviceSend(
+      state: ds,
+      db: () async => db,
+      sessions: (_) async => deskDs,
+      wire: _Wire(),
+    );
+    pumps.add(send);
+    final listen = _Listen();
+    final me = (ident: kMainIdent, identity: ana.identity.public, device: 4);
+    final recv = DeviceReceive(
+      state: ds,
+      db: () async => db,
+      sessions: (_) async => deskDs,
+      send: send,
+      listener: listen,
+      open: deviceOpenAt,
+      me: (_) async => me,
+      contact: (_, _) async => null,
+      phone: (_, _, _) async => false,
+      sign: (_, _) async => throw StateError('a linked device never signs'),
+    );
+    var wiped = 0;
+    recv.ownRemoved = (_) async => wiped++;
+    final anaX = devHex(ana.identity.public).substring(2);
+    final opener = '$anaX/1/4';
+    Future<String> sealed(Uint8List list) async => phoneDs.seal(
+      kOwnDevices,
+      4,
+      _seeded(
+        _frame({'u': 'dl:${listVersionOf(list)}', 'dl': base64Encode(list)}),
+      ),
+      deskStore.identity.public,
+    );
+    // the phone's first word, then one on the seeded pair: heard, and its
+    // opener address still watched
+    await recv.receive(
+      '$opener/opn',
+      await sealed(_list(anaId, ana.registrationId, 4001, [deskE, lapE])),
+    );
+    await recv.receive(
+      opener,
+      await sealed(_list(anaId, ana.registrationId, 4002, [deskE, lapE])),
+    );
+    expect(listen.off, isNot(contains(opener)));
+    listen.on.clear();
+    await recv.listenAll();
+    expect(listen.on, contains(opener));
+    // my phone's list with a signature not its own, and a stranger's
+    final stranger = lib.identityFromPrivate(
+      testKeyPair().privateKey.serialize(),
+    );
+    final real = _list(anaId, ana.registrationId, 4100, const []);
+    final forged = Uint8List.fromList(real)..[real.length - 1] ^= 1;
+    await recv.receive('$opener/opn', await sealed(forged));
+    await recv.receive(
+      '$opener/opn',
+      await sealed(_list(stranger, 9, 4100, const [])),
+    );
+    // an old list without it, replayed, and one at the held version
+    await recv.receive(
+      '$opener/opn',
+      await sealed(_list(anaId, ana.registrationId, 3999, const [])),
+    );
+    await recv.receive(
+      '$opener/opn',
+      await sealed(_list(anaId, ana.registrationId, 4002, const [])),
+    );
+    expect(wiped, 0);
+    expect(await ownListHeld(db, kMainIdent), isTrue);
+    expect(await linkedStandingForTest(), isNull);
+    // my phone's list without it, on the opener address: it wipes once,
+    // and a relay's copy of the same bytes again opens nothing
+    final last = await sealed(real);
+    await recv.receive('$opener/opn', last);
+    expect(wiped, 1);
+    await recv.receive('$opener/opn', last);
+    expect(wiped, 1);
+    // the list went with it: a wipe cut short ends it at the next check
+    expect(await ownListHeld(db, kMainIdent), isFalse);
+    expect(await linkedStandingForTest(), LinkedEnd.removed);
+  });
+
+  test('a linked device shows when it last heard its phone, and a phone '
+      'shows a computer it linked as used then', () async {
+    if (skip()) return;
+    final db = await open();
+    final at = DateTime(2026, 11, 7, 12);
+    await ownPhoneHeard(db, at.millisecondsSinceEpoch);
+    final mine = await StoredOwnDevices(
+      db: db,
+      thisName: 'This computer',
+      thisKind: DeviceKind.computer,
+      phoneName: 'Your phone',
+    ).load();
+    final phoneRow = mine.singleWhere((d) => d.id == 'phone');
+    expect(phoneRow.lastUsed, at);
+    expect(deviceUseOf(phoneRow.lastUsed, at), DeviceUse.today);
+    await addOwnDevice(
+      db,
+      uid: 'u9',
+      name: 'Computer',
+      kind: DeviceKind.computer,
+      linkedAt: at,
+      heardAt: at,
+      keys: const [],
+    );
+    final row = (await db.query('own_devices', where: "uid = 'u9'")).single;
+    expect(row['heard_at'], at.millisecondsSinceEpoch);
+  });
+
+  test('end to end: a computer linked on the engine\'s rows stays through a '
+      'restart and a tick; removed while offline, its phone hands the last '
+      'word again by its steps, the one copy that comes days later wipes it, '
+      'and a removal taken before a kill wipes it at the next start', () async {
+    if (skip()) return;
+    final lib = shim!;
+    final w = await phone();
+    final anaHex = devHex(w.ana.identity.public);
+    final shimPath = KryfoSignal.loadedFrom!;
+    Future<void> loadOn(Database db) async => DeviceState(
+      DeviceEngine(),
+    ).load(db, await devMineOf(db, lib), shimPath: shimPath);
+
+    final phoneList = await currentList(w);
+    // the computer's own container, placed as a link places it
+    final deskHome = HaloDb(HaloContainer.decoy);
+    opened.add(deskHome);
+    final deskDb = await deskHome.open();
+    await putMainIdentity(deskDb, w.deskKp.privateKey.serialize());
+    final deskState = DeviceState(DeviceEngine());
+    await deskState.load(deskDb, [
+      (
+        ident: kMainIdent,
+        identity: w.ana.identity.public,
+        key: w.desk.identity.public,
+        dev: 4,
+      ),
+    ], shimPath: shimPath);
+    // the rows the engine gives for my phone's list, written by the join
+    List<dynamic> linkRows = const [];
+    try {
+      await deskDb.transaction((t) async {
+        final j = await deskState.session(t, 'own_set', {
+          'ident': kMainIdent,
+          'identity': anaHex,
+          'list': base64Encode(phoneList),
+        }, SessionRemote.opened(w.ana.identity.public));
+        linkRows = j['rows'] as List;
+        throw StateError('kept for the join');
+      });
+    } on StateError {
+      // rolled back: the join writes them
+    }
+    expect(linkRows, isNotEmpty);
+    await joinedRows(
+      deskDb,
+      identity: w.ana.identity.public,
+      device: 4,
+      rows: linkRows,
+      stream: Uint8List(32),
+    );
+    useDatabasesForTest(deskHome, Session(deskHome));
+    linkedRoleForTest = true;
+    final lockDir = Directory('${docs.path}/lock')..createSync();
+    final keys = <String, String>{};
+    linkedLockForTest = LinkedLock(
+      dir: () async => lockDir.path,
+      readKey: (k) async => keys[k],
+      writeKey: (k, v) async => keys[k] = v,
+    );
+    await linkedLock.start();
+    var wipes = 0;
+    linkedWipeForTest = () async => wipes++;
+    linkedEndResetForTest();
+    addTearDown(() {
+      linkedRoleForTest = false;
+      linkedWipeForTest = null;
+      linkedLockForTest = null;
+      linkedEndResetForTest();
+    });
+    expect(await linkedStandingForTest(), isNull);
+    // a restart and a tick: nothing ends
+    await bootDevices();
+    await linkedTickForTest();
+    expect(wipes, 0);
+    expect(deviceUnlinked.value, isNull);
+
+    // the computer is offline: its phone removes it
+    await loadOn(w.db);
+    final t0 = w.clock;
+    expect(await w.unlink.remove(['u4'], why: kGoneRemoved), ['u4']);
+    final removal = await currentList(w);
+    int words() => w.wire.sent.where((s) => s.arg.contains('/4/1.')).length;
+    final hands = <int>[];
+    final openers = <int>[];
+    var seen = words(), seenOpeners = w.wire.openers.length;
+    Future<void> step(Duration by) async {
+      w.clock += by.inMilliseconds;
+      await w.send.pump();
+      if (words() > seen) hands.add(w.clock - t0);
+      if (w.wire.openers.length > seenOpeners) openers.add(w.clock - t0);
+      seen = words();
+      seenOpeners = w.wire.openers.length;
+    }
+
+    await step(Duration.zero);
+    while (w.clock - t0 < const Duration(hours: 1).inMilliseconds) {
+      await step(const Duration(seconds: 30));
+    }
+    while (w.clock - t0 < _day) {
+      await step(const Duration(minutes: 10));
+    }
+    while (w.clock - t0 < 3 * _day) {
+      await step(const Duration(hours: 1));
+    }
+    // every wait drawn from the second half of its step, and the opener
+    // address only for the first day
+    expect(hands.first, 0);
+    for (var i = 1; i < hands.length; i++) {
+      final age = Duration(milliseconds: hands[i - 1]);
+      final most = farewellAgainAfter(age).inMilliseconds;
+      final gap = hands[i] - hands[i - 1];
+      // the loop's own tick where the copy came
+      final at = hands[i];
+      final tick = at <= const Duration(hours: 1).inMilliseconds
+          ? 30000
+          : at <= _day + 600000
+          ? 600000
+          : 3600000;
+      expect(gap, greaterThanOrEqualTo(most ~/ 2), reason: 'gap $i');
+      expect(gap, lessThanOrEqualTo(most + tick), reason: 'gap $i');
+    }
+    expect(hands.where((h) => h <= 2 * 60000).length, inInclusiveRange(2, 3));
+    expect(hands.where((h) => h < 15 * 60000).length, inInclusiveRange(6, 12));
+    expect(hands.where((h) => h > 2 * _day), isNotEmpty);
+    // the opener address with every hand: after the first day, once a day
+    expect(openers, hands);
+    final late = [
+      for (final h in openers)
+        if (h > _day + 600000) h,
+    ];
+    expect(late, isNotEmpty);
+    for (var i = 1; i < late.length; i++) {
+      expect(late[i] - late[i - 1], greaterThanOrEqualTo(_day ~/ 2));
+      expect(late[i] - late[i - 1], lessThanOrEqualTo(_day + 3600000));
+    }
+    // every copy the same bytes
+    final copies = {
+      for (final x in w.wire.sent)
+        if (x.arg.contains('/4/1.')) x.cipher,
+    };
+    expect(copies, hasLength(1));
+
+    // a kill: the computer takes my list without it and stops before the
+    // wipe. its next start wipes it
+    await loadOn(deskDb);
+    await expectLater(
+      deskState.session(deskDb, 'own_set', {
+        'ident': kMainIdent,
+        'identity': anaHex,
+        'list': base64Encode(removal),
+      }, SessionRemote.opened(w.ana.identity.public)),
+      throwsA(isA<DevRefused>().having((e) => e.why, 'why', 'removed')),
+    );
+    expect(await linkedStandingForTest(), LinkedEnd.removed);
+    await bootDevices();
+    expect(wipes, 1);
+    expect(deviceUnlinked.value, LinkedEnd.removed);
+
+    // as linked again, then online: the early copies and every one on the
+    // seeded pair are lost (its seeds went apart), the one of day three
+    // comes on the opener address, and the wipe runs at once
+    linkedEndResetForTest();
+    await deskDb.transaction((t) => applyDevRows(t, linkRows));
+    await bootDevices();
+    expect(wipes, 1);
+    final recv = DeviceReceive(
+      state: deskState,
+      db: () async => deskDb,
+      sessions: (_) async => w.deskDs,
+      send: DeviceSend(
+        state: deskState,
+        db: () async => deskDb,
+        sessions: (_) async => w.deskDs,
+        wire: _Wire(),
+      ),
+      listener: _Listen(),
+      open: deviceOpenAt,
+      me: (_) async =>
+          (ident: kMainIdent, identity: w.ana.identity.public, device: 4),
+      contact: (_, _) async => null,
+      phone: (_, _, _) async => false,
+      sign: (_, _) async => throw StateError('a linked device never signs'),
+    );
+    recv.ownRemoved = deviceReceive!.ownRemoved;
+    final day3 = w.wire.sent.lastWhere((s) => s.arg.contains('/4/1.'));
+    expect(day3.arg, w.wire.openers.last);
+    await recv.receive('${anaHex.substring(2)}/1/4/opn', day3.cipher);
+    expect(wipes, 2);
+    expect(deviceUnlinked.value, LinkedEnd.removed);
+    expect(await linkedStandingForTest(), LinkedEnd.removed);
   });
 
   test('a linked device counts its time in touch with a relay without a '

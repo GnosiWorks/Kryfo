@@ -11,7 +11,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_trace.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, useDatabasesForTest, AppStateReceive, AppStateRoute;
+    show
+        AppState,
+        AppStateContacts,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateReceive,
+        AppStateRoute;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -101,6 +107,30 @@ void main() {
     for (final l in File(file).readAsLinesSync())
       l.substring(l.indexOf(' ') + 1),
   ];
+
+  test('an accept says each of its steps with the ms since it began, and '
+      'nothing that names them', () async {
+    await app.afterAccept(_sam);
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    final l = lines();
+    final steps = [
+      'hello answered',
+      'relay marked',
+      'held let in (0)',
+      'relay freed',
+      'list read',
+    ];
+    var at = l.indexOf('request accepted');
+    expect(at, greaterThanOrEqualTo(0));
+    for (final s in steps) {
+      final i = l.indexWhere(
+        (x) => RegExp('^accept: ${RegExp.escape(s)} \\+\\d+ms\$').hasMatch(x),
+      );
+      expect(i, greaterThan(at), reason: s);
+      at = i;
+    }
+    expect(l.where((x) => x.contains(_sam) || x.contains('sam')), isEmpty);
+  });
 
   test('their first sticker after an accept: added back, then the sticker '
       'and where it showed, and nothing that names them', () async {

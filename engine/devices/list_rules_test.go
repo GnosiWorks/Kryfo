@@ -184,6 +184,32 @@ func TestTwoIdentitiesOnOneDeviceShareNoKey(t *testing.T) {
 	}
 }
 
+// an id a device just removed still uses (its last word goes) is never
+// drawn for a new one, and with every other id busy the one left comes
+func TestFreeIDPassesOverBusyIds(t *testing.T) {
+	s := newShim()
+	a := newAccount(t, s)
+	busy := func(id uint8) bool { return id%2 == 0 }
+	for i := range 2000 {
+		id, err := FreeIDBut(a.list, busy, seeded(uint64(i)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if busy(id) {
+			t.Fatalf("busy id %d drawn", id)
+		}
+	}
+	id, err := FreeIDBut(a.list, func(id uint8) bool { return id != 77 }, rand.Reader)
+	if err != nil || id != 77 {
+		t.Fatalf("the one free id: %d %v", id, err)
+	}
+	dk := DeviceKeys{Identity: a.id.pub, Key: s.identity(t).pub, Reg: 9}
+	e, err := EntryForBut(a.list, dk, func(id uint8) bool { return id != 42 }, rand.Reader)
+	if err != nil || e.ID != 42 {
+		t.Fatalf("entry on the one free id: %d %v", e.ID, err)
+	}
+}
+
 type fixedSource struct{ k Key }
 
 func (f fixedSource) NewKey() (Key, error) { return f.k, nil }

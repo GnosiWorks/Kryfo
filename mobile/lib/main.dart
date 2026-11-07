@@ -15,6 +15,7 @@ import 'devices/history_export.dart'
         kHistoryContactCols,
         kHistoryGroupCols;
 import 'devices/history_ffi.dart' show historyHex;
+import 'devices/history_files.dart' show historyFilesComing;
 import 'devices/history_link.dart';
 import 'devices/history_open.dart' show endHistoryCopies;
 import 'devices/link_calls.dart' show EngineLinkCalls;
@@ -41,6 +42,7 @@ import 'desktop/desktop_mode.dart'
         onDesktop,
         shotsHonouredHere,
         startEngineIn,
+        takeDeskLaunchLink,
         withNativeFiles;
 import 'store.dart' show kPlayBuild, playBuild;
 import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
@@ -78,7 +80,7 @@ import 'picked.dart'
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-import 'phone_seal.dart' show openPhoneSeal;
+import 'phone_seal.dart' show fileKeyOf, openPhoneSeal;
 import 'theme.dart';
 import 'wipe.dart';
 import 'group_end.dart';

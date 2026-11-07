@@ -838,11 +838,19 @@ class _LockTrailPainter extends CustomPainter {
 // fast: no pill, the delivered tick shows in the bubble
 // normal = "1 hop" + a padlock with two dots trailing it
 // private = "3 hops" + 3 rotating onions, staggered
+// waiting: a request they have not accepted yet. nothing turns, so it never
+// reads as a slow route
 
 class SendPill extends StatefulWidget {
   final PrivacyMode mode;
   final bool delivered;
-  const SendPill({super.key, required this.mode, this.delivered = false});
+  final bool waiting;
+  const SendPill({
+    super.key,
+    required this.mode,
+    this.delivered = false,
+    this.waiting = false,
+  });
   @override
   State<SendPill> createState() => _SendPillState();
 }
@@ -867,7 +875,18 @@ class _SendPillState extends State<SendPill>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (motionStill(context)) {
+    _pace();
+  }
+
+  @override
+  void didUpdateWidget(SendPill old) {
+    super.didUpdateWidget(old);
+    if (old.waiting != widget.waiting) _pace();
+  }
+
+  // a waiting pill has nothing turning, so it asks for no frames
+  void _pace() {
+    if (motionStill(context) || widget.waiting) {
       _ctl.stop();
       _ctl.value = 0.5;
     } else if (!_ctl.isAnimating) {
@@ -882,6 +901,7 @@ class _SendPillState extends State<SendPill>
   }
 
   int get _onionCount {
+    if (widget.waiting && !widget.delivered) return 0;
     switch (widget.mode) {
       case PrivacyMode.fast:
         return 0;
@@ -894,6 +914,7 @@ class _SendPillState extends State<SendPill>
 
   String get _label {
     if (widget.delivered) return l10n.motionDelivered;
+    if (widget.waiting) return l10n.pairCodeWaitingForThem;
     switch (widget.mode) {
       case PrivacyMode.fast:
         return l10n.motionSent;
@@ -908,6 +929,7 @@ class _SendPillState extends State<SendPill>
   // text tones, so the words hold 4.5:1 in light too
   Color get _color {
     if (widget.delivered) return HaloColors.greenText;
+    if (widget.waiting) return HaloColors.amberText;
     switch (widget.mode) {
       case PrivacyMode.private:
         return HaloColors.violetText;
@@ -920,7 +942,9 @@ class _SendPillState extends State<SendPill>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.mode == PrivacyMode.fast && !widget.delivered) {
+    if (widget.mode == PrivacyMode.fast &&
+        !widget.delivered &&
+        !widget.waiting) {
       return const SizedBox.shrink();
     }
     return Container(
@@ -954,7 +978,9 @@ class _SendPillState extends State<SendPill>
                 fontWeight: FontWeight.w700,
               ),
             ),
-          ] else if (widget.mode == PrivacyMode.normal) ...[
+          ] else if (widget.waiting)
+            ...[]
+          else if (widget.mode == PrivacyMode.normal) ...[
             const SizedBox(width: 7),
             SizedBox(
               width: 22,

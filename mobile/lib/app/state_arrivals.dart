@@ -1573,6 +1573,7 @@ extension AppStateArrivals on AppState {
           answered: senderAccepted,
           title: notifTitle,
           body: notifBody,
+          msgUid: env.msgUid,
         );
       }
       return to;
@@ -1624,6 +1625,7 @@ extension AppStateArrivals on AppState {
     required bool answered,
     required String title,
     required String body,
+    String? msgUid,
   }) async {
     try {
       if (answered) {
@@ -1632,6 +1634,7 @@ extension AppStateArrivals on AppState {
           tag: await db.notifTag('$kSupportPayload$id'),
           title: title,
           body: body,
+          msgUid: msgUid,
         );
       } else if (!readingIn(kSupportPayload, db.container)) {
         // the inbox on screen says it already. a chat is new with its

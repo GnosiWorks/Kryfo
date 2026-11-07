@@ -1378,6 +1378,112 @@ void main() {
     expect(went.toSet(), hasLength(20));
   });
 
+  test('a device of mine asks for a contact\'s push now: it goes on the next '
+      'pump ahead of the spread; one owed none goes again once a day; a '
+      'contact who does not read lists, or is blocked, gets none', () async {
+    if (skip(engine: false)) return;
+    if (shim == null) {
+      markTestSkipped('needs the shim');
+      return;
+    }
+    linkedDevicesForTest = true;
+    final db = await open();
+    String key(int i) => '05${i.toRadixString(16).padLeft(64, '0')}';
+    for (var i = 0; i < 20; i++) {
+      await db.insert('contacts', {
+        'halo_id': 'c$i',
+        'onion': '',
+        'xpub': '',
+        'first_seen': 0,
+        'last_seen': 0,
+        'ident': kMainIdent,
+        'ikey': key(i),
+        'caps': i == 19 ? 'pq' : 'dv,pq',
+        'blocked': i == 18 ? 1 : 0,
+        'accepted': 1,
+      });
+    }
+    // my list names a desk, 9
+    await db.insert('dev_lists', {
+      'ident': kMainIdent,
+      'owner': 'me',
+      'version': 10,
+      'wire': Uint8List(1),
+    });
+    var clock = 1_780_000_000_000;
+    final store = await testStore();
+    final send = DeviceSend(
+      state: DeviceState(_PhoneOnly(desk: true)),
+      db: () async => db,
+      sessions: (_) async => DeviceSessions(store),
+      wire: _Wire(),
+      clock: () => clock,
+      random: Random(5),
+    );
+    await send.listsChanged([
+      (ident: kMainIdent, version: 10, added: [9], removed: false),
+    ]);
+    final went = <String>[];
+    Future<void> push() => send.pushes(
+      contact: (i, id) async => (
+        me: (ident: i, identity: Uint8List(33), device: 1),
+        c: (peer: 'p-$id', identity: id, devices: true, phoneClassic: false),
+      ),
+      phone: (me, c) =>
+          (measure: (f) async => kSealSizes[0], seal: (f, n) async => 'sealed'),
+      send: (me, c, cipher) async {
+        went.add(c.identity);
+        return true;
+      },
+    );
+    // the last of the spread
+    final rows = await db.query('dev_pushes', orderBy: 'due_at');
+    final last = rows.last['peer'] as String;
+    expect(
+      (rows.last['due_at'] as int) - clock,
+      greaterThan(kPushGapLeast.inMilliseconds),
+    );
+    expect(await send.pushNow(kMainIdent, last), isTrue);
+    await push();
+    expect(went, [last]);
+    // the first pass comes when it is due, without the one gone
+    clock += const Duration(minutes: 7).inMilliseconds;
+    await push();
+    expect(went, hasLength(kPushPerPass + 1));
+    // sent and answered: none owed. asked again, it goes again, once a day
+    await send.listTaken(kMainIdent, last, 10);
+    expect(await send.pushNow(kMainIdent, last), isTrue);
+    await push();
+    expect(went.where((p) => p == last), hasLength(2));
+    await send.listTaken(kMainIdent, last, 10);
+    expect(await send.pushNow(kMainIdent, last), isFalse);
+    clock += const Duration(days: 1, minutes: 1).inMilliseconds;
+    expect(await send.pushNow(kMainIdent, last), isTrue);
+    // fresh bundles again for at most kPushAgainMost contacts a day, kept
+    // in the marks over restarts
+    await db.delete('dev_pushes', where: 'peer = ?', whereArgs: [key(3)]);
+    for (var i = 0; i < kPushAgainMost - 1; i++) {
+      await db.insert('dev_marks', {
+        'ident': kMainIdent,
+        'peer': key(100 + i),
+        'kind': 'dp',
+        'key': '',
+        'at': clock - 1000,
+      });
+    }
+    expect(await send.pushNow(kMainIdent, key(3)), isFalse);
+    expect(
+      await db.query('dev_pushes', where: 'peer = ?', whereArgs: [key(3)]),
+      isEmpty,
+    );
+    await db.delete('dev_marks', where: 'peer = ?', whereArgs: [key(100)]);
+    expect(await send.pushNow(kMainIdent, key(3)), isTrue);
+    // no list reader, a blocked contact, someone else: nothing
+    expect(await send.pushNow(kMainIdent, key(19)), isFalse);
+    expect(await send.pushNow(kMainIdent, key(18)), isFalse);
+    expect(await send.pushNow(kMainIdent, key(77)), isFalse);
+  });
+
   test('a batch carries its make time, and one that answers the phone\'s ask '
       'ages from the ask: a device clock far behind loses none', () async {
     if (skip()) return;
@@ -1537,8 +1643,11 @@ class _SeedEngine implements HaloEngine {
       throw UnimplementedError('engine: ${i.memberName}');
 }
 
-// an engine whose contacts have their phones alone, and my list too
+// an engine whose contacts have their phones alone, and my list too (with
+// [desk], my list names a desk, 9)
 class _PhoneOnly implements DeviceEngine {
+  _PhoneOnly({this.desk = false});
+  final bool desk;
   @override
   String call(String op, Map<String, Object?> args) => switch (op) {
     'current' => jsonEncode({
@@ -1546,6 +1655,7 @@ class _PhoneOnly implements DeviceEngine {
       'list': base64Encode([...ascii.encode('KDL2'), 5, ...List.filled(32, 7)]),
       'devices': [
         {'id': 1, 'phone': true},
+        if (desk && args['ident'] != null) {'id': 9},
       ],
     }),
     'fanout' => jsonEncode({

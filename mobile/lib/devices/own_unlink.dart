@@ -114,7 +114,7 @@ class OwnUnlink {
     // a device stays owed until every list that names it moved
     final open = <String>{};
     for (final e in byIdent.entries) {
-      if (!await _unlist(d, e.key, e.value)) {
+      if (!await _unlist(d, e.key, e.value, why)) {
         open.addAll(e.value.map((r) => r.uid));
       }
     }
@@ -168,7 +168,15 @@ class OwnUnlink {
   // contacts at once. the signed list is kept before it is used, so a
   // removal cut short goes on from where it was. true when nothing of it
   // is owed any more
-  Future<bool> _unlist(Database d, int ident, List<OwnKeyRow> gone) async {
+  Future<bool> _unlist(
+    Database d,
+    int ident,
+    List<OwnKeyRow> gone,
+    String why,
+  ) async {
+    // only a device the person removed may still be out there to wipe:
+    // one that unlinked itself or ended unused is gone already
+    final once = why != kGoneRemoved;
     final m = await me(ident);
     if (m == null || m.device != 1) return false;
     Map<String, dynamic> cur;
@@ -204,7 +212,7 @@ class OwnUnlink {
       await _sealAndKeep(d, m, ident, [
         for (final g in out)
           if (owed.ids.contains(g.dev)) g,
-      ], owed.wire);
+      ], owed.wire, once: once);
       cur = await state.call(d, 'current', {'ident': ident});
       out = listedOf(cur);
     }
@@ -227,7 +235,7 @@ class OwnUnlink {
           'ids': [for (final g in out) g.dev],
         }),
       );
-      await _sealAndKeep(d, m, ident, out, wire);
+      await _sealAndKeep(d, m, ident, out, wire, once: once);
       cur = await state.call(d, 'current', {'ident': ident});
     }
     await _drop(m, gone);
@@ -270,8 +278,9 @@ class OwnUnlink {
     DevMe m,
     int ident,
     List<OwnKeyRow> out,
-    Uint8List wire,
-  ) async {
+    Uint8List wire, {
+    required bool once,
+  }) async {
     final frame = _listFrame(wire);
     for (final g in out) {
       if (await send.farewellHeld(ident, g.dev, g.key)) continue;
@@ -281,6 +290,7 @@ class OwnUnlink {
         pin: g.key,
         reg: g.reg,
         frame: frame,
+        once: once,
       );
     }
     await state.ownMine(d, ident, wire);

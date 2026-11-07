@@ -5402,7 +5402,10 @@ class _Header extends StatelessWidget {
         expiresAt != null ||
         appState.groups.any((g) => g.groupId == groupId && g.expiresAt != null);
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
+      // a computer's header stands a little roomier, a phone's as it was
+      padding: onDesktop
+          ? const EdgeInsetsDirectional.fromSTEB(8, 10, 12, 10)
+          : const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
       child: Row(
         children: [
           PaneBack(
@@ -5425,8 +5428,8 @@ class _Header extends StatelessWidget {
                     HaloHero(
                       tag: 'group-$groupId',
                       child: Container(
-                        width: 36,
-                        height: 36,
+                        width: onDesktop ? 40 : 36,
+                        height: onDesktop ? 40 : 36,
                         decoration: BoxDecoration(
                           color: room
                               ? HaloColors.violet.withValues(alpha: 0.14)
@@ -5444,7 +5447,7 @@ class _Header extends StatelessWidget {
                               ? '·'
                               : name.characters.first.toUpperCase(),
                           style: HaloType.serif(
-                            size: 18,
+                            size: onDesktop ? 20 : 18,
                             italic: true,
                             color: room
                                 ? HaloColors.violetText
@@ -5463,7 +5466,7 @@ class _Header extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.sans(
-                              size: 15,
+                              size: onDesktop ? 16 : 15,
                               weight: FontWeight.w500,
                               color: HaloColors.text,
                             ),
@@ -5696,7 +5699,9 @@ class _Composer extends StatelessWidget {
           ),
         ),
       ),
-      padding: const EdgeInsetsDirectional.fromSTEB(8, 8, 12, 12),
+      padding: onDesktop
+          ? const EdgeInsetsDirectional.fromSTEB(12, 12, 16, 16)
+          : const EdgeInsetsDirectional.fromSTEB(8, 8, 12, 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -5855,8 +5860,8 @@ class _Composer extends StatelessWidget {
                                   hint: ComposerHint(l10n.groupChatMessage),
                                   border: InputBorder.none,
                                   isCollapsed: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 12,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: onDesktop ? 15 : 12,
                                   ),
                                 ),
                                 minLines: 1,

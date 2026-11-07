@@ -311,6 +311,8 @@ type devLoad struct {
 		Ident    int    `json:"ident"`
 		Identity string `json:"identity"`
 		Key      string `json:"key"`
+		// this device's id on the identity's list: 1 (or none) on the phone
+		Dev int `json:"dev"`
 	} `json:"mine"`
 	Contacts []struct {
 		Ident    int    `json:"ident"`
@@ -354,6 +356,47 @@ type devLoad struct {
 		AgedAt  int64  `json:"aged_at"`
 		Last    int    `json:"last"`
 	} `json:"dev_pool"`
+}
+
+// a fresh state from the stored rows, and how many rows did not load: a
+// the address layer's linked identities as a load names them: a container
+// that is device 2..127 of an identity derives every address as that
+// device, never as a phone. a device key of its own goes with an id of
+// 2..127 and only with one. one load replaces all of them
+func linkedFromLoad(in *devLoad) error {
+	next := map[int]linkedIdent{}
+	for _, m := range in.Mine {
+		id, err := parseHexKey(m.Identity)
+		if err != nil {
+			return err
+		}
+		own := false
+		if m.Key != "" {
+			k, err := parseHexKey(m.Key)
+			if err != nil {
+				return err
+			}
+			own = k != id
+		}
+		// no id, or 1, is the phone
+		if m.Dev < 0 || m.Dev > maxDevice {
+			return devices.ErrMalformed
+		}
+		linked := m.Dev > phoneDevice
+		if linked != own {
+			return devices.ErrMalformed
+		}
+		if !linked {
+			continue
+		}
+		var pub [32]byte
+		copy(pub[:], id[1:])
+		next[m.Ident] = linkedIdent{pub: pub, dev: uint8(m.Dev)}
+	}
+	identsMu.Lock()
+	linkedIdents = next
+	identsMu.Unlock()
+	return nil
 }
 
 // a fresh state from the stored rows, and how many rows did not load: a

@@ -12692,7 +12692,7 @@
   "@devicesHistoryCopy": {
     "description": "screens/linked_devices_screen.dart: the first history choice, picked to start"
   },
-  "devicesHistoryCopyHint": "All your messages, with photos and videos from the last 30 days.",
+  "devicesHistoryCopyHint": "Your messages, with photos, videos and voice notes from the last 30 days.",
   "@devicesHistoryCopyHint": {
     "description": "screens/linked_devices_screen.dart: under the first history choice"
   },
@@ -13422,18 +13422,36 @@
   "@historyChatStaysShots": {
     "description": "devices/history_import.dart: on a newly linked device, for a chat that stayed on the phone because screenshot blocking is on in it"
   },
-  "chatDeviceReplyFromPhone": "{name} uses an older Kryfo. Reply from your phone.",
-  "@chatDeviceReplyFromPhone": {
-    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages come through the phone",
+  "chatDeviceOlderKryfo": "{name} uses an older Kryfo. Reply from your phone until they update.",
+  "@chatDeviceOlderKryfo": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on an older Kryfo, whose messages go through the phone until they update",
     "placeholders": {
       "name": {
         "type": "String"
       }
     }
   },
-  "chatDeviceReplyFromPhoneForNow": "Reply to {name} from your phone for now.",
-  "@chatDeviceReplyFromPhoneForNow": {
-    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact none of whose devices has written to this one yet, whose messages go from the phone for now",
+  "chatDeviceNotYet": "{name} can't get messages from this computer yet. Reply from your phone.",
+  "@chatDeviceNotYet": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact whose app has not said which Kryfo it runs yet, so this computer cannot write to them",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatDeviceWaitingForApp": "Waiting for {name}'s app to see this computer. Reply from your phone for now.",
+  "@chatDeviceWaitingForApp": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on Kryfo 0.6 whose app has not opened a pair to this computer yet (it does once it is online and has this computer's details from the phone)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatDeviceQuietAWhile": "{name} hasn't written in a while. Reply from your phone for now.",
+  "@chatDeviceQuietAWhile": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on Kryfo 0.6 whose app has not opened a pair to this computer yet and whose newest message here is two weeks old or more",
     "placeholders": {
       "name": {
         "type": "String"

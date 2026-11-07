@@ -22,6 +22,26 @@ const kLinkNextEnv = 'KRYFO_LINK_NEXT';
 /// set at the start of a run a wipe for a link made: taken once
 bool deskLinkAtStart = false;
 
+/// a kryfo: link the linux runner started this run with (the menu entry's
+/// %u). app_links on linux hears only a command-line signal the runner
+/// never sends, so the cold start's link comes from here
+String? deskLaunchLink;
+
+/// the first kryfo: argument, null when none
+String? launchLinkOf(List<String> args) {
+  for (final a in args) {
+    if (a.length <= 8192 && a.toLowerCase().startsWith('kryfo:')) return a;
+  }
+  return null;
+}
+
+/// the launch link, taken once
+Uri? takeDeskLaunchLink() {
+  final v = deskLaunchLink;
+  deskLaunchLink = null;
+  return v == null ? null : Uri.tryParse(v);
+}
+
 /// whether onboarding opens the link at once, asked once
 bool takeDeskLinkAtStart() {
   final v = deskLinkAtStart;

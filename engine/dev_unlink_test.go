@@ -104,7 +104,7 @@ func TestARemovalIsSignedWithoutTheDevice(t *testing.T) {
 	}
 	// a linked device signs no list of its own
 	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
-		"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(lapKey)}},
+		"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(lapKey), "dev": int(lap.ID)}},
 	})))
 	mustOK(t, devSessionJSON("own_set", devJSON(t, map[string]any{
 		"ident": 0, "identity": hexKey(me.id.pub), "list": me.wire, "remote": hexKey(me.id.pub),
@@ -211,7 +211,7 @@ func TestALeavingKeyOnlyAddresses(t *testing.T) {
 	}
 	// a linked device has no leaving keys of its own
 	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
-		"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(lap.Key)}},
+		"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(lap.Key), "dev": int(lap.ID)}},
 	})))
 	if e := leave(map[string]any{"id": int(desk.ID), "key": hexKey(deskKey)}); e != "source" {
 		t.Fatalf("a linked device leaving: %s", e)

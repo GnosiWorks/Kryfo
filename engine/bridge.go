@@ -392,6 +392,7 @@ func startListener(dataDir string) string {
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
 		return fmt.Sprintf("error: mkdir tor: %v", err)
 	}
+	torDataDir = torDirTarget(torDataDir)
 	setSavedDataDir(dataDir)
 
 	// a hard-killed previous process can leave tor's lock and run files

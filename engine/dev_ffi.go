@@ -225,6 +225,9 @@ func devCallJSON(op, raw string) string {
 		if err != nil {
 			return devAnswer(out, err)
 		}
+		if err := linkedFromLoad(&in); err != nil {
+			return devAnswer(out, err)
+		}
 		devCur = d
 		// a new state starts with no leaving keys: the rows set them again
 		devLeavingReset()

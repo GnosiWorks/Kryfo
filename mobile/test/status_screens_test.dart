@@ -424,7 +424,10 @@ void main() {
       starting: true,
     );
     expect(start.text, l10n.appConnecting2);
-    expect(start.chatLine, l10n.chatBuildingAPrivateRoute);
+    // tor is up: the first relay on its way says the pill's word, never
+    // "first connect is the slow one" (a reopen waits here too)
+    expect(start.chatLine, l10n.appConnecting2);
+    expect(v(LinkKind.climbing).chatLine, l10n.chatBuildingAPrivateRoute);
     expect(start.sendLine, l10n.chatStillConnectingToTor);
     expect(v(LinkKind.offline).chatLine, l10n.appOffline);
     // and the chat screen takes them from the reading, nothing else

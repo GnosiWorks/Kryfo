@@ -4,7 +4,8 @@
 // the save dialog straight to the place picked, "Send to a chat" into a
 // chat's row, "Copy picture". the person's own file is only read, where it
 // is. what a tool makes lives in memory, or sealed in kryfo's tmp, until it
-// is saved or staged; nothing plain is written anywhere else
+// is saved or staged (a locked file is age's ciphertext in kryfo's tmp);
+// nothing plain is written anywhere else
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -15,7 +16,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../desktop/attach_tray.dart' show DeskTrays, TrayHandoff;
-import '../desktop/desktop_mode.dart' show engineDir, onDesktop;
+import '../desktop/desktop_mode.dart' show bulkTempDir, engineDir, onDesktop;
 import '../desktop/desktop_save.dart' show deskSaver;
 import '../desktop/drag_in.dart' show DragInZone;
 import '../l10n/l10n.dart';
@@ -103,12 +104,16 @@ Future<Directory> toolsFolder(String what) async {
   return d;
 }
 
-/// where the engine writes a locked file a tool made: its own folder, which
-/// it reads and writes by path (in memory on linux). only age's ciphertext
-/// is ever there
+/// where the engine writes a locked file a tool made. only age's ciphertext
+/// is ever there. on windows the engine's own folder, on the disk. on linux
+/// the disk's tmp too: the memory folder holds about a tenth of the ram,
+/// and a large file would not fit
 Future<Directory> engineToolsFolder() async {
-  final docs = (await getApplicationDocumentsDirectory()).path;
-  final d = Directory(p.join(engineDir(docs), 'tools_out', _tag()));
+  final bulk = bulkTempDir;
+  final base = Platform.isLinux && bulk != null
+      ? await bulk()
+      : engineDir((await getApplicationDocumentsDirectory()).path);
+  final d = Directory(p.join(base, 'tools_out', _tag()));
   await d.create(recursive: true);
   return d;
 }

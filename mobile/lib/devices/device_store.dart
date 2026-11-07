@@ -325,6 +325,12 @@ Future<void> deviceTables(
       PRIMARY KEY (ident, device)
     )
   ''');
+  // 1: handed until a relay takes it, never again (a device that unlinked
+  // itself or ended unused is gone already)
+  await addColumn(
+    db,
+    'ALTER TABLE dev_farewell ADD COLUMN once INTEGER NOT NULL DEFAULT 0',
+  );
   await db.execute('''
     CREATE TABLE IF NOT EXISTS dev_marks (
       ident INTEGER NOT NULL,
@@ -410,7 +416,8 @@ Future<void> deviceTablesAtOpen(
       (await colsOf('dev_out')).contains('keep') &&
       (await colsOf('own_gone')).contains('chat') &&
       (await colsOf('dev_pushes')).contains('dev_sent') &&
-      (await colsOf('dev_openers')).contains('key');
+      (await colsOf('dev_openers')).contains('key') &&
+      (await colsOf('dev_farewell')).contains('once');
   if (!whole) await deviceTables(db, addColumn);
 }
 
@@ -471,9 +478,9 @@ Future<void> applyDevRows(DatabaseExecutor db, List<dynamic> rows) async {
   }
 }
 
-/// one identity of mine for the engine: its key, and this device's key
-/// for it (the same on the phone)
-typedef DevMine = ({int ident, Uint8List identity, Uint8List key});
+/// one identity of mine for the engine: its key, this device's key for it
+/// (the same on the phone) and this device's id on its list (1 the phone)
+typedef DevMine = ({int ident, Uint8List identity, Uint8List key, int dev});
 
 /// what the engine loads at the start: my identities, every contact with
 /// an identity key, and the stored rows in the order they were written
@@ -486,7 +493,12 @@ Future<Map<String, Object?>> devLoadArgs(
   final out = <String, Object?>{
     'mine': [
       for (final m in mine)
-        {'ident': m.ident, 'identity': hex(m.identity), 'key': hex(m.key)},
+        {
+          'ident': m.ident,
+          'identity': hex(m.identity),
+          'key': hex(m.key),
+          'dev': m.dev,
+        },
     ],
     'contacts': [
       for (final r in await db.query(

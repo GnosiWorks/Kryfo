@@ -44,11 +44,16 @@ void Function(Pointer<Utf8>) lookupEngineFree(
 }
 
 // no real string sits in windows' first 64 KiB, which is never mapped: a
-// pointer there is a broken call, said rather than read
+// pointer there is a broken call, said rather than read. dart reads an
+// address as signed, and android tags heap pointers in the top byte, so a
+// real one there reads below zero: only 0 up to 64 KiB is bad
 const _lowest = 0x10000;
 
+/// whether [address] sits in the first 64 KiB, read as unsigned
+bool lowAddress(int address) => address >= 0 && address < _lowest;
+
 void _checkAddress(Pointer p) {
-  if (p.address < _lowest) {
+  if (lowAddress(p.address)) {
     throw StateError('engine string at a bad address');
   }
 }

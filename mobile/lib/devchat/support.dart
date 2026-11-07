@@ -465,7 +465,14 @@ class SupportBell {
     required String tag,
     required String title,
     required String body,
-  }) => showSupportMessage(chatId: chatId, tag: tag, title: title, body: body);
+    String? msgUid,
+  }) => showSupportMessage(
+    chatId: chatId,
+    tag: tag,
+    title: title,
+    body: body,
+    msgUid: msgUid,
+  );
 
   Future<void> clear() => clearSupportSummary();
 }

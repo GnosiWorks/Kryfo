@@ -19,7 +19,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'carried_settings.dart';
 import 'container.dart';
 import 'lock_state.dart' show LockState, lockState;
-import 'notifications.dart' show cancelWithRetry, notifPlugin;
+import 'notifications.dart' show clearAllNotifications;
 import 'main.dart'
     show
         HaloDb,
@@ -457,8 +457,7 @@ Future<void> _livesHereNow(Object? made) async {
 
 // what the shade holds came for the account just replaced. a decoy's
 // session shows none. after the relays are held, so nothing rings again
-Future<void> _clearShade() =>
-    cancelWithRetry(notifPlugin.cancelAll, 'restore shade');
+Future<void> _clearShade() => clearAllNotifications('restore shade');
 
 // from here on the phone's own files are going: a failure leaves the app on
 // a database it no longer has, so it has to close and start again

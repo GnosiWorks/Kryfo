@@ -1500,5 +1500,63 @@ void main() {
       await hellosGo(nowMs: DateTime.now().millisecondsSinceEpoch + 30 * hour);
       expect(engine.hellos.where((x) => x == p.x), hasLength(1));
     });
+
+    // what 0.5.3's own code made (fixtures/invites_053, make_invites_053.sh):
+    // the qr and link it shows, the link when its counter did not read, and
+    // the text its share sheet carries
+    Map<String, dynamic> made053() =>
+        jsonDecode(
+              File(
+                'test/fixtures/invites_053/from_053.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
+
+    String xOf(String card) => _hex(
+      base64Decode(
+        (jsonDecode(utf8.decode(base64Decode(card))) as Map)['identityKey']
+            as String,
+      ).sublist(1),
+    );
+
+    test(
+      'a 0.5.3 qr scanned here: a hello to its first-contact address and '
+      'the line that they may need to update, never an invalid link',
+      () async {
+        final m = made053();
+        final id = m['id'] as String;
+        final keyHex = '05${xOf(m['card'] as String)}';
+        expect(await handleHaloUriAdded(m['qr'] as String, app: app), (
+          l10n.helloSentOld,
+          true,
+        ));
+        final w = await app.helloWaitOf(id);
+        expect(w.waits, isTrue);
+        expect(w.update, isTrue);
+        expect(await hellosOf('old', keyHex), hasLength(1));
+        await hellosGo();
+        expect(engine.hellos, contains(xOf(m['card'] as String)));
+        // and no session is built on the classic card
+        expect(await hasSessionWith(id), isFalse);
+      },
+    );
+
+    test('a 0.5.3 share text pasted here reads as its link; its link '
+        'without a first-contact address says they need to update', () async {
+      final m = made053();
+      final id = m['id'] as String;
+      expect(await handleHaloUriAdded(m['link_v2'] as String, app: app), (
+        l10n.appLinkNeedsUpdate(id),
+        false,
+      ));
+      expect(live.people.containsKey(id), isFalse);
+      expect(engine.hellos, isEmpty);
+      expect(await handleHaloUriAdded(m['share_text'] as String, app: app), (
+        l10n.helloSentOld,
+        true,
+      ));
+      expect((await app.helloWaitOf(id)).update, isTrue);
+      expect(await hasSessionWith(id), isFalse);
+    });
   });
 }

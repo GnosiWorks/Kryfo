@@ -395,7 +395,10 @@ extension AppStateReceive on AppState {
         if (holder != null && holder != haloId) continue;
         if (r['accepted'] == 1) ours[xPub] = haloId;
         _xPubToHaloId[xPub] = haloId;
-        if (!skip.contains(xPub)) _listen(identOf(haloId), xPub);
+        // a linked device hears its contacts on its device pairs alone
+        if (!skip.contains(xPub) && !linkedRole) {
+          _listen(identOf(haloId), xPub);
+        }
         fresh[xPub] = haloId;
       } catch (e) {
         short = true;

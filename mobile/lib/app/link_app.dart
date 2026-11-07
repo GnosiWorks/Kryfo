@@ -168,6 +168,8 @@ class _PhoneLinkApp implements PhoneLinkHooks {
           name: l10n.devicesNameComputer,
           kind: DeviceKind.computer,
           linkedAt: now,
+          // the link is a use of it
+          heardAt: now,
           keys: [(ident: kMainIdent, dev: t.device, key: t.key, reg: t.reg)],
           stream: bind == null ? null : t.stream,
           hist: bind == null
@@ -254,7 +256,12 @@ class _JoinLinkApp implements JoinLinkHooks {
     final key = signalSession.identity.public;
     final ds = DeviceState(DeviceEngine());
     await ds.load(db, [
-      (ident: kMainIdent, identity: _linkUnhex(p.identity), key: key),
+      (
+        ident: kMainIdent,
+        identity: _linkUnhex(p.identity),
+        key: key,
+        dev: p.device,
+      ),
     ], shimPath: path);
     _deviceState = ds;
   }
