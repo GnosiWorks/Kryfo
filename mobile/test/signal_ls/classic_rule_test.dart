@@ -17,6 +17,9 @@ const _old = 'libsignal_protocol_dart';
 // into the app
 bool _outside(String path) =>
     RegExp(r'^test/fixtures/upgrade_0\d\d/make_0\d\d\.dart$').hasMatch(path) ||
+    RegExp(
+      r'^test/fixtures/invites_0\d\d/make_invites_0\d\d\.dart$',
+    ).hasMatch(path) ||
     path.startsWith('tool/peer053/');
 
 // the code of a dart file without its comments and string contents, so a

@@ -44,6 +44,7 @@ class HaloDb
   static const _storage = secureStore;
 
   // the schema open() upgrades every file to
+  // moves with version: below
   static const schema = 96;
 
   Database? _db;
@@ -161,7 +162,8 @@ class HaloDb
     _db = await openDatabase(
       path,
       password: pw,
-      version: schema,
+      // the upgrade tests read this line: it stays the number, = schema
+      version: 96,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
