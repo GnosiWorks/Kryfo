@@ -8778,6 +8778,21 @@ class AppLocalizationsHi extends AppLocalizations {
       'दिन में एक बार, Tor से। kryfo.app से सबसे नया वर्शन पूछता है और आपके बारे में कुछ नहीं भेजता।';
 
   @override
+  String get settingsCheckNow => 'अभी जाँचें';
+
+  @override
+  String get settingsCheckNowBusy => 'जाँच हो रही है…';
+
+  @override
+  String get updateOpenPage => 'डाउनलोड पेज खोलें';
+
+  @override
+  String get updateNewest => 'आपके पास सबसे नया Kryfo है';
+
+  @override
+  String get updateCouldNotCheck => 'जाँच नहीं हो सकी। बाद में फिर कोशिश करें।';
+
+  @override
   String get voiceDisguiseHere => 'यहाँ मेरी आवाज़ बदलें';
 
   @override

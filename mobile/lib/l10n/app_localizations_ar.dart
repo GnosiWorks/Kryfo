@@ -8903,6 +8903,21 @@ class AppLocalizationsAr extends AppLocalizations {
       'مرة واحدة يوميًا عبر Tor. يسأل kryfo.app عن أحدث إصدار ولا يرسل أي شيء عنك.';
 
   @override
+  String get settingsCheckNow => 'تحقّق الآن';
+
+  @override
+  String get settingsCheckNowBusy => 'جارٍ التحقق…';
+
+  @override
+  String get updateOpenPage => 'فتح صفحة التنزيل';
+
+  @override
+  String get updateNewest => 'لديك أحدث إصدار من Kryfo';
+
+  @override
+  String get updateCouldNotCheck => 'تعذّر التحقق. أعد المحاولة لاحقًا.';
+
+  @override
   String get voiceDisguiseHere => 'تمويه صوتي هنا';
 
   @override

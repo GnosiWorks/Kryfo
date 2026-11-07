@@ -8754,6 +8754,21 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mỗi ngày một lần qua Tor. Chỉ hỏi kryfo.app phiên bản mới nhất và không gửi gì về bạn.';
 
   @override
+  String get settingsCheckNow => 'Kiểm tra ngay';
+
+  @override
+  String get settingsCheckNowBusy => 'Đang kiểm tra…';
+
+  @override
+  String get updateOpenPage => 'Mở trang tải về';
+
+  @override
+  String get updateNewest => 'Bạn đang dùng Kryfo mới nhất';
+
+  @override
+  String get updateCouldNotCheck => 'Không thể kiểm tra. Hãy thử lại sau.';
+
+  @override
   String get voiceDisguiseHere => 'Đổi giọng của tôi ở đây';
 
   @override

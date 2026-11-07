@@ -8769,6 +8769,21 @@ class AppLocalizationsId extends AppLocalizations {
       'Sekali sehari lewat Tor. Hanya menanyakan versi terbaru ke kryfo.app dan tidak mengirim apa pun tentang kamu.';
 
   @override
+  String get settingsCheckNow => 'Periksa sekarang';
+
+  @override
+  String get settingsCheckNowBusy => 'Mengecek…';
+
+  @override
+  String get updateOpenPage => 'Buka halaman unduhan';
+
+  @override
+  String get updateNewest => 'Kamu sudah memakai Kryfo terbaru';
+
+  @override
+  String get updateCouldNotCheck => 'Tidak bisa memeriksa. Coba lagi nanti.';
+
+  @override
   String get voiceDisguiseHere => 'Samarkan suaraku di sini';
 
   @override

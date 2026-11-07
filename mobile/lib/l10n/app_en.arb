@@ -10957,6 +10957,26 @@
   "@settingsCheckForUpdatesHint": {
     "description": "screens/settings_screen.dart: what the update check does"
   },
+  "settingsCheckNow": "Check now",
+  "@settingsCheckNow": {
+    "description": "screens/settings_screen.dart: button under the update switch, one check at once over Tor"
+  },
+  "settingsCheckNowBusy": "Checking…",
+  "@settingsCheckNowBusy": {
+    "description": "screens/settings_screen.dart: the check now row while the check runs"
+  },
+  "updateOpenPage": "Open the download page",
+  "@updateOpenPage": {
+    "description": "screens/settings_screen.dart: sheet button after a check by hand found a newer Kryfo, opens kryfo.app/download"
+  },
+  "updateNewest": "You have the newest Kryfo",
+  "@updateNewest": {
+    "description": "screens/settings_screen.dart: toast after a check by hand, this copy is the newest"
+  },
+  "updateCouldNotCheck": "Couldn't check. Try again later.",
+  "@updateCouldNotCheck": {
+    "description": "screens/settings_screen.dart: toast after a check by hand that got no trusted answer: Tor down or a bad signature"
+  },
   "voiceDisguiseHere": "Disguise my voice here",
   "@voiceDisguiseHere": {
     "description": "a chat's menu: the switch that disguises your voice notes in this chat, remembered per chat"

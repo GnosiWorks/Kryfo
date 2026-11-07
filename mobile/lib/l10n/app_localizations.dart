@@ -14083,6 +14083,36 @@ abstract class AppLocalizations {
   /// **'Once a day over Tor. Asks kryfo.app for the newest version and sends nothing about you.'**
   String get settingsCheckForUpdatesHint;
 
+  /// screens/settings_screen.dart: button under the update switch, one check at once over Tor
+  ///
+  /// In en, this message translates to:
+  /// **'Check now'**
+  String get settingsCheckNow;
+
+  /// screens/settings_screen.dart: the check now row while the check runs
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get settingsCheckNowBusy;
+
+  /// screens/settings_screen.dart: sheet button after a check by hand found a newer Kryfo, opens kryfo.app/download
+  ///
+  /// In en, this message translates to:
+  /// **'Open the download page'**
+  String get updateOpenPage;
+
+  /// screens/settings_screen.dart: toast after a check by hand, this copy is the newest
+  ///
+  /// In en, this message translates to:
+  /// **'You have the newest Kryfo'**
+  String get updateNewest;
+
+  /// screens/settings_screen.dart: toast after a check by hand that got no trusted answer: Tor down or a bad signature
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check. Try again later.'**
+  String get updateCouldNotCheck;
+
   /// a chat's menu: the switch that disguises your voice notes in this chat, remembered per chat
   ///
   /// In en, this message translates to:

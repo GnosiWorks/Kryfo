@@ -76,7 +76,8 @@ import '../l10n/l10n.dart';
 import '../widgets/language_sheet.dart';
 import '../wipe_word.dart';
 import '../first_contact.dart' show firstFails;
-import '../update_check.dart' show updateNotice;
+import '../update_check.dart' show UpdateAnswer, updateNotice;
+import '../widgets/update_card.dart' show openDownloadPage;
 
 // one protection: a ring that fills on the house spring and ticks, and its
 // state, which rises in when it changes. turning on washes the line amber
@@ -382,6 +383,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // only for copies from the site or github
   bool _updateOffered = false;
   bool? _updateOn;
+  bool _checkingNow = false;
   // asked once a visit, not on every rebuild
   late final Future<bool> _notifs = notificationsEnabled();
   // when this side last handed a backup out, once read
@@ -505,6 +507,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _updateOn = v;
       });
     }
+  }
+
+  // one check at once, its answer said plainly. a newer version offers
+  // the download page, as the card does
+  Future<void> _checkNow() async {
+    if (_checkingNow) return;
+    setState(() => _checkingNow = true);
+    final a = await updateNotice.checkNow();
+    if (!mounted) return;
+    setState(() => _checkingNow = false);
+    final v = updateNotice.latest;
+    if (a == UpdateAnswer.ready && v != null) {
+      final go = await showConfirmSheet(
+        context,
+        title: l10n.updateAvailable,
+        line: l10n.updateReady(v),
+        yes: l10n.updateOpenPage,
+        keep: l10n.homeNotNow,
+        rose: false,
+      );
+      if (go && mounted) await openDownloadPage(context);
+      return;
+    }
+    showHaloToast(
+      context,
+      a == UpdateAnswer.newest ? l10n.updateNewest : l10n.updateCouldNotCheck,
+    );
   }
 
   // how messages arrive, how they sound and what they show: one screen
@@ -1129,6 +1158,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       setState(() => _updateOn = v);
                       await updateNotice.setOn(v);
                     },
+                  ),
+                if (_updateOffered)
+                  HaloRow(
+                    icon: Icons.refresh_rounded,
+                    label: l10n.settingsCheckNow,
+                    value: _checkingNow ? l10n.settingsCheckNowBusy : null,
+                    onTap: _checkingNow ? null : _checkNow,
                   ),
                 // the chat with the developer: the way back after a delete.
                 // none on his own phone, none with no key pinned
