@@ -501,6 +501,11 @@ void main() {
   });
 
   test('release.sh never builds a final with the candidate switch set', () {
+    // nothing from the shell: a KRYFO_RC set there would start a real build
+    final bare = {
+      'PATH': Platform.environment['PATH']!,
+      'HOME': Platform.environment['HOME']!,
+    };
     final sh = File('../repro/release.sh').readAsStringSync();
     expect(sh, contains('a final release is never built with it'));
     expect(sh, contains('scripts/check-dev-card.sh'));
@@ -516,14 +521,16 @@ void main() {
     final r = Process.runSync(
       'bash',
       ['../repro/release.sh', '--unsigned'],
-      environment: {'KRYFO_RC': '1', 'PATH': Platform.environment['PATH']!},
+      environment: {...bare, 'KRYFO_RC': '1'},
+      includeParentEnvironment: false,
     );
     expect(r.exitCode, 2);
     expect('${r.stderr}', contains('never built with it'));
     final rc = Process.runSync(
       'bash',
       ['../repro/release.sh', '--rc', '--unsigned'],
-      environment: {'PATH': Platform.environment['PATH']!},
+      environment: bare,
+      includeParentEnvironment: false,
     );
     expect(rc.exitCode, 2);
     expect('${rc.stderr}', contains('--rc needs KRYFO_RC=1'));
