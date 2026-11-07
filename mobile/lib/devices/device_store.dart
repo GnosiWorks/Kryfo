@@ -325,6 +325,12 @@ Future<void> deviceTables(
       PRIMARY KEY (ident, device)
     )
   ''');
+  // 1: handed until a relay takes it, never again (a device that unlinked
+  // itself or ended unused is gone already)
+  await addColumn(
+    db,
+    'ALTER TABLE dev_farewell ADD COLUMN once INTEGER NOT NULL DEFAULT 0',
+  );
   await db.execute('''
     CREATE TABLE IF NOT EXISTS dev_marks (
       ident INTEGER NOT NULL,
@@ -410,7 +416,8 @@ Future<void> deviceTablesAtOpen(
       (await colsOf('dev_out')).contains('keep') &&
       (await colsOf('own_gone')).contains('chat') &&
       (await colsOf('dev_pushes')).contains('dev_sent') &&
-      (await colsOf('dev_openers')).contains('key');
+      (await colsOf('dev_openers')).contains('key') &&
+      (await colsOf('dev_farewell')).contains('once');
   if (!whole) await deviceTables(db, addColumn);
 }
 

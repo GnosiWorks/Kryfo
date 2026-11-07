@@ -392,6 +392,9 @@ Future<void> joinedRows(
   }, where: 'id = 0');
   if (n != 1) throw StateError('no identity to link');
   await applyDevRows(tx, rows);
+  // linked only with its phone's list held: one without it would end at
+  // its first standing check
+  if (!await ownListHeld(tx, 0)) throw StateError('no list to link with');
   await tx.insert('signal_meta', {
     'k': kLinkStreamMeta,
     'v': base64Encode(stream),

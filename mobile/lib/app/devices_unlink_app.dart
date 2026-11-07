@@ -87,7 +87,11 @@ void _bootUnlink(DeviceState ds, DeviceSend send, DeviceReceive recv) {
   _onlineTimer?.cancel();
   _onlineTimer = Timer.periodic(
     kOnlineTickEvery,
-    (_) => unawaited(linkedRole ? _quietTick() : _onlineTick()),
+    (_) {
+      // nothing of it while this device is being erased
+      if (haloWiping) return;
+      unawaited(linkedRole ? _quietTick() : _onlineTick());
+    },
   );
   if (!linkedRole) {
     unawaited(_onlineTick());
@@ -140,7 +144,9 @@ bool _relayInTouch(int? since) {
 // phone: past 30 days of it, the phone holds it no more and it ends
 Future<void> _quietTick() async {
   final u = _ownUnlink;
-  if (u == null || !linkedRole || deviceUnlinked.value != null) return;
+  if (u == null || !linkedRole || haloWiping || deviceUnlinked.value != null) {
+    return;
+  }
   try {
     // a removal taken and not finished ends it now, not at the hour
     final end = await _linkedStanding();

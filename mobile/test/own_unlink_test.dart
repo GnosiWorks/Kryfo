@@ -170,6 +170,7 @@ class _Killed extends DeviceSend {
     required String pin,
     required int reg,
     required String frame,
+    bool once = false,
   }) async {
     if (at == 'farewell') throw StateError('killed');
     return super.farewell(
@@ -178,6 +179,7 @@ class _Killed extends DeviceSend {
       pin: pin,
       reg: reg,
       frame: frame,
+      once: once,
     );
   }
 }
@@ -560,17 +562,22 @@ void main() {
     expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 1);
     int words() => w.wire.sent.where((s) => s.arg.contains('/4/1.')).length;
     final n = words();
-    w.clock += const Duration(minutes: 1).inMilliseconds;
+    final openers = w.wire.openers.length;
+    // the next copy in the second half of two minutes, never sooner
+    w.clock += const Duration(seconds: 59).inMilliseconds;
     await w.settle();
     expect(words(), n);
     w.clock += const Duration(minutes: 2).inMilliseconds;
     await w.settle();
     expect(words(), n + 2);
+    expect(w.wire.openers, hasLength(openers + 1));
     expect(w.wire.sent.last.cipher, tried.first.cipher);
-    // a day on, once more; past two weeks it is let go
+    // a day on, once more, on the seeded pair alone; past two weeks it is
+    // let go
     w.clock += _day;
     await w.settle();
-    expect(words(), n + 4);
+    expect(words(), n + 3);
+    expect(w.wire.openers, hasLength(openers + 1));
     w.clock += 14 * _day;
     await w.settle();
     expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 0);
@@ -678,6 +685,15 @@ void main() {
     expect(row['gone_why'], kGoneItself);
     expect(row['notice'], 2);
     expect(await w.anaDs.has(kOwnDevices, 4), isFalse);
+    // wiped already: its last word goes until a relay takes it, never again
+    await w.settle();
+    expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 0);
+    int words() => w.wire.sent.where((s) => s.arg.contains('/4/1.')).length;
+    final n = words();
+    expect(n, greaterThan(0));
+    w.clock += _day;
+    await w.settle();
+    expect(words(), n);
   });
 
   test('my phone\'s list without this device wipes it; an older list, one '

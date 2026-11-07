@@ -39,9 +39,14 @@ const kOwnOpKept = Duration(days: 30);
 /// before it is let go: the relays keep a wrap about this long
 const kFarewellKept = Duration(days: 14);
 
-/// when a last word the relay took goes again, by its age: a relay that
-/// drops it or a device that missed it gets it from a later copy, and one
-/// that already took it cannot open the same bytes twice
+/// the opener address gets a last word for this long: the seeded pair
+/// keeps it to [kFarewellKept]
+const kFarewellOpenerFor = Duration(days: 1);
+
+/// when a last word the relay took goes again, by its age, at most: a
+/// relay that drops it or a device that missed it gets it from a later
+/// copy, and one that already took it cannot open the same bytes twice.
+/// each wait is drawn from its second half
 Duration farewellAgainAfter(Duration age) {
   if (age < const Duration(minutes: 10)) return const Duration(minutes: 2);
   if (age < const Duration(hours: 1)) return const Duration(minutes: 15);
@@ -1144,6 +1149,7 @@ class DeviceSend {
     required String pin,
     required int reg,
     required String frame,
+    bool once = false,
   }) async {
     final last = await sealLast(
       me: me,
@@ -1165,6 +1171,7 @@ class DeviceSend {
       'opener': last.opener ? 1 : 0,
       'at': _clock(),
       'next_at': 0,
+      'once': once ? 1 : 0,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     await leaving(me.ident);
     return true;
@@ -1207,7 +1214,11 @@ class DeviceSend {
   // device's opener address, which a linked device watches for its phone
   // always, so a pair whose seeds went apart still carries it. true when a
   // relay took either
-  Future<bool> _handFarewell(int ident, DevLast last) async {
+  Future<bool> _handFarewell(
+    int ident,
+    DevLast last, {
+    required bool opener,
+  }) async {
     Future<bool> one(Future<String> Function() go) async {
       try {
         return await go() == 'ok';
@@ -1217,10 +1228,10 @@ class DeviceSend {
     }
 
     final seeded = await one(() => wire.send(ident, last.arg, last.wire));
-    final opener = await one(
-      () => wire.sendOpener(ident, last.arg, last.wire),
-    );
-    return seeded || opener;
+    final opened =
+        opener &&
+        await one(() => wire.sendOpener(ident, last.arg, last.wire));
+    return seeded || opened;
   }
 
   // the last words due: each handed to the relay until it takes one, then
@@ -1249,21 +1260,30 @@ class DeviceSend {
       whereArgs: [now],
     )) {
       final ident = r['ident'] as int;
-      final ok = await _handFarewell(ident, (
-        arg: r['arg'] as String,
-        wire: r['wire'] as String,
-        opener: r['opener'] == 1,
-      ));
+      final age = Duration(milliseconds: now - (r['at'] as int));
+      final once = r['once'] == 1;
+      final ok = await _handFarewell(
+        ident,
+        (
+          arg: r['arg'] as String,
+          wire: r['wire'] as String,
+          opener: r['opener'] == 1,
+        ),
+        opener: age < kFarewellOpenerFor,
+      );
       final where = 'ident = ? AND device = ?';
       final args = [ident, r['device']];
+      if (ok && once) {
+        await d.delete('dev_farewell', where: where, whereArgs: args);
+        idents.add(ident);
+        continue;
+      }
       if (ok) {
-        final age = Duration(milliseconds: now - (r['at'] as int));
+        final step = farewellAgainAfter(age).inMilliseconds;
+        final half = step ~/ 2;
         await d.update(
           'dev_farewell',
-          {
-            'tries': 0,
-            'next_at': now + farewellAgainAfter(age).inMilliseconds,
-          },
+          {'tries': 0, 'next_at': now + half + _rand.nextInt(half + 1)},
           where: where,
           whereArgs: args,
         );
