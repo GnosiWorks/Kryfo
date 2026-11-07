@@ -7,7 +7,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:flutter/services.dart';
+import 'package:kryfo/chat_shots.dart' show ChatShots;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/main.dart' show AppIo, HaloDb;
 import 'package:kryfo/notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -61,6 +64,11 @@ _Shade _start({bool hide = false}) {
   FlutterSecureStorage.setMockInitialValues({});
   forgetNotifPlain();
   forgetFolds();
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (_) async => true,
+      );
   final shade = _Shade();
   FlutterLocalNotificationsPlatform.instance = shade;
   return shade;
@@ -104,6 +112,28 @@ String _words(
     if (st is BigTextStyleInformation) ...[st.contentTitle, st.summaryText],
   ].whereType<String>().join('\n');
 }
+
+// the rows a ring asks for its tag and keeps its first ring in
+class _Rows implements HaloDb {
+  final rings = <(int, String, String)>[];
+  @override
+  Future<String> notifTag(String chat) async => 't-$chat';
+  @override
+  Future<void> noteRing(int id, String chat, String msgUid) async =>
+      rings.add((id, chat, msgUid));
+  @override
+  Future<ChatShots> shotsOf(String peer) async => const ChatShots();
+  @override
+  HaloContainer get container => HaloContainer.everyday;
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+// what the shade showed last under a chat's tag
+({int id, String? title, String? body, AndroidNotificationDetails d}) _lastOf(
+  _Shade shade,
+  String chat,
+) => shade.shown.lastWhere((s) => s.d.tag == 't-$chat');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -296,5 +326,138 @@ void main() {
     });
     expect(await _ring('bob', 'hi'), isNull);
     expect(shade.shown, isEmpty);
+  });
+
+  test('swiped away, a line taken back posts nothing again', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    await _ring('bob', 'see you', uid: 'b');
+    shade.posted.clear();
+    final before = shade.shown.length;
+    await clearMessageNotification('a');
+    expect(shade.shown, hasLength(before));
+    expect(shade.up, isEmpty);
+    // a burn of the other finds nothing to post either
+    await clearMessageNotification('b');
+    expect(shade.shown, hasLength(before));
+  });
+
+  test('swiped away, plain on, a line taken back posts no name', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    await _ring('bob', 'see you', uid: 'b');
+    shade.posted.clear();
+    await setNotifPlain(true);
+    final before = shade.shown.length;
+    await clearMessageNotification('a');
+    expect(shade.shown, hasLength(before));
+    expect(ringIsFirst('bob'), isTrue);
+  });
+
+  test('plain on with folds up: nothing named is posted after', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    await _ring('bob', 'see you', uid: 'b');
+    await setNotifPlain(true);
+    await clearMessageNotification('a');
+    for (final s in shade.shown.skipWhile((s) => s.d.tag == 't-bob')) {
+      expect(_words(s), isNot(contains('Bob')));
+      expect(_words(s), isNot(contains('see you')));
+    }
+  });
+
+  test('previews off while up: a repost says only kryfo', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    await _ring('bob', 'see you', uid: 'b');
+    await setHideNotifContent(true);
+    await clearMessageNotification('a');
+    final last = shade.shown.last;
+    expect(_words(last), isNot(contains('Bob')));
+    expect(_words(last), isNot(contains('see you')));
+    expect(shade.up, hasLength(1));
+  });
+
+  test('previews off after a swipe: nothing is posted again', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    await _ring('bob', 'see you', uid: 'b');
+    shade.posted.clear();
+    await setHideNotifContent(true);
+    final before = shade.shown.length;
+    await clearMessageNotification('a');
+    expect(shade.shown, hasLength(before));
+    await _ring('bob', 'later', uid: 'c', hidden: true);
+    expect(_words(shade.shown.last), isNot(contains('see you')));
+  });
+
+  test('swiped away, a new message starts over', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    await _ring('bob', 'see you', uid: 'b');
+    shade.posted.clear();
+    await _ring('bob', 'hello again', uid: 'c');
+    expect(_lines(shade.shown.last.d), ['hello again']);
+    expect(shade.shown.last.d.number, 1);
+    expect(ringIsFirst('bob'), isTrue);
+  });
+
+  test('a tapped one, the chat never opened, starts over too', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    // autoCancel: the tap takes it down, the chat stays closed
+    shade.posted.clear();
+    await _ring('bob', 'hi', uid: 'b');
+    expect(_words(shade.shown.last), isNot(contains('six')));
+  });
+
+  test('a line past the 500 kept by message still leaves its fold', () async {
+    final shade = _start();
+    await _ring('bob', 'secret plan', uid: 'x0');
+    await _ring('bob', 'fine', uid: 'x1');
+    for (var i = 0; i < 505; i++) {
+      await _ring('amy', 'm$i', title: 'Amy', uid: 'y$i');
+    }
+    await clearMessageNotification('x0');
+    final last = _lastOf(shade, 'bob');
+    expect(_words(last), isNot(contains('secret')));
+    expect(last.d.number, 1);
+    expect(shade.posted.map((p) => p.$2), contains('t-bob'));
+  });
+
+  test('two first arrivals at once in one chat make one fold', () async {
+    final shade = _start();
+    await Future.wait([
+      _ring('bob', 'one', uid: 'a'),
+      _ring('bob', 'two', uid: 'b'),
+      _ring('amy', 'three', title: 'Amy', uid: 'c'),
+    ]);
+    expect(shade.up, hasLength(2));
+    expect(_lastOf(shade, 'bob').d.number, 2);
+    await clearMessageNotification('a');
+    expect(shade.up, hasLength(2));
+  });
+
+  test('a fold keeps the ring of its first message only', () async {
+    final shade = _start();
+    final rows = _Rows();
+    const io = AppIo();
+    Future<void> say(String uid) => io.notify(
+      title: 'Bob',
+      body: 'hi $uid',
+      payload: 'bob',
+      on: rows,
+      msgUid: uid,
+    );
+    await say('a');
+    await say('b');
+    expect(rows.rings.map((r) => r.$3), ['a']);
+    // swiped, then plain on: the next plain ring is kept, no stale fold
+    shade.posted.clear();
+    await setNotifPlain(true);
+    await say('c');
+    expect(rows.rings.map((r) => r.$3), ['a', 'c']);
+    await say('d');
+    expect(rows.rings.map((r) => r.$3), ['a', 'c', 'd']);
   });
 }

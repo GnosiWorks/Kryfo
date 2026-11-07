@@ -249,6 +249,8 @@ Future<void> setHideNotifContent(
   await prefs.setBool(c.key(_hideContentKey), v);
   _hideKnown[c.key(_hideContentKey)] = v;
   hideNotifRevision.value++;
+  // words already folded never show again: a later repost says only kryfo
+  if (v) _maskFolds();
 }
 
 // the phone's: no name, no words, no colour, whoever is unlocked
@@ -392,6 +394,12 @@ Future<int?> _postPlain({
 // stands for them, for the newest one's chat. what is up was not opened
 // yet: a chat that was read took its own down. a decoy has none up
 Future<void> _plainOverNamed() async {
+  // ids do not follow time: the folds this process posted know which
+  // rang last, the rest fall back on id order
+  final order = [for (final f in _folds.values) f.tag];
+  final chatOf = {for (final e in _folds.entries) e.value.tag: e.key};
+  // named folds go whatever the shade says: nothing reposts their words
+  _folds.removeWhere((_, f) => f.channel == _messagesChannel);
   if (await quietNow()) return;
   final named = <ActiveNotification>[];
   try {
@@ -403,16 +411,11 @@ Future<void> _plainOverNamed() async {
     return;
   }
   if (named.isEmpty) return;
-  // ids do not follow time: the folds this process posted know which
-  // rang last, the rest fall back on id order
-  final order = [for (final f in _folds.values) f.tag];
   int rank(ActiveNotification a) => order.indexOf(a.tag ?? '');
   named.sort((a, b) {
     final r = rank(a).compareTo(rank(b));
     return r != 0 ? r : a.id!.compareTo(b.id!);
   });
-  final chatOf = {for (final e in _folds.entries) e.value.tag: e.key};
-  _folds.removeWhere((_, f) => f.channel == _messagesChannel);
   for (final a in named) {
     await cancelWithRetry(
       () => notifPlugin.cancel(id: a.id!, tag: a.tag),
@@ -527,28 +530,102 @@ Future<void> clearUntaggedShade() async {
   }
 }
 
-Future<void> clearMessageNotification(String msgUid) async {
+Future<void> clearMessageNotification(String msgUid) =>
+    _foldTurnOf(() => _clearMessage(msgUid)).then((_) {});
+
+Future<void> _clearMessage(String msgUid) async {
   unawaited(_forgetRings(msgUid: msgUid));
   final shown = _shownForMsg.remove(msgUid);
-  if (shown == null) return;
-  final (chat, id, tag) = shown;
-  final fold = _folds[chat];
-  if (fold != null && fold.id == id && fold.tag == tag) {
+  // the folds are looked in directly: the map above forgets the oldest
+  final at = _folds.entries
+      .where((e) => e.value.lines.any((l) => l.uid == msgUid))
+      .firstOrNull;
+  final chat = at?.key ?? shown?.$1;
+  final fold = chat == null ? null : _folds[chat];
+  if (fold != null &&
+      (at != null || (shown!.$2 == fold.id && shown.$3 == fold.tag))) {
     // the rest of the chat's stay up: its line goes, quietly
     fold.lines.removeWhere((l) => l.uid == msgUid);
     fold.count--;
-    if (fold.count > 0 && fold.lines.isNotEmpty && !await quietNow()) {
+    if (fold.count > 0 &&
+        fold.lines.isNotEmpty &&
+        await _mayRepost(fold) &&
+        !await quietNow()) {
       await _postFold(fold, alert: false);
       return;
     }
     _folds.remove(chat);
-    await cancelWithRetry(() => notifPlugin.cancel(id: id, tag: tag), 'shade');
+    await cancelWithRetry(
+      () => notifPlugin.cancel(id: fold.id, tag: fold.tag),
+      'shade',
+    );
     return;
   }
-  final ids = _shownFor[chat];
+  if (shown == null) return;
+  final (sChat, id, tag) = shown;
+  final ids = _shownFor[sChat];
   ids?.remove((id, tag));
-  if (ids != null && ids.isEmpty) _shownFor.remove(chat);
+  if (ids != null && ids.isEmpty) _shownFor.remove(sChat);
   await cancelWithRetry(() => notifPlugin.cancel(id: id, tag: tag), 'shade');
+}
+
+// a fold is posted again only while it is up and nothing got stricter
+// since: swiped away, plain on, or previews off, it goes instead
+Future<bool> _mayRepost(_Fold fold) async {
+  if (!await _foldUp(fold)) return false;
+  if (!_isSupport(fold) && await loadNotifPlain()) return false;
+  if (!fold.lines.last.hidden && await loadHideNotifContent()) return false;
+  return true;
+}
+
+// the fold's own notification is in the shade now. a shade that cannot be
+// read counts as empty, so nothing old is posted again
+Future<bool> _foldUp(_Fold fold) async {
+  try {
+    for (final a in await notifPlugin.getActiveNotifications()) {
+      if (a.id == fold.id && a.tag == fold.tag) return true;
+    }
+  } catch (e) {
+    dlog('shade: not read (${e.runtimeType})');
+  }
+  return false;
+}
+
+void _maskFolds() {
+  for (final f in _folds.values) {
+    for (var i = 0; i < f.lines.length; i++) {
+      final l = f.lines[i];
+      if (l.hidden) continue;
+      f.lines[i] = _Line(
+        uid: l.uid,
+        title: 'Kryfo',
+        body: l10n.notificationsNewMessage,
+        hidden: true,
+        burnAt: l.burnAt,
+        at: l.at,
+      );
+    }
+  }
+}
+
+// one fold change at a time: two arrivals together would each build a fold
+// for the same chat. a platform call that hangs gives up, so the next runs
+Future<void> _foldTurn = Future.value();
+
+@visibleForTesting
+Duration foldPostLimit = const Duration(seconds: 10);
+
+Future<T?> _foldTurnOf<T>(Future<T> Function() job) {
+  final done = Completer<T?>();
+  _foldTurn = _foldTurn.then((_) async {
+    try {
+      done.complete(await job().timeout(foldPostLimit));
+    } catch (e) {
+      dlog('shade: fold not done (${e.runtimeType})');
+      done.complete(null);
+    }
+  });
+  return done.future;
 }
 
 // one notification per chat, under its tag and an id cut from it, updated
@@ -561,7 +638,8 @@ class _Line {
     required this.body,
     required this.hidden,
     this.burnAt,
-  }) : at = DateTime.now().millisecondsSinceEpoch;
+    int? at,
+  }) : at = at ?? DateTime.now().millisecondsSinceEpoch;
   final String? uid;
   final String title;
   final String body;
@@ -588,7 +666,7 @@ bool _isSupport(_Fold f) => f.channel == _supportChannel;
 final Map<String, _Fold> _folds = {};
 
 // lines kept per chat, and lines shown
-const _kKeptLines = 50;
+const _kKeptLines = 10;
 const _kShownLines = 6;
 
 // chats with a notification up at once. the shade's own limit is about 25
@@ -630,6 +708,17 @@ Future<int?> _ringFold({
   required String tag,
   required _Line line,
   bool support = false,
+}) => _foldTurnOf<int?>(() async {
+  // a decoy may have opened while this waited its turn
+  if (await quietNow()) return null;
+  return _ringFoldNow(chat: chat, tag: tag, line: line, support: support);
+});
+
+Future<int?> _ringFoldNow({
+  required String chat,
+  required String tag,
+  required _Line line,
+  required bool support,
 }) async {
   var fold = _folds.remove(chat);
   // a chat whose tag changed starts over
@@ -640,6 +729,9 @@ Future<int?> _ringFold({
     );
     fold = null;
   }
+  // swiped away, or tapped with the chat never opened: what it held is not
+  // posted again
+  if (fold != null && !await _foldUp(fold)) fold = null;
   if (fold == null) {
     await _makeRoom();
     fold = _Fold(tag, support ? _supportChannel : _messagesChannel);
@@ -758,6 +850,8 @@ Future<void> _postFold(_Fold fold, {required bool alert}) async {
     // a timed message leaves the shade its window after it came, read or
     // not, whatever is running then: android takes it down itself. the
     // message waits in the chat to be read
+    // a timed one newest takes the whole fold down with it, the untimed
+    // lines above it too: they wait in the chat, unread
     final left = last.burnAt == null ? null : max(1, last.burnAt! - now);
     details = AndroidNotificationDetails(
       _messagesChannel,
