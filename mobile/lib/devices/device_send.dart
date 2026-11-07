@@ -39,10 +39,6 @@ const kOwnOpKept = Duration(days: 30);
 /// before it is let go: the relays keep a wrap about this long
 const kFarewellKept = Duration(days: 14);
 
-/// the opener address gets a last word for this long: the seeded pair
-/// keeps it to [kFarewellKept]
-const kFarewellOpenerFor = Duration(days: 1);
-
 /// when a last word the relay took goes again, by its age, at most: a
 /// relay that drops it or a device that missed it gets it from a later
 /// copy, and one that already took it cannot open the same bytes twice.
@@ -1212,13 +1208,10 @@ class DeviceSend {
 
   // a last word to both addresses of its pair: the seeded one, and the
   // device's opener address, which a linked device watches for its phone
-  // always, so a pair whose seeds went apart still carries it. true when a
-  // relay took either
-  Future<bool> _handFarewell(
-    int ident,
-    DevLast last, {
-    required bool opener,
-  }) async {
+  // always, so a pair whose seeds went apart still carries it, a stolen
+  // computer kept offline for days too (from the first day on, both go
+  // once a day by [farewellAgainAfter]). true when a relay took either
+  Future<bool> _handFarewell(int ident, DevLast last) async {
     Future<bool> one(Future<String> Function() go) async {
       try {
         return await go() == 'ok';
@@ -1228,9 +1221,9 @@ class DeviceSend {
     }
 
     final seeded = await one(() => wire.send(ident, last.arg, last.wire));
-    final opened =
-        opener &&
-        await one(() => wire.sendOpener(ident, last.arg, last.wire));
+    final opened = await one(
+      () => wire.sendOpener(ident, last.arg, last.wire),
+    );
     return seeded || opened;
   }
 
@@ -1262,15 +1255,11 @@ class DeviceSend {
       final ident = r['ident'] as int;
       final age = Duration(milliseconds: now - (r['at'] as int));
       final once = r['once'] == 1;
-      final ok = await _handFarewell(
-        ident,
-        (
-          arg: r['arg'] as String,
-          wire: r['wire'] as String,
-          opener: r['opener'] == 1,
-        ),
-        opener: age < kFarewellOpenerFor,
-      );
+      final ok = await _handFarewell(ident, (
+        arg: r['arg'] as String,
+        wire: r['wire'] as String,
+        opener: r['opener'] == 1,
+      ));
       final where = 'ident = ? AND device = ?';
       final args = [ident, r['device']];
       if (ok && once) {

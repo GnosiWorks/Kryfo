@@ -584,12 +584,11 @@ void main() {
     expect(words(), n + 2);
     expect(w.wire.openers, hasLength(openers + 1));
     expect(w.wire.sent.last.cipher, tried.first.cipher);
-    // a day on, once more, on the seeded pair alone; past two weeks it is
-    // let go
+    // a day on, once more on both; past two weeks it is let go
     w.clock += _day;
     await w.settle();
-    expect(words(), n + 3);
-    expect(w.wire.openers, hasLength(openers + 1));
+    expect(words(), n + 4);
+    expect(w.wire.openers, hasLength(openers + 2));
     w.clock += 14 * _day;
     await w.settle();
     expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 0);
@@ -2218,8 +2217,17 @@ void main() {
       inInclusiveRange(6, 12),
     );
     expect(hands.where((h) => h > 2 * _day), isNotEmpty);
-    expect(openers.every((h) => h < _day + 600000), isTrue);
-    expect(openers.length, lessThan(hands.length));
+    // the opener address with every hand: after the first day, once a day
+    expect(openers, hands);
+    final late = [
+      for (final h in openers)
+        if (h > _day + 600000) h,
+    ];
+    expect(late, isNotEmpty);
+    for (var i = 1; i < late.length; i++) {
+      expect(late[i] - late[i - 1], greaterThanOrEqualTo(_day ~/ 2));
+      expect(late[i] - late[i - 1], lessThanOrEqualTo(_day + 3600000));
+    }
     // every copy the same bytes
     final copies = {
       for (final x in w.wire.sent)
@@ -2243,8 +2251,9 @@ void main() {
     expect(wipes, 1);
     expect(deviceUnlinked.value, LinkedEnd.removed);
 
-    // as linked again, then online: the early copies are lost, the one of
-    // day three comes on its pair, and the wipe runs at once
+    // as linked again, then online: the early copies and every one on the
+    // seeded pair are lost (its seeds went apart), the one of day three
+    // comes on the opener address, and the wipe runs at once
     linkedEndResetForTest();
     await deskDb.transaction((t) => applyDevRows(t, linkRows));
     await bootDevices();
@@ -2272,7 +2281,8 @@ void main() {
     );
     recv.ownRemoved = deviceReceive!.ownRemoved;
     final day3 = w.wire.sent.lastWhere((s) => s.arg.contains('/4/1.'));
-    await recv.receive('${anaHex.substring(2)}/1/4', day3.cipher);
+    expect(day3.arg, w.wire.openers.last);
+    await recv.receive('${anaHex.substring(2)}/1/4/opn', day3.cipher);
     expect(wipes, 2);
     expect(deviceUnlinked.value, LinkedEnd.removed);
     expect(await linkedStandingForTest(), LinkedEnd.removed);
