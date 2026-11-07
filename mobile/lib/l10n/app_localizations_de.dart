@@ -10871,6 +10871,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String chatDeviceNotYet(String name) {
+    return '$name kann noch keine Nachrichten von diesem Computer empfangen. Antworte von deinem Handy aus.';
+  }
+
+  @override
   String chatDeviceWaitingForApp(String name) {
     return 'Warten, bis die App von $name diesen Computer erkennt. Antworte vorerst von deinem Handy aus.';
   }

@@ -1072,7 +1072,15 @@ class _ChatScreenState extends State<ChatScreen>
       if (row['shots_on'] == 1) {
         line = l10n.historyChatStaysShots;
       } else if (!capsOfText(row['caps'] as String?).contains(kCapDevices)) {
-        line = await deviceReplyLine(widget.peerHaloId, name, older: true);
+        // their caps came without the devices word: an older Kryfo. none
+        // came yet: nothing is known of their version
+        final known = capsOfText(row['caps'] as String?).isNotEmpty;
+        line = await deviceReplyLine(
+          widget.peerHaloId,
+          name,
+          older: known,
+          unknown: !known,
+        );
       } else if (!await deviceReaches(widget.peerHaloId)) {
         // none of their devices opened to this one yet
         line = await deviceReplyLine(widget.peerHaloId, name, older: false);

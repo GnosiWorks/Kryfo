@@ -10734,6 +10734,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String chatDeviceNotYet(String name) {
+    return '$name chưa thể nhận tin nhắn từ máy tính này. Hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
   String chatDeviceWaitingForApp(String name) {
     return 'Đang chờ ứng dụng của $name nhận ra máy tính này. Tạm thời hãy trả lời từ điện thoại của bạn.';
   }

@@ -10778,6 +10778,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String chatDeviceNotYet(String name) {
+    return '$name henüz bu bilgisayardan mesaj alamıyor. Telefonundan yanıtla.';
+  }
+
+  @override
   String chatDeviceWaitingForApp(String name) {
     return '$name kişisinin uygulamasının bu bilgisayarı görmesi bekleniyor. Şimdilik telefonundan yanıt ver.';
   }

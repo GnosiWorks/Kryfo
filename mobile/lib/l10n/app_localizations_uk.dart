@@ -10919,6 +10919,11 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String chatDeviceNotYet(String name) {
+    return '$name поки не може отримувати повідомлення з цього комп’ютера. Відповідай з телефона.';
+  }
+
+  @override
   String chatDeviceWaitingForApp(String name) {
     return 'Чекаємо, поки Kryfo у $name побачить цей комп’ютер. Поки що відповідай з телефона.';
   }

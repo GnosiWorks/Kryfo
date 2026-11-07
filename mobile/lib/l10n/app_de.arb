@@ -2838,6 +2838,7 @@
   "photoOf": "Foto von {name}",
   "historyChatStaysShots": "Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.",
   "chatDeviceOlderKryfo": "{name} nutzt ein älteres Kryfo. Antworte bis zum Update von deinem Handy aus.",
+  "chatDeviceNotYet": "{name} kann noch keine Nachrichten von diesem Computer empfangen. Antworte von deinem Handy aus.",
   "chatDeviceWaitingForApp": "Warten, bis die App von {name} diesen Computer erkennt. Antworte vorerst von deinem Handy aus.",
   "chatDeviceQuietAWhile": "{name} hat länger nicht geschrieben. Antworte vorerst von deinem Handy aus.",
   "linkedClearHereOnly": "Jede Nachricht hier wird nur von diesem Computer gelöscht. Dein Handy behält sie.",

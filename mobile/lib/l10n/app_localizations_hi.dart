@@ -10756,6 +10756,11 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String chatDeviceNotYet(String name) {
+    return '$name अभी इस कंप्यूटर से मैसेज नहीं पा सकते। अपने फ़ोन से जवाब दें।';
+  }
+
+  @override
   String chatDeviceWaitingForApp(String name) {
     return '$name के ऐप के इस कंप्यूटर को पहचानने का इंतज़ार है। अभी के लिए अपने फ़ोन से जवाब दें।';
   }

@@ -2838,6 +2838,7 @@
   "photoOf": "Zdjęcie: {name}",
   "historyChatStaysShots": "Ten czat zostaje na twoim telefonie, bo zrzuty ekranu są w nim zablokowane.",
   "chatDeviceOlderKryfo": "{name} używa starszej wersji Kryfo. Odpowiadaj z telefonu, dopóki nie zaktualizuje.",
+  "chatDeviceNotYet": "{name} nie może jeszcze odbierać wiadomości z tego komputera. Odpowiedz z telefonu.",
   "chatDeviceWaitingForApp": "Czekamy, aż Kryfo u {name} rozpozna ten komputer. Na razie odpowiadaj z telefonu.",
   "chatDeviceQuietAWhile": "{name} od jakiegoś czasu nic nie pisze. Na razie odpowiadaj z telefonu.",
   "linkedClearHereOnly": "Każda wiadomość stąd zostanie usunięta tylko z tego komputera. Twój telefon je zachowa.",

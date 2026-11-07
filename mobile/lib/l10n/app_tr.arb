@@ -2838,6 +2838,7 @@
   "photoOf": "{name} fotoğrafı",
   "historyChatStaysShots": "Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.",
   "chatDeviceOlderKryfo": "{name} daha eski bir Kryfo kullanıyor. Güncelleyene kadar telefonundan yanıtla.",
+  "chatDeviceNotYet": "{name} henüz bu bilgisayardan mesaj alamıyor. Telefonundan yanıtla.",
   "chatDeviceWaitingForApp": "{name} kişisinin uygulamasının bu bilgisayarı görmesi bekleniyor. Şimdilik telefonundan yanıt ver.",
   "chatDeviceQuietAWhile": "{name} bir süredir yazmadı. Şimdilik telefonundan yanıt ver.",
   "linkedClearHereOnly": "Buradaki her mesaj yalnızca bu bilgisayardan silinir. Telefonun onları saklar.",

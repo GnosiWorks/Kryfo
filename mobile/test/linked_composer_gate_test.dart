@@ -198,6 +198,7 @@ void main() {
 
   for (final (what, caps, quiet) in [
     ('older Kryfo', 'pq,ty', false),
+    ('not yet', '', false),
     ('waiting', 'dv,pq,ty', false),
     ('quiet', 'dv,pq,ty', true),
   ]) {
@@ -219,7 +220,9 @@ void main() {
         expect(phoneOnly, findsOneWidget);
         // the name cut to 22 letters and an ellipsis
         final cut = '${long.substring(0, 22)}\u2026';
-        final line = caps.contains('dv')
+        final line = caps.isEmpty
+            ? l10n.chatDeviceNotYet(cut)
+            : caps.contains('dv')
             ? quiet
                   ? l10n.chatDeviceQuietAWhile(cut)
                   : l10n.chatDeviceWaitingForApp(cut)
@@ -235,6 +238,17 @@ void main() {
       });
     }
   }
+
+  testWidgets('a contact whose caps never came: a plain line, never an older '
+      'Kryfo', (t) async {
+    await setUpWith('');
+    reaches = true;
+    await open(t);
+    expect(find.text(l10n.chatDeviceNotYet(_name)), findsOneWidget);
+    expect(find.text(l10n.chatDeviceOlderKryfo(_name)), findsNothing);
+    expect(composer, findsNothing);
+    await devClose(t);
+  });
 
   testWidgets('an older Kryfo: the phone line whatever the sessions', (
     t,

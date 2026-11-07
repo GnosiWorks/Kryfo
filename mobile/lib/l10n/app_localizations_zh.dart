@@ -10169,6 +10169,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String chatDeviceNotYet(String name) {
+    return '$name 暂时还无法接收来自这台电脑的消息。请在手机上回复。';
+  }
+
+  @override
   String chatDeviceWaitingForApp(String name) {
     return '正在等待 $name 的应用识别这台电脑。暂时请在手机上回复。';
   }
@@ -21227,6 +21232,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String chatDeviceOlderKryfo(String name) {
     return '$name 使用的是較舊版本的 Kryfo。在對方更新前，請在手機上回覆。';
+  }
+
+  @override
+  String chatDeviceNotYet(String name) {
+    return '$name 暫時還無法接收來自這台電腦的訊息。請在手機上回覆。';
   }
 
   @override

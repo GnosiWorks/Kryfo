@@ -2838,6 +2838,7 @@
   "photoOf": "Foto de {name}",
   "historyChatStaysShots": "Esta conversa fica no seu celular porque as capturas de tela estão bloqueadas nela.",
   "chatDeviceOlderKryfo": "{name} usa uma versão mais antiga do Kryfo. Responda pelo seu celular até a atualização.",
+  "chatDeviceNotYet": "{name} ainda não pode receber mensagens deste computador. Responda pelo seu celular.",
   "chatDeviceWaitingForApp": "Aguardando o app de {name} reconhecer este computador. Por enquanto, responda pelo seu celular.",
   "chatDeviceQuietAWhile": "{name} não escreve há um tempo. Por enquanto, responda pelo seu celular.",
   "linkedClearHereOnly": "Todas as mensagens daqui são apagadas só deste computador. Seu celular as mantém.",

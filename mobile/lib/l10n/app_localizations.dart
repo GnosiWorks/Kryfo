@@ -17311,6 +17311,12 @@ abstract class AppLocalizations {
   /// **'{name} uses an older Kryfo. Reply from your phone until they update.'**
   String chatDeviceOlderKryfo(String name);
 
+  /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact whose app has not said which Kryfo it runs yet, so this computer cannot write to them
+  ///
+  /// In en, this message translates to:
+  /// **'{name} can\'t get messages from this computer yet. Reply from your phone.'**
+  String chatDeviceNotYet(String name);
+
   /// screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on Kryfo 0.6 whose app has not opened a pair to this computer yet (it does once it is online and has this computer's details from the phone)
   ///
   /// In en, this message translates to:

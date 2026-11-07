@@ -265,15 +265,18 @@ Future<void> deviceAskReach(String peer) async {
 
 /// a linked device's line in place of the composer in [peer]'s chat
 /// ([name] as the chat shows it), kept here as the desk words are, out of
-/// the contact pages: an older Kryfo ([older]), or a 0.6 contact this device
-/// does not reach yet. for that one my phone is asked to push my list to
-/// them now, and the line says whether they wrote lately
+/// the contact pages: an older Kryfo ([older]), one whose version is not
+/// known here ([unknown]), or a 0.6 contact this device does not reach yet.
+/// for that one my phone is asked to push my list to them now, and the
+/// line says whether they wrote lately
 Future<String> deviceReplyLine(
   String peer,
   String name, {
   required bool older,
+  bool unknown = false,
 }) async {
   if (older) return l10n.chatDeviceOlderKryfo(name);
+  if (unknown) return l10n.chatDeviceNotYet(name);
   unawaited(deviceAskReach(peer));
   return await deviceQuiet(peer)
       ? l10n.chatDeviceQuietAWhile(name)

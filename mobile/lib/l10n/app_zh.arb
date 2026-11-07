@@ -2838,6 +2838,7 @@
   "photoOf": "{name}的照片",
   "historyChatStaysShots": "此聊天禁止截屏，所以只留在你的手机上。",
   "chatDeviceOlderKryfo": "{name} 使用的是较旧版本的 Kryfo。在对方更新前，请在手机上回复。",
+  "chatDeviceNotYet": "{name} 暂时还无法接收来自这台电脑的消息。请在手机上回复。",
   "chatDeviceWaitingForApp": "正在等待 {name} 的应用识别这台电脑。暂时请在手机上回复。",
   "chatDeviceQuietAWhile": "{name} 已经有一段时间没有发消息了。暂时请在手机上回复。",
   "linkedClearHereOnly": "这里的每条消息只会从这台电脑上清除。你的手机会保留它们。",

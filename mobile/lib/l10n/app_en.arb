@@ -13431,6 +13431,15 @@
       }
     }
   },
+  "chatDeviceNotYet": "{name} can't get messages from this computer yet. Reply from your phone.",
+  "@chatDeviceNotYet": {
+    "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact whose app has not said which Kryfo it runs yet, so this computer cannot write to them",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatDeviceWaitingForApp": "Waiting for {name}'s app to see this computer. Reply from your phone for now.",
   "@chatDeviceWaitingForApp": {
     "description": "screens/chat_screen.dart: on a linked device, in place of the composer in a chat with a contact on Kryfo 0.6 whose app has not opened a pair to this computer yet (it does once it is online and has this computer's details from the phone)",
