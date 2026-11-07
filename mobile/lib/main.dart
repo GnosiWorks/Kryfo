@@ -42,6 +42,7 @@ import 'desktop/desktop_mode.dart'
         onDesktop,
         shotsHonouredHere,
         startEngineIn,
+        takeDeskLaunchLink,
         withNativeFiles;
 import 'store.dart' show kPlayBuild, playBuild;
 import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;

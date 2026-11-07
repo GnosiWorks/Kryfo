@@ -228,6 +228,7 @@ extension AppStateBoot on AppState {
       _appLinks
           .getInitialLink()
           .then((uri) async {
+            uri ??= takeDeskLaunchLink();
             if (uri == null || uri.scheme != 'kryfo') return;
             await _outsideLink(uri, 'deep link (cold start)');
           })
