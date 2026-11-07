@@ -39,6 +39,17 @@ const kOwnOpKept = Duration(days: 30);
 /// before it is let go: the relays keep a wrap about this long
 const kFarewellKept = Duration(days: 14);
 
+/// when a last word the relay took goes again, by its age, at most: a
+/// relay that drops it or a device that missed it gets it from a later
+/// copy, and one that already took it cannot open the same bytes twice.
+/// each wait is drawn from its second half
+Duration farewellAgainAfter(Duration age) {
+  if (age < const Duration(minutes: 10)) return const Duration(minutes: 2);
+  if (age < const Duration(hours: 1)) return const Duration(minutes: 15);
+  if (age < const Duration(days: 1)) return const Duration(hours: 4);
+  return const Duration(days: 1);
+}
+
 /// a frame sealed now for one device, with where it goes: a removal's last
 /// word and a linked device's own, whose session goes right after
 typedef DevLast = ({String arg, String wire, bool opener});
@@ -1125,14 +1136,16 @@ class DeviceSend {
 
   /// my own [device] of [ident] is being removed: [frame] (my list without
   /// it) sealed on its session now and kept with where it goes, then handed
-  /// to the relay until it took it. the engine keeps the device's key for
-  /// its address alone meanwhile. true when there was a session to seal on
+  /// to the relay until it took it, and again now and then until
+  /// [kFarewellKept]. the engine keeps the device's key for its addresses
+  /// alone meanwhile. true when there was a session to seal on
   Future<bool> farewell({
     required DevMe me,
     required int device,
     required String pin,
     required int reg,
     required String frame,
+    bool once = false,
   }) async {
     final last = await sealLast(
       me: me,
@@ -1154,6 +1167,7 @@ class DeviceSend {
       'opener': last.opener ? 1 : 0,
       'at': _clock(),
       'next_at': 0,
+      'once': once ? 1 : 0,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     await leaving(me.ident);
     return true;
@@ -1192,8 +1206,30 @@ class DeviceSend {
     }
   }
 
-  // the last words due: each handed to the relay until it takes one; past
-  // [kFarewellKept] let go. the engine's leaving keys follow the rows
+  // a last word to both addresses of its pair: the seeded one, and the
+  // device's opener address, which a linked device watches for its phone
+  // always, so a pair whose seeds went apart still carries it, a stolen
+  // computer kept offline for days too (from the first day on, both go
+  // once a day by [farewellAgainAfter]). true when a relay took either
+  Future<bool> _handFarewell(int ident, DevLast last) async {
+    Future<bool> one(Future<String> Function() go) async {
+      try {
+        return await go() == 'ok';
+      } on Object {
+        return false;
+      }
+    }
+
+    final seeded = await one(() => wire.send(ident, last.arg, last.wire));
+    final opened = await one(
+      () => wire.sendOpener(ident, last.arg, last.wire),
+    );
+    return seeded || opened;
+  }
+
+  // the last words due: each handed to the relay until it takes one, then
+  // again by [farewellAgainAfter]; past [kFarewellKept] let go. the
+  // engine's leaving keys follow the rows
   Future<void> _farewells(int now) async {
     final d = await mine();
     final idents = <int>{};
@@ -1217,16 +1253,29 @@ class DeviceSend {
       whereArgs: [now],
     )) {
       final ident = r['ident'] as int;
-      final ok = await handLast(ident, (
+      final age = Duration(milliseconds: now - (r['at'] as int));
+      final once = r['once'] == 1;
+      final ok = await _handFarewell(ident, (
         arg: r['arg'] as String,
         wire: r['wire'] as String,
         opener: r['opener'] == 1,
       ));
       final where = 'ident = ? AND device = ?';
       final args = [ident, r['device']];
-      if (ok) {
+      if (ok && once) {
         await d.delete('dev_farewell', where: where, whereArgs: args);
         idents.add(ident);
+        continue;
+      }
+      if (ok) {
+        final step = farewellAgainAfter(age).inMilliseconds;
+        final half = step ~/ 2;
+        await d.update(
+          'dev_farewell',
+          {'tries': 0, 'next_at': now + half + _rand.nextInt(half + 1)},
+          where: where,
+          whereArgs: args,
+        );
         continue;
       }
       final tries = r['tries'] as int? ?? 0;

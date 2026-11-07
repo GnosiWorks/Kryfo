@@ -190,11 +190,34 @@ void main() {
         );
         expect(await linkedRoleOf(db), isFalse);
         expect(await db.query('signal_meta'), isEmpty);
+        // no list of the phone's among the rows: not linked
+        await expectLater(
+          joinedRows(
+            db,
+            identity: ident,
+            device: 3,
+            rows: const [],
+            stream: Uint8List(32),
+          ),
+          throwsA(isA<StateError>()),
+        );
+        expect(await linkedRoleOf(db), isFalse);
+        expect(await db.query('signal_meta'), isEmpty);
         await joinedRows(
           db,
           identity: ident,
           device: 3,
-          rows: const [],
+          rows: [
+            {
+              't': 'dev_lists',
+              'put': {
+                'ident': 0,
+                'owner': 'me',
+                'version': 1,
+                'wire': base64Encode([1, 2, 3]),
+              },
+            },
+          ],
           stream: Uint8List.fromList(List.filled(32, 7)),
         );
         await db.close();

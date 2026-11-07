@@ -168,6 +168,8 @@ class _PhoneLinkApp implements PhoneLinkHooks {
           name: l10n.devicesNameComputer,
           kind: DeviceKind.computer,
           linkedAt: now,
+          // the link is a use of it
+          heardAt: now,
           keys: [(ident: kMainIdent, dev: t.device, key: t.key, reg: t.reg)],
           stream: bind == null ? null : t.stream,
           hist: bind == null

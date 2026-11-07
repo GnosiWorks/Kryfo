@@ -656,7 +656,12 @@ func (d *devState) linkList(r *linkRun, ident int, phoneReg uint32) ([]byte, err
 	if _, taken := l.FindKey(dk.Key); taken {
 		return nil, devices.ErrDuplicate
 	}
-	e, err := devices.EntryFor(l, dk, rand.Reader)
+	// never the id of a device just removed whose last word still goes:
+	// a link there would end its resends
+	e, err := devices.EntryForBut(l, dk, func(id uint8) bool {
+		_, leaving := devLeavingKey(ident, id)
+		return leaving
+	}, rand.Reader)
 	if err != nil {
 		return nil, err
 	}

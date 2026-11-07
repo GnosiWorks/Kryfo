@@ -126,7 +126,11 @@ func NewReg(r io.Reader) (uint32, error) {
 
 // FreeID is a random device id for a new device on l: never the phone's,
 // never one l already has.
-func FreeID(l *List, r io.Reader) (uint8, error) {
+func FreeID(l *List, r io.Reader) (uint8, error) { return FreeIDBut(l, nil, r) }
+
+// FreeIDBut is FreeID that also passes over the ids busy says are in use
+// off the list (a device just removed whose last word still goes).
+func FreeIDBut(l *List, busy func(uint8) bool, r io.Reader) (uint8, error) {
 	if len(l.Devices) >= MaxDevices {
 		return 0, ErrTooMany
 	}
@@ -139,7 +143,7 @@ func FreeID(l *List, r io.Reader) (uint8, error) {
 		if id <= PhoneID {
 			continue
 		}
-		if _, taken := l.Find(id); !taken {
+		if _, taken := l.Find(id); !taken && (busy == nil || !busy(id)) {
 			return id, nil
 		}
 	}
@@ -148,10 +152,15 @@ func FreeID(l *List, r io.Reader) (uint8, error) {
 
 // EntryFor is the entry a phone puts on l for a device's keys.
 func EntryFor(l *List, dk DeviceKeys, r io.Reader) (Entry, error) {
+	return EntryForBut(l, dk, nil, r)
+}
+
+// EntryForBut is EntryFor on an id busy does not name (FreeIDBut).
+func EntryForBut(l *List, dk DeviceKeys, busy func(uint8) bool, r io.Reader) (Entry, error) {
 	if dk.Identity != l.Identity {
 		return Entry{}, ErrWrongIdentity
 	}
-	id, err := FreeID(l, r)
+	id, err := FreeIDBut(l, busy, r)
 	if err != nil {
 		return Entry{}, err
 	}

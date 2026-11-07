@@ -18,8 +18,9 @@ package main
 //   role "ops", owner the sender: the opener's seal key, never an address
 //
 // a receiver watches its opener address only for listed devices it has
-// not heard yet. the opener carries the pair's seed; everything after it
-// goes on the seeded pair.
+// not heard yet, and a linked device its phone's always (the phone's last
+// word to a device it removed goes there too). the opener carries the
+// pair's seed; everything after it goes on the seeded pair.
 //
 // a pair arg names a device pair as "peer/their/my" with the device ids
 // (1..127, 1 the phone) and ".seed" for the seeded pair. "peer/1/1.seed"
