@@ -98,11 +98,11 @@ func TestTheFirstChatsBatchGoesFirst(t *testing.T) {
 	freshInbox(t)
 	freshBatches(t)
 	freshStart(t)
-	old := subSpread
-	subSpread = time.Hour
+	old, oldOwn := subSpread, ownStartSpread
+	subSpread, ownStartSpread = time.Hour, 3*time.Second
 	t.Cleanup(func() {
 		runnersGone(t)
-		subSpread = old
+		subSpread, ownStartSpread = old, oldOwn
 	})
 
 	// seats as a start before this one gave them: batch 0 full, batch 1 two
@@ -139,9 +139,13 @@ func TestTheFirstChatsBatchGoesFirst(t *testing.T) {
 	waitFor(t, "the first batch on both relays", 10*time.Second, func() bool {
 		return listensOn(own, byBatch[first]) == 2 && listensOn(pub, byBatch[first]) == 2
 	})
-	time.Sleep(time.Second)
 	rest := append(append([]string(nil), byBatch[batchLane(contactSet(mainIdent), 0)]...), hidRcv)
-	if n := listensOn(own, rest) + listensOn(pub, rest); n != 0 {
+	// on our relay the other sockets follow within ownStartSpread, on the
+	// public one they wait the whole spread
+	waitFor(t, "the other sockets on our relay", ownStartSpread+5*time.Second, func() bool {
+		return listensOn(own, rest) == len(rest)
+	})
+	if n := listensOn(pub, rest); n != 0 {
 		t.Fatalf("%d addresses of other sockets went at once beside the first batch", n)
 	}
 	// told once the turns began, a new list waits for the next start
@@ -664,4 +668,68 @@ func TestTheFirstContactListenerOnOursTakesAShortTurn(t *testing.T) {
 	}
 	// a public relay's turn is the whole spread: almost never up by now
 	_ = pub
+}
+
+// at the start on our relays the first batch and the first-contact listener
+// go at once, or with no first batch (a linked device) the first socket,
+// and the rest of ours within ownStartSpread. a public relay at the start
+// and every relay at a later kick draw over the whole spread
+func TestOurRelaysTakeAShortTurnAtTheStart(t *testing.T) {
+	if ownStartSpread != 15*time.Second {
+		t.Fatalf("our relays' start spread is %s", ownStartSpread)
+	}
+	old, oldOwn := subSpread, ownStartSpread
+	subSpread, ownStartSpread = time.Hour, time.Hour
+	t.Cleanup(func() { subSpread, ownStartSpread = old, oldOwn })
+	turnIn := func(tr *subTurn, within time.Duration) bool {
+		ctx, cancel := context.WithTimeout(context.Background(), within)
+		defer cancel()
+		defer tr.done()
+		begun := time.Now()
+		return tr.take(ctx) && time.Since(begun) < within
+	}
+	batch := func(lane string) *subTurn {
+		return &subTurn{own: true, lane: lane, batch: &hubKey{lane: lane, group: "g", url: "ws://ours"}}
+	}
+
+	// a linked device: no first batch
+	freshStart(t)
+	spendFirstTurn()
+	if !turnIn(&subTurn{own: true, lane: laneFirstContact}, 2*time.Second) {
+		t.Fatal("the first-contact listener on our relay waited at the start")
+	}
+	if !turnIn(batch("everyday:0:1"), 2*time.Second) {
+		t.Fatal("the first socket on our relay waited at the start")
+	}
+	if turnIn(batch("everyday:0:2"), 300*time.Millisecond) {
+		t.Fatal("a second socket on our relay took the free turn too")
+	}
+	ownStartSpread = 500 * time.Millisecond
+	if !turnIn(batch("everyday:0:3"), 3*time.Second) {
+		t.Fatal("a socket on our relay waited past its start spread")
+	}
+	if turnIn(&subTurn{lane: laneEveryday}, 300*time.Millisecond) {
+		t.Fatal("a public relay's socket took a short turn at the start")
+	}
+	kickRelays()
+	spendFirstTurn()
+	if turnIn(batch("everyday:0:4"), 300*time.Millisecond) {
+		t.Fatal("a socket on our relay took a short turn at a later kick")
+	}
+
+	// a phone: its first batch goes at once, the free turn on ours is its
+	ownStartSpread = time.Hour
+	freshStart(t)
+	startFirst.Lock()
+	startFirst.lane = "everyday:0:5"
+	startFirst.Unlock()
+	if !turnIn(batch("everyday:0:5"), 2*time.Second) {
+		t.Fatal("the first batch on our relay waited at the start")
+	}
+	if !turnIn(&subTurn{own: true, lane: laneFirstContact}, 2*time.Second) {
+		t.Fatal("the first-contact listener on our relay waited at the start")
+	}
+	if turnIn(batch("everyday:0:6"), 300*time.Millisecond) {
+		t.Fatal("another socket on our relay went at once beside the first batch")
+	}
 }

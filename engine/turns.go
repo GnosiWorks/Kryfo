@@ -5,7 +5,10 @@ package main
 // start and after each wake, so a relay does not see all of one phone's
 // addresses ask in the same instant. only the first goes at once, and the
 // open chat's address, and a just-added one's first ask right after the add,
-// go with no turn.
+// go with no turn. at the start our own relays wait less: the first batch
+// and the first-contact listener go at once there, the first socket of ours
+// too when there is no first batch (a linked device has none), and the rest
+// of ours within ownStartSpread.
 
 import (
 	"context"
@@ -90,10 +93,31 @@ func isFirstTag(tag string) bool {
 }
 
 // the longest turn the first-contact listener waits on our own relays at a
-// start: a card scanned in the first minute is heard there within this,
-// not after up to the whole spread. its own socket on its own lane, drawn
-// apart from every batch, so it still asks at no batch's moment
+// kick after the start (at the start it goes at once): a
+// card scanned then is heard there within this, not after up to the whole
+// spread. its own socket on its own lane, drawn apart from every batch
 var fcOwnSpread = 20 * time.Second
+
+// the longest turn a socket on our relays waits at the start, past the ones
+// that go at once there
+var ownStartSpread = 15 * time.Second
+
+// the free turn on our relays at the start, when no first batch takes it
+var ownFirst struct {
+	sync.Mutex
+	kick chan struct{}
+}
+
+// true for the first caller under kc, if the start has no first batch
+func takeOwnFirstTurn(kc chan struct{}) bool {
+	ownFirst.Lock()
+	defer ownFirst.Unlock()
+	if ownFirst.kick == kc {
+		return false
+	}
+	ownFirst.kick = kc
+	return !startFirstHolds(kc)
+}
 
 // the spread a socket's turn is drawn over at a start or kick
 func spreadFor(lane string, own bool) time.Duration {
@@ -153,6 +177,8 @@ type subTurn struct {
 	held bool
 	// a socket on one of our relay's entries: first at a wake
 	own bool
+	// the runner's lane
+	lane string
 	// the wake it last had a turn in, see takeWake
 	wake int64
 	// closed once the socket it shares is up, nil for a socket of its own:
@@ -245,6 +271,13 @@ func (t *subTurn) take(ctx context.Context) bool {
 	d := t.sharedDelay(kc, 0, now, func() time.Duration {
 		if t.batch != nil && startFirstFor(t.batch.lane, kc) {
 			return 0
+		}
+		// ours at the start: a short turn, and the free one is left to the rest
+		if t.own && isStartKick(kc) {
+			if t.lane == laneFirstContact || takeOwnFirstTurn(kc) {
+				return 0
+			}
+			return spreadDelay(min(ownStartSpread, subSpread), now)
 		}
 		if takeFirstTurn(kc) {
 			return 0
