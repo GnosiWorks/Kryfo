@@ -244,6 +244,7 @@ void main() {
   // (4) when [desk]. bob's devices hold sessions to ana's phone, built from
   // its KDB1, as a list push would hand them out
   Future<_World> world({
+    Duration Function()? jitter,
     bool desk = false,
     bool baseline = true,
     String gate = 'open',
@@ -335,6 +336,7 @@ void main() {
       listen: w.listen.listen,
       clock: () => w.clock,
       random: Random(7),
+      jitter: jitter,
     );
     final me = (ident: kMainIdent, identity: ana.identity.public, device: 1);
     final toBob = (
@@ -540,6 +542,54 @@ void main() {
     expect(await w.db.query('dev_held_openers'), isEmpty);
     expect(await w.anaDs.has(_bobChat, 9), isTrue);
   });
+
+  // a starter sealed with my seed waits its spread before it goes; their
+  // opener landing meanwhile must not make me take a higher seed of theirs,
+  // or my starter goes after it with mine and the two sides split
+  for (final lower in [true, false]) {
+    test('a starter still waiting counts as gone: the lower seed is kept '
+        '(${lower ? 'theirs' : 'mine'})', () async {
+      if (skip()) return;
+      final w = await world(jitter: () => const Duration(hours: 1));
+      await w.anaDs.build(
+        _bobChat,
+        5,
+        w.ana.lib.parseDeviceBundle(
+          await w.b5.ds.makeBundle(5),
+          w.bob.identity.public,
+        ),
+        w.b5.key,
+        w.b5.reg,
+      );
+      await w.send.start(
+        w.me,
+        devHex(w.bob.identity.public),
+        5,
+        _bobChat,
+        devHex(w.b5.key),
+        w.b5.reg,
+      );
+      // sealed with my seed, not gone
+      expect(w.wire.sent, isEmpty);
+      final mySeed = devHex(
+        (await w.db.query('pairs', where: 'their_device = 5')).single['seed']
+            as List<int>,
+      );
+      final theirSeed = lower ? _hex32(0x00) : _hex32(0xff);
+      final theirs = await w.b5.ds.seal(
+        'ana',
+        1,
+        'halo/1:${jsonEncode({'u': 'm-b', 'm': 'from 5', 'as': theirSeed})}',
+        w.ana.identity.public,
+      );
+      await w.recv.receive(w.tag(w.b5, opener: true), theirs);
+      final seed = devHex(
+        (await w.db.query('pairs', where: 'their_device = 5')).single['seed']
+            as List<int>,
+      );
+      expect(seed, lower ? theirSeed : mySeed);
+    });
+  }
 
   for (final lower in [true, false]) {
     test(

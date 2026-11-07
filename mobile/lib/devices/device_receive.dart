@@ -440,7 +440,11 @@ class DeviceReceive {
       // only a seed of mine whose opener went is one they may know: one
       // that never went (a copy that waits, a send that kept nothing)
       // gives way, and what waits takes theirs as it is sealed
-      final went = rec.isNotEmpty && (rec.first['at'] as int? ?? 0) > 0;
+      var went = rec.isNotEmpty && (rec.first['at'] as int? ?? 0) > 0;
+      // an opener of mine sealed with my seed and waiting to go (a
+      // starter's spread) goes as it is: it counts as gone, so both sides
+      // keep the lower seed whichever opener lands first
+      if (!went) went = await _openerSealed(d, t.ident, identity, t.their);
       if (went && _lower(held, seed) <= 0) return;
     }
     final heldFor = rec.isEmpty ? null : rec.first['key'] as String?;
@@ -475,6 +479,29 @@ class DeviceReceive {
     final res = await listener.seed(t.ident, pair, theirs);
     if (res != 'ok') return;
     listener.listen(t.ident, '$pair.$theirs');
+  }
+
+  Future<bool> _openerSealed(
+    Database d,
+    int ident,
+    String identity,
+    int device,
+  ) async {
+    for (final r in await d.query(
+      'dev_out',
+      columns: ['wire'],
+      where: "ident = ? AND peer = ? AND device = ? AND state = 'go'",
+      whereArgs: [ident, identity, device],
+    )) {
+      final w = r['wire'];
+      if (w is! String || w.isEmpty) continue;
+      try {
+        if (base64Decode(w)[0] == kLsPreKey) return true;
+      } on FormatException {
+        continue;
+      }
+    }
+    return false;
   }
 
   int _lower(List<int> a, List<int> b) {
