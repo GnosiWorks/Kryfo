@@ -8049,7 +8049,10 @@ class _ChatHead extends StatelessWidget {
     Theme.of(context);
     final fast = appState.sendMode != 'private';
     return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
+      // a computer's header stands a little roomier, a phone's as it was
+      padding: onDesktop
+          ? const EdgeInsetsDirectional.fromSTEB(8, 10, 12, 14)
+          : const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 12),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: HaloColors.line, width: 0.5)),
       ),
@@ -8072,7 +8075,11 @@ class _ChatHead extends StatelessWidget {
               // the same face flies in from the list row
               child: HaloHero(
                 tag: 'face-$avatarSeed',
-                child: KryfoAvatar(seed: avatarSeed, size: 36, choice: face),
+                child: KryfoAvatar(
+                  seed: avatarSeed,
+                  size: onDesktop ? 40 : 36,
+                  choice: face,
+                ),
               ),
             ),
           ),
@@ -8107,7 +8114,7 @@ class _ChatHead extends StatelessWidget {
                             key: ValueKey<String>(nickname ?? haloId),
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.sans(
-                              size: 14,
+                              size: onDesktop ? 15.5 : 14,
                               weight: FontWeight.w500,
                             ),
                           ),
@@ -10124,7 +10131,9 @@ class _Composer extends StatelessWidget {
     if (appState.movedAway) return const MovedStrip();
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: onDesktop
+          ? const EdgeInsets.fromLTRB(20, 12, 20, 16)
+          : const EdgeInsets.fromLTRB(16, 8, 16, 12),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -10294,9 +10303,9 @@ class _Composer extends StatelessWidget {
                             minHeight: 36,
                           ),
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: onDesktop ? 16 : 14,
+                            vertical: onDesktop ? 13 : 10,
                           ),
                           filled: true,
                           fillColor: HaloColors.surface2,
