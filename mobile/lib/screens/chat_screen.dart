@@ -1225,6 +1225,9 @@ class _ChatScreenState extends State<ChatScreen>
   // sender-side lock: messaging a stranger who hasn't accepted, past the cap.
   // once they engage (reply/back-pair) or we accept them, it clears.
   bool get _requestPending => !_peerEngaged && _recvCount == 0;
+  // ours to someone who has not accepted: the pill says so, not the route
+  bool get _waitsAccept =>
+      _requestPending && !_vouched && !_isDev && !widget.support;
   bool get _requestLocked =>
       _requestPending && _sentCount >= (_isDev ? kDevCap : 2) && !_vouched;
   // receiver-side: a stranger has messaged us and we haven't accepted yet.
@@ -2677,6 +2680,7 @@ class _ChatScreenState extends State<ChatScreen>
                             translation: _translation,
                             transcripts: _transcripts,
                             plainLinks: _plainLinks,
+                            waitsAccept: _waitsAccept,
                           ),
                         ),
                         builder: (_, t, child) => Transform.scale(
@@ -5708,6 +5712,7 @@ class _ChatScreenState extends State<ChatScreen>
           linkTitle: _linkPreview(m)?['title'],
           linkBySender: _linkPreview(m)?['by'] == 'sender',
           plainLinks: _plainLinks,
+          waitsAccept: _waitsAccept,
           firstInGroup: firstInGroup,
           lastInGroup: lastInGroup,
           revealed: m.msgUid != null && m.msgUid == _revealedUid,
@@ -8564,6 +8569,8 @@ class _Bubble extends StatelessWidget {
   final bool linkBySender;
   // a request's links: shown as the words they are, never tappable
   final bool plainLinks;
+  // a request they have not accepted: the pill waits, nothing turns
+  final bool waitsAccept;
   // a sticker row: the chat's budget, its place in it, and its flight
   final StickerBudget? stickers;
   final int stickerOrder;
@@ -8610,6 +8617,7 @@ class _Bubble extends StatelessWidget {
     this.linkTitle,
     this.linkBySender = false,
     this.plainLinks = false,
+    this.waitsAccept = false,
     this.firstInGroup = true,
     this.lastInGroup = true,
     this.unconfirmed = false,
@@ -9586,7 +9594,10 @@ class _Bubble extends StatelessWidget {
                                   SendProgressLabel(msgUid: msg.msgUid!),
                                   const SizedBox(width: 6),
                                 ],
-                                SendPill(mode: _pmFrom(appState.sendMode)),
+                                SendPill(
+                                  mode: _pmFrom(appState.sendMode),
+                                  waiting: waitsAccept,
+                                ),
                               ],
                             ),
                           ),
@@ -9794,7 +9805,10 @@ class _Bubble extends StatelessWidget {
                               top: 4,
                               end: 4,
                             ),
-                            child: SendPill(mode: _pmFrom(appState.sendMode)),
+                            child: SendPill(
+                              mode: _pmFrom(appState.sendMode),
+                              waiting: waitsAccept,
+                            ),
                           ),
                   ),
               ],
