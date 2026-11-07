@@ -10916,13 +10916,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот чат остаётся на твоём телефоне, потому что в нём запрещены скриншоты.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name пользуется более старой версией Kryfo. Ответь с телефона.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name пользуется более старой версией Kryfo. Отвечай с телефона до обновления.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'Пока отвечай $name с телефона.';
+  String chatDeviceWaitingForApp(String name) {
+    return 'Ждём, когда Kryfo у $name увидит этот компьютер. Пока отвечай с телефона.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return 'От $name давно не было сообщений. Пока отвечай с телефона.';
   }
 
   @override

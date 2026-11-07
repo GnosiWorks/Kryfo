@@ -10773,13 +10773,18 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu sohbet telefonunda kalır, çünkü içinde ekran görüntüsü engelli.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name daha eski bir Kryfo kullanıyor. Telefonundan yanıtla.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name daha eski bir Kryfo kullanıyor. Güncelleyene kadar telefonundan yanıtla.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'Şimdilik $name kişisine telefonundan yanıt ver.';
+  String chatDeviceWaitingForApp(String name) {
+    return '$name kişisinin uygulamasının bu bilgisayarı görmesi bekleniyor. Şimdilik telefonundan yanıt ver.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name bir süredir yazmadı. Şimdilik telefonundan yanıt ver.';
   }
 
   @override

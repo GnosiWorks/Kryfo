@@ -10822,13 +10822,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'Este chat se queda en tu teléfono porque las capturas están bloqueadas en él.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name usa un Kryfo más antiguo. Responde desde tu teléfono.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name usa un Kryfo más antiguo. Responde desde tu teléfono hasta que lo actualice.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'Por ahora, responde a $name desde tu teléfono.';
+  String chatDeviceWaitingForApp(String name) {
+    return 'Esperando a que la app de $name vea este ordenador. Por ahora, responde desde tu teléfono.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name lleva un tiempo sin escribir. Por ahora, responde desde tu teléfono.';
   }
 
   @override

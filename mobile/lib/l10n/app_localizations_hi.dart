@@ -10751,13 +10751,18 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह चैट आपके फ़ोन पर ही रहती है, क्योंकि इसमें स्क्रीनशॉट रोके गए हैं।';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name Kryfo का पुराना संस्करण इस्तेमाल करते हैं। अपने फ़ोन से जवाब दें।';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name Kryfo का पुराना संस्करण इस्तेमाल करते हैं। उनके अपडेट करने तक अपने फ़ोन से जवाब दें।';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'अभी के लिए $name को अपने फ़ोन से जवाब दें।';
+  String chatDeviceWaitingForApp(String name) {
+    return '$name के ऐप के इस कंप्यूटर को पहचानने का इंतज़ार है। अभी के लिए अपने फ़ोन से जवाब दें।';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name ने काफ़ी समय से कुछ नहीं लिखा। अभी के लिए अपने फ़ोन से जवाब दें।';
   }
 
   @override

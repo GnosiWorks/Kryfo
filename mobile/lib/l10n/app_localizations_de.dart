@@ -10866,13 +10866,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieser Chat bleibt auf deinem Handy, weil Screenshots darin blockiert sind.';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name nutzt ein älteres Kryfo. Antworte von deinem Handy aus.';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name nutzt ein älteres Kryfo. Antworte bis zum Update von deinem Handy aus.';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return 'Antworte $name vorerst von deinem Handy aus.';
+  String chatDeviceWaitingForApp(String name) {
+    return 'Warten, bis die App von $name diesen Computer erkennt. Antworte vorerst von deinem Handy aus.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name hat länger nicht geschrieben. Antworte vorerst von deinem Handy aus.';
   }
 
   @override

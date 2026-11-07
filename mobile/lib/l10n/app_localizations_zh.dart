@@ -10164,13 +10164,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get historyChatStaysShots => '此聊天禁止截屏，所以只留在你的手机上。';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name 使用的是较旧版本的 Kryfo。请在手机上回复。';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name 使用的是较旧版本的 Kryfo。在对方更新前，请在手机上回复。';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return '暂时请在手机上回复 $name。';
+  String chatDeviceWaitingForApp(String name) {
+    return '正在等待 $name 的应用识别这台电脑。暂时请在手机上回复。';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name 已经有一段时间没有发消息了。暂时请在手机上回复。';
   }
 
   @override
@@ -21220,13 +21225,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get historyChatStaysShots => '此聊天禁止截圖，所以只留在你的手機上。';
 
   @override
-  String chatDeviceReplyFromPhone(String name) {
-    return '$name 使用的是較舊版本的 Kryfo。請在手機上回覆。';
+  String chatDeviceOlderKryfo(String name) {
+    return '$name 使用的是較舊版本的 Kryfo。在對方更新前，請在手機上回覆。';
   }
 
   @override
-  String chatDeviceReplyFromPhoneForNow(String name) {
-    return '暫時請在手機上回覆 $name。';
+  String chatDeviceWaitingForApp(String name) {
+    return '正在等待 $name 的應用程式辨識這台電腦。暫時請在手機上回覆。';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name 已經有一段時間沒有傳訊息了。暫時請在手機上回覆。';
   }
 
   @override
