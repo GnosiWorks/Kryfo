@@ -68,6 +68,9 @@ extension AppStateReceive on AppState {
     String? skip,
     Map<String, Set<String>> full = const {},
   }) async {
+    // a linked device hears contacts on its device pairs alone: its
+    // sessions with their phones never open a classic frame
+    if (linkedRole) return null;
     await _afterClose();
     final tried = <String>{?skip};
     Future<({String id, String plain})?> under(Iterable<String> ids) async {
@@ -132,6 +135,7 @@ extension AppStateReceive on AppState {
   // can't rebuild: try any sessioned address that is not an everyday
   // contact or kept by the router, to re-file it as a fresh request
   Future<({String id, String plain})?> _openParked(String cipher) async {
+    if (linkedRole) return null;
     await _afterClose();
     final skip = {
       for (final r in await live.contacts()) r['halo_id'] as String,

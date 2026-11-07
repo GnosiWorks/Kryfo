@@ -36,6 +36,8 @@ class _EngineDeviceWire implements DeviceWire {
 // identity they were refused, and nothing from device 1 ever opened
 Future<DeviceSessions> _appDeviceSessions(int ident) async {
   final ss = await signalOfIdent(ident);
+  // checked after the await: the send and receive loops ask at once at
+  // boot, and two instances would seal and open one pair side by side
   final held = _devSessions[ident];
   if (held != null && identical(held.s, ss) && held.linked == linkedRole) {
     return held;
