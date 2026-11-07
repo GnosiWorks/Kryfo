@@ -889,6 +889,12 @@ extension AppStateReceive on AppState {
       arrived();
       return;
     }
+    // a linked device hears contacts on its device pairs alone: no frame
+    // here is opened on a classic session, whatever tag it came under
+    if (linkedRole) {
+      arrived();
+      return;
+    }
     // 'firstcontact' is a lane, not a peer. every stranger's opening
     // message arrives under that one tag, so it can neither name who
     // sent this nor be remembered as anyone.

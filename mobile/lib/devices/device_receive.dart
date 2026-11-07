@@ -444,7 +444,9 @@ class DeviceReceive {
       // an opener of mine sealed with my seed and waiting to go (a
       // starter's spread) goes as it is: it counts as gone, so both sides
       // keep the lower seed whichever opener lands first
-      if (!went) went = await _openerSealed(d, t.ident, identity, t.their);
+      if (!went) {
+        went = await _openerSealed(d, t.ident, identity, t.their, key);
+      }
       if (went && _lower(held, seed) <= 0) return;
     }
     final heldFor = rec.isEmpty ? null : rec.first['key'] as String?;
@@ -486,12 +488,17 @@ class DeviceReceive {
     int ident,
     String identity,
     int device,
+    String key,
   ) async {
+    // a starter (uid s:) sealed for the key on the list now: one for an
+    // old key is never sent, and a copy with no seed in it says nothing
     for (final r in await d.query(
       'dev_out',
       columns: ['wire'],
-      where: "ident = ? AND peer = ? AND device = ? AND state = 'go'",
-      whereArgs: [ident, identity, device],
+      where:
+          "ident = ? AND peer = ? AND device = ? AND pin = ? AND state = 'go' "
+          "AND uid LIKE 's:%'",
+      whereArgs: [ident, identity, device, key],
     )) {
       final w = r['wire'];
       if (w is! String || w.isEmpty) continue;
