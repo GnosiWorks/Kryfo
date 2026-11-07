@@ -20,6 +20,7 @@ import 'photo_viewer.dart';
 import 'voice_parts.dart';
 import '../file_kind.dart';
 import '../file_save.dart' show savingFiles;
+import '../devices/history_files.dart' show historyFilesComing;
 import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../voice_length.dart';
@@ -403,6 +404,8 @@ class VoiceBubbleState extends State<VoiceBubble> {
   final _player = AudioPlayer();
   bool _ready = false;
   bool _missing = false;
+  // the history copy still brings the note: it waits, never "unavailable"
+  late bool _coming = historyFilesComing.coming(widget.path);
   bool _playing = false;
   Duration _dur = Duration.zero;
   Duration _pos = Duration.zero;
@@ -415,7 +418,8 @@ class VoiceBubbleState extends State<VoiceBubble> {
     // no _load() here: it takes a native media handle per bubble, and a chat
     // with several voice notes exhausts android's codec pool. the real load
     // waits for the first tap in _toggle.
-    _checkExists();
+    historyFilesComing.addListener(_comingChanged);
+    if (!_coming) _checkExists();
     _player.playerStateStream.listen((st) {
       if (!mounted) return;
       setState(() => _playing = st.playing);
@@ -470,10 +474,25 @@ class VoiceBubbleState extends State<VoiceBubble> {
     _letFileGo();
   }
 
+  // the note landed: read as any note here is
+  void _comingChanged() {
+    final now = historyFilesComing.coming(widget.path);
+    if (now == _coming || !mounted) return;
+    setState(() {
+      _coming = now;
+      _missing = false;
+    });
+    if (!now) {
+      _durCache.remove(widget.path);
+      _checkExists();
+    }
+  }
+
   @override
   void didUpdateWidget(VoiceBubble oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.path == widget.path) return;
+    _coming = historyFilesComing.coming(widget.path);
     _missing = false;
     _peaks = voicePeaksNow(widget.path) ?? _peaks;
     final d = _durCache[oldWidget.path];
@@ -562,6 +581,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
 
   @override
   void dispose() {
+    historyFilesComing.removeListener(_comingChanged);
     VoiceTurn.letGo(this);
     _unguard?.call();
     // a player let go while it was still coming up can fail to close its
@@ -628,11 +648,36 @@ class VoiceBubbleState extends State<VoiceBubble> {
         : (_pos.inMilliseconds / _dur.inMilliseconds).clamp(0.0, 1.0);
     final shown = _pos > Duration.zero ? _pos : _dur;
     final bubble = GestureDetector(
-      onTap: _missing ? null : _toggle,
+      onTap: _missing || _coming ? null : _toggle,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 184,
-        child: _missing
+        child: _coming
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: 34,
+                    height: 34,
+                    child: Padding(
+                      padding: const EdgeInsets.all(7),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: still ? 0.3 : null,
+                        color: fg,
+                        backgroundColor: rest,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      l10n.albumOnItsWay,
+                      style: HaloType.mono(size: 11, color: sub),
+                    ),
+                  ),
+                ],
+              )
+            : _missing
             ? Row(
                 children: [
                   Icon(Icons.music_off_rounded, size: 20, color: sub),

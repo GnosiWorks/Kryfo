@@ -10291,7 +10291,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'كل رسائلك، مع الصور والفيديوهات من آخر 30 يومًا.';
+      'رسائلك، مع الصور والفيديوهات والرسائل الصوتية من آخر 30 يومًا.';
 
   @override
   String get devicesHistoryNone => 'جهات الاتصال والمجموعات فقط';

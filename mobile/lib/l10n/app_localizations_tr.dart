@@ -10186,7 +10186,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Tüm mesajların, son 30 günün fotoğraf ve videolarıyla.';
+      'Mesajların, son 30 günün fotoğraf, video ve sesli mesajlarıyla.';
 
   @override
   String get devicesHistoryNone => 'Yalnızca kişiler ve gruplar';

@@ -12,9 +12,19 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import '../desktop/sealed_format.dart'
+    show
+        ChunkCrypto,
+        EngineChunkCrypto,
+        chunkPlain,
+        isSealedHead,
+        openChunk,
+        plainLength,
+        sealedHead;
 import '../main.dart' show goneKey, goneKept;
 import '../search.dart' show searchBody;
 import '../l10n/l10n.dart';
+import 'history_files.dart';
 import 'history_export.dart'
     show
         HistoryChatGap,
@@ -70,6 +80,12 @@ Future<void> historyTables(DatabaseExecutor t) async {
     'CREATE TABLE IF NOT EXISTS history_gone (n INTEGER PRIMARY KEY, '
     'c INTEGER NOT NULL)',
   );
+  // a file the phone keeps sealed comes as it lies there, with its own
+  // key: opened once whole, the key gone with it
+  await t.execute(
+    'CREATE TABLE IF NOT EXISTS history_keys (name TEXT PRIMARY KEY, '
+    'key BLOB NOT NULL)',
+  );
   // the lists the phone held, taken at the end
   await t.execute(
     'CREATE TABLE IF NOT EXISTS history_lists (identity TEXT PRIMARY KEY, '
@@ -95,6 +111,7 @@ const _kTables = [
   'history_chats',
   'history_rows',
   'history_gone',
+  'history_keys',
   'history_lists',
   'history_files',
   'history_made',
@@ -188,6 +205,8 @@ class HistoryImport {
     this._id,
     this._identity,
     this._r,
+    this._crypto,
+    this._coming,
   );
 
   final Database _db;
@@ -197,6 +216,9 @@ class HistoryImport {
   final String _id;
   final String _identity;
   HistoryReceiver _r;
+  final ChunkCrypto _crypto;
+  // the bubbles' list of files on their way, when the app shows one
+  final HistoryFilesComing? _coming;
   // a rewind that failed: nothing more until the import is opened again
   bool _stopped = false;
   int _triesAt = -1;
@@ -228,6 +250,8 @@ class HistoryImport {
     required String bindHex,
     required String idHex,
     required String identityHex,
+    ChunkCrypto crypto = const EngineChunkCrypto(),
+    HistoryFilesComing? coming,
   }) async {
     await historyTables(db);
     final stream = '$bindHex/$idHex';
@@ -264,6 +288,8 @@ class HistoryImport {
       idHex,
       identityHex,
       r,
+      crypto,
+      coming,
     );
     await imp._load();
     return imp;
@@ -274,6 +300,7 @@ class HistoryImport {
   static Future<HistoryImport?> reopen({
     required Database db,
     required String mediaDir,
+    ChunkCrypto crypto = const EngineChunkCrypto(),
   }) async {
     await historyTables(db);
     final held = await db.query('history_in', where: 'k = 1');
@@ -286,7 +313,40 @@ class HistoryImport {
       bindHex: h['bind'] as String,
       idHex: h['id'] as String,
       identityHex: h['identity'] as String,
+      crypto: crypto,
     );
+  }
+
+  /// the files a copy this database holds still brings, by their paths
+  /// here: those its list waits on, or before its list came, those its rows
+  /// name that are not here yet
+  static Future<List<String>> comingOf(Database db, String mediaDir) async {
+    await historyTables(db);
+    String at(String name) => p.join(mediaDir, p.joinAll(name.split('/')));
+    final files = await db.query('history_files');
+    if (files.isNotEmpty) {
+      return [
+        for (final f in files)
+          if (f['ok'] == _fileWaiting ||
+              (f['ok'] == _fileWhole &&
+                  await File(
+                    p.join(mediaDir, _kPartDir, '${f['file']}.part'),
+                  ).exists()))
+            at(f['name'] as String),
+      ];
+    }
+    final out = <String>[];
+    for (final r in await db.rawQuery(
+      'SELECT media_path, file_path FROM messages '
+      'WHERE id IN (SELECT msg_id FROM history_rows)',
+    )) {
+      for (final v in [r['media_path'], r['file_path']]) {
+        if (v is String && p.isWithin(mediaDir, v) && !await File(v).exists()) {
+          out.add(v);
+        }
+      }
+    }
+    return out;
   }
 
   static Uint8List _blob(Object? v) => v is Uint8List
@@ -312,7 +372,10 @@ class HistoryImport {
         size: f['size'] as int,
         ok: f['ok'] as int,
       );
-      if (f['ok'] == _fileWhole) await _settle(n);
+      if (f['ok'] == _fileWhole) {
+        await _settle(n);
+        _landed(n);
+      }
     }
     _done = _r.done;
   }
@@ -386,10 +449,42 @@ class HistoryImport {
       }
       rethrow;
     }
-    if (ev.kind == 'data' && ev.last && ev.ok) await _settle(ev.file);
-    if (ev.kind == 'end') _done = true;
+    if (ev.kind == 'data' && ev.last) {
+      if (ev.ok) await _settle(ev.file);
+      _landed(ev.file);
+    }
+    if (ev.kind == 'gone') _landed(ev.file);
+    if (ev.kind == 'media') _listed();
+    final rowFiles = List.of(_rowFiles);
+    _rowFiles.clear();
+    final coming = _coming;
+    if (coming != null && rowFiles.isNotEmpty) {
+      coming.add([
+        for (final f in rowFiles)
+          if (!await File(f).exists()) f,
+      ]);
+    }
+    if (ev.kind == 'end') {
+      _done = true;
+      _coming?.clear();
+    }
     await _dropGoneFiles();
     return ev;
+  }
+
+  // files the rows of the last record name, for the bubbles
+  final _rowFiles = <String>[];
+
+  // the list came: the bubbles wait on what it brings, nothing else
+  void _listed() => _coming?.only([
+    for (final f in _files.values)
+      if (f.ok == _fileWaiting) _final(f.name),
+  ]);
+
+  // a file landed or will not come: its bubble stops waiting
+  void _landed(int file) {
+    final f = _files[file];
+    if (f != null) _coming?.done(_final(f.name));
   }
 
   Future<void> _dropGoneFiles() async {
@@ -404,6 +499,7 @@ class HistoryImport {
 
   Future<void> _rewind() async {
     _goneFiles.clear();
+    _rowFiles.clear();
     _r.close();
     _cols.clear();
     _chats.clear();
@@ -456,7 +552,9 @@ class HistoryImport {
     }
   }
 
-  // a whole file moves from its part to its name, once its row says whole
+  // a whole file moves from its part to its name, once its row says whole.
+  // one the phone keeps sealed is opened with its own key on the way, and
+  // one that does not open counts as lost
   Future<void> _settle(int file) async {
     final f = _files[file];
     if (f == null) return;
@@ -464,7 +562,83 @@ class HistoryImport {
     if (!await part.exists()) return;
     final to = File(_final(f.name));
     await to.parent.create(recursive: true);
-    await part.rename(to.path);
+    final keys = await _db.query(
+      'history_keys',
+      columns: ['key'],
+      where: 'name = ?',
+      whereArgs: [f.name],
+    );
+    final key = keys.isEmpty ? null : _blob(keys.first['key']);
+    if (key == null || key.length != 32) {
+      // sealed on the phone after its key was read: bytes no one here opens
+      if (await _sealedPart(part)) {
+        await _db.transaction((t) => _fileOk(t, file, _fileLost));
+        await part.delete();
+        return;
+      }
+      await part.rename(to.path);
+      return;
+    }
+    final open = File('${_part(file)}.open');
+    // a disk that fails or a seal that is locked here is no lost file: the
+    // part and its key stay, and the next take or start tries again
+    final ok = await _unseal(part, open, key);
+    if (ok) {
+      await open.rename(to.path);
+    } else {
+      try {
+        await open.delete();
+      } on FileSystemException {
+        // never made
+      }
+      await _db.transaction((t) => _fileOk(t, file, _fileLost));
+    }
+    await part.delete();
+    await _db.delete('history_keys', where: 'name = ?', whereArgs: [f.name]);
+  }
+
+  // the phone's sealed bytes in [from] to their plaintext in [to], chunk by
+  // chunk. false when any chunk does not open under [fk]
+  Future<bool> _unseal(File from, File to, Uint8List fk) async {
+    RandomAccessFile? src, dst;
+    try {
+      src = await from.open();
+      dst = await to.open(mode: FileMode.write);
+      final size = await src.length();
+      if (size < sealedHead || !isSealedHead(await src.read(sealedHead))) {
+        return false;
+      }
+      final len = plainLength(size);
+      if (len == null) return false;
+      final last = len == 0 ? 0 : (len - 1) ~/ chunkPlain;
+      for (var i = 0; i <= last; i++) {
+        final n = i < last ? chunkPlain : len - i * chunkPlain;
+        final stored = await src.read(n + 32);
+        final plain = openChunk(_crypto, fk, i, i == last, stored);
+        if (plain == null || plain.length != n) return false;
+        await dst.writeFrom(plain);
+      }
+      await dst.flush();
+      return true;
+    } finally {
+      fk.fillRange(0, fk.length, 0);
+      try {
+        await src?.close();
+      } finally {
+        await dst?.close();
+      }
+    }
+  }
+
+  // a part that starts as a sealed file does
+  static Future<bool> _sealedPart(File part) async {
+    final r = await part.open();
+    try {
+      if (await r.length() < sealedHead) return false;
+      return isSealedHead(await r.read(sealedHead));
+    } finally {
+      await r.close();
+    }
   }
 
   Future<void> _apply(Transaction t, HistoryEvent ev) async {
@@ -491,7 +665,7 @@ class HistoryImport {
             chat: (m['chat'] as num).toInt(),
             name: name,
             size: size,
-            ok: wanted.contains(_final(name)) && !await _held(name, size)
+            ok: wanted.contains(_final(name)) && !await _held(t, name, size)
                 ? _fileWaiting
                 : _fileHere,
           );
@@ -517,14 +691,25 @@ class HistoryImport {
 
   // a file already here at its listed size, as an earlier copy left it: the
   // list comes before any chunk of this stream, so this stream never wrote
-  // it, and it is neither written again nor taken back by a discard
-  Future<bool> _held(String name, int size) async {
+  // it, and it is neither written again nor taken back by a discard. a file
+  // the phone keeps sealed counts by its plaintext: its sealed bytes left by
+  // an older copy are no file to keep
+  Future<bool> _held(DatabaseExecutor t, String name, int size) async {
     try {
-      return await File(_final(name)).length() == size;
+      final have = await File(_final(name)).length();
+      if (await _exists(t, 'history_keys', 'name = ?', [name])) {
+        return have == plainLength(size);
+      }
+      return have == size;
     } on FileSystemException {
       return false;
     }
   }
+
+  // a file at its listed size: the bytes as the phone holds them, or the
+  // plaintext of a sealed one
+  static bool _sizeOk(int have, int listed) =>
+      have == listed || have == plainLength(listed);
 
   Future<void> _fileOk(Transaction t, int file, int ok) async {
     await t.update(
@@ -821,6 +1006,25 @@ class HistoryImport {
         final v = m[col];
         if (v is String && v.isNotEmpty) {
           m[col] = _safe(v) ? _final(v) : null;
+          if (_safe(v)) _rowFiles.add(_final(v));
+        }
+      }
+      // the keys of the files the phone keeps sealed, for when they land
+      if (r['x_keys'] case final Map keys) {
+        for (final e in keys.entries) {
+          final name = e.key, k = e.value;
+          if (name is! String || !_safe(name) || k is! String) continue;
+          final Uint8List key;
+          try {
+            key = base64Decode(k);
+          } on FormatException {
+            continue;
+          }
+          if (key.length != 32) continue;
+          await t.insert('history_keys', {
+            'name': name,
+            'key': key,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
       m['peer_id'] ??= '';
@@ -1051,7 +1255,7 @@ class HistoryImport {
       final file = File(_final(f['name'] as String));
       final size = f['size'] as int;
       if (f['ok'] == _fileWhole &&
-          (!await file.exists() || await file.length() != size)) {
+          (!await file.exists() || !_sizeOk(await file.length(), size))) {
         continue;
       }
       final n = f['n'] as int;

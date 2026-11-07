@@ -10158,7 +10158,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Semua pesanmu, dengan foto dan video dari 30 hari terakhir.';
+      'Pesanmu, dengan foto, video, dan pesan suara dari 30 hari terakhir.';
 
   @override
   String get devicesHistoryNone => 'Hanya kontak dan grup';

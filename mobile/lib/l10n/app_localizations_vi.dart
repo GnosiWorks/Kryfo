@@ -10140,7 +10140,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesHistoryCopyHint =>
-      'Tất cả tin nhắn, kèm ảnh và video trong 30 ngày qua.';
+      'Tin nhắn của bạn, kèm ảnh, video và tin nhắn thoại trong 30 ngày qua.';
 
   @override
   String get devicesHistoryNone => 'Chỉ danh bạ và nhóm';

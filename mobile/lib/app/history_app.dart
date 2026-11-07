@@ -55,7 +55,20 @@ Future<HistoryOutgoing> _makeHistory({
     skipMedia: skipMedia,
     rowsOnly: rowsOnly,
     hold: appState.withVaultStill,
+    fileKeyOf: _historyFileKey,
   );
+}
+
+// a media file's own key for the device, when it is sealed here. a key
+// that cannot be had leaves the file's bytes unopenable there: the device
+// counts it as not come
+Uint8List? _historyFileKey(String path) {
+  try {
+    return fileKeyOf(path);
+  } catch (e) {
+    dlog('history: a file key not read (${e.runtimeType})');
+    return null;
+  }
 }
 
 void _showCopy(ValueNotifier<HistoryCopyStage> s) {
@@ -155,6 +168,8 @@ void startDeviceHistoryCopy() {
       landed: (lists) => _copyLanded(db, lists),
       unlanded: _copyTakenBack,
       forgetKey: () => forgetLinkStream(db),
+      coming: historyFilesComing,
+      rowsIn: _copyRowsIn,
     );
     _showCopy(c.stage);
     await _copyEnded();
@@ -166,6 +181,23 @@ void startDeviceHistoryCopy() {
       if (_deviceCopy == c) _deviceCopy = null;
     }
   }());
+}
+
+// chats and messages of the copy came in: the home list shows them as they
+// come, a beat apart at most, not only after the next start
+Timer? _copyRowsSoon;
+void _copyRowsIn() {
+  if (_copyRowsSoon?.isActive ?? false) return;
+  _copyRowsSoon = Timer(const Duration(milliseconds: 700), () {
+    unawaited(() async {
+      try {
+        await appState.refreshContacts();
+        await appState.refreshGroups();
+      } catch (e) {
+        dlog('history: lists not refreshed (${e.runtimeType})');
+      }
+    }());
+  });
 }
 
 // every record is in: the contacts that came are known to the device state,

@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "تأكد أن الشاشتين تعرضان الأرقام الستة نفسها.",
   "devicesHistory": "السجل",
   "devicesHistoryCopy": "نسخ محادثاتي",
-  "devicesHistoryCopyHint": "كل رسائلك، مع الصور والفيديوهات من آخر 30 يومًا.",
+  "devicesHistoryCopyHint": "رسائلك، مع الصور والفيديوهات والرسائل الصوتية من آخر 30 يومًا.",
   "devicesHistoryNone": "جهات الاتصال والمجموعات فقط",
   "devicesHistoryNoneHint": "تصل دون أي رسائل.",
   "devicesSkipMedia": "تخطي الصور والفيديوهات",

@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "确认两块屏幕显示的六位数字相同。",
   "devicesHistory": "历史记录",
   "devicesHistoryCopy": "复制我的聊天",
-  "devicesHistoryCopyHint": "所有消息，以及最近 30 天的照片和视频。",
+  "devicesHistoryCopyHint": "你的消息，以及最近 30 天的照片、视频和语音消息。",
   "devicesHistoryNone": "仅联系人和群组",
   "devicesHistoryNoneHint": "它们会复制过来，不含任何消息。",
   "devicesSkipMedia": "跳过照片和视频",

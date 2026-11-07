@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "Перевірте, що на обох екранах ті самі шість цифр.",
   "devicesHistory": "Історія",
   "devicesHistoryCopy": "Перенести мої чати",
-  "devicesHistoryCopyHint": "Усі ваші повідомлення, а також фото й відео за останні 30 днів.",
+  "devicesHistoryCopyHint": "Ваші повідомлення, а також фото, відео й голосові за останні 30 днів.",
   "devicesHistoryNone": "Лише контакти й групи",
   "devicesHistoryNoneHint": "Вони переносяться без повідомлень.",
   "devicesSkipMedia": "Без фото й відео",

@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "Vérifiez que les deux écrans affichent les mêmes six chiffres.",
   "devicesHistory": "Historique",
   "devicesHistoryCopy": "Copier mes discussions",
-  "devicesHistoryCopyHint": "Tous vos messages, avec les photos et vidéos des 30 derniers jours.",
+  "devicesHistoryCopyHint": "Vos messages, avec les photos, vidéos et messages vocaux des 30 derniers jours.",
   "devicesHistoryNone": "Contacts et groupes seulement",
   "devicesHistoryNoneHint": "Ils arrivent sans aucun message.",
   "devicesSkipMedia": "Ignorer les photos et vidéos",

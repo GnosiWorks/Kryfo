@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "İki ekranda da aynı altı rakamın göründüğünü kontrol et.",
   "devicesHistory": "Geçmiş",
   "devicesHistoryCopy": "Sohbetlerimi aktar",
-  "devicesHistoryCopyHint": "Tüm mesajların, son 30 günün fotoğraf ve videolarıyla.",
+  "devicesHistoryCopyHint": "Mesajların, son 30 günün fotoğraf, video ve sesli mesajlarıyla.",
   "devicesHistoryNone": "Yalnızca kişiler ve gruplar",
   "devicesHistoryNoneHint": "Hiçbir mesaj olmadan gelirler.",
   "devicesSkipMedia": "Fotoğraf ve videoları atla",

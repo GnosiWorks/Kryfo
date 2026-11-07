@@ -7,6 +7,7 @@ import 'transport_screen.dart';
 import '../widgets/desk_menu.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/entrance.dart';
+import '../widgets/ease_size.dart' show EaseSize;
 import '../widgets/stagger_in.dart';
 import 'requests_screen.dart';
 import 'dart:async';
@@ -949,6 +950,8 @@ class _HomeCard extends StatelessWidget {
   // a soft wash from the top corner rather than a flat tint
   final bool wash;
   final List<Widget> actions;
+  // how far something under way is, 0 to 1: a bar under the line
+  final double? progress;
   const _HomeCard({
     required this.show,
     required this.id,
@@ -958,6 +961,7 @@ class _HomeCard extends StatelessWidget {
     required this.actions,
     this.lineColor,
     this.wash = false,
+    this.progress,
   });
 
   @override
@@ -1013,6 +1017,31 @@ class _HomeCard extends StatelessWidget {
                       size: 13,
                       color: lineColor ?? HaloColors.text,
                     ),
+                  ),
+                  // the bar grows in and moves on smoothly, at once under
+                  // reduced motion
+                  EaseSize(
+                    child: progress == null
+                        ? const SizedBox(width: double.infinity)
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(end: progress!.clamp(0.0, 1.0)),
+                              duration: motionStill(context)
+                                  ? Duration.zero
+                                  : const Duration(milliseconds: 420),
+                              curve: Curves.easeOutCubic,
+                              builder: (_, v, _) => ClipRRect(
+                                borderRadius: BorderRadius.circular(2),
+                                child: LinearProgressIndicator(
+                                  value: v,
+                                  minHeight: 3,
+                                  color: tint,
+                                  backgroundColor: tint.withValues(alpha: 0.18),
+                                ),
+                              ),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 12),
                   // the answers flow onto a second line in longer languages
@@ -1119,6 +1148,13 @@ class _HistoryCopyCard extends StatelessWidget {
               ? l10n.historyCopySize(historyCopySize(s.bytes))
               : words.line,
           lineColor: HaloColors.text,
+          progress:
+              s != null &&
+                  !over &&
+                  s.records > 0 &&
+                  s.step != HistoryCopyStep.making
+              ? s.share
+              : null,
           actions: [
             CardAction(
               label: l10n.historyCopySee,

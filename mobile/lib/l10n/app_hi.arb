@@ -2667,7 +2667,7 @@
   "devicesLinkStep3": "देखें कि दोनों स्क्रीन पर वही छह अंक दिख रहे हैं।",
   "devicesHistory": "पुरानी चैट",
   "devicesHistoryCopy": "मेरी चैट कॉपी करें",
-  "devicesHistoryCopyHint": "आपके सारे मैसेज, पिछले 30 दिन की फ़ोटो और वीडियो के साथ।",
+  "devicesHistoryCopyHint": "आपके मैसेज, पिछले 30 दिन की फ़ोटो, वीडियो और वॉइस नोट के साथ।",
   "devicesHistoryNone": "सिर्फ़ संपर्क और ग्रुप",
   "devicesHistoryNoneHint": "वे बिना किसी मैसेज के आते हैं।",
   "devicesSkipMedia": "फ़ोटो और वीडियो छोड़ दें",
