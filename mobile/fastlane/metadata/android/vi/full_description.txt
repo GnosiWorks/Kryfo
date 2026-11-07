@@ -21,7 +21,7 @@ Tính năng:
 * Khóa ứng dụng bằng mã PIN hoặc sinh trắc học, mã PIN ngụy trang mở ra một Kryfo trống, và các cuộc trò chuyện ẩn sau một mã PIN riêng
 * Xóa sạch khẩn cấp, gỡ bỏ mọi thứ, kể cả tệp đa phương tiện trong bộ nhớ
 * Một cuộc trò chuyện với người làm ra Kryfo, ẩn danh nếu bạn muốn
-* 15 ngôn ngữ
+* 17 ngôn ngữ
 * Không phân tích hay đo lường từ xa
 
 Kinh phí: không quảng cáo, không nhà đầu tư. Kryfo sống nhờ những gì người

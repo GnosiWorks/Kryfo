@@ -1,0 +1,5 @@
+Nuevo: cifrado poscuántico entre móviles con 0.6 y dispositivos vinculados para usar Kryfo también en tu ordenador. Fotos de perfil, indicador de escritura, bloqueo de capturas en grupos y archivos de hasta 50 MB con pausa y reanudación.
+
+Cambios: configuración en seis pasos, códigos de emparejamiento de ocho dígitos, y fotos y archivos cifrados también en el móvil. Kryfo ya está en hindi y polaco.
+
+Tus contactos con 0.5 deben actualizar para que os podáis añadir. Tus chats siguen funcionando.

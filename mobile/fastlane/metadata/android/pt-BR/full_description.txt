@@ -21,7 +21,7 @@ Recursos:
 * Bloqueio do app com PIN ou biometria, um PIN de disfarce que abre um Kryfo vazio e conversas ocultas atrás de um PIN próprio
 * Apagamento de pânico que remove tudo, inclusive a mídia gravada no aparelho
 * Uma conversa com quem cria o Kryfo, anonimamente se você quiser
-* 15 idiomas
+* 17 idiomas
 * Sem análise de uso nem telemetria
 
 Apoio: sem anúncios, sem investidores. O Kryfo se mantém com as doações de quem

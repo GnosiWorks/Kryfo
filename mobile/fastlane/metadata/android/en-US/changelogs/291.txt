@@ -1,0 +1,5 @@
+New: post-quantum encryption between 0.6 phones, and linked devices to use Kryfo on your computer too. Profile photos, a typing indicator, screenshot blocking in groups, and files up to 50 MB that pause and resume. Offline translation, on your phone only.
+
+Changed: setup takes six steps, pair codes have eight digits, and photos and files are encrypted on the phone too. Kryfo is now in Hindi and Polish.
+
+New contacts need 0.6 on both phones: ask 0.5.3 users to update. Your chats keep working.

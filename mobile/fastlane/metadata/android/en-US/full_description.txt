@@ -20,7 +20,7 @@ Features:
 * App lock with PIN or biometrics, a decoy PIN that opens an empty Kryfo, and hidden chats behind a PIN of their own
 * Panic wipe that removes everything, including media on disk
 * A chat with the person who builds Kryfo, anonymous if you like
-* 15 languages
+* 17 languages
 * No analytics or telemetry
 
 Funding: no ads, no investors. It runs on what backers give. Backing is

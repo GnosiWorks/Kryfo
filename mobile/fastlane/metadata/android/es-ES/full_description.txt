@@ -20,7 +20,7 @@ Funciones:
 * Bloqueo de la app con PIN o biometría, un PIN señuelo que abre un Kryfo vacío y chats ocultos tras un PIN propio
 * Borrado de emergencia que lo elimina todo, incluidos los archivos multimedia
 * Un chat con quien crea Kryfo, de forma anónima si quieres
-* 15 idiomas
+* 17 idiomas
 * Sin analíticas ni telemetría
 
 Financiación: sin anuncios ni inversores. Vive de lo que aportan quienes lo

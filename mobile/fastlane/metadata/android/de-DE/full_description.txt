@@ -20,7 +20,7 @@ Funktionen:
 * App-Sperre mit PIN oder Biometrie, eine Tarn-PIN, die ein leeres Kryfo öffnet, und versteckte Chats hinter einer eigenen PIN
 * Panik-Löschen, das alles entfernt, auch Medien im Speicher
 * Ein Chat mit dem Menschen, der Kryfo baut, auf Wunsch anonym
-* 15 Sprachen
+* 17 Sprachen
 * Keine Analyse und keine Telemetrie
 
 Finanzierung: keine Werbung, keine Investoren. Es läuft mit dem, was Leute

@@ -1,0 +1,5 @@
+Yeni: 0.6 kullanan telefonlar arasında kuantum sonrası şifreleme ve Kryfo'yu bilgisayarda da kullanmak için bağlı cihazlar. Profil fotoğrafları, yazıyor göstergesi, gruplarda ekran görüntüsü engeli ve duraklatılıp sürdürülebilen 50 MB'a kadar dosyalar.
+
+Değişti: kurulum altı adım, eşleştirme kodları sekiz haneli, fotoğraflar ve dosyalar telefonda da şifreli. Kryfo artık Hintçe ve Lehçe.
+
+0.5 kullanan kişilerin, birbirinizi eklemeden önce güncellemesi gerekir. Sohbetlerin çalışmaya devam eder.

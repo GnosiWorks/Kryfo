@@ -108,12 +108,16 @@ both builds have to pass: MATCH at f-droid's path, SAME at another one. no
     git push origin vX.Y.Z
 
 attach the four apks from repro/out/ to the github release, and
-libkryfo_signal-X.Y.Z-source.tar.gz from the same folder (X.Y.Z is the
+libkryfo_signal-X.Y.Z-source.tar.gz and SHA256SUMS from the same folder (X.Y.Z is the
 release's version): the complete source of the signal shim, which the AGPL
 and the GPL want offered beside the apks. it holds the shim's own crate and
 every crate its Cargo.lock names (libsignal's AGPL-3.0 ones, and the build
 scripts and their dependencies too), vendored with checksums, so it builds
 with `cargo build --offline` and nothing else. its README says how.
+
+release.sh writes SHA256SUMS (`repro/sums.sh`). put the windows installer and zip and the linux
+tarball into repro/out/ too, then `./sums.sh out X.Y.Z` adds SHA256SUMS-windows and
+SHA256SUMS-linux, and `./sums.sh --check out X.Y.Z` checks all three. `./sums-test.sh` tests it.
 
 ## version codes
 

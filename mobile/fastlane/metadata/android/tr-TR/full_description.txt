@@ -20,7 +20,7 @@ da kim olduğunu asla öğrenmez. Rehber asla yüklenmez.
 * PIN ya da biyometriyle uygulama kilidi, boş bir Kryfo açan yem PIN’i ve kendi PIN’i olan gizli sohbetler
 * Diskteki medya dahil her şeyi kaldıran panik silme
 * Kryfo’yu yapan kişiyle bir sohbet, istersen anonim
-* 15 dil
+* 17 dil
 * Analiz ve telemetri yok
 
 Finansman: reklam yok, yatırımcı yok. Bağışçıların verdikleriyle ayakta
