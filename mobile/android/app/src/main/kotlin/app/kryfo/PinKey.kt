@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package app.kryfo
 
+import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.Context
 import android.os.Build
@@ -123,6 +124,9 @@ object PinKey {
         override fun delete(alias: String) = store().deleteEntry(alias)
     }
 
+    // on disk before the keystore is touched: a process death mid-make
+    // must still find the flag
+    @SuppressLint("ApplySharedPref")
     private class Prefs(context: Context) : Notes {
         private val p = context.getSharedPreferences("kryfo_pin_key", Context.MODE_PRIVATE)
         override fun read(): Pair<Int, Int>? =
