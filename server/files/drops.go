@@ -202,12 +202,15 @@ type service struct {
 // the most one record may take on disk: anything larger is not one of ours
 const maxRecord = 16 << 10
 
+// the clock a new service starts on (tests set their own)
+var clockNow = time.Now
+
 func newService(cfg config, store blobStore, stateDir string) (*service, error) {
 	s := &service{
 		cfg:   cfg,
 		store: store,
 		index: filepath.Join(stateDir, "index"),
-		now:   time.Now,
+		now:   clockNow,
 		drops: map[string]*drop{},
 	}
 	if err := os.MkdirAll(s.index, 0o700); err != nil {
