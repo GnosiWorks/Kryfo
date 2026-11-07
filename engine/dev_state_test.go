@@ -468,7 +468,7 @@ func TestOpenedAdmitsBeforeItProves(t *testing.T) {
 	}
 	// a linked device's own list never comes as the phone's own
 	mustOK(t, devCallJSON("load", devJSON(t, map[string]any{
-		"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(stray)}},
+		"mine": []map[string]any{{"ident": 0, "identity": hexKey(me.id.pub), "key": hexKey(stray), "dev": 9}},
 	})))
 	if e := devErr(t, devSessionJSON("own_mine", devJSON(t, map[string]any{"ident": 0, "list": me.wire}))); e != "source" {
 		t.Fatalf("own_mine on a linked device: %s", e)
