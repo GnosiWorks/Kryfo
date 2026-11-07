@@ -2,6 +2,8 @@
 // a desktop notification follows the phone's preview setting: kryfo and new
 // message unless previews are on, and never a word of a hidden chat or the
 // vault, or anything while a decoy is open
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications_linux/flutter_local_notifications_linux.dart';
@@ -74,6 +76,30 @@ Future<void> _ring({bool hidden = false}) => showMessageNotification(
 // what a windows toast would say for the same post
 (String?, String) _toast(_Caught n) =>
     toastWords(n.asked.single.$1, n.asked.single.$2);
+
+// a post the server answers late, and what is taken down, in order
+class _Slow extends QuietLinuxNotifications {
+  final events = <String>[];
+  final answer = Completer<void>();
+
+  @override
+  Future<void> post({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    events.add('post $id');
+    await answer.future;
+    events.add('posted $id');
+  }
+
+  @override
+  Future<void> drop(int id) async => events.add('drop $id');
+
+  @override
+  Future<void> dropAll() async => events.add('drop all');
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -155,5 +181,17 @@ void main() {
       ),
     );
     expect(seen, ['window', 'open chat:abc']);
+  });
+
+  test('a cancel waits for the post before it to be recorded', () async {
+    final n = _Slow();
+    final shown = n.show(id: 7, title: 'Wren', body: 'hi');
+    final gone = n.cancel(id: 7);
+    final all = n.cancelAll();
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    expect(n.events, ['post 7']);
+    n.answer.complete();
+    await Future.wait([shown, gone, all]);
+    expect(n.events, ['post 7', 'posted 7', 'drop 7', 'drop all']);
   });
 }

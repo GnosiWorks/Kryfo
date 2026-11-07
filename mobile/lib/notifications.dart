@@ -399,7 +399,9 @@ Future<void> _plainOverNamed() async {
   final order = [for (final f in _folds.values) f.tag];
   final chatOf = {for (final e in _folds.entries) e.value.tag: e.key};
   // named folds go whatever the shade says: nothing reposts their words
-  _folds.removeWhere((_, f) => f.channel == _messagesChannel);
+  for (final e in [..._folds.entries]) {
+    if (e.value.channel == _messagesChannel) _dropFold(e.key);
+  }
   if (await quietNow()) return;
   final named = <ActiveNotification>[];
   try {
@@ -543,6 +545,8 @@ Future<void> clearMessageNotification(String msgUid) =>
     _foldTurnOf(() => _clearMessage(msgUid)).then((_) {});
 
 Future<void> _clearMessage(String msgUid) async {
+  final gen = _clearGen;
+  final gens = {..._chatGen};
   unawaited(_forgetRings(msgUid: msgUid));
   final shown = _shownForMsg.remove(msgUid);
   // the folds are looked in directly: the map above forgets the oldest
@@ -556,13 +560,16 @@ Future<void> _clearMessage(String msgUid) async {
     // the rest of the chat's stay up: its line goes, quietly
     fold.lines.removeWhere((l) => l.uid == msgUid);
     fold.count--;
+    // a clear since this began: the repost never lands
+    bool stale() => gen != _clearGen || gens[chat] != _chatGen[chat];
     if (fold.count > 0 &&
         fold.lines.isNotEmpty &&
         await _mayRepost(fold) &&
         !await quietNow()) {
-      await _postFold(fold, alert: false);
+      await _postFold(fold, alert: false, stale: stale);
       return;
     }
+    if (stale()) return;
     _dropFold(chat!);
     await cancelWithRetry(
       () => notifPlugin.cancel(id: fold.id, tag: fold.tag),

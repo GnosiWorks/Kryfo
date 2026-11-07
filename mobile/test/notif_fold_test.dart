@@ -54,15 +54,17 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
 
   @override
   Future<List<ActiveNotification>> getActiveNotifications() async {
+    // read now, answered later: what was up when asked
+    final up = [
+      for (final (id, tag, channel) in posted)
+        ActiveNotification(id: id, tag: tag, channelId: channel),
+    ];
     final hold = holdRead;
     if (hold != null) {
       holdRead = null;
       await hold.future;
     }
-    return [
-      for (final (id, tag, channel) in posted)
-        ActiveNotification(id: id, tag: tag, channelId: channel),
-    ];
+    return up;
   }
 }
 
@@ -518,5 +520,33 @@ void main() {
     expect(shade.up, isEmpty);
     await _ring('bob', 'later', uid: 'b');
     expect(_words(shade.shown.last), isNot(contains('six')));
+  });
+
+  test('plain on then off, an old take-back leaves the new fold up', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    await setNotifPlain(true);
+    await setNotifPlain(false);
+    shade.posted.clear();
+    await _ring('bob', 'see you', uid: 'b');
+    await clearMessageNotification('a');
+    expect(shade.posted.map((p) => p.$2), ['t-bob']);
+    expect(_lastOf(shade, 'bob').body, 'see you');
+  });
+
+  test('a chat cleared during a take-back gets no repost', () async {
+    final shade = _start();
+    await _ring('bob', 'meet at six', uid: 'a');
+    await _ring('bob', 'see you', uid: 'b');
+    final before = shade.shown.length;
+    final hold = Completer<void>();
+    shade.holdRead = hold;
+    final back = clearMessageNotification('a');
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await clearNotificationsFor('bob');
+    hold.complete();
+    await back;
+    expect(shade.shown, hasLength(before));
+    expect(shade.up, isEmpty);
   });
 }
