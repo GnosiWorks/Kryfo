@@ -1238,7 +1238,7 @@ void main() {
       FlutterSecureStorage.setMockInitialValues({
         'halo.d.key': "x'${'2e' * 32}'",
         'my_avatar': '3',
-        '${HaloContainer.decoy.key('my_avatar')}': '7',
+        HaloContainer.decoy.key('my_avatar'): '7',
       });
       useDatabasesForTest(live, Session(decoy));
       final d = await draftQuietBackup(stage, side: side);
