@@ -1141,6 +1141,35 @@ class DeviceReceive {
     }
   }
 
+  /// the contacts whose rows came after the state was loaded, as a history
+  /// copy brings them: known to the engine as a load would know them, and
+  /// heard on now, each once ([heard] holds the identities done)
+  Future<void> hearNew(Set<String> heard) async {
+    if (!linkedDevicesOn) return;
+    final d = await db();
+    for (final r in await d.query(
+      'contacts',
+      columns: ['ident', 'ikey'],
+      where: 'ikey IS NOT NULL',
+      orderBy: 'rowid',
+    )) {
+      final identity = r['ikey'] as String;
+      if (heard.contains(identity)) continue;
+      try {
+        await state.call(d, 'add', {
+          'ident': r['ident'] as int? ?? 0,
+          'identity': identity,
+        });
+      } on DevRefused catch (e) {
+        _note('a contact not held (${e.why})');
+        heard.add(identity);
+        continue;
+      }
+      heard.add(identity);
+      await listenAll(only: identity);
+    }
+  }
+
   // the bundles of a contact's devices for this device: a session built
   // from each that lists, a held one built again only when it is a fresh
   // push for a silent device or the answer to my ask after a Rebuild

@@ -832,4 +832,121 @@ void main() {
     },
     skip: !_engine ? 'needs the host engine' : false,
   );
+
+  test('a contact a history copy brings after the state loaded is known and '
+      'heard on at once, each once: their app can open to the desk while '
+      'the copy runs', () async {
+    if (sql == null || shim == null || !_engine) {
+      markTestSkipped('needs sqlite, the host engine and the shim');
+      return;
+    }
+    final lib = shim!;
+    final anaKp = testKeyPair();
+    final deskKp = testKeyPair();
+    final ana = await testStore(keys: anaKp);
+    final desk = await testStore(keys: deskKp);
+    final bob = await testStore();
+    final bobHex = devHex(bob.identity.public);
+    final bobX = bobHex.substring(2);
+    final sam = '05${'5a' * 32}';
+    final kim = '05${'6b' * 32}';
+    final deskHalo = HaloDb(HaloContainer.decoy);
+    opened.add(deskHalo);
+    final deskDb = await deskHalo.open();
+    await putMainIdentity(deskDb, deskKp.privateKey.serialize());
+    await deskDb.update('identities', {
+      'ident_pub': ana.identity.public,
+      'dev_id': 4,
+    });
+    final ds = DeviceState(DeviceEngine());
+    linkedDevicesForTest = true;
+    deviceStateForTest(ds);
+    // the desk just linked: its state loaded before any contact came
+    await ds.load(
+      deskDb,
+      await devMineOf(deskDb, lib),
+      shimPath: KryfoSignal.loadedFrom!,
+    );
+    final deskMe = (
+      ident: kMainIdent,
+      identity: ana.identity.public,
+      device: 4,
+    );
+    final deskDs = DeviceSessions(desk, linked: true);
+    final deskListen = _Listen();
+    final deskSend = DeviceSend(
+      state: ds,
+      db: () async => deskDb,
+      sessions: (_) async => deskDs,
+      wire: _Wire(),
+      listen: deskListen.listen,
+      clock: () => 1_780_000_000_000,
+      random: Random(14),
+      jitter: () => Duration.zero,
+    );
+    final deskRecv = DeviceReceive(
+      state: ds,
+      db: () async => deskDb,
+      sessions: (_) async => deskDs,
+      send: deskSend,
+      listener: deskListen,
+      open: deviceOpenAt,
+      me: (_) async => deskMe,
+      contact: (_, _) async => null,
+      phone: (_, _, _) async => false,
+      sign: (_, _) async => throw StateError('a linked device never signs'),
+      clock: () => 1_780_000_000_000,
+    );
+    Future<String?> refused(String identity) async {
+      try {
+        await ds.call(deskDb, 'fanout', {
+          'ident': kMainIdent,
+          'contact': identity,
+          'devices': true,
+          'phone_classic': false,
+          'now': 1_780_000_000_000,
+          'no_own': true,
+          'peek': true,
+        });
+        return null;
+      } on DevRefused catch (e) {
+        return e.why;
+      }
+    }
+
+    // the copy's rows: bob a contact, sam blocked, kim a group member by
+    // key alone
+    for (final (id, ikey, accepted, blocked) in [
+      (_bobChat, bobHex, 1, 0),
+      ('sam-low-field', sam, 1, 1),
+      ('kim-far-shore', kim, 0, 0),
+    ]) {
+      await deskDb.insert('contacts', {
+        'halo_id': id,
+        'onion': '',
+        'xpub': ikey.substring(2),
+        'first_seen': 0,
+        'last_seen': 0,
+        'ident': kMainIdent,
+        'ikey': ikey,
+        'caps': 'dv,pq,ty',
+        'accepted': accepted,
+        'blocked': blocked,
+      });
+    }
+    expect(await refused(bobHex), 'unknown');
+    expect(deskListen.heard, isEmpty);
+
+    final heard = <String>{};
+    await deskRecv.hearNew(heard);
+    expect(heard, {bobHex, sam, kim});
+    // the engine knows each as a load would; bob's phone alone is heard on
+    expect(await refused(bobHex), isNot('unknown'));
+    expect(await refused(kim), isNot('unknown'));
+    expect(deskListen.heard, {'$bobX/1/4'});
+    // asked again: nothing heard twice
+    deskListen.heard.clear();
+    await deskRecv.hearNew(heard);
+    expect(deskListen.heard, isEmpty);
+  });
 }

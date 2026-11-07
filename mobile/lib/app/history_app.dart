@@ -196,8 +196,23 @@ void _copyRowsIn() {
       } catch (e) {
         dlog('history: lists not refreshed (${e.runtimeType})');
       }
+      await _copyHearNew();
     }());
   });
+}
+
+// the contacts the copy brought so far are known to the device state and
+// heard on now, not only once it landed: a contact's app opens a pair to
+// this device as soon as my phone's list reaches it, so sending works while
+// the copy runs. their own lists still come last, with the copy's end
+final _copyHeard = <String>{};
+Future<void> _copyHearNew() async {
+  if (!linkedRole) return;
+  try {
+    await deviceReceive?.hearNew(_copyHeard);
+  } catch (e) {
+    dlog('history: copied contacts not heard yet (${e.runtimeType})');
+  }
 }
 
 // every record is in: the contacts that came are known to the device state,
@@ -235,6 +250,7 @@ Future<void> _copyLanded(
 // a copy taken back: the contacts it made are forgotten by the device
 // state (their lists, proofs, listens) before their rows go
 Future<void> _copyTakenBack(List<String> haloIds) async {
+  _copyHeard.clear();
   for (final id in haloIds) {
     try {
       await _devForget(id);
