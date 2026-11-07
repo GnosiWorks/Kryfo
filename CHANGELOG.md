@@ -3,10 +3,10 @@
 ## [0.6.0] - unreleased
 
 ### Added
-- invite someone from the first minute: the link you share opens a page that says what Kryfo is and where to get it, then opens Kryfo. it works in any messenger, also for people who don't have Kryfo yet.
+- invite someone from the first minute: the link you share opens a page that says what Kryfo is and where to get it, then opens Kryfo. it works in any messenger, also for people without Kryfo.
 - you can pick a public @name while setting up, or skip it and stay unfindable.
-- post-quantum encryption: a chat between two 0.6 phones starts with pqxdh and runs with spqr, signal's post-quantum ratchet. an older chat moves over by itself once both sides have 0.6, and the chat shows a line when it has. a new chat needs 0.6 on both sides.
-- pair codes have eight digits, and both phones need 0.6. the six digit code is gone.
+- post-quantum encryption: a chat between two 0.6 phones starts with pqxdh and runs with spqr, signal's post-quantum ratchet. an older chat moves over by itself once both sides have 0.6, and the chat shows a line when it has.
+- pair codes have eight digits. the six digit code is gone.
 - typing indicator: in a 1:1 chat you see "Typing" under your contact's name and in the chat list while they write, and they see yours. it goes straight to them over tor, never through a relay, and only while you both have it on. it is on for everyone, also after the update, and off by itself while tor goes through a bridge or the chat is archived. turn it off under settings, privacy.
 - linked devices: link a computer to your phone. scan the code it shows, compare six digits, and pick what comes over: every chat, text only, or contacts and groups only. new messages reach the phone and the computer, read and deleted ones stay in step, and your supporter badge shows on both. hidden chats, the decoy, invites, rooms and group changes stay on the phone. remove a computer from the phone at any time and it erases itself; one left unused for 30 days erases itself too.
 - test builds for windows and linux. use Kryfo on a computer on its own or link it to your phone. it keeps its data encrypted, locked by your windows account, the linux keyring or a passphrase.
@@ -17,11 +17,12 @@
 - screenshot blocking in groups.
 - note to self keeps photos, gifs, files and voice notes too, and they reach your linked computer.
 - share a saved bridge with someone, as a code or into a chat.
+- the home screen icon and name can look like an everyday app: Notes, Weather, Tasks or News. pick one under settings, security, icon and notifications.
 - google push, in the google play build only and off until you pick it.
 - tips in the google play build. a tip gives a supporter badge and nothing else.
 - if Kryfo can't start, it offers to restore a backup or start fresh.
 - offline translation: translate a message on your phone, never on a server. a language pack downloads once, over tor.
-- a universal apk with both arm builds in one file, on github and the site. it installs on every arm phone, so nobody has to know which one they need.
+- a universal apk with both arm builds in one file, on github and the site. it installs on every arm phone.
 - Kryfo in hindi, the 16th language.
 - Kryfo in polish, the 17th language. thanks to padrian772 for reviewing the translation.
 
