@@ -20,8 +20,7 @@ import 'devices/own_sync.dart' show frameOfGroup, ownFrameNames;
 import 'heal.dart' show vaultMadeAfterRestore;
 import 'lock_state.dart' show LockState, lockState;
 import 'main.dart' show HaloDb, deviceState, engine, shredFile;
-import 'notifications.dart'
-    show cancelWithRetry, clearNotificationsFor, notifPlugin;
+import 'notifications.dart' show clearAllNotifications, clearNotificationsFor;
 import 'chat_shots.dart' show ShotsWord;
 import 'router.dart';
 import 'search.dart' show searchBody;
@@ -224,7 +223,7 @@ class LiveVaultHost implements VaultHost {
       await clearNotificationsFor(p);
     }
     // what the receiving job showed cannot be told apart by chat here
-    await cancelWithRetry(notifPlugin.cancelAll, 'hidden shade');
+    await clearAllNotifications('hidden shade');
   }
 
   @override

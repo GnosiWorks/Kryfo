@@ -27,6 +27,8 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
     AndroidNotificationDetails? notificationDetails,
     String? payload,
   }) async {
+    // the same id and tag again updates in place, as android does
+    posted.removeWhere((p) => p.$1 == id && p.$2 == notificationDetails?.tag);
     posted.add((id, notificationDetails?.tag, notificationDetails?.channelId));
     timeouts.add(notificationDetails?.timeoutAfter);
     payloads.add(payload);
@@ -63,9 +65,12 @@ _Shade _start() {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  tearDown(() => notifTagsOf = (_) async => const {});
+  tearDown(() {
+    notifTagsOf = (_) async => const {};
+    forgetFolds();
+  });
 
-  test('only the one taken back leaves the shade', () async {
+  test('one taken back leaves its chat\'s notification up', () async {
     final shade = _start();
     await showMessageNotification(
       title: 'bob',
@@ -82,14 +87,21 @@ void main() {
       tag: 't-bob',
       msgUid: 'u2',
     );
-    expect(shade.up, hasLength(2));
-    final second = shade.up.last;
+    // one per chat, updated in place
+    expect(shade.up, hasLength(1));
+    final one = shade.up.single;
     await clearMessageNotification('u1');
-    expect(shade.up, [second]);
+    expect(shade.up, [one]);
+    // what is left stays up, without a second alert
+    expect(shade.details.last!.silent, isTrue);
+    expect(shade.details.last!.number, 1);
     // asked twice, or for one never shown: nothing more goes
     await clearMessageNotification('u1');
     await clearMessageNotification('nobody');
-    expect(shade.up, [second]);
+    expect(shade.up, [one]);
+    // the last one taken back takes it down
+    await clearMessageNotification('u2');
+    expect(shade.up, isEmpty);
     await clearNotificationsFor('bob');
     expect(shade.up, isEmpty);
   });

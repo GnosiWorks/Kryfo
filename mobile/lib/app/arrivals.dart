@@ -155,7 +155,8 @@ class AppIo {
       burnAt: burnAt,
       hidden: on.container.wrapped,
     );
-    if (id == null || msgUid == null) return;
+    // a folded one keeps the ring of the first message it holds
+    if (id == null || msgUid == null || !ringIsFirst(payload)) return;
     try {
       await on.noteRing(id, payload, msgUid);
       desk_trace.trace('toast ring kept');

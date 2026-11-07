@@ -74,7 +74,7 @@ Future<String?> _phoneHideLine() async {
 /// and the app opens again. false when it would not
 Future<bool> switchAppFace(AppFace face) async {
   await noteFaceChanged();
-  await cancelWithRetry(notifPlugin.cancelAll, 'icon shade');
+  await clearAllNotifications('icon shade');
   var ok = false;
   await restartKeepingDrafts(() async {
     ok = await appFaceChannel.switchTo(face);

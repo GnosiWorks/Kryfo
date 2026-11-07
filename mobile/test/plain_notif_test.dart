@@ -100,6 +100,7 @@ _Shade _start({Map<String, Object> prefs = const {}, bool quiet = false}) {
     if (quiet) 'halo.lock.state': '{"q":true}',
   });
   forgetNotifPlain();
+  forgetFolds();
   forgetAppFace();
   _faces.face = AppFace.kryfo;
   appFaceChannel = _faces;

@@ -143,6 +143,8 @@ AndroidNotificationDetails _supportDetails({
   String? tag,
   String? ticker,
   StyleInformation? style,
+  int? number,
+  int? when,
 }) => AndroidNotificationDetails(
   _supportChannel,
   tag: tag,
@@ -160,7 +162,8 @@ AndroidNotificationDetails _supportDetails({
   autoCancel: true,
   ticker: ticker,
   styleInformation: style,
-  when: DateTime.now().millisecondsSinceEpoch,
+  number: number,
+  when: when ?? DateTime.now().millisecondsSinceEpoch,
 );
 
 // the one support summary, always under this id so it updates in place
@@ -193,13 +196,14 @@ Future<void> clearSupportSummary() async {
   }
 }
 
-// an answered support chat rings per message, like any contact, on the
-// support channel. opening the chat takes it down
+// an answered support chat rings like any contact, on the support channel,
+// one notification per chat. opening the chat takes it down
 Future<void> showSupportMessage({
   required String chatId,
   required String tag,
   required String title,
   required String body,
+  String? msgUid,
 }) async {
   if (await quietNow()) return;
   await _makeSupportChannel();
@@ -208,21 +212,11 @@ Future<void> showSupportMessage({
     title = 'Kryfo';
     body = l10n.notificationsNewMessage;
   }
-  final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
-  (_shownFor[chatId] ??= []).add((id, tag));
-  await notifPlugin.show(
-    id: id,
-    title: title,
-    body: body,
-    notificationDetails: NotificationDetails(
-      android: _supportDetails(
-        alert: true,
-        tag: tag,
-        ticker: hidden ? l10n.notificationsNewMessage2 : '$title: $body',
-        style: BigTextStyleInformation(body, contentTitle: title),
-      ),
-    ),
-    payload: tag,
+  await _ringFold(
+    chat: chatId,
+    tag: tag,
+    support: true,
+    line: _Line(uid: msgUid, title: title, body: body, hidden: hidden),
   );
 }
 
@@ -409,7 +403,16 @@ Future<void> _plainOverNamed() async {
     return;
   }
   if (named.isEmpty) return;
-  named.sort((a, b) => a.id!.compareTo(b.id!));
+  // ids do not follow time: the folds this process posted know which
+  // rang last, the rest fall back on id order
+  final order = [for (final f in _folds.values) f.tag];
+  int rank(ActiveNotification a) => order.indexOf(a.tag ?? '');
+  named.sort((a, b) {
+    final r = rank(a).compareTo(rank(b));
+    return r != 0 ? r : a.id!.compareTo(b.id!);
+  });
+  final chatOf = {for (final e in _folds.entries) e.value.tag: e.key};
+  _folds.removeWhere((_, f) => f.channel == _messagesChannel);
   for (final a in named) {
     await cancelWithRetry(
       () => notifPlugin.cancel(id: a.id!, tag: a.tag),
@@ -419,7 +422,7 @@ Future<void> _plainOverNamed() async {
   final newest = named.last.tag;
   if (newest == null) return;
   // the chat it was posted for, as this process knows it, else its tag
-  var chat = newest;
+  var chat = chatOf[newest] ?? newest;
   for (final e in _shownFor.entries) {
     if (e.value.any((x) => x.$2 == newest)) chat = e.key;
   }
@@ -466,7 +469,11 @@ final Map<String, (String, int, String?)> _shownForMsg = {};
 Future<void> clearNotificationsFor(String chat, {Set<String>? tags}) async {
   unawaited(_forgetRings(chat: chat));
   _shownForMsg.removeWhere((_, v) => v.$1 == chat);
-  final shown = _shownFor.remove(chat) ?? const <(int, String?)>[];
+  final fold = _folds.remove(chat);
+  final shown = [
+    ...?_shownFor.remove(chat),
+    if (fold != null) (fold.id, fold.tag),
+  ];
   for (final (id, tag) in shown) {
     await cancelWithRetry(() => notifPlugin.cancel(id: id, tag: tag), 'shade');
   }
@@ -525,10 +532,273 @@ Future<void> clearMessageNotification(String msgUid) async {
   final shown = _shownForMsg.remove(msgUid);
   if (shown == null) return;
   final (chat, id, tag) = shown;
+  final fold = _folds[chat];
+  if (fold != null && fold.id == id && fold.tag == tag) {
+    // the rest of the chat's stay up: its line goes, quietly
+    fold.lines.removeWhere((l) => l.uid == msgUid);
+    fold.count--;
+    if (fold.count > 0 && fold.lines.isNotEmpty && !await quietNow()) {
+      await _postFold(fold, alert: false);
+      return;
+    }
+    _folds.remove(chat);
+    await cancelWithRetry(() => notifPlugin.cancel(id: id, tag: tag), 'shade');
+    return;
+  }
   final ids = _shownFor[chat];
   ids?.remove((id, tag));
   if (ids != null && ids.isEmpty) _shownFor.remove(chat);
   await cancelWithRetry(() => notifPlugin.cancel(id: id, tag: tag), 'shade');
+}
+
+// one notification per chat, under its tag and an id cut from it, updated
+// in place: android keeps no more than about 25 up per app and drops the
+// rest without a word
+class _Line {
+  _Line({
+    required this.uid,
+    required this.title,
+    required this.body,
+    required this.hidden,
+    this.burnAt,
+  }) : at = DateTime.now().millisecondsSinceEpoch;
+  final String? uid;
+  final String title;
+  final String body;
+  // said only kryfo and new message when it came
+  final bool hidden;
+  final int? burnAt;
+  final int at;
+}
+
+class _Fold {
+  _Fold(this.tag, this.channel) : id = notifIdFor(tag);
+  final String tag;
+  final String channel;
+  final int id;
+  // every message folded in, more than the lines kept
+  int count = 0;
+  // newest last
+  final lines = <_Line>[];
+}
+
+bool _isSupport(_Fold f) => f.channel == _supportChannel;
+
+// by chat, the one rung last at the end
+final Map<String, _Fold> _folds = {};
+
+// lines kept per chat, and lines shown
+const _kKeptLines = 50;
+const _kShownLines = 6;
+
+// chats with a notification up at once. the shade's own limit is about 25
+// per app, with the service, a transfer and android's group summary in it
+@visibleForTesting
+const kMaxChatNotifs = 20;
+
+/// the id a chat's notification goes under: from its random tag, so it says
+/// nothing the tag does not, and clear of the fixed ids below 0x10000
+int notifIdFor(String tag) {
+  var h = 0x811c9dc5;
+  for (final c in tag.codeUnits) {
+    h = ((h ^ c) * 0x01000193) & 0xffffffff;
+  }
+  h &= 0x7fffffff;
+  return h < 0x10000 ? h + 0x10000 : h;
+}
+
+/// true while [chat]'s notification holds one message: the tap opens on it
+bool ringIsFirst(String chat) => (_folds[chat]?.count ?? 0) <= 1;
+
+/// the shade is cleared as a whole: what the folds hold goes with it
+Future<void> clearAllNotifications(String where) async {
+  _folds.clear();
+  _shownFor.clear();
+  _shownForMsg.clear();
+  await cancelWithRetry(notifPlugin.cancelAll, where);
+}
+
+@visibleForTesting
+void forgetFolds() {
+  _folds.clear();
+  _shownFor.clear();
+  _shownForMsg.clear();
+}
+
+Future<int?> _ringFold({
+  required String chat,
+  required String tag,
+  required _Line line,
+  bool support = false,
+}) async {
+  var fold = _folds.remove(chat);
+  // a chat whose tag changed starts over
+  if (fold != null && fold.tag != tag) {
+    await cancelWithRetry(
+      () => notifPlugin.cancel(id: fold!.id, tag: fold.tag),
+      'shade',
+    );
+    fold = null;
+  }
+  if (fold == null) {
+    await _makeRoom();
+    fold = _Fold(tag, support ? _supportChannel : _messagesChannel);
+  }
+  _folds[chat] = fold;
+  fold.count++;
+  fold.lines.add(line);
+  if (fold.lines.length > _kKeptLines) fold.lines.removeAt(0);
+  if (line.uid != null) {
+    _shownForMsg[line.uid!] = (chat, fold.id, tag);
+    // the oldest go first: a shade that full has been cleared long since
+    if (_shownForMsg.length > 500) {
+      _shownForMsg.remove(_shownForMsg.keys.first);
+    }
+  }
+  await _postFold(fold, alert: true);
+  return fold.id;
+}
+
+// a new chat's notification: the oldest chat's goes first when the shade
+// holds the most it may. what an earlier process left counts too
+Future<void> _makeRoom() async {
+  var up = <ActiveNotification>[];
+  try {
+    up = [
+      for (final a in await notifPlugin.getActiveNotifications())
+        if (a.id != null &&
+            a.tag != null &&
+            (a.channelId == _messagesChannel || a.channelId == _supportChannel))
+          a,
+    ];
+  } catch (e) {
+    dlog('shade: not read (${e.runtimeType})');
+  }
+  final ours = {for (final f in _folds.values) (f.id, f.tag)};
+  final older = [
+    for (final a in up)
+      if (!ours.contains((a.id, a.tag))) a,
+  ];
+  var total = _folds.length + older.length;
+  for (final a in older) {
+    if (total < kMaxChatNotifs) return;
+    await cancelWithRetry(
+      () => notifPlugin.cancel(id: a.id!, tag: a.tag),
+      'shade',
+    );
+    total--;
+  }
+  while (_folds.length >= kMaxChatNotifs) {
+    final chat = _folds.keys.first;
+    await clearNotificationsFor(chat, tags: const {});
+  }
+}
+
+// what a chat's notification says: the newest message as it would have
+// shown alone, and above it the earlier ones that came under the same rules.
+// a hidden one shows no earlier lines, and a timed one only while newest,
+// so no words outlive their message or a stricter setting
+Future<void> _postFold(_Fold fold, {required bool alert}) async {
+  final now = DateTime.now().millisecondsSinceEpoch;
+  fold.lines.removeWhere((l) => l.burnAt != null && l.burnAt! <= now);
+  if (fold.lines.isEmpty) {
+    _folds.removeWhere((_, f) => identical(f, fold));
+    await cancelWithRetry(
+      () => notifPlugin.cancel(id: fold.id, tag: fold.tag),
+      'shade',
+    );
+    return;
+  }
+  final last = fold.lines.last;
+  final shown = <_Line>[
+    if (!last.hidden)
+      for (final l in fold.lines.sublist(0, fold.lines.length - 1))
+        if (!l.hidden && l.burnAt == null && l.title == last.title) l,
+    last,
+  ];
+  final lines = shown.length > _kShownLines
+      ? shown.sublist(shown.length - _kShownLines)
+      : shown;
+  final title = last.title;
+  final body = last.body;
+  final hidden = last.hidden;
+  final StyleInformation style;
+  if (_isSupport(fold)) {
+    style = lines.length == 1
+        ? BigTextStyleInformation(body, contentTitle: title)
+        : InboxStyleInformation([
+            for (final l in lines) l.body,
+          ], contentTitle: title);
+  } else {
+    final summary = hidden ? null : l10n.notificationsEncrypted;
+    style = lines.length == 1
+        ? BigTextStyleInformation(
+            body,
+            contentTitle: title,
+            summaryText: summary,
+          )
+        : InboxStyleInformation(
+            [for (final l in lines) l.body],
+            contentTitle: title,
+            summaryText: summary,
+          );
+  }
+  final ticker = hidden ? l10n.notificationsNewMessage2 : '$title: $body';
+  final AndroidNotificationDetails details;
+  if (_isSupport(fold)) {
+    details = _supportDetails(
+      alert: alert,
+      tag: fold.tag,
+      ticker: ticker,
+      style: style,
+      number: fold.count,
+      when: last.at,
+    );
+  } else {
+    // a timed message leaves the shade its window after it came, read or
+    // not, whatever is running then: android takes it down itself. the
+    // message waits in the chat to be read
+    final left = last.burnAt == null ? null : max(1, last.burnAt! - now);
+    details = AndroidNotificationDetails(
+      _messagesChannel,
+      l10n.notificationsChannelName,
+      tag: fold.tag,
+      channelDescription:
+          l10n.notificationsNewEncryptedMessagesFromYourContacts,
+      importance: Importance.max,
+      priority: Priority.high,
+      fullScreenIntent: false,
+      category: AndroidNotificationCategory.message,
+      icon: 'ic_halo_notification',
+      color: const Color(0xFFF59E0B),
+      // locked screen never shows content, unlocked does. the toggle above
+      // decides whether it shows even then.
+      visibility: NotificationVisibility.private,
+      // two short taps reads as a message, not an alarm
+      vibrationPattern: Int64List.fromList(<int>[0, 120, 90, 120]),
+      enableLights: true,
+      ledColor: const Color(0xFFF59E0B),
+      ledOnMs: 600,
+      ledOffMs: 2000,
+      ticker: ticker,
+      autoCancel: true,
+      timeoutAfter: left,
+      when: last.at,
+      number: fold.count,
+      // an update in place alerts again for a new message, never for a
+      // line taken back
+      onlyAlertOnce: !alert,
+      silent: !alert,
+      styleInformation: style,
+    );
+  }
+  await notifPlugin.show(
+    id: fold.id,
+    title: title,
+    body: body,
+    notificationDetails: NotificationDetails(android: details),
+    payload: fold.tag,
+  );
 }
 
 void _noteShown(String chat, String tag, String? msgUid, int id) {
@@ -585,53 +855,15 @@ Future<int?> showMessageNotification({
     title = 'Kryfo';
     body = l10n.notificationsNewMessage;
   }
-  // a timed message leaves the shade its window after it came, read or
-  // not, whatever is running then: android takes it down itself. the
-  // message waits in the chat to be read
-  final left = burnAt == null
-      ? null
-      : max(1, burnAt - DateTime.now().millisecondsSinceEpoch);
-  final details = AndroidNotificationDetails(
-    _messagesChannel,
-    l10n.notificationsChannelName,
+  return _ringFold(
+    chat: chat,
     tag: tag,
-    channelDescription: l10n.notificationsNewEncryptedMessagesFromYourContacts,
-    importance: Importance.max,
-    priority: Priority.high,
-    fullScreenIntent: false,
-    category: AndroidNotificationCategory.message,
-    icon: 'ic_halo_notification',
-    color: const Color(0xFFF59E0B),
-    // locked screen never shows content, unlocked does. the toggle above
-    // decides whether it shows even then.
-    visibility: NotificationVisibility.private,
-    // two short taps reads as a message, not an alarm
-    vibrationPattern: Int64List.fromList(<int>[0, 120, 90, 120]),
-    enableLights: true,
-    ledColor: const Color(0xFFF59E0B),
-    ledOnMs: 600,
-    ledOffMs: 2000,
-    ticker: hidden ? l10n.notificationsNewMessage2 : '$title: $body',
-    autoCancel: true,
-    timeoutAfter: left,
-    when: DateTime.now().millisecondsSinceEpoch,
-    // sender on top, message underneath, expands for long text
-    styleInformation: BigTextStyleInformation(
-      body,
-      contentTitle: title,
-      summaryText: hidden ? null : l10n.notificationsEncrypted,
+    line: _Line(
+      uid: msgUid,
+      title: title,
+      body: body,
+      hidden: hidden,
+      burnAt: burnAt,
     ),
   );
-  // unique per message: android never re-alerts when a notification is
-  // updated in place
-  final id = DateTime.now().microsecondsSinceEpoch & 0x7fffffff;
-  _noteShown(chat, tag, msgUid, id);
-  await notifPlugin.show(
-    id: id,
-    title: title,
-    body: body,
-    notificationDetails: NotificationDetails(android: details),
-    payload: tag,
-  );
-  return id;
 }
