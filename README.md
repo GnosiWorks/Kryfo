@@ -6,7 +6,8 @@ messages are end to end encrypted with the signal protocol, post-quantum
 between 0.6 phones, and travel over tor by default.
 
 Kryfo is alpha software and has not been audited yet. an independent audit
-by cure53 is planned. THREAT_MODEL.md says plainly what Kryfo protects
+firm will review it (cure53 quoted); if a funder brings its own vendor, we
+use theirs. THREAT_MODEL.md says plainly what Kryfo protects
 against and what it doesn't. found a security problem? SECURITY.md says how
 to tell us privately.
 
