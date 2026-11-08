@@ -10176,7 +10176,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Cinco aparelhos estão conectados. Remova um para conectar outro.';
+      'Todas as vagas para seus aparelhos estão em uso. Remova um para conectar outro.';
 
   @override
   String get devicesLinkADevice => 'Conectar um aparelho';

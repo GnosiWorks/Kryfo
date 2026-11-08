@@ -10083,7 +10083,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Đã liên kết năm thiết bị. Gỡ một thiết bị để liên kết thiết bị khác.';
+      'Đã dùng hết chỗ cho thiết bị. Gỡ một thiết bị để liên kết thiết bị khác.';
 
   @override
   String get devicesLinkADevice => 'Liên kết thiết bị';

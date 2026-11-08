@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Liên kết một máy tính để đọc và gửi tin nhắn trên đó.",
   "devicesContactsSeeNothing": "Ứng dụng của danh bạ bạn không hiển thị thiết bị của bạn.",
   "devicesUnusedRule": "Thiết bị bạn không mở trong 30 ngày sẽ tự hủy liên kết và xóa các cuộc trò chuyện trên đó.",
-  "devicesFull": "Đã liên kết năm thiết bị. Gỡ một thiết bị để liên kết thiết bị khác.",
+  "devicesFull": "Đã dùng hết chỗ cho thiết bị. Gỡ một thiết bị để liên kết thiết bị khác.",
   "devicesLinkADevice": "Liên kết thiết bị",
   "devicesRemoveAll": "Gỡ mọi thiết bị khác",
   "devicesRemoveAllTitle": "Gỡ mọi thiết bị khác?",

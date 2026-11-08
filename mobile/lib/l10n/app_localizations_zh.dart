@@ -9570,7 +9570,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesUnusedRule => '一台设备 30 天没打开，就会自己解除关联，并抹除上面的聊天。';
 
   @override
-  String get devicesFull => '已关联五台设备。移除一台才能再关联。';
+  String get devicesFull => '可关联的设备已满。移除一台才能再关联。';
 
   @override
   String get devicesLinkADevice => '关联设备';
@@ -20651,7 +20651,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesUnusedRule => '一台裝置 30 天沒開啟，就會自己解除連結，並抹除上面的聊天。';
 
   @override
-  String get devicesFull => '已連結五台裝置。移除一台才能再連結。';
+  String get devicesFull => '可連結的裝置已滿。移除一台才能再連結。';
 
   @override
   String get devicesLinkADevice => '連結裝置';

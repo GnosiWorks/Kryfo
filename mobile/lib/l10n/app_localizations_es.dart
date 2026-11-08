@@ -10175,7 +10175,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Hay cinco dispositivos vinculados. Quita uno para vincular otro.';
+      'Todos tus espacios para dispositivos están en uso. Quita uno para vincular otro.';
 
   @override
   String get devicesLinkADevice => 'Vincular un dispositivo';

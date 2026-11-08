@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Collega un computer per leggere e mandare lì i tuoi messaggi.",
   "devicesContactsSeeNothing": "Le app dei tuoi contatti non mostrano i tuoi dispositivi.",
   "devicesUnusedRule": "Un dispositivo che non apri per 30 giorni si scollega da solo e cancella le tue chat.",
-  "devicesFull": "Ci sono cinque dispositivi collegati. Rimuovine uno per collegarne un altro.",
+  "devicesFull": "Tutti i posti per i tuoi dispositivi sono occupati. Rimuovine uno per collegarne un altro.",
   "devicesLinkADevice": "Collega un dispositivo",
   "devicesRemoveAll": "Rimuovi tutti gli altri dispositivi",
   "devicesRemoveAllTitle": "Rimuovere tutti gli altri dispositivi?",

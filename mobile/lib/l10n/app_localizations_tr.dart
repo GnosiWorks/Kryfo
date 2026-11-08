@@ -10129,7 +10129,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Beş cihaz bağlı. Başka birini bağlamak için birini kaldır.';
+      'Cihaz yerlerinin hepsi dolu. Başka birini bağlamak için birini kaldır.';
 
   @override
   String get devicesLinkADevice => 'Cihaz bağla';

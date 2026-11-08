@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Połącz komputer, żeby czytać i wysyłać tam wiadomości.",
   "devicesContactsSeeNothing": "Aplikacje twoich kontaktów nie pokazują twoich urządzeń.",
   "devicesUnusedRule": "Urządzenie, którego nie otworzysz przez 30 dni, samo się rozłącza i wymazuje z siebie twoje czaty.",
-  "devicesFull": "Połączonych jest pięć urządzeń. Usuń jedno, żeby połączyć kolejne.",
+  "devicesFull": "Wszystkie miejsca na urządzenia są zajęte. Usuń jedno, żeby połączyć kolejne.",
   "devicesLinkADevice": "Połącz urządzenie",
   "devicesRemoveAll": "Usuń wszystkie inne urządzenia",
   "devicesRemoveAllTitle": "Usunąć wszystkie inne urządzenia?",

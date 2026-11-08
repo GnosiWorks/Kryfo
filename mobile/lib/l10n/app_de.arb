@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Verknüpfe einen Computer, um dort deine Nachrichten zu lesen und zu senden.",
   "devicesContactsSeeNothing": "Die Apps deiner Kontakte zeigen deine Geräte nicht an.",
   "devicesUnusedRule": "Ein Gerät, das du 30 Tage nicht öffnest, trennt sich selbst und löscht deine Chats darauf.",
-  "devicesFull": "Fünf Geräte sind verknüpft. Entferne eins, um ein weiteres zu verknüpfen.",
+  "devicesFull": "Alle Plätze für deine Geräte sind belegt. Entferne eins, um ein weiteres zu verknüpfen.",
   "devicesLinkADevice": "Gerät verknüpfen",
   "devicesRemoveAll": "Alle anderen Geräte entfernen",
   "devicesRemoveAllTitle": "Alle anderen Geräte entfernen?",

@@ -10235,7 +10235,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'الجهاز الذي لا تفتحه 30 يومًا يفصل نفسه ويمسح محادثاتك منه.';
 
   @override
-  String get devicesFull => 'خمسة أجهزة مرتبطة. أزِل واحدًا لتربط غيره.';
+  String get devicesFull => 'كل أماكن أجهزتك مستخدمة. أزِل واحدًا لتربط غيره.';
 
   @override
   String get devicesLinkADevice => 'ربط جهاز';

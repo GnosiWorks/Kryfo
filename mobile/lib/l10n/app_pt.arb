@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Conecte um computador para ler e enviar suas mensagens nele.",
   "devicesContactsSeeNothing": "Os apps dos seus contatos não mostram seus aparelhos.",
   "devicesUnusedRule": "Um aparelho que você não abre por 30 dias se desconecta sozinho e apaga suas conversas dele.",
-  "devicesFull": "Cinco aparelhos estão conectados. Remova um para conectar outro.",
+  "devicesFull": "Todas as vagas para seus aparelhos estão em uso. Remova um para conectar outro.",
   "devicesLinkADevice": "Conectar um aparelho",
   "devicesRemoveAll": "Remover todos os outros aparelhos",
   "devicesRemoveAllTitle": "Remover todos os outros aparelhos?",

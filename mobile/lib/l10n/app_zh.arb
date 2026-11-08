@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "关联一台电脑，就能在上面读和发消息。",
   "devicesContactsSeeNothing": "你的联系人的应用不会显示你的设备。",
   "devicesUnusedRule": "一台设备 30 天没打开，就会自己解除关联，并抹除上面的聊天。",
-  "devicesFull": "已关联五台设备。移除一台才能再关联。",
+  "devicesFull": "可关联的设备已满。移除一台才能再关联。",
   "devicesLinkADevice": "关联设备",
   "devicesRemoveAll": "移除其他所有设备",
   "devicesRemoveAllTitle": "移除其他所有设备？",

@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Tautkan komputer untuk membaca dan mengirim pesanmu dari sana.",
   "devicesContactsSeeNothing": "Aplikasi kontakmu tidak menampilkan perangkatmu.",
   "devicesUnusedRule": "Perangkat yang tidak kamu buka selama 30 hari akan terlepas sendiri dan menghapus obrolanmu darinya.",
-  "devicesFull": "Lima perangkat sudah tertaut. Hapus satu untuk menautkan yang lain.",
+  "devicesFull": "Semua tempat perangkatmu sudah terpakai. Hapus satu untuk menautkan yang lain.",
   "devicesLinkADevice": "Tautkan perangkat",
   "devicesRemoveAll": "Hapus semua perangkat lain",
   "devicesRemoveAllTitle": "Hapus semua perangkat lain?",

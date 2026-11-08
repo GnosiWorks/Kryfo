@@ -10112,7 +10112,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'پنج دستگاه پیوند خورده‌اند. یکی را حذف کنید تا دستگاه دیگری را پیوند دهید.';
+      'همهٔ جاهای دستگاه‌هایتان پر است. یکی را حذف کنید تا دستگاه دیگری را پیوند دهید.';
 
   @override
   String get devicesLinkADevice => 'پیوند دادن دستگاه';

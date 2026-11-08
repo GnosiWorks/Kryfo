@@ -382,7 +382,23 @@ void main() {
     expect(find.text(l10n.devicesUnusedRule), findsOneWidget);
   });
 
-  testWidgets('five linked: the button rests and says why', (t) async {
+  test('the limit counts the phone: it and two more', () {
+    expect(kMaxDevices, 3);
+    expect(kMaxLinkedDevices, kMaxDevices - 1);
+  });
+
+  testWidgets('under the limit: a link is offered', (t) async {
+    final src = _Devices([
+      _phone,
+      for (var i = 0; i < kMaxLinkedDevices - 1; i++)
+        _computer('$i', 'Computer $i'),
+    ]);
+    await _open(t, src);
+    expect(find.text(l10n.devicesFull), findsNothing);
+    expect(_button(t, l10n.devicesLinkADevice).onTap, isNotNull);
+  });
+
+  testWidgets('at the limit: the button rests and says why', (t) async {
     final src = _Devices([
       _phone,
       for (var i = 0; i < kMaxLinkedDevices; i++)
@@ -391,6 +407,58 @@ void main() {
     await _open(t, src);
     expect(find.text(l10n.devicesFull), findsOneWidget);
     expect(_button(t, l10n.devicesLinkADevice).onTap, isNull);
+  });
+
+  testWidgets('over the limit: every device stays, one goes, still full', (
+    t,
+  ) async {
+    // five linked before the limit came down
+    final src = _Devices([
+      _phone,
+      for (var i = 0; i < 5; i++) _computer('$i', 'Computer $i'),
+    ]);
+    await _open(t, src);
+    for (var i = 0; i < 5; i++) {
+      await t.scrollUntilVisible(find.text('Computer $i'), 80);
+      expect(find.text('Computer $i'), findsOneWidget);
+    }
+    expect(find.text(l10n.devicesFull), findsOneWidget);
+    expect(_button(t, l10n.devicesLinkADevice).onTap, isNull);
+    // nothing was dropped on its own
+    expect(src.removed, isEmpty);
+    expect(src.others, 0);
+    await t.scrollUntilVisible(find.text('Computer 4'), 80);
+    await t.tap(find.text('Computer 4'));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.devicesRemove));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.devicesRemove).last);
+    await t.pumpAndSettle();
+    expect(src.removed, ['4']);
+    // four left: still at or over the limit
+    expect(find.text(l10n.devicesFull), findsOneWidget);
+    expect(_button(t, l10n.devicesLinkADevice).onTap, isNull);
+  });
+
+  testWidgets('removing down under the limit offers a link again', (t) async {
+    final src = _Devices([
+      _phone,
+      for (var i = 0; i < kMaxLinkedDevices + 1; i++)
+        _computer('$i', 'Computer $i'),
+    ]);
+    await _open(t, src);
+    expect(_button(t, l10n.devicesLinkADevice).onTap, isNull);
+    for (final id in ['0', '1']) {
+      await t.tap(find.text('Computer $id'));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.devicesRemove));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.devicesRemove).last);
+      await t.pumpAndSettle();
+    }
+    expect(src.removed, ['0', '1']);
+    expect(find.text('Computer 2'), findsOneWidget);
+    expect(_button(t, l10n.devicesLinkADevice).onTap, isNotNull);
   });
 
   testWidgets('the history choice: all, text only, or none', (t) async {
