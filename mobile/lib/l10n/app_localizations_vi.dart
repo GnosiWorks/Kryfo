@@ -8766,6 +8766,16 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'Ảnh này nặng $size. Kryfo chuẩn bị ảnh đến $max.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Đã thu nhỏ, ảnh này vẫn nặng $size. Tệp trong cuộc trò chuyện này có thể đến $max.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.';
 

@@ -8357,6 +8357,16 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String sharePhotoTooBig(String size, String max) {
+    return '这张照片有 $size。Kryfo 可处理最大 $max 的照片。';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return '这张照片缩小后仍有 $size。这个聊天的文件最大为 $max。';
+  }
+
+  @override
   String get valveStillConnecting => '仍在连接…连接恢复后，你的消息会立刻发出。';
 
   @override
@@ -19465,6 +19475,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       one: '傳送這個檔案？',
     );
     return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return '這張照片有 $size。Kryfo 可處理最大 $max 的照片。';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return '這張照片縮小後仍有 $size。這個聊天的檔案最大為 $max。';
   }
 
   @override

@@ -2300,6 +2300,8 @@
   "shareCheckLine": "İçinde ne olduğunu bu telefonda gör",
   "shareFileOverLimit": "Dosyalar en fazla {max} olabilir. Bu daha büyük.",
   "shareSendFiles": "{count, plural, =1{Bu dosya gönderilsin mi?} other{Bu {count} dosya gönderilsin mi?}}",
+  "sharePhotoTooBig": "Bu fotoğraf {size}. Kryfo fotoğrafları {max} boyutuna kadar hazırlar.",
+  "sharePhotoOverLimit": "Bu fotoğraf küçültülünce bile {size}. Bu sohbette dosyalar en fazla {max} olabilir.",
   "valveStillConnecting": "Hâlâ bağlanıyor… Bağlantı geri gelir gelmez mesajların gidecek.",
   "valveCouldNotReconnect": "Kryfo yeniden bağlanamadı. Yeniden başlatmak bunu düzeltir, mesajların korunur.",
   "valveRestartKryfo": "Kryfo’yu yeniden başlat",

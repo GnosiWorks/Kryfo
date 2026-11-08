@@ -50,6 +50,7 @@ import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart'
     show
         VoiceBubble,
+        humanFileSize,
         VoiceMakingBubble,
         fileCard,
         fileTooBigLine,
@@ -6876,10 +6877,27 @@ class _ChatScreenState extends State<ChatScreen>
       ];
       if (media.isNotEmpty) {
         var sent = false;
+        final most = await appState.fileLimitFor(widget.peerHaloId);
+        if (!mounted) return;
         await sendGalleryPicks(
           media,
           pickMore: () => lockState.hold(pickGallery),
-          preview: _preview,
+          // a photo is shrunk as a gallery pick is; one still over the
+          // chat's limit stays out, and says so
+          preview: (items, more) {
+            final (:fit, :over) = photosWithin(items, most);
+            if (over != null) {
+              showHaloToast(
+                context,
+                l10n.sharePhotoOverLimit(
+                  humanFileSize(over),
+                  humanFileSize(most),
+                ),
+              );
+            }
+            if (fit.isEmpty) return Future.value(null);
+            return _preview(fit, more);
+          },
           send: (r) {
             sent = true;
             return _sendPicked(r);

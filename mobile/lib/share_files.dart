@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 
 import 'lock_state.dart';
+import 'picked.dart' show PickedMedia;
 import 'shred.dart';
 import 'tools/tools_bridge.dart' show PickedFile;
 
@@ -32,8 +33,17 @@ const _photoExts = {'.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'};
 
 SharedKind kindOfPicked(PickedFile f) => sharedKindOf(f.mime, f.name);
 
-/// the shared items over [most] bytes, and those that may be copied. a
-/// size the sharing app did not say is found out while copying
+/// the most a shared photo is copied in at: it is shrunk as a gallery pick
+/// is, so only what it weighs once shrunk meets the chat's limit. this one
+/// keeps a raw camera file from filling the memory
+const kSharedPhotoMost = 200 * 1024 * 1024;
+
+/// the most [f] is copied in at, for a chat that takes files up to [most]
+int copyMostOf(PickedFile f, int most) =>
+    kindOfPicked(f) == SharedKind.photo ? kSharedPhotoMost : most;
+
+/// the shared items over what they may be copied at, and those that may be
+/// copied. a size the sharing app did not say is found out while copying
 ({List<PickedFile> fit, PickedFile? over}) sortBySize(
   List<PickedFile> items,
   int most,
@@ -41,10 +51,29 @@ SharedKind kindOfPicked(PickedFile f) => sharedKindOf(f.mime, f.name);
   final fit = <PickedFile>[];
   PickedFile? over;
   for (final f in items) {
-    if (f.size > most) {
+    if (f.size > copyMostOf(f, most)) {
       over ??= f;
     } else {
       fit.add(f);
+    }
+  }
+  return (fit: fit, over: over);
+}
+
+/// the preview's items that fit [most], and the size of the first photo
+/// still over it once shrunk. a video is weighed as it is made ready
+({List<PickedMedia> fit, int? over}) photosWithin(
+  List<PickedMedia> items,
+  int most,
+) {
+  final fit = <PickedMedia>[];
+  int? over;
+  for (final m in items) {
+    final n = m.photo?.length ?? 0;
+    if (n > most) {
+      over ??= n;
+    } else {
+      fit.add(m);
     }
   }
   return (fit: fit, over: over);

@@ -2300,6 +2300,8 @@
   "shareCheckLine": "Veja o que ela traz, aqui neste telefone",
   "shareFileOverLimit": "Os arquivos podem ter até {max}. Este é maior.",
   "shareSendFiles": "{count, plural, =1{Enviar este arquivo?} other{Enviar estes {count} arquivos?}}",
+  "sharePhotoTooBig": "Esta foto tem {size}. O Kryfo prepara fotos de até {max}.",
+  "sharePhotoOverLimit": "Reduzida, esta foto ainda tem {size}. Os arquivos deste chat podem ter até {max}.",
   "valveStillConnecting": "Ainda conectando… Suas mensagens saem assim que a conexão voltar.",
   "valveCouldNotReconnect": "O Kryfo não conseguiu se reconectar. Reiniciar resolve isso e suas mensagens continuam guardadas.",
   "valveRestartKryfo": "Reiniciar o Kryfo",

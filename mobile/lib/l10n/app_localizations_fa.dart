@@ -8790,6 +8790,16 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'این عکس $size است. Kryfo عکس‌ها را تا $max آماده می‌کند.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'این عکس کوچک‌شده هم هنوز $size است. فایل‌های این گفتگو می‌توانند تا $max باشند.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'هنوز در حال اتصال… پیام‌های شما به محض برگشتن اتصال فرستاده می‌شوند.';
 

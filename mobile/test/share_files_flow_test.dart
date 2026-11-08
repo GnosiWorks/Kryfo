@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
+import 'package:kryfo/devchat/dev_chat.dart' show DevRow, devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_state.dart';
@@ -33,7 +33,10 @@ import 'package:kryfo/screens/share_files_sheet.dart' show sharePeekLimit;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/share_files.dart';
 import 'package:kryfo/tools/tools_bridge.dart' show PickedFile;
-import 'package:kryfo/widgets/media_bubbles.dart' show fileTooBigLine;
+import 'package:kryfo/widgets/media_bubbles.dart'
+    show fileTooBigLine, humanFileSize;
+import 'package:kryfo/picked.dart' show PickedMedia;
+import 'package:kryfo/screens/dev_about_sheet.dart' show DevForwardTile;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -729,6 +732,125 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a photo over the file limit is still copied, to be shrunk '
+      'as a gallery pick is', (t) async {
+    final most = await appState.fileLimitFor(_amber);
+    await home(t);
+    await android.share(t, 'f30', [
+      {..._photo(), 'size': most + 1},
+    ]);
+    await settle(t);
+    await t.tap(find.text(l10n.toolsSendToAChat));
+    await settle(t);
+    await pick(t, _amber);
+    expect(android.copied, hasLength(1));
+    expect(find.byType(MediaSendScreen), findsOneWidget);
+    await t.tap(find.byTooltip(l10n.commonBack).last);
+    await settle(t, 20);
+    expect(android.allGone(), isTrue);
+    await devClose(t);
+  });
+
+  testWidgets('a photo too big to read at all is said and never copied', (
+    t,
+  ) async {
+    await home(t);
+    await android.share(t, 'f31', [
+      {..._photo(), 'size': kSharedPhotoMost + 1},
+    ]);
+    await settle(t);
+    await t.tap(find.text(l10n.toolsSendToAChat));
+    await settle(t);
+    await t.tap(offered(_amber));
+    await settle(t, 6);
+    expect(
+      find.text(
+        l10n.sharePhotoTooBig(
+          humanFileSize(kSharedPhotoMost + 1),
+          humanFileSize(kSharedPhotoMost),
+        ),
+      ),
+      findsOneWidget,
+    );
+    expect(android.copied, isEmpty);
+    await settle(t, 40);
+    await devClose(t);
+  });
+
+  testWidgets('an audio file and a text file go to a chat as files', (t) async {
+    await home(t);
+    await android.share(t, 'f32', [
+      {
+        'uri': 'content://downloads/2/song.mp3',
+        'mime': 'audio/mpeg',
+        'name': 'song.mp3',
+        'size': 10,
+      },
+      {
+        'uri': 'content://downloads/3/notes.txt',
+        'mime': 'text/plain',
+        'name': 'notes.txt',
+        'size': 10,
+      },
+    ]);
+    await settle(t);
+    expect(find.text(l10n.shareCheckPhoto), findsNothing);
+    await pick(t, _amber);
+    // no preview: both are asked about as files
+    expect(find.byType(MediaSendScreen), findsNothing);
+    expect(find.text(l10n.shareSendFiles(2)), findsOneWidget);
+    expect(find.text('song.mp3'), findsOneWidget);
+    expect(find.text('notes.txt'), findsOneWidget);
+    await t.tap(find.text(l10n.commonCancel));
+    // two copies to shred, a few disk turns each
+    await settle(t, 60);
+    nothingSent();
+    expect(android.allGone(), isTrue);
+    await devClose(t);
+  });
+
+  testWidgets('the developer chat is offered on the everyday side, never in '
+      'a decoy', (t) async {
+    const dev = DevRow(keyId: 'k1', chatId: 'dev:k1', started: true);
+    appState.devRow = dev;
+    await home(t);
+    await android.share(t, 'f33', [_pdf()]);
+    await settle(t);
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(DevForwardTile),
+      ),
+      findsOneWidget,
+    );
+    await letGo(t);
+    await devClose(t);
+
+    final decoyMem = MemDb(except: {'devchat'});
+    await devChatTables(decoyMem, now: 1);
+    await _contact(decoyMem, _decoyOne);
+    useDatabasesForTest(db, Session(_Db(decoyMem, HaloContainer.decoy)));
+    lockState.inDecoy = true;
+    await appState.refreshContacts();
+    appState.devRow = dev;
+    await home(t);
+    await android.share(t, 'f34', [_pdf()]);
+    await settle(t);
+    expect(offered(_decoyOne), findsOneWidget);
+    expect(find.byType(DevForwardTile), findsNothing);
+    await letGo(t);
+    await devClose(t);
+    appState.devRow = null;
+  });
+
+  test('a photo still over the limit once shrunk stays out', () {
+    final small = PickedMedia.photo(Uint8List(10));
+    final big = PickedMedia.photo(Uint8List(11));
+    final r = photosWithin([small, big], 10);
+    expect(r.fit, [small]);
+    expect(r.over, 11);
+  });
+
   test('the kind each item goes as', () {
     expect(sharedKindOf('image/jpeg', 'x'), SharedKind.photo);
     expect(sharedKindOf('image/heic', null), SharedKind.photo);
@@ -738,6 +860,8 @@ void main() {
     expect(sharedKindOf(null, 'clip.MOV'), SharedKind.video);
     expect(sharedKindOf('application/octet-stream', 'p.jpg'), SharedKind.photo);
     expect(sharedKindOf(null, 'a.zip'), SharedKind.file);
+    expect(sharedKindOf('audio/mpeg', 'a.mp3'), SharedKind.file);
+    expect(sharedKindOf('text/plain', 'a.txt'), SharedKind.file);
   });
 
   test('over the limit is told apart before any copy', () {

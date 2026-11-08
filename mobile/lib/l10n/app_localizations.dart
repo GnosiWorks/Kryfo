@@ -14095,6 +14095,18 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Send this file?} other{Send these {count} files?}}'**
   String shareSendFiles(int count);
 
+  /// screens/share_files_sheet.dart: toast when a shared photo is too big to be read and shrunk at all. size and max are like 230.4 mb and 200.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This photo is {size}. Kryfo makes photos ready up to {max}.'**
+  String sharePhotoTooBig(String size, String max);
+
+  /// screens/chat_screen.dart: toast when a shared photo, shrunk as a gallery pick is, is still over the chat file limit. size and max are like 52.1 mb and 50.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This photo is still {size} made smaller. Files in this chat can be up to {max}.'**
+  String sharePhotoOverLimit(String size, String max);
+
   /// widgets/reconnect_valve.dart: a send has waited on tor a minute
   ///
   /// In en, this message translates to:

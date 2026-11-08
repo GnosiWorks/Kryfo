@@ -8886,6 +8886,16 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'Dieses Foto hat $size. Kryfo bereitet Fotos bis $max vor.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Dieses Foto hat verkleinert noch $size. Dateien in diesem Chat können bis zu $max groß sein.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Verbindung wird noch aufgebaut… Deine Nachrichten gehen raus, sobald die Verbindung wieder da ist.';
 

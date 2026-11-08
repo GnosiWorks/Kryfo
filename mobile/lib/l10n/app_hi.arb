@@ -2294,6 +2294,8 @@
   "shareCheckLine": "देखें इसमें क्या है, इसी फ़ोन पर",
   "shareFileOverLimit": "फ़ाइलें {max} तक की हो सकती हैं। यह उससे बड़ी है।",
   "shareSendFiles": "{count, plural, =1{यह फ़ाइल भेजें?} other{ये {count} फ़ाइलें भेजें?}}",
+  "sharePhotoTooBig": "यह फ़ोटो {size} की है। Kryfo {max} तक की फ़ोटो तैयार करता है।",
+  "sharePhotoOverLimit": "छोटी करने पर भी यह फ़ोटो {size} की है। इस चैट में फ़ाइलें {max} तक की हो सकती हैं।",
   "valveStillConnecting": "अभी जुड़ रहा है… कनेक्शन लौटते ही आपके मैसेज चले जाएँगे।",
   "valveCouldNotReconnect": "Kryfo दोबारा नहीं जुड़ पाया। इसे फिर से शुरू करने से यह ठीक हो जाता है और आपके मैसेज बने रहते हैं।",
   "valveRestartKryfo": "Kryfo फिर से शुरू करें",

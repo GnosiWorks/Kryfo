@@ -8937,6 +8937,16 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'Це фото важить $size. Kryfo готує фото до $max.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Навіть зменшене, це фото важить $size. Файли в цьому чаті можуть бути до $max.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Ще підключаємося… Твої повідомлення підуть, щойно зв’язок повернеться.';
 

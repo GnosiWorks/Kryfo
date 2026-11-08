@@ -26,6 +26,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/tool_parts.dart' show ToolWideButton;
 import 'chat_screen.dart' show landFilesInOpenChat;
+import 'dev_about_sheet.dart' show devForwardTarget;
 import 'forward_sheet.dart';
 
 enum ShareWay { chat, check }
@@ -163,6 +164,11 @@ class ShareFiles {
             empty: appState.contacts.isEmpty
                 ? l10n.shareNoChats
                 : l10n.shareNoOne,
+            // a screenshot for a bug report goes to him; a decoy never
+            // shows his chat
+            dev: lockState.inDecoy || session.container.quiet
+                ? null
+                : devForwardTarget,
             onSheet: _onSheet,
           ),
           null,
@@ -211,7 +217,17 @@ class ShareFiles {
     if (!context.mounted) return const [];
     final sorted = sortBySize(items, most);
     final over = sorted.over;
-    if (over != null) showHaloToast(context, fileTooBigLine(over.size, most));
+    if (over != null) {
+      showHaloToast(
+        context,
+        kindOfPicked(over) == SharedKind.photo
+            ? l10n.sharePhotoTooBig(
+                humanFileSize(over.size),
+                humanFileSize(kSharedPhotoMost),
+              )
+            : fileTooBigLine(over.size, most),
+      );
+    }
     if (sorted.fit.isEmpty) return const [];
     final out = <SharedCopy>[];
     // a cancel, a lock or a copy that stopped moving ends the wait at once,
@@ -265,7 +281,7 @@ class ShareFiles {
       for (final f in sorted.fit) {
         if (stopped.isCompleted) break;
         moved();
-        final copy = _bridge.copyIn(f.uri, most: most);
+        final copy = _bridge.copyIn(f.uri, most: copyMostOf(f, most));
         final String path;
         try {
           final got = await Future.any<String?>([
@@ -287,7 +303,9 @@ class ShareFiles {
             break;
           }
           said ??= switch (e.code) {
-            'big' => l10n.shareFileOverLimit(humanFileSize(most)),
+            'big' => l10n.shareFileOverLimit(
+              humanFileSize(copyMostOf(f, most)),
+            ),
             'full' => l10n.cleanFreeSomeSpaceAnd,
             _ => l10n.chatCouldNotReadThat,
           };

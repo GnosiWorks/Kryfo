@@ -8809,6 +8809,16 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'Bu fotoğraf $size. Kryfo fotoğrafları $max boyutuna kadar hazırlar.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Bu fotoğraf küçültülünce bile $size. Bu sohbette dosyalar en fazla $max olabilir.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Hâlâ bağlanıyor… Bağlantı geri gelir gelmez mesajların gidecek.';
 

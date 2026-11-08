@@ -2300,6 +2300,8 @@
   "shareCheckLine": "Xem nó chứa gì, ngay trên điện thoại này",
   "shareFileOverLimit": "Tệp có thể đến {max}. Tệp này lớn hơn.",
   "shareSendFiles": "{count, plural, =1{Gửi tệp này?} other{Gửi {count} tệp này?}}",
+  "sharePhotoTooBig": "Ảnh này nặng {size}. Kryfo chuẩn bị ảnh đến {max}.",
+  "sharePhotoOverLimit": "Đã thu nhỏ, ảnh này vẫn nặng {size}. Tệp trong cuộc trò chuyện này có thể đến {max}.",
   "valveStillConnecting": "Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.",
   "valveCouldNotReconnect": "Kryfo không thể kết nối lại. Khởi động lại sẽ khắc phục và giữ nguyên tin nhắn của bạn.",
   "valveRestartKryfo": "Khởi động lại Kryfo",
