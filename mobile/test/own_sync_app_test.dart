@@ -33,6 +33,9 @@ import 'package:kryfo/main.dart'
         engineDeviceWireForTest,
         ownAddedForTest,
         linkedRoleForTest,
+        ownShownId,
+        appState,
+        AppStateSession,
         ownApplyForTest,
         ownPassForTest,
         ownTellMeForTest,
@@ -632,6 +635,15 @@ void main() {
       'bg': {'t': 'guardian', 'c': true},
     });
     expect(await loadSupporterTier(), SupporterTier.none);
+  }, skip: skip);
+
+  test('a linked device shows its phone\'s name as its own, never the one '
+      'its container made before the link', () async {
+    linkedRoleForTest = true;
+    await op('profile', null, {'h': 'my-phone'});
+    expect(ownShownId, 'my-phone');
+    linkedRoleForTest = false;
+    expect(ownShownId, appState.sessionId);
   }, skip: skip);
 
   test('nothing is told while the decoy is open', () async {

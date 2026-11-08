@@ -1337,6 +1337,7 @@ extension AppStateOwn on AppState {
         'v': h,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
+    // the avatar's set tells the home and the profile, my phone's name too
     final av = a['a'];
     if (av is int || av == null) await setMyAvatar(av as int?);
     final bg = a['bg'];
