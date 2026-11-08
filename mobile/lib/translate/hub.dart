@@ -189,13 +189,16 @@ class TranslationHub extends ChangeNotifier {
     }
     final plan = planMessage(text);
     if (plan.asks.isEmpty) return text;
-    var out = plan.asks;
-    for (final (f, t) in route) {
-      out = await translator.translateAll(out, from: f, to: t);
-      if (out.length != plan.asks.length) {
-        throw StateError('translate: ${out.length} answers');
+    var out = await translator.holding(route, () async {
+      var step = plan.asks;
+      for (final (f, t) in route) {
+        step = await translator.translateAll(step, from: f, to: t);
+        if (step.length != plan.asks.length) {
+          throw StateError('translate: ${step.length} answers');
+        }
       }
-    }
+      return step;
+    });
     if (o.hant != HantForm.none) {
       final h = await (_hant ??= loadHant());
       out = [for (final s in out) h.convert(s, o.hant)];

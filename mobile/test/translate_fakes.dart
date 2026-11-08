@@ -74,6 +74,23 @@ class FakeTranslator implements Translator {
     return [for (final t in texts) await translate(t, from: from, to: to)];
   }
 
+  // the routes held right now, and every route ever held
+  final List<List<(String, String)>> holdingNow = [];
+  final List<List<(String, String)>> held = [];
+  @override
+  Future<T> holding<T>(
+    List<(String, String)> route,
+    Future<T> Function() run,
+  ) async {
+    held.add(route);
+    holdingNow.add(route);
+    try {
+      return await run();
+    } finally {
+      holdingNow.remove(route);
+    }
+  }
+
   @override
   Future<void> close() async => closes++;
 }
