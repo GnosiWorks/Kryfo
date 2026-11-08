@@ -545,6 +545,24 @@ void main() {
     expect(c.args['end'], {'link': 'J2'});
   });
 
+  testWidgets('a code shown and not scanned is made afresh in time', (t) async {
+    var now = DateTime(2026, 11, 8, 19);
+    final c = _Calls()
+      ..answers['join_start'] = {'link': 'J1', 'offer': 'kryfo-link:abc'};
+    c.state = {'st': 'offer', 'ready': true};
+    final f = JoinLinkFlow(c, hooks: _Join(), poll: _tick, now: () => now);
+    f.start();
+    await t.pump(_tick * 2);
+    expect(f.value.offer, 'kryfo-link:abc');
+    c.answers['join_start'] = {'link': 'J2', 'offer': 'kryfo-link:def'};
+    now = now.add(kJoinCodeFor);
+    await t.pump(_tick * 3);
+    expect(c.said, ['join_start', 'end', 'join_start']);
+    expect(f.value.step, LinkStep.showing);
+    expect(f.value.offer, 'kryfo-link:def');
+    f.dispose();
+  });
+
   testWidgets('both sides show how far the link is', (t) async {
     {
       final c = _Calls()..answers['link_start'] = {'link': 'L1'};

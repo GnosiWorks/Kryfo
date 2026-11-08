@@ -55,6 +55,10 @@ const kLinkReachWait = Duration(seconds: 90);
 /// one shown keeps most of its ten minutes
 const kJoinFreshFor = Duration(minutes: 4);
 
+/// a code shown this long and not scanned is made afresh before its ten
+/// minutes run out: the page never shows one a phone would refuse
+const kJoinCodeFor = Duration(minutes: 9);
+
 /// the wait with its spread: the real phone's and the decoy's are drawn
 /// alike, so a stopwatch cannot tell them apart
 Duration linkReachWait([Random? r]) =>
@@ -465,8 +469,10 @@ class JoinLinkFlow extends _EngineFlow {
     required this.hooks,
     Duration? poll,
     Duration? fresh,
+    Duration? codeFor,
     DateTime Function()? now,
   }) : fresh = fresh ?? kJoinFreshFor,
+       codeFor = codeFor ?? kJoinCodeFor,
        _now = now ?? DateTime.now,
        super(calls, const LinkStage(LinkStep.preparing), poll: poll);
 
@@ -474,6 +480,9 @@ class JoinLinkFlow extends _EngineFlow {
 
   /// a code still not shown after this is made afresh
   final Duration fresh;
+
+  /// a code shown and not scanned this long is made afresh
+  final Duration codeFor;
   final DateTime Function() _now;
   JoinPlace? _place;
   Map<String, dynamic>? _own;
@@ -533,10 +542,15 @@ class JoinLinkFlow extends _EngineFlow {
   Future<void> onState(Map<String, dynamic> s) async {
     switch (s['st']) {
       case 'offer':
+        final age = _now().difference(_since ?? _now());
+        if (value.step == LinkStep.showing && age >= codeFor) {
+          show(const LinkStage(LinkStep.preparing));
+          return _again();
+        }
         if (value.step != LinkStep.preparing) return;
         if (s['ready'] == true) {
           show(LinkStage(LinkStep.showing, offer: _offer));
-        } else if (_now().difference(_since ?? _now()) >= fresh) {
+        } else if (age >= fresh) {
           _again();
         }
       case 'digits':
