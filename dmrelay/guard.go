@@ -1,9 +1,8 @@
 package main
 
-// khatru reads each message in a goroutine of its own with no recover, so
-// one panic in a hook ends the whole relay. every hook is wrapped: a panic
-// is logged by the hook's name alone, nothing of the event, the filter or
-// the peer, and the event or filter is refused.
+// every hook is wrapped: a panic in a hook refuses that event or filter and
+// the relay keeps serving. it is logged by the hook's name alone, nothing of
+// the event, the filter or the peer.
 
 import (
 	"context"
