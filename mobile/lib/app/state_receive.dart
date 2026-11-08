@@ -10,8 +10,10 @@ const kFirstChats = 5;
 extension AppStateReceive on AppState {
   void chatFirst(String? haloId) {
     // the dev chat's lane is its own, and nothing of it goes before it starts
-    unawaited(_tellDoor(haloId));
     if (haloId != null && isDevId(haloId)) haloId = null;
+    // the dev chat asks nothing of the engine before it starts: only a
+    // chat told before is let go
+    if (haloId != null || _doorChat != null) unawaited(_tellDoor(haloId));
     _firstChat = haloId;
     unawaited(_tellFirst());
   }

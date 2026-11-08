@@ -204,17 +204,24 @@ class HaloEngine {
   // onion stops resting. looked up on first use so older engines load
   late final OneArgFnDart _doorFocus = _lib
       .lookupFunction<OneArgFn, OneArgFnDart>('HaloDoorFocus');
-  void doorFocus(String onion) => _doorCall(() => _doorFocus, onion);
+  void doorFocus(String onion) {
+    final p = onion.toNativeUtf8();
+    try {
+      engineTake(_doorFocus(p));
+    } catch (_) {
+      // an older engine without the call
+    } finally {
+      malloc.free(p);
+    }
+  }
 
   // a frame came from them: their onion stops resting
   late final OneArgFnDart _doorAwake = _lib
       .lookupFunction<OneArgFn, OneArgFnDart>('HaloDoorAwake');
-  void doorAwake(String onion) => _doorCall(() => _doorAwake, onion);
-
-  void _doorCall(OneArgFnDart Function() fn, String onion) {
+  void doorAwake(String onion) {
     final p = onion.toNativeUtf8();
     try {
-      engineTake(fn()(p));
+      engineTake(_doorAwake(p));
     } catch (_) {
       // an older engine without the call
     } finally {
@@ -1775,16 +1782,14 @@ Future<String> _sendOnIsolate(
         );
       }
       if (args.rest) {
-        IdentTwoFnDart? sendAs;
-        try {
-          sendAs = lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(
-            'HaloSendToAs',
-          );
-        } catch (_) {
-          // an older engine without the call: a message's place
-        }
         // 2: the rest's place in the door's queue
-        if (sendAs != null) return engineTake(sendAs(2, p1, p2));
+        return engineTake(
+          lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>('HaloSendToAs')(
+            2,
+            p1,
+            p2,
+          ),
+        );
       }
       final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
       return engineTake(fn(p1, p2));
