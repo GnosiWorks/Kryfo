@@ -595,8 +595,9 @@ extension AppStateInvites on AppState {
   // answer (SignalSession.holdOpener): a frame of this session went to
   // their one-time invite already, and they heard only that one (3c). a
   // frame that went a wrap's life ago may never have reached them: one
-  // more goes, and the hold starts again from it. rows that do not read
-  // say no: the frame goes, as before
+  // more goes, and the hold starts again once a relay took it
+  // (noteOnceWent), so a send that fails does not wait out another wrap's
+  // life. rows that do not read say no: the frame goes, as before
   Future<bool> _onceOpenerWent(String peer) async {
     try {
       final db = await live.open();
@@ -626,7 +627,7 @@ extension AppStateInvites on AppState {
       if (now - went < kOnceHoldFor.inMilliseconds && went <= now) return true;
       await db.update(
         'hellos',
-        {'went_at': now},
+        {'went_at': null},
         where: 'ident = ? AND way = ? AND peer = ? AND once = ?',
         whereArgs: [ident, kHelloOpen, key, 1],
       );
