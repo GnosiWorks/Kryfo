@@ -9498,6 +9498,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get translateNeverSection => 'Jamais proposées';
 
   @override
+  String get translateOfferAllAgain => 'Tout proposer à nouveau';
+
+  @override
   String get translateOfferAgain => 'Proposer à nouveau';
 
   @override

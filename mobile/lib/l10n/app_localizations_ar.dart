@@ -9535,6 +9535,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translateNeverSection => 'لا تُقترح أبدًا';
 
   @override
+  String get translateOfferAllAgain => 'اقتراح الكل مجددًا';
+
+  @override
   String get translateOfferAgain => 'الاقتراح مجددًا';
 
   @override

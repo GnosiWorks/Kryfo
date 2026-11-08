@@ -9396,6 +9396,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get translateNeverSection => 'Never offered';
 
   @override
+  String get translateOfferAllAgain => 'Offer all again';
+
+  @override
   String get translateOfferAgain => 'Offer again';
 
   @override

@@ -9427,6 +9427,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get translateNeverSection => 'Hiç önerilmeyenler';
 
   @override
+  String get translateOfferAllAgain => 'Tümünü yeniden öner';
+
+  @override
   String get translateOfferAgain => 'Yeniden öner';
 
   @override

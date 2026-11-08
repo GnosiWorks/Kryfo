@@ -2465,6 +2465,7 @@
   "translateNeverDone": "تبقى الرسائل كما هي · {language}",
   "translateUndo": "تراجع",
   "translateNeverSection": "لا تُقترح أبدًا",
+  "translateOfferAllAgain": "اقتراح الكل مجددًا",
   "translateOfferAgain": "الاقتراح مجددًا",
   "translateOnHint": "تُقترح أسفل الرسائل المكتوبة بلغات أخرى",
   "translatePrivacyKept": "تُحفظ الترجمات مشفّرة مع محادثتها على هذا الهاتف وتُحذف معها.",

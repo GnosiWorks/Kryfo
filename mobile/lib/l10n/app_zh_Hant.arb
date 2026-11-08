@@ -2465,6 +2465,7 @@
   "translateNeverDone": "{language}訊息保持原樣",
   "translateUndo": "復原",
   "translateNeverSection": "不提供翻譯的語言",
+  "translateOfferAllAgain": "全部重新提供",
   "translateOfferAgain": "重新提供",
   "translateOnHint": "在其他語言的訊息下方提供",
   "translatePrivacyKept": "譯文與所屬聊天一起加密保存在這支手機上，並隨聊天一起刪除。",

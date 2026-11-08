@@ -2465,6 +2465,7 @@
   "translateNeverDone": "Tin nhắn bằng {language} được giữ nguyên",
   "translateUndo": "Hoàn tác",
   "translateNeverSection": "Không bao giờ đề xuất",
+  "translateOfferAllAgain": "Đề xuất lại tất cả",
   "translateOfferAgain": "Đề xuất lại",
   "translateOnHint": "Được đề xuất bên dưới tin nhắn bằng ngôn ngữ khác",
   "translatePrivacyKept": "Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.",

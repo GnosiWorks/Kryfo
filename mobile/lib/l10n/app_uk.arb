@@ -2465,6 +2465,7 @@
   "translateNeverDone": "Повідомлення лишаються як є · {language}",
   "translateUndo": "Скасувати",
   "translateNeverSection": "Не пропонувати",
+  "translateOfferAllAgain": "Пропонувати знову всі",
   "translateOfferAgain": "Пропонувати знову",
   "translateOnHint": "Пропонується під повідомленнями іншими мовами",
   "translatePrivacyKept": "Переклади зберігаються зашифрованими разом із чатом на цьому телефоні й видаляються разом із ним.",

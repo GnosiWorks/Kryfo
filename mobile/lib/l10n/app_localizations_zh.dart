@@ -8929,6 +8929,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translateNeverSection => '不提供翻译的语言';
 
   @override
+  String get translateOfferAllAgain => '全部重新提供';
+
+  @override
   String get translateOfferAgain => '重新提供';
 
   @override
@@ -20010,6 +20013,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateNeverSection => '不提供翻譯的語言';
+
+  @override
+  String get translateOfferAllAgain => '全部重新提供';
 
   @override
   String get translateOfferAgain => '重新提供';

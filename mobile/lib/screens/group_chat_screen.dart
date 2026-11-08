@@ -6752,6 +6752,7 @@ class _GroupBubble extends StatelessWidget {
                                                         m.msgUid,
                                                         m.came,
                                                       ),
+                                                      came: m.came,
                                                       text: m.text,
                                                       // theirs only, and not while a search marks its hits
                                                       enabled:

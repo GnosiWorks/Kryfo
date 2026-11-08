@@ -9271,6 +9271,7 @@ class _Bubble extends StatelessWidget {
                                                         msg.msgUid,
                                                         msg.came,
                                                       ),
+                                                      came: msg.came,
                                                       text: msg.text,
                                                       enabled:
                                                           !isOut &&

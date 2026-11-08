@@ -9480,6 +9480,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get translateNeverSection => 'Mai proposte';
 
   @override
+  String get translateOfferAllAgain => 'Proponi di nuovo tutte';
+
+  @override
   String get translateOfferAgain => 'Proponi di nuovo';
 
   @override

@@ -9409,6 +9409,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get translateNeverSection => 'هرگز پیشنهاد نمی‌شود';
 
   @override
+  String get translateOfferAllAgain => 'همه را دوباره پیشنهاد بده';
+
+  @override
   String get translateOfferAgain => 'دوباره پیشنهاد بده';
 
   @override

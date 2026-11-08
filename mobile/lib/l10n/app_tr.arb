@@ -2465,6 +2465,7 @@
   "translateNeverDone": "Mesajlar olduğu gibi kalır · {language}",
   "translateUndo": "Geri al",
   "translateNeverSection": "Hiç önerilmeyenler",
+  "translateOfferAllAgain": "Tümünü yeniden öner",
   "translateOfferAgain": "Yeniden öner",
   "translateOnHint": "Başka dillerdeki mesajların altında sunulur",
   "translatePrivacyKept": "Çeviriler bu telefonda sohbetleriyle birlikte şifreli tutulur ve sohbetle birlikte silinir.",

@@ -9577,6 +9577,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get translateNeverSection => 'Nigdy nie proponowane';
 
   @override
+  String get translateOfferAllAgain => 'Proponuj znowu wszystkie';
+
+  @override
   String get translateOfferAgain => 'Proponuj znowu';
 
   @override

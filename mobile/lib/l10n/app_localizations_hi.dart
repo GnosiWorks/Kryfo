@@ -9405,6 +9405,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get translateNeverSection => 'कभी नहीं सुझाई जातीं';
 
   @override
+  String get translateOfferAllAgain => 'सभी फिर से सुझाएँ';
+
+  @override
   String get translateOfferAgain => 'फिर से सुझाएँ';
 
   @override
