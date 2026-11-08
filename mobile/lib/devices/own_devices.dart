@@ -8,8 +8,13 @@ import 'link_flow.dart';
 
 export 'linked_switch.dart' show kLinkedDevicesOn;
 
-/// the phone and five more
-const int kMaxLinkedDevices = 5;
+/// devices an account may hold for a new link, the phone counted. more
+/// linked before stay until unlinked; nothing is ever dropped for it.
+/// the engine's own list cap (devices.MaxDevices) is the ceiling
+const int kMaxDevices = 3;
+
+/// the devices besides this one a new link may bring the list to
+const int kMaxLinkedDevices = kMaxDevices - 1;
 
 /// unused this long, a device unlinks itself and wipes
 const int kUnusedDays = 30;

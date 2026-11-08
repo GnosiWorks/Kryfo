@@ -158,6 +158,7 @@ class _LinkedDevicesScreenState extends State<LinkedDevicesScreen> {
       if (!d.thisDevice) d,
   ];
 
+  // over counts as full: a list linked before the limit keeps every device
   bool get _full => _others.length >= kMaxLinkedDevices;
 
   Future<void> _open(OwnDevice d) async {
