@@ -40,6 +40,51 @@ void main() {
     expect(g.share, lessThan(1));
   });
 
+  test('short ukrainian without its own letters is not russian', () {
+    // everyday lines with no і, ї, є or ґ, and their russian twins
+    const uk = [
+      'Глянь, який вид з вершини',
+      'Чекаю на тебе вдома',
+      'Я вже йду',
+      'Ти де зараз?',
+      'Можеш подзвонити?',
+      'Мама каже, що вечеря готова',
+      'Добре, до завтра',
+      'Котра година?',
+      'Хочу спати',
+      'Гарного вечора',
+      'Я трохи запізнюсь',
+      'Що робиш?',
+      'Ще не знаю, напишу тобі',
+      'Ти теж прийдеш?',
+    ];
+    const ru = [
+      'Посмотри, какой вид с вершины',
+      'Жду тебя дома',
+      'Я уже иду',
+      'Ты где сейчас?',
+      'Можешь позвонить?',
+      'Мама говорит, что ужин готов',
+      'Хорошо, до завтра',
+      'Который час?',
+      'Хочу спать',
+      'Хорошего вечера',
+      'Я немного опоздаю',
+      'Что делаешь?',
+      'Еще не знаю, напишу тебе',
+      'Ты тоже придешь?',
+      'именно интел процессор',
+      'Давай потом',
+      'Пока, до встречи',
+    ];
+    for (final s in uk) {
+      expect(detectLanguage(s).lang, 'uk', reason: s);
+    }
+    for (final s in ru) {
+      expect(detectLanguage(s).lang, 'ru', reason: s);
+    }
+  });
+
   test('every language with packs', () {
     const cases = {
       // russian and ukrainian, by letters and by words
