@@ -8912,6 +8912,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shareNoOne => 'Не с кем поделиться';
 
   @override
+  String get shareCheckPhoto => 'Проверить это фото';
+
+  @override
+  String get shareCheckVideo => 'Проверить это видео';
+
+  @override
+  String get shareSendCleanLine => 'Скрытые данные сначала удаляются';
+
+  @override
+  String get shareCheckLine =>
+      'Посмотрите, что в нём есть, прямо на этом телефоне';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Файлы могут быть до $max. Этот больше.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Всё ещё подключаемся… Твои сообщения уйдут, как только связь вернётся.';
 

@@ -87,7 +87,11 @@ void main() {
   });
 
   test('every halo/tools method has a desktop line', () {
-    final android = _methods('ToolsBridge.kt', from: 240, to: 310);
+    // the handler's own lines, wherever it sits in the file
+    final kt = File(p.join(_kt, 'ToolsBridge.kt')).readAsLinesSync();
+    final from = kt.indexWhere((l) => l.contains('private fun handle('));
+    final to = kt.indexWhere((l) => l.contains('private fun free('));
+    final android = _methods('ToolsBridge.kt', from: from, to: to);
     final desk = {...toolsAnswered, ...toolsNotHere};
     expect(android.difference(desk), isEmpty);
     expect(desk.difference(android), isEmpty);
@@ -204,7 +208,7 @@ void main() {
       ask('halo/tools', 'shareOut'),
       throwsA(isA<MissingPluginException>()),
     );
-    expect(await ask('halo/tools', 'takeShared'), isNull);
+    expect(await ask('halo/tools', 'takeSharedFiles'), isNull);
     // a file is never opened outside: it goes to a save
     expect(await ask('halo/platform', 'openFile', {'path': '/x'}), 'refused');
     expect(await ask('halo/tools', 'freeBytes'), greaterThan(0));

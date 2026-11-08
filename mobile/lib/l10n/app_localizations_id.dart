@@ -8753,6 +8753,23 @@ class AppLocalizationsId extends AppLocalizations {
   String get shareNoOne => 'Tidak ada yang bisa diajak berbagi';
 
   @override
+  String get shareCheckPhoto => 'Periksa foto ini';
+
+  @override
+  String get shareCheckVideo => 'Periksa video ini';
+
+  @override
+  String get shareSendCleanLine => 'Detail tersembunyinya dihapus dulu';
+
+  @override
+  String get shareCheckLine => 'Lihat isinya, langsung di ponsel ini';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'File bisa sampai $max. Yang ini lebih besar.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Masih menyambung… Pesanmu akan terkirim begitu koneksi kembali.';
 

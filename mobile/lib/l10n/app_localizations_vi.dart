@@ -8738,6 +8738,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get shareNoOne => 'Không có ai để chia sẻ';
 
   @override
+  String get shareCheckPhoto => 'Kiểm tra ảnh này';
+
+  @override
+  String get shareCheckVideo => 'Kiểm tra video này';
+
+  @override
+  String get shareSendCleanLine => 'Thông tin ẩn được gỡ trước';
+
+  @override
+  String get shareCheckLine => 'Xem nó chứa gì, ngay trên điện thoại này';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Tệp có thể đến $max. Tệp này lớn hơn.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.';
 

@@ -8887,6 +8887,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareNoOne => 'لا يوجد من تشارك معه';
 
   @override
+  String get shareCheckPhoto => 'افحص هذه الصورة';
+
+  @override
+  String get shareCheckVideo => 'افحص هذا الفيديو';
+
+  @override
+  String get shareSendCleanLine => 'تُزال تفاصيلها المخفية أولًا';
+
+  @override
+  String get shareCheckLine => 'اعرف ما تحمله، على هذا الهاتف';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'يمكن أن يصل حجم الملفات إلى $max. هذا الملف أكبر.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.';
 

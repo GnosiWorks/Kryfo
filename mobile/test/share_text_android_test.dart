@@ -5,7 +5,8 @@
 // one, under the app's own name. the words come from the intent's extras,
 // or a small text file sent alone, cut whole, held in the process's memory
 // until dart lets them go and never in a saved state, and offered warm and
-// cold. the photo and video path reads as it did
+// cold. photos, videos and files, one or several, are kept as uris alone
+// until dart picks a way for them
 import 'package:flutter_test/flutter_test.dart';
 
 import 'source_body.dart';
@@ -38,30 +39,78 @@ void main() {
     expect(text, isNot(contains('image/')));
     final media = sends.singleWhere((f) => f.contains('image/*'));
     expect(media, contains('video/*'));
+    expect(media, contains('application/*'));
     expect(media, isNot(contains('text/')));
+    // several at once, of the same kinds
+    final many = _filters(
+      manifest,
+    ).singleWhere((f) => f.contains('android.intent.action.SEND_MULTIPLE"'));
+    expect(many, contains('android.intent.category.DEFAULT'));
+    for (final m in ['image/*', 'video/*', 'application/*']) {
+      expect(many, contains(m));
+    }
+    expect(many, isNot(contains('text/')));
     // no label or icon of its own: the share sheet shows the entry's
     expect(text, isNot(contains('android:label')));
     expect(text, isNot(contains('android:icon')));
     expect(manifest, contains(r'android:label="${appLabel}"'));
   });
 
-  test('text is taken before the photo and video path, which reads as it '
-      'did', () {
+  test('text is taken before the file path, which keeps uris alone', () {
     final offer = bodyOf(bridge, 'fun offer(');
+    expect(offer, contains('Intent.ACTION_SEND_MULTIPLE'));
     expect(offer.indexOf('isText(type)'), greaterThan(0));
     expect(
       offer.indexOf('isText(type)'),
-      lessThan(offer.indexOf('startsWith("image/")')),
+      lessThan(offer.indexOf('offerFiles(intent, type)')),
     );
+    expect(offer, contains('if (!isFileType(type)) return'));
+    final kinds = bodyOf(bridge, 'fun isFileType(');
+    for (final k in ['"image/"', '"video/"', '"application/"']) {
+      expect(kinds, contains(k));
+    }
+    final files = bodyOf(bridge, 'private fun offerFiles(');
     expect(
-      offer,
+      files,
+      contains('all.filter { acceptable(it) }.distinct().take(FILES_MOST)'),
+    );
+    expect(files, contains('channel?.invokeMethod("sharedFiles", null)'));
+    // nothing is read or copied before a way is picked
+    for (final body in [files, bodyOf(bridge, 'private fun streams(')]) {
+      expect(body, isNot(contains('openInputStream')));
+      expect(body, isNot(contains('File(')));
+      expect(body, isNot(contains('describe(')));
+    }
+    expect(bridge, contains('private var sharedFiles: SharedFiles? = null'));
+    expect(bridge, isNot(contains('private var shared: Uri?')));
+    expect(bodyOf(bridge, 'fun isText('), contains('"text/plain"'));
+  });
+
+  test('a copy in stops at the chat limit, told or found out', () {
+    final copy = bodyOf(bridge, 'private fun copyIn(');
+    expect(copy, contains('if (most != null && total > most)'));
+    expect(
+      copy,
       contains(
-        'if (!type.startsWith("image/") && !type.startsWith("video/")) return',
+        'if (most != null && done > most) throw java.io.IOException("big")',
       ),
     );
-    expect(offer, contains('if (uri == null || !acceptable(uri)) return'));
-    expect(offer, contains('channel?.invokeMethod("shared", null)'));
-    expect(bodyOf(bridge, 'fun isText('), contains('"text/plain"'));
+    expect(copy, contains('"big" -> "big"'));
+    final h = bodyOf(bridge, 'private fun handle(');
+    final drop = h.substring(
+      h.indexOf('"dropSharedFiles"'),
+      h.indexOf('"takeSharedText"'),
+    );
+    expect(
+      drop,
+      contains(
+        'if (sharedFiles?.id == call.argument<String>("id")) sharedFiles = null',
+      ),
+    );
+    expect(
+      bodyOf(bridge, 'fun attach('),
+      contains('if (sharedFiles != null) ch.invokeMethod("sharedFiles", null)'),
+    );
   });
 
   test('the words come from the extras, in memory only', () {

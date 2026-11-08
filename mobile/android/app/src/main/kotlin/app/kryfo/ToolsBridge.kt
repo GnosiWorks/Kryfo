@@ -41,6 +41,26 @@ class ToolsBridge(private val activity: Activity) {
         @Volatile
         private var sharedText: SharedWords? = null
 
+        // photos, videos and files shared from another app: their uris
+        // alone, in memory, until dart takes a way for them. nothing is
+        // read or copied before that
+        @Volatile
+        private var sharedFiles: SharedFiles? = null
+
+        // the most one share hands over, as the send preview holds
+        const val FILES_MOST = 30
+
+        // a type a chat or the photo checker takes. text has its own path
+        fun isFileType(type: String): Boolean {
+            val t = type.substringBefore(';').trim().lowercase()
+            return t.startsWith("image/") || t.startsWith("video/") ||
+                t.startsWith("application/") || t == "*/*"
+        }
+
+        // a concrete type, never a wildcard a mixed share carries
+        fun concrete(type: String?): String? =
+            type?.takeIf { !it.contains('*') }
+
         // [s] cut to [most] chars, never between the halves of a pair
         fun cut(s: String?, most: Int): String? {
             if (s == null || s.length <= most) return s
@@ -97,8 +117,6 @@ class ToolsBridge(private val activity: Activity) {
     }
 
     private var channel: MethodChannel? = null
-    private var shared: Uri? = null
-    private var sharedMime: String? = null
     private var pendingPick: MethodChannel.Result? = null
     private var pendingDelete: MethodChannel.Result? = null
     private var pendingSaveAs: MethodChannel.Result? = null
@@ -112,27 +130,66 @@ class ToolsBridge(private val activity: Activity) {
         ch.setMethodCallHandler { call, result -> handle(call, result) }
         // words this process holds for a screen made again over it
         if (sharedText != null) ch.invokeMethod("sharedText", null)
+        if (sharedFiles != null) ch.invokeMethod("sharedFiles", null)
     }
 
     fun offer(intent: Intent?) {
-        if (intent?.action != Intent.ACTION_SEND) return
+        val action = intent?.action
+        if (action != Intent.ACTION_SEND && action != Intent.ACTION_SEND_MULTIPLE) return
         val type = intent.type ?: return
-        if (isText(type)) {
+        if (action == Intent.ACTION_SEND && isText(type)) {
             offerText(intent)
             return
         }
-        if (!type.startsWith("image/") && !type.startsWith("video/")) return
-        val uri: Uri? = if (Build.VERSION.SDK_INT >= 33) {
-            intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra(Intent.EXTRA_STREAM)
-        }
-        if (uri == null || !acceptable(uri)) return
-        shared = uri
-        sharedMime = type
-        activity.runOnUiThread { channel?.invokeMethod("shared", null) }
+        if (!isFileType(type)) return
+        offerFiles(intent, type)
     }
+
+    // a newer share takes the place of one not used yet. only what kryfo
+    // may read is kept, never one of its own files
+    private fun offerFiles(intent: Intent, type: String) {
+        val all = try {
+            streams(intent)
+        } catch (e: Exception) {
+            return
+        }
+        val uris = all.filter { acceptable(it) }.distinct().take(FILES_MOST)
+        if (uris.isEmpty()) return
+        sharedFiles = SharedFiles(newId(), uris.map { Pair(it, concrete(type)) })
+        activity.runOnUiThread { channel?.invokeMethod("sharedFiles", null) }
+    }
+
+    private fun streams(intent: Intent): List<Uri> {
+        val out = ArrayList<Uri>()
+        if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
+            val list: List<Uri>? = if (Build.VERSION.SDK_INT >= 33) {
+                intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+            }
+            list?.let { out.addAll(it) }
+        } else {
+            val one: Uri? = if (Build.VERSION.SDK_INT >= 33) {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
+            one?.let { out.add(it) }
+        }
+        // some apps put them only in the clip the grant rides on
+        if (out.isEmpty()) {
+            val clip = intent.clipData
+            if (clip != null) {
+                for (i in 0 until clip.itemCount) clip.getItemAt(i).uri?.let { out.add(it) }
+            }
+        }
+        return out
+    }
+
+    private fun newId(): String = ByteArray(8).also { SecureRandom().nextBytes(it) }
+        .joinToString("") { "%02x".format(it) }
 
     // a newer share takes the place of one not used yet. a text file sent
     // as a stream is read when it is small and really text; its name alone
@@ -187,8 +244,7 @@ class ToolsBridge(private val activity: Activity) {
     }
 
     private fun keepText(text: String?, subject: String?) {
-        val id = ByteArray(8).also { SecureRandom().nextBytes(it) }
-            .joinToString("") { "%02x".format(it) }
+        val id = newId()
         sharedText = SharedWords(id, cut(text, TEXT_MOST), cut(subject, TEXT_MOST))
         activity.runOnUiThread { channel?.invokeMethod("sharedText", null) }
     }
@@ -243,12 +299,32 @@ class ToolsBridge(private val activity: Activity) {
 
     private fun handle(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "takeShared" -> {
-                val u = shared
-                val m = sharedMime
-                shared = null
-                sharedMime = null
-                result.success(if (u == null) null else describe(u, m))
+            "takeSharedFiles" -> {
+                val f = sharedFiles
+                if (f == null) {
+                    result.success(null)
+                } else {
+                    // a provider can be slow to answer: off the ui thread
+                    Thread {
+                        val items = f.items.map { (u, m) ->
+                            val d = describe(u, null)
+                            if (d["mime"] == null) d + ("mime" to m) else d
+                        }
+                        val out = mapOf("id" to f.id, "seen" to f.seen, "items" to items)
+                        activity.runOnUiThread { result.success(out) }
+                    }.start()
+                }
+            }
+            "seenSharedFiles" -> {
+                val f = sharedFiles
+                if (f != null && f.id == call.argument<String>("id")) {
+                    sharedFiles = f.copy(seen = call.argument<String>("where"))
+                }
+                result.success(true)
+            }
+            "dropSharedFiles" -> {
+                if (sharedFiles?.id == call.argument<String>("id")) sharedFiles = null
+                result.success(true)
             }
             "takeSharedText" -> result.success(sharedText?.let {
                 mapOf("id" to it.id, "text" to it.text, "subject" to it.subject, "seen" to it.seen)
@@ -265,7 +341,11 @@ class ToolsBridge(private val activity: Activity) {
                 result.success(true)
             }
             "pick" -> pick(call.argument<String>("kind") ?: "image", result)
-            "copyIn" -> copyIn(call.argument<String>("uri"), result)
+            "copyIn" -> copyIn(
+                call.argument<String>("uri"),
+                call.argument<Number>("most")?.toLong(),
+                result
+            )
             "cancelCopy" -> {
                 cancel.set(true)
                 result.success(true)
@@ -339,7 +419,8 @@ class ToolsBridge(private val activity: Activity) {
         }
     }
 
-    private fun copyIn(uriText: String?, result: MethodChannel.Result) {
+    // [most], when given, is the most it copies: one over it stops as "big"
+    private fun copyIn(uriText: String?, most: Long?, result: MethodChannel.Result) {
         val uri = uriText?.let { Uri.parse(it) }
         if (uri == null || !acceptable(uri)) {
             result.error("refused", "not a file kryfo may read", null)
@@ -351,6 +432,10 @@ class ToolsBridge(private val activity: Activity) {
             try {
                 val info = describe(uri, null)
                 val total = info["size"] as Long
+                if (most != null && total > most) {
+                    activity.runOnUiThread { result.error("big", "over the limit", null) }
+                    return@Thread
+                }
                 val room = free()
                 if (total > 0 && room >= 0 && room < total * 2 + (32L shl 20)) {
                     activity.runOnUiThread { result.error("full", "not enough room on the phone", null) }
@@ -374,6 +459,8 @@ class ToolsBridge(private val activity: Activity) {
                             if (n < 0) break
                             o.write(buf, 0, n)
                             done += n
+                            // a provider can lie about the size here too
+                            if (most != null && done > most) throw java.io.IOException("big")
                             if (done - lastTold >= (1L shl 20)) {
                                 lastTold = done
                                 // a provider can lie about the size. the disk cannot
@@ -394,7 +481,11 @@ class ToolsBridge(private val activity: Activity) {
                 activity.runOnUiThread { result.error("cancelled", "stopped", null) }
             } catch (e: Exception) {
                 out?.parentFile?.let { Shred.tree(it) }
-                val code = if (e.message == "full") "full" else "read"
+                val code = when (e.message) {
+                    "full" -> "full"
+                    "big" -> "big"
+                    else -> "read"
+                }
                 activity.runOnUiThread { result.error(code, "could not read that file", null) }
             }
         }.start()
@@ -671,6 +762,13 @@ class ToolsBridge(private val activity: Activity) {
         return false
     }
 }
+
+data class SharedFiles(
+    val id: String,
+    // each uri with the type the share said, when it named one
+    val items: List<Pair<Uri, String?>>,
+    val seen: String? = null
+)
 
 data class SharedWords(
     val id: String,

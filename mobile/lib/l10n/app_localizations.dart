@@ -14059,6 +14059,36 @@ abstract class AppLocalizations {
   /// **'No one to share with'**
   String get shareNoOne;
 
+  /// screens/share_files_sheet.dart: a photo shared from another app, the choice that opens the photo checker
+  ///
+  /// In en, this message translates to:
+  /// **'Check this photo'**
+  String get shareCheckPhoto;
+
+  /// screens/share_files_sheet.dart: the same choice for a shared video
+  ///
+  /// In en, this message translates to:
+  /// **'Check this video'**
+  String get shareCheckVideo;
+
+  /// screens/share_files_sheet.dart: the line under "Send to a chat" for a shared photo or video: location and camera details are removed before it is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Its hidden details come off first'**
+  String get shareSendCleanLine;
+
+  /// screens/share_files_sheet.dart: the line under "Check this photo": the checker shows what the file holds, offline
+  ///
+  /// In en, this message translates to:
+  /// **'See what it carries, right on this phone'**
+  String get shareCheckLine;
+
+  /// screens/share_files_sheet.dart: toast when a shared file turns out bigger than the limit while it is copied in. max is like 50.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'Files can be up to {max}. This one is bigger.'**
+  String shareFileOverLimit(String max);
+
   /// widgets/reconnect_valve.dart: a send has waited on tor a minute
   ///
   /// In en, this message translates to:

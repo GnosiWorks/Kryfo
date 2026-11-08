@@ -21,6 +21,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../picked.dart';
+import '../share_files.dart';
 import '../album.dart';
 import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
@@ -250,6 +251,18 @@ bool landInOpenChat(String id, String words) {
   for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
     if (s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false)) {
       s._takeWords(words);
+      return true;
+    }
+  }
+  return false;
+}
+
+/// what was shared into [id]'s chat (SharedInbox), taken by that chat when
+/// it is the page on top. false otherwise
+bool landFilesInOpenChat(String id) {
+  for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
+    if (s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false)) {
+      s._takeSharedIn();
       return true;
     }
   }
@@ -1574,6 +1587,7 @@ class _ChatScreenState extends State<ChatScreen>
             (_) => _barSettled = true,
           );
           if (onDesktop) _takeHandedIn();
+          _takeSharedIn();
         });
     _scrollCtrl.addListener(_onScroll);
     _scrollCtrl.addListener(_updateSticky);
@@ -6822,6 +6836,48 @@ class _ChatScreenState extends State<ChatScreen>
   // container so it can never go to anyone else
   late final AttachTray _tray = DeskTrays.of(_trayKey);
   late final String _trayKey = '${session.container.id}|${widget.peerHaloId}';
+
+  // photos, videos and files shared from another app wait for this chat
+  // in front, once the bar is known
+  void _takeSharedIn() {
+    if (!mounted || !_barKnown) return;
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    final got = SharedInbox.take(_trayKey);
+    if (got.isNotEmpty) unawaited(_sendSharedIn(got));
+  }
+
+  // the photos and videos through the send preview as a gallery pick, then
+  // each file as the file tile sends one. the copies go once done with
+  Future<void> _sendSharedIn(List<SharedCopy> got) async {
+    try {
+      if (!_composerShown) {
+        if (_requestLocked) showHaloToast(context, l10n.chatWaitingForThemTo);
+        return;
+      }
+      if (_sayMediaLater()) return;
+      final media = [
+        for (final c in got)
+          if (c.kind != SharedKind.file)
+            XFile(c.path, name: c.name, mimeType: c.mime),
+      ];
+      if (media.isNotEmpty) {
+        await sendGalleryPicks(
+          media,
+          pickMore: () => lockState.hold(pickGallery),
+          preview: _preview,
+          send: _sendPicked,
+        );
+      }
+      for (final f in got) {
+        if (f.kind != SharedKind.file) continue;
+        if (!mounted || lockState.locked) break;
+        final ready = await _readyFile(f.path, f.name);
+        if (ready != null) await _sendReady(ready, '');
+      }
+    } finally {
+      await shredCopies(got);
+    }
+  }
 
   // what a tool sent here ("Send to a chat") waits for this row and goes in
   // by a drop's rules, once the bar is known

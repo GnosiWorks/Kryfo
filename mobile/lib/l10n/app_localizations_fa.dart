@@ -8762,6 +8762,23 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shareNoOne => 'کسی برای هم‌رسانی نیست';
 
   @override
+  String get shareCheckPhoto => 'بررسی این عکس';
+
+  @override
+  String get shareCheckVideo => 'بررسی این ویدیو';
+
+  @override
+  String get shareSendCleanLine => 'جزئیات پنهانش اول پاک می‌شود';
+
+  @override
+  String get shareCheckLine => 'ببینید چه چیزی در آن هست، همین‌جا روی این گوشی';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'فایل‌ها می‌توانند تا $max باشند. این یکی بزرگ‌تر است.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'هنوز در حال اتصال… پیام‌های شما به محض برگشتن اتصال فرستاده می‌شوند.';
 

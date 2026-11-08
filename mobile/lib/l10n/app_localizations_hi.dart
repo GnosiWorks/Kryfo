@@ -8762,6 +8762,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shareNoOne => 'शेयर करने के लिए कोई नहीं';
 
   @override
+  String get shareCheckPhoto => 'यह फ़ोटो जाँचें';
+
+  @override
+  String get shareCheckVideo => 'यह वीडियो जाँचें';
+
+  @override
+  String get shareSendCleanLine => 'इसकी छिपी जानकारी पहले हटती है';
+
+  @override
+  String get shareCheckLine => 'देखें इसमें क्या है, इसी फ़ोन पर';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'फ़ाइलें $max तक की हो सकती हैं। यह उससे बड़ी है।';
+  }
+
+  @override
   String get valveStillConnecting =>
       'अभी जुड़ रहा है… कनेक्शन लौटते ही आपके मैसेज चले जाएँगे।';
 

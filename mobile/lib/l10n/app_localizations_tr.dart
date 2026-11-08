@@ -8781,6 +8781,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shareNoOne => 'Paylaşılacak kimse yok';
 
   @override
+  String get shareCheckPhoto => 'Bu fotoğrafı kontrol et';
+
+  @override
+  String get shareCheckVideo => 'Bu videoyu kontrol et';
+
+  @override
+  String get shareSendCleanLine => 'Gizli bilgileri önce silinir';
+
+  @override
+  String get shareCheckLine => 'İçinde ne olduğunu bu telefonda gör';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Dosyalar en fazla $max olabilir. Bu daha büyük.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Hâlâ bağlanıyor… Bağlantı geri gelir gelmez mesajların gidecek.';
 

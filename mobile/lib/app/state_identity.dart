@@ -144,10 +144,12 @@ extension AppStateIdentity on AppState {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(kGoogleOfferKey, 'said');
     }
-    // words shared while the app was being set up are let go, not held for
-    // the home that comes next
+    // words and files shared while the app was being set up are let go,
+    // not held for the home that comes next
     final shared = await ToolsBridge.instance.peekSharedText();
     if (shared != null) await ToolsBridge.instance.dropSharedText(shared.id);
+    final files = await ToolsBridge.instance.peekSharedFiles();
+    if (files != null) await ToolsBridge.instance.dropSharedFiles(files.id);
     notifyListeners();
   }
 }

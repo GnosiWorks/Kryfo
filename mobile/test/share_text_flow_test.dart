@@ -3,7 +3,7 @@
 // then the chat's composer, never a send. a draft there stays with the
 // words under it, an open chat takes them in place, the pin comes first,
 // hidden chats show only with their vault open and a decoy only its own.
-// a photo still goes to the photo tool. android is a stand-in on its channel
+// a photo checked goes to the photo tool. android is a stand-in on its channel
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -176,10 +176,17 @@ class _Android {
         dropped.add(a['id'] as String);
         if (text?['id'] == a['id']) text = null;
         return true;
-      case 'takeShared':
+      case 'takeSharedFiles':
         final i = image;
+        return i == null
+            ? null
+            : {
+                'id': 'f${identityHashCode(i)}',
+                'items': [i],
+              };
+      case 'dropSharedFiles':
         image = null;
-        return i;
+        return true;
     }
     return null;
   }
@@ -523,7 +530,7 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('a photo still goes to the photo tool, and words after it to '
+  testWidgets('a photo checked goes to the photo tool, and words after it to '
       'the picker', (t) async {
     await home(t);
     android.image = {
@@ -532,7 +539,9 @@ void main() {
       'name': 'p.jpg',
       'size': 10,
     };
-    await android.say(t, 'shared');
+    await android.say(t, 'sharedFiles');
+    await settle(t);
+    await t.tap(find.text(l10n.shareCheckPhoto));
     await settle(t);
     expect(find.byType(PhotoKnowsScreen), findsOneWidget);
     expect(find.text(l10n.shareChooseChat), findsNothing);
@@ -557,7 +566,9 @@ void main() {
       'name': 'p.jpg',
       'size': 10,
     };
-    await android.say(t, 'shared');
+    await android.say(t, 'sharedFiles');
+    await settle(t);
+    await t.tap(find.text(l10n.shareCheckPhoto));
     await settle(t);
     expect(find.byType(PhotoKnowsScreen), findsOneWidget);
     await android.share(t, 's13', words: 'over the cleaner');

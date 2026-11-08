@@ -8907,6 +8907,24 @@ class AppLocalizationsUk extends AppLocalizations {
   String get shareNoOne => 'Немає з ким поділитися';
 
   @override
+  String get shareCheckPhoto => 'Перевірити це фото';
+
+  @override
+  String get shareCheckVideo => 'Перевірити це відео';
+
+  @override
+  String get shareSendCleanLine => 'Приховані дані спершу видаляються';
+
+  @override
+  String get shareCheckLine =>
+      'Подивіться, що в ньому є, просто на цьому телефоні';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Файли можуть бути до $max. Цей більший.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Ще підключаємося… Твої повідомлення підуть, щойно зв’язок повернеться.';
 

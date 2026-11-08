@@ -8824,6 +8824,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareNoOne => 'No hay nadie con quien compartir';
 
   @override
+  String get shareCheckPhoto => 'Revisar esta foto';
+
+  @override
+  String get shareCheckVideo => 'Revisar este vídeo';
+
+  @override
+  String get shareSendCleanLine => 'Antes se le quitan los datos ocultos';
+
+  @override
+  String get shareCheckLine => 'Mira lo que lleva, aquí en este teléfono';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Los archivos pueden pesar hasta $max. Este pesa más.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Todavía conectando… Tus mensajes saldrán en cuanto vuelva la conexión.';
 
