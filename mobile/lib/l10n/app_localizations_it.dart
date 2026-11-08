@@ -10410,9 +10410,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Controlla che il telefono sia online con Kryfo aperto, poi prova con un nuovo codice.';
 
   @override
-  String get joinNewCode => 'Nuovo codice';
-
-  @override
   String get devicesNewNotice => 'Nuovo dispositivo collegato';
 
   @override

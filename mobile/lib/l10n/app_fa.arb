@@ -2716,7 +2716,6 @@
   "joinOpen": "باز کردن Kryfo",
   "joinUnreached": "به گوشی‌تان نرسیدیم",
   "joinUnreachedLine": "بررسی کنید گوشی‌تان آنلاین باشد و Kryfo روی آن باز باشد، سپس یک کد تازه امتحان کنید.",
-  "joinNewCode": "کد تازه",
   "devicesNewNotice": "دستگاه تازه پیوند خورد",
   "devicesNewNoticeLine": "⁨{name}⁩ در ⁨{date}⁩ به حساب‌تان پیوند خورد. برای دیدنش دستگاه‌های پیوندخورده را باز کنید.",
   "devicesNewNoticeMany": "دستگاه‌های تازه پیوند خوردند",

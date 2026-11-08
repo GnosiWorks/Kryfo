@@ -10332,9 +10332,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'देखें कि आपका फ़ोन ऑनलाइन है और Kryfo खुला है, फिर नया कोड आज़माएँ।';
 
   @override
-  String get joinNewCode => 'नया कोड';
-
-  @override
   String get devicesNewNotice => 'नया डिवाइस जुड़ा';
 
   @override

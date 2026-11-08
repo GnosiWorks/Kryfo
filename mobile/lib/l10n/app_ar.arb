@@ -2716,7 +2716,6 @@
   "joinOpen": "فتح Kryfo",
   "joinUnreached": "تعذّر الوصول إلى هاتفك",
   "joinUnreachedLine": "تأكد أن هاتفك متصل وأن Kryfo مفتوح عليه، ثم جرّب رمزًا جديدًا.",
-  "joinNewCode": "رمز جديد",
   "devicesNewNotice": "رُبط جهاز جديد",
   "devicesNewNoticeLine": "رُبط ⁨{name}⁩ بحسابك في ⁨{date}⁩. افتح الأجهزة المرتبطة لتراه.",
   "devicesNewNoticeMany": "أجهزة جديدة مرتبطة",

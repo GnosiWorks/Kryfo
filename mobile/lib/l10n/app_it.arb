@@ -2716,7 +2716,6 @@
   "joinOpen": "Apri Kryfo",
   "joinUnreached": "Impossibile raggiungere il tuo telefono",
   "joinUnreachedLine": "Controlla che il telefono sia online con Kryfo aperto, poi prova con un nuovo codice.",
-  "joinNewCode": "Nuovo codice",
   "devicesNewNotice": "Nuovo dispositivo collegato",
   "devicesNewNoticeLine": "{name} è stato collegato al tuo account il {date}. Apri Dispositivi collegati per vederlo.",
   "devicesNewNoticeMany": "Nuovi dispositivi collegati",

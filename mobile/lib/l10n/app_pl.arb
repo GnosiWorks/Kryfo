@@ -2716,7 +2716,6 @@
   "joinOpen": "Otwórz Kryfo",
   "joinUnreached": "Nie udało się nawiązać kontaktu z telefonem",
   "joinUnreachedLine": "Sprawdź, czy telefon jest online i ma otwarte Kryfo, a potem spróbuj z nowym kodem.",
-  "joinNewCode": "Nowy kod",
   "devicesNewNotice": "Połączono nowe urządzenie",
   "devicesNewNoticeLine": "Urządzenie {name} połączono z twoim kontem {date}. Otwórz Połączone urządzenia, żeby je zobaczyć.",
   "devicesNewNoticeMany": "Połączono nowe urządzenia",

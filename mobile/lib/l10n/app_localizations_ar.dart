@@ -10460,9 +10460,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'تأكد أن هاتفك متصل وأن Kryfo مفتوح عليه، ثم جرّب رمزًا جديدًا.';
 
   @override
-  String get joinNewCode => 'رمز جديد';
-
-  @override
   String get devicesNewNotice => 'رُبط جهاز جديد';
 
   @override

@@ -2716,7 +2716,6 @@
   "joinOpen": "Buka Kryfo",
   "joinUnreached": "Tidak bisa menghubungi ponselmu",
   "joinUnreachedLine": "Pastikan ponselmu online dan Kryfo terbuka, lalu coba kode baru.",
-  "joinNewCode": "Kode baru",
   "devicesNewNotice": "Perangkat baru tertaut",
   "devicesNewNoticeLine": "{name} ditautkan ke akunmu pada {date}. Buka Perangkat tertaut untuk melihatnya.",
   "devicesNewNoticeMany": "Perangkat baru tertaut",

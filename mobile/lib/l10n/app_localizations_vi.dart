@@ -10312,9 +10312,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kiểm tra điện thoại đang trực tuyến và Kryfo đang mở, rồi thử một mã mới.';
 
   @override
-  String get joinNewCode => 'Mã mới';
-
-  @override
   String get devicesNewNotice => 'Đã liên kết thiết bị mới';
 
   @override

@@ -10403,9 +10403,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Confira se o celular está online com o Kryfo aberto e tente um código novo.';
 
   @override
-  String get joinNewCode => 'Código novo';
-
-  @override
   String get devicesNewNotice => 'Novo aparelho conectado';
 
   @override

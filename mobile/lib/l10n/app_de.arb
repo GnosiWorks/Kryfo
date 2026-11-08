@@ -2716,7 +2716,6 @@
   "joinOpen": "Kryfo öffnen",
   "joinUnreached": "Handy nicht erreichbar",
   "joinUnreachedLine": "Prüfe, ob dein Handy online ist und Kryfo offen hat, und versuche es dann mit einem neuen Code.",
-  "joinNewCode": "Neuer Code",
   "devicesNewNotice": "Neues Gerät verknüpft",
   "devicesNewNoticeLine": "{name} wurde am {date} mit deinem Konto verknüpft. Öffne Verknüpfte Geräte, um es zu sehen.",
   "devicesNewNoticeMany": "Neue Geräte verknüpft",

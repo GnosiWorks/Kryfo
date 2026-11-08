@@ -10494,9 +10494,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Перевірте, що телефон у мережі й Kryfo відкритий, і спробуйте новий код.';
 
   @override
-  String get joinNewCode => 'Новий код';
-
-  @override
   String get devicesNewNotice => 'Пов’язано новий пристрій';
 
   @override

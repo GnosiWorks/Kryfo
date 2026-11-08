@@ -9776,9 +9776,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get joinUnreachedLine => '确认手机已联网并打开了 Kryfo，然后换一个新的二维码再试。';
 
   @override
-  String get joinNewCode => '新二维码';
-
-  @override
   String get devicesNewNotice => '已关联新设备';
 
   @override
@@ -20867,9 +20864,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get joinUnreachedLine => '確認手機已連線並開啟 Kryfo，然後換一個新的 QR 碼再試。';
-
-  @override
-  String get joinNewCode => '新 QR 碼';
 
   @override
   String get devicesNewNotice => '已連結新裝置';

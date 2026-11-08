@@ -10519,9 +10519,6 @@ class AppLocalizationsPl extends AppLocalizations {
       'Sprawdź, czy telefon jest online i ma otwarte Kryfo, a potem spróbuj z nowym kodem.';
 
   @override
-  String get joinNewCode => 'Nowy kod';
-
-  @override
   String get devicesNewNotice => 'Połączono nowe urządzenie';
 
   @override

@@ -12896,10 +12896,6 @@
   "@joinUnreachedLine": {
     "description": "screens/link_screens.dart: under joinUnreached"
   },
-  "joinNewCode": "New code",
-  "@joinNewCode": {
-    "description": "screens/link_screens.dart: button: show a fresh code"
-  },
   "devicesNewNotice": "New device linked",
   "@devicesNewNotice": {
     "description": "screens/home_screen.dart: card title on every own device after a device was linked. stays until opened"

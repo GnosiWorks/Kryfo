@@ -2716,7 +2716,6 @@
   "joinOpen": "打开 Kryfo",
   "joinUnreached": "无法连接到你的手机",
   "joinUnreachedLine": "确认手机已联网并打开了 Kryfo，然后换一个新的二维码再试。",
-  "joinNewCode": "新二维码",
   "devicesNewNotice": "已关联新设备",
   "devicesNewNoticeLine": "{name} 于 {date} 关联到你的账号。打开“已关联的设备”查看。",
   "devicesNewNoticeMany": "已关联几台新设备",

@@ -2716,7 +2716,6 @@
   "joinOpen": "Abrir o Kryfo",
   "joinUnreached": "Não foi possível alcançar o seu celular",
   "joinUnreachedLine": "Confira se o celular está online com o Kryfo aberto e tente um código novo.",
-  "joinNewCode": "Código novo",
   "devicesNewNotice": "Novo aparelho conectado",
   "devicesNewNoticeLine": "{name} foi conectado à sua conta em {date}. Abra Aparelhos conectados para ver.",
   "devicesNewNoticeMany": "Novos aparelhos conectados",

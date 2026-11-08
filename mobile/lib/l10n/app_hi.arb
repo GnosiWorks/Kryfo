@@ -2716,7 +2716,6 @@
   "joinOpen": "Kryfo खोलें",
   "joinUnreached": "आपके फ़ोन तक नहीं पहुँच पाए",
   "joinUnreachedLine": "देखें कि आपका फ़ोन ऑनलाइन है और Kryfo खुला है, फिर नया कोड आज़माएँ।",
-  "joinNewCode": "नया कोड",
   "devicesNewNotice": "नया डिवाइस जुड़ा",
   "devicesNewNoticeLine": "{name} {date} को आपके खाते से जुड़ा। देखने के लिए जुड़े हुए डिवाइस खोलें।",
   "devicesNewNoticeMany": "नए डिवाइस जुड़े",

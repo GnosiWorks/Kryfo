@@ -2716,7 +2716,6 @@
   "joinOpen": "Kryfo’yu aç",
   "joinUnreached": "Telefonuna ulaşılamadı",
   "joinUnreachedLine": "Telefonunun çevrimiçi olduğunu ve Kryfo’nun açık olduğunu kontrol et, sonra yeni bir kod dene.",
-  "joinNewCode": "Yeni kod",
   "devicesNewNotice": "Yeni cihaz bağlandı",
   "devicesNewNoticeLine": "{name} {date} tarihinde hesabına bağlandı. Görmek için Bağlı cihazlar’ı aç.",
   "devicesNewNoticeMany": "Yeni cihazlar bağlandı",

@@ -16591,12 +16591,6 @@ abstract class AppLocalizations {
   /// **'Check that your phone is online with Kryfo open, then try a new code.'**
   String get joinUnreachedLine;
 
-  /// screens/link_screens.dart: button: show a fresh code
-  ///
-  /// In en, this message translates to:
-  /// **'New code'**
-  String get joinNewCode;
-
   /// screens/home_screen.dart: card title on every own device after a device was linked. stays until opened
   ///
   /// In en, this message translates to:

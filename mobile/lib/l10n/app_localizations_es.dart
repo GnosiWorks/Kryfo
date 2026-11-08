@@ -10403,9 +10403,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Comprueba que tu teléfono está en línea con Kryfo abierto y prueba con un código nuevo.';
 
   @override
-  String get joinNewCode => 'Código nuevo';
-
-  @override
   String get devicesNewNotice => 'Nuevo dispositivo vinculado';
 
   @override

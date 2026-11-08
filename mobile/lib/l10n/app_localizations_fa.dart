@@ -10340,9 +10340,6 @@ class AppLocalizationsFa extends AppLocalizations {
       'بررسی کنید گوشی‌تان آنلاین باشد و Kryfo روی آن باز باشد، سپس یک کد تازه امتحان کنید.';
 
   @override
-  String get joinNewCode => 'کد تازه';
-
-  @override
   String get devicesNewNotice => 'دستگاه تازه پیوند خورد';
 
   @override

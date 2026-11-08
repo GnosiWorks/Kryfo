@@ -10321,9 +10321,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check that your phone is online with Kryfo open, then try a new code.';
 
   @override
-  String get joinNewCode => 'New code';
-
-  @override
   String get devicesNewNotice => 'New device linked';
 
   @override

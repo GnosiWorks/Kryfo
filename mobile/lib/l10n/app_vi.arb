@@ -2716,7 +2716,6 @@
   "joinOpen": "Mở Kryfo",
   "joinUnreached": "Không kết nối được với điện thoại",
   "joinUnreachedLine": "Kiểm tra điện thoại đang trực tuyến và Kryfo đang mở, rồi thử một mã mới.",
-  "joinNewCode": "Mã mới",
   "devicesNewNotice": "Đã liên kết thiết bị mới",
   "devicesNewNoticeLine": "{name} đã được liên kết với tài khoản của bạn vào {date}. Mở Thiết bị đã liên kết để xem.",
   "devicesNewNoticeMany": "Đã liên kết thiết bị mới",

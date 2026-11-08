@@ -10441,9 +10441,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Prüfe, ob dein Handy online ist und Kryfo offen hat, und versuche es dann mit einem neuen Code.';
 
   @override
-  String get joinNewCode => 'Neuer Code';
-
-  @override
   String get devicesNewNotice => 'Neues Gerät verknüpft';
 
   @override

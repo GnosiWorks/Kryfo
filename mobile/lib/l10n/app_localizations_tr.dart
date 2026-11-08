@@ -10356,9 +10356,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Telefonunun çevrimiçi olduğunu ve Kryfo’nun açık olduğunu kontrol et, sonra yeni bir kod dene.';
 
   @override
-  String get joinNewCode => 'Yeni kod';
-
-  @override
   String get devicesNewNotice => 'Yeni cihaz bağlandı';
 
   @override

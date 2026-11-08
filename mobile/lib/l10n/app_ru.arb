@@ -2716,7 +2716,6 @@
   "joinOpen": "Открыть Kryfo",
   "joinUnreached": "Не удалось связаться с телефоном",
   "joinUnreachedLine": "Проверьте, что телефон в сети и Kryfo открыт, и попробуйте новый код.",
-  "joinNewCode": "Новый код",
   "devicesNewNotice": "Связано новое устройство",
   "devicesNewNoticeLine": "{name} связано с вашим аккаунтом {date}. Откройте Связанные устройства, чтобы его увидеть.",
   "devicesNewNoticeMany": "Новые устройства связаны",

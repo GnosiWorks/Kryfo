@@ -10329,9 +10329,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Pastikan ponselmu online dan Kryfo terbuka, lalu coba kode baru.';
 
   @override
-  String get joinNewCode => 'Kode baru';
-
-  @override
   String get devicesNewNotice => 'Perangkat baru tertaut';
 
   @override
