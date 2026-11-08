@@ -60,6 +60,13 @@ jobs:
         with:
           persist-credentials: false
 
+      # the installer takes its name from pubspec, not from the tag
+      - name: tag is the app's version
+        if: github.ref_type == 'tag'
+        run: |
+          v=$(sed -n 's/^version: \([^+]*\).*/\1/p' mobile/pubspec.yaml)
+          test "v$v" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME, pubspec says $v"; exit 1; }
+
       - name: go
         run: |
           curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tgz
