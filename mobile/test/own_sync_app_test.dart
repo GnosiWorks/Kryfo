@@ -661,6 +661,22 @@ void main() {
     skip: skip,
   );
 
+  test(
+    'a profile not told at a first word, the decoy open, goes at the next',
+    () async {
+      final decoy = _Rows(s, HaloContainer.decoy);
+      useDatabasesForTest(db, Session(decoy));
+      await ownApplyForTest.heard(0, 2, 'k2', 1000);
+      expect(told.ops, isEmpty);
+      useDatabasesForTest(db, Session(db));
+      await ownApplyForTest.heard(0, 2, 'k2', 2000);
+      expect(told.ops.map((o) => o.$1), ['profile']);
+      await ownApplyForTest.heard(0, 2, 'k2', 3000);
+      expect(told.ops, hasLength(1));
+    },
+    skip: skip,
+  );
+
   test('nothing is told while the decoy is open', () async {
     final decoy = _Rows(s, HaloContainer.decoy);
     useDatabasesForTest(db, Session(decoy));

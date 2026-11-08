@@ -338,11 +338,13 @@ class _AppOwn implements OwnApply {
       limit: 1,
     );
     if (told.isNotEmpty) return;
+    // kept as told only once it went: a decoy open now or a send that
+    // failed tells it again at the next word
+    if (await _madeApp?._ownTellMe() != true) return;
     await d.insert('signal_meta', {
       'k': k,
       'v': '$at',
     }, conflictAlgorithm: ConflictAlgorithm.replace);
-    await _madeApp?._ownTellMe();
   }
 }
 
@@ -1389,19 +1391,22 @@ extension AppStateOwn on AppState {
   /// a device just linked: my profile goes to my devices now, the badge
   /// with it, whatever the passes told before (the first pass tells
   /// nothing, and a new device was never told)
-  Future<void> _ownTellMe() async {
+  /// true when my profile went to my devices
+  Future<bool> _ownTellMe() async {
     final own = _ownSync;
-    if (own == null || !_ownSends || linkedRole) return;
+    if (own == null || !_ownSends || linkedRole) return false;
     try {
       final me = <String, Object?>{
         'h': myId,
         'a': _myAvatar,
         'bg': await _ownBadge(),
       };
-      await own.op(kMainIdent, 'profile', null, me);
+      final sent = await own.op(kMainIdent, 'profile', null, me);
       await _ownKept('me', ownDigest(me));
+      return sent;
     } catch (e) {
       dlog('own: my profile not sent (${e.runtimeType})');
+      return false;
     }
   }
 
