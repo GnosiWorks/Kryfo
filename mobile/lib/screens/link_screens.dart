@@ -138,22 +138,26 @@ class _LinkRunScreenState extends State<LinkRunScreen> {
           LinkEnd.full => l10n.devicesFull,
           LinkEnd.stopped => l10n.devicesLinkStoppedLine,
           LinkEnd.interrupted => l10n.devicesLinkInterruptedLine,
+          LinkEnd.linkedAlready => l10n.devicesLinkAlreadyLine,
           _ => l10n.devicesLinkUnreachedLine,
         },
-        primary: v.end == LinkEnd.full ? l10n.commonClose : l10n.commonTryAgain,
+        // full or listed already: the devices page is where it goes on
+        primary: _closes(v.end) ? l10n.commonClose : l10n.commonTryAgain,
         onPrimary: () {
-          if (v.end == LinkEnd.full || widget.onAgain == null) {
+          if (_closes(v.end) || widget.onAgain == null) {
             Navigator.of(context).pop(false);
           } else {
             widget.onAgain!();
           }
         },
-        secondary: v.end == LinkEnd.full ? null : l10n.commonClose,
+        secondary: _closes(v.end) ? null : l10n.commonClose,
         onSecondary: () => Navigator.of(context).pop(false),
       ),
     };
   }
 }
+
+bool _closes(LinkEnd? e) => e == LinkEnd.full || e == LinkEnd.linkedAlready;
 
 /// the new device's side: its code until the phone answers, then the rest
 class JoinScreen extends StatefulWidget {

@@ -10391,6 +10391,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'انقطع الربط. ابدأ من جديد برمز جديد.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'هذا الحاسوب مرتبط بالفعل. أزله من الأجهزة المرتبطة، ثم اربطه من جديد.';
+
+  @override
   String get scanLinkTitle => 'قراءة رمز الجهاز';
 
   @override
@@ -10423,7 +10427,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'يتصل Kryfo الآن. يظهر رمزك حين يصبح بوسع هاتفك الوصول إلى هذا الحاسوب.';
+      'يتصل Kryfo الآن. يظهر رمزك حين يصبح هذا الحاسوب متصلًا.';
 
   @override
   String get joinPreparingSlow =>

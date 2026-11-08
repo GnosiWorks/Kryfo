@@ -10333,6 +10333,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Algo interrumpió la vinculación. Empieza de nuevo con un código nuevo.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Esta computadora ya está vinculada. Quítala en Dispositivos vinculados y vuelve a vincularla.';
+
+  @override
   String get scanLinkTitle => 'Escanear el código del dispositivo';
 
   @override
@@ -10365,7 +10369,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo se está conectando. Tu código aparece en cuanto tu teléfono pueda llegar a esta computadora.';
+      'Kryfo se está conectando. Tu código aparece en cuanto esta computadora esté en línea.';
 
   @override
   String get joinPreparingSlow =>

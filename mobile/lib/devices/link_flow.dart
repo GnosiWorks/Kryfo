@@ -45,6 +45,10 @@ enum LinkEnd {
 
   /// the phone has every device it may have
   full,
+
+  /// the phone lists this device already, from a link that ended on the
+  /// other side: it is removed there before it links again
+  linkedAlready,
 }
 
 /// how long the phone waits for the new device's first answer before it
@@ -58,6 +62,9 @@ const kJoinFreshFor = Duration(minutes: 4);
 /// a code shown this long and not scanned is made afresh before its ten
 /// minutes run out: the page never shows one a phone would refuse
 const kJoinCodeFor = Duration(minutes: 9);
+
+/// bundles made between two words to the engine that the link moves
+const kLinkTouchEvery = 16;
 
 /// the wait with its spread: the real phone's and the decoy's are drawn
 /// alike, so a stopwatch cannot tell them apart
@@ -130,6 +137,7 @@ abstract class LinkFlow extends ValueNotifier<LinkStage> {
 /// the engine's reason as the person's
 LinkEnd linkEndOf(String? why) => switch (why) {
   'full' || 'too_many' => LinkEnd.full,
+  'duplicate' => LinkEnd.linkedAlready,
   'expired' || 'unreached' => LinkEnd.unreached,
   _ => LinkEnd.interrupted,
 };
@@ -291,6 +299,10 @@ abstract class PhoneLinkHooks {
   /// ks_sign by the identity over the next list's body
   Future<Uint8List> sign(Uint8List body);
 
+  /// every device this phone may link for a new link is linked already
+  /// (the app's limit; the engine's own cap is higher)
+  Future<bool> full();
+
   /// everything the link left, written in one go. [kept] tells the engine,
   /// which acks the new device's last line; it throws when the engine gave
   /// up first, and then nothing is kept
@@ -377,6 +389,15 @@ class PhoneLinkFlow extends _EngineFlow {
     final id = _link;
     if (value.step != LinkStep.digits || id == null) return;
     show(const LinkStage(LinkStep.linking));
+    // the app's limit, before any list is made: the engine caps higher
+    final bool isFull;
+    try {
+      isFull = await hooks.full();
+    } catch (_) {
+      return fail(LinkEnd.interrupted);
+    }
+    if (isFull) return fail(LinkEnd.full);
+    if (over) return;
     final l = calls.call('list', {
       'link': id,
       'ident': 0,
@@ -582,11 +603,18 @@ class JoinLinkFlow extends _EngineFlow {
           if (own['err'] != null) return fail(LinkEnd.interrupted);
           _own = own;
           final want = (s['want'] as num?)?.toInt() ?? 0;
-          // making a big identity's bundles takes a while: the first half
+          // making a big identity's bundles takes a while: the first half.
+          // the engine hears it is moving, so its idle wait never ends it
+          var told = 0;
           final b = await hooks.bundles(
             p.device,
             want,
             made: (n) {
+              if (n - told >= kLinkTouchEvery || n == want) {
+                told = n;
+                final id = _link;
+                if (id != null) calls.call('touch', {'link': id});
+              }
               if (value.step == LinkStep.linking && want > 0) {
                 show(LinkStage(LinkStep.linking, share: 0.5 * n / want));
               }

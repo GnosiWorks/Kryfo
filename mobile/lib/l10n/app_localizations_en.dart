@@ -10251,6 +10251,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Something interrupted the link. Start again with a new code.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'This computer is linked already. Remove it in Linked devices, then link it again.';
+
+  @override
   String get scanLinkTitle => 'Scan the device\'s code';
 
   @override
@@ -10283,7 +10287,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo is connecting. Your code shows as soon as your phone can reach this computer.';
+      'Kryfo is connecting. Your code shows as soon as this computer is online.';
 
   @override
   String get joinPreparingSlow =>

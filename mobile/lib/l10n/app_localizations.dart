@@ -16465,6 +16465,12 @@ abstract class AppLocalizations {
   /// **'Something interrupted the link. Start again with a new code.'**
   String get devicesLinkInterruptedLine;
 
+  /// phone link page: the computer is on the list already from a link that ended on its side (screens/link_screens.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'This computer is linked already. Remove it in Linked devices, then link it again.'**
+  String get devicesLinkAlreadyLine;
+
   /// screens/scan_screen.dart: the scanner title when the phone links a device
   ///
   /// In en, this message translates to:
@@ -16528,7 +16534,7 @@ abstract class AppLocalizations {
   /// desktop join page, under the waiting line before the code shows (screens/link_screens.dart)
   ///
   /// In en, this message translates to:
-  /// **'Kryfo is connecting. Your code shows as soon as your phone can reach this computer.'**
+  /// **'Kryfo is connecting. Your code shows as soon as this computer is online.'**
   String get joinPreparingLine;
 
   /// desktop join page, the same line after twenty seconds (screens/link_screens.dart)

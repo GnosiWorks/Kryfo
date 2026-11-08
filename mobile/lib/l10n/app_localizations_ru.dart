@@ -10427,6 +10427,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Связь прервалась. Начните заново с новым кодом.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Этот компьютер уже связан. Удалите его в разделе «Связанные устройства», затем свяжите снова.';
+
+  @override
   String get scanLinkTitle => 'Сканировать код устройства';
 
   @override
@@ -10459,7 +10463,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo подключается. Код появится, как только ваш телефон сможет достучаться до этого компьютера.';
+      'Kryfo подключается. Код появится, как только этот компьютер будет в сети.';
 
   @override
   String get joinPreparingSlow =>

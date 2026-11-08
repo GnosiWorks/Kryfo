@@ -10361,6 +10361,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Quelque chose a interrompu l’association. Recommencez avec un nouveau code.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Cet ordinateur est déjà associé. Retirez-le dans Appareils associés, puis associez-le à nouveau.';
+
+  @override
   String get scanLinkTitle => 'Scanner le code de l’appareil';
 
   @override
@@ -10393,7 +10397,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo se connecte. Votre code s’affiche dès que votre téléphone peut joindre cet ordinateur.';
+      'Kryfo se connecte. Votre code s’affiche dès que cet ordinateur est en ligne.';
 
   @override
   String get joinPreparingSlow =>

@@ -10263,6 +10263,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'जोड़ना बीच में रुक गया। नए कोड के साथ फिर से शुरू करें।';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'यह कंप्यूटर पहले से जुड़ा है। जुड़े हुए डिवाइस में इसे हटाएँ, फिर दोबारा जोड़ें।';
+
+  @override
   String get scanLinkTitle => 'डिवाइस का कोड स्कैन करें';
 
   @override
@@ -10295,7 +10299,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo जुड़ रहा है। जैसे ही आपका फ़ोन इस कंप्यूटर तक पहुँच सकेगा, आपका कोड दिखेगा।';
+      'Kryfo जुड़ रहा है। जैसे ही यह कंप्यूटर ऑनलाइन होगा, आपका कोड दिखेगा।';
 
   @override
   String get joinPreparingSlow =>

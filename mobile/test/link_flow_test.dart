@@ -42,6 +42,9 @@ class _Phone implements PhoneLinkHooks {
   Future<String> identity() async => '05${'ab' * 32}';
   @override
   Future<int> phoneReg() async => 4321;
+  bool isFull = false;
+  @override
+  Future<bool> full() async => isFull;
   @override
   Future<Uint8List> sign(Uint8List body) async {
     signed.add(body);
@@ -218,6 +221,8 @@ void main() {
     expect(linkEndOf('unreached'), LinkEnd.unreached);
     expect(linkEndOf('full'), LinkEnd.full);
     expect(linkEndOf('too_many'), LinkEnd.full);
+    // listed already: removed on the phone before it links again
+    expect(linkEndOf('duplicate'), LinkEnd.linkedAlready);
     // a no is only the person's own: every other end is an interruption
     for (final why in [
       'refused',
@@ -225,7 +230,6 @@ void main() {
       'gone',
       'malformed',
       'signature',
-      'duplicate',
       'state',
     ]) {
       expect(linkEndOf(why), LinkEnd.interrupted, reason: why);
@@ -283,7 +287,8 @@ void main() {
         // nothing written yet: the place is held in memory
         expect(h.steps, ['placed 42', 'bundles 42']);
         expect(h.wanted, 3);
-        expect(c.said, ['join_start', 'confirm', 'own', 'bundles']);
+        // the engine hears the bundles being made, then gets them
+        expect(c.said, ['join_start', 'confirm', 'own', 'touch', 'bundles']);
         expect((c.args['bundles']!['once'] as List).length, 3);
         expect(c.args['bundles']!['made'], 1000);
         c.answers['take'] = {'stream': _b(List.filled(32, 5))};
@@ -611,9 +616,47 @@ void main() {
       await t.pump(_tick * 3);
       // making its bundles is the first half
       expect(seen, [0.125, 0.25, 0.375, 0.5]);
+      // and the engine hears it is moving while they are made
+      expect(c.said.where((o) => o == 'touch'), hasLength(1));
       c.state = {'st': 'sending', 'at': 1, 'of': 2};
       await t.pump(_tick * 2);
       expect(f.value.share, closeTo(0.725, 0.001));
+      f.dispose();
+    }
+  });
+
+  testWidgets('a phone at its limit links nothing, and a computer it lists '
+      'already says so', (t) async {
+    {
+      final c = _Calls()..answers['link_start'] = {'link': 'L1'};
+      final h = _Phone()..isFull = true;
+      final f = PhoneLinkFlow(c, code: 'kryfo-link:x', hooks: h, poll: _tick);
+      f.start();
+      await t.pump();
+      c.state = {'st': 'digits', 'sas': '123456'};
+      await t.pump(_tick * 2);
+      await f.match();
+      expect(f.value.end, LinkEnd.full);
+      expect(c.said, isNot(contains('list')));
+      expect(h.signed, isEmpty);
+      f.dispose();
+    }
+    {
+      final c = _Calls()
+        ..answers['link_start'] = {'link': 'L1'}
+        ..answers['list'] = {'err': 'duplicate'};
+      final f = PhoneLinkFlow(
+        c,
+        code: 'kryfo-link:x',
+        hooks: _Phone(),
+        poll: _tick,
+      );
+      f.start();
+      await t.pump();
+      c.state = {'st': 'digits', 'sas': '123456'};
+      await t.pump(_tick * 2);
+      await f.match();
+      expect(f.value.end, LinkEnd.linkedAlready);
       f.dispose();
     }
   });

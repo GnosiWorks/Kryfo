@@ -10259,6 +10259,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Penautan terputus. Mulai lagi dengan kode baru.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Komputer ini sudah tertaut. Hapus di Perangkat tertaut, lalu tautkan lagi.';
+
+  @override
   String get scanLinkTitle => 'Pindai kode perangkat';
 
   @override
@@ -10291,7 +10295,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo sedang terhubung. Kodemu muncul begitu ponselmu bisa menjangkau komputer ini.';
+      'Kryfo sedang terhubung. Kodemu muncul begitu komputer ini online.';
 
   @override
   String get joinPreparingSlow =>

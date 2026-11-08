@@ -9713,6 +9713,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesLinkInterruptedLine => '关联被中断了。用新的二维码重新开始。';
 
   @override
+  String get devicesLinkAlreadyLine => '这台电脑已经关联过了。先在“已关联的设备”中移除它，再重新关联。';
+
+  @override
   String get scanLinkTitle => '扫描设备的二维码';
 
   @override
@@ -9743,7 +9746,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get joinPreparing => '正在准备你的二维码';
 
   @override
-  String get joinPreparingLine => 'Kryfo 正在连接。你的手机一能连到这台电脑，二维码就会出现。';
+  String get joinPreparingLine => 'Kryfo 正在连接。这台电脑一联网，二维码就会出现。';
 
   @override
   String get joinPreparingSlow => '首次启动时 Tor 连接可能需要一两分钟。';
@@ -20803,6 +20806,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesLinkInterruptedLine => '連結被中斷了。用新的 QR 碼重新開始。';
 
   @override
+  String get devicesLinkAlreadyLine => '這台電腦已經連結過了。先在「已連結的裝置」中移除它，再重新連結。';
+
+  @override
   String get scanLinkTitle => '掃描裝置的 QR 碼';
 
   @override
@@ -20833,7 +20839,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get joinPreparing => '正在準備你的 QR 碼';
 
   @override
-  String get joinPreparingLine => 'Kryfo 正在連線。你的手機一能連到這台電腦，QR 碼就會出現。';
+  String get joinPreparingLine => 'Kryfo 正在連線。這台電腦一連上網路，QR 碼就會出現。';
 
   @override
   String get joinPreparingSlow => '第一次啟動時 Tor 連線可能需要一兩分鐘。';

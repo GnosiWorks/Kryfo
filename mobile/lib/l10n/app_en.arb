@@ -12812,6 +12812,10 @@
   "@devicesLinkInterruptedLine": {
     "description": "screens/link_screens.dart: under devicesLinkStopped when the link ended for another reason than a no: the other side stopped, a step failed"
   },
+  "devicesLinkAlreadyLine": "This computer is linked already. Remove it in Linked devices, then link it again.",
+  "@devicesLinkAlreadyLine": {
+    "description": "phone link page: the computer is on the list already from a link that ended on its side (screens/link_screens.dart)"
+  },
   "scanLinkTitle": "Scan the device's code",
   "@scanLinkTitle": {
     "description": "screens/scan_screen.dart: the scanner title when the phone links a device"
@@ -12852,7 +12856,7 @@
   "@joinPreparing": {
     "description": "desktop join page, while the code is not shown yet (screens/link_screens.dart)"
   },
-  "joinPreparingLine": "Kryfo is connecting. Your code shows as soon as your phone can reach this computer.",
+  "joinPreparingLine": "Kryfo is connecting. Your code shows as soon as this computer is online.",
   "@joinPreparingLine": {
     "description": "desktop join page, under the waiting line before the code shows (screens/link_screens.dart)"
   },

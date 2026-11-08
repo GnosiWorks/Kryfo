@@ -10242,6 +10242,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Việc liên kết bị gián đoạn. Bắt đầu lại với một mã mới.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Máy tính này đã được liên kết. Hãy gỡ nó trong Thiết bị đã liên kết, rồi liên kết lại.';
+
+  @override
   String get scanLinkTitle => 'Quét mã của thiết bị';
 
   @override
@@ -10274,7 +10278,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo đang kết nối. Mã của bạn hiện ra ngay khi điện thoại của bạn có thể kết nối tới máy tính này.';
+      'Kryfo đang kết nối. Mã của bạn hiện ra ngay khi máy tính này trực tuyến.';
 
   @override
   String get joinPreparingSlow =>

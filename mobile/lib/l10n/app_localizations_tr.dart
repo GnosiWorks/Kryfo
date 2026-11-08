@@ -10286,6 +10286,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağlama yarıda kesildi. Yeni bir kodla baştan başla.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Bu bilgisayar zaten bağlı. Bağlı cihazlar’dan kaldır, sonra yeniden bağla.';
+
+  @override
   String get scanLinkTitle => 'Cihazın kodunu tara';
 
   @override
@@ -10318,7 +10322,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo bağlanıyor. Telefonun bu bilgisayara ulaşabildiği anda kodun görünür.';
+      'Kryfo bağlanıyor. Bu bilgisayar çevrimiçi olur olmaz kodun görünür.';
 
   @override
   String get joinPreparingSlow =>

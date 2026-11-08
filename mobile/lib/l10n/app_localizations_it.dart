@@ -10340,6 +10340,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Qualcosa ha interrotto il collegamento. Ricomincia con un nuovo codice.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Questo computer è già collegato. Rimuovilo in Dispositivi collegati, poi collegalo di nuovo.';
+
+  @override
   String get scanLinkTitle => 'Scansiona il codice del dispositivo';
 
   @override
@@ -10372,7 +10376,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo si sta collegando. Il codice compare appena il tuo telefono può raggiungere questo computer.';
+      'Kryfo si sta collegando. Il codice compare appena questo computer è online.';
 
   @override
   String get joinPreparingSlow =>

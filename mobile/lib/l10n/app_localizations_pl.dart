@@ -10449,6 +10449,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Coś przerwało łączenie. Zacznij od nowa z nowym kodem.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Ten komputer jest już połączony. Usuń go w Połączonych urządzeniach, a potem połącz ponownie.';
+
+  @override
   String get scanLinkTitle => 'Zeskanuj kod urządzenia';
 
   @override
@@ -10481,7 +10485,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo się łączy. Kod pojawi się, gdy tylko twój telefon będzie mógł dotrzeć do tego komputera.';
+      'Kryfo się łączy. Kod pojawi się, gdy tylko ten komputer będzie online.';
 
   @override
   String get joinPreparingSlow =>

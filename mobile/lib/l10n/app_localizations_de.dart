@@ -10371,6 +10371,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Etwas hat die Verknüpfung unterbrochen. Fang mit einem neuen Code noch einmal an.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Dieser Computer ist schon verknüpft. Entferne ihn unter Verknüpfte Geräte und verknüpfe ihn dann neu.';
+
+  @override
   String get scanLinkTitle => 'Code des Geräts scannen';
 
   @override
@@ -10403,7 +10407,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo verbindet sich. Dein Code erscheint, sobald dein Handy diesen Computer erreichen kann.';
+      'Kryfo verbindet sich. Dein Code erscheint, sobald dieser Computer online ist.';
 
   @override
   String get joinPreparingSlow =>

@@ -10270,6 +10270,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیوند نیمه‌کاره ماند. با یک کد تازه دوباره شروع کنید.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'این رایانه از قبل پیوند خورده است. آن را در دستگاه‌های پیوندخورده حذف کنید، بعد دوباره پیوند دهید.';
+
+  @override
   String get scanLinkTitle => 'اسکن کد دستگاه';
 
   @override
@@ -10302,7 +10306,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get joinPreparingLine =>
-      'Kryfo در حال وصل شدن است. کدتان همین که گوشی‌تان بتواند به این رایانه برسد نمایش داده می‌شود.';
+      'Kryfo در حال وصل شدن است. کدتان همین که این رایانه آنلاین شود نمایش داده می‌شود.';
 
   @override
   String get joinPreparingSlow =>

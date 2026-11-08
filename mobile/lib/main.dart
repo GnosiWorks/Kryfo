@@ -26,7 +26,7 @@ import 'devices/own_sync.dart';
 import 'devices/own_unlink.dart';
 import 'devices/linked_lock.dart';
 import 'devices/own_devices.dart'
-    show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
+    show DecoyDevices, DeviceKind, LinkHistory, OwnDevices, kMaxLinkedDevices;
 import 'photo_blur.dart' show makeBlurSoon;
 import 'secure_store.dart';
 import 'desktop/desk_frames.dart' show deskRunApp;
