@@ -45,11 +45,17 @@ var (
 	linkPoll = 5 * time.Second
 	// how long the door holds the last KLB1 line for the phone's app to
 	// keep the device before it acks; the joiner waits as long
-	linkKeptWait = time.Minute
+	linkKeptWait = 2 * time.Minute
 	// the bundles may come this long after the link's own ten minutes
-	linkBundlesLate            = 5 * time.Minute
-	linkWireNow     linkWire   = relayLinkWire{}
-	linkDialNow     linkDialer = dialLinkDoor
+	linkBundlesLate = 5 * time.Minute
+	// once both confirmed a link ends only when nothing moved for this long:
+	// a big identity's bundles over a slow tor take what they take
+	linkIdle = 3 * time.Minute
+	// a post to the rendezvous is tried again for this long: a relay that
+	// blinks or a tor still warming up never ends a link
+	linkPostFor            = time.Minute
+	linkWireNow linkWire   = relayLinkWire{}
+	linkDialNow linkDialer = dialLinkDoor
 	// the phone's onion, without ".onion"
 	linkOnionOf = func() string {
 		mu.Lock()
@@ -96,8 +102,17 @@ type linkRun struct {
 	st     string
 	why    string
 	sas    string
-	cancel context.CancelFunc
+	cancel func()
 	toJ    [32]byte
+
+	// a fetch at the rendezvous was answered: the code may show
+	heard bool
+	// both confirmed: from then on only an idle run ends
+	live bool
+	// when the run last moved: a message, a post, a line
+	moved time.Time
+	// lines of KLB1 through the door so far, of all
+	at, of int
 	toP    [32]byte
 
 	// joiner
@@ -136,12 +151,11 @@ type linkRun struct {
 	list     []byte
 	// the door's last line waits on dart keeping the device: 0 waiting,
 	// 1 kept (ack), 2 the door gave up
-	ack      int
-	keptCh   chan struct{}
-	stream   *[devices.StreamKeySize]byte
-	after    devices.AfterKeys
-	bind     [32]byte
-	deadline time.Time
+	ack    int
+	keptCh chan struct{}
+	stream *[devices.StreamKeySize]byte
+	after  devices.AfterKeys
+	bind   [32]byte
 }
 
 var (
@@ -153,6 +167,74 @@ var (
 func (r *linkRun) world() *linkRun {
 	r.wire, r.dial, r.poll, r.clock, r.onion = linkWireNow, linkDialNow, linkPoll, linkClock, linkOnionOf
 	return r
+}
+
+// the run's context: the code's life until both confirmed, then for as long
+// as something moves. its cause says why it ended
+func (r *linkRun) begin(life time.Duration) context.Context {
+	ctx, cancel := context.WithCancelCause(context.Background())
+	r.cancel = func() { cancel(context.Canceled) }
+	now := r.clock()
+	end := now.Add(life)
+	r.moved = now
+	go func() {
+		tick := time.NewTicker(min(time.Second, r.poll))
+		defer tick.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-tick.C:
+			}
+			r.mu.Lock()
+			live, moved := r.live, r.moved
+			r.mu.Unlock()
+			now := r.clock()
+			switch {
+			case live && now.Sub(moved) > linkIdle:
+				cancel(errLinkIdle)
+			case !live && now.After(end):
+				cancel(context.DeadlineExceeded)
+			}
+		}
+	}()
+	return ctx
+}
+
+// something moved: the idle wait starts again
+func (r *linkRun) touch() {
+	r.mu.Lock()
+	r.moved = r.clock()
+	r.mu.Unlock()
+}
+
+// what ended a run's steps: the context's cause once it is done
+func endOf(ctx context.Context, err error) error {
+	if ctx.Err() != nil {
+		if c := context.Cause(ctx); c != nil {
+			return c
+		}
+	}
+	return err
+}
+
+// a post tried again, further apart, for linkPostFor
+func (r *linkRun) postOn(ctx context.Context, seed [32]byte, msg []byte) error {
+	until := time.Now().Add(linkPostFor)
+	for try := 0; ; try++ {
+		if err := r.wire.post(ctx, seed, msg); err == nil {
+			r.touch()
+			return nil
+		}
+		if !time.Now().Before(until) {
+			return errLinkUnreached
+		}
+		select {
+		case <-ctx.Done():
+			return errLinkUnreached
+		case <-time.After(linkBackoff(try)):
+		}
+	}
 }
 
 func newLinkID() string {
@@ -259,7 +341,7 @@ func whyOf(err error) string {
 		return lsWhyTime
 	case errors.Is(err, devices.ErrTooMany):
 		return lsWhyFull
-	case errors.Is(err, errLinkUnreached):
+	case errors.Is(err, errLinkUnreached), errors.Is(err, errLinkIdle):
 		return lsWhyReach
 	case errors.Is(err, errLinkEnded):
 		return lsWhyGone
@@ -269,7 +351,10 @@ func whyOf(err error) string {
 	return lsWhyBad
 }
 
-var errLinkUnreached = errors.New("link: unreached")
+var (
+	errLinkUnreached = errors.New("link: unreached")
+	errLinkIdle      = errors.New("link: nothing moved")
+)
 
 // waits for the first message with magic at seed, past those already
 // seen. a message of another kind is passed over: the other side's earlier
@@ -280,6 +365,9 @@ func (r *linkRun) await(ctx context.Context, seed [32]byte, magic string, seen m
 	for {
 		msgs, err := r.wire.fetch(ctx, seed)
 		if err == nil {
+			r.mu.Lock()
+			r.heard = true
+			r.mu.Unlock()
 			for _, m := range msgs {
 				k := string(m)
 				if seen[k] || len(m) < 4 {
@@ -290,6 +378,7 @@ func (r *linkRun) await(ctx context.Context, seed [32]byte, magic string, seen m
 					return nil, errLinkEnded
 				case magic:
 					seen[k] = true
+					r.touch()
 					return m, nil
 				}
 				// another kind stays unread for the step that wants it,
@@ -337,10 +426,10 @@ func joinStart(key devices.Key, reg uint32) (string, *linkRun, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), devices.LinkLife+linkBundlesLate)
-	r := &linkRun{st: lsOffer, j: j, toJ: toJ, toP: toP, cancel: cancel,
+	r := &linkRun{st: lsOffer, j: j, toJ: toJ, toP: toP,
 		confirm: make(chan struct{}, 1), bundles: make(chan []byte, 1)}
 	r.world()
+	ctx := r.begin(devices.LinkLife + linkBundlesLate)
 	id := newLinkID()
 	linkMu.Lock()
 	// one link at a time: a new code ends the one before
@@ -359,6 +448,7 @@ func joinStart(key devices.Key, reg uint32) (string, *linkRun, error) {
 func (r *linkRun) join(ctx context.Context) {
 	defer r.ended()
 	if err := r.joinSteps(ctx); err != nil {
+		err = endOf(ctx, err)
 		log.Printf("link: the joining side ended (%s)", whyOf(err))
 		r.failed(whyOf(err))
 	}
@@ -374,8 +464,8 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := r.wire.post(ctx, r.toP, reveal); err != nil {
-		return errLinkUnreached
+	if err := r.postOn(ctx, r.toP, reveal); err != nil {
+		return err
 	}
 	sas, err := r.j.SAS()
 	if err != nil {
@@ -417,7 +507,9 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 	if err := r.j.Confirm(); err != nil {
 		return err
 	}
-	r.set(lsLinking, "")
+	r.mu.Lock()
+	r.st, r.why, r.live, r.moved = lsLinking, "", true, r.clock()
+	r.mu.Unlock()
 	r.mu.Lock()
 	w := r.welcome
 	r.mu.Unlock()
@@ -461,7 +553,11 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 		return ctx.Err()
 	}
 	r.set(lsSending, "")
-	if err := sendLinkBundles(ctx, r.dial, place, klb1); err != nil {
+	if err := sendLinkBundles(ctx, r.dial, place, klb1, func(at, of int) {
+		r.mu.Lock()
+		r.at, r.of, r.moved = at, of, r.clock()
+		r.mu.Unlock()
+	}); err != nil {
 		return err
 	}
 	r.mu.Lock()
@@ -476,10 +572,12 @@ func devShimNow() *kshim.Lib {
 	return devShim
 }
 
-// KLB1 to the door, in lines: "KLB1 <token> <i>/<n> <base64>"
-func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1 []byte) error {
+// KLB1 to the door, in lines: "KLB1 <token> <i>/<n> <base64>". sent says
+// how many lines are through, of how many
+func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1 []byte, sent func(at, of int)) error {
 	n := (len(klb1) + linkChunk - 1) / linkChunk
 	tok := hex.EncodeToString(p.Token[:])
+	sent(0, n)
 	for i := 0; i < n; i++ {
 		end := min((i+1)*linkChunk, len(klb1))
 		line := linkLinePrefix + tok + " " + strconv.Itoa(i) + "/" + strconv.Itoa(n) + " " +
@@ -489,6 +587,7 @@ func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1
 		for try := 0; ; try++ {
 			err := dial(ctx, p.Onion, line)
 			if err == nil {
+				sent(i+1, n)
 				break
 			}
 			select {
@@ -518,10 +617,10 @@ func linkStart(offer []byte, identity devices.Key) (string, *linkRun, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), devices.LinkLife+linkBundlesLate)
-	r := &linkRun{st: lsAccept, p: p, identity: identity, toJ: toJ, toP: toP, cancel: cancel,
-		confirm: make(chan struct{}, 1), deadline: linkClock().Add(devices.LinkLife + linkBundlesLate)}
+	r := &linkRun{st: lsAccept, p: p, identity: identity, toJ: toJ, toP: toP,
+		confirm: make(chan struct{}, 1)}
 	r.world()
+	ctx := r.begin(devices.LinkLife + linkBundlesLate)
 	id := newLinkID()
 	linkMu.Lock()
 	// one link at a time: a new one ends the one before
@@ -540,14 +639,15 @@ func linkStart(offer []byte, identity devices.Key) (string, *linkRun, error) {
 func (r *linkRun) phone(ctx context.Context, accept []byte) {
 	defer r.ended()
 	if err := r.phoneSteps(ctx, accept); err != nil {
+		err = endOf(ctx, err)
 		log.Printf("link: the phone's side ended (%s)", whyOf(err))
 		r.failed(whyOf(err))
 	}
 }
 
 func (r *linkRun) phoneSteps(ctx context.Context, accept []byte) error {
-	if err := r.wire.post(ctx, r.toJ, accept); err != nil {
-		return errLinkUnreached
+	if err := r.postOn(ctx, r.toJ, accept); err != nil {
+		return err
 	}
 	seen := map[string]bool{}
 	reveal, err := r.await(ctx, r.toP, "KLR2", seen, nil)
@@ -584,6 +684,9 @@ func (r *linkRun) phoneSteps(ctx context.Context, accept []byte) error {
 	if err := r.p.Confirm(r.clock()); err != nil {
 		return err
 	}
+	r.mu.Lock()
+	r.live, r.moved = true, r.clock()
+	r.mu.Unlock()
 	stream, err := devices.NewStreamKey()
 	if err != nil {
 		return err
@@ -612,11 +715,11 @@ func (r *linkRun) phoneSteps(ctx context.Context, accept []byte) error {
 	r.stream, r.after, r.bind, r.token = stream, after, bind, tok
 	r.chunks, r.waiting = map[int]string{}, true
 	r.mu.Unlock()
-	if err := r.wire.post(ctx, r.toJ, w); err != nil {
-		return errLinkUnreached
+	if err := r.postOn(ctx, r.toJ, w); err != nil {
+		return err
 	}
-	if err := r.wire.post(ctx, r.toJ, place); err != nil {
-		return errLinkUnreached
+	if err := r.postOn(ctx, r.toJ, place); err != nil {
+		return err
 	}
 	// the rest comes through the door; an end from the new device is
 	// watched for meanwhile
@@ -719,16 +822,26 @@ func linkDoorTake(line string) bool {
 	}
 	linkMu.Lock()
 	var r *linkRun
+	// a line again whose ack was lost on its way: a link kept already acks
+	// it again, one still keeping answers as the first did
+	again := false
 	for _, o := range linkRuns {
 		o.mu.Lock()
-		if o.waiting && subtle.ConstantTimeCompare(o.token[:], tok) == 1 {
-			r = o
+		if o.p != nil && (o.waiting || o.keptCh != nil) && subtle.ConstantTimeCompare(o.token[:], tok) == 1 {
+			r, again = o, !o.waiting
 		}
 		o.mu.Unlock()
+	}
+	if r == nil && linkKeptLately(tok) {
+		linkMu.Unlock()
+		return true
 	}
 	linkMu.Unlock()
 	if r == nil {
 		return false
+	}
+	if again {
+		return r.ackAgain()
 	}
 	r.mu.Lock()
 	if !r.waiting || (r.nChunks != 0 && r.nChunks != n) || len(f[2]) > base64.StdEncoding.EncodedLen(linkChunk) {
@@ -737,6 +850,7 @@ func linkDoorTake(line string) bool {
 	}
 	r.nChunks = n
 	r.chunks[i] = f[2]
+	r.at, r.of, r.moved = len(r.chunks), n, r.clock()
 	if len(r.chunks) < n {
 		r.mu.Unlock()
 		return true
@@ -777,6 +891,46 @@ func linkDoorTake(line string) bool {
 		r.tellEnd()
 	}
 	return acked
+}
+
+// a line again for a link whose last line came: acked once the phone's app
+// kept the device, as the first was, never before
+func (r *linkRun) ackAgain() bool {
+	r.mu.Lock()
+	kept := r.keptCh
+	r.mu.Unlock()
+	t := time.NewTimer(linkKeptWait)
+	defer t.Stop()
+	select {
+	case <-kept:
+	case <-t.C:
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.ack == 1
+}
+
+// tokens of links kept lately, for a last line that comes again: its ack
+// was lost and the new device would try for the rest of its time
+var linkKept = map[[devices.TokenSize]byte]time.Time{}
+
+// how long a kept link's token still acks a line again
+const linkKeptFor = 10 * time.Minute
+
+// linkMu held
+func linkKeptLately(tok []byte) bool {
+	now := time.Now()
+	hit := false
+	for k, at := range linkKept {
+		if now.Sub(at) > linkKeptFor {
+			delete(linkKept, k)
+			continue
+		}
+		if subtle.ConstantTimeCompare(k[:], tok) == 1 {
+			hit = true
+		}
+	}
+	return hit
 }
 
 func chunkOf(s string) (i, n int, ok bool) {
@@ -863,6 +1017,11 @@ type linkOut struct {
 	Want      int        `json:"want,omitempty"`
 	Rows      []devOp    `json:"rows,omitempty"`
 	Gone      []devEntry `json:"gone,omitempty"`
+	// the joiner heard the rendezvous: its code can be answered now
+	Ready bool `json:"ready,omitempty"`
+	// lines of the bundles through the door, of all
+	At int `json:"at,omitempty"`
+	Of int `json:"of,omitempty"`
 }
 
 // HaloDevLink runs one call of a link: op, and its args as json.
@@ -975,6 +1134,8 @@ func (r *linkRun) state(out *linkOut) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	out.St, out.Why = r.st, r.why
+	out.Ready = r.heard
+	out.At, out.Of = r.at, r.of
 	if r.st == lsDigits {
 		out.SAS = r.sas
 	}
@@ -1161,11 +1322,13 @@ func (r *linkRun) kept(id string) error {
 	}
 	r.ack, r.st = 1, lsDone
 	close(r.keptCh)
+	tok := r.token
 	r.forget()
 	r.mu.Unlock()
 	r.cancel()
 	linkMu.Lock()
 	delete(linkRuns, id)
+	linkKept[tok] = time.Now()
 	linkMu.Unlock()
 	return nil
 }
