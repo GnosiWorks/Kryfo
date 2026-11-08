@@ -72,7 +72,9 @@ void main() {
     final files = bodyOf(bridge, 'private fun offerFiles(');
     expect(
       files,
-      contains('all.filter { acceptable(it) }.distinct().take(FILES_MOST)'),
+      contains(
+        'streams(intent).filter { acceptable(it) }.distinct().take(FILES_MOST)',
+      ),
     );
     expect(files, contains('channel?.invokeMethod("sharedFiles", null)'));
     // nothing is read or copied before a way is picked
@@ -82,6 +84,16 @@ void main() {
       expect(body, isNot(contains('describe(')));
     }
     expect(bridge, contains('private var sharedFiles: SharedFiles? = null'));
+    // only real uris, also where android does not check the list's kind
+    final streams = bodyOf(bridge, 'private fun streams(');
+    expect(streams, contains('filterIsInstance<Uri>()'));
+    expect(streams, contains('(one as? Uri)'));
+    // the providers' answers have a deadline, a cancel closes a hung read
+    expect(bridge, contains('const val DESCRIBE_MS = 4000L'));
+    expect(
+      bodyOf(bridge, 'private fun handle('),
+      contains('if (r != null) Thread { try { r.close() }'),
+    );
     expect(bridge, isNot(contains('private var shared: Uri?')));
     expect(bodyOf(bridge, 'fun isText('), contains('"text/plain"'));
   });

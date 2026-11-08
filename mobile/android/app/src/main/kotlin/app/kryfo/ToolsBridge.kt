@@ -49,6 +49,8 @@ class ToolsBridge(private val activity: Activity) {
 
         // the most one share hands over, as the send preview holds
         const val FILES_MOST = 30
+        // how long the providers of one share are given to name their files
+        const val DESCRIBE_MS = 4000L
 
         // a type a chat or the photo checker takes. text has its own path
         fun isFileType(type: String): Boolean {
@@ -124,6 +126,10 @@ class ToolsBridge(private val activity: Activity) {
     private var pendingCreate: MethodChannel.Result? = null
     private val created = HashSet<String>()
     private val cancel = AtomicBoolean(false)
+    // the stream a copy in reads: closed by a cancel, so a provider that
+    // hangs in a read lets go
+    @Volatile
+    private var reading: java.io.InputStream? = null
 
     fun attach(ch: MethodChannel) {
         channel = ch
@@ -148,12 +154,11 @@ class ToolsBridge(private val activity: Activity) {
     // a newer share takes the place of one not used yet. only what kryfo
     // may read is kept, never one of its own files
     private fun offerFiles(intent: Intent, type: String) {
-        val all = try {
-            streams(intent)
+        val uris = try {
+            streams(intent).filter { acceptable(it) }.distinct().take(FILES_MOST)
         } catch (e: Exception) {
             return
         }
-        val uris = all.filter { acceptable(it) }.distinct().take(FILES_MOST)
         if (uris.isEmpty()) return
         sharedFiles = SharedFiles(newId(), uris.map { Pair(it, concrete(type)) })
         activity.runOnUiThread { channel?.invokeMethod("sharedFiles", null) }
@@ -162,21 +167,22 @@ class ToolsBridge(private val activity: Activity) {
     private fun streams(intent: Intent): List<Uri> {
         val out = ArrayList<Uri>()
         if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
-            val list: List<Uri>? = if (Build.VERSION.SDK_INT >= 33) {
+            // below 13 the list is not checked: anything else in it is dropped
+            val list: List<Any?>? = if (Build.VERSION.SDK_INT >= 33) {
                 intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+                intent.getParcelableArrayListExtra<android.os.Parcelable>(Intent.EXTRA_STREAM)
             }
-            list?.let { out.addAll(it) }
+            list?.let { out.addAll(it.filterIsInstance<Uri>()) }
         } else {
-            val one: Uri? = if (Build.VERSION.SDK_INT >= 33) {
+            val one: Any? = if (Build.VERSION.SDK_INT >= 33) {
                 intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+                intent.getParcelableExtra<android.os.Parcelable>(Intent.EXTRA_STREAM)
             }
-            one?.let { out.add(it) }
+            (one as? Uri)?.let { out.add(it) }
         }
         // some apps put them only in the clip the grant rides on
         if (out.isEmpty()) {
@@ -306,10 +312,22 @@ class ToolsBridge(private val activity: Activity) {
                 } else {
                     // a provider can be slow to answer: off the ui thread
                     Thread {
+                        // a provider that does not answer leaves the item
+                        // unnamed and of no known size, never the share stuck
+                        val ex = java.util.concurrent.Executors.newSingleThreadExecutor()
+                        val until = System.currentTimeMillis() + DESCRIBE_MS
                         val items = f.items.map { (u, m) ->
-                            val d = describe(u, null)
+                            val left = until - System.currentTimeMillis()
+                            val d = try {
+                                if (left <= 0) throw java.util.concurrent.TimeoutException()
+                                ex.submit<Map<String, Any?>> { describe(u, null) }
+                                    .get(left, java.util.concurrent.TimeUnit.MILLISECONDS)
+                            } catch (e: Exception) {
+                                mapOf("uri" to u.toString(), "mime" to null, "name" to null, "size" to -1L)
+                            }
                             if (d["mime"] == null) d + ("mime" to m) else d
                         }
+                        ex.shutdownNow()
                         val out = mapOf("id" to f.id, "seen" to f.seen, "items" to items)
                         activity.runOnUiThread { result.success(out) }
                     }.start()
@@ -348,6 +366,8 @@ class ToolsBridge(private val activity: Activity) {
             )
             "cancelCopy" -> {
                 cancel.set(true)
+                val r = reading
+                if (r != null) Thread { try { r.close() } catch (e: Exception) {} }.start()
                 result.success(true)
             }
             "freeBytes" -> result.success(free())
@@ -450,7 +470,9 @@ class ToolsBridge(private val activity: Activity) {
                 var lastTold = 0L
                 val input = activity.contentResolver.openInputStream(uri)
                     ?: throw IllegalStateException("cannot open")
+                reading = input
                 input.use { i ->
+                    if (cancel.get()) throw InterruptedException()
                     out.outputStream().use { o ->
                         val buf = ByteArray(256 * 1024)
                         while (true) {
@@ -481,7 +503,8 @@ class ToolsBridge(private val activity: Activity) {
                 activity.runOnUiThread { result.error("cancelled", "stopped", null) }
             } catch (e: Exception) {
                 out?.parentFile?.let { Shred.tree(it) }
-                val code = when (e.message) {
+                // a read a cancel closed under it
+                val code = if (cancel.get()) "cancelled" else when (e.message) {
                     "full" -> "full"
                     "big" -> "big"
                     else -> "read"
