@@ -27,6 +27,10 @@ jobs:
     # ubuntu 26.04 as of 2026-10-06, the release the local builds use
     container:
       image: ubuntu@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944
+      # the image has no ca-certificates and the snapshot is https only:
+      # the runner's bundle carries the first fetch, apt's gpg still checks it
+      volumes:
+        - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/runner-ca.crt:ro
     env:
       # the archive as it was on this day, so apt hands out the same packages
       APT_SNAPSHOT: 20261101T000000Z
@@ -43,8 +47,9 @@ jobs:
     steps:
       - name: packages
         run: |
-          apt-get update --snapshot "$APT_SNAPSHOT"
-          apt-get install -y --no-install-recommends --snapshot "$APT_SNAPSHOT" \
+          ca="-o Acquire::https::CaInfo=/etc/ssl/runner-ca.crt"
+          apt-get $ca update --snapshot "$APT_SNAPSHOT"
+          apt-get $ca install -y --no-install-recommends --snapshot "$APT_SNAPSHOT" \
             ca-certificates curl git unzip xz-utils make perl gcc libc6-dev \
             gcc-mingw-w64-x86-64-win32=13.2.0-6ubuntu1+26.1 \
             binutils-mingw-w64-x86-64=2.45.90.20260125-1ubuntu1+13.3 \
