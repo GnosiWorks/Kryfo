@@ -53,18 +53,20 @@ to tell us privately.
 
 ## how it works
 
-- **encryption:** 1:1 chats use libsignal. between 0.6 phones a chat starts
-  with pqxdh and runs the double ratchet together with spqr, signal's
-  post-quantum ratchet. chats that started before 0.6 began with x3dh and
-  move over once both sides have 0.6. groups are pairwise over each
-  member's 1:1 session. FORWARD_SECRECY.md has the details.
-- **transport:** by default messages go phone to phone over tor onion
-  services. when the other side is offline they wait, sealed, on nostr
-  relays: ours and public ones. a relay sees only sealed envelopes: not what
-  is in them and not who sent them.
-- **servers hold nothing they don't need:** no accounts, no ip logs, no
-  contact lists, no member lists. SERVERS.md and PRIVACY.md list what each
-  server keeps and for how long.
+1:1 chats use libsignal. between 0.6 phones a chat starts with pqxdh and
+runs the double ratchet together with spqr, signal's post-quantum ratchet.
+chats that started before 0.6 began with x3dh and move over once both sides
+have 0.6. groups are pairwise over each member's 1:1 session.
+FORWARD_SECRECY.md has the details.
+
+by default messages go phone to phone over tor onion services. when the
+other side is offline they wait, sealed, on nostr relays: ours and public
+ones. a relay sees only sealed envelopes: not what is in them and not who
+sent them.
+
+the servers hold nothing they don't need: no accounts, no ip logs, no
+contact lists, no member lists. SERVERS.md and PRIVACY.md list what each
+server keeps and for how long.
 
 ## install
 
@@ -75,8 +77,8 @@ to tell us privately.
   sha-256 sums. the universal apk works on every arm phone
 - **windows and linux (beta):** on the releases page too. the windows
   installer is not signed yet, so SmartScreen warns before it runs. windows
-  builds will be signed once SignPath approves. the linux beta needs glibc 2.38 or newer: ubuntu
-  24.04 or newer, debian 13, fedora 39 or newer
+  builds will be signed once SignPath approves. the linux beta needs glibc
+  2.38 or newer: ubuntu 24.04 or newer, debian 13, fedora 39 or newer
 - **[kryfo.app/download](https://kryfo.app/download)** has all of them in one
   place
 
