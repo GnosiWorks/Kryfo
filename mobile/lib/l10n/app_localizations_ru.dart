@@ -3188,7 +3188,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get handleChecking => 'Проверяем…';
 
   @override
-  String get handleAvailable => '✓ Свободно';
+  String get handleAvailable => 'Свободно';
 
   @override
   String get handleAlreadyTaken => 'Уже занято';

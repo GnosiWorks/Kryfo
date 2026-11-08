@@ -3109,7 +3109,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get handleChecking => 'Mengecek…';
 
   @override
-  String get handleAvailable => '✓ Tersedia';
+  String get handleAvailable => 'Tersedia';
 
   @override
   String get handleAlreadyTaken => 'Sudah dipakai';

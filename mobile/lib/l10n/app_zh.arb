@@ -894,7 +894,7 @@
   "handleDeleteYes": "删除用户名",
   "handleDeleting": "正在删除…",
   "handleChecking": "正在检查…",
-  "handleAvailable": "✓ 可用",
+  "handleAvailable": "可用",
   "handleAlreadyTaken": "已被占用",
   "handleNameRule": "3 到 20 个字符：a-z、0-9 或 _",
   "handleWhatAHandleDoes": "用户名有什么用",

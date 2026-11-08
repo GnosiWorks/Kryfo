@@ -4924,7 +4924,7 @@ abstract class AppLocalizations {
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'✓ Available'**
+  /// **'Available'**
   String get handleAvailable;
 
   /// screens/handle_screen.dart

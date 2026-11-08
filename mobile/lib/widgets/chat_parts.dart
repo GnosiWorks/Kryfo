@@ -4,6 +4,7 @@
 // and the sent tick. one place, so the two chats cannot drift apart.
 import 'package:flutter/material.dart';
 
+import 'tick_mark.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'burn_fade.dart' show BurnFlame;
@@ -819,15 +820,7 @@ class _SentTickState extends State<SentTick>
             scale: 1.35 - 0.35 * kHouseCurve.transform(_nod.value),
             child: child,
           ),
-          child: Text(
-            '✓',
-            style: TextStyle(
-              fontSize: 11,
-              color: widget.color,
-              fontWeight: FontWeight.w700,
-              height: 1,
-            ),
-          ),
+          child: TickMark(color: widget.color),
         ),
         // an AnimatedSize given no time trips over its own layout: still, it
         // is left out

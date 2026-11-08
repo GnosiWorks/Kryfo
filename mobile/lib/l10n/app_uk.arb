@@ -894,7 +894,7 @@
   "handleDeleteYes": "Видалити ім’я користувача",
   "handleDeleting": "Видаляємо…",
   "handleChecking": "Перевіряємо…",
-  "handleAvailable": "✓ Вільне",
+  "handleAvailable": "Вільне",
   "handleAlreadyTaken": "Уже зайняте",
   "handleNameRule": "Від 3 до 20 символів: a-z, 0-9 або _",
   "handleWhatAHandleDoes": "Що дає ім’я користувача",

@@ -2248,12 +2248,10 @@ class _Path extends StatelessWidget {
             const SizedBox(width: 10),
             // points the way reading goes
             ExcludeSemantics(
-              child: Transform.flip(
-                flipX: Directionality.of(context) == TextDirection.rtl,
-                child: Text(
-                  '→',
-                  style: HaloType.sans(size: 18, color: HaloColors.amberText),
-                ),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                size: 18,
+                color: HaloColors.amberText,
               ),
             ),
           ],

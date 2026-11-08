@@ -3143,7 +3143,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get handleChecking => 'Controllo…';
 
   @override
-  String get handleAvailable => '✓ Disponibile';
+  String get handleAvailable => 'Disponibile';
 
   @override
   String get handleAlreadyTaken => 'Già preso';

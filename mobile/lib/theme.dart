@@ -351,8 +351,12 @@ class HaloType {
   static List<String> get serifFallbackNow => _joinedScript
       ? const ['Fraunces', 'Noto Serif Cyrillic', 'Noto Sans Devanagari']
       : serifFallback;
+  // vietnamese's noto subset has no arrows (continue →): instrument sans
+  // draws them
   static List<String> get sansFallbackNow => _joinedScript
       ? const ['Instrument Sans', 'Noto Sans Cyrillic', 'Noto Sans Devanagari']
+      : l10nLocale.languageCode == 'vi'
+      ? const ['Instrument Sans', ...sansFallback]
       : sansFallback;
   static List<String> get monoFallbackNow => _joinedScript
       ? const ['JetBrains Mono', 'Noto Sans Devanagari']

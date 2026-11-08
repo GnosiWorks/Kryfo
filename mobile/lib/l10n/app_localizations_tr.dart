@@ -3117,7 +3117,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get handleChecking => 'Kontrol ediliyor…';
 
   @override
-  String get handleAvailable => '✓ Uygun';
+  String get handleAvailable => 'Uygun';
 
   @override
   String get handleAlreadyTaken => 'Zaten alınmış';

@@ -3829,7 +3829,7 @@
   "@handleChecking": {
     "description": "screens/handle_screen.dart"
   },
-  "handleAvailable": "✓ Available",
+  "handleAvailable": "Available",
   "@handleAvailable": {
     "description": "screens/handle_screen.dart"
   },

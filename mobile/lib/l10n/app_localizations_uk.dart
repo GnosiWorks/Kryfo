@@ -3182,7 +3182,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get handleChecking => 'Перевіряємо…';
 
   @override
-  String get handleAvailable => '✓ Вільне';
+  String get handleAvailable => 'Вільне';
 
   @override
   String get handleAlreadyTaken => 'Уже зайняте';

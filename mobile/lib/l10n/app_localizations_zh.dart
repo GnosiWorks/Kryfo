@@ -2958,7 +2958,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleChecking => '正在检查…';
 
   @override
-  String get handleAvailable => '✓ 可用';
+  String get handleAvailable => '可用';
 
   @override
   String get handleAlreadyTaken => '已被占用';
@@ -14164,7 +14164,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleChecking => '檢查中…';
 
   @override
-  String get handleAvailable => '✓ 可以使用';
+  String get handleAvailable => '可以使用';
 
   @override
   String get handleAlreadyTaken => '已被使用';

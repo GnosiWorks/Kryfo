@@ -894,7 +894,7 @@
   "handleDeleteYes": "Xóa tên người dùng",
   "handleDeleting": "Đang xóa…",
   "handleChecking": "Đang kiểm tra…",
-  "handleAvailable": "✓ Còn trống",
+  "handleAvailable": "Còn trống",
   "handleAlreadyTaken": "Đã có người dùng",
   "handleNameRule": "Từ 3 đến 20 ký tự: a-z, 0-9 hoặc _",
   "handleWhatAHandleDoes": "Tên người dùng để làm gì",

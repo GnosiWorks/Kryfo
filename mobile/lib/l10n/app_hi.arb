@@ -799,7 +799,7 @@
   "handleDeleteYes": "यूज़रनेम डिलीट करें",
   "handleDeleting": "डिलीट हो रहा है…",
   "handleChecking": "जाँच हो रही है…",
-  "handleAvailable": "✓ उपलब्ध",
+  "handleAvailable": "उपलब्ध",
   "handleAlreadyTaken": "पहले से लिया हुआ",
   "handleNameRule": "3 से 20 अक्षर: a-z, 0-9 या _",
   "handleWhatAHandleDoes": "यूज़रनेम क्या करता है",

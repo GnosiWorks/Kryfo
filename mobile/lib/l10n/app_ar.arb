@@ -894,7 +894,7 @@
   "handleDeleteYes": "حذف اسم المستخدم",
   "handleDeleting": "جارٍ الحذف…",
   "handleChecking": "جارٍ التحقق…",
-  "handleAvailable": "✓ متاح",
+  "handleAvailable": "متاح",
   "handleAlreadyTaken": "محجوز بالفعل",
   "handleNameRule": "من ٣ إلى ٢٠ حرفًا: أحرف لاتينية صغيرة أو أرقام أو _",
   "handleWhatAHandleDoes": "ما فائدة اسم المستخدم",

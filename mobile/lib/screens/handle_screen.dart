@@ -21,6 +21,7 @@ import '../widgets/motion.dart' show motionStill;
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
+import '../widgets/tick_mark.dart';
 import '../widgets/written_field.dart';
 import '../l10n/l10n.dart';
 import '../widgets/shift_tap_guard.dart';
@@ -536,11 +537,22 @@ class HandleAvailability extends StatelessWidget {
     final line = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 16),
       child: RiseSwap(
-        child: Text(
-          txt,
-          key: ValueKey(txt),
-          style: HaloType.mono(size: 11, color: c),
-        ),
+        // a free name gets the drawn tick before its word
+        child: state == 'free'
+            ? Row(
+                key: ValueKey(txt),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExcludeSemantics(child: TickMark(color: c)),
+                  const SizedBox(width: 5),
+                  Text(txt, style: HaloType.mono(size: 11, color: c)),
+                ],
+              )
+            : Text(
+                txt,
+                key: ValueKey(txt),
+                style: HaloType.mono(size: 11, color: c),
+              ),
       ),
     );
     // reduced motion: the room without animation

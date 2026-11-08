@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
+import '../widgets/tick_mark.dart';
 import '../lock_state.dart';
 import '../capture_watch.dart';
 import 'dart:convert';
@@ -6905,31 +6906,18 @@ class _GroupBubble extends StatelessWidget {
                                                                   const EdgeInsetsDirectional.only(
                                                                     start: 3,
                                                                   ),
-                                                              child: Text(
-                                                                '✓',
-                                                                style: TextStyle(
-                                                                  fontFamily:
-                                                                      HaloType
-                                                                          .monoFamily,
-                                                                  fontFamilyFallback:
-                                                                      HaloType
-                                                                          .monoFallbackNow,
-                                                                  fontSize: 11,
-                                                                  color:
-                                                                      m.mediaPath !=
-                                                                          null
-                                                                      ? HaloColors
-                                                                            .text2
-                                                                      : HaloColors
-                                                                            .onAmber
-                                                                            .withValues(
-                                                                              alpha: 0.7,
-                                                                            ),
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w700,
-                                                                  height: 1,
-                                                                ),
+                                                              child: TickMark(
+                                                                color:
+                                                                    m.mediaPath !=
+                                                                        null
+                                                                    ? HaloColors
+                                                                          .text2
+                                                                    : HaloColors
+                                                                          .onAmber
+                                                                          .withValues(
+                                                                            alpha:
+                                                                                0.7,
+                                                                          ),
                                                               ),
                                                             )
                                                           : const SizedBox.shrink(
@@ -7255,17 +7243,7 @@ class _GroupBubble extends StatelessWidget {
           ),
           if (isOut && !m.pending && !m.looksFailed) ...[
             const SizedBox(width: 3),
-            Text(
-              '✓',
-              style: TextStyle(
-                fontFamily: HaloType.monoFamily,
-                fontFamilyFallback: HaloType.monoFallbackNow,
-                fontSize: 11,
-                color: HaloColors.amberText,
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-            ),
+            TickMark(color: HaloColors.amberText),
           ],
           if (m.looksFailed) ...[
             const SizedBox(width: 6),

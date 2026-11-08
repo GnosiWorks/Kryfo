@@ -3119,7 +3119,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get handleChecking => 'जाँच हो रही है…';
 
   @override
-  String get handleAvailable => '✓ उपलब्ध';
+  String get handleAvailable => 'उपलब्ध';
 
   @override
   String get handleAlreadyTaken => 'पहले से लिया हुआ';

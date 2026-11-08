@@ -894,7 +894,7 @@
   "handleDeleteYes": "Hapus nama pengguna",
   "handleDeleting": "Menghapus…",
   "handleChecking": "Mengecek…",
-  "handleAvailable": "✓ Tersedia",
+  "handleAvailable": "Tersedia",
   "handleAlreadyTaken": "Sudah dipakai",
   "handleNameRule": "3 sampai 20 karakter: a-z, 0-9 atau _",
   "handleWhatAHandleDoes": "Guna nama pengguna",

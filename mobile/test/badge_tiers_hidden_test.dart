@@ -16,6 +16,7 @@ import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/screens/profile_screen.dart';
 import 'package:kryfo/supporter.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/widgets/tier_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Widget framed(Widget home, {bool still = false}) => MaterialApp(
@@ -230,7 +231,12 @@ void main() {
     expect(find.text(l10n.profileYouAreAThank('patron')), findsOneWidget);
     // the pill in the head and the one in its section
     expect(find.text(tierLabel(SupporterTier.patron)), findsNWidgets(2));
-    expect(find.text(tierGlyph(SupporterTier.patron)), findsNWidgets(2));
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is TierMark && w.tier == SupporterTier.patron,
+      ),
+      findsNWidgets(2),
+    );
     expect(engine.asked, isEmpty);
     await t.pumpWidget(const SizedBox());
     await t.pump(const Duration(seconds: 11));

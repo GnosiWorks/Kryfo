@@ -3191,7 +3191,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get handleChecking => 'Sprawdzam…';
 
   @override
-  String get handleAvailable => '✓ Dostępna';
+  String get handleAvailable => 'Dostępna';
 
   @override
   String get handleAlreadyTaken => 'Już zajęta';
