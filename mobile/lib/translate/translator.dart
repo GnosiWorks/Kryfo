@@ -40,6 +40,10 @@ abstract class Translator {
     required String to,
   });
 
+  // run with the route's models kept open throughout: a pivot's second
+  // leg is not closed to make room while its first runs
+  Future<T> holding<T>(List<(String, String)> route, Future<T> Function() run);
+
   // the models out of memory, say when the app goes to the background
   Future<void> close();
 }

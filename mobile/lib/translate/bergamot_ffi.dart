@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // bergamot through engine/translate/native/kryfo_translate.h, in its own
-// library. one long-lived isolate keeps each model open, since opening one
-// reads about 50 MB
+// library. one long-lived isolate keeps the recent models open, since
+// opening one reads about 50 MB
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../engine_strings.dart';
+import 'model_cache.dart';
 import 'translator.dart';
 
 const kTranslateLib = 'libkryfo_translate.so';
+
+// models open at once: a pivot and one more. a 32-bit phone has little
+// memory and address space to spare, so there a pivot alone
+final int kMaxOpenModels = sizeOf<IntPtr>() == 4 ? 2 : 3;
 
 typedef _OpenC = Pointer<Void> Function(Pointer<Utf8>, Pointer<Pointer<Utf8>>);
 typedef _TrC =
@@ -47,7 +53,10 @@ class BergamotTranslator implements Translator {
     required this.installed,
     this.lib = kTranslateLib,
     this.probe = libraryOpens,
-  });
+    int? maxOpen,
+  }) : maxOpen = maxOpen ?? kMaxOpenModels;
+
+  final int maxOpen;
 
   // whether the library opens here; a test hands in its own
   final bool Function(String lib) probe;
@@ -86,8 +95,47 @@ class BergamotTranslator implements Translator {
     void gone() => scheduleMicrotask(() {
       if (identical(_port, made)) _port = null;
     });
-    made = _Worker.spawn(lib, gone);
+    made = _Worker.spawn(lib, maxOpen, gone);
     return _port = made;
+  }
+
+  // directions some translation holds open, with how many hold each
+  final Map<String, int> _held = {};
+  @visibleForTesting
+  Map<String, int> get held => Map.unmodifiable(_held);
+
+  @override
+  Future<T> holding<T>(
+    List<(String, String)> route,
+    Future<T> Function() run,
+  ) async {
+    final keys = [for (final (f, t) in route) '$f-$t'];
+    for (final k in keys) {
+      _held[k] = (_held[k] ?? 0) + 1;
+    }
+    try {
+      return await run();
+    } finally {
+      var freed = false;
+      for (final k in keys) {
+        final n = (_held[k] ?? 1) - 1;
+        if (n > 0) {
+          _held[k] = n;
+        } else {
+          _held.remove(k);
+          freed = true;
+        }
+      }
+      // what was kept past the cap for this one can go now
+      if (freed) _trim();
+    }
+  }
+
+  void _trim() {
+    final port = _port;
+    if (port == null) return;
+    final keep = [..._held.keys];
+    port.then((w) => w.trim(keep), onError: (Object _) {});
   }
 
   @override
@@ -110,7 +158,9 @@ class BergamotTranslator implements Translator {
     final cfg = config(from, to);
     if (cfg == null) throw const TranslateUnavailable(TranslateBlock.noLib);
     if (texts.isEmpty) return const [];
-    final out = await (await _worker()).ask('$from-$to', cfg, texts);
+    final out = await (await _worker()).ask('$from-$to', cfg, texts, [
+      ..._held.keys,
+    ]);
     if (out is List && out.length == texts.length) {
       return [for (final s in out) s as String];
     }
@@ -134,7 +184,11 @@ class _Worker {
   bool _dead = false;
   _Worker._(this.port);
 
-  static Future<_Worker> spawn(String lib, void Function() gone) async {
+  static Future<_Worker> spawn(
+    String lib,
+    int maxOpen,
+    void Function() gone,
+  ) async {
     final hello = RawReceivePort();
     final exit = RawReceivePort();
     final ready = Completer<_Worker>();
@@ -156,7 +210,11 @@ class _Worker {
     };
     exit.handler = (Object? _) => die();
     try {
-      await Isolate.spawn(_run, (hello.sendPort, lib), onExit: exit.sendPort);
+      await Isolate.spawn(_run, (
+        hello.sendPort,
+        lib,
+        maxOpen,
+      ), onExit: exit.sendPort);
     } catch (_) {
       die();
     }
@@ -172,7 +230,19 @@ class _Worker {
     }
   }
 
-  Future<Object?> ask(String key, String cfg, List<String> texts) async {
+  void trim(List<String> keep) {
+    if (_dead) return;
+    try {
+      port.send(keep);
+    } catch (_) {}
+  }
+
+  Future<Object?> ask(
+    String key,
+    String cfg,
+    List<String> texts,
+    List<String> keep,
+  ) async {
     final done = Completer<Object?>();
     if (_dead) return const {'err': 'worker gone'};
     final reply = RawReceivePort((Object? m) {
@@ -180,7 +250,7 @@ class _Worker {
     });
     _waiting.add(done);
     try {
-      port.send((reply.sendPort, key, cfg, texts));
+      port.send((reply.sendPort, key, cfg, texts, keep));
       return await done.future;
     } finally {
       _waiting.remove(done);
@@ -189,9 +259,11 @@ class _Worker {
   }
 }
 
-// the worker: models by direction, opened on first use, all closed on null
-void _run((SendPort, String) args) {
-  final (hello, name) = args;
+// the worker: models by direction, opened on first use, the least recently
+// used closed past the cap, all closed on null. it handles one message at a
+// time, so nothing it closes is translating
+void _run((SendPort, String, int) args) {
+  final (hello, name, maxOpen) = args;
   final inbox = ReceivePort();
   hello.send(inbox.sendPort);
   final lib = DynamicLibrary.open(name);
@@ -199,25 +271,29 @@ void _run((SendPort, String) args) {
   final tr = lib.lookupFunction<_TrC, _TrD>('kt_translate');
   final free = lib.lookupFunction<_FreeC, _FreeD>('kt_free');
   final close = lib.lookupFunction<_CloseC, _CloseD>('kt_close');
-  final models = <String, Pointer<Void>>{};
+  final models = ModelCache<Pointer<Void>>(maxOpen, close);
 
   String take(Pointer<Utf8> p) => nativeTakeSecret(p, free);
 
   inbox.listen((m) {
     if (m == null) {
-      for (final h in models.values) {
-        close(h);
-      }
-      models.clear();
+      models.closeAll();
       inbox.close();
       Isolate.exit();
     }
-    final (reply, key, cfg, texts) =
-        m as (SendPort, String, String, List<String>);
+    // a bare list of held directions: a hold let go, trim to the cap
+    if (m is List) {
+      models.trim(m.cast<String>());
+      return;
+    }
+    final (reply, key, cfg, texts, keep) =
+        m as (SendPort, String, String, List<String>, List<String>);
     final err = calloc<Pointer<Utf8>>();
     try {
-      var h = models[key];
+      var h = models.use(key);
       if (h == null) {
+        // closed before the open, so the peak stays at the cap
+        models.makeRoom(key, keep);
         final c = cfg.toNativeUtf8();
         try {
           h = open(c, err);
@@ -228,7 +304,7 @@ void _run((SendPort, String) args) {
           reply.send({'err': take(err.value)});
           return;
         }
-        models[key] = h;
+        models.add(key, h);
       }
       final n = texts.length;
       final ins = calloc<Pointer<Utf8>>(n);
