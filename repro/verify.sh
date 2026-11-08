@@ -208,6 +208,12 @@ build_at() {
   local srcpath="$1" tag="$2"
   git clone -q "$REPO" "$WORK/$tag"
   git -C "$WORK/$tag" checkout -q "$COMMIT"
+  # KRYFO_TARBALLS=<dir>: the translation sources' tarballs from there, as
+  # release.sh takes them; fetch-bergamot.sh checks each against its pin
+  if [ -n "${KRYFO_TARBALLS:-}" ]; then
+    mkdir -p "$WORK/$tag/engine/translate/native/.third_party/dl"
+    cp "$KRYFO_TARBALLS"/*.tar.gz "$WORK/$tag/engine/translate/native/.third_party/dl/"
+  fi
   mkdir -p "$WORK/out-$tag"
   local mounts=(-v "$WORK/$tag:$srcpath" -v "$WORK/out-$tag:/out")
   if [ -n "$CACHE" ]; then

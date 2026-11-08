@@ -156,7 +156,16 @@ with_retry() {
 # one left behind
 clone_to() {
   rm -rf "$1"
-  git clone -q "$REPO" "$1" && git -C "$1" checkout -q "$COMMIT"
+  git clone -q "$REPO" "$1" && git -C "$1" checkout -q "$COMMIT" && put_tarballs "$1"
+}
+
+# KRYFO_TARBALLS=<dir>: the translation sources' tarballs taken from there
+# instead of github, for when github cannot make an archive. each is still
+# checked against its pin by fetch-bergamot.sh before anything reads it
+put_tarballs() {
+  [ -n "${KRYFO_TARBALLS:-}" ] || return 0
+  mkdir -p "$1/engine/translate/native/.third_party/dl"
+  cp "$KRYFO_TARBALLS"/*.tar.gz "$1/engine/translate/native/.third_party/dl/"
 }
 
 # cgo opens more files at once building tor and openssl than the 1024 a
