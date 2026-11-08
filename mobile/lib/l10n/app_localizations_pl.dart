@@ -10279,7 +10279,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Połącz komputer, żeby czytać i wysyłać tam wiadomości. Do pięciu urządzeń oprócz tego telefonu.';
+      'Połącz komputer, żeby czytać i wysyłać tam wiadomości.';
 
   @override
   String get devicesContactsSeeNothing =>

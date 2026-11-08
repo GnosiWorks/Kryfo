@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "Henüz kullanılmadı",
   "devicesUnlinksSoon": "{days, plural, =0{Açmazsan bugün bağlantısı kesilir} =1{Açmazsan yarın bağlantısı kesilir} other{Açmazsan {days} gün içinde bağlantısı kesilir}}",
   "devicesEmptyTitle": "Bilgisayarında Kryfo",
-  "devicesEmptyLine": "Mesajlarını orada okuyup göndermek için bir bilgisayar bağla. Bu telefon dışında en çok beş cihaz.",
+  "devicesEmptyLine": "Mesajlarını orada okuyup göndermek için bir bilgisayar bağla.",
   "devicesContactsSeeNothing": "Kişilerinin uygulamaları cihazlarını göstermez.",
   "devicesUnusedRule": "30 gün açmadığın bir cihazın bağlantısı kendiliğinden kesilir ve sohbetlerin ondan silinir.",
   "devicesFull": "Beş cihaz bağlı. Başka birini bağlamak için birini kaldır.",

@@ -16180,7 +16180,7 @@ abstract class AppLocalizations {
   /// screens/linked_devices_screen.dart: under the empty title
   ///
   /// In en, this message translates to:
-  /// **'Link a computer to read and send your messages there. Up to five devices besides this phone.'**
+  /// **'Link a computer to read and send your messages there.'**
   String get devicesEmptyLine;
 
   /// screens/linked_devices_screen.dart: a note under the list, about what contacts see

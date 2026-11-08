@@ -10225,8 +10225,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get devicesEmptyTitle => 'Kryfo على حاسوبك';
 
   @override
-  String get devicesEmptyLine =>
-      'اربط حاسوبًا لتقرأ رسائلك وترسلها منه. حتى خمسة أجهزة إضافةً إلى هذا الهاتف.';
+  String get devicesEmptyLine => 'اربط حاسوبًا لتقرأ رسائلك وترسلها منه.';
 
   @override
   String get devicesContactsSeeNothing => 'تطبيقات جهات اتصالك لا تعرض أجهزتك.';

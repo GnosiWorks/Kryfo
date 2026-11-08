@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "Chưa dùng lần nào",
   "devicesUnlinksSoon": "{days, plural, =0{Sẽ hủy liên kết hôm nay nếu bạn không mở} =1{Sẽ hủy liên kết ngày mai nếu bạn không mở} other{Sẽ hủy liên kết sau {days} ngày nếu bạn không mở}}",
   "devicesEmptyTitle": "Kryfo trên máy tính của bạn",
-  "devicesEmptyLine": "Liên kết một máy tính để đọc và gửi tin nhắn trên đó. Tối đa năm thiết bị ngoài điện thoại này.",
+  "devicesEmptyLine": "Liên kết một máy tính để đọc và gửi tin nhắn trên đó.",
   "devicesContactsSeeNothing": "Ứng dụng của danh bạ bạn không hiển thị thiết bị của bạn.",
   "devicesUnusedRule": "Thiết bị bạn không mở trong 30 ngày sẽ tự hủy liên kết và xóa các cuộc trò chuyện trên đó.",
   "devicesFull": "Đã liên kết năm thiết bị. Gỡ một thiết bị để liên kết thiết bị khác.",

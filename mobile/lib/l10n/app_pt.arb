@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "Ainda não usado",
   "devicesUnlinksSoon": "{days, plural, =0{Desconecta hoje se você não abrir} =1{Desconecta amanhã se você não abrir} other{Desconecta em {days} dias se você não abrir}}",
   "devicesEmptyTitle": "Kryfo no seu computador",
-  "devicesEmptyLine": "Conecte um computador para ler e enviar suas mensagens nele. Até cinco aparelhos além deste celular.",
+  "devicesEmptyLine": "Conecte um computador para ler e enviar suas mensagens nele.",
   "devicesContactsSeeNothing": "Os apps dos seus contatos não mostram seus aparelhos.",
   "devicesUnusedRule": "Um aparelho que você não abre por 30 dias se desconecta sozinho e apaga suas conversas dele.",
   "devicesFull": "Cinco aparelhos estão conectados. Remova um para conectar outro.",

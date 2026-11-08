@@ -10117,7 +10117,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Mesajlarını orada okuyup göndermek için bir bilgisayar bağla. Bu telefon dışında en çok beş cihaz.';
+      'Mesajlarını orada okuyup göndermek için bir bilgisayar bağla.';
 
   @override
   String get devicesContactsSeeNothing =>

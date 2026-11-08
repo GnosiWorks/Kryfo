@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "Jeszcze nieużywane",
   "devicesUnlinksSoon": "{days, plural, =0{Rozłączy się dzisiaj, jeśli go nie otworzysz} =1{Rozłączy się jutro, jeśli go nie otworzysz} few{Rozłączy się za {days} dni, jeśli go nie otworzysz} many{Rozłączy się za {days} dni, jeśli go nie otworzysz} other{Rozłączy się za {days} dnia, jeśli go nie otworzysz}}",
   "devicesEmptyTitle": "Kryfo na twoim komputerze",
-  "devicesEmptyLine": "Połącz komputer, żeby czytać i wysyłać tam wiadomości. Do pięciu urządzeń oprócz tego telefonu.",
+  "devicesEmptyLine": "Połącz komputer, żeby czytać i wysyłać tam wiadomości.",
   "devicesContactsSeeNothing": "Aplikacje twoich kontaktów nie pokazują twoich urządzeń.",
   "devicesUnusedRule": "Urządzenie, którego nie otworzysz przez 30 dni, samo się rozłącza i wymazuje z siebie twoje czaty.",
   "devicesFull": "Połączonych jest pięć urządzeń. Usuń jedno, żeby połączyć kolejne.",

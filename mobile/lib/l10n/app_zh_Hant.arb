@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "還沒用過",
   "devicesUnlinksSoon": "{days, plural, =0{今天不開啟就會解除連結} =1{明天不開啟就會解除連結} other{{days} 天內不開啟就會解除連結}}",
   "devicesEmptyTitle": "在電腦上用 Kryfo",
-  "devicesEmptyLine": "連結一台電腦，就能在上面讀取和傳送訊息。除了這支手機，最多再連結五台裝置。",
+  "devicesEmptyLine": "連結一台電腦，就能在上面讀取和傳送訊息。",
   "devicesContactsSeeNothing": "你的聯絡人的 App 不會顯示你的裝置。",
   "devicesUnusedRule": "一台裝置 30 天沒開啟，就會自己解除連結，並抹除上面的聊天。",
   "devicesFull": "已連結五台裝置。移除一台才能再連結。",

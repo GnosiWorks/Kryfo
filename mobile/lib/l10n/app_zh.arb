@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "还没用过",
   "devicesUnlinksSoon": "{days, plural, =0{今天不打开就会解除关联} =1{明天不打开就会解除关联} other{{days} 天内不打开就会解除关联}}",
   "devicesEmptyTitle": "在电脑上用 Kryfo",
-  "devicesEmptyLine": "关联一台电脑，就能在上面读和发消息。除了这部手机，最多再关联五台设备。",
+  "devicesEmptyLine": "关联一台电脑，就能在上面读和发消息。",
   "devicesContactsSeeNothing": "你的联系人的应用不会显示你的设备。",
   "devicesUnusedRule": "一台设备 30 天没打开，就会自己解除关联，并抹除上面的聊天。",
   "devicesFull": "已关联五台设备。移除一台才能再关联。",

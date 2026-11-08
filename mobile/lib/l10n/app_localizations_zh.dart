@@ -9561,7 +9561,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesEmptyTitle => '在电脑上用 Kryfo';
 
   @override
-  String get devicesEmptyLine => '关联一台电脑，就能在上面读和发消息。除了这部手机，最多再关联五台设备。';
+  String get devicesEmptyLine => '关联一台电脑，就能在上面读和发消息。';
 
   @override
   String get devicesContactsSeeNothing => '你的联系人的应用不会显示你的设备。';
@@ -20642,7 +20642,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesEmptyTitle => '在電腦上用 Kryfo';
 
   @override
-  String get devicesEmptyLine => '連結一台電腦，就能在上面讀取和傳送訊息。除了這支手機，最多再連結五台裝置。';
+  String get devicesEmptyLine => '連結一台電腦，就能在上面讀取和傳送訊息。';
 
   @override
   String get devicesContactsSeeNothing => '你的聯絡人的 App 不會顯示你的裝置。';

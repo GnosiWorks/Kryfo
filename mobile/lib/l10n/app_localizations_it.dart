@@ -10170,7 +10170,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Collega un computer per leggere e mandare lì i tuoi messaggi. Fino a cinque dispositivi oltre a questo telefono.';
+      'Collega un computer per leggere e mandare lì i tuoi messaggi.';
 
   @override
   String get devicesContactsSeeNothing =>

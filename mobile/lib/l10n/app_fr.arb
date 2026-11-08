@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "Pas encore utilisé",
   "devicesUnlinksSoon": "{days, plural, =0{Sera dissocié aujourd’hui si vous ne l’ouvrez pas} =1{Sera dissocié demain si vous ne l’ouvrez pas} other{Sera dissocié dans {days} jours si vous ne l’ouvrez pas}}",
   "devicesEmptyTitle": "Kryfo sur votre ordinateur",
-  "devicesEmptyLine": "Associez un ordinateur pour y lire et envoyer vos messages. Jusqu’à cinq appareils en plus de ce téléphone.",
+  "devicesEmptyLine": "Associez un ordinateur pour y lire et envoyer vos messages.",
   "devicesContactsSeeNothing": "Les applis de vos contacts n’affichent pas vos appareils.",
   "devicesUnusedRule": "Un appareil que vous n’ouvrez pas pendant 30 jours se dissocie tout seul et efface vos discussions.",
   "devicesFull": "Cinq appareils sont associés. Retirez-en un pour en associer un autre.",

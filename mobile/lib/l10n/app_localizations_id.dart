@@ -10089,7 +10089,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Tautkan komputer untuk membaca dan mengirim pesanmu dari sana. Hingga lima perangkat selain ponsel ini.';
+      'Tautkan komputer untuk membaca dan mengirim pesanmu dari sana.';
 
   @override
   String get devicesContactsSeeNothing =>

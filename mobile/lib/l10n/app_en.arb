@@ -12605,7 +12605,7 @@
   "@devicesEmptyTitle": {
     "description": "screens/linked_devices_screen.dart: over the empty list, only this phone"
   },
-  "devicesEmptyLine": "Link a computer to read and send your messages there. Up to five devices besides this phone.",
+  "devicesEmptyLine": "Link a computer to read and send your messages there.",
   "@devicesEmptyLine": {
     "description": "screens/linked_devices_screen.dart: under the empty title"
   },

@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "Aún sin usar",
   "devicesUnlinksSoon": "{days, plural, =0{Se desvincula hoy si no lo abres} =1{Se desvincula mañana si no lo abres} other{Se desvincula en {days} días si no lo abres}}",
   "devicesEmptyTitle": "Kryfo en tu computadora",
-  "devicesEmptyLine": "Vincula una computadora para leer y enviar tus mensajes desde ella. Hasta cinco dispositivos además de este teléfono.",
+  "devicesEmptyLine": "Vincula una computadora para leer y enviar tus mensajes desde ella.",
   "devicesContactsSeeNothing": "Las apps de tus contactos no muestran tus dispositivos.",
   "devicesUnusedRule": "Un dispositivo que no abres en 30 días se desvincula solo y borra tus chats de él.",
   "devicesFull": "Hay cinco dispositivos vinculados. Quita uno para vincular otro.",

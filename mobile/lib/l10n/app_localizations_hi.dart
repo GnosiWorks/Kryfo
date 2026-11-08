@@ -10093,7 +10093,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'कंप्यूटर जोड़ें और वहीं से अपने मैसेज पढ़ें और भेजें। इस फ़ोन के अलावा ज़्यादा से ज़्यादा पाँच डिवाइस।';
+      'कंप्यूटर जोड़ें और वहीं से अपने मैसेज पढ़ें और भेजें।';
 
   @override
   String get devicesContactsSeeNothing =>

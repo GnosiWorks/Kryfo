@@ -10081,7 +10081,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Link a computer to read and send your messages there. Up to five devices besides this phone.';
+      'Link a computer to read and send your messages there.';
 
   @override
   String get devicesContactsSeeNothing =>

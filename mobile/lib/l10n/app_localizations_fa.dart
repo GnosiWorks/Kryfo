@@ -10100,7 +10100,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'یک رایانه را پیوند دهید تا پیام‌هایتان را آن‌جا بخوانید و بفرستید. تا پنج دستگاه به‌جز همین گوشی.';
+      'یک رایانه را پیوند دهید تا پیام‌هایتان را آن‌جا بخوانید و بفرستید.';
 
   @override
   String get devicesContactsSeeNothing =>

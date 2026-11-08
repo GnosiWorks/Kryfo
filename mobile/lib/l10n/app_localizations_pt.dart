@@ -10164,7 +10164,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Conecte um computador para ler e enviar suas mensagens nele. Até cinco aparelhos além deste celular.';
+      'Conecte um computador para ler e enviar suas mensagens nele.';
 
   @override
   String get devicesContactsSeeNothing =>

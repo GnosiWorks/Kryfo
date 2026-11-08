@@ -10257,7 +10257,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Свяжите компьютер, чтобы читать и отправлять с него сообщения. До пяти устройств, кроме этого телефона.';
+      'Свяжите компьютер, чтобы читать и отправлять с него сообщения.';
 
   @override
   String get devicesContactsSeeNothing =>

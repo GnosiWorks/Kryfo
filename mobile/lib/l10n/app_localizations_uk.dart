@@ -10254,7 +10254,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Пов’яжіть комп’ютер, щоб читати й надсилати з нього повідомлення. До п’яти пристроїв, крім цього телефона.';
+      'Пов’яжіть комп’ютер, щоб читати й надсилати з нього повідомлення.';
 
   @override
   String get devicesContactsSeeNothing =>

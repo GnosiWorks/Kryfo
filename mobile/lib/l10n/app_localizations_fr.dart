@@ -10191,7 +10191,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Associez un ordinateur pour y lire et envoyer vos messages. Jusqu’à cinq appareils en plus de ce téléphone.';
+      'Associez un ordinateur pour y lire et envoyer vos messages.';
 
   @override
   String get devicesContactsSeeNothing =>

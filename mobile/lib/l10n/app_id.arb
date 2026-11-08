@@ -2647,7 +2647,7 @@
   "devicesNotUsedYet": "Belum dipakai",
   "devicesUnlinksSoon": "{days, plural, =0{Terlepas hari ini jika tidak kamu buka} =1{Terlepas besok jika tidak kamu buka} other{Terlepas dalam {days} hari jika tidak kamu buka}}",
   "devicesEmptyTitle": "Kryfo di komputermu",
-  "devicesEmptyLine": "Tautkan komputer untuk membaca dan mengirim pesanmu dari sana. Hingga lima perangkat selain ponsel ini.",
+  "devicesEmptyLine": "Tautkan komputer untuk membaca dan mengirim pesanmu dari sana.",
   "devicesContactsSeeNothing": "Aplikasi kontakmu tidak menampilkan perangkatmu.",
   "devicesUnusedRule": "Perangkat yang tidak kamu buka selama 30 hari akan terlepas sendiri dan menghapus obrolanmu darinya.",
   "devicesFull": "Lima perangkat sudah tertaut. Hapus satu untuk menautkan yang lain.",

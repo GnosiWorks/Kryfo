@@ -10201,7 +10201,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Verknüpfe einen Computer, um dort deine Nachrichten zu lesen und zu senden. Bis zu fünf Geräte neben diesem Handy.';
+      'Verknüpfe einen Computer, um dort deine Nachrichten zu lesen und zu senden.';
 
   @override
   String get devicesContactsSeeNothing =>

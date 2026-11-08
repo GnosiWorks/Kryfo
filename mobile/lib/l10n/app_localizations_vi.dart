@@ -10071,7 +10071,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Liên kết một máy tính để đọc và gửi tin nhắn trên đó. Tối đa năm thiết bị ngoài điện thoại này.';
+      'Liên kết một máy tính để đọc và gửi tin nhắn trên đó.';
 
   @override
   String get devicesContactsSeeNothing =>

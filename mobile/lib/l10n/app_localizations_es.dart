@@ -10163,7 +10163,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get devicesEmptyLine =>
-      'Vincula una computadora para leer y enviar tus mensajes desde ella. Hasta cinco dispositivos además de este teléfono.';
+      'Vincula una computadora para leer y enviar tus mensajes desde ella.';
 
   @override
   String get devicesContactsSeeNothing =>
