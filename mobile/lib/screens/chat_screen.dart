@@ -21,6 +21,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../picked.dart';
+import '../share_files.dart';
+import 'share_files_sheet.dart' show askSendSharedFiles;
 import '../album.dart';
 import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
@@ -48,6 +50,7 @@ import '../widgets/intro_chip.dart';
 import '../widgets/media_bubbles.dart'
     show
         VoiceBubble,
+        humanFileSize,
         VoiceMakingBubble,
         fileCard,
         fileTooBigLine,
@@ -250,6 +253,18 @@ bool landInOpenChat(String id, String words) {
   for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
     if (s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false)) {
       s._takeWords(words);
+      return true;
+    }
+  }
+  return false;
+}
+
+/// what was shared into [id]'s chat (SharedInbox), taken by that chat when
+/// it is the page on top. false otherwise
+bool landFilesInOpenChat(String id) {
+  for (final s in _openChats[id] ?? const <_ChatScreenState>[]) {
+    if (s.mounted && (ModalRoute.of(s.context)?.isCurrent ?? false)) {
+      s._takeSharedIn();
       return true;
     }
   }
@@ -1574,6 +1589,7 @@ class _ChatScreenState extends State<ChatScreen>
             (_) => _barSettled = true,
           );
           if (onDesktop) _takeHandedIn();
+          _takeSharedIn();
         });
     _scrollCtrl.addListener(_onScroll);
     _scrollCtrl.addListener(_updateSticky);
@@ -5873,6 +5889,9 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    if (_sharedHeld.isNotEmpty) {
+      unawaited(SharedInbox.release(_sharedHeld.toList()));
+    }
     _find.detach();
     _helloWaitTimer?.cancel();
     _unwatchCaptures?.call();
@@ -6822,6 +6841,82 @@ class _ChatScreenState extends State<ChatScreen>
   // container so it can never go to anyone else
   late final AttachTray _tray = DeskTrays.of(_trayKey);
   late final String _trayKey = '${session.container.id}|${widget.peerHaloId}';
+
+  // photos, videos and files shared from another app wait for this chat
+  // in front, once the bar is known
+  void _takeSharedIn() {
+    if (!mounted || !_barKnown) return;
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    final got = SharedInbox.take(_trayKey);
+    _sharedHeld.addAll(got);
+    if (got.isNotEmpty) unawaited(_sendSharedIn(got));
+  }
+
+  // shared copies this chat holds while its preview or question is up: a
+  // chat that goes first shreds them
+  final _sharedHeld = <SharedCopy>{};
+
+  // the photos and videos through the send preview as a gallery pick, then
+  // the files once asked about, each as the file tile sends one. a back out
+  // anywhere sends nothing more of it; the copies go once done with
+  Future<void> _sendSharedIn(List<SharedCopy> got) async {
+    try {
+      if (!_composerShown) {
+        if (_requestLocked) showHaloToast(context, l10n.chatWaitingForThemTo);
+        return;
+      }
+      if (_sayMediaLater()) return;
+      final media = [
+        for (final c in got)
+          if (c.kind != SharedKind.file)
+            XFile(c.path, name: c.name, mimeType: c.mime),
+      ];
+      final files = [
+        for (final c in got)
+          if (c.kind == SharedKind.file) c,
+      ];
+      if (media.isNotEmpty) {
+        var sent = false;
+        final most = await appState.fileLimitFor(widget.peerHaloId);
+        if (!mounted) return;
+        await sendGalleryPicks(
+          media,
+          pickMore: () => lockState.hold(pickGallery),
+          // a photo is shrunk as a gallery pick is; one still over the
+          // chat's limit stays out, and says so
+          preview: (items, more) {
+            final (:fit, :over) = photosWithin(items, most);
+            if (over != null) {
+              showHaloToast(
+                context,
+                l10n.sharePhotoOverLimit(
+                  humanFileSize(over),
+                  humanFileSize(most),
+                ),
+              );
+            }
+            if (fit.isEmpty) return Future.value(null);
+            return _preview(fit, more);
+          },
+          send: (r) {
+            sent = true;
+            return _sendPicked(r);
+          },
+        );
+        if (!sent) return;
+      }
+      if (files.isEmpty || !mounted || lockState.locked) return;
+      if (!await askSendSharedFiles(context, files)) return;
+      for (final f in files) {
+        if (!mounted || lockState.locked) break;
+        final ready = await _readyFile(f.path, f.name);
+        if (ready != null) await _sendReady(ready, '');
+      }
+    } finally {
+      _sharedHeld.removeAll(got);
+      await SharedInbox.release(got);
+    }
+  }
 
   // what a tool sent here ("Send to a chat") waits for this row and goes in
   // by a drop's rules, once the bar is known

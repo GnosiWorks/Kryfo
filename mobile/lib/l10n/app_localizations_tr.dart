@@ -8781,6 +8781,44 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shareNoOne => 'Paylaşılacak kimse yok';
 
   @override
+  String get shareCheckPhoto => 'Bu fotoğrafı kontrol et';
+
+  @override
+  String get shareCheckVideo => 'Bu videoyu kontrol et';
+
+  @override
+  String get shareSendCleanLine => 'Gizli bilgileri önce silinir';
+
+  @override
+  String get shareCheckLine => 'İçinde ne olduğunu bu telefonda gör';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Dosyalar en fazla $max olabilir. Bu daha büyük.';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bu $count dosya gönderilsin mi?',
+      one: 'Bu dosya gönderilsin mi?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'Bu fotoğraf $size. Kryfo fotoğrafları $max boyutuna kadar hazırlar.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Bu fotoğraf küçültülünce bile $size. Bu sohbette dosyalar en fazla $max olabilir.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Hâlâ bağlanıyor… Bağlantı geri gelir gelmez mesajların gidecek.';
 

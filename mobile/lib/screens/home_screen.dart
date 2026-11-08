@@ -22,6 +22,7 @@ import 'qr_screen.dart';
 import 'lock_file_screen.dart';
 import 'open_locked_screen.dart';
 import 'share_sheet.dart';
+import 'share_files_sheet.dart';
 import '../tools/tools_bridge.dart';
 import '../tools/desk_tools.dart';
 import '../desktop/attach_tray.dart' show clipboardFiles;
@@ -147,6 +148,11 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<void>? _sharedSub;
   StreamSubscription<void>? _sharedTextSub;
   final _texts = ShareTexts();
+  // a photo or video shared in: a chat, or the one photo tool, which shows
+  // what it gives away first, then one button that removes all of it
+  late final _files = ShareFiles(
+    onCheck: (f) => _openTool(PhotoKnowsScreen(file: f)),
+  );
   // tool leftovers, swept every few minutes while kryfo is in front. away,
   // the timer does not wake the phone; back, a sweep that fell due runs
   final _sweeper = SeenTimers();
@@ -159,7 +165,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _sharedSub = ToolsBridge.instance.shared.listen((_) => _takeShared());
+    _sharedSub = ToolsBridge.instance.sharedFiles.listen((_) {
+      if (mounted) _files.arrived(context, () => mounted);
+    });
     _sharedTextSub = ToolsBridge.instance.sharedText.listen((_) {
       if (mounted) _texts.arrived(context, () => mounted);
     });
@@ -176,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
       () => ToolsBridge.instance.sweep(),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _takeShared();
+      if (mounted) _files.take(context, () => mounted);
       if (mounted) _texts.take(context, () => mounted);
     });
   }
@@ -186,6 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _sharedSub?.cancel();
     _sharedTextSub?.cancel();
     _texts.dispose();
+    _files.dispose();
     lockState.removeListener(_onLock);
     appState.removeListener(_maybeAskBridge);
     lockState.removeListener(_maybeAskBridge);
@@ -206,13 +215,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final ctx = rootNavKey.currentState?.overlay?.context ?? context;
     appState.bridgeAskTaken();
     showTorBlockedSheet(ctx, asked: true);
-  }
-
-  // a photo or video shared in goes to the one photo tool: what it gives
-  // away first, then one button that removes all of it
-  Future<void> _takeShared() async {
-    final f = await ToolsBridge.instance.takeShared();
-    if (f != null) _openTool(PhotoKnowsScreen(file: f));
   }
 
   Future<void> _pickToRead(String kind) async {

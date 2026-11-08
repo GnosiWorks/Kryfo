@@ -87,7 +87,9 @@ const platformNotHere = {
 /// the same for halo/tools: nothing is shared into a desktop app. a pick
 /// is the system's open dialog, and the file is read where it is
 const toolsAnswered = {
-  'takeShared',
+  'takeSharedFiles',
+  'seenSharedFiles',
+  'dropSharedFiles',
   'takeSharedText',
   'seenSharedText',
   'dropSharedText',
@@ -351,7 +353,8 @@ Map<String, DesktopAnswer> desktopAnswers(
   }
 
   Future<Object?> tools(MethodCall c) async => switch (c.method) {
-    'takeShared' || 'takeSharedText' => null,
+    'takeSharedFiles' || 'takeSharedText' => null,
+    'seenSharedFiles' || 'dropSharedFiles' => null,
     'seenSharedText' || 'dropSharedText' || 'sweep' => null,
     'freeBytes' => await host.freeBytes() ?? -1,
     'saveToFiles' ||

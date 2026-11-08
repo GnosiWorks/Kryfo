@@ -8907,6 +8907,46 @@ class AppLocalizationsUk extends AppLocalizations {
   String get shareNoOne => 'Немає з ким поділитися';
 
   @override
+  String get shareCheckPhoto => 'Перевірити це фото';
+
+  @override
+  String get shareCheckVideo => 'Перевірити це відео';
+
+  @override
+  String get shareSendCleanLine => 'Приховані дані спершу видаляються';
+
+  @override
+  String get shareCheckLine =>
+      'Подивіться, що в ньому є, просто на цьому телефоні';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Файли можуть бути до $max. Цей більший.';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Надіслати ці $count файлів?',
+      few: 'Надіслати ці $count файли?',
+      one: 'Надіслати цей файл?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'Це фото важить $size. Kryfo готує фото до $max.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Навіть зменшене, це фото важить $size. Файли в цьому чаті можуть бути до $max.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Ще підключаємося… Твої повідомлення підуть, щойно зв’язок повернеться.';
 

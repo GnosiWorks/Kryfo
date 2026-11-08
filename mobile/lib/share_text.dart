@@ -92,11 +92,14 @@ class ShareGate {
   /// true once [s] may be shown, now or after an unlock. one that came under
   /// the lock goes to whichever session opens it, and is let go when the
   /// app is left first. one already shown shows only in its own session
-  Future<bool> clear(SharedText s) async {
-    if (guard.isLocked() && !await _unlocked(dropOnLeave: s.seenIn == null)) {
+  Future<bool> clear(SharedText s) => clearSeen(s.seenIn);
+
+  /// the same for anything shared, by the session it was shown in
+  Future<bool> clearSeen(String? seenIn) async {
+    if (guard.isLocked() && !await _unlocked(dropOnLeave: seenIn == null)) {
       return false;
     }
-    return s.seenIn == null || s.seenIn == where();
+    return seenIn == null || seenIn == where();
   }
 
   Future<bool> _unlocked({required bool dropOnLeave}) {

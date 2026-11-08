@@ -8887,6 +8887,44 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareNoOne => 'لا يوجد من تشارك معه';
 
   @override
+  String get shareCheckPhoto => 'افحص هذه الصورة';
+
+  @override
+  String get shareCheckVideo => 'افحص هذا الفيديو';
+
+  @override
+  String get shareSendCleanLine => 'تُزال تفاصيلها المخفية أولًا';
+
+  @override
+  String get shareCheckLine => 'اعرف ما تحمله، على هذا الهاتف';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'يمكن أن يصل حجم الملفات إلى $max. هذا الملف أكبر.';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إرسال هذه الملفات ($count)؟',
+      one: 'إرسال هذا الملف؟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'حجم هذه الصورة $size. يجهّز Kryfo الصور حتى $max.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'حجم هذه الصورة بعد تصغيرها لا يزال $size. يمكن أن يصل حجم الملفات في هذه الدردشة إلى $max.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.';
 

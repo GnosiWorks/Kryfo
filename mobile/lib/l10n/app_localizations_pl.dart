@@ -8926,6 +8926,45 @@ class AppLocalizationsPl extends AppLocalizations {
   String get shareNoOne => 'Nie ma komu udostępnić';
 
   @override
+  String get shareCheckPhoto => 'Sprawdź to zdjęcie';
+
+  @override
+  String get shareCheckVideo => 'Sprawdź ten film';
+
+  @override
+  String get shareSendCleanLine => 'Ukryte dane znikają przed wysłaniem';
+
+  @override
+  String get shareCheckLine => 'Zobacz, co zawiera, na tym telefonie';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Pliki mogą mieć do $max. Ten jest większy.';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wysłać te $count plików?',
+      few: 'Wysłać te $count pliki?',
+      one: 'Wysłać ten plik?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'To zdjęcie ma $size. Kryfo przygotowuje zdjęcia do $max.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Po zmniejszeniu to zdjęcie ma nadal $size. Pliki w tym czacie mogą mieć do $max.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Wciąż łączę… Twoje wiadomości wyjdą, gdy tylko połączenie wróci.';
 

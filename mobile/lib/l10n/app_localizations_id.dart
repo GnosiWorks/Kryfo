@@ -8753,6 +8753,44 @@ class AppLocalizationsId extends AppLocalizations {
   String get shareNoOne => 'Tidak ada yang bisa diajak berbagi';
 
   @override
+  String get shareCheckPhoto => 'Periksa foto ini';
+
+  @override
+  String get shareCheckVideo => 'Periksa video ini';
+
+  @override
+  String get shareSendCleanLine => 'Detail tersembunyinya dihapus dulu';
+
+  @override
+  String get shareCheckLine => 'Lihat isinya, langsung di ponsel ini';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'File bisa sampai $max. Yang ini lebih besar.';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kirim $count file ini?',
+      one: 'Kirim file ini?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'Foto ini $size. Kryfo menyiapkan foto hingga $max.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Setelah diperkecil, foto ini masih $size. File di chat ini bisa sampai $max.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Masih menyambung… Pesanmu akan terkirim begitu koneksi kembali.';
 

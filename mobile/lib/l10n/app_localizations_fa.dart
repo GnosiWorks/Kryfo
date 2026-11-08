@@ -8762,6 +8762,44 @@ class AppLocalizationsFa extends AppLocalizations {
   String get shareNoOne => 'کسی برای هم‌رسانی نیست';
 
   @override
+  String get shareCheckPhoto => 'بررسی این عکس';
+
+  @override
+  String get shareCheckVideo => 'بررسی این ویدیو';
+
+  @override
+  String get shareSendCleanLine => 'جزئیات پنهانش اول پاک می‌شود';
+
+  @override
+  String get shareCheckLine => 'ببینید چه چیزی در آن هست، همین‌جا روی این گوشی';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'فایل‌ها می‌توانند تا $max باشند. این یکی بزرگ‌تر است.';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'این $count فایل فرستاده شوند؟',
+      one: 'این فایل فرستاده شود؟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'این عکس $size است. Kryfo عکس‌ها را تا $max آماده می‌کند.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'این عکس کوچک‌شده هم هنوز $size است. فایل‌های این گفتگو می‌توانند تا $max باشند.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'هنوز در حال اتصال… پیام‌های شما به محض برگشتن اتصال فرستاده می‌شوند.';
 

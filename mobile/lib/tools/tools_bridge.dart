@@ -44,6 +44,25 @@ class PickedFile {
   }
 }
 
+/// photos, videos or files shared from another app, as android holds them
+/// until dart lets them go. [seenIn] is the session they were shown in
+class SharedFiles {
+  final String id;
+  final List<PickedFile> items;
+  final String? seenIn;
+  const SharedFiles(this.id, this.items, {this.seenIn});
+
+  static SharedFiles? from(Object? raw) {
+    if (raw is! Map) return null;
+    final id = raw['id'];
+    final list = raw['items'];
+    if (id is! String || id.isEmpty || list is! List) return null;
+    final items = [for (final i in list) ?PickedFile.from(i)];
+    if (items.isEmpty) return null;
+    return SharedFiles(id, items, seenIn: raw['seen'] as String?);
+  }
+}
+
 class CopyProgress {
   final int done;
   final int total;
@@ -62,17 +81,17 @@ class ToolsBridge {
   static final ToolsBridge instance = ToolsBridge._();
 
   static const _ch = MethodChannel('halo/tools');
-  final _shared = StreamController<void>.broadcast();
+  final _sharedFiles = StreamController<void>.broadcast();
   final _sharedText = StreamController<void>.broadcast();
   final _progress = StreamController<CopyProgress>.broadcast();
 
-  Stream<void> get shared => _shared.stream;
+  Stream<void> get sharedFiles => _sharedFiles.stream;
   Stream<void> get sharedText => _sharedText.stream;
   Stream<CopyProgress> get progress => _progress.stream;
 
   Future<Object?> _onCall(MethodCall call) async {
-    if (call.method == 'shared') {
-      _shared.add(null);
+    if (call.method == 'sharedFiles') {
+      _sharedFiles.add(null);
     } else if (call.method == 'sharedText') {
       _sharedText.add(null);
     } else if (call.method == 'copyProgress') {
@@ -89,15 +108,22 @@ class ToolsBridge {
     return null;
   }
 
-  Future<PickedFile?> takeShared() async {
+  // the files shared last, kept on the android side until dropped
+  Future<SharedFiles?> peekSharedFiles() async {
     try {
-      return PickedFile.from(await _ch.invokeMethod('takeShared'));
+      return SharedFiles.from(await _ch.invokeMethod('takeSharedFiles'));
     } on PlatformException {
       return null;
     } on MissingPluginException {
       return null;
     }
   }
+
+  Future<void> sawSharedFiles(String id, String where) =>
+      _quiet('seenSharedFiles', {'id': id, 'where': where});
+
+  Future<void> dropSharedFiles(String id) =>
+      _quiet('dropSharedFiles', {'id': id});
 
   // the words shared last, kept on the android side until dropped
   Future<SharedText?> peekSharedText() async {
@@ -150,9 +176,14 @@ class ToolsBridge {
     }
   }
 
-  Future<String> copyIn(String uri) async {
+  /// [uri] copied into the tools folder. over [most] bytes it stops with
+  /// ToolsFailure('big')
+  Future<String> copyIn(String uri, {int? most}) async {
     try {
-      final path = await _ch.invokeMethod<String>('copyIn', {'uri': uri});
+      final path = await _ch.invokeMethod<String>('copyIn', {
+        'uri': uri,
+        'most': ?most,
+      });
       if (path == null) throw const ToolsFailure('read');
       return path;
     } on PlatformException catch (e) {

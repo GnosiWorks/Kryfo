@@ -5,7 +5,8 @@
 // one, under the app's own name. the words come from the intent's extras,
 // or a small text file sent alone, cut whole, held in the process's memory
 // until dart lets them go and never in a saved state, and offered warm and
-// cold. the photo and video path reads as it did
+// cold. photos, videos and files, one or several, are kept as uris alone
+// until dart picks a way for them
 import 'package:flutter_test/flutter_test.dart';
 
 import 'source_body.dart';
@@ -38,30 +39,97 @@ void main() {
     expect(text, isNot(contains('image/')));
     final media = sends.singleWhere((f) => f.contains('image/*'));
     expect(media, contains('video/*'));
+    expect(media, contains('application/*'));
+    expect(media, contains('audio/*'));
     expect(media, isNot(contains('text/')));
+    // several at once, of the same kinds
+    final many = _filters(
+      manifest,
+    ).singleWhere((f) => f.contains('android.intent.action.SEND_MULTIPLE"'));
+    expect(many, contains('android.intent.category.DEFAULT'));
+    // text files too: several of them are files, never words
+    for (final m in [
+      'image/*',
+      'video/*',
+      'application/*',
+      'audio/*',
+      'text/plain',
+    ]) {
+      expect(many, contains(m));
+    }
     // no label or icon of its own: the share sheet shows the entry's
     expect(text, isNot(contains('android:label')));
     expect(text, isNot(contains('android:icon')));
     expect(manifest, contains(r'android:label="${appLabel}"'));
   });
 
-  test('text is taken before the photo and video path, which reads as it '
-      'did', () {
+  test('text is taken before the file path, which keeps uris alone', () {
     final offer = bodyOf(bridge, 'fun offer(');
+    expect(offer, contains('Intent.ACTION_SEND_MULTIPLE'));
     expect(offer.indexOf('isText(type)'), greaterThan(0));
     expect(
       offer.indexOf('isText(type)'),
-      lessThan(offer.indexOf('startsWith("image/")')),
+      lessThan(offer.indexOf('offerFiles(intent, type)')),
     );
+    expect(offer, contains('if (!isFileType(type)) return'));
+    final kinds = bodyOf(bridge, 'fun isFileType(');
+    for (final k in ['"image/"', '"video/"', '"application/"']) {
+      expect(kinds, contains(k));
+    }
+    final files = bodyOf(bridge, 'private fun offerFiles(');
     expect(
-      offer,
+      files,
       contains(
-        'if (!type.startsWith("image/") && !type.startsWith("video/")) return',
+        'streams(intent).filter { acceptable(it) }.distinct().take(FILES_MOST)',
       ),
     );
-    expect(offer, contains('if (uri == null || !acceptable(uri)) return'));
-    expect(offer, contains('channel?.invokeMethod("shared", null)'));
+    expect(files, contains('channel?.invokeMethod("sharedFiles", null)'));
+    // nothing is read or copied before a way is picked
+    for (final body in [files, bodyOf(bridge, 'private fun streams(')]) {
+      expect(body, isNot(contains('openInputStream')));
+      expect(body, isNot(contains('File(')));
+      expect(body, isNot(contains('describe(')));
+    }
+    expect(bridge, contains('private var sharedFiles: SharedFiles? = null'));
+    // only real uris, also where android does not check the list's kind
+    final streams = bodyOf(bridge, 'private fun streams(');
+    expect(streams, contains('filterIsInstance<Uri>()'));
+    expect(streams, contains('(one as? Uri)'));
+    // the providers' answers have a deadline, a cancel closes a hung read
+    expect(bridge, contains('const val DESCRIBE_MS = 4000L'));
+    expect(
+      bodyOf(bridge, 'private fun handle('),
+      contains('if (r != null) Thread { try { r.close() }'),
+    );
+    expect(bridge, isNot(contains('private var shared: Uri?')));
     expect(bodyOf(bridge, 'fun isText('), contains('"text/plain"'));
+  });
+
+  test('a copy in stops at the chat limit, told or found out', () {
+    final copy = bodyOf(bridge, 'private fun copyIn(');
+    expect(copy, contains('if (most != null && total > most)'));
+    expect(
+      copy,
+      contains(
+        'if (most != null && done > most) throw java.io.IOException("big")',
+      ),
+    );
+    expect(copy, contains('"big" -> "big"'));
+    final h = bodyOf(bridge, 'private fun handle(');
+    final drop = h.substring(
+      h.indexOf('"dropSharedFiles"'),
+      h.indexOf('"takeSharedText"'),
+    );
+    expect(
+      drop,
+      contains(
+        'if (sharedFiles?.id == call.argument<String>("id")) sharedFiles = null',
+      ),
+    );
+    expect(
+      bodyOf(bridge, 'fun attach('),
+      contains('if (sharedFiles != null) ch.invokeMethod("sharedFiles", null)'),
+    );
   });
 
   test('the words come from the extras, in memory only', () {
@@ -78,36 +146,25 @@ void main() {
       bodyOf(bridge, 'fun cut('),
       contains('if (Character.isHighSurrogate(s[end - 1])) end--'),
     );
-    for (final body in [
-      take,
-      keep,
-      bodyOf(bridge, 'private fun readSmallText('),
-    ]) {
+    for (final body in [take, keep]) {
       expect(body, isNot(contains('File(')));
       expect(body, isNot(contains('SharedPreferences')));
       expect(body, isNot(contains('openOutputStream')));
     }
   });
 
-  test('a text file shared alone is read when small and really text, never '
-      'by its name', () {
+  test('a text file shared alone goes as a file, never read as words', () {
     final take = bodyOf(bridge, 'private fun offerText(');
     // only when the extras say nothing
     expect(
-      take.indexOf('Intent.EXTRA_STREAM'),
+      take.indexOf('offerFiles(intent, "text/plain")'),
       greaterThan(take.indexOf('keepText(text, subject)')),
     );
-    expect(take, contains('if (uri == null || !acceptable(uri)) return'));
-    expect(take, isNot(contains('describe(')));
-    expect(take, isNot(contains('DISPLAY_NAME')));
-    final read = bodyOf(bridge, 'private fun readSmallText(');
-    expect(bridge, contains('const val TEXT_FILE_MOST = 64 * 1024'));
-    expect(read, contains('if (buf.size() > TEXT_FILE_MOST) return null'));
-    expect(read, contains('textOfBytes('));
-    expect(read, isNot(contains('DISPLAY_NAME')));
-    final text = bodyOf(bridge, 'fun textOfBytes(');
-    expect(text, contains('CodingErrorAction.REPORT'));
-    expect(text, contains("it < ' '"));
+    expect(take, isNot(contains('openInputStream')));
+    expect(bridge, isNot(contains('readSmallText')));
+    final kinds = bodyOf(bridge, 'fun isFileType(');
+    expect(kinds, contains('"audio/"'));
+    expect(kinds, contains('"text/"'));
   });
 
   test('nothing of a share goes into a saved state', () {

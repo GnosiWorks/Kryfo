@@ -8329,6 +8329,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shareNoOne => '没有可以分享的人';
 
   @override
+  String get shareCheckPhoto => '检查这张照片';
+
+  @override
+  String get shareCheckVideo => '检查这个视频';
+
+  @override
+  String get shareSendCleanLine => '先去掉隐藏信息';
+
+  @override
+  String get shareCheckLine => '在这部手机上看看它带着什么';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return '文件最大为 $max。这个更大。';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '发送这 $count 个文件？',
+      one: '发送这个文件？',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return '这张照片有 $size。Kryfo 可处理最大 $max 的照片。';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return '这张照片缩小后仍有 $size。这个聊天的文件最大为 $max。';
+  }
+
+  @override
   String get valveStillConnecting => '仍在连接…连接恢复后，你的消息会立刻发出。';
 
   @override
@@ -19410,6 +19448,44 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get shareNoOne => '沒有可以分享的人';
+
+  @override
+  String get shareCheckPhoto => '檢查這張照片';
+
+  @override
+  String get shareCheckVideo => '檢查這段影片';
+
+  @override
+  String get shareSendCleanLine => '先移除隱藏資訊';
+
+  @override
+  String get shareCheckLine => '在這支手機上看看它帶著什麼';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return '檔案最大為 $max。這個更大。';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '傳送這 $count 個檔案？',
+      one: '傳送這個檔案？',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return '這張照片有 $size。Kryfo 可處理最大 $max 的照片。';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return '這張照片縮小後仍有 $size。這個聊天的檔案最大為 $max。';
+  }
 
   @override
   String get valveStillConnecting => '仍在連線…連線恢復後，你的訊息會立刻送出。';

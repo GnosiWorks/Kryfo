@@ -14059,6 +14059,54 @@ abstract class AppLocalizations {
   /// **'No one to share with'**
   String get shareNoOne;
 
+  /// screens/share_files_sheet.dart: a photo shared from another app, the choice that opens the photo checker
+  ///
+  /// In en, this message translates to:
+  /// **'Check this photo'**
+  String get shareCheckPhoto;
+
+  /// screens/share_files_sheet.dart: the same choice for a shared video
+  ///
+  /// In en, this message translates to:
+  /// **'Check this video'**
+  String get shareCheckVideo;
+
+  /// screens/share_files_sheet.dart: the line under "Send to a chat" for a shared photo or video: location and camera details are removed before it is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Its hidden details come off first'**
+  String get shareSendCleanLine;
+
+  /// screens/share_files_sheet.dart: the line under "Check this photo": the checker shows what the file holds, offline
+  ///
+  /// In en, this message translates to:
+  /// **'See what it carries, right on this phone'**
+  String get shareCheckLine;
+
+  /// screens/share_files_sheet.dart: toast when a shared file turns out bigger than the limit while it is copied in. max is like 50.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'Files can be up to {max}. This one is bigger.'**
+  String shareFileOverLimit(String max);
+
+  /// screens/share_files_sheet.dart: asked before shared files go to the chat picked, above their names
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Send this file?} other{Send these {count} files?}}'**
+  String shareSendFiles(int count);
+
+  /// screens/share_files_sheet.dart: toast when a shared photo is too big to be read and shrunk at all. size and max are like 230.4 mb and 200.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This photo is {size}. Kryfo makes photos ready up to {max}.'**
+  String sharePhotoTooBig(String size, String max);
+
+  /// screens/chat_screen.dart: toast when a shared photo, shrunk as a gallery pick is, is still over the chat file limit. size and max are like 52.1 mb and 50.0 mb
+  ///
+  /// In en, this message translates to:
+  /// **'This photo is still {size} made smaller. Files in this chat can be up to {max}.'**
+  String sharePhotoOverLimit(String size, String max);
+
   /// widgets/reconnect_valve.dart: a send has waited on tor a minute
   ///
   /// In en, this message translates to:

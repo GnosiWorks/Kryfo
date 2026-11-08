@@ -8824,6 +8824,44 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareNoOne => 'No hay nadie con quien compartir';
 
   @override
+  String get shareCheckPhoto => 'Revisar esta foto';
+
+  @override
+  String get shareCheckVideo => 'Revisar este vídeo';
+
+  @override
+  String get shareSendCleanLine => 'Antes se le quitan los datos ocultos';
+
+  @override
+  String get shareCheckLine => 'Mira lo que lleva, aquí en este teléfono';
+
+  @override
+  String shareFileOverLimit(String max) {
+    return 'Los archivos pueden pesar hasta $max. Este pesa más.';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '¿Enviar estos $count archivos?',
+      one: '¿Enviar este archivo?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharePhotoTooBig(String size, String max) {
+    return 'Esta foto pesa $size. Kryfo prepara fotos de hasta $max.';
+  }
+
+  @override
+  String sharePhotoOverLimit(String size, String max) {
+    return 'Esta foto aún pesa $size reducida. Los archivos de este chat pueden pesar hasta $max.';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Todavía conectando… Tus mensajes saldrán en cuanto vuelva la conexión.';
 

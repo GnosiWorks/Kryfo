@@ -10935,6 +10935,64 @@
   "@shareNoOne": {
     "description": "screens/share_sheet.dart: the same picker when everyone there is blocked"
   },
+  "shareCheckPhoto": "Check this photo",
+  "@shareCheckPhoto": {
+    "description": "screens/share_files_sheet.dart: a photo shared from another app, the choice that opens the photo checker"
+  },
+  "shareCheckVideo": "Check this video",
+  "@shareCheckVideo": {
+    "description": "screens/share_files_sheet.dart: the same choice for a shared video"
+  },
+  "shareSendCleanLine": "Its hidden details come off first",
+  "@shareSendCleanLine": {
+    "description": "screens/share_files_sheet.dart: the line under \"Send to a chat\" for a shared photo or video: location and camera details are removed before it is sent"
+  },
+  "shareCheckLine": "See what it carries, right on this phone",
+  "@shareCheckLine": {
+    "description": "screens/share_files_sheet.dart: the line under \"Check this photo\": the checker shows what the file holds, offline"
+  },
+  "shareFileOverLimit": "Files can be up to {max}. This one is bigger.",
+  "@shareFileOverLimit": {
+    "description": "screens/share_files_sheet.dart: toast when a shared file turns out bigger than the limit while it is copied in. max is like 50.0 mb",
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "shareSendFiles": "{count, plural, =1{Send this file?} other{Send these {count} files?}}",
+  "@shareSendFiles": {
+    "description": "screens/share_files_sheet.dart: asked before shared files go to the chat picked, above their names",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePhotoTooBig": "This photo is {size}. Kryfo makes photos ready up to {max}.",
+  "@sharePhotoTooBig": {
+    "description": "screens/share_files_sheet.dart: toast when a shared photo is too big to be read and shrunk at all. size and max are like 230.4 mb and 200.0 mb",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "sharePhotoOverLimit": "This photo is still {size} made smaller. Files in this chat can be up to {max}.",
+  "@sharePhotoOverLimit": {
+    "description": "screens/chat_screen.dart: toast when a shared photo, shrunk as a gallery pick is, is still over the chat file limit. size and max are like 52.1 mb and 50.0 mb",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
   "valveStillConnecting": "Still connecting… Your messages go out as soon as the connection is back.",
   "@valveStillConnecting": {
     "description": "widgets/reconnect_valve.dart: a send has waited on tor a minute"

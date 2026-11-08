@@ -129,7 +129,7 @@ void main() {
 
   test('every entry takes the same links and shares', () {
     final want = _filters(aliases['.MainActivity']!);
-    expect(want, hasLength(4));
+    expect(want, hasLength(5));
     expect(
       want.where((f) => f.contains('intent.category.LAUNCHER')),
       hasLength(1),
@@ -142,6 +142,11 @@ void main() {
     expect(sends, hasLength(2));
     expect(sends.where((f) => f.contains('text/plain')), hasLength(1));
     expect(sends.where((f) => f.contains('image/*')), hasLength(1));
+    // several photos, videos or files at once
+    expect(
+      want.where((f) => f.contains('action.SEND_MULTIPLE"')),
+      hasLength(1),
+    );
     for (final a in aliases.entries) {
       expect(_filters(a.value), want, reason: a.key);
     }
