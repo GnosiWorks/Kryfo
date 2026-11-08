@@ -277,9 +277,12 @@ double? _dim;
 /// the dim known for the open identity without a read, or null
 double? knownWallDim() => identical(_dimOf, _dimOwner()) ? _dim : null;
 
+// the open identity's own container, compared and never read, as
+// keepPicked compares it
 Object? _dimOwner() {
   try {
-    return session.primary;
+    final at = session;
+    return at.primary;
   } catch (_) {
     return null;
   }
