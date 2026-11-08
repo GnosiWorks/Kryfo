@@ -105,11 +105,13 @@ func routeAliveOn(gen int64, u string) {
 func routeDoubtedSince(t time.Time) bool {
 	ok := routeOK()
 	routeMu.Lock()
-	defer routeMu.Unlock()
-	if lastAnswerAt.After(t) {
-		return false
-	}
-	return lastFailAt.After(t) || !ok
+	answered, failed := lastAnswerAt, lastFailAt
+	routeMu.Unlock()
+	return doubtedSince(t, answered, failed, ok)
+}
+
+func doubtedSince(t, answered, failed time.Time, ok bool) bool {
+	return !answered.After(t) && (failed.After(t) || !ok)
 }
 
 // relay u answered in route generation gen (below zero: now)

@@ -119,7 +119,7 @@ var netValidLostAt time.Time
 // noticed is left to the route watch. the same network, so not a new one:
 // automatic keeps its way in
 func validBack(lost time.Time) {
-	if lost.IsZero() || !modeNeedsTor() || torIsPaused() || !routeDoubtedSince(lost) {
+	if lost.IsZero() || !modeNeedsTor() || torIsPaused() || !routeDoubted(lost) {
 		return
 	}
 	now := time.Now().UnixNano()
@@ -137,8 +137,11 @@ var (
 	validBackAt  atomic.Int64
 )
 
-// a var for the tests
-var validBackDo = func() { reconnectNowFor(whyNetwork) }
+// vars for the tests: whatever runs beside a test can answer meanwhile
+var (
+	validBackDo  = func() { reconnectNowFor(whyNetwork) }
+	routeDoubted = routeDoubtedSince
+)
 
 // what android last said of the default network, and whether it has said
 // anything yet

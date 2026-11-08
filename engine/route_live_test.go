@@ -87,29 +87,51 @@ func TestAStuckBootstrapOnAValidatedNetwork(t *testing.T) {
 	}
 }
 
+// in doubt since t: nothing answered after it, and something failed after
+// it or the route is not proven
+func TestDoubtedSince(t *testing.T) {
+	t0 := time.Unix(1_700_000_000, 0)
+	before, after := t0.Add(-time.Second), t0.Add(time.Second)
+	for _, c := range []struct {
+		answered, failed time.Time
+		ok, want         bool
+	}{
+		{before, before, true, false},
+		{before, after, true, true},
+		{before, before, false, true},
+		{after, after, false, false},
+		{time.Time{}, time.Time{}, true, false},
+		{time.Time{}, after, true, true},
+	} {
+		if got := doubtedSince(t0, c.answered, c.failed, c.ok); got != c.want {
+			t.Errorf("answered %v failed %v ok %v: %v, want %v",
+				c.answered.Sub(t0), c.failed.Sub(t0), c.ok, got, c.want)
+		}
+	}
+}
+
 // android stops vouching for the wifi and vouches again, the same wifi: a
-// route nothing proved meanwhile is taken as on a new network, at once
-func TestValidatedAgainBouncesADeadRoute(t *testing.T) {
+// route in doubt gets the reconnect, once, and only on that wifi
+func TestValidatedAgainReconnectsARouteInDoubt(t *testing.T) {
 	useStandIns(t, modePrivate, nil)
 	keepNetDetail(t)
 	var n atomic.Int32
-	oldDo, oldGap := validBackDo, validBackGap
+	var doubt atomic.Bool
+	oldDo, oldGap, oldDoubt := validBackDo, validBackGap, routeDoubted
 	validBackDo, validBackGap = func() { n.Add(1) }, 0
+	routeDoubted = func(time.Time) bool { return doubt.Load() }
 	validBackAt.Store(0)
-	t.Cleanup(func() { validBackDo, validBackGap = oldDo, oldGap })
+	t.Cleanup(func() { validBackDo, validBackGap, routeDoubted = oldDo, oldGap, oldDoubt })
 	// a change of network bounces through its own path, left out here
 	keepBounceKnobs(t)
 	underNetMu(func() {
 		netQuiet, netGap = time.Millisecond, time.Millisecond
 		netBounce = func() {}
 	})
-	resetRoute(t, "reachable", 100)
-	routeNoteOK()
 	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":7}`)
-	time.Sleep(100 * time.Millisecond)
-	n.Store(0)
+	time.Sleep(50 * time.Millisecond)
 
-	// an idle phone: nothing failed meanwhile and the route stands proven
+	// nothing in doubt: left to the route watch
 	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":7}`)
 	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":7}`)
 	time.Sleep(100 * time.Millisecond)
@@ -117,36 +139,38 @@ func TestValidatedAgainBouncesADeadRoute(t *testing.T) {
 		t.Fatalf("reconnected %d times with nothing in doubt", got)
 	}
 
+	doubt.Store(true)
 	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":7}`)
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 	if got := n.Load(); got != 0 {
 		t.Fatalf("reconnected %d times when android lost the network's validation", got)
 	}
-	time.Sleep(10 * time.Millisecond)
-	routeNoteFail("wss://relay.kryfo.app")
 	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":7}`)
 	if !waitUntil(2*time.Second, func() bool { return n.Load() == 1 }) {
-		t.Fatalf("validated again with nothing through meanwhile: %d reconnects, want 1", n.Load())
+		t.Fatalf("validated again with the route in doubt: %d reconnects, want 1", n.Load())
 	}
-	// another network in its place is a change of network, not this
+	// validated again and again: once
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":7}`)
 	time.Sleep(100 * time.Millisecond)
-	n.Store(0)
+	if got := n.Load(); got != 1 {
+		t.Fatalf("%d reconnects for one return of the network", got)
+	}
+
+	// another network in its place is a change of network, not this
 	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":7}`)
 	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":8}`)
 	time.Sleep(200 * time.Millisecond)
-	if got := n.Load(); got != 0 {
-		t.Fatalf("%d reconnects for a validated wifi that is another one", got)
+	if got := n.Load(); got != 1 {
+		t.Fatalf("%d reconnects, a validated wifi that is another one counted", got-1)
 	}
 
-	// a relay answered while it was unvalidated: the route carries, nothing to do
-	time.Sleep(100 * time.Millisecond)
-	n.Store(0)
+	// android says the flap again within validBackGap: one reconnect
+	validBackGap = time.Hour
+	validBackAt.Store(time.Now().UnixNano())
 	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":8}`)
-	time.Sleep(10 * time.Millisecond)
-	routeNoteOK()
 	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":8}`)
-	time.Sleep(200 * time.Millisecond)
-	if got := n.Load(); got != 0 {
-		t.Fatalf("reconnected %d times a route a relay proved", got)
+	time.Sleep(100 * time.Millisecond)
+	if got := n.Load(); got != 1 {
+		t.Fatalf("a flapping wifi reconnected %d more times inside the gap", got-1)
 	}
 }
