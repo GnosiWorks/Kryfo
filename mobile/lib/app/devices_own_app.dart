@@ -50,6 +50,8 @@ void _bootOwnSync(DeviceState ds, DeviceSend send, DeviceReceive recv) {
         limit: 1,
       );
       if (r.isNotEmpty) _ownPhoneId = r.first['v'] as String?;
+      // a linked device that never heard my phone's name asks for it
+      if (linkedRole && _ownPhoneId == null) unawaited(_ownBeat());
       // whether the vault keeps what went too, before its first delete
       await _ownGoneOn(await live.open(), live.container);
       await _madeApp?._ownPass();
@@ -66,6 +68,10 @@ const kOwnPhoneIdMeta = 'own_phone_id';
 /// on a linked device, signal_meta 'own_pb:' and a contact's kryfo id: the
 /// block my phone last told for them (1 or 0)
 const kOwnPhoneBlockMeta = 'own_pb:';
+
+/// on a phone, signal_meta 'own_me:' and a device: my profile was told
+/// again at its first word
+const kOwnMeToldMeta = 'own_me:';
 
 Future<int?> _ownPhoneBlockOf(Database d, String id) async {
   final r = await d.query(
@@ -319,13 +325,24 @@ class _AppOwn implements OwnApply {
 
   @override
   Future<void> heard(int ident, int device, String key, int at) async {
-    await ownDeviceHeard(
-      await live.open(),
-      ident: ident,
-      dev: device,
-      key: key,
-      at: at,
+    final d = await live.open();
+    await ownDeviceHeard(d, ident: ident, dev: device, key: key, at: at);
+    // the first word of a device: my profile again, once for its key. the
+    // one sent at the link can reach it before it takes own frames
+    final k = '$kOwnMeToldMeta$ident/$device/$key';
+    final told = await d.query(
+      'signal_meta',
+      columns: ['v'],
+      where: 'k = ?',
+      whereArgs: [k],
+      limit: 1,
     );
+    if (told.isNotEmpty) return;
+    await d.insert('signal_meta', {
+      'k': k,
+      'v': '$at',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await _madeApp?._ownTellMe();
   }
 }
 

@@ -245,6 +245,9 @@ Future<void> _copyLanded(
     dlog('history: listens wait (${e.runtimeType})');
   }
   await appState.applyEarlyCopied();
+  // my phone hears this device is in use and tells it my name, which a
+  // word sent at the link itself can miss
+  unawaited(_ownBeat());
 }
 
 // a copy taken back: the contacts it made are forgotten by the device

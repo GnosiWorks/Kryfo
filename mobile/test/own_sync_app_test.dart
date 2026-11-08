@@ -646,6 +646,21 @@ void main() {
     expect(ownShownId, appState.sessionId);
   }, skip: skip);
 
+  test(
+    'my phone tells a device my profile again at its first word, once',
+    () async {
+      await ownApplyForTest.heard(0, 2, 'k2', 1000);
+      expect(told.ops.map((o) => o.$1), ['profile']);
+      expect(told.ops.single.$3['h'], 'me');
+      await ownApplyForTest.heard(0, 2, 'k2', 2000);
+      expect(told.ops, hasLength(1));
+      // a new key on the id is a new device
+      await ownApplyForTest.heard(0, 2, 'k3', 3000);
+      expect(told.ops, hasLength(2));
+    },
+    skip: skip,
+  );
+
   test('nothing is told while the decoy is open', () async {
     final decoy = _Rows(s, HaloContainer.decoy);
     useDatabasesForTest(db, Session(decoy));
