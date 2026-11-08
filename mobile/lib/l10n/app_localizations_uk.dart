@@ -3182,7 +3182,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get handleChecking => 'Перевіряємо…';
 
   @override
-  String get handleAvailable => '✓ Вільне';
+  String get handleAvailable => 'Вільне';
 
   @override
   String get handleAlreadyTaken => 'Уже зайняте';
@@ -6101,6 +6101,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Типовий';
+
+  @override
+  String get wallpaperDim => 'Затемнити фон';
 
   @override
   String get wallpaperNotSet => 'Фон не встановлено. Спробуй ще раз.';

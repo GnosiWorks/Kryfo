@@ -481,6 +481,27 @@ mixin _ChatSettingRows {
       'photo': photo,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
+
+  // how strongly the dark page lies over this identity's photos, 0 to 1,
+  // or null for the automatic veil. kept with the default's row: the same
+  // container, gone with the identity, the decoy's its own
+  Future<double?> wallDim() async {
+    final row = await wallpaperRow(kDimWall);
+    final v = row == null ? null : double.tryParse(row.atmo);
+    return v == null || !v.isFinite ? null : v.clamp(0.0, 1.0);
+  }
+
+  Future<void> setWallDim(double? dim) async {
+    final db = await open();
+    if (dim == null) {
+      await db.delete('wallpapers', where: 'chat = ?', whereArgs: [kDimWall]);
+      return;
+    }
+    await db.insert('wallpapers', {
+      'chat': kDimWall,
+      'atmo': dim.clamp(0.0, 1.0).toStringAsFixed(3),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 }
 
 // a chat's own wallpaper photo, and the default every chat without a choice
@@ -491,6 +512,9 @@ mixin _ChatSettingRows {
 // photo: whatever clears that or drops the row (a delete, a wipe of the
 // chat's settings) takes the photo with it, by the triggers below
 const kPhotoWall = 'photo';
+
+// the dim's row: no chat or group key takes a leading colon
+const kDimWall = ':dim';
 
 String wallKey(String chatId, {bool group = false}) =>
     group ? 'group:$chatId' : chatId;

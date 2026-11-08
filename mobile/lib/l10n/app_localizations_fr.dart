@@ -3142,7 +3142,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get handleChecking => 'Vérification…';
 
   @override
-  String get handleAvailable => '✓ Disponible';
+  String get handleAvailable => 'Disponible';
 
   @override
   String get handleAlreadyTaken => 'Déjà pris';
@@ -6056,6 +6056,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Par défaut';
+
+  @override
+  String get wallpaperDim => 'Assombrir le fond d’écran';
 
   @override
   String get wallpaperNotSet =>

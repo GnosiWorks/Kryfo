@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../supporter.dart';
+import '../widgets/tier_mark.dart';
 import '../badge_client.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../widgets/confirm_sheet.dart';
@@ -102,25 +103,21 @@ const _addrs = {
   'eth': '0x55014AF792d54E4350b7f4bfc7be7D62EbbCfE43',
 };
 
-// each tier's orb: glyph, gradient and the glyph's colour, as on the cards
-({String glyph, List<Color> grad, Color fg}) _look(SupporterTier t) =>
-    switch (t) {
-      SupporterTier.patron => (
-        glyph: '\u25C6',
-        grad: const [Color(0xFFA78BFA), Color(0xFF6D28D9)],
-        fg: const Color(0xFF1E1B4B),
-      ),
-      SupporterTier.guardian => (
-        glyph: '\u2726',
-        grad: const [Color(0xFFF59E0B), Color(0xFFD97706)],
-        fg: HaloColors.onYellow,
-      ),
-      _ => (
-        glyph: '\u25CF',
-        grad: const [Color(0xFF60A5FA), Color(0xFF2563EB)],
-        fg: const Color(0xFF0C1F3F),
-      ),
-    };
+// each tier's orb: gradient and the mark's colour, as on the cards
+({List<Color> grad, Color fg}) _look(SupporterTier t) => switch (t) {
+  SupporterTier.patron => (
+    grad: const [Color(0xFFA78BFA), Color(0xFF6D28D9)],
+    fg: const Color(0xFF1E1B4B),
+  ),
+  SupporterTier.guardian => (
+    grad: const [Color(0xFFF59E0B), Color(0xFFD97706)],
+    fg: HaloColors.onYellow,
+  ),
+  _ => (
+    grad: const [Color(0xFF60A5FA), Color(0xFF2563EB)],
+    fg: const Color(0xFF0C1F3F),
+  ),
+};
 
 // what a tier costs, in dollars, as the badge service prices it
 int _usdOf(SupporterTier t) => switch (t) {
@@ -268,9 +265,10 @@ class _DonateScreenState extends State<DonateScreen> {
             ],
           ),
           alignment: Alignment.center,
-          child: Text(
-            '\u2726',
-            style: TextStyle(fontSize: 38, color: HaloColors.onAmber),
+          child: TierMark(
+            tier: SupporterTier.guardian,
+            color: HaloColors.onAmber,
+            size: 38,
           ),
         ),
         const SizedBox(height: 14),
@@ -497,7 +495,7 @@ class _DonateScreenState extends State<DonateScreen> {
   Widget _tierCard(SupporterTier tier) {
     final amt = _usdOf(tier);
     final name = tierLabel(tier);
-    final (:glyph, :grad, :fg) = _look(tier);
+    final (:grad, :fg) = _look(tier);
     final sel = _amount == amt && _customCtl.text.isEmpty;
     final still = MediaQuery.disableAnimationsOf(context);
     return Expanded(
@@ -546,10 +544,7 @@ class _DonateScreenState extends State<DonateScreen> {
                       gradient: LinearGradient(colors: grad),
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      glyph,
-                      style: TextStyle(fontSize: 13, color: fg),
-                    ),
+                    child: TierMark(tier: tier, color: fg, size: 13),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -686,9 +681,14 @@ class _DonateScreenState extends State<DonateScreen> {
                 alignment: Alignment.center,
                 child: c.icon != null
                     ? Icon(c.icon, size: 15, color: c.tint)
+                    // mono has the coin signs our sans lacks
                     : Text(
                         c.sym,
-                        style: TextStyle(color: c.tint, fontSize: 12),
+                        style: TextStyle(
+                          fontFamily: 'JetBrains Mono',
+                          color: c.tint,
+                          fontSize: 12,
+                        ),
                       ),
               ),
               const SizedBox(width: 8),
@@ -1368,7 +1368,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
 
   Widget _reviewView() {
     final t = widget.tier;
-    final (:glyph, :grad, :fg) = _look(t);
+    final (:grad, :fg) = _look(t);
     final still = motionStill(context);
     Widget gives(IconData icon, String text) => Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -1421,7 +1421,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
                   ],
                 ),
                 alignment: Alignment.center,
-                child: Text(glyph, style: TextStyle(fontSize: 24, color: fg)),
+                child: TierMark(tier: t, color: fg, size: 24),
               ),
             ),
           ),

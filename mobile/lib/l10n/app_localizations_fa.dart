@@ -3113,7 +3113,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get handleChecking => 'در حال بررسی…';
 
   @override
-  String get handleAvailable => '✓ آزاد';
+  String get handleAvailable => 'آزاد';
 
   @override
   String get handleAlreadyTaken => 'قبلاً گرفته شده';
@@ -5998,6 +5998,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'پیش‌فرض';
+
+  @override
+  String get wallpaperDim => 'تیره کردن تصویر زمینه';
 
   @override
   String get wallpaperNotSet => 'تصویر زمینه تنظیم نشد. دوباره امتحان کنید.';

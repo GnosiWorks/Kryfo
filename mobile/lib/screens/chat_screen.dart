@@ -6305,6 +6305,7 @@ class _ChatScreenState extends State<ChatScreen>
     final id = widget.peerHaloId;
     final before = _wall;
     final follows = await followsDefault(id);
+    final byDefault = follows ? before : await defaultWall();
     if (!mounted) return;
     final picked = await showWallpaperSheet(
       context,
@@ -6313,6 +6314,8 @@ class _ChatScreenState extends State<ChatScreen>
       allowDefault: true,
       followsDefault: follows,
       hasPhoto: !follows && before.photo != null,
+      photo: before.photo,
+      defaultPhoto: byDefault.photo,
       onPreview: (a) {
         if (mounted) setState(() => _wall = ChatWall(a));
       },
@@ -7156,6 +7159,7 @@ class _ChatScreenState extends State<ChatScreen>
               Expanded(
                 child: AtmoScope(
                   atmo: _wall.atmo,
+                  photo: _wall.photo != null,
                   child: Stack(
                     key: _listKey,
                     children: [

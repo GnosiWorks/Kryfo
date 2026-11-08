@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
+import '../widgets/tick_mark.dart';
 import '../lock_state.dart';
 import '../capture_watch.dart';
 import 'dart:convert';
@@ -5006,6 +5007,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       : AtmoScope(
                           key: const ValueKey('list'),
                           atmo: _wall.atmo,
+                          photo: _wall.photo != null,
                           child: Stack(
                             children: [
                               Positioned.fill(
@@ -6234,50 +6236,54 @@ class _GroupBubble extends StatelessWidget {
                         bottom: 3,
                       ),
                       // the name gives way first; the tags keep their size
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              m.senderName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: HaloType.mono(
-                                size: 9.5,
-                                color: HaloColors.wordsIn(
-                                  _authorColor(m.sender),
+                      child: PageWords(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                m.senderName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: HaloType.mono(
+                                  size: 9.5,
+                                  color: HaloColors.wordsIn(
+                                    _authorColor(m.sender),
+                                  ),
+                                  letter: 0.4,
                                 ),
-                                letter: 0.4,
                               ),
                             ),
-                          ),
-                          if (senderBadge != null) ...[
-                            const SizedBox(width: 5),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: HaloColors.amber.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(5),
-                                border: Border.all(
+                            if (senderBadge != null) ...[
+                              const SizedBox(width: 5),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
                                   color: HaloColors.amber.withValues(
-                                    alpha: 0.4,
+                                    alpha: 0.18,
+                                  ),
+                                  borderRadius: BorderRadius.circular(5),
+                                  border: Border.all(
+                                    color: HaloColors.amber.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  l10n.groupChatSupporter,
+                                  maxLines: 1,
+                                  style: HaloType.mono(
+                                    size: 9,
+                                    color: HaloColors.amberText,
                                   ),
                                 ),
                               ),
-                              child: Text(
-                                l10n.groupChatSupporter,
-                                maxLines: 1,
-                                style: HaloType.mono(
-                                  size: 9,
-                                  color: HaloColors.amberText,
-                                ),
-                              ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   Stack(
@@ -6905,31 +6911,18 @@ class _GroupBubble extends StatelessWidget {
                                                                   const EdgeInsetsDirectional.only(
                                                                     start: 3,
                                                                   ),
-                                                              child: Text(
-                                                                '✓',
-                                                                style: TextStyle(
-                                                                  fontFamily:
-                                                                      HaloType
-                                                                          .monoFamily,
-                                                                  fontFamilyFallback:
-                                                                      HaloType
-                                                                          .monoFallbackNow,
-                                                                  fontSize: 11,
-                                                                  color:
-                                                                      m.mediaPath !=
-                                                                          null
-                                                                      ? HaloColors
-                                                                            .text2
-                                                                      : HaloColors
-                                                                            .onAmber
-                                                                            .withValues(
-                                                                              alpha: 0.7,
-                                                                            ),
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w700,
-                                                                  height: 1,
-                                                                ),
+                                                              child: TickMark(
+                                                                color:
+                                                                    m.mediaPath !=
+                                                                        null
+                                                                    ? HaloColors
+                                                                          .text2
+                                                                    : HaloColors
+                                                                          .onAmber
+                                                                          .withValues(
+                                                                            alpha:
+                                                                                0.7,
+                                                                          ),
                                                               ),
                                                             )
                                                           : const SizedBox.shrink(
@@ -7255,17 +7248,7 @@ class _GroupBubble extends StatelessWidget {
           ),
           if (isOut && !m.pending && !m.looksFailed) ...[
             const SizedBox(width: 3),
-            Text(
-              '✓',
-              style: TextStyle(
-                fontFamily: HaloType.monoFamily,
-                fontFamilyFallback: HaloType.monoFallbackNow,
-                fontSize: 11,
-                color: HaloColors.amberText,
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-            ),
+            TickMark(color: HaloColors.amberText),
           ],
           if (m.looksFailed) ...[
             const SizedBox(width: 6),

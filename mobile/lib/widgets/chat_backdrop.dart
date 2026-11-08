@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a chat's wallpaper behind its messages. a photo wears a veil of the
-// page's own ground, as strong as that photo needs for the bubbles, dates
-// and names over it to read; a new one fades in over the old
+// page's own ground: in the dark theme the identity's chosen dim, or as
+// strong as that photo needs up to kDimDefault; a new one fades in over
+// the old
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -50,10 +51,14 @@ class _Photo extends StatefulWidget {
 class _PhotoState extends State<_Photo> {
   List<Color>? _samples;
   Size? _size;
+  double? _dim = knownWallDim();
 
   @override
   void initState() {
     super.initState();
+    wallDimPreview.addListener(_moved);
+    wallDimRevision.addListener(_readDim);
+    _readDim();
     photoSize(widget.bytes).then((s) {
       if (mounted) setState(() => _size = s);
     });
@@ -62,10 +67,36 @@ class _PhotoState extends State<_Photo> {
     });
   }
 
+  void _moved() => setState(() {});
+
+  void _readDim() {
+    final known = knownWallDim();
+    if (known != null) {
+      setState(() => _dim = known);
+      return;
+    }
+    readWallDim().then((d) {
+      if (mounted && d != _dim) setState(() => _dim = d);
+    });
+  }
+
+  @override
+  void dispose() {
+    wallDimPreview.removeListener(_moved);
+    wallDimRevision.removeListener(_readDim);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final ground = HaloColors.ink;
-    final veil = veilFor(_samples, ground, light: HaloColors.isLight);
+    final preview = wallDimPreview.value;
+    final veil = photoVeil(
+      _samples,
+      ground,
+      light: HaloColors.isLight,
+      dim: preview ?? _dim,
+    );
     final size = _size;
     final mq = MediaQuery.of(context);
     final still = motionStill(context);
@@ -84,8 +115,11 @@ class _PhotoState extends State<_Photo> {
             gaplessPlayback: true,
             excludeFromSemantics: true,
           ),
+        // a held slider moves the veil with the finger
         AnimatedContainer(
-          duration: still ? Duration.zero : const Duration(milliseconds: 200),
+          duration: still || preview != null
+              ? Duration.zero
+              : const Duration(milliseconds: 200),
           color: ground.withValues(alpha: veil),
         ),
       ],

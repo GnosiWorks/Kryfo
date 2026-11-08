@@ -3143,7 +3143,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get handleChecking => 'Controllo…';
 
   @override
-  String get handleAvailable => '✓ Disponibile';
+  String get handleAvailable => 'Disponibile';
 
   @override
   String get handleAlreadyTaken => 'Già preso';
@@ -6052,6 +6052,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Predefinito';
+
+  @override
+  String get wallpaperDim => 'Scurisci lo sfondo';
 
   @override
   String get wallpaperNotSet => 'Lo sfondo non è stato impostato. Riprova.';

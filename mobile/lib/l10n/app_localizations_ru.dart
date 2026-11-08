@@ -3188,7 +3188,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get handleChecking => 'Проверяем…';
 
   @override
-  String get handleAvailable => '✓ Свободно';
+  String get handleAvailable => 'Свободно';
 
   @override
   String get handleAlreadyTaken => 'Уже занято';
@@ -6110,6 +6110,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'По умолчанию';
+
+  @override
+  String get wallpaperDim => 'Затемнить обои';
 
   @override
   String get wallpaperNotSet => 'Обои не установлены. Попробуй ещё раз.';

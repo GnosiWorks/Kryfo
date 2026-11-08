@@ -3109,7 +3109,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get handleChecking => 'Mengecek…';
 
   @override
-  String get handleAvailable => '✓ Tersedia';
+  String get handleAvailable => 'Tersedia';
 
   @override
   String get handleAlreadyTaken => 'Sudah dipakai';
@@ -5999,6 +5999,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Bawaan';
+
+  @override
+  String get wallpaperDim => 'Redupkan latar belakang';
 
   @override
   String get wallpaperNotSet => 'Latar belakang belum terpasang. Coba lagi.';

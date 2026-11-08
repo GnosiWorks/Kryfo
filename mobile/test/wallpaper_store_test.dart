@@ -14,6 +14,7 @@ import 'package:kryfo/main.dart'
         adoptWallpaperFiles,
         dropOrphanWallpapers,
         kOrphanWallpapers,
+        kDimWall,
         kPhotoWall,
         wallKey,
         wallpaperTable;
@@ -362,6 +363,34 @@ void main() {
     ]);
     await dropOrphanWallpapers(db);
     expect(await walls(db), ['', _other, _peer]);
+  }, skip: skip);
+
+  test('the dim is a row of its own: it reads back, clamps, survives the '
+      'sweep and chat deletes, and goes when set back to automatic', () async {
+    final db = await chats();
+    final on = _On(db);
+    expect(await on.wallDim(), isNull);
+    await on.setWallDim(0.3);
+    expect(await on.wallDim(), closeTo(0.3, 1e-9));
+    await on.setWallDim(1.7);
+    expect(await on.wallDim(), 1.0);
+    await on.setWallDim(0.25);
+    await dropOrphanWallpapers(db);
+    await db.execute('DELETE FROM contacts');
+    await db.execute('DELETE FROM groups');
+    expect(await walls(db), [kDimWall, '']..sort());
+    expect(await on.wallDim(), closeTo(0.25, 1e-9));
+    // the default is untouched by it
+    expect((await on.wallpaperRow(''))!.atmo, 'rain');
+    await on.setWallDim(null);
+    expect(await on.wallDim(), isNull);
+    expect(await walls(db), ['']);
+  }, skip: skip);
+
+  test('a dim row that does not read is the automatic veil', () async {
+    final db = await chats();
+    await db.insert('wallpapers', {'chat': kDimWall, 'atmo': 'NaN'});
+    expect(await _On(db).wallDim(), isNull);
   }, skip: skip);
 
   test('the sweep runs at every open', () {

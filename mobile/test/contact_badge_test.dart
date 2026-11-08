@@ -12,6 +12,8 @@ import 'package:kryfo/main.dart'
     show HaloDb, appState, useDatabasesForTest, AppStateMessages;
 import 'package:kryfo/screens/contact_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/supporter.dart' show SupporterTier;
+import 'package:kryfo/widgets/tier_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -102,20 +104,20 @@ void main() {
     await t.pump(const Duration(seconds: 2));
   }
 
-  for (final (tier, glyph, label) in [
-    ('supporter', '●', () => l10n.donateTierSupporter),
-    ('patron', '◆', () => l10n.donateTierPatron),
-    ('guardian', '✦', () => l10n.donateTierGuardian),
+  for (final (tier, mark, label) in [
+    ('supporter', SupporterTier.supporter, () => l10n.donateTierSupporter),
+    ('patron', SupporterTier.patron, () => l10n.donateTierPatron),
+    ('guardian', SupporterTier.guardian, () => l10n.donateTierGuardian),
   ]) {
     testWidgets('a $tier shows the tier on their page', (t) async {
       final semantics = t.ensureSemantics();
       await open(t, tier);
-      expect(find.text('$glyph ${label()}'), findsOneWidget);
+      expect(find.text(label()), findsOneWidget);
+      expect(_mark(mark), findsOneWidget);
       expect(
         find.bySemanticsLabel(RegExp(RegExp.escape(label()))),
         findsWidgets,
       );
-      expect(find.bySemanticsLabel(RegExp(glyph)), findsNothing);
       semantics.dispose();
       await close(t);
     });
@@ -156,7 +158,8 @@ void main() {
     appState.chatChanged(_peer);
     await t.pump();
     await t.pump(const Duration(seconds: 1));
-    expect(find.text('◆ ${l10n.donateTierPatron}'), findsOneWidget);
+    expect(find.text(l10n.donateTierPatron), findsOneWidget);
+    expect(_mark(SupporterTier.patron), findsOneWidget);
     // turned off on their phone: absent on their next message
     await mem.update('contacts', {'supporter_badge': null});
     appState.chatChanged(_peer);
@@ -172,8 +175,13 @@ void main() {
       addTearDown(() => setL10nLocale(const Locale('en')));
       await open(t, 'guardian', locale: Locale(lang), scale: 2.0);
       expect(t.takeException(), isNull);
-      expect(find.text('✦ ${l10n.donateTierGuardian}'), findsOneWidget);
+      expect(find.text(l10n.donateTierGuardian), findsOneWidget);
+      expect(_mark(SupporterTier.guardian), findsOneWidget);
       await close(t);
     });
   }
 }
+
+// a tier's drawn mark on the page
+Finder _mark(SupporterTier t) =>
+    find.byWidgetPredicate((w) => w is TierMark && w.tier == t);

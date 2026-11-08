@@ -1369,7 +1369,7 @@ void main() {
     expect(l.handleDeleteYes, "Delete handle");
     expect(l.handleDeleting, "Deleting…");
     expect(l.handleChecking, "Checking…");
-    expect(l.handleAvailable, "✓ Available");
+    expect(l.handleAvailable, "Available");
     expect(l.handleAlreadyTaken, "Already taken");
     expect(l.handleWhatAHandleDoes, "What a handle does");
     expect(

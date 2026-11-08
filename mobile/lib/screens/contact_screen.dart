@@ -11,7 +11,8 @@ import '../chat_shots.dart' show ChatShots, ShotsPacer;
 import '../contact_status.dart';
 import '../devchat/dev_key.dart' show isDevChat;
 import '../lock_state.dart' show lockState;
-import '../supporter.dart' show SupporterTier, tierGlyph, tierLabel, tierOf;
+import '../widgets/tier_mark.dart';
+import '../supporter.dart' show SupporterTier, tierLabel, tierOf;
 import '../main.dart'
     show
         ownDeleteLine,
@@ -989,9 +990,18 @@ class _Badge extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: HaloColors.amber.withValues(alpha: 0.4)),
         ),
-        child: Text(
-          known ? '${tierGlyph(tier)} $label' : label,
-          style: HaloType.mono(size: 11, color: HaloColors.amberText),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (known) ...[
+              TierMark(tier: tier, color: HaloColors.amberText, size: 11),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: HaloType.mono(size: 11, color: HaloColors.amberText),
+            ),
+          ],
         ),
       ),
     );

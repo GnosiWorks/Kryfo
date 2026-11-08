@@ -33,20 +33,6 @@ SupporterTier _parseTier(String? s) {
 // the tier a contact's badge names. one this phone does not know is none
 SupporterTier tierOf(String? s) => _parseTier(s);
 
-// the glyph shown next to a name. matches the donate-screen tiers.
-String tierGlyph(SupporterTier t) {
-  switch (t) {
-    case SupporterTier.supporter:
-      return '\u25CF'; // ●
-    case SupporterTier.patron:
-      return '\u25C6'; // ◆
-    case SupporterTier.guardian:
-      return '\u2726'; // ✦
-    case SupporterTier.none:
-      return '';
-  }
-}
-
 // the tier as the badge service and the prefs know it. never shown.
 String tierKey(SupporterTier t) {
   switch (t) {

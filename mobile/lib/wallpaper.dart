@@ -208,15 +208,24 @@ Future<List<Color>?> photoSamples(Uint8List bytes) async {
   }
 }
 
+/// the most the dark theme's automatic veil lays over a photo: more made a
+/// bright photo gloomy. dates and names wear their own chips, so reading
+/// never rests on the veil
+const kDimDefault = 0.55;
+
+/// the slider's reach, from the bare photo to nearly the plain page
+const kDimMost = 0.8;
+
 /// how strongly the page's [ground] lies over a photo, from its [samples]:
 /// enough that its brightest tenth (dark theme) or darkest tenth (light
-/// theme) lands where the plain page's lines read, so a bright patch
-/// behind a date or a name is covered too, not only the average. the veil
-/// is mixed as the screen mixes it and the result judged in linear light.
-/// never less than a veil, never all of it
+/// theme) lands where the plain page's lines read, so a bright patch is
+/// covered too, not only the average. the veil is mixed as the screen
+/// mixes it and the result judged in linear light. never less than a veil,
+/// never all of it, and in the dark theme never more than kDimDefault
 double veilFor(List<Color>? samples, Color ground, {required bool light}) {
-  const least = 0.4, most = 0.86;
-  if (samples == null || samples.isEmpty) return 0.6;
+  const least = 0.4;
+  final most = light ? 0.86 : kDimDefault;
+  if (samples == null || samples.isEmpty) return light ? 0.6 : kDimDefault;
   final byLum = [...samples]
     ..sort((a, b) => a.computeLuminance().compareTo(b.computeLuminance()));
   final at = light
@@ -240,4 +249,74 @@ double veilFor(List<Color>? samples, Color ground, {required bool light}) {
     }
   }
   return hi;
+}
+
+/// the veil a photo wears: the light theme's own, or in the dark theme the
+/// identity's chosen [dim] when it has one
+double photoVeil(
+  List<Color>? samples,
+  Color ground, {
+  required bool light,
+  double? dim,
+}) => !light && dim != null
+    ? dim.clamp(0.0, kDimMost)
+    : veilFor(samples, ground, light: light);
+
+/// the dim the picker's slider shows while it moves, laid over every photo
+/// behind it at once; null when no slider is held
+final wallDimPreview = ValueNotifier<double?>(null);
+
+/// bumped when the identity's dim is kept
+final wallDimRevision = ValueNotifier<int>(0);
+
+// the dim as last read or kept, and whose: a decoy or another identity
+// opened since reads its own
+Object? _dimOf;
+double? _dim;
+
+/// the dim known for the open identity without a read, or null
+double? knownWallDim() => identical(_dimOf, _dimOwner()) ? _dim : null;
+
+// the open identity's own container, compared and never read, as
+// keepPicked compares it
+Object? _dimOwner() {
+  try {
+    final at = session;
+    return at.primary;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// the open identity's dim, null for the automatic veil. a read that fails
+/// gives the automatic one
+Future<double?> readWallDim() async {
+  final owner = _dimOwner();
+  if (owner != null && identical(owner, _dimOf)) return _dim;
+  try {
+    final v = await session.wallDim();
+    if (identical(owner, _dimOwner())) {
+      _dimOf = owner;
+      _dim = v;
+    }
+    return v;
+  } catch (e) {
+    dlog('wallpaper: no dim read (${e.runtimeType})');
+    return null;
+  }
+}
+
+/// keeps [dim] for the open identity. known at once, so a photo behind the
+/// sheet never flicks back to the old one while it is written
+Future<void> keepWallDim(double dim) async {
+  final owner = _dimOwner();
+  if (owner == null) return;
+  _dimOf = owner;
+  _dim = dim;
+  wallDimRevision.value++;
+  try {
+    await session.setWallDim(dim);
+  } catch (e) {
+    dlog('wallpaper: dim not kept (${e.runtimeType})');
+  }
 }

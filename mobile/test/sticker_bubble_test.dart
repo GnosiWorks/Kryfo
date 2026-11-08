@@ -16,6 +16,7 @@ import 'package:kryfo/stickers/sticker_wire.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/chat_parts.dart' show CornerSwap;
 import 'package:kryfo/widgets/pins.dart';
+import 'package:kryfo/widgets/tick_mark.dart';
 
 import 'sticker_test_util.dart';
 
@@ -85,7 +86,7 @@ void main() {
     expect(box.size, const Size.square(kStickerBubble));
     final sticker = _rectOf(box);
     final time = t.getRect(find.text('12:04'));
-    expect(find.text('✓'), findsOneWidget);
+    expect(find.byType(TickMark), findsOneWidget);
     expect(find.text('Delivered'), findsOneWidget);
     // inside the sticker's square, in its bottom end corner
     expect(sticker.contains(time.center), true);

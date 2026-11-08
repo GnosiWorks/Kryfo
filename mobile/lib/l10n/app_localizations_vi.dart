@@ -3102,7 +3102,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get handleChecking => 'Đang kiểm tra…';
 
   @override
-  String get handleAvailable => '✓ Còn trống';
+  String get handleAvailable => 'Còn trống';
 
   @override
   String get handleAlreadyTaken => 'Đã có người dùng';
@@ -5987,6 +5987,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Mặc định';
+
+  @override
+  String get wallpaperDim => 'Làm tối hình nền';
 
   @override
   String get wallpaperNotSet => 'Chưa đặt được hình nền. Hãy thử lại.';

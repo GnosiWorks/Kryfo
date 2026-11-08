@@ -3137,7 +3137,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get handleChecking => 'Verificando…';
 
   @override
-  String get handleAvailable => '✓ Disponível';
+  String get handleAvailable => 'Disponível';
 
   @override
   String get handleAlreadyTaken => 'Já está em uso';
@@ -6035,6 +6035,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Padrão';
+
+  @override
+  String get wallpaperDim => 'Escurecer o papel de parede';
 
   @override
   String get wallpaperNotSet =>

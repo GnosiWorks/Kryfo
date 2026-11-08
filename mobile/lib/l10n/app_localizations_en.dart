@@ -3112,7 +3112,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get handleChecking => 'Checking…';
 
   @override
-  String get handleAvailable => '✓ Available';
+  String get handleAvailable => 'Available';
 
   @override
   String get handleAlreadyTaken => 'Already taken';
@@ -5992,6 +5992,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Default';
+
+  @override
+  String get wallpaperDim => 'Dim wallpaper';
 
   @override
   String get wallpaperNotSet => 'The wallpaper was not set. Try again.';

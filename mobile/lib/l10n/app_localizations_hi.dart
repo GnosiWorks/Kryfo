@@ -3119,7 +3119,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get handleChecking => 'जाँच हो रही है…';
 
   @override
-  String get handleAvailable => '✓ उपलब्ध';
+  String get handleAvailable => 'उपलब्ध';
 
   @override
   String get handleAlreadyTaken => 'पहले से लिया हुआ';
@@ -5999,6 +5999,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'डिफ़ॉल्ट';
+
+  @override
+  String get wallpaperDim => 'वॉलपेपर मद्धम करें';
 
   @override
   String get wallpaperNotSet => 'वॉलपेपर नहीं लगा। दोबारा कोशिश करें।';

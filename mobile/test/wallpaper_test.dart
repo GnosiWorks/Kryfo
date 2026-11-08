@@ -174,7 +174,7 @@ void main() {
     ];
 
     test('dark theme: a bright photo is pulled down further than a dark '
-        'one, and lands dark', () {
+        'one, never past the default cap', () {
       const white = Color(0xFFFFFFFF);
       final bright = veilFor(shot(white, 64), darkInk, light: false);
       final dim = veilFor(
@@ -183,15 +183,30 @@ void main() {
         light: false,
       );
       expect(bright, greaterThan(dim));
-      expect(bright, lessThanOrEqualTo(0.86));
+      // a bright photo stays bright enough to be itself
+      expect(bright, kDimDefault);
       expect(dim, greaterThanOrEqualTo(0.4));
       expect(
         under(
-          const Color(0xFF808080),
+          const Color(0xFF606060),
           darkInk,
-          veilFor(shot(const Color(0xFF808080), 64), darkInk, light: false),
+          veilFor(shot(const Color(0xFF606060), 64), darkInk, light: false),
         ),
         lessThanOrEqualTo(0.0601),
+      );
+    });
+
+    test('the chosen dim rules the dark theme, within the slider\'s reach; '
+        'the light theme keeps its own veil', () {
+      final white = shot(const Color(0xFFFFFFFF), 64);
+      expect(photoVeil(white, darkInk, light: false), kDimDefault);
+      expect(photoVeil(white, darkInk, light: false, dim: 0.2), 0.2);
+      expect(photoVeil(white, darkInk, light: false, dim: 0), 0);
+      expect(photoVeil(white, darkInk, light: false, dim: 0.95), kDimMost);
+      final black = shot(const Color(0xFF000000), 64);
+      expect(
+        photoVeil(black, paleInk, light: true, dim: 0.1),
+        veilFor(black, paleInk, light: true),
       );
     });
 
@@ -214,18 +229,15 @@ void main() {
       );
     });
 
-    test('a bright patch on a dark photo is covered too: the veil follows '
-        'its brightest tenth, not its average', () {
+    test('a bright patch on a dark photo counts: the veil follows its '
+        'brightest tenth, not its average, up to the cap', () {
       // a night photo with a lamp in a corner: an eighth of it white
       final lamp = shot(const Color(0xFFFFFFFF), 8, const Color(0xFF101010));
-      final mean = shot(const Color(0xFF5A5A5A), 64);
+      final mean = shot(const Color(0xFF3A3A3A), 64);
       final v = veilFor(lamp, darkInk, light: false);
-      // the average of it alone would ask far less
+      // the average of it alone would ask less
       expect(v, greaterThan(veilFor(mean, darkInk, light: false)));
-      expect(
-        under(const Color(0xFFFFFFFF), darkInk, v),
-        lessThanOrEqualTo(0.0601),
-      );
+      expect(v, kDimDefault);
       // and the light theme looks at its darkest tenth
       final snow = shot(const Color(0xFF000000), 8, const Color(0xFFF0F0F0));
       expect(veilFor(snow, paleInk, light: true), greaterThan(0.75));
@@ -234,7 +246,7 @@ void main() {
     test('a photo not read yet gets a middle veil, never none', () {
       for (final light in [false, true]) {
         final v = veilFor(null, light ? paleInk : darkInk, light: light);
-        expect(v, inInclusiveRange(0.4, 0.86));
+        expect(v, inInclusiveRange(0.4, light ? 0.86 : kDimDefault));
       }
     });
 

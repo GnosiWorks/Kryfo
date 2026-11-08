@@ -3198,7 +3198,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get handleChecking => 'جارٍ التحقق…';
 
   @override
-  String get handleAvailable => '✓ متاح';
+  String get handleAvailable => 'متاح';
 
   @override
   String get handleAlreadyTaken => 'محجوز بالفعل';
@@ -6099,6 +6099,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'الافتراضي';
+
+  @override
+  String get wallpaperDim => 'تعتيم الخلفية';
 
   @override
   String get wallpaperNotSet => 'لم تُضبط الخلفية. حاول مرة أخرى.';

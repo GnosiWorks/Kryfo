@@ -3191,7 +3191,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get handleChecking => 'Sprawdzam…';
 
   @override
-  String get handleAvailable => '✓ Dostępna';
+  String get handleAvailable => 'Dostępna';
 
   @override
   String get handleAlreadyTaken => 'Już zajęta';
@@ -6124,6 +6124,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Domyślna';
+
+  @override
+  String get wallpaperDim => 'Przyciemnij tapetę';
 
   @override
   String get wallpaperNotSet =>

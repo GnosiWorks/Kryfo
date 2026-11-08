@@ -2958,7 +2958,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleChecking => '正在检查…';
 
   @override
-  String get handleAvailable => '✓ 可用';
+  String get handleAvailable => '可用';
 
   @override
   String get handleAlreadyTaken => '已被占用';
@@ -5712,6 +5712,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get wallpaperDefault => '默认';
+
+  @override
+  String get wallpaperDim => '调暗壁纸';
 
   @override
   String get wallpaperNotSet => '壁纸没有设置成功。请再试一次。';
@@ -14164,7 +14167,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleChecking => '檢查中…';
 
   @override
-  String get handleAvailable => '✓ 可以使用';
+  String get handleAvailable => '可以使用';
 
   @override
   String get handleAlreadyTaken => '已被使用';
@@ -16918,6 +16921,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get wallpaperDefault => '預設';
+
+  @override
+  String get wallpaperDim => '調暗桌布';
 
   @override
   String get wallpaperNotSet => '桌布沒有設定成功。請再試一次。';

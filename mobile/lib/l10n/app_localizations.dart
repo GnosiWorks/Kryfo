@@ -4924,7 +4924,7 @@ abstract class AppLocalizations {
   /// screens/handle_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'✓ Available'**
+  /// **'Available'**
   String get handleAvailable;
 
   /// screens/handle_screen.dart
@@ -9636,6 +9636,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Default'**
   String get wallpaperDefault;
+
+  /// screens/wallpaper_sheet.dart; a slider over a photo wallpaper in the dark theme
+  ///
+  /// In en, this message translates to:
+  /// **'Dim wallpaper'**
+  String get wallpaperDim;
 
   /// screens/chat_screen.dart
   ///

@@ -2,6 +2,7 @@
 // the wallpaper picker for chats, groups and the default under appearance.
 // kept in the encrypted db and never sent: the other person sees their own.
 // taps preview live behind the sheet; backing out puts the old one back.
+// in the dark theme a photo in use brings a dim slider, moved live too
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/services.dart';
 
 import '../atmosphere.dart';
 import '../theme.dart';
+import '../wallpaper.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime;
 import '../widgets/halo_sheet.dart';
@@ -16,6 +18,7 @@ import '../widgets/halo_rows.dart' show HaloSection;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../l10n/l10n.dart';
+import '../l10n/numbers.dart' show percent;
 
 // what the sheet hands back when the person wants a photo of their own
 // behind the chat instead of an atmosphere
@@ -30,7 +33,10 @@ class WallpaperDefault {
 
 // an Atmo to keep, a WallpaperFromPhotos to go and pick one, a
 // WallpaperDefault, or null for no change. [allowDefault] offers the default
-// first, [followsDefault] and [hasPhoto] say what is in use now
+// first, [followsDefault] and [hasPhoto] say what is in use now. [photo] is
+// the chat's own photo in use and [defaultPhoto] the default's, when it is
+// one: the dim slider shows while one of them is picked. a dim moved is
+// kept with Keep it, whatever else is picked
 Future<Object?> showWallpaperSheet(
   BuildContext context,
   Atmo current, {
@@ -40,6 +46,8 @@ Future<Object?> showWallpaperSheet(
   bool allowDefault = false,
   bool followsDefault = false,
   bool hasPhoto = false,
+  Uint8List? photo,
+  Uint8List? defaultPhoto,
 }) {
   return showHaloSheet<Object>(
     context,
@@ -54,6 +62,8 @@ Future<Object?> showWallpaperSheet(
       onPreviewDefault: onPreviewDefault,
       allowPhoto: allowPhoto,
       allowDefault: allowDefault,
+      photo: hasPhoto ? photo : null,
+      defaultPhoto: defaultPhoto,
     ),
   );
 }
@@ -65,12 +75,16 @@ class _Picker extends StatefulWidget {
   final VoidCallback? onPreviewDefault;
   final bool allowPhoto;
   final bool allowDefault;
+  final Uint8List? photo;
+  final Uint8List? defaultPhoto;
   const _Picker({
     required this.current,
     this.onPreview,
     this.onPreviewDefault,
     this.allowPhoto = false,
     this.allowDefault = false,
+    this.photo,
+    this.defaultPhoto,
   });
   @override
   State<_Picker> createState() => _PickerState();
@@ -78,6 +92,60 @@ class _Picker extends StatefulWidget {
 
 class _PickerState extends State<_Picker> {
   late Object? _pick = widget.current;
+  // the dim the slider was moved to, kept with Keep it; until then it shows
+  // the identity's, or the automatic veil of the photo in view
+  double? _moved;
+  double? _kept;
+  final _auto = <Uint8List, double>{};
+
+  @override
+  void initState() {
+    super.initState();
+    readWallDim().then((d) {
+      if (mounted) setState(() => _kept = d);
+    });
+    for (final p in {?widget.photo, ?widget.defaultPhoto}) {
+      photoSamples(p).then((s) {
+        if (!mounted) return;
+        setState(() => _auto[p] = veilFor(s, HaloColors.ink, light: false));
+      });
+    }
+  }
+
+  double get _dim => _moved ?? _kept ?? _autoOf(_inView) ?? kDimDefault;
+
+  @override
+  void dispose() {
+    wallDimPreview.value = null;
+    super.dispose();
+  }
+
+  // the photo behind the chat as the pick stands, or null for none
+  Uint8List? get _inView => _pick == null
+      ? widget.photo
+      : _pick is WallpaperDefault
+      ? widget.defaultPhoto
+      : null;
+
+  double? _autoOf(Uint8List? p) => p == null ? null : _auto[p];
+
+  bool get _dimShown =>
+      widget.allowPhoto && !HaloColors.isLight && _inView != null;
+
+  void _slide(double v) {
+    // a click at each step, as the swatches click
+    if ((v * 20).round() != (_dim * 20).round()) {
+      HapticFeedback.selectionClick();
+    }
+    setState(() => _moved = v);
+    wallDimPreview.value = v;
+  }
+
+  void _keep() {
+    final moved = _moved;
+    if (moved != null) keepWallDim(moved);
+    Navigator.pop(context, _pick);
+  }
 
   // a null swatch is the default's
   void _choose(Atmo? a) {
@@ -186,10 +254,14 @@ class _PickerState extends State<_Picker> {
                   ),
                 ),
               ],
+              _DimRoom(
+                shown: _dimShown,
+                child: _DimSlider(value: _dim, onChanged: _slide),
+              ),
               const SizedBox(height: 18),
               PressScale(
                 label: l10n.wallpaperKeepIt,
-                onTap: () => Navigator.pop(context, _pick),
+                onTap: _keep,
                 child: Container(
                   height: 46,
                   alignment: Alignment.center,
@@ -211,6 +283,88 @@ class _PickerState extends State<_Picker> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// the slider's room, opening and folding on the house spring as a photo is
+// picked or left; with reduced motion it is there or not
+class _DimRoom extends StatelessWidget {
+  final bool shown;
+  final Widget child;
+  const _DimRoom({required this.shown, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.of(context).disableAnimations;
+    return AnimatedSwitcher(
+      duration: still ? Duration.zero : kHouseTime,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (c, a) => FadeTransition(
+        opacity: a,
+        child: SizeTransition(sizeFactor: a, axisAlignment: -1, child: c),
+      ),
+      child: shown
+          ? Column(
+              key: const ValueKey('dim'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [HaloSection(l10n.wallpaperDim, flush: true), child],
+            )
+          : const SizedBox(key: ValueKey('none'), width: double.infinity),
+    );
+  }
+}
+
+// how dark the page lies over the photo, from the bare photo to nearly the
+// plain page, in steps of five, the share read out as it moves
+class _DimSlider extends StatelessWidget {
+  final double value;
+  final ValueChanged<double> onChanged;
+  const _DimSlider({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final v = value.clamp(0.0, kDimMost);
+    final shown = percent((v * 100).round() / 100);
+    return Row(
+      children: [
+        Icon(Icons.brightness_high_outlined, size: 18, color: HaloColors.text2),
+        Expanded(
+          child: SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 3,
+              activeTrackColor: HaloColors.amber,
+              inactiveTrackColor: HaloColors.line2,
+              thumbColor: HaloColors.amber,
+              overlayColor: HaloColors.amber.withValues(alpha: 0.14),
+              activeTickMarkColor: Colors.transparent,
+              inactiveTickMarkColor: Colors.transparent,
+              showValueIndicator: ShowValueIndicator.never,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+            ),
+            child: Slider(
+              value: v,
+              max: kDimMost,
+              divisions: (kDimMost * 20).round(),
+              label: shown,
+              semanticFormatterCallback: (x) =>
+                  percent((x * 100).round() / 100),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+        Icon(Icons.brightness_low_outlined, size: 18, color: HaloColors.text2),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 44,
+          child: Text(
+            shown,
+            textAlign: TextAlign.end,
+            style: HaloType.mono(size: 12, color: HaloColors.text),
+          ),
+        ),
+      ],
     );
   }
 }

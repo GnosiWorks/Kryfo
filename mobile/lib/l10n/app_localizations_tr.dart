@@ -3117,7 +3117,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get handleChecking => 'Kontrol ediliyor…';
 
   @override
-  String get handleAvailable => '✓ Uygun';
+  String get handleAvailable => 'Uygun';
 
   @override
   String get handleAlreadyTaken => 'Zaten alınmış';
@@ -6015,6 +6015,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get wallpaperDefault => 'Varsayılan';
+
+  @override
+  String get wallpaperDim => 'Duvar kağıdını karart';
 
   @override
   String get wallpaperNotSet => 'Duvar kağıdı ayarlanmadı. Yeniden dene.';

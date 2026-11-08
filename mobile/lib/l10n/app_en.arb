@@ -3829,7 +3829,7 @@
   "@handleChecking": {
     "description": "screens/handle_screen.dart"
   },
-  "handleAvailable": "✓ Available",
+  "handleAvailable": "Available",
   "@handleAvailable": {
     "description": "screens/handle_screen.dart"
   },
@@ -7476,6 +7476,10 @@
   "wallpaperDefault": "Default",
   "@wallpaperDefault": {
     "description": "screens/wallpaper_sheet.dart"
+  },
+  "wallpaperDim": "Dim wallpaper",
+  "@wallpaperDim": {
+    "description": "screens/wallpaper_sheet.dart; a slider over a photo wallpaper in the dark theme"
   },
   "wallpaperNotSet": "The wallpaper was not set. Try again.",
   "@wallpaperNotSet": {
