@@ -28,6 +28,7 @@ KT_EXPORT kt_model *kt_open(const char *config_yaml, char **err);
 KT_EXPORT int kt_translate(kt_model *m, const char **texts, int n, char **out, char **err);
 
 KT_EXPORT void kt_free(char *s);
+// the caller makes sure no kt_translate on m is running or follows.
 KT_EXPORT void kt_close(kt_model *m);
 
 #ifdef __cplusplus

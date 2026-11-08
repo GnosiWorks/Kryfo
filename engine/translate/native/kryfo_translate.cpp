@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -30,8 +31,14 @@ int __wrap_pclose(FILE *) {
 }
 }
 
+// a bergamot service registers marian's loggers by name, so only one can
+// live in a process. every model shares it: made with the first, gone with
+// the last. it is not safe across threads, so every call into it holds the lock
+static std::mutex service_lock;
+static std::weak_ptr<BlockingService> service_shared;
+
 struct kt_model {
-  std::unique_ptr<BlockingService> service;
+  std::shared_ptr<BlockingService> service;
   std::shared_ptr<TranslationModel> model;
 };
 
@@ -48,10 +55,16 @@ static void fail(char **err, const char *what) {
 kt_model *kt_open(const char *config_yaml, char **err) {
   try {
     auto options = parseOptionsFromString(config_yaml, /*validate=*/false);
+    // held past m, so a failed open lets go of the service under it too
+    std::lock_guard<std::mutex> hold(service_lock);
     auto m = std::make_unique<kt_model>();
-    BlockingService::Config sc;
-    sc.cacheSize = 0;
-    m->service = std::make_unique<BlockingService>(sc);
+    m->service = service_shared.lock();
+    if (!m->service) {
+      BlockingService::Config sc;
+      sc.cacheSize = 0;
+      m->service = std::make_shared<BlockingService>(sc);
+      service_shared = m->service;
+    }
     m->model = std::make_shared<TranslationModel>(options);
     return m.release();
   } catch (const std::exception &e) {
@@ -70,6 +83,7 @@ int kt_translate(kt_model *m, const char **texts, int n, char **out, char **err)
   try {
     std::vector<std::string> in(texts, texts + n);
     std::vector<ResponseOptions> opts(n);
+    std::lock_guard<std::mutex> hold(service_lock);
     auto res = m->service->translateMultiple(m->model, std::move(in), opts);
     for (int i = 0; i < n; i++) out[i] = dup(res[i].target.text);
     return 0;
@@ -83,4 +97,7 @@ int kt_translate(kt_model *m, const char **texts, int n, char **out, char **err)
 
 void kt_free(char *s) { std::free(s); }
 
-void kt_close(kt_model *m) { delete m; }
+void kt_close(kt_model *m) {
+  std::lock_guard<std::mutex> hold(service_lock);
+  delete m;
+}
