@@ -8755,6 +8755,17 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gửi $count tệp này?',
+      one: 'Gửi tệp này?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.';
 

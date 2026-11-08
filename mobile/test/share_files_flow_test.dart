@@ -5,6 +5,7 @@
 // only its own chats, hidden ones only with their vault open, nothing is
 // copied before a chat is picked, one over the limit is said and never
 // copied, and every copy goes once done with. android is a stand-in
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/media_send_screen.dart';
 import 'package:kryfo/screens/photo_knows_screen.dart';
+import 'package:kryfo/screens/share_files_sheet.dart' show sharePeekLimit;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/share_files.dart';
 import 'package:kryfo/tools/tools_bridge.dart' show PickedFile;
@@ -122,6 +124,18 @@ class _Db extends DevTestDb {
 
   // the people a vault holds, when this is one
   Set<String> holds = const {};
+  // each message saved, by the name of the file it carries
+  final saved = <String?>[];
+
+  @override
+  dynamic noSuchMethod(Invocation i) {
+    if (i.memberName == #saveMessage) {
+      saved.add(i.namedArguments[#fileName] as String?);
+      return Future<void>.value();
+    }
+    return super.noSuchMethod(i);
+  }
+
   Set<String> held = const {};
 
   Map<String, Object?>? _contact(String id) {
@@ -254,11 +268,14 @@ class _Android {
   final seen = <String>[];
   final copied = <String>[];
   final copies = <String>[];
+  var cancels = 0;
+  var hangPeek = false;
 
   Future<Object?> call(MethodCall c) async {
     final a = c.arguments is Map ? c.arguments as Map : const {};
     switch (c.method) {
       case 'takeSharedFiles':
+        if (hangPeek) return Completer<Object?>().future;
         final f = files;
         return f == null ? null : Map<String, Object?>.of(f);
       case 'seenSharedFiles':
@@ -269,14 +286,20 @@ class _Android {
         dropped.add(a['id'] as String);
         if (files?['id'] == a['id']) files = null;
         return true;
+      case 'cancelCopy':
+        cancels++;
+        return true;
       case 'copyIn':
         final uri = a['uri'] as String;
         copied.add(uri);
+        // a provider that never answers
+        if (uri.contains('hang')) return Completer<Object?>().future;
         final dir = Directory(
           p.join(cache.path, 'tools_in', 'c${copies.length}'),
         )..createSync(recursive: true);
         final name = uri.endsWith('.pdf') ? 'a.pdf' : 'p.png';
-        final f = File(p.join(dir.path, name))..writeAsBytesSync(_png);
+        final f = File(p.join(dir.path, name))
+          ..writeAsBytesSync(uri.endsWith('.pdf') ? _pdfBytes : _png);
         copies.add(f.path);
         return f.path;
     }
@@ -309,6 +332,10 @@ Map<String, Object?> _photo([int n = 1]) => {
   'name': 'p$n.png',
   'size': _png.length,
 };
+
+final _pdfBytes = Uint8List.fromList(
+  '%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n'.codeUnits,
+);
 
 Map<String, Object?> _pdf({int? size}) => {
   'uri': 'content://downloads/1/a.pdf',
@@ -386,6 +413,7 @@ void main() {
 
   void nothingSent() {
     expect(mem.rows('messages'), isEmpty);
+    expect(db.saved, isEmpty);
     expect(engine.calls.where((c) => c.toLowerCase().contains('send')), []);
   }
 
@@ -472,6 +500,117 @@ void main() {
     await settle(t);
     nothingSent();
     expect(android.allGone(), isTrue);
+    await devClose(t);
+  });
+
+  testWidgets('a photo and a pdf: backing out of the preview sends neither', (
+    t,
+  ) async {
+    await home(t);
+    await android.share(t, 'f20', [_photo(), _pdf()]);
+    await settle(t);
+    await pick(t, _amber);
+    expect(find.byType(MediaSendScreen), findsOneWidget);
+    await t.tap(find.byTooltip(l10n.commonBack).last);
+    await settle(t, 20);
+    // no question about the files either: the share ended there
+    expect(find.text(l10n.shareSendFiles(1)), findsNothing);
+    nothingSent();
+    expect(android.copies, hasLength(2));
+    expect(android.allGone(), isTrue);
+    await devClose(t);
+  });
+
+  testWidgets('a pdf is asked about, then sent, and its copy goes', (t) async {
+    await home(t);
+    await android.share(t, 'f21', [_pdf()]);
+    await settle(t);
+    await pick(t, _amber);
+    expect(find.text(l10n.shareSendFiles(1)), findsOneWidget);
+    expect(find.text('a.pdf'), findsOneWidget);
+    nothingSent();
+    await t.tap(find.text(l10n.chatSendIt));
+    await settle(t, 100);
+    expect(db.saved, ['a.pdf']);
+    expect(android.allGone(), isTrue);
+    await devClose(t);
+  });
+
+  testWidgets('a pdf asked about and cancelled sends nothing', (t) async {
+    await home(t);
+    await android.share(t, 'f22', [_pdf()]);
+    await settle(t);
+    await pick(t, _amber);
+    await t.tap(find.text(l10n.commonCancel));
+    await settle(t, 20);
+    nothingSent();
+    expect(android.allGone(), isTrue);
+    await devClose(t);
+  });
+
+  testWidgets('a copy that hangs can be stopped, and the next share works', (
+    t,
+  ) async {
+    await home(t);
+    await android.share(t, 'f23', [
+      {
+        'uri': 'content://hang/1',
+        'mime': 'application/pdf',
+        'name': 'h.pdf',
+        'size': 10,
+      },
+    ]);
+    await settle(t);
+    await t.tap(offered(_amber));
+    await settle(t, 10);
+    expect(find.text(l10n.photoKnowsReadingTheFile), findsOneWidget);
+    await t.tap(find.text(l10n.commonCancel));
+    await settle(t, 10);
+    expect(android.cancels, greaterThan(0));
+    expect(find.text(l10n.photoKnowsReadingTheFile), findsNothing);
+    expect(find.byType(ChatScreen), findsNothing);
+    expect(android.dropped, contains('f23'));
+
+    await android.share(t, 'f24', [_pdf()]);
+    await settle(t);
+    expect(find.text(l10n.shareChooseChat), findsOneWidget);
+    await letGo(t);
+    await devClose(t);
+  });
+
+  testWidgets('a look android never answers ends, and the next one works', (
+    t,
+  ) async {
+    sharePeekLimit = const Duration(milliseconds: 300);
+    addTearDown(() => sharePeekLimit = const Duration(seconds: 10));
+    await home(t);
+    android.hangPeek = true;
+    await android.share(t, 'f25', [_pdf()]);
+    await settle(t, 10);
+    expect(find.text(l10n.shareChooseChat), findsNothing);
+    android.hangPeek = false;
+    await android.share(t, 'f26', [_pdf()]);
+    await settle(t);
+    expect(find.text(l10n.shareChooseChat), findsOneWidget);
+    await letGo(t);
+    await devClose(t);
+  });
+
+  testWidgets('a lock while the preview is up shreds every copy of it', (
+    t,
+  ) async {
+    lockState.openForTest(enabled: true);
+    await home(t);
+    await android.share(t, 'f27', [_photo(), _pdf()]);
+    await settle(t);
+    await pick(t, _amber);
+    expect(find.byType(MediaSendScreen), findsOneWidget);
+    expect(SharedInbox.takenCount, 2);
+    lockState.lock();
+    await settle(t, 60);
+    expect(android.allGone(), isTrue);
+    expect(SharedInbox.takenCount, 0);
+    nothingSent();
     await devClose(t);
   });
 

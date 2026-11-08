@@ -8930,6 +8930,18 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Отправить эти $count файлов?',
+      few: 'Отправить эти $count файла?',
+      one: 'Отправить этот файл?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Всё ещё подключаемся… Твои сообщения уйдут, как только связь вернётся.';
 

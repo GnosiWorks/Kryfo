@@ -2299,6 +2299,7 @@
   "shareSendCleanLine": "Приховані дані спершу видаляються",
   "shareCheckLine": "Подивіться, що в ньому є, просто на цьому телефоні",
   "shareFileOverLimit": "Файли можуть бути до {max}. Цей більший.",
+  "shareSendFiles": "{count, plural, =1{Надіслати цей файл?} few{Надіслати ці {count} файли?} other{Надіслати ці {count} файлів?}}",
   "valveStillConnecting": "Ще підключаємося… Твої повідомлення підуть, щойно зв’язок повернеться.",
   "valveCouldNotReconnect": "Kryfo не зміг перепідключитися. Перезапуск це виправить, а повідомлення збережуться.",
   "valveRestartKryfo": "Перезапустити Kryfo",

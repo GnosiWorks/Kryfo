@@ -8769,6 +8769,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Send these $count files?',
+      one: 'Send this file?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Still connecting… Your messages go out as soon as the connection is back.';
 

@@ -22,6 +22,7 @@ import 'package:file_picker/file_picker.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../picked.dart';
 import '../share_files.dart';
+import 'share_files_sheet.dart' show askSendSharedFiles;
 import '../album.dart';
 import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
@@ -5887,6 +5888,9 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    if (_sharedHeld.isNotEmpty) {
+      unawaited(SharedInbox.release(_sharedHeld.toList()));
+    }
     _find.detach();
     _helloWaitTimer?.cancel();
     _unwatchCaptures?.call();
@@ -6843,11 +6847,17 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted || !_barKnown) return;
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
     final got = SharedInbox.take(_trayKey);
+    _sharedHeld.addAll(got);
     if (got.isNotEmpty) unawaited(_sendSharedIn(got));
   }
 
+  // shared copies this chat holds while its preview or question is up: a
+  // chat that goes first shreds them
+  final _sharedHeld = <SharedCopy>{};
+
   // the photos and videos through the send preview as a gallery pick, then
-  // each file as the file tile sends one. the copies go once done with
+  // the files once asked about, each as the file tile sends one. a back out
+  // anywhere sends nothing more of it; the copies go once done with
   Future<void> _sendSharedIn(List<SharedCopy> got) async {
     try {
       if (!_composerShown) {
@@ -6860,22 +6870,33 @@ class _ChatScreenState extends State<ChatScreen>
           if (c.kind != SharedKind.file)
             XFile(c.path, name: c.name, mimeType: c.mime),
       ];
+      final files = [
+        for (final c in got)
+          if (c.kind == SharedKind.file) c,
+      ];
       if (media.isNotEmpty) {
+        var sent = false;
         await sendGalleryPicks(
           media,
           pickMore: () => lockState.hold(pickGallery),
           preview: _preview,
-          send: _sendPicked,
+          send: (r) {
+            sent = true;
+            return _sendPicked(r);
+          },
         );
+        if (!sent) return;
       }
-      for (final f in got) {
-        if (f.kind != SharedKind.file) continue;
+      if (files.isEmpty || !mounted || lockState.locked) return;
+      if (!await askSendSharedFiles(context, files)) return;
+      for (final f in files) {
         if (!mounted || lockState.locked) break;
         final ready = await _readyFile(f.path, f.name);
         if (ready != null) await _sendReady(ready, '');
       }
     } finally {
-      await shredCopies(got);
+      _sharedHeld.removeAll(got);
+      await SharedInbox.release(got);
     }
   }
 

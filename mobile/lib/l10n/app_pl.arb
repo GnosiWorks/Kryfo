@@ -2299,6 +2299,7 @@
   "shareSendCleanLine": "Ukryte dane znikają przed wysłaniem",
   "shareCheckLine": "Zobacz, co zawiera, na tym telefonie",
   "shareFileOverLimit": "Pliki mogą mieć do {max}. Ten jest większy.",
+  "shareSendFiles": "{count, plural, =1{Wysłać ten plik?} few{Wysłać te {count} pliki?} other{Wysłać te {count} plików?}}",
   "valveStillConnecting": "Wciąż łączę… Twoje wiadomości wyjdą, gdy tylko połączenie wróci.",
   "valveCouldNotReconnect": "Kryfo nie mogło połączyć się ponownie. Ponowne uruchomienie to naprawi i zachowa twoje wiadomości.",
   "valveRestartKryfo": "Uruchom Kryfo ponownie",

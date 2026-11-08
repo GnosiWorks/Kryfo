@@ -2299,6 +2299,7 @@
   "shareSendCleanLine": "Detail tersembunyinya dihapus dulu",
   "shareCheckLine": "Lihat isinya, langsung di ponsel ini",
   "shareFileOverLimit": "File bisa sampai {max}. Yang ini lebih besar.",
+  "shareSendFiles": "{count, plural, =1{Kirim file ini?} other{Kirim {count} file ini?}}",
   "valveStillConnecting": "Masih menyambung… Pesanmu akan terkirim begitu koneksi kembali.",
   "valveCouldNotReconnect": "Kryfo tidak bisa menyambung ulang. Memulai ulang akan memperbaikinya dan pesanmu tetap tersimpan.",
   "valveRestartKryfo": "Mulai ulang Kryfo",

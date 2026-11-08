@@ -4,6 +4,7 @@
 // or check it), then the chat picker, a copy in, and that chat's own send
 // preview. nothing goes without its send, and what is not used is let go
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
@@ -18,7 +19,9 @@ import '../theme.dart';
 import '../tools/tools_bridge.dart';
 import '../voice_live.dart';
 import '../widgets/halo_sheet.dart';
-import '../widgets/media_bubbles.dart' show fileTooBigLine, humanFileSize;
+import '../widgets/media_bubbles.dart'
+    show fileGlyph, fileTooBigLine, humanFileSize;
+import '../file_kind.dart' show kindOfName;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/tool_parts.dart' show ToolWideButton;
@@ -26,6 +29,14 @@ import 'chat_screen.dart' show landFilesInOpenChat;
 import 'forward_sheet.dart';
 
 enum ShareWay { chat, check }
+
+/// how long a copy in may go without moving before it is stopped
+@visibleForTesting
+Duration copyIdleLimit = const Duration(seconds: 45);
+
+/// how long android is given to say what was shared
+@visibleForTesting
+Duration sharePeekLimit = const Duration(seconds: 10);
 
 class ShareFiles {
   ShareFiles({
@@ -88,7 +99,7 @@ class ShareFiles {
     _busy = true;
     try {
       while (alive()) {
-        final s = await _bridge.peekSharedFiles();
+        final s = await _peek();
         if (s == null) return;
         if (_done.contains(s.id)) {
           await _bridge.dropSharedFiles(s.id);
@@ -104,7 +115,7 @@ class ShareFiles {
         await WidgetsBinding.instance.endOfFrame;
         if (!alive() || !context.mounted) return;
         _newer = false;
-        final now = await _bridge.peekSharedFiles();
+        final now = await _peek();
         if (now?.id != s.id) continue;
         final where = _whereNow();
         final container = session.container.id;
@@ -180,6 +191,10 @@ class ShareFiles {
     }
   }
 
+  // a provider that never answers ends the look, not every share after it
+  Future<SharedFiles?> _peek() =>
+      _bridge.peekSharedFiles().timeout(sharePeekLimit, onTimeout: () => null);
+
   Future<void> _finish(String id) async {
     _done.add(id);
     await _bridge.dropSharedFiles(id);
@@ -199,7 +214,9 @@ class ShareFiles {
     if (over != null) showHaloToast(context, fileTooBigLine(over.size, most));
     if (sorted.fit.isEmpty) return const [];
     final out = <SharedCopy>[];
-    var stopped = false;
+    // a cancel, a lock or a copy that stopped moving ends the wait at once,
+    // whatever the provider still does
+    final stopped = Completer<void>();
     String? said;
     final total = sorted.fit.fold<int>(
       0,
@@ -207,13 +224,22 @@ class ShareFiles {
     );
     var before = 0;
     final shown = ValueNotifier<double?>(null);
-    final sub = _bridge.progress.listen((c) {
-      if (total > 0) shown.value = ((before + c.done) / total).clamp(0.0, 1.0);
-    });
+    Timer? idle;
     void stop() {
-      stopped = true;
+      if (stopped.isCompleted) return;
+      stopped.complete();
       _bridge.cancelCopy();
     }
+
+    void moved() {
+      idle?.cancel();
+      idle = Timer(copyIdleLimit, stop);
+    }
+
+    final sub = _bridge.progress.listen((c) {
+      moved();
+      if (total > 0) shown.value = ((before + c.done) / total).clamp(0.0, 1.0);
+    });
 
     void onLock() {
       if (lockState.locked) stop();
@@ -221,10 +247,11 @@ class ShareFiles {
 
     lockState.addListener(onLock);
     BuildContext? sheet;
-    var sheetDone = false;
+    var asked = false;
     // a quick copy shows nothing; a slow one a bar that can be stopped
     final slow = Timer(const Duration(milliseconds: 400), () {
-      if (!context.mounted || stopped) return;
+      if (!context.mounted || stopped.isCompleted) return;
+      asked = true;
       showHaloSheet<void>(
         context,
         dismissible: false,
@@ -232,19 +259,31 @@ class ShareFiles {
           sheet = c;
           return _CopySheet(progress: shown, onStop: stop);
         },
-      ).whenComplete(() => sheetDone = true);
+      );
     });
     try {
       for (final f in sorted.fit) {
-        if (stopped) break;
+        if (stopped.isCompleted) break;
+        moved();
+        final copy = _bridge.copyIn(f.uri, most: most);
+        final String path;
         try {
-          final path = await _bridge.copyIn(f.uri, most: most);
-          out.add(
-            SharedCopy(path, name: f.name ?? p.basename(path), mime: f.mime),
-          );
+          final got = await Future.any<String?>([
+            copy,
+            stopped.future.then((_) => null),
+          ]);
+          if (got == null) {
+            // one that ends after all the wait is let go of on its own
+            copy.then(
+              (late) => shredCopies([SharedCopy(late, name: '')]),
+              onError: (_) {},
+            );
+            break;
+          }
+          path = got;
         } on ToolsFailure catch (e) {
           if (e.code == 'cancelled') {
-            stopped = true;
+            stop();
             break;
           }
           said ??= switch (e.code) {
@@ -252,18 +291,28 @@ class ShareFiles {
             'full' => l10n.cleanFreeSomeSpaceAnd,
             _ => l10n.chatCouldNotReadThat,
           };
+          before += f.size > 0 ? f.size : 0;
+          continue;
         }
+        out.add(
+          SharedCopy(path, name: f.name ?? p.basename(path), mime: f.mime),
+        );
         before += f.size > 0 ? f.size : 0;
       }
     } finally {
       slow.cancel();
+      idle?.cancel();
       await sub.cancel();
       lockState.removeListener(onLock);
+      // asked for but not built yet: it is, a frame on
+      if (asked && sheet == null) await WidgetsBinding.instance.endOfFrame;
       final s = sheet;
-      if (s != null && s.mounted && !sheetDone) Navigator.of(s).pop();
-      shown.dispose();
+      final r = s != null && s.mounted ? ModalRoute.of(s) : null;
+      // its own route, wherever it sits now: never whatever is on top
+      if (r != null && r.isActive) r.navigator?.removeRoute(r);
     }
-    if (stopped) {
+    final cancelled = stopped.isCompleted;
+    if (cancelled) {
       await shredCopies(out);
       return const [];
     }
@@ -298,6 +347,95 @@ Future<void> landFiles(
   }
   if (!context.mounted) return;
   unawaited(Navigator.of(context).push(route));
+}
+
+/// the files of a share, named, asked about before any of them goes
+Future<bool> askSendSharedFiles(
+  BuildContext context,
+  List<SharedCopy> files,
+) async =>
+    await showHaloSheet<bool>(
+      context,
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Center(child: SheetHandle()),
+              const SizedBox(height: 18),
+              Text(
+                l10n.shareSendFiles(files.length),
+                style: HaloType.serif(
+                  size: 18,
+                  italic: true,
+                  color: HaloColors.text,
+                ),
+              ),
+              const SizedBox(height: 10),
+              for (final f in files) _FileLine(f),
+              const SizedBox(height: 16),
+              ToolWideButton(
+                label: l10n.chatSendIt,
+                filled: true,
+                onTap: () => Navigator.pop(ctx, true),
+              ),
+              const SizedBox(height: 10),
+              ToolWideButton(
+                label: l10n.commonCancel,
+                filled: false,
+                onTap: () => Navigator.pop(ctx, false),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ) ==
+    true;
+
+class _FileLine extends StatelessWidget {
+  const _FileLine(this.file);
+  final SharedCopy file;
+
+  @override
+  Widget build(BuildContext context) {
+    int size;
+    try {
+      size = File(file.path).lengthSync();
+    } on FileSystemException {
+      size = -1;
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(
+            fileGlyph(kindOfName(file.name)),
+            size: 20,
+            color: HaloColors.amber,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              file.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: HaloType.sans(size: 14, color: HaloColors.text),
+            ),
+          ),
+          if (size >= 0) ...[
+            const SizedBox(width: 10),
+            Text(
+              humanFileSize(size),
+              style: HaloType.sans(size: 12.5, color: HaloColors.warm),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 /// what to do with one shared photo or video. null when let go

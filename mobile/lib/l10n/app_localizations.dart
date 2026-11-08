@@ -14089,6 +14089,12 @@ abstract class AppLocalizations {
   /// **'Files can be up to {max}. This one is bigger.'**
   String shareFileOverLimit(String max);
 
+  /// screens/share_files_sheet.dart: asked before shared files go to the chat picked, above their names
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Send this file?} other{Send these {count} files?}}'**
+  String shareSendFiles(int count);
+
   /// widgets/reconnect_valve.dart: a send has waited on tor a minute
   ///
   /// In en, this message translates to:

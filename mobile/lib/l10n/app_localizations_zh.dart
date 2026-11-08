@@ -8346,6 +8346,17 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '发送这 $count 个文件？',
+      one: '发送这个文件？',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get valveStillConnecting => '仍在连接…连接恢复后，你的消息会立刻发出。';
 
   @override
@@ -19443,6 +19454,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String shareFileOverLimit(String max) {
     return '檔案最大為 $max。這個更大。';
+  }
+
+  @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '傳送這 $count 個檔案？',
+      one: '傳送這個檔案？',
+    );
+    return '$_temp0';
   }
 
   @override

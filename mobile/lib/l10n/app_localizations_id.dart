@@ -8770,6 +8770,17 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String shareSendFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kirim $count file ini?',
+      one: 'Kirim file ini?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get valveStillConnecting =>
       'Masih menyambung… Pesanmu akan terkirim begitu koneksi kembali.';
 

@@ -2299,6 +2299,7 @@
   "shareSendCleanLine": "Thông tin ẩn được gỡ trước",
   "shareCheckLine": "Xem nó chứa gì, ngay trên điện thoại này",
   "shareFileOverLimit": "Tệp có thể đến {max}. Tệp này lớn hơn.",
+  "shareSendFiles": "{count, plural, =1{Gửi tệp này?} other{Gửi {count} tệp này?}}",
   "valveStillConnecting": "Vẫn đang kết nối… Tin nhắn của bạn sẽ được gửi ngay khi có kết nối lại.",
   "valveCouldNotReconnect": "Kryfo không thể kết nối lại. Khởi động lại sẽ khắc phục và giữ nguyên tin nhắn của bạn.",
   "valveRestartKryfo": "Khởi động lại Kryfo",

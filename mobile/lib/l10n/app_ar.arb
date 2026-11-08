@@ -2299,6 +2299,7 @@
   "shareSendCleanLine": "تُزال تفاصيلها المخفية أولًا",
   "shareCheckLine": "اعرف ما تحمله، على هذا الهاتف",
   "shareFileOverLimit": "يمكن أن يصل حجم الملفات إلى {max}. هذا الملف أكبر.",
+  "shareSendFiles": "{count, plural, =1{إرسال هذا الملف؟} other{إرسال هذه الملفات ({count})؟}}",
   "valveStillConnecting": "ما زال الاتصال جاريًا… ستُرسَل رسائلك فور عودة الاتصال.",
   "valveCouldNotReconnect": "تعذّر على Kryfo إعادة الاتصال. إعادة تشغيله تحل المشكلة وتحتفظ برسائلك.",
   "valveRestartKryfo": "إعادة تشغيل Kryfo",

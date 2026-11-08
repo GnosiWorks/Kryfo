@@ -3,6 +3,7 @@
 // picked for them: kryfo's own copies in the tools folder, waiting for that
 // chat to take them into its send preview. a lock, or a newer share, lets
 // them go; a chat that takes them shreds them once they went its own way
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 
 import 'lock_state.dart';
@@ -72,9 +73,12 @@ Future<void> shredCopies(Iterable<SharedCopy> copies) async {
   }
 }
 
-/// copies handed to a chat, by container and chat id
+/// copies handed to a chat, by container and chat id. a lock shreds them,
+/// waiting or taken: a chat still showing them (a preview left open) loses
+/// them with the session they were shared into
 class SharedInbox {
   static final _waiting = <String, List<SharedCopy>>{};
+  static final _taken = <SharedCopy>{};
   static bool _watching = false;
 
   /// [copies] wait for [key]'s chat. one share at a time: what waited for
@@ -90,13 +94,28 @@ class SharedInbox {
     _waiting[key] = [...?_waiting[key], ...copies];
   }
 
-  static List<SharedCopy> take(String key) => _waiting.remove(key) ?? const [];
+  static List<SharedCopy> take(String key) {
+    final got = _waiting.remove(key) ?? const <SharedCopy>[];
+    _taken.addAll(got);
+    return got;
+  }
+
+  /// [copies] shredded and no longer tracked: the chat is done with them
+  static Future<void> release(Iterable<SharedCopy> copies) async {
+    final list = copies.toList();
+    _taken.removeAll(list);
+    await shredCopies(list);
+  }
+
+  @visibleForTesting
+  static int get takenCount => _taken.length;
 
   static bool waits(String key) => _waiting.containsKey(key);
 
   static Future<void> dropAll() async {
-    final all = [for (final l in _waiting.values) ...l];
+    final all = [for (final l in _waiting.values) ...l, ..._taken];
     _waiting.clear();
+    _taken.clear();
     await shredCopies(all);
   }
 

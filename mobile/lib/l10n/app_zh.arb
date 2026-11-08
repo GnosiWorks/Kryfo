@@ -2299,6 +2299,7 @@
   "shareSendCleanLine": "先去掉隐藏信息",
   "shareCheckLine": "在这部手机上看看它带着什么",
   "shareFileOverLimit": "文件最大为 {max}。这个更大。",
+  "shareSendFiles": "{count, plural, =1{发送这个文件？} other{发送这 {count} 个文件？}}",
   "valveStillConnecting": "仍在连接…连接恢复后，你的消息会立刻发出。",
   "valveCouldNotReconnect": "Kryfo 无法重新连接。重启即可解决，你的消息会保留。",
   "valveRestartKryfo": "重启 Kryfo",
