@@ -685,7 +685,7 @@ func (r *linkRun) phoneSteps(ctx context.Context, accept []byte) error {
 		return err
 	}
 	r.mu.Lock()
-	r.live, r.moved = true, r.clock()
+	r.st, r.live, r.moved = lsLinking, true, r.clock()
 	r.mu.Unlock()
 	stream, err := devices.NewStreamKey()
 	if err != nil {
