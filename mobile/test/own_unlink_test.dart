@@ -2372,19 +2372,21 @@ void main() {
     // tried again and again, further apart, kept, never let go
     expect(tries(), greaterThan(early + 5));
     expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 1);
-    // relays again: the next try, at most the longest wait away, goes on
-    // both addresses and is taken
+    // its next try is hours away now
+    final next = (await w.db.query('dev_farewell')).single['next_at'] as int;
+    expect(
+      next - w.clock,
+      greaterThan(const Duration(hours: 1).inMilliseconds),
+    );
+    // a relay answers again: the word goes at once on both addresses and
+    // is taken, no wait
     w.wire.up = true;
     final openersBefore = w.wire.openers.length;
-    final back = w.clock;
-    while (w.wire.openers.length == openersBefore) {
-      expect(
-        w.clock - back,
-        lessThanOrEqualTo(const Duration(hours: 6).inMilliseconds),
-      );
-      w.clock += const Duration(minutes: 5).inMilliseconds;
-      await w.send.pump();
-    }
+    await w.send.relaysBack();
+    expect(w.wire.openers.length, greaterThan(openersBefore));
+    // taken: the usual copies after, not the outage's waits
+    final row = (await w.db.query('dev_farewell')).single;
+    expect(row['tries'], 0);
     final taken = w.wire.sent.lastWhere((s) => s.arg.contains('/4/1.'));
     expect(taken.arg, w.wire.openers.last);
 
