@@ -606,6 +606,10 @@ func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1
 				trying()
 			}
 			err := dial(ctx, p.Onion, line)
+			// one dial may take most of the idle wait: its end counts too
+			if last {
+				trying()
+			}
 			if err == nil {
 				sent(i+1, n)
 				break
