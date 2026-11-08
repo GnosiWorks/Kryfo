@@ -51,6 +51,8 @@ var (
 	// once both confirmed a link ends only when nothing moved for this long:
 	// a big identity's bundles over a slow tor take what they take
 	linkIdle = 3 * time.Minute
+	// a confirmed run lasts this long at most, whatever moves
+	linkLiveMost = time.Hour
 	// a post to the rendezvous is tried again for this long: a relay that
 	// blinks or a tor still warming up never ends a link
 	linkPostFor            = time.Minute
@@ -108,7 +110,8 @@ type linkRun struct {
 	// a fetch at the rendezvous was answered: the code may show
 	heard bool
 	// both confirmed: from then on only an idle run ends
-	live bool
+	live   bool
+	liveAt time.Time
 	// when the run last moved: a message, a post, a line
 	moved time.Time
 	// lines of KLB1 through the door so far, of all
@@ -187,11 +190,17 @@ func (r *linkRun) begin(life time.Duration) context.Context {
 			case <-tick.C:
 			}
 			r.mu.Lock()
-			live, moved := r.live, r.moved
+			live, moved, liveAt := r.live, r.moved, r.liveAt
+			// the phone hears nothing while the new device makes its
+			// bundles: until their first line, the bundles' own grace
+			idle := linkIdle
+			if r.p != nil && r.of == 0 {
+				idle = linkBundlesLate
+			}
 			r.mu.Unlock()
 			now := r.clock()
 			switch {
-			case live && now.Sub(moved) > linkIdle:
+			case live && (now.Sub(moved) > idle || now.Sub(liveAt) > linkLiveMost):
 				cancel(errLinkIdle)
 			case !live && now.After(end):
 				cancel(context.DeadlineExceeded)
@@ -508,7 +517,8 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 		return err
 	}
 	r.mu.Lock()
-	r.st, r.why, r.live, r.moved = lsLinking, "", true, r.clock()
+	r.st, r.why, r.live = lsLinking, "", true
+	r.moved, r.liveAt = r.clock(), r.clock()
 	r.mu.Unlock()
 	r.mu.Lock()
 	w := r.welcome
@@ -557,7 +567,7 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 		r.mu.Lock()
 		r.at, r.of, r.moved = at, of, r.clock()
 		r.mu.Unlock()
-	}); err != nil {
+	}, r.touch); err != nil {
 		return err
 	}
 	r.mu.Lock()
@@ -573,8 +583,10 @@ func devShimNow() *kshim.Lib {
 }
 
 // KLB1 to the door, in lines: "KLB1 <token> <i>/<n> <base64>". sent says
-// how many lines are through, of how many
-func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1 []byte, sent func(at, of int)) error {
+// how many lines are through, of how many. the last line, once tried, is
+// tried on for linkKeptFor and each try counts as moving: the phone may
+// have kept the device with its ack lost, and only that line tells
+func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1 []byte, sent func(at, of int), trying func()) error {
 	n := (len(klb1) + linkChunk - 1) / linkChunk
 	tok := hex.EncodeToString(p.Token[:])
 	sent(0, n)
@@ -584,11 +596,22 @@ func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1
 			base64.StdEncoding.EncodeToString(klb1[i*linkChunk:end])
 		// a fresh tor may need a while for the phone's descriptor: tried
 		// again, further apart, while the run lasts
+		last := i == n-1
+		var since time.Time
 		for try := 0; ; try++ {
+			if last {
+				if since.IsZero() {
+					since = time.Now()
+				}
+				trying()
+			}
 			err := dial(ctx, p.Onion, line)
 			if err == nil {
 				sent(i+1, n)
 				break
+			}
+			if last && time.Since(since) > linkKeptFor {
+				return errLinkUnreached
 			}
 			select {
 			case <-ctx.Done():
@@ -685,7 +708,8 @@ func (r *linkRun) phoneSteps(ctx context.Context, accept []byte) error {
 		return err
 	}
 	r.mu.Lock()
-	r.st, r.live, r.moved = lsLinking, true, r.clock()
+	r.st, r.live = lsLinking, true
+	r.moved, r.liveAt = r.clock(), r.clock()
 	r.mu.Unlock()
 	stream, err := devices.NewStreamKey()
 	if err != nil {
@@ -849,8 +873,13 @@ func linkDoorTake(line string) bool {
 		return false
 	}
 	r.nChunks = n
+	_, had := r.chunks[i]
 	r.chunks[i] = f[2]
-	r.at, r.of, r.moved = len(r.chunks), n, r.clock()
+	// the same line again moves nothing: a joiner resending it never
+	// keeps the run open
+	if !had {
+		r.at, r.of, r.moved = len(r.chunks), n, r.clock()
+	}
 	if len(r.chunks) < n {
 		r.mu.Unlock()
 		return true
@@ -1126,6 +1155,16 @@ func linkCall(op string, a *linkArgs, out *linkOut) error {
 		return r.take(a.Link, out)
 	case "kept":
 		return r.kept(a.Link)
+	case "touch":
+		// the new device's app makes its bundles: the run is moving
+		r.mu.Lock()
+		ok := r.j != nil && r.live && r.st == lsPlaced
+		r.mu.Unlock()
+		if !ok {
+			return devices.ErrState
+		}
+		r.touch()
+		return nil
 	}
 	return errors.New("no such call")
 }
