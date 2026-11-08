@@ -31,11 +31,9 @@ int __wrap_pclose(FILE *) {
 }
 }
 
-// a bergamot service registers marian's loggers by name, so a second one in
-// the process fails to start ("logger with name 'general' already exists")
-// and only the first language opened could translate. every model shares
-// one service: made with the first, gone with the last. it is not safe
-// across threads, so every call into it holds the lock
+// a bergamot service registers marian's loggers by name, so only one can
+// live in a process. every model shares it: made with the first, gone with
+// the last. it is not safe across threads, so every call into it holds the lock
 static std::mutex service_lock;
 static std::weak_ptr<BlockingService> service_shared;
 
