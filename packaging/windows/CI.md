@@ -43,6 +43,7 @@ them to this workflow run and commit:
 | :- | :- |
 | Linux image | `ubuntu@sha256:c098726d...` (resolute-20261006) |
 | apt packages | the Ubuntu snapshot of 2026-11-01, and exact mingw-w64 versions (gcc 13.2.0-6ubuntu1+26.1, binutils 2.45.90.20260125-1ubuntu1+13.3, headers 13.0.0-2ubuntu1) |
+| apt trust | the image has no CA bundle, so the first fetch uses the runner's, read-only; apt still checks every file against the Ubuntu archive key |
 | Go | 1.26.9, tarball sha256 checked, modules vendored, no network |
 | Rust | 1.97.0, rustup-init and the channel manifest by sha256, rustc commit checked; crates from `Cargo.lock` |
 | protoc | 36.2, sha256 checked |
