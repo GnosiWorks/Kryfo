@@ -31,6 +31,7 @@ func main() {
 	if _, err := startKnocks(relay, l, "./data"); err != nil {
 		panic(err)
 	}
+	guardHooks(relay)
 
 	addr := "127.0.0.1:3334"
 	if v := os.Getenv("RELAY_ADDR"); v != "" {
