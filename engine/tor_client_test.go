@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/textproto"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -236,6 +237,22 @@ func TestAClientStartNeverMakesASecondTor(t *testing.T) {
 	mu.Unlock()
 	if !same {
 		t.Fatal("another tor")
+	}
+}
+
+// a start that checked before the client flag came reads and writes no
+// onion key: the app shredded the old one, a new plain one never lands
+func TestALateClientFlagWritesNoOnionKey(t *testing.T) {
+	f := newFakeControl(t, 100)
+	n := fakeTor(t, f.port())
+	torClient.Store(true)
+	t.Cleanup(func() { torClient.Store(false) })
+	dir := t.TempDir()
+	if r := onionIn(n, dir, false); r != torClientAddr {
+		t.Fatalf("the listen gave %q", r)
+	}
+	if _, err := os.Stat(dir + "/onion.key"); !os.IsNotExist(err) {
+		t.Fatalf("an onion key was written: %v", err)
 	}
 }
 

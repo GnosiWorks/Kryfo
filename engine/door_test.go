@@ -204,6 +204,33 @@ func TestOlderDoorGetsALinePerStream(t *testing.T) {
 	}
 }
 
+// a fresh stream the door shuts before an ack is counted (an older door
+// with lines queued behind the first) is dialled once more, not failed
+func TestFreshStreamShutDialsOnceMore(t *testing.T) {
+	socks := newSocksStandIn(t)
+	var first atomic.Bool
+	d := newTestDoor(t, func(c net.Conn) {
+		if first.CompareAndSwap(false, true) {
+			// the line read, no ack: as a reset ack reads on this side
+			r := bufio.NewReader(c)
+			r.ReadString('\n')
+			c.Close()
+			return
+		}
+		handleConn(c)
+	})
+	tn := doorSetup(t, socks, map[string]*testDoor{"f.onion": d})
+	if err := sendTo(tn, "f.onion", doorLine(t, 500)); err != nil {
+		t.Fatalf("the line failed: %v", err)
+	}
+	if d.count() != 2 {
+		t.Fatalf("%d streams, want two", d.count())
+	}
+	if n := doorInboxLen(); n != 1 {
+		t.Fatalf("inbox has %d, want 1", n)
+	}
+}
+
 // the sender lets a quiet stream go, and the next line dials a new one
 func TestDoorStreamClosesWhenQuiet(t *testing.T) {
 	old := doorKeep

@@ -183,7 +183,9 @@ class _Engine implements HaloEngine {
     String peerXPubHex,
     String fcPk,
     String b64Cipher,
-  ) async => 'ok';
+  ) async => firstContactAnswer;
+  // what a first contact's send answers
+  String firstContactAnswer = 'ok';
 
   @override
   String firstContactPk(int ident, int counter) => 'fc$counter';
@@ -906,7 +908,7 @@ void main() {
       throwsA(isA<WaitsForAnswer>()),
     );
     // a wrap's life on, that opener may have expired unread: one more goes,
-    // and the hold starts again from it
+    // and the rest of a burst waits for it
     final old = DateTime.now()
         .subtract(const Duration(days: 16))
         .millisecondsSinceEpoch;
@@ -918,6 +920,19 @@ void main() {
     );
     final late = await signalSession.encryptTo(p.words, 'late');
     expect(base64Decode(late)[0], kLsPreKey);
+    await expectLater(
+      signalSession.encryptTo(p.words, 'burst'),
+      throwsA(isA<WaitsForAnswer>()),
+    );
+    // its send failed: its stamp goes, and the next one goes too rather
+    // than waiting out another wrap's life
+    engine.firstContactAnswer = 'error: no relay';
+    expect(await sendFirstContactNoted(0, p.x, fc, late), isNot('ok'));
+    expect((await hellosOf('open', p.keyHex)).single['went_at'], isNull);
+    final retry = await signalSession.encryptTo(p.words, 'late again');
+    expect(base64Decode(retry)[0], kLsPreKey);
+    engine.firstContactAnswer = 'ok';
+    expect(await sendFirstContactNoted(0, p.x, fc, retry), 'ok');
     final stamped = (await hellosOf('open', p.keyHex)).single['went_at'] as int;
     expect(stamped, greaterThan(old));
     await expectLater(
