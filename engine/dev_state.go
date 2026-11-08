@@ -358,7 +358,6 @@ type devLoad struct {
 	} `json:"dev_pool"`
 }
 
-// a fresh state from the stored rows, and how many rows did not load: a
 // the address layer's linked identities as a load names them: a container
 // that is device 2..127 of an identity derives every address as that
 // device, never as a phone. a device key of its own goes with an id of

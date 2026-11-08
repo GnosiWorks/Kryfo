@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the device sessions the app's send and receive loops use: on a linked
 // device a contact's phone, and its own phone, are devices it opens and
-// seals to. built as a phone's store they were refused, so nothing from
-// device 1 ever opened there: no contact's opener, no own sync, no removal
+// seals to. built as a phone's store they would be refused, so nothing
+// from device 1 would open there: no contact's opener, no own sync, no
+// removal
 import 'dart:convert';
 import 'dart:typed_data';
 
