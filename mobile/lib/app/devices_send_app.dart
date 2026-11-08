@@ -33,7 +33,7 @@ class _EngineDeviceWire implements DeviceWire {
 
 // the device sessions the send and receive loops use. on a linked device
 // a contact's phone, and mine, are devices here: built as the phone's own
-// identity they were refused, and nothing from device 1 ever opened
+// identity they would be refused, and nothing from device 1 would open
 Future<DeviceSessions> _appDeviceSessions(int ident) async {
   final ss = await signalOfIdent(ident);
   // checked after the await: the send and receive loops ask at once at

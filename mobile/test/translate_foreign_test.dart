@@ -43,8 +43,7 @@ void main() {
   });
 
   test('every language with packs is offered, through english too', () {
-    // what the developer's phone showed nothing for: an english and german
-    // reader, russian and arabic packs on the phone
+    // an english and german reader with russian and arabic packs
     const mine = ['de'];
     expect(
       _offer('я позову больше людей в этот мессенджер', mine: mine),
