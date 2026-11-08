@@ -8,10 +8,11 @@ String _doc(String name) => File('../$name').readAsStringSync();
 
 void main() {
   test('the readme says push is optional and what it learns', () {
-    final r = _doc('README.md').toLowerCase();
+    // line wrapping is not the wording
+    final r = _doc('README.md').toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
     expect(r, isNot(contains('no push service')));
     expect(r, contains('optional push'));
-    expect(r, contains('off by\n  default'));
+    expect(r, contains('off by default'));
     expect(r, contains('an empty knock'));
     expect(r, contains('privacy.md'));
   });
