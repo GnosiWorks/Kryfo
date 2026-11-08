@@ -100,18 +100,25 @@ func TestALinkEndsOnlyWhenNothingMoves(t *testing.T) {
 	link(t, "confirm", map[string]any{"link": jid})
 	waitState(t, jid, lsPlaced)
 	r, _ := runOf(jid)
-	// twenty minutes of a slow transfer, a line every two
+	pr, _ := runOf(pid)
+	// twenty minutes of a slow transfer, a line every two, on both sides:
+	// the clock moves under both runs at once
 	for i := 0; i < 10; i++ {
 		step(2 * time.Minute)
 		r.touch()
+		pr.touch()
 		time.Sleep(15 * time.Millisecond)
 	}
 	if s := link(t, "state", map[string]any{"link": jid}); s.St != lsPlaced {
 		t.Fatalf("a moving link ended: %+v", s)
 	}
 	step(linkIdle + time.Second)
-	if s := waitState(t, jid, lsFailed); s.Why != lsWhyReach {
+	// whichever side notices first, the other hears it
+	if s := waitState(t, jid, lsFailed); s.Why != lsWhyReach && s.Why != lsWhyGone {
 		t.Fatalf("an idle link: %+v", s)
+	}
+	if s := waitState(t, pid, lsFailed); s.Why != lsWhyReach && s.Why != lsWhyGone {
+		t.Fatalf("an idle link, the phone: %+v", s)
 	}
 }
 
