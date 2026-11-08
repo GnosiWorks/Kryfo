@@ -1117,7 +1117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: () async {
                         final card = await appState.myDevCard();
                         if (card != null) {
-                          await Clipboard.setData(ClipboardData(text: card));
+                          await copySensitive(card);
                         }
                         if (context.mounted) {
                           showHaloToast(

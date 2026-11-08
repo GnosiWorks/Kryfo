@@ -25,7 +25,8 @@ extension AppStateDevchat on AppState {
     final pinned = devKeyByXPub(myXPub);
     if (pinned == null) return null;
     try {
-      final link = await buildHaloUriV3(myId, myOnion, _fcCounter);
+      // no onion: the pin never reads it, and the card is pasted elsewhere
+      final link = await buildHaloUriV3(myId, '', _fcCounter);
       final k = DevKey.fromLink(link, keyId: pinned.keyId);
       if (k == null ||
           k.xPub != pinned.xPub ||
