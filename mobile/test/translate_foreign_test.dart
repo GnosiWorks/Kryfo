@@ -42,6 +42,38 @@ void main() {
     );
   });
 
+  test('every language with packs is offered, through english too', () {
+    // what the developer's phone showed nothing for: an english and german
+    // reader, russian and arabic packs on the phone
+    const mine = ['de'];
+    expect(
+      _offer('я позову больше людей в этот мессенджер', mine: mine),
+      const Offer('ru', 'en'),
+    );
+    expect(
+      _offer('مرحبا، كيف حالك اليوم؟', mine: mine),
+      const Offer('ar', 'en'),
+    );
+    expect(
+      _offer('Hallo, wir sehen uns morgen am Bahnhof', mine: mine),
+      isNull,
+    );
+    expect(
+      _offer('Merci, cela me fait plaisir', mine: mine),
+      const Offer('fr', 'en'),
+    );
+    // a german app: russian into german, through english
+    expect(
+      _offer('Привет, увидимся завтра на вокзале', app: 'de'),
+      const Offer('ru', 'de'),
+    );
+    expect(_cat.route('ru', 'de'), [('ru', 'en'), ('en', 'de')]);
+    expect(
+      _offer('سلام، حالت چطوره؟ فردا می‌بینمت', app: 'fr'),
+      const Offer('fa', 'fr'),
+    );
+  });
+
   test('a language the person reads is not foreign', () {
     expect(_offer('Are you coming tomorrow?'), isNull);
     expect(_offer('你好，我们明天见吧', mine: ['zh']), isNull);
