@@ -3,21 +3,24 @@
 // device finds for it, and some have none and draw an empty box
 import 'package:flutter/widgets.dart';
 
+import '../l10n/l10n.dart';
+
 class TickMark extends StatelessWidget {
   final Color color;
   // the font size the glyph had: the mark fills the same line box
   final double size;
-  final String semanticLabel;
+  // read out as the word, not the mark
+  final String? semanticLabel;
   const TickMark({
     super.key,
     required this.color,
     this.size = 11,
-    this.semanticLabel = '✓',
+    this.semanticLabel,
   });
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: semanticLabel,
+    label: semanticLabel ?? l10n.motionSent,
     child: CustomPaint(
       size: Size(size * 0.64, size),
       painter: _TickPainter(color),
