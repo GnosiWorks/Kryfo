@@ -64,6 +64,9 @@ func failAll(at time.Time, relays ...string) {
 // nothing for circuitsFor, and then not again until the gap has passed, and
 // that gap doubles while nothing comes back.
 func TestDeadRouteRebuiltAfterMinute(t *testing.T) {
+	keepNetDetail(t)
+	// android could not check this network: the gaps grow as they always did
+	setNetDetailForTest(netInfo{On: true, Kind: "wifi", known: true})
 	resetRoute(t, "publishing", 100)
 	routeNoteOK() // it worked once, as it had before the network went
 	t0 := time.Unix(1_700_000_000, 0)
@@ -159,6 +162,8 @@ func TestSlowBootstrapLeftAlone(t *testing.T) {
 // a bootstrap stuck at one percentage is bounced, and the second time it
 // sticks, it is given longer before the next bounce.
 func TestStuckBootstrapBouncedWithBackoff(t *testing.T) {
+	keepNetDetail(t)
+	setNetDetailForTest(netInfo{On: true, Kind: "wifi", known: true})
 	resetRoute(t, "starting", 0)
 	t0 := time.Unix(1_700_000_000, 0)
 	routeNeedsRescue(t0) // starts the stall clock at 0%

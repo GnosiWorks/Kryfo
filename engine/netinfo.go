@@ -11,8 +11,10 @@ import "C"
 
 import (
 	"encoding/json"
+	"log"
 	"strings"
 	"sync"
+	"time"
 )
 
 type netInfo struct {
@@ -58,6 +60,17 @@ func setNetInfo(n netInfo) {
 		netDisproved = nil
 	}
 	netInfoNow = n
+	valid := n.On && n.Validated && !n.Limited
+	switch {
+	case !n.On || !prev.known || !sameNetwork(prev, n):
+		netValidLostAt = time.Time{}
+	case !valid && prev.On && prev.Validated && !prev.Limited && netValidLostAt.IsZero():
+		netValidLostAt = time.Now()
+	}
+	lostAt := netValidLostAt
+	if valid {
+		netValidLostAt = time.Time{}
+	}
 	netInfoMu.Unlock()
 	if stale {
 		return
@@ -86,8 +99,27 @@ func setNetInfo(n netInfo) {
 	// failed before may get through now
 	if prev.known && n.On && n.Validated && !n.Limited && (!prev.Validated || prev.Limited) {
 		autoValidFlips.Add(1)
+		if !was && sameNetwork(prev, n) {
+			validBack(lostAt)
+		}
 	}
 	autoKick()
+}
+
+// when android stopped vouching for the network that is still there, zero
+// while it vouches. netInfoMu
+var netValidLostAt time.Time
+
+// android vouches again for a network it stopped vouching for at lost: a
+// wifi that passed nothing for a while and came back, without a change of
+// network. what tor held through it may be dead and the back-off grown, so
+// it is taken as a new network unless a relay answered meanwhile
+func validBack(lost time.Time) {
+	if lost.IsZero() || !modeNeedsTor() || torIsPaused() || routeAnsweredSince(lost) {
+		return
+	}
+	log.Println("halo: the network is validated again, taking it as new")
+	networkChanged()
 }
 
 // what android last said of the default network, and whether it has said

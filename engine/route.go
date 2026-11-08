@@ -98,6 +98,13 @@ func routeAliveOn(gen int64, u string) {
 	}
 }
 
+// whether a relay answered through tor after t
+func routeAnsweredSince(t time.Time) bool {
+	routeMu.Lock()
+	defer routeMu.Unlock()
+	return lastAnswerAt.After(t)
+}
+
 // relay u answered in route generation gen (below zero: now)
 func routeAnswered(u string, gen int64) {
 	routeMu.Lock()
@@ -287,6 +294,21 @@ const (
 	probeWhy    = "probe: "
 )
 
+// on a network android validated, a dead route is tor's own state far more
+// often than the network's, as when a wifi passed no tcp for a while and
+// said nothing. the waits stop growing there, so the route comes back
+// within minutes of the network and not a quarter of an hour after it
+var (
+	rescueGapLive  = 3 * time.Minute
+	stallLimitLive = 6 * time.Minute
+)
+
+// android says the default network is there and reaches the internet
+func netValidated() bool {
+	n, _ := netDetailNow()
+	return n.On && n.Validated && !n.Limited
+}
+
 // how long a bootstrap may sit at one percentage before it is bounced. it is
 // judged by the percentage not moving, never by how long bootstrapping takes:
 // bridges on a slow or censored network can climb for many minutes, and every
@@ -355,6 +377,7 @@ func routeNeedsRescue(now time.Time) string {
 	statusMu.RUnlock()
 	// before routeMu: it takes mu
 	up := st == "off" && torUp()
+	live := netValidated()
 
 	routeMu.Lock()
 	defer routeMu.Unlock()
@@ -400,19 +423,23 @@ func routeNeedsRescue(now time.Time) string {
 			return ""
 		}
 		why := "tor says ready but every relay has failed for " + failing
-		noteRescue(now)
+		noteRescue(now, live)
 		return why
 	case st == "starting":
 		if pct != stallPct {
 			stallPct, stallSince = pct, now
 			return ""
 		}
-		if now.Sub(stallSince) < stallLimit(rescues) {
+		limit := stallLimit(rescues)
+		if live && limit > stallLimitLive {
+			limit = stallLimitLive
+		}
+		if now.Sub(stallSince) < limit {
 			return ""
 		}
 		why := "bootstrap has not moved from " + strconv.Itoa(pct) + "% for " +
 			now.Sub(stallSince).Round(time.Second).String()
-		noteRescue(now)
+		noteRescue(now, live)
 		stallPct = -1
 		return why
 	case up:
@@ -430,18 +457,23 @@ func routeNeedsRescue(now time.Time) string {
 			return ""
 		}
 		why := "tor has been off for " + now.Sub(offSince).Round(time.Second).String()
-		noteRescue(now)
+		noteRescue(now, live)
 		return why
 	}
 	// an off tor that never started is the app's watchdog: it starts it
 	return ""
 }
 
-// a bounce is let go: the next one waits longer. under routeMu
-func noteRescue(now time.Time) {
+// a bounce is let go: the next one waits longer, on a validated network
+// (live) no longer than rescueGapLive. under routeMu
+func noteRescue(now time.Time, live bool) {
 	rescues++
 	lastRescue = now
-	rescueWait = rescueJitter(rescueGap(rescues))
+	gap := rescueGap(rescues)
+	if live && gap > rescueGapLive {
+		gap = rescueGapLive
+	}
+	rescueWait = rescueJitter(gap)
 }
 
 // the transport screen's name for a rescue's reason

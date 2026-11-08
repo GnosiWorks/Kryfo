@@ -28,6 +28,11 @@ type airplane struct {
 	live  map[net.Conn]bool
 	dials atomic.Int64
 	fails atomic.Int64
+	// a wifi that passes no tcp and says nothing: what is open goes quiet
+	// for good, as a router that lost its mapping keeps it, and a connect
+	// made meanwhile never hears back, even after the wifi is fine again
+	stalled atomic.Bool
+	stallN  atomic.Int64
 }
 
 func newAirplane(t *testing.T) *airplane {
@@ -50,6 +55,31 @@ func (a *airplane) blackhole(on bool) {
 	if on {
 		a.cut(true)
 		a.down.Store(false)
+	}
+}
+
+// tcp gone without a word, on or off. off, new connections work again
+func (a *airplane) stall(on bool) {
+	if on {
+		a.stallN.Add(1)
+	}
+	a.stalled.Store(on)
+}
+
+// carries src to dst until the connection is frozen by a stall begun after
+// it was made: from then on what is sent is lost, and nothing comes back
+func (a *airplane) carry(dst, src net.Conn, made int64) {
+	buf := make([]byte, 32<<10)
+	for {
+		n, err := src.Read(buf)
+		if n > 0 && a.stallN.Load() == made {
+			if _, werr := dst.Write(buf[:n]); werr != nil {
+				return
+			}
+		}
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -156,6 +186,13 @@ func (a *airplane) handle(c net.Conn) {
 		reply(3)
 		return
 	}
+	if a.stalled.Load() {
+		// the syn is lost and so is every retry of it
+		_ = c.SetDeadline(time.Time{})
+		_, _ = io.Copy(io.Discard, c)
+		return
+	}
+	made := a.stallN.Load()
 	up, err := net.DialTimeout("tcp", target, 10*time.Second)
 	if err != nil {
 		a.fails.Add(1)
@@ -176,7 +213,7 @@ func (a *airplane) handle(c net.Conn) {
 	reply(0)
 	_ = c.SetDeadline(time.Time{})
 	done := make(chan struct{}, 2)
-	go func() { _, _ = io.Copy(up, c); done <- struct{}{} }()
-	go func() { _, _ = io.Copy(c, up); done <- struct{}{} }()
+	go func() { a.carry(up, c, made); done <- struct{}{} }()
+	go func() { a.carry(c, up, made); done <- struct{}{} }()
 	<-done
 }

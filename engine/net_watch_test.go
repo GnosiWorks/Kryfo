@@ -24,12 +24,14 @@ func keepNetDetail(t *testing.T) {
 	saved := netInfoNow
 	netInfoNow = netInfo{On: true, Validated: true, Kind: "unknown"}
 	netDisproved = nil
+	netValidLostAt = time.Time{}
 	netInfoMu.Unlock()
 	connSaid.Store(connUnsaid)
 	t.Cleanup(func() {
 		netInfoMu.Lock()
 		netInfoNow = saved
 		netDisproved = nil
+		netValidLostAt = time.Time{}
 		netInfoMu.Unlock()
 		connSaid.Store(connUnsaid)
 		setOffline(false)
