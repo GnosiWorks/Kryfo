@@ -46,6 +46,22 @@ Future<void> torAsLinked({required String at}) async {
   } catch (e) {
     dlog('linked: tor as a client at $at (${e.runtimeType})');
   }
+  await shredPreLinkOnion();
+}
+
+/// the onion key this device made before its link: a client tor never
+/// reads it again, so it does not stay on the disk in the clear. after the
+/// flag above, so a start can no longer read it. desktop keeps its copy
+/// sealed and hands it to the engine per start, left as it is there
+@visibleForTesting
+Future<void> shredPreLinkOnion() async {
+  if (onDesktop) return;
+  try {
+    final docs = await getApplicationDocumentsDirectory();
+    await shredFile(p.join(docs.path, 'onion.key'));
+  } catch (e) {
+    dlog('linked: the old onion key not shredded (${e.runtimeType})');
+  }
 }
 
 /// where the devices page reads from, for the session open now. the
