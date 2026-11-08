@@ -1580,6 +1580,35 @@ func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
 	return C.CString(sendDirect(goStr(cAddr), goStr(cMsg)))
 }
 
+// HaloSendTo with the line's place in the door's queue: 1 a message, 2 the
+// rest (doorq.go). anything else is a message
+//
+//export HaloSendToAs
+func HaloSendToAs(cPri C.int, cAddr *C.char, cMsg *C.char) *C.char {
+	pri := int(cPri)
+	if pri != doorRest {
+		pri = doorMessage
+	}
+	return C.CString(sendDirectAs(goStr(cAddr), goStr(cMsg), pri))
+}
+
+// the chat on screen, "" when none: its lines go first and its onion stops
+// resting
+//
+//export HaloDoorFocus
+func HaloDoorFocus(cOnion *C.char) *C.char {
+	doorFocus(goStr(cOnion))
+	return C.CString("ok")
+}
+
+// a message came from this contact: their onion stops resting
+//
+//export HaloDoorAwake
+func HaloDoorAwake(cOnion *C.char) *C.char {
+	doorAwake(goStr(cOnion))
+	return C.CString("ok")
+}
+
 // what HaloSendTo answers before our onion is published. callers take the
 // relay at once, as for a direct route that is down
 const errNotPublished = "error: not published yet"
@@ -1612,7 +1641,9 @@ func directOpen() bool {
 	return false
 }
 
-func sendDirect(addr, msg string) string {
+func sendDirect(addr, msg string) string { return sendDirectAs(addr, msg, doorMessage) }
+
+func sendDirectAs(addr, msg string, pri int) string {
 	mu.Lock()
 	t := torNode
 	mu.Unlock()
@@ -1622,7 +1653,7 @@ func sendDirect(addr, msg string) string {
 	if !directOpen() {
 		return errNotPublished
 	}
-	if err := sendTo(t, addr, msg); err != nil {
+	if err := sendToAs(t, addr, msg, pri); err != nil {
 		return "error: " + err.Error()
 	}
 	log.Printf("halo: sent %d bytes to %s", len(msg), addr)

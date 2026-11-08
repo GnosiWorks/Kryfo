@@ -58,6 +58,7 @@ type doorStream struct {
 	onion string
 	ready chan struct{} // closed once the dial is done
 	conn  net.Conn      // set before ready closes, nil when the dial failed
+	slot  *doorSlot     // its place in the queue, set with conn
 
 	wmu sync.Mutex // one line on the wire at a time
 
@@ -93,9 +94,9 @@ func doorOneLineOnly(onion string) bool {
 
 // the kept stream to onion, or a new one. fresh says it was dialled for
 // this line. lines that come while it is being dialled wait for it.
-func doorGet(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, error) {
+func doorGet(ctx context.Context, t *tor.Tor, onion string, pri int) (*doorStream, bool, error) {
 	for {
-		s, fresh, err := doorGetOnce(ctx, t, onion)
+		s, fresh, err := doorGetOnce(ctx, t, onion, pri)
 		if s == nil && !fresh && errors.Is(err, errDialCutShort) && ctx.Err() == nil {
 			continue
 		}
@@ -105,7 +106,8 @@ func doorGet(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, 
 
 var errDialCutShort = errors.New("dial ran out of its line's budget")
 
-func doorGetOnce(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bool, error) {
+func doorGetOnce(ctx context.Context, t *tor.Tor, onion string, pri int) (*doorStream, bool, error) {
+	resting := pri != doorOpenChat && doorResting(onion) > 0
 	doorMu.Lock()
 	if s := doorStreams[onion]; s != nil {
 		s.mu.Lock()
@@ -136,17 +138,22 @@ func doorGetOnce(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bo
 		}
 		delete(doorStreams, onion)
 	}
+	if resting {
+		doorMu.Unlock()
+		return nil, false, errDoorResting
+	}
 	s := &doorStream{onion: onion, busy: 1, ready: make(chan struct{})}
 	doorStreams[onion] = s
 	doorMu.Unlock()
 
-	conn, err := doorDial(ctx, t, onion)
+	conn, slot, err := doorDialQueued(ctx, t, onion, pri)
 	if err != nil {
 		s.mu.Lock()
 		s.err = err
 		s.mu.Unlock()
-		// read by waiters only after ready closes
-		s.cutShort = ctx.Err() != nil
+		// read by waiters only after ready closes. a line with more time
+		// left than this one's queues again
+		s.cutShort = ctx.Err() != nil || errors.Is(err, errDoorBusy)
 		doorMu.Lock()
 		if doorStreams[onion] == s {
 			delete(doorStreams, onion)
@@ -155,10 +162,49 @@ func doorGetOnce(ctx context.Context, t *tor.Tor, onion string) (*doorStream, bo
 		close(s.ready)
 		return nil, true, err
 	}
-	s.conn = conn
+	s.conn, s.slot = conn, slot
 	close(s.ready)
 	go s.readAcks()
 	return s, true, nil
+}
+
+// a dial in its turn (doorq.go): a slot first, then at most doorDialMost.
+// the slot's dial part is given back when the dial ends, the stream part
+// when the stream closes
+func doorDialQueued(ctx context.Context, t *tor.Tor, onion string, pri int) (net.Conn, *doorSlot, error) {
+	slot, err := doorSlotFor(ctx, onion, pri)
+	if err != nil {
+		return nil, nil, err
+	}
+	if onion == doorFocusNow() {
+		pri = doorOpenChat
+	}
+	// the turn ends with time left for the dial, as the queue's wait does
+	turn := ctx
+	if d, ok := ctx.Deadline(); ok {
+		var cancel context.CancelFunc
+		turn, cancel = context.WithDeadline(ctx, d.Add(-doorDialLeast))
+		defer cancel()
+	}
+	if !doorPace(turn, onion, pri) {
+		slot.closed()
+		return nil, nil, errDoorBusy
+	}
+	gen := routeGeneration()
+	dctx, cancel := context.WithTimeout(ctx, doorDialMost)
+	defer cancel()
+	conn, err := doorDial(dctx, t, onion)
+	slot.dialDone()
+	if err != nil {
+		slot.closed()
+		// the line's own budget running out says nothing of the onion
+		if ctx.Err() == nil {
+			doorDialFailed(onion, gen)
+		}
+		return nil, nil, err
+	}
+	doorDialOK(onion)
+	return conn, slot, nil
 }
 
 func doorDial(ctx context.Context, t *tor.Tor, onion string) (net.Conn, error) {
@@ -269,6 +315,7 @@ func (s *doorStream) fail(err error, byDoor bool) {
 	if s.conn != nil {
 		s.conn.Close()
 	}
+	s.slot.closed()
 	doorMu.Lock()
 	if doorStreams[s.onion] == s {
 		delete(doorStreams, s.onion)
@@ -291,7 +338,17 @@ func (s *doorStream) done() {
 		if s.conn != nil {
 			s.conn.Close()
 		}
+		s.slot.closed()
 		return
+	}
+	// lines wait for a slot: no keep, the stream gives way now
+	select {
+	case <-s.ready:
+		if doorRoomWanted() {
+			go s.fail(errors.New("gave way to a waiting line"), false)
+			return
+		}
+	default:
 	}
 	if s.idle == nil {
 		s.idle = time.AfterFunc(doorKeep, func() {
@@ -323,13 +380,24 @@ func doorCloseAll() {
 // one line to a peer's door: on the kept stream, once more on a new one when
 // that one had died, or on a stream of its own for a door that takes one
 func sendTo(t *tor.Tor, onion, line string) error {
+	return sendToAs(t, onion, line, doorMessage)
+}
+
+// sendTo with the line's place in the queue (doorq.go)
+func sendToAs(t *tor.Tor, onion, line string, pri int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
+	if onion == doorFocusNow() {
+		pri = doorOpenChat
+	}
+	if pri != doorOpenChat && doorResting(onion) > 0 {
+		return errDoorResting
+	}
 	if doorOneLineOnly(onion) {
-		return sendOneLine(ctx, t, onion, line)
+		return sendOneLine(ctx, t, onion, line, pri)
 	}
 	for try := 0; ; try++ {
-		s, fresh, err := doorGet(ctx, t, onion)
+		s, fresh, err := doorGet(ctx, t, onion, pri)
 		if err != nil {
 			return err
 		}
@@ -342,7 +410,7 @@ func sendTo(t *tor.Tor, onion, line string) error {
 		// this one goes on a stream of its own, while the budget lasts
 		var shut doorShut
 		if doorOneLineOnly(onion) && ctx.Err() == nil && (!fresh && try == 0 || errors.As(err, &shut)) {
-			if err2 := sendOneLine(ctx, t, onion, line); err2 != nil {
+			if err2 := sendOneLine(ctx, t, onion, line, pri); err2 != nil {
 				return fmt.Errorf("%v, then on its own stream: %v", err, err2)
 			}
 			return nil
@@ -354,11 +422,12 @@ func sendTo(t *tor.Tor, onion, line string) error {
 }
 
 // a stream of its own: dial, one line, the ack, close
-func sendOneLine(ctx context.Context, t *tor.Tor, onion, line string) error {
-	conn, err := doorDial(ctx, t, onion)
+func sendOneLine(ctx context.Context, t *tor.Tor, onion, line string, pri int) error {
+	conn, slot, err := doorDialQueued(ctx, t, onion, pri)
 	if err != nil {
 		return err
 	}
+	defer slot.closed()
 	defer conn.Close()
 	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	if _, err := conn.Write([]byte(line + "\n")); err != nil {
@@ -425,12 +494,16 @@ func sendTyping(t *tor.Tor, onion, line string) error {
 	if raw, _ := base64.StdEncoding.DecodeString(line); raw[0] != 2 {
 		return errTypingShape
 	}
+	// an onion that failed lately is not dialled for a whisper
+	if doorResting(onion) > 0 {
+		return errDoorResting
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), typingBudget)
 	defer cancel()
 	if doorOneLineOnly(onion) {
 		return sendOneLineBy(ctx, t, onion, line)
 	}
-	s, fresh, err := doorGet(ctx, t, onion)
+	s, fresh, err := doorGet(ctx, t, onion, doorOpenChat)
 	if err != nil {
 		return err
 	}
@@ -442,7 +515,7 @@ func sendTyping(t *tor.Tor, onion, line string) error {
 	if doorOneLineOnly(onion) {
 		return sendOneLineBy(ctx, t, onion, line)
 	}
-	s, _, err = doorGet(ctx, t, onion)
+	s, _, err = doorGet(ctx, t, onion, doorOpenChat)
 	if err != nil {
 		return err
 	}
@@ -467,10 +540,11 @@ func deadlineOf(ctx context.Context) time.Time {
 
 // sendOneLine held to the deadline of ctx
 func sendOneLineBy(ctx context.Context, t *tor.Tor, onion, line string) error {
-	conn, err := doorDial(ctx, t, onion)
+	conn, slot, err := doorDialQueued(ctx, t, onion, doorOpenChat)
 	if err != nil {
 		return err
 	}
+	defer slot.closed()
 	defer conn.Close()
 	conn.SetDeadline(deadlineOf(ctx))
 	if _, err := conn.Write([]byte(line + "\n")); err != nil {
