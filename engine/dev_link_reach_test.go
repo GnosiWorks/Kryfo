@@ -419,3 +419,34 @@ func TestALineAgainIsNotAckedWhenThePhoneKeptNothing(t *testing.T) {
 		t.Fatal("a line of a link kept nowhere acked")
 	}
 }
+
+// a confirmed run lasts linkLiveMost at most, whatever moves: a joiner
+// that keeps a run busy never keeps it for ever
+func TestAConfirmedRunEndsAfterAnHour(t *testing.T) {
+	w := newLinkWorld(t)
+	step := linkTestClock(t)
+	jid, pid, _ := w.toDigits(t)
+	waitState(t, jid, lsDigits)
+	waitState(t, pid, lsDigits)
+	w.toPlaced(t, jid, pid, 1)
+	r, _ := runOf(jid)
+	pr, _ := runOf(pid)
+	for i := 0; i < 29; i++ {
+		step(2 * time.Minute)
+		r.touch()
+		pr.touch()
+		time.Sleep(5 * time.Millisecond)
+	}
+	if s := link(t, "state", map[string]any{"link": jid}); s.St != lsPlaced {
+		t.Fatalf("a busy run ended before its hour: %+v", s)
+	}
+	for i := 0; i < 2; i++ {
+		step(2 * time.Minute)
+		r.touch()
+		pr.touch()
+		time.Sleep(5 * time.Millisecond)
+	}
+	if s := waitState(t, jid, lsFailed); s.Why != lsWhyReach && s.Why != lsWhyGone {
+		t.Fatalf("a run past its hour: %+v", s)
+	}
+}
