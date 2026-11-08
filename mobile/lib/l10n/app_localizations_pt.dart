@@ -9511,6 +9511,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get translateNeverSection => 'Nunca oferecidos';
 
   @override
+  String get translateOfferAllAgain => 'Oferecer todos de novo';
+
+  @override
   String get translateOfferAgain => 'Oferecer de novo';
 
   @override

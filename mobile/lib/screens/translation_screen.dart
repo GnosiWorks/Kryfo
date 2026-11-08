@@ -259,6 +259,17 @@ class _TranslationScreenState extends State<TranslationScreen> {
                           hub.offerAgain(l);
                         },
                       ),
+                    // two or more: all back in one tap
+                    if (s.never.length > 1)
+                      HaloRow(
+                        key: const ValueKey('never-all'),
+                        icon: Icons.restart_alt_rounded,
+                        label: l10n.translateOfferAllAgain,
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          hub.offerAllAgain();
+                        },
+                      ),
                   ],
                 ),
               ],

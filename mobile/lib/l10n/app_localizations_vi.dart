@@ -9425,6 +9425,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get translateNeverSection => 'Không bao giờ đề xuất';
 
   @override
+  String get translateOfferAllAgain => 'Đề xuất lại tất cả';
+
+  @override
   String get translateOfferAgain => 'Đề xuất lại';
 
   @override

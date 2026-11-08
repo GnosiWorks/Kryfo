@@ -11835,6 +11835,10 @@
   "@translateNeverSection": {
     "description": "translation settings: the languages set to never offer"
   },
+  "translateOfferAllAgain": "Offer all again",
+  "@translateOfferAllAgain": {
+    "description": "translation settings: empties the never list, every language offered again"
+  },
   "translateOfferAgain": "Offer again",
   "@translateOfferAgain": {
     "description": "translation settings: takes a language off the never list"

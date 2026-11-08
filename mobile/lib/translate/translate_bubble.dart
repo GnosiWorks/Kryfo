@@ -50,6 +50,9 @@ class TranslatedBody extends StatefulWidget {
   // what the chat knows the message by
   final String msgKey;
   final String text;
+  // when it came: the download offer shows only under the newest message
+  // in its language. none, and every one offers
+  final int? came;
   // false for our own, a sticker, a search: the words as they are
   final bool enabled;
   final Widget original;
@@ -59,6 +62,7 @@ class TranslatedBody extends StatefulWidget {
     required this.chat,
     required this.msgKey,
     required this.text,
+    this.came,
     required this.original,
     required this.translated,
     this.enabled = true,
@@ -118,6 +122,14 @@ class _TranslatedBodyState extends State<TranslatedBody> {
             : packLangs.length == 1 && packLangs.first != baseLang(o.seen)
             ? langName(packLangs.first)
             : langName(o.seen);
+        final came = widget.came;
+        // a pack to fetch first: said once per language, not per message
+        final here =
+            o == null ||
+            size == 0 ||
+            m.phase != MsgPhase.idle ||
+            came == null ||
+            chat.offerHere(o.from, key, came);
         final Widget? foot = o == null
             ? null
             : switch (m.phase) {
@@ -140,6 +152,7 @@ class _TranslatedBodyState extends State<TranslatedBody> {
                   onTap: tap,
                   onMenu: menu,
                 ),
+                MsgPhase.idle when !here => null,
                 // the packs it needs are coming, or wait for wi-fi
                 MsgPhase.idle when got != null && got.busy => _Foot(
                   key: const ValueKey('tr-getting'),
@@ -162,6 +175,12 @@ class _TranslatedBodyState extends State<TranslatedBody> {
                   action: l10n.translateOfferDownload(name, packSize(size)),
                   onTap: tap,
                   onMenu: menu,
+                  // the x: never offered for this language again
+                  onClose: () {
+                    HapticFeedback.selectionClick();
+                    unawaited(neverOffer(context, chat.hub, o));
+                  },
+                  closeLabel: l10n.translateBarNever(langName(o.seen)),
                 ),
                 MsgPhase.idle => _Foot(
                   key: const ValueKey('tr-idle'),
@@ -230,6 +249,8 @@ class _Foot extends StatelessWidget {
   final bool icon;
   final VoidCallback? onTap;
   final VoidCallback? onMenu;
+  final VoidCallback? onClose;
+  final String? closeLabel;
   const _Foot({
     super.key,
     this.lead,
@@ -237,6 +258,8 @@ class _Foot extends StatelessWidget {
     this.icon = false,
     this.onTap,
     this.onMenu,
+    this.onClose,
+    this.closeLabel,
   });
 
   @override
@@ -282,7 +305,7 @@ class _Foot extends StatelessWidget {
     // the menu: a long press, or a screen reader's own action. no glyph of
     // its own, so a foreign message is no taller
     final menu = onMenu;
-    return Semantics(
+    final line = Semantics(
       button: true,
       label: [?lead, ?action].join(', '),
       excludeSemantics: true,
@@ -297,6 +320,34 @@ class _Foot extends StatelessWidget {
         onLongPress: menu,
         child: padded,
       ),
+    );
+    final close = onClose;
+    if (close == null) return line;
+    // a small x beside the line, its touch area wider than it looks
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(child: line),
+        Semantics(
+          button: true,
+          label: closeLabel,
+          excludeSemantics: true,
+          onTap: close,
+          child: GestureDetector(
+            key: const ValueKey('tr-offer-close'),
+            behavior: HitTestBehavior.opaque,
+            onTap: close,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(10, 5, 6, 1),
+              child: Icon(
+                Icons.close_rounded,
+                size: 14,
+                color: HaloColors.amberText,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

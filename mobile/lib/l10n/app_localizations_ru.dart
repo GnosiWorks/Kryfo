@@ -9603,6 +9603,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get translateNeverSection => 'Не предлагать';
 
   @override
+  String get translateOfferAllAgain => 'Предлагать снова все';
+
+  @override
   String get translateOfferAgain => 'Предлагать снова';
 
   @override

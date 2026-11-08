@@ -15133,6 +15133,12 @@ abstract class AppLocalizations {
   /// **'Never offered'**
   String get translateNeverSection;
 
+  /// translation settings: empties the never list, every language offered again
+  ///
+  /// In en, this message translates to:
+  /// **'Offer all again'**
+  String get translateOfferAllAgain;
+
   /// translation settings: takes a language off the never list
   ///
   /// In en, this message translates to:

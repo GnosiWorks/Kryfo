@@ -333,6 +333,10 @@ class TranslationHub extends ChangeNotifier {
     ),
   );
 
+  // the never list emptied: every language offered again
+  Future<void> offerAllAgain() =>
+      saveSettings(_settings.copyWith(never: const []));
+
   // off deletes every kept translation
   Future<void> setOn(bool on) async {
     if (on == _settings.on) return;

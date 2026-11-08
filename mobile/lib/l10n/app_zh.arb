@@ -2473,6 +2473,7 @@
   "translateNeverDone": "{language}消息保持原样",
   "translateUndo": "撤销",
   "translateNeverSection": "不提供翻译的语言",
+  "translateOfferAllAgain": "全部重新提供",
   "translateOfferAgain": "重新提供",
   "translateOnHint": "在其他语言的消息下方提供",
   "translatePrivacyKept": "译文与所属聊天一起加密保存在这部手机上，并随聊天一起删除。",

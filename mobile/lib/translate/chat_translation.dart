@@ -79,6 +79,7 @@ class ChatTranslation extends ChangeNotifier {
     _keptOriginal.clear();
     _autoTried.clear();
     _burnt.clear();
+    _offerAt.clear();
     _kept = {};
     _keptRead = false;
   }
@@ -162,6 +163,26 @@ class ChatTranslation extends ChangeNotifier {
       }
     });
     return most >= 2 && most * 2 >= seen ? best : null;
+  }
+
+  // the newest message per language that would offer a download: the
+  // offer shows once, under it, the way telegram offers a chat once and
+  // not every message in it
+  final Map<String, (int, String)> _offerAt = {};
+
+  // whether [key], come at [came], is the one to carry the offer for
+  // [lang]. a newer one takes it over, and the older folds its line away
+  bool offerHere(String lang, String key, int came) {
+    final at = _offerAt[lang];
+    if (at != null && at.$2 == key) return true;
+    if (at != null &&
+        (at.$1 > came || (at.$1 == came && at.$2.compareTo(key) > 0))) {
+      return false;
+    }
+    _offerAt[lang] = (came, key);
+    // the one that had it rebuilds after this frame, not during it
+    if (at != null) scheduleMicrotask(() => _gone ? null : notifyListeners());
+    return true;
   }
 
   // the bar's tap: the whole chat in the reader's language from now on.

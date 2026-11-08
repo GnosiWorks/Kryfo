@@ -2473,6 +2473,7 @@
   "translateNeverDone": "Los mensajes quedan como están · {language}",
   "translateUndo": "Deshacer",
   "translateNeverSection": "Nunca ofrecidos",
+  "translateOfferAllAgain": "Volver a ofrecer todos",
   "translateOfferAgain": "Volver a ofrecer",
   "translateOnHint": "Se ofrece bajo los mensajes en otros idiomas",
   "translatePrivacyKept": "Las traducciones se guardan cifradas con su chat en este teléfono y se borran con él.",

@@ -2473,6 +2473,7 @@
   "translateNeverDone": "Les messages restent tels quels · {language}",
   "translateUndo": "Annuler",
   "translateNeverSection": "Jamais proposées",
+  "translateOfferAllAgain": "Tout proposer à nouveau",
   "translateOfferAgain": "Proposer à nouveau",
   "translateOnHint": "Proposée sous les messages dans d’autres langues",
   "translatePrivacyKept": "Les traductions sont gardées chiffrées avec leur discussion sur ce téléphone et supprimées avec elle.",

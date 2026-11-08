@@ -9438,6 +9438,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get translateNeverSection => 'Tidak pernah ditawarkan';
 
   @override
+  String get translateOfferAllAgain => 'Tawarkan semua lagi';
+
+  @override
   String get translateOfferAgain => 'Tawarkan lagi';
 
   @override

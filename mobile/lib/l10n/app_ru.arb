@@ -2473,6 +2473,7 @@
   "translateNeverDone": "Сообщения остаются как есть · {language}",
   "translateUndo": "Отменить",
   "translateNeverSection": "Не предлагать",
+  "translateOfferAllAgain": "Предлагать снова все",
   "translateOfferAgain": "Предлагать снова",
   "translateOnHint": "Предлагается под сообщениями на других языках",
   "translatePrivacyKept": "Переводы хранятся зашифрованными вместе с чатом на этом телефоне и удаляются вместе с ним.",

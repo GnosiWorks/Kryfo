@@ -9600,6 +9600,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get translateNeverSection => 'Не пропонувати';
 
   @override
+  String get translateOfferAllAgain => 'Пропонувати знову всі';
+
+  @override
   String get translateOfferAgain => 'Пропонувати знову';
 
   @override
