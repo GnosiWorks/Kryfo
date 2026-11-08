@@ -595,8 +595,10 @@ extension AppStateInvites on AppState {
   // answer (SignalSession.holdOpener): a frame of this session went to
   // their one-time invite already, and they heard only that one (3c). a
   // frame that went a wrap's life ago may never have reached them: one
-  // more goes, and the hold starts again from it. rows that do not read
-  // say no: the frame goes, as before
+  // more goes, stamped here so the rest of a burst waits for it. a send of
+  // it that fails takes the stamp back (sendFirstContactNoted), so the next
+  // goes rather than waiting out another wrap's life. rows that do not
+  // read say no: the frame goes, as before
   Future<bool> _onceOpenerWent(String peer) async {
     try {
       final db = await live.open();
@@ -615,7 +617,7 @@ extension AppStateInvites on AppState {
       final ident = c.first['ident'] as int? ?? kMainIdent;
       final o = await db.query(
         'hellos',
-        columns: ['went_at'],
+        columns: ['went_at', 'fc'],
         where: 'ident = ? AND way = ? AND peer = ? AND once = ?',
         whereArgs: [ident, kHelloOpen, key, 1],
         limit: 1,
@@ -630,6 +632,8 @@ extension AppStateInvites on AppState {
         where: 'ident = ? AND way = ? AND peer = ? AND once = ?',
         whereArgs: [ident, kHelloOpen, key, 1],
       );
+      final fc = o.first['fc'] as String?;
+      if (fc != null) _onceRestamped[fc] = now;
       dlog('v4 opener: one more to their one-time invite');
       return false;
     } catch (e) {
@@ -1126,8 +1130,33 @@ Future<String> sendFirstContactNoted(
   String cipher,
 ) async {
   final r = await engine.sendFirstContact(ident, xPub, fc, cipher);
-  if (r == 'ok') await noteOnceWent(fc);
+  final stamp = _onceRestamped.remove(fc);
+  if (r == 'ok') {
+    await noteOnceWent(fc);
+  } else if (stamp != null) {
+    await _onceNotWent(fc, stamp);
+  }
   return r;
+}
+
+// the stamp a stale hold put on the one-time invite at an fc, until the
+// send of the one more opener says how it went
+final _onceRestamped = <String, int>{};
+
+// that opener did not go: its stamp goes, and the next seal is not held.
+// a stamp a later seal put there stays
+Future<void> _onceNotWent(String fc, int stamp) async {
+  try {
+    final db = await live.open();
+    await db.update(
+      'hellos',
+      {'went_at': null},
+      where: 'way = ? AND fc = ? AND once = ? AND went_at = ?',
+      whereArgs: [kHelloOpen, fc, 1, stamp],
+    );
+  } catch (e) {
+    dlog('v4 opener: stamp not taken back (${e.runtimeType})');
+  }
 }
 
 /// the open hello rows on the one-time invite at [fc], marked as reached

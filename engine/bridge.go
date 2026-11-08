@@ -476,6 +476,11 @@ func onionIn(t *tor.Tor, dataDir string, first bool) string {
 	if t.Control == nil {
 		return "error: listen: no control connection"
 	}
+	// a client from the middle of this start on: the app shreds the old key
+	// then, and none is read or made again
+	if torClientOnly() {
+		return clientStartEnds(t, first)
+	}
 	keyPath := dataDir + "/onion.key"
 	var key ed25519.PrivateKey
 	var err error
@@ -487,6 +492,9 @@ func onionIn(t *tor.Tor, dataDir string, first bool) string {
 		if err != nil {
 			return fmt.Sprintf("error: gen onion key: %v", err)
 		}
+		if torClientOnly() {
+			return clientStartEnds(t, first)
+		}
 		if werr := os.WriteFile(keyPath, key, 0600); werr != nil {
 			log.Printf("halo: onion key save failed: %v", werr)
 		} else {
@@ -494,6 +502,16 @@ func onionIn(t *tor.Tor, dataDir string, first bool) string {
 		}
 	}
 	return onionOn(t, key, first)
+}
+
+// a start that became a client's after its check: what the client branch
+// of the start does
+func clientStartEnds(t *tor.Tor, first bool) string {
+	if first {
+		networkOnAtStart(t)
+	}
+	log.Println("halo: tor runs as a client, no onion of its own")
+	return torClientAddr
 }
 
 // our onion on tor t with key. [first]: the start that made t, which also

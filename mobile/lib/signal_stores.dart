@@ -261,18 +261,15 @@ class LsKyberPreKeyStore extends _ById {
     'opener': Uint8List.fromList(opener),
   }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
-  /// whether [opener] was read on kyber key [id] before
-  Future<bool> wasRead(int id, List<int> opener) async {
-    for (final r in await _db.query(
-      _reads,
-      columns: ['opener'],
-      where: 'ident = ? AND kyber_id = ?',
-      whereArgs: [ident, id],
-    )) {
-      if (_eq(r['opener'] as List<int>, opener)) return true;
-    }
-    return false;
-  }
+  /// whether [opener] was read on kyber key [id] before. one lookup on the
+  /// primary key, however many openers a key that never expires took
+  Future<bool> wasRead(int id, List<int> opener) async => (await _db.query(
+    _reads,
+    columns: ['kyber_id'],
+    where: 'ident = ? AND kyber_id = ? AND opener = ?',
+    whereArgs: [ident, id, Uint8List.fromList(opener)],
+    limit: 1,
+  )).isNotEmpty;
 
   Future<void> store(
     int id,
@@ -329,17 +326,16 @@ class LsKyberPreKeyStore extends _ById {
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  Future<bool> wasUsed(int id, List<int> baseKey) async {
-    for (final r in await _db.query(
-      _used,
-      columns: ['base_key'],
-      where: 'ident = ? AND kyber_id = ?',
-      whereArgs: [ident, id],
-    )) {
-      if (_eq(r['base_key'] as List<int>, baseKey)) return true;
-    }
-    return false;
-  }
+  /// whether [baseKey] opened a session on last resort key [id]. every row
+  /// stays while the key is held (a replayed opener is refused on it), so
+  /// this is one lookup on the primary key, not a read of them all
+  Future<bool> wasUsed(int id, List<int> baseKey) async => (await _db.query(
+    _used,
+    columns: ['kyber_id'],
+    where: 'ident = ? AND kyber_id = ? AND base_key = ?',
+    whereArgs: [ident, id, Uint8List.fromList(baseKey)],
+    limit: 1,
+  )).isNotEmpty;
 
   // the openers a key took go with it: nothing opens on it after
   Future<void> remove(int id) async {
