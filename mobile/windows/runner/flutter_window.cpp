@@ -299,6 +299,10 @@ bool FlutterWindow::OnCreate() {
       result->Success(ClipboardPicture(GetHandle()));
     } else if (call.method_name() == "setClipPicture") {
       result->Success(flutter::EncodableValue(SetClipboardPicture(GetHandle(), call.arguments())));
+    } else if (call.method_name() == "titleDark") {
+      const auto* dark = std::get_if<bool>(call.arguments());
+      if (dark) SetDarkTitle(*dark);
+      result->Success();
     } else if (call.method_name() == "show") {
       ShowAndRaise();
       result->Success();
