@@ -40,16 +40,23 @@ void main() {
     final media = sends.singleWhere((f) => f.contains('image/*'));
     expect(media, contains('video/*'));
     expect(media, contains('application/*'));
+    expect(media, contains('audio/*'));
     expect(media, isNot(contains('text/')));
     // several at once, of the same kinds
     final many = _filters(
       manifest,
     ).singleWhere((f) => f.contains('android.intent.action.SEND_MULTIPLE"'));
     expect(many, contains('android.intent.category.DEFAULT'));
-    for (final m in ['image/*', 'video/*', 'application/*']) {
+    // text files too: several of them are files, never words
+    for (final m in [
+      'image/*',
+      'video/*',
+      'application/*',
+      'audio/*',
+      'text/plain',
+    ]) {
       expect(many, contains(m));
     }
-    expect(many, isNot(contains('text/')));
     // no label or icon of its own: the share sheet shows the entry's
     expect(text, isNot(contains('android:label')));
     expect(text, isNot(contains('android:icon')));
@@ -139,36 +146,25 @@ void main() {
       bodyOf(bridge, 'fun cut('),
       contains('if (Character.isHighSurrogate(s[end - 1])) end--'),
     );
-    for (final body in [
-      take,
-      keep,
-      bodyOf(bridge, 'private fun readSmallText('),
-    ]) {
+    for (final body in [take, keep]) {
       expect(body, isNot(contains('File(')));
       expect(body, isNot(contains('SharedPreferences')));
       expect(body, isNot(contains('openOutputStream')));
     }
   });
 
-  test('a text file shared alone is read when small and really text, never '
-      'by its name', () {
+  test('a text file shared alone goes as a file, never read as words', () {
     final take = bodyOf(bridge, 'private fun offerText(');
     // only when the extras say nothing
     expect(
-      take.indexOf('Intent.EXTRA_STREAM'),
+      take.indexOf('offerFiles(intent, "text/plain")'),
       greaterThan(take.indexOf('keepText(text, subject)')),
     );
-    expect(take, contains('if (uri == null || !acceptable(uri)) return'));
-    expect(take, isNot(contains('describe(')));
-    expect(take, isNot(contains('DISPLAY_NAME')));
-    final read = bodyOf(bridge, 'private fun readSmallText(');
-    expect(bridge, contains('const val TEXT_FILE_MOST = 64 * 1024'));
-    expect(read, contains('if (buf.size() > TEXT_FILE_MOST) return null'));
-    expect(read, contains('textOfBytes('));
-    expect(read, isNot(contains('DISPLAY_NAME')));
-    final text = bodyOf(bridge, 'fun textOfBytes(');
-    expect(text, contains('CodingErrorAction.REPORT'));
-    expect(text, contains("it < ' '"));
+    expect(take, isNot(contains('openInputStream')));
+    expect(bridge, isNot(contains('readSmallText')));
+    final kinds = bodyOf(bridge, 'fun isFileType(');
+    expect(kinds, contains('"audio/"'));
+    expect(kinds, contains('"text/"'));
   });
 
   test('nothing of a share goes into a saved state', () {

@@ -32,8 +32,6 @@ class ToolsBridge(private val activity: Activity) {
         // dart cuts the words to a message's size. this only bounds what
         // crosses over
         const val TEXT_MOST = 2 * 4096
-        // a text file shared as a stream is read up to this, else let go
-        const val TEXT_FILE_MOST = 64 * 1024
 
         // words shared from another app: in this process's memory only, so
         // a screen rebuilt keeps them and a process that went takes them
@@ -56,7 +54,8 @@ class ToolsBridge(private val activity: Activity) {
         fun isFileType(type: String): Boolean {
             val t = type.substringBefore(';').trim().lowercase()
             return t.startsWith("image/") || t.startsWith("video/") ||
-                t.startsWith("application/") || t == "*/*"
+                t.startsWith("application/") || t.startsWith("audio/") ||
+                t.startsWith("text/") || t == "*/*"
         }
 
         // a concrete type, never a wildcard a mixed share carries
@@ -71,22 +70,6 @@ class ToolsBridge(private val activity: Activity) {
             return s.substring(0, end)
         }
 
-        // a file's bytes as text: utf-8 that decodes cleanly, with no
-        // control a text never holds
-        fun textOfBytes(bytes: ByteArray): String? {
-            val text = try {
-                java.nio.charset.StandardCharsets.UTF_8.newDecoder()
-                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
-                    .decode(java.nio.ByteBuffer.wrap(bytes))
-                    .toString()
-            } catch (e: java.nio.charset.CharacterCodingException) {
-                return null
-            }
-            val odd = text.any { it < ' ' && it != '\n' && it != '\r' && it != '\t' }
-            return if (odd) null else text
-        }
-
         fun isText(type: String) =
             type.substringBefore(';').trim().lowercase() == "text/plain"
 
@@ -97,10 +80,6 @@ class ToolsBridge(private val activity: Activity) {
             val own = pkg.lowercase()
             return host == own || host.startsWith("$own.")
         }
-
-        // each text share takes a turn. a stream read that ends after a
-        // newer share is let go
-        private val textTurns = Turns()
 
         // [all] at start: no copy in is being read then. a result may have
         // been shared with another app that still reads it, so it waits out
@@ -197,9 +176,8 @@ class ToolsBridge(private val activity: Activity) {
     private fun newId(): String = ByteArray(8).also { SecureRandom().nextBytes(it) }
         .joinToString("") { "%02x".format(it) }
 
-    // a newer share takes the place of one not used yet. a text file sent
-    // as a stream is read when it is small and really text; its name alone
-    // is never taken
+    // a newer share takes the place of one not used yet. words come from
+    // the extras alone; a text file is a file
     private fun offerText(intent: Intent) {
         val (text, subject) = try {
             Pair(
@@ -210,43 +188,11 @@ class ToolsBridge(private val activity: Activity) {
             return
         }
         if (!text.isNullOrBlank() || !subject.isNullOrBlank()) {
-            textTurns.next()
             keepText(text, subject)
             return
         }
-        val uri: Uri? = try {
-            if (Build.VERSION.SDK_INT >= 33) {
-                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                intent.getParcelableExtra(Intent.EXTRA_STREAM)
-            }
-        } catch (e: Exception) {
-            null
-        }
-        if (uri == null || !acceptable(uri)) return
-        // a refused or empty share took no turn; this one holds its place
-        val turn = textTurns.next()
-        Thread {
-            val read = readSmallText(uri) ?: return@Thread
-            activity.runOnUiThread { if (textTurns.latest(turn)) keepText(read, null) }
-        }.start()
-    }
-
-    private fun readSmallText(uri: Uri): String? = try {
-        activity.contentResolver.openInputStream(uri)?.use { i ->
-            val buf = java.io.ByteArrayOutputStream()
-            val chunk = ByteArray(8 * 1024)
-            while (true) {
-                val n = i.read(chunk)
-                if (n < 0) break
-                buf.write(chunk, 0, n)
-                if (buf.size() > TEXT_FILE_MOST) return null
-            }
-            textOfBytes(buf.toByteArray())?.takeIf { it.isNotBlank() }
-        }
-    } catch (e: Exception) {
-        null
+        // a text file sent alone goes as a file, to a chat picked for it
+        offerFiles(intent, "text/plain")
     }
 
     private fun keepText(text: String?, subject: String?) {
@@ -799,10 +745,3 @@ data class SharedWords(
     val subject: String?,
     val seen: String? = null
 )
-
-// a counter of turns: only the last one taken is still current
-class Turns {
-    private val n = java.util.concurrent.atomic.AtomicLong()
-    fun next(): Long = n.incrementAndGet()
-    fun latest(turn: Long): Boolean = n.get() == turn
-}
