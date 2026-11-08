@@ -216,6 +216,14 @@ class MemDb implements Database, Transaction {
   static bool _same(Object? a, Object? b) {
     if (a == null || b == null) return false;
     if (a is num && b is num) return a == b;
+    // blobs compare by their bytes, as sqlite's do
+    if (a is List<int> && b is List<int>) {
+      if (a.length != b.length) return false;
+      for (var i = 0; i < a.length; i++) {
+        if (a[i] != b[i]) return false;
+      }
+      return true;
+    }
     return a == b;
   }
 
