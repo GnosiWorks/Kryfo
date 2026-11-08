@@ -6,6 +6,7 @@
 // INSERT OR IGNORE / REPLACE and rollback behave as sqlite's do
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:kryfo/signal_stores.dart' show kDevSignalPrefix;
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -216,8 +217,11 @@ class MemDb implements Database, Transaction {
   static bool _same(Object? a, Object? b) {
     if (a == null || b == null) return false;
     if (a is num && b is num) return a == b;
-    // blobs compare by their bytes, as sqlite's do
-    if (a is List<int> && b is List<int>) {
+    // blobs compare by their bytes, as sqlite's do. sqflite binds a blob
+    // from a Uint8List only
+    if (a is List<int> &&
+        b is List<int> &&
+        (a is Uint8List || b is Uint8List)) {
       if (a.length != b.length) return false;
       for (var i = 0; i < a.length; i++) {
         if (a[i] != b[i]) return false;
