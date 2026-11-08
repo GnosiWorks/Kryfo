@@ -5714,6 +5714,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get wallpaperDefault => '默认';
 
   @override
+  String get wallpaperDim => '调暗壁纸';
+
+  @override
   String get wallpaperNotSet => '壁纸没有设置成功。请再试一次。';
 
   @override
@@ -16918,6 +16921,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get wallpaperDefault => '預設';
+
+  @override
+  String get wallpaperDim => '調暗桌布';
 
   @override
   String get wallpaperNotSet => '桌布沒有設定成功。請再試一次。';

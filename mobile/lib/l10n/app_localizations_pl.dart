@@ -6126,6 +6126,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get wallpaperDefault => 'Domyślna';
 
   @override
+  String get wallpaperDim => 'Przyciemnij tapetę';
+
+  @override
   String get wallpaperNotSet =>
       'Nie udało się ustawić tapety. Spróbuj ponownie.';
 

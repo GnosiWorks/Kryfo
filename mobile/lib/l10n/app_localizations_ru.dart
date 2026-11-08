@@ -6112,6 +6112,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get wallpaperDefault => 'По умолчанию';
 
   @override
+  String get wallpaperDim => 'Затемнить обои';
+
+  @override
   String get wallpaperNotSet => 'Обои не установлены. Попробуй ещё раз.';
 
   @override

@@ -4,6 +4,7 @@
 // and the sent tick. one place, so the two chats cannot drift apart.
 import 'package:flutter/material.dart';
 
+import '../atmosphere.dart' show AtmoScope;
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'burn_fade.dart' show BurnFlame;
@@ -148,6 +149,29 @@ class DayChip extends StatelessWidget {
           weight: FontWeight.w500,
           letter: 0.06,
         ),
+      ),
+    );
+  }
+}
+
+// words drawn straight on the page, a sender's name above the bubble: over
+// a photo they wear a chip of their own, so reading never rests on the veil
+class PageWords extends StatelessWidget {
+  final Widget child;
+  const PageWords({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!AtmoScope.photoOf(context)) return child;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: HaloColors.surface2.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: HaloColors.line, width: 0.5),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: child,
       ),
     );
   }

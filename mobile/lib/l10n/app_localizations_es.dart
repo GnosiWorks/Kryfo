@@ -6048,6 +6048,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get wallpaperDefault => 'Predeterminado';
 
   @override
+  String get wallpaperDim => 'Oscurecer el fondo';
+
+  @override
   String get wallpaperNotSet => 'No se puso el fondo. Inténtalo de nuevo.';
 
   @override

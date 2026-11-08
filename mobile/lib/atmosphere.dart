@@ -167,14 +167,24 @@ Color atmoBubbleIn(BuildContext context, [Color? fallback]) {
   return Color.lerp(plain, mood.base, mood.bubble)!;
 }
 
-// tells the bubbles which atmosphere the conversation is under
+// tells the bubbles which atmosphere the conversation is under, and
+// whether a photo lies behind it: words drawn on the page then wear a chip
 class AtmoScope extends InheritedWidget {
   final Atmo atmo;
-  const AtmoScope({super.key, required this.atmo, required super.child});
+  final bool photo;
+  const AtmoScope({
+    super.key,
+    required this.atmo,
+    this.photo = false,
+    required super.child,
+  });
   static Atmo? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<AtmoScope>()?.atmo;
+  static bool photoOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AtmoScope>()?.photo ?? false;
   @override
-  bool updateShouldNotify(AtmoScope old) => old.atmo != atmo;
+  bool updateShouldNotify(AtmoScope old) =>
+      old.atmo != atmo || old.photo != photo;
 }
 
 // the patterns, drawn in the line colour so they sit behind the bubbles

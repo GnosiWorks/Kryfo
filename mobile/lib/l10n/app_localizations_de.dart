@@ -6071,6 +6071,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get wallpaperDefault => 'Standard';
 
   @override
+  String get wallpaperDim => 'Hintergrund abdunkeln';
+
+  @override
   String get wallpaperNotSet =>
       'Der Hintergrund wurde nicht gesetzt. Versuch es noch einmal.';
 

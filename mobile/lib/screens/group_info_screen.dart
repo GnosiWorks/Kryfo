@@ -506,6 +506,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final id = widget.groupId;
     final follows = await followsDefault(id, group: true);
     final now = await chatWall(id, group: true);
+    final byDefault = follows ? now : await defaultWall();
     if (!mounted) return;
     final picked = await showWallpaperSheet(
       context,
@@ -514,6 +515,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       allowDefault: true,
       followsDefault: follows,
       hasPhoto: !follows && now.photo != null,
+      photo: now.photo,
+      defaultPhoto: byDefault.photo,
     );
     if (!mounted) return;
     if (picked is WallpaperFromPhotos) {

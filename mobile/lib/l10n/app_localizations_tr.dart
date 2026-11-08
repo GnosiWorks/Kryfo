@@ -6017,6 +6017,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get wallpaperDefault => 'Varsayılan';
 
   @override
+  String get wallpaperDim => 'Duvar kağıdını karart';
+
+  @override
   String get wallpaperNotSet => 'Duvar kağıdı ayarlanmadı. Yeniden dene.';
 
   @override

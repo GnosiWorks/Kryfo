@@ -69,6 +69,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
       before.atmo,
       allowPhoto: true,
       hasPhoto: before.photo != null,
+      photo: before.photo,
       onPreview: (a) {
         if (mounted) setState(() => _default = ChatWall(a));
       },

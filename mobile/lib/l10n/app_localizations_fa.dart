@@ -6000,6 +6000,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get wallpaperDefault => 'پیش‌فرض';
 
   @override
+  String get wallpaperDim => 'تیره کردن تصویر زمینه';
+
+  @override
   String get wallpaperNotSet => 'تصویر زمینه تنظیم نشد. دوباره امتحان کنید.';
 
   @override

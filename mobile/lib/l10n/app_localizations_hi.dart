@@ -6001,6 +6001,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get wallpaperDefault => 'डिफ़ॉल्ट';
 
   @override
+  String get wallpaperDim => 'वॉलपेपर मद्धम करें';
+
+  @override
   String get wallpaperNotSet => 'वॉलपेपर नहीं लगा। दोबारा कोशिश करें।';
 
   @override

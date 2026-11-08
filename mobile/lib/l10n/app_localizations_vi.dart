@@ -5989,6 +5989,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wallpaperDefault => 'Mặc định';
 
   @override
+  String get wallpaperDim => 'Làm tối hình nền';
+
+  @override
   String get wallpaperNotSet => 'Chưa đặt được hình nền. Hãy thử lại.';
 
   @override

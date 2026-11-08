@@ -6058,6 +6058,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get wallpaperDefault => 'Par défaut';
 
   @override
+  String get wallpaperDim => 'Assombrir le fond d’écran';
+
+  @override
   String get wallpaperNotSet =>
       'Le fond d’écran n’a pas été appliqué. Réessayez.';
 

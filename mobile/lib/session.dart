@@ -340,6 +340,8 @@ class Session {
       primary.wallpaperRow('');
   Future<void> setDefaultWallpaper(String atmo, [Uint8List? photo]) =>
       primary.setDefaultWallpaper(atmo, photo);
+  Future<double?> wallDim() => primary.wallDim();
+  Future<void> setWallDim(double? dim) => primary.setWallDim(dim);
   // a chat's own choice, in the container that holds the chat, so a hidden
   // chat's never lands on the everyday side
   Future<bool?> voiceDisguiseOf(String chatId, {bool group = false}) =>

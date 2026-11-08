@@ -6103,6 +6103,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get wallpaperDefault => 'Типовий';
 
   @override
+  String get wallpaperDim => 'Затемнити фон';
+
+  @override
   String get wallpaperNotSet => 'Фон не встановлено. Спробуй ще раз.';
 
   @override

@@ -7477,6 +7477,10 @@
   "@wallpaperDefault": {
     "description": "screens/wallpaper_sheet.dart"
   },
+  "wallpaperDim": "Dim wallpaper",
+  "@wallpaperDim": {
+    "description": "screens/wallpaper_sheet.dart; a slider over a photo wallpaper in the dark theme"
+  },
   "wallpaperNotSet": "The wallpaper was not set. Try again.",
   "@wallpaperNotSet": {
     "description": "screens/chat_screen.dart"

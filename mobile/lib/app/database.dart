@@ -1691,10 +1691,10 @@ Future<void> draftsTable(DatabaseExecutor db) async {
 
 // a photo no chat here says it shows: one written for a row that went or
 // was replaced whole (INSERT OR REPLACE fires no delete trigger). the
-// default ('') is never a chat's
+// default ('') and the dim (kDimWall) are never a chat's
 @visibleForTesting
 const kOrphanWallpapers =
-    "chat <> '' AND NOT EXISTS "
+    "chat <> '' AND chat <> '$kDimWall' AND NOT EXISTS "
     "(SELECT 1 FROM contacts c WHERE c.halo_id = wallpapers.chat "
     "AND c.atmosphere = '$kPhotoWall') AND NOT EXISTS "
     "(SELECT 1 FROM groups g WHERE substr(wallpapers.chat, 1, 6) = 'group:' "
