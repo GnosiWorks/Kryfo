@@ -117,8 +117,9 @@ class AppIo {
   Future<String> relaySend(int ident, String xPub, String cipher) =>
       engine.nostrSend(ident, xPub, cipher);
 
-  Future<String> onionSend(String onion, String cipher) =>
-      engine.sendTo(onion, cipher);
+  // [rest]: no message, so it waits behind messages for a dial
+  Future<String> onionSend(String onion, String cipher, {bool rest = false}) =>
+      engine.sendTo(onion, cipher, rest: rest);
 
   // a typing frame: sealed only on a session past its opener, and sent
   // straight to the peer's door, never anywhere else (typing.dart)

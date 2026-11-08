@@ -23,8 +23,10 @@ extension AppStateRooms on AppState {
   Future<bool> _sendGroupEnvelope(
     String groupId,
     String memberId,
-    String wrapped,
-  ) async {
+    String wrapped, {
+    // a group message, not a control: its door dial goes first
+    bool message = false,
+  }) async {
     if (everydayHeld) return false;
     final room = await _roomOf(groupId);
     if (room == null) {
@@ -40,7 +42,12 @@ extension AppStateRooms on AppState {
         );
         return r != _DeviceSend.failed;
       }
-      final ok = await _sendOneEnvelope(memberId, wrapped, member: true);
+      final ok = await _sendOneEnvelope(
+        memberId,
+        wrapped,
+        member: true,
+        message: message,
+      );
       if (ok) _ownGroupCopy(groupId, memberId, wrapped, reached: true);
       return ok;
     }

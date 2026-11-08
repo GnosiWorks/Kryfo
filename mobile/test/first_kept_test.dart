@@ -90,7 +90,8 @@ class _Engine implements HaloEngine {
   Future<String> subscribeFirstContact(int ident, int counter) async => 'ok';
   var onion = 'ok';
   @override
-  Future<String> sendTo(String addr, String msg) async => onion;
+  Future<String> sendTo(String addr, String msg, {bool rest = false}) async =>
+      onion;
   // the first-contact copies, and when they may answer
   final firsts = <String>[];
   Completer<String>? firstGate;
@@ -159,7 +160,11 @@ class _Io extends AppIo {
   }
 
   @override
-  Future<String> onionSend(String onion, String cipher) async {
+  Future<String> onionSend(
+    String onion,
+    String cipher, {
+    bool rest = false,
+  }) async {
     sent.add(('onion', cipher));
     return 'ok';
   }
