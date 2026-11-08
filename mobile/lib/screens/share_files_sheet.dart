@@ -65,7 +65,10 @@ class ShareFiles {
 
   ToolsBridge get _bridge => ToolsBridge.instance;
 
+  Timer? _peekTimer;
+
   void dispose() {
+    _peekTimer?.cancel();
     if (!_gone.isCompleted) _gone.complete();
   }
 
@@ -198,8 +201,19 @@ class ShareFiles {
   }
 
   // a provider that never answers ends the look, not every share after it
-  Future<SharedFiles?> _peek() =>
-      _bridge.peekSharedFiles().timeout(sharePeekLimit, onTimeout: () => null);
+  // its timer goes with the home, so none outlives it
+  Future<SharedFiles?> _peek() {
+    final late = Completer<SharedFiles?>();
+    _peekTimer?.cancel();
+    _peekTimer = Timer(sharePeekLimit, () {
+      if (!late.isCompleted) late.complete(null);
+    });
+    return Future.any([
+      _bridge.peekSharedFiles(),
+      late.future,
+      _gone.future.then((_) => null),
+    ]).whenComplete(() => _peekTimer?.cancel());
+  }
 
   Future<void> _finish(String id) async {
     _done.add(id);
