@@ -10399,6 +10399,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get joinWaiting => 'Warte auf dein Handy';
 
   @override
+  String get joinPreparing => 'Dein Code wird vorbereitet';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo verbindet sich. Dein Code erscheint, sobald dein Handy diesen Computer erreichen kann.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Der erste Start kann ein bis zwei Minuten dauern, während sich Tor verbindet.';
+
+  @override
   String get joinCodeLife => 'Der Code gilt zehn Minuten.';
 
   @override
@@ -11865,7 +11876,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Seine eigene Identität und jeder Chat darauf werden entfernt. Versteckte Chats, die Tarnung und Notiz an mich gehen auch. Dateien, die du in deinen eigenen Ordnern gespeichert hast, bleiben.';
+      'Seine eigene Identität, seine Chats und seine Kontakte auf diesem Computer werden entfernt. Versteckte Chats, die Tarnung und Notiz an mich gehen auch. Dateien, die du in deinen eigenen Ordnern gespeichert hast, bleiben.';
 
   @override
   String get deskLinkBackupRow => 'Zuerst sichern';
@@ -11880,6 +11891,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Löschen und verknüpfen';
+
+  @override
+  String get deskLinkReplace => 'Identität dieses Computers ersetzen';
 
   @override
   String get deskLinkErasing => 'Dieser Computer wird gelöscht';

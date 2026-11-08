@@ -527,7 +527,7 @@ void main() {
         const LinkStage(LinkStep.failed, end: LinkEnd.interrupted),
       );
       expect(find.text(l10n.devicesLinkStopped), findsOneWidget);
-      expect(find.text(l10n.joinNewCode), findsOneWidget);
+      expect(find.text(l10n.commonTryAgain), findsOneWidget);
       await t.tap(find.byTooltip(l10n.commonBack).first);
       await _settle(t);
       expect(find.byType(JoinScreen), findsNothing);

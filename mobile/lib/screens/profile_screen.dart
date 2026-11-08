@@ -11,6 +11,7 @@ import '../main.dart'
     show
         appState,
         linkedRole,
+        ownShownId,
         session,
         showAddContact,
         AppStatePhotos,
@@ -139,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final id = appState.sessionId;
+    final id = ownShownId;
     final hasBadge = _tier != SupporterTier.none;
 
     return Scaffold(

@@ -86,6 +86,11 @@ Future<void> _ownPhoneBlockPut(Database d, String id, int b) => d.insert(
 
 String? _ownPhoneId;
 
+/// the kryfo id to show as mine: a linked device's is its phone's, never
+/// the one its own container made before the link
+String get ownShownId =>
+    linkedRole && !sessionQuiet ? (_ownPhoneId ?? '') : appState.sessionId;
+
 // a person unlocked this device: its phone hears it is in use
 Future<void> _ownBeat() async {
   final own = _ownSync;

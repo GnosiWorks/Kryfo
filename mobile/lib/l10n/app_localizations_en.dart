@@ -10279,6 +10279,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinWaiting => 'Waiting for your phone';
 
   @override
+  String get joinPreparing => 'Getting your code ready';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo is connecting. Your code shows as soon as your phone can reach this computer.';
+
+  @override
+  String get joinPreparingSlow =>
+      'The first start can take a minute or two while Tor connects.';
+
+  @override
   String get joinCodeLife => 'The code works for ten minutes.';
 
   @override
@@ -11726,7 +11737,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Its own identity and every chat on it are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.';
+      'Its own identity, its chats and its contacts on this computer are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.';
 
   @override
   String get deskLinkBackupRow => 'Back up first';
@@ -11741,6 +11752,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Erase and link';
+
+  @override
+  String get deskLinkReplace => 'Replace this computer\'s identity';
 
   @override
   String get deskLinkErasing => 'Erasing this computer';

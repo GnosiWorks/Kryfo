@@ -10270,6 +10270,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get joinWaiting => 'Đang chờ điện thoại của bạn';
 
   @override
+  String get joinPreparing => 'Đang chuẩn bị mã của bạn';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo đang kết nối. Mã của bạn hiện ra ngay khi điện thoại của bạn có thể kết nối tới máy tính này.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Lần khởi động đầu có thể mất một hai phút trong lúc Tor kết nối.';
+
+  @override
   String get joinCodeLife => 'Mã có hiệu lực mười phút.';
 
   @override
@@ -11713,7 +11724,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Danh tính riêng của nó và mọi cuộc trò chuyện trên đó bị xóa. Trò chuyện ẩn, phần ngụy trang và Ghi chú riêng cũng bị xóa. Các tệp bạn đã lưu vào thư mục của mình vẫn còn.';
+      'Danh tính riêng của nó, các cuộc trò chuyện và danh bạ trên máy tính này bị xóa. Trò chuyện ẩn, phần ngụy trang và Ghi chú riêng cũng bị xóa. Các tệp bạn đã lưu vào thư mục của mình vẫn còn.';
 
   @override
   String get deskLinkBackupRow => 'Sao lưu trước';
@@ -11728,6 +11739,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Xóa và liên kết';
+
+  @override
+  String get deskLinkReplace => 'Thay danh tính của máy tính này';
 
   @override
   String get deskLinkErasing => 'Đang xóa máy tính này';

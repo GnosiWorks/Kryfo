@@ -10477,6 +10477,17 @@ class AppLocalizationsPl extends AppLocalizations {
   String get joinWaiting => 'Czekam na twój telefon';
 
   @override
+  String get joinPreparing => 'Przygotowuję twój kod';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo się łączy. Kod pojawi się, gdy tylko twój telefon będzie mógł dotrzeć do tego komputera.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Pierwsze uruchomienie może potrwać minutę lub dwie, aż Tor się połączy.';
+
+  @override
   String get joinCodeLife => 'Kod działa przez dziesięć minut.';
 
   @override
@@ -11954,7 +11965,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Jego własna tożsamość i wszystkie czaty na nim zostaną usunięte. Ukryte czaty, przynęta i Notatka dla siebie też znikną. Pliki zapisane w twoich własnych folderach zostaną.';
+      'Jego własna tożsamość, czaty i kontakty na tym komputerze zostaną usunięte. Ukryte czaty, przynęta i Notatka dla siebie też znikną. Pliki zapisane w twoich własnych folderach zostaną.';
 
   @override
   String get deskLinkBackupRow => 'Najpierw kopia zapasowa';
@@ -11969,6 +11980,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Wymaż i połącz';
+
+  @override
+  String get deskLinkReplace => 'Zastąp tożsamość tego komputera';
 
   @override
   String get deskLinkErasing => 'Wymazywanie tego komputera';

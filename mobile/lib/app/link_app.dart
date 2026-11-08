@@ -267,14 +267,23 @@ class _JoinLinkApp implements JoinLinkHooks {
   }
 
   @override
-  Future<JoinBundles> bundles(int device, int want) async {
+  Future<JoinBundles> bundles(
+    int device,
+    int want, {
+    void Function(int done)? made,
+  }) async {
     final ds = DeviceSessions(signalSession, linked: true);
     final first = await ds.makeBundle(device);
     final last = await ds.lastResortBundle(device);
+    final once = <Uint8List>[];
+    for (var i = 0; i < want; i++) {
+      once.add(await ds.makeBundle(device));
+      made?.call(i + 1);
+    }
     return (
       first: first,
       last: last,
-      once: [for (var i = 0; i < want; i++) await ds.makeBundle(device)],
+      once: once,
       made: DateTime.now().millisecondsSinceEpoch,
     );
   }

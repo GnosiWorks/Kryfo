@@ -13,6 +13,9 @@ import 'package:flutter/foundation.dart';
 import 'link_calls.dart';
 
 enum LinkStep {
+  /// the new device gets ready: its code shows once a phone can answer it
+  preparing,
+
   /// the new device shows its code
   showing,
 
@@ -48,6 +51,10 @@ enum LinkEnd {
 /// says it could not reach it
 const kLinkReachWait = Duration(seconds: 90);
 
+/// a code not shown this long, its tor still starting, is made afresh: the
+/// one shown keeps most of its ten minutes
+const kJoinFreshFor = Duration(minutes: 4);
+
 /// the wait with its spread: the real phone's and the decoy's are drawn
 /// alike, so a stopwatch cannot tell them apart
 Duration linkReachWait([Random? r]) =>
@@ -62,6 +69,7 @@ class LinkStage {
     this.digits,
     this.end,
     this.keyNumber,
+    this.share,
   });
   final LinkStep step;
 
@@ -72,6 +80,17 @@ class LinkStage {
 
   /// the account's key number, on the new device once linked
   final String? keyNumber;
+
+  /// how far linking is, 0 to 1, while what it sends moves
+  final double? share;
+}
+
+/// lines through the door, of all, as a share; null before any is counted
+double? linkShareOf(Map<String, dynamic> s, {double from = 0, double to = 1}) {
+  final at = (s['at'] as num?)?.toInt() ?? 0;
+  final of = (s['of'] as num?)?.toInt() ?? 0;
+  if (of <= 0) return null;
+  return from + (to - from) * (at / of).clamp(0, 1);
 }
 
 abstract class LinkFlow extends ValueNotifier<LinkStage> {
@@ -318,9 +337,16 @@ class PhoneLinkFlow extends _EngineFlow {
         if (value.step == LinkStep.reaching) {
           show(LinkStage(LinkStep.digits, digits: s['sas'] as String?));
         }
+      case 'linking':
+        // the device's bundles come through the door line by line
+        final share = linkShareOf(s, to: 0.95);
+        if (value.step == LinkStep.linking && share != null) {
+          show(LinkStage(LinkStep.linking, share: share));
+        }
       case 'bundles':
         if (_keeping) return;
         _keeping = true;
+        show(const LinkStage(LinkStep.linking, share: 0.95));
         final id = _link;
         final t = calls.call('take', {'link': id});
         if (t['err'] != null) return fail(LinkEnd.interrupted);
@@ -414,8 +440,12 @@ abstract class JoinLinkHooks {
   Future<void> placed(JoinPlace p);
 
   /// its first own bundles, as device [device]: [want] one-time ones,
-  /// as many as the phone asked for
-  Future<JoinBundles> bundles(int device, int want);
+  /// as many as the phone asked for. [made] hears how many are done
+  Future<JoinBundles> bundles(
+    int device,
+    int want, {
+    void Function(int done)? made,
+  });
 
   /// linked, the phone kept it: everything written at once (the place, the
   /// own list's rows, the history stream's key) and onboarding done
@@ -430,28 +460,59 @@ abstract class JoinLinkHooks {
 }
 
 class JoinLinkFlow extends _EngineFlow {
-  JoinLinkFlow(LinkCalls calls, {required this.hooks, Duration? poll})
-    : super(calls, const LinkStage(LinkStep.showing), poll: poll);
+  JoinLinkFlow(
+    LinkCalls calls, {
+    required this.hooks,
+    Duration? poll,
+    Duration? fresh,
+    DateTime Function()? now,
+  }) : fresh = fresh ?? kJoinFreshFor,
+       _now = now ?? DateTime.now,
+       super(calls, const LinkStage(LinkStep.preparing), poll: poll);
 
   final JoinLinkHooks hooks;
+
+  /// a code still not shown after this is made afresh
+  final Duration fresh;
+  final DateTime Function() _now;
   JoinPlace? _place;
   Map<String, dynamic>? _own;
   bool _placing = false;
   bool _taking = false;
+  ({String key, int reg})? _me;
+  String? _offer;
+  DateTime? _since;
 
   @override
   Future<void> start() async {
-    final ({String key, int reg}) me;
     try {
-      me = await hooks.myKey();
+      _me = await hooks.myKey();
     } catch (_) {
       return fail(LinkEnd.interrupted);
     }
+    if (over) return;
+    _join();
+  }
+
+  // a code from the engine, shown once its rendezvous answers: a phone
+  // that scans it before then waits for nothing
+  void _join() {
+    final me = _me!;
     final r = calls.call('join_start', {'key': me.key, 'reg': me.reg});
     if (r['err'] != null) return fail(linkEndOf(r['err'] as String));
     _link = r['link'] as String;
-    show(LinkStage(LinkStep.showing, offer: r['offer'] as String));
+    _offer = r['offer'] as String;
+    _since = _now();
     _watch();
+  }
+
+  // still not ready: the code made afresh, the old one ended
+  void _again() {
+    final id = _link;
+    _timer?.cancel();
+    _link = null;
+    if (id != null) calls.call('end', {'link': id});
+    _join();
   }
 
   @override
@@ -471,9 +532,23 @@ class JoinLinkFlow extends _EngineFlow {
   @override
   Future<void> onState(Map<String, dynamic> s) async {
     switch (s['st']) {
+      case 'offer':
+        if (value.step != LinkStep.preparing) return;
+        if (s['ready'] == true) {
+          show(LinkStage(LinkStep.showing, offer: _offer));
+        } else if (_now().difference(_since ?? _now()) >= fresh) {
+          _again();
+        }
       case 'digits':
-        if (value.step == LinkStep.showing) {
+        if (value.step == LinkStep.showing ||
+            value.step == LinkStep.preparing) {
           show(LinkStage(LinkStep.digits, digits: s['sas'] as String?));
+        }
+      case 'sending':
+        // its bundles made, they go to the phone line by line
+        final share = linkShareOf(s, from: 0.5, to: 0.95);
+        if (value.step == LinkStep.linking && share != null) {
+          show(LinkStage(LinkStep.linking, share: share));
         }
       case 'placed':
         if (_placing) return;
@@ -492,9 +567,16 @@ class JoinLinkFlow extends _EngineFlow {
           final own = calls.call('own', {'link': _link, 'ident': 0});
           if (own['err'] != null) return fail(LinkEnd.interrupted);
           _own = own;
+          final want = (s['want'] as num?)?.toInt() ?? 0;
+          // making a big identity's bundles takes a while: the first half
           final b = await hooks.bundles(
             p.device,
-            (s['want'] as num?)?.toInt() ?? 0,
+            want,
+            made: (n) {
+              if (value.step == LinkStep.linking && want > 0) {
+                show(LinkStage(LinkStep.linking, share: 0.5 * n / want));
+              }
+            },
           );
           final r = calls.call('bundles', {
             'link': _link,
@@ -512,6 +594,7 @@ class JoinLinkFlow extends _EngineFlow {
         final own = _own;
         if (_taking || p == null || own == null) return;
         _taking = true;
+        show(const LinkStage(LinkStep.linking, share: 1));
         final t = calls.call('take', {'link': _link});
         if (t['err'] != null) return fail(LinkEnd.interrupted);
         final stream = base64Decode(t['stream'] as String);

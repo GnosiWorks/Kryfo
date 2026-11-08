@@ -10291,6 +10291,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get joinWaiting => 'आपके फ़ोन का इंतज़ार है';
 
   @override
+  String get joinPreparing => 'आपका कोड तैयार हो रहा है';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo जुड़ रहा है। जैसे ही आपका फ़ोन इस कंप्यूटर तक पहुँच सकेगा, आपका कोड दिखेगा।';
+
+  @override
+  String get joinPreparingSlow =>
+      'पहली बार शुरू होने में एक-दो मिनट लग सकते हैं, जब तक Tor जुड़ता है।';
+
+  @override
   String get joinCodeLife => 'यह कोड दस मिनट तक चलता है।';
 
   @override
@@ -11733,7 +11744,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'इसकी अपनी पहचान और इस पर हर चैट हटा दी जाएगी। छिपी चैट, नकली Kryfo और अपने लिए नोट भी चले जाएँगे। आपके अपने फ़ोल्डरों में सहेजी फ़ाइलें रहेंगी।';
+      'इस कंप्यूटर पर इसकी अपनी पहचान, इसकी चैट और इसके संपर्क हटा दिए जाएँगे। छिपी चैट, नकली Kryfo और अपने लिए नोट भी चले जाएँगे। आपके अपने फ़ोल्डरों में सहेजी फ़ाइलें रहेंगी।';
 
   @override
   String get deskLinkBackupRow => 'पहले बैकअप लें';
@@ -11748,6 +11759,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'मिटाएँ और जोड़ें';
+
+  @override
+  String get deskLinkReplace => 'इस कंप्यूटर की पहचान बदलें';
 
   @override
   String get deskLinkErasing => 'यह कंप्यूटर मिटाया जा रहा है';

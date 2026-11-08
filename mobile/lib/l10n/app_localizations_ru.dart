@@ -10455,6 +10455,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get joinWaiting => 'Ждём ваш телефон';
 
   @override
+  String get joinPreparing => 'Готовим ваш код';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo подключается. Код появится, как только ваш телефон сможет достучаться до этого компьютера.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Первый запуск может занять минуту-другую, пока подключается Tor.';
+
+  @override
   String get joinCodeLife => 'Код действует десять минут.';
 
   @override
@@ -11913,7 +11924,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Его собственный профиль и все чаты на нём удаляются. Скрытые чаты, приманка и Заметки удаляются тоже. Файлы, сохранённые в ваших папках, останутся.';
+      'Его собственный профиль, чаты и контакты на этом компьютере удаляются. Скрытые чаты, приманка и Заметки удаляются тоже. Файлы, сохранённые в ваших папках, останутся.';
 
   @override
   String get deskLinkBackupRow => 'Сначала резервная копия';
@@ -11928,6 +11939,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Стереть и связать';
+
+  @override
+  String get deskLinkReplace => 'Заменить профиль этого компьютера';
 
   @override
   String get deskLinkErasing => 'Компьютер стирается';

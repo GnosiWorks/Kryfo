@@ -10287,6 +10287,17 @@ class AppLocalizationsId extends AppLocalizations {
   String get joinWaiting => 'Menunggu ponselmu';
 
   @override
+  String get joinPreparing => 'Menyiapkan kodemu';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo sedang terhubung. Kodemu muncul begitu ponselmu bisa menjangkau komputer ini.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Mulai pertama kali bisa makan waktu satu atau dua menit selagi Tor terhubung.';
+
+  @override
   String get joinCodeLife => 'Kode berlaku sepuluh menit.';
 
   @override
@@ -11730,7 +11741,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Identitasnya sendiri dan semua obrolan di dalamnya dihapus. Obrolan tersembunyi, umpan, dan Catatan pribadi juga ikut terhapus. File yang kamu simpan di foldermu sendiri tetap ada.';
+      'Identitasnya sendiri, obrolannya, dan kontaknya di komputer ini dihapus. Obrolan tersembunyi, umpan, dan Catatan pribadi juga ikut terhapus. File yang kamu simpan di foldermu sendiri tetap ada.';
 
   @override
   String get deskLinkBackupRow => 'Cadangkan dulu';
@@ -11745,6 +11756,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Hapus dan tautkan';
+
+  @override
+  String get deskLinkReplace => 'Ganti identitas komputer ini';
 
   @override
   String get deskLinkErasing => 'Menghapus komputer ini';

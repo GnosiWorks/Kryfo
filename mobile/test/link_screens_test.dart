@@ -228,7 +228,7 @@ void main() {
       );
       await t.pump();
       expect(find.text(l10n.joinUnreached), findsOneWidget);
-      await t.tap(find.text(l10n.joinNewCode));
+      await t.tap(find.text(l10n.commonTryAgain));
       await t.pump();
       expect(made, hasLength(2));
       expect(made.first.cancelled, greaterThan(0));

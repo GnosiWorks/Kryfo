@@ -10314,6 +10314,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get joinWaiting => 'Telefonun bekleniyor';
 
   @override
+  String get joinPreparing => 'Kodun hazırlanıyor';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo bağlanıyor. Telefonun bu bilgisayara ulaşabildiği anda kodun görünür.';
+
+  @override
+  String get joinPreparingSlow =>
+      'İlk açılış, Tor bağlanırken bir iki dakika sürebilir.';
+
+  @override
   String get joinCodeLife => 'Kod on dakika geçerli.';
 
   @override
@@ -11753,7 +11764,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Kendi kimliği ve üzerindeki her sohbet kaldırılır. Gizli sohbetler, yem ve Kendime not da gider. Kendi klasörlerine kaydettiğin dosyalar kalır.';
+      'Bu bilgisayardaki kendi kimliği, sohbetleri ve kişileri kaldırılır. Gizli sohbetler, yem ve Kendime not da gider. Kendi klasörlerine kaydettiğin dosyalar kalır.';
 
   @override
   String get deskLinkBackupRow => 'Önce yedekle';
@@ -11768,6 +11779,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Sil ve bağla';
+
+  @override
+  String get deskLinkReplace => 'Bu bilgisayarın kimliğini değiştir';
 
   @override
   String get deskLinkErasing => 'Bu bilgisayar siliniyor';

@@ -10362,6 +10362,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get joinWaiting => 'Esperando o seu celular';
 
   @override
+  String get joinPreparing => 'Preparando o seu código';
+
+  @override
+  String get joinPreparingLine =>
+      'O Kryfo está se conectando. Seu código aparece assim que o seu celular puder alcançar este computador.';
+
+  @override
+  String get joinPreparingSlow =>
+      'A primeira vez pode levar um ou dois minutos enquanto o Tor se conecta.';
+
+  @override
   String get joinCodeLife => 'O código vale por dez minutos.';
 
   @override
@@ -11816,7 +11827,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'A identidade dele e todas as conversas nele são removidas. As conversas ocultas, o disfarce e Notas também vão. Os arquivos que você salvou nas suas pastas ficam.';
+      'A identidade dele, as conversas e os contatos neste computador são removidos. As conversas ocultas, o disfarce e Notas também vão. Os arquivos que você salvou nas suas pastas ficam.';
 
   @override
   String get deskLinkBackupRow => 'Fazer backup antes';
@@ -11831,6 +11842,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Apagar e conectar';
+
+  @override
+  String get deskLinkReplace => 'Substituir a identidade deste computador';
 
   @override
   String get deskLinkErasing => 'Apagando este computador';

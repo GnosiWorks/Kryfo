@@ -9740,6 +9740,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get joinWaiting => '正在等待你的手机';
 
   @override
+  String get joinPreparing => '正在准备你的二维码';
+
+  @override
+  String get joinPreparingLine => 'Kryfo 正在连接。你的手机一能连到这台电脑，二维码就会出现。';
+
+  @override
+  String get joinPreparingSlow => '首次启动时 Tor 连接可能需要一两分钟。';
+
+  @override
   String get joinCodeLife => '二维码十分钟内有效。';
 
   @override
@@ -11082,7 +11091,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      '它自己的身份和上面的每个聊天都会被移除。隐藏聊天、伪装和给自己的笔记也会一起移除。你存到自己文件夹里的文件会保留。';
+      '这台电脑上它自己的身份、聊天和联系人都会被移除。隐藏聊天、伪装和给自己的笔记也会一起移除。你存到自己文件夹里的文件会保留。';
 
   @override
   String get deskLinkBackupRow => '先备份';
@@ -11095,6 +11104,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => '抹除并关联';
+
+  @override
+  String get deskLinkReplace => '替换这台电脑的身份';
 
   @override
   String get deskLinkErasing => '正在抹除这台电脑';
@@ -20821,6 +20833,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get joinWaiting => '正在等待你的手機';
 
   @override
+  String get joinPreparing => '正在準備你的 QR 碼';
+
+  @override
+  String get joinPreparingLine => 'Kryfo 正在連線。你的手機一能連到這台電腦，QR 碼就會出現。';
+
+  @override
+  String get joinPreparingSlow => '第一次啟動時 Tor 連線可能需要一兩分鐘。';
+
+  @override
   String get joinCodeLife => 'QR 碼十分鐘內有效。';
 
   @override
@@ -22165,7 +22186,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get deskLinkGoesLine =>
-      '它自己的身分和上面的每個聊天都會被移除。隱藏聊天、偽裝和給自己的筆記也會一起移除。你存到自己資料夾裡的檔案會保留。';
+      '這台電腦上它自己的身分、聊天和聯絡人都會被移除。隱藏聊天、偽裝和給自己的筆記也會一起移除。你存到自己資料夾裡的檔案會保留。';
 
   @override
   String get deskLinkBackupRow => '先備份';
@@ -22179,6 +22200,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get deskLinkConfirmYes => '抹除並連結';
+
+  @override
+  String get deskLinkReplace => '替換這台電腦的身分';
 
   @override
   String get deskLinkErasing => '正在抹除這台電腦';

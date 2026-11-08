@@ -67,9 +67,16 @@ class _Join implements JoinLinkHooks {
   @override
   Future<void> placed(JoinPlace p) async => steps.add('placed ${p.device}');
   @override
-  Future<JoinBundles> bundles(int device, int want) async {
+  Future<JoinBundles> bundles(
+    int device,
+    int want, {
+    void Function(int done)? made,
+  }) async {
     wanted = want;
     steps.add('bundles $device');
+    for (var i = 1; i <= want; i++) {
+      made?.call(i);
+    }
     return (
       first: Uint8List.fromList([1]),
       last: Uint8List.fromList([2]),
@@ -253,8 +260,9 @@ void main() {
           };
         final h = _Join();
         final f = JoinLinkFlow(c, hooks: h, poll: _tick);
+        c.state = {'st': 'offer', 'ready': true};
         f.start();
-        await t.pump();
+        await t.pump(_tick * 2);
         expect(c.args['join_start'], {'key': '05${'cd' * 32}', 'reg': 77});
         expect(f.value.step, LinkStep.showing);
         expect(f.value.offer, 'kryfo-link:abc');
@@ -489,6 +497,129 @@ void main() {
     expect(h.steps, ['placed 42', 'bundles 42', 'failed']);
     expect(h.stream, isNull);
     f.dispose();
+  });
+
+  testWidgets('the code shows only once its rendezvous answers', (t) async {
+    final c = _Calls()
+      ..answers['join_start'] = {'link': 'J1', 'offer': 'kryfo-link:abc'};
+    c.state = {'st': 'offer'};
+    final f = JoinLinkFlow(c, hooks: _Join(), poll: _tick);
+    f.start();
+    await t.pump(_tick * 3);
+    // a tor still starting: no code a phone would scan for nothing
+    expect(f.value.step, LinkStep.preparing);
+    expect(f.value.offer, isNull);
+    c.state = {'st': 'offer', 'ready': true};
+    await t.pump(_tick * 2);
+    expect(f.value.step, LinkStep.showing);
+    expect(f.value.offer, 'kryfo-link:abc');
+    f.dispose();
+  });
+
+  testWidgets('a code not shown for a while is made afresh', (t) async {
+    var now = DateTime(2026, 11, 8, 19);
+    final c = _Calls()
+      ..answers['join_start'] = {'link': 'J1', 'offer': 'kryfo-link:abc'};
+    c.state = {'st': 'offer'};
+    final f = JoinLinkFlow(
+      c,
+      hooks: _Join(),
+      poll: _tick,
+      fresh: const Duration(minutes: 4),
+      now: () => now,
+    );
+    f.start();
+    await t.pump(_tick * 2);
+    expect(c.said, ['join_start']);
+    c.answers['join_start'] = {'link': 'J2', 'offer': 'kryfo-link:def'};
+    now = now.add(const Duration(minutes: 4));
+    await t.pump(_tick * 2);
+    // the old code ends at the engine, a new one waits in its place
+    expect(c.said, ['join_start', 'end', 'join_start']);
+    expect(c.args['end'], {'link': 'J1'});
+    expect(f.value.step, LinkStep.preparing);
+    c.state = {'st': 'offer', 'ready': true};
+    await t.pump(_tick * 2);
+    expect(f.value.offer, 'kryfo-link:def');
+    f.dispose();
+    expect(c.args['end'], {'link': 'J2'});
+  });
+
+  testWidgets('both sides show how far the link is', (t) async {
+    {
+      final c = _Calls()..answers['link_start'] = {'link': 'L1'};
+      final f = PhoneLinkFlow(
+        c,
+        code: 'kryfo-link:x',
+        hooks: _Phone(),
+        poll: _tick,
+      );
+      f.start();
+      await t.pump();
+      c.state = {'st': 'digits', 'sas': '123456'};
+      await t.pump(_tick * 2);
+      c.answers['list'] = {
+        'body': _b([1, 2]),
+      };
+      await f.match();
+      expect(f.value.step, LinkStep.linking);
+      expect(f.value.share, isNull);
+      c.state = {'st': 'linking', 'at': 3, 'of': 6};
+      await t.pump(_tick * 2);
+      expect(f.value.share, closeTo(0.475, 0.001));
+      f.dispose();
+    }
+    {
+      final c = _Calls()
+        ..answers['join_start'] = {'link': 'J1', 'offer': 'kryfo-link:abc'}
+        ..answers['own'] = {'rows': []};
+      c.state = {'st': 'digits', 'sas': '222333'};
+      final f = JoinLinkFlow(c, hooks: _Join(), poll: _tick);
+      f.start();
+      await t.pump(_tick * 2);
+      await f.match();
+      final seen = <double>[];
+      f.addListener(() {
+        final s = f.value.share;
+        if (s != null) seen.add(s);
+      });
+      c.state = {
+        'st': 'placed',
+        'identity': '05${'ab' * 32}',
+        'key_number': '1',
+        'want': 4,
+        'device': {'id': 42, 'key': 'k', 'reg': 77},
+      };
+      await t.pump(_tick * 3);
+      // making its bundles is the first half
+      expect(seen, [0.125, 0.25, 0.375, 0.5]);
+      c.state = {'st': 'sending', 'at': 1, 'of': 2};
+      await t.pump(_tick * 2);
+      expect(f.value.share, closeTo(0.725, 0.001));
+      f.dispose();
+    }
+  });
+
+  testWidgets('a cancelled join ends at the engine, and the next is new', (
+    t,
+  ) async {
+    final c = _Calls()
+      ..answers['join_start'] = {'link': 'J1', 'offer': 'kryfo-link:abc'};
+    c.state = {'st': 'offer', 'ready': true};
+    final f = JoinLinkFlow(c, hooks: _Join(), poll: _tick);
+    f.start();
+    await t.pump(_tick * 2);
+    f.dispose();
+    expect(c.said, ['join_start', 'end']);
+    c.answers['join_start'] = {'link': 'J2', 'offer': 'kryfo-link:def'};
+    final g = JoinLinkFlow(c, hooks: _Join(), poll: _tick);
+    g.start();
+    await t.pump(_tick * 2);
+    expect(g.value.offer, 'kryfo-link:def');
+    c.state = {'st': 'failed', 'why': 'gone'};
+    await t.pump(_tick * 2);
+    expect(g.value.end, LinkEnd.interrupted);
+    g.dispose();
   });
 }
 
