@@ -44,7 +44,7 @@ else()
   message(FATAL_ERROR "no ${HALO_SQLCIPHER_LIB}: run linux/build-sqlcipher.sh")
 endif()
 
-# the window's and the tray's icon
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../assets/icon/halo_icon.png"
+# the window's, the menu's and the tray's icon, 512 px for hicolor/512x512
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/kryfo.png"
   DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" RENAME "kryfo.png"
   COMPONENT Runtime)
