@@ -160,9 +160,13 @@ void main() {
       if (out != null) File(out).writeAsStringSync('${log.join('\n')}\n');
     });
 
+    // every line's english, so a pivot that stopped there shows
+    final viaEnglish = <String>{};
+
     Future<String> say(String text, String from, String to) async {
       final out = await hub.translate(text, Offer(from, to));
       log.add('$from-$to\t$out');
+      if (to == 'en') viaEnglish.add(out);
       return out;
     }
 
@@ -174,7 +178,12 @@ void main() {
       // the guess tells the latin languages apart; a short or odd line
       // may come back unsure, never as another language
       final g = detectLanguage(out).lang;
-      if (g.isNotEmpty) expect(baseLang(g), baseLang(to), reason: '$step: $out');
+      // italian and others share words with english: an english guess is
+      // fine as long as the line is not the english step itself
+      if (g.isEmpty || (g == 'en' && to != 'en' && !viaEnglish.contains(out))) {
+        return;
+      }
+      expect(baseLang(g), baseLang(to), reason: '$step: $out');
     }
 
     test('the engine names the same packs as the app', () async {
@@ -204,7 +213,9 @@ void main() {
       for (final a in langs) {
         for (final b in langs) {
           if (a == b) continue;
-          looksLike(await say(said[a]!, a, b), b, '$a-$b');
+          final out = await say(said[a]!, a, b);
+          expect(viaEnglish, isNot(contains(out)), reason: '$a-$b: $out');
+          looksLike(out, b, '$a-$b');
         }
       }
     }, timeout: const Timeout(Duration(minutes: 60)));
@@ -212,6 +223,7 @@ void main() {
     test('a reader of another language is offered the way there', () async {
       for (final app in ['de', 'ar', 'zh']) {
         final h = _hub(c, t, app);
+        await h.ready();
         for (final l in langs) {
           if (l == app) continue;
           final o = h.offer(said[l]!);
