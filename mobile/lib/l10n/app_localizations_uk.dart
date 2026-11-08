@@ -10266,7 +10266,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Пов’язано п’ять пристроїв. Приберіть один, щоб пов’язати інший.';
+      'Усі місця для пристроїв зайняті. Приберіть один, щоб пов’язати інший.';
 
   @override
   String get devicesLinkADevice => 'Пов’язати пристрій';

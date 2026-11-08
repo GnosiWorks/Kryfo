@@ -12617,9 +12617,9 @@
   "@devicesUnusedRule": {
     "description": "screens/linked_devices_screen.dart: a note under the list, the 30 day rule"
   },
-  "devicesFull": "Five devices are linked. Remove one to link another.",
+  "devicesFull": "All your device spots are in use. Remove one to link another.",
   "@devicesFull": {
-    "description": "screens/linked_devices_screen.dart: over the link button when five are linked"
+    "description": "screens/linked_devices_screen.dart: over the link button when every device spot is taken"
   },
   "devicesLinkADevice": "Link a device",
   "@devicesLinkADevice": {

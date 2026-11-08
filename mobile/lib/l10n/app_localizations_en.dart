@@ -10093,7 +10093,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Five devices are linked. Remove one to link another.';
+      'All your device spots are in use. Remove one to link another.';
 
   @override
   String get devicesLinkADevice => 'Link a device';

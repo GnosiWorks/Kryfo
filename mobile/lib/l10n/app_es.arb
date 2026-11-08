@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Vincula una computadora para leer y enviar tus mensajes desde ella.",
   "devicesContactsSeeNothing": "Las apps de tus contactos no muestran tus dispositivos.",
   "devicesUnusedRule": "Un dispositivo que no abres en 30 días se desvincula solo y borra tus chats de él.",
-  "devicesFull": "Hay cinco dispositivos vinculados. Quita uno para vincular otro.",
+  "devicesFull": "Todos tus espacios para dispositivos están en uso. Quita uno para vincular otro.",
   "devicesLinkADevice": "Vincular un dispositivo",
   "devicesRemoveAll": "Quitar todos los demás dispositivos",
   "devicesRemoveAllTitle": "¿Quitar todos los demás dispositivos?",

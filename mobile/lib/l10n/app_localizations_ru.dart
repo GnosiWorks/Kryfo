@@ -10269,7 +10269,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Связано пять устройств. Удалите одно, чтобы связать другое.';
+      'Все места для устройств заняты. Удалите одно, чтобы связать другое.';
 
   @override
   String get devicesLinkADevice => 'Связать устройство';

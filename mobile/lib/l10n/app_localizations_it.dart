@@ -10182,7 +10182,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Ci sono cinque dispositivi collegati. Rimuovine uno per collegarne un altro.';
+      'Tutti i posti per i tuoi dispositivi sono occupati. Rimuovine uno per collegarne un altro.';
 
   @override
   String get devicesLinkADevice => 'Collega un dispositivo';

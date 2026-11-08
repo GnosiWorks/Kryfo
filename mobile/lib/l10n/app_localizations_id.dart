@@ -10101,7 +10101,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Lima perangkat sudah tertaut. Hapus satu untuk menautkan yang lain.';
+      'Semua tempat perangkatmu sudah terpakai. Hapus satu untuk menautkan yang lain.';
 
   @override
   String get devicesLinkADevice => 'Tautkan perangkat';

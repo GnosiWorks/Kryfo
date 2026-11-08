@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "連結一台電腦，就能在上面讀取和傳送訊息。",
   "devicesContactsSeeNothing": "你的聯絡人的 App 不會顯示你的裝置。",
   "devicesUnusedRule": "一台裝置 30 天沒開啟，就會自己解除連結，並抹除上面的聊天。",
-  "devicesFull": "已連結五台裝置。移除一台才能再連結。",
+  "devicesFull": "可連結的裝置已滿。移除一台才能再連結。",
   "devicesLinkADevice": "連結裝置",
   "devicesRemoveAll": "移除其他所有裝置",
   "devicesRemoveAllTitle": "移除其他所有裝置？",

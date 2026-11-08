@@ -10203,7 +10203,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Cinq appareils sont associés. Retirez-en un pour en associer un autre.';
+      'Toutes les places pour vos appareils sont prises. Retirez-en un pour en associer un autre.';
 
   @override
   String get devicesLinkADevice => 'Associer un appareil';

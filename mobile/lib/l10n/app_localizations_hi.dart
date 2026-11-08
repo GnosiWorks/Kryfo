@@ -10105,7 +10105,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'पाँच डिवाइस जुड़े हैं। दूसरा जोड़ने के लिए एक हटाएँ।';
+      'आपके डिवाइस की सभी जगहें भर गई हैं। दूसरा जोड़ने के लिए एक हटाएँ।';
 
   @override
   String get devicesLinkADevice => 'डिवाइस जोड़ें';

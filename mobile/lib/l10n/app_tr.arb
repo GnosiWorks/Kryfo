@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Mesajlarını orada okuyup göndermek için bir bilgisayar bağla.",
   "devicesContactsSeeNothing": "Kişilerinin uygulamaları cihazlarını göstermez.",
   "devicesUnusedRule": "30 gün açmadığın bir cihazın bağlantısı kendiliğinden kesilir ve sohbetlerin ondan silinir.",
-  "devicesFull": "Beş cihaz bağlı. Başka birini bağlamak için birini kaldır.",
+  "devicesFull": "Cihaz yerlerinin hepsi dolu. Başka birini bağlamak için birini kaldır.",
   "devicesLinkADevice": "Cihaz bağla",
   "devicesRemoveAll": "Diğer tüm cihazları kaldır",
   "devicesRemoveAllTitle": "Diğer tüm cihazlar kaldırılsın mı?",

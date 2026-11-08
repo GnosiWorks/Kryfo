@@ -16195,10 +16195,10 @@ abstract class AppLocalizations {
   /// **'A device you don\'t open for 30 days unlinks itself and wipes your chats from it.'**
   String get devicesUnusedRule;
 
-  /// screens/linked_devices_screen.dart: over the link button when five are linked
+  /// screens/linked_devices_screen.dart: over the link button when every device spot is taken
   ///
   /// In en, this message translates to:
-  /// **'Five devices are linked. Remove one to link another.'**
+  /// **'All your device spots are in use. Remove one to link another.'**
   String get devicesFull;
 
   /// screens/linked_devices_screen.dart: the button at the foot of the list, and the title of the page it opens

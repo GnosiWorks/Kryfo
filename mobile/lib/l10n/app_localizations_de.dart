@@ -10213,7 +10213,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get devicesFull =>
-      'Fünf Geräte sind verknüpft. Entferne eins, um ein weiteres zu verknüpfen.';
+      'Alle Plätze für deine Geräte sind belegt. Entferne eins, um ein weiteres zu verknüpfen.';
 
   @override
   String get devicesLinkADevice => 'Gerät verknüpfen';

@@ -2650,7 +2650,7 @@
   "devicesEmptyLine": "Associez un ordinateur pour y lire et envoyer vos messages.",
   "devicesContactsSeeNothing": "Les applis de vos contacts n’affichent pas vos appareils.",
   "devicesUnusedRule": "Un appareil que vous n’ouvrez pas pendant 30 jours se dissocie tout seul et efface vos discussions.",
-  "devicesFull": "Cinq appareils sont associés. Retirez-en un pour en associer un autre.",
+  "devicesFull": "Toutes les places pour vos appareils sont prises. Retirez-en un pour en associer un autre.",
   "devicesLinkADevice": "Associer un appareil",
   "devicesRemoveAll": "Retirer tous les autres appareils",
   "devicesRemoveAllTitle": "Retirer tous les autres appareils ?",
