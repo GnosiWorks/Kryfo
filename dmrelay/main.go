@@ -52,18 +52,10 @@ func rejectEvent(ctx context.Context, ev *nostr.Event) (bool, string) {
 		if at.Before(now.Add(-maxPastSkew)) {
 			return true, "invalid: created_at too old"
 		}
-		if ev.Tags.Find("p") == nil {
+		if p := ev.Tags.Find("p"); len(p) < 2 {
 			return true, "invalid: missing p tag"
 		}
-		exp := ev.Tags.Find("expiration")
-		if exp == nil {
-			return true, "invalid: missing expiration tag"
-		}
-		sec, err := strconv.ParseInt(exp[1], 10, 64)
-		if err != nil || time.Unix(sec, 0).After(now.Add(maxExpiry)) {
-			return true, "invalid: bad expiration"
-		}
-		return false, ""
+		return checkExpiration(ev, now)
 	case 10050:
 		if len(ev.Content) > 4096 {
 			return true, "invalid: content too large"
@@ -71,6 +63,27 @@ func rejectEvent(ctx context.Context, ev *nostr.Event) (bool, string) {
 		return false, ""
 	}
 	return true, "blocked: kind not accepted here"
+}
+
+// one decimal number of seconds, still ahead and no more than maxExpiry
+// out. compared as numbers: time.Unix wraps for values near the int64
+// limits and would put a huge one in the past
+func checkExpiration(ev *nostr.Event, now time.Time) (bool, string) {
+	exp := ev.Tags.Find("expiration")
+	if len(exp) < 2 {
+		return true, "invalid: missing expiration tag"
+	}
+	sec, err := strconv.ParseInt(exp[1], 10, 64)
+	if err != nil {
+		return true, "invalid: bad expiration"
+	}
+	if sec <= now.Unix() {
+		return true, "invalid: already expired"
+	}
+	if sec > now.Add(maxExpiry).Unix() {
+		return true, "invalid: bad expiration"
+	}
+	return false, ""
 }
 
 // a 1059 query must be authed and may only ask for the authed address.
@@ -129,6 +142,7 @@ func main() {
 
 	relay.RejectEvent = append(relay.RejectEvent, rejectEvent)
 	relay.RejectFilter = append(relay.RejectFilter, rejectFilter)
+	guardHooks(relay)
 
 	// wraps go after 14 days, collected or not
 	startSweeper(&db)
