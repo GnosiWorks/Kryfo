@@ -3112,7 +3112,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get handleChecking => 'Checking…';
 
   @override
-  String get handleAvailable => '✓ Available';
+  String get handleAvailable => 'Available';
 
   @override
   String get handleAlreadyTaken => 'Already taken';

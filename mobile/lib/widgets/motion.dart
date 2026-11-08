@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'tick_mark.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart' show HaloColors, HaloType, track, slant;
 import '../l10n/marked.dart';
@@ -969,15 +970,7 @@ class _SendPillState extends State<SendPill>
           ),
           if (widget.delivered) ...[
             const SizedBox(width: 5),
-            Text(
-              '\u2713',
-              style: TextStyle(
-                fontSize: 11,
-                color: _color,
-                height: 1,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            TickMark(color: _color),
           ] else if (widget.waiting)
             ...[]
           else if (widget.mode == PrivacyMode.normal) ...[

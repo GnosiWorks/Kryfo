@@ -683,12 +683,13 @@ void main() {
       t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(5);
       await t.pump();
       await t.pump(const Duration(milliseconds: 500));
-      final arrows = find.text('→');
+      // drawn icons that mirror themselves in a right to left language
+      final arrows = find.byIcon(Icons.arrow_forward_rounded);
       expect(arrows, findsNWidgets(2));
       for (final e in arrows.evaluate()) {
         final flip = t.widget<Transform>(
           find
-              .ancestor(
+              .descendant(
                 of: find.byWidget(e.widget),
                 matching: find.byType(Transform),
               )

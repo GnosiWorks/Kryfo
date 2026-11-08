@@ -894,7 +894,7 @@
   "handleDeleteYes": "Eliminar nombre de usuario",
   "handleDeleting": "Eliminando…",
   "handleChecking": "Comprobando…",
-  "handleAvailable": "✓ Disponible",
+  "handleAvailable": "Disponible",
   "handleAlreadyTaken": "Ya está en uso",
   "handleNameRule": "De 3 a 20 caracteres: a-z, 0-9 o _",
   "handleWhatAHandleDoes": "Qué es un nombre de usuario",

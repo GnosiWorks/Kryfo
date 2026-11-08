@@ -11,6 +11,7 @@ import 'burn_fade.dart' show BurnFlame;
 import 'count_badge.dart';
 import 'motion.dart';
 import 'press_scale.dart';
+import 'tick_mark.dart';
 
 // the keyboard goes before a message menu opens, and the menu is measured
 // once the chat has settled without it. a menu placed under the keyboard
@@ -843,15 +844,7 @@ class _SentTickState extends State<SentTick>
             scale: 1.35 - 0.35 * kHouseCurve.transform(_nod.value),
             child: child,
           ),
-          child: Text(
-            '✓',
-            style: TextStyle(
-              fontSize: 11,
-              color: widget.color,
-              fontWeight: FontWeight.w700,
-              height: 1,
-            ),
-          ),
+          child: TickMark(color: widget.color),
         ),
         // an AnimatedSize given no time trips over its own layout: still, it
         // is left out

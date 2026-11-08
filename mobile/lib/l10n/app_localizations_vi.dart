@@ -3102,7 +3102,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get handleChecking => 'Đang kiểm tra…';
 
   @override
-  String get handleAvailable => '✓ Còn trống';
+  String get handleAvailable => 'Còn trống';
 
   @override
   String get handleAlreadyTaken => 'Đã có người dùng';

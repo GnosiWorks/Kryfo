@@ -3113,7 +3113,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get handleChecking => 'در حال بررسی…';
 
   @override
-  String get handleAvailable => '✓ آزاد';
+  String get handleAvailable => 'آزاد';
 
   @override
   String get handleAlreadyTaken => 'قبلاً گرفته شده';

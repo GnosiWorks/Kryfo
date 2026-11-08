@@ -894,7 +894,7 @@
   "handleDeleteYes": "Kullanıcı adını sil",
   "handleDeleting": "Siliniyor…",
   "handleChecking": "Kontrol ediliyor…",
-  "handleAvailable": "✓ Uygun",
+  "handleAvailable": "Uygun",
   "handleAlreadyTaken": "Zaten alınmış",
   "handleNameRule": "3 ile 20 karakter: a-z, 0-9 veya _",
   "handleWhatAHandleDoes": "Kullanıcı adı ne işe yarar",

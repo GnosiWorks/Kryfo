@@ -799,7 +799,7 @@
   "handleDeleteYes": "Usuń nazwę",
   "handleDeleting": "Usuwam…",
   "handleChecking": "Sprawdzam…",
-  "handleAvailable": "✓ Dostępna",
+  "handleAvailable": "Dostępna",
   "handleAlreadyTaken": "Już zajęta",
   "handleNameRule": "Od 3 do 20 znaków: a-z, 0-9 lub _",
   "handleWhatAHandleDoes": "Do czego służy nazwa użytkownika",

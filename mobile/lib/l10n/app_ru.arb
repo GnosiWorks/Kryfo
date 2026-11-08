@@ -894,7 +894,7 @@
   "handleDeleteYes": "Удалить имя пользователя",
   "handleDeleting": "Удаляем…",
   "handleChecking": "Проверяем…",
-  "handleAvailable": "✓ Свободно",
+  "handleAvailable": "Свободно",
   "handleAlreadyTaken": "Уже занято",
   "handleNameRule": "От 3 до 20 символов: a-z, 0-9 или _",
   "handleWhatAHandleDoes": "Зачем нужно имя пользователя",

@@ -894,7 +894,7 @@
   "handleDeleteYes": "刪除使用者名稱",
   "handleDeleting": "刪除中…",
   "handleChecking": "檢查中…",
-  "handleAvailable": "✓ 可以使用",
+  "handleAvailable": "可以使用",
   "handleAlreadyTaken": "已被使用",
   "handleNameRule": "3 到 20 個字元：a-z、0-9 或 _",
   "handleWhatAHandleDoes": "使用者名稱的用途",

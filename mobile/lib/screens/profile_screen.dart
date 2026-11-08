@@ -21,6 +21,7 @@ import '../profile_photo.dart' show photoAddOffered, photoBook;
 import '../widgets/face_view.dart';
 import '../widgets/photo_sheet.dart';
 import '../supporter.dart';
+import '../widgets/tier_mark.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';
 import 'donate_screen.dart';
@@ -527,10 +528,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            tierGlyph(t),
-            style: TextStyle(color: HaloColors.amberText, fontSize: 10),
-          ),
+          TierMark(tier: t, color: HaloColors.amberText, size: 10),
           const SizedBox(width: 4),
           Text(
             tierLabel(t),
@@ -675,9 +673,10 @@ class _SupportCard extends StatelessWidget {
                   colors: [HaloColors.amber, HaloColors.amberDeep],
                 ),
               ),
-              child: Text(
-                '\u2726',
-                style: TextStyle(color: HaloColors.onAmber, fontSize: 16),
+              child: TierMark(
+                tier: SupporterTier.guardian,
+                color: HaloColors.onAmber,
+                size: 16,
               ),
             ),
             const SizedBox(width: 12),

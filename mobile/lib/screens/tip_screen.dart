@@ -11,6 +11,7 @@ import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
 import '../main.dart' show session;
 import '../supporter.dart';
+import '../widgets/tier_mark.dart';
 import '../theme.dart';
 import '../tips/tip_billing.dart';
 import '../tips/tip_jar.dart';
@@ -30,24 +31,20 @@ const _tiers = [
 enum _Shop { asking, open, soon, unavailable }
 
 // each tier's orb, as the badge shows it elsewhere
-({String glyph, List<Color> grad, Color fg}) _look(SupporterTier t) =>
-    switch (t) {
-      SupporterTier.patron => (
-        glyph: '◆',
-        grad: const [Color(0xFFA78BFA), Color(0xFF6D28D9)],
-        fg: const Color(0xFF1E1B4B),
-      ),
-      SupporterTier.guardian => (
-        glyph: '✦',
-        grad: const [Color(0xFFF59E0B), Color(0xFFD97706)],
-        fg: HaloColors.onYellow,
-      ),
-      _ => (
-        glyph: '●',
-        grad: const [Color(0xFF60A5FA), Color(0xFF2563EB)],
-        fg: const Color(0xFF0C1F3F),
-      ),
-    };
+({List<Color> grad, Color fg}) _look(SupporterTier t) => switch (t) {
+  SupporterTier.patron => (
+    grad: const [Color(0xFFA78BFA), Color(0xFF6D28D9)],
+    fg: const Color(0xFF1E1B4B),
+  ),
+  SupporterTier.guardian => (
+    grad: const [Color(0xFFF59E0B), Color(0xFFD97706)],
+    fg: HaloColors.onYellow,
+  ),
+  _ => (
+    grad: const [Color(0xFF60A5FA), Color(0xFF2563EB)],
+    fg: const Color(0xFF0C1F3F),
+  ),
+};
 
 class TipScreen extends StatefulWidget {
   final TipJar? jar;
@@ -432,9 +429,10 @@ class _HeroState extends State<_Hero> with SingleTickerProviderStateMixin {
             ),
             alignment: Alignment.center,
             child: ExcludeSemantics(
-              child: Text(
-                '✦',
-                style: TextStyle(fontSize: 38, color: HaloColors.onAmber),
+              child: TierMark(
+                tier: SupporterTier.guardian,
+                color: HaloColors.onAmber,
+                size: 38,
               ),
             ),
           ),
@@ -494,7 +492,7 @@ class _TierCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (:glyph, :grad, :fg) = _look(tier);
+    final (:grad, :fg) = _look(tier);
     final still = motionStill(context);
     final sel = picked && !owned;
     final can = !asking && !owned && price != null;
@@ -550,10 +548,7 @@ class _TierCard extends StatelessWidget {
                       alignment: Alignment.center,
                       child: owned
                           ? Icon(Icons.check_rounded, size: 18, color: fg)
-                          : Text(
-                              glyph,
-                              style: TextStyle(fontSize: 13, color: fg),
-                            ),
+                          : TierMark(tier: tier, color: fg, size: 13),
                     ),
                   ),
                   const SizedBox(height: 8),
