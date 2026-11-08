@@ -36,9 +36,12 @@ final _bullet = RegExp(r'^(?:[-*•·]|\d+[.)])\s');
 final _space = RegExp(r'\s');
 // where a long text may be cut: after a sentence, else a clause, else a space
 final _sentenceEnd = RegExp(
-  r'''[.!?…]["'”’»)\]]*\s+|[。！？][」』）]*\s*''',
+  r'''[.!?…؟۔।]["'”’»)\]]*\s+|[。！？][」』）]*\s*''',
   unicode: true,
 );
+// sentence ends the model's own splitter does not know: arabic and persian
+// lose the sentence before one, so each such sentence is asked on its own
+final _unsplitEnd = RegExp(r'''[؟۔]["'”’»)\]]*\s*''');
 final _clauseEnd = RegExp(r'[,;:，；、：]\s*');
 final _gap = RegExp(r'\s+');
 
@@ -141,14 +144,17 @@ MessagePlan planMessage(String text, {int limit = kModelLimit}) {
   }
 
   void ask(String s) {
-    for (final (piece, gap) in _cut(s, limit)) {
-      if (_letter.hasMatch(piece)) {
-        parts.add(asks.length);
-        asks.add(piece);
-      } else {
-        keep(piece);
+    for (final (sentence, end) in _split(s, _unsplitEnd)) {
+      for (final (piece, gap) in _cut(sentence, limit)) {
+        if (_letter.hasMatch(piece)) {
+          parts.add(asks.length);
+          asks.add(piece);
+        } else {
+          keep(piece);
+        }
+        keep(gap);
       }
-      keep(gap);
+      keep(end);
     }
   }
 

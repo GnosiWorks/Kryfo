@@ -314,6 +314,22 @@ void main() {
       );
     });
 
+    testWidgets('only the target\'s leg missing: named after it', (t) async {
+      // a russian message for a german reader, russian's pack there: the
+      // download is german's, and the offer says so, as the sheet does
+      final f = _reader(have: {'ru-en'});
+      await open(t, f, _ru);
+      final size = packSize(_gz('en-de'));
+      final offer = l10n.translateOfferDownload(langName('de'), size);
+      expect(_rich(offer), findsOneWidget);
+      await t.tap(_rich(offer));
+      await t.pumpAndSettle();
+      expect(
+        find.text(l10n.translatePackLineShown(langName('de'), size)),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('everything there: the usual translate line', (t) async {
       final f = _reader(have: {'ru-en', 'en-de'});
       await open(t, f, _ru);

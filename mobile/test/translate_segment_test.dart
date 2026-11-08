@@ -129,6 +129,27 @@ void main() {
       expect(p.fill(p.asks), text);
     });
 
+    test('an arabic or persian question is asked on its own', () {
+      // the model's splitter has no ؟: the sentence before it was dropped
+      const ar = 'مرحبا، كيف حالك؟ سأزورك غدا في المساء.';
+      final p = planMessage(ar);
+      expect(p.asks, ['مرحبا، كيف حالك؟', 'سأزورك غدا في المساء.']);
+      expect(p.fill(p.asks), ar);
+      expect(
+        p.fill(['Hello, how are you?', 'I will visit you.'], to: 'en'),
+        'Hello, how are you? I will visit you.',
+      );
+      // no space after it, and at the end: still whole sentences
+      final q = planMessage('حالت چطور است؟من فردا می‌آیم؟');
+      expect(q.asks, ['حالت چطور است؟', 'من فردا می‌آیم؟']);
+      expect(
+        q.fill(['How are you?', 'I come tomorrow?'], to: 'en'),
+        'How are you? I come tomorrow?',
+      );
+      // into chinese, no gap between the two
+      expect(p.fill(['你好吗？', '我明天来。'], to: 'zh'), '你好吗？我明天来。');
+    });
+
     test('a short text is never cut', () {
       final p = planMessage('One. Two. Three.');
       expect(p.asks, ['One. Two. Three.']);

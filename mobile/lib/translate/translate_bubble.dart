@@ -16,6 +16,7 @@ import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import 'catalog.dart' show LangBundle;
 import 'chat_translation.dart';
 import 'downloads.dart' show DlPhase;
+import 'foreign.dart' show baseLang;
 import 'lang_names.dart';
 import 'pack_sheet.dart';
 import 'translate_menu.dart';
@@ -109,7 +110,14 @@ class _TranslatedBodyState extends State<TranslatedBody> {
                 [for (final b in missing) b.id],
                 [for (final b in missing) b.gz],
               );
-        final name = o == null ? '' : langName(o.seen);
+        // the language whose pack is missing: through english with a chosen
+        // language that is the target's, not the message's
+        final packLangs = {for (final b in missing) ...b.langs};
+        final name = o == null
+            ? ''
+            : packLangs.length == 1 && packLangs.first != baseLang(o.seen)
+            ? langName(packLangs.first)
+            : langName(o.seen);
         final Widget? foot = o == null
             ? null
             : switch (m.phase) {
