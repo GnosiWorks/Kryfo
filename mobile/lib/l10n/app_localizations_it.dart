@@ -10383,6 +10383,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il primo avvio può richiedere un paio di minuti, il tempo che Tor si colleghi.';
 
   @override
+  String get homeLinkedChatsComing =>
+      'Le tue chat stanno ancora arrivando dal telefono.';
+
+  @override
   String get joinCodeLife => 'Il codice vale dieci minuti.';
 
   @override

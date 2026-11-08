@@ -10404,6 +10404,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le premier démarrage peut prendre une ou deux minutes, le temps que Tor se connecte.';
 
   @override
+  String get homeLinkedChatsComing =>
+      'Vos discussions arrivent encore depuis votre téléphone.';
+
+  @override
   String get joinCodeLife => 'Le code reste valable dix minutes.';
 
   @override

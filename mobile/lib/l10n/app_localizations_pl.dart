@@ -10492,6 +10492,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Pierwsze uruchomienie może potrwać minutę lub dwie, aż Tor się połączy.';
 
   @override
+  String get homeLinkedChatsComing =>
+      'Twoje czaty wciąż przychodzą z telefonu.';
+
+  @override
   String get joinCodeLife => 'Kod działa przez dziesięć minut.';
 
   @override

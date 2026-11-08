@@ -10467,6 +10467,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Перший запуск може тривати хвилину-дві, поки підключається Tor.';
 
   @override
+  String get homeLinkedChatsComing => 'Ваші чати ще надходять із телефона.';
+
+  @override
   String get joinCodeLife => 'Код діє десять хвилин.';
 
   @override

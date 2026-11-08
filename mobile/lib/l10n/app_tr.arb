@@ -2708,6 +2708,7 @@
   "joinPreparing": "Kodun hazırlanıyor",
   "joinPreparingLine": "Kryfo bağlanıyor. Bu bilgisayar çevrimiçi olur olmaz kodun görünür.",
   "joinPreparingSlow": "İlk açılış, Tor bağlanırken bir iki dakika sürebilir.",
+  "homeLinkedChatsComing": "Sohbetlerin hâlâ telefonundan geliyor.",
   "joinCodeLife": "Kod on dakika geçerli.",
   "joinCompareLine": "Telefonun da altı rakam gösteriyor. Yalnızca aynıysa devam et.",
   "joinLinking": "Telefonuna bağlanıyor",

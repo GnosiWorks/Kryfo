@@ -2708,6 +2708,7 @@
   "joinPreparing": "نجهّز رمزك",
   "joinPreparingLine": "يتصل Kryfo الآن. يظهر رمزك حين يصبح هذا الحاسوب متصلًا.",
   "joinPreparingSlow": "قد يستغرق التشغيل الأول دقيقة أو دقيقتين حتى يتصل Tor.",
+  "homeLinkedChatsComing": "ما زالت محادثاتك تصل من هاتفك.",
   "joinCodeLife": "يعمل الرمز عشر دقائق.",
   "joinCompareLine": "يعرض هاتفك ستة أرقام أيضًا. تابع فقط إن كانت هي نفسها.",
   "joinLinking": "جارٍ الربط بهاتفك",

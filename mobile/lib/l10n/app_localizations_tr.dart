@@ -10329,6 +10329,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'İlk açılış, Tor bağlanırken bir iki dakika sürebilir.';
 
   @override
+  String get homeLinkedChatsComing => 'Sohbetlerin hâlâ telefonundan geliyor.';
+
+  @override
   String get joinCodeLife => 'Kod on dakika geçerli.';
 
   @override

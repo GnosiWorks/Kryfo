@@ -2708,6 +2708,7 @@
   "joinPreparing": "Préparation de votre code",
   "joinPreparingLine": "Kryfo se connecte. Votre code s’affiche dès que cet ordinateur est en ligne.",
   "joinPreparingSlow": "Le premier démarrage peut prendre une ou deux minutes, le temps que Tor se connecte.",
+  "homeLinkedChatsComing": "Vos discussions arrivent encore depuis votre téléphone.",
   "joinCodeLife": "Le code reste valable dix minutes.",
   "joinCompareLine": "Votre téléphone affiche aussi six chiffres. Continuez seulement s’ils sont identiques.",
   "joinLinking": "Association à votre téléphone",

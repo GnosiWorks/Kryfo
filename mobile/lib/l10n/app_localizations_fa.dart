@@ -10313,6 +10313,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'اولین اجرا ممکن است یکی دو دقیقه طول بکشد تا Tor وصل شود.';
 
   @override
+  String get homeLinkedChatsComing =>
+      'گفت‌وگوهایتان هنوز از گوشی‌تان در راه‌اند.';
+
+  @override
   String get joinCodeLife => 'این کد ده دقیقه کار می‌کند.';
 
   @override

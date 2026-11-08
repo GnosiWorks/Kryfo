@@ -10302,6 +10302,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Mulai pertama kali bisa makan waktu satu atau dua menit selagi Tor terhubung.';
 
   @override
+  String get homeLinkedChatsComing =>
+      'Obrolanmu masih berdatangan dari ponselmu.';
+
+  @override
   String get joinCodeLife => 'Kode berlaku sepuluh menit.';
 
   @override

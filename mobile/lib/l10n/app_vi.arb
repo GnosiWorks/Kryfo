@@ -2708,6 +2708,7 @@
   "joinPreparing": "Đang chuẩn bị mã của bạn",
   "joinPreparingLine": "Kryfo đang kết nối. Mã của bạn hiện ra ngay khi máy tính này trực tuyến.",
   "joinPreparingSlow": "Lần khởi động đầu có thể mất một hai phút trong lúc Tor kết nối.",
+  "homeLinkedChatsComing": "Các cuộc trò chuyện vẫn đang được chuyển từ điện thoại của bạn.",
   "joinCodeLife": "Mã có hiệu lực mười phút.",
   "joinCompareLine": "Điện thoại của bạn cũng hiện sáu chữ số. Chỉ tiếp tục nếu chúng giống nhau.",
   "joinLinking": "Đang liên kết với điện thoại của bạn",

@@ -10377,6 +10377,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'A primeira vez pode levar um ou dois minutos enquanto o Tor se conecta.';
 
   @override
+  String get homeLinkedChatsComing =>
+      'Suas conversas ainda estão chegando do seu celular.';
+
+  @override
   String get joinCodeLife => 'O código vale por dez minutos.';
 
   @override

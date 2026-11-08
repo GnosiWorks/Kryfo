@@ -92,6 +92,26 @@ Future<void> _ownPhoneBlockPut(Database d, String id, int b) => d.insert(
 
 String? _ownPhoneId;
 
+/// a linked device's phone not heard this long: its chats may still be on
+/// their way, and the home says so
+const kLinkedComingQuiet = Duration(days: 1);
+
+/// whether a linked device's chats may still be on their way from its
+/// phone: its history copy not begun, or its phone quiet for
+/// [kLinkedComingQuiet]. a copy under way has its own card. never in the
+/// decoy or a quiet session
+Future<bool> linkedChatsComing({DateTime Function()? now}) async {
+  if (!linkedRole || sessionQuiet || lockState.inDecoy) return false;
+  final s = historyCopyShown.value;
+  if (s == null) return true;
+  if (!historyCopyOver(s.step)) return false;
+  final at = int.tryParse(
+    await devMeta(await live.open(), kPhoneHeardMeta) ?? '',
+  );
+  final t = (now ?? DateTime.now)().millisecondsSinceEpoch;
+  return at == null || t - at > kLinkedComingQuiet.inMilliseconds;
+}
+
 /// the kryfo id to show as mine: a linked device's is its phone's, never
 /// the one its own container made before the link
 String get ownShownId =>

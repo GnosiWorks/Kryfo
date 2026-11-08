@@ -10434,6 +10434,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'قد يستغرق التشغيل الأول دقيقة أو دقيقتين حتى يتصل Tor.';
 
   @override
+  String get homeLinkedChatsComing => 'ما زالت محادثاتك تصل من هاتفك.';
+
+  @override
   String get joinCodeLife => 'يعمل الرمز عشر دقائق.';
 
   @override

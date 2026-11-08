@@ -2708,6 +2708,7 @@
   "joinPreparing": "正在準備你的 QR 碼",
   "joinPreparingLine": "Kryfo 正在連線。這台電腦一連上網路，QR 碼就會出現。",
   "joinPreparingSlow": "第一次啟動時 Tor 連線可能需要一兩分鐘。",
+  "homeLinkedChatsComing": "你的聊天仍在從手機傳過來。",
   "joinCodeLife": "QR 碼十分鐘內有效。",
   "joinCompareLine": "你的手機上也顯示六位數字。只有相同時才繼續。",
   "joinLinking": "正在連結到你的手機",

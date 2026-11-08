@@ -2708,6 +2708,7 @@
   "joinPreparing": "Menyiapkan kodemu",
   "joinPreparingLine": "Kryfo sedang terhubung. Kodemu muncul begitu komputer ini online.",
   "joinPreparingSlow": "Mulai pertama kali bisa makan waktu satu atau dua menit selagi Tor terhubung.",
+  "homeLinkedChatsComing": "Obrolanmu masih berdatangan dari ponselmu.",
   "joinCodeLife": "Kode berlaku sepuluh menit.",
   "joinCompareLine": "Ponselmu juga menampilkan enam angka. Lanjutkan hanya jika angkanya sama.",
   "joinLinking": "Menautkan ke ponselmu",

@@ -10470,6 +10470,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Первый запуск может занять минуту-другую, пока подключается Tor.';
 
   @override
+  String get homeLinkedChatsComing => 'Ваши чаты ещё приходят с телефона.';
+
+  @override
   String get joinCodeLife => 'Код действует десять минут.';
 
   @override

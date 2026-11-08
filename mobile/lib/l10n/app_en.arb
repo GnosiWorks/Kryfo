@@ -12864,6 +12864,10 @@
   "@joinPreparingSlow": {
     "description": "desktop join page, the same line after twenty seconds (screens/link_screens.dart)"
   },
+  "homeLinkedChatsComing": "Your chats are still coming from your phone.",
+  "@homeLinkedChatsComing": {
+    "description": "home card on a linked computer whose chats may still be on their way from its phone (screens/home_screen.dart)"
+  },
   "joinCodeLife": "The code works for ten minutes.",
   "@joinCodeLife": {
     "description": "screens/link_screens.dart: under joinWaiting"

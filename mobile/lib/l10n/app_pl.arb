@@ -2708,6 +2708,7 @@
   "joinPreparing": "Przygotowuję twój kod",
   "joinPreparingLine": "Kryfo się łączy. Kod pojawi się, gdy tylko ten komputer będzie online.",
   "joinPreparingSlow": "Pierwsze uruchomienie może potrwać minutę lub dwie, aż Tor się połączy.",
+  "homeLinkedChatsComing": "Twoje czaty wciąż przychodzą z telefonu.",
   "joinCodeLife": "Kod działa przez dziesięć minut.",
   "joinCompareLine": "Twój telefon też pokazuje sześć cyfr. Przejdź dalej tylko wtedy, gdy są takie same.",
   "joinLinking": "Łączę z twoim telefonem",

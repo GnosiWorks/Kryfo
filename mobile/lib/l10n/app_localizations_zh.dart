@@ -9752,6 +9752,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get joinPreparingSlow => '首次启动时 Tor 连接可能需要一两分钟。';
 
   @override
+  String get homeLinkedChatsComing => '你的聊天仍在从手机传过来。';
+
+  @override
   String get joinCodeLife => '二维码十分钟内有效。';
 
   @override
@@ -20843,6 +20846,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get joinPreparingSlow => '第一次啟動時 Tor 連線可能需要一兩分鐘。';
+
+  @override
+  String get homeLinkedChatsComing => '你的聊天仍在從手機傳過來。';
 
   @override
   String get joinCodeLife => 'QR 碼十分鐘內有效。';

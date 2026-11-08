@@ -33,6 +33,8 @@ import 'package:kryfo/main.dart'
         engineDeviceWireForTest,
         ownAddedForTest,
         linkedRoleForTest,
+        linkedChatsComing,
+        historyCopyShown,
         ownShownId,
         appState,
         AppStateSession,
@@ -56,6 +58,9 @@ import 'package:kryfo/main.dart'
         AppStateOutbox,
         AppStateReceive,
         AppStateContacts;
+import 'package:kryfo/devices/history_link.dart'
+    show HistoryCopyStage, HistoryCopyStep;
+import 'package:kryfo/devices/own_device_store.dart' show ownPhoneHeard;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/supporter.dart';
@@ -676,6 +681,26 @@ void main() {
     },
     skip: skip,
   );
+
+  test('a linked computer says its chats are still coming until its copy '
+      'began and while its phone is quiet a day', () async {
+    final t = DateTime(2026, 11, 8, 22);
+    expect(await linkedChatsComing(now: () => t), isFalse);
+    linkedRoleForTest = true;
+    historyCopyShown.value = null;
+    expect(await linkedChatsComing(now: () => t), isTrue);
+    // a copy under way has its own card
+    historyCopyShown.value = const HistoryCopyStage(HistoryCopyStep.copying);
+    expect(await linkedChatsComing(now: () => t), isFalse);
+    historyCopyShown.value = const HistoryCopyStage(HistoryCopyStep.whole);
+    await ownPhoneHeard(s, t.millisecondsSinceEpoch);
+    expect(await linkedChatsComing(now: () => t), isFalse);
+    expect(
+      await linkedChatsComing(now: () => t.add(const Duration(days: 2))),
+      isTrue,
+    );
+    historyCopyShown.value = null;
+  }, skip: skip);
 
   test('nothing is told while the decoy is open', () async {
     final decoy = _Rows(s, HaloContainer.decoy);

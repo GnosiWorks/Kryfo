@@ -16543,6 +16543,12 @@ abstract class AppLocalizations {
   /// **'The first start can take a minute or two while Tor connects.'**
   String get joinPreparingSlow;
 
+  /// home card on a linked computer whose chats may still be on their way from its phone (screens/home_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Your chats are still coming from your phone.'**
+  String get homeLinkedChatsComing;
+
   /// screens/link_screens.dart: under joinWaiting
   ///
   /// In en, this message translates to:

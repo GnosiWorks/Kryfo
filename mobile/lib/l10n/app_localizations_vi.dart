@@ -10285,6 +10285,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lần khởi động đầu có thể mất một hai phút trong lúc Tor kết nối.';
 
   @override
+  String get homeLinkedChatsComing =>
+      'Các cuộc trò chuyện vẫn đang được chuyển từ điện thoại của bạn.';
+
+  @override
   String get joinCodeLife => 'Mã có hiệu lực mười phút.';
 
   @override
