@@ -56,6 +56,8 @@ var (
 	offSince time.Time
 	// the last answer that proved the route, on the monotonic clock
 	lastAnswerAt time.Time
+	// the last failure that spoke for the route
+	lastFailAt time.Time
 )
 
 // a relay connect worked. the route carries traffic, whatever came before.
@@ -98,11 +100,16 @@ func routeAliveOn(gen int64, u string) {
 	}
 }
 
-// whether a relay answered through tor after t
-func routeAnsweredSince(t time.Time) bool {
+// whether the route is in doubt since t: nothing answered through tor
+// after it, and something failed after it or the route is not proven
+func routeDoubtedSince(t time.Time) bool {
+	ok := routeOK()
 	routeMu.Lock()
 	defer routeMu.Unlock()
-	return lastAnswerAt.After(t)
+	if lastAnswerAt.After(t) {
+		return false
+	}
+	return lastFailAt.After(t) || !ok
 }
 
 // relay u answered in route generation gen (below zero: now)
@@ -177,6 +184,7 @@ func routeNoteFailFrom(u string, began time.Time) {
 		deadWait = rescueJitter(deadFor)
 	}
 	failedSinceOK[u] = true
+	lastFailAt = time.Now()
 }
 
 // the phone slept: a dead spell begun before it starts again from the wake

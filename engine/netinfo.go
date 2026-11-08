@@ -114,10 +114,12 @@ var netValidLostAt time.Time
 // android vouches again for a network it stopped vouching for at lost: a
 // wifi that passed nothing for a while and came back, without a change of
 // network. what tor held through it may be dead and the back-off grown, so
-// it gets the reconnect the button does, unless a relay answered meanwhile.
-// the same network, so not a new one: automatic keeps its way in
+// it gets the reconnect the button does, when the route is in doubt since:
+// nothing answered and something failed. an idle phone whose relays never
+// noticed is left to the route watch. the same network, so not a new one:
+// automatic keeps its way in
 func validBack(lost time.Time) {
-	if lost.IsZero() || !modeNeedsTor() || torIsPaused() || routeAnsweredSince(lost) {
+	if lost.IsZero() || !modeNeedsTor() || torIsPaused() || !routeDoubtedSince(lost) {
 		return
 	}
 	now := time.Now().UnixNano()

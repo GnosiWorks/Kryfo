@@ -23,7 +23,7 @@ func resetRoute(t *testing.T, status string, pct int) {
 	probeAt, probeNext = time.Time{}, 0
 	answeredIn = map[string]int64{}
 	stallPct, stallSince = -1, time.Time{}
-	lastAnswerAt = time.Time{}
+	lastAnswerAt, lastFailAt = time.Time{}, time.Time{}
 	routeMu.Unlock()
 	keepRescueJitter(t)
 	setTestStatus(status, pct)

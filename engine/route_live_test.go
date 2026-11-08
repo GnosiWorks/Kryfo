@@ -109,11 +109,21 @@ func TestValidatedAgainBouncesADeadRoute(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	n.Store(0)
 
+	// an idle phone: nothing failed meanwhile and the route stands proven
+	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":7}`)
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":7}`)
+	time.Sleep(100 * time.Millisecond)
+	if got := n.Load(); got != 0 {
+		t.Fatalf("reconnected %d times with nothing in doubt", got)
+	}
+
 	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":7}`)
 	time.Sleep(100 * time.Millisecond)
 	if got := n.Load(); got != 0 {
 		t.Fatalf("reconnected %d times when android lost the network's validation", got)
 	}
+	time.Sleep(10 * time.Millisecond)
+	routeNoteFail("wss://relay.kryfo.app")
 	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":7}`)
 	if !waitUntil(2*time.Second, func() bool { return n.Load() == 1 }) {
 		t.Fatalf("validated again with nothing through meanwhile: %d reconnects, want 1", n.Load())
