@@ -27,6 +27,7 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 #line 4 "ffi_free.go"
 
 #include <stdlib.h>
@@ -39,11 +40,16 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
-#line 7 "pin_export.go"
+
+
+
+
+#line 9 "pin_export.go"
 
 #include <string.h>
 
 #line 1 "cgo-generated-wrapper"
+
 
 #line 8 "quiet.go"
 
@@ -62,11 +68,14 @@ extern const char *_GoStringPtr(_GoString_ s);
 
 
 
+
 #line 9 "vault.go"
 
 #include <stdlib.h>
 
 #line 1 "cgo-generated-wrapper"
+
+
 
 
 /* End of preamble from import "C" comments.  */
@@ -153,8 +162,8 @@ extern char* HaloMyXPubkey(void);
 extern char* HaloMyEdPrivkey(void);
 extern char* HaloMyXPrivkey(void);
 extern char* HaloIdFromPubkey(char* cHex);
-extern char* HaloEncryptFor(char* cPeerPub, char* cPlain);
-extern char* HaloDecryptFrom(char* cPeerPub, char* cB64);
+extern char* HaloEncryptFor(int cIdent, char* cPeerPub, char* cPlain);
+extern char* HaloDecryptFrom(int cIdent, char* cPeerPub, char* cB64);
 extern char* HaloStartListener(char* cDataDir);
 extern char* HaloLastReconnect(void);
 extern char* HaloTorStop(void);
@@ -163,6 +172,7 @@ extern int HaloTorPaused(void);
 extern char* HaloGetStatus(void);
 extern char* HaloDrainInbox(void);
 extern char* HaloSendTo(char* cAddr, char* cMsg);
+extern char* HaloSendTyping(char* cAddr, char* cMsg);
 extern char* HaloIdFromEdPub(char* cHexPub);
 extern char* HaloDecryptBackup(char* cBlob, char* cPassphrase);
 extern char* HaloBackupKey(char* cPassphrase, unsigned char* cSalt);
@@ -179,12 +189,52 @@ extern char* HaloBuiltinBridges(char* cTransport);
 extern char* HaloBuiltinRefresh(char* cOpts);
 extern char* HaloBridgeCache(void);
 extern char* HaloSetBridgeCache(char* cJSON);
+extern char* HaloFcKeyPk(char* cSkHex);
+extern char* HaloNostrSubscribeFcKey(int cIdent, char* cInvite, char* cSkHex);
+extern char* HaloNostrUnsubscribeFcKey(int cIdent, char* cInvite);
 extern void HaloFree(char* p);
 extern char* HaloWipeHold(void);
+extern char* HaloFileProgress(char* cKey);
+extern char* HaloFileCancel(char* cKey);
+extern char* HaloFileSend(char* cJob);
+extern char* HaloFileDrop(char* cJob);
+extern char* HaloFileValues(char* cJob);
+extern char* HaloFileGot(char* cHost, char* cID, char* cToken);
+extern char* HaloFileFetch(char* cJob);
 extern char* HaloHandleCheck(char* cHandle);
 extern char* HaloHandleClaim(char* cHandle, char* cInvite, char* cBio);
 extern char* HaloHandleRelease(char* cHandle);
 extern char* HaloHandleListing(char* cHandle, char* cListed, char* cName);
+extern long long HaloHistSendNew(char* cKey, char* cBind, char* cIdentity, char* cSpool, char* cRoot, int skip, int chunk);
+extern int HaloHistSendChat(long long h, unsigned char* meta, int n);
+extern int HaloHistSendMessage(long long h, unsigned char* row, int n);
+extern int HaloHistSendMedia(long long h, int chat, long long at, char* cName);
+extern int HaloHistSendLeft(long long h, int chat);
+extern char* HaloHistSendID(long long h);
+extern char* HaloHistSendPlan(long long h);
+extern char* HaloHistSendHead(long long h);
+extern int HaloHistSendRecord(long long h, unsigned long long index, unsigned char* out, int cap);
+extern char* HaloHistSendTally(long long h, unsigned char* in, int n);
+extern void HaloHistSendClose(long long h);
+extern long long HaloHistRecvNew(char* cKey, char* cBind, char* cID, char* cIdentity);
+extern long long HaloHistRecvResume(char* cKey, char* cBind, char* cID, char* cIdentity, unsigned char* plan, int pn, unsigned char* state, int sn);
+extern int HaloHistRecvTake(long long h, unsigned char* rec, int n);
+extern int HaloHistRecvEvent(long long h, unsigned char* out, int cap);
+extern char* HaloHistRecvHead(long long h);
+extern int HaloHistRecvState(long long h, unsigned char* out, int cap);
+extern int HaloHistRecvPlan(long long h, unsigned char* out, int cap);
+extern long long HaloHistRecvNext(long long h);
+extern int HaloHistRecvDone(long long h);
+extern char* HaloHistRecvCheck(long long h, char* cCounts);
+extern int HaloHistRecvTally(long long h, char* cCounts, unsigned char* out, int cap);
+extern void HaloHistRecvClose(long long h);
+extern char* HaloIdentityPut(int cIdent, char* cXPrivHex);
+extern char* HaloIdentityDrop(int cIdent);
+extern char* HaloPairSeed(int cIdent, char* cPeer, char* cSeedHex);
+extern char* HaloFaceSign(char* cMsgHex);
+extern char* HaloOnionOfKey(char* cKeyHex);
+extern char* HaloHelloSealPk(int cIdent, char* cSenderHex);
+extern char* HaloNostrSendHello(int cIdent, char* cOwnerHex, char* cFcPk, char* cMsg);
 extern char* HaloKnockAddresses(char* cExclude);
 extern char* HaloKnockRegister(char* cItems);
 extern char* HaloKnockCheck(void);
@@ -197,16 +247,17 @@ extern char* HaloMoatAnswer(char* cOpts);
 extern char* HaloNetworkDetail(char* cJSON);
 extern char* HaloCatchupState(void);
 extern char* HaloNostrInit(char* cRelaysCSV);
-extern char* HaloNostrSend(char* cPeerXPubHex, char* cMsg);
-extern char* HaloNostrSubscribe(char* cPeerXPubHex);
-extern char* HaloNostrSubscribeNew(char* cPeerXPubHex);
-extern char* HaloNostrLetHeld(char* cPeerXPubHex, char* cHow);
+extern char* HaloNostrSend(int cIdent, char* cPeerXPubHex, char* cMsg);
+extern char* HaloNostrSubscribe(int cIdent, char* cPeerXPubHex);
+extern char* HaloNostrSubscribeNew(int cIdent, char* cPeerXPubHex);
+extern char* HaloNostrLetHeld(int cIdent, char* cPeerXPubHex, char* cHow);
 extern char* HaloNostrMarkHeld(char* cPeersJSON);
-extern char* HaloNostrUnsubscribe(char* cPeerXPubHex);
-extern char* HaloFirstContactPk(int counter);
+extern char* HaloNostrPinned(char* cPeersJSON);
+extern char* HaloNostrUnsubscribe(int cIdent, char* cPeerXPubHex);
+extern char* HaloFirstContactPk(int cIdent, int counter);
 extern int HaloFirstContactRelays(void);
-extern char* HaloNostrSubscribeFirstContact(int counter);
-extern char* HaloNostrSendFirstContact(char* cPeerXPubHex, char* cFcPk, char* cMsg);
+extern char* HaloNostrSubscribeFirstContact(int cIdent, int counter);
+extern char* HaloNostrSendFirstContact(int cIdent, char* cPeerXPubHex, char* cFcPk, char* cMsg);
 extern char* HaloNostrKick(void);
 extern char* HaloMemStats(void);
 extern char* HaloNostrPoll(void);
@@ -214,15 +265,23 @@ extern char* HaloNostrAck(char* cToken, char* cFailed);
 extern char* HaloTorGetStrict(char* cUrl);
 extern char* HaloTorPost(char* cUrl, char* cBody);
 extern char* HaloTorGetJSON(char* cUrl);
-extern char* HaloPairCodePublish(char* cCode, char* cPayload);
-extern char* HaloPairCodeFetch(char* cCode);
+extern char* HaloPairShare(char* cInvite);
+extern char* HaloPairJoin(char* cCode, char* cInvite);
+extern char* HaloPairStep(long long h);
+extern char* HaloPairFinish(long long h);
+extern char* HaloPairCancel(long long h);
+extern char* HaloDecoyPairLook(char* cBox);
 extern char* HaloPinCalibrate(void);
 extern char* HaloPinNewTable(int logN);
-extern char* HaloPinCheck(char* cPin, char* cTable, char* cLegacy);
-extern char* HaloPinSetup(char* cPin, char* cTable, char* cLegacy, int index, int kind, char* cContainer, char* cWrapPlain);
-extern char* HaloPinRewrap(char* cOld, char* cNew, char* cTable, char* cLegacy, int index);
+extern char* HaloPinBegin(char* cPin, char* cTable, char* cLegacy);
+extern int HaloPinFits(char* cPin);
+extern void HaloPinDrop(char* cH);
+extern char* HaloPinFinish(char* cH, char* cM, char* cTable, char* cLegacy, char* cKey);
+extern char* HaloPinSetupFinish(char* cH, char* cM, char* cTable, char* cKey, int index, int kind, char* cContainer, char* cWrapPlain);
+extern char* HaloPinRewrapFinish(char* cHo, char* cMo, char* cHn, char* cMn, char* cTable, char* cKey, int index);
 extern char* HaloPinUpgrade(char* cTable);
 extern char* HaloPinClear(char* cTable, int index);
+extern char* HaloPushSeal(char* cPub, char* cToken);
 extern char* HaloQuietIdentity(void);
 extern char* HaloQuietDescribe(char* cEd, char* cX, char* cOnion);
 extern char* HaloQuietFirstContactPk(char* cX, int counter);
@@ -240,6 +299,13 @@ extern char* HaloTransportMode(void);
 extern char* HaloGifPost(char* cUrl, char* cBody);
 extern char* HaloGifGet(char* cUrl);
 extern char* HaloGifGetFile(char* cUrl, char* cPath);
+extern char* HaloTranslateCatalog(void);
+extern char* HaloTranslateFetch(char* cLang, char* cDir);
+extern char* HaloTranslateProgress(char* cLang);
+extern char* HaloTranslateCancel(char* cLang);
+extern char* HaloTranslateInstalled(char* cLang, char* cDir);
+extern char* HaloTranslateRemove(char* cLang, char* cDir);
+extern char* HaloTranslateConfig(char* cFrom, char* cTo, char* cDir);
 extern char* HaloTransportState(void);
 extern char* HaloNostrFirst(char* cTag);
 extern char* HaloUpdateGet(char* cUrl);
@@ -247,6 +313,16 @@ extern char* HaloVaultKeys(void);
 extern char* HaloVaultSeal(char* cPub, char* cB64);
 extern char* HaloVaultOpen(char* cPriv, char* cB64);
 extern char* HaloVaultOpenMany(char* cPriv, char* cJSON);
+extern char* HaloVoiceModels(void);
+extern char* HaloVoiceFetch(char* cID, char* cDir);
+extern char* HaloVoiceProgress(char* cID);
+extern char* HaloVoiceCancel(char* cID);
+extern char* HaloVoiceCheck(char* cID, char* cDir);
+extern char* HaloVoiceRemove(char* cID, char* cDir);
+extern char* HaloVoiceOgg(char* inPath, char* outPath);
+extern char* HaloVoiceWav(char* inPath, char* outPath);
+extern char* HaloVoicePeaks(char* path, int bars);
+extern void HaloVoiceStop(char* outPath);
 
 #ifdef __cplusplus
 }

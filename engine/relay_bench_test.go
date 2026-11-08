@@ -6,7 +6,9 @@ import (
 	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -16,12 +18,25 @@ import (
 type refuserStandIn struct {
 	srv *httptest.Server
 	n   atomic.Int32
+	// when set, no socket is turned away before this many have asked (or a
+	// second went by): a burst in the same moment, before any is counted
+	holdFor int32
+	all     chan struct{}
+	allOnce sync.Once
 }
 
 func newRefuserStandIn(t *testing.T) *refuserStandIn {
-	r := &refuserStandIn{}
+	r := &refuserStandIn{all: make(chan struct{})}
 	r.srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		r.n.Add(1)
+		if n := r.n.Add(1); r.holdFor > 0 {
+			if n >= r.holdFor {
+				r.allOnce.Do(func() { close(r.all) })
+			}
+			select {
+			case <-r.all:
+			case <-time.After(time.Second):
+			}
+		}
 		http.Error(w, "slow down", http.StatusTooManyRequests)
 	}))
 	t.Cleanup(r.srv.Close)
@@ -61,18 +76,21 @@ func setFailBurst(t *testing.T, d time.Duration) {
 func TestABurstOfRefusalsBenchesARelayAtMostOnce(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	pub := newRefuserStandIn(t)
+	pub.holdFor = 30
 	useStandIns(t, modeBalanced, nil, own)
 	setRelays([]string{own.url(), pub.url()})
+	// all thirty dial the public relay at once, none past the cap
+	setLiveCap(t, 30, time.Hour)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	for i := 0; i < 30; i++ {
 		p := newXid(t)
-		_, rcv, err := nip17RcvAddress(p.pub)
+		_, rcv, err := nip17RcvAddressAs(testMain(), p.pub)
 		if err != nil {
 			t.Fatal(err)
 		}
-		go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+		go nostrSubscribeRunner(alone(ctx), hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 	}
 	waitFor(t, "every socket turned away", 5*time.Second, func() bool { return pub.n.Load() >= 30 })
 	time.Sleep(200 * time.Millisecond)
@@ -130,9 +148,9 @@ func TestFailuresOfAttemptsBegunTogetherCountOnce(t *testing.T) {
 // minutes.
 func TestOurRelayIsNeverBenchedPastItsCeiling(t *testing.T) {
 	useStandIns(t, modeBalanced, nil)
-	old := ownRelayHost
-	ownRelayHost = "own.example"
-	t.Cleanup(func() { ownRelayHost = old })
+	old := ownRelayHost.get()
+	ownRelayHost.put("own.example")
+	t.Cleanup(func() { ownRelayHost.put(old) })
 	onion := "ws://ownrelayabc.onion"
 	clear := "wss://own.example"
 	pub := "wss://public.example"
@@ -160,29 +178,43 @@ func TestOurRelayIsNeverBenchedPastItsCeiling(t *testing.T) {
 }
 
 // a public relay's failures one after another bench it as before: three
-// are free, then ten seconds doubling to five minutes
+// are free, then ten seconds doubling to five minutes. one that never
+// answered in this process goes on past five minutes, to ten and fifteen
 func TestPublicRelayBenchScheduleUnchanged(t *testing.T) {
 	useStandIns(t, modeBalanced, nil)
 	pub := "wss://public.example"
-	setRelays([]string{"ws://own.invalid", pub})
+	never := "wss://never.example"
+	setRelays([]string{"ws://own.invalid", pub, never})
 	setFailBurst(t, 20*time.Millisecond)
+	relayOK(pub)
 
 	want := []time.Duration{0, 0, 0, 10 * time.Second, 20 * time.Second, 40 * time.Second,
 		80 * time.Second, 160 * time.Second, 300 * time.Second, 300 * time.Second, 300 * time.Second}
-	for i, w := range want {
+	wantNever := slices.Clone(want)
+	wantNever[9], wantNever[10] = 10*time.Minute, relayDeadBench
+	wantNever = append(wantNever, relayDeadBench)
+	want = append(want, 300*time.Second)
+	for i := range want {
 		time.Sleep(30 * time.Millisecond)
-		relayFailed(pub, time.Now())
-		got := benchLeft(pub)
-		if got > w || got < w-time.Second {
-			t.Fatalf("after %d failures benched for %s, want %s", i+1, got.Round(time.Second), w)
-		}
-		if r := relayRetryAfter(pub, 10*time.Second, false); r != max(w, 10*time.Second) {
-			t.Fatalf("after %d failures retried after %s, want %s", i+1, r, max(w, 10*time.Second))
+		for _, c := range []struct {
+			u string
+			w time.Duration
+		}{{pub, want[i]}, {never, wantNever[i]}} {
+			relayFailed(c.u, time.Now())
+			got := benchLeft(c.u)
+			if got > c.w || got < c.w-time.Second {
+				t.Fatalf("%s after %d failures benched for %s, want %s", c.u, i+1, got.Round(time.Second), c.w)
+			}
+			if r := relayRetryAfter(c.u, 10*time.Second, false); r != max(c.w, 10*time.Second) {
+				t.Fatalf("%s after %d failures retried after %s, want %s", c.u, i+1, r, max(c.w, 10*time.Second))
+			}
 		}
 	}
-	relayOK(pub)
-	if failsOf(pub) != 0 || benchLeft(pub) != 0 {
-		t.Fatal("a success left the bench in place")
+	for _, u := range []string{pub, never} {
+		relayOK(u)
+		if failsOf(u) != 0 || benchLeft(u) != 0 {
+			t.Fatalf("a success left %s's bench in place", u)
+		}
 	}
 }
 
@@ -192,7 +224,7 @@ func TestASendWaitsForASlowOnionDial(t *testing.T) {
 	own := slowOnionOnly(t)
 	peer := newXid(t)
 	start := time.Now()
-	res := nostrSend(hex.EncodeToString(peer.pub[:]), "hi")
+	res := nostrSend(mainIdent, hex.EncodeToString(peer.pub[:]), "hi")
 	checkSlowOnionLanded(t, own, res, "ok", time.Since(start))
 }
 
@@ -200,7 +232,14 @@ func TestASendWaitsForASlowOnionDial(t *testing.T) {
 func TestAPairCodeShareWaitsForASlowOnionDial(t *testing.T) {
 	own := slowOnionOnly(t)
 	start := time.Now()
-	res := pairCodePublish("482913", "kryfo://share?id=the-sharer")
+	a, err := pairAddrOf("48", 2950000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := "unreached"
+	if pairBoxPublish(t.Context(), pairLane(a.pk), a, []byte("KPO1")) {
+		res = "ok"
+	}
 	checkSlowOnionLanded(t, own, res, "ok", time.Since(start))
 }
 
@@ -246,9 +285,9 @@ func checkSlowOnionLanded(t *testing.T, own *relayStandIn, res, want string, too
 // to five minutes.
 func TestOurRelayDroppingYoungWaitsItsCeiling(t *testing.T) {
 	useStandIns(t, modeBalanced, nil)
-	old := ownRelayHost
-	ownRelayHost = "own.example"
-	t.Cleanup(func() { ownRelayHost = old })
+	old := ownRelayHost.get()
+	ownRelayHost.put("own.example")
+	t.Cleanup(func() { ownRelayHost.put(old) })
 	onion := "ws://ownrelayabc.onion"
 	clear := "wss://own.example"
 	pub := "wss://public.example"
@@ -270,16 +309,16 @@ func TestAPublishTriesOurRelayWhileItIsBenched(t *testing.T) {
 	first := newRefuserStandIn(t)
 	clear := newRelayStandIn(t, 0)
 	useStandIns(t, modeBalanced, nil)
-	old := ownRelayHost
-	ownRelayHost = strings.TrimPrefix(clear.url(), "ws://")
-	t.Cleanup(func() { ownRelayHost = old })
+	old := ownRelayHost.get()
+	ownRelayHost.put(strings.TrimPrefix(clear.url(), "ws://"))
+	t.Cleanup(func() { ownRelayHost.put(old) })
 	setRelays([]string{first.url(), clear.url()})
 	relayHealthMu.Lock()
 	relayFails[clear.url()] = 6
 	relayCoolTill[clear.url()] = time.Now().Add(ownRelayCeiling)
 	relayHealthMu.Unlock()
 
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -297,18 +336,18 @@ func TestOurClearnetNameBacksOffWhileTheOnionAnswers(t *testing.T) {
 	onion := newRelayStandIn(t, 0)
 	clear := newRefuserStandIn(t)
 	useStandIns(t, modeBalanced, nil)
-	old := ownRelayHost
-	ownRelayHost = strings.TrimPrefix(clear.url(), "ws://")
-	t.Cleanup(func() { ownRelayHost = old })
+	old := ownRelayHost.get()
+	ownRelayHost.put(strings.TrimPrefix(clear.url(), "ws://"))
+	t.Cleanup(func() { ownRelayHost.put(old) })
 	setRelays([]string{onion.url(), clear.url()})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	p := newXid(t)
-	_, rcv, err := nip17RcvAddress(p.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), p.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 	waitFor(t, "the onion listening", 5*time.Second, func() bool {
 		for _, c := range onion.snapshot() {
 			if len(c.reqs) > 0 {
@@ -348,11 +387,14 @@ func TestOurRelayWaitsAreSpread(t *testing.T) {
 	useStandIns(t, modeBalanced, nil)
 	onion := "ws://ownrelayabc.onion"
 	pub := "wss://public.example"
-	setRelays([]string{onion, pub})
+	never := "wss://never.example"
+	setRelays([]string{onion, pub, never})
 	setFailBurst(t, 0)
+	relayOK(pub)
 	for i := 0; i < 15; i++ {
 		relayFailed(onion, time.Now())
 		relayFailed(pub, time.Now())
+		relayFailed(never, time.Now())
 	}
 	lo, hi := ownRelayCeiling*4/5, ownRelayCeiling*6/5
 	retry := map[time.Duration]bool{}
@@ -375,5 +417,8 @@ func TestOurRelayWaitsAreSpread(t *testing.T) {
 	}
 	if d := youngDropWait(pub, 5*time.Second, 10, false); d != 5*time.Minute {
 		t.Fatalf("a public relay waits %s after young drops", d)
+	}
+	if d := relayRetryAfter(never, 10*time.Second, false); d != relayDeadBench {
+		t.Fatalf("a public relay that never answered waits %s", d)
 	}
 }

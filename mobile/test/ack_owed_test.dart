@@ -13,7 +13,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, kFrameTries, useDatabasesForTest;
+    show
+        AppState,
+        HaloDb,
+        kFrameTries,
+        useDatabasesForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateContacts,
+        AppStateReceive,
+        AppStatePairing;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -64,6 +73,10 @@ class _Io extends ArrivalIo {
   Exception Function(String peer)? sealWaits;
 
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async {
     final w = sealWaits;
     if (w != null) throw w(peer);
@@ -71,16 +84,16 @@ class _Io extends ArrivalIo {
   }
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     tried.add(xPub);
     await hold?.future;
-    return super.relaySend(xPub, cipher);
+    return super.relaySend(ident, xPub, cipher);
   }
 
   @override
-  void listen(String xPub, {bool fresh = false}) {
+  void listen(int ident, String xPub, {bool fresh = false}) {
     if (fresh) this.fresh.add(xPub);
-    super.listen(xPub);
+    super.listen(ident, xPub);
   }
 }
 

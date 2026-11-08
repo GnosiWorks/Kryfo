@@ -12,9 +12,23 @@ backups are files you make and control. they are encrypted with a passphrase onl
 
 ## what travels over the network
 
-to deliver a message, Kryfo routes it through tor and, when the other person is offline, leaves it in an encrypted mailbox on nostr relays: a few public ones and ours in onion and fast mode, only ours in relay mode. relays only ever hold sealed, encrypted data. they do not hold your contact list or a record of your account, because no such account exists. messages from 0.5.2 on are padded to one of five sizes, so a relay sees roughly how big a message is, not how long. how many you send and when still shows.
+to deliver a message, Kryfo routes it through tor and, when the other person is offline, leaves it in an encrypted mailbox on nostr relays: a few public ones and our two in private mode, each of ours through its own onion, and our two in fast mode, with the public ones through tor while the first of ours is down. relays only ever hold sealed, encrypted data. they do not hold your contact list or a record of your account, because no such account exists. messages from 0.5.2 on are padded to one of five sizes, so a relay sees roughly how big a message is, not how long. how many you send and when still shows. your chats' mailboxes are read in fixed groups of up to eight, each group over a tor circuit of its own, and the mailboxes of one group share one connection to each relay, so a relay can tell they are read together. a mailbox stays in its group. hidden chats, your first-contact address, pair codes and a room's drop box keep a connection of their own.
 
-your ip is hidden behind tor on the default private mode. relay mode and fast mode skip tor to go quicker. relay mode connects straight to our own relay, which then sees your ip for that connection and writes nothing down. fast mode adds public relays, and each of them sees your ip too. both are off by default and labeled where you turn them on.
+photos, videos, voice notes and files bigger than one message go through our files service, when everyone in the chat has a version that fetches from it. your phone seals the file with a key of its own before it leaves, and the key travels only inside the end-to-end encrypted message. the service holds sealed bytes it cannot open, reached over tor on every route, so it never sees your ip. it knows a file's id, its size rounded up, how many recipients it has and when it went up and came down. nothing in an upload is yours: no key, no account, no day, so two files from you share nothing it can see. each new upload costs your phone a little work instead, more while the service is busy, and never more than a minute of it. each recipient tells the service when it has the file, and once all have, the file goes. only its random id, a hash of a random token only your phone holds, and the day stay until the week is up, so the same message sent again from your phone does not upload it again. nothing stays longer than a week. how many big files you send in a day is counted on your phone, not on our server.
+
+your ip is hidden behind tor on the default private mode. fast mode skips tor to go quicker. it connects straight to our two relays, run at two different hosting companies, which then see your ip for that connection and write nothing down. each message goes to both, so one can stop without messages stopping. while the first of them is down, fast mode also reads and sends through public relays, and then only through tor, so they never see your ip. each of our servers sees which mailboxes one ip address reads and writes, and when both people in a chat use fast mode, it can see that two ip addresses share a mailbox. fast mode is off by default and labeled where you turn it on. relay mode was merged into it. burner rooms, pair codes and your first-contact address (the one in your invite, which a handle points to) go through tor on every route, also in fast mode, so our relays never see your ip on a room's addresses, a pair code's or the address a handle names. with a handle on fast mode, our server could still tie the handle to your ip address, by timing the first messages of a new chat against the mailbox it moves to.
+
+## linked devices
+
+linking a computer to your phone uses two one-off addresses on nostr relays, made from the code the computer shows, so only who saw the code can write there. the relays see two keys made for that link alone and sealed messages. the computer's keys and the history copy then go over tor straight to your phone's onion address, sealed under keys from the link: no server of ours ever holds them. hidden chats never go to a linked computer.
+
+each device has keys of its own, and your phone signs the list of them. your contacts' apps hold that list, so they know how many devices you use and when one is added or removed, and a message to you goes as one copy for each of your devices and theirs, all at once and in one size, so a relay can count them too. a linked computer runs tor without an onion address of its own, so tor and the relays can tell it from a phone, and contacts' phones never reach it directly. a contact on an older Kryfo reaches the computer through your phone, and you answer them from the phone.
+
+## typing
+
+typing is on by default. while you write in a 1:1 chat, your phone tells that contact over tor, straight to their phone, never through a relay or any server. they can tell you are online then. you see theirs only while yours is on, and only on the onion route. groups, archived chats, the decoy and hidden chats behind a shut vault never send or show it. while tor goes through a bridge it is off, because a network that needs a bridge may be watched closely enough to match the typing signals. it comes back by itself when bridges are off. no typing is kept on either phone: no message, no time, no log. like every message, each one moves the chat's encryption keys on one step, and the first one after your contact updates notes that their phone can show it.
+
+the contact's phone learns when you type and pause, never what. the tor relays on the way see a few small cells every few seconds, not who sends them or to whom. someone who watches both your connection and your contact's at once could match those moments more easily than single messages. turn it off under settings, privacy.
 
 ## bridges
 
@@ -34,15 +48,21 @@ a handle (@name) is optional. without one, nothing about you sits anywhere centr
 
 people search is a second choice on top of that, off by default. only handles whose owner turned on "Show me in search" come up, next to a name they picked. turning it off takes you out of search at once. releasing the handle deletes its entry at once. the server keeps one backup copy a day and deletes each copy once it is a week old, so no copy of a released handle is left after 8 days.
 
-the app reaches the registry, people search and the badge service over tor on every route, also in relay and fast modes. the registry keeps no record of who looked anyone up or what was searched for.
+the app reaches the registry, people search and the badge service over tor on every route, also in fast mode. the registry keeps no record of who looked anyone up or what was searched for.
+
+## gif search
+
+gif search is off until you turn it on. when it is on, the gifs tab sends what you type, the app's language, how far into the results and how many to show, and for more of the same results which service gave them (giphy or klipy) to our gif relay on relay.kryfo.app, and fetches the pictures of the results from it. on the private route that goes on a tor circuit of its own, apart from your messages, handles and badges. our server asks giphy or klipy for you under one fixed name and passes their pictures through, so neither of them ever sees your phone, your ip or anything that tells one person from another. it writes no access log and keeps no record of who searched or for what. a trending page is kept for five minutes and holds nothing of anyone's.
+
+on the private route all of it goes through tor, so our server sees a tor exit, never you. in fast mode it goes straight from your phone to our server, as your messages do: our server then sees your ip address and the words you searched, and writes neither down. the gifs tab and the sheet where you turn search on say which route it takes. a gif you send travels inside your encrypted message, like a photo, and your contact's phone fetches nothing.
 
 ## the developer chat
 
 the "Marios · built Kryfo" chat at the top of the list talks to the person who builds the app. its key is built into Kryfo, so nobody else can answer in it. nothing connects and nothing is sent until you write the first message: no hello, no lookup, no app version, no logs.
 
-with your three words, Marios sees them and can write back like any contact. the face you picked, your onion address and any supporter badge are not sent. "Write anonymously" makes a new name and keys for that chat alone: they stay on your phone, are never used anywhere else and are left out of backups. either way Marios sees what you write and when, and delivery receipts tell each side when a message arrived. anonymous does not hide your writing style, the details you share, or your ip in relay and fast modes. voice notes in an anonymous chat always go through the voice disguise.
+with your three words, Marios sees them and can write back like any contact. the face you picked, your onion address and any supporter badge are not sent. "Write anonymously" makes a new name and keys for that chat alone: they stay on your phone, are never used anywhere else and are left out of backups. either way Marios sees what you write and when, and delivery receipts tell each side when a message arrived. anonymous does not hide your writing style, the details you share, or your ip in fast mode. voice notes in an anonymous chat always go through the voice disguise.
 
-deleting the chat deletes it on your phone, and it does not come back unless you open it again from settings. Marios keeps a copy of what you sent, as any person you write to does.
+deleting the chat deletes it on your phone, and it does not come back unless you open it again from settings. it also takes back what you sent from Marios's phone, the same way taking back a single message does. if his phone cannot be reached within half a minute, the app tells you how many could not be taken back. a message he already read has been read.
 
 ## notifications
 
@@ -64,13 +84,21 @@ if you run your own helper server, its name is part of every endpoint, so our re
 
 leaving the mode tells the helper app to drop the endpoints at once, so our relay's next knock finds them gone, and our relay is asked to forget them, a few at a time. both are best effort: whatever is missed runs out within 30 days. moving Kryfo to another phone drops the endpoints without asking the relay. a panic wipe makes no call at all, so the helper app keeps its endpoints until our relay's registrations run out, and its server sees knocks that nothing answers.
 
+## google push (google play build only)
+
+"Google push" is a way of getting messages in the build from google play, on phones with google play services. it is not in the f-droid, github or site builds. nothing of google's runs before you pick it: no firebase, no token. picking it asks google for one token for this install; picking another way deletes it, or as soon as the phone can.
+
+the token reaches our relay sealed to our push gateway's key, in a different seal for each of the sixteen endpoints, so the relay on its own holds sixteen strings it cannot tie together. the push gateway runs on our second server and holds the key that opens them. the two together could tie a phone's sixteen together and see its fcm token, which google can match to the phone and its google account. seizing one of them is not enough, but we run both, so we could. if that matters to you, pick another way. when something arrives for you, the relay knocks the gateway, which opens the seal in memory and asks google to wake your phone with an empty message. Kryfo then fetches over tor as always. fake wake-ups are mixed in, as in the helper app mode.
+
+google sees that this install uses Kryfo, when it is woken, and your phone's IP as it always does for play services. it never sees who wrote, what was said or how many. our gateway keeps no table on disk, writes no file and logs nothing per token; in memory it holds a keyed hash of a token and the times of its last pushes for an hour, to keep one push a phone every 45 seconds, a keyed hash of a token google says is no phone's for a day, short hashes of the seals it was knocked on, up to a day each, to refuse copies, and, for a wake-up held back to keep that pace, the token itself for up to 45 seconds. firebase's analytics, advertising id and delivery metrics are switched off in the app.
+
 ## third parties
 
-Kryfo talks to tor relays and nostr relays, to your helper app's server if you choose the helper app mode, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
+Kryfo talks to tor relays and nostr relays, to our files service for big files, to our gif relay if you turn gif search on, to your helper app's server if you choose the helper app mode, to google and our push gateway if you choose google push, to the tor project when you ask it for bridges, and, while a bridge is in use, to that bridge and what it needs: snowflake volunteers, public stun servers and the cdn in front of the tor project. we share nothing with them, and we have no data to sell, rent or trade.
 
 ## law enforcement and data requests
 
-we have no account records, no message store, and no logs of who talks to whom. if someone asks us to hand over your data, there is nothing to hand over.
+we have no account records, no message store, and no logs of who talks to whom. if someone asks us to hand over your data, there is nothing to hand over, except, for google push users, what the google push section says our two servers together could link.
 
 ## children
 

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- written by tool/icon_art.dart from lib/app_icon_art.dart -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <group
+        android:scaleX="1"
+        android:scaleY="1"
+        android:translateX="-18"
+        android:translateY="-18">
+        <path
+            android:fillColor="#FFD9C9A3"
+            android:pathData="M34,18 h40 a16,16 0 0 1 16,16 v40 a16,16 0 0 1 -16,16 h-40 a16,16 0 0 1 -16,-16 v-40 a16,16 0 0 1 16,-16 z" />
+        <path
+            android:fillColor="#FFFFF8EA"
+            android:pathData="M39,29 h30 a5,5 0 0 1 5,5 v40 a5,5 0 0 1 -5,5 h-30 a5,5 0 0 1 -5,-5 v-40 a5,5 0 0 1 5,-5 z" />
+        <path
+            android:strokeColor="#FFA8956E"
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round"
+            android:pathData="M41,41 L67,41" />
+        <path
+            android:strokeColor="#FFA8956E"
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round"
+            android:pathData="M41,49 L67,49" />
+        <path
+            android:strokeColor="#FFA8956E"
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round"
+            android:pathData="M41,57 L67,57" />
+        <path
+            android:strokeColor="#FFA8956E"
+            android:strokeWidth="3.2"
+            android:strokeLineCap="round"
+            android:pathData="M41,65 L58,65" />
+    </group>
+</vector>

@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# a stateless c abi over signal's libsignal-protocol: keys and records in,
+# messages and new records out. the stores stay in the app's database
+[package]
+name = "kryfo_signal"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "GPL-3.0-or-later"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# only the canary test mtecheck.sh runs, never in a build
+mtecheck = []
+
+[dependencies]
+# libsignal v0.99.4, named by its commit: a tag can move, a commit cannot.
+# cargo takes one of tag, branch or rev
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", rev = "387da3e29ac87c821aedc697aee77646a1c72fff" }
+# the versions libsignal-protocol already pulls in, so nothing new is built,
+# with no feature it does not already turn on
+async-trait = "0.1.92"
+curve25519-dalek = { version = "5.0.0", default-features = false }
+prost = "0.14.4"
+rand = "0.9.4"
+sha2 = { version = "0.11.0", default-features = false }
+
+[dev-dependencies]
+# a second big integer maths for the secp256k1 check to be tested against
+num-bigint = "0.4.8"
+# the pq ratchet libsignal already pulls in, for the pinning test to read.
+# it stays on the tag libsignal's own manifest names, or the lock would hold
+# two of it; the lock and the pinning test hold its commit
+spqr = { git = "https://github.com/signalapp/SparsePostQuantumRatchet.git", tag = "v1.5.3" }
+
+# tests run libsignal's maths thousands of times; release builds are not
+# touched by this
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "unwind"

@@ -5,4 +5,9 @@
     <string name="service_text">Deine verschlüsselte Leitung bleibt offen, damit Nachrichten ankommen</string>
     <string name="channel_name">Verbunden bleiben</string>
     <string name="channel_description">Hält Kryfo verbunden, damit verschlüsselte Nachrichten ankommen, während es geschlossen ist. Wenn du das ausschaltest, stoppt die Zustellung.</string>
+    <string name="icon_notes">Notizen</string>
+    <string name="icon_weather">Wetter</string>
+    <string name="icon_tasks">Aufgaben</string>
+    <string name="icon_news">Neuigkeiten</string>
+    <string name="service_title_plain">Aktiv</string>
 </resources>

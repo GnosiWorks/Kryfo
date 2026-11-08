@@ -57,6 +57,7 @@ const _names = {
   'f',
   'droid',
   'unifiedpush',
+  'google',
   'ntfy',
   'pro',
   'natural',
@@ -94,6 +95,8 @@ const _devPhoneOnly = {
   'supportMovedToChats',
   'supportMoveToInbox',
   'supportMovedToInbox',
+  'supportCopyDevCard',
+  'supportDevCardOff',
 };
 // read and kept: the word is the same in that language
 // (test/l10n_same_as_english.json, key lists per language)

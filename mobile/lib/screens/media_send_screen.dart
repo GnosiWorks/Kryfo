@@ -12,7 +12,7 @@ import '../album.dart' show kPickMax;
 import '../bidi_safe.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateScreen;
 import '../open_file.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 
@@ -23,6 +23,7 @@ import '../widgets/decode_px.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/press_scale.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../widgets/enter_sends.dart';
 import '../widgets/swap.dart';
 import '../widgets/written_field.dart';
 
@@ -34,10 +35,9 @@ class MediaSendScreen extends StatefulWidget {
   final bool? secure;
   // the chat blocks screenshots, so this screen does too
   final bool holdSecure;
-  // the most that go in this send. before they accept, the slots a
-  // request has left ([request])
+  // the most that go in this send: the slots the dev chat has left
+  // before his first word, or kPickMax
   final int max;
-  final bool request;
   // asked on send, with this screen still up: a big file's question.
   // false keeps it open
   final Future<bool> Function(List<PickedMedia> items)? beforeSend;
@@ -51,7 +51,6 @@ class MediaSendScreen extends StatefulWidget {
     this.secure,
     this.holdSecure = false,
     this.max = kPickMax,
-    this.request = false,
     this.beforeSend,
     this.onGone,
   });
@@ -107,12 +106,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
   }
 
   // never a quiet drop: what stays behind is said
-  void _capped() => showHaloToast(
-    context,
-    widget.request
-        ? l10n.mediaSendUntilAccepted(whole(_max))
-        : l10n.mediaSendUpTo(whole(_max)),
-  );
+  void _capped() => showHaloToast(context, l10n.mediaSendUpTo(whole(_max)));
 
   @override
   void dispose() {
@@ -382,30 +376,38 @@ class MediaSendScreenState extends State<MediaSendScreen> {
         Expanded(
           child: WrittenDir(
             controller: _caption,
-            builder: (dir) => ShiftTapGuard(
+            // enter sends the picks on a computer, shift and enter is a
+            // new line in the caption
+            builder: (dir) => EnterSends(
               controller: _caption,
-              child: TextField(
-                textDirection: dir,
-                inputFormatters: const [UnmarkedInput()],
+              onSend: () {
+                if (n > 0) _send();
+              },
+              child: ShiftTapGuard(
                 controller: _caption,
-                enableIMEPersonalizedLearning: false,
-                style: HaloType.sans(size: 14),
-                minLines: 1,
-                maxLines: 4,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  hintText: l10n.mediaBubblesAddACaption,
-                  hintStyle: HaloType.sans(size: 14, color: HaloColors.text2),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  filled: true,
-                  fillColor: HaloColors.surface2,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
+                child: TextField(
+                  textDirection: dir,
+                  inputFormatters: const [UnmarkedInput()],
+                  controller: _caption,
+                  enableIMEPersonalizedLearning: false,
+                  style: HaloType.sans(size: 14),
+                  minLines: 1,
+                  maxLines: 4,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    hintText: l10n.mediaBubblesAddACaption,
+                    hintStyle: HaloType.sans(size: 14, color: HaloColors.text2),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    filled: true,
+                    fillColor: HaloColors.surface2,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),

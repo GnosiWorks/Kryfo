@@ -10,7 +10,37 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/app_shell.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
+import 'package:kryfo/container.dart';
+import 'package:kryfo/file_kind.dart';
+import 'package:kryfo/gifs/gif_opt_in.dart';
+import 'package:kryfo/rooms.dart' show RoomLink;
+import 'package:kryfo/screens/appearance_screen.dart';
+import 'package:kryfo/screens/auto_get_screen.dart';
+import 'package:kryfo/screens/bridge_share_sheet.dart';
+import 'package:kryfo/screens/bridge_sheets.dart';
+import 'package:kryfo/screens/fast_servers_screen.dart';
+import 'package:kryfo/screens/helper_sheet.dart';
+import 'package:kryfo/screens/linked_devices_screen.dart';
+import 'package:kryfo/screens/notes_export_screen.dart';
+import 'package:kryfo/screens/pin_flow_screen.dart';
+import 'package:kryfo/screens/pins_screen.dart';
+import 'package:kryfo/screens/room_link_sheet.dart';
+import 'package:kryfo/screens/room_preview_sheet.dart';
+import 'package:kryfo/screens/tip_screen.dart';
+import 'package:kryfo/screens/update_pins_screen.dart';
+import 'package:kryfo/screens/wallpaper_sheet.dart';
+import 'package:kryfo/atmosphere.dart' show Atmo;
+import 'package:kryfo/stickers/sticker_recents.dart';
+import 'package:kryfo/stickers/sticker_sheet.dart';
+import 'package:kryfo/widgets/attach_grid.dart';
+import 'package:kryfo/widgets/file_sheet.dart';
+import 'package:kryfo/widgets/photo_sheet.dart';
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/blocked_screen.dart';
@@ -18,7 +48,7 @@ import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/clean_screen.dart';
 import 'package:kryfo/screens/contact_screen.dart' show showRenameSheet;
 import 'package:kryfo/screens/donate_screen.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/screens/lock_file_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
@@ -45,6 +75,7 @@ import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/tools/tools_bridge.dart' show PickedFile;
 import 'package:kryfo/widgets/confirm_sheet.dart';
+import 'package:kryfo/widgets/desk_menu.dart' show showMenuSheet;
 import 'package:kryfo/widgets/halo_sheet.dart';
 import 'package:kryfo/widgets/language_sheet.dart';
 import 'package:kryfo/widgets/message_menu.dart';
@@ -54,6 +85,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bars_check.dart';
 import 'dev_chat_fakes.dart' show DevTestDb, devHome, devMem, devWorld;
+import 'sticker_test_util.dart' show useLibrary;
 
 class _Db extends DevTestDb {
   _Db() : super(devMem);
@@ -92,12 +124,33 @@ class _Engine implements HaloEngine {
       throw UnimplementedError('${i.memberName}');
 }
 
-typedef Phone = ({String name, double nav, double kb, bool side});
+typedef Phone = ({String name, double nav, double kb, bool side, double top});
+
+// the android 15 and 16 sizes: the thinnest and the tallest status bar, the
+// thinnest handle and the three buttons
+const android15 = <Phone>[
+  (name: '15 thin', nav: gestureThin, kb: 0, side: false, top: statusLow),
+  (name: '15 buttons', nav: buttonBar, kb: 0, side: false, top: statusTall),
+  (
+    name: '15 keyboard',
+    nav: buttonBar,
+    kb: keyboardUp,
+    side: false,
+    top: statusTall,
+  ),
+];
 
 const upright = <Phone>[
-  (name: 'gesture bar', nav: gestureBar, kb: 0, side: false),
-  (name: 'button bar', nav: buttonBar, kb: 0, side: false),
-  (name: 'keyboard', nav: gestureBar, kb: keyboardUp, side: false),
+  (name: 'gesture bar', nav: gestureBar, kb: 0, side: false, top: cutoutTop),
+  (name: 'button bar', nav: buttonBar, kb: 0, side: false, top: cutoutTop),
+  (
+    name: 'keyboard',
+    nav: gestureBar,
+    kb: keyboardUp,
+    side: false,
+    top: cutoutTop,
+  ),
+  ...android15,
 ];
 
 const _file = PickedFile(
@@ -116,8 +169,10 @@ const _age = PickedFile(
 
 // a sheet without a field: opening it takes the focus, and the keyboard goes
 const _noKeyboard = <Phone>[
-  (name: 'gesture bar', nav: gestureBar, kb: 0, side: false),
-  (name: 'button bar', nav: buttonBar, kb: 0, side: false),
+  (name: 'gesture bar', nav: gestureBar, kb: 0, side: false, top: cutoutTop),
+  (name: 'button bar', nav: buttonBar, kb: 0, side: false, top: cutoutTop),
+  (name: '15 thin', nav: gestureThin, kb: 0, side: false, top: statusLow),
+  (name: '15 buttons', nav: buttonBar, kb: 0, side: false, top: statusTall),
 ];
 
 final _nav = GlobalKey<NavigatorState>();
@@ -178,7 +233,13 @@ Future<List<String>> sweepBars(
   try {
     for (final p in phones) {
       now = p.name;
-      barsPhone(t, nav: p.nav, keyboard: p.kb, landscape: p.side);
+      barsPhone(
+        t,
+        nav: p.nav,
+        keyboard: p.kb,
+        landscape: p.side,
+        status: p.top,
+      );
       await t.pumpWidget(
         KeyedSubtree(key: ValueKey(p.name), child: _shell(page())),
       );
@@ -189,6 +250,10 @@ Future<List<String>> sweepBars(
       }
       for (final h in underBars(t)) {
         hits.add('${p.name}: $h');
+      }
+      await scrollAllToEnd(t);
+      for (final h in underBars(t)) {
+        hits.add('${p.name}, scrolled: $h');
       }
       await _gone(t);
     }
@@ -221,7 +286,7 @@ void main() {
       'settings': () => const SettingsScreen(),
       'bridges': () => const BridgesScreen(),
       'modes': () => const ModesScreen(),
-      'getting messages': () => const GettingMessagesScreen(),
+      'getting messages': () => const NotificationsScreen(),
       'blocked': () => const BlockedScreen(),
       'transport': () => const TransportScreen(),
       'backup': () => const BackupScreen(),
@@ -244,7 +309,19 @@ void main() {
       'lock a file': () => const LockFileScreen(file: _file),
       'open a locked file': () => const OpenLockedScreen(file: _age),
       'clean': () => const CleanScreen(file: _file),
-      'what a photo knows': () => const PhotoKnowsScreen(file: _file),
+      'photo cleaner': () => const PhotoKnowsScreen(file: _file),
+      'appearance': () => const AppearanceScreen(),
+      'auto get': () => const AutoGetScreen(),
+      'fast servers': () => const FastServersScreen(),
+      'linked devices': () => const LinkedDevicesScreen(),
+      'link a device': () => const LinkDeviceScreen(),
+      'notes export': () => const NotesExportScreen(),
+      'pins': () => const PinsScreen(),
+      'tip': () => const TipScreen(),
+      'decoy pin': () => const PinFlowScreen(flow: PinFlow.decoy),
+      'wipe pin': () => const PinFlowScreen(flow: PinFlow.wipe),
+      'decoy pin, typed': () =>
+          const PinFlowScreen(flow: PinFlow.decoy, skipIntro: true),
     };
     for (final e in pages.entries) {
       testWidgets(e.key, (t) async {
@@ -252,6 +329,16 @@ void main() {
         expect(hits, isEmpty, reason: hits.join('\n'));
       });
     }
+
+    // a pad of its own: no keyboard comes up over it
+    testWidgets('update pins', (t) async {
+      final hits = await sweepBars(
+        t,
+        () => const UpdatePinsScreen(),
+        phones: _noKeyboard,
+      );
+      expect(hits, isEmpty, reason: hits.join('\n'));
+    });
 
     testWidgets('qr', (t) async {
       final hits = await sweepBars(t, () => const QrScreen());
@@ -305,7 +392,13 @@ void main() {
       try {
         for (final p in phones) {
           now = p.name;
-          barsPhone(t, nav: p.nav, keyboard: p.kb, landscape: p.side);
+          barsPhone(
+            t,
+            nav: p.nav,
+            keyboard: p.kb,
+            landscape: p.side,
+            status: p.top,
+          );
           await t.pumpWidget(
             KeyedSubtree(
               key: ValueKey(p.name),
@@ -330,6 +423,11 @@ void main() {
           for (final h in underBars(t)) {
             if (h.contains('"open"')) continue;
             hits.add('${p.name}: $h');
+          }
+          await scrollAllToEnd(t);
+          for (final h in underBars(t)) {
+            if (h.contains('"open"')) continue;
+            hits.add('${p.name}, scrolled: $h');
           }
           if (last != null) {
             // a tall sheet scrolls above the keyboard: its last button
@@ -470,5 +568,256 @@ void main() {
       );
       expect(hits, isEmpty, reason: hits.join('\n'));
     });
+
+    Future<void> plain(
+      WidgetTester t,
+      String name,
+      Future<void> Function(BuildContext) open,
+    ) async {
+      final hits = await sheet(t, open, phones: _noKeyboard);
+      expect(hits, isEmpty, reason: '$name\n${hits.join('\n')}');
+    }
+
+    testWidgets('the attach tray', (t) async {
+      await plain(
+        t,
+        'attach',
+        (c) => showHaloSheet<void>(
+          c,
+          builder: (_) => AttachGrid(
+            note: l10n.chatNoExifNeverSaved,
+            items: [
+              for (final w in ['Camera', 'Gallery', 'Video', 'File', 'Place'])
+                AttachItem(
+                  icon: (k) => Icon(Icons.photo_outlined, color: k),
+                  tint: HaloColors.amber,
+                  label: w,
+                  onTap: () {},
+                ),
+            ],
+          ),
+        ),
+      );
+    });
+
+    testWidgets('the sticker panel', (t) async {
+      final lib = useLibrary();
+      await plain(
+        t,
+        'stickers',
+        (c) => showHaloSheet<void>(
+          c,
+          scroll: true,
+          builder: (_) => StickerSheet(
+            recents: StickerRecents(HaloContainer.everyday),
+            library: lib,
+          ),
+        ),
+      );
+    });
+
+    testWidgets('the gif question', (t) async {
+      await plain(t, 'gif', (c) => showGifOptInSheet(c, overTor: true));
+    });
+
+    testWidgets('a photo sheet', (t) async {
+      await plain(
+        t,
+        'photo',
+        (c) => showPhotoSheet(
+          c,
+          title: 'Your photo',
+          line: 'Only your contacts see it.',
+          seed: 'amber-slow-river',
+          add: false,
+          has: true,
+        ),
+      );
+    });
+
+    testWidgets('a file sheet', (t) async {
+      await plain(
+        t,
+        'file',
+        (c) => showFileSheet(
+          c,
+          path: '/nowhere/report.pdf',
+          name: 'report.pdf',
+          facts: const FileFacts(FileKind.pdf, 'pdf'),
+        ),
+      );
+    });
+
+    testWidgets('a notice', (t) async {
+      await plain(
+        t,
+        'notice',
+        (c) => showNoticeSheet(c, title: 'Saved', line: 'All done.', ok: 'Ok'),
+      );
+    });
+
+    testWidgets('change or remove', (t) async {
+      await plain(
+        t,
+        'change',
+        (c) => showChangeOrRemoveSheet(
+          c,
+          title: 'Your photo',
+          line: 'Pick one.',
+          change: 'Change',
+          remove: 'Remove',
+          more: 'More',
+        ),
+      );
+    });
+
+    testWidgets('confirm or more', (t) async {
+      await plain(
+        t,
+        'confirm more',
+        (c) => showConfirmOrMoreSheet(
+          c,
+          title: 'Leave?',
+          line: 'You can come back.',
+          yes: 'Leave',
+          more: 'Why',
+          detail: 'A longer line about it.',
+        ),
+      );
+    });
+
+    testWidgets('the helper apps', (t) async {
+      await plain(t, 'helper', showHelperSheet);
+    });
+
+    testWidgets('a wallpaper', (t) async {
+      await plain(
+        t,
+        'wallpaper',
+        (c) => showWallpaperSheet(c, Atmo.values.first, allowPhoto: true),
+      );
+    });
+
+    testWidgets('a bridge to share', (t) async {
+      await plain(
+        t,
+        'bridge share',
+        (c) => showBridgeShareSheet(
+          c,
+          'obfs4 192.0.2.1:443 ABCDEF cert=x iat-mode=0',
+        ),
+      );
+    });
+
+    testWidgets('tor blocked', (t) async {
+      await plain(t, 'tor blocked', showTorBlockedSheet);
+    });
+
+    testWidgets('a blocked start', (t) async {
+      await plain(t, 'blocked start', showBlockedStartSheet);
+    });
+
+    testWidgets('tor project consent', (t) async {
+      await plain(t, 'consent', showTorProjectConsentSheet);
+    });
+
+    testWidgets('a friend\'s lines', (t) async {
+      final hits = await sheet(t, showFriendLinesSheet);
+      expect(hits, isEmpty, reason: hits.join('\n'));
+    });
+
+    final room = RoomLink(
+      roomId: 'r1',
+      name: 'Book club',
+      expiresAt: DateTime(2030).millisecondsSinceEpoch,
+      creatorPub: 'aa' * 32,
+      fcPk: 'bb' * 32,
+    );
+
+    testWidgets('a room link', (t) async {
+      await plain(
+        t,
+        'room link',
+        (c) => showRoomLinkSheet(c, room, fresh: true),
+      );
+    });
+
+    testWidgets('a room preview', (t) async {
+      await plain(t, 'room preview', (c) => showRoomPreviewSheet(c, room));
+    });
+  });
+
+  // android 15 and 16 sizes, kept as pictures: settings and a menu sheet
+  group('android 15 goldens', () {
+    for (final (name, nav, top) in [
+      ('gesture', gestureThin, statusLow),
+      ('buttons', buttonBar, statusTall),
+    ]) {
+      testWidgets('settings, $name', (t) async {
+        _quiet(t);
+        barsPhone(t, nav: nav, status: top);
+        await t.pumpWidget(_shell(const SettingsScreen()));
+        await _rest(t);
+        expectClearOfBars(t);
+        await expectLater(
+          find.byType(SettingsScreen),
+          matchesGoldenFile('goldens/a15_settings_$name.png'),
+        );
+        await _gone(t);
+      });
+
+      testWidgets('a menu sheet, $name', (t) async {
+        _quiet(t);
+        barsPhone(t, nav: nav, status: top);
+        await t.pumpWidget(
+          _shell(
+            Scaffold(
+              body: Builder(
+                builder: (ctx) => Center(
+                  child: TextButton(
+                    onPressed: () => showMenuSheet<void>(
+                      ctx,
+                      groups: (_) => [
+                        [
+                          MenuSheetRow(
+                            icon: Icons.push_pin_outlined,
+                            label: 'Pin',
+                            onTap: () {},
+                          ),
+                          MenuSheetRow(
+                            icon: Icons.archive_outlined,
+                            label: 'Archive',
+                            onTap: () {},
+                          ),
+                        ],
+                        [
+                          MenuSheetRow(
+                            icon: Icons.delete_outline,
+                            label: 'Delete',
+                            danger: true,
+                            onTap: () {},
+                          ),
+                        ],
+                      ],
+                    ),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await t.tap(find.text('open'));
+        await t.pump();
+        await _rest(t);
+        final hits = underBars(t).where((h) => !h.contains('"open"'));
+        expect(hits, isEmpty);
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('goldens/a15_menu_$name.png'),
+        );
+        await _gone(t);
+      });
+    }
   });
 }

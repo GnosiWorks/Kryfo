@@ -6,6 +6,7 @@
 // the listener service cannot bring the process back. the deletes below are
 // the fallback where that call refuses.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'secure_store.dart';
@@ -14,10 +15,21 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'main.dart' show appState, engine, session, sessionQuiet;
+import 'main.dart'
+    show
+        appState,
+        engine,
+        session,
+        sessionQuiet,
+        AppStateProfile,
+        AppStatePhotos;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'desktop/desktop_mode.dart'
+    show desktopLetGo, desktopWipeKeys, onDesktop, rawFiles;
 import 'dlog.dart';
+import 'drafts.dart' show forgetAllDrafts;
 import 'shred.dart' show shredFile;
+import 'theme.dart' show dropOurClip;
 
 // everything still running checks this before touching the database. the
 // timers outlive the widget tree and cannot all be cancelled from here.
@@ -41,6 +53,9 @@ const kWipeHeld = 'wipe_held';
 // unzeroed, and a panic wipe stays quick
 const kWipeShredWait = Duration(seconds: 2);
 
+// how long a wipe gives a linked device's last word to reach the relay
+const kWipeTellWait = Duration(seconds: 8);
+
 // the shred of one held entry, a stand-in in tests
 @visibleForTesting
 Future<void> Function(String path) wipeShred = shredHeld;
@@ -56,38 +71,68 @@ Future<void> get wipeShredding => _shredding;
 
 // [releaseHandle] gives the handle back on the way, for a wipe chosen in
 // settings. a wipe from the lock screen or from a quiet session makes no
-// network call at all
-Future<void> wipeHalo({bool releaseHandle = false}) async {
+// network call at all. [afterErase] runs once the keys, prefs and files are
+// gone and before the engine is taken off the network (a linked device's
+// last word to its phone, sealed before the wipe began), a few seconds at
+// most. [stay]: the process lives on for a page that says what happened,
+// and android's erase and the exit wait for [wipeFinish]. [thenLink]: a
+// computer's next run starts at onboarding's link to a phone
+Future<void> wipeHalo({
+  bool releaseHandle = false,
+  Future<void> Function()? afterErase,
+  bool stay = false,
+  bool thenLink = false,
+}) async {
   // read before anything goes: a quiet session has no handle and reaches
   // nobody on the everyday identity's behalf
   final release = releaseHandle && !sessionQuiet;
   final handleKey = session.container.key('my_handle');
   haloWiping = true;
+  // on desktop the handle is in the vault, which goes next: read first
+  String? h;
+  if (release && onDesktop) h = await _handle(handleKey);
+  // the pin key before anything: hidden chats' database and their sealed
+  // photos and files open nowhere again, whatever the flash keeps of them.
+  // files an older version left plain and that were never sealed since are
+  // only as gone as the shred below gets them
+  await _dropPinKey();
+  // on desktop the vault, which holds every key, and what the computer's
+  // account kept for it
+  await desktopWipeKeys?.call();
   wipeForget();
+  // a draft waiting to be written would land in a file being erased
+  forgetAllDrafts();
   // a repoint armed before this must not claim the handle back after the
   // release below
   try {
     appState.stopRepoint();
+    appState.stopPhotos();
   } catch (e) {
     dlog('wipe: repoint not stopped (${e.runtimeType})');
   }
   // a beat for anything mid-query to finish before the files vanish
   await Future.delayed(const Duration(milliseconds: 120));
+  // windows deletes no database file that is still open
+  await desktopLetGo?.call();
   // the handle goes back while the key that proves it is ours is still in
   // the engine's memory. the request runs beside the erase and gets a few
   // seconds at most: nothing here waits on the network
-  String? h;
-  if (release) {
-    try {
-      h = await secureStore.read(key: handleKey);
-    } catch (e) {
-      dlog('wipe: handle not read (${e.runtimeType})');
-    }
-  }
+  if (release && !onDesktop) h = await _handle(handleKey);
   final released = h == null || h.isEmpty ? null : _release(h);
   final cap = Future<void>.delayed(const Duration(seconds: 4));
   // keys, prefs and folders first. tor's own folder stays while tor runs
   await _erase(keep: const {'tor'});
+  // what was copied leaves the clipboard, whatever session copied it
+  unawaited(dropOurClip(wipe: true));
+  // never before the erase: whatever happens to it, nothing is left to read
+  final after = afterErase;
+  if (after != null) {
+    try {
+      await Future.any([after(), Future<void>.delayed(kWipeTellWait)]);
+    } catch (e) {
+      dlog('wipe: the last word not sent (${e.runtimeType})');
+    }
+  }
   final shredFrom = Stopwatch()..start();
   if (released != null) await Future.any([released, cap]);
   // the engine stops its relay listeners and takes tor off the network, and
@@ -105,6 +150,13 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   if (wait > Duration.zero) {
     await Future.any([_shredding, Future<void>.delayed(wait)]);
   }
+  if (stay) return;
+  await wipeFinish(link: thenLink);
+}
+
+/// the end of a wipe: android's erase, else the exit. a page shown after a
+/// wipe that stayed calls it when the person closes it
+Future<void> wipeFinish({bool link = false}) async {
   // the call that finishes the job kills this process before it can
   // answer, so a reply at all means it did not happen.
   var native = false;
@@ -112,7 +164,9 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
     native = await Future.any([
       const MethodChannel(
         'halo/platform',
-      ).invokeMethod<bool>('wipe').then((v) => v ?? false),
+      ).invokeMethod<bool>('wipe', link ? {'link': true} : null).then(
+        (v) => v ?? false,
+      ),
       Future.delayed(const Duration(seconds: 5), () => false),
     ]);
   } catch (e) {
@@ -123,6 +177,25 @@ Future<void> wipeHalo({bool releaseHandle = false}) async {
   // before exit
   await Future.delayed(const Duration(milliseconds: 600));
   wipeExit(0);
+}
+
+Future<String?> _handle(String key) async {
+  try {
+    return await secureStore.read(key: key);
+  } catch (e) {
+    dlog('wipe: handle not read (${e.runtimeType})');
+    return null;
+  }
+}
+
+Future<void> _dropPinKey() async {
+  try {
+    await const MethodChannel(
+      'halo/platform',
+    ).invokeMethod<bool>('pinKeyDrop').timeout(const Duration(seconds: 1));
+  } catch (e) {
+    dlog('wipe: pin key left (${e.runtimeType})');
+  }
 }
 
 // straight to the engine, not in turn behind a claim on its way: the wipe
@@ -149,12 +222,21 @@ Future<void> _erase({Set<String> keep = const {}}) async {
   } catch (e) {
     dlog('wipe: finger key left (${e.runtimeType})');
   }
+  // identity markers go first. if anything below fails the next launch
+  // still starts at onboarding instead of an empty home screen. on desktop
+  // both live in the vault, gone already: the files go all the same
   try {
-    // identity markers go first. if anything below fails the next launch
-    // still starts at onboarding instead of an empty home screen.
     await secureStore.deleteAll();
+  } catch (e) {
+    dlog('wipe: secrets left (${e.runtimeType})');
+  }
+  try {
     final prefs0 = await SharedPreferences.getInstance();
     await prefs0.clear();
+  } catch (e) {
+    dlog('wipe: prefs left (${e.runtimeType})');
+  }
+  try {
     final docs = await getApplicationDocumentsDirectory();
     final held = _heldIn(docs);
     final dirs = <Directory>[
@@ -165,34 +247,38 @@ Future<void> _erase({Set<String> keep = const {}}) async {
     final behind = <String>[];
     // the ones that would not move
     final stuck = <FileSystemEntity>[];
-    for (final d in dirs) {
-      if (!await d.exists()) continue;
-      await for (final entry in d.list(followLinks: false)) {
-        final name = p.basename(entry.path);
-        if (d.path == docs.path && keep.contains(name)) continue;
-        if (!_sealed(name) && entry is! Link) {
-          final to = p.join(held, _rnd());
-          _moving.add(to);
+    // on desktop the entries move as the disk holds them: sealed ones stay
+    // sealed in the folder they wait in to be shredded
+    await rawFiles(() async {
+      for (final d in dirs) {
+        if (!await d.exists()) continue;
+        await for (final entry in d.list(followLinks: false)) {
+          final name = p.basename(entry.path);
+          if (d.path == docs.path && keep.contains(name)) continue;
+          if (!_sealed(name) && entry is! Link) {
+            final to = p.join(held, _rnd());
+            _moving.add(to);
+            try {
+              await Directory(held).create(recursive: true);
+              behind.add((await entry.rename(to)).path);
+              continue;
+            } catch (e) {
+              dlog('wipe: an entry not moved (${e.runtimeType})');
+              _moving.remove(to);
+              stuck.add(entry);
+              continue;
+            }
+          }
           try {
-            await Directory(held).create(recursive: true);
-            behind.add((await entry.rename(to)).path);
-            continue;
+            await entry.delete(recursive: true);
           } catch (e) {
-            dlog('wipe: an entry not moved (${e.runtimeType})');
-            _moving.remove(to);
-            stuck.add(entry);
-            continue;
+            // one that will not go must not keep the rest. the native call
+            // below is the real erase
+            dlog('wipe: an entry stayed (${e.runtimeType})');
           }
         }
-        try {
-          await entry.delete(recursive: true);
-        } catch (e) {
-          // one that will not go must not keep the rest. the native call
-          // below is the real erase
-          dlog('wipe: an entry stayed (${e.runtimeType})');
-        }
       }
-    }
+    });
     _shredBehind(behind, held);
     if (stuck.isNotEmpty) {
       // shredded where they lie, for a moment at most, then unlinked with

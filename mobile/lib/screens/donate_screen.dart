@@ -14,17 +14,20 @@ import '../widgets/copied_mark.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/press_scale.dart';
-import '../widgets/motion.dart' show haloRoute;
+import '../widgets/fit_column.dart';
+import '../widgets/motion.dart' show haloRoute, motionStill;
 import '../widgets/qr_wipe.dart';
 import '../address_text.dart';
 import '../open_outside.dart';
 import '../dlog.dart';
-import '../main.dart' show appState, session;
+import '../main.dart' show appState, session, AppStateRoute;
 import 'modes_screen.dart';
 import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
+import '../wide/wide_pane.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 // the page about the audit backers help pay for. sent as is: no query, no tag
 const kAuditUrl = 'https://kryfo.app/audit';
@@ -99,6 +102,53 @@ const _addrs = {
   'eth': '0x55014AF792d54E4350b7f4bfc7be7D62EbbCfE43',
 };
 
+// each tier's orb: glyph, gradient and the glyph's colour, as on the cards
+({String glyph, List<Color> grad, Color fg}) _look(SupporterTier t) =>
+    switch (t) {
+      SupporterTier.patron => (
+        glyph: '\u25C6',
+        grad: const [Color(0xFFA78BFA), Color(0xFF6D28D9)],
+        fg: const Color(0xFF1E1B4B),
+      ),
+      SupporterTier.guardian => (
+        glyph: '\u2726',
+        grad: const [Color(0xFFF59E0B), Color(0xFFD97706)],
+        fg: HaloColors.onYellow,
+      ),
+      _ => (
+        glyph: '\u25CF',
+        grad: const [Color(0xFF60A5FA), Color(0xFF2563EB)],
+        fg: const Color(0xFF0C1F3F),
+      ),
+    };
+
+// what a tier costs, in dollars, as the badge service prices it
+int _usdOf(SupporterTier t) => switch (t) {
+  SupporterTier.guardian => 100,
+  SupporterTier.patron => 50,
+  _ => 20,
+};
+
+// the card page leaves Kryfo, so it is said first, as other outside links
+// do. no browser: the link goes on the clipboard
+Future<void> _openCardPage(BuildContext context) async {
+  HapticFeedback.selectionClick();
+  // every card path passes here, so this is where the name is said
+  final ok = await showConfirmSheet(
+    context,
+    title: l10n.donateCardPay,
+    line: l10n.donateCardSeesName,
+    detail: l10n.settingsFollowBrowserNote,
+    yes: l10n.settingsFollowOpen,
+    keep: l10n.commonCancel,
+    rose: false,
+  );
+  if (!ok || !context.mounted) return;
+  if (await openOutside(Uri.parse(kCardUrl))) return;
+  await Clipboard.setData(const ClipboardData(text: kCardUrl));
+  if (context.mounted) showHaloToast(context, l10n.settingsLinkCopied);
+}
+
 class _DonateScreenState extends State<DonateScreen> {
   int _amount = 20;
 
@@ -169,25 +219,27 @@ class _DonateScreenState extends State<DonateScreen> {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _hero(),
-              const SizedBox(height: 18),
-              _auditRow(),
-              const SizedBox(height: 22),
-              if (kBadgeTiersShown) ...[
-                _tiers(),
-                const SizedBox(height: 10),
-                _cardUnderTiers(),
+      body: DeskPage(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _hero(),
+                const SizedBox(height: 18),
+                _auditRow(),
                 const SizedBox(height: 22),
+                if (kBadgeTiersShown) ...[
+                  _tiers(),
+                  const SizedBox(height: 10),
+                  _cardUnderTiers(),
+                  const SizedBox(height: 22),
+                ],
+                _cryptoPane(),
+                const SizedBox(height: 26),
               ],
-              _cryptoPane(),
-              const SizedBox(height: 26),
-            ],
+            ),
           ),
         ),
       ),
@@ -259,7 +311,7 @@ class _DonateScreenState extends State<DonateScreen> {
                 ),
               ),
               textAlign: TextAlign.center,
-              style: HaloType.mono(size: 11, color: HaloColors.text2),
+              style: HaloType.mono(size: 11, color: HaloColors.text),
             ),
           ),
         ],
@@ -419,7 +471,7 @@ class _DonateScreenState extends State<DonateScreen> {
                   l10n.donateCardNoBadge,
                   style: HaloType.mono(
                     size: 10.5,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                   ).copyWith(height: 1.4),
                 ),
               ],
@@ -433,31 +485,19 @@ class _DonateScreenState extends State<DonateScreen> {
   Widget _tiers() {
     return Row(
       children: [
-        _tierCard(20, l10n.donateTierSupporter, '\u25CF', const [
-          Color(0xFF60A5FA),
-          Color(0xFF2563EB),
-        ], const Color(0xFF0C1F3F)),
+        _tierCard(SupporterTier.supporter),
         const SizedBox(width: 8),
-        _tierCard(50, l10n.donateTierPatron, '\u25C6', const [
-          Color(0xFFA78BFA),
-          Color(0xFF6D28D9),
-        ], const Color(0xFF1E1B4B)),
+        _tierCard(SupporterTier.patron),
         const SizedBox(width: 8),
-        _tierCard(100, l10n.donateTierGuardian, '\u2726', const [
-          Color(0xFFF59E0B),
-          Color(0xFFD97706),
-        ], HaloColors.onYellow),
+        _tierCard(SupporterTier.guardian),
       ],
     );
   }
 
-  Widget _tierCard(
-    int amt,
-    String name,
-    String glyph,
-    List<Color> grad,
-    Color fg,
-  ) {
+  Widget _tierCard(SupporterTier tier) {
+    final amt = _usdOf(tier);
+    final name = tierLabel(tier);
+    final (:glyph, :grad, :fg) = _look(tier);
     final sel = _amount == amt && _customCtl.text.isEmpty;
     final still = MediaQuery.disableAnimationsOf(context);
     return Expanded(
@@ -532,7 +572,7 @@ class _DonateScreenState extends State<DonateScreen> {
                       : const Duration(milliseconds: 220),
                   style: HaloType.mono(
                     size: 10.5,
-                    color: sel ? HaloColors.amberText : HaloColors.text2,
+                    color: sel ? HaloColors.amberText : HaloColors.text,
                   ),
                   // one word, shrunk rather than broken mid-word
                   child: FittedBox(
@@ -663,7 +703,7 @@ class _DonateScreenState extends State<DonateScreen> {
                     if (c.note.isNotEmpty)
                       Text(
                         c.note,
-                        style: HaloType.mono(size: 10, color: HaloColors.text2),
+                        style: HaloType.mono(size: 10, color: HaloColors.text),
                       ),
                   ],
                 ),
@@ -688,7 +728,8 @@ class _DonateScreenState extends State<DonateScreen> {
     if (tier == SupporterTier.none) return;
     final key = tierKey(tier);
     HapticFeedback.mediumImpact();
-    Navigator.of(context).push(
+    deskPush(
+      context,
       haloRoute(
         _InvoiceScreen(
           tier: tier,
@@ -699,25 +740,7 @@ class _DonateScreenState extends State<DonateScreen> {
     );
   }
 
-  // the card page leaves Kryfo, so it is said first, as other outside links
-  // do. no browser: the link goes on the clipboard
-  Future<void> _openCard() async {
-    HapticFeedback.selectionClick();
-    // both card paths pass here, so this is where the name is said
-    final ok = await showConfirmSheet(
-      context,
-      title: l10n.donateCardPay,
-      line: l10n.donateCardSeesName,
-      detail: l10n.settingsFollowBrowserNote,
-      yes: l10n.settingsFollowOpen,
-      keep: l10n.commonCancel,
-      rose: false,
-    );
-    if (!ok || !mounted) return;
-    if (await openOutside(Uri.parse(kCardUrl))) return;
-    await Clipboard.setData(const ClipboardData(text: kCardUrl));
-    if (mounted) showHaloToast(context, l10n.settingsLinkCopied);
-  }
+  Future<void> _openCard() => _openCardPage(context);
 
   Widget _cardBox() {
     Widget line(String text, {Color? color}) => Text(
@@ -754,7 +777,7 @@ class _DonateScreenState extends State<DonateScreen> {
               l10n.donateCardSeesName,
               style: HaloType.mono(
                 size: 11,
-                color: HaloColors.text2,
+                color: HaloColors.text,
               ).copyWith(height: 1.45),
             ),
           ),
@@ -826,7 +849,7 @@ class _DonateScreenState extends State<DonateScreen> {
           const SizedBox(height: 12),
           Text(
             l10n.donateAddressCheckItAgainst(coin.name),
-            style: HaloType.mono(size: 10, color: HaloColors.text2),
+            style: HaloType.mono(size: 10, color: HaloColors.text),
           ),
           const SizedBox(height: 8),
           Container(
@@ -870,7 +893,7 @@ class _DonateScreenState extends State<DonateScreen> {
                     : l10n.donateWeCanTVerify,
                 style: HaloType.mono(
                   size: 11,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                 ).copyWith(height: 1.45),
               ),
             ),
@@ -881,15 +904,13 @@ class _DonateScreenState extends State<DonateScreen> {
               Text(
                 l10n.donateBitcoinBadgesNeedOnion,
                 textAlign: TextAlign.center,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                style: HaloType.sans(size: 13, color: HaloColors.text),
               ),
               const SizedBox(height: 8),
               PressScale(
                 onTap: () async {
                   HapticFeedback.selectionClick();
-                  await Navigator.of(
-                    context,
-                  ).push(haloRoute(const ModesScreen()));
+                  await deskPush(context, haloRoute(const ModesScreen()));
                   if (mounted) setState(() {});
                 },
                 child: Container(
@@ -950,7 +971,18 @@ class _DonateScreenState extends State<DonateScreen> {
 
 // ---- live bitcoin invoice ----
 
-enum _Phase { needsOnion, loading, unreachable, invoice, confirmed, expired }
+// review comes first: the tier, the amount and what the badge gives. no
+// address is made until "Show the address" is tapped
+enum _Phase {
+  needsOnion,
+  review,
+  loading,
+  busy,
+  unreachable,
+  invoice,
+  confirmed,
+  expired,
+}
 
 class _InvoiceScreen extends StatefulWidget {
   final SupporterTier tier;
@@ -967,8 +999,14 @@ class _InvoiceScreen extends StatefulWidget {
 
 class _InvoiceScreenState extends State<_InvoiceScreen>
     with TickerProviderStateMixin {
-  _Phase _phase = _Phase.loading;
+  late _Phase _phase = _onOnion ? _Phase.review : _Phase.needsOnion;
   BadgeInvoice? _inv;
+  // the service handed back the invoice this phone opened earlier
+  bool _again = false;
+  // the badge the phone wears once the receipt is in, and whether it was
+  // already higher than what this payment proves
+  SupporterTier _paid = SupporterTier.none;
+  bool _kept = false;
   Timer? _poll;
   Timer? _tick;
   int _secsLeft = 0;
@@ -995,8 +1033,9 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       duration: const Duration(milliseconds: 1600),
       vsync: this,
     );
-    _start();
   }
+
+  bool get _onOnion => appState.sendMode == 'private';
 
   // the dots pulse only while something is being waited for: the service
   // answering, or the chain. every other page rests
@@ -1022,7 +1061,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
 
   Future<void> _start() async {
     // never touch the service off onion mode: no request, no lookup
-    if (appState.sendMode != 'private') {
+    if (!_onOnion) {
       setState(() => _phase = _Phase.needsOnion);
       return;
     }
@@ -1037,28 +1076,41 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted && _phase == _Phase.loading) setState(() => _waited++);
     });
+    // this phone's invoice for the tier, if one is still open: handed back,
+    // so coming back within the hour costs no new address
+    final again = await reusableInvoice(widget.tier, session.container);
+    if (!mounted || ask != _ask) return;
     final got = await createInvoice(
       widget.tierKey,
       wanted: () => mounted && ask == _ask,
+      again: again,
     );
     if (!mounted || ask != _ask) return;
     _waitTick?.cancel();
     final inv = got.invoice;
     if (inv == null) {
       // tor or the service is unreachable: the static address still takes a
-      // donation, with no badge
+      // donation, with no badge. a busy service points to the card
       setState(() {
         _failure = got.failure;
-        _phase = _Phase.unreachable;
+        _phase = got.failure == InvoiceFailure.busy
+            ? _Phase.busy
+            : _Phase.unreachable;
       });
       return;
     }
     setState(() {
       _inv = inv;
+      _again = again != null && inv.id == again;
       _secsLeft = inv.secondsLeft;
       _phase = _Phase.invoice;
     });
-    await saveOpenInvoice(inv.id, widget.tier, session.container);
+    await saveOpenInvoice(
+      inv.id,
+      widget.tier,
+      session.container,
+      DateTime.now().add(Duration(seconds: inv.secondsLeft)),
+    );
     _tick?.cancel();
     _tick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
@@ -1125,22 +1177,22 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       case ReceiptState.paid:
         _poll?.cancel();
         _tick?.cancel();
-        await clearOpenInvoice(session.container);
-        // signature already verified inside fetchReceipt. grant the tier and
-        // keep the receipt so the badge stays provable without the network.
-        if (widget.tier != SupporterTier.none) {
-          await saveSupporterTier(widget.tier, session.container);
-          if (r.payload != null && r.sig != null) {
-            await saveBadgeReceipt(r.payload!, r.sig!, session.container);
-          }
-        }
+        await clearOpenInvoice(session.container, inv.id);
+        // signature and id already checked inside fetchReceipt. the tier
+        // granted is the one the receipt proves, kept so the badge stays
+        // provable without the network
+        final t = await grantReceipt(r, session.container);
         if (!mounted) return;
-        setState(() => _phase = _Phase.confirmed);
+        setState(() {
+          _paid = t;
+          _kept = t != tierOf(r.tier);
+          _phase = _Phase.confirmed;
+        });
         break;
       case ReceiptState.expired:
         // the service itself says so: nothing left to wait for
         _poll?.cancel();
-        await clearOpenInvoice(session.container);
+        await clearOpenInvoice(session.container, inv.id);
         if (mounted) setState(() => _phase = _Phase.expired);
         break;
       default:
@@ -1162,25 +1214,27 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: SafeArea(
-        // reduced motion: a new phase without animation
-        child: AnimatedSwitcher(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 280),
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim,
-            child: SlideTransition(
-              position: Tween(
-                begin: const Offset(0, 0.02),
-                end: Offset.zero,
-              ).animate(anim),
-              child: child,
+      body: DeskPage(
+        child: SafeArea(
+          // reduced motion: a new phase without animation
+          child: AnimatedSwitcher(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 0.02),
+                  end: Offset.zero,
+                ).animate(anim),
+                child: child,
+              ),
             ),
+            child: _body(),
           ),
-          child: _body(),
         ),
       ),
     );
@@ -1190,14 +1244,18 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
     switch (_phase) {
       case _Phase.needsOnion:
         return _needsOnionView();
+      case _Phase.review:
+        return _reviewView();
       case _Phase.loading:
         return _loadingView();
+      case _Phase.busy:
+        return _busyView();
       case _Phase.unreachable:
         return _unreachableView();
       case _Phase.invoice:
         return _invoiceView();
       case _Phase.confirmed:
-        return _ConfirmedView(tier: widget.tier);
+        return _ConfirmedView(tier: _paid, kept: _kept);
       case _Phase.expired:
         return _expiredView();
     }
@@ -1237,14 +1295,14 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 18),
           Text(
             l10n.donateReachingThePaymentService,
-            style: HaloType.mono(size: 11, color: HaloColors.text2),
+            style: HaloType.mono(size: 11, color: HaloColors.text),
           ),
           const SizedBox(height: 8),
           Text(
             _waited < 5
                 ? l10n.donateThisCanTakeUp
                 : l10n.donateSThisCanTake(whole(_waited)),
-            style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+            style: HaloType.mono(size: 10.5, color: HaloColors.text),
           ),
           // held back until the wait is long enough to doubt
           if (_waited >= 20 && widget.fallbackAddress.isNotEmpty) ...[
@@ -1286,17 +1344,212 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 24),
             _fillButton(l10n.donateSwitchToOnion, () async {
-              await Navigator.of(context).push(haloRoute(const ModesScreen()));
-              if (mounted) _start();
+              await deskPush(context, haloRoute(const ModesScreen()));
+              // back on onion: the review, and still no address until asked
+              if (mounted && _onOnion) setState(() => _phase = _Phase.review);
             }),
           ],
         ),
+      ),
+    );
+  }
+
+  // ---- review: nothing asked yet ----
+  void _showAddress() {
+    HapticFeedback.mediumImpact();
+    _start();
+  }
+
+  Widget _reviewView() {
+    final t = widget.tier;
+    final (:glyph, :grad, :fg) = _look(t);
+    final still = motionStill(context);
+    Widget gives(IconData icon, String text) => Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(icon, size: 17, color: HaloColors.amber),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: HaloType.sans(
+                size: 13,
+                color: HaloColors.text,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return FitColumn(
+      key: const ValueKey('review'),
+      padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // the orb settles in once, the way a picked tier's does
+        Center(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: still ? 1 : 0.86, end: 1),
+            duration: still ? Duration.zero : const Duration(milliseconds: 420),
+            curve: Curves.easeOutBack,
+            builder: (_, k, child) => Transform.scale(scale: k, child: child),
+            child: ExcludeSemantics(
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(colors: grad),
+                  boxShadow: [
+                    BoxShadow(
+                      color: grad.last.withValues(alpha: 0.4),
+                      blurRadius: 28,
+                      spreadRadius: -6,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(glyph, style: TextStyle(fontSize: 24, color: fg)),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          tierLabel(t),
+          textAlign: TextAlign.center,
+          style: HaloType.serif(size: 26, color: HaloColors.text),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.donateReviewAmount(dollars(_usdOf(t))),
+          textAlign: TextAlign.center,
+          style: HaloType.mono(size: 13, color: HaloColors.amberText),
+        ),
+        const SizedBox(height: 22),
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          decoration: BoxDecoration(
+            color: HaloColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: HaloColors.line),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  l10n.donateWhatTheBadgeGives,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w600,
+                    color: HaloColors.text,
+                  ),
+                ),
+              ),
+              gives(Icons.auto_awesome_outlined, l10n.donateGivesMark),
+              gives(Icons.verified_outlined, l10n.donateGivesReceiptShown),
+              gives(Icons.lock_open_rounded, l10n.donateGivesFree),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.donateAddressOnTap,
+          textAlign: TextAlign.center,
+          style: HaloType.sans(size: 12.5, color: HaloColors.text, height: 1.5),
+        ),
+        const Spacer(),
+        const SizedBox(height: 24),
+        _fillButton(l10n.donateShowTheAddress, _showAddress),
+      ],
+    );
+  }
+
+  // ---- busy: the service holds new invoices for now ----
+  // the badge waits, the donation does not: the fixed address is right
+  // here, and it makes no new address
+  Widget _busyView() {
+    final addr = widget.fallbackAddress;
+    // scrolls rather than fits: the qr measures itself by layout, which an
+    // intrinsic height cannot ask
+    return SingleChildScrollView(
+      key: const ValueKey('busy'),
+      padding: const EdgeInsets.fromLTRB(22, 16, 22, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: HaloColors.amberSoft,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.hourglass_empty_rounded,
+                size: 22,
+                color: HaloColors.amber,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              l10n.donateBitcoinBusy,
+              textAlign: TextAlign.center,
+              style: HaloType.serif(
+                size: 19,
+                color: HaloColors.text,
+              ).copyWith(height: 1.35),
+            ),
+          ),
+          if (addr.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: HaloColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: HaloColors.line),
+              ),
+              child: Text(
+                l10n.donateBusyPlainAddress,
+                style: HaloType.sans(
+                  size: 12.5,
+                  color: HaloColors.text,
+                  height: 1.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _StaticAddress(address: addr),
+          ],
+          const SizedBox(height: 20),
+          HaloPrimaryButton(
+            key: const ValueKey('busy-card'),
+            label: l10n.donateCardPay,
+            onTap: () => _openCardPage(context),
+          ),
+          const SizedBox(height: 10),
+          _ghostButton(l10n.commonTryAgain, _start),
+        ],
       ),
     );
   }
@@ -1323,7 +1576,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
                   : l10n.donateThePaymentServiceIsHavingTrouble,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -1356,7 +1609,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           Center(
             child: Text(
               l10n.donateSendExactlyThisAmount(_fmtLeft()),
-              style: HaloType.mono(size: 10, color: HaloColors.text2),
+              style: HaloType.mono(size: 10, color: HaloColors.text),
             ),
           ),
           const SizedBox(height: 16),
@@ -1364,6 +1617,40 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
           const SizedBox(height: 16),
           _copyRow(l10n.donateAddress, inv.address),
           const SizedBox(height: 14),
+          // a donor who sent and came back must not think it failed
+          if (_again) ...[
+            Container(
+              key: const ValueKey('same-address'),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: HaloColors.amberSoft,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: HaloColors.amber),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.history_rounded,
+                    size: 17,
+                    color: HaloColors.amber,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.donateSameAddressAgain,
+                      style: HaloType.sans(
+                        size: 13,
+                        color: HaloColors.text,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
           _watchingPill(),
           const SizedBox(height: 14),
           Row(
@@ -1389,7 +1676,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             child: Text(
               l10n.donateThisScreenUpdatesItself,
               textAlign: TextAlign.center,
-              style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+              style: HaloType.mono(size: 10.5, color: HaloColors.text),
             ),
           ),
         ],
@@ -1423,7 +1710,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
             const SizedBox(width: 10),
             Text(
               l10n.donateWatchingTheChainFor,
-              style: HaloType.mono(size: 11, color: HaloColors.text2),
+              style: HaloType.mono(size: 11, color: HaloColors.text),
             ),
           ],
         ),
@@ -1450,7 +1737,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -1479,7 +1766,7 @@ class _InvoiceScreenState extends State<_InvoiceScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(label, style: HaloType.mono(size: 10, color: HaloColors.text2)),
+          Text(label, style: HaloType.mono(size: 10, color: HaloColors.text)),
           const SizedBox(height: 6),
           Text(
             chunkAddress(value),
@@ -1542,7 +1829,9 @@ class _StaticAddress extends StatelessWidget {
 // confirmed: animated check that draws itself, then rolls into badge opt-in.
 class _ConfirmedView extends StatefulWidget {
   final SupporterTier tier;
-  const _ConfirmedView({required this.tier});
+  // a higher badge was already here and stays
+  final bool kept;
+  const _ConfirmedView({required this.tier, this.kept = false});
   @override
   State<_ConfirmedView> createState() => _ConfirmedViewState();
 }
@@ -1620,11 +1909,13 @@ class _ConfirmedViewState extends State<_ConfirmedView>
             Text(
               t == SupporterTier.none
                   ? l10n.donateThankYouForKeeping
+                  : widget.kept
+                  ? l10n.donateVerifiedBadgeStays(tierKey(t))
                   : l10n.donateVerifiedOnChainYou(tierKey(t)),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.55,
               ),
             ),
@@ -1647,7 +1938,7 @@ class _ConfirmedViewState extends State<_ConfirmedView>
                               l10n.donateJustGladToHelp,
                               style: HaloType.sans(
                                 size: 14,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                               ),
                             ),
                           ),

@@ -9,12 +9,14 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show AppState, HaloDb, useDatabasesForTest, AppStateBoot;
 import 'package:kryfo/session.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'mem_db.dart';
+import 'source_body.dart';
 
 class _Rows extends HaloDb {
   _Rows(this.mem);
@@ -187,6 +189,18 @@ void main() {
       expect(f.existsSync(), isTrue);
     });
 
+    test('a blur stays while its photo is named, and goes after it', () async {
+      final photo = await row('k3', col: 'media_path');
+      final blur = File('${photo.path}.blur')..writeAsBytesSync([1]);
+      final stray = File(p.join(media.path, 'in_gone.jpg.blur'))
+        ..writeAsBytesSync([1]);
+      final gone = await db.unnamedMedia(
+        before: DateTime.now().add(const Duration(minutes: 1)),
+      );
+      expect([for (final f in gone) f.path], [stray.path]);
+      expect(blur.existsSync(), isTrue);
+    });
+
     test('one written since is left alone', () async {
       File(p.join(media.path, 'in_new.jpg')).writeAsBytesSync([1]);
       final gone = await db.unnamedMedia(
@@ -196,7 +210,7 @@ void main() {
     });
 
     test('start sweeps them before anything else runs', () {
-      final src = File('lib/app/state.dart').readAsStringSync();
+      final src = sourceOf('lib/app/state.dart');
       final boot = src.substring(src.indexOf('Future<void> _boot() async'));
       final tidy = boot.indexOf('tidyAtStart(');
       expect(tidy, greaterThan(0));
@@ -206,8 +220,11 @@ void main() {
       final sweep = body.indexOf('_sweepUnnamedMedia(');
       expect(sweep, greaterThan(0));
       expect(body.indexOf('repairVaultMoves()'), lessThan(sweep));
-      // nothing else sweeps the media folder at start
-      expect('_sweepUnnamedMedia('.allMatches(src).length, 2);
+      // nothing else sweeps the media folder at start. a vault or the
+      // decoy sweeps its own as it opens, once its moves are settled
+      expect('_sweepUnnamedMedia('.allMatches(src).length, 5);
+      final open = src.indexOf('await _sweepUnnamedMedia(before, v);');
+      expect(open, greaterThan(src.indexOf('await settleVault(v);')));
       expect(boot.indexOf('unnamedMedia('), -1);
     });
 

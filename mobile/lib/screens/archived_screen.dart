@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/kryfo_avatar.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateContacts;
 import '../lock_guard.dart' show lockGuard;
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/hidden_mark.dart';
@@ -24,6 +24,7 @@ import '../widgets/swap.dart' show FadeSwap;
 import '../widgets/swipe_actions.dart';
 import 'chat_door.dart';
 import 'home_screen.dart' show ContactPreview;
+import '../wide/read_width.dart' show DeskPage;
 
 // archived chats: hidden from the main list, still receive normally. rows
 // read dimmer on purpose and wake to full colour on press.
@@ -34,18 +35,20 @@ class ArchivedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: AnimatedBuilder(
-          animation: appState,
-          builder: (_, _) => ArchivedList(
-            archived: appState.contacts.where((c) => c.archived).toList(),
-            dev: appState.devRow?.archived == true ? appState.devRow : null,
-            onUnarchive: appState.unarchive,
-            onUnarchiveDev: () => setDevArchived(false),
-            onOpen: (id) => openChatAt(context, peer: id),
-            onOpenDev: (id) => openDevChat(context, id),
-            // under the lock nothing is being watched
-            quiet: lockGuard.isLocked(),
+      body: DeskPage(
+        child: SafeArea(
+          child: AnimatedBuilder(
+            animation: appState,
+            builder: (_, _) => ArchivedList(
+              archived: appState.contacts.where((c) => c.archived).toList(),
+              dev: appState.devRow?.archived == true ? appState.devRow : null,
+              onUnarchive: appState.unarchive,
+              onUnarchiveDev: () => setDevArchived(false),
+              onOpen: (id) => openChatAt(context, peer: id),
+              onOpenDev: (id) => openDevChat(context, id),
+              // under the lock nothing is being watched
+              quiet: lockGuard.isLocked(),
+            ),
           ),
         ),
       ),
@@ -201,7 +204,7 @@ class _ArchivedListState extends State<ArchivedList> {
                                 : l10n.archivedChatsRestingHere,
                             style: HaloType.sans(
                               size: 12.5,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                               height: 1.45,
                             ),
                           ),
@@ -225,7 +228,7 @@ class _ArchivedListState extends State<ArchivedList> {
                         style: HaloType.serif(
                           size: 18,
                           italic: true,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                         ),
                       ),
                     ),
@@ -294,7 +297,7 @@ class _ArchivedListState extends State<ArchivedList> {
                     textAlign: TextAlign.center,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       letter: 0.02,
                     ),
                   ),
@@ -442,7 +445,7 @@ class _ArchivedRowState extends State<_ArchivedRow> {
                         c.preview!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                        style: HaloType.sans(size: 13, color: HaloColors.text),
                       ),
                     ],
                   ],
@@ -567,7 +570,7 @@ class _ArchivedDevRowState extends State<_ArchivedDevRow> {
                       d.preview ?? l10n.devWelcome,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
                     ),
                   ],
                 ),

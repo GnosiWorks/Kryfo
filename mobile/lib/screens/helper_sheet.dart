@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 
 import '../helper_push.dart';
 import '../l10n/l10n.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateDelivery;
 import '../open_outside.dart';
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
@@ -123,7 +123,7 @@ class _HelperSheetState extends State<HelperSheet> with WidgetsBindingObserver {
             l10n.helperSheetPickLine,
             style: HaloType.sans(
               size: 13,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -142,7 +142,7 @@ class _HelperSheetState extends State<HelperSheet> with WidgetsBindingObserver {
                       l10n.helperSheetNoAnswer(_failed!.name),
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.rose,
+                        color: HaloColors.roseText,
                         height: 1.4,
                       ),
                     ),
@@ -183,7 +183,7 @@ class _NeedOne extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           l10n.helperSheetNeedLine,
-          style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.45),
+          style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.45),
         ),
         const SizedBox(height: 16),
         HaloPrimaryButton(

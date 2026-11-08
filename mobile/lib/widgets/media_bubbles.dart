@@ -9,18 +9,22 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../theme.dart';
+import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'ease_size.dart';
+import 'sealed_picture.dart';
 import 'swap.dart';
 import 'photo_viewer.dart';
 import 'voice_parts.dart';
 import '../file_kind.dart';
 import '../file_save.dart' show savingFiles;
+import '../devices/history_files.dart' show historyFilesComing;
 import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
 import '../voice_length.dart';
+import '../phone_seal.dart' show PlainView, plainViewOf;
 
 /// a file's size as the bubbles write it
 String humanFileSize(int bytes) {
@@ -32,12 +36,17 @@ String humanFileSize(int bytes) {
 }
 
 /// the line for a file over the limit. a size that would read the same as
-/// the limit is given in whole kb, rounded up, so the two never match
+/// the limit is given in whole kb, rounded up, so the two never match. a
+/// limit under the full one is a chat with a phone not yet updated, and
+/// the line says so
 String fileTooBigLine(int bytes, [int max = kMaxFileBytes]) {
+  final line = max < kMaxFileBytes
+      ? l10n.fileTooBigUntilUpdate
+      : l10n.fileTooBig;
   final size = humanFileSize(bytes);
   final most = humanFileSize(max);
-  if (size != most) return l10n.fileTooBig(size, most);
-  return l10n.fileTooBig(
+  if (size != most) return line(size, most);
+  return line(
     l10n.mediaBubblesKb(whole((bytes / 1024).ceil())),
     l10n.mediaBubblesKb(whole(max ~/ 1024)),
   );
@@ -69,19 +78,20 @@ Widget fileCard(
     final fallback = FileCard(path: filePath, name: fileName, isOut: isOut);
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 230),
-      child: Image.file(
-        File(filePath),
-        fit: BoxFit.cover,
-        cacheWidth: 460,
+      // its blur, the picture fading up over it, the name underneath. a
+      // card that replaced it has no name under it
+      child: SealedPicture(
+        path: filePath,
+        shaped: true,
+        decodeWidth: 460,
+        image: mediaImage(filePath, 460),
         filterQuality: FilterQuality.low,
         errorBuilder: (_, _, _) => fallback,
-        // wraps only an image that is actually loading, so the caption
-        // cannot end up under a card that replaced it
-        frameBuilder: (ctx, child, frame, wasSync) => Column(
+        framed: (picture) => Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(borderRadius: BorderRadius.circular(12), child: child),
+            ClipRRect(borderRadius: BorderRadius.circular(12), child: picture),
             const SizedBox(height: 4),
             Text(
               safeFileName(fileName),
@@ -89,7 +99,7 @@ Widget fileCard(
               overflow: TextOverflow.ellipsis,
               style: HaloType.mono(
                 size: 9,
-                color: isOut ? HaloColors.onAmber : HaloColors.text2,
+                color: isOut ? HaloColors.onAmber : HaloColors.text,
               ),
             ),
           ],
@@ -177,7 +187,7 @@ class _FileCardState extends State<FileCard> {
         FileFacts(kindOfName(widget.name), extOf(safeFileName(widget.name)));
     final installer = facts.installer;
     final fg = isOut ? HaloColors.onAmber : HaloColors.text;
-    final sub = isOut ? HaloColors.onAmber : HaloColors.text2;
+    final sub = isOut ? HaloColors.onAmber : HaloColors.text;
     // the name it is saved and handed on under: what is seen is what is
     // saved
     final shown = safeFileName(widget.name, facts: facts);
@@ -369,6 +379,10 @@ void openFullImage(
   double radius = 0,
 }) => openPhoto(context, path, tag: tag, radius: radius);
 
+/// the note at [path] plays [ms]: known as it is made, never read again
+void voiceLengthKnown(String path, int ms) =>
+    VoiceBubbleState._durCache[path] = Duration(milliseconds: ms);
+
 class VoiceBubble extends StatefulWidget {
   final String path;
   final bool isOut;
@@ -390,6 +404,8 @@ class VoiceBubbleState extends State<VoiceBubble> {
   final _player = AudioPlayer();
   bool _ready = false;
   bool _missing = false;
+  // the history copy still brings the note: it waits, never "unavailable"
+  late bool _coming = historyFilesComing.coming(widget.path);
   bool _playing = false;
   Duration _dur = Duration.zero;
   Duration _pos = Duration.zero;
@@ -402,7 +418,8 @@ class VoiceBubbleState extends State<VoiceBubble> {
     // no _load() here: it takes a native media handle per bubble, and a chat
     // with several voice notes exhausts android's codec pool. the real load
     // waits for the first tap in _toggle.
-    _checkExists();
+    historyFilesComing.addListener(_comingChanged);
+    if (!_coming) _checkExists();
     _player.playerStateStream.listen((st) {
       if (!mounted) return;
       setState(() => _playing = st.playing);
@@ -411,17 +428,15 @@ class VoiceBubbleState extends State<VoiceBubble> {
       // the position back.
       if (st.processingState == ProcessingState.idle) {
         _ready = false;
+        _letFileGo();
       }
       if (st.processingState == ProcessingState.completed) {
         VoiceTurn.letGo(this);
         _player.seek(Duration.zero);
         _player.pause();
-        if (mounted) {
-          setState(() {
-            _playing = false;
-            _pos = Duration.zero;
-          });
-        }
+        _playing = false;
+        _swapIfMoved();
+        if (mounted) setState(() => _pos = Duration.zero);
       }
     });
     // rebuild on position ticks only while playing: idle bubbles rebuilding
@@ -432,9 +447,58 @@ class VoiceBubbleState extends State<VoiceBubble> {
   }
 
   // flag missing files, and read the clip length once per file: from the
-  // wav's head, or else with a throwaway player, disposed right after so no
-  // bubble holds a codec handle
+  // wav's head or the ogg's last page, or else with a throwaway player,
+  // disposed right after so no bubble holds a codec handle
   static final Map<String, Duration> _durCache = {};
+
+  // the file the player has open, held so it is not shredded under it
+  String? _open;
+  // what the player reads of a sealed note: memory, gone with the hold
+  PlainView? _view;
+
+  void _letFileGo() {
+    final o = _open;
+    _open = null;
+    _view?.close();
+    _view = null;
+    if (o != null) letVoiceFileGo(o);
+  }
+
+  // the note moved to another file (its opus copy) while this one played:
+  // the player lets the old one go once it stops, and the next tap loads
+  // the new one where this one was
+  void _swapIfMoved() {
+    if (_open == null || _open == widget.path || _playing) return;
+    _ready = false;
+    _player.stop();
+    _letFileGo();
+  }
+
+  // the note landed: read as any note here is
+  void _comingChanged() {
+    final now = historyFilesComing.coming(widget.path);
+    if (now == _coming || !mounted) return;
+    setState(() {
+      _coming = now;
+      _missing = false;
+    });
+    if (!now) {
+      _durCache.remove(widget.path);
+      _checkExists();
+    }
+  }
+
+  @override
+  void didUpdateWidget(VoiceBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path == widget.path) return;
+    _coming = historyFilesComing.coming(widget.path);
+    _missing = false;
+    _peaks = voicePeaksNow(widget.path) ?? _peaks;
+    final d = _durCache[oldWidget.path];
+    if (d != null) _durCache.putIfAbsent(widget.path, () => d);
+    _swapIfMoved();
+  }
 
   Future<void> _checkExists() async {
     if (!await File(widget.path).exists()) {
@@ -452,7 +516,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
       return;
     }
     // the samples in the file, sent or received: no length rides the wire
-    final ms = await wavFileMs(widget.path);
+    final ms = await voiceFileMs(widget.path);
     if (ms != null) {
       final d = Duration(milliseconds: ms);
       _durCache[widget.path] = d;
@@ -463,8 +527,10 @@ class VoiceBubbleState extends State<VoiceBubble> {
     Future.delayed(const Duration(milliseconds: 400), () async {
       if (!mounted) return;
       final probe = AudioPlayer();
+      PlainView? v;
       try {
-        final d = await probe.setFilePath(widget.path);
+        v = plainViewOf(widget.path);
+        final d = await probe.setFilePath(v.path);
         if (d != null) {
           _durCache[widget.path] = d;
           if (mounted) setState(() => _dur = d);
@@ -473,6 +539,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
         // no length known: the bubble shows none
       } finally {
         await probe.dispose();
+        v?.close();
       }
     });
   }
@@ -487,9 +554,20 @@ class VoiceBubbleState extends State<VoiceBubble> {
     // or a just-recorded note is not flushed yet, so it gets a few tries
     for (var attempt = 0; attempt < 3; attempt++) {
       try {
-        final d = await _player.setFilePath(widget.path);
+        final path = widget.path;
+        final v = plainViewOf(path);
+        final Duration? d;
+        try {
+          d = await _player.setFilePath(v.path);
+        } catch (_) {
+          v.close();
+          rethrow;
+        }
+        _letFileGo();
+        _view = v;
+        holdVoiceFile(_open = path);
         // the length read from the head stays: the number does not jump
-        _dur = _durCache[widget.path] ?? d ?? Duration.zero;
+        _dur = _durCache[path] ?? d ?? Duration.zero;
         if (mounted) setState(() => _ready = true);
         return;
       } catch (_) {
@@ -503,9 +581,15 @@ class VoiceBubbleState extends State<VoiceBubble> {
 
   @override
   void dispose() {
+    historyFilesComing.removeListener(_comingChanged);
     VoiceTurn.letGo(this);
     _unguard?.call();
-    _player.dispose();
+    // a player let go while it was still coming up can fail to close its
+    // streams: the bubble is gone either way
+    _player.dispose().catchError(
+      (Object e) => dlog('voice: player not let go (${e.runtimeType})'),
+    );
+    _letFileGo();
     super.dispose();
   }
 
@@ -544,6 +628,8 @@ class VoiceBubbleState extends State<VoiceBubble> {
     _unguard?.call();
     _unguard = null;
     _player.pause();
+    _playing = false;
+    _swapIfMoved();
   }
 
   String _fmt(Duration d) => voiceClock(d.inMilliseconds);
@@ -553,7 +639,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
     final out = widget.isOut;
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final fg = out ? HaloColors.onAmber : HaloColors.amber;
-    final sub = out ? HaloColors.onAmber : HaloColors.text2;
+    final sub = out ? HaloColors.onAmber : HaloColors.text;
     final rest = out
         ? HaloColors.onAmber.withValues(alpha: 0.3)
         : HaloColors.text3.withValues(alpha: 0.45);
@@ -562,11 +648,36 @@ class VoiceBubbleState extends State<VoiceBubble> {
         : (_pos.inMilliseconds / _dur.inMilliseconds).clamp(0.0, 1.0);
     final shown = _pos > Duration.zero ? _pos : _dur;
     final bubble = GestureDetector(
-      onTap: _missing ? null : _toggle,
+      onTap: _missing || _coming ? null : _toggle,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 184,
-        child: _missing
+        child: _coming
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: 34,
+                    height: 34,
+                    child: Padding(
+                      padding: const EdgeInsets.all(7),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: still ? 0.3 : null,
+                        color: fg,
+                        backgroundColor: rest,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      l10n.albumOnItsWay,
+                      style: HaloType.mono(size: 11, color: sub),
+                    ),
+                  ),
+                ],
+              )
+            : _missing
             ? Row(
                 children: [
                   Icon(Icons.music_off_rounded, size: 20, color: sub),
@@ -635,7 +746,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
                                 size: 10,
                                 color: out
                                     ? HaloColors.onAmber
-                                    : HaloColors.text2,
+                                    : HaloColors.text,
                               ),
                             ),
                             if (widget.disguised) ...[
@@ -762,4 +873,14 @@ class VoiceMakingBubble extends StatelessWidget {
       ),
     );
   }
+}
+
+/// what a screen reader calls a photo or video tile: its kind, who sent it
+/// when that is known, and the day
+String mediaTileLabel(DateTime when, {String? from, bool video = false}) {
+  final day = dayMonthMaybeYear(when);
+  if (from == null || from.isEmpty) {
+    return video ? l10n.a11yVideoOn(day) : l10n.a11yPhotoOn(day);
+  }
+  return video ? l10n.a11yVideoFrom(from, day) : l10n.a11yPhotoFrom(from, day);
 }

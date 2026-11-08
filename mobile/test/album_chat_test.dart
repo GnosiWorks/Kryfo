@@ -22,16 +22,21 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         processPeerBundle,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateMessages,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
+import 'package:kryfo/transfers.dart';
 import 'package:kryfo/widgets/album_grid.dart';
+import 'package:kryfo/widgets/file_wait.dart'
+    show FileWaitMark, WaitingFileCard;
 import 'package:kryfo/widgets/shots_line.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show VideoBubble;
 import 'package:kryfo/widgets/message_menu.dart' show MessageMenuCard;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -154,7 +159,7 @@ class _Db extends DevTestDb {
   Future<({bool sent, bool delivered})> sendState(String msgUid) async =>
       (sent: _row(msgUid)?['sent'] == 1, delivered: true);
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     deleted.add(msgUid);
     await mem.delete('messages', where: 'msg_uid = ?', whereArgs: [msgUid]);
   }
@@ -175,9 +180,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
@@ -194,13 +199,13 @@ void main() {
   final base = DateTime.now().millisecondsSinceEpoch - 3600000;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     final amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),
@@ -240,6 +245,7 @@ void main() {
   });
 
   tearDown(() {
+    fileWaits.value = const {};
     _mock('plugins.flutter.io/path_provider', null);
     _mock('com.llfbandit.record/messages', null);
     _mock('halo/platform', null);
@@ -338,6 +344,67 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a waiting photo read after the chat is drawn shows as such', (
+    t,
+  ) async {
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'in',
+      'plaintext': '',
+      'sent_at': base,
+      'written_at': base,
+      'msg_uid': 'w-1',
+      'media_path': '${docs.path}/not_yet.jpg',
+      'sent': 1,
+    });
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(WaitingFileCard), findsNothing);
+    // the waits are read after the chat was drawn
+    setFileWait(
+      'w-1',
+      const FileWait(size: 4096, state: WaitState.asks, rule: AutoGet.wifi),
+    );
+    await settle(t);
+    expect(find.byType(WaitingFileCard), findsOneWidget);
+    setFileWait('w-1', null);
+    await settle(t);
+    expect(find.byType(WaitingFileCard), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('a waiting photo keeps its place in its album', (t) async {
+    await item(0, 2);
+    await item(1, 2);
+    final later = File('${docs.path}/p_${_id}1.png')..deleteSync();
+    setFileWait(
+      'in-$_id-1',
+      const FileWait(size: 4096, state: WaitState.asks, rule: AutoGet.wifi),
+    );
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.byType(AlbumGrid), findsOneWidget);
+    expect(find.byType(WaitingFileCard), findsNothing);
+    expect(
+      find.descendant(of: tile(1), matching: find.byType(FileWaitMark)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: tile(0), matching: find.byType(FileWaitMark)),
+      findsNothing,
+    );
+    // in: the tile turns into its photo
+    later.writeAsBytesSync(_png);
+    setFileWait('in-$_id-1', null);
+    await settle(t);
+    expect(find.byType(FileWaitMark), findsNothing);
+    expect(
+      find.descendant(of: tile(1), matching: find.byType(Image)),
+      findsOneWidget,
+    );
+    await devClose(t);
+  });
+
   testWidgets('one still on its way holds its place', (t) async {
     await item(0, 4);
     await item(3, 4);
@@ -398,6 +465,9 @@ void main() {
     await settle(t, 4);
     // the sheet asks once, for the album
     expect(find.text(l10n.albumUnsendTitle), findsOneWidget);
+    // its own line, not the one for a message
+    expect(find.text(l10n.chatAlbumItDisappearsWithNo), findsOneWidget);
+    expect(find.text(l10n.chatItDisappearsWithNo), findsNothing);
     await t.tap(find.text(l10n.chatUnsend).last);
     await settle(t, 12);
     final uids = ['out-$_id-0', 'out-$_id-1', 'out-$_id-2'];
@@ -498,6 +568,49 @@ void main() {
     await devClose(t);
   });
 
+  // a caption reads as the words of a text bubble: upright, same face and size
+  TextStyle wordsOf(WidgetTester t, String words) => drawnIn(
+    t.widget<RichText>(find.text(words, findRichText: true)).text,
+    words,
+  )!;
+
+  void sameAsText(TextStyle caption, TextStyle body) {
+    expect(caption.fontStyle, isNot(FontStyle.italic));
+    expect(caption.fontFamily, body.fontFamily);
+    expect(caption.fontFamilyFallback, body.fontFamilyFallback);
+    expect(caption.fontSize, body.fontSize);
+    expect(caption.fontWeight, body.fontWeight);
+    expect(caption.height, body.height);
+    expect(caption.color, body.color);
+    expect(caption, body);
+  }
+
+  testWidgets('a caption is drawn as a text bubble\'s words', (t) async {
+    await text('t0', 'plain words', base);
+    await item(0, 2, caption: 'album words');
+    await item(1, 2);
+    // one photo of ours, no album, its caption on the photo's card
+    final f = File('${docs.path}/single.png')..writeAsBytesSync(_png);
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': 'out',
+      'plaintext': 'photo words',
+      'sent_at': base + 120000,
+      'written_at': base + 120000,
+      'msg_uid': 'out-single',
+      'media_path': f.path,
+      'sent': 1,
+      'delivered': 1,
+    });
+    await devOpen(t, chat());
+    await settle(t);
+    final body = wordsOf(t, 'plain words');
+    expect(body.fontStyle, isNot(FontStyle.italic));
+    sameAsText(wordsOf(t, 'album words'), body);
+    sameAsText(wordsOf(t, 'photo words'), body);
+    await devClose(t);
+  });
+
   testWidgets('with its first places missing, what came is drawn and '
       'opens', (t) async {
     await item(2, 4);
@@ -554,4 +667,17 @@ void main() {
     expect(y, lessThan(t.getCenter(find.text('after', findRichText: true)).dy));
     await devClose(t);
   });
+}
+
+// the style the words are drawn in: the spans' styles merged down to them
+TextStyle? drawnIn(InlineSpan span, String words, [TextStyle? up]) {
+  final here = up == null ? span.style : up.merge(span.style);
+  if (span is TextSpan) {
+    if (span.text != null && span.text!.contains(words)) return here;
+    for (final c in span.children ?? const <InlineSpan>[]) {
+      final s = drawnIn(c, words, here);
+      if (s != null) return s;
+    }
+  }
+  return null;
 }

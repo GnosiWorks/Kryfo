@@ -3,6 +3,7 @@
 // unknown one is a short warm light moving along the track.
 import 'package:flutter/material.dart';
 
+import '../l10n/numbers.dart';
 import '../theme.dart';
 
 class HaloBar extends StatelessWidget {
@@ -16,6 +17,10 @@ class HaloBar extends StatelessWidget {
   final bool grow;
   final Duration duration;
 
+  /// what a screen reader calls a long job's bar. with it the bar is a
+  /// live region that speaks in steps of 10%, without it the bar is silent
+  final String? label;
+
   const HaloBar({
     super.key,
     required this.value,
@@ -24,10 +29,25 @@ class HaloBar extends StatelessWidget {
     this.track,
     this.grow = false,
     this.duration = const Duration(milliseconds: 420),
+    this.label,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bar = _bar(context);
+    final name = label;
+    if (name == null) return bar;
+    final v = value;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: name,
+      value: v == null ? null : percent(barStep(v)),
+      child: ExcludeSemantics(child: bar),
+    );
+  }
+
+  Widget _bar(BuildContext context) {
     final still = MediaQuery.of(context).disableAnimations;
     final fg = color ?? HaloColors.amber;
     final bg = track ?? HaloColors.surface3;
@@ -63,6 +83,9 @@ class HaloBar extends StatelessWidget {
     );
   }
 }
+
+/// the share a screen reader hears: down to the last 10%
+double barStep(double v) => (v.clamp(0.0, 1.0) * 10).floorToDouble() / 10;
 
 class _Sweep extends StatefulWidget {
   final double height;

@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // how both chats send what the preview gives back: its bubbles show at
 // once and the cleaning follows; the camera's clip goes through the
-// preview too; before they accept, the preview takes only the slots left;
+// preview too; to a stranger before they accept none opens, and the dev
+// chat's takes only the slots left;
 // a big file is asked about inside the preview, not after it
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/clean_media.dart' show writeMadeCopy;
 
 import 'source_body.dart';
 
@@ -43,11 +48,13 @@ void main() {
     }
   });
 
-  test('before they accept, the preview takes only the slots left', () {
+  test('before they accept, no preview to a stranger, the dev chat\'s slots '
+      'left', () {
     final body = bodyOf(chat, 'Future<MediaSendResult?> _preview(');
     expect(body, contains('final room = _roomLeft;'));
     expect(body, contains('max: room,'));
-    expect(body, contains('request: room < kPickMax,'));
+    expect(body, contains('if (_mediaWaits || room <= 0)'));
+    expect(body, isNot(contains('request:')));
     expect(body, contains('onGone:'));
     expect(
       bodyOf(group, 'Future<MediaSendResult?> _preview('),
@@ -109,5 +116,26 @@ void main() {
     final gone = photo.indexOf('if (!mounted) return null;');
     expect(gone, greaterThan(0));
     expect(gone, lessThan(photo.indexOf('mediaDirOf')));
+  });
+
+  test('a photo the phone has no room for leaves no part behind, and its '
+      'bubble goes', () async {
+    for (final (src, ready) in [
+      (chat, 'Future<_Ready?> _readyPhoto('),
+      (group, 'Future<_GReady?> _readyGroupPhoto('),
+    ]) {
+      final body = bodyOf(src, ready);
+      expect(body, contains('await writeMadeCopy('), reason: ready);
+      expect(body, isNot(contains('.writeAsBytes(')), reason: ready);
+    }
+    final dir = Directory.systemTemp.createTempSync('made_copy');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final ok = File('${dir.path}/a.jpg');
+    expect(await writeMadeCopy(ok, Uint8List.fromList([1, 2, 3])), isTrue);
+    expect(ok.readAsBytesSync(), [1, 2, 3]);
+    // a write that fails, as a full phone's does
+    final no = File('${dir.path}/gone/b.jpg');
+    expect(await writeMadeCopy(no, Uint8List.fromList([1, 2, 3])), isFalse);
+    expect(no.existsSync(), isFalse);
   });
 }

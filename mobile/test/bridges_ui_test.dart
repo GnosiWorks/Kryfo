@@ -17,12 +17,21 @@ import 'package:kryfo/l10n/numbers.dart' show whole;
 import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, appState, bridgeWriteTap, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        appState,
+        bridgeWriteTap,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateBridges;
+import 'package:kryfo/screens/bridge_share_sheet.dart';
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
-import 'package:kryfo/widgets/motion.dart'
-    show BreathDot, TorStatus, kHouseCurve;
+import 'package:kryfo/widgets/halo_buttons.dart';
+import 'package:kryfo/widgets/motion.dart' show BreathDot, kHouseCurve;
 import 'package:kryfo/widgets/press_scale.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart' show devApp;
@@ -75,6 +84,17 @@ class _Engine implements HaloEngine {
     moat++;
     return '{"ok":true,"settings":[],"country":"ir","guessed":true}';
   }
+
+  // the route as the relay button moves it
+  final modes = <String>[];
+  @override
+  String setTransportMode(String mode) {
+    modes.add(mode);
+    return mode;
+  }
+
+  @override
+  String nostrInit(String relaysCSV) => 'ok';
 
   @override
   String autoMemory() => memories.isEmpty ? '{}' : memories.last;
@@ -351,15 +371,50 @@ void main() {
       expect(l.detail, isNull);
     });
 
-    test('nothing got through: one way out', () {
+    test('nothing got through: the bridge way, fast last with its cost', () {
       const s = BridgeStatus(mode: 'auto', phase: 'exhausted');
       expect(line(s).head, l10n.bridgesNothingGotThrough);
       expect(line(s).tone, BridgeTone.rose);
-      // the words go with the button
+      expect(line(s).offerRelay, isTrue);
+      expect(line(s).detail, l10n.bridgesRelayThisNetworkSees);
+      // the bridge way first, fast after it
       expect(line(s).action, BridgeAction.getBridge);
-      expect(line(s).detail, l10n.bridgesTheTorProjectCanSuggest);
       expect(line(s, c: 'yes').action, BridgeAction.tryAgain);
-      expect(line(s, c: 'yes').detail, l10n.bridgesKryfoTriesAgainOnItsOwn);
+      expect(line(s, c: 'yes').offerRelay, isTrue);
+      expect(line(s, c: 'yes').detail, l10n.bridgesRelayThisNetworkSees);
+      // a decoy is offered nothing
+      expect(line(s, decoy: true).offerRelay, isFalse);
+      // still trying: no fast yet
+      expect(line(_another).offerRelay, isFalse);
+    });
+
+    test('relay or fast mode: no bridge is in use', () {
+      const s = BridgeStatus(
+        mode: 'auto',
+        phase: 'not_tor_mode',
+        method: 'snowflake',
+        source: 'builtin',
+      );
+      expect(bridgeMethodWords(s), l10n.bridgesNoneUntilOnion);
+      expect(
+        bridgeMethodWords(
+          const BridgeStatus(mode: 'snowflake', phase: 'not_tor_mode'),
+          choice: BridgeChoice.snowflake,
+        ),
+        l10n.bridgesNoneUntilOnion,
+      );
+      // on onion the way in use is named
+      expect(
+        bridgeMethodWords(
+          const BridgeStatus(
+            mode: 'auto',
+            phase: 'connected',
+            method: 'snowflake',
+            source: 'builtin',
+          ),
+        ),
+        isNot(l10n.bridgesNoneUntilOnion),
+      );
     });
 
     test('a wi-fi that wants a sign-in says so, in amber', () {
@@ -517,6 +572,80 @@ void main() {
       await t.tap(find.text(l10n.bridgesGetABridge));
       await _in(t);
       expect(find.text(l10n.bridgesWhenYouAskFor), findsOneWidget);
+      await _done(t);
+    });
+
+    testWidgets('nothing got through: fast in one tap, last', (t) async {
+      await _open(
+        t,
+        status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      );
+      expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+      // the tor project's way first, fast under it
+      final relay = t.getRect(find.text(l10n.homeUseFast));
+      final ask = t.getRect(find.text(l10n.bridgesGetABridge));
+      expect(ask.top, lessThan(relay.top));
+      await t.tap(find.text(l10n.homeUseFast));
+      // the switch waits on the store, off the fake clock
+      for (
+        var i = 0;
+        i < 50 && find.text(l10n.homeSwitchedToFastRoute).evaluate().isEmpty;
+        i++
+      ) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      await t.pump();
+      expect(_eng.modes, ['balanced']);
+      expect(appState.sendMode, 'balanced');
+      expect(find.text(l10n.homeSwitchedToFastRoute), findsOneWidget);
+      await _done(t);
+    });
+
+    // which button is the filled one
+    bool filled(WidgetTester t, String label) => find
+        .ancestor(
+          of: find.text(label),
+          matching: find.byType(HaloPrimaryButton),
+        )
+        .evaluate()
+        .isNotEmpty;
+
+    // connect as usual or blocked or watched: the same order and the cost
+    for (final (locale, scale, skip) in [
+      (const Locale('en'), 1.0, false),
+      (const Locale('en'), 1.0, true),
+      (const Locale('fa'), 2.0, true),
+    ]) {
+      testWidgets('the cost said, the bridge way first '
+          '(${locale.languageCode}, x$scale, skip $skip)', (t) async {
+        await _open(
+          t,
+          setup: BridgeSetup(skipDirect: skip),
+          status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+          locale: locale,
+          scale: scale,
+        );
+        expect(t.takeException(), isNull);
+        expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+        final ask = t.getRect(find.text(l10n.bridgesGetABridge));
+        final relay = t.getRect(find.text(l10n.homeUseFast));
+        expect(ask.top, lessThan(relay.top));
+        expect(filled(t, l10n.bridgesGetABridge), isTrue);
+        expect(filled(t, l10n.homeUseFast), isFalse);
+        await _done(t);
+      });
+    }
+
+    testWidgets('a decoy is never offered relay mode', (t) async {
+      lockState.inDecoy = true;
+      await _open(
+        t,
+        status: const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      );
+      expect(find.text(l10n.homeUseFast), findsNothing);
       await _done(t);
     });
   });
@@ -738,7 +867,8 @@ void main() {
       );
       await t.tap(find.text(l10n.bridgesMore));
       await _in(t);
-      expect(find.text(l10n.bridgesCountry), findsNothing);
+      // plain advice, no country to pick
+      expect(find.text(l10n.bridgesPlainAdvice), findsOneWidget);
       await t.ensureVisible(find.text(l10n.bridgesAskTorProject));
       await t.pump();
       await t.tap(find.text(l10n.bridgesAskTorProject));
@@ -748,31 +878,9 @@ void main() {
       await t.tap(find.text(l10n.commonAllow));
       await _in(t);
       expect(_eng.calls.single, contains('"consent":"yes"'));
+      // no country goes to the engine, and the tor project is not asked
+      expect(_eng.calls.single, isNot(contains('country')));
       expect(_eng.moat, 0);
-      // the country: the sheet at once, and the tor project asked only
-      // for its guess, when that is picked
-      await t.pump(const Duration(seconds: 1));
-      await t.ensureVisible(find.text(l10n.bridgesCountry));
-      await t.pump(const Duration(seconds: 1));
-      await t.tap(find.text(l10n.bridgesCountry));
-      await _in(t);
-      expect(find.text(l10n.bridgesIran), findsOneWidget);
-      expect(_eng.moat, 0);
-      await t.tap(find.text(l10n.bridgesIran));
-      await _in(t);
-      expect(appState.bridge.country, 'ir');
-      expect(_eng.calls.last, contains('"country":"ir"'));
-      expect(_eng.moat, 0);
-      await t.tap(find.text(l10n.bridgesCountry));
-      await _in(t);
-      await t.tap(find.text(l10n.bridgesLetTheTorProject).last);
-      await _in(t);
-      expect(_eng.moat, 1);
-      expect(appState.bridge.country, '');
-      expect(
-        find.textContaining(l10n.bridgesTheTorProjectSGuess),
-        findsOneWidget,
-      );
       await _done(t);
     });
   });
@@ -871,14 +979,25 @@ void main() {
       }
     });
 
-    test('the fallback is kept at once, the yes and country with it', () async {
+    test('a country picked before goes, and none reaches the engine', () async {
+      FlutterSecureStorage.setMockInitialValues({
+        'bridge_mode': 'auto',
+        'bridge_consent': 'yes',
+        'bridge_country': 'ir',
+      });
+      final b = await AppState().readBridgeSetup(firstStart: false);
+      const st = FlutterSecureStorage();
+      expect(await st.read(key: 'bridge_country'), isNull);
+      expect(b.engineMode()!.$2, isNot(contains('country')));
+    });
+
+    test('the fallback is kept at once, the yes with it', () async {
       _eng.restoreAnswer = 'error: lines_bad';
       final app = AppState()
         ..bridgeSetupForTest = const BridgeSetup(
           choice: BridgeChoice.friend,
           friendLines: 'obfs4 mangled',
           consent: 'yes',
-          country: 'ir',
         );
       app.restoreBridgeAtBoot();
       await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -886,7 +1005,7 @@ void main() {
       expect(await st.read(key: 'bridge_mode'), 'auto');
       expect(await st.read(key: 'bridge_skip_direct'), '1');
       expect(await st.read(key: 'bridge_consent'), 'yes');
-      expect(await st.read(key: 'bridge_country'), 'ir');
+      expect(await st.read(key: 'bridge_country'), isNull);
     });
 
     test('what automatic learnt waits for the decoy to close', () async {
@@ -1097,12 +1216,8 @@ void main() {
       const lines =
           'obfs4 192.0.2.1:443 A cert=x\nwebtunnel [2001:db8::1]:443 B';
       expect(
-        const BridgeSetup(
-          consent: 'yes',
-          friendLines: lines,
-          country: 'ir',
-        ).engineMode()!.$2,
-        allOf(contains('"country":"ir"'), contains('"webtunnel"')),
+        const BridgeSetup(consent: 'yes', friendLines: lines).engineMode()!.$2,
+        allOf(isNot(contains('country')), contains('"webtunnel"')),
       );
       expect(
         const BridgeSetup(
@@ -1179,6 +1294,78 @@ void main() {
       await _done(t);
     });
 
+    testWidgets('a saved line shares as a code, said to keep private', (
+      t,
+    ) async {
+      final copied = <String>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (c) async {
+          if (c.method == 'copySensitive') {
+            copied.add((c.arguments as Map)['text'] as String);
+          }
+          return true;
+        },
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          const MethodChannel('halo/platform'),
+          null,
+        ),
+      );
+      const line = 'obfs4 192.0.2.2:443 B cert=y';
+      await _open(
+        t,
+        setup: const BridgeSetup(
+          choice: BridgeChoice.friend,
+          friendLines: 'obfs4 192.0.2.1:443 A cert=x\n$line',
+        ),
+        size: const Size(400, 1600),
+      );
+      await t.tap(find.text(l10n.bridgesMore));
+      await _in(t);
+      final share = find.byTooltip(l10n.bridgesShareBridgeN('2'));
+      await t.ensureVisible(share);
+      await t.tap(share);
+      await _in(t);
+      expect(find.text(l10n.bridgesShareThisBridge), findsOneWidget);
+      expect(find.text(l10n.bridgesShareItPrivately), findsOneWidget);
+      expect(find.byType(QrImageView), findsOneWidget);
+      // the code carries the one line picked, not the others
+      expect(
+        t.widget<BridgeShareSheet>(find.byType(BridgeShareSheet)).line,
+        line,
+      );
+      await t.tap(find.text(l10n.bridgesCopyBridge));
+      await _in(t);
+      expect(copied, [line]);
+      expect(find.text(l10n.bridgesBridgeCopied), findsOneWidget);
+      // the toast and the tick go by themselves, the copy after a minute
+      for (var i = 0; i < 62; i++) {
+        await t.pump(const Duration(seconds: 1));
+      }
+      await _done(t);
+    });
+
+    testWidgets('a decoy never opens the share sheet', (t) async {
+      lockState.inDecoy = true;
+      addTearDown(() => lockState.inDecoy = false);
+      await t.pumpWidget(
+        devApp(
+          Builder(
+            builder: (c) => TextButton(
+              onPressed: () => showBridgeShareSheet(c, 'obfs4 192.0.2.1:443'),
+              child: const Text('go'),
+            ),
+          ),
+        ),
+      );
+      await t.tap(find.text('go'));
+      await _in(t);
+      expect(find.byType(BridgeShareSheet), findsNothing);
+      await _done(t);
+    });
+
     test(
       'an undo after a change is refused; one not in use stays put',
       () async {
@@ -1197,7 +1384,7 @@ void main() {
         expect(_eng.calls, isEmpty);
         // removed, then something else changed: the undo is refused
         final d = (await app.removeBridgeLine(BridgeChoice.torProject, 0))!;
-        await app.setBridgeCountry('ir');
+        await app.setBridgeConsent(true);
         expect(await app.putBridgeSetupBack(d.$1, d.$2), isFalse);
         expect(splitBridgeLines(app.bridge.torProjectLines), hasLength(1));
       },
@@ -1265,6 +1452,27 @@ void main() {
       }
     });
 
+    // what tor keeps for onion is not in use in relay or fast mode
+    testWidgets('relay or fast mode: more says no bridge is in use', (t) async {
+      for (final mode in ['balanced', 'fast']) {
+        appState.sendModeForTest = mode;
+        await _open(
+          t,
+          status: const BridgeStatus(
+            mode: 'auto',
+            phase: 'not_tor_mode',
+            method: 'snowflake',
+            source: 'builtin',
+          ),
+        );
+        await t.tap(find.text(l10n.bridgesMore));
+        await _in(t);
+        expect(find.text(l10n.bridgesNoneUntilOnion), findsOneWidget);
+        expect(find.textContaining('snowflake'), findsNothing);
+        await _done(t);
+      }
+    });
+
     testWidgets('a wi-fi sign-in: its tag and the way to the wi-fi page', (
       t,
     ) async {
@@ -1302,24 +1510,6 @@ void main() {
       expect(find.text(l10n.bridgesOpenWifiSettings), findsNothing);
       expect(find.text(l10n.bridgesWaitingForWifiSignIn), findsNothing);
       await _done(t);
-    });
-
-    test('with tor up there is no guess, only the list', () async {
-      final app = AppState()
-        ..bridgeSetupForTest = const BridgeSetup(consent: 'yes')
-        ..sendModeForTest = 'private';
-      app.setTorStatusForTest(TorStatus.publishing);
-      app.setRouteOKForTest(true);
-      expect(await app.askMoatGuess(), isNull);
-      expect(_eng.moat, 0);
-      app.setTorStatusForTest(TorStatus.starting);
-      app.setRouteOKForTest(false);
-      expect(await app.askMoatGuess(), 'ir');
-      expect(_eng.moat, 1);
-      // over meek only with the yes
-      final no = AppState()..bridgeSetupForTest = const BridgeSetup();
-      expect(await no.askMoatGuess(), isNull);
-      expect(_eng.moat, 1);
     });
 
     test('a wi-fi sign-in shows on home, whatever the way, onion only', () {
@@ -1461,7 +1651,7 @@ void main() {
           await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
           await _in(t);
           await _done(t);
-          // a removed line, its undo, and the country row with a guess
+          // a removed line and its undo
           await at(
             h: 4000,
             setup: const BridgeSetup(
@@ -1471,7 +1661,6 @@ void main() {
                   'obfs4 192.0.2.1:443 A cert=x\nobfs4 192.0.2.2:443 B cert=y',
             ),
           );
-          await appState.askMoatGuess();
           await t.tap(find.text(l10n.bridgesMore));
           await _in(t);
           final x = find.byTooltip(l10n.bridgesRemoveBridgeN(whole(2)));

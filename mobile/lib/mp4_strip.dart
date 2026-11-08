@@ -1,20 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // strip an mp4 (and mov, 3gp: same box format) of everything that is not
-// the picture. location, make, model, encoder and dates live in boxes beside
-// the video: udta, meta, uuid (xmp), and the stamps in mvhd, tkhd, mdhd.
-// nothing is deleted, since the chunk offset tables point at absolute
-// positions: a box is renamed 'free' and zeroed in place, a stamp is zeroed
-// where it sits. the walk seeks and writes, so a long clip never sits in
-// memory.
+// the picture, the sound or subtitles. location, make, model, encoder and
+// dates live in boxes beside the video: udta, meta, uuid (xmp), handler
+// names, and the stamps in mvhd, tkhd, mdhd. a gps or motion sensor track
+// (gopro, camera motion, timecode, any data track) is a track of its own
+// with samples in mdat. nothing is moved, since the chunk offset tables
+// point at absolute positions: what goes is renamed 'free' and zeroed in
+// place (mp4_clean.dart), every mdat byte no kept track uses is zeroed, and
+// a box or samsung trailer after the last one kept is cut off. the walk
+// seeks and writes, so a long clip never sits in memory.
 import 'dart:io';
 import 'dart:typed_data';
 
-// boxes that carry identifying data and nothing decoding needs
-const _neuter = {'udta', 'meta', 'uuid'};
-// full boxes with creation_time and modification_time after version+flags
-const _stamped = {'mvhd', 'tkhd', 'mdhd'};
-// containers worth looking inside. udta is not here: it is neutered whole
-const _containers = {'moov', 'trak', 'mdia', 'minf', 'stbl', 'edts', 'dinf'};
+import 'meta/byte_source.dart';
+import 'meta/file_source.dart';
+import 'meta/iso.dart';
+import 'meta/meta_reader.dart';
+import 'meta/mp4_tracks.dart';
+import 'meta/sef.dart';
+import 'mp4_clean.dart';
+import 'desktop/desktop_mode.dart' show runIsolated;
 
 /// the containers this walk understands. mkv is a different format.
 bool videoNameNeedsStrip(String name) {
@@ -26,123 +31,146 @@ bool videoNameNeedsStrip(String name) {
       n.endsWith('.3g2');
 }
 
+/// strips [path] in place. true when it was read end to end and cleaned,
+/// null when it is not an mp4 or a size or table cannot be trusted: a
+/// caller drops a null rather than pass on what it could not read.
+Future<bool?> stripMp4Metadata(String path) =>
+    runIsolated(() => stripMp4Sync(path));
+
+/// how many things the reader still finds in [path], or null when it cannot
+/// be read through, so an unreadable file never reads as clean. the check a
+/// caller runs after the strip.
+Future<int?> mp4MetadataCount(String path) =>
+    runIsolated(() => mp4MetadataCountSync(path));
+
+bool? stripMp4Sync(String path) {
+  final raf = File(path).openSync(mode: FileMode.append);
+  try {
+    final s = _RafSource(raf, raf.lengthSync());
+    final p = _RafPatch(raf);
+    final c = [0];
+    // a samsung trailer ends the file in 'SEFT', after the last box
+    final sef = readSef(s);
+    final end = sef?.start ?? s.length;
+    final top = isoBoxes(s, 0, end, c);
+    if (top.isEmpty || !kMp4Top.contains(top.first.type)) return null;
+    final lay = readMp4LayoutOf(s, top, c);
+    cleanMoov(s, p, lay);
+
+    final kept = lay.keptSamples.merged;
+    var cut = end;
+    for (final b in top.reversed) {
+      if (kMp4Top.contains(b.type)) break;
+      cut = b.start;
+    }
+    for (final (_, b) in kept) {
+      if (b > cut) return null; // a kept sample in what is about to go
+    }
+    for (final b in top) {
+      if (b.start >= cut) break;
+      if (kFreeBoxes.contains(b.type)) {
+        p.zero(b.body, b.end);
+      } else if (!kMp4Top.contains(b.type)) {
+        if (Ranges.overlaps(kept, b.start, b.end)) return null;
+        p.neuter(b);
+      } else if (b.type == 'mdat' && lay.moov != null) {
+        for (final (x, y) in Ranges.gaps(kept, b.body, b.end)) {
+          p.zero(x, y);
+        }
+      }
+    }
+    if (cut < s.length) {
+      p.zero(cut, s.length);
+      raf.truncateSync(cut);
+    }
+    raf.flushSync();
+    return true;
+  } on IsoError {
+    return null;
+  } on RangeError {
+    return null;
+  } finally {
+    raf.closeSync();
+  }
+}
+
+int? mp4MetadataCountSync(String path) {
+  final src = FileSource.open(path);
+  try {
+    final r = readMetaStrict(src);
+    if (r.kind != MetaKind.mp4) return null;
+    return switch (r.status) {
+      MetaStatus.nothing => 0,
+      MetaStatus.found => _count(r),
+      _ => null,
+    };
+  } catch (_) {
+    return null;
+  } finally {
+    src.close();
+  }
+}
+
+int _count(MetaReport r) {
+  var n = r.videoTags.length + r.extra.length + r.extraTracks;
+  for (final b in [
+    r.gps != null,
+    r.make != null || r.model != null || r.software != null,
+    r.created != null || r.taken != null,
+    r.stamps,
+    r.credentials,
+    r.timecode,
+    r.gpsPoints > 0,
+    r.handlerNames,
+    r.leftoverBytes > 0,
+    r.liveId != null,
+    r.networkCountry != null,
+  ]) {
+    if (b) n++;
+  }
+  return n == 0 ? 1 : n;
+}
+
 const _free = [0x66, 0x72, 0x65, 0x65]; // 'free'
 final _zeros = Uint8List(64 * 1024);
 
-/// strips [path] in place. true when every identifying box was neutered,
-/// null when it is not an mp4 or a size field cannot be trusted: a caller
-/// drops a null rather than pass on what it could not read.
-Future<bool?> stripMp4Metadata(String path) async {
-  final raf = await File(path).open(mode: FileMode.append);
-  try {
-    final n = await _walk(raf, 0, await raf.length(), strip: true);
-    return n == null ? null : true;
-  } finally {
-    await raf.close();
-  }
-}
+class _RafPatch implements Mp4Patch {
+  final RandomAccessFile raf;
+  _RafPatch(this.raf);
 
-/// how many identifying boxes or non-zero stamps [path] still carries, or
-/// null when it cannot be walked, so an unreadable file never reads as
-/// clean. the check a caller runs after the strip.
-Future<int?> mp4MetadataCount(String path) async {
-  final raf = await File(path).open();
-  try {
-    return await _walk(raf, 0, await raf.length(), strip: false);
-  } finally {
-    await raf.close();
+  @override
+  void neuter(IsoBox b) {
+    raf.setPositionSync(b.start + 4);
+    raf.writeFromSync(_free);
+    zero(b.body, b.end);
   }
-}
 
-// walks the boxes between [start] and [end]. returns how many things it
-// found (and, when stripping, neutered), or null on a size it cannot trust.
-Future<int?> _walk(
-  RandomAccessFile raf,
-  int start,
-  int end, {
-  required bool strip,
-}) async {
-  var pos = start;
-  var found = 0;
-  while (pos < end) {
-    if (pos + 8 > end) return null; // trailing bytes too short to be a box
-    await raf.setPosition(pos);
-    final head = await raf.read(8);
-    if (head.length < 8) return null;
-    var size = _u32(head, 0);
-    final type = String.fromCharCodes(head, 4, 8);
-    var header = 8;
-    if (size == 1) {
-      // 64-bit size follows the type
-      final big = await raf.read(8);
-      if (big.length < 8) return null;
-      size = _u64(big, 0);
-      header = 16;
-    } else if (size == 0) {
-      // runs to the end of the file. only meaningful at the top level
-      if (start != 0) return null;
-      size = end - pos;
+  @override
+  void zero(int from, int to) {
+    raf.setPositionSync(from);
+    var left = to - from;
+    while (left > 0) {
+      final n = left < _zeros.length ? left : _zeros.length;
+      raf.writeFromSync(_zeros, 0, n);
+      left -= n;
     }
-    if (size < header || pos + size > end) return null;
-    final payload = pos + header;
+  }
+}
 
-    if (_neuter.contains(type)) {
-      found++;
-      if (strip) {
-        await raf.setPosition(pos + 4);
-        await raf.writeFrom(_free);
-        await _zero(raf, payload, pos + size);
-      }
-    } else if (_stamped.contains(type)) {
-      final n = await _stamps(raf, payload, pos + size, strip: strip);
-      if (n == null) return null;
-      found += n;
-    } else if (_containers.contains(type)) {
-      final n = await _walk(raf, payload, pos + size, strip: strip);
-      if (n == null) return null;
-      found += n;
+class _RafSource implements ByteSource {
+  final RandomAccessFile _raf;
+  @override
+  final int length;
+  _RafSource(this._raf, this.length);
+
+  @override
+  Uint8List read(int offset, int count) {
+    if (offset < 0 || count < 0 || offset + count > length) {
+      throw RangeError('read $count at $offset of $length');
     }
-    pos += size;
-  }
-  return found;
-}
-
-// creation_time and modification_time sit right after the 4 bytes of
-// version and flags: 4 bytes each in version 0, 8 each in version 1.
-// returns how many were non-zero, or null when the box is too short.
-Future<int?> _stamps(
-  RandomAccessFile raf,
-  int payload,
-  int end, {
-  required bool strip,
-}) async {
-  if (payload + 4 > end) return null;
-  await raf.setPosition(payload);
-  final v = (await raf.read(1))[0];
-  final w = v == 1 ? 8 : 4;
-  final at = payload + 4;
-  if (at + 2 * w > end) return null;
-  await raf.setPosition(at);
-  final cur = await raf.read(2 * w);
-  final dirty = cur.any((b) => b != 0) ? 1 : 0;
-  if (strip && dirty == 1) {
-    await raf.setPosition(at);
-    await raf.writeFrom(Uint8List(2 * w));
-  }
-  return dirty;
-}
-
-Future<void> _zero(RandomAccessFile raf, int from, int to) async {
-  await raf.setPosition(from);
-  var left = to - from;
-  while (left > 0) {
-    final n = left < _zeros.length ? left : _zeros.length;
-    await raf.writeFrom(_zeros, 0, n);
-    left -= n;
+    _raf.setPositionSync(offset);
+    final b = _raf.readSync(count);
+    if (b.length != count) throw RangeError('short read at $offset');
+    return b;
   }
 }
-
-int _u32(Uint8List b, int i) =>
-    (b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3];
-
-int _u64(Uint8List b, int i) => (_u32(b, i) << 32) | _u32(b, i + 4);

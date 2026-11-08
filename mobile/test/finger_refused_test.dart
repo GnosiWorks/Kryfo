@@ -94,7 +94,10 @@ void main() {
     await _card(t, lock);
     expect(_switchOn(t), isFalse);
     await t.tap(find.text(l10n.pinsUnlockWithFingerprint));
-    await t.pump();
+    await t.pumpAndSettle();
+    // the pin first
+    await typePin(t, appPin);
+    await enter(t);
     await t.pump(const Duration(milliseconds: 300));
     expect(find.text(l10n.pinsFingerRefused), findsOneWidget);
     await t.pumpAndSettle();
@@ -106,6 +109,9 @@ void main() {
     bio.failures = 0;
     await t.pump(const Duration(seconds: 5));
     await t.tap(find.text(l10n.pinsUnlockWithFingerprint));
+    await t.pumpAndSettle();
+    await typePin(t, appPin);
+    await enter(t);
     await t.pumpAndSettle();
     expect(_switchOn(t), isTrue);
     expect(find.text(l10n.pinsFingerRefused), findsNothing);

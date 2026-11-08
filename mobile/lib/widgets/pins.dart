@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // pins, the parts both chats share. a pinned message is reached from one
 // place, the pin in the header; nothing sits over the conversation.
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,10 +15,12 @@ import 'count_badge.dart';
 import 'halo_sheet.dart';
 import 'kryfo_avatar.dart';
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
+import 'sealed_picture.dart';
 import 'sheet_handle.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../l10n/numbers.dart';
+import '../voice_format.dart' show isVoiceName;
 
 /// how many pins one chat holds. the sender checks before pinning and the
 /// receiver checks before mirroring, so nobody can fill the list from afar.
@@ -124,7 +125,7 @@ class PinEntry {
     if (sticker != null) return l10n.stickerLabel;
     if (text.trim().isNotEmpty) return text.trim();
     if (imagePath != null) return l10n.pinsPhoto;
-    if (fileName == 'voice.wav') return l10n.pinsVoiceMessage;
+    if (isVoiceName(fileName)) return l10n.pinsVoiceMessage;
     if (fileName != null) return fileName!;
     return l10n.pinsMessage;
   }
@@ -207,7 +208,7 @@ class _PinsSheetState extends State<_PinsSheet> {
                   if (pins != null && pins.isNotEmpty)
                     Text(
                       l10n.pinsOf(whole(pins.length), whole(kMaxPins)),
-                      style: HaloType.mono(size: 10, color: HaloColors.text2),
+                      style: HaloType.mono(size: 10, color: HaloColors.text),
                     ),
                 ],
               ),
@@ -218,10 +219,10 @@ class _PinsSheetState extends State<_PinsSheet> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(22, 10, 22, 30),
                 child: Text(
-                  l10n.pinsNothingPinnedHereYet,
+                  l10n.pinsNothingPinnedHereYetShown,
                   style: HaloType.sans(
                     size: 13.5,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
@@ -322,7 +323,7 @@ class _PinCard extends StatelessWidget {
                           _pinDate(e.when),
                           style: HaloType.mono(
                             size: 9.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         ),
                       ],
@@ -348,14 +349,15 @@ class _PinCard extends StatelessWidget {
                           const SizedBox(width: 10),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.file(
-                              File(img),
+                            child: SizedBox(
                               width: 52,
                               height: 52,
-                              fit: BoxFit.cover,
-                              cacheWidth: decodePx(context, 52),
-                              errorBuilder: (_, _, _) =>
-                                  const SizedBox(width: 52, height: 52),
+                              child: SealedPicture(
+                                path: img,
+                                image: mediaImage(img, decodePx(context, 52)),
+                                errorBuilder: (_, _, _) =>
+                                    const SizedBox(width: 52, height: 52),
+                              ),
                             ),
                           ),
                         ],
@@ -407,7 +409,7 @@ class _PinAction extends StatelessWidget {
           style: HaloType.sans(
             size: 12.5,
             weight: FontWeight.w600,
-            color: amber ? HaloColors.amberText : HaloColors.text2,
+            color: amber ? HaloColors.amberText : HaloColors.text,
           ),
         ),
       ),

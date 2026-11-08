@@ -192,10 +192,19 @@ func TestOnlyWrapsToOneAddress(t *testing.T) {
 			}
 		},
 		"a long tag": func(e *nostr.Event) { e.Tags = append(e.Tags, make(nostr.Tag, maxTagLen+1)) },
+		"listed for everyone": func(e *nostr.Event) {
+			e.Tags = append(e.Tags, nostr.Tag{"x", counting(100)})
+		},
 	} {
 		if err := publish(t, r, wrap(t, to, mod)); err == nil {
 			t.Errorf("%s was taken", name)
 		}
+	}
+	// other keys in its tags, short of maxRuns, are taken
+	if err := publish(t, r, wrap(t, to, func(e *nostr.Event) {
+		e.Tags = append(e.Tags, nostr.Tag{"x", addr(), addr(), addr()})
+	})); err != nil {
+		t.Errorf("a wrap with three more keys was refused: %v", err)
 	}
 }
 
@@ -285,7 +294,7 @@ func TestReqsArePacedPerConnection(t *testing.T) {
 	r := connect(t, url)
 	f := nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {addr()}}}
 	refused := 0
-	for i := 0; i < reqBurst+10; i++ {
+	for i := 0; i < reqBurst+50; i++ {
 		if _, why := ask(t, r, f); why != "" {
 			refused++
 		}
@@ -301,7 +310,7 @@ func TestReqsArePacedPerConnection(t *testing.T) {
 	now := nostr.Now()
 	probe := nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {addr()}}, Since: &now, LimitZero: true}
 	refused = 0
-	for i := 0; i < reqBurst+10; i++ {
+	for i := 0; i < reqBurst+50; i++ {
 		if _, why := ask(t, r, probe); why != "" {
 			refused++
 		}
@@ -455,5 +464,33 @@ func TestConnectionCeilingAndDisk(t *testing.T) {
 	l.diskLow.Store(false)
 	if err := publish(t, r, wrap(t, addr(), nil)); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// under the second floor file slices wait and text still goes
+func TestDiskTightTakesTextOnly(t *testing.T) {
+	url, l := testRelay(t)
+	r := connect(t, url)
+	l.diskTight.Store(true)
+	big := wrap(t, addr(), func(e *nostr.Event) { e.Content = strings.Repeat("s", bigContent+1) })
+	if err := publish(t, r, big); err == nil || !strings.Contains(err.Error(), "full") {
+		t.Fatalf("a file slice was taken with the disk tight: %v", err)
+	}
+	if err := publish(t, r, wrap(t, addr(), nil)); err != nil {
+		t.Fatalf("a text was refused with the disk tight: %v", err)
+	}
+	l.diskTight.Store(false)
+	big = wrap(t, addr(), func(e *nostr.Event) { e.Content = strings.Repeat("s", bigContent+1) })
+	if err := publish(t, r, big); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestReadDiskSetsBothFloors(t *testing.T) {
+	l := &limits{}
+	l.readDisk(t.TempDir())
+	free := freeBytes(t.TempDir())
+	if l.diskLow.Load() != (free < minFreeBytes) || l.diskTight.Load() != (free < minFreeBigBytes) {
+		t.Fatalf("free %d: low %v tight %v", free, l.diskLow.Load(), l.diskTight.Load())
 	}
 }

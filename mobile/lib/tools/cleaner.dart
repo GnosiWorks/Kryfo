@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
+import 'dart:typed_data';
 
+import '../desktop/desktop_mode.dart' show runIsolated;
 import '../image_strip.dart';
 import '../meta/file_source.dart';
 import '../meta/meta_reader.dart';
 import '../mp4_strip.dart';
+import '../picture_convert.dart' show cleanJpegOf;
 import '../shred.dart';
 import '../l10n/l10n.dart';
 
@@ -94,14 +96,87 @@ MetaReport readFile(String path) {
   }
 }
 
+// runIsolated: on desktop the new isolate reads a sealed copy through the
+// same seal, and writes its own copy sealed
 Future<MetaReport> readFileOffUi(String path) =>
-    Isolate.run(() => readFile(path));
+    runIsolated(() => readFile(path));
 
 Future<CleanResult> cleanFile(
   String inPath,
   String outRoot, {
   String? originalName,
-}) => Isolate.run(() => cleanFileHere(inPath, outRoot, originalName));
+}) async => drawnWhereBetter(
+  await runIsolated(() => cleanFileHere(inPath, outRoot, originalName)),
+  inPath,
+  outRoot,
+  originalName,
+);
+
+// what is drawn again: a heic or an avif, which a computer cannot draw, and
+// a picture the cleaner could not make clean
+const _drawn = {
+  CleanFailure.unknownKind,
+  CleanFailure.motion,
+  CleanFailure.unreadable,
+  CleanFailure.notClean,
+};
+
+/// [r] for [inPath] made a clean jpeg where it can be: a heic or an avif,
+/// and a picture the cleaner refused, drawn again the way every lane draws
+/// them (picture_convert.dart). one that cannot be drawn keeps the
+/// cleaner's own result: a cleaned heic, or the plain line that this one
+/// can't be cleaned
+Future<CleanResult> drawnWhereBetter(
+  CleanResult r,
+  String inPath,
+  String outRoot,
+  String? originalName,
+) async {
+  final heif = r.failure == null && r.before.kind == MetaKind.heif;
+  if (!heif && !_drawn.contains(r.failure)) return r;
+  // a video is never drawn as a picture
+  if (r.before.kind == MetaKind.mp4 ||
+      videoNameNeedsStrip(originalName ?? '')) {
+    return r;
+  }
+  final Uint8List bytes;
+  try {
+    final f = File(inPath);
+    if (await f.length() > kMaxPictureBytes) return r;
+    bytes = await f.readAsBytes();
+  } on FileSystemException {
+    return r;
+  }
+  final jpeg = await cleanJpegOf(bytes);
+  if (jpeg == null) return r;
+  final dir = Directory('$outRoot/${_tag()}');
+  final name = cleanName(originalName, MetaKind.jpeg);
+  final out = File('${dir.path}/$name');
+  try {
+    await dir.create(recursive: true);
+    await out.writeAsBytes(jpeg, flush: true);
+  } on FileSystemException {
+    await _drop(dir);
+    return r;
+  }
+  final had = r.path;
+  if (had != null) await _drop(File(had).parent);
+  return CleanResult(
+    before: r.before,
+    path: out.path,
+    name: name,
+    mime: cleanMime(MetaKind.jpeg, name),
+    bytes: jpeg.length,
+  );
+}
+
+String _tag() {
+  final rnd = Random.secure();
+  return List.generate(
+    8,
+    (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+}
 
 Future<CleanResult> cleanFileHere(
   String inPath,
@@ -115,7 +190,12 @@ Future<CleanResult> cleanFileHere(
   if (before.status == MetaStatus.unreadable) {
     return fail(CleanFailure.unreadable);
   }
-  if (before.embeddedVideo || before.secondImage) {
+  // a jpeg ends at its end marker once clean, and a heif keeps only its
+  // picture's items, so a motion clip, the extra pictures, an hdr layer and
+  // a samsung trailer go. the result line then says "same picture" alone
+  final cuts = before.kind == MetaKind.jpeg || before.kind == MetaKind.heif;
+  if (!cuts &&
+      (before.embeddedVideo || before.secondImage || before.hdrLayer)) {
     return fail(CleanFailure.motion);
   }
   final size = File(inPath).lengthSync();
@@ -141,7 +221,9 @@ Future<CleanResult> cleanFileHere(
 
   try {
     final ok = before.kind == MetaKind.mp4
-        ? await stripMp4Metadata(out.path)
+        // already off the ui thread: a nested isolate would not have the
+        // desktop's seal over the copy
+        ? stripMp4Sync(out.path)
         : await stripPictureFile(out.path);
     if (ok != true) {
       await _drop(dir);
@@ -183,7 +265,7 @@ class RemovedLine {
 
 List<RemovedLine> removedLines(MetaReport r) {
   final out = <RemovedLine>[];
-  if (r.gps != null) {
+  if (r.gps != null || r.gpsPoints > 0) {
     out.add(RemovedLine(l10n.cleanerLocation));
   } else if (r.gpsBlank) {
     out.add(
@@ -201,11 +283,13 @@ List<RemovedLine> removedLines(MetaReport r) {
   }
   if (r.thumbnailBytes > 0) out.add(RemovedLine(l10n.cleanerHiddenThumbnail));
   if (r.credentials) out.add(RemovedLine(l10n.cleanerContentCredentials));
+  if (r.hdrLayer) out.add(RemovedLine(l10n.cleanerHdrLayer));
   if (r.trailingBytes > 0) {
     out.add(RemovedLine(l10n.cleanerDataAfterThePicture));
   }
   var other = r.otherExifTags + r.textKeys.length + r.videoTags.length;
-  other += r.extra.length;
+  other += r.extra.length + r.extraTracks;
+  if (r.leftoverBytes > 0 && r.extraTracks == 0) other++;
   for (final b in [
     r.software != null,
     r.lens != null,
@@ -216,6 +300,18 @@ List<RemovedLine> removedLines(MetaReport r) {
     r.comment,
     r.savedTime,
     r.stamps && r.created == null,
+    // named one by one in the found list later; counted until then
+    r.timecode,
+    r.handlerNames,
+    r.editHistory,
+    r.syntheticLabel,
+    r.syntheticPrompt.isNotEmpty,
+    r.smallCopies > 0,
+    r.depthMap || r.portraitMatte || r.beforeBlur,
+    r.extraPictures > 0,
+    r.sphere,
+    r.networkCountry != null,
+    r.liveId != null,
   ]) {
     if (b) other++;
   }

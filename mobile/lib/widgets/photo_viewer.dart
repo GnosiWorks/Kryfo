@@ -9,11 +9,12 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateScreen;
 import '../theme.dart';
 import 'decode_px.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show houseSpring, motionStill;
+import 'sealed_picture.dart';
 import 'text_ground.dart';
 
 /// the tag a photo and the viewer share, so the photo flies between them.
@@ -29,17 +30,15 @@ Future<void> openPhoto(
   double radius = 0,
   bool secure = false,
 }) {
-  final image = ResizeImage.resizeIfNeeded(
-    screenPx(context, times: 2),
-    null,
-    FileImage(File(path)),
-  );
+  final px = screenPx(context, times: 2);
+  final image = ResizeImage.resizeIfNeeded(px, null, FileImage(File(path)));
   return openPhotoImage(
     context,
     image,
     tag: tag,
     radius: radius,
     secure: secure,
+    media: (path: path, px: px),
   );
 }
 
@@ -53,6 +52,10 @@ Future<void> openPhotoImage(
   Object? tag,
   double radius = 0,
   bool secure = false,
+  // what a screen reader says the picture is
+  String? label,
+  // a chat's file: the lock takes it down and its blur brings it back
+  ({String path, int px})? media,
 }) async {
   if (_opening) return;
   // drop the composer's focus first, else popping the viewer brings the
@@ -78,11 +81,16 @@ Future<void> openPhotoImage(
         transitionDuration: Duration(milliseconds: still ? 0 : 280),
         reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
         pageBuilder: (_, anim, _) => TextGround(
-          child: PhotoViewer(
-            image: image,
-            tag: tag,
-            radius: radius,
-            route: anim,
+          child: Semantics(
+            label: label,
+            image: label != null,
+            child: PhotoViewer(
+              image: image,
+              media: media,
+              tag: tag,
+              radius: radius,
+              route: anim,
+            ),
           ),
         ),
       ),
@@ -108,6 +116,7 @@ Future<void> _decoded(ImageProvider image, BuildContext context) {
 
 class PhotoViewer extends StatefulWidget {
   final ImageProvider image;
+  final ({String path, int px})? media;
   final Object? tag;
   final double radius;
   final Animation<double> route;
@@ -115,6 +124,7 @@ class PhotoViewer extends StatefulWidget {
     super.key,
     required this.image,
     required this.route,
+    this.media,
     this.tag,
     this.radius = 0,
   });
@@ -263,7 +273,17 @@ class _PhotoViewerState extends State<PhotoViewer>
       // a pinch takes over from a zoom still easing
       onInteractionStart: (_) => _ease.stop(),
       onInteractionEnd: _zoomEnded,
-      child: Image(image: widget.image, gaplessPlayback: true),
+      child: switch (widget.media) {
+        (:final path, :final px) => SealedPicture(
+          path: path,
+          image: widget.image,
+          shaped: true,
+          decodeWidth: px,
+          fit: BoxFit.contain,
+          ground: Colors.transparent,
+        ),
+        null => Image(image: widget.image, gaplessPlayback: true),
+      },
     );
     final tag = widget.tag;
     return AnimatedBuilder(
@@ -330,24 +350,3 @@ Widget photoFlight(Animation<double> a, ImageProvider image, double radius) =>
         child: Image(image: image, fit: BoxFit.cover, gaplessPlayback: true),
       ),
     );
-
-/// a tile of photos: a quiet square until its photo is decoded, then the
-/// photo fades up over it
-class PhotoTileFade extends StatelessWidget {
-  final bool shown;
-  final Widget child;
-  const PhotoTileFade({super.key, required this.shown, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: HaloColors.surface2,
-      child: AnimatedOpacity(
-        opacity: shown ? 1 : 0,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        child: child,
-      ),
-    );
-  }
-}

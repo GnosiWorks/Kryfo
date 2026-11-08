@@ -2,7 +2,7 @@
 # builds the release apks in the pinned container, at the path f-droid
 # builds in, then signs them here with apksigner.
 #
-# this is the release build, not a check on one. the three apks it leaves
+# this is the release build, not a check on one. the four apks it leaves
 # in repro/out are what goes on the github release, so there is nothing to
 # reconcile afterwards: f-droid rebuilding the tag gets the same bytes by
 # construction. the dart snapshot and two plugin libraries bake in the
@@ -17,29 +17,50 @@
 #   ./release.sh              build the current commit and sign it
 #   ./release.sh --ref v0.2.8
 #   ./release.sh --unsigned   stop after the container, sign it yourself
-#   ./release.sh --fetch      only fill cache/ with the commit's pub and
-#                             gradle dependencies (needs the network)
+#   ./release.sh --fetch      only fill cache/ with the commit's pub,
+#                             gradle and shim crate dependencies (needs the
+#                             network)
 #   ./release.sh --offline    fetch if cache/ is not for this commit, then
 #                             build with the container's network cut
+#   ./release.sh --rc         a release candidate (with KRYFO_RC=1): the one
+#                             build the developer's phone takes before the
+#                             final, whose dev card it has not made yet. it
+#                             goes to out/rc/, every file named -rc, its
+#                             version name <version>-rc. verify it with
+#                             HALO_BUILD_NAME=<version>-rc ./verify.sh
 set -e
 cd "$(dirname "$0")"
 
-IMAGE=kryfo-repro
+# KRYFO_REPRO_IMAGE names the image apart, for a box building two trees at once
+IMAGE=${KRYFO_REPRO_IMAGE:-kryfo-repro}
 REF=HEAD
 SIGN=1
 MODE=
+RC=
 while [ $# -gt 0 ]; do
   case "$1" in
+    --rc) RC=1; shift ;;
     --ref) REF="$2"; shift 2 ;;
     --unsigned) SIGN=; shift ;;
     --fetch) MODE=fetch; shift ;;
     --offline) MODE=offline; shift ;;
-    -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,27p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 # fetching builds nothing that ships, so there is nothing to sign
 [ "$MODE" = fetch ] && SIGN=
+# a final pins the developer card the candidate's first start made on his
+# phone. KRYFO_RC=1 is for the candidate alone: a final is never built
+# with it set, and a candidate is never built without it
+if [ -n "${KRYFO_RC:-}" ] && [ -z "$RC" ]; then
+  echo "KRYFO_RC is set: a final release is never built with it (--rc for a candidate)" >&2
+  exit 2
+fi
+if [ -n "$RC" ] && [ "${KRYFO_RC:-}" != 1 ]; then
+  echo "--rc needs KRYFO_RC=1" >&2
+  exit 2
+fi
 
 command -v docker >/dev/null || { echo "docker is not installed" >&2; exit 2; }
 docker info >/dev/null 2>&1 || { echo "the docker daemon is not running" >&2; exit 2; }
@@ -57,6 +78,22 @@ fi
 if [ -n "$SIGN" ]; then
   git -C "$REPO" show "$COMMIT:mobile/lib/update_check.dart" |
     "$REPO/scripts/check-version-key.sh" - >/dev/null || exit 2
+fi
+if [ -n "$RC" ]; then
+  echo "== release candidate: the dev card is not checked"
+elif [ "$MODE" != fetch ]; then
+  git -C "$REPO" show "$COMMIT:mobile/lib/devchat/dev_key.dart" |
+    "$REPO/scripts/check-dev-card.sh" - || exit 2
+fi
+# a candidate never lands where a final does, and never looks like one
+OUT=out
+BUILD_NAME=
+if [ -n "$RC" ]; then
+  OUT=out/rc
+  version=$(git -C "$REPO" show "$COMMIT:mobile/pubspec.yaml" | sed -n 's/^version: *\([^+ ]*\).*/\1/p')
+  [ -n "$version" ] || { echo "no version in mobile/pubspec.yaml at $COMMIT" >&2; exit 2; }
+  BUILD_NAME="$version-rc"
+  echo "== release candidate $BUILD_NAME, into $OUT"
 fi
 echo "== release build of $REF ($COMMIT)"
 
@@ -119,17 +156,32 @@ with_retry() {
 # one left behind
 clone_to() {
   rm -rf "$1"
-  git clone -q "$REPO" "$1" && git -C "$1" checkout -q "$COMMIT"
+  git clone -q "$REPO" "$1" && git -C "$1" checkout -q "$COMMIT" && put_tarballs "$1"
+}
+
+# KRYFO_TARBALLS=<dir>: the translation sources' tarballs taken from there
+# instead of github, for when github cannot make an archive. each is still
+# checked against its pin by fetch-bergamot.sh before anything reads it
+put_tarballs() {
+  [ -n "${KRYFO_TARBALLS:-}" ] || return 0
+  mkdir -p "$1/engine/translate/native/.third_party/dl"
+  cp "$KRYFO_TARBALLS"/*.tar.gz "$1/engine/translate/native/.third_party/dl/"
 }
 
 # cgo opens more files at once building tor and openssl than the 1024 a
 # container gets by default
 RUN=(docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)")
 
+SHIM_TARGET=mobile/native/kryfo_signal/target
+# the translation library's source tarballs, checked by fetch-bergamot.sh
+KT_DL=engine/translate/native/.third_party/dl
+# the voice library's whisper.cpp tarball, checked by fetch-whisper.sh
+KV_DL=engine/voice/native/.third_party/dl
+
 fetch_step() {
   clone_to "$WORK/fetch" || return 1
-  rm -rf cache/pub cache/gradle cache/commit "$WORK/fetch-out"
-  mkdir -p cache/pub cache/gradle "$WORK/fetch-out"
+  rm -rf cache/pub cache/gradle cache/cargo cache/bergamot cache/whisper cache/commit "$WORK/fetch-out"
+  mkdir -p cache/pub cache/gradle cache/cargo cache/bergamot cache/whisper "$WORK/fetch-out"
   "${RUN[@]}" -e HALO_STEP=fetch \
     -v "$WORK/fetch:/home/vagrant/build/app.kryfo" \
     -v "$PWD/cache/pub:/home/vagrant/.pub-cache" \
@@ -142,14 +194,26 @@ fetch_step() {
   # output. done here, once the container and its daemons are gone.
   find cache/gradle -mindepth 1 -maxdepth 1 ! -name caches ! -name wrapper -exec rm -rf {} + &&
     find cache/gradle/caches -mindepth 1 -maxdepth 1 ! -name modules-2 -exec rm -rf {} + &&
-    du -sh cache/pub cache/gradle
+    cp -a "$WORK/fetch/$SHIM_TARGET/vendor" "$WORK/fetch/$SHIM_TARGET/vendor.toml" \
+      "$WORK/fetch/$SHIM_TARGET/vendor.lock" cache/cargo/ &&
+    cp -a "$WORK/fetch/$KT_DL/." cache/bergamot/ &&
+    cp -a "$WORK/fetch/$KV_DL/." cache/whisper/ &&
+    du -sh cache/pub cache/gradle cache/cargo cache/bergamot cache/whisper
 }
 
 build_step() {
   clone_to "$WORK/src" || return 1
+  # the shim's crates and the translation and voice sources where their
+  # scripts look
+  if [ "$MODE" = offline ]; then
+    mkdir -p "$WORK/src/$SHIM_TARGET" "$WORK/src/$KT_DL" "$WORK/src/$KV_DL"
+    cp -a cache/cargo/. "$WORK/src/$SHIM_TARGET/"
+    cp -a cache/bergamot/. "$WORK/src/$KT_DL/"
+    cp -a cache/whisper/. "$WORK/src/$KV_DL/"
+  fi
   rm -rf "$WORK/out"
   mkdir -p "$WORK/out"
-  "${RUN[@]}" "$@" \
+  "${RUN[@]}" "$@" ${BUILD_NAME:+-e "HALO_BUILD_NAME=$BUILD_NAME"} \
     -v "$WORK/src:/home/vagrant/build/app.kryfo" \
     -v "$WORK/out:/out" \
     "$IMAGE"
@@ -159,7 +223,7 @@ echo "== image"
 with_retry image docker build -q -t "$IMAGE" .
 
 if [ -n "$MODE" ] && [ "$(cat cache/commit 2>/dev/null)" != "$COMMIT" ]; then
-  echo "== fetching pub and gradle dependencies into repro/cache"
+  echo "== fetching pub, gradle and shim crate dependencies into repro/cache"
   with_retry fetch fetch_step
   rm -rf "$WORK/fetch" "$WORK/fetch-out"
   echo "$COMMIT" > cache/commit
@@ -195,13 +259,23 @@ else
   with_retry build build_step
 fi
 
-rm -f out/app-*.apk
-cp "$WORK/out/"app-*.apk out/
+mkdir -p "$OUT"
+rm -f "$OUT"/app-*.apk
+cp "$WORK/out/"app-*.apk "$OUT"/
+# a candidate's files carry -rc in their names
+if [ -n "$RC" ]; then
+  for f in "$OUT"/app-*.apk; do
+    case "$f" in *-rc.apk) ;; *) mv "$f" "${f%.apk}-rc.apk" ;; esac
+  done
+fi
 
 # a test engine that acts as if tor were blocked never ships. an apk
 # without an engine is refused too, so this cannot pass by finding nothing
-for f in out/app-*.apk; do
+for f in "$OUT"/app-*.apk; do
   unzip -l "$f" | grep -q 'lib/[^/]*/libhalo\.so' || { echo "$f has no engine" >&2; exit 1; }
+  unzip -l "$f" | grep -q 'lib/[^/]*/libkryfo_signal\.so' || { echo "$f has no signal shim" >&2; exit 1; }
+  # built from the libsignal and spqr the lock pins, as ks_build_info says
+  ./shim-check.sh --ref "$COMMIT" "$f" || exit 1
   scan=$(mktemp -d)
   unzip -q -o "$f" 'lib/*/libhalo.so' -d "$scan"
   if ! ../engine/censor-scan.sh "$scan"/lib/*/libhalo.so; then
@@ -210,11 +284,34 @@ for f in out/app-*.apk; do
     exit 1
   fi
   rm -rf "$scan"
+  # the universal apk: both arm abis, each whole, and no other
+  case "$f" in
+    */app-universal-release*)
+      got=$(unzip -Z1 "$f" 'lib/*' | grep -v '/$' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+      [ "$got" = "arm64-v8a armeabi-v7a " ] || { echo "$f carries the abis $got" >&2; exit 1; }
+      for a in arm64-v8a armeabi-v7a; do
+        for l in libflutter libapp libhalo libkryfo_signal; do
+          unzip -Z1 "$f" | grep -qx "lib/$a/$l.so" || { echo "$f has no lib/$a/$l.so" >&2; exit 1; }
+        done
+      done
+      ;;
+  esac
 done
+ls "$OUT"/app-universal-release*.apk >/dev/null 2>&1 || { echo "the container made no universal apk" >&2; exit 1; }
+
+# the shim's complete source goes on the release page beside the apks
+# (agpl and gpl section 6), from the vendor dir this build used
+rm -f "$OUT"/libsignal-*-source.tar.gz "$OUT"/libkryfo_signal-*-source.tar.gz
+./shim-source.sh "$WORK/src/$SHIM_TARGET/vendor" "$OUT"
+if [ -n "$RC" ]; then
+  for f in "$OUT"/libkryfo_signal-*-source.tar.gz; do
+    case "$f" in *-rc.tar.gz) ;; *) mv "$f" "${f%.tar.gz}-rc.tar.gz" ;; esac
+  done
+fi
 
 if [ -z "$SIGN" ]; then
   echo
-  ( cd out && sha256sum app-*.apk )
+  ( cd "$OUT" && sha256sum app-*.apk libkryfo_signal-*-source*.tar.gz )
   echo
   echo "unsigned. sign each with:"
   echo "  apksigner sign --ks <keystore> --v1-signing-enabled false app-<abi>-release.apk"
@@ -231,8 +328,12 @@ echo
 echo "== signing"
 # flutter renames the output whether or not it is signed, so these carry
 # the plain name and are signed in place
-for f in out/app-*-release.apk; do
-  [ -f "$f" ] || { echo "the container produced no apks" >&2; exit 1; }
+for f in "$OUT"/app-*-release.apk "$OUT"/app-*-release-rc.apk; do
+  [ -f "$f" ] || continue
+  # a candidate is signed only in out/rc, under its -rc name
+  if [ -n "$RC" ]; then
+    case "$f" in out/rc/*-rc.apk) ;; *) echo "refusing to sign a candidate as $f" >&2; exit 1 ;; esac
+  fi
   # --alignment-preserved, or apksigner re-pads every entry on the way
   # through, and f-droid compares their unsigned build to ours with the
   # signature cut out, byte for byte. with the flag signing is a pure
@@ -254,10 +355,18 @@ for f in out/app-*-release.apk; do
     | grep -i "SHA-256 digest" | head -1 | sed 's/^/    /'
 done
 
+ls "$OUT"/app-*-release*.apk >/dev/null 2>&1 || { echo "the container produced no apks" >&2; exit 1; }
 echo
-echo "== out/"
-( cd out && sha256sum app-*.apk )
+echo "== $OUT/"
+if [ -n "$RC" ]; then
+  ( cd "$OUT" && sha256sum app-*.apk libkryfo_signal-*-source*.tar.gz )
+else
+  # SHA256SUMS now; run it again once the windows and linux files are in $OUT
+  version=$(git -C "$REPO" show "$COMMIT:mobile/pubspec.yaml" | sed -n 's/^version: *\([^+ ]*\).*/\1/p')
+  ./sums.sh "$OUT" "$version"
+fi
 echo
-echo "these are the release. attach them to the github release."
+echo "these are the release. attach them, the shim's source tarball and"
+echo "SHA256SUMS to the github release."
 echo "to have someone else confirm them, or to check them later:"
-echo "  ./verify.sh --ref $REF out/app-arm64-v8a-release.apk ..."
+echo "  ${BUILD_NAME:+HALO_BUILD_NAME=$BUILD_NAME }./verify.sh --ref $REF $OUT/app-*-release*.apk"

@@ -12,11 +12,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateBridges;
 import 'package:kryfo/screens/backup_screen.dart';
 import 'package:kryfo/screens/blocked_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/screens/pins_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
@@ -47,6 +53,7 @@ Future<void> loadAppFonts() async {
     'Noto Sans Vietnamese': ['NotoSans-Vietnamese.ttf'],
     'Noto Naskh Arabic': ['NotoNaskhArabic-Kryfo.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
   };
   for (final e in families.entries) {
     final loader = FontLoader(e.key);
@@ -225,7 +232,6 @@ void narrowSettings({
       friendLines: 'obfs4 1.2.3.4:443 ABCDEF cert=abc iat-mode=0',
       torProjectLines: 'webtunnel [2001:db8::1]:443 ABCDEF url=https://a.b/c',
       consent: 'yes',
-      country: 'ir',
       offerAuto: true,
     );
     addTearDown(() => appState.bridgeSetupForTest = const BridgeSetup());
@@ -246,7 +252,7 @@ void narrowSettings({
   });
 
   testWidgets('getting messages', (t) async {
-    await sweep(t, () async => const GettingMessagesScreen());
+    await sweep(t, () async => const NotificationsScreen());
   });
 
   testWidgets('app lock, off', (t) async {

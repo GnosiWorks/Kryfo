@@ -1,7 +1,51 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:async';
+import 'device_sessions.dart' show DeviceSessions, kOwnDevices;
+import 'devices/device_receive.dart';
+import 'devices/device_send.dart';
+import 'devices/device_state.dart';
+import 'devices/device_store.dart';
+import 'devices/history_export.dart'
+    show
+        HistoryChatRef,
+        HistoryNotHere,
+        HistoryOutgoing,
+        exportHistory,
+        kHistoryContactCols,
+        kHistoryGroupCols;
+import 'devices/history_ffi.dart' show historyHex;
+import 'devices/history_files.dart' show historyFilesComing;
+import 'devices/history_link.dart';
+import 'devices/history_open.dart' show endHistoryCopies;
+import 'devices/link_calls.dart' show EngineLinkCalls;
+import 'devices/link_flow.dart';
+import 'devices/own_device_store.dart';
+import 'devices/own_gone.dart';
+import 'devices/own_sync.dart';
+import 'devices/own_unlink.dart';
+import 'devices/linked_lock.dart';
+import 'devices/own_devices.dart'
+    show DecoyDevices, DeviceKind, LinkHistory, OwnDevices;
+import 'photo_blur.dart' show makeBlurSoon;
 import 'secure_store.dart';
+import 'desktop/desk_frames.dart' show deskRunApp;
+import 'desktop/desktop_trace.dart' as desk_trace;
+import 'desktop/desktop_mode.dart'
+    show
+        computerLock,
+        containerClosed,
+        containerOpened,
+        containerSettled,
+        keepComputerDecoyNote,
+        kComputerDecoyNote,
+        onDesktop,
+        shotsHonouredHere,
+        startEngineIn,
+        takeDeskLaunchLink,
+        withNativeFiles;
+import 'store.dart' show kPlayBuild, playBuild;
+import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
 import 'widgets/boot_failed.dart';
 import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';
@@ -9,19 +53,24 @@ import 'widgets/theme_refresh.dart';
 import 'widgets/wall_images.dart';
 import 'dart:convert';
 import 'dart:math';
+import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
+import 'clean_media.dart' show kSaveCopies;
 import 'shred.dart';
+import 'heal.dart';
+import 'identities.dart';
+import 'invites.dart';
 import 'album.dart' show AlbumTag, albumGoneUid, albumInWindow, albumItemBurnAt;
 export 'shred.dart' show shredFile, shredTree;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' hide Curve;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
-import 'image_strip.dart' show photoToSendOffUi;
+import 'image_strip.dart' show cleanSavedPhoto, photoToSendOffUi;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'orientation.dart' show appOrientations;
@@ -31,11 +80,17 @@ import 'picked.dart'
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import 'phone_seal.dart' show fileKeyOf, openPhoneSeal;
 import 'theme.dart';
 import 'wipe.dart';
 import 'group_end.dart';
+import 'group_shots.dart';
 import 'group_media_send.dart';
+import 'media_names.dart' show mediaNamesAtOpen;
 import 'media_progress.dart';
+import 'media_trace.dart' show traceCode;
+import 'transfers.dart';
+import 'transfer_note.dart';
 import 'media_send.dart';
 import 'msg_order.dart';
 import 'send_order.dart';
@@ -46,14 +101,33 @@ import 'screens/bridges_screen.dart' show BridgesScreen;
 import 'offline_gate.dart';
 import 'in_front.dart';
 import 'reopen.dart';
+import 'link_view.dart';
+import 'pill_fit.dart';
+import 'app_icon.dart' show appFaceNow, readAppFace;
+import 'screens/icon_screen.dart' show sayFaceChanged;
 import 'pill_grace.dart';
 import 'tor_valve.dart';
 import 'auto_restart.dart';
 import 'drafts.dart'
-    show dropDraft, everydayChats, restartKeepingDrafts, restoreKeptDrafts;
+    show
+        Draft,
+        DraftRows,
+        DraftsOnPause,
+        KeptDraft,
+        dropDraft,
+        forgetDraft,
+        forgetDrafts,
+        holdDraftsOf,
+        restartKeepingDrafts,
+        restoreKeptDrafts,
+        settleDrafts,
+        sweepDrafts,
+        writeDraftNow;
+import 'google_push.dart';
+import 'tips/tip_jar.dart' show TipJar;
 import 'helper_delivery.dart';
 import 'helper_push.dart';
-import 'screens/getting_messages_screen.dart';
+import 'screens/notifications_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_group_screen.dart';
 import 'screens/room_create_sheet.dart';
@@ -63,7 +137,7 @@ import 'screens/requests_screen.dart' show RequestsScreen, backToRequests;
 import 'screens/chat_door.dart' show openChatAt;
 import 'screens/chat_screen.dart';
 import 'screens/dev_about_sheet.dart' show devChatRoute;
-import 'devchat/dev_start.dart' show DevKeyCheckFailed, DevStart;
+import 'devchat/dev_start.dart' show DevCardOld, DevKeyCheckFailed, DevStart;
 import 'screens/pair_code_screen.dart';
 import 'screens/scan_screen.dart';
 import 'screens/modes_screen.dart';
@@ -75,13 +149,17 @@ import 'container.dart';
 import 'lock_state.dart';
 import 'app_shell.dart';
 import 'lock_guard.dart';
+import 'pin_shield.dart';
 import 'lock_layer.dart';
 import 'screens/lock_screen.dart';
 import 'screens/lock_setup_screen.dart';
 import 'screens/moved_screen.dart';
+import 'screens/unlinked_screen.dart';
+import 'screens/restore_screen.dart' show RestoreScreen;
 import 'pin_gate.dart';
 import 'widgets/pins.dart' show kMaxPins;
 import 'push_mode.dart';
+import 'quiet_wait.dart';
 import 'intro_prefs.dart';
 import 'scam_prefs.dart';
 import 'scam_shield.dart';
@@ -98,6 +176,8 @@ import 'session.dart';
 import 'router.dart';
 import 'vault_life.dart';
 import 'voice_choice.dart';
+import 'voice_format.dart';
+import 'file_drop.dart';
 import 'tools/tools_bridge.dart' show ToolsBridge;
 import 'devchat/dev_chat.dart';
 import 'devchat/dev_frame.dart' show DevSelf, devInFrame;
@@ -109,27 +189,27 @@ import 'screens/support_screen.dart' show askMoveIntoChats, openSupportTap;
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
 import 'widgets/motion.dart';
-import 'widgets/pair_join.dart' show pairUnreached;
-import 'widgets/pair_code_panel.dart' show PairCodes;
+import 'pair_flow.dart';
 import 'widgets/kryfo_link_text.dart'
     show addScanned, askTakeNameSheet, takeOutsideLink, takeOwnLink;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_ffi/kryfo_signal.dart';
 import 'package:app_links/app_links.dart';
 import 'signal_session.dart';
-import 'key_number.dart';
-import 'signal_stores.dart'
-    show invitePreKeyId, kDevSignalPrefix, onPeerKeyChanged;
+import 'signal_stores.dart' show kDevSignalPrefix, onPeerKeyChanged;
 import 'dart:isolate';
 import 'dlog.dart';
-import 'read_burn.dart' show burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
+import 'read_burn.dart'
+    show burnCameAt, burnStartBy, burnWaitsRow, burnWaitsSql, kBurnSkew;
+import 'restore_undo.dart';
 import 'stranger_gate.dart';
 import 'first_contact.dart';
 import 'text_send.dart' show kSendBlocked;
-import 'fast_gate.dart';
+import 'route_merge.dart';
 import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
 import 'notes_export.dart' show dropNotesExports, sweepNotesExports;
 import 'handle_lookup.dart';
+import 'invite_share.dart' show kryfoInviteOf;
 import 'handle_repoint.dart';
 import 'widgets/sheet_handle.dart';
 import 'widgets/halo_sheet.dart';
@@ -141,27 +221,94 @@ import 'relay_poll.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
 import 'l10n/app_locale.dart';
+import 'native_libs.dart';
 import 'widgets/shift_tap_guard.dart';
 import 'wire_pad.dart';
+import 'typing.dart';
+import 'profile_photo.dart';
 
 part 'app/arrivals.dart';
 part 'app/boot.dart';
 part 'app/database.dart';
+part 'app/database_blocks.dart';
+part 'app/database_chat_settings.dart';
+part 'app/database_contacts.dart';
+part 'app/database_deletes.dart';
+part 'app/database_drafts.dart';
+part 'app/database_group_shots.dart';
+part 'app/database_first_contact.dart';
+part 'app/database_group_owed.dart';
+part 'app/database_groups.dart';
+part 'app/database_media.dart';
+part 'app/database_messages.dart';
+part 'app/database_notifications.dart';
+part 'app/database_outbox.dart';
+part 'app/database_photos.dart';
+part 'app/database_polls.dart';
+part 'app/database_rooms.dart';
+part 'app/database_search.dart';
 part 'app/dev_screen.dart';
+part 'app/devices_app.dart';
+part 'app/devices_own_app.dart';
+part 'app/devices_receive_app.dart';
+part 'app/devices_send_app.dart';
+part 'app/devices_unlink_app.dart';
+part 'app/devices_vault_app.dart';
+part 'app/link_app.dart';
+part 'app/notes_own_app.dart';
+part 'app/history_app.dart';
 part 'app/engine.dart';
 part 'app/files.dart';
 part 'app/gates.dart';
+part 'app/group_hellos.dart';
 part 'app/groups.dart';
 part 'app/links.dart';
+part 'app/old_peers.dart';
+part 'app/invites_app.dart';
+part 'app/pair_codes_app.dart';
+part 'app/pairs.dart';
+part 'app/pq_restart.dart';
 part 'app/routing.dart';
 part 'app/sending.dart';
 part 'app/shell.dart';
 part 'app/signal.dart';
+part 'app/door.dart';
 part 'app/state.dart';
+part 'app/state_arrivals.dart';
+part 'app/state_bench.dart';
+part 'app/state_boot.dart';
+part 'app/state_bridges.dart';
+part 'app/state_contacts.dart';
+part 'app/state_delivery.dart';
+part 'app/state_devchat.dart';
+part 'app/state_group_lanes.dart';
+part 'app/state_groups.dart';
+part 'app/state_group_shots.dart';
+part 'app/state_heal.dart';
+part 'app/state_identity.dart';
+part 'app/state_messages.dart';
+part 'app/state_outbox.dart';
+part 'app/state_pairing.dart';
+part 'app/state_photos.dart';
+part 'app/state_prefs.dart';
+part 'app/state_profile.dart';
+part 'app/state_receive.dart';
+part 'app/state_refresh.dart';
+part 'app/state_rooms.dart';
+part 'app/state_route.dart';
+part 'app/state_screen.dart';
+part 'app/state_typing.dart';
+part 'app/state_search.dart';
+part 'app/state_session.dart';
+part 'app/state_vault.dart';
+part 'app/state_voice.dart';
+part 'app/state_files.dart';
 
 void main() async {
   dlog('launch main');
   WidgetsFlutterBinding.ensureInitialized();
+  // the media folders sealed before anything reads or writes them
+  await openPhoneSeal();
   // a key saved for someone that is not the one held before: open pages that
   // show it read again
   onPeerKeyChanged = appState.keyChanged;
@@ -173,11 +320,9 @@ void main() async {
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;
   lockState.picksDropped = dropPickerCopies;
-  // a draft is written down for a restart only for a chat that is still
-  // there
-  everydayChats = () => live.draftChats();
   // what a hidden chat or the decoy shares goes with the next lock
   shareGoesWithLock = () => sessionQuiet || session.vault != null;
+  clipGoesWithLock = () => sessionQuiet || session.vault != null;
   unawaited(_sweepNotesAtLaunch());
   unawaited(_sweepPlaintextLeftovers());
   // what a backup or a restore cut short left, before either can run again
@@ -191,6 +336,8 @@ void main() async {
   // replaced, it is lost, so it is asked again on every return
   unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
   WidgetsBinding.instance.addObserver(_underBars);
+  // a draft waiting to be written goes down before android may stop us
+  WidgetsBinding.instance.addObserver(const DraftsOnPause());
   // the periodic job knocks here every fifteen minutes. registered before
   // anything that could fail, and whether or not a screen is attached:
   // after a kill the system restarts the process for the service or the
@@ -210,6 +357,8 @@ void main() async {
       why: why,
     );
   });
+  // debug and profile builds: the reliability harness's sender (state_bench)
+  benchListen();
   // the language, before anything says a word: the first frame, or a
   // notification from a process the job started
   await loadAppLocale();
@@ -223,6 +372,14 @@ void main() async {
       }
     }),
   );
+  // which icon the home screen shows, before the first frame, while the
+  // theme's read runs: the pin pad's wordmark and the app switcher's title
+  // follow it. a short wait at most
+  try {
+    await readAppFace().timeout(const Duration(milliseconds: 300));
+  } catch (_) {
+    // read on in the background; the title follows once it is
+  }
   if (PlatformDispatcher.instance.implicitView == null) {
     dlog('launch headless');
     // no window: the service or the job brought the process back, and
@@ -242,7 +399,7 @@ void main() async {
       t.cancel();
       dlog('launch window arrived');
       WidgetsBinding.instance.addObserver(lockBack);
-      runApp(const HaloApp());
+      onDesktop ? deskRunApp(const HaloApp()) : runApp(const HaloApp());
       WidgetsBinding.instance.addPostFrameCallback((_) => _openFromNotif());
     });
     return;
@@ -250,7 +407,8 @@ void main() async {
   WidgetsBinding.instance.addPostFrameCallback((_) => dlog('launch frame'));
   // before runApp, so it is asked about back before the app's navigator
   WidgetsBinding.instance.addObserver(lockBack);
-  runApp(const HaloApp());
+  // desktop: a frame once the app replaces the lock screen's root
+  onDesktop ? deskRunApp(const HaloApp()) : runApp(const HaloApp());
   dlog('launch runApp returned');
   // cold-start: if launched from a notification tap, open the chat
   // after the first frame so rootNavKey has a navigator.
@@ -281,11 +439,15 @@ class HaloApp extends StatelessWidget {
           localeRevision,
           navRevision,
         ]),
-        builder: (context, _) => haloAppShell(
-          navigatorKey: rootNavKey,
-          locale: l10nLocale,
-          lock: (navigator) => _LockGate(child: navigator),
-          home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+        builder: (context, _) => FacedShell(
+          builder: (face, label) => haloAppShell(
+            navigatorKey: rootNavKey,
+            locale: l10nLocale,
+            face: face,
+            faceLabel: label,
+            lock: (navigator) => _LockGate(child: navigator),
+            home: _LocaleScope(child: _OnboardingGate(child: RootShell())),
+          ),
         ),
       ),
     );

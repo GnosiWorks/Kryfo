@@ -77,6 +77,16 @@ func isC(e ast.Expr, name string) bool {
 	return ok && x.Name == "C" && sel.Sel.Name == name
 }
 
+// (*C.char)(...)
+func isCharConv(e ast.Expr) bool {
+	p, ok := e.(*ast.ParenExpr)
+	if !ok {
+		return false
+	}
+	s, ok := p.X.(*ast.StarExpr)
+	return ok && isC(s.X, "char")
+}
+
 func returnsCString(fd *ast.FuncDecl) bool {
 	r := fd.Type.Results
 	if r == nil || len(r.List) != 1 || len(r.List[0].Names) > 1 {
@@ -131,8 +141,14 @@ func (o owned) fresh(in *ast.FuncDecl, e ast.Expr) bool {
 	case *ast.Ident:
 		return v.Name == "nil" || o.assigned(in, v.Name)
 	case *ast.CallExpr:
-		if isC(v.Fun, "CString") {
+		// a secret is written into fresh c memory without a go string
+		// (malloc, or C.CBytes, malloc'd as C.CString is)
+		if isC(v.Fun, "CString") || isC(v.Fun, "malloc") || isC(v.Fun, "CBytes") {
 			return true
+		}
+		// (*C.char)(x) is as fresh as x
+		if isCharConv(v.Fun) && len(v.Args) == 1 {
+			return o.fresh(in, v.Args[0])
 		}
 		if id, ok := v.Fun.(*ast.Ident); ok {
 			return o.helper(id.Name, 0)

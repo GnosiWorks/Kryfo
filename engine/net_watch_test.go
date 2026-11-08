@@ -370,7 +370,7 @@ func TestAParkedRunnerHearsAKickBeforeItSleeps(t *testing.T) {
 	peer := newXid(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), mustRcv(t, peer))
 	if !waitUntil(3*time.Second, func() bool { return looks.Load() >= 2 }) {
 		t.Fatalf("the runner slept through a kick, %d looks", looks.Load())
 	}
@@ -387,7 +387,7 @@ func TestAParkedRunnerEndsWithItsContext(t *testing.T) {
 	t.Cleanup(func() { runnerParkHook = nil })
 	before := fcRelaysLive.Load()
 	ctx, cancel := context.WithCancel(context.Background())
-	go nostrSubscribeRunnerMode(ctx, "firstcontact", [32]byte{}, strings.Repeat("ab", 32), true, 3)
+	go nostrSubscribeRunnerFc(ctx, "firstcontact", strings.Repeat("cd", 32), strings.Repeat("ab", 32))
 	if !waitUntil(3*time.Second, func() bool { return looks.Load() > 0 }) {
 		t.Fatal("the runner never parked")
 	}
@@ -708,9 +708,7 @@ func TestAStuckBridgeConfigSaysSo(t *testing.T) {
 		t.Fatal(r)
 	}
 	f := overlapRig(t)
-	old := ctrlDeadline
-	ctrlDeadline = 300 * time.Millisecond
-	t.Cleanup(func() { ctrlDeadline = old })
+	setCtrlDeadline(t, 300*time.Millisecond)
 	f.slow.Store(int64(time.Second))
 	r := reconnectNow()
 	if !strings.HasPrefix(r, "error: control port timeout") {

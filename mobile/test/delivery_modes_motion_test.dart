@@ -8,8 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/main.dart' show appState, AppStateDelivery;
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot;
@@ -70,34 +70,38 @@ void main() {
       expect(t.hasRunningAnimations, isFalse);
       expect(
         find.ancestor(
-          of: find.text(l10n.modesRelay),
+          of: find.text(l10n.modesFast),
           matching: find.byType(PressScale),
         ),
         findsOneWidget,
       );
-      final g = await t.startGesture(t.getCenter(find.text(l10n.modesRelay)));
+      final g = await t.startGesture(t.getCenter(find.text(l10n.modesFast)));
       await t.pump(const Duration(milliseconds: 150));
-      expect(press(t, l10n.modesRelay), lessThan(1));
+      expect(press(t, l10n.modesFast), lessThan(1));
       await g.cancel();
       await t.pump(const Duration(milliseconds: 300));
       await t.pump(const Duration(milliseconds: 300));
-      expect(press(t, l10n.modesRelay), 1);
+      expect(press(t, l10n.modesFast), 1);
       expect(t.hasRunningAnimations, isFalse);
     });
 
-    testWidgets('hops read in mono, like every count', (t) async {
+    testWidgets('the line under a card name reads in mono', (t) async {
       phone(t);
       await t.pumpWidget(framed(const ModesScreen()));
       await t.pump(const Duration(seconds: 1));
-      final three = t.widget<Text>(find.text('3'));
-      expect(three.style!.fontFamily, HaloType.monoFamily);
+      for (final tag in [l10n.modesPrivateTag, l10n.modesFastTag]) {
+        expect(
+          t.widget<Text>(find.text(tag)).style!.fontFamily,
+          HaloType.monoFamily,
+        );
+      }
     });
 
     testWidgets('reduced motion: a press does not move', (t) async {
       phone(t);
       await t.pumpWidget(framed(const ModesScreen(), still: true));
       await t.pump(const Duration(seconds: 1));
-      final g = await t.startGesture(t.getCenter(find.text(l10n.modesRelay)));
+      final g = await t.startGesture(t.getCenter(find.text(l10n.modesFast)));
       await t.pump(const Duration(milliseconds: 150));
       expect(t.hasRunningAnimations, isFalse);
       await g.cancel();
@@ -112,7 +116,7 @@ void main() {
       // the relay has answered, so the helper card has no check running
       appState.relaySaidNoForTest = true;
       addTearDown(() => appState.relaySaidNoForTest = false);
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(milliseconds: 500));
       expect(find.byType(BreathDot), findsNothing);
@@ -124,7 +128,7 @@ void main() {
       t,
     ) async {
       phone(t);
-      await t.pumpWidget(framed(const GettingMessagesScreen(), still: true));
+      await t.pumpWidget(framed(const NotificationsScreen(), still: true));
       await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(milliseconds: 500));
       expect(find.text(l10n.gettingMessagesHelperChecking), findsOneWidget);

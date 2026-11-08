@@ -11,7 +11,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/not_them.dart';
 import '../devchat/dev_gate.dart' show isDevId;
 import '../widgets/motion.dart' show kHouseCurve, motionStill;
-import '../main.dart' show session, appState;
+import '../main.dart' show session, appState, AppStateOutbox, AppStateRefresh;
 import '../l10n/l10n.dart';
 
 // safety number for a contact: 60 digits from both X25519 public keys,
@@ -173,7 +173,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                     index: 0,
                     child: Text(
                       l10n.keyVerificationWith(widget.peerName),
-                      style: HaloType.sans(size: 14, color: HaloColors.text2),
+                      style: HaloType.sans(size: 14, color: HaloColors.text),
                     ),
                   ),
                   EaseSize(
@@ -227,7 +227,7 @@ class _KeyVerificationScreenState extends State<KeyVerificationScreen> {
                         l10n.keyVerificationCompareAll(widget.peerName),
                         style: HaloType.sans(
                           size: 13,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.5,
                         ),
                       ),
@@ -449,7 +449,7 @@ class _VerifyButton extends StatelessWidget {
                   style: HaloType.sans(
                     size: 14,
                     weight: FontWeight.w500,
-                    color: verified ? HaloColors.green : HaloColors.text,
+                    color: verified ? HaloColors.greenText : HaloColors.text,
                   ),
                 ),
               ),

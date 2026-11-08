@@ -10,7 +10,8 @@ import 'package:kryfo/app_shell.dart' show HaloScrollBehavior;
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
-import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
+import 'package:kryfo/main.dart'
+    show HaloEngine, appState, useEngineForTest, AppStateBridges;
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/transport_screen.dart';
 import 'package:kryfo/theme.dart';

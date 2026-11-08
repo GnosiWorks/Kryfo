@@ -22,7 +22,10 @@ import 'package:kryfo/main.dart'
         appState,
         currentChatPeer,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute,
+        AppStateRefresh,
+        AppStateIdentity;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/photo_knows_screen.dart';
 import 'package:kryfo/screens/share_sheet.dart';
@@ -142,9 +145,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) {
     calls.add(i.memberName.toString());

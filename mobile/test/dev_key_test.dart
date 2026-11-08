@@ -11,11 +11,12 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/devchat/dev_lane.dart' show devCardChecks, devCardStarts;
 import 'package:kryfo/main.dart'
-    show haloUriV3, makePreKeyBundleB64, parseHaloUri;
+    show haloUriV3, makePreKeyBundleB64, parseHaloUri, processPeerBundle;
 import 'package:kryfo/signal_session.dart';
-import 'package:kryfo/signal_stores.dart' show invitePreKeyId;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:kryfo/signal_stores.dart' show invitePreKeyId, kInviteKyberId;
+import 'signal_kit.dart';
 
 import 'mem_db.dart';
 
@@ -56,8 +57,8 @@ Future<List<String>> _problems(DevKey k) async {
     );
     // the call SignalSession makes on its own signed prekey
     need(
-      Curve.verifySignature(
-        Curve.decodePoint(identity, 0),
+      preKeySigned(
+        identity,
         _b64(j['signedPreKeyPublic']),
         _b64(j['signedPreKeySignature']),
       ),
@@ -66,26 +67,24 @@ Future<List<String>> _problems(DevKey k) async {
     need(j['preKeyId'] == invitePreKeyId, 'preKeyId is the kept invite key');
     need(j['signedPreKeyId'] == 1, 'signedPreKeyId is 1');
     need(j['deviceId'] == 1, 'deviceId is 1');
-    // and a session builds from it, as a first send's would
-    final store = InMemorySignalProtocolStore(
-      generateIdentityKeyPair(),
-      generateRegistrationId(false),
-    );
-    await SessionBuilder.fromSignalStore(
-      store,
-      SignalProtocolAddress(k.chatId, 1),
-    ).processPreKeyBundle(
-      PreKeyBundle(
-        j['registrationId'] as int,
-        j['deviceId'] as int,
-        j['preKeyId'] as int,
-        Curve.decodePoint(_b64(j['preKeyPublic']), 0),
-        j['signedPreKeyId'] as int,
-        Curve.decodePoint(_b64(j['signedPreKeyPublic']), 0),
-        _b64(j['signedPreKeySignature']),
-        IdentityKey(Curve.decodePoint(identity, 0)),
+    // a card from before 0.6 has no kyber prekey: chats already on it go
+    // on, a new one cannot start (the release check asks for one)
+    if (!j.containsKey('kyberPreKeyPublic')) return out;
+    need(
+      preKeySigned(
+        identity,
+        _b64(j['kyberPreKeyPublic']),
+        _b64(j['kyberPreKeySignature']),
       ),
+      'the kyber prekey signature verifies under the identity key',
     );
+    need(j['kyberPreKeyId'] == kInviteKyberId, 'kyberPreKeyId is the kept one');
+    // and a session builds from it, as a first send's would
+    // under a plain name: the dev chat's own pins the key on top
+    final store = await testStore();
+    await processPeerBundle('dev-card-check', k.bundle, into: store);
+    final info = (await store.sessionInfo('dev-card-check'))!;
+    need(info.version == 4 && info.pq, 'the session is pqxdh with spqr');
   } catch (e) {
     out.add('${k.keyId}: the bundle does not build a session ($e)');
   }
@@ -104,7 +103,7 @@ List<String> _listProblems(List<DevKey> keys) => [
 Future<({String link, Uint8List xPub, SignalSession ss})> _card(
   String words,
 ) async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final xPub = pair.publicKey.serialize().sublist(1);
   final ss = SignalSession();
   await ss.bootstrap(
@@ -181,10 +180,7 @@ void main() {
       expect(k.onion, isEmpty);
       // the signal identity is the x25519 key itself
       expect(k.xPub, _hex(card.xPub));
-      expect(
-        pinnedIdentity(k),
-        card.ss.identityKeyPair.getPublicKey().serialize(),
-      );
+      expect(pinnedIdentity(k), card.ss.identity.public);
       expect(pinnedIdentity(k), hasLength(33));
     });
 
@@ -197,6 +193,60 @@ void main() {
       final p = await _problems(bad);
       expect(p, contains(contains('signature verifies')));
       expect(p, contains(contains('does not build a session')));
+    });
+
+    test('carries the kyber prekey, and a dev chat can start on it', () async {
+      final j = jsonDecode(utf8.decode(base64Decode(k.bundle))) as Map;
+      expect(j['kyberPreKeyId'], kInviteKyberId);
+      expect(_b64(j['kyberPreKeyPublic']), hasLength(1569));
+      expect(devCardChecks(k), isTrue);
+      expect(devCardStarts(k), isTrue);
+    });
+
+    test('a flipped kyber signature byte fails', () async {
+      final bad = _edited(k, (j) {
+        final sig = _b64(j['kyberPreKeySignature']);
+        sig[10] ^= 0x01;
+        j['kyberPreKeySignature'] = base64Encode(sig);
+      });
+      final p = await _problems(bad);
+      expect(p, contains(contains('kyber prekey signature verifies')));
+      expect(p, contains(contains('does not build a session')));
+      expect(devCardChecks(bad), isFalse);
+      expect(devCardStarts(bad), isFalse);
+    });
+
+    test('another kyber key in it fails', () async {
+      final other = DevKey.fromLink(
+        (await _card('other-test-card')).link,
+        keyId: 'x2',
+      )!;
+      final o = jsonDecode(utf8.decode(base64Decode(other.bundle))) as Map;
+      final bad = _edited(k, (j) {
+        j['kyberPreKeyPublic'] = o['kyberPreKeyPublic'];
+        j['kyberPreKeySignature'] = o['kyberPreKeySignature'];
+      });
+      expect(devCardChecks(bad), isFalse);
+      expect(await _problems(bad), isNotEmpty);
+    });
+
+    test('without its kyber prekey it checks out and starts nothing', () async {
+      final old = _edited(k, (j) {
+        j.remove('kyberPreKeyId');
+        j.remove('kyberPreKeyPublic');
+        j.remove('kyberPreKeySignature');
+      });
+      // as the 0.5.x card pinned today: its signatures hold
+      expect(devCardChecks(old), isTrue);
+      expect(await _problems(old), isEmpty);
+      // but no new chat starts on it
+      expect(devCardStarts(old), isFalse);
+      final store = await testStore();
+      await expectLater(
+        processPeerBundle('dev-card-check', old.bundle, into: store),
+        throwsA(isA<ClassicRefused>()),
+      );
+      expect(await store.hasSession('dev-card-check'), isFalse);
     });
 
     test('another identity behind the same xpub fails', () async {
@@ -406,4 +456,101 @@ void main() {
     ].join('\n');
     expect('KRYFO_DEV_CARD'.allMatches(code), hasLength(1));
   });
+
+  test('release.sh refuses a final whose current card has no kyber '
+      'prekey', () async {
+    final card = await _card('kyber-test-card');
+    final kyber = parseHaloUri(card.link)!['bundle']!;
+    final j = jsonDecode(utf8.decode(base64Decode(kyber))) as Map
+      ..remove('kyberPreKeyId')
+      ..remove('kyberPreKeyPublic')
+      ..remove('kyberPreKeySignature');
+    final classic = base64Encode(utf8.encode(jsonEncode(j)));
+    String file(List<(String, String?)> keys) =>
+        'const kDevKeys = <DevKey>[\n'
+        '${[for (final (b, st) in keys) "  DevKey(\n    keyId: 'x',\n    bundle:\n        '$b',\n${st == null ? '' : '    status: DevKeyStatus.$st,\n'}  ),\n"].join()}'
+        '];\n';
+    Future<ProcessResult> check(String src) async {
+      final p = await Process.start('bash', [
+        '../scripts/check-dev-card.sh',
+        '-',
+      ]);
+      p.stdin.write(src);
+      await p.stdin.close();
+      final out = await p.stdout.transform(utf8.decoder).join();
+      final err = await p.stderr.transform(utf8.decoder).join();
+      return ProcessResult(p.pid, await p.exitCode, out, err);
+    }
+
+    expect((await check(file([(kyber, null)]))).exitCode, 0);
+    final old = await check(file([(classic, null)]));
+    expect(old.exitCode, isNot(0));
+    expect('${old.stderr}', contains('no kyber prekey'));
+    // a classic card kept as the previous one is fine
+    expect(
+      (await check(file([(classic, 'previous'), (kyber, null)]))).exitCode,
+      0,
+    );
+    expect(
+      (await check(file([(kyber, null), (kyber, null)]))).exitCode,
+      isNot(0),
+    );
+    // the script reads the app's own list the same way
+    final real = File('lib/devchat/dev_key.dart').readAsStringSync();
+    expect(real, contains('const kDevKeys = <DevKey>['));
+  });
+
+  test('release.sh never builds a final with the candidate switch set', () {
+    // nothing from the shell: a KRYFO_RC set there would start a real build
+    final bare = {
+      'PATH': Platform.environment['PATH']!,
+      'HOME': Platform.environment['HOME']!,
+    };
+    final sh = File('../repro/release.sh').readAsStringSync();
+    expect(sh, contains('a final release is never built with it'));
+    expect(sh, contains('scripts/check-dev-card.sh'));
+    // a candidate lands in out/rc, named and versioned -rc, signed only so
+    expect(sh, contains('OUT=out/rc'));
+    expect(sh, contains(r'BUILD_NAME="$version-rc"'));
+    expect(sh, contains(r'mv "$f" "${f%.apk}-rc.apk"'));
+    expect(sh, contains('refusing to sign a candidate'));
+    expect(
+      File('../repro/build-repro.sh').readAsStringSync(),
+      contains('--build-name "\$HALO_BUILD_NAME"'),
+    );
+    final r = Process.runSync(
+      'bash',
+      ['../repro/release.sh', '--unsigned'],
+      environment: {...bare, 'KRYFO_RC': '1'},
+      includeParentEnvironment: false,
+    );
+    expect(r.exitCode, 2);
+    expect('${r.stderr}', contains('never built with it'));
+    final rc = Process.runSync(
+      'bash',
+      ['../repro/release.sh', '--rc', '--unsigned'],
+      environment: bare,
+      includeParentEnvironment: false,
+    );
+    expect(rc.exitCode, 2);
+    expect('${rc.stderr}', contains('--rc needs KRYFO_RC=1'));
+  });
+
+  // the release check: a release whose current pinned card a new dev chat
+  // cannot start on does not ship. KRYFO_RELEASE=1 flutter test
+  // test/dev_key_test.dart. a release candidate (KRYFO_RC=1) skips it, and
+  // release.sh refuses a final built with KRYFO_RC set
+  test(
+    'the current pinned card carries the kyber prekey',
+    () {
+      final k = kDevKeys.firstWhere((k) => k.status == DevKeyStatus.current);
+      expect(devCardStarts(k), isTrue, reason: k.keyId);
+    },
+    skip: Platform.environment['KRYFO_RELEASE'] != '1'
+        ? 'release check: KRYFO_RELEASE=1'
+        : Platform.environment['KRYFO_RC'] == '1'
+        ? 'release candidate: its first start on the developer\'s phone '
+              'makes the card the final pins'
+        : false,
+  );
 }

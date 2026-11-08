@@ -259,7 +259,7 @@ void main() {
 
   group('set up and registrations', () {
     final contacts = [
-      for (var i = 0; i < 6; i++) KnockAddress(c[i], 'everyday:${i % 4}'),
+      for (var i = 0; i < 6; i++) KnockAddress(c[i], 'everyday:0:$i'),
     ];
     const fc = KnockAddress('fc', 'firstcontact:aa');
 
@@ -559,7 +559,7 @@ void main() {
           id = x;
         }
       }
-      engine.live = [KnockAddress(id, 'everyday:0'), ...contacts];
+      engine.live = [KnockAddress(id, 'everyday:0:9'), ...contacts];
       await helper.setUp(ntfy.package, wait: Duration.zero);
       await rounds();
       expect(engine.relay.containsKey(id), isFalse);
@@ -752,7 +752,7 @@ void main() {
     const hour = 60 * 60 * 1000;
     const step = 15 * 60 * 1000;
     final contacts = [
-      for (var i = 0; i < 6; i++) KnockAddress(c[i], 'everyday:${i % 4}'),
+      for (var i = 0; i < 6; i++) KnockAddress(c[i], 'everyday:0:$i'),
     ];
     const fc = KnockAddress('fc', 'firstcontact:aa');
 

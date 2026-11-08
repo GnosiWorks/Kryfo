@@ -96,6 +96,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hình nền riêng của một cuộc trò chuyện, chọn từ menu của nó, được ưu tiên. Ảnh ở lại trên điện thoại này, được mã hóa cùng các cuộc trò chuyện của bạn.';
 
   @override
+  String get appearanceWallpaperHintDesk =>
+      'Hình nền riêng của một cuộc trò chuyện, chọn từ menu của nó, được ưu tiên. Ảnh ở lại trên máy tính này, được mã hóa cùng các cuộc trò chuyện của bạn.';
+
+  @override
   String get backupThatPassphraseDoesNot =>
       'Cụm mật khẩu đó không mở được tệp này';
 
@@ -135,9 +139,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get contactStatusWaitingInRequests => 'Đang chờ ở mục yêu cầu';
-
-  @override
-  String get contactStatusAddedByHand => 'Đã thêm thủ công';
 
   @override
   String get deliveryModeAlwaysOn => 'Luôn bật';
@@ -414,6 +415,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được một tệp đính kèm trên điện thoại này';
 
   @override
+  String get appAnAttachmentCouldNotDesk =>
+      'Không lưu được một tệp đính kèm trên máy tính này';
+
+  @override
   String get appGroup2 => 'Nhóm';
 
   @override
@@ -508,10 +513,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Quét mã của họ, hoặc dán thứ họ đưa cho bạn: một liên kết, một @tên người dùng, hoặc một liên kết phòng.';
 
   @override
+  String get appScanTheirCodeOrDesk =>
+      'Dán thứ họ đưa cho bạn: một liên kết, một @tên người dùng, hoặc một liên kết phòng.';
+
+  @override
   String get appScanTheirCode => 'Quét mã của họ';
 
   @override
-  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @wren';
+  String get appAKryfoLinkA => 'Liên kết Kryfo, liên kết phòng hoặc @name';
 
   @override
   String get appAddThem => 'Thêm họ';
@@ -610,9 +619,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appSpeedPrivacy => 'Tốc độ & riêng tư →';
 
   @override
-  String get appGettingMessages => 'Nhận tin nhắn →';
-
-  @override
   String get appDisableAppLock => 'Tắt khóa ứng dụng?';
 
   @override
@@ -636,17 +642,8 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã kết nối · định tuyến qua 3 relay';
 
   @override
-  String get appReadyToSendPublishing =>
-      'Sẵn sàng gửi · đang công bố địa chỉ của bạn';
-
-  @override
-  String get appReadyToSendFinishing =>
-      'Sẵn sàng gửi · đang hoàn tất thiết lập';
-
-  @override
-  String appConnecting(Object pct) {
-    return 'Đang kết nối · $pct';
-  }
+  String get appReadyToChatAddressFinishing =>
+      'Sẵn sàng trò chuyện · địa chỉ đang hoàn tất';
 
   @override
   String get appTor => 'Tor';
@@ -665,16 +662,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appRelayAndFastModes =>
-      'Chế độ relay và chế độ nhanh bỏ qua Tor và nhanh hơn. Chúng nằm trong cài đặt, mục tốc độ & riêng tư, và mỗi chế độ đều nói rõ cái giá phải trả.';
-
-  @override
-  String get appViaRelay => 'Qua relay';
+      'Nhanh bỏ qua Tor nên nhanh hơn. Nằm trong cài đặt, mục tốc độ và quyền riêng tư, và có nói rõ cái giá phải trả.';
 
   @override
   String get appOffline => 'Ngoại tuyến';
-
-  @override
-  String get appFast => 'Nhanh';
 
   @override
   String get appTorOff => 'Tor tắt';
@@ -687,6 +678,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appWaitingForARelay => 'Đang chờ relay';
+
+  @override
+  String appStartingTorPct(Object pct) {
+    return 'Đang khởi động Tor · $pct';
+  }
+
+  @override
+  String get appGettingNewMessages => 'Đang nhận tin nhắn mới';
 
   @override
   String mediaProgressSendingKeepTheApp(Object v) {
@@ -1070,11 +1069,19 @@ class AppLocalizationsVi extends AppLocalizations {
       'Một bản để cất giữ. Điện thoại này vẫn hoạt động như bình thường.';
 
   @override
+  String get backupACopyToKeepDesk =>
+      'Một bản để cất giữ. Máy tính này vẫn hoạt động như bình thường.';
+
+  @override
   String get backupMoveToAnotherDevice => 'Chuyển sang thiết bị khác';
 
   @override
   String get backupTheFileTakesThis =>
       'Tệp này mang theo danh tính này. Khi tệp được tạo xong, điện thoại này sẽ ngừng: không có gì mới đến đây nữa, và không gì gửi từ đây đến được với ai.';
+
+  @override
+  String get backupTheFileTakesThisDesk =>
+      'Tệp này mang theo danh tính này. Khi tệp được tạo xong, máy tính này sẽ ngừng: không có gì mới đến đây nữa, và không gì gửi từ đây đến được với ai.';
 
   @override
   String get backupOneEncryptedFileYour =>
@@ -1083,6 +1090,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get backupOneEncryptedFileYourIdentityYour =>
       'Một tệp được mã hóa: danh tính, các liên hệ, mọi tin nhắn, cùng mọi ảnh, tin nhắn thoại và tệp đang có trên điện thoại này của bạn. Những gì nói sau hôm nay sẽ không có trong đó, nên hãy tạo bản khác khi cần. Để khôi phục, bạn cần cả tệp lẫn cụm mật khẩu.';
+
+  @override
+  String get backupOneEncryptedFileYourIdentityYourDesk =>
+      'Một tệp được mã hóa: danh tính, các liên hệ, mọi tin nhắn, cùng mọi ảnh, tin nhắn thoại và tệp đang có trên máy tính này của bạn. Những gì nói sau hôm nay sẽ không có trong đó, nên hãy tạo bản khác khi cần. Để khôi phục, bạn cần cả tệp lẫn cụm mật khẩu.';
 
   @override
   String get backupPassphrase => 'Cụm mật khẩu';
@@ -1130,8 +1141,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tệp đã tới điện thoại mới của bạn chưa?';
 
   @override
+  String get backupMoveReachedTitleDesk =>
+      'Tệp đã tới thiết bị mới của bạn chưa?';
+
+  @override
   String get backupMoveReachedLine =>
       'Hãy giữ điện thoại này cho đến khi bạn đã mở tệp ở đó.';
+
+  @override
+  String get backupMoveReachedLineDesk =>
+      'Hãy giữ máy tính này cho đến khi bạn đã mở tệp ở đó.';
 
   @override
   String get backupFinishTheMove => 'Hoàn tất việc chuyển';
@@ -1156,6 +1175,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Điện thoại không đủ dung lượng trống để tạo bản sao lưu. Hãy giải phóng bớt dung lượng rồi thử lại.';
 
   @override
+  String get backupNoSpaceDesk =>
+      'Máy tính không đủ dung lượng trống để tạo bản sao lưu. Hãy giải phóng bớt dung lượng rồi thử lại.';
+
+  @override
   String get backupHiddenNotIn => 'Trò chuyện ẩn không có trong tệp này.';
 
   @override
@@ -1165,6 +1188,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get backupMoveHiddenStay =>
       'Trò chuyện ẩn ở lại trên điện thoại này và bị xóa cùng với nó.';
+
+  @override
+  String get backupMoveHiddenStayDesk =>
+      'Trò chuyện ẩn ở lại trên máy tính này và bị xóa cùng với nó.';
 
   @override
   String get backupHiddenGone =>
@@ -1207,9 +1234,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khi bạn xin cầu nối, Dự án Tor sẽ thấy địa chỉ IP của bạn. Điều đó là bình thường: Tor Browser và mọi ứng dụng Tor đều lấy cầu nối theo cách này, và tất cả những gì họ biết được là có ai đó đã xin cầu nối. Không có gì về các cuộc trò chuyện của bạn.';
 
   @override
-  String get bridgesAsking => 'Đang hỏi…';
-
-  @override
   String get cameraNoCameraOnThis => 'Điện thoại này không có máy ảnh';
 
   @override
@@ -1242,7 +1266,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được bản sao trên điện thoại này';
 
   @override
-  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 15 MB';
+  String get cameraTooLongForA => 'Quá dài cho một tin nhắn · tối đa 50 MB';
 
   @override
   String get cameraNeverSavedToYour => 'Không bao giờ lưu vào thư viện ảnh';
@@ -1373,7 +1397,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatItDisappearsWithNo =>
-      'Tin nhắn bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+      'Tin nhắn sẽ bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get chatItDisappearsWithNoDesk =>
+      'Tin nhắn sẽ bị xóa khỏi cả hai thiết bị, trừ khi đã được lưu. Không thể hoàn tác việc này.';
 
   @override
   String chatThisChatHasPins(int count) {
@@ -1451,6 +1479,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatGifFromPhone => 'Gif từ điện thoại';
 
   @override
+  String get chatGifFromPhoneDesk => 'Gif từ máy tính';
+
+  @override
   String get chatFile2 => 'Tệp';
 
   @override
@@ -1510,28 +1541,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCouldNotCleanThat => 'Không làm sạch được video đó';
 
   @override
-  String get chatCouldNotCleanThatPictureSend =>
-      'Không làm sạch được hình đó · hãy gửi dưới dạng ảnh';
-
-  @override
   String get chatGifTooBig8 => 'Gif quá lớn · tối đa 8 mb';
 
   @override
   String get chatCouldNotCleanThatGif => 'Không làm sạch được gif đó';
 
   @override
-  String get chatTorIsNotUp => 'Tor chưa sẵn sàng · gửi không kèm xem trước';
+  String get chatTorIsNotUp => 'Tor chưa kết nối · không có xem trước liên kết';
 
   @override
   String get chatCouldnTReachIt =>
-      'Không truy cập được · gửi không kèm xem trước';
+      'Không truy cập được trang · không có xem trước liên kết';
 
   @override
   String get chatNoTitleCameBack =>
-      'Không lấy được tiêu đề · gửi không kèm xem trước';
+      'Trang này không có tiêu đề · không có xem trước liên kết';
 
   @override
-  String get chatCouldnTFetchIt => 'Không tải được · gửi không kèm xem trước';
+  String get chatCouldnTFetchIt => 'Không tải được bản xem trước';
 
   @override
   String get chatNoSignalSessionRe => 'Không có phiên Signal. Hãy ghép nối lại';
@@ -1606,6 +1633,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chỉ dành cho bạn. Không bao giờ được gửi, không bao giờ rời khỏi điện thoại này.';
 
   @override
+  String get chatJustForYouNeverDesk =>
+      'Chỉ dành cho bạn. Không bao giờ được gửi, không bao giờ rời khỏi máy tính này.';
+
+  @override
   String get chatAQuietReminder => 'Một lời nhắc nhỏ…';
 
   @override
@@ -1617,6 +1648,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get chatEveryMessageHereIs =>
       'Mọi tin nhắn ở đây sẽ bị xóa khỏi điện thoại này. Việc này chỉ xóa bản của bạn. Không động đến thiết bị của họ.';
+
+  @override
+  String get chatEveryMessageHereIsDesk =>
+      'Mọi tin nhắn ở đây sẽ bị xóa khỏi máy tính này. Việc này chỉ xóa bản của bạn. Không động đến thiết bị của họ.';
 
   @override
   String get chatClear => 'Xóa hết';
@@ -1697,6 +1732,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatWaitingForThemTo => 'Đang chờ họ chấp nhận yêu cầu của bạn';
 
   @override
+  String get chatWaitsToSend => 'Đang chờ gửi';
+
+  @override
   String get chatTheyMayNotKnow => 'Có thể họ chưa biết bạn đã chấp nhận';
 
   @override
@@ -1704,9 +1742,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatSupporter => 'Người ủng hộ';
-
-  @override
-  String get chatEncryptedViaRelay => 'Được mã hóa · qua relay';
 
   @override
   String get chatEncryptedDirect => 'Được mã hóa · trực tiếp';
@@ -1850,13 +1885,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatCompareLater => 'Để sau';
 
   @override
-  String get chatCompareFolded => 'Chưa so sánh số an toàn';
-
-  @override
   String get chatCompareNow => 'So sánh';
-
-  @override
-  String get chatCompareDismiss => 'Ẩn';
 
   @override
   String chatKeyHeldLine(Object peerName) {
@@ -1907,6 +1936,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cleanNotEnoughRoomOn => 'Điện thoại không đủ dung lượng.';
 
   @override
+  String get cleanNotEnoughRoomOnDesk => 'Máy tính không đủ dung lượng.';
+
+  @override
   String get cleanKryfoCouldNotOpen => 'Kryfo không mở được tệp đó.';
 
   @override
@@ -1920,6 +1952,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cleanPicturesOver64Mb =>
       'Ảnh trên 64 MB không được làm sạch trên điện thoại. Không có gì bị thay đổi.';
+
+  @override
+  String get cleanPicturesOver64MbDesk =>
+      'Ảnh trên 64 MB không được làm sạch trên máy tính. Không có gì bị thay đổi.';
 
   @override
   String get cleanKryfoCouldNotRead =>
@@ -1938,12 +1974,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ứng dụng đã chia sẻ tệp có thể đã lấy lại nó. Hãy thử chia sẻ lại.';
 
   @override
+  String get cleanTheAppThatSharedDesk =>
+      'Có thể tệp đã bị di chuyển, hoặc một ứng dụng khác đang mở nó. Hãy thử chọn lại.';
+
+  @override
   String get cleanNoAppOnThis =>
       'Không ứng dụng nào trên điện thoại này nhận tệp.';
 
   @override
   String get cleanCouldNotSaveIt =>
       'Không lưu được. Hãy kiểm tra xem điện thoại còn dung lượng không.';
+
+  @override
+  String get cleanCouldNotSaveItDesk =>
+      'Không lưu được. Hãy kiểm tra xem máy tính còn dung lượng không.';
 
   @override
   String get cleanTheOriginalIsGone => 'Bản gốc đã bị xóa. Bản sạch vẫn còn.';
@@ -1960,6 +2004,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cleanSaveToGallery => 'Lưu vào thư viện';
+
+  @override
+  String get cleanSaveToGalleryDesk => 'Lưu bản sạch';
 
   @override
   String get commonStop => 'Dừng';
@@ -1980,6 +2027,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ đều ở lại trên điện thoại này.';
 
   @override
+  String get cleanEverythingStaysOnThisDesk =>
+      'Mọi thứ đều ở lại trên máy tính này.';
+
+  @override
   String get cleanAlreadyClean => 'Đã sạch sẵn.';
 
   @override
@@ -1996,6 +2047,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cleanSamePictureSameQuality => 'Vẫn ảnh đó, vẫn chất lượng đó';
+
+  @override
+  String get cleanSamePicture => 'Vẫn ảnh đó';
 
   @override
   String cleanRemoved(Object label) {
@@ -2021,6 +2075,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cleanSavedToYourGallery => 'Đã lưu vào thư viện ảnh.';
+
+  @override
+  String get cleanSavedToYourGalleryDesk => 'Đã lưu vào nơi bạn chọn.';
 
   @override
   String cleanTheOriginalIsStill(Object what) {
@@ -2050,6 +2107,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get contactStaysOnThisPhone =>
       'Ở lại trên điện thoại này. Họ không bao giờ thấy nó.';
+
+  @override
+  String get contactStaysOnThisPhoneDesk =>
+      'Ở lại trên máy tính này. Họ không bao giờ thấy nó.';
 
   @override
   String get contactClear => 'Xóa';
@@ -2101,11 +2162,19 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tin nhắn và liên hệ, bị xóa khỏi điện thoại này';
 
   @override
+  String get contactMessagesAndContactGoneDesk =>
+      'Tin nhắn và liên hệ, bị xóa khỏi máy tính này';
+
+  @override
   String get contactDeleteThisChat => 'Xóa cuộc trò chuyện này?';
 
   @override
   String get contactEveryMessageAndThe =>
       'Mọi tin nhắn và liên hệ này sẽ bị xóa khỏi điện thoại này. Không có gì được gửi cho họ.';
+
+  @override
+  String get contactEveryMessageAndTheDesk =>
+      'Mọi tin nhắn và liên hệ này sẽ bị xóa khỏi máy tính này. Không có gì được gửi cho họ.';
 
   @override
   String get commonDelete => 'Xóa';
@@ -2278,6 +2347,49 @@ class AppLocalizationsVi extends AppLocalizations {
   String get donateBadgesStartAt20 => 'Huy hiệu từ \$20';
 
   @override
+  String get donateShowTheAddress => 'Hiện địa chỉ';
+
+  @override
+  String donateReviewAmount(String amount) {
+    return '$amount bằng bitcoin';
+  }
+
+  @override
+  String get donateWhatTheBadgeGives => 'Huy hiệu mang lại gì';
+
+  @override
+  String get donateGivesMark =>
+      'Một dấu bên cạnh tên bạn. Bạn chọn ai được thấy, hoặc không ai cả.';
+
+  @override
+  String get donateGivesReceipt =>
+      'Một biên nhận có chữ ký lưu trên điện thoại này. Nó chứng minh huy hiệu mà không cần tài khoản.';
+
+  @override
+  String get donateGivesReceiptDesk =>
+      'Một biên nhận có chữ ký lưu trên máy tính này. Nó chứng minh huy hiệu mà không cần tài khoản.';
+
+  @override
+  String get donateGivesFree =>
+      'Mọi tính năng riêng tư vẫn miễn phí, dù có huy hiệu hay không.';
+
+  @override
+  String get donateAddressOnTap =>
+      'Địa chỉ chỉ được tạo khi bạn chạm vào bên dưới. Nó là của bạn trong một giờ, nên quay lại bạn vẫn nhận đúng địa chỉ đó.';
+
+  @override
+  String get donateBitcoinBusy =>
+      'Bitcoin đang bận. Hãy thử lại sau hoặc thanh toán bằng thẻ.';
+
+  @override
+  String get donateBusyPlainAddress =>
+      'Bạn vẫn có thể gửi bitcoin đến địa chỉ bên dưới. Địa chỉ này không mở huy hiệu.';
+
+  @override
+  String get donateSameAddressAgain =>
+      'Đây là địa chỉ bạn đã mở lúc trước. Nếu đã gửi rồi, hãy chờ ở đây.';
+
+  @override
   String get donateReachingThePaymentService =>
       'Đang kết nối tới dịch vụ thanh toán qua Tor…';
 
@@ -2375,17 +2487,25 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String donateVerifiedBadgeStays(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
+      'patron':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu nhà bảo trợ.',
+      'guardian':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người bảo hộ.',
+      'other':
+          'Đã xác minh trên chuỗi. Cảm ơn bạn đã ủng hộ thêm lần nữa. Bạn vẫn giữ huy hiệu người ủng hộ.',
+    });
+    return '$_temp0';
+  }
+
+  @override
   String get donateWearMyBadge => 'Đeo huy hiệu của tôi';
 
   @override
   String get donateJustGladToHelp => 'Vui vì giúp được';
-
-  @override
-  String get gettingMessagesGettingMessages => 'Nhận tin nhắn';
-
-  @override
-  String get gettingMessagesHowNewMessagesReach =>
-      'Cách tin nhắn mới đến điện thoại này. Bạn có thể đổi bất cứ lúc nào.';
 
   @override
   String get gettingMessagesAlwaysOn => 'Luôn bật';
@@ -2395,7 +2515,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gettingMessagesMessagesArriveInstantlyNothing =>
-      'Tin nhắn đến ngay lập tức. Không có gì rời khỏi Tor. Tốn pin nhất.';
+      'Tốn pin nhất.\nĐến ngay, và không gì rời khỏi Tor.';
+
+  @override
+  String get gettingMessagesArriveInstantlyFast =>
+      'Tốn pin nhất.\nĐến ngay ở chế độ Nhanh.';
 
   @override
   String get gettingMessagesCheckIns => 'Kiểm tra định kỳ';
@@ -2405,13 +2529,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get gettingMessagesKryfoLooksForMessages =>
-      'Kryfo tìm tin nhắn mới mỗi 15 phút. Tiết kiệm pin, nhưng tin nhắn có thể đến muộn.';
-
-  @override
-  String get gettingMessagesOnTheLockScreen => 'Trên màn hình khóa';
-
-  @override
-  String get gettingMessagesHideMessagePreview => 'Ẩn xem trước tin nhắn';
+      'Kryfo kiểm tra mỗi 15 phút, nên tin nhắn có thể đến muộn.\nTiết kiệm pin.';
 
   @override
   String get gettingMessagesAGenericAlertWith =>
@@ -2442,19 +2560,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatTorIsNotUp =>
-      'Tor chưa sẵn sàng · gửi không kèm xem trước';
+      'Tor chưa kết nối · không có xem trước liên kết';
 
   @override
   String get groupChatCouldnTReachIt =>
-      'Không truy cập được · gửi không kèm xem trước';
+      'Không truy cập được trang · không có xem trước liên kết';
 
   @override
   String get groupChatNoTitleCameBack =>
-      'Không lấy được tiêu đề · gửi không kèm xem trước';
+      'Trang này không có tiêu đề · không có xem trước liên kết';
 
   @override
-  String get groupChatCouldnTFetchIt =>
-      'Không tải được · gửi không kèm xem trước';
+  String get groupChatCouldnTFetchIt => 'Không tải được bản xem trước';
 
   @override
   String get groupChatCamera => 'Máy ảnh';
@@ -2467,6 +2584,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatGifFromPhone => 'Gif từ điện thoại';
+
+  @override
+  String get groupChatGifFromPhoneDesk => 'Gif từ máy tính';
 
   @override
   String get groupChatFile => 'Tệp';
@@ -2482,10 +2602,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatCouldNotCleanThatVideo => 'Không làm sạch được video đó';
-
-  @override
-  String get groupChatCouldNotCleanThatPictureSend =>
-      'Không làm sạch được hình đó · hãy gửi dưới dạng ảnh';
 
   @override
   String get groupChat30Seconds => '30 giây';
@@ -2576,7 +2692,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatItDisappearsWithNo =>
-      'Tin nhắn bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+      'Tin nhắn sẽ bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get groupChatItDisappearsWithNoDesk =>
+      'Tin nhắn sẽ bị xóa khỏi thiết bị của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
 
   @override
   String get groupChatUnsend => 'Thu hồi';
@@ -2812,6 +2932,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi tin nhắn ở đây sẽ bị xóa khỏi điện thoại này. Việc này chỉ xóa bản của bạn, các thành viên khác vẫn giữ bản của họ.';
 
   @override
+  String get groupInfoEveryMessageHereIsDesk =>
+      'Mọi tin nhắn ở đây sẽ bị xóa khỏi máy tính này. Việc này chỉ xóa bản của bạn, các thành viên khác vẫn giữ bản của họ.';
+
+  @override
   String get groupInfoClear => 'Xóa hết';
 
   @override
@@ -2828,6 +2952,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ trong đó sẽ bị xóa sạch khỏi điện thoại này ngay bây giờ, và khóa bạn dùng ở đây sẽ mất vĩnh viễn.';
 
   @override
+  String get groupInfoEverythingInItIsDesk =>
+      'Mọi thứ trong đó sẽ bị xóa sạch khỏi máy tính này ngay bây giờ, và khóa bạn dùng ở đây sẽ mất vĩnh viễn.';
+
+  @override
   String groupChatYouWereRemovedFrom(Object name) {
     return 'Bạn đã bị xóa khỏi $name';
   }
@@ -2837,12 +2965,24 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn sẽ không nhận tin nhắn của nhóm nữa, và mọi thứ trong đó sẽ bị xóa khỏi điện thoại này.';
 
   @override
+  String get groupInfoLeaveGroupLineDesk =>
+      'Bạn sẽ không nhận tin nhắn của nhóm nữa, và mọi thứ trong đó sẽ bị xóa khỏi máy tính này.';
+
+  @override
   String get groupInfoLeaveGroupAdmin =>
       'Bạn sẽ không nhận tin nhắn của nhóm nữa, và mọi thứ trong đó sẽ bị xóa khỏi điện thoại này. Bạn là quản trị viên, nên sau khi bạn rời đi sẽ không ai thay đổi được thành viên hay đổi tên nhóm.';
 
   @override
+  String get groupInfoLeaveGroupAdminDesk =>
+      'Bạn sẽ không nhận tin nhắn của nhóm nữa, và mọi thứ trong đó sẽ bị xóa khỏi máy tính này. Bạn là quản trị viên, nên sau khi bạn rời đi sẽ không ai thay đổi được thành viên hay đổi tên nhóm.';
+
+  @override
   String get groupInfoLeaveRoomMaker =>
       'Mọi thứ trong đó sẽ bị xóa sạch khỏi điện thoại này ngay bây giờ, và khóa bạn dùng ở đây sẽ mất vĩnh viễn. Bạn đã tạo phòng này, nên liên kết của nó sẽ không cho ai vào nữa.';
+
+  @override
+  String get groupInfoLeaveRoomMakerDesk =>
+      'Mọi thứ trong đó sẽ bị xóa sạch khỏi máy tính này ngay bây giờ, và khóa bạn dùng ở đây sẽ mất vĩnh viễn. Bạn đã tạo phòng này, nên liên kết của nó sẽ không cho ai vào nữa.';
 
   @override
   String get groupInfoLeave => 'Rời đi';
@@ -2922,7 +3062,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không bắt buộc. Ba từ của bạn vẫn hoạt động dù thế nào.';
 
   @override
-  String get handleWren => 'wren';
+  String get handleHintName => 'name';
 
   @override
   String get handleALineAboutYou => 'Một dòng về bạn · không bắt buộc';
@@ -2983,12 +3123,25 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String handleIsNotYoursOnDesk(Object handle) {
+    return '@$handle không thuộc về bạn trên máy tính này';
+  }
+
+  @override
   String handleTheRegistryHoldsIt(Object handle) {
     return 'Nơi đăng ký đang giữ tên này dưới một khóa khác, nhiều khả năng là danh tính mà điện thoại này có trước khi khôi phục. Những người thêm @$handle sẽ không liên lạc được với bạn. Không thể nhả hoặc cập nhật tên này từ đây. Hãy chọn tên khác.';
   }
 
   @override
+  String handleTheRegistryHoldsItDesk(Object handle) {
+    return 'Nơi đăng ký đang giữ tên này dưới một khóa khác, nhiều khả năng là danh tính mà máy tính này có trước khi khôi phục. Những người thêm @$handle sẽ không liên lạc được với bạn. Không thể nhả hoặc cập nhật tên này từ đây. Hãy chọn tên khác.';
+  }
+
+  @override
   String get handleForgetItOnThis => 'Quên nó trên điện thoại này';
+
+  @override
+  String get handleForgetItOnThisDesk => 'Quên nó trên máy tính này';
 
   @override
   String get homeAddAContact => 'Thêm liên hệ';
@@ -3086,26 +3239,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeLeaveThemOff => 'Cứ để tắt';
 
   @override
-  String get homeOurRelayIsQuiet => 'Relay của chúng tôi im lặng';
-
-  @override
-  String get homeRelayModeUsesOnly =>
-      'Chế độ relay chỉ dùng relay riêng của chúng tôi, và hiện nó không phản hồi. Chế độ nhanh thêm các relay công cộng bên cạnh, nên tin nhắn vẫn đến được. Dù thế nào mọi thứ vẫn được mã hóa kín.';
-
-  @override
-  String get homeSwitchedToFast => 'Đã chuyển sang Nhanh';
-
-  @override
-  String get homeUseFastMode => 'Dùng chế độ nhanh';
-
-  @override
   String get homeKeepWaiting => 'Tiếp tục chờ';
-
-  @override
-  String get homeSwitchedToRelay => 'Đã chuyển sang Relay';
-
-  @override
-  String get homeUseOurRelay => 'Dùng relay của Kryfo';
 
   @override
   String get homeOffline => 'Ngoại tuyến';
@@ -3131,25 +3265,15 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String homeWaitingTorIsStill(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString đang chờ · Tor vẫn đang kết nối',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeNoKryfosYet => 'Chưa có Kryfo nào.';
 
   @override
   String get homeScanTheirCodeSend =>
       'Quét mã của họ, gửi cho họ một liên kết, hoặc nhập @tên người dùng họ đưa cho bạn.';
+
+  @override
+  String get homeScanTheirCodeSendDesk =>
+      'Gửi cho họ một liên kết, hoặc nhập @tên người dùng họ đưa cho bạn.';
 
   @override
   String get homeAddSomeone => 'Thêm người';
@@ -3222,11 +3346,20 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tin nhắn và liên hệ, bị xóa khỏi điện thoại này';
 
   @override
+  String get homeMessagesAndContactGoneDesk =>
+      'Tin nhắn và liên hệ, bị xóa khỏi máy tính này';
+
+  @override
   String get homeDeleteThisChat => 'Xóa cuộc trò chuyện này?';
 
   @override
   String homeEveryMessageWithGoes(Object c) {
     return 'Mọi tin nhắn với $c sẽ bị xóa, và họ không còn là liên hệ nữa. Việc này chỉ xóa trên điện thoại này. Bản của họ vẫn ở chỗ họ. Nếu họ nhắn lại, tin nhắn sẽ vào mục yêu cầu.';
+  }
+
+  @override
+  String homeEveryMessageWithGoesDesk(Object c) {
+    return 'Mọi tin nhắn với $c sẽ bị xóa, và họ không còn là liên hệ nữa. Việc này chỉ xóa trên máy tính này. Bản của họ vẫn ở chỗ họ. Nếu họ nhắn lại, tin nhắn sẽ vào mục yêu cầu.';
   }
 
   @override
@@ -3264,6 +3397,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeOnlyOnThisPhone => 'Chỉ trên điện thoại này';
+
+  @override
+  String get homeOnlyOnThisPhoneDesk => 'Chỉ trên máy tính này';
 
   @override
   String get homeSaved => 'Đã lưu';
@@ -3460,6 +3596,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ đều ở lại trên điện thoại này.';
 
   @override
+  String get lockFileEverythingStaysOnThisDesk =>
+      'Mọi thứ đều ở lại trên máy tính này.';
+
+  @override
   String get lockFileCouldNotMakeOne => 'Không tạo được. Hãy tự nhập.';
 
   @override
@@ -3472,6 +3612,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get linkNoAppOpens =>
       'Không có ứng dụng nào trên điện thoại này mở được liên kết này.';
+
+  @override
+  String get linkNoAppOpensDesk =>
+      'Không có ứng dụng nào trên máy tính này mở được liên kết này.';
 
   @override
   String get placeStubLocation => 'Vị trí';
@@ -3497,6 +3641,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lockFileSaveToFiles => 'Lưu vào Tệp';
+
+  @override
+  String get lockFileSaveToFilesDesk => 'Lưu tệp';
 
   @override
   String get lockFileLockFile => 'Khóa tệp';
@@ -3612,41 +3759,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bốn chữ số trở lên, bất cứ số nào bạn sẽ nhớ được';
 
   @override
-  String get modesOnion => 'Onion';
-
-  @override
-  String get modesFullOnionRoutingThree =>
-      'Định tuyến onion đầy đủ, ba chặng. Mỗi tin nhắn mất từ hai đến năm giây. Không ai thấy bạn nói chuyện với ai.';
-
-  @override
-  String get modesSlower => 'Chậm hơn';
-
-  @override
-  String get modesRelay => 'Relay';
-
-  @override
-  String get modesOneSealedConnectionTo =>
-      'Một kết nối được mã hóa kín tới relay riêng của Kryfo, như một vpn không có gì để ghi nhật ký. Tin gửi đi đến nơi trong khoảng một giây, và chế độ này hoạt động cả ở nơi Tor bị chặn.';
-
-  @override
-  String get modesQuick => 'Nhanh';
-
-  @override
-  String get modesRelayOnly => 'Chỉ relay';
-
-  @override
   String get modesFast => 'Nhanh';
-
-  @override
-  String get modesPlainConnectionsToEvery =>
-      'Kết nối thông thường tới mọi relay. Gần như tức thì, và kém riêng tư nhất trong ba chế độ.';
-
-  @override
-  String get modesInstant => 'Tức thì';
-
-  @override
-  String get modesEveryRelayYouUse =>
-      'Mọi relay bạn dùng đều biết địa chỉ bạn kết nối từ đó, không chỉ relay của chúng tôi. Tin nhắn vẫn được mã hóa kín, nhưng việc bạn đã gửi tin thì không được che giấu. Mặc định tắt, và tắt lại sau khi cài đặt lại.';
 
   @override
   String get modesNotChanged => 'Chế độ chưa đổi. Hãy thử lại.';
@@ -3661,54 +3774,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get modesPrivacy => '& riêng tư';
 
   @override
-  String get modesChangeGloballyOrPer =>
-      'Đổi cho tất cả, hoặc cho từng cuộc trò chuyện';
-
-  @override
-  String get modesSoon => 'Sắp có';
-
-  @override
-  String get modesActive => 'Đang dùng';
-
-  @override
-  String get modesSpeed2 => 'TỐC ĐỘ';
-
-  @override
-  String get modesHops => 'CHẶNG';
-
-  @override
-  String get modesIp => 'IP';
-
-  @override
-  String get modesVisible => 'Bị lộ';
-
-  @override
-  String get modesHidden => 'Ẩn';
-
-  @override
-  String modesHeadsUp(Object warning) {
-    return '*Lưu ý:* $warning';
-  }
-
-  @override
-  String get modesOnionIsTheDefault =>
-      'Onion là chế độ mặc định và sẽ giữ nguyên trừ khi bạn thay đổi. Việc chuyển đổi có hiệu lực từ tin nhắn tiếp theo.';
-
-  @override
-  String get modesFastMode => 'Chế độ nhanh';
-
-  @override
-  String get modesPlainConnectionsToEveryRelayQuicker =>
-      'Kết nối thông thường tới mọi relay. Nhanh hơn, và các relay có thể thấy địa chỉ IP của bạn. Dù thế nào tin nhắn vẫn được mã hóa đầu cuối.';
-
-  @override
-  String get modesTurnOnFastMode => 'Bật chế độ nhanh';
-
-  @override
-  String get modesKeepItOff => 'Cứ để tắt';
-
-  @override
   String get movedWipeThisPhone => 'Xóa sạch Kryfo khỏi điện thoại này?';
+
+  @override
+  String get movedWipeThisPhoneDesk => 'Xóa sạch Kryfo khỏi máy tính này?';
 
   @override
   String get movedEverythingKryfoHoldsHere =>
@@ -3736,6 +3805,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String movedKryfoWillCloseNowDesk(Object myId) {
+    return 'Kryfo sẽ đóng ngay bây giờ. Hãy khởi động lại để mở với tư cách $myId.';
+  }
+
+  @override
   String get movedReopenKryfo => 'Mở lại Kryfo';
 
   @override
@@ -3747,10 +3821,18 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String movedIsNowOnAnotherDesk(Object myId) {
+    return '$myId giờ đã ở trên thiết bị khác. Máy tính này vẫn hiện được những gì đã có ở đây, nhưng sẽ không có gì mới đến nữa, và mọi thứ bạn gửi từ đây sẽ không đến được với ai.';
+  }
+
+  @override
   String get movedKeepItToRead => 'Giữ để đọc';
 
   @override
   String get movedWipeThisPhone2 => 'Xóa sạch Kryfo khỏi điện thoại này';
+
+  @override
+  String get movedWipeThisPhone2Desk => 'Xóa sạch Kryfo khỏi máy tính này';
 
   @override
   String get movedIMNotMoving => 'Rốt cuộc tôi không chuyển nữa';
@@ -3762,11 +3844,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get myKryfoInviteCopiedClearsIn =>
       'Đã sao chép lời mời · tự xóa sau 60s';
-
-  @override
-  String myKryfoAddMeOnKryfo(Object myId, Object uri) {
-    return 'Thêm tôi trên Kryfo. ID của tôi là $myId\n\nChạm để thêm tôi:\n$uri\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
-  }
 
   @override
   String get myKryfoAddMeOnKryfo2 => 'Thêm tôi trên Kryfo';
@@ -3797,6 +3874,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hướng hai điện thoại vào nhau. Không có gì đi qua máy chủ.';
 
   @override
+  String get myKryfoPointYourPhonesAtDesk =>
+      'Người kia quét mã này bằng điện thoại của họ. Không có gì đi qua máy chủ.';
+
+  @override
   String get myKryfoScanTheirsInstead => 'Hoặc quét mã của họ';
 
   @override
@@ -3815,7 +3896,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get myKryfoTheLinkCarriesYour =>
-      'Liên kết chứa ID, địa chỉ của bạn và các khóa để bắt đầu trò chuyện. Nó dùng được cho đến khi bạn đặt lại trong cài đặt.';
+      'Liên kết chứa ba từ của bạn, địa chỉ của bạn và các khóa để bắt đầu trò chuyện. Nó dùng được cho đến khi bạn đặt lại trong cài đặt.';
 
   @override
   String get myKryfoSendTheLink => 'Gửi liên kết';
@@ -3904,6 +3985,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy thêm ít nhất một liên hệ trước khi tạo nhóm.';
 
   @override
+  String get newGroupNeedsContacts => 'Nhóm được tạo với các liên hệ của bạn';
+
+  @override
+  String get newGroupAddSomeoneFirst =>
+      'Hãy thêm ai đó trước. Phòng không cần liên hệ: ai có liên kết đều có thể vào.';
+
+  @override
   String get notesDeleteThisNote => 'Xóa ghi chú này?';
 
   @override
@@ -3923,6 +4011,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi ghi chú trên điện thoại này sẽ mất vĩnh viễn.';
 
   @override
+  String get notesDeleteAllLineDesk =>
+      'Mọi ghi chú trên máy tính này sẽ mất vĩnh viễn.';
+
+  @override
   String get notesDeleteAllYes => 'Xóa tất cả';
 
   @override
@@ -3939,10 +4031,17 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ghi chú sẽ bị xóa vĩnh viễn khỏi điện thoại này.';
 
   @override
+  String get notesGoneFromThisPhoneDesk =>
+      'Ghi chú sẽ bị xóa vĩnh viễn khỏi máy tính này.';
+
+  @override
   String get notesNoteToSelf => 'Ghi chú riêng';
 
   @override
   String get notesOnlyOnThisPhone => 'Chỉ trên điện thoại này';
+
+  @override
+  String get notesOnlyOnThisPhoneDesk => 'Chỉ trên máy tính này';
 
   @override
   String get notesAQuietPlace => 'Một góc yên tĩnh';
@@ -3950,6 +4049,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get notesJotAnythingDownIt =>
       'Ghi lại bất cứ điều gì. Nó ở lại trên điện thoại này và không bao giờ rời đi.';
+
+  @override
+  String get notesJotAnythingDownItDesk =>
+      'Ghi lại bất cứ điều gì. Nó ở lại trên máy tính này và không bao giờ rời đi.';
 
   @override
   String get notesJotSomethingDown => 'Ghi lại điều gì đó…';
@@ -4025,6 +4128,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bản xuất này có tệp cài đặt ứng dụng nên không thể chia sẻ. Hãy lưu nó vào điện thoại của bạn.';
 
   @override
+  String get notesExportHoldsInstallerDesk =>
+      'Bản xuất này có tệp cài đặt ứng dụng nên không thể chia sẻ. Hãy lưu nó vào máy tính này.';
+
+  @override
   String get notesExportSaved => 'Đã lưu ghi chú';
 
   @override
@@ -4048,7 +4155,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notesExportSubject => 'Ghi chú Kryfo';
 
   @override
-  String get onboardingPrivateByDefault => 'RIÊNG TƯ MẶC ĐỊNH';
+  String get onboardingPrivateByDefault => 'Riêng tư mặc định';
 
   @override
   String get onboardingPrivateMessaging =>
@@ -4056,15 +4163,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingYourNameIsThree =>
-      '*Tên bạn là ba từ.* Không số điện thoại, không email, không danh bạ.';
+      '*Tên bạn là ba từ.*\nKhông số điện thoại, không email, không danh bạ.';
 
   @override
   String get onboardingNobodyGetsInUnless =>
-      '*Không ai vào được trừ khi bạn cho phép.* Chỉ khi bạn đăng ký tên người dùng công khai, người khác mới tìm được bạn. Mọi người được thêm thủ công, từ cả hai phía.';
+      '*Không ai vào được trừ khi bạn cho phép.*\nKhông có @tên công khai, không ai tìm được bạn.\nNgười lạ chỉ có thể gõ cửa.';
 
   @override
   String get onboardingTheFirstConnectionTakes =>
-      '*Lần kết nối đầu tiên mất một phút.* Kryfo dựng một tuyến đường riêng tư trước khi gửi. Sau đó sẽ nhanh.';
+      '*Lần kết nối đầu tiên mất một phút.*\nKryfo dựng một tuyến riêng tư trước. Sau đó sẽ nhanh.';
 
   @override
   String get onboardingBegin => 'Bắt đầu';
@@ -4076,11 +4183,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onboardingKryfoIsOpenSource => 'Kryfo là mã nguồn mở';
 
   @override
-  String get onboardingYourKryfoId => 'ID KRYFO CỦA BẠN';
+  String get onboardingYourKryfoId => 'Tên của bạn';
 
   @override
   String get onboardingGeneratedFromAKey =>
-      'Được tạo từ một khóa chỉ nằm trên điện thoại này. *Không ai khác có tên này.*';
+      'Được tạo từ một khóa chỉ nằm trên điện thoại này.\n*Không ai khác có những từ này.*';
+
+  @override
+  String get onboardingGeneratedFromAKeyDesk =>
+      'Được tạo từ một khóa chỉ nằm trên máy tính này.\n*Không ai khác có những từ này.*';
 
   @override
   String get onboardingTryAnother => 'Thử cái khác';
@@ -4092,102 +4203,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onboardingThreeWords => 'Ba từ. *Của riêng bạn.*';
 
   @override
-  String get onboardingPickA => 'Chọn một *khuôn mặt*.';
-
-  @override
-  String get onboardingDrawnOnThisPhone =>
-      'Được vẽ trên điện thoại này từ một con số, không bao giờ tải lên. Đổi bất cứ lúc nào bạn muốn.';
-
-  @override
-  String get onboardingThePeopleYouMessage =>
-      'Những người mà bạn nhắn tin cũng thấy khuôn mặt này';
-
-  @override
-  String get onboardingKeepMyInitial => 'Giữ chữ cái đầu';
-
-  @override
-  String get onboardingThatOne => 'Cái này →';
-
-  @override
   String get onboardingContinue => 'Tiếp tục →';
-
-  @override
-  String get onboardingHowYourMessages => 'Cách tin nhắn của bạn *đi*.';
-
-  @override
-  String get onboardingYouCanChangeThis =>
-      'Bạn có thể đổi bất cứ lúc nào trong cài đặt, cho mọi người hoặc cho một cuộc trò chuyện.';
-
-  @override
-  String get onboardingOnion => 'Onion';
-
-  @override
-  String get onboardingSlowerAMessageTakes =>
-      'Chậm hơn. Mỗi tin nhắn mất từ hai đến năm giây.';
-
-  @override
-  String get onboardingHidesYourAddressFrom =>
-      'Ẩn địa chỉ của bạn với tất cả mọi người, kể cả relay của chúng tôi.';
-
-  @override
-  String get onboardingRelay => 'Relay';
-
-  @override
-  String get onboardingOurRelaySeesYour =>
-      'Relay của chúng tôi thấy địa chỉ của bạn. Ngoài ra không ai thấy.';
-
-  @override
-  String get onboardingAboutASecondWorks =>
-      'Khoảng một giây. Hoạt động cả ở nơi Tor bị chặn.';
-
-  @override
-  String get onboardingAutoFindsAWay =>
-      'Chế độ Tự động tự tìm cách vượt qua việc chặn.';
-
-  @override
-  String get onboardingFast => 'Nhanh';
-
-  @override
-  String get onboardingEveryRelayYouUse =>
-      'Mọi relay bạn dùng đều thấy địa chỉ của bạn. Kém riêng tư nhất trong ba chế độ.';
-
-  @override
-  String get onboardingNearInstant => 'Gần như tức thì.';
-
-  @override
-  String get onboardingKeepOnion => 'Giữ onion →';
-
-  @override
-  String get onboardingUseThis => 'Dùng chế độ này →';
-
-  @override
-  String get onboardingSkipOnionIsA => 'Bỏ qua · onion là mặc định tốt';
-
-  @override
-  String get onboardingThreeThingsThen => 'Ba điều thôi,\nrồi *vào luôn*.';
-
-  @override
-  String get onboardingEverythingElseTheApp =>
-      'Mọi thứ khác, ứng dụng sẽ cho bạn biết khi cần.';
-
-  @override
-  String get onboardingYourNameIsThreeWords => 'Tên bạn là ba từ';
-
-  @override
-  String get onboardingThatIsTheWhole =>
-      'Đó là toàn bộ danh tính. Không có số điện thoại hay email nào để bị lộ hoặc bị tra cứu. Những người trò chuyện với bạn sẽ thấy ba từ này và khuôn mặt bạn đã chọn.';
-
-  @override
-  String get onboardingNobodyCanReachYou =>
-      'Không ai liên lạc được với bạn cho đến khi bạn cho phép';
-
-  @override
-  String get onboardingAStrangerWithYour =>
-      'Người lạ biết ba từ của bạn chỉ có thể gõ cửa. Tin nhắn đầu tiên của họ chờ trong mục yêu cầu cho đến khi bạn đồng ý, và bạn có thể từ chối mà họ không bao giờ biết.';
-
-  @override
-  String get onboardingTheFirstConnectionTakesAMinute =>
-      'Lần kết nối đầu tiên mất một phút';
 
   @override
   String get onboardingKryfoBuildsAPrivateRouteBefore =>
@@ -4195,51 +4211,34 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onboardingYourIdentityLivesOn =>
-      'Danh tính của bạn nằm trên điện thoại này. Hãy sao lưu nó trong cài đặt khi bạn sẵn sàng.';
+      'Danh tính của bạn nằm trên điện thoại này.\nHãy sao lưu trong Cài đặt khi bạn sẵn sàng.';
 
   @override
-  String get onboardingIUnderstand => 'Tôi hiểu rồi →';
+  String get onboardingYourIdentityLivesOnDesk =>
+      'Danh tính của bạn nằm trên máy tính này.\nHãy sao lưu trong Cài đặt khi bạn sẵn sàng.';
 
   @override
-  String get onboardingOneQuiet => 'Một *thông báo* lặng lẽ.';
-
-  @override
-  String get onboardingAndroidNeedsAVisible =>
-      'Android cần một thông báo hiển thị khi ứng dụng lắng nghe ở chế độ nền. Nhờ vậy tin nhắn đến được với bạn khi Kryfo đang đóng.';
-
-  @override
-  String get onboardingSilentAndAtThe => 'Im lặng, và nằm cuối bảng thông báo';
+  String get onboardingSilentAndAtThe => 'Im lặng, nằm cuối bảng thông báo';
 
   @override
   String get onboardingItNeverBuzzesTurn =>
-      'Nó không bao giờ rung. Tắt nó đi thì tin nhắn sẽ chờ đến khi bạn mở lại ứng dụng.';
+      'Nó không bao giờ rung.\nTắt nó đi thì tin nhắn sẽ chờ đến khi bạn mở Kryfo.';
 
   @override
   String get onboardingGotIt => 'Đã hiểu →';
-
-  @override
-  String get onboardingNow => 'Giờ thì, *thêm một người*.';
-
-  @override
-  String get onboardingTheAppIsReady =>
-      'Ứng dụng đã sẵn sàng. Không ai nhắn tin được cho bạn cho đến khi bạn thêm họ hoặc cho họ vào.';
 
   @override
   String get onboardingEveryWayToAdd => 'Mọi cách để thêm người';
 
   @override
   String get onboardingShowYourCodeSend =>
-      'Hiện mã của bạn, gửi cho họ một liên kết, hoặc nhập @tên người dùng họ đưa cho bạn.';
+      'Hiện mã của bạn, chia sẻ liên kết, hoặc nhập @tên của họ.';
 
   @override
   String get onboardingScanTheirs => 'Quét mã của họ';
 
   @override
   String get onboardingPointTheCameraAt => 'Hướng máy ảnh vào mã của họ';
-
-  @override
-  String get onboardingTheAppIsReadyWhenYou =>
-      'Ứng dụng sẵn sàng bất cứ khi nào bạn muốn.';
 
   @override
   String get onboardingNotNowAddPeople => 'Để sau · thêm người sau';
@@ -4267,6 +4266,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get openLockedItOpensOnThis => 'Tệp được mở trên điện thoại này.';
+
+  @override
+  String get openLockedItOpensOnThisDesk => 'Tệp được mở trên máy tính này.';
 
   @override
   String get openLockedLockedFile => 'Tệp đã khóa';
@@ -4302,9 +4304,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodeEnterOne => 'Nhập mã';
 
   @override
-  String get pairCodeSixDigits => 'Sáu chữ số';
-
-  @override
   String get pairCodeLooking => 'Đang tìm…';
 
   @override
@@ -4319,34 +4318,86 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không liên lạc được với các relay. Hãy thử lại sau giây lát.';
 
   @override
-  String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
+  String get fastRoomsWaitForTor =>
+      'Phòng, mã ghép nối và lần liên hệ đầu tiên luôn đi qua Tor, kể cả ở chế độ Nhanh. Chúng hoạt động ngay khi Tor kết nối.';
 
   @override
-  String get pairCodeTypeTheSixDigits => 'Nhập sáu chữ số họ đọc cho bạn.';
+  String get pairCodeFailed => 'Không thành công. Hãy thử lại.';
 
   @override
   String get pairCodeAddThem => 'Thêm họ';
 
   @override
-  String get pairCodeUsedTwice =>
-      'Mã này đã được dùng hai lần. Hãy xin mã mới.';
-
-  @override
   String get pairCodeKeyNumber => 'Số khóa';
 
   @override
-  String get pairCodeNumberMatches =>
-      'Kiểm tra cả bốn nhóm số giống nhau trên hai điện thoại';
-
-  @override
-  String get pairCodeNumberDiffers => 'Số không giống';
-
-  @override
-  String get pairCodeNoNumberThere =>
-      'Màn hình của họ không có số? Hãy thêm họ, rồi so sánh số an toàn trong cuộc trò chuyện.';
-
-  @override
   String get pairCodeNotAdded => 'Chưa thêm. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeEightDigits => 'Tám chữ số';
+
+  @override
+  String get pairCodeTypeTheEightDigits => 'Nhập tám chữ số họ đọc cho bạn.';
+
+  @override
+  String get pairCodeOldCode =>
+      'Mã đó đến từ một bản Kryfo cũ hơn. Cả hai điện thoại cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeOldCodeDesk =>
+      'Mã đó đến từ một bản Kryfo cũ hơn. Cả hai thiết bị cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeBothNeed06 => 'Cả hai điện thoại cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeBothNeed06Desk => 'Cả hai thiết bị cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get pairCodeWaitingForThem => 'Đang chờ họ…';
+
+  @override
+  String get pairCodeStillWaiting =>
+      'Vẫn đang chờ. Nếu màn hình của họ báo đã nhập sai mã, hãy cùng nhau kiểm tra lại các chữ số.';
+
+  @override
+  String get pairCodeUnanswered =>
+      'Chưa có phản hồi. Hãy kiểm tra lại mã với họ rồi nhập lại.';
+
+  @override
+  String get pairCodeTooManyTries =>
+      'Mã này đã được thử ba lần. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeRanOut => 'Mã đó đã hết hạn. Hãy xin họ mã mới.';
+
+  @override
+  String get pairCodeMatched => 'Mã đã khớp. Thêm nhau nhé?';
+
+  @override
+  String get pairCodeNotThem => 'Không phải họ';
+
+  @override
+  String get pairCodePanelReadEightDigitsOut =>
+      'Đọc to tám chữ số là hai bạn thêm được nhau. Không cần trao đổi gì khác.';
+
+  @override
+  String get pairCodePanelOrMakeACode => 'Hoặc tạo một mã để đọc to';
+
+  @override
+  String get pairCodePanelTheyOpenKryfoEight =>
+      'Họ mở Kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập tám chữ số này. Hãy tạo mã mới cho người tiếp theo.';
+
+  @override
+  String get pairCodePanelWrongTyped =>
+      'Đã nhập sai mã. Hãy đọc lại thật chậm.';
+
+  @override
+  String get pairCodePanelThreeWrong =>
+      'Đã nhập sai mã ba lần nên mã này đã dừng. Hãy tạo mã mới.';
+
+  @override
+  String get pairCodePanelNotAdded => 'Chưa thêm. Tạo mã mới khi họ sẵn sàng.';
 
   @override
   String get panicSetupThoseWereDifferentFrom =>
@@ -4368,24 +4419,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoKnowsPhoto => 'Ảnh';
 
   @override
-  String get photoKnowsWhatThisVideoKnows => 'Video này biết gì';
+  String get photoKnowsVideoCleaner => 'Làm sạch video';
 
   @override
-  String get photoKnowsWhatThisPhotoKnows => 'Ảnh này biết gì';
+  String get photoKnowsPhotoCleaner => 'Làm sạch ảnh';
 
   @override
   String get photoKnowsRemoveAllOfIt => 'Gỡ bỏ tất cả';
 
   @override
   String get photoKnowsKeepItAsIt => 'Giữ nguyên';
-
-  @override
-  String get photoKnowsReadOnThisPhone =>
-      'ĐỌC TRÊN ĐIỆN THOẠI NÀY · VIDEO KHÔNG ĐI ĐÂU CẢ';
-
-  @override
-  String get photoKnowsReadOnThisPhoneThePhoto =>
-      'ĐỌC TRÊN ĐIỆN THOẠI NÀY · ẢNH KHÔNG ĐI ĐÂU CẢ';
 
   @override
   String get photoKnowsReadingTheFile => 'Đang đọc tệp';
@@ -4398,6 +4441,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get photoKnowsEverythingStaysOnThis =>
       'Mọi thứ đều ở lại trên điện thoại này.';
+
+  @override
+  String get photoKnowsEverythingStaysOnThisDesk =>
+      'Mọi thứ đều ở lại trên máy tính này.';
 
   @override
   String photoKnowsMapWithAPin(Object place) {
@@ -4445,7 +4492,15 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch và mọi trò chuyện ẩn. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
 
   @override
+  String get pinsThePinGoesAndDesk =>
+      'Mã PIN sẽ bị gỡ, kéo theo cả mã PIN xóa sạch và mọi trò chuyện ẩn. Bất kỳ ai ngồi vào máy tính của bạn đều mở được Kryfo với tư cách là bạn.';
+
+  @override
   String get pinsUnlockWithFingerprint => 'Mở khóa bằng vân tay';
+
+  @override
+  String get pinsFingerOpensDecoy =>
+      'Tắt khi đã đặt mã PIN ngụy trang: ngón tay chỉ mở phần ngụy trang.';
 
   @override
   String get pinsWipePin => 'Mã PIN xóa sạch';
@@ -4478,10 +4533,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileProfile => 'Hồ sơ';
 
   @override
-  String get profileChangeYourFace => 'Đổi khuôn mặt';
-
-  @override
-  String get profileKryfoId => 'ID Kryfo';
+  String get profileKryfoId => 'Tên của bạn';
 
   @override
   String get profileOnionAddress => 'Địa chỉ onion';
@@ -4553,6 +4605,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get qrMadeOnThisPhone =>
       'Tạo trên điện thoại này · không trang web nào thấy mật khẩu';
+
+  @override
+  String get qrMadeOnThisPhoneDesk =>
+      'Tạo trên máy tính này · không trang web nào thấy mật khẩu';
 
   @override
   String get qrNetworkName => 'Tên mạng';
@@ -4646,6 +4702,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get qrCouldNotSaveIt =>
       'Không lưu được. Hãy kiểm tra xem điện thoại còn dung lượng không.';
+
+  @override
+  String get qrCouldNotSaveItDesk =>
+      'Không lưu được. Hãy kiểm tra xem máy tính còn dung lượng không.';
 
   @override
   String get qrNoAppOnThis =>
@@ -4747,6 +4807,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thay thế tài khoản trên điện thoại này?';
 
   @override
+  String get restoreReplaceTheAccountOnDesk =>
+      'Thay thế tài khoản trên máy tính này?';
+
+  @override
   String get restoreWhatIsHereNow =>
       'Những gì đang có ở đây, gồm danh tính, liên hệ và tin nhắn, sẽ bị xóa. Tệp sẽ thế vào chỗ đó. Không thể hoàn tác việc này.';
 
@@ -4764,6 +4828,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String restoreTheRegistryDidNotDesk(Object mine) {
+    return 'Nơi đăng ký không phản hồi. Nếu bạn tiếp tục, @$mine sẽ vẫn trỏ tới danh tính mà máy tính này sắp mất. Ai thêm tên đó sẽ nhắn tới hư không, và tên đó không thể đăng ký lại. Tốt hơn là hãy kết nối mạng và thử lại lần nữa.';
+  }
+
+  @override
   String get restoreRestoreAnyway => 'Vẫn khôi phục';
 
   @override
@@ -4775,6 +4844,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String restoreKryfoWillCloseNow(Object haloId) {
     return 'Kryfo sẽ đóng ngay bây giờ. Chạm vào biểu tượng để mở lại với tư cách $haloId.';
+  }
+
+  @override
+  String restoreKryfoWillCloseNowDesk(Object haloId) {
+    return 'Kryfo sẽ đóng ngay bây giờ. Hãy khởi động lại để mở với tư cách $haloId.';
   }
 
   @override
@@ -4854,6 +4928,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ được gửi cho bạn khi điện thoại cũ đang tắt, trong vòng mười bốn ngày kể từ khi được gửi.';
 
   @override
+  String get restoreAnythingSentToYouDesk =>
+      'Mọi thứ được gửi cho bạn khi thiết bị cũ đang tắt, trong vòng mười bốn ngày kể từ khi được gửi.';
+
+  @override
   String get restoreYourSupporterBadgeIf =>
       'Huy hiệu người ủng hộ của bạn, nếu có.';
 
@@ -4865,12 +4943,24 @@ class AppLocalizationsVi extends AppLocalizations {
       'Điện thoại cũ sẽ ngừng nhận ngay khi bạn gửi bất cứ thứ gì từ đây. Tin nhắn đầu tiên bạn gửi từ thiết bị này là tin cuối cùng điện thoại cũ còn theo được, và mọi thứ đến điện thoại cũ sau đó sẽ không đọc được ở đó và cũng không chờ bạn ở đây.';
 
   @override
+  String get restoreTheOldPhoneStopsDesk =>
+      'Thiết bị cũ sẽ ngừng nhận ngay khi bạn gửi bất cứ thứ gì từ đây. Tin nhắn đầu tiên bạn gửi từ máy tính này là tin cuối cùng thiết bị cũ còn theo được, và mọi thứ đến thiết bị cũ sau đó sẽ không đọc được ở đó và cũng không chờ bạn ở đây.';
+
+  @override
   String get restoreIfThePhoneThis =>
       'Nếu điện thoại tạo ra tệp này vẫn đang được dùng, hãy ngừng dùng Kryfo trên đó trước khi tiếp tục. Hai điện thoại dùng chung một Kryfo sẽ mất tin nhắn trên cả hai.';
 
   @override
+  String get restoreIfThePhoneThisDesk =>
+      'Nếu thiết bị tạo ra tệp này vẫn đang được dùng, hãy ngừng dùng Kryfo trên đó trước khi tiếp tục. Hai thiết bị dùng chung một Kryfo sẽ mất tin nhắn trên cả hai.';
+
+  @override
   String get restoreNotificationsNeedSettingUp =>
       'Cần thiết lập lại thông báo trên thiết bị này.';
+
+  @override
+  String get restoreDeletedComeBack =>
+      'Những cuộc trò chuyện bạn xóa sau khi tạo bản sao lưu này sẽ quay lại cùng nó, và những người đó có thể thấy bạn đã cài đặt lại Kryfo.';
 
   @override
   String get restoreMoveItHere => 'Chuyển sang đây';
@@ -4887,6 +4977,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get restoreABackupBringsBack =>
       'Bản sao lưu mang lại danh tính, các liên hệ của bạn, và những tin nhắn có trên điện thoại lúc tạo tệp. Những gì nói sau đó không có trong đó.';
+
+  @override
+  String get restoreABackupBringsBackDesk =>
+      'Bản sao lưu mang lại danh tính, các liên hệ của bạn, và những tin nhắn có trên thiết bị lúc tạo tệp. Những gì nói sau đó không có trong đó.';
 
   @override
   String get restoreTheFile => 'Tệp';
@@ -4955,6 +5049,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get roomCreateARoomThatEnds =>
       'Một căn phòng có hồi kết. Mọi người tham gia bằng một khóa tạo riêng cho phòng, và khi phòng kết thúc, không còn gì trên bất kỳ điện thoại nào.';
+
+  @override
+  String get roomCreateARoomThatEndsDesk =>
+      'Một căn phòng có hồi kết. Mọi người tham gia bằng một khóa tạo riêng cho phòng, và khi phòng kết thúc, không còn gì trên bất kỳ thiết bị nào.';
 
   @override
   String get roomCreateRoomName => 'Tên phòng';
@@ -5049,6 +5147,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cuộc trò chuyện đó không còn trên điện thoại này';
 
   @override
+  String get savedChatGoneDesk =>
+      'Cuộc trò chuyện đó không còn trên máy tính này';
+
+  @override
   String get savedLongPressAnyMessage =>
       'Nhấn giữ một tin nhắn bất kỳ rồi chạm lưu để giữ nó ở đây.';
 
@@ -5084,6 +5186,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mấy dòng cuối là lý do có khóa ứng dụng, mã PIN xóa sạch và bộ nhớ được mã hóa, và không công cụ nào cứu được bạn khỏi người đang cầm điện thoại đã mở khóa của bạn. Mô hình mối đe dọa đầy đủ nằm trong THREAT_MODEL.md trong kho mã, viết theo LINDDUN. Mã nguồn mở, nên bạn có thể tự kiểm tra tất cả.';
 
   @override
+  String get seenHonestAboutTheLastDesk =>
+      'Mấy dòng cuối là lý do có khóa ứng dụng, mã PIN xóa sạch và bộ nhớ được mã hóa, và không công cụ nào cứu được bạn khỏi người đang ngồi trước máy tính đã mở khóa của bạn. Mô hình mối đe dọa đầy đủ nằm trong THREAT_MODEL.md trong kho mã, viết theo LINDDUN. Mã nguồn mở, nên bạn có thể tự kiểm tra tất cả.';
+
+  @override
   String get seenHidden => 'Ẩn';
 
   @override
@@ -5103,7 +5209,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get seenEachConversationGetsIts =>
-      'Mỗi cuộc trò chuyện có địa chỉ riêng, được suy ra từ khóa của cả hai bên. Relay chỉ thấy những điểm thả không liên quan đến nhau, không thấy một cặp người.';
+      'Mỗi cuộc trò chuyện có địa chỉ riêng, được suy ra từ khóa của cả hai bên. Relay chỉ thấy những điểm thả không liên quan đến nhau, không thấy một cặp người. Ở chế độ Nhanh, máy chủ của chúng tôi thấy địa chỉ IP của bạn trên các điểm thả bạn dùng, và khi cả hai người trong một cuộc trò chuyện dùng Nhanh, thấy hai địa chỉ IP dùng chung một điểm thả.';
 
   @override
   String get seenWhatYouSay => 'Những gì bạn nói';
@@ -5116,21 +5222,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get seenYourIpAddress => 'Địa chỉ IP của bạn';
 
   @override
-  String get seenOurRelay => 'Relay của Kryfo';
-
-  @override
-  String get seenEveryRelay => 'Mọi relay';
-
-  @override
-  String get seenOnOnionEverythingLeaves =>
-      'Ở chế độ onion, mọi thứ đi ra qua Tor và relay chỉ thấy một nút thoát, không bao giờ thấy bạn. Ở chế độ relay, kết nối đi thẳng tới relay riêng của chúng tôi: không có gì chuyển tiếp địa chỉ của bạn và không có gì được ghi lại, nhưng riêng kết nối đó thì chúng tôi thấy được. Ở chế độ nhanh, mọi relay công cộng đều biết bạn đã kết nối, nhưng không biết bạn nói chuyện với ai hay nói gì.';
-
-  @override
   String get seenYourContactGraph => 'Mạng liên hệ của bạn';
 
   @override
   String get seenKryfoDoesNotScan =>
-      'Kryfo không quét danh bạ của bạn. Ở đây không có số điện thoại nào để bị lộ.';
+      'Kryfo không quét danh bạ của bạn. Ở đây không có số điện thoại nào để bị lộ. Ở chế độ Nhanh, máy chủ của chúng tôi có thể ghép lại một phần từ việc địa chỉ IP nào dùng chung điểm thả. Chúng không lưu lại điều đó.';
 
   @override
   String get seenIntroducer => 'Người giới thiệu';
@@ -5145,6 +5241,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get seenScamShieldRequestsOnly =>
       'Chạy trên điện thoại của bạn với các quy tắc có sẵn trong ứng dụng. Không dùng mạng, không tải danh sách. Nó chỉ đọc yêu cầu nhắn tin từ người lạ, không bao giờ đọc những gì một liên hệ hoặc nhóm gửi cho bạn.';
+
+  @override
+  String get seenScamShieldRequestsOnlyDesk =>
+      'Chạy trên máy tính của bạn với các quy tắc có sẵn trong ứng dụng. Không dùng mạng, không tải danh sách. Nó chỉ đọc yêu cầu nhắn tin từ người lạ, không bao giờ đọc những gì một liên hệ hoặc nhóm gửi cho bạn.';
 
   @override
   String get seenBurnerRooms => 'Phòng tạm';
@@ -5167,11 +5267,22 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bản xem trước do người gửi tải về, qua Tor, và đi bên trong tin nhắn được mã hóa. Điện thoại nhận không gửi yêu cầu nào. Trang web chỉ biết có ai đó dùng Tor đã yêu cầu một trang, ngoài ra không biết gì. Không bao giờ có hình ảnh nào được tải, và liên kết từ người lạ vẫn chỉ là văn bản thường.';
 
   @override
+  String get seenAPreviewIsFetchedDesk =>
+      'Bản xem trước do người gửi tải về, qua Tor, và đi bên trong tin nhắn được mã hóa. Thiết bị nhận không gửi yêu cầu nào. Trang web chỉ biết có ai đó dùng Tor đã yêu cầu một trang, ngoài ra không biết gì. Không bao giờ có hình ảnh nào được tải, và liên kết từ người lạ vẫn chỉ là văn bản thường.';
+
+  @override
   String get seenASeizedUnlockedPhone => 'Điện thoại bị thu giữ lúc mở khóa';
+
+  @override
+  String get seenASeizedUnlockedPhoneDesk => 'Máy tính bị thu giữ lúc mở khóa';
 
   @override
   String get seenIfSomeoneHoldsYour =>
       'Nếu ai đó cầm điện thoại đang mở khóa của bạn, họ đọc được tin nhắn của bạn. Khóa ứng dụng, mã PIN xóa sạch và bộ nhớ được mã hóa giúp ích trước thời điểm đó, không phải sau đó.';
+
+  @override
+  String get seenIfSomeoneHoldsYourDesk =>
+      'Nếu ai đó ngồi trước máy tính đang mở khóa của bạn, họ đọc được tin nhắn của bạn. Khóa ứng dụng, mã PIN xóa sạch và bộ nhớ được mã hóa giúp ích trước thời điểm đó, không phải sau đó.';
 
   @override
   String get seenTheCryptoItself => 'Bản thân mật mã';
@@ -5179,12 +5290,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get seenTheRatchetAndStorage =>
       'Lớp ratchet và lớp lưu trữ là chuẩn. Lớp nối chúng lại là của chúng tôi và chưa có bên độc lập nào kiểm tra. Đây là bản alpha.';
-
-  @override
-  String get seenOnion => 'Onion';
-
-  @override
-  String get seenRelay => 'Relay';
 
   @override
   String get seenFast => 'Nhanh';
@@ -5195,6 +5300,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsIdentityMessagesContactsAnd =>
       'Danh tính, tin nhắn, liên hệ và cài đặt trên điện thoại này. Mất vĩnh viễn trừ khi bạn có bản sao lưu.';
+
+  @override
+  String get settingsIdentityMessagesContactsAndDesk =>
+      'Danh tính, tin nhắn, liên hệ và cài đặt trên máy tính này. Mất vĩnh viễn trừ khi bạn có bản sao lưu.';
 
   @override
   String get commonContinue => 'Tiếp tục';
@@ -5221,12 +5330,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsTorRouting => 'Định tuyến Tor';
 
   @override
-  String get settingsConnecting => 'Đang kết nối';
-
-  @override
-  String get settingsOffMode => 'Tắt · chế độ relay';
-
-  @override
   String get settingsOffFastMode => 'Tắt · chế độ nhanh';
 
   @override
@@ -5242,13 +5345,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsFast => 'Nhanh';
 
   @override
-  String get settingsRelay1Hop => 'Relay · 1 chặng';
-
-  @override
   String get settingsOnion3Hops => 'Onion · 3 chặng';
-
-  @override
-  String get settingsGettingMessages => 'Nhận tin nhắn';
 
   @override
   String settingsPreviewHidden(Object deliveryModeName) {
@@ -5288,6 +5385,27 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsScamShieldHint =>
       'Chỉ kiểm tra trên điện thoại của bạn, không gì rời khỏi máy';
+
+  @override
+  String get settingsScamShieldHintDesk =>
+      'Chỉ kiểm tra trên máy tính của bạn, không gì rời khỏi máy';
+
+  @override
+  String get typingNow => 'Đang nhập';
+
+  @override
+  String get settingsTypingIndicator => 'Báo đang nhập';
+
+  @override
+  String get settingsTypingIndicatorHint =>
+      'Cả hai đều thấy khi người kia đang nhập. Tín hiệu đi thẳng tới họ qua Tor, không bao giờ qua máy chuyển tiếp.';
+
+  @override
+  String get settingsTypingOnionOnly => 'Có trên tuyến Onion';
+
+  @override
+  String get settingsTypingBridgesOff =>
+      'Tắt khi đang dùng cầu nối: ai theo dõi kết nối của bạn có thể khớp các tín hiệu đang nhập. Tự bật lại khi tắt cầu nối.';
 
   @override
   String get settingsLightTheme => 'Giao diện sáng';
@@ -5362,9 +5480,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsVersion => 'Phiên bản';
 
   @override
-  String get settings030Alpha => '0.5.3 · alpha';
-
-  @override
   String get settingsReportAnIssue => 'Báo lỗi';
 
   @override
@@ -5420,6 +5535,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsWipeKryfoFromThis => 'Xóa sạch Kryfo khỏi điện thoại này';
 
   @override
+  String get settingsWipeKryfoFromThisDesk =>
+      'Xóa sạch Kryfo khỏi máy tính này';
+
+  @override
   String get toolsMoreTools => 'Thêm công cụ';
 
   @override
@@ -5458,14 +5577,23 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi thứ ở đây diễn ra trên điện thoại này. Không có gì được tải lên, và người khác không cần dùng Kryfo.';
 
   @override
-  String get toolsWhatDoesThisPhoto => 'Ảnh này biết gì?';
+  String get toolsEverythingHereHappensOnDesk =>
+      'Mọi thứ ở đây diễn ra trên máy tính này. Không có gì được tải lên, và người khác không cần dùng Kryfo.';
 
   @override
-  String get toolsPlacePhoneTime => 'Địa điểm · máy · giờ';
+  String get toolsPhotoCleaner => 'Làm sạch ảnh';
+
+  @override
+  String get toolsRemovesHiddenInfo =>
+      'Xóa thông tin ẩn (siêu dữ liệu) như địa điểm, thời gian và mẫu điện thoại';
 
   @override
   String get toolsPickAPhotoAnd =>
       'Chọn một ảnh hoặc video để xem nó để lộ những gì, rồi xóa hết chỉ với một chạm. Bạn cũng có thể chia sẻ từ thư viện sang Kryfo.';
+
+  @override
+  String get toolsPickAPhotoAndDesk =>
+      'Chọn một ảnh hoặc video để xem nó để lộ những gì, rồi xóa hết chỉ với một cú nhấp. Bạn cũng có thể thả hoặc dán nó vào đây.';
 
   @override
   String get toolsPickAPhoto => 'Chọn ảnh';
@@ -5479,6 +5607,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get transportNothingHereLeavesThe =>
       'Không có gì ở đây rời khỏi điện thoại. Đây chính là trạng thái mà bộ máy dùng để quyết định việc cần làm.';
+
+  @override
+  String get transportNothingHereLeavesTheDesk =>
+      'Không có gì ở đây rời khỏi máy tính. Đây chính là trạng thái mà bộ máy dùng để quyết định việc cần làm.';
 
   @override
   String get transportStayingAlive => 'Duy trì hoạt động';
@@ -5561,6 +5693,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get transportWithNoContactsThe =>
       'Khi không có liên hệ nào, ứng dụng không đăng ký địa chỉ relay nào, nên không tin nhắn nào đến được với bạn. Hãy quét mã của ai đó để khắc phục.';
+
+  @override
+  String get transportWithNoContactsTheDesk =>
+      'Khi không có liên hệ nào, ứng dụng không đăng ký địa chỉ relay nào, nên không tin nhắn nào đến được với bạn. Hãy thêm ai đó để khắc phục.';
 
   @override
   String get transportSendAnythingWaitingNow =>
@@ -5891,11 +6027,15 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không tài khoản, không số điện thoại, không máy chủ trung tâm lưu các cuộc trò chuyện của bạn. Chúng nằm trên điện thoại này, được mã hóa khi lưu trữ.';
 
   @override
+  String get whyKryfoNoAccountNoPhoneDesk =>
+      'Không tài khoản, không số điện thoại, không máy chủ trung tâm lưu các cuộc trò chuyện của bạn. Chúng nằm trên máy tính này, được mã hóa khi lưu trữ.';
+
+  @override
   String get whyKryfoNothingLeaks => 'Không gì bị lộ';
 
   @override
-  String get whyKryfoNoReadReceiptsOr =>
-      'Không trao cho ai thông báo đã đọc hay dấu hiệu đang gõ, không tải danh bạ lên. Siêu dữ liệu là thứ hầu hết ứng dụng để lộ. Kryfo được xây dựng để không như vậy.';
+  String get whyKryfoNoReceiptsTyping =>
+      'Không có thông báo đã đọc, không tải danh bạ lên. Việc bạn đang nhập chỉ người bạn đang nhắn mới thấy, đi thẳng qua Tor, không bao giờ qua máy chủ. Hầu hết ứng dụng để lộ siêu dữ liệu. Kryfo được làm để không như vậy.';
 
   @override
   String get whyKryfoVerifyItIsReally => 'Xác minh đúng là họ';
@@ -5934,6 +6074,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cleanerContentCredentials => 'Thông tin xác thực nội dung';
+
+  @override
+  String get cleanerHdrLayer => 'Lớp HDR';
 
   @override
   String get cleanerDataAfterThePicture => 'Dữ liệu sau phần ảnh';
@@ -6389,7 +6532,49 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kho khóa của điện thoại không phản hồi. Đóng rồi mở lại Kryfo thường sẽ khắc phục được.';
 
   @override
+  String get bootFailedKeysDidNotAnswerDesk =>
+      'Kho khóa của máy tính này không phản hồi. Đóng rồi mở lại Kryfo thường sẽ khắc phục được.';
+
+  @override
   String get bootFailedCloseAndReopen => 'Đóng và mở lại Kryfo';
+
+  @override
+  String get bootFailedStillStuck => 'Nếu thử lại vẫn không được';
+
+  @override
+  String get bootFailedRestoreBackup => 'Khôi phục bản sao lưu';
+
+  @override
+  String get bootFailedStartFresh => 'Bắt đầu lại từ đầu';
+
+  @override
+  String get bootFailedStartFreshTitle => 'Bắt đầu lại từ đầu?';
+
+  @override
+  String get bootFailedStartFreshLine =>
+      'Thao tác này xóa sạch mọi thứ Kryfo lưu trên điện thoại này: cuộc trò chuyện, liên hệ, tệp phương tiện, cuộc trò chuyện ẩn và ba từ của bạn. Tệp sao lưu lưu ở nơi khác không bị ảnh hưởng.';
+
+  @override
+  String get bootFailedStartFreshLineDesk =>
+      'Thao tác này xóa sạch mọi thứ Kryfo lưu trên máy tính này: cuộc trò chuyện, liên hệ, tệp phương tiện, cuộc trò chuyện ẩn và ba từ của bạn. Tệp sao lưu lưu ở nơi khác không bị ảnh hưởng.';
+
+  @override
+  String get bootFailedStartFreshNext => 'Tiếp tục';
+
+  @override
+  String get bootFailedStartFreshSure =>
+      'Xóa sạch mọi thứ trên điện thoại này?';
+
+  @override
+  String get bootFailedStartFreshSureDesk =>
+      'Xóa sạch mọi thứ trên máy tính này?';
+
+  @override
+  String get bootFailedStartFreshSureLine =>
+      'Không thể hoàn tác. Kryfo sẽ đóng và mở lại như mới cài đặt.';
+
+  @override
+  String get bootFailedStartFreshYes => 'Xóa sạch và bắt đầu lại';
 
   @override
   String get kryfoLinkTextThatLinkIsNot => 'Kryfo không đọc được liên kết đó';
@@ -6464,7 +6649,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get kryfoLinkTextYouJoinUnderA =>
-      'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ID Kryfo của bạn.';
+      'Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ba từ của bạn.';
 
   @override
   String get linkStubFetchedOverTorBy => 'Tải qua Tor · bởi thiết bị của bạn';
@@ -6537,6 +6722,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get motionYouReAnonymous => 'Bạn đang ẩn danh';
 
   @override
+  String get motionReadyToChat => 'Sẵn sàng trò chuyện';
+
+  @override
   String get motionTorIsStartingIn =>
       'Tor đang khởi động ở chế độ nền. Biểu đồ này sẽ sáng lên khi kết nối hình thành.';
 
@@ -6555,6 +6743,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get motionYourIpIsHidden =>
       'IP của bạn được ẩn. Chỉ những người có Kryfo của bạn mới liên lạc được với bạn.';
+
+  @override
+  String get motionAddressFinishing =>
+      'Tin nhắn đã có thể đi qua Tor. Địa chỉ riêng của bạn đang hoàn tất ở chế độ nền.';
 
   @override
   String get motionBuilding2 => 'đang dựng';
@@ -6606,14 +6798,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairCodePanelYourInviteIsNot => 'Lời mời của bạn chưa sẵn sàng';
 
   @override
-  String get pairCodePanelReadSixDigitsOut =>
-      'Đọc to sáu chữ số là họ có thể thêm bạn. Không cần trao đổi gì khác.';
-
-  @override
   String get pairCodePanelWorking => 'Đang xử lý';
-
-  @override
-  String get pairCodePanelOrMakeASix => 'Hoặc tạo mã sáu chữ số để đọc to';
 
   @override
   String get pairCodePanelBurned =>
@@ -6630,17 +6815,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get pairCodePanelTheyTapAddChoose =>
       'Họ chạm Thêm, chọn Mã, rồi nhập các số này.';
-
-  @override
-  String get pairCodePanelTheyOpenKryfoTap =>
-      'Họ mở Kryfo, chạm Thêm, chọn Mã ghép nối rồi nhập sáu chữ số này. Hãy tạo mã mới cho người tiếp theo.';
-
-  @override
-  String get pairCodePanelYourWords => 'Ba từ của bạn';
-
-  @override
-  String get pairCodePanelAcceptOnce =>
-      'Yêu cầu của họ sẽ đến khi họ thêm bạn. Chỉ chấp nhận khi họ nói cả bốn nhóm số đều khớp.';
 
   @override
   String pinsPinnedMessages(Object count) {
@@ -6721,6 +6895,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get torBootSplashMadeOnThisPhone =>
       'Được tạo trên điện thoại này. Không có gì được gửi đi đâu cả.';
+
+  @override
+  String get torBootSplashMadeOnThisPhoneDesk =>
+      'Được tạo trên máy tính này. Không có gì được gửi đi đâu cả.';
 
   @override
   String get torBootSplashFirstLaunchTakesA =>
@@ -6895,12 +7073,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsConnected => 'Đã kết nối';
 
   @override
-  String get settingsScreenshots => 'Chụp màn hình';
-
-  @override
-  String get settingsBlocked2 => 'Đã chặn';
-
-  @override
   String get settingsOn => 'Bật';
 
   @override
@@ -6917,6 +7089,28 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Sao lưu';
+
+  @override
+  String get settingsProtectBackup => 'Sao lưu';
+
+  @override
+  String get settingsBackupNotYet => 'Chưa có';
+
+  @override
+  String get settingsBackupToday => 'Hôm nay';
+
+  @override
+  String get settingsBackupYesterday => 'Hôm qua';
+
+  @override
+  String settingsBackupDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ngày trước',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get settingsVoice => 'Giọng nói';
@@ -7037,13 +7231,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesBuiltIn => 'có sẵn';
 
   @override
+  String get bridgesPasteOrScanALineDesk =>
+      'Dán một dòng do người bạn tin tưởng đưa cho bạn.';
+
+  @override
   String get bridgesDetails => 'Chi tiết';
 
   @override
   String get transportBridgeMode => 'Cầu nối';
-
-  @override
-  String get bridgesEgypt => 'Ai Cập';
 
   @override
   String get bridgesYourBridgeCouldNot =>
@@ -7061,6 +7256,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mạng này cần đăng nhập trước. Khi bạn đã vào được, Kryfo sẽ kết nối.';
 
   @override
+  String get bridgesThisNetworkWantsADesk =>
+      'Mạng này cần đăng nhập trước. Hãy đăng nhập từ trình duyệt, hoặc kiểm tra kết nối mạng của máy tính. Khi bạn đã vào được, Kryfo sẽ kết nối.';
+
+  @override
   String get bridgesWaitingForWifiSignIn => 'Đang chờ đăng nhập Wi-Fi';
 
   @override
@@ -7076,14 +7275,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesUsingTorProject => 'Đang dùng cầu nối từ Dự án Tor';
 
   @override
-  String get bridgesKryfoTriesAgainOnItsOwn =>
-      'Thỉnh thoảng Kryfo sẽ tự thử lại.';
-
-  @override
-  String get bridgesTheTorProjectCanSuggest =>
-      'Dự án Tor có thể gợi ý một cầu nối dùng được ở đây.';
-
-  @override
   String get bridgesBridgeRemoved => 'Đã gỡ cầu nối';
 
   @override
@@ -7093,9 +7284,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String bridgesRemoveBridgeN(String n) {
     return 'Gỡ cầu nối $n';
   }
-
-  @override
-  String get bridgesIran => 'Iran';
 
   @override
   String get bridgesTurnOnAutomatic => 'Bật tự động';
@@ -7129,9 +7317,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesScanACode => 'Quét mã';
 
   @override
-  String get bridgesMyanmar => 'Myanmar';
-
-  @override
   String get bridgesSwitchToAutomatic => 'Chuyển sang tự động';
 
   @override
@@ -7154,9 +7339,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get bridgesGoesThroughAVolunteer =>
       'Đi qua máy tính của một tình nguyện viên. Khó bị chặn, nhưng khởi động chậm.';
-
-  @override
-  String get bridgesLetTheTorProject => 'Để Dự án Tor đoán';
 
   @override
   String get bridgesTorSeemsBlocked => 'Có vẻ Tor bị chặn trên mạng này';
@@ -7186,10 +7368,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo tự tìm cách dùng được ở nơi bạn đang ở.';
 
   @override
-  String get bridgesTheTorProjectKnows =>
-      'Dự án Tor có lời khuyên riêng cho những nước này.';
-
-  @override
   String get bridgesThisBridgeIsnTGetting => 'Cầu nối này không kết nối được';
 
   @override
@@ -7201,9 +7379,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesNotNow => 'Để sau';
-
-  @override
-  String get bridgesRussia => 'Nga';
 
   @override
   String get bridgesObfs4BridgesThatCome =>
@@ -7219,17 +7394,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesSavedLines => 'Dòng đã lưu';
 
   @override
+  String get bridgesPasteTheLineTheyDesk =>
+      'Dán dòng họ gửi cho bạn. Hãy nhận dòng cầu nối từ người bạn quen biết.';
+
+  @override
   String get bridgesFromAFriendLower => 'từ bạn bè';
 
   @override
   String get bridgesAlmostThere => 'Sắp xong rồi';
-
-  @override
-  String get bridgesTheTorProjectSGuess => 'Dự án Tor đoán';
-
-  @override
-  String get bridgesOurRelayUsuallyGets =>
-      'Relay của chúng tôi chỉ là một kết nối thông thường và thường vẫn đi qua được. Hoặc để Kryfo tự tìm cách.';
 
   @override
   String get bridgesUseThisBridge => 'Dùng cầu nối này';
@@ -7247,9 +7419,6 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get bridgesTurkmenistan => 'Turkmenistan';
 
   @override
   String get transportBridgeMethod => 'Phương thức';
@@ -7276,11 +7445,12 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cầu nối có thể ngừng hoạt động mà không báo trước. Chế độ Tự động có thể tìm cách khác.';
 
   @override
-  String get bridgesHongKong => 'Hồng Kông';
-
-  @override
   String get bridgesWhenTorIsBlockedAutomatic =>
       'Khi Tor bị chặn, chế độ Tự động sẽ hỏi Dự án Tor cách nào dùng được ở nước bạn.';
+
+  @override
+  String get bridgesPlainAdvice =>
+      'Kryfo tự động chọn cầu nối. Snowflake và WebTunnel hoạt động ở hầu hết mọi nơi. Nếu một cầu nối không kết nối được, hãy thử cái khác hoặc xin bạn bè một dòng cầu nối.';
 
   @override
   String get bridgesAskTorProject => 'Hỏi Dự án Tor';
@@ -7289,18 +7459,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesTooLongForTor => 'Quá dài để Tor dùng được';
 
   @override
-  String get bridgesCountry => 'Quốc gia';
-
-  @override
   String bridgesMethodFrom(String method, String from) {
     return '$method, $from';
   }
-
-  @override
-  String get bridgesChina => 'Trung Quốc';
-
-  @override
-  String get bridgesBelarus => 'Belarus';
 
   @override
   String get bridgesKryfoCanTUseThis => 'Kryfo không dùng được dòng này';
@@ -7324,8 +7485,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get languageMatchPhone => 'Theo điện thoại';
 
   @override
+  String get languageMatchPhoneDesk => 'Theo hệ thống';
+
+  @override
   String languageMatchPhoneValue(Object language) {
     return 'Theo điện thoại ($language)';
+  }
+
+  @override
+  String languageMatchPhoneValueDesk(Object language) {
+    return 'Theo hệ thống ($language)';
   }
 
   @override
@@ -7363,6 +7532,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get videoViewerCannotPlay =>
       'Điện thoại này không phát được video này ở đây.';
+
+  @override
+  String get videoViewerCannotPlayDesk =>
+      'Máy tính này không phát được video này ở đây.';
 
   @override
   String get videoViewerOpenElsewhere => 'Mở bằng ứng dụng khác';
@@ -7417,6 +7590,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get languageNameAr => 'Tiếng Ả Rập';
+
+  @override
+  String get languageNameHi => 'Tiếng Hindi';
+
+  @override
+  String get languageNamePl => 'Tiếng Ba Lan';
 
   @override
   String get languageLaterLine =>
@@ -7550,6 +7729,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tên, từ ngữ, ảnh, tệp và liên kết. Việc tìm kiếm diễn ra trên điện thoại này và không gửi gì đi đâu cả.';
 
   @override
+  String get searchIntroLineDesk =>
+      'Tên, từ ngữ, ảnh, tệp và liên kết. Việc tìm kiếm diễn ra trên máy tính này và không gửi gì đi đâu cả.';
+
+  @override
   String get searchNothing => 'Không tìm thấy gì';
 
   @override
@@ -7618,11 +7801,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get handleRegistryFailed =>
-      'Không liên lạc được với nơi đăng ký. Hãy thử lại sau một phút.';
+      'Không liên lạc được với nơi đăng ký.\nHãy thử lại sau một phút.';
 
   @override
   String get handleStillReaching =>
-      'Vẫn đang liên lạc với nơi đăng ký. Qua Tor việc này có thể mất đến một phút.';
+      'Vẫn đang liên lạc với nơi đăng ký.\nQua Tor việc này có thể mất một lúc.';
 
   @override
   String get handleSearchNeedsTor =>
@@ -7631,6 +7814,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get handleCheckClock =>
       'Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.';
+
+  @override
+  String get handleCheckClockDesk =>
+      'Hãy kiểm tra ngày giờ trên máy tính rồi thử lại.';
 
   @override
   String get searchPeople => 'Mọi người';
@@ -7697,6 +7884,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Điện thoại không giữ được mở khóa bằng vân tay cho Kryfo nên tính năng này đã tắt. Mã PIN vẫn dùng được.';
 
   @override
+  String get lockFingerTryAgain =>
+      'Điện thoại đang bận lúc đó. Hãy thử lại bằng vân tay hoặc dùng mã PIN.';
+
+  @override
   String get pinsFingerRefused =>
       'Điện thoại không cho bật mở khóa bằng vân tay cho Kryfo. Mã PIN vẫn dùng được.';
 
@@ -7708,8 +7899,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dành cho lúc có người bắt bạn mở khóa điện thoại.';
 
   @override
+  String get pinsAdvancedLineDesk =>
+      'Dành cho lúc có người bắt bạn mở khóa máy tính.';
+
+  @override
   String get pinsWipeLine =>
       'Nhập ở màn hình khóa, mã này sẽ xóa Kryfo khỏi điện thoại này.';
+
+  @override
+  String get pinsWipeLineDesk =>
+      'Nhập ở màn hình khóa, mã này sẽ xóa Kryfo khỏi máy tính này.';
 
   @override
   String get pinsDecoyPin => 'Mã PIN ngụy trang';
@@ -7731,6 +7930,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mọi mã PIN đều bị gỡ, kể cả mã ngụy trang, Kryfo của nó và mọi trò chuyện ẩn. Bất kỳ ai cầm điện thoại của bạn đều mở được Kryfo với tư cách là bạn.';
 
   @override
+  String get pinsTurnOffWithDecoyDesk =>
+      'Mọi mã PIN đều bị gỡ, kể cả mã ngụy trang, Kryfo của nó và mọi trò chuyện ẩn. Bất kỳ ai ngồi vào máy tính của bạn đều mở được Kryfo với tư cách là bạn.';
+
+  @override
   String get pinsHowThisWorks => 'Cách hoạt động';
 
   @override
@@ -7745,6 +7948,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get flowWipe1 =>
       'Nhập ở màn hình khóa thay cho mã PIN của bạn, mã này sẽ xóa Kryfo khỏi điện thoại này rồi đóng lại. Với người đang nhìn, ứng dụng chỉ như vừa dừng.';
+
+  @override
+  String get flowWipe1Desk =>
+      'Nhập ở màn hình khóa thay cho mã PIN của bạn, mã này sẽ xóa Kryfo khỏi máy tính này rồi đóng lại. Với người đang nhìn, ứng dụng chỉ như vừa dừng.';
 
   @override
   String get flowWipe2 =>
@@ -7779,6 +7986,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thông báo đã nằm trong bảng thông báo thì đã bị thấy rồi. Khi phần ngụy trang đang mở, không có thông báo mới nào hiện ra.';
 
   @override
+  String get flowDecoyShadeDesk =>
+      'Thông báo đã hiện trên màn hình thì đã bị thấy rồi. Khi phần ngụy trang đang mở, không có thông báo mới nào hiện ra.';
+
+  @override
   String get flowDecoyChoose => 'Chọn mã PIN ngụy trang';
 
   @override
@@ -7791,6 +8002,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get flowLaw =>
       'Ở một số nước, từ chối mở khóa điện thoại hoặc giấu dữ liệu khỏi nhà chức trách tự nó đã là vi phạm. Hãy nắm luật ở nơi bạn đến.';
+
+  @override
+  String get flowLawDesk =>
+      'Ở một số nước, từ chối mở khóa thiết bị hoặc giấu dữ liệu khỏi nhà chức trách tự nó đã là vi phạm. Hãy nắm luật ở nơi bạn đến.';
 
   @override
   String get howWipe =>
@@ -7855,6 +8070,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get flowVaultReplace =>
       'Việc này thay thế mọi trò chuyện ẩn mà điện thoại này đang có.';
+
+  @override
+  String get flowVaultReplaceDesk =>
+      'Việc này thay thế mọi trò chuyện ẩn mà máy tính này đang có.';
 
   @override
   String get flowVaultChoose => 'Chọn mã PIN trò chuyện ẩn';
@@ -7930,6 +8149,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get howVault =>
       'Mã PIN trò chuyện ẩn mở Kryfo cùng trò chuyện ẩn của bạn; mã PIN và vân tay của bạn mở mà không có chúng. Thiết lập lại trò chuyện ẩn sẽ thay thế những trò chuyện ẩn mà điện thoại này đang có. Quên mã PIN trò chuyện ẩn là chúng mất vĩnh viễn.';
+
+  @override
+  String get howVaultDesk =>
+      'Mã PIN trò chuyện ẩn mở Kryfo cùng trò chuyện ẩn của bạn; mã PIN của bạn mở mà không có chúng. Thiết lập lại trò chuyện ẩn sẽ thay thế những trò chuyện ẩn mà máy tính này đang có. Quên mã PIN trò chuyện ẩn là chúng mất vĩnh viễn.';
 
   @override
   String get chatHide => 'Ẩn trò chuyện';
@@ -8148,6 +8371,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get supportMovedToInbox => 'Moved to inbox';
 
   @override
+  String get supportCopyDevCard => 'Copy my developer card';
+
+  @override
+  String get supportDevCardOff =>
+      'This card does not match the pinned one. Nothing was copied.';
+
+  @override
   String get settingsWriteToMarios => 'Nhắn cho Marios';
 
   @override
@@ -8181,12 +8411,23 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khi viết ẩn danh, Kryfo tạo một cái tên và các khóa mới chỉ cho cuộc trò chuyện này. Chúng ở lại trên điện thoại này và không bao giờ được dùng ở nơi khác.';
 
   @override
+  String get devWhoAnonDesk =>
+      'Khi viết ẩn danh, Kryfo tạo một cái tên và các khóa mới chỉ cho cuộc trò chuyện này. Chúng ở lại trên máy tính này và không bao giờ được dùng ở nơi khác.';
+
+  @override
   String get devWhoNothingYet =>
       'Không có gì rời khỏi điện thoại của bạn cho đến khi bạn gửi tin nhắn đầu tiên.';
 
   @override
+  String get devWhoNothingYetDesk =>
+      'Không có gì rời khỏi máy tính của bạn cho đến khi bạn gửi tin nhắn đầu tiên.';
+
+  @override
   String get devWhoChoiceStays =>
       'Lựa chọn của bạn gắn liền với cuộc trò chuyện này.';
+
+  @override
+  String get devUpdateToWrite => 'Hãy cập nhật Kryfo để nhắn tin cho Marios.';
 
   @override
   String get devKeyCheckFailed =>
@@ -8209,6 +8450,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get devNamelessLine =>
       'Cái tên được tạo cho cuộc trò chuyện này ở lại trên điện thoại đã tạo ra nó, nên ở đây chỉ có thể đọc cuộc trò chuyện này.';
+
+  @override
+  String get devNamelessLineDesk =>
+      'Cái tên được tạo cho cuộc trò chuyện này ở lại trên thiết bị đã tạo ra nó, nên ở đây chỉ có thể đọc cuộc trò chuyện này.';
 
   @override
   String get devStartNewLine =>
@@ -8244,6 +8489,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn đã xóa khỏi điện thoại này một người dưới ba từ này vì đó không phải người họ nói. Nếu liên kết này đến từ người bạn quen, hãy dùng nó, rồi so sánh số an toàn với họ.';
 
   @override
+  String get nameTakenTombLineDesk =>
+      'Bạn đã xóa khỏi máy tính này một người dưới ba từ này vì đó không phải người họ nói. Nếu liên kết này đến từ người bạn quen, hãy dùng nó, rồi so sánh số an toàn với họ.';
+
+  @override
   String get nameTakenUse => 'Dùng liên kết này';
 
   @override
@@ -8252,6 +8501,11 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get appYourOwnInvite =>
       'Đây là lời mời của chính bạn. Hãy chia sẻ cho người khác để kết nối.';
+
+  @override
+  String appLinkNeedsUpdate(Object id) {
+    return '$id cần cập nhật Kryfo trước khi hai bạn có thể thêm nhau.';
+  }
 
   @override
   String appLinkWordsTaken(Object id) {
@@ -8286,6 +8540,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cuộc trò chuyện, tin nhắn và tệp của nó sẽ bị xóa khỏi điện thoại này. Chỉ một liên kết hoặc mã do bạn thêm mới lấy lại được ba từ của họ. Hãy so sánh số an toàn với người bạn thêm.';
 
   @override
+  String get notThemSheetLineDesk =>
+      'Cuộc trò chuyện, tin nhắn và tệp của nó sẽ bị xóa khỏi máy tính này. Chỉ một liên kết hoặc mã do bạn thêm mới lấy lại được ba từ của họ. Hãy so sánh số an toàn với người bạn thêm.';
+
+  @override
   String get notThemRemove => 'Xóa và chặn';
 
   @override
@@ -8294,6 +8552,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get groupAdminGoneLine =>
       'Quản trị viên của nhóm đã bị xóa khỏi điện thoại này. Các thay đổi của nhóm không còn đến với bạn.';
+
+  @override
+  String get groupAdminGoneLineDesk =>
+      'Quản trị viên của nhóm đã bị xóa khỏi máy tính này. Các thay đổi của nhóm không còn đến với bạn.';
 
   @override
   String get blockedKey => 'Khóa đã chặn';
@@ -8338,6 +8600,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Máy chủ của Kryfo hỏi dịch vụ GIF thay cho bạn. Dịch vụ không bao giờ thấy bạn, và máy chủ không lưu lại những gì bạn đã tìm.';
 
   @override
+  String get gifOptInAsksForYouFast =>
+      'Máy chủ của Kryfo hỏi dịch vụ GIF thay cho bạn, nên dịch vụ không bao giờ thấy bạn. Ở chế độ Nhanh, máy chủ của chúng tôi thấy địa chỉ IP của bạn khi bạn tìm, và không lưu lại địa chỉ đó hay những gì bạn đã tìm.';
+
+  @override
   String get gifOptInLikeAPhoto =>
       'GIF được gửi đi đã mã hóa, như một bức ảnh. Điện thoại của bạn bè bạn không tải gì về.';
 
@@ -8347,6 +8613,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get gifOptInWhereToTurnOff =>
       'Cài đặt, Quyền riêng tư, Tìm GIF. GIF trên điện thoại của bạn luôn dùng được mà không cần nó.';
+
+  @override
+  String get gifOptInWhereToTurnOffDesk =>
+      'Cài đặt, Quyền riêng tư, Tìm GIF. GIF trên máy tính của bạn luôn dùng được mà không cần nó.';
 
   @override
   String get gifTurnOn => 'Bật tìm GIF';
@@ -8361,7 +8631,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String gifAskThroughKryfo(String brand) {
-    return 'Tìm GIF đi qua máy chủ của Kryfo. $brand không bao giờ thấy bạn. Bật lên nhé?';
+    return 'Tìm GIF đi thẳng tới máy chủ của Kryfo, nơi thấy địa chỉ IP của bạn ở chế độ Nhanh. $brand không bao giờ thấy bạn. Bật lên nhé?';
   }
 
   @override
@@ -8375,10 +8645,17 @@ class AppLocalizationsVi extends AppLocalizations {
       'GIF đã lưu trên điện thoại nằm ở *Trên điện thoại này*.';
 
   @override
+  String get gifSavedOnPhoneDesk =>
+      'GIF đã lưu trên máy tính nằm ở *Trên máy tính này*.';
+
+  @override
   String get gifTab => 'GIF';
 
   @override
   String get gifPhoneTab => 'Trên điện thoại này';
+
+  @override
+  String get gifPhoneTabDesk => 'Trên máy tính này';
 
   @override
   String get gifSearchHint => 'Tìm GIF';
@@ -8435,6 +8712,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'GIF đã lưu trên điện thoại này. Không có gì lên mạng.';
 
   @override
+  String get gifPhoneLineDesk =>
+      'GIF đã lưu trên máy tính này. Không có gì lên mạng.';
+
+  @override
   String get gifPhoneChoose => 'Chọn một GIF';
 
   @override
@@ -8480,6 +8761,21 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mỗi ngày một lần qua Tor. Chỉ hỏi kryfo.app phiên bản mới nhất và không gửi gì về bạn.';
 
   @override
+  String get settingsCheckNow => 'Kiểm tra ngay';
+
+  @override
+  String get settingsCheckNowBusy => 'Đang kiểm tra…';
+
+  @override
+  String get updateOpenPage => 'Mở trang tải về';
+
+  @override
+  String get updateNewest => 'Bạn đang dùng Kryfo mới nhất';
+
+  @override
+  String get updateCouldNotCheck => 'Không thể kiểm tra. Hãy thử lại sau.';
+
+  @override
   String get voiceDisguiseHere => 'Đổi giọng của tôi ở đây';
 
   @override
@@ -8487,7 +8783,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatShotsWhenTheyUpdate =>
-      'Dùng được khi người kia cập nhật ứng dụng';
+      'Dùng được khi người kia dùng Kryfo bản mới nhất trên điện thoại';
+
+  @override
+  String get chatShotsWhenTheyUpdateDesk => 'Dùng được trong Kryfo cho Android';
 
   @override
   String get chatShotsBothPhones =>
@@ -8543,6 +8842,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatShotsYouTurnedOff => 'Bạn đã tắt chặn chụp màn hình';
 
   @override
+  String get chatNowPostQuantum =>
+      'Tin nhắn trong cuộc trò chuyện này giờ dùng mã hóa hậu lượng tử';
+
+  @override
   String chatShotsTheyTurnedOn(String name) {
     return '$name đã bật chặn chụp màn hình. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
   }
@@ -8557,11 +8860,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo chặn chụp màn hình và quay màn hình phòng này trên mọi điện thoại trong đó, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
 
   @override
+  String get roomShotsBlockedDesk =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau trong phòng này. Kryfo cho Android còn chặn chụp màn hình và quay màn hình.';
+
+  @override
   String get roomShotsAlwaysOn =>
       'Luôn bật trong phòng, trên mọi điện thoại trong đó';
 
   @override
-  String get settingsPerChat => 'Theo từng cuộc trò chuyện';
+  String get roomShotsAlwaysOnDesk =>
+      'Luôn bật trong phòng, trong Kryfo cho Android';
 
   @override
   String get homeShotsPerChat =>
@@ -8625,6 +8933,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Điện thoại không còn đủ dung lượng trống. Hãy giải phóng bớt dung lượng rồi thử lại.';
 
   @override
+  String get voiceNoRoomDesk =>
+      'Máy tính không còn đủ dung lượng trống. Hãy giải phóng bớt dung lượng rồi thử lại.';
+
+  @override
   String get voiceNoRoomNotSent =>
       'Không đủ dung lượng để đổi giọng cho tin này nên tin chưa được gửi';
 
@@ -8686,19 +8998,12 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tệp này được gửi đi nguyên trạng. Kryfo chỉ làm sạch JPEG, PNG, WebP, HEIC, AVIF, GIF, MP4 và MOV.';
 
   @override
-  String get fileRawPictureTitle => 'Gửi ảnh này nguyên trạng?';
-
-  @override
-  String get fileRawPictureLine =>
-      'Không thể làm sạch ảnh này. Các chi tiết như nơi chụp sẽ đi kèm. Hãy gửi dưới dạng ảnh để làm sạch.';
-
-  @override
   String get voiceStoppedAtLimit =>
       'Tin nhắn thoại dừng ở 30 phút. Hãy nghe lại rồi gửi đi.';
 
   @override
   String get gettingMessagesHelperBody =>
-      'Đến ngay và nhẹ. Máy chủ của nó thấy IP của bạn và lúc tin nhắn đến, không bao giờ biết nội dung.';
+      'Máy chủ của nó thấy địa chỉ IP của bạn và lúc tin nhắn đến.\nKhông bao giờ biết nội dung. Đến ngay và nhẹ.';
 
   @override
   String get gettingMessagesHelperUseOnion => 'Chuyển sang Onion';
@@ -8711,7 +9016,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Có lẫn các lần đánh thức giả, khiến máy chủ của ứng dụng trợ giúp khó biết khi nào tin nhắn thật đến. Máy chủ trợ giúp tự dựng sẽ cho relay của chúng tôi biết địa chỉ của nó. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
 
   @override
-  String get gettingMessagesHelperOnionOnly => 'Có trên tuyến Onion';
+  String get gettingMessagesHelperOnionOnly => 'Cần tuyến Riêng tư';
 
   @override
   String get gettingMessagesHelperChecking => 'Đang kiểm tra…';
@@ -8812,9 +9117,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mediaSendVideo => 'Gửi video';
 
   @override
-  String mediaSendUntilAccepted(Object count) {
-    return 'Đến khi họ chấp nhận, có thể gửi $count';
-  }
+  String get requestSenderMediaLater =>
+      'Ảnh và tệp sẽ mở sau khi họ chấp nhận bạn, để cả hai cùng an toàn.';
+
+  @override
+  String get requestReceiverMediaLater =>
+      'Ảnh và tệp sẽ mở sau khi bạn chấp nhận họ, để bạn được an toàn.';
 
   @override
   String get groupEndedYou => 'Bạn đã kết thúc nhóm này';
@@ -8838,6 +9146,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Nhóm sẽ bị xóa với mọi người: tin nhắn và tệp phương tiện bị gỡ khỏi điện thoại của mọi thành viên đã cập nhật.';
 
   @override
+  String get groupInfoEndGroupLineDesk =>
+      'Nhóm sẽ bị xóa với mọi người: tin nhắn và tệp phương tiện bị gỡ khỏi thiết bị của mọi thành viên đã cập nhật.';
+
+  @override
   String get groupInfoDeleteGroup => 'Xóa nhóm';
 
   @override
@@ -8854,4 +9166,2684 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get groupInfoEndGroupDetail =>
       'Kryfo gỡ nhóm khỏi điện thoại của mọi thành viên đã có bản cập nhật.';
+
+  @override
+  String get groupInfoEndGroupDetailDesk =>
+      'Kryfo gỡ nhóm khỏi thiết bị của mọi thành viên đã có bản cập nhật.';
+
+  @override
+  String get translateAction => 'Dịch';
+
+  @override
+  String get translateShowOriginal => 'Xem bản gốc';
+
+  @override
+  String translateBarTo(Object language) {
+    return 'Dịch sang $language';
+  }
+
+  @override
+  String get translateBarMore => 'Tùy chọn dịch';
+
+  @override
+  String translateBarNever(Object language) {
+    return 'Không bao giờ đề xuất cho $language';
+  }
+
+  @override
+  String get translateBarHide => 'Ẩn trong cuộc trò chuyện này';
+
+  @override
+  String get translateWorking => 'Đang dịch…';
+
+  @override
+  String get translateFailed => 'Không dịch được';
+
+  @override
+  String translateFrom(Object language) {
+    return 'Đã dịch từ $language';
+  }
+
+  @override
+  String get translateLangZh => 'Tiếng Trung';
+
+  @override
+  String translatePackTitle(Object language) {
+    return 'Dịch trên điện thoại này: $language';
+  }
+
+  @override
+  String translatePackTitleDesk(Object language) {
+    return 'Dịch trên máy tính này: $language';
+  }
+
+  @override
+  String translatePackLine(Object language, Object size) {
+    return 'Tin nhắn được dịch ngay trên điện thoại này và không bao giờ rời khỏi máy. Việc này cần gói ngôn ngữ $language, khoảng $size, tải một lần qua Tor.';
+  }
+
+  @override
+  String translatePackLineDesk(Object language, Object size) {
+    return 'Tin nhắn được dịch ngay trên máy tính này và không bao giờ rời khỏi máy. Việc này cần gói ngôn ngữ $language, khoảng $size, tải một lần qua Tor.';
+  }
+
+  @override
+  String get translatePackNoLib =>
+      'Tính năng dịch không chạy được trên điện thoại này.';
+
+  @override
+  String get translatePackNoLibDesk =>
+      'Tính năng dịch không chạy được trên máy tính này.';
+
+  @override
+  String translateDownload(Object size) {
+    return 'Tải xuống · khoảng $size';
+  }
+
+  @override
+  String get translateDownloadAnyway => 'Vẫn tải ngay';
+
+  @override
+  String get translateResume => 'Tiếp tục tải';
+
+  @override
+  String translateProgress(Object done, Object total) {
+    return '$done / $total';
+  }
+
+  @override
+  String get translateFinishing => 'Đang kiểm tra tệp…';
+
+  @override
+  String translateInstalled(Object size) {
+    return 'Trên điện thoại này · $size';
+  }
+
+  @override
+  String translateInstalledDesk(Object size) {
+    return 'Trên máy tính này · $size';
+  }
+
+  @override
+  String get translateNeedsWifi =>
+      '“Chỉ qua Wi-Fi” đang bật và điện thoại này không dùng Wi-Fi.';
+
+  @override
+  String get translateNeedsWifiDesk =>
+      '“Chỉ qua Wi-Fi” đang bật và máy tính này không dùng Wi-Fi.';
+
+  @override
+  String get translateFailNoTor =>
+      'Tor chưa kết nối. Gói chỉ được tải qua Tor, hãy thử lại khi đã kết nối.';
+
+  @override
+  String get translateFailNetwork =>
+      'Quá trình tải đã dừng. Hãy thử lại, nó sẽ tiếp tục từ chỗ đã dừng.';
+
+  @override
+  String get translateFailBadFile =>
+      'Một tệp không khớp với điều Kryfo mong đợi nên đã bị loại bỏ. Hãy thử lại.';
+
+  @override
+  String get translateFailNoEngine =>
+      'Không thể tải gói ngôn ngữ trên điện thoại này.';
+
+  @override
+  String get translateFailNoEngineDesk =>
+      'Không thể tải gói ngôn ngữ trên máy tính này.';
+
+  @override
+  String translatePaused(Object size) {
+    return 'Đã tạm dừng · đã tải $size';
+  }
+
+  @override
+  String get translateSettingsTitle => 'Dịch thuật';
+
+  @override
+  String get translateSettingsRow => 'Dịch tin nhắn';
+
+  @override
+  String get translateSettingsHint =>
+      'Trên điện thoại này, không bao giờ trên máy chủ';
+
+  @override
+  String get translateSettingsHintDesk =>
+      'Trên máy tính này, không bao giờ trên máy chủ';
+
+  @override
+  String get translatePacksSection => 'Gói ngôn ngữ';
+
+  @override
+  String translateNotDownloaded(Object size) {
+    return 'Chưa tải · khoảng $size';
+  }
+
+  @override
+  String get translateDownloading => 'Đang tải qua Tor';
+
+  @override
+  String get translateLanguagesSection => 'Ngôn ngữ';
+
+  @override
+  String get translateMyLanguages => 'Ngôn ngữ tôi đọc';
+
+  @override
+  String get translateMyLanguagesHint =>
+      'Tin nhắn bằng các ngôn ngữ này sẽ không được đề nghị dịch. Ngôn ngữ của ứng dụng luôn nằm trong số đó.';
+
+  @override
+  String get translateInto => 'Dịch sang';
+
+  @override
+  String get translateAppLanguage => 'Ngôn ngữ của ứng dụng';
+
+  @override
+  String get translateBehaviourSection => 'Tải xuống và trò chuyện';
+
+  @override
+  String get translateAutoDefault => 'Tự động dịch các cuộc trò chuyện';
+
+  @override
+  String get translateAutoDefaultHint =>
+      'Cho những cuộc trò chuyện bạn chưa tự đặt. Mỗi cuộc trò chuyện có thể bật hoặc tắt.';
+
+  @override
+  String get translateWifiOnly => 'Chỉ tải gói qua Wi-Fi';
+
+  @override
+  String get translatePrivacyTitle => 'Những gì được giữ riêng tư';
+
+  @override
+  String get translatePrivacyNote =>
+      'Việc dịch diễn ra trên điện thoại này. Không tin nhắn nào được gửi đi đâu để dịch. Tải một gói sẽ cho máy chủ biết đó là gói nào. Gói được tải qua Tor nên máy chủ không biết ai đã yêu cầu.';
+
+  @override
+  String get translatePrivacyNoteDesk =>
+      'Việc dịch diễn ra trên máy tính này. Không tin nhắn nào được gửi đi đâu để dịch. Tải một gói sẽ cho máy chủ biết đó là gói nào. Gói được tải qua Tor nên máy chủ không biết ai đã yêu cầu.';
+
+  @override
+  String get translateAutoInChat => 'Tự động dịch';
+
+  @override
+  String get translateAutoInChatHint =>
+      'Tin nhắn bằng ngôn ngữ khác sẽ hiện bản dịch. Bản gốc chỉ cách một lần chạm.';
+
+  @override
+  String get translateAlwaysChat => 'Luôn dịch cuộc trò chuyện này';
+
+  @override
+  String translateNeverDone(Object language) {
+    return 'Tin nhắn bằng $language được giữ nguyên';
+  }
+
+  @override
+  String get translateUndo => 'Hoàn tác';
+
+  @override
+  String get translateNeverSection => 'Không bao giờ đề xuất';
+
+  @override
+  String get translateOfferAgain => 'Đề xuất lại';
+
+  @override
+  String get translateOnHint =>
+      'Được đề xuất bên dưới tin nhắn bằng ngôn ngữ khác';
+
+  @override
+  String get translatePrivacyKept =>
+      'Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.';
+
+  @override
+  String get translatePrivacyKeptDesk =>
+      'Bản dịch được lưu mã hóa cùng cuộc trò chuyện trên máy tính này và bị xóa cùng nó.';
+
+  @override
+  String get translateOffDeletes => 'Tắt mục này sẽ xóa các bản dịch đã lưu.';
+
+  @override
+  String get bridgesNoneUntilOnion => 'Chưa dùng cho đến khi bật Onion';
+
+  @override
+  String get bridgesRelayThisNetworkSees =>
+      'Nhanh vượt qua được nơi Tor bị chặn, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
+
+  @override
+  String get settingsLicences => 'Giấy phép';
+
+  @override
+  String get settingsLicencesValue => 'Kryfo được xây dựng từ đâu';
+
+  @override
+  String get licencesKryfoLine =>
+      'Kryfo là phần mềm tự do theo Giấy phép Công cộng GNU, phiên bản 3 trở lên. Mọi người đều có thể đọc, sửa và chia sẻ mã nguồn của nó.';
+
+  @override
+  String get licencesSourceCode => 'Mã nguồn';
+
+  @override
+  String get licencesSignalTitle => 'Giao thức Signal';
+
+  @override
+  String licencesSignalLine(String version) {
+    return 'Kryfo có libsignal $version do Signal làm, theo Giấy phép Công cộng GNU Affero, phiên bản 3. Mã nguồn của nó có tại github.com/signalapp/libsignal và bên cạnh mỗi bản phát hành Kryfo.';
+  }
+
+  @override
+  String get licencesAgplText => 'GNU AGPL 3.0, toàn văn';
+
+  @override
+  String get licencesSignalSource => 'Mã nguồn libsignal';
+
+  @override
+  String get licencesParts => 'Thành phần mã nguồn mở';
+
+  @override
+  String get licencesInSignal => 'Trong thư viện Signal';
+
+  @override
+  String get licencesInApp => 'Trong ứng dụng';
+
+  @override
+  String licencesPartCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString thành phần',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licencesGplText => 'GNU GPL 3.0, toàn văn';
+
+  @override
+  String get licencesInEngine => 'Trong bộ máy mạng';
+
+  @override
+  String get licencesLoadFailed => 'Không tải được';
+
+  @override
+  String get licencesInVoice => 'Trong chép lời giọng nói';
+
+  @override
+  String get licencesInTranslation => 'Trong dịch tin nhắn';
+
+  @override
+  String get settingsCopyLinkHint => 'Sao chép liên kết';
+
+  @override
+  String get motionNoRelayYet => 'CHƯA CÓ RELAY';
+
+  @override
+  String get motionTheRouteIsUp => 'Tuyến đường đã thông';
+
+  @override
+  String get motionMessagesGoOnceARelay =>
+      'Tin nhắn sẽ đi ngay khi có relay phản hồi qua tuyến đường này.';
+
+  @override
+  String get motionOffline => 'NGOẠI TUYẾN';
+
+  @override
+  String get motionNoNetwork => 'Không có mạng';
+
+  @override
+  String get motionTorPicksUpAgain =>
+      'Không có mạng thì không gửi được gì. Tor sẽ tiếp tục khi có mạng lại.';
+
+  @override
+  String deliveryModeStateLast(String state, Object last) {
+    return '$state · $last';
+  }
+
+  @override
+  String homeWaitingState(int count, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count đang chờ · $state',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsIconAndNotifications => 'Biểu tượng và thông báo';
+
+  @override
+  String iconSettingsValue(String icon) {
+    return '$icon, thông báo đơn giản';
+  }
+
+  @override
+  String get iconSectionTitle => 'Biểu tượng ứng dụng';
+
+  @override
+  String get iconHint =>
+      'Màn hình chính và danh sách ứng dụng của bạn hiện biểu tượng và tên này thay cho Kryfo.';
+
+  @override
+  String get iconHintKryfo =>
+      'Chọn một biểu tượng và tên bình thường cho màn hình chính và danh sách ứng dụng.';
+
+  @override
+  String get iconWhatChanges => 'Điều này thay đổi gì';
+
+  @override
+  String iconConfirmTitle(String name) {
+    return 'Đổi biểu tượng thành $name?';
+  }
+
+  @override
+  String iconConfirmLine(String name) {
+    return 'Kryfo sẽ đóng rồi mở lại. Nếu biểu tượng biến khỏi màn hình chính, hãy tìm $name trong các ứng dụng của bạn và đặt lại.';
+  }
+
+  @override
+  String get iconConfirmButton => 'Đổi biểu tượng';
+
+  @override
+  String get iconNoPinLine =>
+      'Ai chạm vào cũng sẽ thấy Kryfo. Đặt mã PIN cho ứng dụng để họ chỉ thấy bàn phím mã PIN.';
+
+  @override
+  String get iconSetPin => 'Đặt mã PIN';
+
+  @override
+  String iconChanged(String name) {
+    return 'Đã đổi biểu tượng thành $name';
+  }
+
+  @override
+  String iconPreviewLabel(String name) {
+    return 'Màn hình chính của bạn sẽ hiện $name';
+  }
+
+  @override
+  String iconButtonLabel(String name) {
+    return '$name, biểu tượng ứng dụng';
+  }
+
+  @override
+  String get notifShowAll => 'Tên và tin nhắn';
+
+  @override
+  String get notifShowNew => 'Chỉ “Tin nhắn mới”';
+
+  @override
+  String get notifShowPlain => 'Đơn giản';
+
+  @override
+  String get notifPlainHint =>
+      'Không tên, không tin nhắn, không màu của Kryfo. Một biểu tượng trung tính và một dòng.';
+
+  @override
+  String get notifPlainLine => 'Có điều mới';
+
+  @override
+  String get notifPlainChannel => 'Cảnh báo';
+
+  @override
+  String get notifHeaderLimit =>
+      'Phần trên cùng của mỗi thông báo vẫn ghi Kryfo. Android không cho ứng dụng đổi phần đó.';
+
+  @override
+  String get gettingMessagesWhatShows => 'Thông báo hiện gì';
+
+  @override
+  String get iconSheetChangesTitle => 'Những gì thay đổi';
+
+  @override
+  String get iconSheetChanges =>
+      'Biểu tượng và tên trên màn hình chính và trong danh sách ứng dụng, menu chia sẻ và màn hình ứng dụng đang mở. Với Đơn giản, cả những gì thông báo hiện.';
+
+  @override
+  String get iconSheetStaysTitle => 'Những gì vẫn là Kryfo';
+
+  @override
+  String get iconSheetStays =>
+      'Dòng trên cùng của mỗi thông báo, các trang cài đặt và pin của điện thoại, cửa hàng ứng dụng, và chính Kryfo khi ai đó mở nó.';
+
+  @override
+  String get iconSheetGlance =>
+      'Nó chịu được một cái liếc qua màn hình chính. Nó không giấu Kryfo khỏi người xem kỹ phần cài đặt của điện thoại.';
+
+  @override
+  String get iconSheetPrivateSpace =>
+      'Điện thoại của bạn có thể có cách riêng để ẩn ứng dụng: không gian riêng tư, trong phần cài đặt.';
+
+  @override
+  String get iconSheetSecureFolder =>
+      'Điện thoại của bạn có thể có cách riêng để ẩn ứng dụng: Thư mục bảo mật, trong phần cài đặt.';
+
+  @override
+  String get iconSheetXiaomi =>
+      'Điện thoại của bạn có thể có cách riêng để ẩn ứng dụng: ẩn ứng dụng, trong phần cài đặt.';
+
+  @override
+  String get androidIconNotes => 'Ghi chú';
+
+  @override
+  String get androidIconWeather => 'Thời tiết';
+
+  @override
+  String get androidIconTasks => 'Công việc';
+
+  @override
+  String get androidIconNews => 'Tin tức';
+
+  @override
+  String get androidServiceTitlePlain => 'Đang hoạt động';
+
+  @override
+  String get lockStateUnlockPlain => 'Mở khóa';
+
+  @override
+  String get iconSheetOthers =>
+      'Các ứng dụng trên điện thoại vẫn có thể thấy Kryfo đã được cài đặt, và các hộp thoại, lời nhắc của chính Android có thể hiện tên của nó.';
+
+  @override
+  String get iconSheetSaves =>
+      'Khi đang dùng biểu tượng đơn giản, ảnh, video và tệp mới được lưu với tên bình thường vào các thư mục quen thuộc của điện thoại. Những gì đã lưu trước đó vẫn ở nguyên chỗ cũ.';
+
+  @override
+  String get deliveryModeGooglePush => 'Thông báo đẩy Google';
+
+  @override
+  String get deliveryModeGoogle => 'Google';
+
+  @override
+  String get notificationsLead =>
+      'Tin nhắn mới đến điện thoại này thế nào, kêu ra sao và hiện gì. Bạn có thể đổi bất cứ lúc nào.';
+
+  @override
+  String get notificationsLeadDesk =>
+      'Tin nhắn mới đến máy tính này thế nào, kêu ra sao và hiện gì. Bạn có thể đổi bất cứ lúc nào.';
+
+  @override
+  String get notificationsHowTheyReachYou => 'Cách tin nhắn đến với bạn';
+
+  @override
+  String get notificationsRecommended => 'Nên dùng';
+
+  @override
+  String get notificationsGoogleBody =>
+      'Google thấy khi nào điện thoại của bạn thức dậy.\nKhông bao giờ biết ai viết hay viết gì.\nĐến ngay và nhẹ pin.';
+
+  @override
+  String get notificationsGoogleStarting => 'Đang bật…';
+
+  @override
+  String get notificationsGoogleNoStart =>
+      'Không bật được thông báo đẩy Google. Hãy kiểm tra kết nối rồi thử lại.';
+
+  @override
+  String get notificationsGoogleNote =>
+      'Có lẫn các lần đánh thức giả, khiến Google khó biết khi nào tin nhắn thật đến. Relay của chúng tôi chỉ lưu những địa chỉ mà nó không thể nối với nhau. Dịch vụ thông báo đẩy chạy trên máy chủ thứ hai của chúng tôi. Hai máy chủ cùng nhau có thể nối chúng, và với sự giúp đỡ của Google, với tài khoản Google của bạn. Thu giữ một máy chủ thôi là không đủ, nhưng cả hai đều do chúng tôi vận hành, nên chúng tôi có thể. Nếu điều đó quan trọng với bạn, hãy chọn cách khác. Cuộc trò chuyện ẩn, các phòng sau vài phòng đầu, và thỉnh thoảng một liên hệ thường, khoảng một tháng trong mỗi năm tháng, chờ lần kiểm tra mà Kryfo vẫn làm mỗi 15 phút.';
+
+  @override
+  String get notificationsGoogleRefused =>
+      'Hiện relay của chúng tôi chưa nhận một số đăng ký của điện thoại này. Các cuộc trò chuyện đó đến với lần kiểm tra mỗi 15 phút, và Kryfo vẫn tiếp tục thử.';
+
+  @override
+  String get notificationsSoundAndVibration => 'Âm thanh và rung';
+
+  @override
+  String get notificationsSoundHint => 'Trong cài đặt của chính Android';
+
+  @override
+  String get notificationsEachShows => 'Mỗi thông báo hiện';
+
+  @override
+  String get notificationsBatteryTips => 'Mẹo về pin';
+
+  @override
+  String get notificationsBatteryAllowed => 'Đã cho phép';
+
+  @override
+  String get notificationsBatteryNotYet => 'Chưa cho phép';
+
+  @override
+  String get notificationsMakerSwitch => 'Công tắc của hãng điện thoại';
+
+  @override
+  String get onboardingHowYourMessages => 'Cách tin nhắn của bạn *đi*.';
+
+  @override
+  String get onboardingRouteLead =>
+      'Bạn có thể đổi bất cứ lúc nào trong Cài đặt.';
+
+  @override
+  String get onboardingRoutePrivateCost =>
+      'Qua Tor. Một tin nhắn mất vài giây.';
+
+  @override
+  String get onboardingRoutePrivateGain =>
+      'Không ai biết địa chỉ IP của bạn, kể cả máy chủ của chúng tôi.';
+
+  @override
+  String get onboardingRouteFastCost =>
+      'Máy chủ của chúng tôi thấy địa chỉ IP của bạn khi bạn đang kết nối.\nMạng của bạn có thể thấy bạn dùng Kryfo.';
+
+  @override
+  String get onboardingRouteFastGain => 'Bỏ qua Tor: nhanh hơn và đỡ tốn pin.';
+
+  @override
+  String get onboardingRouteBlockedLead =>
+      'Kryfo vẫn dùng Tor, qua cầu nối khi cần.\nChế độ Nhanh có trong Cài đặt nếu bạn cần.';
+
+  @override
+  String get onboardingRouteBlockedGain => 'Tự tìm đường vượt qua chặn.';
+
+  @override
+  String get onboardingDeliveryHeadline => 'Khi nào tin nhắn *đến*.';
+
+  @override
+  String get onboardingDeliveryLead =>
+      'Bạn có thể đổi điều này bất cứ lúc nào trong Thông báo.';
+
+  @override
+  String get homeGoogleTitle => 'Đã có thông báo đẩy Google';
+
+  @override
+  String get homeGoogleLine =>
+      'Đến ngay và đỡ tốn pin. Google có thể thấy khi nào điện thoại của bạn được đánh thức, không bao giờ biết ai viết hay viết gì.';
+
+  @override
+  String get homeGoogleUse => 'Dùng ngay';
+
+  @override
+  String get homeGoogleOn => 'Thông báo đẩy Google đã bật';
+
+  @override
+  String get homeGoogleGoneTitle => 'Không dùng được thông báo đẩy Google';
+
+  @override
+  String get appNotificationsLink => 'Thông báo →';
+
+  @override
+  String devGooglePushes(int got, int low) {
+    return 'Đẩy Google $got · bị hạ $low';
+  }
+
+  @override
+  String get passFieldLabel => 'Cụm mật khẩu';
+
+  @override
+  String get padUseLetters => 'Dùng chữ';
+
+  @override
+  String get padUseDigits => 'Dùng số';
+
+  @override
+  String get passWeak => 'Yếu';
+
+  @override
+  String get passFair => 'Khá';
+
+  @override
+  String get passStrong => 'Mạnh';
+
+  @override
+  String passStrengthIs(Object level) {
+    return 'Độ mạnh: $level';
+  }
+
+  @override
+  String get lockKeyBusy =>
+      'Chip bảo mật của điện thoại đang bận. Hãy thử lại sau giây lát.';
+
+  @override
+  String get lockKeyLocked =>
+      'Hãy mở khóa điện thoại một lần bằng mã PIN của chính nó, rồi thử lại.';
+
+  @override
+  String get lockKeyWaiting => 'Chip bảo mật của điện thoại vẫn đang kiểm tra';
+
+  @override
+  String get lockKeyLost =>
+      'Điện thoại này đã mất khóa dùng để kiểm tra mã PIN của bạn, nên một số mã PIN có thể không mở được. Bạn có thể đặt lại Kryfo và khôi phục bản sao lưu.';
+
+  @override
+  String get lockKeyReset => 'Đặt lại Kryfo';
+
+  @override
+  String get lockKeyResetTitle => 'Đặt lại Kryfo?';
+
+  @override
+  String get lockKeyResetLine =>
+      'Mọi thứ của Kryfo trên điện thoại này sẽ bị xóa và Kryfo sẽ đóng. Sau đó bạn có thể khôi phục bản sao lưu. Trò chuyện ẩn chỉ quay lại từ bản sao lưu được tạo khi chúng đang mở.';
+
+  @override
+  String get lockKeyResetSureTitle => 'Không thể hoàn tác';
+
+  @override
+  String get lockKeyResetSureLine =>
+      'Mọi cuộc trò chuyện, khóa và cài đặt của Kryfo trên điện thoại này sẽ bị xóa ngay.';
+
+  @override
+  String get lockKeyResetSure => 'Xóa tất cả';
+
+  @override
+  String get flowVaultPassLine =>
+      'Ít nhất 12 ký tự. Bàn phím của điện thoại thấy những gì bạn gõ, nên hãy dùng bàn phím không học hay đồng bộ từ.';
+
+  @override
+  String get flowVaultPassLineDesk =>
+      'Ít nhất 12 ký tự. Hãy dùng một cụm bạn không dùng ở nơi nào khác.';
+
+  @override
+  String get flowVaultPassAgain => 'Nhập lại cụm mật khẩu đó';
+
+  @override
+  String get cardTitle => 'Hoàn tất bản cập nhật bảo mật';
+
+  @override
+  String get cardLine =>
+      'Nếu bạn dùng các mã PIN khác, hãy nhập mỗi mã một lần ở đây.';
+
+  @override
+  String get cardType => 'Nhập mã PIN';
+
+  @override
+  String get cardAnswer =>
+      'Xong. Nhập mã khác, hoặc chạm Xong khi bạn đã hoàn tất.';
+
+  @override
+  String get keyLine =>
+      'Mã PIN của bạn chỉ dùng được trên điện thoại này. Nếu một ngày điện thoại mất khóa dùng để kiểm tra chúng, bạn sẽ phải đặt lại Kryfo và khôi phục bản sao lưu. Trò chuyện ẩn chỉ quay lại từ bản sao lưu được tạo khi chúng đang mở.';
+
+  @override
+  String get keyLineUnlocked =>
+      'Mã PIN của bạn chỉ dùng được trên điện thoại này, và chỉ khi điện thoại đang mở khóa. Nếu một ngày điện thoại mất khóa dùng để kiểm tra chúng, bạn sẽ phải đặt lại Kryfo và khôi phục bản sao lưu. Trò chuyện ẩn chỉ quay lại từ bản sao lưu được tạo khi chúng đang mở.';
+
+  @override
+  String get keyLineScreenLock =>
+      'Hãy đặt khóa màn hình cho điện thoại để lớp bảo vệ này vẫn giữ được khi máy bị khóa.';
+
+  @override
+  String get fileServerTryLater =>
+      'Máy chủ tệp đang đầy. Hãy thử lại sau một lúc.';
+
+  @override
+  String fileTooBigUntilUpdate(String size, String max) {
+    return 'Tệp này nặng $size. Trong cuộc trò chuyện này, tệp chỉ được tối đa $max cho đến khi mọi người cập nhật Kryfo.';
+  }
+
+  @override
+  String get fileDayLimit =>
+      'Hôm nay bạn đã gửi nhiều tệp lớn. Hãy thử lại vào ngày mai.';
+
+  @override
+  String get mediaProgressPreparing => 'Đang chuẩn bị · giữ ứng dụng mở';
+
+  @override
+  String get groupShotsBlocksAll =>
+      'Chặn chụp màn hình và quay màn hình trên mọi điện thoại trong nhóm này, cũng như sao chép, chuyển tiếp hoặc lưu tin nhắn của nhau. Nó không chặn được các ứng dụng được phép đọc màn hình, hay điện thoại hoặc ứng dụng đã bị sửa để lách qua.';
+
+  @override
+  String get groupShotsBlocksAllDesk =>
+      'Tắt việc sao chép, chuyển tiếp và lưu tin nhắn của nhau ở đây. Kryfo cho Android còn chặn chụp màn hình và quay màn hình.';
+
+  @override
+  String get groupShotsStartsWhenAll =>
+      'Đang chờ mọi người ở đây chặn được chụp màn hình trên thiết bị của họ';
+
+  @override
+  String get groupShotsOnForAll => 'Đã bật cho mọi người ở đây';
+
+  @override
+  String get groupShotsOnForAllDesk => 'Đã bật trong Kryfo cho Android';
+
+  @override
+  String get groupShotsOffAdminOnly =>
+      'Đang tắt. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String get groupShotsWaitAdminOnly =>
+      'Đang chờ mọi người ở đây chặn được chụp màn hình trên thiết bị của họ. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String get groupShotsOnAdminOnly =>
+      'Đã bật cho mọi người ở đây. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String get groupShotsOnAdminOnlyDesk =>
+      'Đã bật trong Kryfo cho Android. Chỉ quản trị viên mới đổi được';
+
+  @override
+  String groupShotsWaitingFor(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đang chờ $countString người',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupShotsWaitingTitle => 'Chưa được áp dụng';
+
+  @override
+  String get groupShotsWaitingHint =>
+      'Chặn chụp màn hình áp dụng cho mọi người khi thiết bị của những người này chặn được chụp màn hình. Chạm vào một người để xoá họ khỏi nhóm.';
+
+  @override
+  String get groupShotsNeedsUpdate =>
+      'Chưa chặn được chụp màn hình trên thiết bị của họ, hoặc chưa trực tuyến từ lúc đó';
+
+  @override
+  String get groupShotsBlockedByYou => 'Bạn đã chặn';
+
+  @override
+  String get groupShotsYouTurnedOnWait =>
+      'Bạn đã bật chặn chụp màn hình. Nó áp dụng cho mọi người khi tất cả ở đây chặn được chụp màn hình trên thiết bị của họ.';
+
+  @override
+  String groupShotsTheyTurnedOnWait(String name) {
+    return '$name đã bật chặn chụp màn hình. Nó áp dụng cho mọi người khi tất cả ở đây chặn được chụp màn hình trên thiết bị của họ.';
+  }
+
+  @override
+  String get groupShotsStarted =>
+      'Chặn chụp màn hình đã bật cho mọi người ở đây. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
+
+  @override
+  String get groupShotsStartedDesk =>
+      'Chặn chụp màn hình đã bật trong Kryfo cho Android. Việc sao chép, chuyển tiếp và lưu tin nhắn của nhau cũng bị tắt.';
+
+  @override
+  String get groupShotsPaused =>
+      'Có người ở đây chưa chặn được chụp màn hình trên thiết bị của họ. Nó sẽ áp dụng lại cho mọi người khi họ chặn được.';
+
+  @override
+  String get groupShotsCantYet => 'Chưa chặn chụp màn hình được';
+
+  @override
+  String get groupShotsAddTitle => 'Vẫn thêm?';
+
+  @override
+  String get groupShotsAddPauses =>
+      'Chặn chụp màn hình sẽ chưa áp dụng cho mọi người ở đây cho đến khi họ chặn được trên thiết bị của mình.';
+
+  @override
+  String get groupShotsLeaveStays => 'Chặn chụp màn hình vẫn giữ nguyên.';
+
+  @override
+  String get groupShotsBlockedHere => 'Kryfo chặn chụp màn hình trong nhóm này';
+
+  @override
+  String get groupShotsBlockedHereDesk =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu trong nhóm này';
+
+  @override
+  String get groupShotsMenuNote =>
+      'Không thể sao chép, chuyển tiếp hoặc lưu tin nhắn của người khác trong nhóm này';
+
+  @override
+  String get groupShotsKeptOpen =>
+      'Không thể mở tệp của người khác bằng ứng dụng khác trong nhóm này';
+
+  @override
+  String get groupShotsOldNotice =>
+      'Mình đã bật chặn chụp màn hình trong nhóm này. Kryfo của bạn chưa làm được việc đó, hãy cập nhật nhé.';
+
+  @override
+  String get captureShotTaken => 'Đã chụp màn hình. Không ai khác được báo.';
+
+  @override
+  String get captureRecording =>
+      'Màn hình này đang bị quay. Không ai khác được báo.';
+
+  @override
+  String get settingsDevices => 'Thiết bị';
+
+  @override
+  String get devicesLinkedDevices => 'Thiết bị đã liên kết';
+
+  @override
+  String get devicesThisPhoneOnly => 'Chỉ điện thoại này';
+
+  @override
+  String get devicesThisPhoneOnlyDesk => 'Chỉ máy tính này';
+
+  @override
+  String get devicesNameSeparator => ', ';
+
+  @override
+  String get devicesThisPhone => 'Điện thoại này';
+
+  @override
+  String get devicesThisPhoneDesk => 'Máy tính này';
+
+  @override
+  String get devicesOnlyThisPhone =>
+      'Chỉ điện thoại này mới liên kết hoặc gỡ được thiết bị';
+
+  @override
+  String get devicesOnlyThisPhoneDesk =>
+      'Chỉ máy tính này mới liên kết hoặc gỡ được thiết bị';
+
+  @override
+  String devicesLinkedOn(Object date) {
+    return 'Liên kết ngày $date';
+  }
+
+  @override
+  String get devicesUsedToday => 'Dùng hôm nay';
+
+  @override
+  String get devicesUsedThisWeek => 'Dùng trong tuần này';
+
+  @override
+  String get devicesUsedThisMonth => 'Dùng trong tháng này';
+
+  @override
+  String get devicesNotUsedYet => 'Chưa dùng lần nào';
+
+  @override
+  String devicesUnlinksSoon(int days) {
+    final intl.NumberFormat daysNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String daysString = daysNumberFormat.format(days);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Sẽ hủy liên kết sau $daysString ngày nếu bạn không mở',
+      one: 'Sẽ hủy liên kết ngày mai nếu bạn không mở',
+      zero: 'Sẽ hủy liên kết hôm nay nếu bạn không mở',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get devicesEmptyTitle => 'Kryfo trên máy tính của bạn';
+
+  @override
+  String get devicesEmptyLine =>
+      'Liên kết một máy tính để đọc và gửi tin nhắn trên đó.';
+
+  @override
+  String get devicesContactsSeeNothing =>
+      'Ứng dụng của danh bạ bạn không hiển thị thiết bị của bạn.';
+
+  @override
+  String get devicesUnusedRule =>
+      'Thiết bị bạn không mở trong 30 ngày sẽ tự hủy liên kết và xóa các cuộc trò chuyện trên đó.';
+
+  @override
+  String get devicesFull =>
+      'Đã liên kết năm thiết bị. Gỡ một thiết bị để liên kết thiết bị khác.';
+
+  @override
+  String get devicesLinkADevice => 'Liên kết thiết bị';
+
+  @override
+  String get devicesRemoveAll => 'Gỡ mọi thiết bị khác';
+
+  @override
+  String get devicesRemoveAllTitle => 'Gỡ mọi thiết bị khác?';
+
+  @override
+  String get devicesRemoveAllLine =>
+      'Khi ứng dụng của danh bạ bạn nhận được thay đổi, các thiết bị đó sẽ không nhận tin nhắn mới và không gửi được dưới tên bạn. Điện thoại này giữ lại mọi thứ.';
+
+  @override
+  String get devicesRemoveAllYes => 'Gỡ tất cả';
+
+  @override
+  String get devicesRemovedAll => 'Giờ chỉ còn điện thoại này';
+
+  @override
+  String devicesRemoveTitle(Object name) {
+    return 'Gỡ $name?';
+  }
+
+  @override
+  String get devicesRemoveLine =>
+      'Khi ứng dụng của danh bạ bạn nhận được thay đổi, thiết bị sẽ không nhận tin nhắn mới và không gửi được dưới tên bạn. Nó tự xóa các cuộc trò chuyện của bạn vào lần trực tuyến tới. Thiết bị đã bị ai đó can thiệp có thể giữ lại những gì nó đã có.';
+
+  @override
+  String get devicesRemove => 'Gỡ bỏ';
+
+  @override
+  String devicesRemoved(Object name) {
+    return 'Đã gỡ $name';
+  }
+
+  @override
+  String get devicesRename => 'Đổi tên';
+
+  @override
+  String devicesRenameTitle(Object name) {
+    return 'Đổi tên $name';
+  }
+
+  @override
+  String get devicesRenameLine =>
+      'Chỉ bạn thấy tên này. Danh bạ của bạn không bao giờ thấy.';
+
+  @override
+  String get devicesNameComputer => 'Máy tính';
+
+  @override
+  String get devicesDeviceCode => 'Mã thiết bị';
+
+  @override
+  String get devicesDeviceCodeLine =>
+      'Mã giống hệt hiện trên chính thiết bị đó, trong Cài đặt.';
+
+  @override
+  String get devicesLinkStep1 =>
+      'Mở Kryfo trên máy tính. Ứng dụng sẽ hiện một mã.';
+
+  @override
+  String get devicesLinkStep2 => 'Quét mã bằng điện thoại này.';
+
+  @override
+  String get devicesLinkStep3 =>
+      'Kiểm tra cả hai màn hình hiện cùng sáu chữ số.';
+
+  @override
+  String get devicesHistory => 'Lịch sử';
+
+  @override
+  String get devicesHistoryCopy => 'Sao chép các cuộc trò chuyện';
+
+  @override
+  String get devicesHistoryCopyHint =>
+      'Tin nhắn của bạn, kèm ảnh, video và tin nhắn thoại trong 30 ngày qua.';
+
+  @override
+  String get devicesHistoryNone => 'Chỉ danh bạ và nhóm';
+
+  @override
+  String get devicesHistoryNoneHint =>
+      'Chúng được chuyển sang không kèm tin nhắn nào.';
+
+  @override
+  String get devicesSkipMedia => 'Bỏ qua ảnh và video';
+
+  @override
+  String get devicesSkipMediaHint =>
+      'Chỉ chép phần chữ. Nhanh hơn và ít dữ liệu lưu trên thiết bị hơn.';
+
+  @override
+  String get devicesHiddenStay =>
+      'Trò chuyện ẩn và phần ngụy trang ở lại trên điện thoại này.';
+
+  @override
+  String get devicesHiddenStayDesk =>
+      'Trò chuyện ẩn và phần ngụy trang ở lại trên máy tính này.';
+
+  @override
+  String get devicesScanCode => 'Quét mã';
+
+  @override
+  String get devicesLinkReaching => 'Đang kết nối với thiết bị';
+
+  @override
+  String get devicesLinkReachingLine =>
+      'Giữ Kryfo mở trên cả hai. Qua Tor việc này có thể mất một phút.';
+
+  @override
+  String get devicesLinkCompare => 'Các chữ số có khớp không?';
+
+  @override
+  String get devicesLinkCompareLine =>
+      'Thiết bị mới cũng hiện sáu chữ số. Chỉ liên kết nếu chúng giống nhau.';
+
+  @override
+  String get devicesLinkMatch => 'Khớp';
+
+  @override
+  String get devicesLinkNoMatch => 'Không khớp';
+
+  @override
+  String get devicesLinkLinking => 'Đang liên kết';
+
+  @override
+  String get devicesLinkLinkingLine =>
+      'Đang thiết lập thiết bị mới. Giữ cả hai mở.';
+
+  @override
+  String get devicesLinkDone => 'Đã liên kết thiết bị';
+
+  @override
+  String get devicesLinkDoneLine =>
+      'Thiết bị hiện trong Thiết bị đã liên kết, nơi bạn có thể đổi tên hoặc gỡ nó.';
+
+  @override
+  String get devicesLinkUnreached => 'Không kết nối được với thiết bị';
+
+  @override
+  String get devicesLinkUnreachedLine =>
+      'Kiểm tra Kryfo đang mở trên thiết bị mới và hiện mã của nó, rồi thử lại.';
+
+  @override
+  String get devicesLinkStopped => 'Chưa liên kết gì';
+
+  @override
+  String get devicesLinkStoppedLine =>
+      'Các chữ số phải khớp. Bắt đầu lại với một mã mới.';
+
+  @override
+  String get devicesLinkInterruptedLine =>
+      'Việc liên kết bị gián đoạn. Bắt đầu lại với một mã mới.';
+
+  @override
+  String get scanLinkTitle => 'Quét mã của thiết bị';
+
+  @override
+  String get scanLinkPoint => 'Hướng vào mã trên thiết bị mới';
+
+  @override
+  String get scanLinkNotOne => 'Đó không phải mã liên kết';
+
+  @override
+  String get onboardingLinkToMyPhone => 'Liên kết với điện thoại của tôi';
+
+  @override
+  String get joinTitle => 'Liên kết với điện thoại của bạn';
+
+  @override
+  String get joinStep1 => 'Mở Kryfo trên điện thoại của bạn.';
+
+  @override
+  String get joinStep2 =>
+      'Vào Cài đặt, rồi Thiết bị đã liên kết, rồi Liên kết thiết bị.';
+
+  @override
+  String get joinStep3 => 'Quét mã này bằng điện thoại của bạn.';
+
+  @override
+  String get joinWaiting => 'Đang chờ điện thoại của bạn';
+
+  @override
+  String get joinCodeLife => 'Mã có hiệu lực mười phút.';
+
+  @override
+  String get joinCompareLine =>
+      'Điện thoại của bạn cũng hiện sáu chữ số. Chỉ tiếp tục nếu chúng giống nhau.';
+
+  @override
+  String get joinLinking => 'Đang liên kết với điện thoại của bạn';
+
+  @override
+  String get joinLinkingLine =>
+      'Giữ Kryfo mở trên điện thoại cho đến khi xong.';
+
+  @override
+  String get joinDone => 'Đã liên kết với điện thoại của bạn';
+
+  @override
+  String get joinDoneLine =>
+      'Tin nhắn mới giờ cũng đến thiết bị này. Số khóa của tài khoản bạn:';
+
+  @override
+  String get joinOpen => 'Mở Kryfo';
+
+  @override
+  String get joinUnreached => 'Không kết nối được với điện thoại';
+
+  @override
+  String get joinUnreachedLine =>
+      'Kiểm tra điện thoại đang trực tuyến và Kryfo đang mở, rồi thử một mã mới.';
+
+  @override
+  String get joinNewCode => 'Mã mới';
+
+  @override
+  String get devicesNewNotice => 'Đã liên kết thiết bị mới';
+
+  @override
+  String devicesNewNoticeLine(Object name, Object date) {
+    return '$name đã được liên kết với tài khoản của bạn vào $date. Mở Thiết bị đã liên kết để xem.';
+  }
+
+  @override
+  String get devicesNewNoticeMany => 'Đã liên kết thiết bị mới';
+
+  @override
+  String devicesNewNoticeManyLine(Object names) {
+    return '$names đã được liên kết với tài khoản của bạn. Mở Thiết bị đã liên kết để xem.';
+  }
+
+  @override
+  String get devicesNewNoticeOpen => 'Mở';
+
+  @override
+  String get settingsLinkedToLine =>
+      'Đã liên kết với điện thoại của bạn. Bản sao lưu và lời mời ở lại trên điện thoại.';
+
+  @override
+  String get devicesYourPhone => 'Điện thoại của bạn';
+
+  @override
+  String get desktopLockTitle => 'Kryfo đang khóa';
+
+  @override
+  String get desktopLockBody => 'Nhập cụm mật khẩu của máy tính này.';
+
+  @override
+  String get desktopLockNewTitle => 'Khóa Kryfo trên máy tính này';
+
+  @override
+  String get desktopLockNewBody =>
+      'Kryfo sẽ hỏi cụm mật khẩu này mỗi lần khởi động. Nó khóa tin nhắn, ảnh, tin nhắn thoại, tệp, danh bạ và khóa của bạn trên máy tính này.';
+
+  @override
+  String get desktopLockHonest =>
+      'Ai sao chép thư mục của Kryfo đều có thể thử cụm mật khẩu trên máy của họ, nhanh đến mức máy cho phép. Bốn từ ngẫu nhiên trở lên sẽ trụ được. Cụm mật khẩu ngắn thì không.';
+
+  @override
+  String get desktopLockForgot =>
+      'Không có cụm mật khẩu thì không tin nhắn, tệp hay khóa nào của bạn ở đây mở được, kể cả chúng tôi.';
+
+  @override
+  String get desktopLockField => 'Cụm mật khẩu';
+
+  @override
+  String get desktopLockRepeat => 'Nhập lại cụm mật khẩu';
+
+  @override
+  String get desktopLockSet => 'Khóa bằng cụm mật khẩu này';
+
+  @override
+  String get desktopLockOpen => 'Mở Kryfo';
+
+  @override
+  String desktopLockShort(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Ít nhất $countString ký tự';
+  }
+
+  @override
+  String get desktopLockMismatch => 'Hai cụm mật khẩu không khớp';
+
+  @override
+  String get desktopLockWrong => 'Đó không phải cụm mật khẩu';
+
+  @override
+  String get desktopLockFailed =>
+      'Kryfo không mở được khóa ở đây. Hãy thử khởi động lại.';
+
+  @override
+  String get desktopTrayQuit => 'Thoát Kryfo';
+
+  @override
+  String get desktopTrayTip => 'Kryfo đang chạy và nhận tin nhắn';
+
+  @override
+  String get desktopTrayLockedTip => 'Mở Kryfo để bắt đầu nhận tin nhắn';
+
+  @override
+  String get desktopTrayStillRunning =>
+      'Kryfo vẫn đang chạy trong khay hệ thống. Để thoát, hãy dùng biểu tượng của nó trong khay.';
+
+  @override
+  String get desktopRunSection => 'Trên máy tính này';
+
+  @override
+  String get desktopTrayRow => 'Tiếp tục chạy trong khay hệ thống';
+
+  @override
+  String get desktopTrayHint => 'Tin nhắn vẫn đến khi cửa sổ đã đóng.';
+
+  @override
+  String get desktopTrayOffLine =>
+      'Đóng cửa sổ thì Kryfo sẽ thoát.\nTin nhắn sẽ đến khi bạn mở lại.';
+
+  @override
+  String get desktopTrayNoneLine =>
+      'Màn hình nền này không có biểu tượng khay hệ thống.\nĐóng cửa sổ thì Kryfo sẽ thoát.';
+
+  @override
+  String get desktopStartRow => 'Khởi động cùng máy tính';
+
+  @override
+  String get desktopStartHint =>
+      'Kryfo khởi động trong khay hệ thống khi bạn đăng nhập vào máy tính này.';
+
+  @override
+  String get desktopStartRefused =>
+      'Máy tính này không cho Kryfo khởi động cùng.\nKryfo mở khi bạn tự khởi động nó.';
+
+  @override
+  String get desktopStartHeldOff =>
+      'Windows đang tắt Kryfo trong các ứng dụng khởi động.\nHãy bật trong Cài đặt Windows, Ứng dụng, Khởi động.';
+
+  @override
+  String get desktopMicBlocked =>
+      'Kryfo có thể ghi âm khi Windows cho phép ứng dụng máy tính dùng micrô, trong Cài đặt, Quyền riêng tư và bảo mật, Micrô.';
+
+  @override
+  String get desktopMicNone => 'Hãy cắm micrô để ghi tin nhắn thoại.';
+
+  @override
+  String get desktopNoCamera =>
+      'Kryfo chưa dùng được camera trên máy tính này. Hãy dùng liên kết hoặc mã thay thế.';
+
+  @override
+  String get desktopAlreadyOpen => 'Kryfo đã mở sẵn trên máy tính này.';
+
+  @override
+  String get desktopFolderNotYours =>
+      'Thư mục của Kryfo thuộc về một tài khoản khác trên máy tính này, nên Kryfo sẽ không mở nó.';
+
+  @override
+  String get desktopFolderNotPrivate =>
+      'Kryfo không thể đặt thư mục của nó thành riêng tư cho bạn, nên sẽ không mở.';
+
+  @override
+  String get desktopLockOtherVersion =>
+      'Khóa này được tạo bởi một phiên bản Kryfo khác mà phiên bản này không đọc được.';
+
+  @override
+  String get desktopNoMemoryFolder =>
+      'Kryfo cần một thư mục riêng trong bộ nhớ khi chạy, và máy tính này không có, nên Kryfo sẽ không mở.';
+
+  @override
+  String get inviteNotYet =>
+      'Lời mời này chưa có hiệu lực. Hãy kiểm tra giờ trên điện thoại.';
+
+  @override
+  String get inviteNotYetDesk =>
+      'Lời mời này chưa có hiệu lực. Hãy kiểm tra giờ trên máy tính.';
+
+  @override
+  String get inviteExpired => 'Lời mời này đã hết hạn. Hãy xin lời mời mới.';
+
+  @override
+  String get inviteDamaged => 'Lời mời này bị hỏng. Hãy xin lời mời mới.';
+
+  @override
+  String get helloSent => 'Đã gửi yêu cầu. Họ sẽ thấy khi trực tuyến.';
+
+  @override
+  String get inviteNeeds06 => 'Cần Kryfo 0.6 trở lên.';
+
+  @override
+  String get helloSentOld =>
+      'Đã gửi yêu cầu. Nếu họ dùng Kryfo phiên bản cũ, họ cần cập nhật trước.';
+
+  @override
+  String get modesPickHow =>
+      'Chọn cách tin nhắn của bạn được gửi đi. Bạn có thể đổi bất cứ lúc nào.';
+
+  @override
+  String get modesPrivate => 'Riêng tư';
+
+  @override
+  String get modesPrivateTag => 'Tor · cầu nối khi cần';
+
+  @override
+  String get modesPrivateLine =>
+      'Không ai biết địa chỉ IP hay bạn là ai, kể cả máy chủ của chúng tôi. Tự tìm đường vượt qua chặn.';
+
+  @override
+  String get modesDefault => 'Mặc định';
+
+  @override
+  String get modesFastTag => 'Đi thẳng tới máy chủ của chúng tôi';
+
+  @override
+  String get modesFastLine =>
+      'Bỏ qua Tor nên tin nhắn đến nhanh hơn và tốn ít pin hơn. Máy chủ của chúng tôi chỉ thấy địa chỉ IP của bạn khi bạn đang kết nối, và không bao giờ ghi lại hay giữ nó. Người liên hệ của bạn không bao giờ thấy nó. Mạng của bạn có thể thấy bạn kết nối tới Kryfo.';
+
+  @override
+  String get modesFastConnected => 'Nhanh · đã kết nối';
+
+  @override
+  String get modesFastConnecting => 'Nhanh · đang kết nối';
+
+  @override
+  String get modesFastDown => 'Nhanh · máy chủ của chúng tôi chưa phản hồi';
+
+  @override
+  String get modesBackupReady =>
+      'Luôn có một máy dự phòng sẵn sàng, nên bạn vẫn kết nối dù một máy ngừng.';
+
+  @override
+  String get modesDetails => 'Chi tiết';
+
+  @override
+  String get modesBothLine =>
+      'Cả hai đều mã hóa đầu cuối mọi tin nhắn. Chỉ khác ở chỗ ai có thể thấy địa chỉ IP của bạn.';
+
+  @override
+  String get modesConnectionBridges => 'Kết nối và cầu nối';
+
+  @override
+  String get modesWhatServersSee => 'Máy chủ của chúng tôi thấy được gì';
+
+  @override
+  String get serversTitle => 'Máy chủ của Nhanh';
+
+  @override
+  String get serversLine =>
+      'Mỗi tin nhắn được gửi tới cả hai máy chủ cùng lúc. Máy nào trả lời trước sẽ chuyển nó, và máy kia thay thế nếu một máy ngừng.';
+
+  @override
+  String get serversOne => 'Máy chủ 1';
+
+  @override
+  String get serversTwo => 'Máy chủ 2 · nhà cung cấp thứ hai';
+
+  @override
+  String get serversConnected => 'Đã kết nối';
+
+  @override
+  String get serversConnecting => 'Đang kết nối';
+
+  @override
+  String get serversNotAnswering => 'Không phản hồi';
+
+  @override
+  String serversMs(int ms) {
+    return '$ms ms';
+  }
+
+  @override
+  String get serversQuicker => 'Nhanh hơn';
+
+  @override
+  String get serversBackups => 'Relay công cộng';
+
+  @override
+  String get serversBackupsLine =>
+      'Được dùng khi Máy chủ 1 ngừng, và chỉ qua Tor, nên chúng không bao giờ thấy địa chỉ IP của bạn.';
+
+  @override
+  String get serversStandingBy => 'Đang chờ sẵn';
+
+  @override
+  String get serversInUse => 'Đang dùng';
+
+  @override
+  String get homeMergedTitle => 'Relay và Nhanh giờ đã là một';
+
+  @override
+  String get homeMergedLine =>
+      'Bạn đang dùng Nhanh. Luôn có một máy chủ dự phòng sẵn sàng, nên bạn vẫn kết nối dù một máy ngừng. Máy chủ của chúng tôi thấy địa chỉ IP của bạn, không bao giờ thấy bạn nói gì.';
+
+  @override
+  String get homeMergedGotIt => 'Đã hiểu';
+
+  @override
+  String get homeMergedUsePrivate => 'Dùng Riêng tư thay thế';
+
+  @override
+  String get homeOursDownTitle => 'Máy chủ của chúng tôi chưa phản hồi';
+
+  @override
+  String get homeOursDownLine =>
+      'Sau vài phút, khi Tor kết nối được, tin nhắn cũng đi qua relay công cộng, và trở lại qua máy chủ của chúng tôi ngay khi một máy phản hồi.';
+
+  @override
+  String get homeUsePrivate => 'Dùng Riêng tư';
+
+  @override
+  String get homeSwitchedToPrivate => 'Đã chuyển sang Riêng tư';
+
+  @override
+  String get homeUseFast => 'Dùng Nhanh';
+
+  @override
+  String get homeSwitchedToFastRoute => 'Đã chuyển sang Nhanh';
+
+  @override
+  String get bridgesBridgeFirstFastSeen =>
+      'Để Kryfo tìm một cầu nối vượt qua được. Nhanh cũng dùng được, nhưng mạng này có thể thấy bạn kết nối tới Kryfo.';
+
+  @override
+  String get appServersNotAnswering => 'Máy chủ chưa phản hồi';
+
+  @override
+  String get settingsPrivateTor => 'Riêng tư · Tor';
+
+  @override
+  String get seenOurServers => 'Máy chủ Kryfo';
+
+  @override
+  String get seenOurServersCould => 'Máy chủ Kryfo có thể';
+
+  @override
+  String get seenIpWhy =>
+      'Với Riêng tư, mọi thứ đi qua Tor và máy chủ của chúng tôi chỉ thấy một nút thoát, không bao giờ thấy bạn. Với Nhanh, kết nối đi thẳng tới hai máy chủ của chúng tôi: chúng thấy địa chỉ IP của bạn khi bạn đang kết nối và không lưu lại gì. Khi máy chủ đầu tiên ngừng, Nhanh dùng thêm relay công cộng, chỉ qua Tor.';
+
+  @override
+  String get chatAlbumItDisappearsWithNo =>
+      'Album sẽ bị xóa khỏi cả hai điện thoại, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get chatAlbumItDisappearsWithNoDesk =>
+      'Album sẽ bị xóa khỏi cả hai thiết bị, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNo =>
+      'Album sẽ bị xóa khỏi điện thoại của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get groupChatAlbumItDisappearsWithNoDesk =>
+      'Album sẽ bị xóa khỏi thiết bị của mọi người, trừ khi đã được lưu. Không thể hoàn tác việc này.';
+
+  @override
+  String get homeInviteSomeone => 'Mời một người';
+
+  @override
+  String get onboardingNameHeadline => 'Một *@tên* công khai, nếu bạn muốn.';
+
+  @override
+  String get onboardingNameLine =>
+      'Một @tên công khai giúp mọi người tìm thấy bạn.\nBỏ qua giúp bạn riêng tư hơn.\nBạn có thể thêm sau.';
+
+  @override
+  String get onboardingNameSkip => 'Bỏ qua lúc này →';
+
+  @override
+  String onboardingNameClaim(Object handle) {
+    return 'Lấy @$handle →';
+  }
+
+  @override
+  String get onboardingInviteHeadline => 'Giờ thì, *mời một người*.';
+
+  @override
+  String get onboardingInviteLead =>
+      'Gửi một liên kết qua bất kỳ ứng dụng nhắn tin nào.\nLiên kết mở Kryfo, hoặc chỉ chỗ tải về.';
+
+  @override
+  String get onboardingInviteSomeone => 'Mời một người →';
+
+  @override
+  String get onboardingInviteGettingReady => 'Đang chuẩn bị liên kết…';
+
+  @override
+  String inviteShareText(Object myId, Object link, Object download) {
+    return 'Thêm tôi trên Kryfo. Tên của tôi ở đó là $myId\n\nChạm để thêm tôi:\n$link\n\nChưa có Kryfo? Tải tại đây:\n$download\n\nKryfo là ứng dụng nhắn tin riêng tư. Không cần số điện thoại, không cần email.';
+  }
+
+  @override
+  String get inviteNotReady =>
+      'Liên kết của bạn sắp xong. Thử lại sau giây lát.';
+
+  @override
+  String get photoCropTitle => 'Di chuyển và thu phóng';
+
+  @override
+  String get photoCropUse => 'Dùng ảnh';
+
+  @override
+  String get photoCropLabel =>
+      'Ảnh của bạn trong vòng tròn. Chụm để phóng to, kéo để di chuyển';
+
+  @override
+  String get photoCouldNotUse => 'Hãy thử ảnh khác. Không đọc được ảnh này.';
+
+  @override
+  String get photoTake => 'Chụp ảnh';
+
+  @override
+  String get photoChoose => 'Chọn từ thư viện';
+
+  @override
+  String get photoPickFace => 'Chọn khuôn mặt';
+
+  @override
+  String get photoView => 'Xem ảnh';
+
+  @override
+  String get photoRemove => 'Gỡ ảnh';
+
+  @override
+  String get photoYourPhoto => 'Ảnh của bạn';
+
+  @override
+  String get photoYourPhotoLine =>
+      'Chỉ danh bạ của bạn thấy, được mã hóa đầu cuối.';
+
+  @override
+  String get photoSetTheirs => 'Đặt ảnh';
+
+  @override
+  String get photoChangeTheirs => 'Đổi ảnh';
+
+  @override
+  String get photoOnlyHere => 'Chỉ trên điện thoại này';
+
+  @override
+  String get photoOnlyHereDesk => 'Chỉ trên máy tính này';
+
+  @override
+  String photoForThem(Object name) {
+    return 'Ảnh cho $name';
+  }
+
+  @override
+  String get photoOnlyHereLine =>
+      'Chỉ bạn thấy. Ảnh ở lại trên điện thoại này.';
+
+  @override
+  String get photoOnlyHereLineDesk =>
+      'Chỉ bạn thấy. Ảnh ở lại trên máy tính này.';
+
+  @override
+  String photoOf(Object name) {
+    return 'Ảnh của $name';
+  }
+
+  @override
+  String get historyChatStaysShots =>
+      'Cuộc trò chuyện này ở lại trên điện thoại của bạn vì đã chặn chụp màn hình trong đó.';
+
+  @override
+  String chatDeviceOlderKryfo(String name) {
+    return '$name dùng phiên bản Kryfo cũ hơn. Hãy trả lời từ điện thoại của bạn cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String chatDeviceNotYet(String name) {
+    return '$name chưa thể nhận tin nhắn từ máy tính này. Hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
+  String chatDeviceWaitingForApp(String name) {
+    return 'Đang chờ ứng dụng của $name nhận ra máy tính này. Tạm thời hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
+  String chatDeviceQuietAWhile(String name) {
+    return '$name đã lâu chưa nhắn tin. Tạm thời hãy trả lời từ điện thoại của bạn.';
+  }
+
+  @override
+  String get linkedClearHereOnly =>
+      'Mọi tin nhắn ở đây chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ chúng.';
+
+  @override
+  String get linkedDeleteHereOnly =>
+      'Mọi tin nhắn và liên hệ chỉ bị xóa khỏi máy tính này. Điện thoại của bạn vẫn giữ cuộc trò chuyện.';
+
+  @override
+  String get linkedBlockHereOnly =>
+      'Tin nhắn của họ sẽ không đến máy tính này nữa. Họ không được báo. Hãy chặn họ trên điện thoại để tin nhắn cũng dừng ở đó.';
+
+  @override
+  String get historyCopyTitle => 'Lịch sử trò chuyện';
+
+  @override
+  String get historyCopyMaking => 'Đang chuẩn bị các cuộc trò chuyện';
+
+  @override
+  String get historyCopyMakingLine =>
+      'Điện thoại đang gom những gì sẽ được sao chép. Sắp bắt đầu.';
+
+  @override
+  String get historyCopyGoing => 'Đang sao chép các cuộc trò chuyện';
+
+  @override
+  String get historyCopyGoingLine =>
+      'Hãy giữ cả hai thiết bị trực tuyến cho đến khi xong.';
+
+  @override
+  String historyCopySize(Object size) {
+    return 'Tổng cộng $size';
+  }
+
+  @override
+  String get historyCopyWaiting => 'Đang chờ thiết bị kia';
+
+  @override
+  String get historyCopyWaitingLine =>
+      'Việc sao chép tự tiếp tục khi cả hai thiết bị trực tuyến.';
+
+  @override
+  String get historyCopyPaused => 'Việc sao chép tạm nghỉ một chút';
+
+  @override
+  String get historyCopyPausedLine => 'Sẽ tiếp tục sau một phút.';
+
+  @override
+  String get historyCopyWhole => 'Mọi tin nhắn và tệp đã sang';
+
+  @override
+  String get historyCopyWholeLine => 'Không thiếu gì cả.';
+
+  @override
+  String get historyCopyRows => 'Danh bạ và nhóm của bạn đã sang';
+
+  @override
+  String get historyCopyRowsLine =>
+      'Chúng đã sang mà không kèm tin nhắn nào. Tin nhắn mới hiện trên thiết bị từ bây giờ.';
+
+  @override
+  String get historyCopyGaps => 'Phần lớn cuộc trò chuyện đã sang';
+
+  @override
+  String get historyCopyGapsLine =>
+      'Những cuộc trò chuyện này trên thiết bị mới có ít hơn trên điện thoại.';
+
+  @override
+  String historyCopyGapMessages(Object got, Object want) {
+    return 'Tin nhắn: $got trên $want';
+  }
+
+  @override
+  String historyCopyGapFiles(Object got, Object want) {
+    return 'Tệp: $got trên $want';
+  }
+
+  @override
+  String historyCopyLeft(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString mục ở lại trên điện thoại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyLeftWhy => 'Quá lớn hoặc không đọc được để sao chép.';
+
+  @override
+  String historyCopyLeftChats(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString cuộc trò chuyện ở lại trên điện thoại',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyCopyEnded => 'Việc sao chép đã dừng';
+
+  @override
+  String get historyCopyEndedLine =>
+      'Sẽ không có thêm gì. Hãy liên kết lại thiết bị để có bản sao mới.';
+
+  @override
+  String get historyCopyFailed => 'Việc sao chép không thể hoàn tất';
+
+  @override
+  String get historyCopyFailedLine =>
+      'Hãy liên kết lại thiết bị để có bản sao mới.';
+
+  @override
+  String get historyCopyStays => 'Ở lại trên điện thoại';
+
+  @override
+  String get historyCopySee => 'Xem bản sao';
+
+  @override
+  String a11yPinDigits(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString chữ số',
+      zero: 'Chưa có chữ số',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String a11yPassChars(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString ký tự',
+      zero: 'Chưa có ký tự',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get a11yBackupProgress => 'Tiến độ sao lưu';
+
+  @override
+  String get a11yRestoreProgress => 'Tiến độ khôi phục';
+
+  @override
+  String get a11yExportProgress => 'Tiến độ xuất';
+
+  @override
+  String get a11yLockFileProgress => 'Tiến độ khóa';
+
+  @override
+  String get a11yCleanProgress => 'Tiến độ làm sạch';
+
+  @override
+  String get a11yMessageActions => 'Thao tác với tin nhắn';
+
+  @override
+  String get a11yRecordVoiceNote => 'Ghi tin nhắn thoại';
+
+  @override
+  String get a11yRecording => 'Đang ghi âm';
+
+  @override
+  String a11yPhotoOn(String date) {
+    return 'Ảnh, $date';
+  }
+
+  @override
+  String a11yPhotoFrom(String name, String date) {
+    return 'Ảnh từ $name, $date';
+  }
+
+  @override
+  String a11yVideoOn(String date) {
+    return 'Video, $date';
+  }
+
+  @override
+  String a11yVideoFrom(String name, String date) {
+    return 'Video từ $name, $date';
+  }
+
+  @override
+  String a11yNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString tin nhắn mới',
+      one: 'Tin nhắn mới',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get wideSelectChat => 'Chọn một cuộc trò chuyện';
+
+  @override
+  String get wideSelectChatLine =>
+      'Chọn một cuộc trò chuyện trong danh sách để bắt đầu viết.';
+
+  @override
+  String get wideListWidth => 'Độ rộng danh sách trò chuyện';
+
+  @override
+  String transferDoneOf(String done, String total) {
+    return '$done trên $total';
+  }
+
+  @override
+  String transferDoneLeft(String done, String left) {
+    return '$done · $left';
+  }
+
+  @override
+  String get transferLeftSoon => 'còn chưa đến một phút';
+
+  @override
+  String transferLeftMinutes(String n) {
+    return 'còn khoảng $n phút';
+  }
+
+  @override
+  String transferLeftHours(String n) {
+    return 'còn khoảng $n giờ';
+  }
+
+  @override
+  String transferSending(String detail) {
+    return 'Đang gửi · $detail';
+  }
+
+  @override
+  String transferReceiving(String detail) {
+    return 'Đang nhận · $detail';
+  }
+
+  @override
+  String transferBoth(String detail) {
+    return 'Đang gửi và nhận · $detail';
+  }
+
+  @override
+  String get transferPause => 'Tạm dừng';
+
+  @override
+  String get transferPauseDownload => 'Tạm dừng tải xuống';
+
+  @override
+  String get transferDownload => 'Tải xuống';
+
+  @override
+  String get transferResume => 'Tiếp tục';
+
+  @override
+  String get transferOnWifi => 'Tải qua Wi-Fi';
+
+  @override
+  String transferPausedAt(String detail) {
+    return 'Đã tạm dừng · $detail';
+  }
+
+  @override
+  String get transferTapToDownload => 'Chạm để tải xuống';
+
+  @override
+  String transferSizeLine(String size, String state) {
+    return '$size · $state';
+  }
+
+  @override
+  String get transferNoteTitle => 'Truyền tệp';
+
+  @override
+  String get transferChannel => 'Truyền tệp';
+
+  @override
+  String get transferChannelLine =>
+      'Hiện khi tệp đang gửi hoặc tải xuống. Không bao giờ nêu tên cuộc trò chuyện hay tệp.';
+
+  @override
+  String get autoGetTitle => 'Tự động tải xuống';
+
+  @override
+  String get autoGetLine =>
+      'Tệp đến mà không cần chạm, theo lựa chọn ở đây. Tệp đang chờ được giữ cho bạn trên máy chủ tệp, tối đa một tuần.';
+
+  @override
+  String get autoGetPhotos => 'Ảnh';
+
+  @override
+  String get autoGetVideos => 'Video';
+
+  @override
+  String get autoGetFiles => 'Tệp';
+
+  @override
+  String get autoGetAlways => 'Qua Wi-Fi và dữ liệu di động';
+
+  @override
+  String get autoGetWifi => 'Chỉ qua Wi-Fi';
+
+  @override
+  String get autoGetNever => 'Không bao giờ, tôi chạm để tải';
+
+  @override
+  String get autoGetVoice => 'Tin nhắn thoại luôn được tải xuống.';
+
+  @override
+  String get settingsFiles => 'Tệp';
+
+  @override
+  String get fileSheetOpenWith => 'Mở bằng ứng dụng khác';
+
+  @override
+  String get desktopLockAccountBody =>
+      'Mọi thứ Kryfo lưu trên máy tính này đều được mã hóa. Kryfo mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopLockAddPassphrase => 'Thêm cụm mật khẩu';
+
+  @override
+  String get desktopLockWithoutPassphrase =>
+      'Không có nó, bất kỳ ai dùng tài khoản người dùng của bạn đều mở được Kryfo.';
+
+  @override
+  String get desktopLockKeyringRefused =>
+      'Kryfo không lưu được khóa của mình vào chùm chìa khóa của máy tính này. Hãy thêm cụm mật khẩu thay vào đó.';
+
+  @override
+  String get desktopKeyMissing =>
+      'Tài khoản người dùng này không có khóa dữ liệu của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại. Nếu bạn đã chuyển thư mục của Kryfo, hãy thêm cụm mật khẩu trên tài khoản người dùng nơi nó đến, rồi sao chép lại.';
+
+  @override
+  String get desktopKeyUnreachable =>
+      'Lúc này Kryfo không lấy được khóa của mình trên máy tính này. Hãy mở khóa chùm chìa khóa nếu máy tính hỏi, rồi thử lại.';
+
+  @override
+  String get desktopPassRow => 'Cụm mật khẩu trên máy tính này';
+
+  @override
+  String get desktopPassWindowsAccount =>
+      'Được khóa bằng tài khoản Windows của bạn';
+
+  @override
+  String get desktopPassKeyring => 'Được khóa bằng chùm chìa khóa của bạn';
+
+  @override
+  String get desktopPassOffBody =>
+      'Kryfo mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopPassOnBody =>
+      'Kryfo hỏi cụm mật khẩu này mỗi lần khởi động.';
+
+  @override
+  String get desktopPassChange => 'Đổi cụm mật khẩu';
+
+  @override
+  String get desktopPassRemove => 'Gỡ cụm mật khẩu';
+
+  @override
+  String get desktopPassCurrent => 'Cụm mật khẩu hiện tại';
+
+  @override
+  String get desktopPassNew => 'Cụm mật khẩu mới';
+
+  @override
+  String get desktopPassStays =>
+      'Máy tính này không có chùm chìa khóa nào Kryfo dùng được, nên cụm mật khẩu vẫn giữ nguyên.';
+
+  @override
+  String get desktopPassAdded => 'Đã thêm cụm mật khẩu';
+
+  @override
+  String get desktopPassRemoved => 'Đã gỡ cụm mật khẩu';
+
+  @override
+  String get desktopPassChanged => 'Đã đổi cụm mật khẩu';
+
+  @override
+  String get desktopPassRemoveBody =>
+      'Nhập cụm mật khẩu để gỡ nó. Sau đó Kryfo sẽ mở bằng tài khoản người dùng của bạn.';
+
+  @override
+  String get desktopKeyUnreachableWindows =>
+      'Lúc này Kryfo không lấy được khóa của mình trong chip bảo mật của máy tính này. Hãy thử lại sau giây lát.';
+
+  @override
+  String get desktopLockAccountRefused =>
+      'Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn. Hãy thêm cụm mật khẩu thay vào đó.';
+
+  @override
+  String get desktopPassStaysWindows =>
+      'Kryfo không lưu được khóa của mình bằng tài khoản Windows của bạn, nên cụm mật khẩu vẫn giữ nguyên.';
+
+  @override
+  String get desktopBackupCardTitle => 'Giữ một bản sao lưu Kryfo';
+
+  @override
+  String get desktopBackupCardLine =>
+      'Tài khoản Windows của bạn trên máy tính này giữ khóa của Kryfo. Bản sao lưu Kryfo mang mọi thứ trở lại nếu có lúc máy tính hoặc tài khoản bị đặt lại.';
+
+  @override
+  String get desktopBackupHint =>
+      'Mang mọi thứ trở lại nếu có lúc máy tính này bị đặt lại.';
+
+  @override
+  String chatHealRestored(Object name) {
+    return '$name đã cài đặt lại Kryfo';
+  }
+
+  @override
+  String chatHealNewSession(Object name) {
+    return 'Thiết bị của $name đã bắt đầu một phiên bảo mật mới';
+  }
+
+  @override
+  String chatHealHeldLine(Object name) {
+    return 'Bạn đã xác minh $name trước đây. Không có gì được gửi cho đến khi bạn kiểm tra số hoặc tiếp tục trò chuyện. Tin nhắn của họ vẫn đến.';
+  }
+
+  @override
+  String get chatKeepChatting => 'Tiếp tục trò chuyện';
+
+  @override
+  String chatNeedsUpdateToChat(Object name) {
+    return '$name cần cập nhật Kryfo để tiếp tục trò chuyện';
+  }
+
+  @override
+  String get restoreOlderTitle => 'Một số cuộc trò chuyện sẽ tạm dừng';
+
+  @override
+  String restoreOlderOne(Object name) {
+    return '$name đang dùng phiên bản Kryfo cũ. Cuộc trò chuyện sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String restoreOlderTwo(Object first, Object second) {
+    return '$first và $second đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String restoreOlderMany(Object first, Object second, int count) {
+    return '$first, $second và $count người khác đang dùng phiên bản Kryfo cũ. Các cuộc trò chuyện với họ sẽ tạm dừng cho đến khi họ cập nhật.';
+  }
+
+  @override
+  String settingsVersionAlpha(String version) {
+    return '$version · alpha';
+  }
+
+  @override
+  String get settingsDeskInTray => 'Đang chạy trong khay hệ thống';
+
+  @override
+  String get settingsDeskWhileOpen => 'Khi Kryfo đang mở';
+
+  @override
+  String get onboardingDeskRunTitle => 'Kryfo vẫn *chạy*.';
+
+  @override
+  String get onboardingDeskRunLead =>
+      'Đóng cửa sổ thì Kryfo chờ trong khay hệ thống.\nTin nhắn vẫn tiếp tục đến.\nBạn có thể đổi cả hai trong Cài đặt, Thông báo.';
+
+  @override
+  String get savedLongPressAnyMessageDesk =>
+      'Nhấp chuột phải vào một tin nhắn bất kỳ rồi chọn lưu để giữ nó ở đây.';
+
+  @override
+  String get chatFailedTapToRetryDesk => 'Thất bại · nhấp để thử lại';
+
+  @override
+  String get groupChatTapToRetryDesk => '! Nhấp để thử lại';
+
+  @override
+  String get chatDropHereToSend => 'Thả vào đây để gửi';
+
+  @override
+  String get chatDropHereToAdd => 'Thả vào đây để thêm';
+
+  @override
+  String trayRemove(String name) {
+    return 'Gỡ $name';
+  }
+
+  @override
+  String trayReadyToSend(Object count) {
+    return 'Sẵn sàng gửi: $count';
+  }
+
+  @override
+  String get trayPastedPicture => 'Ảnh đã dán';
+
+  @override
+  String get voiceSeeTranscription => 'Xem bản chép lời';
+
+  @override
+  String get voiceTranscribing => 'Đang chép lời…';
+
+  @override
+  String get voiceHideTranscription => 'Ẩn';
+
+  @override
+  String get voiceShowOriginalOnly => 'Chỉ xem bản gốc';
+
+  @override
+  String get voiceCouldNotTranscribe => 'Không nghe rõ lời';
+
+  @override
+  String get voiceTranscriptLabel => 'Bản chép lời';
+
+  @override
+  String get voiceSettingsTitle => 'Chép lời giọng nói';
+
+  @override
+  String get voiceOnRow => 'Chép lời tin nhắn thoại';
+
+  @override
+  String get voiceOnHint => 'Được đề xuất dưới mỗi tin nhắn thoại';
+
+  @override
+  String get voiceOffDeletes => 'Tắt mục này sẽ xóa các bản chép lời đã lưu.';
+
+  @override
+  String get voiceModelTitle => 'Mô hình giọng nói';
+
+  @override
+  String voiceModelLine(Object size) {
+    return 'Một lần tải khoảng $size, cho mọi ngôn ngữ.';
+  }
+
+  @override
+  String get voiceModelPrivacy =>
+      'Được tải qua Tor và giữ trên điện thoại này. Tin nhắn thoại của bạn không bao giờ rời khỏi máy.';
+
+  @override
+  String get voiceModelPrivacyDesk =>
+      'Được tải qua Tor và giữ trên máy tính này. Tin nhắn thoại của bạn không bao giờ rời khỏi máy.';
+
+  @override
+  String get voiceModelFailNoTor =>
+      'Tor chưa kết nối. Mô hình chỉ được tải qua Tor, hãy thử lại khi đã kết nối.';
+
+  @override
+  String get voiceModelRemoveTitle => 'Gỡ mô hình giọng nói?';
+
+  @override
+  String get voiceModelRemoveLine =>
+      'Các bản chép lời đã có vẫn giữ nguyên. Bản mới cần mô hình lại.';
+
+  @override
+  String get voiceKeptNote =>
+      'Bản chép lời được lưu mã hóa cùng cuộc trò chuyện trên điện thoại này và bị xóa cùng nó.';
+
+  @override
+  String get voiceKeptNoteDesk =>
+      'Bản chép lời được lưu mã hóa cùng cuộc trò chuyện trên máy tính này và bị xóa cùng nó.';
+
+  @override
+  String get voiceNotNow => 'Để sau';
+
+  @override
+  String get unlinkedTitle => 'Thiết bị này đã hủy liên kết';
+
+  @override
+  String get unlinkedRemovedLine =>
+      'Điện thoại của bạn đã gỡ thiết bị này khỏi tài khoản, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedUnusedLine =>
+      'Thiết bị này không được mở trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedSilentLine =>
+      'Thiết bị này không nhận được gì từ điện thoại của bạn trong 30 ngày, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedClockLine =>
+      'Đồng hồ của thiết bị bị chỉnh lùi, nên Kryfo đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.';
+
+  @override
+  String get unlinkedBrokenLine =>
+      'Kryfo không biết được thiết bị này được mở lần cuối khi nào, nên đã xóa mọi thứ nó lưu ở đây để giữ an toàn cho các cuộc trò chuyện của bạn.';
+
+  @override
+  String get unlinkedSelfLine =>
+      'Bạn đã hủy liên kết thiết bị này, nên Kryfo đã xóa mọi thứ nó lưu ở đây.';
+
+  @override
+  String get unlinkedAgainLine =>
+      'Điện thoại của bạn vẫn giữ các cuộc trò chuyện. Để dùng lại Kryfo ở đây, hãy liên kết thiết bị này với điện thoại.';
+
+  @override
+  String get unlinkedClose => 'Đóng Kryfo';
+
+  @override
+  String get devicesLeave => 'Hủy liên kết thiết bị này';
+
+  @override
+  String get devicesLeaveTitle => 'Hủy liên kết thiết bị này?';
+
+  @override
+  String get devicesLeaveLine =>
+      'Kryfo sẽ báo cho điện thoại của bạn và xóa mọi thứ nó lưu ở đây. Điện thoại vẫn giữ các cuộc trò chuyện của bạn.';
+
+  @override
+  String get devicesLeaveYes => 'Hủy liên kết và xóa';
+
+  @override
+  String get devicesGoneNotice => 'Đã gỡ thiết bị';
+
+  @override
+  String devicesGoneRemovedLine(Object name, Object date) {
+    return '$name đã bị gỡ khỏi tài khoản của bạn vào $date.';
+  }
+
+  @override
+  String devicesGoneUnusedLine(Object name, Object date) {
+    return '$name không được dùng trong 30 ngày, nên đã bị gỡ khỏi tài khoản của bạn vào $date.';
+  }
+
+  @override
+  String devicesGoneItselfLine(Object name, Object date) {
+    return '$name đã tự hủy liên kết vào $date và xóa những gì nó lưu.';
+  }
+
+  @override
+  String get devicesChangedNotice => 'Thiết bị của bạn đã thay đổi';
+
+  @override
+  String get devicesChangedLine =>
+      'Mở Thiết bị đã liên kết để xem những gì đã thay đổi.';
+
+  @override
+  String get devicesUnknownNotice => 'Thiết bị được liên kết ở nơi khác';
+
+  @override
+  String get devicesUnknownLine =>
+      'Một bản Kryfo khác đã liên kết một thiết bị với tài khoản của bạn. Điện thoại này đã gỡ nó khỏi danh sách của bạn.';
+
+  @override
+  String get albumPrevious => 'Trước';
+
+  @override
+  String get albumNext => 'Tiếp';
+
+  @override
+  String get notesHoldHintDesk =>
+      'Nhấp chuột phải vào một ghi chú để sao chép hoặc xóa.';
+
+  @override
+  String get pinsNothingPinnedHereYetDesk =>
+      'Chưa có gì được ghim ở đây. Nhấp chuột phải vào một tin nhắn và chọn Ghim, tin nhắn sẽ nằm ở đây cho mọi người trong cuộc trò chuyện.';
+
+  @override
+  String get chatGalleryDesk => 'Hình ảnh';
+
+  @override
+  String get groupChatGalleryDesk => 'Hình ảnh';
+
+  @override
+  String get photoChooseDesk => 'Chọn một tệp hình ảnh';
+
+  @override
+  String get wallpaperFromYourPhotosDesk => 'Từ một tệp hình ảnh';
+
+  @override
+  String get notificationsSoundAndVibrationDesk => 'Âm thanh';
+
+  @override
+  String get notificationsPlaySound => 'Phát âm thanh';
+
+  @override
+  String get notificationsPlaySoundHint =>
+      'Với mỗi thông báo trên máy tính này';
+
+  @override
+  String bridgesShareBridgeN(String n) {
+    return 'Chia sẻ cầu nối $n';
+  }
+
+  @override
+  String get bridgesShareThisBridge => 'Chia sẻ cầu nối này';
+
+  @override
+  String get bridgesShareItPrivately =>
+      'Hãy chia sẻ riêng với người bạn tin tưởng. Cầu nối không đăng ở trang công khai sẽ dùng được lâu hơn.';
+
+  @override
+  String get bridgesCopyBridge => 'Sao chép cầu nối';
+
+  @override
+  String get bridgesBridgeCopied => 'Đã sao chép cầu nối';
+
+  @override
+  String get bridgesSendBridgeTo => 'Gửi cầu nối cho';
+
+  @override
+  String get linkedAddOnPhone =>
+      'Thêm người trên điện thoại của bạn. Họ cũng hiện ở đây.';
+
+  @override
+  String get linkedLinkOnPhone => 'Mở liên kết này trên điện thoại của bạn.';
+
+  @override
+  String get linkedDoOnPhone => 'Hãy làm việc này trên điện thoại của bạn.';
+
+  @override
+  String get tipsTitle => 'Ủng hộ Kryfo';
+
+  @override
+  String get tipsHeadline => 'Giữ Kryfo *miễn phí cho mọi người*';
+
+  @override
+  String get tipsLine =>
+      'Không quảng cáo, không nhà đầu tư, không tài khoản. Tiền tip giúp trả cho máy chủ và công sức làm Kryfo.';
+
+  @override
+  String get tipsLeave => 'Gửi tiền tip';
+
+  @override
+  String get tipsYours => 'Của bạn';
+
+  @override
+  String get tipsAsking => 'Đang hỏi giá từ Google Play';
+
+  @override
+  String get tipsBadgeOnly =>
+      'Tiền tip mang lại cho bạn một huy hiệu người ủng hộ và không gì khác. Mọi thứ trong Kryfo vẫn miễn phí cho mọi người, dù có tip hay không.';
+
+  @override
+  String get tipsThroughPlay =>
+      'Thanh toán đi qua Google Play. Chúng tôi không bao giờ thấy thông tin thẻ hay tên của bạn.';
+
+  @override
+  String get tipsBadgeStays =>
+      'Huy hiệu nằm trên điện thoại này. Trong Tôi, bạn chọn có hiện nó không và danh bạ của bạn có thấy nó không.';
+
+  @override
+  String get tipsRestore => 'Khôi phục huy hiệu của tôi';
+
+  @override
+  String get tipsRestoreLine =>
+      'Đã từng gửi tip? Huy hiệu của bạn quay lại trên bất kỳ điện thoại nào đăng nhập cùng tài khoản Google.';
+
+  @override
+  String tipsRestored(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter': 'Huy hiệu người ủng hộ của bạn đã quay lại',
+      'patron': 'Huy hiệu nhà bảo trợ của bạn đã quay lại',
+      'guardian': 'Huy hiệu người bảo hộ của bạn đã quay lại',
+      'other': 'Huy hiệu người ủng hộ của bạn đã quay lại',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsNothingToRestore =>
+      'Tài khoản Google này chưa có khoản tip nào';
+
+  @override
+  String get tipsUnavailable =>
+      'Tiền tip đi qua Google Play. Chúng sẽ hiện ở đây ngay khi Google Play chạy trên điện thoại này.';
+
+  @override
+  String get tipsSoon => 'Tiền tip sắp có ở đây.';
+
+  @override
+  String get tipsPending =>
+      'Google Play vẫn đang hoàn tất thanh toán của bạn. Huy hiệu sẽ đến ngay khi thanh toán xong.';
+
+  @override
+  String get tipsFailed =>
+      'Google Play chưa hoàn tất thanh toán. Hãy thử lại sau giây lát.';
+
+  @override
+  String get tipsThanks => 'Cảm ơn bạn';
+
+  @override
+  String tipsGranted(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Giờ bạn đã có huy hiệu người ủng hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'patron':
+          'Giờ bạn đã có huy hiệu nhà bảo trợ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'guardian':
+          'Giờ bạn đã có huy hiệu người bảo hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+      'other':
+          'Giờ bạn đã có huy hiệu người ủng hộ. Nó không mở khóa gì khác: mọi thứ trong Kryfo vẫn miễn phí cho mọi người.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String tipsKept(String tier) {
+    String _temp0 = intl.Intl.selectLogic(tier, {
+      'supporter':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người ủng hộ, huy hiệu cao hơn.',
+      'patron':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu nhà bảo trợ, huy hiệu cao hơn.',
+      'guardian':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người bảo hộ, huy hiệu cao hơn.',
+      'other':
+          'Cảm ơn bạn vì tiền tip. Bạn giữ huy hiệu người ủng hộ, huy hiệu cao hơn.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get tipsProfileCard => 'Gửi tiền tip để Kryfo luôn độc lập';
+
+  @override
+  String chatDeviceLinked(Object name) {
+    return '$name đã liên kết một thiết bị mới';
+  }
+
+  @override
+  String chatDeviceRemoved(Object name) {
+    return '$name đã gỡ một thiết bị';
+  }
+
+  @override
+  String chatDeviceListUnchecked(Object name) {
+    return 'Không thể kiểm tra danh sách thiết bị của $name';
+  }
+
+  @override
+  String get notesDropToKeep => 'Thả vào đây để giữ lại';
+
+  @override
+  String get notesOnAllDevices => 'Trên mọi thiết bị của bạn';
+
+  @override
+  String get notesKeepAnything =>
+      'Giữ chữ, ảnh và tệp ở đây. Chúng hiện trên mọi thiết bị của bạn.';
+
+  @override
+  String get notesGoneEverywhere =>
+      'Ghi chú sẽ bị xóa vĩnh viễn khỏi mọi thiết bị của bạn.';
+
+  @override
+  String get notesDeleteAllEverywhere =>
+      'Mọi ghi chú sẽ bị xóa vĩnh viễn khỏi mọi thiết bị của bạn.';
+
+  @override
+  String get notesDeleteAllHereOnly =>
+      'Mọi ghi chú chỉ bị xóa khỏi thiết bị này. Điện thoại của bạn vẫn giữ chúng.';
+
+  @override
+  String get notesAddItem => 'Thêm ảnh hoặc tệp';
+
+  @override
+  String get notesVoiceNotKept => 'Tin nhắn thoại của bạn chưa được giữ lại';
+
+  @override
+  String get handleOlderKryfo =>
+      'Họ đang dùng Kryfo phiên bản cũ. Hãy nhờ họ cập nhật, rồi thêm họ.';
+
+  @override
+  String groupMemberNeedsUpdate(Object name) {
+    return '$name đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây.';
+  }
+
+  @override
+  String get groupMembersNeedUpdate =>
+      'Một số thành viên đang dùng Kryfo phiên bản cũ. Họ cần cập nhật để nhận tin nhắn ở đây.';
+
+  @override
+  String get onboardingAlwaysOnNotice =>
+      'Android cần một thông báo im lặng luôn hiện để tin nhắn vẫn đến khi Kryfo đã đóng.';
+
+  @override
+  String get toolsSendToAChat => 'Gửi vào một cuộc trò chuyện';
+
+  @override
+  String get toolsOneFileAtATime => 'Mỗi lần một tệp';
+
+  @override
+  String get toolsLockThisFile => 'Khóa tệp này';
+
+  @override
+  String get toolsLockThisFileLine =>
+      'Kryfo có thể khóa nó bằng mật khẩu, để chỉ người biết mật khẩu mới mở được.';
+
+  @override
+  String get toolsDropHere => 'Thả tệp vào đây để mở trong một công cụ';
+
+  @override
+  String get toolsCopyPicture => 'Sao chép ảnh';
+
+  @override
+  String get toolsPictureCopied => 'Đã sao chép ảnh';
+
+  @override
+  String get toolsCouldNotCopy => 'Không sao chép được ảnh';
+
+  @override
+  String get cleanNotYetHere => 'Ảnh này chưa làm sạch được ở đây';
+
+  @override
+  String get cleanNotYetHereLine =>
+      'Một bản cập nhật sắp tới sẽ làm sạch những ảnh như thế này trên máy tính. Ảnh của bạn vẫn y như cũ.';
+
+  @override
+  String get deskLinkRowHint => 'Dùng Kryfo trên điện thoại của bạn ở đây';
+
+  @override
+  String get deskLinkHead => 'Dùng Kryfo của điện thoại ở đây';
+
+  @override
+  String get deskLinkLine =>
+      'Máy tính này sau đó hiện các cuộc trò chuyện và danh bạ trên điện thoại của bạn và gửi với tư cách là bạn.';
+
+  @override
+  String get deskLinkGoesTitle => 'Trước hết, máy tính này được xóa';
+
+  @override
+  String get deskLinkGoesLine =>
+      'Danh tính riêng của nó và mọi cuộc trò chuyện trên đó bị xóa. Trò chuyện ẩn, phần ngụy trang và Ghi chú riêng cũng bị xóa. Các tệp bạn đã lưu vào thư mục của mình vẫn còn.';
+
+  @override
+  String get deskLinkBackupRow => 'Sao lưu trước';
+
+  @override
+  String get deskLinkBackupHint =>
+      'Giữ các cuộc trò chuyện của máy tính này trong một tệp, với cụm mật khẩu từ 12 ký tự trở lên';
+
+  @override
+  String get deskLinkConfirmLine =>
+      'Danh tính và các cuộc trò chuyện của máy tính này bị xóa. Sau đó Kryfo mở lại với mã để quét.';
+
+  @override
+  String get deskLinkConfirmYes => 'Xóa và liên kết';
+
+  @override
+  String get deskLinkErasing => 'Đang xóa máy tính này';
+
+  @override
+  String get deskLinkErasingLine => 'Kryfo sẽ mở lại ngay với mã để quét.';
+
+  @override
+  String get deskLinkNotStarted =>
+      'Không thể bắt đầu liên kết. Hãy thử lại sau.';
+
+  @override
+  String get settingsLinkedToYourPhone => 'Đã liên kết với điện thoại của bạn';
+
+  @override
+  String get settingsLinkedPhoneHint =>
+      'Bản sao lưu và lời mời ở lại trên điện thoại';
+
+  @override
+  String get settingsUnlinkComputer => 'Hủy liên kết máy tính này';
+
+  @override
+  String get settingsUnlinkComputerTitle => 'Hủy liên kết máy tính này?';
+
+  @override
+  String get settingsUnlinkComputerLine =>
+      'Các cuộc trò chuyện trên máy tính này bị xóa. Điện thoại của bạn giữ mọi thứ.';
+
+  @override
+  String get metaReaderColourProfileName => 'tên hồ sơ màu';
+
+  @override
+  String get cleanPixelMarksStay =>
+      'Dấu ẩn trong chính các điểm ảnh, như hình mờ ẩn của công cụ tạo ảnh, và mọi thứ nhìn thấy trong ảnh vẫn giữ nguyên.';
+
+  @override
+  String translateOfferDownload(Object language, Object size) {
+    return 'Tải $language ($size)?';
+  }
+
+  @override
+  String translateLineDownloading(Object language) {
+    return 'Đang tải $language…';
+  }
+
+  @override
+  String translateLineWaitsWifi(Object language) {
+    return 'Đang chờ Wi-Fi để tải $language';
+  }
+
+  @override
+  String get translateWaitsWifi =>
+      'Đang chờ Wi-Fi. Việc tải sẽ tự bắt đầu khi điện thoại này dùng Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiDesk =>
+      'Đang chờ Wi-Fi. Việc tải sẽ tự bắt đầu khi máy tính này dùng Wi-Fi.';
+
+  @override
+  String get translateWaitsWifiShort => 'Đang chờ Wi-Fi';
+
+  @override
+  String translatePackLineTwo(Object language, Object other, Object size) {
+    return 'Tin nhắn được dịch trên điện thoại này và không bao giờ rời khỏi nó. Việc này cần gói ngôn ngữ $language và $other, tổng cộng khoảng $size, tải một lần qua Tor.';
+  }
+
+  @override
+  String translatePackLineTwoDesk(Object language, Object other, Object size) {
+    return 'Tin nhắn được dịch trên máy tính này và không bao giờ rời khỏi nó. Việc này cần gói ngôn ngữ $language và $other, tổng cộng khoảng $size, tải một lần qua Tor.';
+  }
+
+  @override
+  String get translateLanguagesHint =>
+      'Mỗi ngôn ngữ tải một lần, sau đó dịch trên điện thoại này';
+
+  @override
+  String get translateLanguagesHintDesk =>
+      'Mỗi ngôn ngữ tải một lần, sau đó dịch trên máy tính này';
+
+  @override
+  String get translateSuggested => 'Đề xuất';
+
+  @override
+  String get translateMoreLanguages => 'Thêm ngôn ngữ';
+
+  @override
+  String get translateWaysBoth => 'Dịch qua lại với tiếng Anh';
+
+  @override
+  String get translateWaysInto => 'Chỉ dịch sang tiếng Anh';
+
+  @override
+  String get translateWaysFrom => 'Chỉ dịch từ tiếng Anh';
+
+  @override
+  String get translateGet => 'Tải xuống';
+
+  @override
+  String get translateRemove => 'Gỡ';
+
+  @override
+  String translateRemoveTitle(Object language) {
+    return 'Gỡ $language?';
+  }
+
+  @override
+  String translateRemoveLine(Object size) {
+    return 'Việc này giải phóng $size. Các bản dịch đã lưu bằng gói này cũng bị xóa. Bạn có thể tải lại bất cứ lúc nào.';
+  }
+
+  @override
+  String get translateResumeShort => 'Tiếp tục';
+
+  @override
+  String get translateTagApp => 'Ngôn ngữ ứng dụng';
+
+  @override
+  String get translateTagRead => 'Bạn đọc được';
 }

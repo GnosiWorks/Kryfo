@@ -2,6 +2,8 @@
 // a restored signal session is never sealed on again: it starts afresh and
 // asks the far side to do the same. real libsignal over rows in maps
 import 'dart:convert';
+
+import 'package:crypto/crypto.dart' show sha256;
 import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -15,6 +17,10 @@ import 'package:kryfo/main.dart'
         HaloDb,
         heldWire,
         kFrameReaction,
+        kFrameUnsend,
+        holdOutboxAfterRestore,
+        groupEditRow,
+        groupUnsendRow,
         kNotSent,
         kFrameReceipt,
         makePreKeyBundleB64,
@@ -25,12 +31,34 @@ import 'package:kryfo/main.dart'
         utcDayOf,
         signalDecrypt,
         signalEncrypt,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox,
+        AppStateGroupLanes,
+        AppStateRoute,
+        AppStateVault,
+        AppStateContacts,
+        AppStateReceive,
+        AppStateHeal;
+import 'package:kryfo/identities.dart' show identityRow, kIdentPool, kMainIdent;
+import 'package:kryfo/invites.dart'
+    show invitesOf, kInviteMain, kInviteOneTime, makeInvite;
+import 'package:kryfo/heal.dart'
+    show
+        kRestoreCutPref,
+        healDayOf,
+        healOfWire,
+        healWire,
+        kHealLineRepair,
+        kHealLineRestored,
+        makeHeal;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
+import 'package:kryfo/restore_undo.dart' show restoreLandedAt;
+import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:kryfo/signal_ffi/kryfo_signal.dart' show LsHeal;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -134,7 +162,7 @@ class _Rows extends HaloDb {
 class _Io extends AppIo {
   final sent = <(String, String)>[];
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add((xPub, cipher));
     return 'ok';
   }
@@ -143,14 +171,19 @@ class _Io extends AppIo {
   Future<String> onionSend(String onion, String cipher) async => 'error: off';
   @override
   Future<String> firstContactSend(
+    int ident,
     String xPub,
     String fc,
     String cipher,
   ) async => 'error: off';
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  void listen(int ident, String xPub, {bool fresh = false}) {}
+
   @override
-  void unlisten(String xPub) {}
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      listen(ident, xPub, fresh: fresh);
+  @override
+  void unlisten(int ident, String xPub) {}
   @override
   String edPub() => 'ed-me';
   @override
@@ -174,7 +207,8 @@ class _Io extends AppIo {
   List<bool> asksTo(String xPub) => [
     for (final (to, c) in sent)
       if (to == xPub && c.startsWith('{'))
-        (jsonDecode(c) as Map)['want'] == true,
+        if (jsonDecode(c) as Map case final j when j['halo_ctl'] == 'bundle')
+          j['want'] == true,
   ];
 }
 
@@ -186,7 +220,7 @@ String _hex(List<int> b) =>
     [for (final x in b) x.toRadixString(16).padLeft(2, '0')].join();
 
 Future<_Peer> _peer() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final ss = SignalSession();
   final x = pair.publicKey.serialize().sublist(1);
   await ss.bootstrap(
@@ -209,31 +243,8 @@ Future<_Peer> _peer() async {
 Future<String?> _atPeer(_Peer p, String wireB64) async {
   final wire = base64Decode(wireB64);
   final body = Uint8List.fromList(wire.sublist(1));
-  final addr = SignalProtocolAddress('me', 1);
-  final c = SessionCipher(
-    p.ss.sessionStore,
-    p.ss.preKeyStore,
-    p.ss.signedPreKeyStore,
-    p.ss.identityStore,
-    addr,
-  );
-  Future<Uint8List> open() async {
-    if (wire[0] != CiphertextMessage.prekeyType) {
-      return c.decryptFromSignal(SignalMessage.fromSerialized(body));
-    }
-    final pkm = PreKeySignalMessage(body);
-    if (await p.ss.sessionStore.containsSession(addr)) {
-      try {
-        return await c.decryptFromSignal(pkm.getWhisperMessage());
-      } catch (_) {
-        return c.decrypt(pkm);
-      }
-    }
-    return c.decrypt(pkm);
-  }
-
   try {
-    return utf8.decode(await p.ss.serial('me', open));
+    return utf8.decode(await p.ss.open('me', wire[0], body));
   } catch (_) {
     return null;
   }
@@ -260,7 +271,7 @@ void main() {
   late ArrivalStore vaultList;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: store,
       xPubBytes: me.publicKey.serialize().sublist(1),
@@ -284,16 +295,19 @@ void main() {
       ..sendModeForTest = 'fast';
   });
 
-  Future<void> contact(_Peer p, {bool card = true}) => mem.insert('contacts', {
-    'halo_id': p.name,
-    'onion': '',
-    'xpub': p.xpub,
-    'first_seen': 1,
-    'last_seen': 1,
-    'back_paired': 1,
-    'accepted': 1,
-    if (card) 'peer_bundle': p.card,
-  });
+  // a 0.6 phone, which sends a capability list; [older] a 0.5.x one
+  Future<void> contact(_Peer p, {bool card = true, bool older = false}) =>
+      mem.insert('contacts', {
+        'halo_id': p.name,
+        'onion': '',
+        'xpub': p.xpub,
+        'first_seen': 1,
+        'last_seen': 1,
+        'back_paired': 1,
+        'accepted': 1,
+        'caps': older ? '' : 'gs,pp,ty',
+        if (card) 'peer_bundle': p.card,
+      });
 
   // paired from their card, a few texts each way, theirs last
   Future<void> talk(_Peer p) async {
@@ -367,6 +381,19 @@ void main() {
     int n = 0,
     int? since,
   }) async {
+    // with a session held their ask is a heal (KHB1), with the day of their
+    // backup: a json card builds a first session only (an introduction)
+    if (want && bundle == null && await signalSession.hasSession(p.name)) {
+      await app.subscribeKnown();
+      final khb1 = await makeHeal(
+        p.ss,
+        peer: signalSession.identity.public,
+        since: since == null ? null : healDayOf(since),
+      );
+      await app.receiveRelay([(peer: p.xpub, cipher: healWire(khb1))]);
+      await _settle();
+      return;
+    }
     await app.receiveRelay([
       (
         peer: p.xpub,
@@ -400,6 +427,32 @@ void main() {
     'sent': 1,
     'delivered': 0,
   });
+
+  // the heals (KHB1) that went to [p], as the shim reads them
+  List<LsHeal> healsTo(_Peer p) => [
+    for (final (to, c) in io.sent)
+      if (to == p.xpub)
+        if (healOfWire(c) case final b?) KryfoSignal.shared.parseHeal(b),
+  ];
+
+  // [p] takes our last heal as their phone does: a session built from its
+  // block, and the empty answer sealed on it, here
+  Future<void> healed(_Peer p) async {
+    // a seal only marks them: the pass sends the heal
+    if (healsTo(p).isEmpty) await app.askAfreshForTest();
+    await p.ss.processBundle('me', healsTo(p).last.block.bundle);
+    final w = await wrapMessage(
+      '',
+      sender: SenderInfo(
+        haloId: p.name,
+        edPub: 'ed-${p.name}',
+        onion: '',
+        xPub: p.xpub,
+      ),
+    );
+    await app.receiveRelay([(peer: p.xpub, cipher: await _fromPeer(p, w))]);
+    await _settle();
+  }
 
   Future<Uint8List> record(_Peer p) async =>
       (await store.query(
@@ -443,8 +496,8 @@ void main() {
     }
   });
 
-  test('the first text after a restore opens on the far side, and the '
-      'chat goes on both ways', () async {
+  test('the first text after a restore waits for the heal: they build from '
+      'it, answer, and the chat goes on both ways', () async {
     final p = await _peer();
     await contact(p);
     await talk(p);
@@ -454,17 +507,53 @@ void main() {
     expect(await _atPeer(p, await _toPeer(p, 'receipt')), 'receipt');
     await restore(p, file);
 
-    // on the file's session this one repeats the receipt's key, and the far
-    // side drops it as a duplicate
+    // on the file's session this one would repeat the receipt's key, and
+    // the far side would drop it as a duplicate: nothing is sealed on it
+    await expectLater(
+      _toPeer(p, 'b7 restored 10'),
+      throwsA(isA<StartingAfresh>()),
+    );
+    await _settle();
+    // a seal only marks them: the next pass sends the heal
+    expect(healsTo(p), isEmpty);
+    await app.askAfreshForTest();
+    expect(healsTo(p).single.restored, isTrue);
+    await healed(p);
+    expect(await signalSession.sealsOnRestored(p.name), isFalse);
     final first = await _toPeer(p, 'b7 restored 10');
     expect(await _atPeer(p, first), 'b7 restored 10');
-    expect(base64Decode(first).first, CiphertextMessage.prekeyType);
     expect(
       await _atMe(p, await _fromPeer(p, 'B7 to restored 10')),
       'B7 to restored 10',
     );
     expect(await _atPeer(p, await _toPeer(p, 'b7 second 10')), 'b7 second 10');
   });
+
+  test(
+    'a late text of theirs from before the heal opens after its answer, '
+    'and the healed state stays in front: nothing waits, no second heal',
+    () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await app.subscribeKnown();
+      final file = backUp(p);
+      // theirs after the file, read by the phone the file came from: a move
+      expect(await _atMe(p, await _fromPeer(p, 'gone')), 'gone');
+      await restore(p, file);
+      // sealed on their old state, still on its way when they take the heal
+      final late = await _fromPeer(p, 'late');
+      await app.askAfreshForTest();
+      await healed(p);
+      expect(await signalSession.sealsOnRestored(p.name), isFalse);
+      expect(await _atMe(p, late), 'late');
+      expect(await signalSession.sealsOnRestored(p.name), isFalse);
+      final next = await _toPeer(p, 'next');
+      expect(base64Decode(next).first, kLsWhisper);
+      expect(await _atPeer(p, next), 'next');
+      expect(healsTo(p), hasLength(1));
+    },
+  );
 
   test('a restore two exchanges behind: both sides read each other '
       'again', () async {
@@ -477,6 +566,8 @@ void main() {
       expect(await _atPeer(p, await _toPeer(p, 'lost $i')), 'lost $i');
     }
     await restore(p, file);
+    await app.askAfreshForTest();
+    await healed(p);
 
     expect(await _atPeer(p, await _toPeer(p, 'back')), 'back');
     for (var i = 0; i < 3; i++) {
@@ -485,7 +576,7 @@ void main() {
     }
   });
 
-  test('the session started afresh is the one the next texts ride, in '
+  test('the session a heal started is the one the next texts ride, in '
       'any order they land', () async {
     final p = await _peer();
     await contact(p);
@@ -494,51 +585,53 @@ void main() {
     expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
     expect(await _atPeer(p, await _toPeer(p, 'receipt')), 'receipt');
     await restore(p, file);
+    await app.askAfreshForTest();
+    await healed(p);
 
     final one = await _toPeer(p, 'one');
     final two = await _toPeer(p, 'two');
-    List<int> base(String w) => PreKeySignalMessage(
-      Uint8List.fromList(base64Decode(w).sublist(1)),
-    ).getBaseKey().serialize();
-    expect(base(two), base(one));
+    // their answer opened it: plain messages, no opener of ours
+    expect(base64Decode(one).first, kLsWhisper);
     expect(await signalSession.sealsOnRestored(p.name), isFalse);
     expect(await _atPeer(p, two), 'two');
     expect(await _atPeer(p, one), 'one');
     expect(await _atMe(p, await _fromPeer(p, 'both')), 'both');
     final three = await _toPeer(p, 'three');
-    expect(base64Decode(three).first, CiphertextMessage.whisperType);
+    expect(base64Decode(three).first, kLsWhisper);
     expect(await _atPeer(p, three), 'three');
   });
 
-  test('with no card of theirs kept, nothing is sealed and they are asked '
-      'for one; their answer lets the text go', () async {
-    final p = await _peer();
-    await contact(p, card: false);
-    await talk(p);
-    final file = backUp(p);
-    expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
-    expect(await _atPeer(p, await _toPeer(p, 'receipt')), 'receipt');
-    await restore(p, file);
+  test('a card of theirs kept or not, nothing is sealed or built here: a '
+      'heal goes, and their answer lets the text go', () async {
+    for (final kept in [false, true]) {
+      final p = await _peer();
+      await contact(p, card: kept);
+      await talk(p);
+      final file = backUp(p);
+      expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+      expect(await _atPeer(p, await _toPeer(p, 'receipt')), 'receipt');
+      await restore(p, file);
 
-    final was = await record(p);
-    await expectLater(_toPeer(p, 'waits'), throwsA(isA<StartingAfresh>()));
-    await _settle();
-    expect(await record(p), was, reason: 'nothing sealed on it');
-    expect(io.asksTo(p.xpub), [true]);
+      final was = await record(p);
+      await expectLater(_toPeer(p, 'waits'), throwsA(isA<StartingAfresh>()));
+      await _settle();
+      // a seal only marks them: the next pass sends the heal
+      expect(healsTo(p), isEmpty);
+      // the second round is a pass past the first one's gap
+      await app.askAfreshForTest(
+        now: DateTime.now().millisecondsSinceEpoch + (kept ? 31 * 60000 : 0),
+      );
+      expect(await record(p), was, reason: 'nothing sealed on it or built');
+      expect(healsTo(p), hasLength(1));
+      expect(io.asksTo(p.xpub), isEmpty, reason: 'no json ask');
 
-    // their answer: their card, asking nothing back
-    final answer = jsonEncode({
-      'halo_ctl': 'bundle',
-      'from': p.name,
-      'bundle': p.card,
-      'want': false,
-    });
-    await app.receiveRelay([(peer: p.xpub, cipher: answer)]);
-    expect(await _atPeer(p, await _toPeer(p, 'waits')), 'waits');
+      await healed(p);
+      expect(await _atPeer(p, await _toPeer(p, 'waits')), 'waits');
+    }
   });
 
-  test('asked to start afresh: what they sealed before still opens, and '
-      'our texts they never got go again', () async {
+  test('their heal: what they sealed before still opens, and our texts '
+      'they never got go again', () async {
     final p = await _peer();
     await contact(p);
     await talk(p);
@@ -567,14 +660,7 @@ void main() {
     await out('in a group', group: 'grp000000001');
     await out('a photo', media: '/m/a.jpg');
 
-    final ask = jsonEncode({
-      'halo_ctl': 'bundle',
-      'from': p.name,
-      'bundle': p.card,
-      'want': true,
-    });
-    await app.receiveRelay([(peer: p.xpub, cipher: ask)]);
-    await _settle();
+    await card(p, want: true);
 
     final sent = {
       for (final r in mem.rows('messages')) r['msg_uid']: r['sent'],
@@ -586,7 +672,7 @@ void main() {
       'in a group': 1,
       'a photo': 1,
     });
-    expect(io.asksTo(p.xpub), [false], reason: 'their answer: our card');
+    expect(io.asksTo(p.xpub), isEmpty, reason: 'no card back: we build');
     expect(await _atMe(p, inFlight), 'in flight');
     expect(await _atPeer(p, await _toPeer(p, 'next')), 'next');
   });
@@ -608,11 +694,12 @@ void main() {
     final c = await _fromPeer(p, 'after the restore');
     await app.receiveRelay([(peer: p.xpub, cipher: c)]);
     await _settle();
-    expect(io.asksTo(p.xpub), [true]);
+    // a restored session's heal goes with the next pass
+    await app.askAfreshForTest();
+    expect(healsTo(p), hasLength(1));
 
-    // they start a session from the card the ask carries, and put it again
-    final card = (jsonDecode(io.sent.single.$2) as Map)['bundle'] as String;
-    await processPeerBundle('me', card, into: p.ss);
+    // they start a session from the heal, and put it again
+    await p.ss.processBundle('me', healsTo(p).single.block.bundle);
     expect(
       await _atMe(p, await _fromPeer(p, 'after the restore')),
       'after the restore',
@@ -637,14 +724,58 @@ void main() {
 
     await app.askAfreshForTest();
     await app.askAfreshForTest();
-    expect(io.asksTo(p.xpub), [true]);
-    expect(io.asksTo(q.xpub), isEmpty);
+    expect(healsTo(p), hasLength(1));
+    expect(healsTo(q), isEmpty);
+  });
+
+  test('a chat deleted here before the restore gets no heal: they reach us '
+      'as a request', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    final file = backUp(p);
+    expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+    await restore(p, file);
+    // their chat deleted: the row parked
+    await mem.update(
+      'contacts',
+      {'accepted': 0},
+      where: 'halo_id = ?',
+      whereArgs: [p.name],
+    );
+    expect(await app.healForTest(p.name), isFalse);
+    await app.askAfreshForTest();
+    expect(healsTo(p), isEmpty);
+  });
+
+  test('a chat a shut vault holds gets no restore\'s heal until the vault is '
+      'open, where its row can be read', () async {
+    final p = await _peer();
+    await processPeerBundle(p.name, p.card);
+    for (var i = 0; i < 3; i++) {
+      expect(await _atPeer(p, await _toPeer(p, 'me $i')), 'me $i');
+      expect(await _atMe(p, await _fromPeer(p, 'them $i')), 'them $i');
+    }
+    final file = backUp(p);
+    expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+    await vaultList.putMeta('pub', 'pub-A');
+    await vaultList.putHidden(
+      p.name,
+      kHiddenPeer,
+      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+      1,
+    );
+    await router.load();
+    await restore(p, file);
+    expect(await app.healForTest(p.name), isFalse);
+    await app.askAfreshForTest();
+    expect(healsTo(p), isEmpty);
   });
 
   test('the store marks what a restore brought back as it opens, only after '
       'a restore, and the mark holds across starts', () async {
     final db = MemDb();
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     Future<SignalSession> start() async {
       final ss = SignalSession();
       await openSignalStore(
@@ -690,9 +821,9 @@ void main() {
     final w = await ss.encryptTo(
       p.name,
       'card',
-      afresh: () async => preKeyBundleOf(p.card),
+      afresh: () async => cardBundle(p.card),
     );
-    expect(base64Decode(w).first, CiphertextMessage.prekeyType);
+    expect(base64Decode(w).first, kLsPreKey);
     expect(await ss.sealsOnRestored(p.name), isFalse);
   });
 
@@ -778,8 +909,66 @@ void main() {
     expect(row('early'), isNull);
   });
 
+  test('after a restore, a timed copy from before it counts from when it '
+      'was written, never from now: one long due lands burned', () async {
+    final p = await _peer();
+    await contact(p);
+    await talk(p);
+    await app.subscribeKnown();
+    const day = 24 * 3600 * 1000;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    Future<void> timed(String uid, int writtenAt, {Reached? reached}) async {
+      final w = await wrapMessage(
+        'timed',
+        msgUid: uid,
+        burnSeconds: 60,
+        writtenAt: writtenAt,
+        sender: SenderInfo(
+          haloId: p.name,
+          edPub: 'ed-${p.name}',
+          onion: '',
+          xPub: p.xpub,
+        ),
+      );
+      await app.receiveRelay(
+        [(peer: p.xpub, cipher: await _fromPeer(p, w))],
+        reached: [reached],
+      );
+      await _settle();
+    }
+
+    addTearDown(() => restoreLandedAt = null);
+    // no restore: it waits to be read, whenever it was written
+    await timed('waits', now - 2 * day);
+    expect(row('waits')?['burn_at'], isNull);
+    // a restore landed a minute ago. the catch-up after it reads from the
+    // file's anchor, days back, to the subscribe, after the landing
+    restoreLandedAt = now - 60000;
+    final caughtUp = (from: now - 5 * day, until: now);
+    // one written two days back is past its day and its minute
+    await timed('due', now - 2 * day, reached: caughtUp);
+    final due = row('due')?['burn_at'] as int?;
+    expect(due, isNotNull);
+    expect(due!, lessThanOrEqualTo(now - day + 60000));
+    // so is one with no window at all
+    await timed('due bare', now - 2 * day);
+    expect(row('due bare')?['burn_at'], isNotNull);
+    // one written an hour before waits out the rest of its day, and keeps
+    // that earlier start on its row
+    await timed('hour', now - 3600 * 1000, reached: caughtUp);
+    expect(row('hour')?['burn_at'], isNull);
+    expect(row('hour')?['sent_at'], now - 3600 * 1000);
+    // one that came live after the restore is new here, whatever it says
+    final t = DateTime.now().millisecondsSinceEpoch;
+    await timed('live', now - 2 * day, reached: (from: t, until: t));
+    expect(row('live')?['burn_at'], isNull);
+    // and so is one written since the restore
+    await timed('new', t, reached: caughtUp);
+    expect(row('new')?['burn_at'], isNull);
+  });
+
   test('a receipt that cannot be sealed while the session waits on their '
-      'card waits with it, and goes once the card is here', () async {
+      'answer waits with it, and goes once the answer is here', () async {
     final p = await _peer();
     await contact(p, card: false);
     await talk(p);
@@ -794,14 +983,14 @@ void main() {
     expect(app.waitsForCard(p.name), isTrue);
     expect(mem.rows('frames_out').single['kind'], kFrameReceipt);
 
-    await card(p);
+    await healed(p);
     expect(await receiptsAt(p), ['r1']);
     expect(mem.rows('frames_out'), isEmpty);
     expect(app.waitsForCard(p.name), isFalse);
   });
 
-  test('a text waiting on their card is no failed try, and goes the moment '
-      'their card is here', () async {
+  test('a text waiting on their answer is no failed try, and goes the '
+      'moment their answer is here', () async {
     final p = await _peer();
     await contact(p, card: false);
     await talk(p);
@@ -824,29 +1013,42 @@ void main() {
     expect(app.waitsForCard(p.name), isTrue);
     expect(app.outboxTriesForTest('w1'), 0);
 
-    await card(p);
+    await healed(p);
     expect(row('w1')?['sent'], 1);
     final at = await atThem(p);
     expect(unwrapMessage(at.whereType<String>().last).message, 'waits');
   });
 
-  test('a restored phone\'s ask says when its backup was made', () async {
+  test('a restored phone\'s heal says since when: the day of their last '
+      'message here, else the day its backup was made', () async {
     final p = await _peer();
+    final q = await _peer();
     await contact(p);
+    await contact(q);
     await talk(p);
+    await talk(q);
     final file = backUp(p);
     expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
     await restore(p, file);
     const day = Duration.millisecondsPerDay;
     await signalSession.markRestored(from: 20000 * day + 4242);
+    // q's last message here, three days before the file
+    await outTo(q, 'theirs', direction: 'in', ago: 0);
+    await mem.update(
+      'messages',
+      {'sent_at': 19997 * day + 5000},
+      where: 'msg_uid = ?',
+      whereArgs: ['theirs'],
+    );
     await app.askAfreshForTest();
-    final ask = jsonDecode(io.sent.last.$2) as Map;
-    expect(ask['want'], isTrue);
-    // to the day, no closer
-    expect(ask['since'], 20000 * day);
+    final h = healsTo(p).single;
+    expect(h.restored, isTrue);
+    // to the day, no closer, in unix hours
+    expect(h.since, 20000 * 24);
+    expect(healsTo(q).single.since, 19997 * 24);
   });
 
-  test('someone whose session did not come back is asked without the '
+  test('someone whose session did not come back is sent a heal without the '
       'backup\'s date', () async {
     final p = await _peer();
     final q = await _peer();
@@ -864,18 +1066,14 @@ void main() {
     expect(await signalSession.sealsOnRestored(q.name), isFalse);
     expect(signalSession.restoredFrom, isNotNull);
     // a text of theirs that does not open here
-    final junk = base64Encode([
-      CiphertextMessage.whisperType,
-      ...List.filled(60, 7),
-    ]);
+    final junk = base64Encode([kLsWhisper, ...List.filled(60, 7)]);
     await app.receiveRelay([(peer: q.xpub, cipher: junk)]);
     await _settle();
-    final asks = [
-      for (final (to, c) in io.sent)
-        if (to == q.xpub && c.startsWith('{')) jsonDecode(c) as Map,
-    ];
-    expect(asks.single['want'], isTrue);
-    expect(asks.single.containsKey('since'), isFalse);
+    final h = healsTo(q).single;
+    expect(h.restored, isFalse);
+    expect(h.since, 0);
+    // a repair holds our sends to them until their answer opens
+    expect(app.waitsForCard(q.name), isTrue);
   });
 
   test('an ask with its backup\'s date puts out again what never came back '
@@ -955,43 +1153,12 @@ void main() {
     expect([for (final r in mem.rows('messages')) r['sent']], [0, 1, 1]);
   });
 
-  test('a hidden chat asked while its vault is shut gets what never reached '
-      'them as the vault opens', () async {
+  test('a heal for a hidden chat while its vault is shut is not taken: '
+      'nothing is built, answered or sealed, and their next try lands once '
+      'it is open', () async {
     final p = await _peer();
     await processPeerBundle(p.name, p.card);
-    await vaultList.putMeta('pub', 'pub-A');
-    await vaultList.putHidden(
-      p.name,
-      kHiddenPeer,
-      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
-      1,
-    );
-    await router.load();
-    await card(p, want: true);
-
-    // the vault opens: their chat and our text in it
-    final vmem = MemDb();
-    final vault = _Rows(vmem, HaloContainer.vault);
-    await vmem.insert('contacts', {
-      'halo_id': p.name,
-      'onion': '',
-      'xpub': p.xpub,
-      'first_seen': 1,
-      'last_seen': 1,
-      'back_paired': 1,
-      'accepted': 1,
-    });
-    await outTo(p, 'lost', into: vmem);
-    useDatabasesForTest(rows, await Session.withVault(rows, vault));
-    await app.drainSealed(vault, 'priv-A');
-    expect(vmem.rows('messages').single['sent'], 0);
-    expect(vaultList.inbox, isEmpty);
-  });
-
-  test('a hidden chat asked with a backup\'s date while its vault is shut '
-      'gets what never reached them since then as the vault opens', () async {
-    final p = await _peer();
-    await processPeerBundle(p.name, p.card);
+    final was = await record(p);
     await vaultList.putMeta('pub', 'pub-A');
     await vaultList.putHidden(
       p.name,
@@ -1002,24 +1169,12 @@ void main() {
     await router.load();
     final now = DateTime.now().millisecondsSinceEpoch;
     await card(p, want: true, since: now - 20 * 24 * 3600 * 1000);
-
-    // the vault opens: their chat and our text in it
-    final vmem = MemDb();
-    final vault = _Rows(vmem, HaloContainer.vault);
-    await vmem.insert('contacts', {
-      'halo_id': p.name,
-      'onion': '',
-      'xpub': p.xpub,
-      'first_seen': 1,
-      'last_seen': 1,
-      'back_paired': 1,
-      'accepted': 1,
-    });
-    await outTo(p, 'lost', into: vmem, ago: 12 * 24 * 3600 * 1000);
-    useDatabasesForTest(rows, await Session.withVault(rows, vault));
-    await app.drainSealed(vault, 'priv-A');
-    expect(vmem.rows('messages').single['sent'], 0);
+    expect(await record(p), was);
+    expect(await atThem(p), isEmpty);
     expect(vaultList.inbox, isEmpty);
+    // nothing of it in the everyday database either
+    expect(mem.rows('heal_nonces'), isEmpty);
+    expect(mem.rows('heal_lines'), isEmpty);
   });
 
   test('with no key pinned for them, a card is taken only with the key '
@@ -1042,11 +1197,11 @@ void main() {
     await talk(p);
     await signalSession.markRestored();
     await app.askAfreshForTest();
-    expect(io.asksTo(p.xpub), [true]);
+    expect(healsTo(p), hasLength(1));
 
     final again = AppState(io: io, router: router)..myId = 'me';
     await again.askAfreshForTest();
-    expect(io.asksTo(p.xpub), [true]);
+    expect(healsTo(p), hasLength(1));
   });
 
   test('a pass asks a few people at a time', () async {
@@ -1059,15 +1214,48 @@ void main() {
     await app.askAfreshForTest();
     final asked = [
       for (final p in people)
-        if (io.asksTo(p.xpub).isNotEmpty) p,
+        if (healsTo(p).isNotEmpty) p,
     ];
     expect(asked, hasLength(8));
+    // the next pass waits 10 to 30 minutes, at random
+    final t = DateTime.now().millisecondsSinceEpoch;
+    await app.askAfreshForTest(now: t + 9 * 60 * 1000);
+    expect([for (final p in people) ...healsTo(p)], hasLength(8));
+    await app.askAfreshForTest(now: t + 31 * 60 * 1000);
+    // eight more, in random order, among them the two not asked yet or not
+    expect([for (final p in people) ...healsTo(p)], hasLength(16));
+  });
+
+  test('passes go in random order, across everyone', () async {
+    await store.delete('sessions');
+    final people = [for (var i = 0; i < 12; i++) await _peer()];
+    for (final p in people) {
+      await contact(p);
+      await processPeerBundle(p.name, p.card);
+    }
+    await signalSession.markRestored();
+    final firsts = <String>{};
+    for (var round = 0; round < 6; round++) {
+      io.sent.clear();
+      final fresh = AppState(io: io, router: router)..myId = 'me';
+      for (final p in people) {
+        await signalSession.noteAsked(p.name, -1 << 40);
+      }
+      await fresh.askAfreshForTest();
+      firsts.add(
+        [
+          for (final p in people)
+            if (healsTo(p).isNotEmpty) p.name,
+        ].join(','),
+      );
+    }
+    expect(firsts.length, greaterThan(1));
   });
 
   test('someone who never answers is asked again later and later, and the '
       'marks go once every session has started afresh', () async {
     final db = MemDb();
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     Future<SignalSession> start() async {
       final ss = SignalSession();
       await ss.bootstrap(
@@ -1106,7 +1294,7 @@ void main() {
     await ss.encryptTo(
       p.name,
       'afresh',
-      afresh: () async => preKeyBundleOf(p.card),
+      afresh: () async => cardBundle(p.card),
     );
     expect(await ss.dropRestoredWhenDone(), isTrue);
     expect(ss.hasRestored, isFalse);
@@ -1135,7 +1323,7 @@ void main() {
     final t0 = DateTime.now().millisecondsSinceEpoch;
     await app.drainOutbox();
     await _settle();
-    expect(io.asksTo(p.xpub), [true]);
+    expect(healsTo(p), hasLength(1));
     expect(app.outboxTriesForTest('w1'), 0);
     expect(
       app.outboxNextAtForTest('w1'),
@@ -1151,7 +1339,7 @@ void main() {
     await _settle();
     expect(again.waitsForCard(p.name), isTrue);
     expect(row('w1')?['sent'], 0);
-    expect(io.asksTo(p.xpub), [true]);
+    expect(healsTo(p), hasLength(1));
   });
 
   test('a blocked contact who asks to start afresh is sent nothing, and '
@@ -1215,39 +1403,6 @@ void main() {
     expect(io.asksTo(p.xpub), isEmpty);
     expect(vaultList.inbox, isEmpty);
     expect(await record(p), was, reason: 'no session from their card');
-  });
-
-  test('a resend owed to a hidden chat is not made once they are blocked '
-      'there', () async {
-    final p = await _peer();
-    await processPeerBundle(p.name, p.card);
-    await vaultList.putMeta('pub', 'pub-A');
-    await vaultList.putHidden(
-      p.name,
-      kHiddenPeer,
-      peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
-      1,
-    );
-    await router.load();
-    await card(p, want: true);
-    expect(vaultList.inbox, isNotEmpty);
-
-    final vmem = MemDb();
-    final vault = _Rows(vmem, HaloContainer.vault);
-    await vmem.insert('contacts', {
-      'halo_id': p.name,
-      'onion': '',
-      'xpub': p.xpub,
-      'first_seen': 1,
-      'last_seen': 1,
-      'back_paired': 1,
-      'accepted': 1,
-      'blocked': 1,
-    });
-    await outTo(p, 'lost', into: vmem);
-    useDatabasesForTest(rows, await Session.withVault(rows, vault));
-    await app.drainSealed(vault, 'priv-A');
-    expect(vmem.rows('messages').single['sent'], 1);
   });
 
   test('a receipt queued for someone goes with the block, and never goes '
@@ -1372,14 +1527,15 @@ void main() {
     await signalSession.markRestored();
     final t = DateTime.now().millisecondsSinceEpoch;
     await app.askAfreshForTest(now: t);
-    expect(io.asksTo(p.xpub), [true]);
-    expect(io.asksTo(b.xpub), isEmpty);
-    expect(io.asksTo(r.xpub), isEmpty);
+    expect(healsTo(p), hasLength(1));
+    expect(healsTo(b), isEmpty);
+    expect(healsTo(r), isEmpty);
     expect(signalSession.hasRestored, isTrue);
 
-    // p's next seal starts afresh from the card on its row
+    // p answers the heal, and the next pass finds nothing left to heal
+    await healed(p);
     expect(await _atPeer(p, await _toPeer(p, 'fresh')), 'fresh');
-    await app.askAfreshForTest(now: t + 11 * 60 * 1000);
+    await app.askAfreshForTest(now: t + 31 * 60 * 1000);
     expect(signalSession.hasRestored, isFalse);
   });
 
@@ -1490,12 +1646,7 @@ void main() {
     expect(app.outboxTriesForTest('h1'), 0);
     expect(await atThem(p), isEmpty);
     // their session stays as it was: a held seal is no broken one
-    expect(
-      await signalSession.sessionStore.containsSession(
-        SignalProtocolAddress(p.name, 1),
-      ),
-      isTrue,
-    );
+    expect(await signalSession.sessionStore.contains(p.name), isTrue);
 
     await session.acceptNewKey(p.name);
     await app.drainOutbox();
@@ -1543,6 +1694,623 @@ void main() {
     await _settle();
     expect(row('goes')?['sent'], 1);
     expect(row('held0')?['sent'], 0);
+  });
+
+  test('after a restore or a move: unused one-time invites go with their '
+      'keys, the main invite and used ones stay, the session prekeys are '
+      'made again, pool identities retire', () async {
+    final t = DateTime.now().millisecondsSinceEpoch;
+    final main = await makeInvite(
+      store,
+      signalSession,
+      kind: kInviteMain,
+      fcPkOf: _fcPkOf,
+      nowMs: t,
+    );
+    final once = await makeInvite(
+      store,
+      signalSession,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+      nowMs: t,
+    );
+    final used = await makeInvite(
+      store,
+      signalSession,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+      nowMs: t,
+    );
+    await store.update(
+      'invites',
+      {'used_at': t},
+      where: 'id = ?',
+      whereArgs: [used.id],
+    );
+    final before = await signalSession.sessionPreKeysForUse(now: t);
+    await store.insert('identities', {
+      'id': 9,
+      'kind': kIdentPool,
+      'x_priv': Uint8List(32),
+      'reg_id': 5,
+      'created_at': t,
+    });
+
+    expect(await app.afterRestore(store, nowMs: t + 1), isTrue);
+    final ids = [for (final r in await invitesOf(store, kMainIdent)) r.id];
+    expect(ids, containsAll([main.id, used.id]));
+    expect(ids, isNot(contains(once.id)));
+    expect(await signalSession.kyberPreKeyStore.load(once.kyberId!), isNull);
+    expect(
+      await store.query(
+        'fc_keys',
+        where: 'invite_id = ?',
+        whereArgs: [once.id],
+      ),
+      isEmpty,
+    );
+    // the main invite's keys stay: links and the handle keep working
+    expect(await signalSession.kyberPreKeyStore.load(main.kyberId!), isNotNull);
+    final after = await signalSession.sessionPreKeysForUse(now: t + 2);
+    expect(after.signedId, isNot(before.signedId));
+    expect(after.kyberId, isNot(before.kyberId));
+    // the pair it replaced still opens for its grace
+    expect(
+      await signalSession.signedPreKeyStore.load(before.signedId),
+      isNotNull,
+    );
+    expect((await identityRow(store, 9))!.retiredAt, t + 1);
+  });
+
+  test('after a restore, what of ours the file still had waiting to go '
+      'waits for a tap: never sent on its own', () async {
+    final p = await _peer();
+    await contact(p);
+    final t = DateTime.now().millisecondsSinceEpoch;
+    Future<void> waiting(String uid, int at, {String dir = 'out'}) =>
+        store.insert('messages', {
+          'peer_id': p.name,
+          'direction': dir,
+          'plaintext': uid,
+          'sent_at': at,
+          'msg_uid': uid,
+          'sent': 0,
+          'delivered': 0,
+        });
+    await waiting('queued in the file', t - 3600 * 1000);
+    await waiting('theirs', t - 3600 * 1000, dir: 'in');
+    await waiting('written since', t + 5000);
+    // before the store opens, on the first start after the restore
+    expect(
+      await holdOutboxAfterRestore(store, landed: t, made: t - 1, nowMs: t),
+      1,
+    );
+    final sent = {
+      for (final r in store.rows('messages')) r['msg_uid']: r['sent'],
+    };
+    expect(sent['queued in the file'], kNotSent);
+    expect(sent['theirs'], 0);
+    expect(sent['written since'], 0);
+    await store.delete('messages');
+  });
+
+  group('a heal from them', () {
+    // [p]'s heal to this phone, as their phone makes it
+    Future<Uint8List> theirHeal(
+      _Peer p, {
+      int? since,
+      int? nowMs,
+      List<int>? to,
+    }) => makeHeal(
+      p.ss,
+      peer: to ?? signalSession.identity.public,
+      since: since,
+      nowMs: nowMs,
+    );
+
+    Future<void> comes(_Peer p, Uint8List khb1) async {
+      // their key is known as theirs, as it is from the first start
+      await app.subscribeKnown();
+      await app.receiveRelay([(peer: p.xpub, cipher: healWire(khb1))]);
+      await _settle();
+    }
+
+    // what of ours [p] opens now, the answer among it
+    Future<List<String?>> openedAt(_Peer p) => atThem(p);
+
+    test('their session is built from it, the empty answer goes at once '
+        'inside it, what never came back delivered since its day goes '
+        'again, and the chat shows the line', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      const day = 24 * 3600 * 1000;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await outTo(p, 'lost', ago: 2 * day);
+      await outTo(p, 'long ago', ago: 20 * day);
+      // their phone came back from a backup a few days old
+      final khb1 = await theirHeal(p, since: healDayOf(now - 25 * day));
+      // a text of theirs sealed before the heal still opens here after it
+      final inFlight = await _fromPeer(p, 'in flight');
+      await comes(p, khb1);
+
+      // the answer: an opener on their heal's kyber, which they open
+      final got = await openedAt(p);
+      expect(got, isNotEmpty);
+      expect(unwrapMessage(got.first!).message, '');
+      final sent = {
+        for (final r in mem.rows('messages')) r['msg_uid']: r['sent'],
+      };
+      expect(sent['lost'], 0, reason: 'inside the window');
+      expect(sent['long ago'], 0, reason: 'since the day the heal names');
+      expect(await _atMe(p, inFlight), 'in flight');
+      expect(await _atPeer(p, await _toPeer(p, 'next')), 'next');
+      expect(mem.rows('heal_lines').single['kind'], kHealLineRestored);
+      expect(mem.rows('heal_lines').single['held'], 0, reason: 'not verified');
+      expect(await session.healLines(p.name), hasLength(1));
+      // no json card goes back: one side builds, the other opens
+      expect(io.asksTo(p.xpub), isEmpty);
+    });
+
+    test('a verified contact is held until the person looks, and the empty '
+        'answer still goes', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await mem.update(
+        'contacts',
+        {'verified': 1, 'verified_key': p.xpub},
+        where: 'halo_id = ?',
+        whereArgs: [p.name],
+      );
+      expect(await app.keyHeld(p.name), isFalse);
+      await comes(p, await theirHeal(p));
+      expect(mem.rows('heal_lines').single['kind'], kHealLineRepair);
+      expect(await app.keyHeld(p.name), isTrue);
+      expect(await session.healHold(p.name), kHealLineRepair);
+      expect(await session.heldPeers(), contains(p.name));
+      // the answer went anyway: it carries nothing
+      expect(await openedAt(p), hasLength(1));
+      await expectLater(_toPeer(p, 'held'), throwsA(isA<KeyHeld>()));
+
+      await app.releaseHealHold(p.name);
+      expect(await app.keyHeld(p.name), isFalse);
+      // the mark stays: their key did not change
+      expect(
+        mem
+            .rows('contacts')
+            .singleWhere((r) => r['halo_id'] == p.name)['verified_key'],
+        p.xpub,
+      );
+      expect(await _atPeer(p, await _toPeer(p, 'goes')), 'goes');
+    });
+
+    test('refused: for another identity, signed by another key, stale, '
+        'replayed, from someone blocked or not taken in', () async {
+      final p = await _peer();
+      final q = await _peer();
+      await contact(p);
+      await contact(q);
+      await talk(p);
+      await talk(q);
+      final was = await record(p);
+      Future<void> nothing(String why) async {
+        expect(await record(p), was, reason: why);
+        expect(await openedAt(p), isEmpty, reason: why);
+        expect(mem.rows('heal_lines'), isEmpty, reason: why);
+      }
+
+      // made for someone else
+      await comes(p, await theirHeal(p, to: q.ss.identity.public));
+      await nothing('another identity');
+      // q's heal through p's address: not the key held for p
+      await comes(p, await theirHeal(q));
+      await nothing('another key');
+      // older than a wrap lives
+      const day = 24 * 3600 * 1000;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await comes(p, await theirHeal(p, nowMs: now - 16 * day));
+      await nothing('stale');
+      // blocked, then not taken in
+      await mem.update(
+        'contacts',
+        {'blocked': 1},
+        where: 'halo_id = ?',
+        whereArgs: [p.name],
+      );
+      final good = await theirHeal(p);
+      await comes(p, good);
+      await nothing('blocked');
+      await mem.update(
+        'contacts',
+        {'blocked': 0, 'accepted': 0},
+        where: 'halo_id = ?',
+        whereArgs: [p.name],
+      );
+      await comes(p, await theirHeal(p));
+      await nothing('not taken in');
+      await mem.update(
+        'contacts',
+        {'accepted': 1},
+        where: 'halo_id = ?',
+        whereArgs: [p.name],
+      );
+      // taken once, and its nonce never again, even on a later start
+      await app.takeHealForTest(p.xpub, good);
+      expect(mem.rows('heal_lines'), hasLength(1));
+      final later = AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'fast';
+      await later.takeHealForTest(p.xpub, good);
+      expect(mem.rows('heal_lines'), hasLength(1), reason: 'replayed');
+    });
+
+    test('after a restore, a heal issued before it is refused and one after '
+        'it is taken', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      const hour = 3600 * 1000;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (await SharedPreferences.getInstance()).setInt(
+        kRestoreCutPref,
+        now,
+      );
+      await comes(p, await theirHeal(p, nowMs: now - 2 * hour));
+      expect(mem.rows('heal_lines'), isEmpty);
+      expect(mem.rows('heal_nonces'), isEmpty);
+      await comes(p, await theirHeal(p));
+      expect(mem.rows('heal_lines'), hasLength(1));
+    });
+
+    test('the last heal taken stays on their row: one issued before it is '
+        'refused once its nonce is gone, as after a move', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      const hour = 3600 * 1000;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final older = await theirHeal(p, nowMs: now - 3 * hour);
+      await comes(p, await theirHeal(p));
+      final row = mem
+          .rows('contacts')
+          .singleWhere((r) => r['halo_id'] == p.name);
+      expect(row['heal_last'], now ~/ hour);
+      expect(mem.rows('heal_nonces').single['peer'], p.name);
+      await mem.delete('heal_nonces');
+      // a later start: the ten minutes between rebuilds are not what stops it
+      final later = AppState(io: io, router: router)
+        ..myId = 'me'
+        ..sendModeForTest = 'fast';
+      await later.takeHealForTest(p.xpub, older);
+      expect(mem.rows('heal_lines'), hasLength(1));
+      expect(mem.rows('heal_nonces'), isEmpty);
+    });
+
+    test('one rebuild per contact in ten minutes', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await comes(p, await theirHeal(p));
+      await comes(p, await theirHeal(p));
+      expect(mem.rows('heal_lines'), hasLength(1));
+    });
+
+    // a peer whose key sorts before ours ([theirsFirst]) or after it
+    Future<_Peer> peerWhoseKey({required bool theirsFirst}) async {
+      for (;;) {
+        final p = await _peer();
+        if (_before(p.ss.identity.public, signalSession.identity.public) ==
+            theirsFirst) {
+          return p;
+        }
+      }
+    }
+
+    for (final theirsFirst in [true, false]) {
+      test('crossed heals: the smaller identity key\'s is the one built '
+          '(theirs smaller: $theirsFirst)', () async {
+        final p = await peerWhoseKey(theirsFirst: theirsFirst);
+        await contact(p);
+        await talk(p);
+        await app.subscribeKnown();
+        // ours went first, for a text of theirs that did not open here
+        final junk = base64Encode([kLsWhisper, ...List.filled(60, 7)]);
+        await app.receiveRelay([(peer: p.xpub, cipher: junk)]);
+        await _settle();
+        expect(healsTo(p), hasLength(1));
+        await comes(p, await theirHeal(p));
+        expect(
+          mem.rows('heal_lines'),
+          theirsFirst ? hasLength(1) : isEmpty,
+          reason: 'ours stands when our key is the smaller',
+        );
+      });
+    }
+
+    test('a json card with a session held is refused: nothing rebuilt, no '
+        'card back, nothing again, a verified chat stays as it was', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await mem.update(
+        'contacts',
+        {'verified': 1, 'verified_key': p.xpub},
+        where: 'halo_id = ?',
+        whereArgs: [p.name],
+      );
+      await outTo(p, 'lost');
+      final was = await record(p);
+      for (final want in [true, false]) {
+        await app.receiveRelay([
+          (
+            peer: p.xpub,
+            cipher: jsonEncode({
+              'halo_ctl': 'bundle',
+              'from': p.name,
+              'bundle': p.card,
+              'want': want,
+              'since': 0,
+            }),
+          ),
+        ]);
+        await _settle();
+      }
+      expect(await record(p), was);
+      expect(io.sent, isEmpty);
+      expect(row('lost')?['sent'], 1);
+      expect(mem.rows('heal_lines'), isEmpty);
+      expect(await app.keyHeld(p.name), isFalse);
+    });
+
+    test('with no identity held for them, a heal builds nothing', () async {
+      final p = await _peer();
+      await contact(p, card: false);
+      await comes(p, await theirHeal(p));
+      expect(await signalSession.hasSession(p.name), isFalse);
+      expect(io.sent, isEmpty);
+      expect(mem.rows('heal_lines'), isEmpty);
+    });
+
+    test('an open vault\'s contact: the line and the nonce go into the '
+        'vault, none into the everyday database', () async {
+      final p = await _peer();
+      await processPeerBundle(p.name, p.card);
+      final vmem = MemDb();
+      final vault = _Rows(vmem, HaloContainer.vault);
+      await vmem.insert('contacts', {
+        'halo_id': p.name,
+        'onion': '',
+        'xpub': p.xpub,
+        'first_seen': 1,
+        'last_seen': 1,
+        'back_paired': 1,
+        'accepted': 1,
+        'caps': 'pp',
+      });
+      // the card the router keeps for them: how their key is known
+      await vaultList.putMeta('pub', 'pub-A');
+      await vaultList.putHidden(
+        p.name,
+        kHiddenPeer,
+        peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
+        1,
+      );
+      await router.load();
+      useDatabasesForTest(rows, await Session.withVault(rows, vault));
+      await comes(p, await theirHeal(p));
+      expect(vmem.rows('heal_lines'), hasLength(1));
+      expect(vmem.rows('heal_nonces'), hasLength(1));
+      expect(mem.rows('heal_lines'), isEmpty);
+      expect(mem.rows('heal_nonces'), isEmpty);
+    });
+
+    test(
+      'held for a moved key and a heal at once: the key card speaks',
+      () async {
+        final p = await _peer();
+        await contact(p);
+        await talk(p);
+        final other = await _peer();
+        await mem.update(
+          'contacts',
+          {'verified': 1, 'verified_key': p.xpub},
+          where: 'halo_id = ?',
+          whereArgs: [p.name],
+        );
+        await comes(p, await theirHeal(p));
+        expect(await session.healHold(p.name), kHealLineRepair);
+        // the mark now names another key than the one held
+        await mem.update(
+          'contacts',
+          {'verified_key': other.xpub},
+          where: 'halo_id = ?',
+          whereArgs: [p.name],
+        );
+        expect(await app.keyHeld(p.name), isTrue);
+        expect(await session.healHold(p.name), isNull);
+      },
+    );
+
+    test('a 0.5.x contact is sent no repair, and after a restore their chat '
+        'waits for their update', () async {
+      final p = await _peer();
+      await contact(p, older: true);
+      await talk(p);
+      final file = backUp(p);
+      expect(await _atMe(p, await _fromPeer(p, 'after')), 'after');
+      expect(await app.pausedForUpdate(p.name), isFalse);
+      await app.subscribeKnown();
+      // a text of theirs that does not open: nothing they could take goes
+      final junk = base64Encode([kLsWhisper, ...List.filled(60, 7)]);
+      await app.receiveRelay([(peer: p.xpub, cipher: junk)]);
+      await _settle();
+      expect(healsTo(p), isEmpty);
+      expect(app.waitsForCard(p.name), isFalse);
+
+      await restore(p, file);
+      expect(await app.pausedForUpdate(p.name), isTrue);
+      // a heal still goes (they may have updated since the file), and what
+      // is written waits
+      await expectLater(_toPeer(p, 'waits'), throwsA(isA<StartingAfresh>()));
+      await _settle();
+      // a seal only marks them: the next pass sends the heal
+      expect(healsTo(p), isEmpty);
+      await app.askAfreshForTest();
+      expect(healsTo(p), hasLength(1));
+      // once they run 0.6 and take it, the chat goes on
+      await healed(p);
+      expect(await app.pausedForUpdate(p.name), isFalse);
+      expect(await _atPeer(p, await _toPeer(p, 'goes')), 'goes');
+    });
+  });
+
+  group('what we undid, after their restore', () {
+    const day = 24 * 3600 * 1000;
+
+    // what of ours to [p] is queued, or reached them, by uid: unsends with
+    // the time they were made, edits with their words
+    Future<({Map<String, int?> un, Map<String, String> ed})> undoneAt(
+      _Peer p,
+    ) async {
+      final un = <String, int?>{
+        for (final r in mem.rows('frames_out'))
+          if (r['kind'] == kFrameUnsend && r['peer_id'] == p.name)
+            r['msg_uid'] as String: r['at'] as int,
+      };
+      final ed = <String, String>{
+        for (final r in mem.rows('edits_out'))
+          if (r['peer_id'] == p.name)
+            r['msg_uid'] as String: r['new_text'] as String,
+      };
+      for (final w in await atThem(p)) {
+        if (w == null) continue;
+        final m = unwrapMessage(w);
+        if (m.unsend case final u?) un.putIfAbsent(u, () => null);
+        if (m.edit case final e?) ed[e.targetUid] = e.newText;
+      }
+      return (un: un, ed: ed);
+    }
+
+    test('our unsends and last edits since their backup go to them again, '
+        'with when each was made; a repair sends none', () async {
+      final p = await _peer();
+      final q = await _peer();
+      for (final x in [p, q]) {
+        await contact(x);
+        await talk(x);
+      }
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await outTo(p, 'fixed', ago: 3 * day);
+      await outTo(p, 'old fix', ago: 30 * day);
+      await outTo(q, 'q fixed', ago: day);
+      await session.queueUnsend('gone', p.name);
+      await session.queueEdit('fixed', p.name, 'one');
+      await session.queueEdit('fixed', p.name, 'two');
+      // the row holds the words: they go from there
+      await mem.update(
+        'messages',
+        {'plaintext': 'two'},
+        where: 'msg_uid = ?',
+        whereArgs: ['fixed'],
+      );
+      await session.queueEdit('old fix', p.name, 'older words');
+      await session.queueUnsend('q gone', q.name);
+      await session.queueEdit('q fixed', q.name, 'q words');
+      // all of it reached them long since, the old fix before their backup
+      await mem.delete('frames_out');
+      await mem.delete('edits_out');
+      expect(
+        {for (final r in mem.rows('taken_out')) r['msg_uid']},
+        {'gone', 'fixed', 'old fix', 'q gone', 'q fixed'},
+      );
+      await mem.update('taken_out', {'at': now - 2 * day});
+      await mem.update(
+        'taken_out',
+        {'at': now - 20 * day},
+        where: 'msg_uid = ?',
+        whereArgs: ['old fix'],
+      );
+
+      await app.subscribeKnown();
+      final khb1 = await makeHeal(
+        p.ss,
+        peer: signalSession.identity.public,
+        since: healDayOf(now - 10 * day),
+      );
+      await app.receiveRelay([(peer: p.xpub, cipher: healWire(khb1))]);
+      await _settle();
+      final got = await undoneAt(p);
+      expect(got.un.keys, ['gone']);
+      final at = got.un['gone'];
+      if (at != null) expect(at, now - 2 * day);
+      expect(got.ed, {'fixed': 'two'});
+
+      // a heal that follows no restore puts nothing out again
+      await app.receiveRelay([
+        (
+          peer: q.xpub,
+          cipher: healWire(
+            await makeHeal(q.ss, peer: signalSession.identity.public),
+          ),
+        ),
+      ]);
+      await _settle();
+      final none = await undoneAt(q);
+      expect(none.un, isEmpty);
+      expect(none.ed, isEmpty);
+    });
+
+    test('a take-back leaves its edit nothing to send again', () async {
+      final p = await _peer();
+      await contact(p);
+      await outTo(p, 'both');
+      await session.queueEdit('both', p.name, 'edited');
+      await session.queueUnsend('both', p.name);
+      expect(
+        [for (final r in mem.rows('taken_out')) (r['msg_uid'], r['kind'])],
+        [('both', 'unsend')],
+      );
+    });
+
+    test('kept no longer once deleted for me, the chat cleared or deleted, '
+        'or our timed message burned', () async {
+      final p = await _peer();
+      final q = await _peer();
+      final r = await _peer();
+      for (final x in [p, q, r]) {
+        await contact(x);
+      }
+      for (final (x, uid) in [
+        (p, 'for me'),
+        (p, 'burns'),
+        (q, 'cleared'),
+        (r, 'chat gone'),
+      ]) {
+        await outTo(x, uid);
+        await session.queueEdit(uid, x.name, 'new words');
+      }
+      await session.queueUnsend('taken back', q.name);
+      Set<Object?> kept() => {
+        for (final row in mem.rows('taken_out')) row['msg_uid'],
+      };
+      expect(kept(), {'for me', 'burns', 'cleared', 'chat gone', 'taken back'});
+      await rows.deleteMessage('for me');
+      expect(kept(), isNot(contains('for me')));
+      await mem.update(
+        'messages',
+        {'burn_at': 1},
+        where: 'msg_uid = ?',
+        whereArgs: ['burns'],
+      );
+      await rows.purgeExpired();
+      expect(kept(), isNot(contains('burns')));
+      await rows.clearConversation(q.name);
+      expect(kept(), isNot(contains('cleared')));
+      expect(kept(), isNot(contains('taken back')));
+      await rows.deleteAllOf(r.name);
+      expect(kept(), isEmpty);
+    });
   });
 
   group('group texts after a restore', () {
@@ -1744,6 +2512,89 @@ void main() {
       expect(await groupTextsAt(p), hasLength(2));
     });
 
+    test('our unsends and edits since their backup, in groups they are '
+        'still in and since they joined, go to them again', () async {
+      final p = await _peer();
+      await contact(p);
+      await talk(p);
+      await groupWith(p, g);
+      await groupWith(p, 'grp000000003', member: false);
+      // a group they joined two days ago
+      const g2 = 'grp000000002';
+      await groupWith(p, g2, joined: 2 * day);
+      await said('edited', ago: 2 * day);
+      await said('sent before they came', group: g2, ago: 5 * day);
+      // the row holds the words: they go from there
+      await mem.update(
+        'messages',
+        {'plaintext': 'new words'},
+        where: 'msg_uid = ?',
+        whereArgs: ['edited'],
+      );
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await rows.queueGroupFrame(
+        g2,
+        [p.name],
+        groupEditRow('sent before they came', 'x'),
+        now: now - day,
+      );
+      await rows.queueGroupUnsend(
+        g2,
+        [p.name],
+        'before they came',
+        now: now - 3 * day,
+      );
+      await rows.queueGroupUnsend(
+        g2,
+        [p.name],
+        'since they came',
+        now: now - day,
+      );
+      final both = [p.name, 'someone-else-in-it'];
+      await rows.queueGroupUnsend(g, both, 'gone', now: now - day);
+      await rows.queueGroupFrame(
+        g,
+        both,
+        groupEditRow('edited', 'new words'),
+        now: now - day,
+      );
+      await rows.queueGroupUnsend(
+        'grp000000003',
+        ['someone-else-in-it'],
+        'elsewhere',
+        now: now - day,
+      );
+      await rows.queueGroupUnsend(g, both, 'before', now: now - 20 * day);
+      // all of it reached them long since
+      await mem.delete('group_ctl_out');
+      await card(p, want: true, since: now - 10 * day);
+      await app.owedPassForTest;
+      await _settle();
+      final got = <String>{
+        for (final r in mem.rows('group_ctl_out'))
+          if (r['member'] == p.name) r['ctl'] as String,
+      };
+      for (final w in await atThem(p)) {
+        if (w == null) continue;
+        final m = unwrapMessage(w);
+        if (m.unsend case final u?) got.add(jsonEncode(groupUnsendRow(u)));
+        if (m.edit case final e?) {
+          got.add(jsonEncode(groupEditRow(e.targetUid, e.newText)));
+        }
+      }
+      expect(got, {
+        jsonEncode(groupUnsendRow('gone')),
+        jsonEncode(groupEditRow('edited', 'new words')),
+        jsonEncode(groupUnsendRow('since they came')),
+      });
+      expect(
+        mem
+            .rows('group_ctl_out')
+            .where((r) => r['member'] == 'someone-else-in-it'),
+        isEmpty,
+      );
+    });
+
     test('one whose time ran out before it went again is never sent, and '
         'is owed no more', () async {
       final p = await _peer();
@@ -1789,32 +2640,6 @@ void main() {
       expect(mem.rows('group_resent'), isEmpty);
     });
 
-    test('an undated ask sealed for a shut vault owes none of its groups\' '
-        'texts as it opens', () async {
-      final p = await _peer();
-      await processPeerBundle(p.name, p.card);
-      await vaultList.putMeta('pub', 'pub-A');
-      await vaultList.putHidden(
-        p.name,
-        kHiddenPeer,
-        peerCard(RouterCard(p.name, '', p.xpub, backPaired: true)),
-        1,
-      );
-      await router.load();
-      await card(p, want: true);
-      expect(vaultList.inbox, isNotEmpty);
-      final vmem = MemDb();
-      final vault = _Rows(vmem, HaloContainer.vault);
-      await groupWith(p, g, into: vmem);
-      await said('hidden hour', into: vmem);
-      useDatabasesForTest(rows, await Session.withVault(rows, vault));
-      app.sendModeForTest = 'private';
-      await app.drainSealed(vault, 'priv-A');
-      expect(vaultList.inbox, isEmpty);
-      expect(owedTo(p.name, vmem), isEmpty);
-      expect(vmem.rows('group_resent'), isEmpty);
-    });
-
     test('a backup dated in the future is no restore', () async {
       final p = await _peer();
       await contact(p);
@@ -1853,23 +2678,20 @@ void main() {
       // past the two minutes, as a later start: two old backups clamp to
       // the same day, so the second is the first restore again
       await mem.delete('group_resent');
-      final later = AppState(io: io, router: router)
-        ..myId = 'me'
-        ..sendModeForTest = 'private';
-      for (final (i, back) in [40, 50].indexed) {
-        await later.receiveRelay([
-          (
-            peer: p.xpub,
-            cipher: jsonEncode({
-              'halo_ctl': 'bundle',
-              'from': p.name,
-              'bundle': p.card,
-              'want': true,
-              'n': 10 + i,
-              'since': now - back * day,
-            }),
+      // each heal on a start of its own, past the ten minutes' limit
+      for (final back in [40, 50]) {
+        final later = AppState(io: io, router: router)
+          ..myId = 'me'
+          ..sendModeForTest = 'private';
+        await later.subscribeKnown();
+        await later.takeHealForTest(
+          p.xpub,
+          await makeHeal(
+            p.ss,
+            peer: signalSession.identity.public,
+            since: healDayOf(now - back * day),
           ),
-        ]);
+        );
         await _settle();
       }
       final marks = mem.rows('group_resent');
@@ -1971,4 +2793,32 @@ void main() {
       expect(vaultList.inbox, isEmpty);
     });
   });
+}
+
+// [a] sorts before [b] as bytes
+bool _before(List<int> a, List<int> b) {
+  for (var i = 0; i < a.length && i < b.length; i++) {
+    if (a[i] != b[i]) return a[i] < b[i];
+  }
+  return a.length < b.length;
+}
+
+// a first-contact key as the engine makes its public half, stood in: the
+// sha256 of the secret, when it lifts to secp256k1
+final _p = BigInt.parse(
+  'fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f',
+  radix: 16,
+);
+
+bool _lifts(List<int> x) {
+  final v = BigInt.parse(_hex(x), radix: 16);
+  if (v >= _p) return false;
+  final a = (v.modPow(BigInt.from(3), _p) + BigInt.from(7)) % _p;
+  final y = a.modPow((_p + BigInt.one) >> 2, _p);
+  return y.modPow(BigInt.two, _p) == a;
+}
+
+String _fcPkOf(Uint8List sk) {
+  final x = sha256.convert(sk).bytes;
+  return _lifts(x) ? _hex(x) : 'error: not a key';
 }

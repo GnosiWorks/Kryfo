@@ -8,6 +8,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'desktop/desktop_mode.dart' show shotsHonouredHere;
+
 const kShotsWire = 'ss';
 
 // shots_by: who made the last change, which the chat shows as a line
@@ -104,10 +106,12 @@ class ChatShots {
   final bool known;
 
   // the switch can be used: their phone knows the block, or in a decoy,
-  // where it stays on this phone
-  bool get peerCan => quiet || can > 0;
+  // where it stays on this phone. never where this app cannot block
+  bool get peerCan => shotsHonouredHere && (quiet || can > 0);
   // what this phone does now. someone blocked holds nothing
   bool get blocking => on && peerCan && !blocked;
+  // the face instead of a photo. blocking them does not bring it back
+  bool get hidesPhoto => on && peerCan;
 
   ShotsWord get word => ShotsWord(on: on, at: at);
 }
@@ -169,6 +173,12 @@ Map<String, dynamic>? shotsBodyOf(String wrapped) {
 /// [body] with [word] on it, as the wire takes it
 String shotsPut(Map<String, dynamic> body, ShotsWord word) {
   body[kShotsWire] = word.toWire();
+  return '$_prefix${jsonEncode(body)}';
+}
+
+/// [body] as the wire takes it, saying nothing of the block
+String shotsLeft(Map<String, dynamic> body) {
+  body.remove(kShotsWire);
   return '$_prefix${jsonEncode(body)}';
 }
 

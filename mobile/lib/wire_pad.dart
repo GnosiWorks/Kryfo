@@ -15,6 +15,17 @@ const kPadField = 'pz';
 // media slice, the last is the largest a gift wrap can hold
 const kSealSizes = [847, 2767, 10447, 21135, 30399];
 
+// what a post-quantum opener carries more than a plain message of the same
+// plaintext: the kyber ciphertext and its prekey fields, 1659 bytes, to the
+// cipher's 16-byte block
+const kPqOpenerExtra = 1664;
+
+// the one size a post-quantum opener is filled to: the second seal size
+// less what the opener adds, so it lands on that size's gift wrap and cell
+// count, as a plain message of the second size does. the first size cannot
+// hold one at all
+const kPqOpenerSeal = 2767 - kPqOpenerExtra;
+
 // past the last size only the onion carries it: filled to whole multiples
 // of 30400 bytes less one, up to the longest line the door reads. past that
 // it is not sealed
@@ -40,6 +51,27 @@ const _sliceFrom = 3;
 
 /// [plain] filled to the next seal size, as signal seals it
 String padSeal(String plain) => _pad(plain, _sealTarget, utf8Length);
+
+/// [plain] filled to the post-quantum opener size, null when it does not
+/// fit there: such a frame waits for the first answer (WaitsForAnswer)
+String? padSealOpener(String plain) {
+  final out = _pad(
+    plain,
+    (need, _) => need <= kPqOpenerSeal ? kPqOpenerSeal : null,
+    utf8Length,
+  );
+  // a frame that takes no filler (not an envelope) goes as it is, if small
+  return utf8Length(out) <= kPqOpenerSeal ? out : null;
+}
+
+/// [plain] filled to [size], a seal size [padSeal] gives some frame, when
+/// it fits there; past it, as [padSeal] fills it. every copy of one message
+/// to several devices lands on one size this way
+String padSealTo(String plain, int size) {
+  final own = padSeal(plain);
+  if (utf8Length(own) >= size) return own;
+  return _pad(plain, (need, _) => need <= size ? size : null, utf8Length);
+}
 
 /// [frame] filled to the next rumor size, for a frame no signal seal covers
 String padRumor(String frame) => _pad(frame, _rumorTarget, rumorLength);

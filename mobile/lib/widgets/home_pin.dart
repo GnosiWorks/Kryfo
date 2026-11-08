@@ -89,7 +89,7 @@ class HomePin extends StatelessWidget {
                     line,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 11, color: HaloColors.text2),
+                    style: HaloType.sans(size: 11, color: HaloColors.text),
                   ),
                 ],
               ),

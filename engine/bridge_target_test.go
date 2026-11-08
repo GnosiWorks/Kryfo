@@ -5,7 +5,6 @@ package main
 // that bridge line's own arguments, and nothing at all while bridges are off
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -145,6 +144,15 @@ func useBridges(t *testing.T, on bool, lines ...string) {
 		bridgeList, bridgeOn, bridgeFails = oldList, oldOn, oldFails
 		bridgeMu.Unlock()
 	})
+}
+
+// the app has said no decoy is open, as it does before it reads the
+// checks: they are hidden while that is unknown
+func noDecoy(t *testing.T) {
+	t.Helper()
+	old := decoyState.Load()
+	decoyState.Store(decoyOff)
+	t.Cleanup(func() { decoyState.Store(old) })
 }
 
 func randomCert() string {
@@ -394,7 +402,7 @@ func TestSortBridgeLines(t *testing.T) {
 
 // logs never carry a bridge's address, whatever happens to it
 func TestBridgeLogsCarryNoAddress(t *testing.T) {
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	t.Cleanup(func() { log.SetOutput(old) })
@@ -430,7 +438,7 @@ func TestBridgeAddressesCompareWhateverTheirSpelling(t *testing.T) {
 
 // tor's own log lines name bridges by address and fingerprint
 func TestTorLogLinesLoseBridgeAddresses(t *testing.T) {
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	t.Cleanup(func() { log.SetOutput(old) })
@@ -458,6 +466,7 @@ func TestTorLogLinesLoseBridgeAddresses(t *testing.T) {
 // the listener dials them.
 func TestStoredLinesFrom050SurviveBoot(t *testing.T) {
 	useBridges(t, false)
+	noDecoy(t)
 	bridge, toBridge := knocks(t)
 	cert := randomCert()
 	stored := strings.Join([]string{
@@ -487,6 +496,7 @@ func TestStoredLinesFrom050SurviveBoot(t *testing.T) {
 // the list, without its contents in the reason
 func TestBrokenStoredLineKeptAndMarked(t *testing.T) {
 	useBridges(t, false)
+	noDecoy(t)
 	stored := strings.Join([]string{
 		tbObfs4,
 		"obfs4 198.51.100.7:443 cert=tooshort iat-mode=0",

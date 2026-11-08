@@ -30,17 +30,30 @@ var (
 	heardAt = map[string]int64{}
 	// address to its last write
 	heardSaved = map[string]time.Time{}
+	// keys kept in memory only: a contact address's public relays. past the
+	// cap those are read now and then, and their times on disk would tell the
+	// addresses heard from last from the rest. a missing one is only a wider
+	// reach for what the relay brings after a restart
+	heardMemOnly = map[string]bool{}
 )
 
+// what key's relay hands over is never written to the file
+func heardInMemory(key string) {
+	heardMu.Lock()
+	heardMemOnly[key] = true
+	heardMu.Unlock()
+}
+
 func heardFile(rcvPk string) string {
-	if savedDataDir == "" {
+	dir := savedDataDir()
+	if dir == "" {
 		return ""
 	}
 	short := rcvPk
 	if len(short) > 16 {
 		short = short[:16]
 	}
-	return savedDataDir + "/nostr_heard_" + short
+	return dir + "/nostr_heard_" + short
 }
 
 // what the file says of an address, for a runner starting on it. what is
@@ -103,7 +116,7 @@ func noteHeard(ctx context.Context, u, rcvPk string, at time.Time, now bool) {
 	}
 	heardAt[k] = ms
 	p := heardFile(rcvPk)
-	if p == "" || (!now && at.Sub(heardSaved[rcvPk]) < heardSaveGap) {
+	if p == "" || heardMemOnly[k] || (!now && at.Sub(heardSaved[rcvPk]) < heardSaveGap) {
 		heardMu.Unlock()
 		return
 	}
@@ -113,7 +126,7 @@ func noteHeard(ctx context.Context, u, rcvPk string, at time.Time, now bool) {
 	suffix := " " + rcvPk
 	for key, v := range heardAt {
 		relay, ok := strings.CutSuffix(key, suffix)
-		if ok && listed[relay] {
+		if ok && listed[relay] && !heardMemOnly[key] {
 			lines = append(lines, relay+" "+strconv.FormatInt(v/step*step, 10))
 		}
 	}
@@ -142,6 +155,11 @@ func dropHeard(rcvPk string) {
 	for k := range heardAt {
 		if strings.HasSuffix(k, suffix) {
 			delete(heardAt, k)
+		}
+	}
+	for k := range heardMemOnly {
+		if strings.HasSuffix(k, suffix) {
+			delete(heardMemOnly, k)
 		}
 	}
 	delete(heardSaved, rcvPk)

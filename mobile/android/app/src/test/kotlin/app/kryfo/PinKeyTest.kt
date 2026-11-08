@@ -1,0 +1,484 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+package app.kryfo
+
+import android.app.Application
+import android.security.keystore.UserNotAuthenticatedException
+import java.security.ProviderException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowBuild
+
+// the pin key's life on keystores that refuse, stall, answer oddly or lose
+// the key: it is never made over one that is there, never deleted on an
+// error, and every failure says which kind it is
+@RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
+class PinKeyTest {
+    private class Plain : PinKey.Keys {
+        val made = mutableMapOf<String, ByteArray>()
+        val makes = mutableListOf<Pair<Boolean, Boolean>>()
+        var deletes = 0
+        var calls = 0
+        var refuseStrongBox = false
+        var refuseAll = false
+        var refuseTee = false
+        // a strongbox key the keystore reads as kept in software
+        var softStrong = false
+        // a tee key that answers this instead of an hmac
+        var fixedTee: ByteArray? = null
+        // ms a strongbox call takes on the fake clock
+        var strongMs = 60L
+        var strong = false
+        // answers this instead of an hmac
+        var fixed: ByteArray? = null
+        var echo = false
+        // calls that fail with these first, one per call
+        val failing = ArrayDeque<Exception>()
+        // calls hang until this opens
+        var hang: CountDownLatch? = null
+        // the next has() answers false once, as a busy keystore may
+        var falseOnce = false
+        var hasCalls = 0
+        // a make takes this long, and a delete waits on this
+        var makeMs = 0L
+        var deleteHang: CountDownLatch? = null
+        // deletes that throw, one each
+        var deleteFails = 0
+        var clock = 0L
+        // where the keystore says the key lives; null asks the default
+        var levelIs: Int? = null
+        var levelThrows = false
+
+        override fun has(alias: String): Boolean {
+            hasCalls++
+            if (falseOnce) {
+                falseOnce = false
+                return false
+            }
+            return made.containsKey(alias)
+        }
+
+        override fun make(alias: String, strongBox: Boolean, unlocked: Boolean) {
+            if (makeMs > 0) Thread.sleep(makeMs)
+            synchronized(makes) { makes.add(strongBox to unlocked) }
+            if (refuseAll || (strongBox && refuseStrongBox) || (!strongBox && refuseTee)) throw ProviderException("refused")
+            made[alias] = ByteArray(32) { (it * 7 + makes.size).toByte() }
+            strong = strongBox
+        }
+
+        override fun mac(alias: String, input: ByteArray): ByteArray {
+            calls++
+            hang?.await(5, TimeUnit.SECONDS)
+            failing.removeFirstOrNull()?.let { throw it }
+            val k = made[alias] ?: throw PinKey.Gone()
+            if (strong) clock += strongMs * 1_000_000
+            fixed?.let { return it.copyOf() }
+            if (!strong) fixedTee?.let { return it.copyOf() }
+            if (echo) return input.copyOf()
+            return Mac.getInstance("HmacSHA256").apply { init(SecretKeySpec(k, "HmacSHA256")) }.doFinal(input)
+        }
+
+        override fun level(alias: String): Int? {
+            if (!made.containsKey(alias)) return null
+            if (levelThrows) throw ProviderException("no key info")
+            return levelIs ?: if (strong && softStrong) PinKey.SOFTWARE else if (strong) PinKey.STRONGBOX else PinKey.TEE
+        }
+
+        override fun delete(alias: String) {
+            deleteHang?.await(5, TimeUnit.SECONDS)
+            if (deleteFails > 0) {
+                deleteFails--
+                throw ProviderException("busy")
+            }
+            deletes++
+            made.remove(alias)
+        }
+    }
+
+    private class Kept : PinKey.Notes {
+        var v: Pair<Int, Int>? = null
+        var m = false
+        var s = false
+        override fun read() = v
+        override fun write(unlocked: Int, level: Int) {
+            v = unlocked to level
+        }
+        override fun clear() {
+            v = null
+            m = false
+            s = false
+        }
+        override fun soft() = s
+        override fun setSoft() {
+            s = true
+        }
+        override fun making() = m
+        override fun setMaking(on: Boolean) {
+            m = on
+        }
+    }
+
+    private val keys = Plain()
+    private val notes = Kept()
+    private val paused = mutableListOf<Long>()
+
+    @Before
+    fun stand() {
+        PinKey.keys = keys
+        PinKey.notes = notes
+        PinKey.sdk = 34
+        PinKey.nanos = { keys.clock }
+        PinKey.pause = { paused.add(it) }
+    }
+
+    @After
+    fun back() {
+        PinKey.keys = PinKey.Store
+        PinKey.notes = null
+        PinKey.sdk = android.os.Build.VERSION.SDK_INT
+        PinKey.nanos = System::nanoTime
+        PinKey.pause = { Thread.sleep(it) }
+        PinKey.secure = { false }
+    }
+
+    private val x = ByteArray(32) { it.toByte() }
+    private val xHex = PinKey.hex(x)
+
+    @Test
+    fun strongBoxFirstAndTheFlagOnlyFrom15() {
+        val r = PinKey.make()
+        assertEquals(true, r["k"])
+        assertEquals(PinKey.STRONGBOX, r["l"])
+        assertEquals(0, r["u"])
+        assertEquals(listOf(true to false), keys.makes)
+        assertEquals(64, (r["kc"] as String).length)
+        PinKey.drop()
+        PinKey.sdk = 35
+        keys.makes.clear()
+        assertEquals(1, PinKey.make()["u"])
+        assertEquals(listOf(true to true), keys.makes)
+        assertEquals(1 to PinKey.STRONGBOX, notes.v)
+    }
+
+    @Test
+    fun aRefusedOrSlowStrongBoxMakesItInTheTee() {
+        keys.refuseStrongBox = true
+        assertEquals(PinKey.TEE, PinKey.make()["l"])
+        assertEquals(listOf(true to false, false to false), keys.makes)
+        PinKey.drop()
+        keys.refuseStrongBox = false
+        keys.strongMs = 400
+        keys.makes.clear()
+        assertEquals(PinKey.TEE, PinKey.make()["l"])
+        assertEquals(listOf(true to false, false to false), keys.makes)
+        // android 8 has no strongbox to ask
+        PinKey.drop()
+        PinKey.sdk = 27
+        keys.makes.clear()
+        PinKey.make()
+        assertEquals(listOf(false to false), keys.makes)
+    }
+
+    @Test
+    fun aSoftwareKeystoreGetsNoKeyAndIsNotAskedAgain() {
+        keys.refuseStrongBox = true
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        assertFalse(keys.has(PinKey.ALIAS))
+        assertTrue(notes.s)
+        assertFalse(notes.m)
+        assertEquals(null, notes.v)
+        val i = PinKey.info()
+        assertEquals(false, i["k"])
+        assertEquals(true, i["n"])
+        keys.makes.clear()
+        assertEquals("software", PinKey.make()["e"])
+        assertTrue(keys.makes.isEmpty())
+        // the lock turned off and on asks the keystore again
+        PinKey.drop()
+        assertFalse(notes.s)
+        keys.levelIs = null
+        assertEquals(PinKey.TEE, PinKey.make()["l"])
+        assertEquals(null, PinKey.info()["n"])
+    }
+
+    @Test
+    fun aSoftwareStrongBoxThenAFailedTeeIsNoSoftwareNote() {
+        keys.softStrong = true
+        keys.refuseTee = true
+        assertEquals("refused", PinKey.make()["e"])
+        assertFalse(notes.s)
+        // a tee key that fails its test
+        keys.refuseTee = false
+        keys.fixedTee = ByteArray(32) { 1 }
+        assertEquals("refused", PinKey.make()["e"])
+        assertFalse(notes.s)
+        // the next unlock asks again and gets its key
+        keys.fixedTee = null
+        assertEquals(PinKey.TEE, PinKey.make()["l"])
+    }
+
+    @Test
+    fun aSoftwareNoteAnswersInfoWithoutTheGonePause() {
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        paused.clear()
+        assertEquals(true, PinKey.info()["n"])
+        assertTrue(paused.isEmpty())
+    }
+
+    @Test
+    fun anotherBuildAsksTheKeystoreAgain() {
+        PinKey.attach(RuntimeEnvironment.getApplication())
+        ShadowBuild.setFingerprint("kryfo/one")
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        keys.makes.clear()
+        assertEquals("software", PinKey.make()["e"])
+        assertTrue(keys.makes.isEmpty())
+        // an os update that brought a keystore with hardware
+        ShadowBuild.setFingerprint("kryfo/two")
+        keys.levelIs = null
+        assertEquals(null, PinKey.info()["n"])
+        assertEquals(PinKey.STRONGBOX, PinKey.make()["l"])
+        PinKey.drop()
+    }
+
+    @Test
+    fun aLevelThatWillNotReadClaimsNothing() {
+        PinKey.sdk = 33
+        keys.refuseStrongBox = true
+        keys.levelThrows = true
+        val r = PinKey.make()
+        assertEquals(true, r["k"])
+        assertEquals(PinKey.SOFTWARE, r["l"])
+        assertFalse(notes.s)
+        // a strongbox key is one whatever the read says
+        PinKey.drop()
+        keys.refuseStrongBox = false
+        assertEquals(PinKey.STRONGBOX, PinKey.make()["l"])
+    }
+
+    @Test
+    fun beforeTwelveAStrongBoxAskInSoftwareIsNoStrongBox() {
+        PinKey.sdk = 30
+        keys.levelIs = PinKey.SOFTWARE
+        assertEquals("software", PinKey.make()["e"])
+        assertEquals(listOf(true to false, false to false), keys.makes)
+        assertFalse(keys.has(PinKey.ALIAS))
+    }
+
+    @Test
+    fun aKeyThatFailsItsTestIsNotKept() {
+        keys.fixed = ByteArray(32) { 1 }
+        assertEquals("refused", PinKey.make()["e"])
+        assertFalse(keys.has(PinKey.ALIAS))
+        keys.fixed = null
+        keys.refuseAll = true
+        assertEquals("refused", PinKey.make()["e"])
+        assertEquals(null, notes.v)
+    }
+
+    @Test
+    fun neverMadeOverOneThatIsThere() {
+        val first = PinKey.make()
+        val key = keys.made[PinKey.ALIAS]!!.copyOf()
+        keys.makes.clear()
+        val again = PinKey.make()
+        assertTrue(keys.makes.isEmpty())
+        assertTrue(key.contentEquals(keys.made[PinKey.ALIAS]))
+        assertEquals(first["kc"], again["kc"])
+    }
+
+    @Test
+    fun theSameInputSignsTheSame() {
+        PinKey.make()
+        val a = PinKey.mac(xHex)["m"] as String
+        assertEquals(a, PinKey.mac(xHex)["m"])
+        assertNotEquals(a, PinKey.mac(PinKey.hex(ByteArray(32) { 9 }))["m"])
+        assertNotEquals(a, PinKey.kcv()["m"])
+        assertEquals("bad", PinKey.mac("abc")["e"])
+        assertEquals("bad", PinKey.mac(PinKey.hex(ByteArray(16)))["e"])
+    }
+
+    @Test
+    fun aBusyKeystoreIsTriedAgainAndNeverDropsTheKey() {
+        PinKey.make()
+        keys.failing.add(ProviderException("busy"))
+        keys.failing.add(ProviderException("busy"))
+        assertTrue(PinKey.mac(xHex).containsKey("m"))
+        assertEquals(listOf(150L, 300L), paused)
+        repeat(3) { keys.failing.add(ProviderException("busy")) }
+        assertEquals("busy", PinKey.mac(xHex)["e"])
+        assertEquals(0, keys.deletes)
+        assertTrue(keys.has(PinKey.ALIAS))
+    }
+
+    @Test
+    fun lockedIsTriedOnceMoreFrom15() {
+        PinKey.make()
+        PinKey.sdk = 35
+        keys.failing.add(UserNotAuthenticatedException())
+        assertTrue(PinKey.mac(xHex).containsKey("m"))
+        assertEquals(listOf(300L), paused)
+        keys.failing.add(UserNotAuthenticatedException())
+        keys.failing.add(UserNotAuthenticatedException())
+        assertEquals("locked", PinKey.mac(xHex)["e"])
+        PinKey.sdk = 34
+        keys.failing.add(UserNotAuthenticatedException())
+        assertEquals("locked", PinKey.mac(xHex)["e"])
+        assertEquals(0, keys.deletes)
+    }
+
+    @Test
+    fun goneOnlyWhenTheKeystoreHasNoKey() {
+        assertEquals("gone", PinKey.mac(xHex)["e"])
+        assertEquals("gone", PinKey.kcv()["e"])
+        PinKey.make()
+        // a failure with the key there is busy, never gone
+        keys.failing.add(IllegalStateException("odd"))
+        keys.failing.add(IllegalStateException("odd"))
+        keys.failing.add(IllegalStateException("odd"))
+        assertEquals("busy", PinKey.mac(xHex)["e"])
+        assertEquals(0, keys.deletes)
+    }
+
+    @Test
+    fun oddAnswersAreNotTaken() {
+        PinKey.make()
+        keys.fixed = ByteArray(32)
+        assertEquals("bad", PinKey.mac(xHex)["e"])
+        keys.fixed = ByteArray(16) { 3 }
+        assertEquals("bad", PinKey.mac(xHex)["e"])
+        keys.fixed = null
+        keys.echo = true
+        assertEquals("bad", PinKey.mac(xHex)["e"])
+        assertEquals(0, keys.deletes)
+    }
+
+    @Test
+    fun aHungCallIsLeftBehindAtTheDeadline() {
+        PinKey.make()
+        PinKey.nanos = System::nanoTime
+        val gate = CountDownLatch(1)
+        keys.hang = gate
+        val t0 = System.nanoTime()
+        val (m, why) = PinKey.sign(x, deadlineMs = 200)
+        val took = (System.nanoTime() - t0) / 1_000_000
+        gate.countDown()
+        assertEquals(null, m)
+        assertEquals("busy", why)
+        assertTrue("waited $took ms", took < 2000)
+        assertTrue(keys.has(PinKey.ALIAS))
+    }
+
+    @Test
+    fun oneFalseLookupIsBusyNotGone() {
+        PinKey.make()
+        keys.falseOnce = true
+        assertEquals(true, PinKey.info()["k"])
+        keys.falseOnce = true
+        keys.failing.add(ProviderException("busy"))
+        keys.failing.add(ProviderException("busy"))
+        keys.failing.add(ProviderException("busy"))
+        assertEquals("busy", PinKey.mac(xHex)["e"])
+        assertTrue(keys.has(PinKey.ALIAS))
+        // gone is asked twice, a second apart
+        keys.made.clear()
+        paused.clear()
+        assertEquals("gone", PinKey.mac(xHex)["e"])
+        assertTrue(paused.contains(PinKey.GONE_GAP_MS))
+    }
+
+    @Test
+    fun makesRunOneAtATime() {
+        keys.makeMs = 50
+        PinKey.nanos = System::nanoTime
+        val out = arrayOfNulls<Map<String, Any>>(2)
+        val ts = (0..1).map { i -> Thread { out[i] = PinKey.make() }.apply { start() } }
+        ts.forEach { it.join(10_000) }
+        assertEquals(1, keys.makes.size)
+        assertEquals(out[0]!!["kc"], out[1]!!["kc"])
+    }
+
+    @Test
+    fun aHungDropDoesNotHoldTheWipe() {
+        PinKey.make()
+        val gate = CountDownLatch(1)
+        keys.deleteHang = gate
+        val t0 = System.nanoTime()
+        assertFalse(PinKey.dropWithin(200))
+        assertTrue((System.nanoTime() - t0) / 1_000_000 < 2000)
+        gate.countDown()
+        keys.deleteHang = null
+    }
+
+    @Test
+    fun anUntestedKeyIsNeverHandedOut() {
+        // the strongbox key fails its test, and its delete fails too
+        keys.fixed = ByteArray(32) { 1 }
+        keys.deleteFails = 1
+        keys.refuseAll = false
+        val first = PinKey.make()
+        assertTrue(first.containsKey("e"))
+        assertTrue(notes.m)
+        // the next make deletes it first, then makes a tested one
+        keys.fixed = null
+        keys.makes.clear()
+        val again = PinKey.make()
+        assertEquals(true, again["k"])
+        assertTrue(keys.makes.isNotEmpty())
+        assertFalse(notes.m)
+        // a delete that keeps failing hands out nothing
+        PinKey.drop()
+        keys.fixed = ByteArray(32) { 1 }
+        keys.deleteFails = 10
+        PinKey.make()
+        keys.fixed = null
+        assertTrue(PinKey.make().containsKey("e"))
+    }
+
+    @Test
+    fun aKeyMidTestIsNoKeyAndNeverUsed() {
+        // a make that died between its generate and the end of its test
+        PinKey.make()
+        notes.m = true
+        assertEquals(false, PinKey.info()["k"])
+        assertEquals("busy", PinKey.kcv()["e"])
+        assertEquals("busy", PinKey.mac(xHex)["e"])
+        // the make dart asks for then drops it and makes a tested one
+        val before = keys.made[PinKey.ALIAS]!!.copyOf()
+        val again = PinKey.make()
+        assertEquals(true, again["k"])
+        assertFalse(before.contentEquals(keys.made[PinKey.ALIAS]))
+        assertFalse(notes.m)
+        assertEquals(true, PinKey.info()["k"])
+        assertTrue(PinKey.mac(xHex).containsKey("m"))
+    }
+
+    @Test
+    fun infoSaysWhatIsThere() {
+        assertEquals(false, PinKey.info()["k"])
+        PinKey.make()
+        val i = PinKey.info()
+        assertEquals(true, i["k"])
+        assertEquals(PinKey.STRONGBOX, i["l"])
+        assertEquals(34, i["v"])
+        PinKey.drop()
+        assertEquals(false, PinKey.info()["k"])
+        assertEquals(null, notes.v)
+    }
+}

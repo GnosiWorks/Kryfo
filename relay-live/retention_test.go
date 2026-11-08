@@ -1,8 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -129,5 +135,118 @@ func TestSavesAndReadsGoOnDuringASweep(t *testing.T) {
 	}
 	if left, all := countLeft(t, db); left != 0 || all != int64(saves) {
 		t.Fatalf("%d expired left, %d in all, want 0 and %d", left, all, saves)
+	}
+}
+
+func sliceWrap(t *testing.T, to string) nostr.Event {
+	return wrap(t, to, func(e *nostr.Event) { e.Content = strings.Repeat("s", bigContent+1) })
+}
+
+func marks(t *testing.T, db *store) int {
+	t.Helper()
+	var n int
+	if err := db.DB.QueryRow(`SELECT count(*) FROM big_wrap`).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	return n
+}
+
+// a file slice is marked as it is saved and goes a week after it came;
+// a text of the same age stays for its fourteen days
+func TestFileSlicesGoAfterAWeek(t *testing.T) {
+	db, err := openStore(filepath.Join(t.TempDir(), "relay.sqlite") + "?_sync=OFF")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	ctx := context.Background()
+	to := addr()
+	small := wrap(t, to, nil)
+	old, fresh := sliceWrap(t, to), sliceWrap(t, to)
+	for _, ev := range []*nostr.Event{&small, &old, &fresh} {
+		if err := db.SaveEvent(ctx, ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if n := marks(t, db); n != 2 {
+		t.Fatalf("%d marks, want the two slices", n)
+	}
+	// a mark is the day the slice came, never the second
+	var at int64
+	if err := db.DB.QueryRow(`SELECT at FROM big_wrap WHERE id = ?`, fresh.ID).Scan(&at); err != nil {
+		t.Fatal(err)
+	}
+	if at%86400 != 0 || at != dayOf(time.Now()) {
+		t.Fatalf("a mark holds %d, not the day", at)
+	}
+	eight := time.Now().Add(-9 * 24 * time.Hour).Unix()
+	if _, err := db.DB.Exec(`UPDATE big_wrap SET at = ? WHERE id = ?`, eight, old.ID); err != nil {
+		t.Fatal(err)
+	}
+	// seven days and a bit after its day: not yet, the day runs to its end
+	seven := dayOf(time.Now()) - 7*86400 - 3600
+	if _, err := db.DB.Exec(`UPDATE big_wrap SET at = ? WHERE id = ?`, seven+3600, fresh.ID); err != nil {
+		t.Fatal(err)
+	}
+	if n := sweepBig(ctx, db, 0); n != 1 {
+		t.Fatalf("swept %d, want the old slice", n)
+	}
+	left, err := db.CountEvents(ctx, nostr.Filter{IDs: []string{small.ID, old.ID, fresh.ID}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if left != 2 || marks(t, db) != 1 {
+		t.Fatalf("%d wraps and %d marks left, want 2 and 1", left, marks(t, db))
+	}
+	gone, _ := db.CountEvents(ctx, nostr.Filter{IDs: []string{old.ID}})
+	if gone != 0 {
+		t.Fatal("the old slice is still there")
+	}
+}
+
+// more marks than a batch go in one sweep
+func TestFileSliceSweepBatches(t *testing.T) {
+	db, err := openStore(filepath.Join(t.TempDir(), "relay.sqlite") + "?_sync=OFF")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	ctx := context.Background()
+	to := addr()
+	want := sweepBatch + 3
+	for i := 0; i < want; i++ {
+		ev := sliceWrap(t, to)
+		if err := db.SaveEvent(ctx, &ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := db.DB.Exec(`UPDATE big_wrap SET at = ?`, time.Now().Add(-9*24*time.Hour).Unix()); err != nil {
+		t.Fatal(err)
+	}
+	if n := sweepBig(ctx, db, 0); n != want {
+		t.Fatalf("swept %d of %d", n, want)
+	}
+	if marks(t, db) != 0 {
+		t.Fatal("marks left")
+	}
+}
+
+// a handler's panic is logged by net/http with the peer's address: both
+// listeners send those lines nowhere
+func TestServerErrorsNameNoPeer(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+	h := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { panic("boom") })
+	s := httptest.NewUnstartedServer(h)
+	s.Config = relayServer("", h)
+	s.Start()
+	t.Cleanup(s.Close)
+	if r, err := http.Get(s.URL); err == nil {
+		r.Body.Close()
+	}
+	s.Close()
+	if buf.Len() > 0 {
+		t.Fatalf("the server logged: %q", buf.String())
 	}
 }

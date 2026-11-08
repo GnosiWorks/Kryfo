@@ -1,0 +1,178 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//go:build !windows
+
+package main
+
+import (
+	"bufio"
+	"context"
+	"fmt"
+	"net"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/cretz/bine/tor"
+)
+
+// one tor per process on a phone too: a start whose listen failed leaves
+// its tor up, and the next start listens again on it. no tor here: a fake
+// control port, tor's own start stood in for
+
+// a control port answering ADD_ONION: no for the first [refuse], then a
+// service
+type addSide struct {
+	mu     sync.Mutex
+	refuse int
+	adds   int
+}
+
+func (s *addSide) serve(c net.Conn) {
+	r := bufio.NewReader(c)
+	for {
+		line, err := r.ReadString('\n')
+		if err != nil {
+			return
+		}
+		if strings.HasPrefix(line, "PROTOCOLINFO") {
+			fmt.Fprint(c, "250-PROTOCOLINFO 1\r\n250-AUTH METHODS=NULL\r\n250-VERSION Tor=\"0.4.9.15\"\r\n250 OK\r\n")
+			continue
+		}
+		if !strings.HasPrefix(line, "ADD_ONION") {
+			fmt.Fprint(c, "250 OK\r\n")
+			continue
+		}
+		s.mu.Lock()
+		s.adds++
+		no := s.adds <= s.refuse
+		s.mu.Unlock()
+		if no {
+			fmt.Fprint(c, "551 Failed to add onion\r\n")
+			continue
+		}
+		fmt.Fprintf(c, "250-ServiceID=%s\r\n250 OK\r\n", strings.Repeat("a", 56))
+	}
+}
+
+func (s *addSide) count() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.adds
+}
+
+// tor's start stood in for: counted, and handing back n
+func standInStart(t *testing.T, n *tor.Tor) *int {
+	t.Helper()
+	calls := 0
+	was := startTor
+	startTor = func(context.Context, *tor.StartConf) (*tor.Tor, error) {
+		calls++
+		return n, nil
+	}
+	t.Cleanup(func() { startTor = was })
+	return &calls
+}
+
+func TestAFailedListenListensAgainOnTheSameTor(t *testing.T) {
+	side := &addSide{refuse: 1}
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	t.Cleanup(func() { ln.Close() })
+	go func() {
+		for {
+			c, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			go side.serve(c)
+		}
+	}()
+	// bine's own connection in fakeTor is never answered
+	setCtrlDeadline(t, time.Second)
+	n := fakeTor(t, ln.Addr().(*net.TCPAddr).Port)
+	t.Cleanup(onionReset)
+	mu.Lock()
+	torNode, myAddr = nil, ""
+	mu.Unlock()
+	resetRoute(t, "starting", 0)
+	// what a start sets for the process, put back for the tests after
+	pin, off := atomic.LoadInt32(&pinnedSocks), torNetOff.Load()
+	// no watchers of this fake tor outlive the test: the slots are taken
+	waitFor(t, "the watcher slots", 5*time.Second, func() bool {
+		return atomic.CompareAndSwapInt32(&bootstrapWatching, 0, 1)
+	})
+	waitFor(t, "the watcher slots", 5*time.Second, func() bool {
+		return atomic.CompareAndSwapInt32(&publishWatching, 0, 1)
+	})
+	t.Cleanup(func() {
+		mu.Lock()
+		l, _ := listener.(*tor.OnionService)
+		// not this process's tor any more: its watchers let go
+		listener, torNode, myAddr = nil, nil, ""
+		mu.Unlock()
+		if l != nil && l.LocalListener != nil {
+			l.LocalListener.Close()
+		}
+		atomic.StoreInt32(&bootstrapWatching, 0)
+		atomic.StoreInt32(&publishWatching, 0)
+		eventReset()
+		atomic.StoreInt32(&pinnedSocks, pin)
+		torNetOff.Store(off)
+		// no client built over this test's socks port stays cached
+		nostrResetClient()
+	})
+	calls := standInStart(t, n)
+	dir := t.TempDir()
+
+	if r := startListener(dir); !strings.HasPrefix(r, "error: listen:") {
+		t.Fatalf("the first start: %q", r)
+	}
+	mu.Lock()
+	kept := torNode == n
+	mu.Unlock()
+	if *calls != 1 || !kept {
+		t.Fatalf("tor started %d times, kept %v", *calls, kept)
+	}
+	want := strings.Repeat("a", 56) + ".onion"
+	if r := startListener(dir); r != want {
+		t.Fatalf("the start after: %q", r)
+	}
+	if *calls != 1 {
+		t.Fatalf("tor started %d times in one process", *calls)
+	}
+	if side.count() != 2 {
+		t.Fatalf("listened %d times", side.count())
+	}
+	mu.Lock()
+	same := torNode == n
+	mu.Unlock()
+	if !same {
+		t.Fatal("another tor")
+	}
+	// and from here the address it has
+	if r := startListener(dir); r != want || *calls != 1 || side.count() != 2 {
+		t.Fatalf("a third start: %q, %d starts, %d listens", r, *calls, side.count())
+	}
+}
+
+// a start that failed twice already (bine closes each) never runs a third
+// tor in the process
+func TestNoThirdTorInAProcess(t *testing.T) {
+	was := torLaunches.Load()
+	t.Cleanup(func() { torLaunches.Store(was) })
+	torLaunches.Store(2)
+	mu.Lock()
+	had := torNode
+	torNode, myAddr = nil, ""
+	mu.Unlock()
+	t.Cleanup(func() { mu.Lock(); torNode = had; mu.Unlock() })
+	calls := standInStart(t, nil)
+	r := startListener(t.TempDir())
+	if !strings.HasPrefix(r, "error: tor start:") || *calls != 0 {
+		t.Fatalf("a third tor: %q, %d starts", r, *calls)
+	}
+}

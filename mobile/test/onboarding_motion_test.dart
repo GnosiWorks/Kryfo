@@ -14,6 +14,7 @@ import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/screens/onboarding_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/store.dart' show playBuildForTest;
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/language_sheet.dart' show LanguageRow;
 import 'package:kryfo/widgets/tor_boot_splash.dart';
@@ -76,22 +77,6 @@ double shown(WidgetTester t, String text) => t
 PageController pages(WidgetTester t) =>
     t.widget<PageView>(find.byType(PageView)).controller!;
 
-// the quiet notification in the shade, folded to one line
-Finder quietLine() =>
-    find.textContaining(l10n.androidServiceTitle, findRichText: true);
-
-List<double> fades(WidgetTester t, Finder f) => [
-  for (final o in t.widgetList<Opacity>(
-    find.ancestor(of: f, matching: find.byType(Opacity)),
-  ))
-    o.opacity,
-];
-
-Future<void> toShade(WidgetTester t) async {
-  pages(t).jumpToPage(5);
-  await t.pump();
-}
-
 Future<void> toName(WidgetTester t) async {
   await t.tap(find.text(l10n.onboardingBegin));
   await t.pump();
@@ -136,7 +121,7 @@ void main() {
     expect(find.byType(LanguageRow).hitTestable(), findsOneWidget);
     expect(find.byTooltip(l10n.commonBack).hitTestable(), findsNothing);
     await toName(t);
-    expect(find.text('02 / 07'), findsOneWidget);
+    expect(find.text('02 / 06'), findsOneWidget);
     expect(find.byType(LanguageRow).hitTestable(), findsNothing);
     await t.tap(find.byTooltip(l10n.commonBack));
     await t.pump();
@@ -153,6 +138,8 @@ void main() {
     await t.pumpWidget(onboarding());
     await t.pump(const Duration(seconds: 3));
     await toName(t);
+    // the reveal's shine and ring play out, then the step rests
+    await t.pump(const Duration(seconds: 9));
     expect(t.hasRunningAnimations, isFalse);
     await t.tap(find.text(l10n.onboardingTryAnother));
     await t.pump();
@@ -182,7 +169,7 @@ void main() {
     await t.pump();
     expect(pages(t).page, 1);
     expect(shown(t, l10n.onboardingYourKryfoId), 1);
-    expect(find.text('02 / 07'), findsOneWidget);
+    expect(find.text('02 / 06'), findsOneWidget);
     expect(t.hasRunningAnimations, isFalse);
     await t.tap(find.text(l10n.onboardingTryAnother));
     await t.pump();
@@ -192,12 +179,15 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
-  testWidgets('the picked way of sending reads as the checked one', (t) async {
+  testWidgets('play: the picked way messages arrive reads as the checked '
+      'one, and always on says its quiet notification', (t) async {
     phone(t);
     quiet(t);
+    playBuildForTest = true;
+    addTearDown(() => playBuildForTest = null);
     final sem = t.ensureSemantics();
     await t.pumpWidget(onboarding(still: true));
-    pages(t).jumpToPage(3);
+    pages(t).jumpToPage(4);
     await t.pump();
     await t.pump(const Duration(seconds: 1));
     Matcher radio(bool on) => isSemantics(
@@ -206,14 +196,17 @@ void main() {
       isChecked: on,
     );
     SemanticsNode card(String title) => t.getSemantics(find.text(title));
-    expect(card(l10n.onboardingOnion), radio(true));
-    expect(card(l10n.onboardingRelay), radio(false));
-    await t.tap(find.text(l10n.onboardingRelay));
+    expect(card(l10n.gettingMessagesAlwaysOn), radio(true));
+    expect(card(l10n.gettingMessagesCheckIns), radio(false));
+    expect(find.text(l10n.onboardingSilentAndAtThe), findsOneWidget);
+    await t.tap(find.text(l10n.gettingMessagesCheckIns));
     await t.pump();
-    expect(card(l10n.onboardingOnion), radio(false));
-    expect(card(l10n.onboardingRelay), radio(true));
-    expect(find.text(l10n.onboardingUseThis), findsOneWidget);
+    expect(card(l10n.gettingMessagesAlwaysOn), radio(false));
+    expect(card(l10n.gettingMessagesCheckIns), radio(true));
+    expect(find.text(l10n.onboardingSilentAndAtThe), findsNothing);
     await t.pumpWidget(const SizedBox());
+    // the look for play services runs on past the step
+    await t.pump(const Duration(seconds: 30));
     sem.dispose();
   });
 
@@ -259,11 +252,10 @@ void main() {
         final buttons = [
           l10n.onboardingBegin,
           l10n.onboardingUseThisName,
+          l10n.onboardingNameSkip,
           l10n.onboardingContinue,
-          l10n.onboardingKeepOnion,
-          l10n.onboardingIUnderstand,
-          l10n.onboardingGotIt,
-          l10n.onboardingNotNowAddPeople,
+          l10n.onboardingContinue,
+          l10n.onboardingInviteSomeone,
         ];
         for (var step = 0; step < buttons.length; step++) {
           pages(t).jumpToPage(step);
@@ -279,98 +271,6 @@ void main() {
         await t.pumpWidget(framed(const TorBootSplash(), scale: 1.3));
         await t.pump(const Duration(seconds: 1));
         expect(t.takeException(), isNull, reason: 'splash');
-        await t.pumpWidget(const SizedBox());
-      });
-    }
-  }
-
-  testWidgets('the notification step: the shade pulls down once, then rests', (
-    t,
-  ) async {
-    phone(t);
-    quiet(t);
-    final sem = t.ensureSemantics();
-    await t.pumpWidget(onboarding());
-    await t.pump(const Duration(seconds: 6));
-    await toShade(t);
-    await t.pump(const Duration(milliseconds: 100));
-    expect(find.text('Kryfo'), findsOneWidget);
-    expect(find.text(l10n.notificationsNewMessage), findsOneWidget);
-    expect(quietLine(), findsOneWidget);
-    expect(fades(t, quietLine()).reduce((a, b) => a < b ? a : b), lessThan(1));
-    expect(t.hasRunningAnimations, isTrue);
-    await t.pump(const Duration(seconds: 2));
-    expect(fades(t, quietLine()), everyElement(1.0));
-    expect(t.hasRunningAnimations, isFalse);
-    // the words start at the left
-    expect(t.getCenter(find.text('Kryfo')).dx, lessThan(411 / 2));
-    expect(
-      find.bySemanticsLabel(
-        '${l10n.androidServiceTitle}. ${l10n.androidServiceText}',
-      ),
-      findsOneWidget,
-    );
-    await t.pumpWidget(const SizedBox());
-    sem.dispose();
-  });
-
-  testWidgets('reduced motion: the shade shows at once', (t) async {
-    phone(t);
-    quiet(t);
-    await t.pumpWidget(onboarding(still: true));
-    await t.pump();
-    await toShade(t);
-    expect(fades(t, quietLine()), everyElement(1.0));
-    expect(
-      fades(t, find.text(l10n.notificationsNewMessage)),
-      everyElement(1.0),
-    );
-    expect(t.hasRunningAnimations, isFalse);
-    await t.pumpWidget(const SizedBox());
-  });
-
-  testWidgets('right to left: the shade reads from the right', (t) async {
-    phone(t);
-    quiet(t);
-    lang('ar');
-    await t.pumpWidget(onboarding(still: true, locale: const Locale('ar')));
-    await toShade(t);
-    expect(quietLine(), findsOneWidget);
-    final name = t.getRect(find.text('Kryfo'));
-    final line = t.getRect(find.text(l10n.notificationsNewMessage));
-    expect(name.center.dx, greaterThan(411 / 2));
-    expect(name.right, moreOrLessEquals(line.right, epsilon: 0.5));
-    await t.pumpWidget(const SizedBox());
-  });
-
-  for (final code in ['en', 'ar']) {
-    for (final light in [false, true]) {
-      final theme = light ? 'light' : 'dark';
-      testWidgets('360 wide, text 1.5, $code, $theme: the shade fits', (
-        t,
-      ) async {
-        phone(t, size: const Size(360, 640));
-        quiet(t);
-        lang(code);
-        HaloColors.setLight(light);
-        addTearDown(() => HaloColors.setLight(false));
-        await t.pumpWidget(
-          onboarding(still: true, locale: Locale(code), scale: 1.5),
-        );
-        await toShade(t);
-        await t.pump(const Duration(seconds: 1));
-        expect(t.takeException(), isNull);
-        expect(quietLine(), findsOneWidget);
-        for (final f in [
-          quietLine(),
-          find.text('Kryfo'),
-          find.text(l10n.notificationsNewMessage),
-        ]) {
-          final r = t.getRect(f);
-          expect(r.left, greaterThanOrEqualTo(0));
-          expect(r.right, lessThanOrEqualTo(360));
-        }
-        expect(find.text(l10n.onboardingGotIt).hitTestable(), findsOneWidget);
         await t.pumpWidget(const SizedBox());
       });
     }
@@ -414,12 +314,16 @@ void main() {
   // a cutout, a gesture or button bar, a keyboard: every step clear of them
   testWidgets('every step clears the bars and the keyboard', (t) async {
     quiet(t);
-    for (final (nav, kb) in [
-      (gestureBar, 0.0),
-      (buttonBar, 0.0),
-      (gestureBar, keyboardUp),
+    for (final (nav, kb, top) in [
+      (gestureBar, 0.0, cutoutTop),
+      (buttonBar, 0.0, cutoutTop),
+      (gestureBar, keyboardUp, cutoutTop),
+      // android 15 and 16
+      (gestureThin, 0.0, statusLow),
+      (buttonBar, 0.0, statusTall),
+      (buttonBar, keyboardUp, statusTall),
     ]) {
-      barsPhone(t, nav: nav, keyboard: kb);
+      barsPhone(t, nav: nav, keyboard: kb, status: top);
       await t.pumpWidget(onboarding(still: true));
       await t.pump(const Duration(seconds: 6));
       final pos = pages(t).position;
@@ -429,7 +333,7 @@ void main() {
         pages(t).jumpToPage(i);
         await t.pump();
         await t.pump(const Duration(seconds: 1));
-        expectClearOfBars(t, reason: 'step $i, nav $nav keyboard $kb');
+        expectClearOfBars(t, reason: 'step $i, nav $nav keyboard $kb top $top');
       }
       await t.pumpWidget(const SizedBox());
       await t.pump(const Duration(seconds: 1));

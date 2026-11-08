@@ -16,6 +16,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -30,11 +31,13 @@ func roomKey(privHex string) (xid, error) {
 	return xidFromPrivHex(privHex)
 }
 
+var errBadPeer = errors.New("bad peer pubkey")
+
 func peerArr(pubHex string) ([32]byte, error) {
 	var out [32]byte
 	b, err := hex.DecodeString(pubHex)
 	if err != nil || len(b) != 32 {
-		return out, fmt.Errorf("bad peer pubkey")
+		return out, errBadPeer
 	}
 	copy(out[:], b)
 	return out, nil
@@ -179,7 +182,9 @@ func HaloRoomSubscribe(cPriv, cPeer *C.char) *C.char {
 	lane := roomLane(hex.EncodeToString(me.pub[:]))
 	noteKnockTarget(key, knockTarget{rcvPk, rcvSk, lane, lane, ""})
 	startSub(key, func(ctx context.Context) {
-		nostrSubscribeRunnerFn(ctx, lane, key, rcvPk, func(gw nostr2.Event) (string, error) {
+		// the room's member addresses share a socket per relay; its drop
+		// box keeps one of its own
+		nostrSubscribeRunnerFn(shareOn(ctx, "room"), lane, key, rcvPk, func(gw nostr2.Event) (string, error) {
 			return nip17UnwrapAs(me, peer, gw)
 		})
 	})
@@ -247,6 +252,8 @@ func roomForget(privHex string, peers []string) error {
 	if _, fcPk, err := fcKeysFrom(me.priv, 0); err == nil {
 		dropAddressFiles(fcPk)
 	}
+	// what the room sent and still waits goes with it
+	topupPurgeLane(roomLane(hex.EncodeToString(me.pub[:])))
 	return nil
 }
 

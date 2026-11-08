@@ -25,13 +25,18 @@ import (
 
 const (
 	wrapKind = 1059
-	// nip-44 caps a wrap's content near 90 kB
-	maxMessage = 256 << 10
+	// nip-44 caps a wrap's content at 87472 bytes, and the rest of the
+	// event is under a kilobyte
+	maxMessage = 96 << 10
 	// a media send is a burst of slices, then quiet
 	eventsPerSec, eventBurst = 10, 500
-	// one live subscription per socket, catch-up pages one after another
-	reqsPerSec, reqBurst = 2, 100
+	// a socket carries a batch of up to 8 addresses: their windows and
+	// catch-up pages share this, the app paces at 8/s, burst 180
+	reqsPerSec, reqBurst = 10, 200
 	maxIDs, maxAddrs     = 20, 10
+	// ids asked for with their address: the app asks for wraps it was told
+	// of by id, a hundred at a time
+	maxAddrIDs = 100
 	// knocks the wraps of one connection may set off: a phone writes to
 	// one address at a time
 	knocksPerSec, knockBurst = 1, 20
@@ -48,21 +53,24 @@ const (
 	// below this much free space the relay stops taking wraps, so a flood
 	// cannot fill the disk the other services write to
 	minFreeBytes = 2 << 30
+	// below this the relay stops taking file slices, so text keeps the
+	// last few gigabytes
+	minFreeBigBytes = 5 << 30
 	// free space is read again after this much is taken, not only on the
 	// poll, so the floor holds however fast wraps come in
 	diskRecheck = 32 << 20
 	// what a stored wrap costs beyond its content and tags: id, key,
 	// signature and the index entries
 	rowOverhead = 512
-	// what a save writes to the wal beside the wrap: the table's page, one
-	// per index and room for a split, 4 kB each. counted toward the
-	// recheck, so the floor holds while a long read keeps the wal full
-	walPages = 8 << 12
+	// what a wrap's row in the recipient index costs (recipients.go), in
+	// its table and its id index. a wrap has one, or one per hex run it
+	// carries, up to maxRuns
+	indexRowBytes = 320
 	// a client gets this long to take each frame, then it is closed
 	writeWait = 10 * time.Second
-	// and this long for a page of stored wraps. the store's read stays open
-	// while a page is written, which keeps the wal from being emptied. the
-	// app gives up on a page after 90 s
+	// and this long for a page of stored wraps in all, which waits in memory
+	// until it is written. the app gives up on a page after 20 s without an
+	// event
 	pageWait = 2 * time.Minute
 	// live wraps waiting for one connection, counted as what they hold in
 	// memory. a phone on a slow circuit gets about 160 media slices of
@@ -105,8 +113,11 @@ func (b *bucket) takeN(now time.Time, n float64) bool {
 }
 
 // a connection's events, reqs, the knocks its wraps may set off and the
-// new knock registrations it may make
-type budget struct{ events, reqs, knocks, regs *bucket }
+// new knock registrations it may make, and its one page in memory
+type budget struct {
+	events, reqs, knocks, regs *bucket
+	page                       chan struct{}
+}
 
 type limits struct {
 	mu       sync.Mutex
@@ -116,10 +127,19 @@ type limits struct {
 	stored  *bucket
 	dataDir string
 	diskLow atomic.Bool
+	// under minFreeBigBytes: text only
+	diskTight atomic.Bool
 	// bytes taken since free space was last read
 	written atomic.Int64
 	// the helper app mode's registrations, nil when off
 	knock *knocker
+	// pages of stored wraps in memory, and reads of them (pages.go)
+	pages, reads *pageBudget
+	// the pages in memory now, for cutting the oldest. under inMemMu
+	inMem   map[*pageInMemory]struct{}
+	inMemMu sync.Mutex
+	// pageCutAfter, apart for the tests
+	cutAfter time.Duration
 }
 
 // sockets for everyone together. a phone holds one per contact address,
@@ -140,6 +160,10 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 		maxConns: maxConns,
 		stored:   newBucket(float64(storedPerMin)/60, float64(storedPerMin)*4),
 		dataDir:  dataDir,
+		pages:    newPageBudget(maxPagesBytes),
+		reads:    newPageBudget(maxReadsBytes),
+		inMem:    map[*pageInMemory]struct{}{},
+		cutAfter: pageCutAfter,
 	}
 	relay.MaxMessageSize = maxMessage
 	relay.WriteWait = writeWait
@@ -154,7 +178,7 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 	relay.RejectFilter = append(relay.RejectFilter, l.filter)
 	relay.RejectCountFilter = append(relay.RejectCountFilter, l.filter)
 	for i, q := range relay.QueryEvents {
-		relay.QueryEvents[i] = noDeletionLookups(q)
+		relay.QueryEvents[i] = noDeletionLookups(l.paged(q))
 	}
 	if dataDir != "" {
 		go l.watchDisk(dataDir)
@@ -164,16 +188,26 @@ func applyLimits(relay *khatru.Relay, dataDir string) *limits {
 
 type queryFunc = func(context.Context, nostr.Filter) (chan *nostr.Event, error)
 
-var errNoDeletion = errors.New("this relay deletes nothing on request")
+var (
+	errNoDeletion = errors.New("this relay deletes nothing on request")
+	errNotOpen    = errors.New("this connection is not open")
+)
 
 // khatru looks up a kind 5's targets before any reject hook runs. this relay
 // keeps wraps until they expire, so those lookups never reach the store and
 // the event then meets l.event like any other. khatru's expiry checks have
-// no connection and pass.
+// no connection and pass. before it saves an event khatru also asks for a
+// kind 5 naming it. the store never holds one, so that is answered here
+// without a store connection or a page.
 func noDeletionLookups(q queryFunc) queryFunc {
 	return func(ctx context.Context, f nostr.Filter) (chan *nostr.Event, error) {
 		if khatru.IsInternalCall(ctx) && khatru.GetConnection(ctx) != nil {
 			return nil, errNoDeletion
+		}
+		if len(f.Kinds) == 1 && f.Kinds[0] == 5 {
+			ch := make(chan *nostr.Event)
+			close(ch)
+			return ch, nil
 		}
 		return q(ctx, f)
 	}
@@ -191,7 +225,13 @@ func (l *limits) connect(ctx context.Context) {
 		return
 	}
 	l.mu.Lock()
-	l.conns[ws] = &budget{newBucket(eventsPerSec, eventBurst), newBucket(reqsPerSec, reqBurst), newBucket(knocksPerSec, knockBurst), newBucket(regsPerSec, regBurst)}
+	l.conns[ws] = &budget{
+		events: newBucket(eventsPerSec, eventBurst),
+		reqs:   newBucket(reqsPerSec, reqBurst),
+		knocks: newBucket(knocksPerSec, knockBurst),
+		regs:   newBucket(regsPerSec, regBurst),
+		page:   make(chan struct{}, 1),
+	}
 	l.mu.Unlock()
 }
 
@@ -271,6 +311,11 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if addrs != 1 {
 		return true, "invalid: a wrap goes to one address"
 	}
+	// one the recipient index would hand every catch-up ("*"): a few
+	// hundred of them would send every catch-up back to the full scan
+	if tags, _ := json.Marshal(ev.Tags); listAs(tags)[0] == anyAddr {
+		return true, "invalid: too many keys in the tags"
+	}
 	now := time.Now()
 	if ev.CreatedAt.Time().After(now.Add(futureSlack)) {
 		return true, "invalid: created_at is in the future"
@@ -278,7 +323,7 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if ev.CreatedAt.Time().Before(now.Add(-wrapTTL)) {
 		return true, "invalid: older than this relay keeps"
 	}
-	if l.diskLow.Load() {
+	if l.diskLow.Load() || (isBig(ev) && l.diskTight.Load()) {
 		return true, "error: the relay is full, try later"
 	}
 	size := storedSize(ev)
@@ -288,15 +333,24 @@ func (l *limits) event(ctx context.Context, ev *nostr.Event) (bool, string) {
 	if !ok {
 		return true, "rate-limited: the relay is busy, try later"
 	}
-	l.noteWritten(size + walPages)
+	l.noteWritten(size + walBytes(ev))
 	return false, ""
 }
 
 // the tags are stored as the json the store writes for them, escapes and
-// all
+// all, and the wrap's rows in the recipient index with them
 func storedSize(ev *nostr.Event) int {
 	tags, _ := json.Marshal(ev.Tags)
-	return rowOverhead + len(ev.Content) + len(tags)
+	return rowOverhead + len(ev.Content) + len(tags) + indexRowBytes*len(listAs(tags))
+}
+
+// what a save writes to the wal beside the wrap: the table's page, one
+// per index, two per row in the recipient index and room for a split,
+// 4 kB each. counted toward the recheck, so the floor holds while a long
+// read keeps the wal full
+func walBytes(ev *nostr.Event) int {
+	tags, _ := json.Marshal(ev.Tags)
+	return (1 + 5 + 2*len(listAs(tags)) + 2) << 12
 }
 
 func (l *limits) noteWritten(n int) {
@@ -304,7 +358,13 @@ func (l *limits) noteWritten(n int) {
 		return
 	}
 	l.written.Store(0)
-	l.diskLow.Store(freeBytes(l.dataDir) < minFreeBytes)
+	l.readDisk(l.dataDir)
+}
+
+func (l *limits) readDisk(dir string) {
+	free := freeBytes(dir)
+	l.diskLow.Store(free < minFreeBytes)
+	l.diskTight.Store(free < minFreeBigBytes)
 }
 
 // khatru answers a limit 0 req with a live subscription and never runs
@@ -330,14 +390,21 @@ func (l *limits) filter(ctx context.Context, f nostr.Filter) (bool, string) {
 	return false, ""
 }
 
-// by id alone (the liveness probe of older builds), or wraps to named
-// addresses
+// by id alone (the liveness probe of older builds), wraps to named
+// addresses, or wraps to named addresses by id
 func filterOK(f nostr.Filter) bool {
 	if f.Search != "" || len(f.Authors) > 0 {
 		return false
 	}
 	if len(f.IDs) > 0 {
-		if len(f.IDs) > maxIDs || len(f.Kinds) > 0 || len(f.Tags) > 0 {
+		most := maxIDs
+		if len(f.Kinds) > 0 || len(f.Tags) > 0 {
+			if !addrsOK(f) {
+				return false
+			}
+			most = maxAddrIDs
+		}
+		if len(f.IDs) > most {
 			return false
 		}
 		for _, id := range f.IDs {
@@ -347,6 +414,11 @@ func filterOK(f nostr.Filter) bool {
 		}
 		return true
 	}
+	return addrsOK(f)
+}
+
+// wraps to at most maxAddrs named addresses, and nothing else
+func addrsOK(f nostr.Filter) bool {
 	if len(f.Kinds) != 1 || f.Kinds[0] != wrapKind || len(f.Tags) != 1 {
 		return false
 	}
@@ -373,7 +445,7 @@ func isKey(s string) bool {
 func (l *limits) watchDisk(dir string) {
 	for {
 		l.written.Store(0)
-		l.diskLow.Store(freeBytes(dir) < minFreeBytes)
+		l.readDisk(dir)
 		time.Sleep(30 * time.Second)
 	}
 }

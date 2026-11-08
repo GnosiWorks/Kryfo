@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'battery_brand.dart';
+import 'desktop/desktop_mode.dart' show onDesktop;
 import 'widgets/confirm_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -43,6 +44,8 @@ Future<bool> openAutostartSettings([PhoneBrand? brand]) async {
 // battery optimization kills background apps, so ask android to exempt us
 // and messages still land while kryfo is closed
 Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
+  // a computer keeps running in its tray: no battery to ask about
+  if (onDesktop) return;
   // these makers need both: their own switch so the system may bring kryfo
   // back, and the battery exemption so it may stay awake once it is back
   final brand = await phoneBrand();
@@ -52,7 +55,7 @@ Future<void> maybeShowBackgroundPrompt(BuildContext context) async {
   }
   final prefs = await SharedPreferences.getInstance();
   if (prefs.getBool(_battPrefKey) ?? false) return;
-  if (await Permission.ignoreBatteryOptimizations.isGranted) {
+  if (await batteryExempt()) {
     await prefs.setBool(_battPrefKey, true);
     return;
   }
@@ -69,13 +72,44 @@ Future<void> forceShowBackgroundPrompt(BuildContext context) async {
     if (context.mounted) await _askBrand(context, brand, guide);
     if (!context.mounted) return;
   }
-  if (await Permission.ignoreBatteryOptimizations.isGranted) {
+  if (await batteryExempt()) {
     if (context.mounted) {
       showHaloToast(context, l10n.miuiAutostartAlreadyAllowedToRun);
     }
     return;
   }
   if (context.mounted) await _askBattery(context);
+}
+
+/// whether android lets kryfo run in the background, for the battery row
+Future<bool> batteryExempt() async {
+  try {
+    return await Permission.ignoreBatteryOptimizations.isGranted;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// the battery row: the exemption asked for, or said to be there already
+Future<void> askBatteryExemption(BuildContext context) async {
+  if (await batteryExempt()) {
+    if (context.mounted) {
+      showHaloToast(context, l10n.miuiAutostartAlreadyAllowedToRun);
+    }
+    return;
+  }
+  if (context.mounted) await _askBattery(context);
+}
+
+/// the phone maker's own switch, or null where the exemption is enough
+Future<BrandGuide?> makerGuide() async => brandGuide(await phoneBrand());
+
+/// the maker's row: its guide, and its settings page
+Future<void> showMakerGuide(BuildContext context) async {
+  final brand = await phoneBrand();
+  final guide = brandGuide(brand);
+  if (guide == null || !context.mounted) return;
+  await _askBrand(context, brand, guide);
 }
 
 Future<void> _askBattery(BuildContext context) async {
@@ -87,7 +121,13 @@ Future<void> _askBattery(BuildContext context) async {
     keep: l10n.commonSkip,
     rose: false,
   );
-  if (ok) await Permission.ignoreBatteryOptimizations.request();
+  if (!ok) return;
+  try {
+    await Permission.ignoreBatteryOptimizations.request();
+  } catch (_) {
+    // a system without the battery page: said once, never asked in a loop
+    if (context.mounted) showHaloToast(context, l10n.homeCouldnTOpenIt);
+  }
 }
 
 Future<void> _maybeAskBrand(

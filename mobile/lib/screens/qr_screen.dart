@@ -7,6 +7,11 @@ import '../theme.dart';
 import '../tools/qr_payload.dart';
 import '../tools/qr_png.dart';
 import '../open_file.dart' show ShareEnd;
+import '../pin_shield.dart';
+import '../desktop/attach_tray.dart' show TrayHandoff;
+import '../desktop/clip_picture.dart' show copyPicture;
+import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../tools/desk_tools.dart';
 import '../tools/tools_bridge.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/motion.dart';
@@ -82,7 +87,7 @@ List<_Kind> get _kinds => [
       'M9 16.5a4 4 0 0 1 6 0',
       'M12 19.6v.1',
     ],
-    l10n.qrMadeOnThisPhone,
+    l10n.qrMadeOnThisPhoneShown,
     [
       _Field('ssid', l10n.qrNetworkName, plain: true),
       _Field('password', l10n.qrPassword, secret: true, plain: true),
@@ -228,7 +233,7 @@ class QrScreen extends StatefulWidget {
   State<QrScreen> createState() => _QrScreenState();
 }
 
-class _QrScreenState extends State<QrScreen> {
+class _QrScreenState extends State<QrScreen> with DeskToolLock {
   final Map<String, TextEditingController> _text = {};
   var _kindId = QrKind.link;
   _Kind get _kind => _kinds.firstWhere((k) => k.kind == _kindId);
@@ -263,7 +268,44 @@ class _QrScreenState extends State<QrScreen> {
     return writeQrPng(png, '${cache.path}/tools_out');
   }
 
+  // a computer: the png stays in memory, and goes only to the place picked,
+  // a chat's row, or the clipboard
+  Future<void> _outDesk(QrGrid g, String how) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    String? said;
+    try {
+      final png = await renderQrPng(g, _inks[_ink].$2, HaloColors.qrPaper);
+      if (png == null) {
+        said = l10n.qrCouldNotDrawThe;
+      } else if (how == 'save') {
+        said = switch (await deskSaveBytes(png, 'qr code.png')) {
+          'saved' => l10n.lockFileSaved,
+          'kept' => null,
+          _ => l10n.qrCouldNotSaveItShown,
+        };
+      } else if (how == 'copy') {
+        said = await copyPicture(png)
+            ? l10n.toolsPictureCopied
+            : l10n.toolsCouldNotCopy;
+      } else if (mounted) {
+        setState(() => _busy = false);
+        await sendToChat(
+          context,
+          TrayHandoff.picture(png, name: 'qr code.png'),
+        );
+        return;
+      }
+    } catch (_) {
+      said = l10n.qrCouldNotDrawThe;
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (said != null) showHaloToast(context, said);
+  }
+
   Future<void> _out(QrGrid g, {required bool save}) async {
+    if (onDesktop) return _outDesk(g, save ? 'save' : 'send');
     if (_busy) return;
     setState(() => _busy = true);
     String? said;
@@ -280,7 +322,7 @@ class _QrScreenState extends State<QrScreen> {
         said = switch (how) {
           'saved' => l10n.qrSavedToYourGallery,
           'kept' => null,
-          _ => l10n.qrCouldNotSaveIt,
+          _ => l10n.qrCouldNotSaveItShown,
         };
       } else {
         final end = await ToolsBridge.instance.shareOut(path, 'image/png');
@@ -501,7 +543,7 @@ class _QrScreenState extends State<QrScreen> {
                                               style: HaloType.mono(
                                                 size: 9.5,
                                                 letter: 0.1,
-                                                color: HaloColors.green,
+                                                color: HaloColors.greenText,
                                               ),
                                             ),
                                           ),
@@ -514,7 +556,9 @@ class _QrScreenState extends State<QrScreen> {
                                 Expanded(
                                   child: ToolWideButton(
                                     icon: _shareIcon,
-                                    label: l10n.commonShare,
+                                    label: canShareOut
+                                        ? l10n.commonShare
+                                        : l10n.toolsSendToAChat,
                                     height: 52,
                                     filled: true,
                                     onTap: ready && !_busy
@@ -536,6 +580,18 @@ class _QrScreenState extends State<QrScreen> {
                                 ),
                               ],
                             ),
+                            if (onDesktop) ...[
+                              const SizedBox(height: 8),
+                              ToolWideButton(
+                                icon: _copyIcon,
+                                label: l10n.toolsCopyPicture,
+                                height: 46,
+                                filled: false,
+                                onTap: ready && !_busy
+                                    ? () => _outDesk(grid, 'copy')
+                                    : null,
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -569,8 +625,8 @@ class _Chip extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          constraints: const BoxConstraints(minHeight: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
             color: on
                 ? HaloColors.amber.withValues(alpha: 0.16)
@@ -620,12 +676,12 @@ class _Pill extends StatelessWidget {
         label: label,
         onTap: onTap,
         scale: 0.96,
-        child: SizedBox(
-          height: 44,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
           child: Center(
             child: Container(
-              height: 32,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              constraints: const BoxConstraints(minHeight: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: on ? HaloColors.amber.withValues(alpha: 0.16) : null,
@@ -817,7 +873,7 @@ class _Input extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -918,5 +974,7 @@ class _Input extends StatelessWidget {
         ),
       ],
     );
+    // a password, and the code that carries it: out of screenshots
+    return field.secret ? PinShieldBox(child: body) : body;
   }
 }

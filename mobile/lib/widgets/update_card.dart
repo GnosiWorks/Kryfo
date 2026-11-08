@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../l10n/app_locale.dart' show currentLanguage;
 import '../l10n/l10n.dart';
 import '../main.dart' show appState;
@@ -205,6 +206,15 @@ class _ArrowPainter extends CustomPainter {
   bool shouldRepaint(_ArrowPainter old) => old.t != t || old.color != color;
 }
 
+/// the download page in a browser, or its link on the clipboard when no
+/// browser takes it
+Future<void> openDownloadPage(BuildContext context) async {
+  final url = updatePageFor(currentLanguage, desktop: onDesktop);
+  if (await openOutside(Uri.parse(url))) return;
+  await Clipboard.setData(ClipboardData(text: url));
+  if (context.mounted) showHaloToast(context, l10n.settingsLinkCopied);
+}
+
 /// the card where the chat list wants it: there while [updateNotice] has a
 /// version to show, and a check asked for whenever tor may have come up
 class UpdateHint extends StatefulWidget {
@@ -245,14 +255,6 @@ class _UpdateHintState extends State<UpdateHint> with WidgetsBindingObserver {
 
   void _poke() => unawaited(_n.check());
 
-  Future<void> _open() async {
-    final url = downloadPageFor(currentLanguage);
-    if (await openOutside(Uri.parse(url))) return;
-    // no browser took it: the link goes on the clipboard instead
-    await Clipboard.setData(ClipboardData(text: url));
-    if (mounted) showHaloToast(context, l10n.settingsLinkCopied);
-  }
-
   @override
   Widget build(BuildContext context) {
     final v = _n.shown;
@@ -263,7 +265,7 @@ class _UpdateHintState extends State<UpdateHint> with WidgetsBindingObserver {
           : UpdateCard(
               key: ValueKey('update-$v'),
               version: v,
-              onOpen: _open,
+              onOpen: () => openDownloadPage(context),
               onDismiss: _n.dismiss,
             ),
     );

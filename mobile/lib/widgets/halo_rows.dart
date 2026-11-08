@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 import 'halo_switch.dart';
+import 'motion.dart' show motionStill;
 import 'swap.dart';
 
 // a section's title, the same on every settings page and sheet. it brings
@@ -85,6 +86,11 @@ class HaloRow extends StatelessWidget {
   final String? value;
   // one plain line under the label saying what the switch does
   final String? hint;
+  // the hint's colour: the text colour unless a page asks for another
+  final Color? hintColor;
+  // a line under the hint while the setting does nothing where the phone
+  // is now, as off the route it needs
+  final String? note;
   final VoidCallback? onTap;
   final IconData? icon;
   // drawn in the tile in place of the icon
@@ -93,19 +99,26 @@ class HaloRow extends StatelessWidget {
   // an on or off setting: a switch stands in for the value and the chevron
   final bool? toggled;
   // the saved value is still being read: the switch's place is kept empty
-  // and it fades in where it belongs, never sliding from a default
+  // and it fades in where it belongs, never sliding from a default. a value
+  // given meanwhile holds the place unseen, so nothing moves when the real
+  // one fades in
   final bool pending;
+  // what a screen reader says a tap does, when the label alone does not
+  final String? tapHint;
   const HaloRow({
     super.key,
     required this.label,
     this.value,
     this.hint,
+    this.hintColor,
+    this.note,
     this.onTap,
     this.icon,
     this.mark,
     this.rose = false,
     this.toggled,
     this.pending = false,
+    this.tapHint,
   });
 
   @override
@@ -116,14 +129,14 @@ class HaloRow extends StatelessWidget {
     final on = toggled;
     final v = on != null ? '' : value ?? '';
     final scaler = MediaQuery.textScalerOf(context);
-    final valueStyle = HaloType.sans(size: 13, color: HaloColors.text2);
+    final valueStyle = HaloType.sans(size: 13, color: HaloColors.text);
     final stacked =
         v.length > 16 ||
         scaler.scale(14) > 19 ||
         (v.isNotEmpty &&
             _width(v, valueStyle, scaler, Directionality.of(context)) >
                 MediaQuery.sizeOf(context).width * 0.35);
-    final fg = rose ? HaloColors.rose : HaloColors.text;
+    final fg = rose ? HaloColors.roseText : HaloColors.text;
     final tile = rose
         ? HaloColors.rose.withValues(alpha: 0.12)
         : HaloColors.amberSoft;
@@ -165,8 +178,23 @@ class HaloRow extends StatelessWidget {
                         hint!,
                         style: HaloType.sans(
                           size: 12.5,
-                          color: HaloColors.text2,
+                          color: hintColor ?? HaloColors.text,
                           height: 1.35,
+                        ),
+                      ),
+                    ),
+                  if (note != null)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        top: 4,
+                        end: 10,
+                      ),
+                      child: Text(
+                        note!,
+                        style: HaloType.sans(
+                          size: 12,
+                          color: HaloColors.text,
+                          height: 1.3,
                         ),
                       ),
                     ),
@@ -176,14 +204,14 @@ class HaloRow extends StatelessWidget {
                         top: 4,
                         end: 10,
                       ),
-                      child: Text(v, style: valueStyle),
+                      child: _shown(context, Text(v, style: valueStyle)),
                     ),
                 ],
               ),
             ),
             if (v.isNotEmpty && !stacked) ...[
               const SizedBox(width: 8),
-              Text(v, style: valueStyle),
+              _shown(context, Text(v, style: valueStyle)),
             ],
             if (on != null) ...[
               const SizedBox(width: 10),
@@ -214,9 +242,25 @@ class HaloRow extends StatelessWidget {
         ),
       ),
     );
-    if (on == null) return row;
-    return Semantics(toggled: on, child: row);
+    if (on == null) {
+      return tapHint == null ? row : Semantics(onTapHint: tapHint, child: row);
+    }
+    return Semantics(toggled: on, onTapHint: tapHint, child: row);
   }
+}
+
+extension on HaloRow {
+  Widget _shown(BuildContext context, Widget value) => ExcludeSemantics(
+    excluding: pending,
+    child: AnimatedOpacity(
+      opacity: pending ? 0 : 1,
+      duration: motionStill(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+      child: value,
+    ),
+  );
 }
 
 double _width(String s, TextStyle style, TextScaler scaler, TextDirection dir) {

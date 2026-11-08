@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // pick a name and members, then create and announce the group
 
+import '../desktop/desktop_mode.dart' show onDesktop;
 import 'package:flutter/material.dart';
-import '../main.dart' show appState, GroupFull;
+import 'package:flutter/services.dart';
+import '../main.dart' show appState, linkedRole, GroupFull, AppStateGroups;
+import '../widgets/confirm_sheet.dart';
+import 'home_screen.dart' show ContactPreview;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/pick_row.dart';
@@ -11,6 +15,35 @@ import '../widgets/motion.dart' show haloRoute;
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../wide/wide_pane.dart';
+
+// a group is made with contacts: someone not blocked to pick
+bool canMakeGroupWith(Iterable<ContactPreview> contacts) =>
+    contacts.any((c) => !c.blocked);
+
+// + New on home. with nobody to pick, a sheet says why and offers to add
+// someone instead; nothing is made on the way
+Future<void> openNewGroup(
+  BuildContext context, {
+  required Future<void> Function() onAdd,
+}) async {
+  // groups are made on the phone a device is linked to
+  if (linkedRole) return;
+  if (canMakeGroupWith(appState.contacts)) {
+    await deskPush(context, haloRoute(const NewGroupScreen()));
+    return;
+  }
+  HapticFeedback.selectionClick();
+  final add = await showConfirmSheet(
+    context,
+    title: l10n.newGroupNeedsContacts,
+    line: l10n.newGroupAddSomeoneFirst,
+    yes: l10n.homeAddSomeone,
+    keep: l10n.homeNotNow,
+    rose: false,
+  );
+  if (add && context.mounted) await onAdd();
+}
 
 class NewGroupScreen extends StatefulWidget {
   const NewGroupScreen({super.key});
@@ -166,6 +199,12 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   controller: _nameCtrl,
                   enableIMEPersonalizedLearning: false,
                   onChanged: (_) => setState(() {}),
+                  // enter makes the group on a computer, once it can be
+                  onSubmitted: onDesktop
+                      ? (_) {
+                          if (_canCreate) _create();
+                        }
+                      : null,
                   style: HaloType.sans(size: 16, color: HaloColors.text),
                   cursorColor: HaloColors.amber,
                   decoration: InputDecoration(
@@ -197,19 +236,23 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                     l10n.newGroupMembers,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       letter: 0.14,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    _selected.isEmpty
-                        ? l10n.newGroupPickAtLeastOne
-                        : l10n.newGroupSelected(_selected.length),
-                    style: HaloType.mono(
-                      size: 10,
-                      color: HaloColors.text2,
-                      letter: 0.14,
+                  const SizedBox(width: 12),
+                  // the count gives way at large text rather than running off
+                  Expanded(
+                    child: Text(
+                      _selected.isEmpty
+                          ? l10n.newGroupPickAtLeastOne
+                          : l10n.newGroupSelected(_selected.length),
+                      textAlign: TextAlign.end,
+                      style: HaloType.mono(
+                        size: 10,
+                        color: HaloColors.text,
+                        letter: 0.14,
+                      ),
                     ),
                   ),
                 ],

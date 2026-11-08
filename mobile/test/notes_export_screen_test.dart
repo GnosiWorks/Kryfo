@@ -35,6 +35,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'host_engine.dart';
 import 'pin_flow_fakes.dart' show phone, press;
+import 'package:kryfo/app_icon.dart' show AppFace, appFaceNow;
 
 class _Db implements HaloDb {
   _Db([this.container = HaloContainer.everyday]);
@@ -66,6 +67,8 @@ void main() {
   // android's copy as a lock finds it, and what it was told
   late String stage;
   late int stopping;
+  // what each save dialog was asked to name the file
+  final names = <String>[];
   late List<Object?> cancels;
   late List<bool> intactAtCancel;
 
@@ -78,6 +81,7 @@ void main() {
     stage = 'idle';
     stopping = 0;
     cancels = [];
+    names.clear();
     intactAtCancel = [];
     String? saving;
     var taken = false;
@@ -95,6 +99,7 @@ void main() {
         case 'saveDocument':
           // what the save window would copy, read as it opens
           final path = (call.arguments as Map)['path'] as String;
+          names.add((call.arguments as Map)['name'] as String);
           saving = path;
           taken = false;
           saved.add(File(path).readAsBytesSync());
@@ -164,12 +169,11 @@ void main() {
     }
   }
 
-  Future<void> until(
-    WidgetTester t,
-    bool Function() done, [
-    int n = 400,
-  ]) async {
-    for (var i = 0; i < n && !done(); i++) {
+  // the file is made by real io, off the test's clock: wait for it as long
+  // as a loaded machine needs, and no longer
+  Future<void> until(WidgetTester t, bool Function() done) async {
+    final w = Stopwatch()..start();
+    while (!done() && w.elapsed < const Duration(seconds: 20)) {
       await beats(t, 1);
     }
   }
@@ -317,6 +321,33 @@ void main() {
     expect(dialogs, hasLength(1));
   }
 
+  // the export's name under each icon: nothing says kryfo unless android
+  // has said kryfo's own icon is on
+  for (final (face, own) in [
+    (AppFace.kryfo, true),
+    (AppFace.tasks, false),
+    (null, false),
+  ]) {
+    testWidgets(
+      'the export\'s name under ${face?.name ?? 'an icon not read'}',
+      (t) async {
+        appFaceNow.value = face;
+        addTearDown(() => appFaceNow.value = null);
+        await plain(t);
+        final name = names.single;
+        if (own) {
+          expect(name, startsWith('kryfo-notes-'));
+        } else {
+          expect(name, startsWith('notes-'));
+          expect(name.toLowerCase(), isNot(contains('kryfo')));
+        }
+        dialogs.single.complete({'state': 'saved', 'where': 'Download'});
+        await until(t, () => screen.evaluate().isEmpty);
+        await t.pumpAndSettle(const Duration(seconds: 5));
+      },
+    );
+  }
+
   testWidgets('saved: a toast, and the file is gone', (t) async {
     await plain(t);
     expect(left(), hasLength(1));
@@ -428,7 +459,7 @@ void main() {
     await page(t);
     await typePass(t, 'four random words here');
     await press(t, find.text(l10n.notesExport));
-    await until(t, () => dialogs.isNotEmpty, 1000);
+    await until(t, () => dialogs.isNotEmpty);
     expect(dialogs, hasLength(1));
     final waiting = left();
     expect(waiting, hasLength(1));
@@ -453,6 +484,17 @@ void main() {
     expect(left(), isEmpty);
   }, skip: !engine);
 
+  // no export is still being made when the test ends: one left running
+  // lives on in this test's clock, and the next test's drop would wait on
+  // it for good. a drop answers once none is
+  Future<void> drained(WidgetTester t) async {
+    var done = false;
+    unawaited(dropNotesExports(tmp).then((_) => done = true));
+    await until(t, () => done);
+    expect(done, isTrue);
+    expect(left(), isEmpty);
+  }
+
   // a lock or a switch to another pin takes the page while the file is
   // made: nothing of it stays, and no save window opens
   Future<void> lockMidway(WidgetTester t) async {
@@ -461,12 +503,13 @@ void main() {
     expect(find.text(l10n.notesExportWorking), findsOneWidget);
     renewRootNavigator();
     await t.pump();
-    await until(t, () => left().isEmpty, 1000);
+    await until(t, () => left().isEmpty);
     await beats(t);
     expect(screen, findsNothing);
     expect(left(), isEmpty);
     expect(asked, isNot(contains('saveDocument')));
     await t.pumpAndSettle();
+    await drained(t);
   }
 
   void bigPhoto(_Db into, [int size = 256 << 20]) {
@@ -497,9 +540,10 @@ void main() {
     renewRootNavigator();
     await t.pump();
     await beats(t, 100);
-    await until(t, () => left().isEmpty, 1000);
+    await until(t, () => left().isEmpty);
     expect(left(), isEmpty);
     expect(asked, isNot(contains('saveDocument')));
+    await drained(t);
   });
 
   testWidgets('a lock while a plain zip is made leaves nothing', (t) async {
@@ -521,11 +565,11 @@ void main() {
     lockState.lock();
     expect(lockState.locked, isTrue);
     var dropped = false;
-    final watch = Stopwatch()..start();
+    // that the making stops at once, a piece and no more, is counted in
+    // notes_export_test: the clock here only waits
     unawaited(dropNotesExports(tmp).then((_) => dropped = true));
-    await until(t, () => dropped, 250);
+    await until(t, () => dropped);
     expect(dropped, isTrue);
-    expect(watch.elapsed, lessThan(const Duration(seconds: 3)));
     expect(left(), isEmpty);
     lockState.openForTest(enabled: true);
     lockGuard.lifted();
@@ -749,7 +793,7 @@ void main() {
     await page(t);
     await typePass(t, 'four random words here');
     await press(t, find.text(l10n.notesExport));
-    await until(t, () => dialogs.isNotEmpty, 1000);
+    await until(t, () => dialogs.isNotEmpty);
     final head = String.fromCharCodes(saved.single.take(200));
     dialogs.single.complete({'state': 'saved'});
     await until(t, () => screen.evaluate().isEmpty);

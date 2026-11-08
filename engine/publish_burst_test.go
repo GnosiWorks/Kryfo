@@ -109,7 +109,7 @@ func measureBurst(t *testing.T, run burstRun) burstResult {
 				}
 				// dart tries a slice again when it fails
 				for attempt := 0; attempt < 3; attempt++ {
-					if nostrSend(peerHex, msg) == "ok" {
+					if nostrSend(mainIdent, peerHex, msg) == "ok" {
 						break
 					}
 					atomic.AddInt32(&failures, 1)
@@ -146,7 +146,7 @@ func measureBurst(t *testing.T, run burstRun) burstResult {
 		res.sockets += len(r.snapshot())
 	}
 	res.streams = socks.count()
-	gw, err := nip17Wrap(peer.pub, msg)
+	gw, err := nip17WrapAs(testMain(), peer.pub, msg)
 	if err == nil {
 		res.wrapB = len(gw.String())
 	}

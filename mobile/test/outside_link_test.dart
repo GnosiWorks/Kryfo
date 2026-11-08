@@ -6,18 +6,19 @@
 // an introduction or a group gave someone here, never checked, go on to the
 // door, which asks which one keeps them. the door the link
 // would go through is a stand-in that counts its calls
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
-import 'package:kryfo/main.dart' show LinkKin, rootNavKey;
+import 'package:kryfo/devices/device_state.dart' show linkedDevicesForTest;
+import 'package:kryfo/main.dart' show LinkKin, linkedRoleForTest, rootNavKey;
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/kryfo_link_text.dart';
+
+import 'source_body.dart';
 
 const _invite =
     'kryfo://share?id=tourist-admit-sun&onion=abcdefghijklmnop.onion'
@@ -111,6 +112,29 @@ class _World {
 }
 
 void main() {
+  // invites and rooms are the phone's: a linked device takes neither, asks
+  // nothing and says where they open
+  testWidgets('a linked device sends an invite or a room to its phone', (
+    t,
+  ) async {
+    linkedDevicesForTest = true;
+    linkedRoleForTest = true;
+    addTearDown(() {
+      linkedRoleForTest = false;
+      linkedDevicesForTest = false;
+    });
+    final w = _World();
+    await w.start(t);
+    for (final link in [_invite, _room()]) {
+      await w.open(t, link);
+      expect(w.finished, isTrue);
+      expect(w.result, l10n.linkedLinkOnPhone);
+    }
+    expect(w.door.taken, isEmpty);
+    expect(w.kinAsked, isEmpty);
+    expect(find.text(l10n.kryfoLinkTextAddThem), findsNothing);
+  });
+
   testWidgets('an invite from outside asks first, and a no adds no one', (
     t,
   ) async {
@@ -236,7 +260,7 @@ void main() {
   });
 
   test('every link from outside goes through the question', () {
-    final app = File('lib/app/state.dart').readAsStringSync();
+    final app = sourceOf('lib/app/state.dart');
     final stream = RegExp(
       r'uriLinkStream\.listen\(\(uri\) async \{([\s\S]*?)\n    \}\);',
     ).firstMatch(app)?.group(1);

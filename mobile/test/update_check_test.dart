@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the update check: who gets it, what it accepts, how often it asks, and
-// that it asks nothing with the switch off, in a decoy or without tor
+// that it asks nothing with the switch off, in a decoy or without tor, and
+// that a decoy shows the card the everyday side fetched, as an install would
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/app_version.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
 import 'package:kryfo/update_check.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -157,6 +160,12 @@ void main() {
       expect(downloadPageFor('de'), 'https://kryfo.app/de/download');
       expect(downloadPageFor('zh_Hant'), 'https://kryfo.app/zh-hant/download');
       expect(downloadPageFor('xx'), 'https://kryfo.app/download');
+      // an update on a computer lands on the page's computer block
+      expect(
+        updatePageFor('de', desktop: true),
+        'https://kryfo.app/de/download#computer',
+      );
+      expect(updatePageFor('de', desktop: false), downloadPageFor('de'));
     });
   });
 
@@ -209,6 +218,7 @@ void main() {
       install: () async => InstallInfo(installer: installer, version: running),
       now: () => now,
       pause: pause ?? () async {},
+      stall: () async {},
       pubKeyB64: s.pub,
     );
 
@@ -371,7 +381,10 @@ void main() {
       expect(asked, isEmpty);
     });
 
-    test('no request in a decoy, and no card there', () async {
+    // until 2026-11 the decoy showed no card at all, while the everyday app on
+    // the same phone did: a tell. it now shows what the everyday side already
+    // fetched, and still never asks
+    test('no request in a decoy, but the same card there', () async {
       final n = make();
       await n.check();
       expect(n.shown, '0.5.1');
@@ -381,7 +394,53 @@ void main() {
       now = now.add(const Duration(days: 2));
       expect(await n.check(), isFalse);
       expect(asked, isEmpty);
+      expect(n.shown, '0.5.1');
+      // a cold start straight into the decoy reads it too, still asking nothing
+      final cold = make();
+      expect(await cold.check(), isFalse);
+      expect(asked, isEmpty);
+      expect(cold.shown, '0.5.1');
+    });
+
+    test('a dismissal stays in the identity that made it', () async {
+      final n = make();
+      await n.check();
+      // dismissed in the decoy: the everyday card stays
+      quiet = true;
+      c = HaloContainer.decoy;
+      await n.dismiss();
       expect(n.shown, isNull);
+      quiet = false;
+      c = HaloContainer.everyday;
+      expect(n.shown, '0.5.1');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('kryfo.update.dismissed'), isNull);
+      // dismissed here: the decoy's card stays
+      await n.dismiss();
+      expect(n.shown, isNull);
+      expect(prefs.getString('kryfo.update.dismissed'), '0.5.1');
+      SharedPreferences.setMockInitialValues({
+        'kryfo.update.latest': '0.5.1',
+        'kryfo.update.dismissed': '0.5.1',
+      });
+      quiet = true;
+      c = HaloContainer.decoy;
+      final fresh = make();
+      await fresh.ready();
+      expect(fresh.shown, '0.5.1');
+      // and the decoy writes nothing the everyday side reads
+      final before = Map.of({
+        for (final k in (await SharedPreferences.getInstance()).getKeys())
+          k: (await SharedPreferences.getInstance()).get(k),
+      });
+      now = now.add(const Duration(days: 3));
+      await fresh.check();
+      await fresh.dismiss();
+      final after = await SharedPreferences.getInstance();
+      for (final k in after.getKeys()) {
+        if (k.startsWith('d.')) continue;
+        expect(after.get(k), before[k], reason: k);
+      }
     });
 
     test('the decoy has a switch of its own', () async {
@@ -445,6 +504,95 @@ void main() {
       final updated = make(running: '0.5.1');
       await updated.ready();
       expect(updated.shown, isNull);
+    });
+
+    // before 0.6 a computer asked android's installer channel, got nothing,
+    // had no version and so never checked at all
+    test('a computer checks, with its own version and no installer', () async {
+      onDesktop = true;
+      addTearDown(() => onDesktop = false);
+      final n = UpdateNotice(
+        get: (url) async {
+          asked.add(url);
+          final body = _file('9.0.0');
+          return url == kVersionUrl ? body : s.sign(body);
+        },
+        torUp: () => tor,
+        quiet: () => quiet,
+        container: () => c,
+        playBuild: false,
+        now: () => now,
+        pause: () async {},
+        pubKeyB64: s.pub,
+      );
+      await n.ready();
+      expect(n.eligible, isTrue);
+      expect(await n.check(), isTrue);
+      expect(asked, [kVersionUrl, kVersionSigUrl]);
+      expect(n.shown, '9.0.0');
+      expect(parseVersion(kAppVersion), isNotNull);
+    });
+
+    group('check by hand', () {
+      test('a newer signed version: ready', () async {
+        final n = make();
+        expect(await n.checkNow(), UpdateAnswer.ready);
+        expect(asked, [kVersionUrl, kVersionSigUrl]);
+        expect(n.latest, '0.5.1');
+        expect(n.shown, '0.5.1');
+      });
+
+      test('the same version: the newest', () async {
+        served = '0.5.0';
+        expect(await make().checkNow(), UpdateAnswer.newest);
+      });
+
+      test('no tor, no answer or a bad signature: could not check', () async {
+        tor = false;
+        expect(await make().checkNow(), UpdateAnswer.failed);
+        expect(asked, isEmpty);
+        tor = true;
+        final dead = make(answer: (_) => 'error: get: tor circuit failed');
+        expect(await dead.checkNow(), UpdateAnswer.failed);
+        final other = _Signer();
+        final forged = make(
+          answer: (url) =>
+              url == kVersionUrl ? _file('9.9.9') : other.sign(_file('9.9.9')),
+        );
+        expect(await forged.checkNow(), UpdateAnswer.failed);
+        expect(forged.latest, isNull);
+        expect(forged.shown, isNull);
+      });
+
+      test('asks at once, past the day and the switch', () async {
+        final n = make(pause: () => Completer<void>().future);
+        await n.setOn(false);
+        expect(await n.checkNow(), UpdateAnswer.ready);
+        expect(await n.checkNow(), UpdateAnswer.ready);
+        expect(asked, hasLength(4));
+        // and it counts as the day's check
+        await n.setOn(true);
+        expect(await n.check(), isFalse);
+        expect(asked, hasLength(4));
+      });
+
+      test('a decoy asks nothing and answers from what was fetched', () async {
+        quiet = true;
+        c = HaloContainer.decoy;
+        expect(await make().checkNow(), UpdateAnswer.failed);
+        SharedPreferences.setMockInitialValues({
+          'kryfo.update.latest': '0.5.1',
+        });
+        expect(await make().checkNow(), UpdateAnswer.ready);
+        expect(await make(running: '0.5.1').checkNow(), UpdateAnswer.newest);
+        expect(asked, isEmpty);
+      });
+
+      test('an f-droid copy never asks', () async {
+        final f = make(installer: 'org.fdroid.fdroid');
+        expect(await f.checkNow(), UpdateAnswer.failed);
+        expect(asked, isEmpty);
+      });
     });
   });
 }

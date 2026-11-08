@@ -8,7 +8,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloDb,
+        HaloEngine,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/media_resend.dart' show kNeedQuietMs;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
@@ -59,6 +67,12 @@ class _Rows extends HaloDb {
   }
 
   @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) {
+    reads.add('messageExists');
+    return super.messageFrom(msgUid, sender, group);
+  }
+
+  @override
   Future<Set<int>> heldSlices(String mediaId) {
     reads.add('heldSlices');
     return super.heldSlices(mediaId);
@@ -71,10 +85,10 @@ class _Wire extends ArrivalIo {
   final out = <String>[];
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     out.add(cipher);
     await hold?.future;
-    return super.relaySend(xPub, cipher);
+    return super.relaySend(ident, xPub, cipher);
   }
 }
 

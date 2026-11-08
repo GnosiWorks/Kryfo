@@ -10,7 +10,11 @@ import 'package:path_provider/path_provider.dart';
 import '../meta/meta_reader.dart';
 import '../shred.dart';
 import '../theme.dart';
+import '../desktop/attach_tray.dart' show TrayHandoff;
+import '../desktop/clip_picture.dart' show copyPicture;
+import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
 import '../tools/cleaner.dart';
+import '../tools/desk_tools.dart';
 import '../open_file.dart' show ShareEnd;
 import '../tools/tools_bridge.dart';
 import '../widgets/ease_size.dart';
@@ -29,6 +33,10 @@ const _share = [
   'M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5',
 ];
 const _down = ['M12 4v11', 'M8 11l4 4 4-4', 'M5 19h14'];
+const _copy = [
+  'M9 9h9.5a1.5 1.5 0 0 1 1.5 1.5V20a1.5 1.5 0 0 1-1.5 1.5H9A1.5 1.5 0 0 1 7.5 20v-9.5A1.5 1.5 0 0 1 9 9z',
+  'M4.5 15V5A1.5 1.5 0 0 1 6 3.5h10',
+];
 const _trash = [
   'M5 7h14',
   'M9 7V5h6v2',
@@ -38,24 +46,37 @@ const _pin = ['M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z'];
 const _note = ['M12 6.5v7', 'M12 17v.5'];
 const _tick = ['M5 12.5l4.5 4.5L19 7.5'];
 
-String failureTitle(Object f) => switch (f) {
+// what the phone draws again as a jpeg (picture_convert) and a computer
+// cannot yet: said plainly, the picture as it was
+const _drawnOnPhone = {
+  CleanFailure.motion,
+  CleanFailure.unreadable,
+  CleanFailure.notClean,
+};
+
+bool _notYetHere(Object f, bool video) =>
+    onDesktop && !video && _drawnOnPhone.contains(f);
+
+String failureTitle(Object f, {bool video = false}) => switch (f) {
+  _ when _notYetHere(f, video) => l10n.cleanNotYetHere,
   CleanFailure.unknownKind => l10n.cleanKryfoCanTClean,
   CleanFailure.motion => l10n.cleanThisIsAMotion,
   CleanFailure.tooLarge => l10n.cleanThisPictureIsToo,
   CleanFailure.unreadable => l10n.cleanThisFileIsDamaged,
   CleanFailure.notClean => l10n.cleanKryfoCouldNotMake,
-  CleanFailure.disk || 'full' => l10n.cleanNotEnoughRoomOn,
+  CleanFailure.disk || 'full' => l10n.cleanNotEnoughRoomOnShown,
   _ => l10n.cleanKryfoCouldNotOpen,
 };
 
-String failureBody(Object f) => switch (f) {
+String failureBody(Object f, {bool video = false}) => switch (f) {
+  _ when _notYetHere(f, video) => l10n.cleanNotYetHereLine,
   CleanFailure.unknownKind => l10n.cleanItCleansJpegPng,
   CleanFailure.motion => l10n.cleanItHoldsAShort,
-  CleanFailure.tooLarge => l10n.cleanPicturesOver64Mb,
+  CleanFailure.tooLarge => l10n.cleanPicturesOver64MbShown,
   CleanFailure.unreadable => l10n.cleanKryfoCouldNotRead,
   CleanFailure.notClean => l10n.cleanSomethingInsideIsOf,
   CleanFailure.disk || 'full' => l10n.cleanFreeSomeSpaceAnd,
-  _ => l10n.cleanTheAppThatShared,
+  _ => l10n.cleanTheAppThatSharedShown,
 };
 
 class CleanScreen extends StatefulWidget {
@@ -68,13 +89,16 @@ class CleanScreen extends StatefulWidget {
 }
 
 class _CleanScreenState extends State<CleanScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, DeskToolLock {
   // made with the page, so a page left before a result has one to dispose
   late final AnimationController _reveal;
   StreamSubscription<CopyProgress>? _sub;
   CopyProgress? _progress;
   CleanResult? _result;
   Object? _failure;
+  bool _video = false;
+  // the cleaner's own copy, in kryfo's tmp
+  String? _made;
   late bool _copying = widget.localPath == null;
   bool _busy = false;
   bool _gone = false;
@@ -102,6 +126,10 @@ class _CleanScreenState extends State<CleanScreen>
   @override
   void dispose() {
     _gone = true;
+    // a computer has no sweep of the tools' leftovers: the clean copy goes
+    // with the page
+    final made = _made;
+    if (onDesktop && made != null) dropToolsFolder(made);
     if (_copying) ToolsBridge.instance.cancelCopy();
     _sub?.cancel();
     _reveal.dispose();
@@ -122,10 +150,15 @@ class _CleanScreenState extends State<CleanScreen>
         '${cache.path}/tools_out',
         originalName: widget.file.name,
       );
-      if (_gone) return;
+      _made = r.path;
+      if (_gone) {
+        if (onDesktop && r.path != null) dropToolsFolder(r.path!);
+        return;
+      }
       setState(() {
         _result = r.failure == null ? r : null;
         _failure = r.failure;
+        _video = r.before.kind == MetaKind.mp4;
       });
       if (r.failure == null) {
         if (_still) {
@@ -151,7 +184,8 @@ class _CleanScreenState extends State<CleanScreen>
         _failure = 'read';
       });
     } finally {
-      if (inPath != null) {
+      // the person's own file is only read
+      if (inPath != null && !widget.file.inPlace) {
         try {
           await shredTree(File(inPath).parent.path);
         } on FileSystemException {
@@ -184,7 +218,7 @@ class _CleanScreenState extends State<CleanScreen>
     setState(() => _busy = false);
     if (how == 'kept') return;
     if (how != 'saved') {
-      _say(l10n.cleanCouldNotSaveIt);
+      _say(l10n.cleanCouldNotSaveItShown);
       return;
     }
     final outcome = await showHaloSheet<String>(
@@ -198,6 +232,43 @@ class _CleanScreenState extends State<CleanScreen>
     if (outcome == 'failed') {
       _say(l10n.cleanAndroidWouldNotDelete);
     }
+  }
+
+  // a computer: the chat picked stages it, nothing goes until enter. a
+  // picture goes as its bytes under the clean name, a video as the file
+  // picked, which the send cleans again the same way
+  Future<void> _sendIt() async {
+    final r = _result;
+    if (r == null || _busy) return;
+    final TrayHandoff what;
+    if (_video) {
+      what = TrayHandoff.file(widget.file.inPlace ? widget.file.uri : r.path!);
+    } else {
+      try {
+        what = TrayHandoff.picture(
+          await File(r.path!).readAsBytes(),
+          name: r.name!,
+        );
+      } on FileSystemException {
+        if (mounted) _say(l10n.chatCouldNotReadThat);
+        return;
+      }
+    }
+    if (!mounted) return;
+    await sendToChat(context, what);
+  }
+
+  Future<void> _copyIt() async {
+    final r = _result;
+    if (r == null || _busy) return;
+    setState(() => _busy = true);
+    var ok = false;
+    try {
+      ok = await copyPicture(await File(r.path!).readAsBytes());
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _busy = false);
+    _say(ok ? l10n.toolsPictureCopied : l10n.toolsCouldNotCopy);
   }
 
   // the house toast, as the other tools say things
@@ -225,7 +296,7 @@ class _CleanScreenState extends State<CleanScreen>
                         : 'done',
                   ),
                   child: _failure != null
-                      ? _Failed(failure: _failure!)
+                      ? _Failed(failure: _failure!, video: _video)
                       : r == null
                       ? _Working(
                           copying: _copying,
@@ -270,17 +341,29 @@ class _CleanScreenState extends State<CleanScreen>
               children: [
                 ToolWideButton(
                   icon: _share,
-                  label: l10n.cleanShareCleanCopy,
+                  label: canShareOut
+                      ? l10n.cleanShareCleanCopy
+                      : l10n.toolsSendToAChat,
                   filled: true,
-                  onTap: _busy ? null : _shareIt,
+                  onTap: _busy ? null : (canShareOut ? _shareIt : _sendIt),
                 ),
                 const SizedBox(height: 10),
                 ToolWideButton(
                   icon: _down,
-                  label: l10n.cleanSaveToGallery,
+                  label: l10n.cleanSaveToGalleryShown,
                   filled: false,
                   onTap: _busy ? null : _saveIt,
                 ),
+                // a picture's result on a computer, never a video's
+                if (onDesktop && !_video) ...[
+                  const SizedBox(height: 10),
+                  ToolWideButton(
+                    icon: _copy,
+                    label: l10n.toolsCopyPicture,
+                    filled: false,
+                    onTap: _busy ? null : _copyIt,
+                  ),
+                ],
               ],
             ),
           )
@@ -336,11 +419,11 @@ class _Working extends StatelessWidget {
             Text(
               copying && total > 0
                   ? l10n.cleanOf(prettySize(done), prettySize(total))
-                  : l10n.cleanEverythingStaysOnThis,
+                  : l10n.cleanEverythingStaysOnThisShown,
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
-            HaloBar(value: frac),
+            HaloBar(value: frac, label: l10n.a11yCleanProgress),
           ],
         ),
       ),
@@ -350,7 +433,8 @@ class _Working extends StatelessWidget {
 
 class _Failed extends StatelessWidget {
   final Object failure;
-  const _Failed({required this.failure});
+  final bool video;
+  const _Failed({required this.failure, this.video = false});
 
   @override
   Widget build(BuildContext context) {
@@ -361,7 +445,7 @@ class _Failed extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              failureTitle(failure),
+              failureTitle(failure, video: video),
               textAlign: TextAlign.center,
               style: HaloType.serif(
                 size: 24,
@@ -371,7 +455,7 @@ class _Failed extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              failureBody(failure),
+              failureBody(failure, video: video),
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 14,
@@ -494,6 +578,10 @@ class _Done extends StatelessWidget {
                                     Text(
                                       video
                                           ? l10n.cleanSameVideoSameQuality
+                                          // without its hdr layer it looks
+                                          // the same only on a plain screen
+                                          : result.before.hdrLayer
+                                          ? l10n.cleanSamePicture
                                           : l10n.cleanSamePictureSameQuality,
                                       style: HaloType.sans(
                                         size: 11.5,
@@ -525,6 +613,19 @@ class _Done extends StatelessWidget {
                           ),
                       ],
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Opacity(
+                opacity: card,
+                child: Text(
+                  l10n.cleanPixelMarksStay,
+                  textAlign: TextAlign.center,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    height: 1.5,
+                    color: HaloColors.warm,
                   ),
                 ),
               ),
@@ -598,7 +699,7 @@ class _RemovedRow extends StatelessWidget {
                 style: HaloType.mono(
                   size: 10.5,
                   letter: 0.08,
-                  color: HaloColors.green,
+                  color: HaloColors.greenText,
                 ),
               ),
             ),
@@ -735,7 +836,7 @@ class _SavedSheetState extends State<_SavedSheet> {
             ),
             const SizedBox(height: 20),
             Text(
-              l10n.cleanSavedToYourGallery,
+              l10n.cleanSavedToYourGalleryShown,
               textAlign: TextAlign.center,
               style: HaloType.serif(size: 23, color: HaloColors.text),
             ),
@@ -783,7 +884,7 @@ class _SavedSheetState extends State<_SavedSheet> {
                             style: HaloType.sans(
                               size: 14.5,
                               weight: FontWeight.w600,
-                              color: HaloColors.rose,
+                              color: HaloColors.roseText,
                             ),
                           ),
                         ),

@@ -127,27 +127,30 @@ func fileGone(path string) bool {
 
 // where a receive address keeps the ids it has seen and how far it got
 func addressFiles(rcvPk string) (seenPath, lastPath string) {
-	if savedDataDir == "" {
+	dir := savedDataDir()
+	if dir == "" {
 		return "", ""
 	}
 	short := rcvPk
 	if len(short) > 16 {
 		short = short[:16]
 	}
-	return savedDataDir + "/nostr_seen_" + short, savedDataDir + "/nostr_last_" + short
+	return dir + "/nostr_seen_" + short, dir + "/nostr_last_" + short
 }
 
 // the files of a receive address, off the disk and never written again by
 // what is still finishing on them
 func dropAddressFiles(rcvPk string) {
 	dropHeard(rcvPk)
+	liveForget(rcvPk)
+	// its batch place stays in the book (batches.go), so it comes back there
 	seenPath, lastPath := addressFiles(rcvPk)
 	if seenPath == "" {
 		return
 	}
 	seenFileMu.Lock()
 	defer seenFileMu.Unlock()
-	for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {
+	for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, storeLastPath(lastPath, storeSecond), heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {
 		goneFiles.Store(p, struct{}{})
 		os.Remove(p)
 	}
@@ -459,6 +462,22 @@ func (s *seenIDs) handed(id nostr.ID) bool {
 	return s.opened.has(id)
 }
 
+// opened here and kept, or still on its way to the app, or left on the relay
+// by it: a copy another of our stores hands over may move that store's
+// anchor too, as the app has the first copy or will
+func (s *seenIDs) taken(id nostr.ID) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.opened.has(id) {
+		return true
+	}
+	if _, ok := s.queued[id]; ok {
+		return true
+	}
+	_, ok := s.held[id]
+	return ok
+}
+
 // an event that did not open: remembered now, it will never be handed over
 func (s *seenIDs) notOpened(id nostr.ID) {
 	s.mu.Lock()
@@ -711,6 +730,8 @@ type inboxDone struct {
 	// 0 when that is not known, and no later than until, 0 when the line
 	// says nothing of it
 	from, until int64
+	// from a public relay of a contact's address: no from on its held line
+	bare bool
 }
 
 // remembers every event of a batch the poll handed over, one write per file

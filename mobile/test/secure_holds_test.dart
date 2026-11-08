@@ -2,12 +2,12 @@
 // the shield is held once per screen that wants it. a room opened over
 // another room lets go of its own hold when it closes, and the room under
 // it stays shielded until it closes too. a lock turned off in the decoy
-// lets the window go as a turn off anywhere does
+// shows the app in recents again as a turn off anywhere does
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/lock_state.dart';
-import 'package:kryfo/main.dart' show AppState;
+import 'package:kryfo/main.dart' show AppState, AppStateScreen;
 import 'package:kryfo/router.dart';
 
 import 'arrival_fakes.dart';
@@ -16,9 +16,18 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late List<bool> told;
+  late List<bool> recents;
+  // calls the window refuses, one each
+  var refuse = 0;
+  var refuseRecents = 0;
 
   setUp(() {
     told = [];
+    recents = [];
+    refuse = 0;
+    refuseRecents = 0;
+    // a lock that was read: nothing is sent before
+    lockState.openForTest();
     FlutterSecureStorage.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
@@ -26,6 +35,17 @@ void main() {
         ) async {
           if (call.method == 'setSecure') {
             told.add((call.arguments as Map)['on'] as bool);
+            if (refuse > 0) {
+              refuse--;
+              throw PlatformException(code: 'refused');
+            }
+          }
+          if (call.method == 'setRecentsHidden') {
+            recents.add((call.arguments as Map)['on'] as bool);
+            if (refuseRecents > 0) {
+              refuseRecents--;
+              throw PlatformException(code: 'refused');
+            }
           }
           return null;
         });
@@ -53,6 +73,40 @@ void main() {
     expect(told, [true, false]);
   });
 
+  test('a block the window refused is asked for once more', () async {
+    final app = await make();
+    refuse = 1;
+    await app.forceSecure(true);
+    expect(told, [true, true]);
+    // refused twice: the next change asks again, never takes it as on
+    await app.forceSecure(false);
+    told.clear();
+    refuse = 2;
+    await app.forceSecure(true);
+    expect(told, [true, true]);
+    await app.forceSecure(true);
+    expect(told, [true, true, true]);
+  });
+
+  test('a recents hide the window refused is asked for once more', () async {
+    lockState.openForTest(enabled: true);
+    addTearDown(lockState.openForTest);
+    var app = await make();
+    refuseRecents = 1;
+    await app.loadScreenSecure();
+    expect(recents, [true, true]);
+    await app.forceSecure(true);
+    expect(recents, [true, true]);
+    // refused twice: the next change asks again
+    recents.clear();
+    app = await make();
+    refuseRecents = 2;
+    await app.loadScreenSecure();
+    expect(recents, [true, true]);
+    await app.forceSecure(true);
+    expect(recents, [true, true, true]);
+  });
+
   test('a release nobody holds takes no one else\'s', () async {
     final app = await make();
     await app.forceSecure(false);
@@ -62,7 +116,7 @@ void main() {
     expect(app.secureForced, isFalse);
   });
 
-  test('a lock turned off in the decoy no longer holds the window', () async {
+  test('a lock turned off in the decoy shows the app in recents', () async {
     lockState.openForTest(enabled: true);
     addTearDown(() {
       lockState.inDecoy = false;
@@ -70,13 +124,66 @@ void main() {
     });
     final app = await make();
     await app.loadScreenSecure();
-    expect(app.screenSecureByLock, isTrue);
-    expect(told.last, isTrue);
+    expect(app.recentsHidden, isTrue);
+    expect(recents.last, isTrue);
+    expect(told.last, isFalse);
     lockState.inDecoy = true;
     await lockState.disable();
     await Future<void>.delayed(Duration.zero);
     // the same as a turn off in the everyday app
-    expect(app.screenSecureByLock, isFalse);
+    expect(app.recentsHidden, isFalse);
+    expect(recents.last, isFalse);
     expect(told.last, isFalse);
+  });
+
+  test('a new screen on the engine gets both again, unchanged', () async {
+    lockState.openForTest(enabled: true);
+    addTearDown(lockState.openForTest);
+    final app = await make();
+    await app.loadScreenSecure();
+    await app.forceSecure(true);
+    expect(told.last, isTrue);
+    expect(recents.last, isTrue);
+    told.clear();
+    recents.clear();
+    // nothing changed on this side, and the new window still hears it
+    await app.windowAttached();
+    expect(told, [true]);
+    expect(recents, [true]);
+    // and only once: the next unchanged value is not sent again
+    await app.forceSecure(true);
+    expect(told, [true]);
+    expect(recents, [true]);
+    await app.forceSecure(false);
+    await app.forceSecure(false);
+    expect(told, [true, false]);
+  });
+
+  test('a new screen that refuses is asked again at the next change', () async {
+    final app = await make();
+    await app.loadScreenSecure();
+    await app.forceSecure(true);
+    told.clear();
+    refuse = 2;
+    await app.windowAttached();
+    expect(told, [true, true]);
+    // never taken as on: the next hold sends it again
+    await app.forceSecure(true);
+    expect(told, [true, true, true]);
+    // and the next screen too
+    await app.windowAttached();
+    expect(told, [true, true, true, true]);
+  });
+
+  test('a screen before the first load sends nothing of its own', () async {
+    lockState.openForTest(enabled: true);
+    addTearDown(lockState.openForTest);
+    final app = await make();
+    await app.windowAttached();
+    expect(told, isEmpty);
+    expect(recents, isEmpty);
+    await app.loadScreenSecure();
+    expect(told, [false]);
+    expect(recents, [true]);
   });
 }

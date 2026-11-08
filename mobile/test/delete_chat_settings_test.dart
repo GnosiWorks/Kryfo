@@ -151,14 +151,13 @@ void main() {
     expect(of('frames_out', _friend), ['r-$_friend', 'c-$_friend']);
   });
 
-  test('a deleted chat leaves no draft behind', () {
-    final key = session.chatKey(_peer);
-    final other = session.chatKey(_friend);
-    draftPerPeer[key] = 'half a thought';
-    draftPerPeer[other] = 'keep me';
-    addTearDown(draftPerPeer.clear);
-    dropChatDraft(_peer);
-    expect(draftPerPeer.containsKey(key), isFalse);
-    expect(draftPerPeer[other], 'keep me');
+  test('a deleted chat leaves no draft behind', () async {
+    final rows = session.draftsOf(_peer);
+    typedDraft(rows, _peer, const Draft('half a thought'), group: false);
+    typedDraft(rows, _friend, const Draft('keep me'), group: false);
+    addTearDown(endProcessForTest);
+    await dropChatDraft(_peer);
+    expect(heldDraft(rows.container, _peer, group: false), isNull);
+    expect(heldDraft(rows.container, _friend, group: false)?.text, 'keep me');
   });
 }

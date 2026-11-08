@@ -23,13 +23,18 @@ import 'package:kryfo/main.dart'
         claimChat,
         kRequestRows,
         releaseChat,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateProfile,
+        AppStateContacts,
+        AppStateDevchat,
+        AppStateReceive,
+        AppStateRefresh,
+        AppStateInvites;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stranger_gate.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show CiphertextMessage, Curve;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart'
     show ConflictAlgorithm, Database;
@@ -52,7 +57,7 @@ String _hex(List<int> b) =>
 
 // the public half the engine gives for a private x25519 key
 String _pubOf(List<int> priv) => _hex(
-  Curve.generateKeyPairFromPrivate(
+  testKeyPairFromPrivate(
     Uint8List.fromList(priv),
   ).publicKey.serialize().sublist(1),
 );
@@ -268,6 +273,17 @@ class _Phone extends HaloDb {
 
 // signal and the engine as the receive side reaches them
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
+  @override
+  Future<String> pinFirst(List<(int, String)> peers) async => 'ok';
+  @override
+  Future<String> firstChats(List<(int, String)> peers) async => 'ok';
   @override
   Future<String?> decryptIf(
     String peer,
@@ -276,15 +292,15 @@ class _Io implements AppIo {
     bool flagKeyChange = false,
   }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   @override
-  Future<String> letHeld(String xPub, String how) async => 'ok';
+  Future<String> letHeld(int ident, String xPub, String how) async => 'ok';
   @override
-  Future<String> markHeld(List<String> xPubs) async => 'ok';
+  Future<String> markHeld(List<(int, String)> peers) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
   Future<void> dropSession(String peer) async => dropped.add(peer);
   @override
-  void unlisten(String xPub) => dropped.add(xPub);
+  void unlisten(int ident, String xPub) => dropped.add(xPub);
   final opens = <String, (String, String)>{};
   ({String haloId, String plain, UnwrappedMessage env})? firstContact;
   final listened = <String>[];
@@ -304,20 +320,31 @@ class _Io implements AppIo {
   @override
   Future<List<String>> sessionAddresses() async => const [];
   @override
+  Future<String?> sessionXPub(String peer) async => null;
+  @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async => firstContact;
   @override
   Future<bool> hasSession(String peer) async => true;
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(int ident, String xPub, {bool fresh = false}) =>
+      listened.add(xPub);
+
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      listen(ident, xPub, fresh: fresh);
   @override
   String edPub() => 'ed-me';
   @override
   String xPub() => 'x-me';
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add(('relay $xPub', cipher));
     return 'ok';
   }
@@ -329,7 +356,12 @@ class _Io implements AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub', cipher));
     return 'ok';
   }
@@ -379,6 +411,7 @@ class _Bell implements SupportBell {
     required String tag,
     required String title,
     required String body,
+    String? msgUid,
   }) async {
     calls.add('chat $chatId $title: $body');
     tags.add(tag);
@@ -431,7 +464,7 @@ class _World {
       ..myId = _me
       ..myXPub = dev
           ? _pubOf(_hisPriv)
-          : _pubOf(Curve.generateKeyPair().privateKey.serialize());
+          : _pubOf(testKeyPair().privateKey.serialize());
     useDatabasesForTest(w.phone, Session(w.phone));
     return w;
   }
@@ -478,7 +511,7 @@ class _World {
   Future<void> firstContact(String id, String plain) async {
     io.firstContact = (haloId: id, plain: plain, env: unwrapMessage(plain));
     await app.receiveOnion([
-      base64Encode([CiphertextMessage.prekeyType, _n++, 7, 7]),
+      base64Encode([kLsPreKey, _n++, 7, 7]),
     ]);
     await _settle();
   }
@@ -498,7 +531,7 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => docs.path,
         );
-    _hisPriv = Curve.generateKeyPair().privateKey.serialize();
+    _hisPriv = testKeyPair().privateKey.serialize();
     _m1 = _key(_pubOf(_hisPriv));
   });
 
@@ -566,7 +599,7 @@ void main() {
       w.app.myXPub = _pubOf(_hisPriv);
       expect(w.app.devMode, isTrue);
       // another key is not, whatever three words the identity has
-      final other = Curve.generateKeyPair().privateKey.serialize();
+      final other = testKeyPair().privateKey.serialize();
       w.app
         ..myId = _words
         ..myXPub = _pubOf(other);
@@ -842,6 +875,76 @@ void main() {
       expect(await w.phone.support.waiting(), 0);
     });
 
+    // what a delete of the dev chat sends: a take-back for each message
+    Future<String> takeBack(String uid) =>
+        wrapMessage('', unsend: uid, supportMarker: kDevSupport);
+
+    test('a chat whose words were all taken back leaves the inbox and its '
+        'count, and comes back with the next message', () async {
+      final w = await _World.make();
+      await w.stranger(_s);
+      await w.onion(_s, await w.frame('one', uid: 's-1'));
+      await w.onion(_s, await w.frame('two', uid: 's-2'));
+      await w.onion(_s, await takeBack('s-1'));
+      expect((await w.phone.support.list()).single.last?['plaintext'], 'two');
+      await w.onion(_s, await takeBack('s-2'));
+      expect(w.phone.msgs(_s), isEmpty);
+      expect(await w.phone.support.list(), isEmpty);
+      expect(await w.phone.support.waiting(), 0);
+      expect(w.app.supportWaiting, 0);
+      await w.onion(_s, await w.frame('three', uid: 's-3'));
+      expect((await w.phone.support.list()).single.last?['plaintext'], 'three');
+      expect(await w.phone.support.waiting(), 1);
+    });
+
+    test('a take-back that comes first, with nothing before it, shows no '
+        'chat', () async {
+      final w = await _World.make();
+      await w.firstContact(_s, await takeBack('never-here'));
+      expect(w.phone.msgs(_s), isEmpty);
+      expect(await w.phone.support.list(), isEmpty);
+      expect(await w.phone.support.waiting(), 0);
+      expect(w.app.supportWaiting, 0);
+    });
+
+    test('a waiting chat with a file still coming, or words the cap holds, '
+        'stays', () async {
+      final w = await _World.make();
+      await w.stranger(_s);
+      await w.stranger(_t);
+      await w.phone.support.file(_s);
+      await w.phone.support.file(_t);
+      await w.phone.mem.insert('media_wants', {
+        'media_id': 'm-1',
+        'peer_id': _s,
+        'total': 4,
+        'can_resend': 1,
+        'last_at': 1,
+      });
+      await w.phone.mem.insert('held_onion', {
+        'peer_id': _t,
+        'cipher': 'c',
+        'at': 1,
+      });
+      expect(
+        {for (final c in await w.phone.support.list()) c.haloId},
+        {_s, _t},
+      );
+      expect(await w.phone.support.waiting(), 2);
+    });
+
+    test('an answered chat stays, whatever is left in it', () async {
+      final w = await _World.make();
+      await w.stranger(_s);
+      await w.onion(_s, await w.frame('one', uid: 's-1'));
+      expect(await w.app.answerSupport(_s), isTrue);
+      await w.onion(_s, await takeBack('s-1'));
+      expect(
+        (await w.phone.support.list()).single.section,
+        SupportSection.answered,
+      );
+    });
+
     test('a table that could not be made reads as none', () async {
       final chats = SupportChats(() async => MemDb(except: {'support_chats'}));
       expect(await chats.ids(), isEmpty);
@@ -954,7 +1057,7 @@ void main() {
       expect(w.phone.row(_r)!['accepted'], 0);
       await w.stranger(_s);
       await w.onion(_s, await w.frame('hi'));
-      w.app.myXPub = _pubOf(Curve.generateKeyPair().privateKey.serialize());
+      w.app.myXPub = _pubOf(testKeyPair().privateKey.serialize());
       expect(await w.app.answerSupport(_s), isFalse);
       expect(w.phone.row(_s)!['accepted'], 0);
     });
@@ -1064,7 +1167,20 @@ void main() {
       // anywhere else it goes on to the invite key, which needs a signal
       // store this test does not have
       final other = await _World.make(dev: false);
+      other.app.signalWait = const Duration(milliseconds: 50);
       await expectLater(other.app.resetInviteAddress(), throwsA(anything));
+    });
+
+    test('before signal is ready waits for it, then throws and moves '
+        'nothing, so no "reset" shows', () async {
+      final w = await _World.make(dev: false);
+      w.app.signalWait = const Duration(milliseconds: 200);
+      final was = w.app.fcCounter;
+      final sw = Stopwatch()..start();
+      await expectLater(w.app.resetInviteAddress(), throwsStateError);
+      expect(sw.elapsedMilliseconds, greaterThanOrEqualTo(200));
+      expect(w.app.fcCounter, was);
+      await expectLater(w.app.resetMyInvite(), throwsStateError);
     });
   });
 
@@ -1447,6 +1563,13 @@ void main() {
             where: 'halo_id = ?',
             whereArgs: [id],
           );
+          await phone.mem.insert('messages', {
+            'peer_id': id,
+            'direction': 'in',
+            'plaintext': 'hi',
+            'sent_at': 1,
+            'msg_uid': 'u-$id',
+          });
           await phone.support.file(id);
           await ring(phone.support, bell, id);
         }
@@ -1509,7 +1632,7 @@ void main() {
     List<String> moding(bool Function(String xPub, String words) mode) {
       final bad = <String>[];
       final his = _pubOf(_hisPriv);
-      final other = _pubOf(Curve.generateKeyPair().privateKey.serialize());
+      final other = _pubOf(testKeyPair().privateKey.serialize());
       if (!mode(his, _me)) bad.add('his own key refused');
       // anyone can grind his three words: they make no developer
       if (mode(other, _words)) bad.add('his words on another key');

@@ -8,17 +8,23 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
+
 import 'album.dart' show AlbumTag;
 import 'container.dart';
 import 'devchat/dev_chat.dart' show DevChat;
 import 'devchat/dev_key.dart' show isDevChat;
 import 'devchat/support.dart' show SupportChats;
+import 'devices/own_sync.dart' show OwnChat, kOwnNotes, ownNoted;
 import 'dlog.dart';
+import 'drafts.dart' show KeptDraft;
 import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend, wallKey;
 import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
 import 'scam_prefs.dart' show loadScamShieldOn;
 import 'search.dart' show SearchKind;
+import 'translate/hub.dart' show TranslationHub;
+import 'translate/settings.dart' show forgetChatTranslate;
 
 class Session {
   Session(this.primary) : vault = null, _people = const {}, _groups = const {};
@@ -50,6 +56,12 @@ class Session {
   final Set<String> _people;
   final Set<String> _groups;
 
+  /// the same databases open as in [at]: no lock, pin or vault change
+  /// came between. [vault] false looks at the primary alone
+  bool holdsSame(Session at, {bool vault = true}) =>
+      identical(primary, at.primary) &&
+      (!vault || identical(this.vault, at.vault));
+
   // settings are the primary's. a chat's folders are its owner's (folderOf)
   HaloContainer get container => primary.container;
 
@@ -67,6 +79,26 @@ class Session {
   // what a chat's draft, read mark and progress are kept under: the
   // container that holds it and its id
   String chatKey(String chatId) => _ofChat(chatId).container.chatKey(chatId);
+
+  // where a chat's draft is kept: the container that holds it, so a hidden
+  // chat's is never written outside the vault
+  HaloDb draftsOf(String chatId) => _ofChat(chatId);
+
+  /// the drafts home shows, newest first: each container's own rows, so a
+  /// chat both hold for a moment shows its owner's
+  Future<List<KeptDraft>> drafts() async {
+    final v = vault;
+    HaloDb owner(KeptDraft d) => d.group ? _ofGroup(d.chat) : _ofPeer(d.chat);
+    List<KeptDraft> own(HaloDb db, List<KeptDraft> all) => [
+      for (final d in all)
+        if (identical(owner(d), db)) d,
+    ];
+    final mine = own(primary, await primary.drafts());
+    if (v == null || !v.isOpen) return mine;
+    final hidden = own(v, await v.drafts());
+    return [...mine, ...hidden]
+      ..sort((a, b) => b.draft.at.compareTo(a.draft.at));
+  }
 
   // the tags a chat's notifications went under, in each container open
   Future<Set<String>> notifTagsOf(String chat) async {
@@ -114,6 +146,16 @@ class Session {
   Future<Directory> folderOf(String chatId, String name) =>
       _ofChat(chatId).container.folder(name);
   Future<Directory> mediaDirOf(String chatId) => folderOf(chatId, 'media');
+
+  // a feature's own small table (translate/settings.dart): its settings in
+  // the primary, a chat's row beside the chat
+  Future<Database> settingsDb() => primary.open();
+  Future<Database> chatDb(String chatId) => _ofChat(chatId).open();
+  // every container open now: the primary, and the vault while it is open
+  Future<List<Database>> openDbs() async => [
+    await primary.open(),
+    if (vault case final v? when v.isOpen) await v.open(),
+  ];
 
   HaloDb _ofPeer(String haloId) {
     final v = vault;
@@ -196,6 +238,22 @@ class Session {
     return out;
   }
 
+  // what the person did on a chat of the everyday side, for my other
+  // devices (own_sync.dart): never a hidden chat's, never the decoy's
+  void _ownTell(HaloDb d, String kind, OwnChat chat, Map<String, Object?> a) {
+    if (!_ownTells(d)) return;
+    ownNoted?.call(kind, chat, a);
+  }
+
+  // whether a doing on [d] is told at all: own sync runs, and [d] is the
+  // everyday container's primary. nothing more is read when it is not
+  bool _ownTells(HaloDb d) =>
+      ownNoted != null &&
+      identical(d, primary) &&
+      primary.container == HaloContainer.everyday;
+
+  static int _now() => DateTime.now().millisecondsSinceEpoch;
+
   // ---- one contact's chat ----
   Future<void> acceptRequest(String haloId) =>
       _ofPeer(haloId).acceptRequest(haloId);
@@ -205,12 +263,20 @@ class Session {
   Future<bool> ackLost(String haloId) => _ofPeer(haloId).ackLost(haloId);
   Future<void> assignUidIfMissing(String peerId, int sentAtMs, String uid) =>
       _ofPeer(peerId).assignUidIfMissing(peerId, sentAtMs, uid);
-  Future<void> clearConversation(String peerId) =>
-      _ofPeer(peerId).clearConversation(peerId);
+  Future<void> clearConversation(String peerId) async {
+    final d = _ofPeer(peerId);
+    await d.clearConversation(peerId);
+    _ownTell(d, 'clear', (id: peerId, group: false), {'t': _now()});
+  }
+
   Future<void> clearKeyChanged(String haloId) =>
       _ofPeer(haloId).clearKeyChanged(haloId);
-  Future<void> clearUnread(String peerId) =>
-      _ofPeer(peerId).clearUnread(peerId);
+  Future<void> clearUnread(String peerId) async {
+    final d = _ofPeer(peerId);
+    await d.clearUnread(peerId);
+    _ownTell(d, 'read', (id: peerId, group: false), {'t': _now()});
+  }
+
   Future<int> countMessagesFrom(String peerId) =>
       _ofPeer(peerId).countMessagesFrom(peerId);
   Future<int> countMessagesTo(String peerId) =>
@@ -219,13 +285,31 @@ class Session {
       _ofPeer(haloId).declineRequest(haloId);
   Future<int> deleteAllOf(String chatId) => _ofPeer(chatId).deleteAllOf(chatId);
 
-  Future<void> deleteConversation(String haloId) =>
-      _ofPeer(haloId).deleteConversation(haloId);
+  /// every note to self, gone: my devices hear the clear (a linked
+  /// device's stays on it, as a chat's does)
+  Future<int> deleteAllNotes() async {
+    final d = _ofPeer(kOwnNotes.id);
+    final n = await d.deleteAllOf(kOwnNotes.id);
+    _ownTell(d, 'clear', kOwnNotes, {'t': _now()});
+    return n;
+  }
+
+  Future<void> deleteConversation(String haloId) async {
+    final db = _ofPeer(haloId);
+    await db.deleteConversation(haloId);
+    // the contact row stays, so its trigger does not take the chat's
+    // translate switch: it goes here, with what else was set for the chat
+    await forgetChatTranslate(db.open, haloId);
+    TranslationHub.instance?.forgetChat(haloId);
+  }
+
   Future<void> dismissShield(String haloId) =>
       _ofPeer(haloId).dismissShield(haloId);
   Future<void> dropHeld(String peerId) => _ofPeer(peerId).dropHeld(peerId);
   Future<int?> firstMessageAt(String peerId) =>
       _ofPeer(peerId).firstMessageAt(peerId);
+  Future<int?> lastHeardAt(String peerId) =>
+      _ofPeer(peerId).lastHeardAt(peerId);
   Future<String?> getAtmosphere(String peerId) =>
       _ofPeer(peerId).getAtmosphere(peerId);
   // a chat's wallpaper, in the container that holds the chat
@@ -278,6 +362,7 @@ class Session {
   Future<bool> isAccepted(String haloId) => _ofPeer(haloId).isAccepted(haloId);
   Future<bool> isBackPaired(String peerId) =>
       _ofPeer(peerId).isBackPaired(peerId);
+  Future<bool> theyAsked(String peerId) => _ofPeer(peerId).theyAsked(peerId);
   Future<bool> isBlocked(String haloId) => _ofPeer(haloId).isBlocked(haloId);
   Future<bool> isMuted(String haloId) => _ofPeer(haloId).isMuted(haloId);
   Future<bool> isVerified(String haloId) => _ofPeer(haloId).isVerified(haloId);
@@ -292,6 +377,10 @@ class Session {
   ) => _ofPeer(peerId).messagesAfter(peerId, afterRowid);
   Future<List<Map<String, Object?>>> messagesFor(String peerId) =>
       _ofPeer(peerId).messagesFor(peerId);
+  Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) =>
+      _ofPeer(peerId).messageIn(peerId, msgUid);
+  Future<Map<String, Object?>?> groupMessageIn(String groupId, String msgUid) =>
+      _ofGroup(groupId).groupMessageIn(groupId, msgUid);
   Future<List<Map<String, Object?>>> messagesPage(
     String peerId, {
     int? beforeRowid,
@@ -347,6 +436,11 @@ class Session {
   Future<String?> heldKey(String haloId) => _ofPeer(haloId).heldKey(haloId);
 
   Future<bool> keyHeld(String haloId) => _ofPeer(haloId).keyHeld(haloId);
+  Future<int?> healHold(String haloId) => _ofPeer(haloId).healHold(haloId);
+  Future<void> releaseHealHold(String haloId) =>
+      _ofPeer(haloId).releaseHealHold(haloId);
+  Future<List<({int at, int kind})>> healLines(String haloId) =>
+      _ofPeer(haloId).healLines(haloId);
 
   // everyone held in either container, for a list
   Future<Set<String>> heldPeers() async => {
@@ -379,10 +473,21 @@ class Session {
   // ---- one group ----
   Future<void> addGroupMember(String groupId, String haloId) =>
       _ofGroup(groupId).addGroupMember(groupId, haloId);
-  Future<void> clearGroupConversation(String groupId, {bool noteGone = true}) =>
-      _ofGroup(groupId).clearGroupConversation(groupId, noteGone: noteGone);
-  Future<void> clearGroupUnread(String groupId) =>
-      _ofGroup(groupId).clearGroupUnread(groupId);
+  Future<void> clearGroupConversation(
+    String groupId, {
+    bool noteGone = true,
+  }) async {
+    final d = _ofGroup(groupId);
+    await d.clearGroupConversation(groupId, noteGone: noteGone);
+    _ownTell(d, 'clear', (id: groupId, group: true), {'t': _now()});
+  }
+
+  Future<void> clearGroupUnread(String groupId) async {
+    final d = _ofGroup(groupId);
+    await d.clearGroupUnread(groupId);
+    _ownTell(d, 'read', (id: groupId, group: true), {'t': _now()});
+  }
+
   Future<void> deleteGroup(String groupId) =>
       _ofGroup(groupId).deleteGroup(groupId);
   Future<Map<String, Object?>?> getGroup(String groupId) =>
@@ -622,7 +727,20 @@ class Session {
   // a send still reading its file stops before the file is scrubbed
   Future<void> deleteMessage(String msgUid) async {
     if (mediaInflight.contains(msgUid)) cancelMediaSend(msgUid);
-    await (await _ofUid(msgUid)).deleteMessage(msgUid);
+    final d = await _ofUid(msgUid);
+    final at = _ownTells(d) ? await d.chatOf(msgUid) : null;
+    await d.deleteMessage(msgUid);
+    if (at != null) {
+      final g = at.$2;
+      _ownTell(
+        d,
+        'del',
+        g != null ? (id: g, group: true) : (id: at.$1, group: false),
+        {
+          'u': [msgUid],
+        },
+      );
+    }
   }
 
   Future<void> editMessage(String msgUid, String newText) async =>
@@ -687,7 +805,16 @@ class Session {
   Future<Map<String, int>> lightReadBurns(
     String chatId,
     List<String> msgUids,
-  ) => _ofChat(chatId).lightReadBurns(msgUids);
+  ) async {
+    final d = _ofChat(chatId);
+    final lit = await d.lightReadBurns(msgUids);
+    if (lit.isNotEmpty && _ownTells(d)) {
+      final group = await d.groupExists(chatId);
+      _ownTell(d, 'lit', (id: chatId, group: group), {'b': lit});
+    }
+    return lit;
+  }
+
   Future<void> setPinned(String msgUid, bool pinned) async =>
       (await _ofUid(msgUid)).setPinned(msgUid, pinned);
   Future<void> setPowNonce(String msgUid, int nonce) async =>

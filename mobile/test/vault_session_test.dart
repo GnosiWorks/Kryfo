@@ -15,8 +15,18 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
-import 'package:kryfo/drafts.dart' show draftPerGroup, draftPerPeer;
+import 'package:kryfo/devices/history_open.dart';
+import 'package:kryfo/drafts.dart'
+    show
+        Draft,
+        endProcessForTest,
+        flushDrafts,
+        heldDraft,
+        kDraftWait,
+        typedDraft;
 import 'package:kryfo/lock_state.dart';
+import 'package:kryfo/theme.dart'
+    show clipGoesWithLock, copySensitive, dropOurClip, ourClipForTest;
 import 'package:kryfo/main.dart'
     show
         AppIo,
@@ -27,10 +37,19 @@ import 'package:kryfo/main.dart'
         searchFill,
         session,
         sessionQuiet,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateVault,
+        AppStateSession,
+        AppStatePhotos,
+        AppStateReceive,
+        AppStateRefresh,
+        AppStateIdentity;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/notifications.dart' show kCancelRetryAfter;
 import 'package:kryfo/polls.dart';
+import 'package:kryfo/profile_photo.dart' show photoBook;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart' show PinsHost;
 import 'package:kryfo/search.dart' show SearchKind;
@@ -171,6 +190,17 @@ class _Seal implements VaultSeal {
 // ---- signal, the engine and android ----
 
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
+  @override
+  Future<String> pinFirst(List<(int, String)> peers) async => 'ok';
+  @override
+  Future<String> firstChats(List<(int, String)> peers) async => 'ok';
   @override
   Future<String?> decryptIf(
     String peer,
@@ -179,15 +209,15 @@ class _Io implements AppIo {
     bool flagKeyChange = false,
   }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   @override
-  Future<String> letHeld(String xPub, String how) async => 'ok';
+  Future<String> letHeld(int ident, String xPub, String how) async => 'ok';
   @override
-  Future<String> markHeld(List<String> xPubs) async => 'ok';
+  Future<String> markHeld(List<(int, String)> peers) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
   Future<void> dropSession(String peer) async => dropped.add(peer);
   @override
-  void unlisten(String xPub) => dropped.add(xPub);
+  void unlisten(int ident, String xPub) => dropped.add(xPub);
   final opens = <String, (String, String)>{};
   final sent = <(String, String)>[];
   final rang = <String>[];
@@ -210,20 +240,33 @@ class _Io implements AppIo {
   @override
   Future<List<String>> sessionAddresses() async => sessions;
   @override
+  Future<String?> sessionXPub(String peer) async => 'x-$peer';
+  @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async => null;
   @override
   Future<bool> hasSession(String peer) async => true;
   @override
-  Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
   @override
-  void listen(String xPub, {bool fresh = false}) {}
+  Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
+  // the keys listened on with the everyday sockets, and apart
+  final heard = <String>[];
+  final heardHidden = <String>[];
+  @override
+  void listen(int ident, String xPub, {bool fresh = false}) => heard.add(xPub);
+
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) =>
+      heardHidden.add(xPub);
   @override
   String edPub() => 'ed-me';
   @override
   String xPub() => 'x-me';
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add((xPub, cipher));
     return 'ok';
   }
@@ -235,7 +278,12 @@ class _Io implements AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add((xPub, cipher));
     return 'ok';
   }
@@ -275,6 +323,8 @@ class _Io implements AppIo {
 // ---- one container's rows, and a handle on them ----
 
 class _Rows {
+  // the drafts table, by chat: a group's under group:
+  final drafts = <String, Draft>{};
   final people = <String, Map<String, Object?>>{};
   final groupRows = <String, Map<String, Object?>>{};
   final members = <String, List<String>>{};
@@ -291,6 +341,8 @@ class _Rows {
   // a read of which chats it holds waits for this, and says it began
   Completer<void>? holdHeld;
   Completer<void>? heldAsked;
+  // contacts' profile photos, by id
+  final photos = <String, Uint8List>{};
 
   void person(
     String id, {
@@ -413,6 +465,33 @@ class _Db implements HaloDb {
 
   @override
   HaloContainer get container => _container;
+
+  // ---- drafts ----
+  T _draft<T>(String name, T Function() f) {
+    if (untouchable) {
+      touched.add(name);
+      throw StateError('${_container.dbFile} was reached');
+    }
+    if (closed) throw StateError('${_container.dbFile} has no key here');
+    return f();
+  }
+
+  static String _chat(String id, bool group) => group ? 'group:$id' : id;
+
+  @override
+  bool get isOpen => !closed;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
+      _draft('draftOf', () => r.drafts[_chat(chatId, group)]);
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async =>
+      _draft('putDraft', () => r.drafts[_chat(chatId, group)] = d);
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      _draft('dropDraftRow', () => r.drafts.remove(_chat(chatId, group)));
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async =>
+      const [];
 
   @override
   Future<void> close() async {
@@ -550,6 +629,8 @@ class _Db implements HaloDb {
     void Function(String msgUid)? gone,
     Future<Set<String>> Function()? blocked,
     bool ifOpen = false,
+    bool Function(String chatId, bool group)? draftOnScreen,
+    void Function(HaloContainer c, String chatId, bool group)? draftGone,
   }) async {
     _hit('purgeExpired', null, null);
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -760,6 +841,19 @@ class _Db implements HaloDb {
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, r.msg(msgUid) != null);
   @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async =>
+      _hit(
+        'messageFrom',
+        msgUid,
+        r.msgs.any(
+          (m) =>
+              m['msg_uid'] == msgUid &&
+              (m['direction'] == 'out' ||
+                  (m['peer_id'] == sender &&
+                      (m['group_id'] ?? '') == (group ?? ''))),
+        ),
+      );
+  @override
   Future<bool> goneFrom(String peer, String msgUid) async => false;
 
   // ---- groups ----
@@ -807,6 +901,25 @@ class _Db implements HaloDb {
   @override
   Future<Map<String, Set<String>>> fullShelves({String? only}) async =>
       _hit('fullShelves', only, <String, Set<String>>{});
+
+  // the photo rows: read as the book is, never counted as a call
+  @override
+  Future<Map<String, Uint8List>> contactPhotos() async {
+    if (untouchable) {
+      touched.add('contactPhotos');
+      throw StateError('${_container.dbFile} was reached');
+    }
+    return Map.of(r.photos);
+  }
+
+  @override
+  Future<({int ver, Uint8List? photo})?> myPhoto() async {
+    if (untouchable) {
+      touched.add('myPhoto');
+      throw StateError('${_container.dbFile} was reached');
+    }
+    return null;
+  }
 
   @override
   dynamic noSuchMethod(Invocation i) {
@@ -964,9 +1077,15 @@ class _Mover implements ChatMover {
           : m['peer_id'] == c.id && m['group_id'] == null;
       if (mine && d.msg(m['msg_uid'] as String) == null) d.msgs.add({...m});
     }
+    // as vault_life's drafts row goes with its chat
+    final draft = s.drafts[_key(c)];
+    if (draft != null) d.drafts[_key(c)] = draft;
   }
 
+  static String _key(ChatRef c) => c.group ? 'group:${c.id}' : c.id;
+
   void _drop(_Rows s, ChatRef c) {
+    s.drafts.remove(_key(c));
     if (c.group) {
       final who = s.members.remove(c.id) ?? const <String>[];
       s.groupRows.remove(c.id);
@@ -1067,6 +1186,11 @@ class _Mover implements ChatMover {
   @override
   Future<Map<String, (String, String)>> vaultCards() async {
     w.log.add('cards');
+    final hold = w.holdCards;
+    if (hold != null) {
+      w.cardsAsked?.complete();
+      await hold.future;
+    }
     return {
       for (final p in _v.people.values)
         if (p['accepted'] == 1)
@@ -1099,6 +1223,9 @@ class _World {
   late VaultRouter router;
   late AppState app;
   Completer<void>? holdMove;
+  // the cards read after a move's rows went, held there
+  Completer<void>? holdCards;
+  Completer<void>? cardsAsked;
   var _n = 0;
   // the decoy, and its own vault: the rows and key of halo_dv.db
   final decoyRows = _Rows();
@@ -1324,9 +1451,15 @@ class _CountingStore implements LockStore {
 class _CountingEngine extends MemEngine {
   var checks = 0;
   @override
-  Future<Map<String, dynamic>> check(String pin, String table, String legacy) {
+  Future<Map<String, dynamic>> check(
+    String pin,
+    String table,
+    String legacy, {
+    PinMac? mac,
+    String key = '',
+  }) {
     checks++;
-    return super.check(pin, table, legacy);
+    return super.check(pin, table, legacy, mac: mac, key: key);
   }
 }
 
@@ -1435,6 +1568,73 @@ void main() {
       },
     );
 
+    test(
+      'a hidden chats PIN answers as fast while a history copy reads the chats',
+      () async {
+        final w = await _World.make();
+        const reveal = Duration(milliseconds: 300);
+        w.app.revealGap = reveal + const Duration(milliseconds: 100);
+        final (:lock, :store, :engine) = _lock(reveal: reveal);
+        await lock.load();
+        lock.onOutcome = (r, {vaultKey}) async {
+          await w.app.sessionFor(r, vaultKey: vaultKey);
+        };
+        // a copy's text phase, held open for the whole test
+        final reading = Completer<void>();
+        final copy = w.app.withVaultStill(() => reading.future);
+        // each pin's fastest answer over five rounds, taken in turn: a
+        // pin that waits on the copy is late in every round, a loaded
+        // machine's stall in one
+        final shown = <String, int>{};
+        for (var round = 0; round < 5; round++) {
+          for (final pin in [appPin, vaultPin, '0000']) {
+            final t = Stopwatch()..start();
+            await lock.verifyPin(pin);
+            final took = t.elapsedMilliseconds;
+            if (took < (shown[pin] ?? took + 1)) shown[pin] = took;
+            lock.lock();
+            w.app.lockingUp();
+            await _settle();
+          }
+        }
+        expect(session.vault, isNull);
+        for (final e in shown.entries) {
+          expect(e.value, greaterThanOrEqualTo(reveal.inMilliseconds - 2));
+        }
+        final ms = shown.values.toList()..sort();
+        expect(ms.last - ms.first, lessThan(120), reason: '$shown');
+        // a hide waits for the copy, and goes once it is read
+        var hid = false;
+        await w.open();
+        final hiding = w.app.hideChats(people: [_v]).then((n) => hid = true);
+        await _settle();
+        expect(hid, isFalse);
+        reading.complete();
+        await copy;
+        await hiding;
+        expect(hid, isTrue);
+      },
+      timeout: const Timeout(Duration(seconds: 90)),
+    );
+
+    test('a history copy never starts inside vault work', () async {
+      final w = await _World.make();
+      await expectLater(
+        w.app.backupStill((_) => w.app.withVaultStill(() async {})),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('a hide ends every history copy that is open', () async {
+      final w = await _World.make();
+      await w.open();
+      var ended = false;
+      historyCopyOpened(() => ended = true);
+      expect(await w.app.hideChats(people: [_v]), 1);
+      expect(ended, isTrue);
+      expect(historyCopiesOpen, 0);
+    });
+
     test('a vault unlock builds its session under the lock', () async {
       final w = await _World.make();
       final rev = w.app.sessionRev;
@@ -1489,6 +1689,85 @@ void main() {
       expect(session.vault, isNull);
       expect(w.homeIds, isNot(contains(_h)));
     });
+  });
+
+  group('the clipboard', () {
+    late List<MethodCall> clears;
+    setUp(() {
+      clears = [];
+      clipGoesWithLock = () => sessionQuiet || session.vault != null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('halo/platform'), (
+            c,
+          ) async {
+            if (c.method == 'clearClip' || c.method == 'clearOurClip') {
+              clears.add(c);
+            }
+            return true;
+          });
+    });
+    tearDown(() async {
+      await dropOurClip(wipe: true);
+      clipGoesWithLock = () => false;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('halo/platform'), null);
+    });
+
+    test('a lock in hidden chats takes whatever is on it, a field\'s own '
+        'copy too', () async {
+      final w = await _World.make();
+      await w.open();
+      await copySensitive('meet at the bridge', kept: true);
+      await w.lockUp();
+      // the lock, and the hidden chats shutting with it
+      expect(clears, isNotEmpty);
+      for (final c in clears) {
+        expect(c.method, 'clearClip');
+        expect(c.arguments, containsPair('any', true));
+      }
+      expect(ourClipForTest.value, isNull);
+    });
+
+    test('an everyday copy stays through a lock, and goes at a switch of '
+        'pin', () async {
+      final w = await _World.make();
+      await w.everyday();
+      await copySensitive('the visible one', kept: true);
+      await w.lockUp();
+      expect(clears, isEmpty);
+      await w.open();
+      final c = clears.where((c) => c.method == 'clearClip').single;
+      expect(c.arguments, {
+        'text': 'the visible one',
+        'force': false,
+        'any': false,
+      });
+    });
+
+    test('hidden chats closing take what was copied in them', () async {
+      final w = await _World.make();
+      await w.open();
+      await copySensitive('still to go', kept: true);
+      // out of the hidden chats with the everyday pin, no lock between
+      await w.everyday();
+      expect(
+        clears.where((c) => c.method == 'clearClip').first.arguments,
+        containsPair('any', true),
+      );
+    });
+
+    test(
+      'the decoy opening takes a labelled copy from an earlier run',
+      () async {
+        final w = await _World.make();
+        await w.withDecoy();
+        // a new process: nothing of this run copied anything
+        expect(ourClipForTest.value, isNull);
+        await w.app.sessionFor(PinResult.decoy);
+        await _settle();
+        expect(clears.map((c) => c.method), contains('clearOurClip'));
+      },
+    );
   });
 
   group('the lock', () {
@@ -1657,6 +1936,24 @@ void main() {
       expect(w.io.rang, [_v]);
     });
 
+    test('shut, with plain notifications: a hidden chat lights no plain '
+        'line either', () async {
+      // a plain line stands for nothing hidden: it rings only for what
+      // would ring anyway
+      SharedPreferences.setMockInitialValues({'notif_plain': true});
+      final w = await _World.make();
+      await w.open();
+      await w.lockUp();
+      await w.onion(
+        _h,
+        await wrapMessage('are you there', msgUid: 'p1', sender: _as(_h)),
+      );
+      await w.onion(_m, await wrapMessage('all', msgUid: 'p2', groupId: _g2));
+      expect(w.io.rang, isEmpty);
+      await w.onion(_v, await wrapMessage('yo', msgUid: 'p3', sender: _as(_v)));
+      expect(w.io.rang, [_v]);
+    });
+
     test(
       'open: a hidden chat rings like any other, and goes at the lock',
       () async {
@@ -1757,13 +2054,19 @@ void main() {
       final w = await _World.make();
       await w.open();
       expect(session.isHidden(_v), isFalse);
-      final draft = HaloContainer.everyday.chatKey(_v);
-      draftPerPeer[draft] = 'half a thought';
-      addTearDown(draftPerPeer.clear);
+      typedDraft(
+        session.draftsOf(_v),
+        _v,
+        const Draft('half a thought'),
+        group: false,
+      );
+      addTearDown(endProcessForTest);
+      expect(heldDraft(HaloContainer.everyday, _v, group: false), isNotNull);
       expect(await w.app.hideChats(people: [_v]), 1);
       expect(session.isHidden(_v), isTrue);
       // its unsent words stay nowhere outside the vault
-      expect(draftPerPeer.containsKey(draft), isFalse);
+      expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
+      expect(heldDraft(HaloContainer.vault, _v, group: false), isNull);
       expect(w.app.contacts.firstWhere((c) => c.haloId == _v).hidden, isTrue);
       expect(w.router.hides(_v), isTrue);
       expect(w.vaultRows.uids, contains('v0'));
@@ -1784,6 +2087,96 @@ void main() {
       );
       expect(w.io.rang, [_v]);
       expect(w.store.inbox, hasLength(1));
+    });
+
+    test('words typed into a chat while it is hidden land nowhere outside '
+        'the vault', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      final hold = Completer<void>();
+      final asked = Completer<void>();
+      w
+        ..holdCards = hold
+        ..cardsAsked = asked;
+      final hiding = w.app.hideChats(people: [_v]);
+      await asked.future;
+      // its rows are in the vault, and the session still names the
+      // everyday side: the screen still open on it writes there
+      expect(w.router.hides(_v), isTrue);
+      final rows = session.draftsOf(_v);
+      expect(rows.container, HaloContainer.everyday);
+      typedDraft(rows, _v, const Draft('typed as it went'), group: false);
+      w.holdCards = null;
+      hold.complete();
+      expect(await hiding, 1);
+      await Future<void>.delayed(kDraftWait * 2);
+      await flushDrafts();
+      expect(w.liveRows.drafts, isEmpty);
+      expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
+      // once moved, the vault is where its words go
+      typedDraft(session.draftsOf(_v), _v, const Draft('now'), group: false);
+      await flushDrafts();
+      expect(w.vaultRows.drafts[_v]?.text, 'now');
+      expect(w.liveRows.drafts, isEmpty);
+    });
+
+    test('Show in chat list takes its draft out, the one still waiting '
+        'too, and the vault keeps none of it', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      typedDraft(session.draftsOf(_h), _h, const Draft('ok'), group: false);
+      await flushDrafts();
+      // typed again just before: not written yet
+      typedDraft(
+        session.draftsOf(_h),
+        _h,
+        const Draft('ok, see you'),
+        group: false,
+      );
+      expect(await w.app.unhideChats(people: [_h]), 1);
+      expect(w.liveRows.drafts[_h]?.text, 'ok, see you');
+      expect(w.vaultRows.drafts, isEmpty);
+      expect(heldDraft(HaloContainer.vault, _h, group: false), isNull);
+      await Future<void>.delayed(kDraftWait * 2);
+      await flushDrafts();
+      expect(w.vaultRows.drafts, isEmpty);
+      expect(session.draftsOf(_h).container, HaloContainer.everyday);
+    });
+
+    test('the lock writes what waits for the vault into it, and lets go '
+        'of it', () async {
+      final w = await _World.make();
+      await w.open();
+      addTearDown(endProcessForTest);
+      typedDraft(session.draftsOf(_h), _h, const Draft('mid'), group: false);
+      expect(w.vaultRows.drafts, isEmpty);
+      await w.lockUp();
+      expect(w.vaultRows.drafts[_h]?.text, 'mid');
+      expect(heldDraft(HaloContainer.vault, _h, group: false), isNull);
+      expect(w.liveRows.drafts, isEmpty);
+    });
+
+    test('remove hidden chats never puts one deleted inside on the '
+        'everyday sockets', () async {
+      final w = await _World.make();
+      await w.open();
+      // heard on as the vault's, then deleted inside it: the list still
+      // names it
+      await w.app.subscribePeer(_h);
+      await w.app.subscribePeer(_m);
+      expect(w.io.heardHidden, containsAll(['x-$_h', 'x-$_m']));
+      w.vaultRows.people.remove(_h);
+      w.vaultRows.msgs.removeWhere(
+        (m) => m['peer_id'] == _h && m['group_id'] == null,
+      );
+      w.io.heard.clear();
+      await w.app.removeVault();
+      expect(w.router.hides(_h), isFalse);
+      expect(w.io.heard, isNot(contains('x-$_h')));
+      // what did come out is heard on as an everyday chat's
+      expect(w.io.heard, contains('x-$_m'));
     });
 
     test('Show in chat list brings a chat back', () async {
@@ -1878,11 +2271,16 @@ void main() {
       // a new one set up from the decoy replaces it
       expect(await w.type(decoyPin), PinResult.decoy);
       expect(await w.app.createVault('112233'), isTrue);
-      final draft = HaloContainer.decoy.chatKey(_dg);
-      draftPerGroup[draft] = 'see you';
-      addTearDown(draftPerGroup.clear);
+      typedDraft(
+        session.draftsOf(_dg),
+        _dg,
+        const Draft('see you'),
+        group: true,
+      );
+      addTearDown(endProcessForTest);
+      expect(heldDraft(HaloContainer.decoy, _dg, group: true), isNotNull);
       expect(await w.app.hideChats(groups: [_dg]), 1);
-      expect(draftPerGroup.containsKey(draft), isFalse);
+      expect(heldDraft(HaloContainer.decoy, _dg, group: true), isNull);
       await w.app.vaultSetupDone();
       expect(w.homeIds, {_d1});
       await w.lockUpAll();
@@ -2261,12 +2659,18 @@ void main() {
             lock.inDecoy = true;
             lock.inVault = true;
         }
+        // words still waiting to be written as the wipe comes
+        addTearDown(endProcessForTest);
+        typedDraft(w.live, _v, const Draft('never kept'), group: false);
         if (from != 'the pin screen') {
           lock.lock();
           w.app.lockingUp();
         }
         await typeWipe(lock);
         await expectAllGone(exited);
+        expect(heldDraft(HaloContainer.everyday, _v, group: false), isNull);
+        await Future<void>.delayed(kDraftWait * 2);
+        expect(w.liveRows.drafts, isEmpty);
       });
     }
 
@@ -2292,5 +2696,40 @@ void main() {
         await expectAllGone(exited);
       });
     }
+  });
+
+  group('profile photos', () {
+    test('a swap shows the coming side\'s photos from its first frame, '
+        'never the leaving side\'s', () async {
+      final w = await _World.make();
+      w.liveRows.photos[_v] = Uint8List.fromList([1]);
+      w.vaultRows.photos[_h] = Uint8List.fromList([2]);
+      w.decoyRows.photos[_d1] = Uint8List.fromList([3]);
+      await w.withDecoy();
+      await w.app.reloadPhotos();
+      expect(photoBook.all.keys, [_v]);
+      final firsts = <Set<String>>[];
+      void look() => firsts.add(photoBook.all.keys.toSet());
+      w.app.addListener(look);
+      addTearDown(() => w.app.removeListener(look));
+      Future<Set<String>> first(Future<void> Function() swap) async {
+        firsts.clear();
+        await swap();
+        return firsts.first;
+      }
+
+      expect(await first(w.open), {_v, _h});
+      // the lock shut the vault: its contacts' photos are gone at once
+      expect(await first(w.lockUp), {_v});
+      expect(
+        await first(() async {
+          await w.app.sessionFor(PinResult.decoy);
+          await _settle();
+        }),
+        {_d1},
+      );
+      expect(await first(w.everyday), {_v});
+      photoBook.clear();
+    });
   });
 }

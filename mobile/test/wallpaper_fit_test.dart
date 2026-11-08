@@ -30,6 +30,7 @@ Future<void> _loadFonts() async {
     'Noto Sans Vietnamese': ['NotoSans-Vietnamese.ttf'],
     'Noto Naskh Arabic': ['NotoNaskhArabic-Kryfo.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
   };
   for (final e in families.entries) {
     final loader = FontLoader(e.key);

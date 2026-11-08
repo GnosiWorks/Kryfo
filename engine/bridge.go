@@ -37,13 +37,12 @@ import (
 )
 
 var (
-	mu           sync.Mutex
-	startMu      sync.Mutex
-	torNode      *tor.Tor
-	listener     net.Listener
-	myAddr       string
-	savedDataDir string // kept so the dialer watchdog can relaunch tor
-	inbox        []string
+	mu       sync.Mutex
+	startMu  sync.Mutex
+	torNode  *tor.Tor
+	listener net.Listener
+	myAddr   string
+	inbox    []string
 
 	myEdPriv ed25519.PrivateKey
 	myEdPub  ed25519.PublicKey
@@ -51,6 +50,19 @@ var (
 	myXPub   [32]byte
 	myId     string
 )
+
+// kept so the dialer watchdog can relaunch tor. runners read it while a
+// start sets it, so it is never a plain string
+var savedDir atomic.Pointer[string]
+
+func savedDataDir() string {
+	if p := savedDir.Load(); p != nil {
+		return *p
+	}
+	return ""
+}
+
+func setSavedDataDir(d string) { savedDir.Store(&d) }
 
 var (
 	statusMu     sync.RWMutex
@@ -103,6 +115,10 @@ func setStatus(s string) {
 			notePublished()
 		}
 		torStatus = s
+		torStatusMoved()
+		if s == "bootstrapped" || s == "publishing" || s == "reachable" {
+			openStartGate()
+		}
 	}
 }
 
@@ -125,6 +141,8 @@ func HaloGenerateIdentity() *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: ed keygen: %v", err))
 	}
+	// the key it replaces goes from memory
+	clear(myEdPriv)
 	myEdPub = pub
 	myEdPriv = priv
 
@@ -132,6 +150,7 @@ func HaloGenerateIdentity() *C.char {
 		return C.CString(fmt.Sprintf("error: x keygen: %v", err))
 	}
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	putIdentity(mainIdent, xid{priv: myXPriv, pub: myXPub})
 
 	myId = idFromPubkey(pub)
 	log.Printf("halo: identity generated: %s", myId)
@@ -146,23 +165,32 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 	mu.Lock()
 	defer mu.Unlock()
 
-	edPrivHex := goStr(cEdPriv)
-	xPrivHex := goStr(cXPriv)
+	// as bytes, cleared once decoded: a go string of a key never goes
+	edPrivHex := goSecret(cEdPriv)
+	xPrivHex := goSecret(cXPriv)
+	defer clear(edPrivHex)
+	defer clear(xPrivHex)
 
-	edPrivBytes, err := hex.DecodeString(edPrivHex)
-	if err != nil || len(edPrivBytes) != ed25519.PrivateKeySize {
+	edPrivBytes, ok := hexSecret(edPrivHex, ed25519.PrivateKeySize)
+	if !ok {
 		return C.CString("error: bad ed priv hex")
 	}
-	xPrivBytes, err := hex.DecodeString(xPrivHex)
-	if err != nil || len(xPrivBytes) != 32 {
+	xPrivBytes, ok := hexSecret(xPrivHex, 32)
+	if !ok {
+		clear(edPrivBytes)
 		return C.CString("error: bad x priv hex")
 	}
+	defer clear(xPrivBytes)
 
+	clear(myEdPriv)
 	myEdPriv = ed25519.PrivateKey(edPrivBytes)
 	myEdPub = myEdPriv.Public().(ed25519.PublicKey)
 
 	copy(myXPriv[:], xPrivBytes)
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	putIdentity(mainIdent, xid{priv: myXPriv, pub: myXPub})
+	// a restore may have landed another batch book
+	batchBookReset()
 
 	myId = idFromPubkey(myEdPub)
 	log.Printf("halo: identity restored: %s", myId)
@@ -233,8 +261,12 @@ func idFromPubkey(pub []byte) string {
 	return fmt.Sprintf("%s-%s-%s", w1, w2, w3)
 }
 
-func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
+func deriveSharedKey(ident int, peerXPubHex string) ([32]byte, error) {
 	var key [32]byte
+	me, err := identityOf(ident)
+	if err != nil {
+		return key, err
+	}
 	peerPub, err := hex.DecodeString(peerXPubHex)
 	if err != nil || len(peerPub) != 32 {
 		return key, fmt.Errorf("bad peer pubkey")
@@ -242,7 +274,7 @@ func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
 	var peer [32]byte
 	copy(peer[:], peerPub)
 
-	shared, err := curve25519.X25519(myXPriv[:], peer[:])
+	shared, err := curve25519.X25519(me.priv[:], peer[:])
 	if err != nil {
 		return key, err
 	}
@@ -251,11 +283,11 @@ func deriveSharedKey(peerXPubHex string) ([32]byte, error) {
 }
 
 //export HaloEncryptFor
-func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
+func HaloEncryptFor(cIdent C.int, cPeerPub *C.char, cPlain *C.char) *C.char {
 	peerPub := goStr(cPeerPub)
 	plain := goStr(cPlain)
 
-	key, err := deriveSharedKey(peerPub)
+	key, err := deriveSharedKey(identArg(cIdent), peerPub)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
@@ -278,11 +310,11 @@ func HaloEncryptFor(cPeerPub *C.char, cPlain *C.char) *C.char {
 }
 
 //export HaloDecryptFrom
-func HaloDecryptFrom(cPeerPub *C.char, cB64 *C.char) *C.char {
+func HaloDecryptFrom(cIdent C.int, cPeerPub *C.char, cB64 *C.char) *C.char {
 	peerPub := goStr(cPeerPub)
 	b64 := goStr(cB64)
 
-	key, err := deriveSharedKey(peerPub)
+	key, err := deriveSharedKey(identArg(cIdent), peerPub)
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: derive: %v", err))
 	}
@@ -329,37 +361,58 @@ func startListener(dataDir string) string {
 		return "error: tor is stopped, resume first"
 	}
 	startRouteWatch()
+	startSteps.begin()
 	mu.Lock()
-	if myAddr != "" {
+	if myAddr != "" && !torClientOnly() {
 		addr := myAddr
 		mu.Unlock()
 		return addr
 	}
+	up := torNode
 	mu.Unlock()
+	// a client's tor is started once and never again, with or without an
+	// onion left to take down from before it was a client
+	if up != nil && torClientOnly() {
+		if r := dropOnion(); r != "ok" {
+			return r
+		}
+		return torClientAddr
+	}
 
 	if dataDir == "" {
 		return "error: empty data dir"
+	}
+	// a phone's tor is started once per process too: a listen that failed
+	// goes again on the same tor, never on a second one
+	if up != nil {
+		log.Println("halo: tor is up, listening again")
+		return onionIn(up, dataDir, false)
 	}
 	torDataDir := dataDir + "/tor"
 	if err := os.MkdirAll(torDataDir, 0700); err != nil {
 		return fmt.Sprintf("error: mkdir tor: %v", err)
 	}
-	mu.Lock()
-	savedDataDir = dataDir
-	mu.Unlock()
+	torDataDir = torDirTarget(torDataDir)
+	setSavedDataDir(dataDir)
 
 	// a hard-killed previous process can leave tor's lock and run files
 	// behind, which fail this start. tor is single-instance per data dir and
 	// we hold startMu, so removing them here is safe.
 	cleanTorRunFiles(torDataDir)
 
+	// a third tor in one process aborts it: only a new process starts one
+	if !torMayLaunch() {
+		log.Println("halo: tor ran twice in this process, a new one needs a restart")
+		return "error: tor start: no more tors in this process"
+	}
 	setStatus("starting")
+	armStartGate()
 	log.Println("halo: starting embedded tor...")
 	// torArgs start it with DisableNetwork 1
 	netWentOff()
 	choosePinnedSocks()
 	start := func() (*tor.Tor, error) {
-		return tor.Start(nil, &tor.StartConf{
+		return startTor(nil, &tor.StartConf{
 			ProcessCreator: libtorCreator{},
 			DataDir:        torDataDir,
 			DebugWriter:    newTorDebugWriter(),
@@ -367,10 +420,12 @@ func startListener(dataDir string) string {
 			// torArgs names the port itself when the pin holds; bine would
 			// otherwise add "--SocksPort auto" alongside it.
 			NoAutoSocksPort: socksPin() != 0,
+			// bine's handshake has no deadline: done below, bounded
+			DisableEagerAuth: true,
 		})
 	}
 	t, err := start()
-	if err != nil && socksPin() != 0 {
+	if err != nil && socksPin() != 0 && torMayLaunch() {
 		// something else took the port between choosing it and tor binding
 		// it. not worth failing a start over: let tor choose, and the cache
 		// resets keep one-shot requests working across a bounce.
@@ -382,21 +437,48 @@ func startListener(dataDir string) string {
 	}
 	mu.Lock()
 	torNode = t
+	// a new tor publishes its onion afresh
+	publishedOnce.Store(false)
+	close(torGone)
+	torGone = make(chan struct{})
 	mu.Unlock()
 	// whatever control socket we held belonged to the tor before this one,
 	// and so did the socks port any cached http client was built against.
 	ctrlReset()
 	eventReset()
+	onionReset()
 	nostrResetClient()
+	// bine's own connection, only the fallback of ctrlDo now. a tor that
+	// does not answer leaves it as it is and the start goes on
+	if err := ctrlFallback(t, "AUTHENTICATE", func(c *control.Conn) error {
+		return c.Authenticate("")
+	}); err != nil {
+		log.Printf("halo: bine's control connection: %v", err)
+	}
 	// stay "starting": tor.Start returns before any circuit exists. the
 	// bootstrap watcher owns the flip at a real 100%.
 	goWatchBootstrap(t)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
+	// a linked device's: no onion key, no service, the network on as below
+	if torClientOnly() {
+		networkOnAtStart(t)
+		log.Println("halo: tor runs as a client, no onion of its own")
+		return torClientAddr
+	}
+	return onionIn(t, dataDir, true)
+}
 
+// tor's own start, the tests' to stand in for
+var startTor = tor.Start
+
+// our onion on tor t, with the key kept in dataDir
+func onionIn(t *tor.Tor, dataDir string, first bool) string {
+	if t.Control == nil {
+		return "error: listen: no control connection"
+	}
 	keyPath := dataDir + "/onion.key"
 	var key ed25519.PrivateKey
+	var err error
 	if data, rerr := os.ReadFile(keyPath); rerr == nil && len(data) == ed25519.PrivateKeySize {
 		key = ed25519.PrivateKey(data)
 		log.Println("halo: loaded onion key from disk")
@@ -411,7 +493,16 @@ func startListener(dataDir string) string {
 			log.Println("halo: generated and saved new onion key")
 		}
 	}
+	return onionOn(t, key, first)
+}
 
+// our onion on tor t with key. [first]: the start that made t, which also
+// puts it on the network. one that does not go up is tried again later
+// with the same key: a retry never reads or makes one
+func onionOn(t *tor.Tor, key ed25519.PrivateKey, first bool) string {
+	if t.Control == nil {
+		return "error: listen: no control connection"
+	}
 	// no status flip here: publishing means nothing while bootstrap is at
 	// 50%. the watcher sets it when tor is actually there.
 	hsCh, hsSubbed := listenForUploads(t)
@@ -419,17 +510,29 @@ func startListener(dataDir string) string {
 	// only on the branch NoWait skips, so turn it on here, over the engine's
 	// own connection (see control_events.go). with no bridge mode yet it
 	// stays off: the bounce that sets the mode turns it on.
-	networkOnAtStart(t)
+	if first {
+		networkOnAtStart(t)
+	}
 
 	listenStart := time.Now()
-	onion, err := t.Listen(ctx, &tor.ListenConf{
-		NoWait:      true,
-		Version3:    true,
-		RemotePorts: []int{80},
-		Key:         key,
+	var onion *tor.OnionService
+	err := onionDo(t, "ADD_ONION", onionAddDeadline(), func(tc *tor.Tor) error {
+		var lerr error
+		onion, lerr = tc.Listen(context.Background(), &tor.ListenConf{
+			NoWait:      true,
+			Version3:    true,
+			RemotePorts: []int{80},
+			Key:         key,
+		})
+		return lerr
 	})
 	if err != nil {
 		log.Printf("halo: listen failed after %.0fs: %v", time.Since(listenStart).Seconds(), err)
+		// the next try listens again and subscribes afresh
+		if hsSubbed {
+			unlistenUploads(hsCh)
+		}
+		onionLater(t, key)
 		return fmt.Sprintf("error: listen: %v", err)
 	}
 	log.Printf("halo: listen returned in %.0fs", time.Since(listenStart).Seconds())
@@ -438,6 +541,13 @@ func startListener(dataDir string) string {
 	myAddr = fmt.Sprintf("%s.onion", onion.ID)
 	addr := myAddr
 	mu.Unlock()
+	// made a client while this listened: the onion goes again at once
+	if torClientOnly() {
+		if r := dropOnion(); r != "ok" {
+			return r
+		}
+		return torClientAddr
+	}
 
 	if atomic.CompareAndSwapInt32(&publishWatching, 0, 1) {
 		go func() {
@@ -505,7 +615,11 @@ func networkOn(t *tor.Tor, before func()) (string, error) {
 		netWentOn()
 		return nil
 	})
-	return why, err
+	// a fallback call that timed out may still write why
+	if err != nil {
+		return "", err
+	}
+	return why, nil
 }
 
 // tor answered and said no, as against a control port that did not answer
@@ -568,6 +682,13 @@ var torRestarting int32
 
 var lastTorRestart int64 // unix seconds of the last one, for the cooldown
 
+// how often and how long a publish seen early waits for the status to leave
+// starting
+var (
+	publishSettle    = 200 * time.Millisecond
+	publishSettleMax = time.Minute
+)
+
 // one watcher of each kind at a time. each parks on a control event listener,
 // and one left behind per reconnect is a leak.
 var (
@@ -586,7 +707,7 @@ func goWatchBootstrap(t *tor.Tor) {
 }
 
 func goWatchPublished(t *tor.Tor, onionID string) {
-	if t == nil || t.Control == nil || onionID == "" {
+	if t == nil || t.Control == nil || onionID == "" || torClientOnly() {
 		return
 	}
 	if !atomic.CompareAndSwapInt32(&publishWatching, 0, 1) {
@@ -604,50 +725,118 @@ func goWatchPublished(t *tor.Tor, onionID string) {
 // sitting out the full fallback.
 func listenForUploads(t *tor.Tor) (chan control.Event, bool) {
 	hsCh := make(chan control.Event, 16)
+	return hsCh, subscribeUploads(t, hsCh)
+}
+
+// the event connection each HS_DESC watch subscribed on. a SETEVENTS that
+// runs out anywhere closes the shared one, and a watch on it hears nothing
+// more: it subscribes again (watchPublishedOn)
+var uploadSubs sync.Map // chan control.Event -> *control.Conn
+
+func subscribeUploads(t *tor.Tor, hsCh chan control.Event) bool {
 	if t == nil || t.Control == nil {
-		return hsCh, false
+		return false
 	}
 	// on the event connection, never on bine's: see control_events.go
 	c, err := eventConn(t)
 	if err != nil {
 		log.Printf("halo: HSDesc subscribe failed: %v", err)
-		return hsCh, false
+		return false
 	}
-	if aerr := c.AddEventListener(hsCh, control.EventCodeHSDesc); aerr != nil {
+	if aerr := evDo(c, "SETEVENTS HS_DESC", func() error {
+		return c.AddEventListener(hsCh, control.EventCodeHSDesc)
+	}); aerr != nil {
 		log.Printf("halo: HSDesc subscribe failed: %v", aerr)
-		return hsCh, false
+		uploadSubs.Delete(hsCh)
+		return false
 	}
-	return hsCh, true
+	uploadSubs.Store(hsCh, c)
+	return true
+}
+
+// whether hsCh still hears HS_DESC: subscribed, on the event connection up
+// now. a channel subscribed elsewhere (the tests') counts as heard
+func uploadsHeard(hsCh chan control.Event, subbed bool) bool {
+	if !subbed {
+		return false
+	}
+	v, known := uploadSubs.Load(hsCh)
+	if !known {
+		return true
+	}
+	evMu.Lock()
+	defer evMu.Unlock()
+	return evConn != nil && evConn == v.(*control.Conn)
+}
+
+// the HS_DESC subscription of hsCh goes. one whose connection went, went
+// with it
+func unlistenUploads(hsCh chan control.Event) {
+	v, known := uploadSubs.LoadAndDelete(hsCh)
+	evMu.Lock()
+	c := evConn
+	evMu.Unlock()
+	if c == nil || (known && v.(*control.Conn) != c) {
+		return
+	}
+	_ = evDo(c, "SETEVENTS", func() error {
+		return c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
+	})
 }
 
 func watchPublishedOn(t *tor.Tor, hsCh chan control.Event, hsSubbed bool, onionID string) {
-	if hsSubbed {
-		defer func() {
-			evMu.Lock()
-			c := evConn
-			evMu.Unlock()
-			if c != nil {
-				c.RemoveEventListener(hsCh, control.EventCodeHSDesc)
-			}
-		}()
-	}
+	gone := torGoneCh()
+	defer func() {
+		if hsSubbed {
+			unlistenUploads(hsCh)
+		}
+	}()
 	for {
-		if watchHSDirUpload(t, hsCh, hsSubbed, onionID) {
+		// a subscription that failed or went with its event connection is
+		// made again, or the status stays publishing with the onion up
+		if !uploadsHeard(hsCh, hsSubbed) {
+			hsSubbed = subscribeUploads(t, hsCh)
+		}
+		if watchHSDirUpload(t, hsCh, hsSubbed, onionID, gone) {
+			// a client by now: that onion was taken down
+			if torClientOnly() {
+				return
+			}
+			publishedOnce.Store(true)
 			break
+		}
+		select {
+		case <-gone:
+			return
+		default:
 		}
 		statusMu.RLock()
 		stillPub := torStatus == "publishing" || torStatus == "starting"
 		statusMu.RUnlock()
-		if !stillPub {
+		if !stillPub || torClientOnly() {
 			return
 		}
 		// no confirmed upload yet: the same listener stays live, so wait for
 		// a late descriptor instead of claiming reachable.
 	}
+	// up before 100% was read: the flip waits for the status to catch up
+	// rather than being lost, within this route
+	gen, waited := routeGeneration(), time.Now()
+	for torStatusNow() == "starting" {
+		if routeGeneration() != gen || time.Since(waited) > publishSettleMax {
+			return
+		}
+		select {
+		case <-gone:
+			return
+		case <-time.After(publishSettle):
+		}
+	}
 	statusMu.Lock()
 	if torStatus == "publishing" {
 		log.Println("halo: status publishing -> reachable (HSDir uploaded)")
 		torStatus = "reachable"
+		torStatusMoved()
 		notePublished()
 		go func() {
 			for _, lane := range mainLanes() {
@@ -777,6 +966,10 @@ var stuckAfter = 2 * time.Minute
 // how many reconnects got past the guards, for the tests that count storms
 var reconnectRuns atomic.Int64
 
+// reconnects claimed and not yet released, replaced ones too, so a test
+// can see them all out before it puts back what they read
+var reconnectsLive atomic.Int32
+
 // one reconnect at a time, ever. the owner, the running flags and the done
 // channel of the one running change together under reconnectMu: a reconnect
 // that takes over makes itself the owner and waits for the one it replaced
@@ -851,6 +1044,7 @@ func reconnectClaim(force bool) (me int64, prev, done chan struct{}, err string)
 	reconnectDone = done
 	atomic.StoreInt32(&torRestarting, 1)
 	reconnectRuns.Add(1)
+	reconnectsLive.Add(1)
 	return me, prev, done, ""
 }
 
@@ -871,6 +1065,7 @@ func reconnectRelease(me int64, done chan struct{}) {
 	}
 	reconnectMu.Unlock()
 	close(done)
+	reconnectsLive.Add(-1)
 }
 
 func reconnectTorAs(force bool, why string) string { return reconnectTorBy(force, false, why) }
@@ -916,10 +1111,11 @@ func reconnectTorBy(force, auto bool, why string) string {
 	}
 	atomic.StoreInt64(&lastTorRestart, now)
 	noteBounce(why)
+	noteTorBounced()
 
 	mu.Lock()
 	t := torNode
-	dir := savedDataDir
+	dir := savedDataDir()
 	addr := myAddr
 	mu.Unlock()
 
@@ -1322,6 +1518,26 @@ func handleConn(conn net.Conn) {
 			return
 		}
 		line = strings.TrimSpace(line)
+		// a linked device asking for its history copy, under the link's
+		// key: answered with what it asked for, never the inbox
+		if ans, ok := histDoorTake(line); ok {
+			conn.SetWriteDeadline(time.Now().Add(histAskWait))
+			if _, err := conn.Write([]byte(ans + "\n")); err != nil {
+				return
+			}
+			conn.SetReadDeadline(deadline(doorNextLine))
+			continue
+		}
+		// a linking device's bundles, for the link that waits with its
+		// token: never the inbox. with no link waiting it is junk below
+		if linkDoorTake(line) {
+			conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if _, err := conn.Write([]byte(doorAck)); err != nil {
+				return
+			}
+			conn.SetReadDeadline(deadline(doorNextLine))
+			continue
+		}
 		// junk never reaches dart's trial decrypts, and a full or repeated
 		// inbox takes nothing more. no ack either way: an honest sender
 		// retries through its backoff, a flood learns nothing.
@@ -1344,14 +1560,7 @@ func handleConn(conn net.Conn) {
 
 //export HaloGetStatus
 func HaloGetStatus() *C.char {
-	ok, gen := 0, routeGeneration()
-	if routeOK() {
-		ok = 1
-	}
-	statusMu.RLock()
-	defer statusMu.RUnlock()
-	// status|bootstrap|hsdir uploads|route carries traffic|route generation
-	return C.CString(fmt.Sprintf("%s|%d|%d|%d|%d", torStatus, bootstrapPct, hsdirUploads, ok, gen))
+	return C.CString(statusLine())
 }
 
 //export HaloDrainInbox
@@ -1368,20 +1577,88 @@ func HaloDrainInbox() *C.char {
 
 //export HaloSendTo
 func HaloSendTo(cAddr *C.char, cMsg *C.char) *C.char {
+	return C.CString(sendDirect(goStr(cAddr), goStr(cMsg)))
+}
+
+// what HaloSendTo answers before our onion is published. callers take the
+// relay at once, as for a direct route that is down
+const errNotPublished = "error: not published yet"
+
+// set once this tor has put our descriptor up, kept through bounces and
+// wakes: tor keeps its intro points through those and uploads again only
+// on its own clock, an hour or two later
+var publishedOnce atomic.Bool
+
+// how long a first publish may hold the direct route, for an upload that
+// is never heard of (no event subscription, a stuck event connection)
+var directAfter = 30 * time.Second
+
+// the direct route joins once our onion is published: until then a send
+// goes by the relays alone instead of waiting on a dial beside the publish.
+// only the first publish of this tor counts, so a bounce changes nothing
+func directOpen() bool {
+	switch torStatusNow() {
+	case "reachable":
+		return true
+	case "publishing":
+		if publishedOnce.Load() {
+			return true
+		}
+		txMu.RLock()
+		since := pubSince
+		txMu.RUnlock()
+		return !since.IsZero() && time.Since(since) > directAfter
+	}
+	return false
+}
+
+func sendDirect(addr, msg string) string {
+	mu.Lock()
+	t := torNode
+	mu.Unlock()
+	if t == nil {
+		return "error: tor not started"
+	}
+	if !directOpen() {
+		return errNotPublished
+	}
+	if err := sendTo(t, addr, msg); err != nil {
+		return "error: " + err.Error()
+	}
+	log.Printf("halo: sent %d bytes to %s", len(msg), addr)
+	return "ok"
+}
+
+// a typing frame straight to the peer's door (sendTyping). nothing about
+// it is logged: not the onion, not the size, not the outcome
+//
+//export HaloSendTyping
+func HaloSendTyping(cAddr *C.char, cMsg *C.char) *C.char {
 	addr := goStr(cAddr)
 	msg := goStr(cMsg)
-
 	mu.Lock()
 	t := torNode
 	mu.Unlock()
 	if t == nil {
 		return C.CString("error: tor not started")
 	}
-	if err := sendTo(t, addr, msg); err != nil {
-		return C.CString("error: " + err.Error())
+	if err := sendTyping(t, addr, msg); err != nil {
+		return C.CString("error: " + typingWhy(err))
 	}
-	log.Printf("halo: sent %d bytes to %s", len(msg), addr)
 	return C.CString("ok")
+}
+
+// what dart hears of a failed typing line: the kind of failure, never a
+// dial error that could name the onion
+func typingWhy(err error) string {
+	switch {
+	case errors.Is(err, errTypingRoute), errors.Is(err, errTypingShape), errors.Is(err, errTypingTo):
+		return err.Error()
+	case errors.Is(err, context.DeadlineExceeded):
+		return "timeout"
+	default:
+		return "not delivered"
+	}
 }
 
 // the door answers "ack\n" and nothing else. only that many bytes are read,
@@ -1466,21 +1743,23 @@ func HaloDecryptBackup(cBlob, cPassphrase *C.char) *C.char {
 // a chunk is not copied through a c string.
 
 // derives the backup key. salt is exactly 16 bytes. returns the key as
-// hex, or "error: ...".
+// hex, or "error: ...". the passphrase and the key are cleared here
 //
 //export HaloBackupKey
 func HaloBackupKey(cPassphrase *C.char, cSalt *C.uchar) *C.char {
 	salt := C.GoBytes(unsafe.Pointer(cSalt), 16)
-	key, err := scrypt.Key([]byte(goStr(cPassphrase)), salt, 32768, 8, 1, 32)
+	pass := goSecret(cPassphrase)
+	key, err := scrypt.Key(pass, salt, 32768, 8, 1, 32)
+	clear(pass)
 	if err != nil {
 		return C.CString("error: scrypt: " + err.Error())
 	}
-	return C.CString(hex.EncodeToString(key))
+	defer clear(key)
+	return cHexSecret(key)
 }
 
-func backupGCM(keyHex string) (cipher.AEAD, error) {
-	key, err := hex.DecodeString(keyHex)
-	if err != nil || len(key) != 32 {
+func backupGCM(key []byte) (cipher.AEAD, error) {
+	if len(key) != 32 {
 		return nil, fmt.Errorf("bad key")
 	}
 	block, err := aes.NewCipher(key)
@@ -1501,52 +1780,84 @@ func backupNonce(index uint64) []byte {
 	return n
 }
 
-// seals inLen bytes at in into out, which must have room for inLen+16.
-// returns the sealed length, or -1.
+// seals inLen bytes at in into out, which must have room for inLen+16,
+// under the key handle [h] (HaloChunkKeyOpen). the bytes are read and
+// written in place: no go copy of the plaintext is made. returns the
+// sealed length, or -1.
 //
 //export HaloSealChunk
-func HaloSealChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
-	gcm, err := backupGCM(goStr(cKey))
-	if err != nil || inLen < 0 {
+func HaloSealChunk(h C.longlong, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
+	if inLen < 0 || in == nil || out == nil {
 		return -1
 	}
-	plain := C.GoBytes(unsafe.Pointer(in), inLen)
-	ct := gcm.Seal(nil, backupNonce(uint64(index)), plain, []byte{byte(typ)})
-	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), len(ct))
-	copy(dst, ct)
-	return C.int(len(ct))
+	n := int(inLen)
+	plain := unsafe.Slice((*byte)(unsafe.Pointer(in)), n)
+	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), n+16)
+	return C.int(sealChunkAt(int64(h), uint64(index), byte(typ), plain, dst))
 }
 
-// opens inLen sealed bytes at in into out, which must have room for inLen.
-// returns the plaintext length, or -1 when the passphrase is wrong, the
-// record was moved, or the bytes were changed.
-//
-//export HaloOpenChunk
-func HaloOpenChunk(cKey *C.char, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
-	gcm, err := backupGCM(goStr(cKey))
-	if err != nil || inLen < 16 {
+// [plain] sealed into [dst], which has room for it and the tag: the
+// sealed length, or -1
+func sealChunkAt(h int64, index uint64, typ byte, plain, dst []byte) int {
+	gcm := chunkKeyOf(h)
+	if gcm == nil || cap(dst) < len(plain)+gcm.Overhead() {
 		return -1
 	}
-	ct := C.GoBytes(unsafe.Pointer(in), inLen)
-	plain, err := gcm.Open(nil, backupNonce(uint64(index)), ct, []byte{byte(typ)})
+	return len(gcm.Seal(dst[:0], backupNonce(index), plain, []byte{typ}))
+}
+
+// opens inLen sealed bytes at in into out, which must have room for inLen,
+// under the key handle [h]. returns the plaintext length, or -1 when the
+// key is wrong, the record was moved, or the bytes were changed.
+//
+//export HaloOpenChunk
+func HaloOpenChunk(h C.longlong, index C.ulonglong, typ C.uchar, in *C.uchar, inLen C.int, out *C.uchar) C.int {
+	if inLen < 16 || in == nil || out == nil {
+		return -1
+	}
+	n := int(inLen)
+	ct := unsafe.Slice((*byte)(unsafe.Pointer(in)), n)
+	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), n)
+	return C.int(openChunkAt(int64(h), uint64(index), byte(typ), ct, dst))
+}
+
+// [sealed] opened into [dst]: the plaintext length, or -1
+func openChunkAt(h int64, index uint64, typ byte, sealed, dst []byte) int {
+	gcm := chunkKeyOf(h)
+	if gcm == nil || len(sealed) < gcm.Overhead() || cap(dst) < len(sealed) {
+		return -1
+	}
+	plain, err := gcm.Open(dst[:0], backupNonce(index), sealed, []byte{typ})
 	if err != nil {
 		return -1
 	}
-	dst := unsafe.Slice((*byte)(unsafe.Pointer(out)), len(plain))
-	copy(dst, plain)
-	return C.int(len(plain))
+	return len(plain)
+}
+
+// how long one watch waits for an upload before it looks again. set by the
+// tests alone
+var hsdirWaitNs atomic.Int64
+
+func hsdirWait() time.Duration {
+	if d := hsdirWaitNs.Load(); d > 0 {
+		return time.Duration(d)
+	}
+	return 120 * time.Second
 }
 
 // watchHSDirUpload reads tor's HS_DESC events and returns true as soon as
-// our descriptor is uploaded, or false after 120s. most networks upload
-// within 5-15 seconds.
-func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string) bool {
+// our descriptor is uploaded, or false after hsdirWait. most networks
+// upload within 5-15 seconds.
+func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID string, gone chan struct{}) bool {
+	timeout := time.After(hsdirWait())
 	if t == nil || t.Control == nil || !subbed {
-		time.Sleep(120 * time.Second)
+		select {
+		case <-gone:
+		case <-timeout:
+		}
 		return false
 	}
 
-	timeout := time.After(120 * time.Second)
 	// how many hsdirs we have handed the descriptor to. the hashring is six
 	// per replica, so three is a comfortable majority of one replica and the
 	// descriptor is fetchable well before that.
@@ -1584,11 +1895,32 @@ func watchHSDirUpload(t *tor.Tor, ch chan control.Event, subbed bool, onionID st
 				log.Printf("halo: HS_DESC UPLOADED received for %s", onionID)
 				return true
 			}
+		// a watcher for a tor that is gone gives up its slot
+		case <-gone:
+			return false
 		case <-timeout:
-			log.Printf("halo: no hsdir upload confirmed in 120s, staying in publishing and still trying")
+			log.Printf("halo: no hsdir upload confirmed in %s, staying in publishing and still trying", hsdirWait())
 			return false
 		}
 	}
+}
+
+// closed and replaced under mu whenever torNode changes, so a watcher of
+// the tor before lets go
+var torGone = make(chan struct{})
+
+func torGoneCh() chan struct{} {
+	mu.Lock()
+	defer mu.Unlock()
+	return torGone
+}
+
+// for the tests, which set torNode themselves
+func torGoneNow() {
+	mu.Lock()
+	close(torGone)
+	torGone = make(chan struct{})
+	mu.Unlock()
 }
 
 // polls tor for real bootstrap progress. tor.Start only means the process
@@ -1601,12 +1933,23 @@ var (
 	bootPoll     = 2 * time.Second
 	bootPollSlow = 15 * time.Second
 	bootFast     = 10 * time.Minute
+	// past bootEndPct tor is building its first circuits and 100% is
+	// close: asked this often, so tor up is read as it happens. no event
+	// subscription for it: a SETEVENTS that never answers holds the event
+	// connection's read lock, and the onion's upload events with it
+	bootPollEnd = 250 * time.Millisecond
+	bootEndPct  = 75
+	// a tor held there, behind a censor, goes back to the usual poll
+	bootEndFor = 30 * time.Second
 )
 
 func watchBootstrap(t *tor.Tor) {
 	lastPct := -1
 	gen := routeGeneration()
 	began := time.Now()
+	var endAt time.Time
+	// asks in a row tor's control port did not answer
+	silent := 0
 	for {
 		if t == nil || t.Control == nil || torIsPaused() {
 			return
@@ -1620,7 +1963,7 @@ func watchBootstrap(t *tor.Tor) {
 		// a bounce set the percentage to 0: whatever tor says next is news,
 		// even the number this watcher saw before it
 		if g := routeGeneration(); g != gen {
-			gen, lastPct = g, -1
+			gen, lastPct, endAt = g, -1, time.Time{}
 		}
 		var kv []*control.KeyVal
 		err := ctrlDo(t, "GETINFO bootstrap-phase", func(c *control.Conn) error {
@@ -1628,6 +1971,16 @@ func watchBootstrap(t *tor.Tor) {
 			kv, gerr = c.GetInfo("status/bootstrap-phase")
 			return gerr
 		})
+		if err != nil {
+			// a control port that stopped answering says nothing of tor:
+			// the start's sockets do not wait on it, their dials tell
+			if silent++; silent == 3 {
+				log.Println("halo: tor's control port is silent, the start's sockets dial")
+				openStartGate()
+			}
+		} else {
+			silent = 0
+		}
 		if err == nil && len(kv) > 0 {
 			pct := parseBootstrapPct(kv[0].Val)
 			if pct != lastPct {
@@ -1636,22 +1989,34 @@ func watchBootstrap(t *tor.Tor) {
 				bootstrapPct = pct
 				noteBootstrapProgress(pct)
 				statusMu.Unlock()
+				startSteps.torPct(pct)
 				log.Printf("halo: tor bootstrap %d%%", pct)
 			}
 			if pct >= 100 {
 				noteTorUp(t)
+				startSteps.torReady()
 				statusMu.Lock()
 				cur := torStatus
 				statusMu.Unlock()
 				if cur != "reachable" {
-					setStatus("publishing")
-					notePublishing()
+					setStatus(upStatus())
+					if !torClientOnly() {
+						notePublishing()
+					}
 				}
 				return
 			}
 		}
 		// with no network there is nothing to climb: ask less often
 		wait := bootPoll
+		if lastPct >= bootEndPct {
+			if endAt.IsZero() {
+				endAt = time.Now()
+			}
+			if time.Since(endAt) < bootEndFor {
+				wait = bootPollEnd
+			}
+		}
 		if time.Since(began) > bootFast || netAway() {
 			wait = bootPollSlow
 		}

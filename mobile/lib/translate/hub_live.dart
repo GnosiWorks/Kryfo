@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// the phone's translation hub: settings in the identity's database, packs
+// in the app's own storage, downloads by the engine over tor, bergamot when
+// the build has it.
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/widgets.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../lock_state.dart' show lockState;
+import '../transfers.dart' show unmeteredNow;
+import '../main.dart' show appState, session, sessionQuiet;
+import 'bergamot_ffi.dart';
+import 'catalog.dart';
+import 'downloads.dart';
+import 'engine_bridge.dart';
+import 'hub.dart';
+import 'settings.dart';
+
+// the packs are the phone's, not an identity's: one copy whoever reads
+Future<String> modelsDir() async =>
+    p.join((await getApplicationSupportDirectory()).path, 'translate');
+
+// a computer: a cable or a vpn counts as wi-fi does for its downloads
+Future<bool> _onWifi() async {
+  if (onDesktop) return unmeteredNow();
+  try {
+    return (await Connectivity().checkConnectivity()).contains(
+      ConnectivityResult.wifi,
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+TranslationHub translationHub() => TranslationHub.instance ??= _live();
+
+// on: the translation library ships in the build
+const kOfflineTranslation = true;
+
+// the hub while translation is on, or one a test set. null: no screen
+// shows translation and nothing of it is built
+TranslationHub? translationHubIfOn() =>
+    TranslationHub.instance ?? (kOfflineTranslation ? translationHub() : null);
+
+TranslationHub _live() {
+  final engine = FfiTranslateEngine();
+  final catalog = engine.catalog() ?? builtInCatalog;
+  late final TranslationHub hub;
+  final downloads = ModelDownloads(
+    backend: EngineModelBackend(engine, modelsDir, () => catalog),
+    onWifi: _onWifi,
+    wifiOnly: () => hub.settings.wifiOnly,
+    quiet: () => sessionQuiet,
+    // asked for off wi-fi: starts by itself once the phone is on it
+    wifiWait: const Duration(seconds: 5),
+  );
+  String? dir;
+  // no storage folder to ask (a test, a broken plugin): no config, so
+  // nothing translates, and nothing throws
+  modelsDir().then<void>((d) => dir = d, onError: (Object _) {});
+  final translator = BergamotTranslator(
+    installed: (f, t) => downloads.installed(catalog.bundleFor(f, t)?.id ?? ''),
+    config: (f, t) => dir == null ? null : engine.config(f, t, dir!),
+  );
+  hub = TranslationHub(
+    // read each time: the session changes with the identity
+    store: DbTranslateStore(
+      () => session.settingsDb(),
+      chatDb: (id) => session.chatDb(id),
+      open: () => session.openDbs(),
+    ),
+    engine: engine,
+    catalog: catalog,
+    translator: translator,
+    downloads: downloads,
+    scope: () => session.container.id,
+  );
+  // a hidden chat's switch is not kept once its vault shuts
+  hub.followSessions(appState, () => appState.sessionRev);
+  // nothing translated or guessed is kept behind the lock
+  hub.followLock(lockState, () => lockState.locked);
+  WidgetsBinding.instance.addObserver(TranslateAway(hub));
+  return hub;
+}

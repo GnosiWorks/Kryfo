@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/l10n.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateVault;
 import '../theme.dart';
 
 // the mark after a hidden chat's name. it comes and goes with a small

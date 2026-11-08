@@ -8,7 +8,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/lock_state.dart';
-import 'package:kryfo/main.dart' show HaloDb, appState, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show HaloDb, appState, useDatabasesForTest, AppStateMessages;
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/session.dart';
@@ -144,7 +145,7 @@ class _GroupDb implements HaloDb {
     Future<Set<String>> Function()? blocked,
   }) async {}
   @override
-  Future<void> deleteMessage(String msgUid) async {}
+  Future<void> deleteMessage(String msgUid, {String? from}) async {}
 
   @override
   dynamic noSuchMethod(Invocation i) =>

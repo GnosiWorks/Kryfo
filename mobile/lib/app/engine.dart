@@ -29,6 +29,22 @@ typedef FourArgFnDart =
       Pointer<Utf8>,
       Pointer<Utf8>,
     );
+// the calls that seal, open, listen or derive an address: the identity
+// they run on comes first (identities.dart)
+typedef IdentFn = Pointer<Utf8> Function(Int32);
+typedef IdentFnDart = Pointer<Utf8> Function(int);
+typedef IdentOneFn = Pointer<Utf8> Function(Int32, Pointer<Utf8>);
+typedef IdentOneFnDart = Pointer<Utf8> Function(int, Pointer<Utf8>);
+typedef IdentTwoFn =
+    Pointer<Utf8> Function(Int32, Pointer<Utf8>, Pointer<Utf8>);
+typedef IdentTwoFnDart =
+    Pointer<Utf8> Function(int, Pointer<Utf8>, Pointer<Utf8>);
+typedef IdentThreeFn =
+    Pointer<Utf8> Function(Int32, Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef IdentThreeFnDart =
+    Pointer<Utf8> Function(int, Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef IdentCounterFn = Pointer<Utf8> Function(Int32, Int32);
+typedef IdentCounterFnDart = Pointer<Utf8> Function(int, int);
 typedef CounterFn = Pointer<Utf8> Function(Int32);
 typedef CounterFnDart = Pointer<Utf8> Function(int);
 typedef StrCounterFn = Pointer<Utf8> Function(Pointer<Utf8>, Int32);
@@ -44,8 +60,8 @@ class HaloEngine {
   late final CStrFnDart _myXPub;
   late final CStrFnDart _myEdPriv;
   late final CStrFnDart _myXPriv;
-  late final TwoArgFnDart _encryptFor;
-  late final TwoArgFnDart _decryptFrom;
+  late final IdentTwoFnDart _encryptFor;
+  late final IdentTwoFnDart _decryptFrom;
   late final Pointer<Utf8> Function(Pointer<Utf8>) _start;
   late final CStrFnDart _drainInbox;
   late final IntArgFnDart _setDebug;
@@ -53,9 +69,9 @@ class HaloEngine {
   late final CStrFnDart _nostrKick;
   late final CStrFnDart _memStats;
   late final OneArgFnDart _nostrInit;
-  late final OneArgFnDart _nostrSubscribe;
+  late final IdentOneFnDart _nostrSubscribe;
   late final CStrFnDart _nostrPoll;
-  late final CounterFnDart _fcPk;
+  late final IdentCounterFnDart _fcPk;
   late final CStrFnDart _txState;
   late final int Function() _torPaused;
   late final CStrFnDart _restartTor;
@@ -64,9 +80,7 @@ class HaloEngine {
   late final TwoArgFnDart _decryptBackup;
 
   HaloEngine() {
-    _lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    _lib = haloLibrary();
     _version = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloVersion');
     _genIdentity = _lib.lookupFunction<CStrFn, CStrFnDart>(
       'HaloGenerateIdentity',
@@ -79,8 +93,10 @@ class HaloEngine {
     _myXPub = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPubkey');
     _myEdPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyEdPrivkey');
     _myXPriv = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMyXPrivkey');
-    _encryptFor = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloEncryptFor');
-    _decryptFrom = _lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
+    _encryptFor = _lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(
+      'HaloEncryptFor',
+    );
+    _decryptFrom = _lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(
       'HaloDecryptFrom',
     );
     _start = _lib
@@ -93,11 +109,13 @@ class HaloEngine {
     _nostrKick = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrKick');
     _memStats = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloMemStats');
     _nostrInit = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrInit');
-    _nostrSubscribe = _lib.lookupFunction<OneArgFn, OneArgFnDart>(
+    _nostrSubscribe = _lib.lookupFunction<IdentOneFn, IdentOneFnDart>(
       'HaloNostrSubscribe',
     );
     _nostrPoll = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloNostrPoll');
-    _fcPk = _lib.lookupFunction<CounterFn, CounterFnDart>('HaloFirstContactPk');
+    _fcPk = _lib.lookupFunction<IdentCounterFn, IdentCounterFnDart>(
+      'HaloFirstContactPk',
+    );
     _txState = _lib.lookupFunction<CStrFn, CStrFnDart>('HaloTransportState');
     _torPaused = _lib.lookupFunction<Int32 Function(), int Function()>(
       'HaloTorPaused',
@@ -114,8 +132,9 @@ class HaloEngine {
     );
     _setDebug = _lib.lookupFunction<IntArgFn, IntArgFnDart>('HaloSetDebug');
     // engine logs to logcat only in debug. release builds stay silent so no
-    // onion address, peer id, or tor timing ever lands in the log.
-    _setDebug(kDebugMode ? 1 : 0);
+    // onion address, peer id, or tor timing ever lands in the log. a
+    // computer started with KRYFO_TRACE=1 writes it to its 0600 file
+    _setDebug(desk_trace.engineLogWanted(debug: kDebugMode) ? 1 : 0);
   }
 
   // every string back from the engine is copied and freed through
@@ -128,6 +147,23 @@ class HaloEngine {
   String myXPubkey() => engineTake(_myXPub());
   String myEdPrivkey() => engineTakeSecret(_myEdPriv());
   String myXPrivkey() => engineTakeSecret(_myXPriv());
+  // a go panic or fatal error written into [path] (KRYFO_TRACE=1). an
+  // engine from before it has no such call: false
+  bool traceCrash(String path) {
+    final OneArgFnDart f;
+    try {
+      f = _lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTraceCrash');
+    } catch (_) {
+      return false;
+    }
+    final ptr = path.toNativeUtf8();
+    try {
+      return engineTake(f(ptr)) == 'ok';
+    } finally {
+      malloc.free(ptr);
+    }
+  }
+
   String startListener(String dataDir) {
     final ptr = dataDir.toNativeUtf8();
     try {
@@ -161,6 +197,46 @@ class HaloEngine {
       // an older engine without the call
     } finally {
       malloc.free(p);
+    }
+  }
+
+  // the start's steps since the last call, for a computer's trace: times
+  // and counts only. looked up on first use so older engines still load
+  late final CStrFnDart _startSteps = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloStartSteps',
+  );
+  List<String> startSteps() {
+    try {
+      final raw = engineTake(_startSteps());
+      return raw.isEmpty ? const [] : raw.split('\n');
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  // the start's new messages are in: the batch of the chats on top of the
+  // list caught up. true for an older engine without the call
+  late final CStrFnDart _startCaught = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloStartCaught',
+  );
+  bool startCaught() {
+    try {
+      return engineTake(_startCaught()) != '0';
+    } catch (_) {
+      return true;
+    }
+  }
+
+  // a card is on screen to scan or to show: the hello lane's circuits are
+  // built ahead, so the first hello and its answer do not wait for them
+  late final CStrFnDart _warmHello = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloNostrWarmHello',
+  );
+  void nostrWarmHello() {
+    try {
+      engineTake(_warmHello());
+    } catch (_) {
+      // an older engine without the call
     }
   }
 
@@ -235,30 +311,65 @@ class HaloEngine {
   // offloaded to a background isolate so a slow relay never freezes the ui.
   // the 1:1 doors ask the dev gate first: a pinned key's lane is the dev
   // chat's alone
-  Future<String> nostrSend(String peerXPubHex, String b64Cipher) =>
+  Future<String> nostrSend(int ident, String peerXPubHex, String b64Cipher) =>
       devGate.nostrSend(
         peerXPubHex,
         b64Cipher,
         // a frame no signal seal covers is filled out here, inside the
         // relay's encryption
-        out: () =>
-            _sendOnIsolate((
-              nostr: true,
-              a: peerXPubHex,
-              b: padRumor(b64Cipher),
-            )).timeout(
-              const Duration(seconds: 60),
-              onTimeout: () => 'error: relay timeout',
-            ),
+        out: () => _onPair(
+          ident,
+          peerXPubHex,
+          (pair) =>
+              _sendOnIsolate((
+                nostr: true,
+                ident: ident,
+                a: pair,
+                b: padRumor(b64Cipher),
+                // a hidden chat's: on its own lane, over tor on every route
+                hidden: hiddenSendPeer(peerXPubHex),
+              )).timeout(
+                const Duration(seconds: 60),
+                onTimeout: () => 'error: relay timeout',
+              ),
+        ),
         room: (priv) => roomSend(priv, peerXPubHex, b64Cipher),
       );
 
   // [fresh]: someone just added or accepted, heard without a turn
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {
     _background(
       devGate.listen(
         peerXPubHex,
-        out: () => _subscribeOnIsolate(peerXPubHex, fresh: fresh),
+        out: () => _onPair(
+          ident,
+          peerXPubHex,
+          (pair) => _subscribeOnIsolate(ident, pair, fresh: fresh),
+        ),
+        room: (priv) async {
+          roomSubscribeBg(priv, peerXPubHex);
+          return 'ok';
+        },
+      ),
+      'relay listen',
+    );
+  }
+
+  // a hidden chat: its address keeps a relay socket of its own
+  void nostrSubscribeHiddenBg(
+    int ident,
+    String peerXPubHex, {
+    bool fresh = false,
+  }) {
+    _background(
+      devGate.listen(
+        peerXPubHex,
+        out: () => _onPair(
+          ident,
+          peerXPubHex,
+          (pair) =>
+              _subscribeOnIsolate(ident, pair, fresh: fresh, hidden: true),
+        ),
         room: (priv) async {
           roomSubscribeBg(priv, peerXPubHex);
           return 'ok';
@@ -382,6 +493,24 @@ class HaloEngine {
     }
   }
 
+  // google push: the fcm token sealed once to the gateway's key, a new seal
+  // each call (engine/push_seal.go). "error: ..." for a key or a token that
+  // is not one, or an engine without the call
+  String pushSeal(String publicKey, String token) {
+    final k = publicKey.toNativeUtf8();
+    final t = token.toNativeUtf8();
+    try {
+      return engineTake(
+        _lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloPushSeal')(k, t),
+      );
+    } catch (_) {
+      return 'error: no engine';
+    } finally {
+      malloc.free(k);
+      malloc.free(t);
+    }
+  }
+
   // the bridges that come with kryfo for one transport
   List<String> builtinBridges(String transport) {
     try {
@@ -473,6 +602,32 @@ class HaloEngine {
   Future<String> handleCheck(String h) =>
       _ffiOnIsolate('HaloHandleCheck', [h], wait: registryWait);
 
+  // the decoy's read-only lookups, on a lane of their own whose socks name
+  // is made again for every decoy session (engine/quiet.go)
+  Future<String> decoyHandleCheck(String h) =>
+      _ffiOnIsolate('HaloDecoyHandleCheck', [h], wait: registryWait);
+
+  Future<String> decoyTorGetJson(String url) => _ffiOnIsolate(
+    'HaloDecoyTorGetJSON',
+    [url],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  Future<String> decoyTorPost(String url, String body) => _ffiOnIsolate(
+    'HaloDecoyTorPost',
+    [url, body],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  late final CStrFnDart _decoyLaneNew = _lib.lookupFunction<CStrFn, CStrFnDart>(
+    'HaloDecoyLaneNew',
+  );
+
+  /// a decoy session opens: its lookups go under a new socks name
+  void decoyLaneNew() => engineTake(_decoyLaneNew());
+
   Future<String> handleClaim(String h, String invite, String bio) =>
       _ffiOnIsolate('HaloHandleClaim', [h, invite, bio], wait: registryWait);
 
@@ -541,31 +696,202 @@ class HaloEngine {
     }
   }
 
-  String firstContactPk(int counter) => engineTake(_fcPk(counter));
+  // the main identity's v3 first-contact address at [counter]: no other
+  // identity has one (fcKeyPk)
+  String firstContactPk(int ident, int counter) =>
+      engineTake(_fcPk(ident, counter));
 
-  // put an invite where a six digit code points, and look for one there. a
-  // look that never came back heard from no relay, so it says nothing about
-  // the code. a share waits past the engine's publishWait, so a slow onion
-  // dial that lands is not reported as unreached
-  Future<String> pairCodePublish(String code, String payload) =>
-      _pairCodeOnIsolate(
-        code,
-        payload,
-      ).timeout(const Duration(seconds: 60), onTimeout: () => pairUnreached);
+  // the public half of an invite's random first-contact key, an error
+  // string for 32 bytes that are not a secp256k1 key
+  late final OneArgFnDart _fcKeyPk = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloFcKeyPk');
+  String fcKeyPk(String skHex) {
+    final p = skHex.toNativeUtf8();
+    try {
+      return engineTake(_fcKeyPk(p));
+    } finally {
+      freeSecret(p);
+    }
+  }
 
-  Future<String> pairCodeFetch(String code) => _pairCodeOnIsolate(
-    code,
-    null,
-  ).timeout(const Duration(seconds: 40), onTimeout: () => pairUnreached);
+  // listen on, or let go of, invite [inviteId]'s first-contact key of
+  // [ident]
+  Future<String> subscribeFcKey(int ident, String inviteId, String skHex) =>
+      _identFfiOnIsolate('HaloNostrSubscribeFcKey', ident, [inviteId, skHex]);
+  Future<String> unsubscribeFcKey(int ident, String inviteId) =>
+      _identFfiOnIsolate('HaloNostrUnsubscribeFcKey', ident, [inviteId]);
+
+  // identity v4 invites (invite_v4.go): the face signature over a face
+  // text by the legacy ed key, an onion key's address, the seal key a v4
+  // first contact to my [ident] from [senderXHex] must carry
+  late final OneArgFnDart _faceSign = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloFaceSign');
+  String faceSign(String msgHex) {
+    final p = msgHex.toNativeUtf8();
+    try {
+      return engineTake(_faceSign(p));
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  late final OneArgFnDart _onionOfKey = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloOnionOfKey');
+  String onionOfKey(String keyHex) {
+    final p = keyHex.toNativeUtf8();
+    try {
+      return engineTake(_onionOfKey(p));
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  late final IdentOneFnDart _helloSealPk = _lib
+      .lookupFunction<IdentOneFn, IdentOneFnDart>('HaloHelloSealPk');
+  String helloSealPk(int ident, String senderXHex) {
+    final p = senderXHex.toNativeUtf8();
+    try {
+      return engineTake(_helloSealPk(ident, p));
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  // a hello or a v4 opener from my [ident] to [fcPk], the first-contact key
+  // of an invite answered by [ownerXHex], under the two's hello seal key
+  Future<String> sendHello(
+    int ident,
+    String ownerXHex,
+    String fcPk,
+    String msg,
+  ) =>
+      _identFfiOnIsolate('HaloNostrSendHello', ident, [
+        ownerXHex,
+        fcPk,
+        padRumor(msg),
+      ]).timeout(
+        const Duration(seconds: 60),
+        onTimeout: () => 'error: relay timeout',
+      );
+
+  // an identity other than the main one, by its x25519 key, and let go
+  late final IdentOneFnDart _identityPut = _lib
+      .lookupFunction<IdentOneFn, IdentOneFnDart>('HaloIdentityPut');
+  late final IdentFnDart _identityDrop = _lib
+      .lookupFunction<IdentFn, IdentFnDart>('HaloIdentityDrop');
+  String identityPut(int ident, String xPrivHex) {
+    final p = xPrivHex.toNativeUtf8();
+    try {
+      return engineTake(_identityPut(ident, p));
+    } finally {
+      freeSecret(p);
+    }
+  }
+
+  String identityDrop(int ident) => engineTake(_identityDrop(ident));
+
+  // a pair a v4 first contact made: its address seed
+  Future<String> pairSeed(int ident, String peerXPubHex, String seedHex) =>
+      _identFfiOnIsolate('HaloPairSeed', ident, [peerXPubHex, seedHex]);
+
+  // linked devices: device-pair args ("x/their/my") on or off in the
+  // engine. off refuses every one, as today
+  late final IdentFnDart _devicePairsOn = _lib
+      .lookupFunction<IdentFn, IdentFnDart>('HaloDevicePairsOn');
+  String devicePairsOn(bool on) => engineTake(_devicePairsOn(on ? 1 : 0));
+
+  // listening on a device pair (device_receive.dart): [arg] "x/their/my"
+  // for its opener address, "x/their/my.seed" for the seeded pair
+  // a device pair is never the dev chat's: a pinned key is not listened on
+  // [hidden]: a hidden chat's contact's device pair, on a lane of its own
+  void deviceListenBg(int ident, String arg, {bool hidden = false}) {
+    if (devGate.names(xPub: arg.split('/').first)) return;
+    deviceTagStep(
+      ident,
+      arg,
+      () => _subscribeOnIsolate(ident, arg, hidden: hidden),
+    );
+  }
+
+  // no more listening on a device pair, by its tag; its files go
+  void deviceUnlistenBg(int ident, String arg) => deviceTagStep(
+    ident,
+    arg,
+    () => _identFfiOnIsolate('HaloNostrUnsubscribe', ident, [arg]),
+  );
+
+  // a copy to a device pair, [arg] "x/their/my.seed" (device_send.dart):
+  // on the seeded pair, or with [opener] to the receiver's opener address.
+  // a device pair is never the dev chat's, so a pinned key is refused
+  Future<String> nostrSendDevice(
+    int ident,
+    String arg,
+    String b64Cipher, {
+    bool opener = false,
+  }) {
+    if (devGate.names(xPub: arg.split('/').first)) {
+      return Future.value(kDevRefused);
+    }
+    return _identFfiOnIsolate(
+      opener ? 'HaloNostrSendDeviceOpener' : 'HaloNostrSend',
+      ident,
+      [arg, padRumor(b64Cipher)],
+    ).timeout(
+      const Duration(seconds: 60),
+      onTimeout: () => 'error: relay timeout',
+    );
+  }
+
+  // an eight digit pair code (pair_flow.dart): a run in the engine named by
+  // its handle. share puts the offer up and gives the code to show; join
+  // takes the typed code as bytes, zeroed once the engine read them; step
+  // is one round over the relays. the keys never come out
+  Future<String> pairShare(Uint8List invite) => _pairOnIsolate(
+    'HaloPairShare',
+    base64Encode(invite),
+  ).timeout(const Duration(seconds: 150), onTimeout: () => pairUnreached);
+
+  late final TwoArgFnDart _pairJoin = _lib
+      .lookupFunction<TwoArgFn, TwoArgFnDart>('HaloPairJoin');
+  String pairJoin(String code, Uint8List invite) {
+    final c = code.toNativeUtf8();
+    final i = base64Encode(invite).toNativeUtf8();
+    try {
+      return engineTake(_pairJoin(c, i));
+    } finally {
+      freeSecret(c);
+      malloc.free(i);
+    }
+  }
+
+  Future<String> pairStep(int handle) => _pairHandleOnIsolate(
+    'HaloPairStep',
+    handle,
+  ).timeout(const Duration(seconds: 100), onTimeout: () => 'unreached');
+
+  Future<void> pairClose(int handle) =>
+      _pairHandleOnIsolate('HaloPairCancel', handle);
+
+  // a decoy's pairing round: box [box]'s addresses read on the decoy's own
+  // lane, nothing put up, nothing answered. "look" or "unreached"
+  Future<String> decoyPairLook(String box) async {
+    final r = await _ffiOnIsolate(
+      'HaloDecoyPairLook',
+      [box],
+      wait: const Duration(seconds: 100),
+      what: 'relay',
+    );
+    return r == 'look' ? 'look' : 'unreached';
+  }
 
   // unlike every other subscription this needs no contacts
-  void subscribeFirstContactBg(int counter) {
-    _background(_fcSubscribeOnIsolate(counter), 'first contact listen');
+  void subscribeFirstContactBg(int ident, int counter) {
+    _background(_fcSubscribeOnIsolate(ident, counter), 'first contact listen');
   }
 
   // the same, waited on: 'ok', or why the address is not listened on
-  Future<String> subscribeFirstContact(int counter) =>
-      _fcSubscribeOnIsolate(counter);
+  Future<String> subscribeFirstContact(int ident, int counter) =>
+      _fcSubscribeOnIsolate(ident, counter);
 
   late final int Function() _fcRelays = _lib
       .lookupFunction<Int32 Function(), int Function()>(
@@ -577,6 +903,7 @@ class HaloEngine {
 
   // introduce ourselves to someone who has never heard of us.
   Future<String> sendFirstContact(
+    int ident,
     String peerXPubHex,
     String fcPk,
     String b64Cipher,
@@ -584,19 +911,24 @@ class HaloEngine {
     peerXPubHex,
     fcPk,
     b64Cipher,
-    out: () => _fcSendOnIsolate(peerXPubHex, fcPk, padRumor(b64Cipher)).timeout(
-      const Duration(seconds: 60),
-      onTimeout: () => 'error: relay timeout',
+    out: () => _onPair(
+      ident,
+      peerXPubHex,
+      (pair) =>
+          _fcSendOnIsolate(ident, pair, fcPk, padRumor(b64Cipher)).timeout(
+            const Duration(seconds: 60),
+            onTimeout: () => 'error: relay timeout',
+          ),
     ),
     room: (priv) => roomSendFirstContact(priv, peerXPubHex, fcPk, b64Cipher),
   );
 
   // it cannot wait on the dev chat, so it never names a pinned key
-  String nostrSubscribe(String peerXPubHex) {
+  String nostrSubscribe(int ident, String peerXPubHex) {
     if (devGate.names(xPub: peerXPubHex)) return kDevRefused;
     final ptr = peerXPubHex.toNativeUtf8();
     try {
-      return engineTake(_nostrSubscribe(ptr));
+      return engineTake(_nostrSubscribe(ident, ptr));
     } finally {
       malloc.free(ptr);
     }
@@ -615,6 +947,23 @@ class HaloEngine {
   // a donation is still unconfirmed. off the ui thread, as above.
   Future<String> torGetJson(String url) => _ffiOnIsolate(
     'HaloTorGetJSON',
+    [url],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  // people search over tor, on a circuit made for this search alone
+  Future<String> searchPost(String url, String body) => _ffiOnIsolate(
+    'HaloSearchPost',
+    [url, body],
+    wait: const Duration(seconds: 80),
+    what: 'tor',
+  );
+
+  // the own handle's lookup, on the lane its claim and release take, apart
+  // from people search and others' handles
+  Future<String> ownHandleGetJson(String url) => _ffiOnIsolate(
+    'HaloOwnHandleGetJSON',
     [url],
     wait: const Duration(seconds: 80),
     what: 'tor',
@@ -644,6 +993,75 @@ class HaloEngine {
     wait: const Duration(seconds: 80),
     what: 'gif',
   );
+
+  // the files service (file_drop.dart): a send or a fetch runs on an
+  // isolate for as long as the file takes; its progress and its stop are
+  // asked for here, by "s:<message id>" or "f:<file id>"
+  Future<String> fileSend(String job) => _ffiOnIsolate(
+    'HaloFileSend',
+    [job],
+    wait: const Duration(hours: 2),
+    what: 'files',
+  );
+
+  Future<String> fileFetch(String job) => _ffiOnIsolate(
+    'HaloFileFetch',
+    [job],
+    wait: const Duration(hours: 2),
+    what: 'files',
+  );
+
+  Future<String> fileGot(String host, String id, String token) => _ffiOnIsolate(
+    'HaloFileGot',
+    [host, id, token],
+    wait: const Duration(minutes: 3),
+    what: 'files',
+  );
+
+  Future<String> fileValues(String job) => _ffiOnIsolate(
+    'HaloFileValues',
+    [job],
+    wait: const Duration(minutes: 1),
+    what: 'files',
+  );
+
+  Future<String> fileTakeBack(String job) => _ffiOnIsolate(
+    'HaloFileDrop',
+    [job],
+    wait: const Duration(minutes: 3),
+    what: 'files',
+  );
+
+  late final OneArgFnDart _fileProgress = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloFileProgress');
+  late final OneArgFnDart _fileCancel = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloFileCancel');
+
+  /// (done, total) bytes of a transfer under way, or null
+  (int, int)? fileProgress(String key) {
+    final p = fileProgressOf(key);
+    return p == null ? null : (p.done, p.total);
+  }
+
+  /// the same, and whether a send is still doing its work, before any
+  /// byte goes
+  ({int done, int total, bool preparing})? fileProgressOf(String key) {
+    final k = key.toNativeUtf8();
+    try {
+      return parseFileProgress(engineTake(_fileProgress(k)));
+    } finally {
+      malloc.free(k);
+    }
+  }
+
+  void fileCancel(String key) {
+    final k = key.toNativeUtf8();
+    try {
+      engineTake(_fileCancel(k));
+    } finally {
+      malloc.free(k);
+    }
+  }
 
   // what the relays delivered, one entry per event (relay_poll.dart). room
   // frames in it are plaintext, so it is zeroed on the way back
@@ -682,6 +1100,9 @@ class HaloEngine {
   Future<String> torResume() => _torCtlOnIsolate('HaloTorResume');
   Future<String> startListenerBg(String dataDir) =>
       _startListenerOnIsolate(dataDir);
+  // a linked device's tor is a client with no onion of its own, from here
+  // to the end of the process (engine/tor_client.go)
+  Future<String> torClientOnly() => _torCtlOnIsolate('HaloTorClientOnly');
   // whether the engine holds tor asleep. a wake that failed has let it run
   // already, whatever the app thinks
   bool torPaused() => _torPaused() == 1;
@@ -790,22 +1211,22 @@ class HaloEngine {
     }
   }
 
-  String encryptFor(String peerPub, String plain) {
+  String encryptFor(int ident, String peerPub, String plain) {
     final cPub = peerPub.toNativeUtf8();
     final cPlain = plain.toNativeUtf8();
     try {
-      return engineTake(_encryptFor(cPub, cPlain));
+      return engineTake(_encryptFor(ident, cPub, cPlain));
     } finally {
       calloc.free(cPub);
       calloc.free(cPlain);
     }
   }
 
-  String decryptFrom(String peerPub, String b64) {
+  String decryptFrom(int ident, String peerPub, String b64) {
     final cPub = peerPub.toNativeUtf8();
     final cB64 = b64.toNativeUtf8();
     try {
-      return engineTakeSecret(_decryptFrom(cPub, cB64));
+      return engineTakeSecret(_decryptFrom(ident, cPub, cB64));
     } finally {
       calloc.free(cPub);
       calloc.free(cB64);
@@ -815,11 +1236,27 @@ class HaloEngine {
   // offloaded to a background isolate so a slow tor dial never freezes the ui.
   Future<String> sendTo(String addr, String msg) => devGate.sendTo(
     addr,
-    out: () => _sendOnIsolate((nostr: false, a: addr, b: msg)).timeout(
-      const Duration(seconds: 15),
-      onTimeout: () => 'error: onion timeout',
-    ),
+    out: () =>
+        _sendOnIsolate((
+          nostr: false,
+          ident: kMainIdent,
+          a: addr,
+          b: msg,
+          hidden: false,
+        )).timeout(
+          const Duration(seconds: 15),
+          onTimeout: () => 'error: onion timeout',
+        ),
   );
+
+  // a typing frame to a peer's door (HaloSendTyping): the private route
+  // only, one try, nothing kept. an engine without the call sends nothing
+  Future<String> sendTyping(String onion, String line) => _ffiOnIsolate(
+    'HaloSendTyping',
+    [onion, line],
+    wait: const Duration(seconds: 10),
+    what: 'typing',
+  ).catchError((Object e) => 'error: typing (${e.runtimeType})');
 
   // burner rooms. every call hands the room's own private key back to the
   // engine, which never keeps it: the key lives in the room row and dies
@@ -920,18 +1357,71 @@ class HaloEngine {
   // what a full shelf left on the peer's address: "mark" lets it go for the
   // runner's next connection or probe, "free" fetches it by id now, "drop"
   // takes it as kept
-  Future<String> nostrLetHeld(String peerXPubHex, String how) =>
-      _roomFfiOnIsolate('HaloNostrLetHeld', [peerXPubHex, how]);
+  Future<String> nostrLetHeld(int ident, String peerXPubHex, String how) =>
+      _onPair(
+        ident,
+        peerXPubHex,
+        (pair) => _identFfiOnIsolate('HaloNostrLetHeld', ident, [pair, how]),
+      );
 
-  // "mark" for each of the peers, in one call
-  Future<String> nostrMarkHeld(List<String> peerXPubHexes) =>
-      _roomFfiOnIsolate('HaloNostrMarkHeld', [jsonEncode(peerXPubHexes)]);
+  // "mark" for each of the peers, in one call: each with its identity
+  Future<String> nostrMarkHeld(List<(int, String)> peers) async =>
+      _roomFfiOnIsolate('HaloNostrMarkHeld', [await _identPeers(peers)]);
+
+  // the pinned chats' keys (HaloNostrPinned)
+  Future<String> nostrPinned(List<(int, String)> peers) async =>
+      _roomFfiOnIsolate('HaloNostrPinned', [await _identPeers(peers)]);
+
+  // the chats on top of the list, the most recent first: their batch goes
+  // first at the start
+  Future<String> nostrFirstChats(List<(int, String)> peers) async =>
+      _roomFfiOnIsolate('HaloNostrFirstChats', [await _identPeers(peers)]);
+
+  // each with its pair's seed when it has one; a peer whose pair is
+  // refused is left out
+  static Future<String> _identPeers(List<(int, String)> peers) async {
+    final out = <Map<String, Object>>[];
+    for (final (i, x) in peers) {
+      try {
+        final pair = await pairArgOf(i, x);
+        final (key, seed) = switch (pair.split('.')) {
+          [final k, final s] => (k, s),
+          _ => (pair, ''),
+        };
+        out.add({'i': i, 'x': key, if (seed.isNotEmpty) 's': seed});
+      } on PairRefused catch (e) {
+        dlog('pairs: a peer left out ($e)');
+      }
+    }
+    return jsonEncode(out);
+  }
 
   // no more listening for a peer, and its address's files gone
-  void nostrUnsubscribeBg(String peerXPubHex) => _background(
-    _roomFfiOnIsolate('HaloNostrUnsubscribe', [peerXPubHex]),
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) => _background(
+    _onPair(
+      ident,
+      peerXPubHex,
+      (pair) => _identFfiOnIsolate('HaloNostrUnsubscribe', ident, [pair]),
+    ),
     'unlisten',
   );
+
+  // [run] on the pair the containers name for [ident] and [x] now; a pair
+  // refused goes nowhere
+  static Future<String> _onPair(
+    int ident,
+    String x,
+    Future<String> Function(String pair) run,
+  ) async {
+    final String pair;
+    try {
+      pair = await pairArgOf(ident, x);
+    } on PairRefused catch (e) {
+      dlog('pairs: refused ($e)');
+      return 'error: pair refused';
+    }
+    return run(pair);
+  }
 }
 
 // a knock left to wait its room's turn: offered again, not an error
@@ -944,6 +1434,34 @@ class _FirstWaits implements Exception {
   const _FirstWaits();
 }
 
+// the listens and unlistens of one engine tag (a device pair's opener
+// address, or its seeded pair whatever the seed) run in the order asked, so
+// an unlisten never lands after a listen asked behind it
+final _deviceTagSteps = <String, Future<void>>{};
+
+void deviceTagStep(int ident, String arg, Future<String> Function() run) =>
+    unawaited(deviceTagStepDone(ident, arg, run));
+
+/// as deviceTagStep, done when [run] is
+Future<void> deviceTagStepDone(
+  int ident,
+  String arg,
+  Future<String> Function() run,
+) {
+  final base = arg.split('.').first;
+  final k = '$ident $base ${arg.contains('.') ? 'seeded' : 'opener'}';
+  final next = (_deviceTagSteps[k] ?? Future<void>.value())
+      .then((_) => run())
+      .then<void>((r) {
+        if (r != 'ok') dlog('device pair listen: $r');
+      }, onError: (Object e) => dlog('device pair listen: $e'));
+  _deviceTagSteps[k] = next;
+  next.whenComplete(() {
+    if (identical(_deviceTagSteps[k], next)) _deviceTagSteps.remove(k);
+  });
+  return next;
+}
+
 // a call nobody waits on: what it threw still shows in a debug log
 void _background(Future<Object?> call, String where) =>
     unawaited(call.then((_) {}, onError: (Object e) => dlog('$where: $e')));
@@ -952,9 +1470,7 @@ void _background(Future<Object?> call, String where) =>
 // other relay call.
 Future<String> _roomFfiOnIsolate(String name, List<String> args) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final ptrs = [for (final a in args) a.toNativeUtf8()];
     try {
       switch (ptrs.length) {
@@ -993,19 +1509,62 @@ Future<String> _roomFfiOnIsolate(String name, List<String> args) {
   });
 }
 
-Future<String> _fcSendOnIsolate(String peerXPub, String fcPk, String msg) {
+// a call that names the identity it runs on, then one to three strings
+Future<String> _identFfiOnIsolate(String name, int ident, List<String> args) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    final fn = lib.lookupFunction<ThreeArgFn, ThreeArgFnDart>(
+    final lib = haloLibrary();
+    final ptrs = [for (final a in args) a.toNativeUtf8()];
+    try {
+      switch (ptrs.length) {
+        case 1:
+          return engineTake(
+            lib.lookupFunction<IdentOneFn, IdentOneFnDart>(name)(
+              ident,
+              ptrs[0],
+            ),
+          );
+        case 2:
+          return engineTake(
+            lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(name)(
+              ident,
+              ptrs[0],
+              ptrs[1],
+            ),
+          );
+        default:
+          return engineTake(
+            lib.lookupFunction<IdentThreeFn, IdentThreeFnDart>(name)(
+              ident,
+              ptrs[0],
+              ptrs[1],
+              ptrs[2],
+            ),
+          );
+      }
+    } finally {
+      for (final p in ptrs) {
+        freeSecret(p);
+      }
+    }
+  });
+}
+
+Future<String> _fcSendOnIsolate(
+  int ident,
+  String peerXPub,
+  String fcPk,
+  String msg,
+) {
+  return Isolate.run(() {
+    final lib = haloLibrary();
+    final fn = lib.lookupFunction<IdentThreeFn, IdentThreeFnDart>(
       'HaloNostrSendFirstContact',
     );
     final a = peerXPub.toNativeUtf8();
     final b = fcPk.toNativeUtf8();
     final c = msg.toNativeUtf8();
     try {
-      return engineTake(fn(a, b, c));
+      return engineTake(fn(ident, a, b, c));
     } finally {
       malloc.free(a);
       malloc.free(b);
@@ -1014,13 +1573,17 @@ Future<String> _fcSendOnIsolate(String peerXPub, String fcPk, String msg) {
   });
 }
 
+/// the read below, stood in by a test (the handle lookup's registry)
+@visibleForTesting
+Future<String> Function(String url)? handleFetchForTest;
+
 // one read through the engine's http route, off the ui thread. used for the
 // handle lookup, which can wait on tor.
 Future<String> _torGetJsonOnIsolate(String url) {
+  final stood = handleFetchForTest;
+  if (stood != null) return stood(url);
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetJSON');
     final u = url.toNativeUtf8();
     try {
@@ -1031,61 +1594,59 @@ Future<String> _torGetJsonOnIsolate(String url) {
   });
 }
 
-Future<String> _pairCodeOnIsolate(String code, String? payload) {
+// a pair share off the ui thread: the answer holds the code, so its native
+// copy is zeroed
+Future<String> _pairOnIsolate(String symbol, String arg) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    final c = code.toNativeUtf8();
+    final lib = haloLibrary();
+    final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(symbol);
+    final a = arg.toNativeUtf8();
     try {
-      if (payload == null) {
-        final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
-          'HaloPairCodeFetch',
-        );
-        return engineTake(fn(c));
-      }
-      final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
-        'HaloPairCodePublish',
-      );
-      final pl = payload.toNativeUtf8();
-      try {
-        return engineTake(fn(c, pl));
-      } finally {
-        malloc.free(pl);
-      }
+      return engineTakeSecret(fn(a));
     } finally {
-      malloc.free(c);
+      malloc.free(a);
     }
   });
 }
 
-Future<String> _fcSubscribeOnIsolate(int counter) {
+typedef PairHandleFn = Pointer<Utf8> Function(Int64);
+typedef PairHandleFnDart = Pointer<Utf8> Function(int);
+
+Future<String> _pairHandleOnIsolate(String symbol, int handle) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    final fn = lib.lookupFunction<CounterFn, CounterFnDart>(
-      'HaloNostrSubscribeFirstContact',
-    );
-    return engineTake(fn(counter));
+    final lib = haloLibrary();
+    final fn = lib.lookupFunction<PairHandleFn, PairHandleFnDart>(symbol);
+    return engineTakeSecret(fn(handle));
   });
 }
+
+Future<String> _fcSubscribeOnIsolate(int ident, int counter) {
+  return Isolate.run(() {
+    final lib = haloLibrary();
+    final fn = lib.lookupFunction<IdentCounterFn, IdentCounterFnDart>(
+      'HaloNostrSubscribeFirstContact',
+    );
+    return engineTake(fn(ident, counter));
+  });
+}
+
+/// what a start answers on a client's tor in place of an onion
+const kTorClientAddr = 'client';
+
+/// our onion from what a start answered, none on a client's tor
+String onionOfStart(String r) => r == kTorClientAddr ? '' : r;
 
 // tor's control port answers fast, but never on the ui thread
 Future<String> _torCtlOnIsolate(String symbol) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     return engineTake(lib.lookupFunction<CStrFn, CStrFnDart>(symbol)());
   }).timeout(const Duration(seconds: 70), onTimeout: () => 'error: timeout');
 }
 
 Future<String> _startListenerOnIsolate(String dataDir) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib
         .lookupFunction<
           Pointer<Utf8> Function(Pointer<Utf8>),
@@ -1139,9 +1700,7 @@ Future<String> _ffiOnIsolate(
   String what = 'registry',
 }) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final ps = [for (final a in args) a.toNativeUtf8()];
     try {
       switch (ps.length) {
@@ -1172,17 +1731,23 @@ Future<String> _ffiOnIsolate(
   }).timeout(wait, onTimeout: () => 'error: $what timeout');
 }
 
-Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
+// [ident]: the identity a relay send seals on; an onion send has none
+Future<String> _sendOnIsolate(
+  ({bool nostr, int ident, String a, String b, bool hidden}) args,
+) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>(
-      args.nostr ? 'HaloNostrSend' : 'HaloSendTo',
-    );
+    final lib = haloLibrary();
     final p1 = args.a.toNativeUtf8();
     final p2 = args.b.toNativeUtf8();
     try {
+      if (args.nostr) {
+        return engineTake(
+          lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(
+            args.hidden ? 'HaloNostrSendHidden' : 'HaloNostrSend',
+          )(args.ident, p1, p2),
+        );
+      }
+      final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');
       return engineTake(fn(p1, p2));
     } finally {
       malloc.free(p1);
@@ -1191,23 +1756,21 @@ Future<String> _sendOnIsolate(({bool nostr, String a, String b}) args) {
   });
 }
 
-Future<String> _subscribeOnIsolate(String xPub, {bool fresh = false}) {
+Future<String> _subscribeOnIsolate(
+  int ident,
+  String xPub, {
+  bool fresh = false,
+  bool hidden = false,
+}) {
+  final name = hidden
+      ? (fresh ? 'HaloNostrSubscribeHiddenNew' : 'HaloNostrSubscribeHidden')
+      : (fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe');
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
-    OneArgFnDart fn;
-    try {
-      fn = lib.lookupFunction<OneArgFn, OneArgFnDart>(
-        fresh ? 'HaloNostrSubscribeNew' : 'HaloNostrSubscribe',
-      );
-    } on ArgumentError {
-      // an engine without it hears them all the same, after a turn
-      fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrSubscribe');
-    }
+    final lib = haloLibrary();
+    final fn = lib.lookupFunction<IdentOneFn, IdentOneFnDart>(name);
     final p = xPub.toNativeUtf8();
     try {
-      return engineTake(fn(p));
+      return engineTake(fn(ident, p));
     } finally {
       malloc.free(p);
     }
@@ -1217,9 +1780,7 @@ Future<String> _subscribeOnIsolate(String xPub, {bool fresh = false}) {
 // the update check's GET: kryfo.app only, on a tor circuit of its own
 Future<String> updateGetOnIsolate(String url) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloUpdateGet');
     final p = url.toNativeUtf8();
     try {
@@ -1232,9 +1793,7 @@ Future<String> updateGetOnIsolate(String url) {
 
 Future<String> torStrictGetOnIsolate(String url) {
   return Isolate.run(() {
-    final lib = Platform.isAndroid
-        ? DynamicLibrary.open('libhalo.so')
-        : DynamicLibrary.process();
+    final lib = haloLibrary();
     final fn = lib.lookupFunction<OneArgFn, OneArgFnDart>('HaloTorGetStrict');
     final p = url.toNativeUtf8();
     try {
@@ -1246,6 +1805,11 @@ Future<String> torStrictGetOnIsolate(String url) {
 }
 
 HaloEngine _engine = HaloEngine();
+
+/// whether a key is a hidden chat's, as the app's vault cards say: its
+/// sends go on the chat's own lane (HaloNostrSendHidden). the app state
+/// sets it
+bool Function(String xPub) hiddenSendPeer = (_) => false;
 
 // a kill, as the tests stand one in: called before each bridge key write
 @visibleForTesting

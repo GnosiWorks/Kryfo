@@ -6,21 +6,27 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../file_kind.dart' show readFileFacts;
+import '../file_kind.dart' show FileShape, fileShapeOf, readFileFacts;
 import '../file_save.dart';
 import '../lock_state.dart';
 import '../open_file.dart';
+import '../photo_blur.dart' show blurNow;
+import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
+import 'file_sheet.dart';
 import 'halo_hero.dart';
+import 'photo_viewer.dart';
 import 'press_scale.dart';
 import 'remembered_height.dart';
-import 'swap.dart';
+import 'sealed_picture.dart';
 import '../l10n/l10n.dart';
+import 'shots_line.dart' show KeptIn, keptOpenLine;
 import '../l10n/numbers.dart';
 import 'video_viewer.dart';
 
-/// a tap on a file or a video: open it in whatever the phone has for it,
-/// or the share sheet when nothing does. an app installer is never opened
+/// a tap on a file or a video: a picture opens in the app's own viewer;
+/// anything else gets the file sheet, which opens it in whatever the phone
+/// has for it (the share sheet when nothing does), saves or shares it. an app installer is never opened
 /// or shared: it is saved where the person picks. held against the app
 /// lock: leaving for the viewer is not leaving. [kept]: the other person's,
 /// in a chat that blocks, which goes to no other app (shotsKeeps)
@@ -29,18 +35,39 @@ Future<void> openReceivedFile(
   String path,
   String? name, {
   bool kept = false,
-  // a room's, which says so in its own words
-  bool room = false,
+  // a group's or a room's, which say so in their own words
+  KeptIn where = KeptIn.chat,
 }) async {
-  if (kept) {
-    showHaloToast(
-      context,
-      room ? l10n.roomShotsKeptOpen : l10n.chatShotsKeptOpen,
-    );
+  final facts = await readFileFacts(path, name);
+  if (!context.mounted) return;
+  // a picture sent as a file opens here like a photo, so no other app gets
+  // a decrypted copy; in a chat that blocks, with screenshots blocked
+  if (!facts.installer && fileShapeOf(facts) == FileShape.picture) {
+    await openPhoto(context, path, secure: kept);
     return;
   }
-  if ((await readFileFacts(path, name)).installer) {
-    if (context.mounted) await saveReceivedFile(context, path, name);
+  if (kept) {
+    showHaloToast(context, keptOpenLine(where));
+    return;
+  }
+  if (facts.installer) {
+    await saveReceivedFile(context, path, name);
+    return;
+  }
+  // what it is first, then where it goes: another app, a save, a share
+  final pick = await showFileSheet(
+    context,
+    path: path,
+    name: name,
+    facts: facts,
+  );
+  if (pick == null || !context.mounted) return;
+  if (pick == FileSheetPick.save) {
+    await saveReceivedFile(context, path, name);
+    return;
+  }
+  if (pick == FileSheetPick.share) {
+    await lockState.hold(() => shareFileOut(path, name: name));
     return;
   }
   final opened = await lockState.hold(
@@ -82,8 +109,24 @@ class _VideoBubbleState extends State<VideoBubble> {
   @override
   void initState() {
     super.initState();
+    picturesShut.addListener(_lock);
     _info = videoInfoNow(widget.path);
     _load();
+  }
+
+  @override
+  void dispose() {
+    picturesShut.removeListener(_lock);
+    super.dispose();
+  }
+
+  // the first frame the lock took is asked for again once it lifts
+  void _lock() {
+    if (picturesShut.value) {
+      if (mounted) setState(() {});
+      return;
+    }
+    if (_info?.jpeg == null) _load();
   }
 
   @override
@@ -122,7 +165,8 @@ class _VideoBubbleState extends State<VideoBubble> {
     final info = _info;
     // tall clips are held to the height a photo gets; wide ones keep their
     // shape. unknown yet: the common one, so most bubbles do not move.
-    final aspect = (info?.aspect ?? 16 / 9).clamp(0.62, 2.4);
+    final aspect = (info?.aspect ?? blurNow(widget.path)?.aspect ?? 16 / 9)
+        .clamp(0.62, 2.4);
     final h = (widget.width / aspect).clamp(90.0, 280.0);
     final jpeg = info?.jpeg;
     final length = info != null && info.length > Duration.zero
@@ -146,19 +190,11 @@ class _VideoBubbleState extends State<VideoBubble> {
                     videoFlight(c, a, dir, from, to, widget.path),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  // the first frame fades up over the plain box
-                  child: FadeSwap(
-                    child: jpeg != null
-                        ? Image.memory(
-                            jpeg,
-                            key: const ValueKey('frame'),
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                          )
-                        : ColoredBox(
-                            key: const ValueKey('wait'),
-                            color: HaloColors.surface3,
-                          ),
+                  // its blur, the first frame fading up over it
+                  child: SealedPicture(
+                    path: widget.path,
+                    image: jpeg == null ? null : MemoryImage(jpeg),
+                    ground: HaloColors.surface3,
                   ),
                 ),
               ),

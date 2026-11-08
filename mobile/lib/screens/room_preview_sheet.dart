@@ -20,6 +20,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/room_countdown.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
+import '../widgets/tor_wait_line.dart';
 
 /// true only when they tapped join. a room that has closed has no join,
 /// nor one [ended] before its time.
@@ -132,7 +133,7 @@ class _RoomPreviewState extends State<_RoomPreview> {
                   child: Center(
                     child: Text(
                       l10n.kryfoLinkTextNotNow,
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
                     ),
                   ),
                 ),
@@ -167,7 +168,11 @@ class _Tile extends StatelessWidget {
       child: Text(
         name.isEmpty ? '·' : name.characters.first.toUpperCase(),
         semanticsLabel: '',
-        style: HaloType.serif(size: 30, italic: true, color: HaloColors.violet),
+        style: HaloType.serif(
+          size: 30,
+          italic: true,
+          color: HaloColors.violetText,
+        ),
       ),
     );
     if (motionStill(context)) return tile;
@@ -192,7 +197,7 @@ class _BurnerChip extends StatelessWidget {
     ),
     child: Text(
       l10n.kryfoLinkTextBurnerRoom,
-      style: HaloType.mono(size: 10, color: HaloColors.violet, letter: 0.3),
+      style: HaloType.mono(size: 10, color: HaloColors.violetText, letter: 0.3),
     ),
   );
 }
@@ -208,15 +213,28 @@ class _Open extends StatelessWidget {
         child: SlotLine(
           msg: l10n.kryfoLinkTextClosesIn,
           slot: RoomCountdown(expiresAt: link.expiresAt, size: 11),
-          style: HaloType.mono(size: 11, color: HaloColors.text2),
+          style: HaloType.mono(size: 11, color: HaloColors.text),
         ),
       ),
       const SizedBox(height: 14),
       Text(
         l10n.kryfoLinkTextYouJoinUnderA,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.45),
+        style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.45),
       ),
+      // on fast a room still goes through tor, and waits for it
+      if (torWaitLine() case final wait?) ...[
+        const SizedBox(height: 10),
+        Text(
+          wait,
+          textAlign: TextAlign.center,
+          style: HaloType.sans(
+            size: 13,
+            color: HaloColors.amberText,
+            height: 1.45,
+          ),
+        ),
+      ],
     ],
   );
 }
@@ -227,7 +245,7 @@ class _Closed extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     l10n.kryfoLinkTextThisRoomHasClosed,
     textAlign: TextAlign.center,
-    style: HaloType.sans(size: 13.5, color: HaloColors.rose),
+    style: HaloType.sans(size: 13.5, color: HaloColors.roseText),
   );
 }
 

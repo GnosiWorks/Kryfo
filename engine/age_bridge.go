@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // the tools tab's "lock a file" and "open a locked file". dart hands over
-// file descriptors it got from android's file picker, so the file streams
-// from where it is to where it goes and no copy of it is ever made inside
-// the app. the work is in ./agefile, which has no cgo and its own tests.
+// file descriptors it got from android's file picker (paths on windows), so
+// the file streams from where it is to where it goes and no copy of it is
+// ever made inside the app. the work is in ./agefile, which has no cgo and its own tests.
 package main
 
 import "C"
@@ -75,25 +75,66 @@ func ageDropLocked() {
 //
 //export HaloAgeLock
 func HaloAgeLock(inFd C.int, outFd C.int, cPass *C.char) *C.char {
-	ageMu.Lock()
-	defer ageMu.Unlock()
 	in := os.NewFile(uintptr(inFd), "age-in")
 	out := os.NewFile(uintptr(outFd), "age-out")
 	if in == nil || out == nil {
+		if in != nil {
+			in.Close()
+		}
+		if out != nil {
+			out.Close()
+		}
 		return ageResult(agefile.ErrIO)
 	}
+	return ageResult(ageLockFiles(in, out, goStr(cPass)))
+}
+
+// windows has no descriptors to hand over: the same work by path. the out
+// file is made new, for this user only, and goes again when the work fails
+//
+//export HaloAgeLockPath
+func HaloAgeLockPath(cIn *C.char, cOut *C.char, cPass *C.char) *C.char {
+	return ageResult(ageLockPath(goStr(cIn), goStr(cOut), goStr(cPass)))
+}
+
+func ageLockPath(inPath, outPath, pass string) error {
+	in, err := os.Open(inPath)
+	if err != nil {
+		return agefile.ErrIO
+	}
+	out, err := ageCreate(outPath)
+	if err != nil {
+		in.Close()
+		return agefile.ErrIO
+	}
+	err = ageLockFiles(in, out, pass)
+	if err != nil {
+		os.Remove(outPath)
+	}
+	return err
+}
+
+// a new file, never one already there
+func ageCreate(path string) (*os.File, error) {
+	return os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+}
+
+// closes both
+func ageLockFiles(in, out *os.File, pass string) error {
+	ageMu.Lock()
+	defer ageMu.Unlock()
 	defer in.Close()
 	atomic.StoreInt64(&ageDone, 0)
 	atomic.StoreInt32(&ageStop, 0)
 	w := bufio.NewWriterSize(out, 256*1024)
-	err := agefile.Lock(in, w, goStr(cPass), &ageDone, &ageStop, memAvailable)
+	err := agefile.Lock(in, w, pass, &ageDone, &ageStop, memAvailable)
 	if err == nil && w.Flush() != nil {
 		err = agefile.ErrIO
 	}
 	if cerr := out.Close(); err == nil && cerr != nil {
 		err = agefile.ErrIO
 	}
-	return ageResult(err)
+	return err
 }
 
 // checks the password against the header and keeps the file open. nothing
@@ -101,36 +142,82 @@ func HaloAgeLock(inFd C.int, outFd C.int, cPass *C.char) *C.char {
 //
 //export HaloAgeOpenBegin
 func HaloAgeOpenBegin(inFd C.int, cPass *C.char) *C.char {
+	in := os.NewFile(uintptr(inFd), "age-in")
+	if in == nil {
+		HaloAgeOpenDrop()
+		return ageResult(agefile.ErrIO)
+	}
+	return ageResult(ageOpenBeginFile(in, goStr(cPass)))
+}
+
+//export HaloAgeOpenBeginPath
+func HaloAgeOpenBeginPath(cIn *C.char, cPass *C.char) *C.char {
+	return ageResult(ageOpenBeginPath(goStr(cIn), goStr(cPass)))
+}
+
+func ageOpenBeginPath(inPath, pass string) error {
+	in, err := os.Open(inPath)
+	if err != nil {
+		HaloAgeOpenDrop()
+		return agefile.ErrIO
+	}
+	return ageOpenBeginFile(in, pass)
+}
+
+// keeps [in] open on success, closes it otherwise
+func ageOpenBeginFile(in *os.File, pass string) error {
 	ageMu.Lock()
 	defer ageMu.Unlock()
 	ageDropLocked()
-	in := os.NewFile(uintptr(inFd), "age-in")
-	if in == nil {
-		return ageResult(agefile.ErrIO)
-	}
-	s, err := agefile.Begin(in, goStr(cPass), memAvailable)
+	s, err := agefile.Begin(in, pass, memAvailable)
 	if err != nil {
 		in.Close()
-		return ageResult(err)
+		return err
 	}
 	ageSession = s
 	ageIn = in
-	return ageResult(nil)
+	return nil
 }
 
 //export HaloAgeOpenFinish
 func HaloAgeOpenFinish(outFd C.int) *C.char {
-	ageMu.Lock()
-	defer ageMu.Unlock()
 	out := os.NewFile(uintptr(outFd), "age-out")
 	if out == nil {
-		ageDropLocked()
+		HaloAgeOpenDrop()
 		return ageResult(agefile.ErrIO)
 	}
+	return ageResult(ageOpenFinishFile(out))
+}
+
+// the plain file is made new at [cOut] and goes again when the work fails:
+// nothing half opened is left
+//
+//export HaloAgeOpenFinishPath
+func HaloAgeOpenFinishPath(cOut *C.char) *C.char {
+	return ageResult(ageOpenFinishPath(goStr(cOut)))
+}
+
+func ageOpenFinishPath(outPath string) error {
+	out, err := ageCreate(outPath)
+	if err != nil {
+		HaloAgeOpenDrop()
+		return agefile.ErrIO
+	}
+	err = ageOpenFinishFile(out)
+	if err != nil {
+		os.Remove(outPath)
+	}
+	return err
+}
+
+// closes [out] and lets go of the session
+func ageOpenFinishFile(out *os.File) error {
+	ageMu.Lock()
+	defer ageMu.Unlock()
 	s := ageSession
 	if s == nil {
 		out.Close()
-		return ageResult(agefile.ErrIO)
+		return agefile.ErrIO
 	}
 	atomic.StoreInt64(&ageDone, 0)
 	atomic.StoreInt32(&ageStop, 0)
@@ -143,7 +230,7 @@ func HaloAgeOpenFinish(outFd C.int) *C.char {
 		err = agefile.ErrIO
 	}
 	ageDropLocked()
-	return ageResult(err)
+	return err
 }
 
 //export HaloAgeOpenDrop

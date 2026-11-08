@@ -114,9 +114,12 @@ Map<String, _Table> _appSchema() {
   final tables = <String, _Table>{};
   for (final f in const [
     'lib/app/database.dart',
+    'lib/file_drop.dart',
     'lib/router.dart',
     'lib/devchat/dev_chat.dart',
     'lib/devchat/support.dart',
+    'lib/heal.dart',
+    'lib/restore_undo.dart',
   ]) {
     final src = File(f).readAsStringSync();
     for (final m in _create.allMatches(src)) {
@@ -521,6 +524,8 @@ class MemDb implements Database, Transaction {
     List<Object?>? whereArgs,
     ConflictAlgorithm? conflictAlgorithm,
   }) async {
+    // as sqflite's builder: an update with nothing in it is no statement
+    if (values.isEmpty) throw ArgumentError('Empty values');
     final t = _t(table);
     _known(t, table, values.keys);
     final ok = _where(t, table, where, whereArgs);

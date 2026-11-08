@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../bridge_mode.dart';
+import '../desk_bridge_line.dart';
 import '../l10n/l10n.dart';
 import '../lock_state.dart' show lockState;
 import '../l10n/numbers.dart';
@@ -23,7 +24,9 @@ import '../widgets/motion.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
+import 'bridge_share_sheet.dart';
 import 'bridge_sheets.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class BridgesScreen extends StatefulWidget {
   const BridgesScreen({super.key});
@@ -54,7 +57,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
         final decoy = appState.inDecoyView;
         final b = appState.bridge;
         final s = appState.bridgeStatus;
-        final line = appState.bridgeLine;
+        final line = shownBridgeLine();
         // decoy: automatic, whatever runs underneath
         final chosen = decoy ? BridgeChoice.auto : b.choice;
         String? tag(BridgeChoice c) {
@@ -83,110 +86,113 @@ class _BridgesScreenState extends State<BridgesScreen> {
               ),
             ),
           ),
-          body: ListView(
-            padding: EdgeInsetsDirectional.fromSTEB(
-              20,
-              4,
-              20,
-              40 + MediaQuery.paddingOf(context).bottom,
-            ),
-            children: staggerAll([
-              BridgeStatusView(
-                line: line,
-                onAction: decoy ? null : (a) => _act(a),
+          body: DeskPage(
+            child: ListView(
+              padding: EdgeInsetsDirectional.fromSTEB(
+                20,
+                4,
+                20,
+                40 + MediaQuery.paddingOf(context).bottom,
               ),
-              const SizedBox(height: 18),
-              if (!decoy)
-                EaseSize(
-                  child:
-                      b.offerAuto &&
-                          b.choice != BridgeChoice.auto &&
-                          !lockState.inVault
-                      ? Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _OfferCard(
-                            onYes: () => _pick(BridgeChoice.auto),
-                            onNo: appState.dismissAutoOffer,
-                          ),
-                        )
-                      : const SizedBox(width: double.infinity),
+              children: staggerAll([
+                BridgeStatusView(
+                  line: line,
+                  onAction: decoy ? null : (a) => _act(a),
+                  onRelay: decoy ? null : () => switchToRelay(context),
                 ),
-              Semantics(
-                container: true,
-                explicitChildNodes: true,
-                child: Column(
-                  children: [
-                    _ChoiceCard(
-                      title: l10n.bridgesAutomatic,
-                      body: l10n.bridgesKryfoFindsAWay,
-                      selected: chosen == BridgeChoice.auto,
-                      tag: tag(BridgeChoice.auto),
-                      onTap: decoy ? null : () => _pick(BridgeChoice.auto),
-                    ),
-                    if (!decoy) ...[
-                      const SizedBox(height: 10),
+                const SizedBox(height: 18),
+                if (!decoy)
+                  EaseSize(
+                    child:
+                        b.offerAuto &&
+                            b.choice != BridgeChoice.auto &&
+                            !lockState.inVault
+                        ? Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _OfferCard(
+                              onYes: () => _pick(BridgeChoice.auto),
+                              onNo: appState.dismissAutoOffer,
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
+                Semantics(
+                  container: true,
+                  explicitChildNodes: true,
+                  child: Column(
+                    children: [
                       _ChoiceCard(
-                        title: l10n.bridgesDirect,
-                        body: l10n.bridgesFastestWhereTorIsnt,
-                        selected: chosen == BridgeChoice.direct,
-                        tag: tag(BridgeChoice.direct),
-                        onTap: () => _pick(BridgeChoice.direct),
+                        title: l10n.bridgesAutomatic,
+                        body: l10n.bridgesKryfoFindsAWay,
+                        selected: chosen == BridgeChoice.auto,
+                        tag: tag(BridgeChoice.auto),
+                        onTap: decoy ? null : () => _pick(BridgeChoice.auto),
                       ),
-                      const SizedBox(height: 10),
-                      _ChoiceCard(
-                        title: l10n.bridgesBridgeFromAFriend,
-                        body: l10n.bridgesPasteOrScanALine,
-                        selected: chosen == BridgeChoice.friend,
-                        tag: tag(BridgeChoice.friend),
-                        onTap: () => _pick(BridgeChoice.friend),
-                        extra: friendCount == 0
-                            ? null
-                            : _FriendLinesRow(
-                                count: friendCount,
-                                onEdit: () => showFriendLinesSheet(context),
-                              ),
-                      ),
+                      if (!decoy) ...[
+                        const SizedBox(height: 10),
+                        _ChoiceCard(
+                          title: l10n.bridgesDirect,
+                          body: l10n.bridgesFastestWhereTorIsnt,
+                          selected: chosen == BridgeChoice.direct,
+                          tag: tag(BridgeChoice.direct),
+                          onTap: () => _pick(BridgeChoice.direct),
+                        ),
+                        const SizedBox(height: 10),
+                        _ChoiceCard(
+                          title: l10n.bridgesBridgeFromAFriend,
+                          body: l10n.bridgesPasteOrScanALineShown,
+                          selected: chosen == BridgeChoice.friend,
+                          tag: tag(BridgeChoice.friend),
+                          onTap: () => _pick(BridgeChoice.friend),
+                          extra: friendCount == 0
+                              ? null
+                              : _FriendLinesRow(
+                                  count: friendCount,
+                                  onEdit: () => showFriendLinesSheet(context),
+                                ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              // a way picked under "more" shows here, so no card stands
-              // unexplained with none selected
-              if (!decoy)
-                EaseSize(
-                  child: _usingLine(chosen) == null
-                      ? const SizedBox(width: double.infinity)
-                      : Padding(
-                          padding: const EdgeInsetsDirectional.only(
-                            start: 4,
-                            top: 12,
-                          ),
-                          child: RiseSwap(
-                            child: Text(
-                              _usingLine(chosen)!,
-                              key: ValueKey(chosen),
-                              style: HaloType.mono(
-                                size: 12,
-                                weight: FontWeight.w600,
-                                color: HaloColors.violet,
+                // a way picked under "more" shows here, so no card stands
+                // unexplained with none selected
+                if (!decoy)
+                  EaseSize(
+                    child: _usingLine(chosen) == null
+                        ? const SizedBox(width: double.infinity)
+                        : Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                              start: 4,
+                              top: 12,
+                            ),
+                            child: RiseSwap(
+                              child: Text(
+                                _usingLine(chosen)!,
+                                key: ValueKey(chosen),
+                                style: HaloType.mono(
+                                  size: 12,
+                                  weight: FontWeight.w600,
+                                  color: HaloColors.violetText,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                ),
-              if (!decoy) ...[
-                const SizedBox(height: 8),
-                _MoreToggle(
-                  open: _more,
-                  onTap: () => setState(() => _more = !_more),
-                ),
-                EaseSize(
-                  child: _more
-                      ? _MoreSection(status: s, setup: b)
-                      : const SizedBox(width: double.infinity),
-                ),
-              ],
-            ]),
+                  ),
+                if (!decoy) ...[
+                  const SizedBox(height: 8),
+                  _MoreToggle(
+                    open: _more,
+                    onTap: () => setState(() => _more = !_more),
+                  ),
+                  EaseSize(
+                    child: _more
+                        ? _MoreSection(status: s, setup: b)
+                        : const SizedBox(width: double.infinity),
+                  ),
+                ],
+              ]),
+            ),
           ),
         );
       },
@@ -211,6 +217,21 @@ class _BridgesScreenState extends State<BridgesScreen> {
         await openWifiSettings();
     }
   }
+}
+
+/// the status line as the bridges page and the home card show it
+BridgeLine shownBridgeLine() => deskBridgeLine(appState.bridgeLine);
+
+/// fast in one tap, where tor found no way in
+Future<void> switchToRelay(BuildContext context) async {
+  HapticFeedback.mediumImpact();
+  try {
+    await appState.setSendMode('balanced');
+  } catch (_) {
+    if (context.mounted) showHaloToast(context, l10n.modesNotChanged);
+    return;
+  }
+  if (context.mounted) showHaloToast(context, l10n.homeSwitchedToFastRoute);
 }
 
 /// android's wi-fi page, where a network's sign-in page is offered. no
@@ -243,9 +264,16 @@ String bridgeActionLabel(BridgeAction a) => switch (a) {
 /// and the one thing to do when stuck. a new state rises in; a percent or
 /// a count changes in place
 class BridgeStatusView extends StatefulWidget {
-  const BridgeStatusView({super.key, required this.line, this.onAction});
+  const BridgeStatusView({
+    super.key,
+    required this.line,
+    this.onAction,
+    this.onRelay,
+  });
   final BridgeLine line;
   final void Function(BridgeAction a)? onAction;
+  // relay mode, where the line offers it
+  final VoidCallback? onRelay;
 
   @override
   State<BridgeStatusView> createState() => _BridgeStatusViewState();
@@ -295,6 +323,14 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
     final tint = bridgeToneColor(line.tone);
     final still = motionStill(context);
     final action = widget.onAction == null ? null : line.action;
+    final relay = line.offerRelay ? widget.onRelay : null;
+    // the first filled, the second quiet under it: the bridge way, then
+    // fast
+    final buttons = <(String, VoidCallback)>[
+      if (action != null)
+        (bridgeActionLabel(action), () => widget.onAction!(action)),
+      if (relay != null) (l10n.homeUseFast, relay),
+    ];
     final base = _base;
     final clock = base == null ? null : bridgeClock(base + _ticks * 1000);
     final detail = [?line.detail, ?clock].join(bridgeSep);
@@ -373,7 +409,7 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
                         key: ValueKey(line.detailKind),
                         style: HaloType.mono(
                           size: 12,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                         ).copyWith(height: 1.45),
                       ),
                     ),
@@ -396,13 +432,24 @@ class _BridgeStatusViewState extends State<BridgeStatusView> {
                 : const SizedBox(width: double.infinity),
           ),
           EaseSize(
-            child: action == null
+            child: buttons.isEmpty
                 ? const SizedBox(width: double.infinity)
                 : Padding(
                     padding: const EdgeInsets.only(top: 14),
-                    child: HaloPrimaryButton(
-                      label: bridgeActionLabel(action),
-                      onTap: () => widget.onAction!(action),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final (i, b) in buttons.indexed) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          i == 0
+                              ? HaloPrimaryButton(label: b.$1, onTap: b.$2)
+                              : HaloGhostButton(
+                                  label: b.$1,
+                                  onTap: b.$2,
+                                  quiet: true,
+                                ),
+                        ],
+                      ],
                     ),
                   ),
           ),
@@ -535,7 +582,7 @@ class _ChoiceCard extends StatelessWidget {
                                     size: 10.5,
                                     weight: FontWeight.w600,
                                     color: t == l10n.bridgesConnected
-                                        ? HaloColors.green
+                                        ? HaloColors.greenText
                                         : HaloColors.amberText,
                                   ),
                                 ),
@@ -547,7 +594,7 @@ class _ChoiceCard extends StatelessWidget {
                       body,
                       style: HaloType.sans(
                         size: 13,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.4,
                       ),
                     ),
@@ -576,7 +623,7 @@ class _FriendLinesRow extends StatelessWidget {
         Expanded(
           child: Text(
             l10n.bridges1LineSaved(count),
-            style: HaloType.mono(size: 11, color: HaloColors.violet),
+            style: HaloType.mono(size: 11, color: HaloColors.violetText),
           ),
         ),
         PressScale(
@@ -636,7 +683,7 @@ class _OfferCard extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           l10n.bridgesAutomaticFindsAWay,
-          style: HaloType.sans(size: 13, color: HaloColors.text2, height: 1.4),
+          style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.4),
         ),
         const SizedBox(height: 12),
         Row(
@@ -731,7 +778,18 @@ class _MoreSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        // plain advice, the same everywhere
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(4, 14, 4, 12),
+          child: Text(
+            l10n.bridgesPlainAdvice,
+            style: HaloType.sans(
+              size: 13,
+              color: HaloColors.text,
+              height: 1.45,
+            ),
+          ),
+        ),
         _Box(
           children: [
             _RowChoice(
@@ -766,11 +824,6 @@ class _MoreSection extends StatelessWidget {
                 if (!v) return appState.setBridgeConsent(false);
                 await showTorProjectConsentSheet(context);
               },
-            ),
-            EaseSize(
-              child: asks
-                  ? _CountryRow(country: setup.country)
-                  : const SizedBox(width: double.infinity),
             ),
           ],
         ),
@@ -891,7 +944,7 @@ class _InfoRow extends StatelessWidget {
               value,
               key: ValueKey(value),
               textAlign: TextAlign.end,
-              style: HaloType.mono(size: 12, color: HaloColors.violet),
+              style: HaloType.mono(size: 12, color: HaloColors.violetText),
             ),
           ),
         ),
@@ -945,7 +998,7 @@ class _RowChoice extends StatelessWidget {
                     body,
                     style: HaloType.sans(
                       size: 12.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.4,
                     ),
                   ),
@@ -1001,7 +1054,7 @@ class _SwitchRow extends StatelessWidget {
                     body,
                     style: HaloType.sans(
                       size: 12.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       height: 1.4,
                     ),
                   ),
@@ -1015,87 +1068,6 @@ class _SwitchRow extends StatelessWidget {
       ),
     ),
   );
-}
-
-// the country the tor project advises for. its own guess comes first
-class _CountryRow extends StatefulWidget {
-  const _CountryRow({required this.country});
-  final String country;
-
-  @override
-  State<_CountryRow> createState() => _CountryRowState();
-}
-
-class _CountryRowState extends State<_CountryRow> {
-  bool _asking = false;
-
-  // the sheet comes up at once. the tor project is asked only when its
-  // guess is picked
-  Future<void> _open() async {
-    final picked = await showCountrySheet(
-      context,
-      current: widget.country,
-      guess: appState.moatGuess,
-    );
-    if (picked == null || !mounted) return;
-    await appState.setBridgeCountry(picked);
-    if (picked.isNotEmpty || !mounted) return;
-    setState(() => _asking = true);
-    await appState.askMoatGuess();
-    if (mounted) setState(() => _asking = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cc = widget.country;
-    final guess = appState.moatGuess;
-    final value = _asking
-        ? l10n.bridgesAsking
-        : cc.isNotEmpty
-        ? bridgeCountryName(cc)
-        : guess != null
-        ? '${bridgeCountryName(guess)} · ${l10n.bridgesTheTorProjectSGuess}'
-        : l10n.bridgesLetTheTorProject;
-    return Semantics(
-      button: true,
-      child: PressScale(
-        scale: 0.98,
-        onTap: _open,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 12, 14),
-          child: Row(
-            children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 130),
-                child: Text(
-                  l10n.bridgesCountry,
-                  style: HaloType.sans(size: 14, color: HaloColors.text),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: RiseSwap(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: Text(
-                    value,
-                    key: ValueKey(value),
-                    textAlign: TextAlign.end,
-                    style: HaloType.mono(size: 12, color: HaloColors.violet),
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: HaloColors.text2,
-                textDirection: Directionality.of(context),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // one kept line: its transport and address, never more of it, and whether
@@ -1145,11 +1117,28 @@ class _LineRow extends StatelessWidget {
                       : from,
                   style: HaloType.sans(
                     size: 12,
-                    color: bad ? HaloColors.rose : HaloColors.text2,
+                    color: bad ? HaloColors.roseText : HaloColors.text,
                   ),
                 ),
               ],
             ),
+          ),
+          // a line that works can go to a friend; one that does not stays
+          EaseSize(
+            child: bad
+                ? const SizedBox.shrink()
+                : IconButton(
+                    tooltip: l10n.bridgesShareBridgeN(whole(number)),
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      showBridgeShareSheet(context, line);
+                    },
+                    icon: Icon(
+                      Icons.ios_share_rounded,
+                      size: 18,
+                      color: HaloColors.text2,
+                    ),
+                  ),
           ),
           IconButton(
             tooltip: l10n.bridgesRemoveBridgeN(whole(number)),

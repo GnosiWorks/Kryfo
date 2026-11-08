@@ -22,7 +22,13 @@ import 'package:kryfo/main.dart'
         kFrameReaction,
         kFrameReceipt,
         sessionQuiet,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateContacts,
+        AppStateGroups,
+        AppStateSession,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

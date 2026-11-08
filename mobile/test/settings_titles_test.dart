@@ -15,23 +15,38 @@ import 'package:kryfo/atmosphere.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateBridges;
+import 'package:kryfo/devices/own_devices.dart' show ThisPhoneOnly;
+import 'package:kryfo/screens/linked_devices_screen.dart';
 import 'package:kryfo/screens/appearance_screen.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
+import 'package:kryfo/screens/icon_screen.dart';
+import 'package:kryfo/screens/licences_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
+import 'package:kryfo/screens/translation_screen.dart';
 import 'package:kryfo/screens/transport_screen.dart';
 import 'package:kryfo/screens/wallpaper_sheet.dart';
 import 'package:kryfo/screens/why_kryfo_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
+import 'package:kryfo/translate/hub.dart';
+import 'package:kryfo/voice/voice_models.dart';
+import 'package:kryfo/voice/voice_transcripts.dart';
 import 'package:kryfo/wallpaper.dart';
 import 'package:kryfo/widgets/halo_rows.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart' show DevTestDb, devApp, devMem, devWorld;
 import 'narrow_settings.dart' show loadAppFonts;
+import 'translate_fakes.dart' show fakeHub;
 
 // the pages and sheets settings opens, and the ones they open in turn
 const _settingsFiles = {
@@ -44,21 +59,41 @@ const _settingsFiles = {
   'bridge_sheets',
   'seen_screen',
   'modes_screen',
+  'fast_servers_screen',
   'blocked_screen',
   'pins_screen',
   'lock_setup_screen',
   'pin_flow_screen',
+  'update_pins_screen',
   'hide_picker',
   'backup_screen',
   'restore_screen',
-  'getting_messages_screen',
+  'notifications_screen',
+  'icon_screen',
   'helper_sheet',
   'follow_section',
   'dev_about_sheet',
+  'translation_screen',
+  'translate_languages_screen',
+  'auto_get_screen',
+  'licences_screen',
+  'linked_devices_screen',
 };
 
 // opened from there, but not settings: a chat, the home and the camera
-const _notSettings = {'chat_screen', 'home_screen', 'scan_screen'};
+// desk_run_section: a section of the notifications page, not a page
+const _notSettings = {
+  'chat_screen',
+  'home_screen',
+  'scan_screen',
+  'desk_run_section',
+  // a link's own pages, opened from Linked devices: steps, not settings
+  'link_screens',
+  // a computer's link to a phone from settings: one step page, no sections
+  'desk_link_screen',
+  // one bridge as a code, or into a chat: a sheet with no sections
+  'bridge_share_sheet',
+};
 
 // what a title looks like and the gaps around it, as on every page
 const _above = 28.0;
@@ -139,18 +174,45 @@ class _SheetOpener extends StatelessWidget {
 
 final _pages = [
   _Page(
+    'linked devices',
+    () => const LinkedDevicesScreen(source: ThisPhoneOnly(phoneName: 'Phone')),
+    () => [],
+  ),
+  _Page(
+    'link a device',
+    () => const LinkDeviceScreen(),
+    () => [l10n.devicesHistory],
+  ),
+  _Page(
     'settings',
     () => const SettingsScreen(),
     () => [
       l10n.settingsPrivacy,
       l10n.settingsSecurity,
+      // linked devices, in every build
+      l10n.settingsDevices,
       l10n.settingsAppearance,
+      l10n.settingsFiles,
       l10n.settingsBackup,
       l10n.settingsVoice,
+      l10n.translateSettingsTitle,
       l10n.settingsAbout,
       l10n.settingsFollowTitle,
       l10n.settingsDangerZone,
     ],
+    // translation's section and the voice transcription row show only
+    // with a hub
+    setUp: () {
+      TranslationHub.instance = fakeHub().hub;
+      VoiceTranscripts.instance = VoiceTranscripts(
+        models: VoiceModels(
+          call: (_, _) async => 'error: none',
+          dir: () async => '/tmp/v',
+          quiet: () => false,
+        ),
+        library: () => null,
+      );
+    },
   ),
   _Page(
     'appearance',
@@ -194,7 +256,6 @@ final _pages = [
         choice: BridgeChoice.friend,
         friendLines: 'obfs4 1.2.3.4:443 ABCDEF cert=abc iat-mode=0',
         consent: 'yes',
-        country: 'ir',
       );
     },
     after: (t) async {
@@ -204,9 +265,19 @@ final _pages = [
     },
   ),
   _Page(
-    'getting messages',
-    () => const GettingMessagesScreen(),
-    () => [l10n.gettingMessagesOnTheLockScreen],
+    'notifications',
+    () => const NotificationsScreen(),
+    () => [
+      l10n.notificationsHowTheyReachYou,
+      l10n.notificationsSoundAndVibration,
+      l10n.gettingMessagesWhatShows,
+      l10n.notificationsBatteryTips,
+    ],
+  ),
+  _Page(
+    'icon and notifications',
+    () => IconScreen(hideLine: () async => null),
+    () => [l10n.iconSectionTitle, l10n.settingsNotifications],
   ),
   _Page(
     'restore',
@@ -218,6 +289,21 @@ final _pages = [
     'why kryfo',
     () => const WhyKryfoScreen(),
     () => [l10n.whyKryfoTheHonestPart],
+  ),
+  _Page(
+    'translation',
+    () => TranslationScreen(hub: fakeHub().hub),
+    () => [
+      l10n.translatePacksSection,
+      l10n.translateLanguagesSection,
+      l10n.translateBehaviourSection,
+      l10n.translatePrivacyTitle,
+    ],
+  ),
+  _Page(
+    'licences',
+    () => const LicencesScreen(),
+    () => [l10n.licencesSignalTitle, l10n.licencesParts],
   ),
 ];
 
@@ -255,12 +341,18 @@ Future<void> _close(WidgetTester t) async {
 }
 
 // the paragraph a title is drawn in, when on screen
+// the title's own paragraph: a line elsewhere may share its words, as
+// your protections' backup line does
 RenderParagraph? _paragraph(String title) {
   final f = find.text(title, findRichText: true);
+  RenderParagraph? first;
   for (final e in f.evaluate()) {
-    if (e.widget is RichText) return e.renderObject! as RenderParagraph;
+    if (e.widget is! RichText) continue;
+    final r = e.renderObject! as RenderParagraph;
+    if (e.findAncestorWidgetOfExactType<HaloSection>() != null) return r;
+    first ??= r;
   }
-  return null;
+  return first;
 }
 
 bool _inSection(String title) => find
@@ -268,11 +360,20 @@ bool _inSection(String title) => find
     .evaluate()
     .isNotEmpty;
 
+// the title as its section draws it, else the one line with its words
+Finder _titleText(String title) {
+  final inSection = find.descendant(
+    of: find.byType(HaloSection),
+    matching: find.text(title),
+  );
+  return inSection.evaluate().isEmpty ? find.text(title) : inSection.first;
+}
+
 TextStyle _styleOf(RenderParagraph p) => (p.text as TextSpan).style!;
 
 // what a title sits on: the first solid ground above it
 Color _ground(String title) {
-  final e = find.text(title).evaluate().first;
+  final e = _titleText(title).evaluate().first;
   Color? found;
   e.visitAncestorElements((a) {
     final w = a.widget;
@@ -324,6 +425,8 @@ void main() {
     addTearDown(() => HaloColors.setLight(false));
     addTearDown(() => HaloColors.setAccent(HaloAccent.yellow));
     addTearDown(() => appState.bridgeSetupForTest = const BridgeSetup());
+    addTearDown(() => TranslationHub.instance = null);
+    addTearDown(() => VoiceTranscripts.instance = null);
   }
 
   group('source', () {
@@ -441,7 +544,7 @@ void main() {
         ];
         final gaps = <String>[];
         for (final title in page.titles()) {
-          final r = t.getRect(find.text(title));
+          final r = t.getRect(_titleText(title));
           final under = groups.where((g) => g.top >= r.bottom - 0.5).toList()
             ..sort((a, b) => a.top.compareTo(b.top));
           final over = groups.where((g) => g.bottom <= r.top + 0.5).toList()

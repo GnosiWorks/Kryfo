@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // swipe right on a bubble to reply. one widget for the 1:1 chat and the
-// group chat, so they cannot drift apart.
+// group chat, so they cannot drift apart. a computer's mouse never swipes:
+// a drag there selects words.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../theme.dart';
+import 'swipe_actions.dart' show swipeDevices;
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
 
 class SwipeToReply extends StatefulWidget {
@@ -60,6 +63,7 @@ class _SwipeToReplyState extends State<SwipeToReply>
     final way = Directionality.of(context) == TextDirection.rtl ? -1.0 : 1.0;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
+      supportedDevices: onDesktop ? swipeDevices : null,
       onHorizontalDragUpdate: (d) {
         if (_spring.isAnimating) return;
         var nx = _dx + way * d.delta.dx;

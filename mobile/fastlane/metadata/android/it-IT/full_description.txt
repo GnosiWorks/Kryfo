@@ -14,7 +14,7 @@ Funzioni:
 * Blocco app con PIN o biometria, un PIN esca che apre un Kryfo vuoto e chat nascoste dietro un PIN tutto loro
 * Cancellazione d'emergenza che rimuove tutto, compresi i media sul disco
 * Una chat con chi crea Kryfo, in forma anonima se vuoi
-* 15 lingue
+* 17 lingue
 * Niente analytics né telemetria
 
 Finanziamento: niente pubblicità, niente investitori. Va avanti con quello che danno i sostenitori. Sostenerlo è facoltativo e anonimo, e tutte le funzioni restano uguali in ogni caso.

@@ -12,9 +12,19 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/bridge_mode.dart' show BridgeStatus;
 import 'package:kryfo/container.dart';
+import 'package:kryfo/delivery_mode.dart' show DeliveryMode;
+import 'package:kryfo/miui_autostart.dart' show maybeShowBackgroundPrompt;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateBridges,
+        AppStateDelivery;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';
@@ -80,7 +90,7 @@ class _Db implements HaloDb {
   }
 
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     deleted.add(msgUid);
     notes.removeWhere((n) => n['msg_uid'] == msgUid);
   }
@@ -171,13 +181,15 @@ ContactPreview _chat(String id, {bool archived = false}) =>
 Widget _home({
   List<ContactPreview> contacts = const [],
   List<GroupSummary> groups = const [],
+  VoidCallback? onNewGroup,
+  VoidCallback? onNewRoom,
 }) => HomeScreen(
   haloId: 'neon-tiger-saturn',
   contacts: contacts,
   groups: groups,
   onAddContact: () {},
-  onNewGroup: () {},
-  onNewRoom: () {},
+  onNewGroup: onNewGroup ?? () {},
+  onNewRoom: onNewRoom ?? () {},
   onOpenDev: () {},
   onOpenSettingsDirect: () {},
   onOpenChat: (_) {},
@@ -268,6 +280,70 @@ void main() {
     expect(find.text('wren-oak-lamp'), findsOneWidget);
     expect(find.text('slow-kite-moss'), findsOneWidget);
     expect(find.text(l10n.homeSupporter), findsOneWidget);
+    await drain(t);
+  });
+
+  testWidgets('home asks for the battery and the maker\'s switch, but not '
+      'with google push, which wakes the phone itself', (t) async {
+    phone(t);
+    final asked = <String>[];
+    homeBackgroundAsk = (_) async => asked.add('ask');
+    addTearDown(() => homeBackgroundAsk = maybeShowBackgroundPrompt);
+    final was = appState.deliveryMode;
+    addTearDown(() => appState.deliveryModeForTest = was);
+    for (final m in [DeliveryMode.google, DeliveryMode.always]) {
+      appState.deliveryModeForTest = m;
+      askBackgroundAgainForTest();
+      await t.pumpWidget(
+        framed(KeyedSubtree(key: ValueKey(m), child: _home())),
+      );
+      await t.pump(const Duration(seconds: 1));
+    }
+    expect(asked, ['ask']);
+    await drain(t);
+  });
+
+  testWidgets('an empty home shows the groups row: a room needs no '
+      'contacts, and + New is there to say why a group does', (t) async {
+    phone(t);
+    final asked = <String>[];
+    await t.pumpWidget(
+      framed(
+        _home(
+          onNewGroup: () => asked.add('group'),
+          onNewRoom: () => asked.add('room'),
+        ),
+      ),
+    );
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.homeNoKryfosYet), findsOneWidget);
+    expect(find.text(l10n.homeGroups), findsOneWidget);
+    await t.tap(find.text(l10n.homeRoom));
+    await t.tap(find.text(l10n.homeNew));
+    await t.pump();
+    expect(asked, ['room', 'group']);
+    // the same row once the first chat comes
+    await t.pumpWidget(framed(_home(contacts: [_chat('wren-oak-lamp')])));
+    await t.pump(const Duration(seconds: 1));
+    expect(find.text(l10n.homeNoKryfosYet), findsNothing);
+    expect(find.text(l10n.homeGroups), findsOneWidget);
+    expect(find.text(l10n.homeRoom), findsOneWidget);
+    await drain(t);
+  });
+
+  testWidgets('an empty home at a large font scrolls, nothing cut', (t) async {
+    phone(t, size: const Size(360, 640));
+    await t.pumpWidget(
+      MediaQuery(
+        data: MediaQueryData.fromView(
+          t.view,
+        ).copyWith(textScaler: TextScaler.linear(2)),
+        child: framed(_home()),
+      ),
+    );
+    await t.pump(const Duration(seconds: 1));
+    expect(t.takeException(), isNull);
+    expect(find.text(l10n.homeGroups), findsOneWidget);
     await drain(t);
   });
 
@@ -410,8 +486,21 @@ void main() {
       await drain(t);
     });
 
-    testWidgets('held, a note can be copied', (t) async {
+    testWidgets('held, a note can be copied, marked sensitive', (t) async {
       phone(t);
+      const platform = MethodChannel('halo/platform');
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(platform, (
+        c,
+      ) async {
+        _asked.add(c);
+        return true;
+      });
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          platform,
+          null,
+        ),
+      );
       db.notes = [note('buy lemons', uid: 'n1')];
       await t.pumpWidget(framed(const NotesScreen()));
       await t.pump(const Duration(seconds: 1));
@@ -420,7 +509,7 @@ void main() {
       expect(find.byType(MenuSheet), findsOneWidget);
       await t.tap(find.text(l10n.commonCopy));
       await t.pump(const Duration(milliseconds: 600));
-      final copied = _asked.where((c) => c.method == 'Clipboard.setData');
+      final copied = _asked.where((c) => c.method == 'copySensitive');
       expect(copied.single.arguments, {'text': 'buy lemons'});
       expect(find.text(l10n.commonCopied), findsOneWidget);
       await drain(t);
@@ -643,21 +732,21 @@ void main() {
       phone(t);
       await t.pumpWidget(framed(_home()));
       await t.pump(const Duration(seconds: 1));
-      expect(find.text(l10n.homeOurRelayIsQuiet), findsNothing);
+      expect(find.text(l10n.homeOursDownTitle), findsNothing);
       await relay(t, down: true);
       await t.pump();
       await t.pump(const Duration(milliseconds: 80));
-      final mid = opened(t, l10n.homeOurRelayIsQuiet);
+      final mid = opened(t, l10n.homeOursDownTitle);
       expect(mid, greaterThan(0));
       expect(mid, lessThan(1));
       await t.pump(const Duration(milliseconds: 400));
-      expect(opened(t, l10n.homeOurRelayIsQuiet), 1);
+      expect(opened(t, l10n.homeOursDownTitle), 1);
       await relay(t, down: false);
       await t.pump();
       await t.pump(const Duration(milliseconds: 80));
-      expect(opened(t, l10n.homeOurRelayIsQuiet), lessThan(1));
+      expect(opened(t, l10n.homeOursDownTitle), lessThan(1));
       await t.pump(const Duration(milliseconds: 400));
-      expect(find.text(l10n.homeOurRelayIsQuiet), findsNothing);
+      expect(find.text(l10n.homeOursDownTitle), findsNothing);
       await drain(t);
     });
 
@@ -711,11 +800,11 @@ void main() {
       await relay(t, down: true);
       await t.pump();
       await t.pump();
-      expect(opened(t, l10n.homeOurRelayIsQuiet), 1);
+      expect(opened(t, l10n.homeOursDownTitle), 1);
       await relay(t, down: false);
       await t.pump();
       await t.pump();
-      expect(find.text(l10n.homeOurRelayIsQuiet), findsNothing);
+      expect(find.text(l10n.homeOursDownTitle), findsNothing);
       await drain(t);
     });
   });

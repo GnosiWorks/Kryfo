@@ -139,7 +139,7 @@ func TestALiveWrapDoesNotMoveTheFirstAnswersOldest(t *testing.T) {
 				ck := catchupKey(u, rcv)
 				forgetCatchup(ck)
 				ctx, cancel := context.WithCancel(context.Background())
-				go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+				go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 				waitFor(t, "the walk to end", 15*time.Second, func() bool {
 					return inboxHas(tag+"|live") && !catchupRunning(ck)
 				})

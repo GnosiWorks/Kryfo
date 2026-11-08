@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
 import '../key_number.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateContacts;
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/kryfo_avatar.dart';
@@ -12,6 +12,7 @@ import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart' show dayMonthMaybeYear;
+import '../wide/read_width.dart' show DeskPage;
 
 // blocked contacts, and the keys "this isn't them" blocked, by their key
 // number. blocking never notifies the other side. an unblocked row folds
@@ -78,77 +79,83 @@ class _BlockedScreenState extends State<BlockedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: l10n.commonBack,
-                    icon: Icon(
-                      Icons.chevron_left,
-                      color: HaloColors.text2,
-                      size: 26,
+      body: DeskPage(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: l10n.commonBack,
+                      icon: Icon(
+                        Icons.chevron_left,
+                        color: HaloColors.text2,
+                        size: 26,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  Flexible(
-                    child: Text(
-                      l10n.blockedBlocked,
-                      style: HaloType.pageTitle(),
+                    Flexible(
+                      child: Text(
+                        l10n.blockedBlocked,
+                        style: HaloType.pageTitle(),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: _loading
-                  ? const SizedBox()
-                  // the last one unblocked, the empty page fades in
-                  : FadeSwap(
-                      child: _blocked.isEmpty && _keys.isEmpty
-                          ? KeyedSubtree(
-                              key: const ValueKey('none'),
-                              child: _empty(),
-                            )
-                          : ListView(
-                              key: const ValueKey('rows'),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              children: [
-                                for (final (i, c) in _blocked.indexed)
-                                  StaggerIn(
-                                    key: ValueKey(c.haloId),
-                                    index: i,
-                                    child: IgnorePointer(
-                                      ignoring: _leaving.contains(c.haloId),
-                                      child: FadeFold(
-                                        leaving: _leaving.contains(c.haloId),
-                                        child: _row(c),
+              Expanded(
+                child: _loading
+                    ? const SizedBox()
+                    // the last one unblocked, the empty page fades in
+                    : FadeSwap(
+                        child: _blocked.isEmpty && _keys.isEmpty
+                            ? KeyedSubtree(
+                                key: const ValueKey('none'),
+                                child: _empty(),
+                              )
+                            : ListView(
+                                key: const ValueKey('rows'),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                children: [
+                                  for (final (i, c) in _blocked.indexed)
+                                    StaggerIn(
+                                      key: ValueKey(c.haloId),
+                                      index: i,
+                                      child: IgnorePointer(
+                                        ignoring: _leaving.contains(c.haloId),
+                                        child: FadeFold(
+                                          leaving: _leaving.contains(c.haloId),
+                                          child: _row(c),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                for (final (i, k) in _keys.indexed)
-                                  StaggerIn(
-                                    key: ValueKey('key:${k.x}'),
-                                    index: _blocked.length + i,
-                                    child: IgnorePointer(
-                                      ignoring: _leaving.contains('key:${k.x}'),
-                                      child: FadeFold(
-                                        leaving: _leaving.contains(
+                                  for (final (i, k) in _keys.indexed)
+                                    StaggerIn(
+                                      key: ValueKey('key:${k.x}'),
+                                      index: _blocked.length + i,
+                                      child: IgnorePointer(
+                                        ignoring: _leaving.contains(
                                           'key:${k.x}',
                                         ),
-                                        child: _keyRow(k.x, k.at),
+                                        child: FadeFold(
+                                          leaving: _leaving.contains(
+                                            'key:${k.x}',
+                                          ),
+                                          child: _keyRow(k.x, k.at),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                              ],
-                            ),
-                    ),
-            ),
-          ],
+                                ],
+                              ),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -176,7 +183,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                     c.haloId,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10, color: HaloColors.text),
                   ),
               ],
             ),
@@ -234,7 +241,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                         dayMonthMaybeYear(
                           DateTime.fromMillisecondsSinceEpoch(at),
                         ),
-                        style: HaloType.sans(size: 12, color: HaloColors.text2),
+                        style: HaloType.sans(size: 12, color: HaloColors.text),
                       ),
                     ],
                   ),
@@ -251,7 +258,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
                         overflow: TextOverflow.ellipsis,
                         style: HaloType.mono(
                           size: 10.5,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                         ),
                       ),
                     ),
@@ -333,7 +340,7 @@ class _BlockedScreenState extends State<BlockedScreen> {
               style: HaloType.serif(
                 size: 20,
                 italic: true,
-                color: HaloColors.text2,
+                color: HaloColors.text,
               ),
             ),
           ]),

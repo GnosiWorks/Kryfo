@@ -107,7 +107,7 @@ void main() {
         .whereType<File>()
         .where((f) => f.path.endsWith('.arb'))
         .toList();
-    expect(arbs, hasLength(15));
+    expect(arbs, hasLength(17));
     for (final f in arbs) {
       final m = jsonDecode(f.readAsStringSync()) as Map;
       for (final k in keys) {

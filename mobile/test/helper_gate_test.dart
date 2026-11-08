@@ -9,9 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/helper_push.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute, AppStateDelivery;
 import 'package:kryfo/open_outside.dart';
-import 'package:kryfo/screens/getting_messages_screen.dart';
+import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/screens/helper_sheet.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/card_action.dart';
@@ -82,7 +82,7 @@ void main() {
       appState.relaySaidNoForTest = true;
       final moved = <String>[];
       setRouteForTest = (m) async => moved.add(m);
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await settle(t);
       expect(helperCard, findsOneWidget);
       expect(helperOpacity(t), lessThan(1));
@@ -99,7 +99,7 @@ void main() {
         'that it does not offer this', (t) async {
       phone(t);
       appState.sendModeForTest = 'private';
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await t.pump(const Duration(milliseconds: 300));
       expect(find.text(l10n.gettingMessagesHelperChecking), findsOneWidget);
       expect(find.byKey(const ValueKey('helperChecking')), findsOneWidget);
@@ -110,13 +110,13 @@ void main() {
     testWidgets('reduced motion: the checking spinner stands still', (t) async {
       phone(t);
       appState.sendModeForTest = 'private';
-      await t.pumpWidget(framed(const GettingMessagesScreen(), still: true));
+      await t.pumpWidget(framed(const NotificationsScreen(), still: true));
       await t.pump(const Duration(milliseconds: 300));
       final spin = t.widget<CircularProgressIndicator>(
         find.byKey(const ValueKey('helperChecking')),
       );
       expect(spin.value, isNotNull);
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await t.pump(const Duration(milliseconds: 300));
       expect(
         t
@@ -135,7 +135,7 @@ void main() {
       phone(t);
       appState.sendModeForTest = 'private';
       appState.relayKnocksForTest = true;
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await settle(t);
       expect(helperCard, findsOneWidget);
       expect(find.text(l10n.gettingMessagesHelperBody), findsOneWidget);
@@ -151,7 +151,7 @@ void main() {
       phone(t);
       appState.relayKnocksForTest = true;
       appState.sendModeForTest = 'fast';
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await settle(t);
       expect(helperCard, findsOneWidget);
       expect(helperOpacity(t), lessThan(1));
@@ -169,7 +169,7 @@ void main() {
         moved.add(m);
         appState.sendModeForTest = m;
       };
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await settle(t);
       await t.tap(helperCard);
       await settle(t);
@@ -189,7 +189,7 @@ void main() {
       appState.relayKnocksForTest = true;
       appState.sendModeForTest = 'fast';
       setRouteForTest = (m) async => throw StateError('not saved');
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await settle(t);
       await t.tap(helperCard);
       await t.pump();
@@ -204,7 +204,7 @@ void main() {
       phone(t);
       appState.deliveryModeForTest = DeliveryMode.helper;
       appState.sendModeForTest = 'fast';
-      await t.pumpWidget(framed(const GettingMessagesScreen(), still: true));
+      await t.pumpWidget(framed(const NotificationsScreen(), still: true));
       await t.pump(const Duration(seconds: 1));
       expect(helperCard, findsOneWidget);
       expect(find.text(l10n.gettingMessagesHelperNote), findsOneWidget);
@@ -229,7 +229,7 @@ void main() {
         moved.add(m);
         appState.sendModeForTest = m;
       };
-      await t.pumpWidget(framed(const GettingMessagesScreen()));
+      await t.pumpWidget(framed(const NotificationsScreen()));
       await settle(t);
       final useOnion = pill(l10n.gettingMessagesHelperUseOnion);
       expect(useOnion, findsOneWidget);
@@ -238,6 +238,9 @@ void main() {
       );
       expect(a.fill, HaloColors.amber);
       expect(a.ink, HaloColors.onAmber);
+      // the page has sections above it now: the pill is a scroll away
+      await t.ensureVisible(useOnion);
+      await settle(t);
       await t.tap(useOnion);
       await settle(t);
       expect(moved, ['private']);
@@ -257,20 +260,22 @@ void main() {
       phone(t);
       appState.sendModeForTest = 'private';
       appState.relaySaidNoForTest = true;
-      await t.pumpWidget(framed(const GettingMessagesScreen(), still: true));
+      await t.pumpWidget(framed(const NotificationsScreen(), still: true));
       await settle(t);
       expect(find.byType(CardAction), findsNothing);
       appState.deliveryModeForTest = DeliveryMode.helper;
       await t.pumpWidget(const SizedBox());
-      await t.pumpWidget(framed(const GettingMessagesScreen(), still: true));
+      await t.pumpWidget(framed(const NotificationsScreen(), still: true));
       await settle(t);
       expect(find.byType(CardAction), findsNothing);
       await t.pumpWidget(const SizedBox());
     });
 
-    test('the card says it in one short line', () {
+    test('the card says it in two short lines, the cost first', () {
       expect(l10n.gettingMessagesHelperBody.length, lessThan(100));
-      expect('.'.allMatches(l10n.gettingMessagesHelperBody).length, 2);
+      final lines = l10n.gettingMessagesHelperBody.split('\n');
+      expect(lines, hasLength(2));
+      expect(lines.first, contains('IP'));
     });
   });
 

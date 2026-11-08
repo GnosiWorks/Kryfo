@@ -10,8 +10,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve, SignalProtocolAddress;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../dlog.dart';
@@ -63,6 +61,9 @@ class DevLane {
   // what the seal made, for the gate
   final DevTokens tokens;
   final DevFrameRule frame;
+  // a message from him opened on the pq state of a record that still holds
+  // classic ones, on a seat of its own (the everyday store says so itself)
+  void Function(String peer)? onPqOver;
 
   static SignalSession _signal() => signalSession;
 
@@ -113,7 +114,9 @@ class DevLane {
         _anonIn = db;
         made = _anon = _boot(db, self.xPub, xPriv);
       }
-      return await made;
+      final ss = await made;
+      ss.onPqOver = (p) => onPqOver?.call(p);
+      return ss;
     } catch (e) {
       dlog('dev lane: the anonymous store did not open ($e)');
       _anon = null;
@@ -154,11 +157,12 @@ class DevLane {
     }
     final out = frame(wrapped, anon: s.anon);
     if (out == null) throw DevSealRefused(DevRefusal.frame);
+    if (kDevPqRestart) await _pqFromCard(s, peer);
     // a session a restore brought back starts afresh from his pinned card
     final cipher = await s.store.encryptTo(
       peer,
       out,
-      afresh: () async => preKeyBundleOf(s.key.bundle),
+      afresh: () async => lsBundleOf(s.store.lib, s.key.bundle),
     );
     tokens.mint(cipher);
     return cipher;
@@ -168,10 +172,8 @@ class DevLane {
   // row are the pinned one, byte for byte
   Future<bool> _pinnedStill(DevSeat s, String peer) async {
     try {
-      final held = await s.store.identityStore.getIdentity(
-        SignalProtocolAddress(peer, 1),
-      );
-      if (held == null || !_same(held.serialize(), pinnedIdentity(s.key))) {
+      final held = await s.store.identityStore.getIdentity(peer);
+      if (held == null || !_same(held, pinnedIdentity(s.key))) {
         return false;
       }
       final o = open;
@@ -190,6 +192,25 @@ class DevLane {
     }
   }
 
+  // a chat started on a classic card goes over to pq on the pinned card
+  // once it carries a kyber prekey: a session on the card in front of the
+  // held one, whose next seal is the opener. his main invite never expires,
+  // so the card's keys are there to open it, and the
+  // classic states go 16 days after his first pq message (pqUpkeep)
+  Future<void> _pqFromCard(DevSeat s, String peer) async {
+    if (!devCardStarts(s.key)) return;
+    try {
+      final info = await s.store.sessionInfo(peer);
+      if (info == null || info.version >= 4) return;
+      final card = lsBundleOf(s.store.lib, s.key.bundle);
+      if (await s.store.restartFrom(peer, card, classicOnly: true)) {
+        dlog('dev lane: the chat goes over to pq');
+      }
+    } catch (e) {
+      dlog('dev lane: no pq restart on the card (${e.runtimeType})');
+    }
+  }
+
   /// a delete: the store and the ciphers go with the chat
   void forget() {
     _anon = null;
@@ -200,19 +221,52 @@ class DevLane {
 }
 
 /// his card as it is pinned: its identity is his pinned key, and that key
-/// signs the card's signed prekey. checked before a first send keeps
-/// anything, in every container
+/// signs the card's signed prekey, and its kyber prekey where it carries
+/// one. checked before a first send keeps anything, in every container
 bool devCardChecks(DevKey k) {
   try {
     final j = jsonDecode(utf8.decode(base64Decode(k.bundle)));
     if (j is! Map) return false;
     final id = base64Decode(j['identityKey'] as String);
     if (!_same(id, pinnedIdentity(k))) return false;
-    return Curve.verifySignature(
-      Curve.decodePoint(id, 0),
+    if (!preKeySigned(
+      id,
       base64Decode(j['signedPreKeyPublic'] as String),
       base64Decode(j['signedPreKeySignature'] as String),
+    )) {
+      return false;
+    }
+    if (!j.containsKey('kyberPreKeyPublic')) return true;
+    return preKeySigned(
+      id,
+      base64Decode(j['kyberPreKeyPublic'] as String),
+      base64Decode(j['kyberPreKeySignature'] as String),
     );
+  } catch (_) {
+    return false;
+  }
+}
+
+/// [k]'s card is from before 0.6: it carries no post-quantum prekey, so no
+/// chat starts on it here (a later app pins a new one)
+bool devCardOld(DevKey k) {
+  try {
+    cardBundle(k.bundle);
+    return false;
+  } on ClassicRefused {
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// a new dev chat can start on [k]'s card: it carries the post-quantum
+/// prekey and every check on it holds
+bool devCardStarts(DevKey k) {
+  if (!devCardChecks(k)) return false;
+  try {
+    cardBundle(k.bundle);
+    return true;
   } catch (_) {
     return false;
   }
@@ -231,6 +285,11 @@ Uint8List _bytes(String hex) => Uint8List.fromList([
   for (var i = 0; i + 1 < hex.length; i += 2)
     int.parse(hex.substring(i, i + 2), radix: 16),
 ]);
+
+/// whether a dev chat started on a classic card goes over to pq on the
+/// pinned card. nothing runs
+/// until a card with a kyber prekey is pinned (RELEASING.md)
+const kDevPqRestart = true;
 
 // the one lane. the app points it at the everyday container
 final devLane = DevLane(tokens: devTokens);

@@ -9,7 +9,8 @@ import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show LockGuard;
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart'
+    show appState, AppStateRoute, AppStateDevchat, AppStateRefresh;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/dev_about_sheet.dart';
 import 'package:kryfo/screens/home_screen.dart';
@@ -584,7 +585,7 @@ void main() {
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text(l10n.seenDevChatCell), findsNWidgets(3));
+      expect(find.text(l10n.seenDevChatCell), findsNWidgets(2));
       await t.tap(find.text(l10n.seenDevChat));
       await t.pump(const Duration(milliseconds: 400));
       expect(find.text(l10n.seenDevChatLine), findsOneWidget);

@@ -128,15 +128,18 @@ class PageSection extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: HaloType.mono(
-                size: 10,
-                color: HaloColors.text2,
-                weight: FontWeight.w500,
-                letter: 0.14,
+            child: Semantics(
+              header: true,
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: HaloType.mono(
+                  size: 10,
+                  color: HaloColors.text,
+                  weight: FontWeight.w500,
+                  letter: 0.14,
+                ),
               ),
             ),
           ),
@@ -192,11 +195,14 @@ class PageBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaloType.pageTitle(),
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: HaloType.pageTitle(),
+                      ),
                     ),
                     if (sub != null) ...[const SizedBox(height: 2), sub!],
                   ],

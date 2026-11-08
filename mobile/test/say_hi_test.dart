@@ -23,8 +23,11 @@ import 'package:kryfo/main.dart'
         openAddedChatLater,
         processPeerBundle,
         rootNavKey,
+        torValve,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart' show grindPow, powBits, verifyPow;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/session.dart';
@@ -32,15 +35,9 @@ import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/stickers/sticker_view.dart' show StickerView;
 import 'package:kryfo/theme.dart' show buildHaloTheme;
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/widgets/say_hi_card.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show
-        CiphertextMessage,
-        Curve,
-        PreKeySignalMessage,
-        SessionCipher,
-        SignalMessage,
-        SignalProtocolAddress;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -78,17 +75,18 @@ void main() {
   late Directory docs;
   late StickerLibrary packs;
   late List<String> ground;
+  late SayHiDb rowsDb;
 
   setUpAll(() async {
     // a line is as wide as on a phone
     await loadAppFonts();
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),
@@ -103,6 +101,7 @@ void main() {
   Future<void> world({
     HaloContainer container = HaloContainer.everyday,
     bool knowsMe = false,
+    bool asked = false,
   }) async {
     mem = MemDb();
     await devChatTables(mem, now: 1);
@@ -116,6 +115,8 @@ void main() {
       'back_paired': knowsMe ? 1 : 0,
     });
     final db = SayHiDb(mem, container);
+    rowsDb = db;
+    if (asked) db.asked.add(_peer);
     if (container.quiet) {
       final everyday = MemDb();
       await devChatTables(everyday);
@@ -188,16 +189,7 @@ void main() {
   Future<Map<String, dynamic>> ambersRead(String cipher) async {
     final w = base64Decode(cipher);
     final body = Uint8List.fromList(w.sublist(1));
-    final c = SessionCipher(
-      amber.sessionStore,
-      amber.preKeyStore,
-      amber.signedPreKeyStore,
-      amber.identityStore,
-      const SignalProtocolAddress('me-to-amber', 1),
-    );
-    final plain = w[0] == CiphertextMessage.prekeyType
-        ? await c.decrypt(PreKeySignalMessage(body))
-        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    final plain = await amber.open('me-to-amber', w[0], body);
     final s = utf8.decode(plain);
     expect(s, startsWith('halo/1:'));
     return jsonDecode(s.substring(7)) as Map<String, dynamic>;
@@ -318,6 +310,63 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a wave held for their accept says no reconnect, and goes '
+      'within seconds of their answer, the route warm', (t) async {
+    // onion, tor and a relay up
+    appState.sendModeForTest = 'private';
+    appState.setTorStatusForTest(TorStatus.reachable);
+    appState.setRouteOKForTest(true);
+    var now = DateTime.now();
+    torValve.clockForTest = () => now;
+    final hold = signalSession.holdOpener;
+    // their one-time address took our opener: the rest waits for the answer
+    var held = true;
+    signalSession.holdOpener = (_) async => held;
+    addTearDown(() {
+      signalSession.holdOpener = hold;
+      torValve.clockForTest = DateTime.now;
+      appState.sendModeForTest = 'balanced';
+    });
+    rowsDb.outboxOn = true;
+    await open(t);
+    await t.tap(wave());
+    await settle(t);
+    expect(signalSession.awaitsAnswer(_peer), isTrue);
+    expect(relay.ciphers, isEmpty);
+    expect(outRows(), hasLength(1));
+    // two minutes on, still waiting for the accept: no reconnect line
+    now = now.add(const Duration(minutes: 2));
+    await t.pump(const Duration(seconds: 6));
+    await settle(t);
+    expect(find.text(l10n.valveStillConnecting), findsNothing);
+    expect(find.text(l10n.homeReconnect), findsNothing);
+    // their answer: the wave goes at once on the relay that takes it
+    held = false;
+    signalSession.answeredForTest(_peer);
+    // the outbox grinds the request's proof again on an isolate, real time
+    final sw = Stopwatch()..start();
+    for (var i = 0; i < 150 && relay.ciphers.isEmpty; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await t.pump(const Duration(milliseconds: 50));
+    }
+    // within a few seconds of the answer, the proof's grind included
+    expect(sw.elapsed, lessThan(const Duration(seconds: 10)));
+    expect(relay.ciphers, hasLength(1));
+    // five seconds after the answer by the valve's clock: still warming
+    now = DateTime.now().add(const Duration(seconds: 5));
+    await t.pump(const Duration(seconds: 6));
+    expect(find.text(l10n.valveStillConnecting), findsNothing);
+    // it is the wave that waited
+    final read = await t.runAsync(() => ambersRead(relay.ciphers.single));
+    expect(read!['m'], kWaveEmoji);
+    relay.sends.single.complete('ok');
+    await settle(t);
+    expect(find.text(l10n.valveStillConnecting), findsNothing);
+    await devClose(t);
+  });
+
   testWidgets('two taps before the next frame wave once, and the sticker '
       'leaves the card for its flight', (t) async {
     final hi = wavingSticker(packs)!.$2;
@@ -430,6 +479,30 @@ void main() {
     await open(t);
     expect(card, findsNothing);
     expect(find.text('are you there'), findsOneWidget);
+    await devClose(t);
+  });
+
+  testWidgets('someone whose hello was answered here gets no card, and '
+      'nothing of mine to them waits as a request', (t) async {
+    // their qr hello accepted: nothing of theirs has come yet, and they
+    // have not added us back on the relays, but they know this computer
+    await t.runAsync(() => world(asked: true));
+    await open(t);
+    expect(card, findsNothing);
+    expect(find.text(l10n.chatSayHi), findsOneWidget);
+    for (final w in ['one', 'two', 'three']) {
+      await t.enterText(find.byType(TextField).last, w);
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.byIcon(Icons.arrow_upward));
+      await settle(t);
+      relay.sends.last.complete('ok');
+      await settle(t);
+    }
+    // a request of mine would lock after two
+    expect(relay.ciphers, hasLength(3));
+    expect(find.text(l10n.chatWaitingForThemTo), findsNothing);
+    expect(card, findsNothing);
     await devClose(t);
   });
 

@@ -4,6 +4,8 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -64,15 +66,15 @@ func TestMeasureReceiveLanes(t *testing.T) {
 	case "":
 		mode = "app"
 	case "1":
-		receiveLane = func(string) string { return laneEveryday }
+		receiveLane = func(int, string) string { return laneEveryday }
 	case "each":
-		receiveLane = func(rcvPk string) string { return laneEveryday + ":" + rcvPk }
+		receiveLane = func(_ int, rcvPk string) string { return laneEveryday + ":" + rcvPk }
 	default:
 		n, err := strconv.Atoi(mode)
 		if err != nil || n < 2 {
 			t.Fatalf("HALO_LANES_MODE %q: want 1, a number of lanes, or each", mode)
 		}
-		receiveLane = func(rcvPk string) string { return hashLane(rcvPk, n) }
+		receiveLane = func(_ int, rcvPk string) string { return hashLane(rcvPk, n) }
 	}
 
 	var logTo io.Writer = io.Discard
@@ -115,6 +117,7 @@ func TestMeasureReceiveLanes(t *testing.T) {
 		t.Fatal(err)
 	}
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
+	setMainForTest(myXPriv, myXPub)
 	mu.Unlock()
 	relays := strings.Split(measureRelays, ",")
 	nostrMu.Lock()
@@ -132,13 +135,13 @@ func TestMeasureReceiveLanes(t *testing.T) {
 			t.Fatal(err)
 		}
 		curve25519.ScalarBaseMult(&peer, &peerPriv)
-		_, rcv, err := nip17RcvAddress(peer)
+		_, rcv, err := nip17RcvAddressAs(testMain(), peer)
 		if err != nil {
 			t.Fatal(err)
 		}
 		rcvs = append(rcvs, rcv)
-		lanes[receiveLane(rcv)] = true
-		go nostrSubscribeRunner(ctx, hex.EncodeToString(peer[:]), peer, rcv)
+		lanes[receiveLane(mainIdent, rcv)] = true
+		go nostrSubscribeRunner(ctx, hex.EncodeToString(peer[:]), mainPair(peer), rcv)
 	}
 
 	// a subscription is settled once the catch-up of its latest connection
@@ -417,3 +420,10 @@ func relayHost(u string) string {
 func secs(d time.Duration) string { return fmt.Sprintf("%.1fs", d.Seconds()) }
 
 func mb(b int64) string { return fmt.Sprintf("%.2f MB", float64(b)/1e6) }
+
+// one of n lanes by the first four bytes of the address's sha256, as the
+// receive lanes went before the batches
+func hashLane(rcvPk string, n int) string {
+	h := sha256.Sum256([]byte(rcvPk))
+	return laneEveryday + ":" + strconv.Itoa(int(binary.BigEndian.Uint32(h[:4])%uint32(n)))
+}

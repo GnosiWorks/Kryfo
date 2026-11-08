@@ -102,7 +102,7 @@ class _RoomJoinLineState extends State<RoomJoinLine>
         overflow: TextOverflow.ellipsis,
         style: HaloType.mono(
           size: widget.size,
-          color: waiting ? HaloColors.violet : HaloColors.amberText,
+          color: waiting ? HaloColors.violetText : HaloColors.amberText,
         ),
       ),
     );
@@ -221,7 +221,7 @@ class _Waiting extends StatelessWidget {
           Text(
             l10n.roomJoinWaitingLine,
             textAlign: TextAlign.center,
-            style: HaloType.sans(size: 13, color: HaloColors.text2),
+            style: HaloType.sans(size: 13, color: HaloColors.text),
           ),
         ],
       ),
@@ -269,7 +269,7 @@ class _Stopped extends StatelessWidget {
           Text(
             line,
             textAlign: TextAlign.center,
-            style: HaloType.sans(size: 13, color: HaloColors.text2),
+            style: HaloType.sans(size: 13, color: HaloColors.text),
           ),
           const SizedBox(height: 26),
           ConstrainedBox(

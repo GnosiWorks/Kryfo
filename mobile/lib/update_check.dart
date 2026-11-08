@@ -12,10 +12,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'app_version.dart';
 import 'container.dart';
+import 'desktop/desktop_mode.dart' show onDesktop;
 import 'dlog.dart';
 import 'main.dart'
-    show appState, engine, session, sessionQuiet, updateGetOnIsolate;
+    show
+        appState,
+        engine,
+        session,
+        sessionQuiet,
+        updateGetOnIsolate,
+        AppStateRoute;
 import 'store.dart' show kPlayBuild;
 import 'widgets/motion.dart' show TorStatus;
 import 'wipe.dart' show haloWiping;
@@ -57,6 +65,10 @@ const _onKey = 'kryfo.update.on';
 const _checkedKey = 'kryfo.update.checked';
 const _latestKey = 'kryfo.update.latest';
 const _dismissedKey = 'kryfo.update.dismissed';
+
+/// what a check by hand found: a newer version, this one, or no answer
+/// that could be trusted
+enum UpdateAnswer { ready, newest, failed }
 
 /// who put the app on the phone, as android says, and its version name
 class InstallInfo {
@@ -125,6 +137,11 @@ String? verifiedVersion(String body, String sigText, String pubKeyB64) {
 }
 
 /// the download page in the language the app is in, when the site has it
+/// where an update sends a person: the download page, on a computer at its
+/// own part of the page (the site's #computer block)
+String updatePageFor(String lang, {required bool desktop}) =>
+    desktop ? '${downloadPageFor(lang)}#computer' : downloadPageFor(lang);
+
 String downloadPageFor(String lang) {
   const folders = {
     'de',
@@ -149,6 +166,9 @@ String downloadPageFor(String lang) {
 const _platform = MethodChannel('halo/platform');
 
 Future<InstallInfo> _installFromPlatform() async {
+  // a computer has no store and no installer to ask: its copy is from the
+  // site or github, and it names its own version
+  if (onDesktop) return const InstallInfo(version: kAppVersion);
   try {
     final m = await _platform.invokeMapMethod<String, Object?>('installSource');
     if (m == null) return const InstallInfo();
@@ -176,10 +196,12 @@ class UpdateNotice extends ChangeNotifier {
     Future<InstallInfo> Function()? install,
     DateTime Function()? now,
     Future<void> Function()? pause,
+    Future<void> Function()? stall,
     this.pubKeyB64 = kVersionPubKeyB64,
   }) : _install = install ?? _installFromPlatform,
        _now = now ?? DateTime.now,
-       _pause = pause ?? (() => Future<void>.delayed(updatePause()));
+       _pause = pause ?? (() => Future<void>.delayed(updatePause())),
+       _stall = stall ?? (() => Future<void>.delayed(_askingTime()));
 
   // a GET over tor alone: the body, or "error: ..."
   final Future<String> Function(String url) get;
@@ -191,15 +213,16 @@ class UpdateNotice extends ChangeNotifier {
   final Future<InstallInfo> Function() _install;
   final DateTime Function() _now;
   final Future<void> Function() _pause;
+  final Future<void> Function() _stall;
 
   Future<void>? _ready;
   bool _eligible = false;
   String? _running;
   String? _latest;
-  String? _dismissed;
   // read once, then followed per session: each identity keeps its switch
   SharedPreferences? _prefs;
   bool _busy = false;
+  bool _asking = false;
   DateTime? _lastTry;
 
   /// whether this copy gets the notice and the switch
@@ -208,9 +231,15 @@ class UpdateNotice extends ChangeNotifier {
   // the open session's switch, whichever one was open at the first read
   bool get _on => _prefs?.getBool(container().key(_onKey)) ?? true;
 
-  /// the version the card offers, null when there is none to show
+  // the open session's dismissal: one identity hiding the card never
+  // hides it in another
+  String? get _dismissed => _prefs?.getString(container().key(_dismissedKey));
+
+  /// the version the card offers, null when there is none to show. a decoy
+  /// shows what the everyday side already fetched, as a fresh install would
+  /// show its own, and never asks for it
   String? get shown {
-    if (!_eligible || !_on || quiet()) return null;
+    if (!_eligible || !_on) return null;
     final v = _latest;
     if (v == null || v == _dismissed || !isNewer(v, _running)) return null;
     return v;
@@ -226,7 +255,6 @@ class UpdateNotice extends ChangeNotifier {
         parseVersion(i.version) != null;
     final prefs = await SharedPreferences.getInstance();
     _latest = prefs.getString(_latestKey);
-    _dismissed = prefs.getString(_dismissedKey);
     _prefs = prefs;
     notifyListeners();
   }
@@ -258,45 +286,82 @@ class UpdateNotice extends ChangeNotifier {
         return false;
       }
       final prefs = await SharedPreferences.getInstance();
-      final ms = prefs.getInt(_checkedKey);
-      final last = ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
-      if (!checkDue(last, now)) return false;
+      if (!checkDue(_checkedAt(prefs), now)) return false;
       await _pause();
-      // the wait is long enough for any of it to change
+      // the wait is long enough for any of it to change, a check by hand
+      // among it
       if (quiet() || !torUp() || !await isOn()) return false;
-      _lastTry = now;
-      final body = await _fetch(kVersionUrl);
-      final sig = body.startsWith('error:')
-          ? body
-          : await _fetch(kVersionSigUrl);
-      // any answer from the site counts as the day's check, whatever it
-      // says: only a route that never reached it is tried again sooner
-      final reached = ![
-        'error: tor',
-        'error: get',
-        'error: req',
-      ].any(body.startsWith);
-      if (reached) await prefs.setInt(_checkedKey, now.millisecondsSinceEpoch);
-      if (body.startsWith('error:') || sig.startsWith('error:')) {
-        dlog('update: no answer');
-        return true;
-      }
-      final v = verifiedVersion(body, sig, pubKeyB64);
-      if (v == null) {
-        dlog('update: refused the version file');
-        return true;
-      }
-      // kept even when not newer: a release taken back takes the card
-      if (v != _latest) {
-        _latest = v;
-        await prefs.setString(_latestKey, v);
-        notifyListeners();
-      }
+      if (!checkDue(_checkedAt(prefs), _now())) return false;
+      await _ask(prefs, now);
       return true;
     } finally {
       _busy = false;
     }
   }
+
+  DateTime? _checkedAt(SharedPreferences prefs) {
+    final ms = prefs.getInt(_checkedKey);
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  // the two GETs and the signature: the version the site signed, or null
+  Future<String?> _ask(SharedPreferences prefs, DateTime now) async {
+    _lastTry = now;
+    final body = await _fetch(kVersionUrl);
+    final sig = body.startsWith('error:') ? body : await _fetch(kVersionSigUrl);
+    // any answer from the site counts as the day's check, whatever it
+    // says: only a route that never reached it is tried again sooner
+    final reached = ![
+      'error: tor',
+      'error: get',
+      'error: req',
+    ].any(body.startsWith);
+    if (reached) await prefs.setInt(_checkedKey, now.millisecondsSinceEpoch);
+    if (body.startsWith('error:') || sig.startsWith('error:')) {
+      dlog('update: no answer');
+      return null;
+    }
+    final v = verifiedVersion(body, sig, pubKeyB64);
+    if (v == null) {
+      dlog('update: refused the version file');
+      return null;
+    }
+    // kept even when not newer: a release taken back takes the card
+    if (v != _latest) {
+      _latest = v;
+      await prefs.setString(_latestKey, v);
+      notifyListeners();
+    }
+    return v;
+  }
+
+  /// one check at once, asked for in settings: no daily limit and no wait,
+  /// with or without the switch, and the same signature. a quiet session
+  /// asks nothing and answers from what the everyday side last fetched,
+  /// after about as long as asking takes
+  Future<UpdateAnswer> checkNow() async {
+    await ready();
+    if (!_eligible || _asking) return UpdateAnswer.failed;
+    _asking = true;
+    try {
+      if (quiet()) {
+        await _stall();
+        final v = _latest;
+        if (v == null) return UpdateAnswer.failed;
+        return isNewer(v, _running) ? UpdateAnswer.ready : UpdateAnswer.newest;
+      }
+      if (!torUp()) return UpdateAnswer.failed;
+      final prefs = await SharedPreferences.getInstance();
+      final v = await _ask(prefs, _now());
+      if (v == null) return UpdateAnswer.failed;
+      return isNewer(v, _running) ? UpdateAnswer.ready : UpdateAnswer.newest;
+    } finally {
+      _asking = false;
+    }
+  }
+
+  /// the newest version the site signed, as last fetched
+  String? get latest => _latest;
 
   Future<String> _fetch(String url) async {
     try {
@@ -310,12 +375,17 @@ class UpdateNotice extends ChangeNotifier {
   Future<void> dismiss() async {
     final v = _latest;
     if (v == null) return;
-    _dismissed = v;
-    notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_dismissedKey, v);
+    _prefs ??= prefs;
+    final done = prefs.setString(container().key(_dismissedKey), v);
+    notifyListeners();
+    await done;
   }
 }
+
+// what a quiet session's check by hand waits: two GETs over tor
+Duration _askingTime() =>
+    Duration(milliseconds: 1500 + Random.secure().nextInt(3000));
 
 const _torLive = {
   TorStatus.bootstrapped,

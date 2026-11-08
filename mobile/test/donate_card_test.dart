@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/theme.dart';
@@ -140,7 +140,7 @@ void main() {
     }
     expect(
       t.widget<Text>(find.text(l10n.donateCardSeesName)).style?.color,
-      HaloColors.text2,
+      HaloColors.text,
     );
     expect(t.getSize(find.text(l10n.donateCardPay)).height, greaterThan(0));
     expect(t.takeException(), isNull);

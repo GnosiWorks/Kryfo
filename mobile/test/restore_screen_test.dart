@@ -32,7 +32,8 @@ import 'package:kryfo/main.dart'
         rootNavKey,
         session,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateProfile;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/screens/pin_flow_screen.dart';
 import 'package:kryfo/screens/restore_screen.dart';
@@ -97,12 +98,7 @@ Future<void> _openAndRestore(
   expect(find.byType(BackButton), findsOneWidget);
 
   await t.tap(find.text(l10n.restorePickTheBackupFile));
-  for (var i = 0; i < 40 && find.text('old.txt').evaluate().isEmpty; i++) {
-    await t.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 50)),
-    );
-    await t.pump();
-  }
+  await _until(t, find.text('old.txt'));
   await t.pumpAndSettle();
 
   expect(find.text('old.txt'), findsOneWidget);
@@ -123,6 +119,18 @@ Future<void> _openAndRestore(
   if (!move) return;
   await press(t, find.text(l10n.restoreMoveItHere));
   await t.pumpAndSettle();
+}
+
+// the picked file is read off the test's clock, by real io: wait for it as
+// long as a loaded machine needs, and no longer
+Future<void> _until(WidgetTester t, Finder f) async {
+  final w = Stopwatch()..start();
+  while (f.evaluate().isEmpty && w.elapsed < const Duration(seconds: 20)) {
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await t.pump();
+  }
 }
 
 // the app's own root: each session switch builds a new navigator
@@ -164,6 +172,57 @@ void main() {
     pickForTest = null;
     _mock('miguelruivo.flutter.plugins.filepicker', null);
     tmp.deleteSync(recursive: true);
+  });
+
+  // a backup saved under a plain icon has a plain name: the file is known
+  // by what it holds
+  testWidgets('a plainly named backup is read like any other', (t) async {
+    phone(t);
+    pickForTest = () async {
+      final f = File('${tmp.path}/backup_20261024_090507.bin')
+        ..writeAsStringSync('kryfo-backup:abc');
+      return AndroidPlatformFile.fromMap({
+        'name': 'backup_20261024_090507.bin',
+        'path': f.path,
+        'size': f.lengthSync(),
+      });
+    };
+    var inspected = 0;
+    inspectForTest = (_) async {
+      inspected++;
+      return const BackupSummary(
+        when: null,
+        version: 1,
+        haloId: 'amber-fox-run',
+        contacts: 2,
+        messages: 9,
+      );
+    };
+    await t.pumpWidget(
+      app(
+        Builder(
+          builder: (ctx) => TextButton(
+            onPressed: () => Navigator.of(ctx).push(
+              MaterialPageRoute<void>(builder: (_) => const RestoreScreen()),
+            ),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.restorePickTheBackupFile));
+    final picked = find.text('backup_20261024_090507.bin');
+    await _until(t, picked);
+    await t.pumpAndSettle();
+    // taken for a backup by what it holds
+    expect(picked, findsOneWidget);
+    expect(find.text(l10n.restoreThatFileIsNot), findsNothing);
+    await t.enterText(find.byType(TextField), 'the passphrase');
+    await t.tap(find.text(l10n.restoreCheckTheFile));
+    await t.pumpAndSettle();
+    expect(inspected, 1);
   });
 
   testWidgets('a restore under way cannot be left', (t) async {
@@ -266,6 +325,8 @@ void main() {
         await t.pumpAndSettle();
       }
       expect(shown(), isTrue);
+      // what was deleted after the file comes back with it, and says so
+      expect(find.text(l10n.restoreDeletedComeBack), findsOneWidget);
       await t.tap(go);
       await t.pumpAndSettle();
       expect(find.text(l10n.restoreRestoring), findsOneWidget);
@@ -300,6 +361,80 @@ void main() {
     await t.binding.handlePopRoute();
     await t.pumpAndSettle();
     expect(find.byType(RestoreScreen), findsNothing);
+  });
+
+  testWidgets('contacts on an older Kryfo are named before the restore, '
+      'and not yet leaves the phone as it was', (t) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({});
+    await appState.loadMyHandle();
+    var restored = false;
+    var quits = 0;
+    quitAfterRestore = () => quits++;
+    addTearDown(() => quitAfterRestore = () => exit(0));
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 4,
+      haloId: 'amber-fox-run',
+      contacts: 5,
+      messages: 9,
+      older: ['Ana', 'Ben', 'Cid', 'Dee'],
+    );
+    restoreForTest = (_, _) async => restored = true;
+    await _openAndRestore(t, wrap: _rooted);
+
+    expect(find.text(l10n.restoreOlderTitle), findsOneWidget);
+    expect(find.text(l10n.restoreOlderMany('Ana', 'Ben', 2)), findsOneWidget);
+    await press(t, find.text(l10n.restoreNotYet));
+    await t.pumpAndSettle();
+    expect(restored, isFalse);
+
+    final again = find.descendant(
+      of: find.byType(ListView),
+      matching: find.text(l10n.restoreRestore),
+    );
+    await press(t, again);
+    await t.pumpAndSettle();
+    await press(t, find.text(l10n.restoreMoveItHere));
+    await t.pumpAndSettle();
+    await press(t, find.text(l10n.restoreRestoreAnyway));
+    await t.pumpAndSettle();
+    expect(restored, isTrue);
+  });
+
+  test('the older line names two and counts the rest', () {
+    expect(olderLine(const []), '');
+    expect(olderLine(const ['Ana']), l10n.restoreOlderOne('Ana'));
+    expect(olderLine(const ['Ana', 'Ben']), l10n.restoreOlderTwo('Ana', 'Ben'));
+    expect(
+      olderLine(const ['Ana', 'Ben', 'Cid']),
+      l10n.restoreOlderMany('Ana', 'Ben', 1),
+    );
+    expect(l10n.restoreOlderMany('Ana', 'Ben', 1), contains('1 other '));
+    expect(l10n.restoreOlderMany('Ana', 'Ben', 3), contains('3 others'));
+  });
+
+  testWidgets('a file with no one on an older Kryfo asks nothing more', (
+    t,
+  ) async {
+    phone(t);
+    FlutterSecureStorage.setMockInitialValues({});
+    await appState.loadMyHandle();
+    var restored = false;
+    var quits = 0;
+    quitAfterRestore = () => quits++;
+    addTearDown(() => quitAfterRestore = () => exit(0));
+    inspectForTest = (_) async => const BackupSummary(
+      when: null,
+      version: 4,
+      haloId: 'amber-fox-run',
+      contacts: 2,
+      messages: 9,
+    );
+    restoreForTest = (_, _) async => restored = true;
+    await _openAndRestore(t, wrap: _rooted);
+    expect(find.text(l10n.restoreOlderTitle), findsNothing);
+    expect(restored, isTrue);
   });
 
   testWidgets('the same identity from an older file keeps its handle and '
@@ -631,12 +766,7 @@ void main() {
     await t.pumpWidget(app(const RestoreScreen()));
     await t.pumpAndSettle();
     await t.tap(find.text(l10n.restorePickTheBackupFile));
-    for (var i = 0; i < 40 && find.text('old.txt').evaluate().isEmpty; i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 50)),
-      );
-      await t.pump();
-    }
+    await _until(t, find.text('old.txt'));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField), 'the passphrase');
     await t.tap(find.text(l10n.restoreCheckTheFile));

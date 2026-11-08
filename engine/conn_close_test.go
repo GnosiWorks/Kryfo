@@ -76,7 +76,7 @@ func TestFailedDialsLeaveNothingBehind(t *testing.T) {
 	rcv := mustRcv(t, peer)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "the first dial", 5*time.Second, func() bool { return dials.Load() >= 1 })
 	time.Sleep(200 * time.Millisecond)
 	before := runtime.NumGoroutine()
@@ -94,12 +94,15 @@ func TestReconnectsLeaveNothingBehind(t *testing.T) {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	rcv := mustRcv(t, peer)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	listening := func(n int) func() bool {
 		return func() bool {
 			conns := relay.snapshot()

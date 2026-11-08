@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// a chat added by a code or a link, or taken in from a request, asks for
-// the safety number: a plain card with one tap to the number, which asks for
-// all of it. it goes once they are verified. later folds it into one quiet
-// line that stays until the number is compared or the line is closed. words
-// a request, an introduction or a group gave read as not checked beside the
-// name until then. with reduced motion the card shows at once, and folds
-// at once. the chat's own screen over rows kept in maps
+// someone added by a code or a link, or taken in from a request: their chat
+// asks nothing. the first visit to their page asks once for the safety
+// number, a plain card with one tap to it, which asks for all of it. the
+// page's own button reaches it after that. the flag that it was asked sits
+// on the side the contact lives on, the vault for a hidden one
 import 'dart:io';
-import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -16,18 +14,23 @@ import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show
+        HaloDb,
         appState,
         kNameAsk,
         kNameLater,
         kNameSays,
-        session,
+        kNameShown,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
+import 'package:kryfo/screens/contact_screen.dart';
 import 'package:kryfo/screens/key_verification_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'dev_chat_fakes.dart';
 import 'mem_db.dart';
@@ -50,6 +53,24 @@ class _Db extends SayHiDb {
   String? held = 'ab' * 32;
   @override
   Future<String?> heldKey(String haloId) async => held;
+}
+
+// a contact page's rows over maps, without what its lists read
+class _Rows extends HaloDb {
+  _Rows(this.mem);
+  final MemDb mem;
+  @override
+  Future<Database> open() async => mem;
+  @override
+  Future<List<Map<String, Object?>>> vouchesFor(String haloId) async => [];
+  @override
+  Future<List<Map<String, Object?>>> mediaFor(String peerId) async => [];
+  @override
+  Future<int?> firstMessageAt(String peerId) async => null;
+  @override
+  Future<List<Map<String, Object?>>> unsentOutbox({
+    Set<String> skip = const {},
+  }) async => const [];
 }
 
 void main() {
@@ -129,249 +150,181 @@ void main() {
               .firstWhere((r) => r['halo_id'] == _peer)['name_check']
           as int;
 
-  testWidgets('added by a code or a link: the chat asks for the safety '
-      'number, and one tap opens it', (t) async {
-    await person(flags: kNameAsk);
-    await open(t);
+  testWidgets('added by a code or a link: the chat asks for nothing, '
+      'whatever the flags say', (t) async {
+    for (final flags in [
+      kNameAsk,
+      kNameAsk | kNameSays,
+      kNameAsk | kNameLater,
+    ]) {
+      await mem.delete('contacts');
+      await person(flags: flags);
+      await open(t);
+      expect(find.text(l10n.chatCompareTitle), findsNothing);
+      expect(find.text(l10n.chatCompareLater), findsNothing);
+      expect(find.text(l10n.chatCompareNow), findsNothing);
+      expect(find.text('Not checked'), findsNothing);
+      // and the chat writes nothing to them
+      expect(flagsNow(), flags);
+      await devClose(t);
+    }
+  });
+
+  // their contact row and its key, on [db]'s side
+  Future<void> row(
+    MemDb db, {
+    required int flags,
+    int verified = 0,
+    bool key = true,
+  }) async {
+    await db.insert('contacts', {
+      'halo_id': _peer,
+      'onion': '',
+      'xpub': '',
+      'first_seen': 1,
+      'last_seen': 1,
+      'accepted': 1,
+      'verified': verified,
+      // a mark holds only for the key it was set on
+      if (verified == 1) 'verified_key': '07' * 32,
+      'name_check': flags,
+    });
+    if (key) {
+      await db.insert('peer_identities', {
+        'address': _peer,
+        'identity_key': Uint8List.fromList([5, ...List.filled(32, 7)]),
+      });
+    }
+  }
+
+  Future<void> page(WidgetTester t, {bool still = false}) async {
+    await devOpen(
+      t,
+      const ContactScreen(haloId: _peer, avatarSeed: _peer, peerXPub: ''),
+      still: still,
+    );
+    await settle(t);
+  }
+
+  int flagsIn(MemDb db) =>
+      db.rows('contacts').firstWhere((r) => r['halo_id'] == _peer)['name_check']
+          as int;
+
+  Future<MemDb> everyday({required int flags, int verified = 0}) async {
+    final live = MemDb();
+    await row(live, flags: flags, verified: verified);
+    final db = _Rows(live);
+    useDatabasesForTest(db, Session(db));
+    return live;
+  }
+
+  testWidgets('the first visit to their page asks once, and the next one '
+      'leaves the number under the page', (t) async {
+    final live = await everyday(flags: kNameAsk | kNameSays);
+    await page(t);
     expect(find.text(l10n.chatCompareTitle), findsOneWidget);
     expect(find.text(l10n.chatCompareLine(_peer)), findsOneWidget);
-    // nothing said about the words: they were given by the link they chose
-    expect(find.text('Not checked'), findsNothing);
-    await t.tap(find.text(l10n.chatVerify));
+    expect(flagsIn(live), kNameAsk | kNameSays | kNameShown);
+    await devClose(t);
+    await page(t);
+    expect(find.text(l10n.chatCompareTitle), findsNothing);
+    expect(find.text(l10n.contactVerifyKeys), findsOneWidget);
+    await t.tap(find.text(l10n.contactVerifyKeys));
     await settle(t);
     expect(find.byType(KeyVerificationScreen), findsOneWidget);
     await devClose(t);
   });
 
-  testWidgets('later folds the card into a quiet line, and the words stay '
-      'not checked', (t) async {
-    await person(flags: kNameAsk | kNameSays);
-    await open(t);
-    expect(find.text(l10n.chatCompareTitle), findsOneWidget);
-    expect(find.text('Not checked'), findsNothing);
-    await t.tap(find.text(l10n.chatCompareLater));
-    await settle(t);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    expect(find.text(l10n.chatCompareFolded), findsOneWidget);
-    expect(flagsNow(), kNameAsk | kNameSays | kNameLater);
-    expect(find.text('Not checked'), findsNothing);
-    await devClose(t);
-  });
-
-  testWidgets('the line comes back with the chat, read from the stored '
-      'flags', (t) async {
-    await person(flags: kNameAsk | kNameSays);
-    await open(t);
-    await t.tap(find.text(l10n.chatCompareLater));
-    await settle(t);
-    await devClose(t);
-    await open(t);
-    expect(find.text(l10n.chatCompareFolded), findsOneWidget);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    await devClose(t);
-  });
-
-  testWidgets('stored folded, the chat opens on the line, never the '
-      'card', (t) async {
-    await person(flags: kNameAsk | kNameLater);
-    await open(t);
-    expect(find.text(l10n.chatCompareFolded), findsOneWidget);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    await devClose(t);
-  });
-
-  testWidgets('compare on the line opens the safety number', (t) async {
-    await person(flags: kNameAsk | kNameLater);
-    await open(t);
+  testWidgets('compare opens the safety number, later puts the card '
+      'away', (t) async {
+    await everyday(flags: kNameAsk);
+    await page(t);
     await t.tap(find.text(l10n.chatCompareNow));
     await settle(t);
     expect(find.byType(KeyVerificationScreen), findsOneWidget);
-    await devClose(t);
-  });
-
-  testWidgets('the line has finger-sized buttons', (t) async {
-    await person(flags: kNameAsk | kNameLater);
-    await open(t);
-    final compare = t.getSize(
-      find
-          .ancestor(
-            of: find.text(l10n.chatCompareNow),
-            matching: find.byType(Container),
-          )
-          .first,
-    );
-    expect(compare.height, greaterThanOrEqualTo(44));
-    expect(compare.width, greaterThanOrEqualTo(44));
-    final x = t.getSize(find.byTooltip(l10n.chatCompareDismiss));
-    expect(x.height, greaterThanOrEqualTo(44));
-    expect(x.width, greaterThanOrEqualTo(44));
-    await devClose(t);
-  });
-
-  testWidgets('the x puts it away for good, and the words stay not '
-      'checked', (t) async {
-    await person(flags: kNameAsk | kNameSays | kNameLater);
-    await open(t);
-    expect(find.text('Not checked'), findsNothing);
-    await t.tap(find.byTooltip(l10n.chatCompareDismiss));
-    await settle(t);
-    expect(find.text(l10n.chatCompareFolded), findsNothing);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    expect(flagsNow(), kNameSays);
-    expect(find.text('Not checked'), findsNothing);
-    await devClose(t);
-    // and it does not come back with the chat
-    await open(t);
-    expect(find.text(l10n.chatCompareFolded), findsNothing);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    await devClose(t);
-  });
-
-  testWidgets('no key held for them yet: no number, so no card', (t) async {
-    await person(flags: kNameAsk);
-    (session.primary as _Db).held = null;
-    await open(t);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    await devClose(t);
-  });
-
-  testWidgets('verified, there is no card and no mark', (t) async {
-    await person(flags: kNameAsk | kNameSays, verified: 1);
-    await open(t);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    expect(find.text('Not checked'), findsNothing);
-    await devClose(t);
-  });
-
-  testWidgets('the line goes once the number is marked verified', (t) async {
-    await person(flags: kNameAsk | kNameLater);
-    await open(t);
-    expect(find.text(l10n.chatCompareFolded), findsOneWidget);
-    await mem.update(
-      'contacts',
-      {'verified': 1},
-      where: 'halo_id = ?',
-      whereArgs: [_peer],
-    );
-    await t.tap(find.text(l10n.chatCompareNow));
-    await settle(t);
     t.state<NavigatorState>(find.byType(Navigator).first).pop();
     await settle(t);
-    expect(find.byType(KeyVerificationScreen), findsNothing);
-    expect(find.text(l10n.chatCompareFolded), findsNothing);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    await devClose(t);
-  });
-
-  testWidgets('a request not taken in yet shows its words as not checked, '
-      'and asks for nothing yet', (t) async {
-    await person(flags: kNameAsk | kNameSays, accepted: 0);
-    await open(t);
-    expect(find.text('Not checked'), findsNothing);
-    expect(find.text(l10n.chatCompareTitle), findsNothing);
-    await devClose(t);
-  });
-
-  // the card's fold, on the frame it first shows
-  Future<double> firstFrame(WidgetTester t, {required bool still}) async {
-    await devOpen(
-      t,
-      const ChatScreen(
-        peerHaloId: _peer,
-        peerOnion: '',
-        peerXPub: '',
-        avatarSeed: _peer,
-      ),
-      still: still,
-    );
-    final card = find.text(l10n.chatCompareTitle);
-    for (var i = 0; i < 40 && card.evaluate().isEmpty; i++) {
-      await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 5)),
-      );
-      await t.pump();
-    }
-    expect(card, findsOneWidget);
-    return t
-        .widget<SizeTransition>(
-          find.ancestor(of: card, matching: find.byType(SizeTransition)).first,
-        )
-        .sizeFactor
-        .value;
-  }
-
-  testWidgets('the card folds in, and with reduced motion it shows at once', (
-    t,
-  ) async {
-    await person(flags: kNameAsk);
-    expect(await firstFrame(t, still: false), lessThan(1));
-    await settle(t);
-    await devClose(t);
-    expect(await firstFrame(t, still: true), 1);
-    await devClose(t);
-  });
-
-  // the card's fade, a frame after later is tapped
-  Future<double> foldFrame(WidgetTester t, {required bool still}) async {
-    await devOpen(
-      t,
-      const ChatScreen(
-        peerHaloId: _peer,
-        peerOnion: '',
-        peerXPub: '',
-        avatarSeed: _peer,
-      ),
-      still: still,
-    );
-    await settle(t);
+    // still the same visit: the card stays until put away
+    expect(find.text(l10n.chatCompareTitle), findsOneWidget);
     await t.tap(find.text(l10n.chatCompareLater));
-    await t.pump();
-    await t.pump(const Duration(milliseconds: 60));
-    expect(find.text(l10n.chatCompareFolded), findsOneWidget);
-    final card = find.text(l10n.chatCompareTitle);
-    if (card.evaluate().isEmpty) return 0;
-    // the card's own fade, whichever of the fades around it is moving
-    return [
-      for (final f in t.widgetList<FadeTransition>(
-        find.ancestor(of: card, matching: find.byType(FadeTransition)),
-      ))
-        f.opacity.value,
-    ].reduce(math.min);
-  }
-
-  testWidgets('later fades the card into the line', (t) async {
-    await person(flags: kNameAsk);
-    final fade = await foldFrame(t, still: false);
-    expect(fade, greaterThan(0));
-    expect(fade, lessThan(1));
     await settle(t);
     expect(find.text(l10n.chatCompareTitle), findsNothing);
     await devClose(t);
   });
 
-  testWidgets('reduced motion: later swaps the card for the line at once', (
-    t,
-  ) async {
-    await person(flags: kNameAsk);
-    expect(await foldFrame(t, still: true), 0);
-    // nothing on its way: no fade, no size moving
-    expect(
-      find.ancestor(
-        of: find.text(l10n.chatCompareFolded),
-        matching: find.byType(AnimatedSize),
-      ),
-      findsNothing,
-    );
-    final fades = t.widgetList<FadeTransition>(
-      find.ancestor(
-        of: find.text(l10n.chatCompareFolded),
-        matching: find.byType(FadeTransition),
-      ),
-    );
-    for (final f in fades) {
-      expect(f.opacity.value, 1);
-    }
+  testWidgets('a card asked on a chat by an older build is asked once on '
+      'the page too', (t) async {
+    final live = await everyday(flags: kNameAsk | kNameLater);
+    await page(t);
+    expect(find.text(l10n.chatCompareTitle), findsOneWidget);
+    expect(flagsIn(live), kNameAsk | kNameLater | kNameShown);
     await devClose(t);
+  });
+
+  testWidgets('no key held, verified or put away for good: no card and '
+      'nothing written', (t) async {
+    final live = MemDb();
+    await row(live, flags: kNameAsk, key: false);
+    final db = _Rows(live);
+    useDatabasesForTest(db, Session(db));
+    await page(t);
+    expect(find.text(l10n.chatCompareTitle), findsNothing);
+    expect(flagsIn(live), kNameAsk);
+    await devClose(t);
+    final v = await everyday(flags: kNameAsk, verified: 1);
+    await page(t);
+    expect(find.text(l10n.chatCompareTitle), findsNothing);
+    expect(flagsIn(v), kNameAsk);
+    await devClose(t);
+    final none = await everyday(flags: kNameSays);
+    await page(t);
+    expect(find.text(l10n.chatCompareTitle), findsNothing);
+    expect(flagsIn(none), kNameSays);
+    await devClose(t);
+  });
+
+  testWidgets('a hidden contact keeps the flag in the vault', (t) async {
+    final live = MemDb();
+    final hidden = MemDb();
+    await row(hidden, flags: kNameAsk);
+    final primary = _Rows(live);
+    useDatabasesForTest(
+      primary,
+      await Session.withVault(primary, _Rows(hidden)),
+    );
+    await page(t);
+    expect(find.text(l10n.chatCompareTitle), findsOneWidget);
+    expect(flagsIn(hidden), kNameAsk | kNameShown);
+    expect(live.rows('contacts'), isEmpty);
+    await devClose(t);
+    await page(t);
+    expect(find.text(l10n.chatCompareTitle), findsNothing);
+    await devClose(t);
+  });
+
+  testWidgets('the card eases in, and with reduced motion it is there at '
+      'once', (t) async {
+    for (final still in [false, true]) {
+      await everyday(flags: kNameAsk);
+      await devOpen(
+        t,
+        const ContactScreen(haloId: _peer, avatarSeed: _peer, peerXPub: ''),
+        still: still,
+      );
+      final card = find.text(l10n.chatCompareTitle);
+      for (var i = 0; i < 40 && card.evaluate().isEmpty; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+        await t.pump();
+      }
+      expect(card, findsOneWidget);
+      expect(
+        find.ancestor(of: card, matching: find.byType(AnimatedSize)),
+        still ? findsNothing : findsWidgets,
+      );
+      await devClose(t);
+    }
   });
 
   test('the safety number page asks for the whole number', () {

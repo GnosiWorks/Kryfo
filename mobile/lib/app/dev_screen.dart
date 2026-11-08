@@ -45,7 +45,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
                   icon: const Icon(Icons.dialpad, size: 18),
                   label: Text(l10n.appPairingCode),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: HaloColors.text2,
+                    foregroundColor: HaloColors.text,
                     side: BorderSide(color: HaloColors.line),
                   ),
                 ),
@@ -53,7 +53,7 @@ Future<(String, String)?> showImportPeerDialog(BuildContext context) =>
               const SizedBox(height: 14),
               Text(
                 l10n.appOrPaste,
-                style: HaloType.sans(size: 11, color: HaloColors.text2),
+                style: HaloType.sans(size: 11, color: HaloColors.text),
               ),
               const SizedBox(height: 10),
               ShiftTapGuard(
@@ -125,12 +125,12 @@ class _DevScreenState extends State<DevScreen> {
     final docsDir = await getApplicationDocumentsDirectory();
     // off the ui thread: starting tor blocks on socket i/o long enough to
     // trip an anr
-    final addr = await _startListenerOnIsolate(docsDir.path);
+    final addr = await startEngineIn(docsDir.path, _startListenerOnIsolate);
     setState(() {
       if (addr.startsWith('error')) {
         _status = addr;
       } else {
-        _myAddr = addr;
+        _myAddr = onionOfStart(addr);
         _status = '';
       }
     });
@@ -147,7 +147,7 @@ class _DevScreenState extends State<DevScreen> {
       final msgs = engine.drainInbox();
       if (msgs.isEmpty || _peerXPub.isEmpty) return;
       for (final r in msgs) {
-        final plain = engine.decryptFrom(_peerXPub, r);
+        final plain = engine.decryptFrom(kMainIdent, _peerXPub, r);
         if (!plain.startsWith('error')) {
           session.saveMessage(_peerId, 'in', plain);
         }
@@ -163,7 +163,7 @@ class _DevScreenState extends State<DevScreen> {
     }
     setState(() => _status = l10n.appEncryptingSending30s);
     final plain = _msgCtrl.text;
-    final cipher = engine.encryptFor(_peerXPub, plain);
+    final cipher = engine.encryptFor(kMainIdent, _peerXPub, plain);
     if (cipher.startsWith('error')) {
       setState(() => _status = cipher);
       return;
@@ -330,12 +330,12 @@ class _DevScreenState extends State<DevScreen> {
               const SizedBox(height: 4),
               Text(
                 engine.version(),
-                style: HaloType.sans(size: 11, color: HaloColors.text2),
+                style: HaloType.sans(size: 11, color: HaloColors.text),
               ),
               const SizedBox(height: 16),
               Text(
                 l10n.appYourKryfo2,
-                style: HaloType.sans(size: 11, color: HaloColors.text2),
+                style: HaloType.sans(size: 11, color: HaloColors.text),
               ),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -359,7 +359,7 @@ class _DevScreenState extends State<DevScreen> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     l10n.appRestoredFromDisk,
-                    style: HaloType.mono(size: 9, color: HaloColors.green),
+                    style: HaloType.mono(size: 9, color: HaloColors.greenText),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -398,7 +398,7 @@ class _DevScreenState extends State<DevScreen> {
               if (_peerId.isNotEmpty) ...[
                 Text(
                   l10n.appPeer,
-                  style: HaloType.sans(size: 11, color: HaloColors.text2),
+                  style: HaloType.sans(size: 11, color: HaloColors.text),
                 ),
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -410,7 +410,7 @@ class _DevScreenState extends State<DevScreen> {
                   ),
                   child: Text(
                     _peerId,
-                    style: HaloType.mono(size: 14, color: HaloColors.green),
+                    style: HaloType.mono(size: 14, color: HaloColors.greenText),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -423,7 +423,7 @@ class _DevScreenState extends State<DevScreen> {
                   style: HaloType.sans(color: HaloColors.text),
                   decoration: InputDecoration(
                     labelText: l10n.appMessageWillBeEncrypted,
-                    labelStyle: HaloType.sans(color: HaloColors.text2),
+                    labelStyle: HaloType.sans(color: HaloColors.text),
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -446,7 +446,7 @@ class _DevScreenState extends State<DevScreen> {
               if (_status.isNotEmpty)
                 Text(
                   l10n.appStatus(_status),
-                  style: HaloType.sans(size: 12, color: HaloColors.text2),
+                  style: HaloType.sans(size: 12, color: HaloColors.text),
                 ),
               const SizedBox(height: 24),
               GestureDetector(
@@ -461,12 +461,28 @@ class _DevScreenState extends State<DevScreen> {
               GestureDetector(
                 onTap: () => Navigator.of(
                   context,
-                ).push(haloRoute(const GettingMessagesScreen())),
+                ).push(haloRoute(const NotificationsScreen())),
                 child: Text(
-                  l10n.appGettingMessages,
+                  l10n.appNotificationsLink,
                   style: HaloType.mono(size: 11, color: HaloColors.amberText),
                 ),
               ),
+              // google push: pushes come, and how many android delivered
+              // below the high priority they were sent with
+              if (playBuild)
+                FutureBuilder<Map<String, int>>(
+                  future: GooglePush.instance.stats(),
+                  builder: (_, snap) => Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      l10n.devGooglePushes(
+                        snap.data?['got'] ?? 0,
+                        snap.data?['low'] ?? 0,
+                      ),
+                      style: HaloType.mono(size: 11, color: HaloColors.text),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () async {
@@ -486,7 +502,7 @@ class _DevScreenState extends State<DevScreen> {
                           l10n.appThePinWillBe,
                           style: HaloType.sans(
                             size: 13,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         ),
                         actions: [
@@ -496,7 +512,7 @@ class _DevScreenState extends State<DevScreen> {
                               l10n.commonCancel,
                               style: HaloType.sans(
                                 size: 13,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                               ),
                             ),
                           ),
@@ -506,7 +522,7 @@ class _DevScreenState extends State<DevScreen> {
                               l10n.appDisable,
                               style: HaloType.sans(
                                 size: 13,
-                                color: HaloColors.rose,
+                                color: HaloColors.roseText,
                               ),
                             ),
                           ),

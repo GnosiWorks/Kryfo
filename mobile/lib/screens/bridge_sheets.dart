@@ -26,6 +26,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
 import 'scan_screen.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 
 // the onion from the fokia pack. it plays twice and rests; still when the
 // phone asks for no movement
@@ -97,7 +98,7 @@ Widget _quiet(String label, VoidCallback onTap) => PressScale(
     child: Center(
       child: Text(
         label,
-        style: HaloType.sans(size: 13.5, color: HaloColors.text2),
+        style: HaloType.sans(size: 13.5, color: HaloColors.text),
       ),
     ),
   ),
@@ -123,7 +124,7 @@ Future<void> showTorBlockedSheet(
       Text(
         l10n.bridgesKryfoCanAskThe,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+        style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
       ),
       const SizedBox(height: 14),
       _seesNote(),
@@ -172,7 +173,7 @@ class _BlockedStart extends StatelessWidget {
     Text(
       l10n.torBootSplashNeverTriesTorPlainly,
       textAlign: TextAlign.center,
-      style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+      style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
     ),
     const SizedBox(height: 18),
     HaloPrimaryButton(
@@ -197,7 +198,7 @@ Future<void> showTorProjectConsentSheet(BuildContext context) async {
       const SizedBox(height: 8),
       Text(
         l10n.bridgesWhenTorIsBlockedAutomatic,
-        style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+        style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
       ),
       const SizedBox(height: 14),
       _seesNote(),
@@ -215,31 +216,6 @@ Future<void> showTorProjectConsentSheet(BuildContext context) async {
   );
   if (yes == true) await appState.setBridgeConsent(true);
 }
-
-/// the countries the tor project has advice for, its own guess marked
-Future<String?> showCountrySheet(
-  BuildContext context, {
-  required String current,
-  String? guess,
-}) => showChoiceSheet<String>(
-  context,
-  title: l10n.bridgesCountry,
-  line: l10n.bridgesTheTorProjectKnows,
-  current: current,
-  choices: [
-    SheetChoice('', l10n.bridgesLetTheTorProject),
-    // a guess the tor project has no advice for is still the person's
-    for (final cc in [
-      ...kBridgeCountries,
-      if (guess != null && !kBridgeCountries.contains(guess)) guess,
-    ])
-      SheetChoice(
-        cc,
-        bridgeCountryName(cc),
-        hint: cc == guess ? l10n.bridgesTheTorProjectSGuess : null,
-      ),
-  ],
-);
 
 /// a friend's lines: pasted or scanned, read by the engine, used at once
 Future<void> showFriendLinesSheet(BuildContext context) => showHaloSheet<void>(
@@ -357,10 +333,10 @@ class _FriendSheetState extends State<_FriendSheet> {
             ),
             const SizedBox(height: 6),
             Text(
-              l10n.bridgesPasteTheLineThey,
+              l10n.bridgesPasteTheLineTheyShown,
               style: HaloType.sans(
                 size: 13.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.45,
               ),
             ),
@@ -418,7 +394,7 @@ class _FriendSheetState extends State<_FriendSheet> {
                           key: ValueKey(err),
                           style: HaloType.sans(
                             size: 12.5,
-                            color: HaloColors.rose,
+                            color: HaloColors.roseText,
                           ),
                         ),
                       ),
@@ -434,14 +410,16 @@ class _FriendSheetState extends State<_FriendSheet> {
                     onTap: _paste,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _Ghost(
-                    icon: Icons.qr_code_scanner_rounded,
-                    label: l10n.bridgesScanACode,
-                    onTap: _scan,
+                if (!onDesktop) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _Ghost(
+                      icon: Icons.qr_code_scanner_rounded,
+                      label: l10n.bridgesScanACode,
+                      onTap: _scan,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
             const SizedBox(height: 12),

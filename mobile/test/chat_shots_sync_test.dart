@@ -8,10 +8,19 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateRoute,
+        AppStateScreen,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/typing.dart' show kCapGroupShots, kCapTyping;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -120,6 +129,36 @@ void main() {
     await to.take(from.me, [await from.app.shotsOnWire(to.me, w)]);
   }
 
+  test('a computer says nothing of the block, so the phone claims it for '
+      'neither; on the computer the switch is not offered', () async {
+    addTearDown(() => onDesktop = false);
+    await text(bob, amy, 'b1');
+    expect(amy.shots('bob').peerCan, isTrue);
+    // bob's Kryfo now runs on a computer
+    onDesktop = true;
+    bob.use();
+    final w = await bob.app.shotsOnWire(
+      'amy',
+      await wrapMessage('hi', msgUid: 'b2', sender: asSender('bob')),
+    );
+    final body = shotsBodyOf(w)!;
+    expect(body.containsKey(kShotsWire), isFalse);
+    expect(body['cp'], isNot(contains(kCapGroupShots)));
+    expect(body['cp'], contains(kCapTyping));
+    onDesktop = false;
+    await amy.take('bob', [w]);
+    expect(amy.shots('bob').peerCan, isFalse);
+    expect(amy.shots('bob').blocking, isFalse);
+    // what the computer itself holds of amy's word claims nothing there
+    onDesktop = true;
+    const held = ChatShots(on: true, at: 5, can: 9, known: true);
+    expect(held.peerCan, isFalse);
+    expect(held.blocking, isFalse);
+    expect(const ChatShots(on: true, quiet: true).blocking, isFalse);
+    onDesktop = false;
+    expect(held.blocking, isTrue);
+  });
+
   test('the switch waits until their phone says it knows the block', () async {
     amy.use();
     await amy.app.setChatShots('bob', true);
@@ -183,6 +222,29 @@ void main() {
       await amy.wire('bob');
       await text(amy, bob, 'a2');
       expect(bob.shots('amy').on, isTrue);
+    },
+  );
+
+  test(
+    'a message through the developer chat says nothing of their phone',
+    () async {
+      // bob's phone knows the block: his chat said so
+      await text(bob, amy, 'b1');
+      expect(amy.shots('bob').peerCan, isTrue);
+      final was = amy.shots('bob').can;
+      // later he writes to amy's developer chat, whose frames are rebuilt
+      // without the word but with the support marker
+      bob.use();
+      final w = await wrapMessage(
+        'hi from the dev chat',
+        msgUid: 'b2',
+        supportMarker: 1,
+        sender: asSender(bob.me),
+        writtenAt: DateTime.now().millisecondsSinceEpoch + 5000,
+      );
+      await amy.take('bob', [w]);
+      expect(amy.shots('bob').peerCan, isTrue);
+      expect(amy.shots('bob').can, was);
     },
   );
 

@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import '../dlog.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateBridges;
 import '../screens/bridge_sheets.dart' show showBlockedStartSheet;
 import '../screens/bridges_screen.dart';
 import '../reopen.dart';
@@ -176,11 +176,11 @@ class _TorBootSplashState extends State<TorBootSplash>
                         child: Text(
                           tor
                               ? l10n.torBootSplashTheNetworkThatKeeps
-                              : l10n.torBootSplashMadeOnThisPhone,
+                              : l10n.torBootSplashMadeOnThisPhoneShown,
                           textAlign: TextAlign.center,
                           style: HaloType.sans(
                             size: 12.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                             height: 1.5,
                           ),
                         ),
@@ -245,7 +245,7 @@ class _TorBootSplashState extends State<TorBootSplash>
                           textAlign: TextAlign.center,
                           style: HaloType.mono(
                             size: 10,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         );
                   if (_still) return line;
@@ -274,7 +274,7 @@ class _TorBootSplashState extends State<TorBootSplash>
       Text(
         l10n.torBootSplashIfTorIsBlocked,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 12.5, color: HaloColors.text2, height: 1.5),
+        style: HaloType.sans(size: 12.5, color: HaloColors.text, height: 1.5),
       ),
       const SizedBox(height: 14),
       HaloPrimaryButton(
@@ -303,7 +303,7 @@ class _TorBootSplashState extends State<TorBootSplash>
       Text(
         l10n.torBootSplashTakingLonger,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 12.5, color: HaloColors.text2, height: 1.5),
+        style: HaloType.sans(size: 12.5, color: HaloColors.text, height: 1.5),
       ),
       const SizedBox(height: 2),
       TextButton(
@@ -351,7 +351,7 @@ class _TorBootSplashState extends State<TorBootSplash>
           label,
           maxLines: 1,
           softWrap: false,
-          style: HaloType.mono(size: 10, color: HaloColors.text2),
+          style: HaloType.mono(size: 10, color: HaloColors.text),
         ),
       ],
     );

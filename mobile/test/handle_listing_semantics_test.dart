@@ -8,7 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
+import 'package:kryfo/main.dart'
+    show HaloEngine, appState, useEngineForTest, AppStateRoute, AppStateProfile;
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,7 +26,7 @@ class _Registry implements HaloEngine {
   }
 
   @override
-  String firstContactPk(int counter) => '';
+  String firstContactPk(int ident, int counter) => '';
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw StateError('the engine was asked for ${i.memberName}');

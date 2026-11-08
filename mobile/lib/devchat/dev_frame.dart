@@ -11,10 +11,9 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
 
 import '../dlog.dart';
+import '../signal_session.dart' show xPublicOf;
 import 'dev_key.dart';
 
 const _prefix = 'halo/1:';
@@ -25,7 +24,7 @@ const kDevSupport = 1;
 
 // the message and what hangs off it: kept as they are, both ways
 final kDevKept = _set(
-  'm u q b r ed un pn dr i f fn vo vd mid ci ct pi cr nd sc st pv w al',
+  'm u q b r ed un pn dr i f fn vo vd mid ci ct pi cr nd sc st pv w al op gf',
 );
 
 // out only: the proof of work, over 'm', which stays as it was
@@ -34,12 +33,14 @@ final kDevPow = _set('pw pb');
 // who sent it. out, rewritten; in, checked against his pinned key
 final kDevSender = _set('h e x o');
 
-// the face and the supporter tier: never sent to him, never taken from him
-final kDevIgnored = _set('av bg');
+// the face, the supporter tier and what the app can do: never sent to him,
+// never taken from him
+final kDevIgnored = _set('av bg cp');
 
-// group controls and rosters, an ended group's words, introductions and
-// polls: no such frame goes to him or is taken from him
-final kDevNever = _set('g gc rs rp in pl vt pc ge');
+// group controls and rosters, an ended group's words, a group's screenshot
+// block and its words, introductions, polls and a file on the files
+// service: no such frame goes to him or is taken from him
+final kDevNever = _set('g gc rs rp in pl vt pc ge gs gu bl');
 
 Set<String> _set(String keys) => Set.unmodifiable(keys.split(' '));
 
@@ -71,11 +72,10 @@ class DevSelf {
     if (edPriv == null || !_hex128.hasMatch(edPriv)) return null;
     if (xPriv == null || !_hex64.hasMatch(xPriv)) return null;
     try {
-      final pair = Curve.generateKeyPairFromPrivate(_bytes(xPriv));
       return DevSelf(
         id: id,
         edPub: edPriv.substring(64).toLowerCase(),
-        xPub: _hex(pair.publicKey.serialize().sublist(1)),
+        xPub: _hex(xPublicOf(_bytes(xPriv))),
       );
     } catch (_) {
       return null;

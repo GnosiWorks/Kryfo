@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// shared motion: the house spring, the tor warmup graph, send pills, typing,
-// cursor and the status dot.
+// shared motion: the house spring, the tor warmup graph, send pills and the
+// status dot.
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -67,6 +67,10 @@ bool motionStill(BuildContext context) =>
     MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
 enum TorStatus { off, starting, bootstrapped, publishing, reachable }
+
+/// what the route picture shows over tor's own stage: nothing, a route no
+/// relay has answered through, or no network
+enum GraphHold { none, relay, offline }
 
 enum PrivacyMode { fast, normal, private }
 
@@ -140,15 +144,24 @@ int parseRouteGen(String raw) {
 // ---- tor warmup graph ----
 // 4 onions on a zig-zag wave (SELF/GUARD/MIDDLE/HSDIR). the curve fills as
 // tor progresses, the active onion glows with expanding rings, and on
-// reachable everything turns green and pulses in sequence.
+// reachable everything turns green and pulses in sequence. a hold says what
+// tor's stage alone does not: a route up that no relay has answered through
+// stays amber, and with no network the picture rests
 
 class TorWarmupGraph extends StatefulWidget {
   final TorStatus status;
   final int bootstrapPct;
+  final GraphHold hold;
+
+  /// messages already go out through the route: a tor still publishing
+  /// shows ready, its address finishing in the background
+  final bool carries;
   const TorWarmupGraph({
     super.key,
     required this.status,
     this.bootstrapPct = 0,
+    this.hold = GraphHold.none,
+    this.carries = false,
   });
   @override
   State<TorWarmupGraph> createState() => _TorWarmupGraphState();
@@ -166,15 +179,36 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     _ctl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
-    )..repeat();
-    _phase = _targetPhase(widget.status);
+    );
+    _phase = _targetPhase();
+  }
+
+  // with reduced motion the picture rests: no glow running round, and a
+  // new stage shows at once
+  bool _rest = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _rest = motionStill(context);
+    if (_rest) {
+      _ctl.stop();
+      _phaseTimer?.cancel();
+      _phase = _targetPhase();
+    } else if (!_ctl.isAnimating) {
+      _ctl.repeat();
+    }
   }
 
   @override
   void didUpdateWidget(TorWarmupGraph old) {
     super.didUpdateWidget(old);
-    final target = _targetPhase(widget.status);
-    if (target != _phase) _walkTo(target);
+    final target = _targetPhase();
+    if (_rest) {
+      _phase = target;
+    } else if (target != _phase) {
+      _walkTo(target);
+    }
   }
 
   @override
@@ -184,8 +218,13 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     super.dispose();
   }
 
-  int _targetPhase(TorStatus s) {
-    switch (s) {
+  // ready to chat while the address is still on its way to the network
+  bool get _finishing =>
+      widget.carries && !_held && widget.status != TorStatus.reachable;
+
+  int _targetPhase() {
+    if (_finishing) return 4;
+    switch (widget.status) {
       case TorStatus.off:
         return 0;
       case TorStatus.starting:
@@ -218,8 +257,10 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     });
   }
 
+  // the whole route lit, the address node still glowing while it finishes
   int get _activeIdx {
-    if (_phase == 0 || _phase == 4) return -1;
+    if (_phase == 0) return -1;
+    if (_phase == 4) return 3;
     return _phase - 1;
   }
 
@@ -247,6 +288,9 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _label {
+    if (widget.hold == GraphHold.relay) return l10n.motionNoRelayYet;
+    if (widget.hold == GraphHold.offline) return l10n.motionOffline;
+    if (_finishing) return l10n.motionReady;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionStandby;
@@ -262,6 +306,9 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _italic {
+    if (widget.hold == GraphHold.relay) return l10n.motionTheRouteIsUp;
+    if (widget.hold == GraphHold.offline) return l10n.motionNoNetwork;
+    if (_finishing) return l10n.motionReadyToChat;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionPreparingToConnect;
@@ -277,6 +324,9 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _help {
+    if (widget.hold == GraphHold.relay) return l10n.motionMessagesGoOnceARelay;
+    if (widget.hold == GraphHold.offline) return l10n.motionTorPicksUpAgain;
+    if (_finishing) return l10n.motionAddressFinishing;
     switch (widget.status) {
       case TorStatus.off:
         return l10n.motionTorIsStartingIn;
@@ -292,6 +342,9 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
   }
 
   String get _circuit {
+    if (widget.hold == GraphHold.relay) return l10n.motionOpen;
+    if (widget.hold == GraphHold.offline) return '\u2014';
+    if (_finishing) return l10n.motionOpen;
     switch (widget.status) {
       case TorStatus.off:
         return '\u2014';
@@ -323,13 +376,25 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
     }
   }
 
-  bool get _green => widget.status == TorStatus.reachable;
-  bool get _standby => _phase == 0;
+  bool get _held => widget.hold != GraphHold.none;
+  bool get _green =>
+      (widget.status == TorStatus.reachable || _finishing) && !_held;
+  bool get _standby => _phase == 0 || widget.hold == GraphHold.offline;
   // dark keeps its pale grey; light needs real ink
   Color get _still =>
       HaloColors.isLight ? HaloColors.text3 : const Color(0xFFE5E5E5);
   Color get _accent =>
       _standby ? _still : (_green ? HaloColors.greenText : HaloColors.warnText);
+
+  // a stage's words fade into the next one's instead of snapping
+  Widget _crossFade(String words, Widget child) => AnimatedSwitcher(
+    duration: _rest ? Duration.zero : const Duration(milliseconds: 260),
+    switchInCurve: Curves.easeOutCubic,
+    switchOutCurve: Curves.easeIn,
+    layoutBuilder: (now, before) =>
+        Stack(alignment: Alignment.center, children: [...before, ?now]),
+    child: KeyedSubtree(key: ValueKey(words), child: child),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -339,52 +404,71 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
         children: [
           SizedBox(
             height: 110,
-            child: AnimatedBuilder(
-              animation: _ctl,
-              builder: (ctx, _) => ColorFiltered(
-                colorFilter: _standby
-                    ? ColorFilter.mode(_still, BlendMode.srcIn)
-                    : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
-                child: CustomPaint(
-                  painter: _ZigZagWarmupPainter(
-                    activeIdx: _activeIdx,
-                    lit: _lit,
-                    progress: _progress,
-                    green: _green,
-                    t: _ctl.value,
+            // the address node's glow fades out as it is published, rather
+            // than stopping mid-ring
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: _phase < 4 || _finishing ? 1.0 : 0.0),
+              duration: _rest
+                  ? Duration.zero
+                  : const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              builder: (_, glow, _) => AnimatedBuilder(
+                animation: _ctl,
+                builder: (ctx, _) => ColorFiltered(
+                  colorFilter: _standby
+                      ? ColorFilter.mode(_still, BlendMode.srcIn)
+                      : const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.dst,
+                        ),
+                  child: CustomPaint(
+                    painter: _ZigZagWarmupPainter(
+                      activeIdx: _activeIdx,
+                      lit: _lit,
+                      progress: _progress,
+                      green: _green,
+                      t: _ctl.value,
+                      glow: glow,
+                    ),
+                    size: Size.infinite,
                   ),
-                  size: Size.infinite,
                 ),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Text(
+          _crossFade(
             _label,
-            style: TextStyle(
-              fontFamily: HaloType.monoFamily,
-              fontFamilyFallback: HaloType.monoFallbackNow,
-              fontSize: 11,
-              letterSpacing: track(4),
-              fontWeight: FontWeight.w500,
-              color: _accent,
+            Text(
+              _label,
+              style: TextStyle(
+                fontFamily: HaloType.monoFamily,
+                fontFamilyFallback: HaloType.monoFallbackNow,
+                fontSize: 11,
+                letterSpacing: track(4),
+                fontWeight: FontWeight.w500,
+                color: _accent,
+              ),
             ),
           ),
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
+            child: _crossFade(
               _italic,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: HaloType.serifFamily,
-                fontFamilyFallback: HaloType.serifFallbackNow,
-                fontStyle: slant(),
-                fontSize: 22,
-                fontWeight: FontWeight.w300,
-                color: HaloColors.text,
-                letterSpacing: track(-0.3),
-                height: 1.15,
+              Text(
+                _italic,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: HaloType.serifFamily,
+                  fontFamilyFallback: HaloType.serifFallbackNow,
+                  fontStyle: slant(),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w300,
+                  color: HaloColors.text,
+                  letterSpacing: track(-0.3),
+                  height: 1.15,
+                ),
               ),
             ),
           ),
@@ -393,15 +477,18 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
+            child: _crossFade(
               _help,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: HaloType.sansFamily,
-                fontFamilyFallback: HaloType.sansFallback,
-                fontSize: 11.5,
-                color: HaloColors.text3,
-                height: 1.55,
+              Text(
+                _help,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: HaloType.sansFamily,
+                  fontFamilyFallback: HaloType.sansFallback,
+                  fontSize: 11.5,
+                  color: HaloColors.text,
+                  height: 1.55,
+                ),
               ),
             ),
           ),
@@ -417,7 +504,7 @@ class _TorWarmupGraphState extends State<TorWarmupGraph>
                       fontFamily: HaloType.monoFamily,
                       fontFamilyFallback: HaloType.monoFallbackNow,
                       fontSize: 10.5,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       letterSpacing: track(0.4),
                     ),
                     children: markedSpans(
@@ -452,12 +539,16 @@ class _ZigZagWarmupPainter extends CustomPainter {
   final double progress;
   final bool green;
   final double t;
+
+  // how much of the active node's glow shows, 0 to 1
+  final double glow;
   _ZigZagWarmupPainter({
     required this.activeIdx,
     required this.lit,
     required this.progress,
     required this.green,
     required this.t,
+    this.glow = 1,
   });
 
   // viewBox 296 x 100
@@ -550,10 +641,11 @@ class _ZigZagWarmupPainter extends CustomPainter {
     final isLit = lit.contains(i);
     final accent = green ? kGreen : kAmber;
 
-    if (isActive) {
+    final on = isActive ? glow : 0.0;
+    if (on > 0) {
       // expanding rings (2, staggered)
-      _drawPulse(canvas, c, t, accent);
-      _drawPulse(canvas, c, (t + 0.5) % 1.0, accent);
+      _drawPulse(canvas, c, t, accent, on);
+      _drawPulse(canvas, c, (t + 0.5) % 1.0, accent, on);
     }
 
     // 4 layered rings, dim by default
@@ -581,12 +673,12 @@ class _ZigZagWarmupPainter extends CustomPainter {
         final isCore = k == 3;
         if (isCore) {
           // glow behind the core
-          if (isActive) {
+          if (on > 0) {
             canvas.drawCircle(
               c,
               radius + 4,
               Paint()
-                ..color = accent.withValues(alpha: 0.5 * breathOp)
+                ..color = accent.withValues(alpha: 0.5 * breathOp * on)
                 ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
             );
           }
@@ -601,7 +693,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
             radius,
             Paint()
               ..color = accent.withValues(
-                alpha: baseOp * breathOp * (isActive ? 1.0 : 0.6),
+                alpha: baseOp * breathOp * (0.6 + 0.4 * on),
               )
               ..style = PaintingStyle.stroke
               ..strokeWidth = 0.6,
@@ -621,9 +713,15 @@ class _ZigZagWarmupPainter extends CustomPainter {
     }
   }
 
-  void _drawPulse(Canvas canvas, Offset c, double phase, Color color) {
+  void _drawPulse(
+    Canvas canvas,
+    Offset c,
+    double phase,
+    Color color, [
+    double amount = 1,
+  ]) {
     final scaleP = 0.7 + 1.5 * phase;
-    final op = 0.7 * (1 - phase);
+    final op = 0.7 * (1 - phase) * amount;
     if (op <= 0) return;
     canvas.drawCircle(
       c,
@@ -661,6 +759,7 @@ class _ZigZagWarmupPainter extends CustomPainter {
       old.activeIdx != activeIdx ||
       old.progress != progress ||
       old.green != green ||
+      old.glow != glow ||
       old.t != t ||
       old.lit.length != lit.length;
 }
@@ -739,11 +838,19 @@ class _LockTrailPainter extends CustomPainter {
 // fast: no pill, the delivered tick shows in the bubble
 // normal = "1 hop" + a padlock with two dots trailing it
 // private = "3 hops" + 3 rotating onions, staggered
+// waiting: a request they have not accepted yet. nothing turns, so it never
+// reads as a slow route
 
 class SendPill extends StatefulWidget {
   final PrivacyMode mode;
   final bool delivered;
-  const SendPill({super.key, required this.mode, this.delivered = false});
+  final bool waiting;
+  const SendPill({
+    super.key,
+    required this.mode,
+    this.delivered = false,
+    this.waiting = false,
+  });
   @override
   State<SendPill> createState() => _SendPillState();
 }
@@ -761,7 +868,30 @@ class _SendPillState extends State<SendPill>
       duration: Duration(
         milliseconds: widget.mode == PrivacyMode.private ? 1400 : 800,
       ),
-    )..repeat();
+    );
+  }
+
+  // with reduced motion the onions and the trail rest on a middle frame
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _pace();
+  }
+
+  @override
+  void didUpdateWidget(SendPill old) {
+    super.didUpdateWidget(old);
+    if (old.waiting != widget.waiting) _pace();
+  }
+
+  // a waiting pill has nothing turning, so it asks for no frames
+  void _pace() {
+    if (motionStill(context) || widget.waiting) {
+      _ctl.stop();
+      _ctl.value = 0.5;
+    } else if (!_ctl.isAnimating) {
+      _ctl.repeat();
+    }
   }
 
   @override
@@ -771,6 +901,7 @@ class _SendPillState extends State<SendPill>
   }
 
   int get _onionCount {
+    if (widget.waiting && !widget.delivered) return 0;
     switch (widget.mode) {
       case PrivacyMode.fast:
         return 0;
@@ -783,6 +914,7 @@ class _SendPillState extends State<SendPill>
 
   String get _label {
     if (widget.delivered) return l10n.motionDelivered;
+    if (widget.waiting) return l10n.pairCodeWaitingForThem;
     switch (widget.mode) {
       case PrivacyMode.fast:
         return l10n.motionSent;
@@ -793,28 +925,32 @@ class _SendPillState extends State<SendPill>
     }
   }
 
-  // the route has a colour of its own, so the mode reads at a glance
+  // the route has a colour of its own, so the mode reads at a glance. the
+  // text tones, so the words hold 4.5:1 in light too
   Color get _color {
-    if (widget.delivered) return kGreen;
+    if (widget.delivered) return HaloColors.greenText;
+    if (widget.waiting) return HaloColors.amberText;
     switch (widget.mode) {
       case PrivacyMode.private:
-        return kViolet;
+        return HaloColors.violetText;
       case PrivacyMode.normal:
-        return kCyan;
+        return HaloColors.sky;
       case PrivacyMode.fast:
-        return kGreen;
+        return HaloColors.greenText;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.mode == PrivacyMode.fast && !widget.delivered) {
+    if (widget.mode == PrivacyMode.fast &&
+        !widget.delivered &&
+        !widget.waiting) {
       return const SizedBox.shrink();
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration: BoxDecoration(
-        color: _color.withValues(alpha: 0.14),
+        color: _color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -842,7 +978,9 @@ class _SendPillState extends State<SendPill>
                 fontWeight: FontWeight.w700,
               ),
             ),
-          ] else if (widget.mode == PrivacyMode.normal) ...[
+          ] else if (widget.waiting)
+            ...[]
+          else if (widget.mode == PrivacyMode.normal) ...[
             const SizedBox(width: 7),
             SizedBox(
               width: 22,
@@ -944,80 +1082,6 @@ class _OnionSpinPainter extends CustomPainter {
       old.t != t || old.phase != phase || old.color != color;
 }
 
-// ---- typing dots ----
-// unused on purpose: kryfo sends no typing signal over the wire, and the why
-// kryfo screen promises that. do not wire this to the transport.
-class TypingDots extends StatefulWidget {
-  const TypingDots({super.key});
-  @override
-  State<TypingDots> createState() => _TypingDotsState();
-}
-
-class _TypingDotsState extends State<TypingDots>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctl;
-  @override
-  void initState() {
-    super.initState();
-    _ctl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: const BoxDecoration(
-        color: kSurface3,
-        borderRadius: BorderRadiusDirectional.only(
-          topStart: Radius.circular(14),
-          topEnd: Radius.circular(14),
-          bottomEnd: Radius.circular(14),
-          bottomStart: Radius.circular(4),
-        ),
-      ),
-      child: AnimatedBuilder(
-        animation: _ctl,
-        builder: (ctx, _) => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _dot(0),
-            const SizedBox(width: 3),
-            _dot(0.18),
-            const SizedBox(width: 3),
-            _dot(0.36),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _dot(double phase) {
-    final ph = (_ctl.value + phase) % 1.0;
-    final dy = ph < 0.3 ? -3.0 * (math.sin(ph / 0.3 * math.pi)) : 0.0;
-    final op = 0.4 + (ph < 0.3 ? 0.6 * math.sin(ph / 0.3 * math.pi) : 0.0);
-    return Transform.translate(
-      offset: Offset(0, dy),
-      child: Container(
-        width: 5,
-        height: 5,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: kAmber.withValues(alpha: op),
-        ),
-      ),
-    );
-  }
-}
-
 // ---- status dot ----
 class BreathDot extends StatefulWidget {
   final Color color;
@@ -1080,47 +1144,6 @@ class _BreathDotState extends State<BreathDot>
       },
     );
   }
-}
-
-// ---- blinking cursor ----
-class BlinkCursor extends StatefulWidget {
-  final Color color;
-  final double height;
-  const BlinkCursor({super.key, this.color = kAmber, this.height = 11});
-  @override
-  State<BlinkCursor> createState() => _BlinkCursorState();
-}
-
-class _BlinkCursorState extends State<BlinkCursor>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctl;
-  @override
-  void initState() {
-    super.initState();
-    _ctl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _ctl,
-    builder: (ctx, _) {
-      final visible = _ctl.value < 0.5;
-      return Container(
-        width: 1.5,
-        height: widget.height,
-        color: visible ? widget.color : Colors.transparent,
-      );
-    },
-  );
 }
 
 // the node names under the tor graph. dark keeps its soft tones; light

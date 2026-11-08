@@ -15,7 +15,11 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         kNotSent,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateProfile,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -73,7 +77,7 @@ class _Rows extends HaloDb {
 
 class _Engine implements HaloEngine {
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');

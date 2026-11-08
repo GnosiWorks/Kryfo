@@ -6,25 +6,25 @@
 //
 // the engine names each address by an id, a keyed hash, never the address
 // itself, and names its group: the addresses that already reach the relay
-// over one tor circuit (a contact lane, a room, one first-contact
-// address). a slot only ever serves one group, so an endpoint never ties
-// together what the relay sees apart, and while free slots last each address
-// has one to itself. a slot whose group is gone gets a new endpoint before
-// it serves another. a slot with no address registers a key that belongs to
-// nothing, so the helper's server sees sixteen alike; the relay can tell a
-// stand-in in time, as no wrap ever comes for it. rooms past the free slots
-// are not registered at all.
+// over one socket and tor circuit (a batch of up to eight contacts, a room,
+// one first-contact address). a group has one slot and a slot only ever
+// serves one group, so an endpoint never ties together what the relay sees
+// apart. a slot whose group is gone gets a new endpoint before it serves
+// another. a slot with no address registers a key that belongs to nothing,
+// so the helper's server sees sixteen alike; the relay can tell a stand-in
+// in time, as no wrap ever comes for it. groups past the free slots are not
+// registered at all: they come with the check-ins.
 import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 
+// the cap: how many endpoints a phone registers, whatever it listens on.
+// a batch takes one, the first-contact address one, a room one. with
+// sixteen, a phone of up to 120 contacts in one identity (15 batches) has a
+// slot for each; past that the newest batches and the rooms wait for the
+// check-ins (helper_slots_test.dart measures it)
 const kHelperSlots = 16;
-// a contact lane owns at most this many slots, so the first-contact address
-// and rooms find some free
-const kLaneSlots = 3;
-// the engine's contact lanes (engine/lanes.go, receiveLaneCount)
-const kContactLanes = 4;
 
 class KnockAddress {
   // the engine's id for the address
@@ -48,9 +48,12 @@ List<KnockAddress> knockAddressesOf(String raw) {
   }
 }
 
-// a contact lane is fixed by its addresses' hash and never goes away. a
-// room or a first-contact address does
-bool lastingGroup(String g) => g.startsWith('everyday:');
+// a batch of contacts ("everyday:<identity>:<n>", engine/batches.go) never
+// changes and never goes away. a room or a first-contact address does, and
+// so did the four hashed lanes before batches ("everyday:<n>"): their slots
+// are let go once and serve batches after
+final _kBatchGroup = RegExp(r'^everyday:\d+:\d+$');
+bool lastingGroup(String g) => _kBatchGroup.hasMatch(g);
 
 // a hidden chat's address is read but never registered. so that this alone
 // does not mark it, each contact's address rests too, one month in five or
@@ -73,6 +76,13 @@ bool restsNow(String id, int nowMs) {
 }
 
 bool _mainGroup(String g) => lastingGroup(g) || g.startsWith('firstcontact:');
+
+// the first-contact address first, then the batches oldest first
+int _batchOrder(String g) => lastingGroup(g)
+    ? int.parse(g.substring(g.lastIndexOf(':') + 1))
+    : g.startsWith('firstcontact:')
+    ? -1
+    : 0;
 
 class SlotBook {
   // address -> slot
@@ -192,26 +202,25 @@ SlotPlan planSlots(SlotBook book, List<KnockAddress> live, Random rnd) {
   }
   byAddress.removeWhere((a, s) => groupOf[a] == null || owner[s] != groupOf[a]);
 
-  int load(int s) => byAddress.values.where((v) => v == s).length;
   List<int> ownedBy(String g) => [
     for (var s = 0; s < kHelperSlots; s++)
       if (owner[s] == g) s,
   ];
-  // a free slot kept back for each main group that has none yet, whether
-  // or not it has an address now: the contact lanes and one first-contact
-  // address
+  // a free slot kept back from the rooms for each main group that has none
+  // yet: the batches listened on now and one first-contact address. the
+  // main groups take theirs in order and keep nothing back from each other
   int reserveFor(String g) {
+    if (_mainGroup(g)) return 0;
     var n = 0;
-    for (var i = 0; i < kContactLanes; i++) {
-      final x = 'everyday:$i';
-      if (x != g && !owner.containsValue(x)) n++;
+    for (final x in groups) {
+      if (lastingGroup(x) && !owner.containsValue(x)) n++;
     }
-    final fc = owner.values.any((x) => x.startsWith('firstcontact:'));
-    if (!fc && !g.startsWith('firstcontact:')) n++;
+    if (!owner.values.any((x) => x.startsWith('firstcontact:'))) n++;
     return n;
   }
 
-  // the main groups first: rooms get what they leave
+  // the main groups first, the oldest batches first: rooms get what they
+  // leave
   final waiting =
       [
         for (final a in live)
@@ -219,7 +228,11 @@ SlotPlan planSlots(SlotBook book, List<KnockAddress> live, Random rnd) {
       ]..sort((x, y) {
         final mx = _mainGroup(x.group) ? 0 : 1;
         final my = _mainGroup(y.group) ? 0 : 1;
-        return mx != my ? mx - my : x.address.compareTo(y.address);
+        if (mx != my) return mx - my;
+        final bx = _batchOrder(x.group), by = _batchOrder(y.group);
+        if (bx != by) return bx.compareTo(by);
+        final g = x.group.compareTo(y.group);
+        return g != 0 ? g : x.address.compareTo(y.address);
       });
   for (final a in waiting) {
     final own = ownedBy(a.group);
@@ -227,13 +240,12 @@ SlotPlan planSlots(SlotBook book, List<KnockAddress> live, Random rnd) {
       for (var s = 0; s < kHelperSlots; s++)
         if (!owner.containsKey(s) && !renew.contains(s)) s,
     ];
-    final cap = lastingGroup(a.group) ? kLaneSlots : 1;
     int? slot;
-    if (own.length < cap && free.length > reserveFor(a.group)) {
+    if (own.isNotEmpty) {
+      slot = own.first;
+    } else if (free.length > reserveFor(a.group)) {
       slot = free.first;
       owner[slot] = a.group;
-    } else if (own.isNotEmpty) {
-      slot = own.reduce((x, y) => load(y) < load(x) ? y : x);
     }
     if (slot != null) byAddress[a.address] = slot;
   }

@@ -9,7 +9,7 @@ import 'package:flutter/services.dart';
 import '../l10n/l10n.dart';
 import '../dlog.dart';
 import '../lock_guard.dart';
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateContacts;
 import '../theme.dart';
 import 'confirm_sheet.dart';
 import 'ease_size.dart';
@@ -27,7 +27,7 @@ Future<bool> removeAsNotThem(
   final yes = await showConfirmSheet(
     context,
     title: l10n.notThemSheetTitle,
-    line: l10n.notThemSheetLine,
+    line: l10n.notThemSheetLineShown,
     yes: l10n.notThemRemove,
     keep: l10n.commonCancel,
     shutOnLock: lockGuard,
@@ -59,7 +59,7 @@ class NotThemAsk extends StatelessWidget {
   const NotThemAsk({super.key, required this.onTap, this.compact = false});
 
   final VoidCallback onTap;
-  // on the compare card in a chat: smaller, as the card is
+  // on the compare card on their page: smaller, as the card is
   final bool compact;
 
   @override
@@ -88,7 +88,7 @@ class NotThemAsk extends StatelessWidget {
                   style: HaloType.sans(
                     size: compact ? 12.5 : 13.5,
                     weight: FontWeight.w500,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                   ),
                 ),
               ),
@@ -184,7 +184,7 @@ class _NotThemFoldState extends State<NotThemFold> {
             l10n.notThemLine,
             style: HaloType.sans(
               size: 13.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -219,7 +219,7 @@ class _NotThemFoldState extends State<NotThemFold> {
                     style: HaloType.sans(
                       size: 14,
                       weight: FontWeight.w600,
-                      color: HaloColors.rose,
+                      color: HaloColors.roseText,
                     ),
                   ),
                 ),

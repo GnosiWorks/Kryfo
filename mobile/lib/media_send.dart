@@ -19,8 +19,25 @@ import 'album.dart' show AlbumTag;
 import 'devchat/dev_start.dart' show devKeyFailed, kDevKeyFailed;
 import 'dlog.dart';
 import 'image_strip.dart' show cleanSavedPhoto;
-import 'main.dart' show appState, engine, signalEncrypt;
+import 'main.dart'
+    show
+        DeviceSent,
+        DeviceCannotReach,
+        kNotFromDevice,
+        appState,
+        engine,
+        sendFirstContactNoted,
+        signalSeal,
+        peerXPubOf,
+        AppStateOutbox,
+        AppStateRoute,
+        AppStateProfile,
+        AppStateContacts,
+        AppStateFiles,
+        AppStateRefresh;
+import 'file_drop.dart' show DropFrame, dropFits, dropFallsBack, kOldFileBytes;
 import 'media_progress.dart';
+import 'media_resend.dart' show kMaxFileSlices;
 import 'message_envelope.dart';
 import 'signal_session.dart';
 import 'text_send.dart' show kSendBlocked;
@@ -32,16 +49,37 @@ final Map<String, int> chunkDoneAt = {};
 // one send per media at a time: the chat's retry and the outbox can pick
 // the same row, and the second to finish would overwrite the bubble
 final Set<String> mediaInflight = {};
+// bumped as a send takes or lets go of a row, so a chat drawing that row
+// follows a send it did not start: the outbox's, or a screen's left since
+final ValueNotifier<int> mediaSendsTick = ValueNotifier(0);
 // a send the person stopped. the workers see it between slices and end
 // there; the chat has already pulled the row and told the other side.
+// the mark stays, so no later pass sends a row that is being taken back
 final Set<String> mediaCancelled = {};
-void cancelMediaSend(String msgUid) => mediaCancelled.add(msgUid);
+void cancelMediaSend(String msgUid) {
+  mediaCancelled.add(msgUid);
+  if (mediaCancelled.length > 500) mediaCancelled.remove(mediaCancelled.first);
+}
+
+// a send with no slice taken for this long has stopped moving. a 16k slice
+// is about 2 s a round over tor and up to 20 s on a slow bridge, and five
+// are in flight, so a moving send is heard from many times inside it. one
+// slice's own three tries, the onion's 15 s and three relay timeouts of
+// 60 s, come to about 197 s, and five slices on one dying circuit fail
+// together, so the bound sits above that. past it the send ends as
+// stalled, lets go of the row, and the outbox goes on from what landed
+// the group sender shares it. tests shorten it
+Duration mediaStallAfter = const Duration(minutes: 4);
+const kMediaStalled = 'error: stalled';
+// the watch looks this many times inside the bound. a phone asleep runs no
+// looks, so a frozen process is not read as a stalled send
+const kMediaStallLooks = 24;
 
 final Map<String, List<Completer<void>>> _freeWaiters = {};
 
 // a send lets go of its row, and whoever waits on that row hears it
 void releaseMedia(String msgUid) {
-  mediaInflight.remove(msgUid);
+  if (mediaInflight.remove(msgUid)) mediaSendsTick.value++;
   final waiting = _freeWaiters.remove(msgUid);
   if (waiting == null) return;
   for (final c in waiting) {
@@ -112,9 +150,12 @@ Future<String> sendChunkedMediaTo({
   // holds the file back
   Future<bool> Function()? blockedHere,
 }) async {
+  if (mediaCancelled.contains(msgUid)) return 'cancelled';
   if (!mediaInflight.add(msgUid)) return 'busy';
+  mediaSendsTick.value++;
+  var res = '';
   try {
-    return await _sendChunkedMediaInner(
+    return res = await _sendChunkedMediaInner(
       peerId: peerId,
       peerOnion: peerOnion,
       peerXPub: peerXPub,
@@ -137,9 +178,10 @@ Future<String> sendChunkedMediaTo({
       blockedHere: blockedHere,
     );
   } finally {
-    mediaCancelled.remove(msgUid);
     mediaProgressEnd(msgUid);
     releaseMedia(msgUid);
+    // the outbox has the row now, and goes on from what landed
+    if (res == kMediaStalled) unawaited(appState.drainOutbox());
   }
 }
 
@@ -168,10 +210,15 @@ Future<String> _sendChunkedMediaInner({
 }) async {
   var torWait = 0;
   while (!appState.torReady && torWait < 300000) {
+    // a stop while tor is down lets go of the row at once
+    if (mediaCancelled.contains(msgUid)) return 'cancelled';
     await Future.delayed(const Duration(milliseconds: 400));
     torWait += 400;
   }
+  if (mediaCancelled.contains(msgUid)) return 'cancelled';
   if (!appState.torReady) return 'error: tor not ready';
+  // a gif or a voice note shows no share on either side: it just appears
+  final gif = quietMedia(path, fileName: fileName, voice: voice);
   // a photo is cleaned on every send, retries and the outbox included
   if (fileName == null && !voice) {
     final cleaned = await cleanSavedPhoto(path);
@@ -182,7 +229,7 @@ Future<String> _sendChunkedMediaInner({
       if (only != null) return 'error: changed';
     }
   }
-  final int total;
+  int total;
   try {
     total = await mediaSliceCount(path);
   } catch (e) {
@@ -190,10 +237,52 @@ Future<String> _sendChunkedMediaInner({
   }
   // an empty file has nothing to send, and is not a send that went
   if (total == 0) return 'error: empty';
-  // a voice note is a couple of seconds of audio. the strip is for photos
-  // and files, where the wait is long enough to wonder about.
-  final showProgress = total > 1 && !voice && only == null;
-  if (showProgress) mediaProgressStart(msgUid, chatKey: progressKey);
+  // more than a slice to a phone that fetches from the files service: the
+  // file goes up there once and one frame goes in place of the slices.
+  // one the service has no room for goes as slices while the relay takes it
+  DropFrame? drop;
+  if (total > 1 && only == null && await appState.dropsFor(peerId)) {
+    final bytes = await File(path).length();
+    if (dropFits(bytes)) {
+      mediaProgressStart(
+        msgUid,
+        chatKey: progressKey,
+        bytes: bytes,
+        quiet: gif,
+      );
+      final (sent, r) = await appState.sendDrop(
+        path: path,
+        uid: msgUid,
+        members: [peerId],
+      );
+      if (mediaCancelled.contains(msgUid) || r == 'error: cancelled') {
+        return 'cancelled';
+      }
+      if (sent != null) {
+        drop = sent.frameFor(peerId);
+        total = 1;
+      } else if (dropFallsBack(r) && bytes <= kOldFileBytes) {
+        dlog('media $msgUid: the files service said $r, going as slices');
+      } else {
+        return 'error: drop ${r.replaceFirst('error: ', '')}';
+      }
+    }
+  }
+  // a phone that takes slices only takes so many of a file: past that it
+  // would drop every one
+  if (drop == null && fileName != null && !voice && total > kMaxFileSlices) {
+    return 'error: big';
+  }
+  // a voice note as well: a long one is a megabyte and more of wav
+  final showProgress = total > 1 && only == null;
+  if (showProgress) {
+    mediaProgressStart(
+      msgUid,
+      chatKey: progressKey,
+      bytes: drop?.size ?? total * _sliceBytes,
+      quiet: gif,
+    );
+  }
   int? pow;
   if (needPow) {
     pow = await compute(_mediaGrind, caption);
@@ -234,6 +323,10 @@ Future<String> _sendChunkedMediaInner({
   var held = false;
   var blocked = false;
   var next = 0;
+  // the watch ended it: a worker still waiting on its slice touches nothing
+  // of the next send's
+  var ended = false;
+  var quiet = 0;
 
   // a chunk that will not go through costs that chunk, not the transfer: it
   // goes back in the queue for another pass, with a pause between passes
@@ -280,13 +373,14 @@ Future<String> _sendChunkedMediaInner({
       final t0 = DateTime.now();
       final String slice;
       try {
-        slice = await mediaSlice(path, i);
+        slice = drop != null ? '' : await mediaSlice(path, i);
       } catch (e) {
         // the file went: a wipe, a burn, a full phone that lost it
         failure = 'error: read';
         return;
       }
       final String cipher;
+      final int sealedOn;
       try {
         // name + voice flags ride every slice: the receiver rebuilds off
         // whichever chunk lands last, and that one decides file vs image.
@@ -294,8 +388,9 @@ Future<String> _sendChunkedMediaInner({
         final wrapped = await wrapMessage(
           caption,
           msgUid: msgUid,
-          imageB64: fileName == null ? slice : null,
-          fileB64: fileName != null ? slice : null,
+          imageB64: drop == null && fileName == null ? slice : null,
+          fileB64: drop == null && fileName != null ? slice : null,
+          drop: drop,
           fileName: fileName,
           voice: voice,
           voiceDisguised: voiceDisguised,
@@ -306,6 +401,7 @@ Future<String> _sendChunkedMediaInner({
           secure: secure,
           replyTo: replyTo,
           album: album,
+          gif: gif,
           powNonce: pow,
           powBitsUsed: pow == null ? null : powBits,
           supporterBadge: await appState.sharedBadge(),
@@ -313,7 +409,22 @@ Future<String> _sendChunkedMediaInner({
           canResend: total > 1,
           writtenAt: written,
         );
-        cipher = await signalEncrypt(peerId, wrapped);
+        final sealed = await signalSeal(peerId, wrapped);
+        cipher = sealed.cipher;
+        sealedOn = sealed.ident;
+      } on DeviceSent {
+        // a linked device: this slice's copies went from here
+        done.add(i);
+        if (ended) return;
+        quiet = 0;
+        if (only == null) {
+          chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
+        }
+        if (showProgress) mediaProgressUpdate(msgUid, done.length / total);
+        continue;
+      } on DeviceCannotReach {
+        failure = kNotFromDevice;
+        return;
       } on KeyHeld {
         // waits on a check of their new number: going, not failed
         parked = true;
@@ -328,7 +439,9 @@ Future<String> _sendChunkedMediaInner({
       var sent = false;
       var route = '';
       String lastErr = 'error: no transport';
-      for (var attempt = 0; attempt < 3 && !sent; attempt++) {
+      // once the watch ended the send, a slice that failed is not tried
+      // again: the next send has the row
+      for (var attempt = 0; attempt < 3 && !sent && !ended; attempt++) {
         if (!backPaired && peerOnion.isNotEmpty && !onionDead) {
           final tor = await engine.sendTo(peerOnion, cipher);
           if (tor == 'ok') {
@@ -337,10 +450,10 @@ Future<String> _sendChunkedMediaInner({
             // their door holds it in memory only: the first-contact copy
             // goes too until they add us back, behind the slice's ok
             final fc = appState.peerFcFor(peerId);
-            xpub ??= await signalSession.peerXPubHex(peerId);
+            xpub ??= await peerXPubOf(peerId);
             if (fc != null && fc.isNotEmpty && xpub != null) {
               unawaited(
-                engine.sendFirstContact(xpub!, fc, cipher).then(
+                sendFirstContactNoted(sealedOn, xpub!, fc, cipher).then(
                   (f) {
                     if (f != 'ok') {
                       dlog('media first-contact copy did not go: $f');
@@ -357,13 +470,13 @@ Future<String> _sendChunkedMediaInner({
           onionDead = true;
           dlog('media onion gave up for this send: $tor');
         }
-        xpub ??= await signalSession.peerXPubHex(peerId);
+        xpub ??= await peerXPubOf(peerId);
         // their first-contact address is the one relay route that reaches
         // them before they add us back, and the pair address is not
         // written beside it
         final fc = backPaired ? null : appState.peerFcFor(peerId);
         if (xpub != null && fc != null && fc.isNotEmpty) {
-          final fr = await engine.sendFirstContact(xpub!, fc, cipher);
+          final fr = await sendFirstContactNoted(sealedOn, xpub!, fc, cipher);
           if (fr == 'ok') {
             sent = true;
             route = 'first-contact';
@@ -371,7 +484,7 @@ Future<String> _sendChunkedMediaInner({
           }
           lastErr = fr;
         } else if (xpub != null) {
-          final r = await engine.nostrSend(xpub!, cipher);
+          final r = await engine.nostrSend(sealedOn, xpub!, cipher);
           if (r == 'ok') {
             pairWay ??= await appState.pairRead(peerId, backPaired: backPaired);
             if (!backPaired && !pairWay!) {
@@ -390,6 +503,7 @@ Future<String> _sendChunkedMediaInner({
         if (!sent) await Future.delayed(const Duration(milliseconds: 600));
       }
       final ms = DateTime.now().difference(t0).inMilliseconds;
+      if (!sent && ended) return;
       if (!sent) {
         final pass = (attempts[i] ?? 0) + 1;
         attempts[i] = pass;
@@ -406,7 +520,10 @@ Future<String> _sendChunkedMediaInner({
         await Future.delayed(Duration(seconds: 2 * pass));
         continue;
       }
+      // a slice that landed is kept even after the watch, for the next go
       done.add(i);
+      if (ended) return;
+      quiet = 0;
       if (only == null) {
         chunkDoneAt[msgUid] = DateTime.now().millisecondsSinceEpoch;
       }
@@ -416,13 +533,41 @@ Future<String> _sendChunkedMediaInner({
     }
   }
 
-  await Future.wait([
-    for (var w = 0; w < math.min(parallel, total); w++) worker(),
-  ]);
+  final stop = Completer<void>();
+  final watch = Timer.periodic(mediaStallAfter ~/ kMediaStallLooks, (_) {
+    // a stop asked while a slice hangs ends it now, not at the next slice
+    if (mediaCancelled.contains(msgUid)) {
+      failure ??= 'cancelled';
+    } else if (++quiet >= kMediaStallLooks) {
+      dlog('media $msgUid: no slice taken in ${mediaStallAfter.inSeconds}s');
+      failure ??= kMediaStalled;
+    } else {
+      return;
+    }
+    if (!stop.isCompleted) stop.complete();
+  });
+  try {
+    await Future.any([
+      Future.wait([
+        for (var w = 0; w < math.min(parallel, total); w++) worker(),
+      ]),
+      stop.future,
+    ]);
+  } finally {
+    watch.cancel();
+    ended = true;
+  }
+  if (failure == 'cancelled') {
+    chunkDone.remove(msgUid);
+    chunkDoneAt.remove(msgUid);
+    return 'cancelled';
+  }
   if (blocked) return kSendBlocked;
   // what landed before a hold is kept however long it lasts: unstamped,
   // the next send resumes from it
-  if (held && only == null) chunkDoneAt.remove(msgUid);
+  if ((held || failure == kMediaStalled) && only == null) {
+    chunkDoneAt.remove(msgUid);
+  }
   if (parked) return 'parked';
   if (failure != null) return failure!;
   if (only == null) {

@@ -1,0 +1,5 @@
+Novità: cifratura post-quantistica tra telefoni con la 0.6 e dispositivi collegati per usare Kryfo anche sul computer. Foto profilo, indicatore di scrittura, blocco screenshot nei gruppi e file fino a 50 MB da mettere in pausa e riprendere.
+
+Cambiato: configurazione in sei passi, codici di abbinamento a otto cifre, foto e file cifrati anche sul telefono. Kryfo ora è in hindi e in polacco.
+
+I contatti con la 0.5 devono aggiornare prima che possiate aggiungervi. Le tue chat restano attive.

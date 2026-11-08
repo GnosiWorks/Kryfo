@@ -1,19 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// speed and privacy modes. private, over tor, is the default; balanced
-// exists because mandatory tor is the app's biggest usability cost.
+// speed and privacy: two routes. private, over tor, is the default. fast
+// goes straight to our two servers at once, for those for whom tor is slow
+// or blocked, and says in one line who sees the address. relay and fast
+// were one each before; whoever had either is on fast now.
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../theme.dart';
-import '../main.dart' hide live;
-import '../widgets/halo_sheet.dart';
-import '../widgets/press_scale.dart';
-import '../widgets/ease_size.dart';
-import '../widgets/sheet_handle.dart';
 import 'package:flutter/services.dart';
-import '../widgets/stagger_in.dart';
-import '../widgets/fit_column.dart';
+
+import '../fast_servers.dart';
 import '../l10n/l10n.dart';
-import '../l10n/marked.dart';
+import '../main.dart' hide live;
+import '../theme.dart';
+import '../widgets/ease_size.dart';
+import '../widgets/fit_column.dart';
+import '../widgets/motion.dart' show haloRoute;
+import '../widgets/onion_loader.dart' show PrivateRouteMark;
+import '../widgets/press_scale.dart';
+import '../widgets/stagger_in.dart';
+import 'bridges_screen.dart';
+import 'fast_servers_screen.dart';
+import 'seen_screen.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class ModesScreen extends StatefulWidget {
   const ModesScreen({super.key});
@@ -25,18 +34,48 @@ class _ModesScreenState extends State<ModesScreen> {
   // what is in use now, so the page opens on the right card. read from the
   // app and never again from storage: a read still on its way when a card
   // is tapped would put the old mode back over the new one
-  late String _mode = appState.sendMode == 'normal'
-      ? 'private'
-      : appState.sendMode;
+  late String _mode = appState.sendMode == 'balanced' ? 'balanced' : 'private';
 
   // taps still in the queue. the picked card says it is switching until
   // the last of them is done, then the page shows the mode in use
   int _going = 0;
 
+  // the fast card's status comes from the engine's relay rows, read while
+  // the page is open
+  Timer? _poll;
+  List? _rows;
+
+  @override
+  void initState() {
+    super.initState();
+    _read();
+    _poll = Timer.periodic(const Duration(seconds: 1), (_) => _read());
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  void _read() {
+    if (appState.sendMode != 'balanced') return;
+    try {
+      appState.sampleRelayHealth();
+      final rows = engine.transportState()['relays'] as List?;
+      if (mounted) setState(() => _rows = rows);
+    } catch (_) {
+      // not readable yet: the card says connecting
+    }
+  }
+
   Future<void> _pick(String m) async {
+    if (m == _mode && _going == 0) return;
+    HapticFeedback.selectionClick();
     setState(() {
       _mode = m;
       _going++;
+      _rows = null;
     });
     var saved = true;
     try {
@@ -49,369 +88,281 @@ class _ModesScreenState extends State<ModesScreen> {
       _going--;
       // a tap behind this one may have moved it since: only the last done
       // says which card is in use
-      if (_going == 0) _mode = appState.sendMode;
+      if (_going == 0) {
+        _mode = appState.sendMode == 'balanced' ? 'balanced' : 'private';
+      }
     });
-    // not saved, so nothing moved for this tap
-    if (!saved) showHaloToast(context, l10n.modesNotChanged);
-  }
-
-  // fast is the one mode that costs something, so it says so first
-  Future<void> _pickFast() async {
-    if (_mode == 'fast') return;
-    final ok = await showFastGateSheet(context);
-    if (ok && mounted) {
-      HapticFeedback.mediumImpact();
-      await _pick('fast');
+    if (saved) {
+      _read();
+    } else {
+      // not saved, so nothing moved for this tap
+      showHaloToast(context, l10n.modesNotChanged);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final fast = _mode == 'balanced';
     return Scaffold(
       backgroundColor: HaloColors.surface,
       body: SafeArea(
         // fits or scrolls: a plain column runs past the body on a short
         // phone and whatever sits below the fold cannot be tapped
-        child: FitColumn(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // the spacer stays a direct child of the column: wrapped by the
-            // stagger it throws a parent-data error, which release paints as
-            // a light box
-            ...staggerAll([
-              _BackBar(onBack: () => Navigator.pop(context)),
-              const _PageHead(),
-              const SizedBox(height: 6),
-              _ModeCard(
-                name: l10n.modesOnion,
-                accent: '·',
-                active: _mode == 'private',
-                switching: _going > 0 && _mode == 'private',
-                desc: l10n.modesFullOnionRoutingThree,
-                speed: l10n.modesSlower,
-                hops: '3',
-                ipVisible: false,
-                onTap: () => _pick('private'),
+        child: DeskPage(
+          child: FitColumn(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // the spacer stays a direct child of the column: wrapped by the
+              // stagger it throws a parent-data error, which release paints as
+              // a light box
+              ...staggerAll([
+                _TopBar(onBack: () => Navigator.pop(context)),
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(24, 4, 24, 20),
+                  child: Text(
+                    l10n.modesPickHow,
+                    style: HaloType.sans(
+                      size: 15,
+                      color: HaloColors.text,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                _RouteCard(
+                  key: const ValueKey('private'),
+                  icon: Icons.track_changes_rounded,
+                  mark: (c) => PrivateRouteMark(color: c),
+                  name: l10n.modesPrivate,
+                  tag: l10n.modesPrivateTag,
+                  line: l10n.modesPrivateLine,
+                  active: !fast,
+                  switching: _going > 0 && !fast,
+                  chip: l10n.modesDefault,
+                  // both our servers back the private route as well
+                  status: fast ? null : const _PrivateBackup(),
+                  onTap: () => _pick('private'),
+                ),
+                const SizedBox(height: 14),
+                _RouteCard(
+                  key: const ValueKey('fast'),
+                  icon: Icons.bolt_rounded,
+                  name: l10n.modesFast,
+                  tag: l10n.modesFastTag,
+                  line: l10n.modesFastLine,
+                  active: fast,
+                  switching: _going > 0 && fast,
+                  status: fast
+                      ? _FastStatus(rows: _rows, going: _going > 0)
+                      : null,
+                  onTap: () => _pick('balanced'),
+                ),
+                const _BothLine(),
+              ]),
+              const Spacer(),
+              StaggerIn(
+                index: 6,
+                child: _BottomLink(
+                  label: fast
+                      ? l10n.modesWhatServersSee
+                      : l10n.modesConnectionBridges,
+                  onTap: () => Navigator.of(context).push(
+                    haloRoute(
+                      fast ? const SeenScreen() : const BridgesScreen(),
+                    ),
+                  ),
+                ),
               ),
-              _ModeCard(
-                name: l10n.modesRelay,
-                active: _mode == 'balanced',
-                switching: _going > 0 && _mode == 'balanced',
-                desc: l10n.modesOneSealedConnectionTo,
-                speed: l10n.modesQuick,
-                hops: '1',
-                ipVisible: false,
-                ipText: l10n.modesRelayOnly,
-                ipWarn: true,
-                onTap: () => _pick('balanced'),
-              ),
-              _ModeCard(
-                name: l10n.modesFast,
-                active: _mode == 'fast',
-                switching: _going > 0 && _mode == 'fast',
-                desc: l10n.modesPlainConnectionsToEvery,
-                speed: l10n.modesInstant,
-                hops: '0',
-                ipVisible: true,
-                warning: l10n.modesEveryRelayYouUse,
-                onTap: _pickFast,
-              ),
-            ]),
-            const Spacer(),
-            const StaggerIn(
-              index: 5,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
-                child: _Footnote(),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _BackBar extends StatelessWidget {
+class _TopBar extends StatelessWidget {
   final VoidCallback onBack;
-  const _BackBar({required this.onBack});
+  const _TopBar({required this.onBack});
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 0, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(8, 12, 16, 4),
       child: Row(
         children: [
           IconButton(
             tooltip: l10n.commonBack,
             onPressed: onBack,
-            icon: Icon(Icons.chevron_left, color: HaloColors.text2, size: 26),
+            icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PageHead extends StatelessWidget {
-  const _PageHead();
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // one line of text, so a long language wraps instead of running
-          // off the side
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: '${l10n.modesSpeed} ',
-                  style: HaloType.serif(size: 30, weight: FontWeight.w400),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                '${l10n.modesSpeed} ${l10n.modesPrivacy}',
+                style: HaloType.serif(
+                  size: 24,
+                  weight: FontWeight.w400,
+                  italic: true,
                 ),
-                TextSpan(
-                  text: l10n.modesPrivacy,
-                  style: HaloType.serif(
-                    size: 30,
-                    weight: FontWeight.w300,
-                    italic: true,
-                    color: HaloColors.amberText,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.modesChangeGloballyOrPer,
-            style: HaloType.sans(size: 11, color: HaloColors.text2),
-          ),
         ],
       ),
     );
   }
 }
 
-class _ModeCard extends StatelessWidget {
+class _RouteCard extends StatelessWidget {
+  final IconData icon;
+  // drawn in place of the icon
+  final Widget Function(Color color)? mark;
   final String name;
-  final String? accent;
+  final String tag;
+  final String line;
   final bool active;
   // picked, and the app still moving onto it
   final bool switching;
-  final bool soon = false;
-  final String desc;
-  final String speed;
-  final String hops;
-  final bool ipVisible;
-  // some tiers aren't a clean hidden/visible: 'relay only' is its own
-  final String? ipText;
-  final bool ipWarn;
-  final String? warning;
+  final String? chip;
+  // the fast card's live part, shown while it is in use
+  final Widget? status;
   final VoidCallback onTap;
-  const _ModeCard({
+  const _RouteCard({
+    super.key,
+    required this.icon,
     required this.name,
-    this.accent,
+    required this.tag,
+    required this.line,
     required this.active,
-    this.switching = false,
-    required this.desc,
-    required this.speed,
-    required this.hops,
-    required this.ipVisible,
-    this.ipText,
-    this.ipWarn = false,
-    this.warning,
     required this.onTap,
+    this.mark,
+    this.switching = false,
+    this.chip,
+    this.status,
   });
 
   @override
   Widget build(BuildContext context) {
     final still = MediaQuery.disableAnimationsOf(context);
-    final d = still ? Duration.zero : const Duration(milliseconds: 220);
+    final d = still ? Duration.zero : const Duration(milliseconds: 240);
+    final accent = HaloColors.amber;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Semantics(
+        button: true,
         selected: active,
+        inMutuallyExclusiveGroup: true,
         child: PressScale(
           scale: 0.98,
-          onTap: soon ? null : onTap,
+          onTap: onTap,
           child: AnimatedContainer(
             duration: d,
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsetsDirectional.fromSTEB(18, 18, 18, 16),
             decoration: BoxDecoration(
               color: active
-                  ? HaloColors.amber.withValues(alpha: 0.10)
-                  : HaloColors.surface,
+                  ? accent.withValues(alpha: 0.10)
+                  : HaloColors.surface2,
               border: Border.all(
-                color: active ? HaloColors.amber : HaloColors.line,
-                width: active ? 1 : 0.5,
+                color: active ? accent : HaloColors.line,
+                width: 1.5,
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    // the name wraps before the pill is pushed off the card
+                    AnimatedContainer(
+                      duration: d,
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: active
+                            ? accent.withValues(alpha: 0.18)
+                            : HaloColors.surface3,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: mark != null ? Alignment.center : null,
+                      child: mark != null
+                          ? mark!(
+                              active ? HaloColors.amberText : HaloColors.text,
+                            )
+                          : Icon(
+                              icon,
+                              size: 22,
+                              color: active
+                                  ? HaloColors.amberText
+                                  : HaloColors.text,
+                            ),
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              style: HaloType.serif(
-                                size: 18,
-                                weight: FontWeight.w400,
-                              ),
+                          Text(
+                            name,
+                            style: HaloType.sans(
+                              size: 18,
+                              weight: FontWeight.w600,
                             ),
                           ),
-                          if (soon) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: HaloColors.surface3,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                l10n.modesSoon,
-                                style: HaloType.mono(
-                                  size: 9,
-                                  color: HaloColors.amberText,
-                                  letter: 0.6,
-                                ),
-                              ),
+                          const SizedBox(height: 2),
+                          Text(
+                            tag,
+                            style: HaloType.mono(
+                              size: 11,
+                              letter: 0.6,
+                              color: active
+                                  ? HaloColors.amberText
+                                  : HaloColors.text,
                             ),
-                          ],
-                          if (accent != null) ...[
-                            const SizedBox(width: 6),
-                            AnimatedOpacity(
-                              opacity: active ? 1 : 0,
-                              duration: d,
-                              child: Text(
-                                accent!,
-                                style: HaloType.serif(
-                                  size: 18,
-                                  weight: FontWeight.w400,
-                                  italic: true,
-                                  color: HaloColors.amberText,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // the pill pops onto the card that was picked
-                    AnimatedSwitcher(
-                      duration: still
-                          ? Duration.zero
-                          : const Duration(milliseconds: 260),
-                      switchInCurve: Curves.easeOutBack,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (c, a) => FadeTransition(
-                        opacity: a,
-                        child: ScaleTransition(scale: a, child: c),
-                      ),
-                      child: active
-                          ? Container(
-                              key: ValueKey(switching ? 'going' : 'on'),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: HaloColors.amber,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                switching
-                                    ? l10n.modesSwitching
-                                    : l10n.modesActive,
-                                style: HaloType.mono(
-                                  size: 10,
-                                  weight: FontWeight.w500,
-                                  color: HaloColors.onAmber,
-                                ),
-                              ),
-                            )
-                          : const SizedBox(key: ValueKey('off')),
-                    ),
+                    _Tick(on: active, switching: switching),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
-                  desc,
+                  line,
                   style: HaloType.sans(
-                    size: 11,
-                    color: HaloColors.text2,
+                    size: 15,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 10),
-                // wraps rather than overflowing in a long language
-                Wrap(
-                  spacing: 14,
-                  runSpacing: 4,
-                  children: [
-                    _Meta(k: l10n.modesSpeed2, v: speed),
-                    _Meta(k: l10n.modesHops, v: hops, mono: true),
-                    _Meta(
-                      k: l10n.modesIp,
-                      v:
-                          ipText ??
-                          (ipVisible ? l10n.modesVisible : l10n.modesHidden),
-                      red: ipVisible,
-                      warn: ipWarn,
+                if (chip != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
-                  ],
-                ),
-                // the cost shows on the card that pays it, grown in rather
-                // than dropped
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      chip!,
+                      style: HaloType.sans(
+                        size: 12,
+                        weight: FontWeight.w500,
+                        // amberText on its tint is under 4.5:1 in light
+                        color: HaloColors.text,
+                      ),
+                    ),
+                  ),
+                ],
+                // the live part grows in on the card that was picked
                 EaseSize(
-                  duration: const Duration(milliseconds: 220),
-                  child: warning != null && active
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              color: HaloColors.rose.withValues(alpha: 0.10),
-                              border: Border.all(
-                                color: HaloColors.rose.withValues(alpha: 0.3),
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: RichText(
-                              text: TextSpan(
-                                style: HaloType.sans(
-                                  size: 10,
-                                  color: HaloColors.rose,
-                                  height: 1.4,
-                                ),
-                                children: markedSpans(
-                                  l10n.modesHeadsUp(warning!),
-                                  HaloType.sans(
-                                    size: 10,
-                                    weight: FontWeight.w500,
-                                    color: HaloColors.rose,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                      : const SizedBox(width: double.infinity),
+                  duration: const Duration(milliseconds: 240),
+                  child: status ?? const SizedBox(width: double.infinity),
                 ),
               ],
             ),
@@ -422,128 +373,334 @@ class _ModeCard extends StatelessWidget {
   }
 }
 
-class _Meta extends StatelessWidget {
-  final String k;
-  final String v;
-  final bool red;
-  final bool warn;
-  // a number: set in the mono the app uses for counts
-  final bool mono;
-  const _Meta({
-    required this.k,
-    required this.v,
-    this.red = false,
-    this.warn = false,
-    this.mono = false,
-  });
+// the round mark at the card's end: filled with a tick on the route in use,
+// a ring that turns while the app moves onto it
+class _Tick extends StatelessWidget {
+  final bool on;
+  final bool switching;
+  const _Tick({required this.on, required this.switching});
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(k, style: HaloType.mono(size: 10, color: HaloColors.text2)),
-        const SizedBox(width: 4),
-        Text(
-          v,
-          style: (mono ? HaloType.mono : HaloType.sans)(
-            size: 10,
-            weight: FontWeight.w500,
-            color: red
-                ? HaloColors.rose
-                : warn
-                ? HaloColors.amber
-                : HaloColors.text,
+    final still = MediaQuery.disableAnimationsOf(context);
+    final Widget mark;
+    if (on && switching) {
+      mark = SizedBox(
+        key: const ValueKey('going'),
+        width: 24,
+        height: 24,
+        child: Semantics(
+          label: l10n.modesSwitching,
+          child: Padding(
+            padding: const EdgeInsets.all(3),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              // reduced motion: a still ring, the label says the rest
+              value: still ? 0.75 : null,
+              color: HaloColors.amber,
+            ),
           ),
         ),
-      ],
+      );
+    } else if (on) {
+      mark = Container(
+        key: const ValueKey('on'),
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: HaloColors.amber,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.check_rounded, size: 15, color: HaloColors.onAmber),
+      );
+    } else {
+      mark = Container(
+        key: const ValueKey('off'),
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: HaloColors.line2, width: 2),
+        ),
+      );
+    }
+    return AnimatedSwitcher(
+      duration: still ? Duration.zero : const Duration(milliseconds: 260),
+      switchInCurve: Curves.easeOutBack,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (c, a) => FadeTransition(
+        opacity: a,
+        child: ScaleTransition(scale: a, child: c),
+      ),
+      child: mark,
     );
   }
 }
 
-class _Footnote extends StatelessWidget {
-  const _Footnote();
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      l10n.modesOnionIsTheDefault,
-      style: HaloType.mono(size: 10, color: HaloColors.text2),
-    );
-  }
-}
-
-// what fast costs, in plain words. shown by every way into it: the modes
-// screen and the home's "our relay is quiet" shortcut alike
-Future<bool> showFastGateSheet(BuildContext context) async {
-  final ok = await showHaloSheet<bool>(
-    context,
-    scroll: true,
-    builder: (_) => const _FastGateSheet(),
-  );
-  return ok == true;
-}
-
-class _FastGateSheet extends StatelessWidget {
-  const _FastGateSheet();
+// the fast card while fast is in use: connected or not, the backup line,
+// and the way to the servers' own rows
+class _FastStatus extends StatelessWidget {
+  final List? rows;
+  final bool going;
+  const _FastStatus({required this.rows, required this.going});
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SheetHandle(),
-            const SizedBox(height: 12),
-            Text(
-              l10n.modesFastMode,
-              style: HaloType.serif(size: 20, color: HaloColors.text),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              l10n.modesPlainConnectionsToEveryRelayQuicker,
-              style: HaloType.sans(
-                size: 13,
-                color: HaloColors.text2,
-                height: 1.45,
+    return ListenableBuilder(
+      listenable: appState,
+      builder: (context, _) {
+        final v = fastViewOf(
+          rows,
+          downSince: appState.relayDownSince,
+          now: DateTime.now(),
+        );
+        final link = going ? FastLink.connecting : v.link;
+        final (word, dot) = switch (link) {
+          FastLink.connected => (l10n.modesFastConnected, HaloColors.green),
+          FastLink.connecting => (l10n.modesFastConnecting, HaloColors.warn),
+          FastLink.down => (l10n.modesFastDown, HaloColors.rose),
+        };
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Container(
+            padding: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: HaloColors.amber.withValues(alpha: 0.22),
+                ),
               ),
             ),
-            const SizedBox(height: 18),
-            PressScale(
-              scale: 0.97,
-              onTap: () => Navigator.pop(context, true),
-              child: Container(
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: HaloColors.amber,
-                  borderRadius: BorderRadius.circular(13),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _Dot(color: dot, pulse: link == FastLink.connecting),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          word,
+                          style: HaloType.sans(
+                            size: 14,
+                            weight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // a small link, with room enough for a thumb
+                    Semantics(
+                      button: true,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => Navigator.of(
+                          context,
+                        ).push(haloRoute(const FastServersScreen())),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 44),
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              12,
+                              6,
+                              4,
+                              6,
+                            ),
+                            child: Center(
+                              widthFactor: 1,
+                              child: Text(
+                                l10n.modesDetails,
+                                style: HaloType.sans(
+                                  size: 13,
+                                  weight: FontWeight.w500,
+                                  color: HaloColors.amberText,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  l10n.modesTurnOnFastMode,
+                const SizedBox(height: 4),
+                Text(
+                  l10n.modesBackupReady,
                   style: HaloType.sans(
-                    size: 14,
-                    weight: FontWeight.w600,
-                    color: HaloColors.onAmber,
+                    size: 13,
+                    color: HaloColors.text,
+                    height: 1.5,
                   ),
                 ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// the private card while it is in use: the second server stands behind the
+// first here too
+class _PrivateBackup extends StatelessWidget {
+  const _PrivateBackup();
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Text(
+        l10n.modesBackupReady,
+        style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
+      ),
+    );
+  }
+}
+
+// a status dot. connecting breathes, unless the phone asks for stillness
+class _Dot extends StatefulWidget {
+  final Color color;
+  final bool pulse;
+  const _Dot({required this.color, required this.pulse});
+  @override
+  State<_Dot> createState() => _DotState();
+}
+
+class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_Dot old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  void _sync() {
+    final move = widget.pulse && !MediaQuery.disableAnimationsOf(context);
+    if (move && !_c.isAnimating) {
+      _c.repeat(reverse: true);
+    } else if (!move && _c.isAnimating) {
+      _c
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, _) => AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: widget.color.withValues(alpha: 1 - _c.value * 0.55),
+        ),
+      ),
+    );
+  }
+}
+
+class _BothLine extends StatelessWidget {
+  const _BothLine();
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(24, 24, 24, 0),
+      child: MergeSemantics(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 18,
+                color: HaloColors.text2,
               ),
             ),
-            const SizedBox(height: 6),
-            PressScale(
-              onTap: () => Navigator.pop(context, false),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Center(
-                  child: Text(
-                    l10n.modesKeepItOff,
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
-                  ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.modesBothLine,
+                style: HaloType.sans(
+                  size: 13,
+                  color: HaloColors.text,
+                  height: 1.55,
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomLink extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _BottomLink({required this.label, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 28),
+      child: Semantics(
+        button: true,
+        child: PressScale(
+          scale: 0.98,
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsetsDirectional.fromSTEB(18, 12, 14, 12),
+            decoration: BoxDecoration(
+              color: HaloColors.surface2,
+              border: Border.all(color: HaloColors.line),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  // the route picked changes where it leads, and the words
+                  // cross over rather than jump
+                  child: AnimatedSwitcher(
+                    duration: still
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
+                    layoutBuilder: (cur, prev) => Stack(
+                      alignment: AlignmentDirectional.centerStart,
+                      children: [...prev, ?cur],
+                    ),
+                    child: Text(
+                      label,
+                      key: ValueKey(label),
+                      style: HaloType.sans(size: 15, color: HaloColors.text),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right, size: 20, color: HaloColors.text2),
+              ],
+            ),
+          ),
         ),
       ),
     );

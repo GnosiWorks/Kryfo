@@ -1,0 +1,9 @@
+{
+  global:
+    kt_open;
+    kt_translate;
+    kt_free;
+    kt_close;
+  local:
+    *;
+};

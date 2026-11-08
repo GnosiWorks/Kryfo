@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>app.kryfo.Kryfo</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Kryfo</name>
+  <summary>Private messages over Tor</summary>
+  <developer id="app.kryfo">
+    <name>Kryfo</name>
+  </developer>
+  <description>
+    <p>
+      A private messenger. No phone number, no email, no account, and no
+      address book upload, ever.
+    </p>
+    <p>
+      Content is end to end encrypted with the Signal protocol. By default
+      everything travels over Tor, and messages wait on relays, sealed so no
+      relay can read them, while the other side is offline.
+    </p>
+    <p>
+      The desktop version is an early test build. Some features of the
+      Android app are missing on the desktop.
+    </p>
+  </description>
+  <launchable type="desktop-id">app.kryfo.Kryfo.desktop</launchable>
+  <provides>
+    <binary>kryfo</binary>
+  </provides>
+  <url type="homepage">https://kryfo.app</url>
+  <url type="vcs-browser">https://github.com/GnosiWorks/Kryfo</url>
+  <url type="bugtracker">https://github.com/GnosiWorks/Kryfo/issues</url>
+  <categories>
+    <category>Network</category>
+    <category>InstantMessaging</category>
+    <category>Chat</category>
+  </categories>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <branding>
+    <color type="primary" scheme_preference="light">#f59e0b</color>
+    <color type="primary" scheme_preference="dark">#c96a06</color>
+  </branding>
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="0.5.3" date="2026-10-22">
+      <url type="details">https://github.com/GnosiWorks/Kryfo/releases/tag/v0.5.3</url>
+    </release>
+    <release version="0.5.2" date="2026-10-16">
+      <url type="details">https://github.com/GnosiWorks/Kryfo/releases/tag/v0.5.2</url>
+    </release>
+    <release version="0.5.1" date="2026-10-15">
+      <url type="details">https://github.com/GnosiWorks/Kryfo/releases/tag/v0.5.1</url>
+    </release>
+    <release version="0.5.0" date="2026-10-08">
+      <url type="details">https://github.com/GnosiWorks/Kryfo/releases/tag/v0.5.0</url>
+    </release>
+  </releases>
+</component>

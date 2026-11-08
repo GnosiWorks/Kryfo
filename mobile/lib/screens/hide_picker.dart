@@ -145,8 +145,8 @@ class _HidePickerState extends State<HidePicker> {
                       style: HaloType.sans(
                         size: 13.5,
                         color: _error != null
-                            ? HaloColors.rose
-                            : HaloColors.text2,
+                            ? HaloColors.roseText
+                            : HaloColors.text,
                         height: 1.45,
                       ),
                     ),
@@ -164,7 +164,7 @@ class _HidePickerState extends State<HidePicker> {
                       style: HaloType.serif(
                         size: 18,
                         italic: true,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                       ),
                     ),
                   ),
@@ -325,7 +325,7 @@ class _PickRow extends StatelessWidget {
                             l10n.homeMembers(c.members),
                             style: HaloType.mono(
                               size: 10,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                             ),
                           ),
                         ],
@@ -364,7 +364,11 @@ class _GroupFace extends StatelessWidget {
     ),
     child: Text(
       name.isEmpty ? '·' : name.characters.first.toUpperCase(),
-      style: HaloType.serif(size: 19, italic: true, color: HaloColors.amberText),
+      style: HaloType.serif(
+        size: 19,
+        italic: true,
+        color: HaloColors.amberText,
+      ),
     ),
   );
 }

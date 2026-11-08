@@ -12,7 +12,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppIo, AppState, HaloDb, useDatabasesForTest;
+    show
+        AppIo,
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateMessages,
+        AppStateVault,
+        AppStateReceive,
+        AppStateRoute,
+        hiddenSendPeer;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/polls.dart';
 import 'package:kryfo/router.dart';
@@ -142,6 +151,29 @@ class _Seal implements VaultSeal {
 }
 
 class _Io implements AppIo {
+  // nothing here types
+  @override
+  Future<String> typingSeal(String peer, String plain) =>
+      throw UnimplementedError('typingSeal');
+  @override
+  Future<String> typingSend(String onion, String cipher) =>
+      throw UnimplementedError('typingSend');
+  // the pinned chats' keys the engine was told, each time
+  final pins = <List<String>>[];
+  @override
+  Future<String> pinFirst(List<(int, String)> peers) async {
+    pins.add([for (final (_, x) in peers) x]);
+    told.add('pins');
+    return 'ok';
+  }
+
+  final firsts = <List<String>>[];
+  @override
+  Future<String> firstChats(List<(int, String)> peers) async {
+    firsts.add([for (final (_, x) in peers) x]);
+    return 'ok';
+  }
+
   @override
   Future<String?> decryptIf(
     String peer,
@@ -150,15 +182,15 @@ class _Io implements AppIo {
     bool flagKeyChange = false,
   }) => decrypt(peer, cipher, flagKeyChange: flagKeyChange);
   @override
-  Future<String> letHeld(String xPub, String how) async => 'ok';
+  Future<String> letHeld(int ident, String xPub, String how) async => 'ok';
   @override
-  Future<String> markHeld(List<String> xPubs) async => 'ok';
+  Future<String> markHeld(List<(int, String)> peers) async => 'ok';
   // sessions let go of, and addresses no longer listened on
   final dropped = <String>[];
   @override
   Future<void> dropSession(String peer) async => dropped.add(peer);
   @override
-  void unlisten(String xPub) => dropped.add(xPub);
+  void unlisten(int ident, String xPub) => dropped.add(xPub);
   // what a cipher opens to, and under whom
   final opens = <String, (String, String)>{};
   final tries = <String>[];
@@ -189,20 +221,46 @@ class _Io implements AppIo {
   @override
   Future<List<String>> sessionAddresses() async => sessions;
   @override
+  Future<String?> sessionXPub(String peer) async => 'x-$peer';
+  @override
   Future<({String haloId, String plain, UnwrappedMessage env})?>
   openFirstContact(String cipher) async => firstContact;
   @override
   Future<bool> hasSession(String peer) async => true;
   @override
+  Future<({int ident, String cipher})> seal(String peer, String plain) async =>
+      (ident: 0, cipher: await encrypt(peer, plain));
+
+  @override
   Future<String> encrypt(String peer, String plain) async => 'to $peer $plain';
   @override
-  void listen(String xPub, {bool fresh = false}) => listened.add(xPub);
+  void listen(int ident, String xPub, {bool fresh = false}) {
+    everyday.add(xPub);
+    _heard(xPub);
+  }
+
+  void _heard(String xPub) {
+    listened.add(xPub);
+    told.add('listen');
+  }
+
+  // keys listened on the everyday way, and on a hidden chat's own lane
+  final everyday = <String>[];
+  final hiddenHeard = <String>[];
+  @override
+  void listenHidden(int ident, String xPub, {bool fresh = false}) {
+    hiddenHeard.add(xPub);
+    _heard(xPub);
+  }
+
+  // listens and pin tellings, in the order they came
+  final told = <String>[];
   @override
   String edPub() => 'ed-me';
   @override
   String xPub() => 'x-me';
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     sent.add(('relay $xPub', cipher));
     return 'ok';
   }
@@ -214,7 +272,12 @@ class _Io implements AppIo {
   }
 
   @override
-  Future<String> firstContactSend(String xPub, String fc, String cipher) async {
+  Future<String> firstContactSend(
+    int ident,
+    String xPub,
+    String fc,
+    String cipher,
+  ) async {
     sent.add(('fc $xPub', cipher));
     return 'ok';
   }
@@ -648,6 +711,19 @@ class _Mem implements HaloDb {
   Future<bool> messageExists(String msgUid) async =>
       _hit('messageExists', msgUid, msg(msgUid) != null);
   @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async =>
+      _hit(
+        'messageFrom',
+        msgUid,
+        msgs.any(
+          (m) =>
+              m['msg_uid'] == msgUid &&
+              (m['direction'] == 'out' ||
+                  (m['peer_id'] == sender &&
+                      (m['group_id'] ?? '') == (group ?? ''))),
+        ),
+      );
+  @override
   Future<bool> goneFrom(String peer, String msgUid) async => false;
   @override
   Future<(String, String?)?> chatOf(String msgUid) async {
@@ -670,7 +746,11 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> editMessage(String msgUid, String newText) async {
+  Future<void> editMessage(
+    String msgUid,
+    String newText, {
+    String? from,
+  }) async {
     _hit('editMessage', msgUid, null);
     final m = msg(msgUid);
     if (m == null) return;
@@ -679,7 +759,7 @@ class _Mem implements HaloDb {
   }
 
   @override
-  Future<void> deleteMessage(String msgUid) async {
+  Future<void> deleteMessage(String msgUid, {String? from}) async {
     _hit('deleteMessage', msgUid, null);
     msgs.removeWhere((m) => m['msg_uid'] == msgUid);
     reactions.remove(msgUid);
@@ -1546,6 +1626,83 @@ void main() {
     });
   });
 
+  group('the public relays\' list', () {
+    // the engine keeps live sockets on the public relays for the pinned chats
+    // first. what it is told is the everyday rows' pins alone, so the vault
+    // opening or shutting changes no socket there
+    test(
+      'the vault opening or shutting changes nothing the engine is told',
+      () async {
+        final w = await _World.make();
+        w.live.people[_v]!['pinned'] = 1;
+        w.vault.people[_h]!['pinned'] = 1;
+        await w.app.subscribeKnown();
+        final listened = [...w.io.listened]..sort();
+        expect(w.io.pins, [
+          ['x-$_v'],
+        ]);
+        expect(listened, containsAll(['x-$_v', 'x-$_h']));
+        for (final open in [true, false, true]) {
+          w.io.listened.clear();
+          w.io.pins.clear();
+          w.io.dropped.clear();
+          if (open) {
+            await w.open();
+          } else {
+            w.close();
+          }
+          expect(w.io.listened, isEmpty);
+          expect(w.io.pins, isEmpty);
+          expect(w.io.dropped, isEmpty);
+          await w.app.subscribeKnown();
+          expect([...w.io.listened]..sort(), listened);
+          // the same pins as with the vault the other way: nothing new told
+          expect(w.io.pins, isEmpty);
+        }
+        // an unpin is told at the next listen, for the run after it
+        w.live.people[_v]!['pinned'] = 0;
+        await w.app.subscribeKnown();
+        expect(w.io.pins, [<String>[]]);
+      },
+    );
+  });
+
+  test('a hidden chat listens apart, and stays apart once deleted inside '
+      'the vault', () async {
+    final w = await _World.make();
+    await w.app.subscribeKnown();
+    expect(w.io.hiddenHeard, ['x-$_h']);
+    expect(w.io.everyday, isNot(contains('x-$_h')));
+    expect(w.io.everyday, contains('x-$_v'));
+    // its card goes, as a delete inside the vault takes it
+    await w.router.unlist([_h]);
+    expect(w.router.hidesKey('x-$_h'), isFalse);
+    w.io.everyday.clear();
+    w.io.hiddenHeard.clear();
+    await w.app.resubscribe();
+    expect(w.io.everyday, isNot(contains('x-$_h')));
+    expect(w.io.everyday, contains('x-$_v'));
+  });
+
+  test('a hidden chat sends on its own lane, and still once deleted inside '
+      'the vault', () async {
+    final w = await _World.make();
+    await w.app.subscribeKnown();
+    expect(hiddenSendPeer('x-$_h'), isTrue);
+    expect(hiddenSendPeer('x-$_v'), isFalse);
+    await w.router.unlist([_h]);
+    await w.app.resubscribe();
+    expect(hiddenSendPeer('x-$_h'), isTrue);
+  });
+
+  test('the pins are told before the first listen', () async {
+    final w = await _World.make();
+    w.live.people[_v]!['pinned'] = 1;
+    await w.app.subscribeKnown();
+    expect(w.io.told.first, 'pins');
+    expect(w.io.told.where((t) => t == 'listen'), isNotEmpty);
+  });
+
   group('every way in', () {
     test('the onion lane tries the router after the everyday rows', () async {
       final w = await _World.make();
@@ -1765,7 +1922,7 @@ void main() {
       expect(w.vault.msg('b'), isNull);
       final p = w.vault.msg('p')!;
       final path = p['media_path'] as String;
-      expect(path, contains('media_v'));
+      expect(path, contains('media_k3'));
       expect(
         File(path).readAsBytesSync(),
         List<int>.generate(20, (i) => 200 - i),

@@ -7,6 +7,8 @@
 //             again. nobody else involved, lightest, messages can be late
 //   helper    a unifiedpush app keeps one light connection and wakes kryfo.
 //             instant and light, and the helper's server learns when
+//   google    google push, the play build only: fcm wakes kryfo through our
+//             gateway. instant and light, and google learns when
 //
 // the key is read by the android side too (as flutter.delivery_mode), which
 // has to know whether to bring the foreground service back.
@@ -14,10 +16,16 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'desktop/desktop_mode.dart';
 import 'l10n/l10n.dart';
 import 'l10n/numbers.dart';
+import 'store.dart';
 
-enum DeliveryMode { always, checkins, helper }
+enum DeliveryMode { always, checkins, helper, google }
+
+/// the modes where a push server wakes kryfo for a check-in
+bool knockMode(DeliveryMode m) =>
+    m == DeliveryMode.helper || m == DeliveryMode.google;
 
 const kDeliveryModeKey = 'delivery_mode';
 const kLastCheckKey = 'delivery_last_check';
@@ -31,11 +39,19 @@ const kLastCheckHowKey = 'delivery_last_how';
 const kLastCheckTriedKey = 'delivery_last_tried';
 const kLastCheckRelaysKey = 'delivery_last_relays';
 
-DeliveryMode deliveryModeOf(String? raw) => switch (raw) {
-  'checkins' => DeliveryMode.checkins,
-  'helper' => DeliveryMode.helper,
-  _ => DeliveryMode.always,
-};
+// google push in a build without it (a backup carried over) checks in.
+// a computer is always on: it has no other mode to pick, and a phone's
+// check-ins would let tor sleep while kryfo waits in the tray
+DeliveryMode deliveryModeOf(String? raw, {bool? play, bool? desktop}) =>
+    (desktop ?? onDesktop)
+    ? DeliveryMode.always
+    : switch (raw) {
+        'checkins' => DeliveryMode.checkins,
+        'helper' => DeliveryMode.helper,
+        'google' =>
+          (play ?? playBuild) ? DeliveryMode.google : DeliveryMode.checkins,
+        _ => DeliveryMode.always,
+      };
 
 Future<DeliveryMode> loadDeliveryMode() async {
   final prefs = await SharedPreferences.getInstance();
@@ -51,6 +67,7 @@ String deliveryModeName(DeliveryMode m) => switch (m) {
   DeliveryMode.always => l10n.deliveryModeAlwaysOn,
   DeliveryMode.checkins => l10n.deliveryModeCheckIns,
   DeliveryMode.helper => l10n.deliveryModeThroughAHelperApp,
+  DeliveryMode.google => l10n.deliveryModeGooglePush,
 };
 
 String agoLine(int thenMs, int nowMs) {
@@ -81,6 +98,9 @@ DeliveryStatus deliveryStatus({
   required DeliveryMode mode,
   required bool connected,
   required bool connecting,
+  // the connection's words while it is not connected (link_view.dart), so
+  // this line says what the home pill says
+  String? state,
   // a check-in is running right now: woken by the job or by a knock
   bool checking = false,
   required int lastCheckMs,
@@ -94,9 +114,10 @@ DeliveryStatus deliveryStatus({
         return DeliveryStatus(l10n.deliveryModeConnected, live: true);
       }
       return DeliveryStatus(
-        connecting
-            ? l10n.deliveryModeConnecting
-            : l10n.deliveryModeNotConnected,
+        state ??
+            (connecting
+                ? l10n.deliveryModeConnecting
+                : l10n.deliveryModeNotConnected),
       );
     case DeliveryMode.checkins:
       if (checking) {
@@ -110,6 +131,9 @@ DeliveryStatus deliveryStatus({
       if (connected) {
         return DeliveryStatus(l10n.deliveryModeConnectedNow(last), live: true);
       }
+      if (state != null) {
+        return DeliveryStatus(l10n.deliveryModeStateLast(state, last));
+      }
       if (connecting) return DeliveryStatus(l10n.deliveryModeConnecting2(last));
       if (lastCheckMs <= 0) {
         return DeliveryStatus(l10n.deliveryModeNoCheckInYet2);
@@ -118,7 +142,10 @@ DeliveryStatus deliveryStatus({
         l10n.deliveryModeLastChecked(agoLine(lastCheckMs, nowMs)),
       );
     case DeliveryMode.helper:
-      final who = (helperName == null || helperName.isEmpty)
+    case DeliveryMode.google:
+      final who = mode == DeliveryMode.google
+          ? l10n.deliveryModeGoogle
+          : (helperName == null || helperName.isEmpty)
           ? l10n.deliveryModeAHelperApp
           : helperName;
       if (lastWakeMs <= 0) {
@@ -160,7 +187,9 @@ RestartVerdict judgeRestart({
       if (k > 0 && nowMs - k < kDayMs && k <= nowMs) k,
   ];
   final gap = nowMs - lastBeatMs;
+  // a computer is quit and started again, never killed
   final wasKill =
+      !onDesktop &&
       mode == DeliveryMode.always &&
       lastBeatMs > 0 &&
       gap > kKillGapMs &&
@@ -170,7 +199,8 @@ RestartVerdict judgeRestart({
   return RestartVerdict(
     wasKill,
     recent,
-    !nudgeShown &&
+    !onDesktop &&
+        !nudgeShown &&
         mode == DeliveryMode.always &&
         recent.length >= kKillsForNudge,
   );

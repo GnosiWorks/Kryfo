@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -155,11 +156,28 @@ func TestAnAckLeavesHeldPlacesOnTheRelay(t *testing.T) {
 func heldRun(t *testing.T, tag string, peer xid, rcv, ck string, how func(string) string) map[string]bool {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	began := atomic.LoadInt64(&catchupStarted)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	got := map[string]bool{}
 	quiet := time.Now()
-	end := time.Now().Add(6 * time.Second)
-	for time.Now().Before(end) && time.Since(quiet) < 1500*time.Millisecond {
+	// the poll holds the address while its walk is out, however long that
+	// takes on a slow machine: quiet counts once the walk began and ended
+	walked := func() bool {
+		nostrMu.Lock()
+		defer nostrMu.Unlock()
+		return atomic.LoadInt64(&catchupStarted) > began && walkingTags[tag] == 0
+	}
+	var over time.Time
+	for end := time.Now().Add(30 * time.Second); time.Now().Before(end); {
+		switch {
+		case !walked():
+			over = time.Time{}
+		case over.IsZero():
+			over = time.Now()
+		}
+		if !over.IsZero() && time.Since(over) >= 1500*time.Millisecond && time.Since(quiet) >= 1500*time.Millisecond {
+			break
+		}
 		if b := pollRaw(t); b.K != "" {
 			h, g := []int{}, []string{}
 			for i, e := range b.M {
@@ -226,7 +244,7 @@ func TestAFloodLeftOnTheRelayStaysBoundedAcrossStarts(t *testing.T) {
 			t.Fatalf("start %d opened %d of the flood again", i+2, len(got))
 		}
 	}
-	if err := nostrLetHeld(tag, "free"); err != nil {
+	if err := nostrLetHeld(mainIdent, tag, "free"); err != nil {
 		t.Fatal(err)
 	}
 	if got := heldRun(t, tag, peer, rcv, ck, keep); len(got) != seenHeldKeep {
@@ -255,7 +273,7 @@ func TestAHeldTextComesBackPastTheWindow(t *testing.T) {
 	if got := heldRun(t, tag, peer, rcv, ck, how); len(got) != 0 {
 		t.Fatalf("the next start offered %v", got)
 	}
-	if err := nostrLetHeld(tag, "free"); err != nil {
+	if err := nostrLetHeld(mainIdent, tag, "free"); err != nil {
 		t.Fatal(err)
 	}
 	if got := heldRun(t, tag, peer, rcv, ck, how); !got["old"] || got["new"] {
@@ -346,7 +364,7 @@ func TestFreeAndMarkLeaveAnAddressWithNothingHeldAlone(t *testing.T) {
 	loadSeen(seenPath).handedOver([]nostr.ID{randomID(t)})
 	before, _ := os.ReadFile(seenPath)
 	for _, how := range []string{"mark", "free"} {
-		if err := nostrLetHeld(tag, how); err != nil {
+		if err := nostrLetHeld(mainIdent, tag, how); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -359,7 +377,7 @@ func TestFreeAndMarkLeaveAnAddressWithNothingHeldAlone(t *testing.T) {
 	id := randomID(t)
 	s.claim(id)
 	s.hold(id, nostr.Timestamp(time.Now().Unix()), "", time.Now(), 0, 0)
-	if err := nostrLetHeld(tag, "mark"); err != nil {
+	if err := nostrLetHeld(mainIdent, tag, "mark"); err != nil {
 		t.Fatal(err)
 	}
 	if w := loadSeen(seenPath).wanted(time.Now()); len(w) != 1 || w[0] != id {
@@ -387,7 +405,7 @@ func TestABigFileAndATextHeldBothComeBack(t *testing.T) {
 	if got := heldRun(t, tag, peer, rcv, ck, hold); len(got) != n+1 {
 		t.Fatalf("the first start offered %d", len(got))
 	}
-	if err := nostrLetHeld(tag, "free"); err != nil {
+	if err := nostrLetHeld(mainIdent, tag, "free"); err != nil {
 		t.Fatal(err)
 	}
 	got := heldRun(t, tag, peer, rcv, ck, keep)
@@ -419,7 +437,7 @@ func TestAFreedIDTheRelayLostIsForgotten(t *testing.T) {
 	}
 	relay.events = left
 	relay.mu.Unlock()
-	if err := nostrLetHeld(tag, "free"); err != nil {
+	if err := nostrLetHeld(mainIdent, tag, "free"); err != nil {
 		t.Fatal(err)
 	}
 	if got := heldRun(t, tag, peer, rcv, ck, how); !got["kept"] || len(got) != 1 {
@@ -474,7 +492,7 @@ func TestAFreedIDOneRelayLacksStillComes(t *testing.T) {
 	b.mu.Lock()
 	b.reqDelay = 300 * time.Millisecond
 	b.mu.Unlock()
-	if err := nostrLetHeld(tag, "free"); err != nil {
+	if err := nostrLetHeld(mainIdent, tag, "free"); err != nil {
 		t.Fatal(err)
 	}
 	keep := func(string) string { return "keep" }
@@ -504,7 +522,7 @@ func TestACappedRelayBringsEveryFreedID(t *testing.T) {
 	relay.mu.Lock()
 	relay.capAt = 40
 	relay.mu.Unlock()
-	if err := nostrLetHeld(tag, "free"); err != nil {
+	if err := nostrLetHeld(mainIdent, tag, "free"); err != nil {
 		t.Fatal(err)
 	}
 	keep := func(string) string { return "keep" }
@@ -537,7 +555,7 @@ func TestAStartMarkRestartsNothing(t *testing.T) {
 	holdOn(paths[0])
 	loadSeen(paths[1]).handedOver([]nostr.ID{randomID(t)})
 	const fc = 7
-	_, fcPk, err := nip17FirstContactKeys(fc)
+	_, fcPk, err := nip17FirstContactKeysAs(testMain(), fc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -559,7 +577,7 @@ func TestAStartMarkRestartsNothing(t *testing.T) {
 	})
 	fcBefore, _ := os.ReadFile(fcPath)
 	quietBefore, _ := os.ReadFile(paths[1])
-	nostrMarkHeld(peers)
+	nostrMarkHeld(mainPeers(peers...))
 	if restarts != 0 {
 		t.Fatalf("%d restarts", restarts)
 	}
@@ -596,7 +614,7 @@ func TestAnUnlockMarkComesOnTheNextProbe(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	reqs := func() (conns, n int) {
 		cs := relay.snapshot()
 		for _, c := range cs {
@@ -613,7 +631,7 @@ func TestAnUnlockMarkComesOnTheNextProbe(t *testing.T) {
 		t.Fatalf("offered before the unlock: %q", bodies(b))
 	}
 	conns, n := reqs()
-	nostrMarkHeld([]string{tag})
+	nostrMarkHeld(mainPeers(tag))
 	time.Sleep(500 * time.Millisecond)
 	if c, m := reqs(); c != conns || m != n {
 		t.Fatalf("the unlock sent %d reqs on %d new sockets", m-n, c-conns)
@@ -648,7 +666,7 @@ func TestAFreeLeavesANewInviteAddressAlone(t *testing.T) {
 	_, _, tag, _, _ := heldSetUp(t)
 	now := time.Now()
 	const fc = 7
-	_, fcPk, err := nip17FirstContactKeys(fc)
+	_, fcPk, err := nip17FirstContactKeysAs(testMain(), fc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -680,7 +698,7 @@ func TestAFreeLeavesANewInviteAddressAlone(t *testing.T) {
 		fcCounterNow = fc + 1
 		nostrMu.Unlock()
 	}
-	if err := nostrLetHeld(tag, "free"); err != nil {
+	if err := nostrLetHeld(mainIdent, tag, "free"); err != nil {
 		t.Fatal(err)
 	}
 	nostrMu.Lock()

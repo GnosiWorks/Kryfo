@@ -148,7 +148,10 @@ void main() {
       sourceOf('lib/app/state.dart'),
       'Future<String> sendMediaToGroup(',
     );
-    expect(body, contains('photo: fileName == null && !voice,'));
+    expect(
+      body,
+      contains('photo: drop == null && fileName == null && !voice,'),
+    );
   });
 
   // every photo lane ends in one of these two: the gallery, one or many,
@@ -165,7 +168,7 @@ void main() {
       final body = bodyOf(sourceOf(file), fn);
       final clean = body.indexOf('await photoToSendOffUi(raw)');
       expect(clean, greaterThan(0));
-      expect(body.indexOf('writeAsBytes(bytes'), greaterThan(clean));
+      expect(body.indexOf('await writeMadeCopy('), greaterThan(clean));
       // the raw bytes go nowhere else
       expect(RegExp(r'\braw\b').allMatches(body).length, 2);
     });

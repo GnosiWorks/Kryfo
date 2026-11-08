@@ -21,6 +21,8 @@ import '../l10n/dates.dart';
 import '../delivery_mode.dart';
 import '../seen_timers.dart';
 import '../l10n/numbers.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../wide/read_width.dart' show DeskPage;
 
 class TransportScreen extends StatelessWidget {
   const TransportScreen({super.key});
@@ -38,194 +40,215 @@ class TransportScreen extends StatelessWidget {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: ListenableBuilder(
-        listenable: appState,
-        builder: (context, _) {
-          final tor = appState.torStatus;
-          final pct = appState.bootstrapPct;
-          final contacts = appState.contacts.length;
-          final tx = engine.transportState();
-          final relays = (tx['relays'] as List?) ?? const [];
-          // the session's own traffic: a decoy's is none
-          final shown = appState.shownTraffic(tx);
-          final subs = shown.subs;
-          final rx = shown.secsSinceRecv;
-          final sx = shown.secsSinceSend;
-          final uploads = tx['hsdir_uploads'] as int? ?? 0;
-          final pubFor = tx['publishing_secs'] as int? ?? -1;
-          // the engine's own words for how tor gets out: codes, never a
-          // line or an address. a decoy sees automatic and the phase
-          final bs = appState.bridgeStatus;
-          final decoy = appState.inDecoyView;
+      body: DeskPage(
+        child: ListenableBuilder(
+          listenable: appState,
+          builder: (context, _) {
+            final tor = appState.torStatus;
+            final pct = appState.bootstrapPct;
+            final contacts = appState.contacts.length;
+            final tx = engine.transportState();
+            final relays = (tx['relays'] as List?) ?? const [];
+            // the session's own traffic: a decoy's is none
+            final shown = appState.shownTraffic(tx);
+            final subs = shown.subs;
+            final rx = shown.secsSinceRecv;
+            final sx = shown.secsSinceSend;
+            final uploads = tx['hsdir_uploads'] as int? ?? 0;
+            final pubFor = tx['publishing_secs'] as int? ?? -1;
+            // a bounce zeroes the uploads, but this tor's onion stays up
+            final published = tx['published_once'] == true;
+            // the engine's own words for how tor gets out: codes, never a
+            // line or an address. a decoy sees automatic and the phase
+            final bs = appState.bridgeStatus;
+            final decoy = appState.inDecoyView;
 
-          // laid out whole: a lazy list builds the staying alive block at
-          // another height on each bounce, and the end never rests
-          return CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  8,
-                  20,
-                  40 + MediaQuery.paddingOf(context).bottom,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: staggerAll([
-                      Text(
-                        l10n.transportNothingHereLeavesThe,
-                        style: HaloType.mono(size: 12, color: HaloColors.text2),
-                      ),
-
-                      HaloSection(l10n.transportStayingAlive, flush: true),
-                      const _Alive(),
-
-                      HaloSection(l10n.appTor, flush: true),
-                      _Line(l10n.transportStatus, _torWord(tor), _torTint(tor)),
-                      // always in the list, so the rows under it keep their place
-                      Unfold(
-                        open: tor == TorStatus.starting,
-                        child: _Line(
-                          l10n.transportBootstrap,
-                          percent(pct / 100),
-                          HaloColors.amber,
+            // laid out whole: a lazy list builds the staying alive block at
+            // another height on each bounce, and the end never rests
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    40 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: staggerAll([
+                        Text(
+                          l10n.transportNothingHereLeavesTheShown,
+                          style: HaloType.mono(
+                            size: 12,
+                            color: HaloColors.text,
+                          ),
                         ),
-                      ),
-                      // the test the outbox and the chats send by: a network too
-                      _Line(
-                        l10n.transportCanSend,
-                        appState.linkUp ? l10n.commonYes : l10n.transportNotYet,
-                        appState.linkUp ? HaloColors.green : HaloColors.rose,
-                      ),
-                      _Line(
-                        l10n.transportBridgeMode,
-                        decoy ? 'auto' : _code(bs.mode),
-                        HaloColors.violet,
-                      ),
-                      _Line(
-                        l10n.transportBridgePhase,
-                        _code(bs.phase),
-                        HaloColors.violet,
-                      ),
-                      if (!decoy) ...[
+
+                        HaloSection(l10n.transportStayingAlive, flush: true),
+                        const _Alive(),
+
+                        HaloSection(l10n.appTor, flush: true),
                         _Line(
-                          l10n.transportBridgeMethod,
-                          _code(bs.method),
-                          HaloColors.violet,
+                          l10n.transportStatus,
+                          _torWord(tor),
+                          _torTint(tor),
+                        ),
+                        // always in the list, so the rows under it keep their place
+                        Unfold(
+                          open: tor == TorStatus.starting,
+                          child: _Line(
+                            l10n.transportBootstrap,
+                            percent(pct / 100),
+                            HaloColors.amberText,
+                          ),
+                        ),
+                        // the test the outbox and the chats send by: a network too
+                        _Line(
+                          l10n.transportCanSend,
+                          appState.linkUp
+                              ? l10n.commonYes
+                              : l10n.transportNotYet,
+                          appState.linkUp
+                              ? HaloColors.greenText
+                              : HaloColors.roseText,
                         ),
                         _Line(
-                          l10n.transportBridgeError,
-                          _code(bs.errorCode),
-                          bs.errorCode.isEmpty
-                              ? HaloColors.green
-                              : HaloColors.amber,
+                          l10n.transportBridgeMode,
+                          decoy ? 'auto' : _code(bs.mode),
+                          HaloColors.violetText,
                         ),
-                      ],
-
-                      HaloSection(l10n.transportNetwork, flush: true),
-                      _Line(
-                        l10n.transportConnectivity,
-                        appState.online
-                            ? l10n.transportOnline
-                            : l10n.transportOffline,
-                        appState.online ? HaloColors.green : HaloColors.rose,
-                      ),
-                      _Line(
-                        l10n.transportQueuedToSend,
-                        '${appState.queued}',
-                        appState.queued == 0
-                            ? HaloColors.text2
-                            : HaloColors.amber,
-                      ),
-
-                      _Line(
-                        l10n.transportOnionPublished,
-
-                        uploads > 0
-                            ? l10n.transportYes(whole(uploads))
-                            : pubFor > 0
-                            ? l10n.transportTryingS(whole(pubFor))
-                            : l10n.transportNotYet,
-
-                        uploads > 0 ? HaloColors.green : HaloColors.rose,
-                      ),
-
-                      HaloSection(l10n.transportRelays, flush: true),
-
-                      for (final r in relays)
                         _Line(
-                          _relayLabel(r['url'] as String? ?? ''),
+                          l10n.transportBridgePhase,
+                          _code(bs.phase),
+                          HaloColors.violetText,
+                        ),
+                        if (!decoy) ...[
+                          _Line(
+                            l10n.transportBridgeMethod,
+                            _code(bs.method),
+                            HaloColors.violetText,
+                          ),
+                          _Line(
+                            l10n.transportBridgeError,
+                            _code(bs.errorCode),
+                            bs.errorCode.isEmpty
+                                ? HaloColors.greenText
+                                : HaloColors.amberText,
+                          ),
+                        ],
 
-                          r['benched'] == true
-                              ? l10n.transportBenchedS(r['bench_for_s'])
-                              : (r['fails'] as int? ?? 0) > 0
-                              ? l10n.transportFails(r['fails'] as int)
-                              : l10n.transportOk,
-
-                          r['benched'] == true
-                              ? HaloColors.rose
-                              : (r['fails'] as int? ?? 0) > 0
-                              ? HaloColors.amber
-                              : HaloColors.green,
+                        HaloSection(l10n.transportNetwork, flush: true),
+                        _Line(
+                          l10n.transportConnectivity,
+                          appState.online
+                              ? l10n.transportOnline
+                              : l10n.transportOffline,
+                          appState.online
+                              ? HaloColors.greenText
+                              : HaloColors.roseText,
+                        ),
+                        _Line(
+                          l10n.transportQueuedToSend,
+                          '${appState.queued}',
+                          appState.queued == 0
+                              ? HaloColors.text
+                              : HaloColors.amberText,
                         ),
 
-                      HaloSection(l10n.transportTraffic, flush: true),
+                        _Line(
+                          l10n.transportOnionPublished,
 
-                      _Line(
-                        l10n.transportRelaySubscriptions,
+                          uploads > 0
+                              ? l10n.transportYes(whole(uploads))
+                              : published
+                              ? l10n.commonYes
+                              : pubFor > 0
+                              ? l10n.transportTryingS(whole(pubFor))
+                              : l10n.transportNotYet,
 
-                        '$subs',
+                          uploads > 0 || published
+                              ? HaloColors.greenText
+                              : HaloColors.roseText,
+                        ),
 
-                        subs == 0 ? HaloColors.rose : HaloColors.text2,
-                      ),
+                        HaloSection(l10n.transportRelays, flush: true),
 
-                      _Line(
-                        l10n.transportLastSent,
-                        sx < 0
-                            ? l10n.transportNever
-                            : l10n.transportSAgo(whole(sx)),
-                        HaloColors.text2,
-                      ),
+                        for (final r in relays)
+                          _Line(
+                            _relayLabel(r['url'] as String? ?? ''),
 
-                      _Line(
-                        l10n.transportLastReceived,
-                        rx < 0
-                            ? l10n.transportNever
-                            : l10n.transportSAgo2(whole(rx)),
-                        HaloColors.text2,
-                      ),
+                            r['benched'] == true
+                                ? l10n.transportBenchedS(r['bench_for_s'])
+                                : (r['fails'] as int? ?? 0) > 0
+                                ? l10n.transportFails(r['fails'] as int)
+                                : l10n.transportOk,
 
-                      HaloSection(l10n.transportContacts, flush: true),
-                      // no contacts, no relay subscriptions: nothing arrives
-                      _Line(
-                        l10n.transportKnown,
-                        '$contacts',
-                        contacts == 0 ? HaloColors.rose : HaloColors.text2,
-                      ),
-                      Unfold(
-                        open: contacts == 0,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            l10n.transportWithNoContactsThe,
-                            style: HaloType.mono(
-                              size: 11.5,
-                              color: HaloColors.rose.withValues(alpha: 0.9),
+                            r['benched'] == true
+                                ? HaloColors.roseText
+                                : (r['fails'] as int? ?? 0) > 0
+                                ? HaloColors.amberText
+                                : HaloColors.greenText,
+                          ),
+
+                        HaloSection(l10n.transportTraffic, flush: true),
+
+                        _Line(
+                          l10n.transportRelaySubscriptions,
+
+                          '$subs',
+
+                          subs == 0 ? HaloColors.roseText : HaloColors.text,
+                        ),
+
+                        _Line(
+                          l10n.transportLastSent,
+                          sx < 0
+                              ? l10n.transportNever
+                              : l10n.transportSAgo(whole(sx)),
+                          HaloColors.text,
+                        ),
+
+                        _Line(
+                          l10n.transportLastReceived,
+                          rx < 0
+                              ? l10n.transportNever
+                              : l10n.transportSAgo2(whole(rx)),
+                          HaloColors.text,
+                        ),
+
+                        HaloSection(l10n.transportContacts, flush: true),
+                        // no contacts, no relay subscriptions: nothing arrives
+                        _Line(
+                          l10n.transportKnown,
+                          '$contacts',
+                          contacts == 0 ? HaloColors.roseText : HaloColors.text,
+                        ),
+                        Unfold(
+                          open: contacts == 0,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
+                              l10n.transportWithNoContactsTheShown,
+                              style: HaloType.mono(
+                                size: 11.5,
+                                color: HaloColors.roseText,
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      const SizedBox(height: 28),
-                      const _Flush(),
-                    ]),
+                        const SizedBox(height: 28),
+                        const _Flush(),
+                      ]),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -240,11 +263,11 @@ String _torWord(TorStatus t) => switch (t) {
 };
 
 Color _torTint(TorStatus t) => switch (t) {
-  TorStatus.off => HaloColors.rose,
-  TorStatus.starting => HaloColors.amber,
-  TorStatus.bootstrapped => HaloColors.amber,
-  TorStatus.publishing => HaloColors.amber,
-  TorStatus.reachable => HaloColors.green,
+  TorStatus.off => HaloColors.roseText,
+  TorStatus.starting => HaloColors.amberText,
+  TorStatus.bootstrapped => HaloColors.amberText,
+  TorStatus.publishing => HaloColors.amberText,
+  TorStatus.reachable => HaloColors.greenText,
 };
 
 // our own relay is a 56 character onion. nobody reads that off a
@@ -346,7 +369,7 @@ class _Line extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: HaloType.mono(size: 13, color: HaloColors.text2),
+                style: HaloType.mono(size: 13, color: HaloColors.text),
               ),
               const SizedBox(height: 3),
               shown(AlignmentDirectional.centerStart, TextAlign.start),
@@ -365,7 +388,7 @@ class _Line extends StatelessWidget {
               padding: start,
               child: Text(
                 label,
-                style: HaloType.mono(size: 13, color: HaloColors.text2),
+                style: HaloType.mono(size: 13, color: HaloColors.text),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -510,7 +533,7 @@ class _AliveState extends State<_Alive> {
           listening
               ? l10n.transportYesCheckedJustNow
               : l10n.transportNoLast(_ago(listen)),
-          listening ? HaloColors.green : HaloColors.rose,
+          listening ? HaloColors.greenText : HaloColors.roseText,
         ),
         _Line(
           l10n.transportLastMessageIn,
@@ -520,28 +543,30 @@ class _AliveState extends State<_Alive> {
               : _ago(appState.lastDrainAt),
           HaloColors.text,
         ),
-        PressScale(
-          scale: 0.98,
-          onTap: _exempt == false
-              ? () async {
-                  await forceShowBackgroundPrompt(context);
-                  _load();
-                }
-              : null,
-          child: _Line(
-            l10n.transportBatteryExemption,
-            _exempt == null
-                ? l10n.transportUnknown
-                : _exempt!
-                ? l10n.transportExempt
-                : l10n.transportNotExemptTapTo,
-            _exempt == null
-                ? HaloColors.text2
-                : _exempt!
-                ? HaloColors.green
-                : HaloColors.rose,
+        // a computer has no battery exemption to ask for
+        if (!onDesktop)
+          PressScale(
+            scale: 0.98,
+            onTap: _exempt == false
+                ? () async {
+                    await forceShowBackgroundPrompt(context);
+                    _load();
+                  }
+                : null,
+            child: _Line(
+              l10n.transportBatteryExemption,
+              _exempt == null
+                  ? l10n.transportUnknown
+                  : _exempt!
+                  ? l10n.transportExempt
+                  : l10n.transportNotExemptTapTo,
+              _exempt == null
+                  ? HaloColors.text
+                  : _exempt!
+                  ? HaloColors.greenText
+                  : HaloColors.roseText,
+            ),
           ),
-        ),
         // in place from the start, so the rows under them do not shift
         Unfold(
           open: _uptimeMs != null,
@@ -559,8 +584,8 @@ class _AliveState extends State<_Alive> {
                   l10n.transportLastStop,
                   '${lastStopWord(exit['code'] as String?)} · ${exitAt == null ? '' : _ago(exitAt)}',
                   (exit['reason'] as int?) == 2
-                      ? HaloColors.rose
-                      : HaloColors.text2,
+                      ? HaloColors.roseText
+                      : HaloColors.text,
                 ),
         ),
         _Line(
@@ -580,10 +605,10 @@ class _AliveState extends State<_Alive> {
               ? l10n.transportNoneYet
               : '${checkInLine(appState.lastCheckHow)} · ${_ago(appState.lastCheckTriedAt > 0 ? appState.lastCheckTriedAt : appState.lastCheckAt)}',
           checkInOk(appState.lastCheckHow)
-              ? HaloColors.green
+              ? HaloColors.greenText
               : appState.lastCheckHow.isEmpty
               ? HaloColors.warm
-              : HaloColors.rose,
+              : HaloColors.roseText,
         ),
         _Line(
           l10n.transportLastTorReconnect,
@@ -591,10 +616,10 @@ class _AliveState extends State<_Alive> {
               ? l10n.transportNoneYet
               : engine.lastReconnect(),
           engine.lastReconnect().startsWith('ok')
-              ? HaloColors.green
+              ? HaloColors.greenText
               : engine.lastReconnect().isEmpty
               ? HaloColors.warm
-              : HaloColors.rose,
+              : HaloColors.roseText,
         ),
         // who took how long on the last catch-up. a relay marked dropped hit
         // the engine's 30s cap and its backfill was given up on; it keeps its
@@ -605,7 +630,7 @@ class _AliveState extends State<_Alive> {
               ? l10n.transportNoneYet
               : catchupLine(appState.lastCheckRelays),
           catchupDropped(appState.lastCheckRelays)
-              ? HaloColors.rose
+              ? HaloColors.roseText
               : appState.lastCheckRelays.isEmpty
               ? HaloColors.warm
               : HaloColors.text2,
@@ -620,8 +645,8 @@ class _AliveState extends State<_Alive> {
             (ctrl['ctrl_timeouts'] as int?) ?? 0,
           ),
           ((ctrl['ctrl_timeouts'] as int?) ?? 0) > 0
-              ? HaloColors.rose
-              : HaloColors.text2,
+              ? HaloColors.roseText
+              : HaloColors.text,
         ),
         // every bounce and every set of new circuits this process made,
         // by why, then the latest few. a release build logs nothing, so
@@ -635,7 +660,7 @@ class _AliveState extends State<_Alive> {
           _Line(
             bounceWhen(DateTime.fromMillisecondsSinceEpoch(b.at * 1000)),
             bounceWhy(b.why),
-            HaloColors.text2,
+            HaloColors.text,
             indent: true,
           ),
         _Line(
@@ -653,7 +678,7 @@ class _AliveState extends State<_Alive> {
           appState.gaps.isEmpty
               ? l10n.transportNone
               : '${appState.gaps.length}',
-          appState.gaps.isEmpty ? HaloColors.green : HaloColors.rose,
+          appState.gaps.isEmpty ? HaloColors.greenText : HaloColors.roseText,
         ),
         for (final g in appState.gaps.reversed.take(8)) _gapLine(g),
         if (appState.gaps.isNotEmpty || appState.jobRuns > 0)
@@ -667,7 +692,7 @@ class _AliveState extends State<_Alive> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
                 l10n.transportClearThisRecord,
-                style: HaloType.mono(size: 11, color: HaloColors.text2),
+                style: HaloType.mono(size: 11, color: HaloColors.text),
               ),
             ),
           ),
@@ -701,7 +726,7 @@ class _AliveState extends State<_Alive> {
     return _Line(
       l10n.transportTo(t(from), t(to)),
       len,
-      HaloColors.text2,
+      HaloColors.text,
       indent: true,
     );
   }

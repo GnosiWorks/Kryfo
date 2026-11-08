@@ -11,6 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart' show HaloDb, useDatabasesForTest;
 import 'package:kryfo/polls.dart' show PollVote;
@@ -37,6 +38,7 @@ class _GroupDb implements HaloDb {
     String text, {
     int? burnSecs,
     String from = 'amber',
+    String direction = 'in',
     Map<String, Object?> more = const {},
   }) {
     final id = rows.length + 1;
@@ -46,7 +48,7 @@ class _GroupDb implements HaloDb {
       'id': id,
       'peer_id': from,
       'group_id': _group,
-      'direction': 'in',
+      'direction': direction,
       'plaintext': text,
       'msg_uid': uid,
       'sent': 1,
@@ -151,7 +153,7 @@ class _GroupDb implements HaloDb {
     Future<Set<String>> Function()? blocked,
   }) async {}
   @override
-  Future<void> deleteMessage(String msgUid) async {}
+  Future<void> deleteMessage(String msgUid, {String? from}) async {}
 
   @override
   dynamic noSuchMethod(Invocation i) =>
@@ -186,12 +188,14 @@ void main() {
     String id = _id,
     int? burnSecs,
     String caption = '',
+    String direction = 'in',
   }) {
     final f = File('${dir.path}/$from$id$i.png')..writeAsBytesSync(_png);
     db.add(
       '$from-$id-$i',
       caption,
       from: from,
+      direction: direction,
       burnSecs: burnSecs,
       more: {'media_path': f.path, ...AlbumTag(id, n, i).toRow()},
     );
@@ -239,6 +243,56 @@ void main() {
     await close(t);
   });
 
+  // a caption reads as the words of a text bubble: upright, same face and size
+  testWidgets('a group caption is drawn as a text bubble\'s words', (t) async {
+    await open(t, (db) {
+      item(db, 0, 2, caption: 'album words');
+      item(db, 1, 2);
+      final f = File('${dir.path}/single.png')..writeAsBytesSync(_png);
+      db.add(
+        'me-single',
+        'photo words',
+        from: 'me',
+        direction: 'out',
+        more: {'media_path': f.path},
+      );
+    });
+    TextStyle of(String words) => drawnIn(
+      t.widget<RichText>(find.text(words, findRichText: true)).text,
+      words,
+    )!;
+    final body = of('hello all');
+    for (final c in [of('album words'), of('photo words')]) {
+      expect(c.fontStyle, isNot(FontStyle.italic));
+      expect(c.fontFamily, body.fontFamily);
+      expect(c.fontSize, body.fontSize);
+      expect(c.fontWeight, body.fontWeight);
+      expect(c, body);
+    }
+    await close(t);
+  });
+
+  testWidgets('ours asks with the album line, not the message one', (t) async {
+    await open(t, (db) {
+      for (var i = 0; i < 2; i++) {
+        item(db, i, 2, from: 'me', direction: 'out');
+      }
+    });
+    await t.longPress(
+      find.descendant(
+        of: find.byType(AlbumGrid),
+        matching: find.byKey(const ValueKey(1)),
+      ),
+    );
+    await frames(t, 4);
+    await t.tap(find.text(l10n.groupChatUnsend).last);
+    await frames(t, 4);
+    expect(find.text(l10n.albumUnsendTitle), findsOneWidget);
+    expect(find.text(l10n.groupChatAlbumItDisappearsWithNo), findsOneWidget);
+    expect(find.text(l10n.groupChatItDisappearsWithNo), findsNothing);
+    await close(t);
+  });
+
   testWidgets('two senders with the same album id are two albums', (t) async {
     await open(t, (db) {
       item(db, 0, 2);
@@ -266,4 +320,17 @@ void main() {
     expect(at.single, isNotNull);
     await close(t);
   });
+}
+
+// the style the words are drawn in: the spans' styles merged down to them
+TextStyle? drawnIn(InlineSpan span, String words, [TextStyle? up]) {
+  final here = up == null ? span.style : up.merge(span.style);
+  if (span is TextSpan) {
+    if (span.text != null && span.text!.contains(words)) return here;
+    for (final c in span.children ?? const <InlineSpan>[]) {
+      final s = drawnIn(c, words, here);
+      if (s != null) return s;
+    }
+  }
+  return null;
 }

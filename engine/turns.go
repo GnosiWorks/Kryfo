@@ -5,7 +5,10 @@ package main
 // start and after each wake, so a relay does not see all of one phone's
 // addresses ask in the same instant. only the first goes at once, and the
 // open chat's address, and a just-added one's first ask right after the add,
-// go with no turn.
+// go with no turn. at the start our own relays wait less: the first batch
+// and the first-contact listener go at once there, the first socket of ours
+// too when there is no first batch (a linked device has none), and the rest
+// of ours within ownStartSpread.
 
 import (
 	"context"
@@ -69,7 +72,8 @@ func takeFirstTurn(kc chan struct{}) bool {
 		return false
 	}
 	firstTurn.kick = kc
-	return true
+	// the start's is the first batch's
+	return !startFirstHolds(kc)
 }
 
 // the runner tag of the chat open on screen: its address asks with no turn
@@ -86,6 +90,41 @@ func HaloNostrFirst(cTag *C.char) *C.char {
 func isFirstTag(tag string) bool {
 	f, _ := firstTag.Load().(string)
 	return tag != "" && f == tag
+}
+
+// the longest turn the first-contact listener waits on our own relays at a
+// kick after the start (at the start it goes at once): a
+// card scanned then is heard there within this, not after up to the whole
+// spread. its own socket on its own lane, drawn apart from every batch
+var fcOwnSpread = 20 * time.Second
+
+// the longest turn a socket on our relays waits at the start, past the ones
+// that go at once there
+var ownStartSpread = 15 * time.Second
+
+// the free turn on our relays at the start, when no first batch takes it
+var ownFirst struct {
+	sync.Mutex
+	kick chan struct{}
+}
+
+// true for the first caller under kc, if the start has no first batch
+func takeOwnFirstTurn(kc chan struct{}) bool {
+	ownFirst.Lock()
+	defer ownFirst.Unlock()
+	if ownFirst.kick == kc {
+		return false
+	}
+	ownFirst.kick = kc
+	return !startFirstHolds(kc)
+}
+
+// the spread a socket's turn is drawn over at a start or kick
+func spreadFor(lane string, own bool) time.Duration {
+	if lane == laneFirstContact && own {
+		return min(fcOwnSpread, subSpread)
+	}
+	return subSpread
 }
 
 // how long after an add or accept its free turn holds
@@ -136,6 +175,69 @@ type subTurn struct {
 	up bool
 	// counted as a catch-up under way
 	held bool
+	// a socket on one of our relay's entries: first at a wake
+	own bool
+	// the runner's lane
+	lane string
+	// the wake it last had a turn in, see takeWake
+	wake int64
+	// closed once the socket it shares is up, nil for a socket of its own:
+	// then its turn is over, and it does not take the first one
+	ready func() <-chan struct{}
+	// the socket it shares, nil for one of its own: the socket's turn is
+	// drawn once for all of its addresses (sharedDelay)
+	batch *hubKey
+	// the longest turn, 0 for subSpread
+	spread time.Duration
+}
+
+// a shared socket's turn under a kick or a wake: drawn once, by the first
+// of its addresses to wait, over the whole spread. the others wait for the
+// same moment or for the socket to be up. drawn per address, a batch would
+// dial at the first of up to eight draws and a phone's batches would come
+// up within seconds of each other
+var batchTurns = struct {
+	sync.Mutex
+	m map[hubKey]batchTurn
+}{m: map[hubKey]batchTurn{}}
+
+type batchTurn struct {
+	kick chan struct{}
+	wake int64
+	at   time.Time
+}
+
+func (t *subTurn) sharedDelay(kc chan struct{}, wake int64, now time.Time, draw func() time.Duration) time.Duration {
+	if t.batch == nil {
+		return draw()
+	}
+	batchTurns.Lock()
+	defer batchTurns.Unlock()
+	if bt, ok := batchTurns.m[*t.batch]; ok && bt.kick == kc && bt.wake == wake {
+		return bt.at.Sub(now)
+	}
+	d := draw()
+	batchTurns.m[*t.batch] = batchTurn{kc, wake, now.Add(d)}
+	return d
+}
+
+func (t *subTurn) readyChan() <-chan struct{} {
+	if t.ready == nil {
+		return nil
+	}
+	return t.ready()
+}
+
+func isClosed(c <-chan struct{}) bool {
+	if c == nil {
+		return false
+	}
+	select {
+	case <-c:
+		return true
+	default:
+		return false
+	}
 }
 
 // waits the socket's turn, unless it has had one since the last kick or has
@@ -145,7 +247,11 @@ type subTurn struct {
 func (t *subTurn) take(ctx context.Context) bool {
 	// every dial is counted until it is over (dialed), turn or none
 	t.hold()
+	wakeCheck()
 	kc := kickChan()
+	if n, w, ok := wakeNow(); ok {
+		return t.takeWake(ctx, kc, n, w)
+	}
 	if t.kick == kc {
 		return ctx.Err() == nil
 	}
@@ -157,10 +263,30 @@ func (t *subTurn) take(ctx context.Context) bool {
 		return ctx.Err() == nil
 	}
 	t.up = false
-	if takeFirstTurn(kc) {
+	up := t.readyChan()
+	if isClosed(up) {
 		return ctx.Err() == nil
 	}
-	d := turnDelay(autoNow())
+	now := autoNow()
+	d := t.sharedDelay(kc, 0, now, func() time.Duration {
+		if t.batch != nil && startFirstFor(t.batch.lane, kc) {
+			return 0
+		}
+		// ours at the start: a short turn, and the free one is left to the rest
+		if t.own && isStartKick(kc) {
+			if t.lane == laneFirstContact || takeOwnFirstTurn(kc) {
+				return 0
+			}
+			return spreadDelay(min(ownStartSpread, subSpread), now)
+		}
+		if takeFirstTurn(kc) {
+			return 0
+		}
+		if t.spread > 0 {
+			return spreadDelay(t.spread, now)
+		}
+		return turnDelay(now)
+	})
 	if d <= 0 {
 		return ctx.Err() == nil
 	}
@@ -169,6 +295,48 @@ func (t *subTurn) take(ctx context.Context) bool {
 	select {
 	case <-tm.C:
 		return true
+	case <-up:
+		return ctx.Err() == nil
+	case <-ctx.Done():
+		return false
+	}
+}
+
+// after a wake every redial takes a turn, with or without a kick: the
+// sockets the sleep killed find out at once or one ping at a time, and
+// either way they would redial together. one turn per wake, and one more
+// once it got through, as a socket that dies again after that does. ours
+// before the public relays, the first of ours at once
+func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wakeTurns) bool {
+	now := autoNow()
+	first := t.kick == nil && t.fresh.holds(kc, now)
+	had := t.wake == n
+	t.kick, t.wake, t.free = kc, n, first
+	// a retry after a failed turn goes at its own backoff's pace
+	if (had && !t.up) || first || isFirstTag(t.tag) {
+		return ctx.Err() == nil
+	}
+	t.up = false
+	up := t.readyChan()
+	if isClosed(up) {
+		return ctx.Err() == nil
+	}
+	d := t.sharedDelay(kc, n, now, func() time.Duration {
+		if t.own && takeWakeFirst(n) {
+			return 0
+		}
+		return w.turn(t.own, now)
+	})
+	if d <= 0 {
+		return ctx.Err() == nil
+	}
+	tm := time.NewTimer(d)
+	defer tm.Stop()
+	select {
+	case <-tm.C:
+		return true
+	case <-up:
+		return ctx.Err() == nil
 	case <-ctx.Done():
 		return false
 	}
@@ -176,6 +344,14 @@ func (t *subTurn) take(ctx context.Context) bool {
 
 // the kick was answered on the live socket: no turn for it
 func (t *subTurn) skip() { t.kick = kickChan() }
+
+// a kick's probe went out at the socket's turn: in a wake that was its
+// turn, and a redial after it failing goes at once
+func (t *subTurn) probed(ok bool) {
+	if n, _, waking := wakeNow(); waking {
+		t.wake, t.up = n, ok
+	}
+}
 
 // counted as a catch-up under way, until done
 func (t *subTurn) hold() {

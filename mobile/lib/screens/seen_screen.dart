@@ -13,6 +13,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import 'dev_about_sheet.dart' show devChatOffered;
+import '../wide/read_width.dart' show DeskPage;
 
 class SeenScreen extends StatefulWidget {
   const SeenScreen({super.key});
@@ -25,8 +26,7 @@ class _SeenScreenState extends State<SeenScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final mode = appState.sendMode;
-    final col = mode == 'balanced' ? 1 : (mode == 'fast' ? 2 : 0);
+    final col = appState.sendMode == 'private' ? 0 : 1;
     final cols = _cellWidth(context, _rows);
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -39,45 +39,47 @@ class _SeenScreenState extends State<SeenScreen> {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          4,
-          20,
-          44 + MediaQuery.paddingOf(context).bottom,
+      body: DeskPage(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            4,
+            20,
+            44 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: staggerAll([
+            Text(
+              l10n.seenEveryMessengerClaimsPrivacy,
+              style: HaloType.mono(size: 12, color: HaloColors.text),
+            ),
+            const SizedBox(height: 22),
+            _Header(active: col, cols: cols),
+            for (final (i, row) in _rows.indexed)
+              _RowTile(
+                row: row,
+                active: col,
+                cols: cols,
+                open: _open == i,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _open = _open == i ? null : i);
+                },
+              ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: HaloColors.line),
+              ),
+              child: Text(
+                l10n.seenHonestAboutTheLastShown,
+                style: HaloType.mono(size: 11.5, color: HaloColors.text),
+              ),
+            ),
+          ]),
         ),
-        children: staggerAll([
-          Text(
-            l10n.seenEveryMessengerClaimsPrivacy,
-            style: HaloType.mono(size: 12, color: HaloColors.text2),
-          ),
-          const SizedBox(height: 22),
-          _Header(active: col, cols: cols),
-          for (final (i, row) in _rows.indexed)
-            _RowTile(
-              row: row,
-              active: col,
-              cols: cols,
-              open: _open == i,
-              onTap: () {
-                HapticFeedback.selectionClick();
-                setState(() => _open = _open == i ? null : i);
-              },
-            ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: HaloColors.surface2,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: HaloColors.line),
-            ),
-            child: Text(
-              l10n.seenHonestAboutTheLast,
-              style: HaloType.mono(size: 11.5, color: HaloColors.text2),
-            ),
-          ),
-        ]),
       ),
     );
   }
@@ -93,7 +95,7 @@ class _Cell {
 
 class _Row {
   final String what;
-  final List<_Cell> cells; // onion, relay, fast
+  final List<_Cell> cells; // private, fast
   final String why;
   const _Row(this.what, this.cells, this.why);
 }
@@ -104,48 +106,39 @@ _Cell get _onDevice => _Cell(l10n.seenOnDevice, _Tone.good);
 _Cell get _yours => _Cell(l10n.seenYours, _Tone.bad);
 _Cell get _unaudited => _Cell(l10n.seenUnaudited, _Tone.bad);
 _Cell get _ifYouWrite => _Cell(l10n.seenDevChatCell, _Tone.warn);
+// on fast one ip reads a person's mailboxes, so our servers could tie them
+_Cell get _serversCould => _Cell(l10n.seenOurServersCould, _Tone.warn);
 
 List<_Row> get _rows => [
   _Row(l10n.seenWhoYouTalkTo, [
     _hidden,
-    _hidden,
-    _hidden,
+    _serversCould,
   ], l10n.seenEachConversationGetsIts),
-  _Row(l10n.seenWhatYouSay, [
-    _hidden,
-    _hidden,
-    _hidden,
-  ], l10n.seenEndToEndEncrypted),
+  _Row(l10n.seenWhatYouSay, [_hidden, _hidden], l10n.seenEndToEndEncrypted),
   _Row(l10n.seenYourIpAddress, [
     _hidden,
-    _Cell(l10n.seenOurRelay, _Tone.warn),
-    _Cell(l10n.seenEveryRelay, _Tone.bad),
-  ], l10n.seenOnOnionEverythingLeaves),
+    _Cell(l10n.seenOurServers, _Tone.warn),
+  ], l10n.seenIpWhy),
   _Row(l10n.seenYourContactGraph, [
     _never,
-    _never,
-    _never,
+    _serversCould,
   ], l10n.seenKryfoDoesNotScan),
   _Row(l10n.seenIntroductions, [
-    _Cell(l10n.seenIntroducer, _Tone.good),
     _Cell(l10n.seenIntroducer, _Tone.good),
     _Cell(l10n.seenIntroducer, _Tone.good),
   ], l10n.seenWhenAContactIntroduces),
   _Row(l10n.seenTheScamShield, [
     _onDevice,
     _onDevice,
-    _onDevice,
-  ], l10n.seenScamShieldRequestsOnly),
+  ], l10n.seenScamShieldRequestsOnlyShown),
   _Row(l10n.seenBurnerRooms, [
-    _Cell(l10n.seenRoomKeys, _Tone.good),
     _Cell(l10n.seenRoomKeys, _Tone.good),
     _Cell(l10n.seenRoomKeys, _Tone.good),
   ], l10n.seenYouJoinARoom),
   _Row(l10n.seenLinkPreviews, [
     _Cell(l10n.seenOverTor, _Tone.good),
     _Cell(l10n.seenOverTor, _Tone.good),
-    _Cell(l10n.seenOverTor, _Tone.good),
-  ], l10n.seenAPreviewIsFetched),
+  ], l10n.seenAPreviewIsFetchedShown),
   // the chat with the developer, wherever the app offers it
   if (devChatOffered)
     _Row(l10n.seenDevChat, [
@@ -153,13 +146,11 @@ List<_Row> get _rows => [
       _ifYouWrite,
       _ifYouWrite,
     ], l10n.seenDevChatLine),
-  _Row(l10n.seenASeizedUnlockedPhone, [
+  _Row(l10n.seenASeizedUnlockedPhoneShown, [
     _yours,
     _yours,
-    _yours,
-  ], l10n.seenIfSomeoneHoldsYour),
+  ], l10n.seenIfSomeoneHoldsYourShown),
   _Row(l10n.seenTheCryptoItself, [
-    _unaudited,
     _unaudited,
     _unaudited,
   ], l10n.seenTheRatchetAndStorage),
@@ -170,6 +161,9 @@ List<_Row> get _rows => [
 // leave the row's words too little room, the row stacks: its words above,
 // the three columns sharing the whole width below
 const _cellMin = 66.0;
+
+// private and fast
+const _routes = 2;
 
 // the columns' width, whether the rows stack, and how much smaller their
 // words are drawn when even a third of the width is short of the longest
@@ -199,7 +193,7 @@ _Cols _cellWidth(BuildContext context, List<_Row> rows) {
   }
 
   var most = 0.0;
-  for (final h in [l10n.seenOnion, l10n.seenRelay, l10n.seenFast]) {
+  for (final h in [l10n.modesPrivate, l10n.seenFast]) {
     most = max(most, widest(h, _headStyle()));
   }
   for (final r in rows) {
@@ -209,18 +203,18 @@ _Cols _cellWidth(BuildContext context, List<_Row> rows) {
   }
   final full = MediaQuery.sizeOf(context).width - 40;
   // beside the row's own words, which keep a third of the width at least
-  final room = full * 2 / 3 / 3;
+  final room = full * 2 / 3 / _routes;
   final need = max(_cellMin, most + 8);
   if (need <= room) return (w: need, stacked: false, shrink: 1.0);
-  final third = full / 3;
-  final shrink = need <= third ? 1.0 : max(0.7, (third - 8) / most);
-  return (w: third, stacked: true, shrink: shrink);
+  final share = full / _routes;
+  final shrink = need <= share ? 1.0 : max(0.7, (share - 8) / most);
+  return (w: share, stacked: true, shrink: shrink);
 }
 
 Color _tint(_Tone t) => switch (t) {
-  _Tone.good => HaloColors.green,
+  _Tone.good => HaloColors.greenText,
   _Tone.warn => HaloColors.warnText,
-  _Tone.bad => HaloColors.rose,
+  _Tone.bad => HaloColors.roseText,
 };
 
 // the column of the route in use, a soft amber band down the table, so
@@ -234,7 +228,7 @@ Widget _band(
 }) => PositionedDirectional(
   top: -above,
   bottom: -below,
-  end: (2 - active) * w,
+  end: (_routes - 1 - active) * w,
   width: w,
   child: DecoratedBox(
     decoration: BoxDecoration(
@@ -251,7 +245,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = cols.w;
-    final names = [l10n.seenOnion, l10n.seenRelay, l10n.seenFast];
+    final names = [l10n.modesPrivate, l10n.seenFast];
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -265,7 +259,7 @@ class _Header extends StatelessWidget {
           child: Row(
             children: [
               if (!cols.stacked) const Expanded(child: SizedBox()),
-              for (var i = 0; i < 3; i++)
+              for (var i = 0; i < _routes; i++)
                 SizedBox(
                   width: w,
                   child: Column(
@@ -276,7 +270,7 @@ class _Header extends StatelessWidget {
                         style: _headStyle(cols.shrink).copyWith(
                           color: i == active
                               ? HaloColors.amberText
-                              : HaloColors.text2,
+                              : HaloColors.text,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -323,7 +317,7 @@ class _RowTile extends StatelessWidget {
       style: HaloType.sans(size: 13.5, color: HaloColors.text),
     );
     final cells = [
-      for (var i = 0; i < 3; i++)
+      for (var i = 0; i < _routes; i++)
         SizedBox(
           width: w,
           child: Text(
@@ -392,7 +386,7 @@ class _RowTile extends StatelessWidget {
                         row.why,
                         style: HaloType.sans(
                           size: 12.5,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.45,
                         ),
                       ),

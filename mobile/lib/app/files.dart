@@ -40,9 +40,15 @@ Future<void> sweepCaptures() async {
         await shredFile(f.path);
       }
       // a backup copy that never got shredded, say the app died mid-save
-      if (n.contains('/kryfo-backup-')) await shredFile(f.path);
+      if (n.contains('/kryfo-backup-') ||
+          (n.contains('/backup_') && n.endsWith('.bin'))) {
+        await shredFile(f.path);
+      }
     }
     await sweepShareCopies(tmp);
+    // clean copies made for a save the app died during
+    final saves = Directory('${tmp.path}/$kSaveCopies');
+    if (await saves.exists()) await shredTree(saves.path);
     // the gallery picker's whole copies, in folders of their own
     await sweepPickerLeftovers(tmp);
     await sweepFilePickerCopies(tmp);
@@ -64,14 +70,31 @@ Future<void> sweepShareCopies(Directory cache, {DateTime? now}) async {
   }
 }
 
-String _safeLeaf(String s) => s.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-
 final _leafRandom = Random.secure();
 
 // a wallpaper's name: random, never its chat's
 String _freshWallLeaf() {
   final b = [for (var i = 0; i < 16; i++) _leafRandom.nextInt(256)];
   return 'wp_${b.map((x) => x.toRadixString(16).padLeft(2, '0')).join()}.jpg';
+}
+
+/// the media files of [d] no row names, for the shred. the decoy's, with
+/// a vault of its own on disk, waits for that vault's open ([vaultOpen]),
+/// as its wallpapers do: a hide cut short drops the rows before it moves
+/// the files, so a file there may be named by the shut vault's rows alone
+@visibleForTesting
+Future<List<File>> sweepableMedia(
+  HaloDb d, {
+  required DateTime before,
+  bool vaultOpen = false,
+}) async {
+  if (restoreRunning || backupRunning) return const [];
+  if (d.container == HaloContainer.decoy &&
+      !vaultOpen &&
+      await HaloContainer.decoyVault.onDisk()) {
+    return const [];
+  }
+  return d.unnamedMedia(before: before);
 }
 
 /// a container's wallpapers put right while it is open and settled: names
@@ -103,15 +126,22 @@ String _freshLeaf() {
   return 'in_${b.map((x) => x.toRadixString(16).padLeft(2, '0')).join()}';
 }
 
-// where a received file lands: media/in_<random>_<name>, in the folder of
-// the container the message goes to. the sender's name stays at the end so
-// the file keeps its type
+// where a received file lands: media/in_<random>.<type>, in the folder of
+// the container the message goes to. only its type stays: the folder would
+// list every name people sent, and the name lives in the database
 Future<File> receivedFileFor(
   String name, [
   HaloContainer c = HaloContainer.everyday,
 ]) async {
   final mediaDir = await c.mediaDir();
-  return File('${mediaDir.path}/${_freshLeaf()}_${_safeLeaf(name)}');
+  return File('${mediaDir.path}/${_freshLeaf()}${typeLeaf(name)}');
+}
+
+/// a name's type for a file on disk: a dot and up to eight letters or
+/// digits, or nothing
+String typeLeaf(String name) {
+  final m = RegExp(r'\.([A-Za-z0-9]{1,8})$').firstMatch(name);
+  return m == null ? '' : '.${m.group(1)!.toLowerCase()}';
 }
 
 // where a received picture lands: media/in_<random>.jpg

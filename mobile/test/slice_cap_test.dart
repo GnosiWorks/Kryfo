@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// slices from someone not accepted: how they count, how long they are kept
-// and the ceiling. arrivals run on stand-ins, the rules on rows in maps
+// slices: what a stranger's do, how long they are kept and the ceiling.
+// arrivals run on stand-ins, the rules on rows in maps
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,7 +8,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateMessages,
+        AppStateReceive;
 import 'package:kryfo/media_resend.dart'
     show
         kMaxSlices,
@@ -112,63 +118,14 @@ void main() {
   tearDown(() => docs.deleteSync(recursive: true));
 
   group('a stranger', () {
-    test('keeps no more files in flight than the cap', () async {
+    // their files wait on the shelf for the accept (request_media_held_test):
+    // none is in flight here, and their words keep their two
+    test('has no file in flight, however many come', () async {
       final w = await _World.make();
-      for (var m = 0; m < 20; m++) {
+      for (var m = 0; m < 5; m++) {
         await w.slice(_s, 'big$m', total: kMaxFileSlices);
       }
-      expect(w.live.chunks.keys, ['big0', 'big1']);
-    });
-
-    test('a photo is held to the file cap, voice flag or not', () async {
-      final w = await _World.make();
-      await w.slice(_s, 'pic', total: kMaxFileSlices + 1, image: true);
-      await w.slice(
-        _s,
-        'vpic',
-        total: kMaxFileSlices + 1,
-        image: true,
-        voice: true,
-      );
-      expect(w.live.chunks.keys, isEmpty);
-      await w.slice(_s, 'ok', total: kMaxFileSlices, image: true);
-      expect(w.live.chunks.keys, ['ok']);
-    });
-
-    test('a voice note longer than the mic records is not kept', () async {
-      final w = await _World.make();
-      await w.slice(_s, 'long', total: kMaxVoiceSlices + 1, voice: true);
-      await w.slice(_s, 'note', total: kMaxVoiceSlices, voice: true);
-      expect(w.live.chunks.keys, ['note']);
-      // the mic's longest take fits under the cap
-      final bytes = 44 + 16000 * 2 * kVoiceMax.inSeconds;
-      expect((bytes + 12287) ~/ 12288, lessThanOrEqualTo(kMaxVoiceSlices));
-    });
-
-    test(
-      'a file saying more slices than any kryfo sends is not kept',
-      () async {
-        final w = await _World.make();
-        await w.slice(_s, 'huge', total: kMaxFileSlices + 1);
-        await w.slice(_s, 'fits', total: kMaxFileSlices);
-        expect(w.live.chunks.keys, ['fits']);
-      },
-    );
-
-    test('still sends the rest of a file in flight', () async {
-      final w = await _World.make();
-      await w.slice(_s, 'f1');
-      await w.slice(_s, 'f2');
-      await w.slice(_s, 'f1', index: 1);
-      expect(w.live.chunks['f1']!.keys, [0, 1]);
-    });
-
-    test('with two files in flight, a message is held back', () async {
-      final w = await _World.make();
-      await w.slice(_s, 'f1');
-      await w.slice(_s, 'f2');
-      await w.text(_s, 't1');
-      expect(w.live.msg('t1'), isNull);
+      expect(w.live.chunks, isEmpty);
       expect(w.live.held, isNotEmpty);
     });
 
@@ -186,14 +143,53 @@ void main() {
       expect(w.live.held, isEmpty);
     });
 
-    test('with one message kept, one file comes in and no second', () async {
+    test('with one message kept, their files take none of the two', () async {
       final w = await _World.make();
       await w.text(_s, 't1');
       await w.slice(_s, 'f1');
       await w.slice(_s, 'f2');
+      await w.text(_s, 't2');
       expect(w.live.msg('t1'), isNotNull);
-      expect(w.live.chunks.keys, ['f1']);
+      expect(w.live.msg('t2'), isNotNull);
+      expect(w.live.chunks, isEmpty);
     });
+  });
+
+  group('any sender', () {
+    test('a photo is held to the file cap, voice flag or not', () async {
+      final w = await _World.make();
+      await w.slice(_c, 'pic', total: kMaxFileSlices + 1, image: true);
+      await w.slice(
+        _c,
+        'vpic',
+        total: kMaxFileSlices + 1,
+        image: true,
+        voice: true,
+      );
+      expect(w.live.chunks.keys, isEmpty);
+      await w.slice(_c, 'ok', total: kMaxFileSlices, image: true);
+      expect(w.live.chunks.keys, ['ok']);
+    });
+
+    test('a voice note longer than the mic records is not kept', () async {
+      final w = await _World.make();
+      await w.slice(_c, 'long', total: kMaxVoiceSlices + 1, voice: true);
+      await w.slice(_c, 'note', total: kMaxVoiceSlices, voice: true);
+      expect(w.live.chunks.keys, ['note']);
+      // the mic's longest take fits under the cap
+      final bytes = 44 + 16000 * 2 * kVoiceMax.inSeconds;
+      expect((bytes + 12287) ~/ 12288, lessThanOrEqualTo(kMaxVoiceSlices));
+    });
+
+    test(
+      'a file saying more slices than any kryfo sends is not kept',
+      () async {
+        final w = await _World.make();
+        await w.slice(_c, 'huge', total: kMaxFileSlices + 1);
+        await w.slice(_c, 'fits', total: kMaxFileSlices);
+        expect(w.live.chunks.keys, ['fits']);
+      },
+    );
   });
 
   test('a contact has no such cap', () async {
@@ -242,7 +238,7 @@ void main() {
       final w = await _World.make();
       w.live.unfinishedBytes = 2 * one;
       await w.slice(_c, 'a');
-      await w.slice(_s, 'b');
+      await w.slice(_v, 'b');
       await w.slice(_v, 'c', group: _g);
       expect(w.live.chunks.keys, ['b', 'c']);
     });

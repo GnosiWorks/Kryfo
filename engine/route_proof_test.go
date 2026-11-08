@@ -28,7 +28,7 @@ func TestRefusedPublishIsNotADeadRoute(t *testing.T) {
 	useStandIns(t, modePrivate, socks, a, b, c)
 	resetRoute(t, "publishing", 100)
 	routeNoteOK()
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestDuplicateAnswerIsNoFailure(t *testing.T) {
 	useStandIns(t, modePrivate, socks, a)
 	resetRoute(t, "publishing", 100)
 	routeNoteOK()
-	me, _ := myXid()
+	me, _ := identityOf(mainIdent)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	if got := nostrPublishMulti(ctx, laneEveryday, wrapTo(t, me, newXid(t).pub, "hi")); got != 1 {
@@ -103,11 +103,14 @@ func TestLiveSocketAnswerClearsFailures(t *testing.T) {
 	resetRoute(t, "publishing", 100)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), mustRcv(t, peer))
 	waitFor(t, "the subscription", 10*time.Second, func() bool {
 		cs := ours.snapshot()
 		return len(cs) == 1 && len(cs[0].reqs) > 0
@@ -346,7 +349,7 @@ func TestUpgradeRefusalIsNotADeadRoute(t *testing.T) {
 	peer := newXid(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), mustRcv(t, peer))
 	kickUntil(t, "both relays refused twice", func() bool {
 		relayClearBenches()
 		return d1.Load() >= 2 && d2.Load() >= 2

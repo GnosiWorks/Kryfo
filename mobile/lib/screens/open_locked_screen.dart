@@ -2,10 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../pin_shield.dart';
 import '../seen_timers.dart';
 import '../theme.dart';
 import '../tools/age_ffi.dart';
 import '../tools/lock_words.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../desktop/desktop_save.dart' show deskSaver;
+import '../lock_guard.dart' show LockDropped;
+import '../lock_state.dart';
+import '../tools/desk_tools.dart' show DeskToolLock;
 import '../tools/tools_bridge.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/stroke_icon.dart';
@@ -35,7 +41,8 @@ class OpenLockedScreen extends StatefulWidget {
   State<OpenLockedScreen> createState() => _OpenLockedScreenState();
 }
 
-class _OpenLockedScreenState extends State<OpenLockedScreen> {
+class _OpenLockedScreenState extends State<OpenLockedScreen>
+    with PinShield, DeskToolLock {
   final _pw = TextEditingController();
   late PickedFile _file = widget.file;
   // the progress, read while the file is written and the page is seen:
@@ -109,6 +116,44 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
     });
   }
 
+  // a computer: the password checked first, then the save dialog, then the
+  // engine writes the plain file only at `<picked>.part`, moved into place
+  // once whole. a failed or stopped open leaves nothing there
+  Future<void> _openDesk(String pass) async {
+    final bad = await ageOpenBeginPath(_file.uri, pass);
+    if (bad != null) return _fail(bad);
+    if (!mounted) {
+      ageOpenDrop();
+      return;
+    }
+    final name = openedName(_file.name);
+    String? to;
+    try {
+      to = await lockState.hold(() => deskSaver.pickTo(name));
+    } on LockDropped {
+      to = null;
+    }
+    if (to == null || !mounted || lockState.locked) {
+      ageOpenDrop();
+      return _fail(AgeError.cancelled);
+    }
+    final job = _job = AgeJob();
+    setState(() => _stage = _Stage.writing);
+    _poll.poke();
+    AgeError? err;
+    final how = await deskSaver.writeTo(to, (part) async {
+      err = await ageOpenFinishPath(part, job);
+      return err == null;
+    });
+    if (how != 'saved') return _fail(err ?? AgeError.io);
+    if (!mounted) return;
+    setState(() {
+      _stage = _Stage.done;
+      _savedAs = to!.split(RegExp(r'[\\/]')).last;
+      _pw.clear();
+    });
+  }
+
   Future<void> _open() async {
     if (_stage != _Stage.form || _pw.text.isEmpty) return;
     FocusScope.of(context).unfocus();
@@ -118,6 +163,7 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
       _error = null;
       _done = 0;
     });
+    if (onDesktop) return _openDesk(pass);
     final inFd = await ToolsBridge.instance.openForRead(_file.uri);
     if (inFd < 0) return _fail(AgeError.io);
     final bad = await ageOpenBegin(inFd, pass);
@@ -255,7 +301,7 @@ class _OpenLockedScreenState extends State<OpenLockedScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  l10n.openLockedItOpensOnThis,
+                  l10n.openLockedItOpensOnThisShown,
                   style: HaloType.serif(
                     size: 22,
                     weight: FontWeight.w300,

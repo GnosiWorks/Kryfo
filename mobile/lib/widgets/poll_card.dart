@@ -259,7 +259,7 @@ class _PollCardState extends State<PollCard> {
                       widget.poll.multi
                           ? l10n.pollPickSeveral
                           : l10n.pollPickOne,
-                      style: HaloType.sans(size: 11.5, color: HaloColors.text2),
+                      style: HaloType.sans(size: 11.5, color: HaloColors.text),
                     ),
                   )
                 : const SizedBox(width: double.infinity),
@@ -307,7 +307,8 @@ class _PollCardState extends State<PollCard> {
                       },
                       label: l10n.pollVote,
                       child: Container(
-                        height: 38,
+                        constraints: const BoxConstraints(minHeight: 38),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: HaloColors.amber,
@@ -354,7 +355,7 @@ class _PollCardState extends State<PollCard> {
                               size: 10,
                               color: voters > 0
                                   ? HaloColors.amberText
-                                  : HaloColors.text2,
+                                  : HaloColors.text,
                               letter: 0.3,
                             ),
                           ),
@@ -438,7 +439,7 @@ class _Link extends StatelessWidget {
             style: HaloType.sans(
               size: 12,
               weight: strong ? FontWeight.w600 : FontWeight.w400,
-              color: strong ? HaloColors.amberText : HaloColors.text2,
+              color: strong ? HaloColors.amberText : HaloColors.text,
             ),
           ),
         ),
@@ -577,7 +578,7 @@ class _ResultRow extends StatelessWidget {
                       size: 11,
                       color: mine || leader
                           ? HaloColors.amberText
-                          : HaloColors.text2,
+                          : HaloColors.text,
                       letter: 0.2,
                     ),
                   ),
@@ -731,7 +732,7 @@ class _VotersSheet extends StatelessWidget {
               textAlign: startOf(context),
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.4,
               ),
             ),
@@ -786,7 +787,7 @@ class _VotersSheet extends StatelessWidget {
                           l10n.pollNobody,
                           style: HaloType.sans(
                             size: 12.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         )
                       else

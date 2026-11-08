@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:ed25519_edwards/ed25519_edwards.dart' as ed;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'main.dart' show engine, sessionQuiet;
 
@@ -35,9 +36,9 @@ class BadgeInvoice {
   });
 }
 
-// why no invoice came: tor did not get through in time, or the service
-// answered and said no
-enum InvoiceFailure { slow, service }
+// why no invoice came: tor did not get through in time, the service is
+// holding new invoices for now, or it answered and said no
+enum InvoiceFailure { slow, busy, service }
 
 class InvoiceAsk {
   final BadgeInvoice? invoice;
@@ -61,26 +62,36 @@ class BadgeReceipt {
 /// then. a first ask that does not get through is made once more, quietly:
 /// a cold onion circuit often finishes building just after the first ask
 /// gave up. a quiet session asks nothing and reads as the service saying no.
-/// [wanted] false: the person walked away, and no second ask is made
-Future<InvoiceAsk> createInvoice(String tier, {bool Function()? wanted}) async {
+/// [wanted] false: the person walked away, and no second ask is made.
+/// [again]: this phone's open invoice for the tier, handed back while it
+/// can still be paid, so coming back costs no new address. only its id goes
+/// along, the one every receipt check already sends
+Future<InvoiceAsk> createInvoice(
+  String tier, {
+  bool Function()? wanted,
+  String? again,
+}) async {
   if (!kBadgeTiersShown || sessionQuiet) {
     return const InvoiceAsk.failed(InvoiceFailure.service);
   }
   final took = Stopwatch()..start();
-  final first = await _askInvoice(tier);
+  final first = await _askInvoice(tier, again);
   // past a minute the person has waited enough: the address is there
   if (!first.again ||
       took.elapsed > const Duration(minutes: 1) ||
       wanted?.call() == false) {
     return first.ask;
   }
-  return (await _askInvoice(tier)).ask;
+  return (await _askInvoice(tier, again)).ask;
 }
 
-Future<({InvoiceAsk ask, bool again})> _askInvoice(String tier) async {
+Future<({InvoiceAsk ask, bool again})> _askInvoice(
+  String tier,
+  String? again,
+) async {
   final raw = await engine.torPost(
     '$kBadgeOnion/invoice',
-    jsonEncode({'tier': tier}),
+    jsonEncode({'tier': tier, 'again': ?again}),
   );
   if (raw.startsWith('error:')) {
     final status = RegExp(r'^error: status (\d+)').firstMatch(raw);
@@ -91,7 +102,9 @@ Future<({InvoiceAsk ask, bool again})> _askInvoice(String tier) async {
     // or a busy one is not
     final code = int.parse(status.group(1)!);
     return (
-      ask: const InvoiceAsk.failed(InvoiceFailure.service),
+      ask: InvoiceAsk.failed(
+        code == 429 ? InvoiceFailure.busy : InvoiceFailure.service,
+      ),
       again: code >= 500,
     );
   }
@@ -137,6 +150,12 @@ Future<void> warmBadgeService() async {
   }
 }
 
+String _pinnedKey = kBadgePubKeyB64;
+
+// a key the tests hold the private half of; null puts the pinned one back
+@visibleForTesting
+void useBadgeKeyForTest(String? b64) => _pinnedKey = b64 ?? kBadgePubKeyB64;
+
 /// paid only when the signature verifies against the pinned key; an
 /// unsigned or badly signed "paid" is an error
 Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
@@ -152,13 +171,19 @@ Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
         if (payload == null || sig == null) {
           return const BadgeReceipt(ReceiptState.error);
         }
+        // the id and tier come from the signed words, never from the
+        // answer around them, and must be the invoice that was asked about
+        final signed = signedReceipt(payload);
+        if (signed == null || signed.id != invoiceId) {
+          return const BadgeReceipt(ReceiptState.error);
+        }
         if (!await verifyReceipt(payload, sig)) {
           return const BadgeReceipt(ReceiptState.error);
         }
         return BadgeReceipt(
           ReceiptState.paid,
-          id: j['id'] as String?,
-          tier: j['tier'] as String?,
+          id: signed.id,
+          tier: signed.tier,
           payload: payload,
           sig: sig,
         );
@@ -172,11 +197,22 @@ Future<BadgeReceipt> fetchReceipt(String invoiceId) async {
   }
 }
 
-/// the payload format is frozen (`kryfo-badge|v1|<id>|<tier>`) so old
+const _receiptTiers = {'supporter', 'patron', 'guardian'};
+
+/// the invoice id and tier a receipt's payload names, or null when it is
+/// not one: `halo-badge|v1|<id>|<tier>`
+({String id, String tier})? signedReceipt(String payload) {
+  final p = payload.split('|');
+  if (p.length != 4 || p[0] != 'halo-badge' || p[1] != 'v1') return null;
+  if (p[2].isEmpty || !_receiptTiers.contains(p[3])) return null;
+  return (id: p[2], tier: p[3]);
+}
+
+/// the payload format is frozen (`halo-badge|v1|<id>|<tier>`) so old
 /// receipts keep verifying
 Future<bool> verifyReceipt(String payload, String sigB64) async {
   try {
-    final pub = ed.PublicKey(base64Url.decode(_pad(kBadgePubKeyB64)));
+    final pub = ed.PublicKey(base64Url.decode(_pad(_pinnedKey)));
     final sig = base64Url.decode(_pad(sigB64));
     return ed.verify(pub, Uint8List.fromList(utf8.encode(payload)), sig);
   } catch (_) {

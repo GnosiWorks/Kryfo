@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../back_on_top.dart' show backToPage;
 import '../lock_guard.dart' show lockGuard;
-import '../main.dart' show session, appState;
+import '../main.dart' show session, appState, AppStateContacts, AppStateRefresh;
 import '../theme.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
@@ -27,6 +27,8 @@ import 'chat_screen.dart';
 import '../scam_shield.dart' show ShieldFlag, requestTitle;
 import '../widgets/motion.dart' show haloRoute;
 import '../l10n/l10n.dart';
+import '../wide/read_width.dart' show DeskPage;
+import '../desktop/desktop_trace.dart' show TraceSteps;
 
 // the requests screens open in the stack: a request's tap goes back to one
 // rather than stacking another
@@ -149,17 +151,26 @@ class _RequestsScreenState extends State<RequestsScreen> {
       final id = r['halo_id'] as String;
       final flag = ShieldFlag.fromRow(await session.shownShieldFor(id));
       if (flag != null) flags[id] = flag;
+      // an introduced row names the friends who vouched. only vouchers we
+      // still hold as contacts come back, so a deleted one just drops off.
+      final vs = await session.vouchesFor(id);
       final msgs = await session.messagesFor(id);
       if (msgs.isNotEmpty) {
         final last = msgs.last;
         final text = (last['plaintext'] as String?) ?? '';
-        previews[id] = text.isEmpty ? l10n.requestsSentAnAttachment : text;
+        // a stranger's file, its caption with it, waits for the accept
+        final file =
+            last['media_path'] != null ||
+            last['file_path'] != null ||
+            last['file_name'] != null;
+        previews[id] = file && vs.isEmpty
+            ? l10n.requestReceiverMediaLater
+            : text.isEmpty
+            ? l10n.requestsSentAnAttachment
+            : text;
       } else {
         previews[id] = l10n.requestsWantsToConnect;
       }
-      // an introduced row names the friends who vouched. only vouchers we
-      // still hold as contacts come back, so a deleted one just drops off.
-      final vs = await session.vouchesFor(id);
       if (vs.isNotEmpty) {
         final first = vs.first;
         introducers[id] = _Introducer(
@@ -217,11 +228,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
     final row = _rows.rows.where((r) => r['halo_id'] == id).firstOrNull;
     // the card answers once more only after the list read again, so a tap
     // on a card still shown answers nothing twice
+    final steps = TraceSteps('accept tap');
     try {
       await session.acceptRequest(id);
+      steps.step('row written');
       await appState.afterAccept(id);
+      steps.step('accepted');
       if (mounted) showHaloToast(context, l10n.requestsAccepted);
       await _load();
+      steps.step('requests read');
     } finally {
       _answering.remove(id);
     }
@@ -229,6 +244,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
     // not under the lock, nor once they went somewhere else
     if (row == null || !mounted || lockGuard.isLocked()) return;
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    steps.step('chat asked');
     if (_pending == 0) {
       unawaited(Navigator.of(context).pushReplacement(requestChatRoute(row)));
       return;
@@ -316,32 +332,39 @@ class _RequestsScreenState extends State<RequestsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _rows.built());
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            PageBar(title: l10n.requestsRequests, controller: _scroll),
-            Expanded(
-              child: _loading
-                  ? const SizedBox.shrink()
-                  // the last card folds away, then the empty page fades in
-                  : FadeSwap(
-                      child: rows.isEmpty
-                          ? KeyedSubtree(
-                              key: const ValueKey('none'),
-                              child: _empty(),
-                            )
-                          : ListView(
-                              key: const ValueKey('cards'),
-                              controller: _scroll,
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-                              children: [
-                                for (final (i, row) in rows.indexed)
-                                  _card(row, i),
-                              ],
-                            ),
-                    ),
-            ),
-          ],
+      body: DeskPage(
+        child: SafeArea(
+          child: Column(
+            children: [
+              PageBar(title: l10n.requestsRequests, controller: _scroll),
+              Expanded(
+                child: _loading
+                    ? const SizedBox.shrink()
+                    // the last card folds away, then the empty page fades in
+                    : FadeSwap(
+                        child: rows.isEmpty
+                            ? KeyedSubtree(
+                                key: const ValueKey('none'),
+                                child: _empty(),
+                              )
+                            : ListView(
+                                key: const ValueKey('cards'),
+                                controller: _scroll,
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  8,
+                                  16,
+                                  14,
+                                ),
+                                children: [
+                                  for (final (i, row) in rows.indexed)
+                                    _card(row, i),
+                                ],
+                              ),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -384,7 +407,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.55,
               ),
             ),
@@ -495,7 +518,7 @@ class _RequestCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         preview,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                        style: HaloType.sans(size: 13, color: HaloColors.text),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -527,7 +550,7 @@ class _RequestCard extends StatelessWidget {
                 _Answer(label: l10n.requestsDecline, onTap: onDecline),
                 _Answer(
                   label: l10n.commonBlock,
-                  color: HaloColors.rose,
+                  color: HaloColors.roseText,
                   onTap: onBlock,
                 ),
               ],

@@ -9,11 +9,12 @@ import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../dlog.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../jpeg_strip.dart';
+import '../image_strip.dart' show photoToSendOffUi;
 import '../open_file.dart' show forgetVideoInfo;
 import '../main.dart' show shredFile, exportToPictures;
 import '../picked.dart' show shrinkPhoto;
@@ -34,6 +35,7 @@ import '../lock_guard.dart' show lockGuard;
 import '../orientation.dart';
 import '../file_kind.dart' show fileFits;
 import 'scan_screen.dart' show cameraDenied;
+import '../save_names.dart' show cameraName, savesPlain;
 
 class CaptureResult {
   final Uint8List? photo; // stripped jpeg bytes
@@ -84,7 +86,9 @@ int _previewTurns(DeviceOrientation screen) {
 }
 
 class CameraScreen extends StatefulWidget {
-  const CameraScreen({super.key});
+  // a profile photo: no video tab
+  final bool photoOnly;
+  const CameraScreen({super.key, this.photoOnly = false});
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
@@ -194,7 +198,7 @@ class _CameraScreenState extends State<CameraScreen>
       _cams = await availableCameras();
       if (_cams.isEmpty) {
         setState(() {
-          _error = l10n.cameraNoCameraOnThis;
+          _error = onDesktop ? l10n.desktopNoCamera : l10n.cameraNoCameraOnThis;
           _denied = false;
           _micOff = false;
         });
@@ -349,14 +353,11 @@ class _CameraScreenState extends State<CameraScreen>
       // after it is the belt to that brace. same size and quality as a
       // gallery pick.
       final small = await shrinkPhoto(raw);
-      final stripped = stripJpegMetadata(small);
-      final clean = stripped;
+      final clean = await photoToSendOffUi(small);
       if (!mounted) return;
       // a file the stripper could not walk, or one that still reads as
-      // tagged, is refused rather than passed on
-      setState(
-        () => _shot = clean == null || jpegHasExif(clean) ? null : clean,
-      );
+      // anything, is refused rather than passed on
+      setState(() => _shot = clean);
       if (_shot == null) {
         showHaloToast(context, l10n.cameraCouldNotStripThat);
       }
@@ -501,14 +502,19 @@ class _CameraScreenState extends State<CameraScreen>
 
   Future<void> _keepCopy() async {
     HapticFeedback.selectionClick();
-    final ts = DateTime.now().millisecondsSinceEpoch;
+    // under a plain icon, the camera's own names in the camera's folder
+    final plain = savesPlain();
     bool ok;
     if (_shot != null) {
-      ok = await exportToPictures(_shot!, 'kryfo_$ts.jpg', 'image/jpeg');
+      ok = await exportToPictures(
+        _shot!,
+        cameraName(video: false, plain: plain),
+        'image/jpeg',
+      );
     } else if (_clip != null) {
       ok = await exportToPictures(
         await File(_clip!).readAsBytes(),
-        'kryfo_$ts.mp4',
+        cameraName(video: true, plain: plain),
         'video/mp4',
       );
     } else {
@@ -552,7 +558,7 @@ class _CameraScreenState extends State<CameraScreen>
     final note = Text(
       _video ? l10n.cameraNeverSavedToYour : l10n.cameraNoExifNeverSaved,
       textAlign: TextAlign.center,
-      style: HaloType.mono(size: 10.5, color: HaloColors.text2, letter: 0.06),
+      style: HaloType.mono(size: 10.5, color: HaloColors.text, letter: 0.06),
     );
     // the bars cross with the picture
     final bars = EaseSize(
@@ -834,7 +840,7 @@ class _CameraScreenState extends State<CameraScreen>
         children: [
           _pill(_size(_clipBytes), HaloColors.text),
           if (!fileFits(_clipBytes))
-            _pill(l10n.cameraTooLongForA, HaloColors.rose),
+            _pill(l10n.cameraTooLongForA, HaloColors.roseText),
         ],
       ),
     );
@@ -860,14 +866,15 @@ class _CameraScreenState extends State<CameraScreen>
     return Column(
       children: [
         // photo | video
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _modeTab(l10n.cameraPhoto, !_video, _toPhoto),
-            const SizedBox(width: 8),
-            _modeTab(l10n.cameraVideo, _video, _toVideo),
-          ],
-        ),
+        if (!widget.photoOnly)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _modeTab(l10n.cameraPhoto, !_video, _toPhoto),
+              const SizedBox(width: 8),
+              _modeTab(l10n.cameraVideo, _video, _toVideo),
+            ],
+          ),
         const SizedBox(height: 6),
         PressScale(
           label: _video
@@ -949,7 +956,7 @@ class _CameraScreenState extends State<CameraScreen>
                     size: 11,
                     letter: 0.12,
                     weight: FontWeight.w600,
-                    color: on ? HaloColors.amberText : HaloColors.text2,
+                    color: on ? HaloColors.amberText : HaloColors.text,
                   ),
                   child: ExcludeSemantics(child: Text(label)),
                 ),

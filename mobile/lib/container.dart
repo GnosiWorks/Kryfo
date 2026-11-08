@@ -2,6 +2,7 @@
 // identity containers: each one is a database under its own key, its own
 // media folders and its own slice of settings
 
+import 'desktop/desktop_mode.dart' show containersSwept, onDesktop;
 import 'dart:io';
 import 'secure_store.dart';
 import 'dart:math';
@@ -28,25 +29,45 @@ class HaloContainer {
   const HaloContainer._({
     required this.id,
     required this.binding,
-    required this.dbFile,
+    required String dbFile,
     required this.keyName,
-    required this.suffix,
+    required String suffix,
     required this.prefix,
     required this.rawKey,
     this.extendsId,
     this.wrapped = false,
-  }) : assert((keyName == null) == wrapped),
+  }) : _dbFile = dbFile,
+       _suffix = suffix,
+       assert((keyName == null) == wrapped),
        assert((extendsId != null) == (binding == Binding.extending));
 
   // the id sealed into a pin table entry: sixteen bytes, hex
   final String id;
   final Binding binding;
   // the database file, in the documents folder
-  final String dbFile;
+  final String _dbFile;
+  String get dbFile => onDesktop ? _desk.$1 : _dbFile;
   // where its database key sits in secure storage. none when wrapped
   final String? keyName;
   // after the media and wallpapers folder names, '' for the everyday one
-  final String suffix;
+  final String _suffix;
+  String get suffix => onDesktop ? _desk.$2 : _suffix;
+
+  // a copied desktop folder names no decoy and no vault: the files of the
+  // others go by number. the everyday one keeps the names backups carry
+  (String, String) get _desk => switch (id) {
+    '00000000000000000000000000000002' => ('k2.db', '_k2'),
+    '00000000000000000000000000000003' => ('k3.db', '_k3'),
+    '00000000000000000000000000000004' => ('k4.db', '_k4'),
+    _ => (_dbFile, _suffix),
+  };
+
+  /// after the media and wallpapers folder names: by number on every
+  /// install, so a folder's name never says whose it is
+  String get folderSuffix => _desk.$2;
+
+  /// the folder suffix a phone used before the numbers, '' when the same
+  String get oldFolderSuffix => _suffix == folderSuffix ? '' : _suffix;
   // settings prefix, '' for the everyday one
   final String prefix;
   // a raw 32-byte key, so sqlcipher skips its key derivation
@@ -135,7 +156,10 @@ class HaloContainer {
 
   Future<Directory> folder(String name) async {
     final d = Directory(
-      p.join((await getApplicationDocumentsDirectory()).path, '$name$suffix'),
+      p.join(
+        (await getApplicationDocumentsDirectory()).path,
+        '$name$folderSuffix',
+      ),
     );
     if (!await d.exists()) await d.create(recursive: true);
     return d;
@@ -151,8 +175,29 @@ class HaloContainer {
       if (await File(f).exists()) return true;
     }
     final docs = (await getApplicationDocumentsDirectory()).path;
-    for (final name in ['media', 'wallpapers']) {
-      if (await Directory(p.join(docs, '$name$suffix')).exists()) return true;
+    for (final name in folderNames) {
+      if (await _holdsFiles(Directory(p.join(docs, name)))) return true;
+    }
+    return false;
+  }
+
+  /// its media and wallpapers folders, under the names of before too
+  List<String> get folderNames => [
+    for (final name in ['media', 'wallpapers']) ...[
+      '$name$folderSuffix',
+      if (oldFolderSuffix.isNotEmpty) '$name$oldFolderSuffix',
+    ],
+  ];
+
+  // every install has the numbered folders: an empty one says nothing
+  static Future<bool> _holdsFiles(Directory d) async {
+    if (!await d.exists()) return false;
+    try {
+      await for (final e in d.list(recursive: true, followLinks: false)) {
+        if (e is File) return true;
+      }
+    } catch (_) {
+      return true;
     }
     return false;
   }
@@ -184,12 +229,12 @@ class HaloContainer {
         dlog('container: a file stayed (${e.runtimeType})');
       }
     }
-    for (final name in ['media', 'wallpapers']) {
+    for (final name in folderNames) {
       final d = Directory(
-        p.join((await getApplicationDocumentsDirectory()).path, '$name$suffix'),
+        p.join((await getApplicationDocumentsDirectory()).path, name),
       );
       try {
-        // its pictures and voice notes, in the clear: zeroed first
+        // its pictures and voice notes: zeroed first
         await shredTree(d.path);
       } catch (e) {
         // the boot sweep takes it once nothing could open it
@@ -245,6 +290,7 @@ Future<void> sweepContainers(
     if (mayOpen) continue;
     if (await c.onDisk()) await c.wipeFiles();
   }
+  containersSwept?.call();
 }
 
 // an identity's own settings: a decoy starts without them and keeps its own.
@@ -265,17 +311,28 @@ const containerKeys = {
   'supporter_show_self',
   'supporter_share_contacts',
   'badge_open_invoice',
+  // a google play tip this identity started whose outcome play may still
+  // owe (tips/tip_jar.dart): settled only in the session that started it
+  'tip_owed',
   'kryfo.intro.accept',
   'kryfo.intro.sent',
   'kryfo.scamshield.on',
+  'kryfo.typing.on',
   'kryfo.gif.on',
   'kryfo.gif.asked',
   'kryfo.update.on',
+  // each identity hides the card for itself
+  'kryfo.update.dismissed',
+  'kryfo.get.photo',
+  'kryfo.get.video',
+  'kryfo.get.file',
   'notif_hide_content',
   'sticker_recents',
   'notes_hold_told',
   // drafts written down for a restart the person asked for, read back once
   'kept_drafts',
+  // when this identity last handed a backup out (last_backup.dart)
+  'kryfo.backup.last',
 };
 
 // the phone's, and the everyday identity's working keys that only the
@@ -301,9 +358,13 @@ const deviceKeys = {
   'hb.jobAt',
   'auto_restart.at',
   'send_mode',
+  'route_merge_note',
   'block_screenshots',
   'theme_light',
   'theme_accent',
+  'wide_list_width',
+  // the computer's notification sound, one for every identity on it
+  'desk_sound',
   'bridge_lines',
   'bridges_on',
   'bridge_hint_off',
@@ -332,7 +393,15 @@ const deviceKeys = {
   'helper_forget_tried',
   'helper_relay_knocks',
   'helper_gone',
+  // google push, the phone's as the helper app's are
+  'gpush_endpoints',
+  'gpush_sealed_for',
+  'gpush_on',
+  'gpush_offer',
   'kryfo.update.checked',
   'kryfo.update.latest',
-  'kryfo.update.dismissed',
+  // plain notifications and the line after an icon switch: the icon is the
+  // phone's, so what goes with it is too
+  'notif_plain',
+  'icon_changed',
 };

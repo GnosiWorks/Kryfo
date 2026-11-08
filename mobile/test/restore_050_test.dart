@@ -15,8 +15,9 @@ import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart';
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/heal.dart' show kRestoreAfterPref;
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -124,16 +125,7 @@ Uint8List _bytes(String hex) => Uint8List.fromList([
 Future<String> _openFrom(SignalSession s, String from, String wire) async {
   final raw = base64Decode(wire);
   final body = Uint8List.fromList(raw.sublist(1));
-  final c = SessionCipher(
-    s.sessionStore,
-    s.preKeyStore,
-    s.signedPreKeyStore,
-    s.identityStore,
-    SignalProtocolAddress(from, 1),
-  );
-  final plain = raw[0] == CiphertextMessage.prekeyType
-      ? await c.decrypt(PreKeySignalMessage(body))
-      : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+  final plain = await s.open(from, raw[0], body);
   return utf8.decode(plain);
 }
 
@@ -248,7 +240,7 @@ void main() {
       final restart = HaloDb();
       useDatabasesForTest(restart, Session(restart));
       final raw = await restart.open();
-      expect(await raw.getVersion(), 85);
+      expect(await raw.getVersion(), 96);
       // the engine is handed the identity in the file
       final id = (await restart.loadIdentity())!;
       expect(id['id'], _me);
@@ -313,6 +305,8 @@ void main() {
       expect(prefs.getString('supporter_tier'), 'gold');
       expect(prefs.getBool('onboarding.complete'), isTrue);
       expect(prefs.getBool(kSessionsRestoredPref), isTrue);
+      // and what follows a restore runs on the next start
+      expect(prefs.getInt(kRestoreAfterPref), isNotNull);
 
       // what 0.5.0 never carried keeps the phone's own, or its default
       expect(restoredSettings, isFalse);
@@ -347,7 +341,7 @@ void main() {
         expect(await lock.verifyPin(_hiddenPin), PinResult.vault);
         final vault = HaloDb.withKey(HaloContainer.vault, key!);
         final v = await vault.open();
-        expect(await v.getVersion(), 85);
+        expect(await v.getVersion(), 96);
         final rows = await _rows(v, only: hiddenCols);
         for (final t in hiddenBefore.keys) {
           expect(rows[t], hiddenBefore[t], reason: 'hidden $t');
@@ -359,7 +353,7 @@ void main() {
           ['only here', 'and back'],
         );
         expect(
-          File(p.join(docs.path, 'media_v', 'h-1.jpg')).existsSync(),
+          File(p.join(docs.path, 'media_k3', 'h-1.jpg')).existsSync(),
           isTrue,
         );
         await vault.close();
@@ -404,15 +398,18 @@ void main() {
     // what she sealed on the session the file brought still opens here
     final back = await hers.encryptTo(_me, 'from before the restore');
     expect(await _openFrom(mine, _alice, back), 'from before the restore');
-    // a session the file brought is not sealed on again: this side starts
-    // afresh from her card, and she opens it
+    // the card 0.5.0 kept for her has no kyber prekey: nothing starts on it
     final card = (await restart.getContact(_alice))!['peer_bundle'] as String;
+    expect(() => cardBundle(card), throwsA(isA<ClassicRefused>()));
+    // a session the file brought is not sealed on again: this side starts
+    // afresh from the card she hands out now, and she opens it
+    final fresh = await hers.makeBundleB64();
     final out = await mine.encryptTo(
       _alice,
       'after the restore',
-      afresh: () async => preKeyBundleOf(card),
+      afresh: () async => cardBundle(fresh),
     );
-    expect(base64Decode(out)[0], CiphertextMessage.prekeyType);
+    expect(base64Decode(out)[0], kLsPreKey);
     expect(await _openFrom(hers, _me, out), 'after the restore');
     await restart.close();
     await other.close();

@@ -9,6 +9,7 @@ import '../theme.dart';
 import 'halo_switch.dart';
 import 'motion.dart';
 import 'sheet_handle.dart';
+import 'entrance.dart';
 
 // one thing a menu can do. no [onTap] leaves it out
 class MenuAction {
@@ -19,12 +20,15 @@ class MenuAction {
   final bool danger;
   // a colour of its own for the icon and label, like amber for edit
   final Color? tint;
+  // a row that turns something on or off: a check at its end while on
+  final bool? checked;
   const MenuAction({
     required this.icon,
     required this.label,
     required this.onTap,
     this.danger = false,
     this.tint,
+    this.checked,
   });
 }
 
@@ -85,20 +89,18 @@ class _MessageMenuCardState extends State<MessageMenuCard>
     vsync: this,
     duration: _staggered(_live.length, _beat),
   );
+  final _entrance = Entrance();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_in.isAnimating || _in.isCompleted) return;
-    if (motionStill(context)) {
-      _in.value = 1;
-    } else {
-      _in.forward();
-    }
+    _entrance.play(context, _in);
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }
@@ -138,7 +140,7 @@ class _MessageMenuCardState extends State<MessageMenuCard>
                 note,
                 style: HaloType.sans(
                   size: 12,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.35,
                 ),
               ),
@@ -181,7 +183,7 @@ class _MenuRow extends StatelessWidget {
     final a = action;
     final ink = a.danger ? HaloColors.rose : (a.tint ?? HaloColors.text);
     final icon = a.danger ? HaloColors.rose : (a.tint ?? HaloColors.text2);
-    return Material(
+    final row = Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(11),
@@ -208,11 +210,21 @@ class _MenuRow extends StatelessWidget {
                   ),
                 ),
               ),
+              if (a.checked != null) ...[
+                const SizedBox(width: 10),
+                Icon(
+                  Icons.check_rounded,
+                  size: 17,
+                  color: a.checked! ? HaloColors.amberText : Colors.transparent,
+                ),
+              ],
             ],
           ),
         ),
       ),
     );
+    if (a.checked == null) return row;
+    return Semantics(toggled: a.checked, child: row);
   }
 }
 
@@ -262,20 +274,18 @@ class _MenuSheetState extends State<MenuSheet>
     vsync: this,
     duration: _staggered(_groups.length, _beat),
   );
+  final _entrance = Entrance();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_in.isAnimating || _in.isCompleted) return;
-    if (motionStill(context)) {
-      _in.value = 1;
-    } else {
-      _in.forward();
-    }
+    _entrance.play(context, _in);
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }
@@ -398,7 +408,7 @@ class _SheetRow extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         row.sub!,
-                        style: HaloType.sans(size: 12, color: HaloColors.text2),
+                        style: HaloType.sans(size: 12, color: HaloColors.text),
                       ),
                     ],
                   ],

@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../store.dart';
 import '../theme.dart';
 import 'press_scale.dart';
 import 'stroke_icon.dart';
@@ -10,11 +9,10 @@ import '../l10n/l10n.dart';
 
 enum HaloTab { chats, tools, support, me }
 
-// the tabs on the bar. the play build has no support tab
-List<HaloTab> get shownTabs => [
-  for (final t in HaloTab.values)
-    if (!kPlayBuild || t != HaloTab.support) t,
-];
+// the tabs on the bar, the same on a computer: its tools pick, take drops
+// and save through the computer's own dialogs (tools/desk_tools.dart). the
+// play build's support tab is its tip jar
+List<HaloTab> get shownTabs => HaloTab.values;
 
 Map<HaloTab, String> get _labels => {
   HaloTab.chats: l10n.navBarChats,
@@ -36,6 +34,9 @@ const _icons = {
 
 // a tab's glyph, for a drawing of the bar elsewhere
 String navTabIcon(HaloTab t) => _icons[t]!;
+
+// a tab's word, for the desktop rail's tooltips
+String navTabLabel(HaloTab t) => _labels[t]!;
 
 class HaloNavBar extends StatelessWidget {
   final HaloTab active;
@@ -60,7 +61,7 @@ class HaloNavBar extends StatelessWidget {
         children: [
           for (final t in shownTabs)
             Expanded(
-              child: _NavTab(
+              child: NavTab(
                 tab: t,
                 on: t == active,
                 onTap: () => onPick(t),
@@ -73,22 +74,24 @@ class HaloNavBar extends StatelessWidget {
   }
 }
 
-class _NavTab extends StatefulWidget {
+// one tab: the bar's, and the desktop rail's
+class NavTab extends StatefulWidget {
   final HaloTab tab;
   final bool on;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  const _NavTab({
+  const NavTab({
+    super.key,
     required this.tab,
     required this.on,
     required this.onTap,
     this.onLongPress,
   });
   @override
-  State<_NavTab> createState() => _NavTabState();
+  State<NavTab> createState() => _NavTabState();
 }
 
-class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
+class _NavTabState extends State<NavTab> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 280),
@@ -96,7 +99,7 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
   );
 
   @override
-  void didUpdateWidget(_NavTab old) {
+  void didUpdateWidget(NavTab old) {
     super.didUpdateWidget(old);
     if (widget.on == old.on) return;
     final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
@@ -121,7 +124,8 @@ class _NavTabState extends State<_NavTab> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final on = widget.on;
     final label = _labels[widget.tab]!;
-    final scale = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3);
+    // the words follow the app's scale; FittedBox keeps a long one in its tab
+    final scale = MediaQuery.textScalerOf(context);
     return Semantics(
       container: true,
       button: true,

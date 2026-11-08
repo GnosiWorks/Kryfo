@@ -7,7 +7,12 @@ import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, bridgeWriteTap, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        bridgeWriteTap,
+        useEngineForTest,
+        AppStateBridges;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Engine implements HaloEngine {

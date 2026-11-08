@@ -17,9 +17,18 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart' show whole;
 import '../lock_guard.dart' show lockGuard;
 import '../main.dart'
-    show appState, claimChat, currentChatPeer, releaseChat, session;
+    show
+        appState,
+        claimChat,
+        currentChatPeer,
+        releaseChat,
+        session,
+        AppStateContacts,
+        AppStateDevchat,
+        AppStateRefresh;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
+import '../widgets/desk_menu.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart' show FadeFold;
 import '../widgets/confirm_sheet.dart';
@@ -36,6 +45,7 @@ import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart' show FadeSwap;
 import '../widgets/swipe_actions.dart';
 import 'chat_screen.dart';
+import '../voice_format.dart' show isVoiceName;
 
 Route<void> supportRoute() => haloRoute(const SupportScreen());
 
@@ -306,51 +316,46 @@ class _SupportScreenState extends State<SupportScreen> {
 
   void _menu(SupportChat c) {
     HapticFeedback.mediumImpact();
-    showHaloSheet<String>(
+    showMenuSheet<String>(
       context,
-      scroll: true,
-      builder: (ctx) {
+      groups: (ctx) {
         void pick(String a) => Navigator.pop(ctx, a);
-        return SingleChildScrollView(
-          child: MenuSheet(
-            groups: [
-              [
-                c.done
-                    ? MenuSheetRow(
-                        icon: Icons.undo_rounded,
-                        label: l10n.supportReopen,
-                        onTap: () => pick('reopen'),
-                      )
-                    : MenuSheetRow(
-                        icon: Icons.done_all_rounded,
-                        label: l10n.supportMarkDone,
-                        onTap: () => pick('done'),
-                      ),
-                // a contact by now: their chat can sit in Chats instead
-                if (c.answered)
-                  MenuSheetRow(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    label: l10n.supportMoveToChats,
-                    onTap: () => pick('chats'),
+        return [
+          [
+            c.done
+                ? MenuSheetRow(
+                    icon: Icons.undo_rounded,
+                    label: l10n.supportReopen,
+                    onTap: () => pick('reopen'),
+                  )
+                : MenuSheetRow(
+                    icon: Icons.done_all_rounded,
+                    label: l10n.supportMarkDone,
+                    onTap: () => pick('done'),
                   ),
-              ],
-              [
-                MenuSheetRow(
-                  icon: Icons.block,
-                  label: l10n.commonBlock,
-                  danger: true,
-                  onTap: () => pick('block'),
-                ),
-                MenuSheetRow(
-                  icon: Icons.delete_outline,
-                  label: l10n.homeDeleteChat,
-                  danger: true,
-                  onTap: () => pick('delete'),
-                ),
-              ],
-            ],
-          ),
-        );
+            // a contact by now: their chat can sit in Chats instead
+            if (c.answered)
+              MenuSheetRow(
+                icon: Icons.chat_bubble_outline_rounded,
+                label: l10n.supportMoveToChats,
+                onTap: () => pick('chats'),
+              ),
+          ],
+          [
+            MenuSheetRow(
+              icon: Icons.block,
+              label: l10n.commonBlock,
+              danger: true,
+              onTap: () => pick('block'),
+            ),
+            MenuSheetRow(
+              icon: Icons.delete_outline,
+              label: l10n.homeDeleteChat,
+              danger: true,
+              onTap: () => pick('delete'),
+            ),
+          ],
+        ];
       },
     ).then((a) {
       if (!mounted || a == null) return;
@@ -549,7 +554,7 @@ class _Head extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: HaloType.mono(
                   size: 10.5,
-                  color: waiting > 0 ? HaloColors.amberText : HaloColors.text2,
+                  color: waiting > 0 ? HaloColors.amberText : HaloColors.text,
                   letter: 0.06,
                 ),
               ),
@@ -589,7 +594,7 @@ class _SectionHead extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 weight: FontWeight.w500,
                 letter: 0.14,
               ),
@@ -598,7 +603,7 @@ class _SectionHead extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             whole(count),
-            style: HaloType.mono(size: 10, color: HaloColors.text2),
+            style: HaloType.mono(size: 10, color: HaloColors.text),
           ),
         ],
       ),
@@ -676,7 +681,7 @@ class _DoneHeadState extends State<_DoneHead>
                     overflow: TextOverflow.ellipsis,
                     style: HaloType.mono(
                       size: 10,
-                      color: HaloColors.text2,
+                      color: HaloColors.text,
                       weight: FontWeight.w500,
                       letter: 0.14,
                     ),
@@ -686,7 +691,7 @@ class _DoneHeadState extends State<_DoneHead>
                 CountBadge(
                   count: widget.count,
                   color: HaloColors.surface3,
-                  ink: HaloColors.text2,
+                  ink: HaloColors.text,
                   fontSize: 9.5,
                 ),
                 const Spacer(),
@@ -939,7 +944,7 @@ String _lastLine(SupportChat c) {
     body = l10n.homeRoomInvite;
   } else if (text.isNotEmpty) {
     body = text;
-  } else if (file == 'voice.wav') {
+  } else if (isVoiceName(file)) {
     body = l10n.appVoiceMessage2;
   } else if (file != null) {
     body = file;
@@ -1002,7 +1007,7 @@ class _Empty extends StatelessWidget {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.55,
               ),
             ),

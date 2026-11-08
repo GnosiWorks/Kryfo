@@ -5,6 +5,7 @@
 // chats and groups, left to right and right to left
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
@@ -16,12 +17,21 @@ import 'package:kryfo/gifs/gif_picture.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/burn_fade.dart' show BurnFade;
+import 'package:kryfo/widgets/photo_shape.dart';
+import 'package:kryfo/widgets/sealed_picture.dart' show SealedPicture;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -76,6 +86,19 @@ Uint8List gifOf(int w, int h, {int a = 0xd97706, int b = 0x7c3aed}) {
   }
   out.add([0, 0x3b]);
   return out.toBytes();
+}
+
+// a plain png of [w] by [h], drawn by the engine
+Future<Uint8List> pngOf(int w, int h) async {
+  final rec = ui.PictureRecorder();
+  Canvas(rec).drawRect(
+    Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
+    Paint()..color = const Color(0xffd97706),
+  );
+  final img = await rec.endRecording().toImage(w, h);
+  final data = await img.toByteData(format: ui.ImageByteFormat.png);
+  img.dispose();
+  return data!.buffer.asUint8List();
 }
 
 class _Db extends DevTestDb {
@@ -274,9 +297,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
@@ -291,8 +314,15 @@ const shapes = {
   'wide': (200, 112),
   'tall': (200, 356),
   'square': (200, 200),
+  'verytall': (40, 400),
   'theirs': (200, 150),
 };
+
+// the box a picture of [name]'s shape takes in bounds of [w] by [h]
+Size boxOf(String name, double w, double h) {
+  final (pw, ph) = shapes[name]!;
+  return photoBoxSize(pw / ph, maxWidth: w, maxHeight: h);
+}
 
 // files are read and decoded outside the test's clock
 Future<void> settle(WidgetTester t) async {
@@ -373,7 +403,7 @@ void main() {
   });
 
   group('a 1:1 chat', () {
-    Future<_Db> world() async {
+    Future<_Db> world({Map<String, String>? photos}) async {
       final mem = MemDb();
       await devChatTables(mem, now: 1);
       await mem.insert('contacts', {
@@ -415,7 +445,20 @@ void main() {
         'sent': 1,
         'delivered': 1,
       });
-      for (final name in ['wide', 'tall', 'square']) {
+      for (final MapEntry(key: name, value: caption)
+          in photos?.entries ?? const <MapEntry<String, String>>[]) {
+        await row({
+          'direction': 'out',
+          'plaintext': caption,
+          'msg_uid': 'u-$name',
+          'media_path': paths[name],
+          'sent': 1,
+          'delivered': 1,
+        });
+      }
+      for (final name in [
+        if (photos == null) ...['wide', 'tall', 'square', 'verytall'],
+      ]) {
         await row({
           'direction': 'out',
           'plaintext': '',
@@ -510,8 +553,11 @@ void main() {
             ]) {
               expect(c.x, greaterThan(0), reason: '$name corner');
             }
-            // as wide as a photo there
-            expect(g.drawn.width, closeTo(360 * 0.78, 0.5), reason: name);
+            // its own shape, as a photo there: the very tall one at the
+            // floor, cropped
+            final want = boxOf(name, 360 * 0.78, kPhotoMaxHeight);
+            expect(g.drawn.width, closeTo(want.width, 0.5), reason: name);
+            expect(g.drawn.height, closeTo(want.height, 0.5), reason: name);
           }
           // no line under a gif of ours
           expect(find.text('Sent inside your message'), findsNothing);
@@ -519,6 +565,71 @@ void main() {
         });
       }
     }
+
+    // photos are drawn as gifs are: their own shape, and a caption under
+    // one wraps at its width instead of widening the bubble
+    testWidgets('photos keep their shape, a caption wraps at its photo', (
+      t,
+    ) async {
+      const photos = {
+        'p-portrait': (150, 200),
+        'p-landscape': (200, 150),
+        'p-square': (160, 160),
+        'p-verytall': (30, 300),
+        'p-captioned': (150, 200),
+      };
+      for (final MapEntry(key: name, value: (w, h)) in photos.entries) {
+        final png = (await t.runAsync(() => pngOf(w, h)))!;
+        final f = File('${tmp.path}/$name.jpg')..writeAsBytesSync(png);
+        paths[name] = f.path;
+      }
+      const caption =
+          'a caption long enough to be wider than any photo here if '
+          'it were left on one line';
+      await world(
+        photos: {
+          for (final n in photos.keys) n: n == 'p-captioned' ? caption : '',
+        },
+      );
+      await devOpen(t, chat(), size: const Size(720, 3600));
+      await settle(t);
+      for (final MapEntry(key: name, value: (w, h)) in photos.entries) {
+        final pic = find.byWidgetPredicate(
+          (x) => x is SealedPicture && x.path == paths[name],
+        );
+        expect(pic, findsOneWidget, reason: name);
+        final want = photoBoxSize(
+          w / h,
+          maxWidth: 360 * 0.78,
+          maxHeight: kPhotoMaxHeight,
+        );
+        final got = t.getSize(pic);
+        expect(got.width, closeTo(want.width, 0.5), reason: name);
+        expect(got.height, closeTo(want.height, 0.5), reason: name);
+      }
+      final pic = rectOf(
+        t,
+        find.byWidgetPredicate(
+          (x) => x is SealedPicture && x.path == paths['p-captioned'],
+        ),
+      );
+      final words = rectOf(
+        t,
+        find.textContaining('a caption long', findRichText: true).first,
+      );
+      expect(words.width, lessThanOrEqualTo(pic.width));
+      final card = rectOf(
+        t,
+        find
+            .ancestor(
+              of: find.textContaining('a caption long', findRichText: true),
+              matching: find.byType(BurnFade),
+            )
+            .first,
+      );
+      expect(card.width, closeTo(pic.width, 0.5));
+      await devClose(t);
+    });
   });
 
   group('a group', () {
@@ -558,7 +669,8 @@ void main() {
           row(5, 'out', '', media: paths['wide']),
           row(6, 'out', '', media: paths['tall']),
           row(7, 'out', '', media: paths['square'], reply: 'uid-1'),
-          row(8, 'out', 'see you'),
+          row(8, 'out', '', media: paths['verytall']),
+          row(9, 'out', 'see you'),
         ]);
         db.reactions['uid-5'] = [const MapEntry(_anna, '❤️')];
         useDatabasesForTest(db, Session(db));
@@ -596,6 +708,9 @@ void main() {
             expect(g.drawn.left, closeTo(edge.left, 0.5), reason: name);
           }
           expectRect(g.drawn, g.clip, name);
+          final want = boxOf(name, 240, 280);
+          expect(g.drawn.width, closeTo(want.width, 0.5), reason: name);
+          expect(g.drawn.height, closeTo(want.height, 0.5), reason: name);
         }
         expect(find.text(l10n.gifSentInside), findsNothing);
         await devClose(t);

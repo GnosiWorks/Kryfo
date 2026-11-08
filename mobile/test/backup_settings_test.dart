@@ -23,6 +23,7 @@ import 'package:kryfo/main.dart'
     show HaloDb, HaloEngine, useDatabasesForTest, useEngineForTest;
 import 'package:kryfo/notifications.dart' show loadHideNotifContent;
 import 'package:kryfo/scam_prefs.dart';
+import 'package:kryfo/typing.dart' show loadTypingOn;
 import 'package:kryfo/session.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -151,6 +152,7 @@ const _changedPrefs = <String, Object>{
   'notif_hide_content': false,
   'kryfo.scamshield.on': false,
   'kryfo.intro.accept': false,
+  'kryfo.typing.on': false,
   'delivery_mode': 'checkins',
   'app_locale': 'de',
 };
@@ -164,6 +166,9 @@ const _phoneOnly = <String, Object>{
   'delivery_last_check': 5678,
   'delivery_last_wake': 91011,
   'hb.listen': 'x',
+  // plain notifications and the icon belong to the phone
+  'notif_plain': true,
+  'icon_changed': true,
 };
 
 const _everydaySettings = {
@@ -174,6 +179,7 @@ const _everydaySettings = {
   Carried.previewsHidden: false,
   Carried.shield: false,
   Carried.intros: false,
+  Carried.typing: false,
   Carried.route: 'balanced',
   Carried.delivery: 'checkins',
   Carried.language: 'de',
@@ -187,6 +193,7 @@ const _defaults = {
   Carried.previewsHidden: true,
   Carried.shield: true,
   Carried.intros: true,
+  Carried.typing: true,
   Carried.route: 'private',
   Carried.delivery: 'always',
 };
@@ -264,6 +271,7 @@ void main() {
       'd.notif_hide_content': true,
       'd.kryfo.scamshield.on': true,
       'd.kryfo.intro.accept': true,
+      'd.kryfo.typing.on': true,
       'd.supporter_tier': 'decoy',
     });
     FlutterSecureStorage.setMockInitialValues({
@@ -324,6 +332,7 @@ void main() {
       Carried.previewsHidden: await loadHideNotifContent(c),
       Carried.shield: await loadScamShieldOn(c),
       Carried.intros: await loadAcceptIntros(c),
+      Carried.typing: await loadTypingOn(c),
       Carried.route: await st.read(key: 'send_mode') ?? 'private',
       Carried.delivery: (await loadDeliveryMode()).name,
       Carried.language: prefs.getString('app_locale') ?? 'system',
@@ -410,6 +419,46 @@ void main() {
         'nostr_last_aaaaaaaaaaaaaaaa': '1791400000',
         'nostr_last_bbbbbbbbbbbbbbbb': '1791500000',
       });
+    });
+
+    test('restored, the batch book comes with the file in place of this '
+        'phone\'s, so every address stays in its batch, and batch files of '
+        'before go', () async {
+      oldPhone();
+      const line = 'c2VhbGVkIGJvb2sgbGluZQ';
+      put(kBatchBookName, '$line\n');
+      final d = await draftBackup(stage, side: const _Side());
+      expect(d.manifest['book'], line);
+      // a file that leaves the hidden chats out carries it too: it names no
+      // address, and a hidden chat's place reads as any other's
+      expect(
+        (await draftBackup(
+          stage,
+          side: const _HiddenLeftOut(),
+        )).manifest['book'],
+        line,
+      );
+      final out = await write(d.manifest, d.sources);
+      newPhone();
+      for (final f in Directory(docs).listSync()) {
+        if (p.basename(f.path).startsWith('nostr_')) f.deleteSync();
+      }
+      put(kBatchBookName, 'dGhpcyBwaG9uZXMgb3du\n');
+      put('nostr_batch_dddddddddddddddd', 'i0 3');
+      await restore(out, inDecoy: false);
+      final left = {
+        for (final f in Directory(docs).listSync())
+          if (p.basename(f.path).startsWith('nostr_'))
+            p.basename(f.path): File(f.path).readAsStringSync(),
+      };
+      expect(left, {kBatchBookName: '$line\n'});
+      // a file with no book, or an odd one, leaves none: the engine starts
+      // a new one
+      for (final odd in [null, 'not/a line!', 5]) {
+        put(kBatchBookName, '$line\n');
+        await landCatchUpAnchors(docs, null, book: odd);
+        expect(File(p.join(docs, kBatchBookName)).existsSync(), isFalse);
+      }
     });
 
     test('a file that leaves hidden chats out carries no anchors and reads '
@@ -705,6 +754,7 @@ void main() {
         Carried.previewsHidden: true,
         Carried.shield: true,
         Carried.intros: true,
+        Carried.typing: true,
       });
       final text = jsonEncode(d.manifest);
       for (final k in _never.keys) {

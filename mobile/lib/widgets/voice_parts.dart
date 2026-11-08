@@ -11,6 +11,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../stickers/sticker_view.dart' show AppFront;
+import '../desktop/desktop_mode.dart' show runIsolated, withNativeFiles;
+import '../voice_format.dart' show isOggPath;
+import '../voice_opus.dart' show oggPeaks, oggPeaksStandIn;
 import '../theme.dart';
 import 'motion.dart';
 import 'press_scale.dart';
@@ -171,10 +174,23 @@ List<double> _peaks(int frames, int bars, int Function(int frame) sample) {
   return [for (final v in out) math.sqrt(v / top)];
 }
 
-List<double>? _peaksOfFile(String path) => wavFilePeaks(path, kVoiceBars);
+// an opus note's wave comes from the engine, a wav's from its samples
+List<double>? _peaksOf(String path, bool ogg) =>
+    ogg ? oggPeaks(path, kVoiceBars) : wavFilePeaks(path, kVoiceBars);
+
+// off the main isolate. on desktop a sealed note is read from memory, so
+// its kind comes from the name it has here
+Future<List<double>?> _peaksOff(String path) {
+  final ogg = isOggPath(path);
+  return withNativeFiles(
+    [path],
+    const [],
+    (i, _) => runIsolated(() => _peaksOf(i[0], ogg)),
+  );
+}
 
 /// a take's wave, read off the main isolate
-Future<List<double>?> takePeaks(String path) => compute(_peaksOfFile, path);
+Future<List<double>?> takePeaks(String path) => _peaksOff(path);
 
 final Map<String, List<double>?> _waves = {};
 Future<void> _reading = Future.value();
@@ -185,7 +201,10 @@ Future<List<double>?> voicePeaks(String path) {
   if (_waves.containsKey(path)) return SynchronousFuture(_waves[path]);
   final done = _reading.then((_) async {
     if (_waves.containsKey(path)) return _waves[path];
-    final p = await compute(_peaksOfFile, path);
+    // a test's stand-in engine lives on this isolate only
+    final p = isOggPath(path) && oggPeaksStandIn
+        ? oggPeaks(path, kVoiceBars)
+        : await _peaksOff(path);
     // insertion ordered: the oldest goes first, so this stays small
     if (_waves.length > 300) _waves.remove(_waves.keys.first);
     _waves[path] = p;
@@ -196,8 +215,47 @@ Future<List<double>?> voicePeaks(String path) {
   return done;
 }
 
+/// every wave known forgotten, and the queue of reads begun again: each
+/// test's clock is its own
+@visibleForTesting
+void forgetVoicePeaks() {
+  _waves.clear();
+  _reading = Future.value();
+}
+
 /// what is known of a note's wave without reading it
 List<double>? voicePeaksNow(String path) => _waves[path];
+
+/// the wave of the note at [from] is the wave of [to] too: an opus note
+/// made of a wav sounds the same
+void voicePeaksSame(String from, String to) {
+  final p = _waves[from];
+  if (p != null) _waves[to] = p;
+}
+
+// the notes a player has open, and who waits for each to be let go
+final _held = <String, int>{};
+final _free = <String, Completer<void>>{};
+
+/// a player opened the note at [path]
+void holdVoiceFile(String path) => _held[path] = (_held[path] ?? 0) + 1;
+
+/// a player let the note at [path] go
+void letVoiceFileGo(String path) {
+  final n = (_held[path] ?? 0) - 1;
+  if (n > 0) {
+    _held[path] = n;
+    return;
+  }
+  _held.remove(path);
+  _free.remove(path)?.complete();
+}
+
+/// done once no player has the note at [path] open: a file still playing
+/// is shredded only after
+Future<void> voiceFileFree(String path) => _held.containsKey(path)
+    ? (_free[path] ??= Completer<void>()).future
+    : Future.value();
 
 /// a note's wave. the played part is drawn in [played] from the start side,
 /// the rest in [rest]. bars rise out of the flat line once, when the wave
@@ -555,7 +613,7 @@ class VoiceRecordBar extends StatelessWidget {
                 slideLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: HaloType.mono(size: 11, color: HaloColors.text2),
+                style: HaloType.mono(size: 11, color: HaloColors.text),
               ),
             ),
           ];
@@ -618,7 +676,7 @@ class VoiceRecordBar extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.mono(
                               size: 12,
-                              color: HaloColors.rose,
+                              color: HaloColors.roseText,
                             ),
                           ),
                         )

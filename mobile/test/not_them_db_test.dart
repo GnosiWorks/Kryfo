@@ -60,6 +60,9 @@ const _apart = {
   'groups',
   'room_keys',
   'group_roster',
+  // a hello's peer is an identity key, not a name: the rows of a v4 first
+  // contact, kept by key as the pairs are
+  'hellos',
 };
 
 void main() {
@@ -169,7 +172,17 @@ void main() {
         r['name'] as String,
     ];
     for (final t in tables) {
-      if (_apart.contains(t) || t.startsWith('dev_') || t.contains('fts')) {
+      // my own linked devices have uids of their own, never a message's;
+      // own sync keeps my own deleted uids and what it told my devices (a
+      // chat gone goes from own_told on its next pass, as a 'gone'), and
+      // the notes to self still owed to my devices, mine alone
+      if (_apart.contains(t) ||
+          t.startsWith('dev_') ||
+          t.startsWith('own_device') ||
+          t == 'own_told' ||
+          t == 'own_gone' ||
+          t == 'own_notes_out' ||
+          t.contains('fts')) {
         continue;
       }
       final cols = await raw.rawQuery("PRAGMA table_info('$t')");
@@ -395,6 +408,50 @@ void main() {
     expect((await db.getGroup(_gid))?['admin_id'], kAdminGone);
   });
 
+  test('the copies of what went still waiting unsealed for a device of '
+      'mine go with it; a sealed one and another chat\'s stay', () async {
+    if (skip()) return;
+    await person(_p);
+    await person(_q);
+    final raw = await db.open();
+    String f(Map<String, Object?> j) => 'halo/1:${jsonEncode(j)}';
+    var n = 0;
+    Future<void> waiting(String plain, {bool sealed = false}) =>
+        raw.insert('dev_out', {
+          'uid': 'w-${n++}',
+          'ident': 0,
+          'peer': 'me',
+          'device': 4,
+          'at': 1,
+          'own': 1,
+          'plain': sealed ? null : plain,
+          'wire': sealed ? 'c2VhbGVk' : null,
+          'state': sealed ? 'go' : 'wait',
+        });
+    String oc(String chat, String u) => f({
+      'u': 'oc:x',
+      'oc': {
+        'i': 0,
+        'c': chat,
+        'f': f({'u': u, 'm': 'mine'}),
+      },
+    });
+    String of(String from, Map<String, Object?> j) => f({
+      'u': 'of:x',
+      'of': {'h': from, 't': 1, 'f': f(j)},
+    });
+    await waiting(oc('p:$_p', 'u-out-$_p'));
+    await waiting(of(_p, {'u': uid(_p), 'm': 'theirs'}));
+    await waiting(of(_p, {'u': groupUid(_p), 'm': 'theirs', 'g': _gid}));
+    await waiting(oc('p:$_q', 'u-out-$_q'));
+    await waiting(oc('p:$_p', 'u-out-$_p'), sealed: true);
+    await db.removeAndBlockKey(_p, _key);
+    expect(
+      [for (final r in await raw.query('dev_out', orderBy: 'rowid')) r['uid']],
+      ['w-3', 'w-4'],
+    );
+  });
+
   test('an unblock lets the key go and nothing else', () async {
     if (skip()) return;
     await person(_q);
@@ -578,7 +635,7 @@ void main() {
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 85);
+    expect(await raw.getVersion(), 96);
     final cols = await raw.rawQuery("PRAGMA table_info('contacts')");
     expect(cols.any((c) => c['name'] == 'ack_owed'), isTrue);
     expect(
@@ -590,7 +647,7 @@ void main() {
   test('an upgrade from 80 makes the tables and keeps every row', () async {
     if (skip()) return;
     var raw = await db.open();
-    expect(await raw.getVersion(), 85);
+    expect(await raw.getVersion(), 96);
     await person(_q);
     await raw.execute('DROP TABLE blocked_keys');
     await raw.execute('DROP TABLE name_tombs');
@@ -598,7 +655,7 @@ void main() {
     await db.close();
     db = HaloDb();
     raw = await db.open();
-    expect(await raw.getVersion(), 85);
+    expect(await raw.getVersion(), 96);
     expect(
       await raw.rawQuery("PRAGMA table_info('blocked_keys')"),
       hasLength(2),

@@ -3,8 +3,6 @@
 // a ring turns its chat into the tag its container keeps, a start clears
 // what an older version left untagged, and a tap, warm or cold, opens what
 // its tag names and nothing a bare chat id would
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -18,6 +16,7 @@ import 'package:kryfo/main.dart'
         openChatForNotif,
         openFromNotifForTest,
         openNotifChat,
+        openNotifList,
         session,
         useDatabasesForTest;
 import 'package:kryfo/notifications.dart';
@@ -25,6 +24,7 @@ import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
+import 'source_body.dart';
 
 class _Shade extends AndroidFlutterLocalNotificationsPlugin {
   final posted = <(int, String?, String?)>[];
@@ -94,7 +94,8 @@ void main() {
 
   setUp(() {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    SharedPreferences.setMockInitialValues({});
+    // previews on: each chat its own, under its tag
+    SharedPreferences.setMockInitialValues({'notif_hide_content': false});
     FlutterSecureStorage.setMockInitialValues({});
     shade = _Shade();
     FlutterLocalNotificationsPlatform.instance = shade;
@@ -221,7 +222,7 @@ void main() {
   });
 
   test('the app starts notifications with the tap that reads tags', () {
-    final src = File('lib/app/state.dart').readAsStringSync();
+    final src = sourceOf('lib/app/state.dart');
     expect(src, contains('onTap: openChatForNotif,'));
     expect(src, contains('tagsOf: (chat) => session.notifTagsOf(chat),'));
     expect(src, isNot(contains('initNotifications(onTap: openChatForHalo')));
@@ -252,5 +253,21 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(live.rings, isEmpty);
     expect(await session.ringOf(id, 'calm-orbit-lantern'), isNull);
+  });
+
+  test('a tap on the shared one opens the chat list, after the lock', () async {
+    var listed = 0;
+    final had = openNotifList;
+    addTearDown(() => openNotifList = had);
+    openNotifList = () async => listed++;
+    lockState.openForTest(enabled: true);
+    lockState.lock();
+    await openChatForNotif(kListPayload, sharedNotifId);
+    expect(listed, 0);
+    lockState.openForTest();
+    lockGuard.lifted();
+    await Future<void>.delayed(Duration.zero);
+    expect(listed, 1);
+    expect(opened, isEmpty);
   });
 }

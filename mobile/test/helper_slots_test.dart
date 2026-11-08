@@ -8,7 +8,8 @@ import 'package:kryfo/l10n/app_localizations.dart';
 // an address in group g
 KnockAddress at(String a, String g) => KnockAddress(a, g);
 
-String lane(int i) => 'everyday:$i';
+// batch i of the main identity's contacts (engine/batches.go)
+String lane(int i) => 'everyday:0:$i';
 
 // every slot serves one group, and every address sits on a slot of its own
 // group
@@ -29,14 +30,15 @@ void expectApart(SlotBook b, List<KnockAddress> live) {
 void main() {
   final rnd = Random(7);
 
-  test('under sixteen every address has a slot to itself', () {
+  test('a batch has one slot, its addresses share it', () {
     final live = [
-      for (var i = 0; i < 10; i++) at('c$i', lane(i % 4)),
+      for (var i = 0; i < 10; i++) at('c$i', lane(i ~/ 8)),
       at('fc', 'firstcontact:fc'),
     ];
     final b = planSlots(const SlotBook(), live, rnd).book;
     expect(b.byAddress.length, 11);
-    expect(b.byAddress.values.toSet().length, 11);
+    expect(b.byAddress.values.toSet().length, 3);
+    expect({for (var i = 0; i < 8; i++) b.slotOf('c$i')}.length, 1);
     expectApart(b, live);
   });
 
@@ -76,37 +78,106 @@ void main() {
     expect(b2.slotOf('b'), b1.slotOf('b'));
   });
 
-  test('a contact lane owns at most three slots and shares them evenly', () {
-    final live = [for (var i = 0; i < 30; i++) at('c$i', lane(0))];
+  test('a batch owns one slot, however full', () {
+    final live = [for (var i = 0; i < 8; i++) at('c$i', lane(0))];
     final b = planSlots(const SlotBook(), live, rnd).book;
-    final slots = b.byAddress.values.toSet();
-    expect(slots.length, kLaneSlots);
-    for (final s in slots) {
-      expect(b.byAddress.values.where((v) => v == s).length, 10);
-    }
+    expect(b.byAddress.length, 8);
+    expect(b.byAddress.values.toSet().length, 1);
   });
 
-  test('every main group keeps a slot however many came first', () {
-    // fourteen rooms come first, then the main groups: five slots wait
-    // for them
-    var live = [for (var i = 0; i < 14; i++) at('r$i', 'room:$i')];
+  test('the main groups keep their slots from the rooms', () {
+    // rooms first: one slot waits for the first-contact address
+    var live = [for (var i = 0; i < 20; i++) at('r$i', 'room:$i')];
     var b = planSlots(const SlotBook(), live, rnd).book;
-    expect(b.byAddress.length, kHelperSlots - kContactLanes - 1);
+    expect(b.byAddress.length, kHelperSlots - 1);
+    live = [...live, at('fc', 'firstcontact:fc')];
+    b = planSlots(b, live, rnd).book;
+    expect(b.slotOf('fc'), isNotNull);
+    // all at once, rooms do not take what the batches need
     live = [
-      ...live,
-      for (var i = 0; i < 4; i++) at('c$i', lane(i)),
+      for (var i = 0; i < 20; i++) at('r$i', 'room:$i'),
+      for (var i = 0; i < 40; i++) at('c$i', lane(i ~/ 8)),
       at('fc', 'firstcontact:fc'),
     ];
-    b = planSlots(b, live, rnd).book;
-    for (final a in ['c0', 'c1', 'c2', 'c3']) {
-      expect(b.slotOf(a), isNotNull, reason: a);
-    }
-    // all at once, rooms do not take what the main groups need
     final all = planSlots(const SlotBook(), live, rnd).book;
-    for (final a in ['c0', 'c1', 'c2', 'c3', 'fc']) {
+    for (final a in ['fc', for (var i = 0; i < 40; i++) 'c$i']) {
       expect(all.slotOf(a), isNotNull, reason: a);
     }
+    expect(all.owner.values.where((g) => g.startsWith('room:')).length, 10);
     expectApart(all, live);
+  });
+
+  // a phone as it is now: [n] chats, one in ten hidden (never registered),
+  // the rest in batches of eight in listen order, one first-contact
+  // address. how many addresses get no slot
+  ({int batches, int hidden, int unregistered}) phoneOf(
+    int n, {
+    SlotBook book = const SlotBook(),
+  }) {
+    final hidden = n ~/ 10;
+    final everyday = n - hidden;
+    final live = [
+      for (var i = 0; i < everyday; i++) at('c$i', lane(i ~/ 8)),
+      at('fc', 'firstcontact:fc'),
+    ];
+    final b = planSlots(book, live, Random(1)).book;
+    expectApart(b, live);
+    return (
+      batches: (everyday + 7) ~/ 8,
+      hidden: hidden,
+      unregistered: live.where((a) => b.slotOf(a.address) == null).length,
+    );
+  }
+
+  test('slots for 15, 50 and 120 contacts: one per batch and the first-'
+      'contact address, under the cap', () {
+    for (final n in [15, 50, 120]) {
+      final p = phoneOf(n);
+      // ignore: avoid_print
+      print(
+        '$n contacts: ${p.batches} batches + 1 first-contact = '
+        '${p.batches + 1} of $kHelperSlots slots, ${p.hidden} hidden lanes '
+        '(${p.batches + 1 + p.hidden} if they were registered), '
+        '${p.unregistered} unregistered',
+      );
+      expect(p.unregistered, 0, reason: '$n contacts');
+    }
+    // past the cap the newest batches are left to the check-ins, never
+    // put on another batch's endpoint
+    final big = phoneOf(200);
+    expect(big.batches + 1, greaterThan(kHelperSlots));
+    expect(big.unregistered, 200 - big.hidden - (kHelperSlots - 1) * 8);
+  });
+
+  test('the four lanes before batches let their slots go once', () {
+    // a 0.5 phone: three slots for each of everyday:0..3
+    final owner = <int, String>{
+      for (var s = 0; s < 12; s++) s: 'everyday:${s ~/ 3}',
+    };
+    final old = SlotBook(
+      byAddress: {for (var s = 0; s < 12; s++) 'old$s': s},
+      owner: owner,
+    );
+    final plan = planSlots(old, [
+      for (var i = 0; i < 50; i++) at('c$i', lane(i ~/ 8)),
+      at('fc', 'firstcontact:fc'),
+    ], rnd);
+    expect(plan.renew, {for (var s = 0; s < 12; s++) s});
+    expect(
+      plan.book.owner.values.where(
+        (g) => RegExp(r'^everyday:\d+$').hasMatch(g),
+      ),
+      isEmpty,
+    );
+    // their new endpoints serve batches from the next round
+    final next = planSlots(plan.book, [
+      for (var i = 0; i < 50; i++) at('c$i', lane(i ~/ 8)),
+      at('fc', 'firstcontact:fc'),
+    ], rnd);
+    for (var i = 0; i < 50; i++) {
+      expect(next.book.slotOf('c$i'), isNotNull, reason: 'c$i');
+    }
+    expect(next.renew, isEmpty);
   });
 
   test('a room that is gone gives its slot back on a new endpoint', () {
@@ -125,7 +196,7 @@ void main() {
     expect(p3.book.instance(s), 'kryfo-$s.1');
   });
 
-  test('a contact lane is never let go, even with nobody in it', () {
+  test('a batch is never let go, even with nobody in it', () {
     final p1 = planSlots(const SlotBook(), [at('c', lane(2))], rnd);
     final s = p1.book.slotOf('c')!;
     final p2 = planSlots(p1.book, const [], rnd);

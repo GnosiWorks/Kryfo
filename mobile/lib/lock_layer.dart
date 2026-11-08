@@ -8,6 +8,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'lock_guard.dart';
+import 'picture_lock.dart';
 import 'theme.dart';
 import 'widgets/wall_images.dart';
 
@@ -219,6 +220,7 @@ class LockGate extends StatefulWidget {
     this.inFront,
     this.localesChanged,
     this.revealed,
+    this.attached,
   });
 
   final Widget app;
@@ -241,6 +243,8 @@ class LockGate extends StatefulWidget {
   final VoidCallback? localesChanged;
   // the app is shown: before what waited for it happens
   final VoidCallback? revealed;
+  // a new android screen came onto the engine
+  final VoidCallback? attached;
 
   @override
   State<LockGate> createState() => _LockGateState();
@@ -255,6 +259,9 @@ const lockWindowChannel = BasicMessageChannel<String>(
 class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
   // android said the app was left, and it has not come back since
   bool _away = false;
+  // a lift that came while the app was away and locked nothing (no pin):
+  // what waited for it runs once the app is back
+  bool _liftOwed = false;
 
   @override
   void initState() {
@@ -267,9 +274,13 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
         widget.inFront?.call(false);
       } else if (m == 'left') {
         widget.left?.call();
+      } else if (m == 'attached') {
+        widget.attached?.call();
       }
       return '';
     });
+    // nothing is decoded under a lock not read yet
+    if (!widget.loaded() || widget.locked()) shutPictures();
     widget.load();
     // the lifecycle only reports changes, and a fresh start in front is not
     // one. a process the job started builds this too, with nobody looking.
@@ -301,6 +312,12 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       _away = false;
       widget.returned();
+      // back with no lock up: an app without a pin, left while the lock was
+      // read, never lifted one, and its pictures open here
+      if (widget.loaded() && !widget.locked()) {
+        openPictures();
+        if (_liftOwed) _lift();
+      }
       widget.inFront?.call(true);
     }
   }
@@ -315,8 +332,9 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     onLockUp: () {
       widget.guard.locking();
       haloClearToasts();
-      // no chat's photo stays decoded behind the pin
+      // no chat's photo or frame stays decoded behind the pin
       WallImages.clear();
+      shutPictures();
       widget.lockingUp?.call();
     },
     onLifted: () {
@@ -326,14 +344,21 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       if (_away ||
           life == AppLifecycleState.paused ||
           life == AppLifecycleState.hidden) {
+        _liftOwed = true;
         widget.leaving();
         return;
       }
-      widget.revealed?.call();
-      // what waited happens in an everyday session and is dropped in a decoy
-      widget.quiet() ? widget.guard.dropHeld() : widget.guard.lifted();
+      openPictures();
+      _lift();
     },
   );
+
+  void _lift() {
+    _liftOwed = false;
+    widget.revealed?.call();
+    // what waited happens in an everyday session and is dropped in a decoy
+    widget.quiet() ? widget.guard.dropHeld() : widget.guard.lifted();
+  }
 }
 
 // back, while the lock is up, goes nowhere. android sends it to dart only

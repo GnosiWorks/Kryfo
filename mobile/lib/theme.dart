@@ -103,8 +103,6 @@ enum HaloAccent {
       Color(0xFFFFFBF4),
       Color(0xFF824900),
     ),
-    bright: Color(0xFFE8960B),
-    brightDeep: Color(0xFFCC7006),
   ),
   grey(
     dark: AccentTones(
@@ -192,22 +190,9 @@ enum HaloAccent {
   );
 
   final AccentTones dark, light;
-  final Color? _bright, _brightDeep;
-  const HaloAccent({
-    required this.dark,
-    required this.light,
-    Color? bright,
-    Color? brightDeep,
-  }) : _bright = bright,
-       _brightDeep = brightDeep;
+  const HaloAccent({required this.dark, required this.light});
 
   AccentTones tones(bool light) => light ? this.light : dark;
-
-  // the bright card in tools, the same in both themes: the dark theme's
-  // tones unless the accent has its own
-  Color get bright => _bright ?? dark.accent;
-  Color get brightDeep => _brightDeep ?? dark.deep;
-  Color get onBright => dark.on;
 
   static HaloAccent byName(String? name) {
     for (final a in values) {
@@ -266,9 +251,6 @@ class HaloColors {
   // the accent's words on its own on colour (a chip or a button inside your
   // bubble): the accent itself, 4.5:1 there as its on colour is to it
   static Color get amberOnOn => _a.accent;
-  static Color get amberBright => _accent.bright;
-  static Color get amberBrightDeep => _accent.brightDeep;
-  static Color get onAmberBright => _accent.onBright;
 
   // the yellow, whatever the accent: avatars and the gold tier are
   // someone's look, not the app's
@@ -286,8 +268,32 @@ class HaloColors {
       isLight ? const Color(0xFF096545) : const Color(0xFF34D399);
   static Color get violetText =>
       isLight ? const Color(0xFF5E3BCC) : const Color(0xFFB79CFF);
+  // error words: light rose needs darker ink for 4.5:1, dark rose passes
+  static Color get roseText =>
+      isLight ? const Color(0xFF9F2962) : const Color(0xFFF472B6);
   static Color get warnText => _y.text;
+
+  /// the tone words take when they wear [c]: a status accent's text twin,
+  /// anything else as it is
+  static Color wordsIn(Color c) {
+    if (c == rose) return roseText;
+    if (c == green) return greenText;
+    if (c == violet) return violetText;
+    if (c == warn) return warnText;
+    if (c == amber) return amberText;
+    return c;
+  }
+
   static Color get onWarn => _y.on;
+
+  /// words on a filled violet button: the dark ink is ~3.3:1 on the light
+  /// theme's violet, white is 5.6:1
+  static Color get onViolet => isLight ? const Color(0xFFFFFFFF) : amberInk;
+
+  /// a rose button's fill: a shade under the light rose, so white on it
+  /// reaches 4.5:1
+  static Color get roseFill => isLight ? const Color(0xFFC93D80) : rose;
+  static Color get onRose => isLight ? const Color(0xFFFFFFFF) : amberInk;
 }
 
 // persian and arabic join their letters. letter spacing pulls the joins
@@ -296,20 +302,34 @@ class HaloColors {
 // words keep their colour).
 bool get _joinedScript => const {'fa', 'ar'}.contains(l10nLocale.languageCode);
 
+// hindi's devanagari hangs a word from one line along its top, which
+// tracking breaks into pieces, and its font has no italic either
+bool get _devanagari => l10nLocale.languageCode == 'hi';
+
 /// letter spacing, or none where the script joins its letters
-double track(double v) => _joinedScript ? 0 : v;
+double track(double v) => _joinedScript || _devanagari ? 0 : v;
 
 /// italic, or upright where the script has no italic
-FontStyle slant() => _joinedScript ? FontStyle.normal : FontStyle.italic;
+FontStyle slant() =>
+    _joinedScript || _devanagari ? FontStyle.normal : FontStyle.italic;
 
 class HaloType {
   // what draws the letters our own fonts do not have. flutter asks these,
   // in order, for any character the family lacks, before the phone's fonts;
-  // they carry only cyrillic and arabic, so latin never reaches them.
-  // jetbrains mono has cyrillic itself; nothing monospaced has arabic.
-  static const serifFallback = ['Noto Serif Cyrillic', 'Noto Naskh Arabic'];
-  static const sansFallback = ['Noto Sans Cyrillic', 'Noto Sans Arabic'];
-  static const monoFallback = ['Noto Sans Arabic'];
+  // they carry only cyrillic, arabic and devanagari, so latin never reaches
+  // them. jetbrains mono has cyrillic itself; nothing monospaced has arabic
+  // or devanagari.
+  static const serifFallback = [
+    'Noto Serif Cyrillic',
+    'Noto Naskh Arabic',
+    'Noto Sans Devanagari',
+  ];
+  static const sansFallback = [
+    'Noto Sans Cyrillic',
+    'Noto Sans Arabic',
+    'Noto Sans Devanagari',
+  ];
+  static const monoFallback = ['Noto Sans Arabic', 'Noto Sans Devanagari'];
 
   // instrument sans has no vietnamese letters with stacked or hooked accents
   // (ế, ự, ỹ...), and a fallback letter mid-word shows in another typeface,
@@ -328,13 +348,19 @@ class HaloType {
       _joinedScript ? 'Noto Naskh Arabic' : 'Fraunces';
   static String get monoFamily =>
       _joinedScript ? 'Noto Sans Arabic' : 'JetBrains Mono';
-  static List<String> get serifFallbackNow =>
-      _joinedScript ? const ['Fraunces', 'Noto Serif Cyrillic'] : serifFallback;
+  static List<String> get serifFallbackNow => _joinedScript
+      ? const ['Fraunces', 'Noto Serif Cyrillic', 'Noto Sans Devanagari']
+      : serifFallback;
   static List<String> get sansFallbackNow => _joinedScript
-      ? const ['Instrument Sans', 'Noto Sans Cyrillic']
+      ? const ['Instrument Sans', 'Noto Sans Cyrillic', 'Noto Sans Devanagari']
       : sansFallback;
-  static List<String> get monoFallbackNow =>
-      _joinedScript ? const ['JetBrains Mono'] : monoFallback;
+  static List<String> get monoFallbackNow => _joinedScript
+      ? const ['JetBrains Mono', 'Noto Sans Devanagari']
+      : monoFallback;
+
+  // devanagari's vowel signs stand above and below the letters: a line set
+  // as tight as a latin headline would touch the next one
+  static double _lineHeight(double h) => _devanagari && h < 1.3 ? 1.3 : h;
 
   static TextStyle serif({
     double size = 26,
@@ -350,7 +376,7 @@ class HaloType {
     fontWeight: weight,
     fontStyle: italic ? slant() : FontStyle.normal,
     color: color ?? HaloColors.text,
-    height: height,
+    height: _lineHeight(height),
     letterSpacing: track(letter),
   );
 
@@ -370,9 +396,18 @@ class HaloType {
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text,
-    height: height,
+    height: _lineHeight(height),
     letterSpacing: track(letter),
   );
+
+  // a message's words, in a bubble or under its photo: one style for both,
+  // dark only on the amber of ours
+  static TextStyle message({required bool onAmber, double height = 1.4}) =>
+      sans(
+        size: 14,
+        color: onAmber ? HaloColors.onAmber : HaloColors.text,
+        height: height,
+      );
 
   static TextStyle mono({
     double size = 11,
@@ -384,7 +419,7 @@ class HaloType {
     fontFamilyFallback: monoFallbackNow,
     fontSize: size,
     fontWeight: weight,
-    color: color ?? HaloColors.text2,
+    color: color ?? HaloColors.text,
     letterSpacing: track(letter),
   );
 }
@@ -459,9 +494,20 @@ ThemeData buildHaloTheme() {
 // if they are still what we put there: the user may have copied since.
 Timer? _clipTimer;
 
-Future<void> copySensitive(String value) async {
-  // marked sensitive for the keyboard's history and the android 13
-  // preview; the plain clipboard is the fallback
+// what kryfo put on the clipboard last, and whether a hidden chat or the
+// decoy was open then
+String? _ourClip;
+bool _ourClipQuiet = false;
+
+/// true while what is copied comes from a hidden chat or the decoy: the app
+/// sets it
+bool Function() clipGoesWithLock = () => false;
+
+/// [value] on the clipboard, marked sensitive for the keyboard's history and
+/// the android 13 preview. [kept]: a message's words, which stay until the
+/// next lock or a switch of pin, not a minute
+Future<void> copySensitive(String value, {bool kept = false}) async {
+  // the plain clipboard is the fallback
   var done = false;
   try {
     done =
@@ -473,18 +519,78 @@ Future<void> copySensitive(String value) async {
     // no such call here: the plain clipboard below
   }
   if (!done) await Clipboard.setData(ClipboardData(text: value));
+  _ourClip = value;
+  _ourClipQuiet = clipGoesWithLock();
   _clipTimer?.cancel();
-  _clipTimer = Timer(const Duration(seconds: 60), () async {
-    try {
-      final now = await Clipboard.getData(Clipboard.kTextPlain);
-      if (now?.text == value) {
-        await Clipboard.setData(const ClipboardData(text: ''));
-      }
-    } catch (e) {
-      dlog('clipboard: not cleared (${e.runtimeType})');
-    }
-  });
+  if (kept) return;
+  _clipTimer = Timer(const Duration(seconds: 60), () => _clearIfOurs(value));
 }
+
+Future<void> _clearIfOurs(
+  String? value, {
+  bool force = false,
+  bool any = false,
+}) async {
+  try {
+    final cleared = await const MethodChannel('halo/platform')
+        .invokeMethod<bool>('clearClip', {
+          'text': value ?? '',
+          'force': force,
+          'any': any,
+        });
+    if (cleared != null) {
+      if (_ourClip == value) _ourClip = null;
+      return;
+    }
+  } catch (_) {
+    // no such call here: the plain clipboard below
+  }
+  try {
+    final now = await Clipboard.getData(Clipboard.kTextPlain);
+    if (any || now?.text == value || (force && now == null)) {
+      await Clipboard.setData(const ClipboardData(text: ''));
+    }
+    if (_ourClip == value) _ourClip = null;
+  } catch (e) {
+    dlog('clipboard: not cleared (${e.runtimeType})');
+  }
+}
+
+/// what kryfo copied comes off the clipboard if it is still there.
+/// [quietOnly]: only a copy from a hidden chat or the decoy, which goes with
+/// a lock or the hidden chats' close as their shared files do; a switch of
+/// pin takes any. such a copy goes even when android hides the clipboard
+/// from the background. [all]: whatever is on it, as a hidden chats or
+/// decoy session ends (a field's own copy or cut is not ours to track, and
+/// the person is leaving kryfo). a [wipe] the same
+Future<void> dropOurClip({
+  bool quietOnly = false,
+  bool all = false,
+  bool wipe = false,
+}) async {
+  final any = all || wipe;
+  final v = _ourClip;
+  if (!any && (v == null || (quietOnly && !_ourClipQuiet))) return;
+  _clipTimer?.cancel();
+  await _clearIfOurs(v, force: any || _ourClipQuiet, any: any);
+  if (any) _ourClip = null;
+}
+
+/// a clip kryfo put there in an earlier run, known by its label: off as the
+/// decoy opens, when nothing of this run remembers it
+Future<void> dropLabelledClip() async {
+  try {
+    await const MethodChannel(
+      'halo/platform',
+    ).invokeMethod<bool>('clearOurClip');
+  } catch (_) {
+    // no such call here: nothing is labelled
+  }
+}
+
+@visibleForTesting
+({String? value, bool quiet}) get ourClipForTest =>
+    (value: _ourClip, quiet: _ourClipQuiet);
 
 // the app's scaffold messenger, set on the MaterialApp. toasts use the root
 // overlay below

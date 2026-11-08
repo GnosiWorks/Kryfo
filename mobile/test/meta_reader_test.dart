@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -10,6 +11,7 @@ import 'package:kryfo/meta/meta_reader.dart';
 import 'package:kryfo/mp4_strip.dart';
 
 import 'meta_fixtures.dart';
+import 'photo_crafted.dart';
 
 MetaReport read(Uint8List b) => readMetaStrict(MemorySource(b));
 
@@ -77,6 +79,33 @@ void main() {
       final cut = read(jpeg(eoi: false));
       expect(cut.status, MetaStatus.unreadable);
       expect(cut.why, isNotNull);
+    });
+
+    test('exif behind ff 00, where a decoder reads on, is unreadable', () {
+      final gps = File('test/fixtures/gallery_gps.jpg').readAsBytesSync();
+      expect(read(gps).status, MetaStatus.found);
+      var at = 2;
+      while (gps[at + 1] != 0xE1) {
+        at += 2 + (gps[at + 2] << 8 | gps[at + 3]);
+      }
+      final hid = hiddenSegment(gps, at);
+      expect(read(hid).status, MetaStatus.unreadable);
+      expect(photoToSend(hid), isNull);
+      // and between two scans
+      final b = jpeg();
+      final app1 = [0xFF, 0xE1, 0, 7, ...t('hello')];
+      Uint8List two(List<int> gap) => Uint8List.fromList([
+        ...b.sublist(0, b.length - 2),
+        0xFF, 0xC4, 0, 4, 1, 2, ...gap, 0xFF, 0xDA, 0, 4, 1, 1, 9, //
+        0xFF, 0xD9,
+      ]);
+      expect(read(two(const [])).status, MetaStatus.nothing);
+      expect(read(two([0xFF])).status, MetaStatus.nothing);
+      expect(
+        read(two([0xFF, 0x00, 0, 2 + app1.length, ...app1])).status,
+        MetaStatus.unreadable,
+      );
+      expect(read(two(app1)).status, MetaStatus.found);
     });
 
     test('orientation alone reads as nothing', () {
@@ -178,6 +207,21 @@ void main() {
     test('a uuid box counts as found', () {
       expect(read(mp4(uuid: true)).status, MetaStatus.found);
       expect(read(mp4()).status, MetaStatus.nothing);
+    });
+
+    test('a gps track is found with its points', () {
+      final r = read(mp4(gpsTrack: true));
+      expect(r.status, MetaStatus.found);
+      expect(r.extraTracks, 1);
+      expect(r.gpsPoints, 3);
+      expect(r.leftoverBytes, gpmdGps(3).length);
+    });
+
+    test('a sample table past the file is unreadable', () {
+      final b = mp4(gpsTrack: true);
+      final i = latin1.decode(b).lastIndexOf('stco') + 12;
+      b.setRange(i, i + 4, be32(0x7ffffff0));
+      expect(read(b).status, MetaStatus.unreadable);
     });
   });
 

@@ -19,3 +19,12 @@ func String(p unsafe.Pointer) string {
 	c := (*C.char)(p)
 	return C.GoStringN(c, C.int(C.strlen(c)))
 }
+
+// Bytes is String for a secret: a byte copy the caller can clear, where a
+// go string could never be
+func Bytes(p unsafe.Pointer) []byte {
+	if p == nil {
+		return nil
+	}
+	return C.GoBytes(p, C.int(C.strlen((*C.char)(p))))
+}

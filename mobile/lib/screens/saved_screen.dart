@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/breathing_ring.dart';
 import '../widgets/burn_fade.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/sealed_picture.dart';
 import '../widgets/swap.dart';
 import '../main.dart' hide live;
 import '../stickers/sticker_bubble.dart' show StickerLine;
@@ -14,7 +14,6 @@ import '../theme.dart';
 import '../devchat/dev_key.dart' show isDevChat;
 import '../rooms.dart' show looksLikeRoomKey, roomTag;
 import '../widgets/decode_px.dart';
-import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import 'chat_door.dart';
 import '../widgets/motion.dart' show kHouseCurve, motionStill;
 import '../widgets/page_head.dart' show PageBar;
@@ -22,6 +21,8 @@ import '../widgets/stagger_in.dart';
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../msg_order.dart' show rowWrittenAt;
+import '../voice_format.dart' show isVoiceName;
+import '../wide/read_width.dart' show DeskPage;
 
 // every saved message across all chats, newest first. tap a card to jump to
 // that message in its chat; tap the bookmark to unsave: it empties, and the
@@ -84,7 +85,7 @@ class _SavedScreenState extends State<SavedScreen> {
       peer: r['peer_id'] as String?,
       uid: r['msg_uid'] as String?,
     );
-    if (!ok && mounted) showHaloToast(context, l10n.savedChatGone);
+    if (!ok && mounted) showHaloToast(context, l10n.savedChatGoneShown);
   }
 
   String _who(String peer) {
@@ -120,13 +121,14 @@ class _SavedScreenState extends State<SavedScreen> {
     if (_kept(r)) return l10n.savedKeptInChat;
     if (r['sticker'] != null) return l10n.stickerLabel;
     final fn = r['file_name'] as String?;
-    if (fn == 'voice.wav') return l10n.savedVoiceNote;
+    if (isVoiceName(fn)) return l10n.savedVoiceNote;
     if (fn != null) return fn;
     if ((r['media_path'] as String?) != null) return l10n.savedPhoto;
     return (r['plaintext'] as String?) ?? '';
   }
 
-  bool _isVoice(Map<String, Object?> r) => r['file_name'] == 'voice.wav';
+  bool _isVoice(Map<String, Object?> r) =>
+      isVoiceName(r['file_name'] as String?);
   bool _isPhoto(Map<String, Object?> r) =>
       r['file_name'] == null && (r['media_path'] as String?) != null;
 
@@ -154,39 +156,46 @@ class _SavedScreenState extends State<SavedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: HaloColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            PageBar(title: l10n.savedSaved, controller: _scroll),
-            Expanded(
-              child: !_loaded
-                  ? const SizedBox.shrink()
-                  // the last one unsaved, the empty page fades in
-                  : FadeSwap(
-                      child: _rows.isEmpty
-                          ? KeyedSubtree(
-                              key: const ValueKey('none'),
-                              child: _empty(),
-                            )
-                          : ListView.builder(
-                              key: const ValueKey('cards'),
-                              controller: _scroll,
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                              itemCount: _rows.length,
-                              itemBuilder: (_, i) => StaggerIn(
-                                key: ValueKey(_rows[i]['msg_uid'] ?? i),
-                                index: i,
-                                child: FadeFold(
-                                  leaving: _leaving.contains(
-                                    _rows[i]['msg_uid'],
+      body: DeskPage(
+        child: SafeArea(
+          child: Column(
+            children: [
+              PageBar(title: l10n.savedSaved, controller: _scroll),
+              Expanded(
+                child: !_loaded
+                    ? const SizedBox.shrink()
+                    // the last one unsaved, the empty page fades in
+                    : FadeSwap(
+                        child: _rows.isEmpty
+                            ? KeyedSubtree(
+                                key: const ValueKey('none'),
+                                child: _empty(),
+                              )
+                            : ListView.builder(
+                                key: const ValueKey('cards'),
+                                controller: _scroll,
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  8,
+                                  16,
+                                  24,
+                                ),
+                                itemCount: _rows.length,
+                                itemBuilder: (_, i) => StaggerIn(
+                                  key: ValueKey(_rows[i]['msg_uid'] ?? i),
+                                  index: i,
+                                  child: FadeFold(
+                                    leaving: _leaving.contains(
+                                      _rows[i]['msg_uid'],
+                                    ),
+                                    child: _card(_rows[i]),
                                   ),
-                                  child: _card(_rows[i]),
                                 ),
                               ),
-                            ),
-                    ),
-            ),
-          ],
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -225,11 +234,11 @@ class _SavedScreenState extends State<SavedScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              l10n.savedLongPressAnyMessage,
+              l10n.savedLongPressAnyMessageShown,
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.55,
               ),
             ),
@@ -324,7 +333,7 @@ class _SavedScreenState extends State<SavedScreen> {
               const SizedBox(width: 8),
               Text(
                 _time(ms),
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
+                style: HaloType.mono(size: 10, color: HaloColors.text),
               ),
               const Spacer(),
               // room for the mark, which is drawn over the corner
@@ -366,7 +375,7 @@ class _SavedScreenState extends State<SavedScreen> {
               const SizedBox(width: 5),
               Text(
                 l10n.savedViewInChat,
-                style: HaloType.mono(size: 10, color: HaloColors.text2),
+                style: HaloType.mono(size: 10, color: HaloColors.text),
               ),
             ],
           ),
@@ -390,7 +399,7 @@ class _SavedScreenState extends State<SavedScreen> {
       const SizedBox(width: 9),
       Text(
         label,
-        style: HaloType.serif(size: 14, color: HaloColors.text2, italic: true),
+        style: HaloType.serif(size: 14, color: HaloColors.text, italic: true),
       ),
     ],
   );
@@ -409,15 +418,17 @@ class _SavedScreenState extends State<SavedScreen> {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(9),
-          child: Image.file(
-            File(r['media_path'] as String),
+          child: SizedBox(
             width: 44,
             height: 44,
-            fit: BoxFit.cover,
-            cacheWidth: decodePx(context, 44),
-            frameBuilder: (_, child, frame, sync) =>
-                PhotoTileFade(shown: sync || frame != null, child: child),
-            errorBuilder: (_, _, _) => missing,
+            child: SealedPicture(
+              path: r['media_path'] as String,
+              image: mediaImage(
+                r['media_path'] as String,
+                decodePx(context, 44),
+              ),
+              errorBuilder: (_, _, _) => missing,
+            ),
           ),
         ),
         const SizedBox(width: 10),

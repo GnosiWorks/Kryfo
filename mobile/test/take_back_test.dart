@@ -18,7 +18,11 @@ import 'package:kryfo/main.dart'
         kFrameReaction,
         kFrameUnsend,
         queueGap,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateOutbox,
+        AppStateMessages,
+        AppStateRoute,
+        AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -51,9 +55,9 @@ class _SlowIo extends ArrivalIo {
   var slow = false;
 
   @override
-  Future<String> relaySend(String xPub, String cipher) async {
+  Future<String> relaySend(int ident, String xPub, String cipher) async {
     asked++;
-    if (!slow) return super.relaySend(xPub, cipher);
+    if (!slow) return super.relaySend(ident, xPub, cipher);
     final c = Completer<String>();
     waits.add(c);
     final r = await c.future;

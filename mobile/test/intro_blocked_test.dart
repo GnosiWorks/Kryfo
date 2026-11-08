@@ -20,13 +20,16 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         unboundIdOf,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateOutbox,
+        AppStateProfile,
+        AppStateReceive,
+        AppStatePairing;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
@@ -126,7 +129,7 @@ Future<void> _settle() =>
 
 // someone's card and the x key it is made from, as hex
 Future<({String card, String x})> _keysOf() async {
-  final pair = Curve.generateKeyPair();
+  final pair = testKeyPair();
   final x = pair.publicKey.serialize().sublist(1);
   final them = SignalSession();
   await them.bootstrap(
@@ -145,7 +148,7 @@ void main() {
   late Directory docs;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),

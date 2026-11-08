@@ -21,6 +21,7 @@ import 'package:kryfo/vault_life.dart' show chatTables;
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'mem_db.dart';
+import 'source_body.dart';
 import 'sqlite_ffi.dart';
 
 class _Rows extends HaloDb {
@@ -68,7 +69,7 @@ Future<String?> _atmo(_Rows db, String table, String col, String id) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final src = File('lib/app/database.dart').readAsStringSync();
+  final src = sourceOf('lib/app/database.dart');
   final upgrade = src.indexOf('onUpgrade: (db, oldV, newV) async {');
   final steps = src.substring(upgrade, src.indexOf('\n    );', upgrade));
   final create = src.substring(

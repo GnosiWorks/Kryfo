@@ -14,12 +14,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/handle_repoint.dart' show kHandleClaimedKey;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloEngine, appState, registryWait, useEngineForTest;
+    show
+        HaloEngine,
+        appState,
+        registryWait,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateProfile;
 import 'package:kryfo/screens/handle_screen.dart';
 import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/signal_session.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 import 'package:kryfo/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,7 +52,7 @@ class _Registry implements HaloEngine {
 
   // no first-contact address: the invite is the plain one
   @override
-  String firstContactPk(int counter) => '';
+  String firstContactPk(int ident, int counter) => '';
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw StateError('the engine was asked for ${i.memberName}');
@@ -89,7 +94,7 @@ void main() {
 
   // the invite a claim sends is built from this phone's own keys
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
@@ -101,6 +106,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     appState.sendModeForTest = 'balanced';
+    // a claim waits for the onion: the registry takes no invite without one
+    final was = appState.myOnion;
+    appState.myOnion = 'abc.onion';
+    addTearDown(() => appState.myOnion = was);
   });
 
   // made inside the test, so its answers land in the test's own clock

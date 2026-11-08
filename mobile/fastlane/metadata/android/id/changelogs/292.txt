@@ -1,0 +1,5 @@
+Baru: enkripsi pascakuantum antarponsel dengan 0.6, dan perangkat tertaut untuk memakai Kryfo juga di komputer. Foto profil, indikator mengetik, blokir tangkapan layar di grup, dan file hingga 50 MB yang bisa dijeda dan dilanjutkan.
+
+Berubah: penyiapan enam langkah, kode penautan delapan digit, serta foto dan file terenkripsi juga di ponsel. Kryfo kini ada dalam bahasa Hindi dan Polandia.
+
+Kontak di 0.5 perlu memperbarui sebelum kalian bisa saling menambahkan. Obrolanmu tetap berjalan.

@@ -4,7 +4,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +14,17 @@ import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateDelivery,
+        AppStateBridges,
+        AppStateContacts,
+        AppStateReceive;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/router.dart';
@@ -26,6 +35,7 @@ import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'arrival_fakes.dart';
+import 'source_body.dart';
 
 class _Engine implements HaloEngine {
   _Engine(this.log);
@@ -130,9 +140,9 @@ class _Io extends ArrivalIo {
   _Io(this.log);
   final List<String> log;
   @override
-  void listen(String xPub, {bool fresh = false}) {
+  void listen(int ident, String xPub, {bool fresh = false}) {
     log.add('listen:$xPub');
-    super.listen(xPub);
+    super.listen(ident, xPub);
   }
 }
 
@@ -223,21 +233,25 @@ void main() {
 
       eng.relays = _failing;
       app.sampleRelayHealth(now: t0);
-      expect(app.suggestFastFallbackAt(t0), isFalse);
+      expect(app.suggestPrivateFallbackAt(t0), isFalse);
+      // the spell begins: the pill counts it on its own clock
+      expect(told, 1);
+      expect(app.relayDownSince, t0);
       app.sampleRelayHealth(now: t0.add(const Duration(seconds: 60)));
-      expect(told, 0);
+      expect(told, 1);
       app.sampleRelayHealth(now: t0.add(const Duration(seconds: 95)));
       expect(
-        app.suggestFastFallbackAt(t0.add(const Duration(seconds: 95))),
+        app.suggestPrivateFallbackAt(t0.add(const Duration(seconds: 95))),
         isTrue,
       );
-      expect(told, 1);
+      expect(told, 2);
 
       eng.relays = _fine;
       final later = t0.add(const Duration(hours: 2));
       app.sampleRelayHealth(now: later);
-      expect(app.suggestFastFallbackAt(later), isFalse);
-      expect(told, 2);
+      expect(app.suggestPrivateFallbackAt(later), isFalse);
+      expect(app.relayDownSince, isNull);
+      expect(told, 3);
     });
 
     test('a spell offline is not an outage, and the clock starts again when '
@@ -252,13 +266,13 @@ void main() {
       // the runner is still waiting out its backoff, so the row still fails
       app.sampleRelayHealth(now: t0.add(const Duration(seconds: 125)));
       expect(
-        app.suggestFastFallbackAt(t0.add(const Duration(seconds: 126))),
+        app.suggestPrivateFallbackAt(t0.add(const Duration(seconds: 126))),
         isFalse,
       );
       // still down a full spell after it came back: that one is the relay
       app.sampleRelayHealth(now: t0.add(const Duration(seconds: 220)));
       expect(
-        app.suggestFastFallbackAt(t0.add(const Duration(seconds: 220))),
+        app.suggestPrivateFallbackAt(t0.add(const Duration(seconds: 220))),
         isTrue,
       );
     });
@@ -270,7 +284,7 @@ void main() {
       app.noteOnline(false);
       app.noteOnline(true);
       expect(
-        app.suggestFastFallbackAt(t0.add(const Duration(seconds: 95))),
+        app.suggestPrivateFallbackAt(t0.add(const Duration(seconds: 95))),
         isFalse,
       );
     });
@@ -279,7 +293,7 @@ void main() {
       final src = [
         'lib/app/state.dart',
         'lib/app/dev_screen.dart',
-      ].map((f) => File(f).readAsStringSync()).join('\n');
+      ].map(sourceOf).join('\n');
       final poll = src.substring(
         src.indexOf('Timer.periodic(const Duration(seconds: 1), (t) {'),
       );
@@ -435,10 +449,10 @@ void main() {
       eng.relays = _failing;
       app.sampleRelayHealth(now: t0);
       app.sampleRelayHealth(now: t0.add(const Duration(seconds: 95)));
-      expect(app.suggestFastFallback, isTrue);
+      expect(app.suggestPrivateFallback, isTrue);
       await app.setSendMode('private');
       await app.setSendMode('balanced');
-      expect(app.suggestFastFallback, isFalse);
+      expect(app.suggestPrivateFallback, isFalse);
     });
 
     test('one that does not save moves nothing, and the next try still '
@@ -532,7 +546,7 @@ void main() {
         ),
       );
       await t.pump();
-      await t.tap(find.text(l10n.modesRelay));
+      await t.tap(find.text(l10n.modesFast));
       await t.pump();
       // anything the page still had on its way comes in after the tap
       await t.runAsync(
@@ -576,27 +590,27 @@ void main() {
       expect(appState.sendMode, 'balanced');
       // the next save of relay is refused, onion's goes
       store.refuseMode = 'balanced';
-      await t.tap(find.text(l10n.modesRelay));
+      await t.tap(find.text(l10n.modesFast));
       await t.pump(const Duration(milliseconds: 300));
-      expect(find.text(l10n.modesSwitching), findsOneWidget);
-      await t.tap(find.text(l10n.modesOnion));
+      expect(find.byKey(const ValueKey('going')), findsOneWidget);
+      await t.tap(find.text(l10n.modesPrivate));
       await t.pump(const Duration(milliseconds: 300));
       await t.pump(const Duration(milliseconds: 300));
-      expect(find.text(l10n.modesSwitching), findsOneWidget);
+      expect(find.byKey(const ValueKey('going')), findsOneWidget);
       live.gate!.complete();
       await first;
       await t.pump();
       await t.pump(const Duration(seconds: 1));
       expect(appState.sendMode, 'private');
-      expect(find.text(l10n.modesSwitching), findsNothing);
+      expect(find.byKey(const ValueKey('going')), findsNothing);
       Finder chosen(String name) => find.ancestor(
         of: find.text(name),
         matching: find.byWidgetPredicate(
           (w) => w is Semantics && w.properties.selected == true,
         ),
       );
-      expect(chosen(l10n.modesOnion), findsOneWidget);
-      expect(chosen(l10n.modesRelay), findsNothing);
+      expect(chosen(l10n.modesPrivate), findsOneWidget);
+      expect(chosen(l10n.modesFast), findsNothing);
       // the refused tap says so
       expect(find.text(l10n.modesNotChanged), findsOneWidget);
       await t.pumpWidget(const SizedBox());
@@ -604,7 +618,7 @@ void main() {
     });
 
     test('the boot sets the list before the invite address listens', () {
-      final src = File('lib/app/state.dart').readAsStringSync();
+      final src = sourceOf('lib/app/state.dart');
       final boot = src.substring(src.indexOf("dlog('transport: booting in"));
       final init = boot.indexOf('engine.nostrInit(relaysFor(_sendMode));');
       expect(init, greaterThan(0));

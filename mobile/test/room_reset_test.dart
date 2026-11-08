@@ -29,7 +29,11 @@ import 'package:kryfo/main.dart'
         roomDoorColumns,
         sayRoomJoined,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateGroupLanes,
+        AppStateGroups,
+        AppStateReceive,
+        AppStateRooms;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/rooms.dart';
 import 'package:kryfo/router.dart';
@@ -1128,7 +1132,7 @@ void main() {
       final rows = screenRows();
       final engine = await open(t, rows);
       final remove = find.byTooltip(l10n.groupInfoRemoveFromGroup);
-      await t.ensureVisible(remove);
+      await t.scrollUntilVisible(remove, 200);
       await t.pump(const Duration(milliseconds: 300));
       await t.tap(remove);
       await t.pump();
@@ -1166,6 +1170,9 @@ void main() {
       final rows = screenRows(room: false)
         ..person(_other, onion: 'o', xpub: 'x');
       await open(t, rows, room: false);
+      // a plain group's page is longer: all of it in view
+      t.view.physicalSize = const Size(1080, 4500);
+      await t.pump(const Duration(milliseconds: 300));
       final remove = find.byTooltip(l10n.groupInfoRemoveFromGroup).last;
       await t.ensureVisible(remove);
       await t.pump(const Duration(milliseconds: 300));

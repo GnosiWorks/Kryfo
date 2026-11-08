@@ -29,7 +29,10 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
 	rcv := mustRcv(t, peer)
@@ -41,7 +44,7 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 	now := time.Now()
 	ts := func(d time.Duration) nostr.Timestamp { return nostr.Timestamp(now.Add(d).Unix()) }
 	began := ts(-3 * time.Hour)
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	anchor := func() int64 {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -62,7 +65,7 @@ func TestWrapStampedIntoAWalkedStretchArrives(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the walk finished", 10*time.Second, func() bool {
 		return inboxLen() == 6 && !catchupMarkOf(ck).Started()
 	})
@@ -121,7 +124,10 @@ func newHalfWay(t *testing.T) *halfWay {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	t.Cleanup(func() { kickSpread = oldSpread })
+	t.Cleanup(func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	})
 	h.peer = newXid(t)
 	h.tag = hex.EncodeToString(h.peer.pub[:])
 	h.rcv = mustRcv(t, h.peer)
@@ -142,7 +148,7 @@ func newHalfWay(t *testing.T) *halfWay {
 	return h
 }
 
-func (h *halfWay) lastPath() string { return savedDataDir + "/nostr_last_" + h.rcv[:16] }
+func (h *halfWay) lastPath() string { return savedDataDir() + "/nostr_last_" + h.rcv[:16] }
 
 func (h *halfWay) anchor() int64 {
 	b, _ := os.ReadFile(h.lastPath())
@@ -232,7 +238,7 @@ func (h *halfWay) leave(otherFirst bool) int {
 	h.pace(otherFirst, 1500*time.Millisecond)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, h.tag, h.peer.pub, h.rcv)
+	go nostrSubscribeRunner(ctx, h.tag, mainPair(h.peer.pub), h.rcv)
 	waitFor(t, "the other relay's pass", 10*time.Second, func() bool {
 		catchupMu.Lock()
 		_, done := catchupLast[h.key(h.other)]
@@ -247,7 +253,7 @@ func (h *halfWay) leave(otherFirst bool) int {
 	}
 	waitFor(t, "a page of the walk", 10*time.Second, func() bool {
 		c := h.ours.snapshot()
-		return len(c) > 0 && len(c[0].reqs) >= 2
+		return len(c) > 0 && pagesOf(c[0]) >= 1
 	})
 	cancel()
 	waitFor(t, "the walk stopped", 5*time.Second, func() bool { return catchupMarkOf(h.key(h.ours)).Started() })
@@ -265,7 +271,7 @@ func (h *halfWay) restart(otherFirst bool) {
 	h.pace(otherFirst, 0)
 	ctx, cancel := context.WithCancel(context.Background())
 	h.t.Cleanup(cancel)
-	go nostrSubscribeRunner(ctx, h.tag, h.peer.pub, h.rcv)
+	go nostrSubscribeRunner(ctx, h.tag, mainPair(h.peer.pub), h.rcv)
 }
 
 var relayOrders = []struct {
@@ -330,7 +336,7 @@ func TestTheAnchorComesBackAfterARestart(t *testing.T) {
 				// a first answer of twenty is full here, so ours walks
 				waitFor(t, "the pass after the reconnect", 10*time.Second, func() bool {
 					c := h.ours.snapshot()
-					return len(c[len(c)-1].reqs) >= 2 && !catchupHoldOf(h.key(h.ours)).Held()
+					return pagesOf(c[len(c)-1]) >= 1 && !catchupHoldOf(h.key(h.ours)).Held()
 				})
 			}
 			if a := h.anchor(); a != text {
@@ -456,7 +462,7 @@ func TestPublicRelaysThatNeverGetThroughHoldNothing(t *testing.T) {
 	}
 	forgetCatchup(keys...)
 	t.Cleanup(func() { forgetCatchup(keys...) })
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	anchor := func() int64 {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -475,7 +481,7 @@ func TestPublicRelaysThatNeverGetThroughHoldNothing(t *testing.T) {
 			cancel()
 			forgetCatchup(keys...)
 		}()
-		go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+		go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 		waitFor(t, "every public relay failing once", 10*time.Second, func() bool {
 			return refused.Load() > r0 && dials.Load() > d0 && stalled.Load() > s0
 		})
@@ -510,7 +516,7 @@ func TestOurRelayRefusingTheSubscriptionHoldsNothing(t *testing.T) {
 	keys := []string{catchupKey(closing, rcv), catchupKey(other.url(), rcv)}
 	forgetCatchup(keys...)
 	t.Cleanup(func() { forgetCatchup(keys...) })
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	began := time.Now().Add(-8 * time.Hour).Unix()
 	if err := os.WriteFile(lastPath, []byte(strconv.FormatInt(began, 10)), 0600); err != nil {
 		t.Fatal(err)
@@ -519,7 +525,7 @@ func TestOurRelayRefusingTheSubscriptionHoldsNothing(t *testing.T) {
 	other.store(text)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the anchor file at the text", 10*time.Second, func() bool {
 		b, _ := os.ReadFile(lastPath)
 		return strings.TrimSpace(string(b)) == strconv.FormatInt(int64(text.CreatedAt), 10)
@@ -551,15 +557,18 @@ func TestEitherEntryOfOurRelayLetsGo(t *testing.T) {
 			h := newHalfWay(t)
 			o := onion.url(t)
 			useRelays(o, h.ours.url(), h.other.url())
-			oldHost := ownRelayHost
-			ownRelayHost = strings.TrimPrefix(h.ours.url(), "ws://")
-			t.Cleanup(func() { ownRelayHost = oldHost })
+			oldHost := ownRelayHost.get()
+			ownRelayHost.put(strings.TrimPrefix(h.ours.url(), "ws://"))
+			t.Cleanup(func() {
+				runnersGone(t)
+				ownRelayHost.put(oldHost)
+			})
 			ok := catchupKey(o, h.rcv)
 			forgetCatchup(ok)
 			t.Cleanup(func() { forgetCatchup(ok) })
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			go nostrSubscribeRunner(ctx, h.tag, h.peer.pub, h.rcv)
+			go nostrSubscribeRunner(ctx, h.tag, mainPair(h.peer.pub), h.rcv)
 			if since := h.firstSince(0); since != h.began-12*3600 {
 				t.Fatalf("our relay's clearnet name asked from %d, not from %d", since, h.began-12*3600)
 			}

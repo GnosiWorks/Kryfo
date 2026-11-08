@@ -1,0 +1,6 @@
+# the one rust every build of the shim uses: here, in repro/Dockerfile and
+# in the f-droid recipe, which read the channel from this file
+[toolchain]
+channel = "1.97.0"
+profile = "minimal"
+targets = ["aarch64-linux-android", "armv7-linux-androideabi", "x86_64-linux-android"]

@@ -24,8 +24,10 @@ import '../widgets/unfold.dart';
 import 'hide_picker.dart';
 import 'lock_setup_screen.dart';
 import 'pin_flow_screen.dart';
+import 'update_pins_screen.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 class PinsScreen extends StatefulWidget {
   const PinsScreen({super.key, this.lock, this.host = const PinsHost()});
@@ -46,6 +48,17 @@ class _PinsScreenState extends State<PinsScreen> {
   void initState() {
     super.initState();
     unawaited(_lock.recheckFinger());
+    unawaited(_lock.recheckKey());
+  }
+
+  Future<void> _typePins() async {
+    HapticFeedback.selectionClick();
+    await Navigator.of(context).push(haloRoute(UpdatePinsScreen(lock: _lock)));
+  }
+
+  Future<void> _cardDone() async {
+    HapticFeedback.mediumImpact();
+    await _lock.cardFinished();
   }
 
   PinsHost get _host => widget.host;
@@ -60,6 +73,9 @@ class _PinsScreenState extends State<PinsScreen> {
     if (_fingerTo != null) return;
     HapticFeedback.selectionClick();
     final to = !_lock.biometric;
+    // a finger in place of the pin weakens the lock: the pin first
+    if (to && !await _pinFirst()) return;
+    if (!mounted || _fingerTo != null || _lock.biometric == to) return;
     setState(() => _fingerTo = to);
     var taken = true;
     try {
@@ -71,6 +87,13 @@ class _PinsScreenState extends State<PinsScreen> {
       HapticFeedback.heavyImpact();
       showHaloToast(context, l10n.pinsFingerRefused);
     }
+  }
+
+  // a change that weakens the lock asks for the pin there is first, as a
+  // new decoy pin does. in the decoy that is the decoy's own
+  Future<bool> _pinFirst() async {
+    if (!mounted) return false;
+    return askPin(context, _lock);
   }
 
   Future<void> _turnOff() async {
@@ -90,10 +113,12 @@ class _PinsScreenState extends State<PinsScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.pinsTurnOffTheApp,
-      line: decoy ? l10n.pinsTurnOffWithDecoy : l10n.pinsThePinGoesAnd,
+      line: decoy
+          ? l10n.pinsTurnOffWithDecoyShown
+          : l10n.pinsThePinGoesAndShown,
       yes: l10n.pinsTurnOff,
     );
-    if (!ok) return;
+    if (!ok || !await _pinFirst()) return;
     if (decoy) await _host.removeDecoy();
     // any hidden chats go with the lock, and the line above reads the same
     // whether there are any. a turn off in the decoy only pauses the lock:
@@ -125,7 +150,7 @@ class _PinsScreenState extends State<PinsScreen> {
     final r = await showChangeOrRemoveSheet(
       context,
       title: l10n.pinsWipePin,
-      line: l10n.pinsWipeLine,
+      line: l10n.pinsWipeLineShown,
       change: l10n.pinsChangeWipePin,
       remove: l10n.pinsRemove,
     );
@@ -137,7 +162,7 @@ class _PinsScreenState extends State<PinsScreen> {
       line: l10n.pinsTheLockScreenKeeps,
       yes: l10n.commonRemove,
     );
-    if (ok) await _lock.disablePanicPin();
+    if (ok && await _pinFirst()) await _lock.disablePanicPin();
   }
 
   Future<void> _decoyRow() async {
@@ -157,7 +182,7 @@ class _PinsScreenState extends State<PinsScreen> {
       line: l10n.pinsTheDecoyGoes,
       yes: l10n.commonRemove,
     );
-    if (!ok) return;
+    if (!ok || !await _pinFirst()) return;
     _lock.inDecoy
         ? await _lock.clearInnerDecoyPin()
         : await _host.removeDecoy();
@@ -218,98 +243,298 @@ class _PinsScreenState extends State<PinsScreen> {
           style: HaloType.serif(size: 18, italic: true, color: HaloColors.text),
         ),
       ),
-      body: AnimatedBuilder(
-        animation: Listenable.merge([_lock, _host.changes]),
-        builder: (context, _) {
-          final on = _lock.lockOn;
-          final wipe = _lock.panicEnabled;
-          final decoy = _decoyOn;
-          final vault = _lock.inVault;
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-            children: staggerAll([
-              _PinCard(
-                name: l10n.pinsYourPin,
-                state: on ? l10n.commonOn : l10n.commonOff,
-                stateColor: on ? HaloColors.green : HaloColors.text3,
-                outcome: l10n.pinsOpensKryfoFourDigits,
-                primary: on ? l10n.pinsChangePin : l10n.pinsSetAPin,
-                onPrimary: () async {
-                  // a change asks for the pin there is first, as the
-                  // advanced flows do
-                  await Navigator.of(
-                    context,
-                  ).push(haloRoute(LockSetupScreen(lock: _lock, check: on)));
-                },
-                secondary: on ? l10n.pinsTurnOff : null,
-                onSecondary: on ? _turnOff : null,
-                extra: on && _lock.fingerOffered
-                    ? _Toggle(
-                        label: l10n.pinsUnlockWithFingerprint,
-                        on: _fingerTo ?? _lock.biometric,
-                        onTap: _flipFinger,
-                      )
-                    : null,
+      body: DeskPage(
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_lock, _host.changes]),
+          builder: (context, _) {
+            final on = _lock.lockOn;
+            final wipe = _lock.panicEnabled;
+            final decoy = _decoyOn;
+            final vault = _lock.inVault;
+            final keyLine = _lock.keyLine;
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+              children: staggerAll([
+                // the same card on every phone that had pins before the
+                // update, the decoy's side alike, whatever pins are set
+                Unfold(
+                  open: _lock.updateCard,
+                  child: _lock.updateCard
+                      ? Padding(
+                          key: const ValueKey('card'),
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _UpdateCard(
+                            onType: _typePins,
+                            onDone: _cardDone,
+                          ),
+                        )
+                      : const SizedBox(
+                          key: ValueKey('no card'),
+                          width: double.infinity,
+                        ),
+                ),
+                _PinCard(
+                  name: l10n.pinsYourPin,
+                  state: on ? l10n.commonOn : l10n.commonOff,
+                  stateColor: on ? HaloColors.green : HaloColors.text,
+                  outcome: l10n.pinsOpensKryfoFourDigits,
+                  primary: on ? l10n.pinsChangePin : l10n.pinsSetAPin,
+                  onPrimary: () async {
+                    // a change asks for the pin there is first, as the
+                    // advanced flows do
+                    await Navigator.of(
+                      context,
+                    ).push(haloRoute(LockSetupScreen(lock: _lock, check: on)));
+                  },
+                  secondary: on ? l10n.pinsTurnOff : null,
+                  onSecondary: on ? _turnOff : null,
+                  extra: on && _lock.fingerOffered
+                      ? _Toggle(
+                          label: l10n.pinsUnlockWithFingerprint,
+                          on: _fingerTo ?? _lock.biometric,
+                          onTap: _flipFinger,
+                        )
+                      : on && _lock.fingerToDecoy
+                      ? _Toggle(
+                          label: l10n.pinsUnlockWithFingerprint,
+                          on: false,
+                          line: l10n.pinsFingerOpensDecoy,
+                        )
+                      : null,
+                ),
+                Unfold(
+                  open: on && keyLine != null,
+                  child: on && keyLine != null
+                      ? _KeyLine(key: const ValueKey('key'), line: keyLine)
+                      : const SizedBox(
+                          key: ValueKey('no key'),
+                          width: double.infinity,
+                        ),
+                ),
+                const SizedBox(height: 22),
+                _Advanced(
+                  open: _open,
+                  onToggle: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _open = !_open);
+                  },
+                  children: [
+                    _ExtraRow(
+                      icon: Icons.local_fire_department_outlined,
+                      tint: HaloColors.rose,
+                      name: l10n.pinsWipePin,
+                      line: l10n.pinsWipeLineShown,
+                      state: !on
+                          ? l10n.pinsNeedsAPinFirst
+                          : wipe
+                          ? l10n.pinsSet
+                          : l10n.commonOff,
+                      stateColor: on && wipe
+                          ? HaloColors.rose
+                          : HaloColors.text,
+                      onTap: on ? _wipeRow : null,
+                    ),
+                    if (_host.decoyAndVault)
+                      _ExtraRow(
+                        icon: Icons.theater_comedy_outlined,
+                        tint: HaloColors.amber,
+                        name: l10n.pinsDecoyPin,
+                        line: l10n.pinsDecoyLine,
+                        state: !on
+                            ? l10n.pinsNeedsAPinFirst
+                            : decoy
+                            ? l10n.pinsSet
+                            : l10n.commonOff,
+                        stateColor: on && decoy
+                            ? HaloColors.amber
+                            : HaloColors.text,
+                        onTap: on ? _decoyRow : null,
+                      ),
+                    if (_host.decoyAndVault)
+                      _ExtraRow(
+                        icon: Icons.visibility_off_outlined,
+                        tint: HaloColors.violet,
+                        name: l10n.pinsHiddenChats,
+                        line: l10n.pinsHiddenLine,
+                        state: !on
+                            ? l10n.pinsNeedsAPinFirst
+                            : vault
+                            ? l10n.pinsSet
+                            : l10n.pinsSetUp,
+                        stateColor: on && vault
+                            ? HaloColors.violet
+                            : HaloColors.text,
+                        onTap: on ? _hiddenRow : null,
+                      ),
+                    if (_host.decoyAndVault)
+                      _HowRow(
+                        onTap: () =>
+                            _showHow(context, finger: _lock.bioSupported),
+                      ),
+                  ],
+                ),
+              ]),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// the security update, until Done: other pins typed once move under the
+// phone's pin key. worded so it says nothing of which pins are set
+class _UpdateCard extends StatelessWidget {
+  const _UpdateCard({required this.onType, required this.onDone});
+  final VoidCallback onType;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: HaloColors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.verified_user_outlined,
+                  size: 18,
+                  color: HaloColors.amber,
+                ),
               ),
-              const SizedBox(height: 22),
-              _Advanced(
-                open: _open,
-                onToggle: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _open = !_open);
-                },
-                children: [
-                  _ExtraRow(
-                    icon: Icons.local_fire_department_outlined,
-                    tint: HaloColors.rose,
-                    name: l10n.pinsWipePin,
-                    line: l10n.pinsWipeLine,
-                    state: !on
-                        ? l10n.pinsNeedsAPinFirst
-                        : wipe
-                        ? l10n.pinsSet
-                        : l10n.commonOff,
-                    stateColor: on && wipe ? HaloColors.rose : HaloColors.text3,
-                    onTap: on ? _wipeRow : null,
-                  ),
-                  _ExtraRow(
-                    icon: Icons.theater_comedy_outlined,
-                    tint: HaloColors.amber,
-                    name: l10n.pinsDecoyPin,
-                    line: l10n.pinsDecoyLine,
-                    state: !on
-                        ? l10n.pinsNeedsAPinFirst
-                        : decoy
-                        ? l10n.pinsSet
-                        : l10n.commonOff,
-                    stateColor: on && decoy
-                        ? HaloColors.amber
-                        : HaloColors.text3,
-                    onTap: on ? _decoyRow : null,
-                  ),
-                  _ExtraRow(
-                    icon: Icons.visibility_off_outlined,
-                    tint: HaloColors.violet,
-                    name: l10n.pinsHiddenChats,
-                    line: l10n.pinsHiddenLine,
-                    state: !on
-                        ? l10n.pinsNeedsAPinFirst
-                        : vault
-                        ? l10n.pinsSet
-                        : l10n.pinsSetUp,
-                    stateColor: on && vault
-                        ? HaloColors.violet
-                        : HaloColors.text3,
-                    onTap: on ? _hiddenRow : null,
-                  ),
-                  _HowRow(
-                    onTap: () => _showHow(context, finger: _lock.bioSupported),
-                  ),
-                ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.cardTitle,
+                      style: HaloType.sans(
+                        size: 15,
+                        weight: FontWeight.w600,
+                        color: HaloColors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      l10n.cardLine,
+                      style: HaloType.sans(
+                        size: 12.5,
+                        color: HaloColors.text,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ]),
-          );
-        },
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              _CardButton(label: l10n.commonDone, onTap: onDone),
+              _CardButton(label: l10n.cardType, onTap: onType, strong: true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CardButton extends StatelessWidget {
+  const _CardButton({
+    required this.label,
+    required this.onTap,
+    this.strong = false,
+  });
+  final String label;
+  final VoidCallback onTap;
+  final bool strong;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: PressScale(
+      onTap: onTap,
+      haptic: false,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: strong
+              ? HaloColors.amber.withValues(alpha: 0.16)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: HaloType.sans(
+            size: 13.5,
+            weight: FontWeight.w600,
+            color: strong ? HaloColors.amberText : HaloColors.text,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+// what the phone's pin key means here, from the phone's state alone: the
+// same on every side
+class _KeyLine extends StatelessWidget {
+  const _KeyLine({super.key, required this.line});
+  final KeyLine line;
+
+  @override
+  Widget build(BuildContext context) {
+    final words = [
+      line.unlocked ? l10n.keyLineUnlocked : l10n.keyLine,
+      if (!line.screenLock) l10n.keyLineScreenLock,
+    ].join(' ');
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(6, 14, 6, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.phonelink_lock_outlined,
+              size: 16,
+              color: HaloColors.amber,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              words,
+              style: HaloType.sans(
+                size: 12.5,
+                color: HaloColors.text,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -371,10 +596,10 @@ class _Advanced extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            l10n.pinsAdvancedLine,
+                            l10n.pinsAdvancedLineShown,
                             style: HaloType.sans(
                               size: 12.5,
-                              color: HaloColors.text2,
+                              color: HaloColors.text,
                             ),
                           ),
                         ],
@@ -486,7 +711,7 @@ class _ExtraRow extends StatelessWidget {
                       line,
                       style: HaloType.sans(
                         size: 12.5,
-                        color: HaloColors.text2,
+                        color: HaloColors.text,
                         height: 1.4,
                       ),
                     ),
@@ -557,11 +782,15 @@ void _showHow(BuildContext context, {required bool finger}) {
                 l10n.howWipe,
               ),
               (Icons.theater_comedy_outlined, HaloColors.amber, l10n.howDecoy),
-              (Icons.visibility_off_outlined, HaloColors.violet, l10n.howVault),
+              (
+                Icons.visibility_off_outlined,
+                HaloColors.violet,
+                l10n.howVaultShown,
+              ),
               if (finger)
                 (Icons.fingerprint, HaloColors.amber, l10n.flowDecoyFinger),
               (Icons.dialpad_outlined, HaloColors.amber, l10n.flowDecoyDigits),
-              (Icons.gavel_outlined, HaloColors.text2, l10n.flowLaw),
+              (Icons.gavel_outlined, HaloColors.text2, l10n.flowLawShown),
             ]) ...[
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -654,7 +883,7 @@ class _PinCard extends StatelessWidget {
             outcome,
             style: HaloType.sans(
               size: 12.5,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -672,36 +901,44 @@ class _PinCard extends StatelessWidget {
               Expanded(
                 child: HaloPrimaryButton(label: primary, onTap: onPrimary),
               ),
-              EaseSize(
-                child: FadeSwap(
-                  child: secondary == null
-                      ? const SizedBox(key: ValueKey('none'), height: 46)
-                      : Padding(
-                          key: ValueKey(secondary),
-                          padding: const EdgeInsetsDirectional.only(start: 8),
-                          child: PressScale(
-                            scale: 0.97,
-                            onTap: onSecondary,
-                            child: Container(
-                              height: 46,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(13),
-                                border: Border.all(color: HaloColors.line),
-                              ),
-                              child: Text(
-                                secondary!,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  color: HaloColors.rose,
+              // a long word at a large font wraps here rather than
+              // pushing past the card
+              Flexible(
+                child: EaseSize(
+                  child: FadeSwap(
+                    child: secondary == null
+                        ? const SizedBox(key: ValueKey('none'), height: 46)
+                        : Padding(
+                            key: ValueKey(secondary),
+                            padding: const EdgeInsetsDirectional.only(start: 8),
+                            child: PressScale(
+                              scale: 0.97,
+                              onTap: onSecondary,
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  minHeight: 46,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(13),
+                                  border: Border.all(color: HaloColors.line),
+                                ),
+                                child: Text(
+                                  secondary!,
+                                  textAlign: TextAlign.center,
+                                  style: HaloType.sans(
+                                    size: 14,
+                                    color: HaloColors.roseText,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ],
@@ -714,30 +951,57 @@ class _PinCard extends StatelessWidget {
 
 // an on or off row is a switch, as in settings: the row and the switch
 // each flip it
+// [onTap] null: the switch cannot be used here, and [line] says why
 class _Toggle extends StatelessWidget {
   final String label;
   final bool on;
-  final VoidCallback onTap;
-  const _Toggle({required this.label, required this.on, required this.onTap});
+  final VoidCallback? onTap;
+  final String? line;
+  const _Toggle({required this.label, required this.on, this.onTap, this.line});
   @override
-  Widget build(BuildContext context) => MergeSemantics(
-    child: GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      excludeFromSemantics: true,
-      child: Row(
-        children: [
-          Icon(Icons.fingerprint, size: 18, color: HaloColors.amber),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: HaloType.sans(size: 13.5, color: HaloColors.text),
+  Widget build(BuildContext context) {
+    final tap = onTap;
+    final why = line;
+    return MergeSemantics(
+      child: GestureDetector(
+        onTap: tap,
+        behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
+        child: Row(
+          children: [
+            Icon(
+              Icons.fingerprint,
+              size: 18,
+              color: tap == null ? HaloColors.text2 : HaloColors.amber,
             ),
-          ),
-          HaloSwitch(value: on, onChanged: (_) => onTap()),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: HaloType.sans(size: 13.5, color: HaloColors.text),
+                  ),
+                  if (why != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      why,
+                      style: HaloType.sans(
+                        size: 12,
+                        color: HaloColors.text,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            HaloSwitch(value: on, onChanged: tap == null ? null : (_) => tap()),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

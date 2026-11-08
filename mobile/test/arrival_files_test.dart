@@ -11,7 +11,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show AppState, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show AppState, useDatabasesForTest, AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -116,7 +117,10 @@ void main() {
     );
     expect(await f.readAsBytes(), [1, 2, 3, 4]);
     expect(w.live.msg('photo1')!['peer_id'], _a);
-    expect(await _mediaNames(), before);
+    // each is a message of its sender's own, in a file of its own
+    final now = await _mediaNames();
+    expect(now.toSet().containsAll(before), isTrue);
+    expect(now, hasLength(before.length + 2));
   });
 
   test('my own sent picture is not reached by a peer\'s uid', () async {
@@ -230,7 +234,11 @@ void main() {
       expect(f.uri.pathSegments.last, startsWith('in_'));
     }
     expect(pic.path, endsWith('.jpg'));
-    expect(doc.path, endsWith('_report.pdf'));
+    // its type only: the name the sender gave it lives in the row
+    expect(
+      doc.uri.pathSegments.last,
+      matches(RegExp(r'^in_[0-9a-f]{32}\.pdf$')),
+    );
     expect(await doc.readAsBytes(), [3, 4]);
     expect(await clip.readAsBytes(), [5, 5, 5, 6, 6, 6]);
     // a second round of the same slices writes nothing more

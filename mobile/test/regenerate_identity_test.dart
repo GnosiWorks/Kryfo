@@ -18,12 +18,14 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         makePreKeyBundleB64,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateProfile,
+        AppStateIdentity;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
-import 'package:kryfo/signal_session.dart' show signalSession;
+import 'package:kryfo/signal_session.dart' show preKeySigned, signalSession;
 import 'package:kryfo/signal_stores.dart' show invitePreKeyId;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -37,11 +39,11 @@ class _Engine implements HaloEngine {
   _Engine() {
     _next();
   }
-  late ECKeyPair pair;
+  late TestKeyPair pair;
   var id = 'first-words-here';
   final listened = <int>[];
 
-  void _next() => pair = Curve.generateKeyPair();
+  void _next() => pair = testKeyPair();
 
   @override
   String generateIdentity() {
@@ -51,12 +53,22 @@ class _Engine implements HaloEngine {
 
   @override
   String myXPubkey() => _hex(pair.publicKey.serialize().sublist(1));
+  // how often a private key was pulled back out
+  var pulls = 0;
   @override
-  String myXPrivkey() => _hex(pair.privateKey.serialize());
+  String myXPrivkey() {
+    pulls++;
+    return _hex(pair.privateKey.serialize());
+  }
+
   @override
-  String myEdPrivkey() => 'ed';
+  String myEdPrivkey() {
+    pulls++;
+    return 'ed';
+  }
+
   @override
-  Future<String> subscribeFirstContact(int counter) async {
+  Future<String> subscribeFirstContact(int ident, int counter) async {
     listened.add(counter);
     return 'ok';
   }
@@ -116,54 +128,55 @@ void main() {
     await app.loadFirstContact();
     expect(e.listened, [0]);
     final before = _bundle(await makePreKeyBundleB64());
-    final oldInvite = await signalSession.preKeyStore.loadPreKey(
-      invitePreKeyId,
-    );
+    final oldInvite = await signalSession.preKeyStore.load(invitePreKeyId);
 
+    e.pulls = 0;
     await app.regenerateIdentity();
 
     expect(live.saved, ['second-words-now']);
+    // the keys come out once, as they are made: signal and a backup take
+    // the copy held then, never the engine's again
+    expect(e.pulls, 2);
+    expect(app.mainKeysForBackup.x, _hex(e.pair.privateKey.serialize()));
+    expect(e.pulls, 2);
     // openers kept for the old key open no more
     expect(live.keptGone, 1);
     final now = _bundle(await makePreKeyBundleB64());
     // the invite names the key every envelope is now sent under
-    final key = IdentityKey.fromBytes(
-      base64Decode(now['identityKey'] as String),
-      0,
-    );
-    expect(_hex(key.publicKey.serialize().sublist(1)), e.myXPubkey());
+    final key = base64Decode(now['identityKey'] as String);
+    expect(_hex(key.sublist(1)), e.myXPubkey());
     expect(now['identityKey'], isNot(before['identityKey']));
     expect(
-      Curve.verifySignature(
-        key.publicKey,
+      preKeySigned(
+        key,
         base64Decode(now['signedPreKeyPublic'] as String),
         base64Decode(now['signedPreKeySignature'] as String),
       ),
       isTrue,
     );
-    final invite = await signalSession.preKeyStore.loadPreKey(invitePreKeyId);
+    // the invite's kyber prekey is made again under the new key too
     expect(
-      invite.getKeyPair().publicKey.serialize(),
-      isNot(oldInvite.getKeyPair().publicKey.serialize()),
+      preKeySigned(
+        key,
+        base64Decode(now['kyberPreKeyPublic'] as String),
+        base64Decode(now['kyberPreKeySignature'] as String),
+      ),
+      isTrue,
     );
+    expect(now['kyberPreKeyPublic'], isNot(before['kyberPreKeyPublic']));
+    final invite = await signalSession.preKeyStore.load(invitePreKeyId);
+    expect(invite, isNot(oldInvite));
     // the address of the new key is the one listened on
     expect(e.listened, [0, 0]);
 
     // a second tap while signal is still being made again changes nothing:
     // signal ends on the key the engine holds
     final first = app.regenerateIdentity();
-    for (var i = 0; i < 1000 && signalSession.ready; i++) {
-      await Future<void>.delayed(Duration.zero);
-    }
-    expect(signalSession.ready, isFalse);
     await app.regenerateIdentity();
     await first;
     final last = _bundle(await makePreKeyBundleB64());
-    final lastKey = IdentityKey.fromBytes(
-      base64Decode(last['identityKey'] as String),
-      0,
-    );
-    expect(_hex(lastKey.publicKey.serialize().sublist(1)), e.myXPubkey());
+    final lastKey = base64Decode(last['identityKey'] as String);
+    expect(_hex(lastKey.sublist(1)), e.myXPubkey());
     expect(live.saved, hasLength(2));
   });
 }

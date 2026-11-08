@@ -16,6 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dlog.dart';
 import 'image_strip.dart' show PictureKind, pictureKind;
 import 'open_file.dart' show nameSaysVideo;
+import 'picture_convert.dart' show drawAsJpeg;
 import 'shred.dart';
 import 'tools/tools_bridge.dart' show ToolsBridge;
 import 'voice_mask.dart' show maskWavFile;
@@ -112,27 +113,17 @@ Future<void> sweepPickerLeftovers(Directory cache) async {
 const _platform = MethodChannel('halo/platform');
 
 // a photo brought to what a gallery pick gets: 1280 on the long edge, jpeg
-// 70, upright. decoded pixels carry no metadata. the bytes as they came when
-// the platform cannot
-Future<Uint8List> shrinkPhoto(Uint8List b) async {
-  try {
-    final r = await _platform.invokeMethod<Uint8List>('shrinkJpeg', {
-      'bytes': b,
-      'maxEdge': 1280,
-      'quality': 70,
-    });
-    if (r != null && r.isNotEmpty) return r;
-  } catch (e) {
-    dlog('shrink: $e');
-  }
-  return b;
-}
+// 70, upright (picture_convert.dart). decoded pixels carry no metadata. the
+// bytes as they came when the platform cannot
+Future<Uint8List> shrinkPhoto(Uint8List b) async => await drawAsJpeg(b) ?? b;
 
 // the gallery's picks, asked for whole and shrunk here: the picker's own
 // shrink writes cache/scaled_<name>, so two picks of one name came back as
-// the last of them twice. a jpeg is shrunk; a png, gif, webp or heic keeps
-// its own format, which the send lane cleans as it is; anything else is
-// drawn again as a jpeg. what the picker left goes even when a read fails.
+// the last of them twice. a jpeg is shrunk, and so is a heic or an avif,
+// drawn again as a jpeg: a computer cannot draw those, and a camera's is
+// many megabytes. a png, gif or webp keeps its own format, which the send
+// lane cleans as it is; anything else is drawn again as a jpeg. what the
+// picker left goes even when a read fails.
 // [shrink] and [drop] stand in for the platform and the shred in tests
 Future<List<Uint8List>> readPickedPhotos(
   List<XFile> picked, {
@@ -140,7 +131,9 @@ Future<List<Uint8List>> readPickedPhotos(
   Future<void> Function(List<XFile> x)? drop,
 }) async {
   Future<Uint8List> fit(Uint8List b) async => switch (pictureKind(b)) {
-    PictureKind.jpeg || PictureKind.other => (shrink ?? shrinkPhoto)(b),
+    PictureKind.jpeg ||
+    PictureKind.heif ||
+    PictureKind.other => (shrink ?? shrinkPhoto)(b),
     _ => b,
   };
   try {

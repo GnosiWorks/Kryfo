@@ -12,8 +12,7 @@ import 'package:kryfo/devchat/dev_gate.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/wire_pad.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 
 import 'dev_frames.dart';
 
@@ -241,7 +240,7 @@ void main() {
     test('the made name comes from its keys', () {
       expect(_self.id, 'made-for-this');
       expect(_self.edPub, _anonEdPriv.substring(64));
-      final pair = Curve.generateKeyPairFromPrivate([
+      final pair = testKeyPairFromPrivate([
         for (var i = 0; i < 64; i += 2)
           int.parse(_anonXPriv.substring(i, i + 2), radix: 16),
       ]);
@@ -351,7 +350,7 @@ void main() {
       j['zz'] = {'h': everydayWords};
       j['hd'] = everydayHandle;
       final got = frameJson(devInFrame(_dev, 'halo/1:${jsonEncode(j)}')!);
-      expect(got.keys.toSet(), {'m', 'w', 'u', 'h', 'e', 'o', 'x'});
+      expect(got.keys.toSet(), {'m', 'w', 'op', 'u', 'h', 'e', 'o', 'x'});
     });
 
     test('a frame filled out to its size reads as it did', () async {

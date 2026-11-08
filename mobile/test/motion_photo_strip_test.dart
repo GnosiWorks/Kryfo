@@ -8,7 +8,11 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/image_strip.dart';
 import 'package:kryfo/meta/byte_source.dart';
+import 'package:kryfo/meta/heif_items.dart';
+import 'package:kryfo/meta/iso.dart';
 import 'package:kryfo/meta/meta_reader.dart';
+
+import 'meta_fixtures.dart' show box, full, videoMdia;
 
 String _text(Uint8List b) => latin1.decode(b, allowInvalid: true);
 
@@ -60,10 +64,22 @@ void main() {
       test('the clip goes, the still stays byte for byte', () {
         final out = stripPictureBytes(src)!;
         expect(out.length, still.length);
-        for (var i = 0; i < out.length; i++) {
-          final want = i >= xmpAt && i < xmpEnd ? 0 : still[i];
-          if (out[i] != want) fail('byte $i is ${out[i]}, not $want');
+        // the picture's own items stay byte for byte where they were
+        final m = readHeifMeta(
+          MemorySource(src),
+          isoBoxes(MemorySource(src), 0, src.length, [
+            0,
+          ]).firstWhere((b) => b.type == 'meta'),
+          [0],
+        );
+        final keep = heifPictureItems(MemorySource(src), m);
+        expect(keep, isNotEmpty);
+        for (final id in keep) {
+          for (final (a, b) in m.fileRanges(id)!) {
+            expect(out.sublist(a, b), src.sublist(a, b));
+          }
         }
+        expect(out.sublist(xmpAt, xmpEnd).every((x) => x == 0), true);
         final t = _text(out);
         for (final gone in [
           'mpvd',
@@ -111,8 +127,21 @@ void main() {
           at + 4,
           latin1.encode(kind == 'heic' ? 'msf1' : 'avis'),
         );
-        final moov = _top(clip).firstWhere((x) => x.$1 == 'moov');
-        final anim = _box('moov', clip.sublist(moov.$2 + 8, moov.$3));
+        // an animation track whose one frame is the still's own picture
+        final m = readHeifMeta(
+          MemorySource(seq),
+          isoBoxes(MemorySource(seq), 0, seq.length, [
+            0,
+          ]).firstWhere((b) => b.type == 'meta'),
+          [0],
+        );
+        final (a, b) = m.fileRanges(m.primary!)!.first;
+        final anim = box('moov', [
+          ...box('trak', [
+            ...full('tkhd', 0, List.filled(80, 0)),
+            ...videoMdia(a, b - a, handler: 'pict', format: 'hvc1'),
+          ]),
+        ]);
         final out = stripPictureBytes(
           Uint8List.fromList([...seq, ...anim, ..._box('mpvd', clip)]),
         )!;
@@ -122,7 +151,7 @@ void main() {
     });
   }
 
-  test('a still with its exif in an mdat at the end keeps its length', () {
+  test('a still with its exif in an mdat at the end loses that mdat', () {
     // ftyp, meta, mdat with the picture and xmp, then an mdat with the exif
     final src = File('test/fixtures/heic_exif_at_end.heic').readAsBytesSync();
     expect(_top(src).map((x) => x.$1).toList(), [
@@ -133,7 +162,8 @@ void main() {
     ]);
     expect(readMeta(MemorySource(src)).status, MetaStatus.found);
     final out = stripPictureBytes(src)!;
-    expect(out.length, src.length);
+    // the exif's own mdat is cut; the picture's stays whole
+    expect(out.length, _top(src)[3].$2);
     expect(_text(out).contains('GPSSECRET'), false);
     expect(out.sublist(432, 432 + 358), src.sublist(432, 432 + 358));
     expect(readMeta(MemorySource(out)).status, MetaStatus.nothing);

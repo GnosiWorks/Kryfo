@@ -1,33 +1,55 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // set or change the pin: four digits, then the same four again. a change
 // asks for the pin there is first, as the advanced flows do, with the same
-// misses and the same wipe pin
+// misses and the same wipe pin. the same check stands alone before a change
+// that weakens the lock
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
 import '../lock_state.dart';
+import '../pass_rules.dart';
+import '../pin_shield.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_sheet.dart';
+import '../widgets/motion.dart' show haloRoute;
+import '../widgets/pass_pad.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
 import '../wipe.dart';
 import '../l10n/l10n.dart';
+import '../wide/read_width.dart' show DeskPage;
+
+/// the pin there is, on the page a change opens with: true once taken. a
+/// miss counts as on the lock screen and the wipe pin wipes. digits or a
+/// phrase, never a finger, which may open only the decoy
+Future<bool> askPin(BuildContext context, LockState lock) async =>
+    await Navigator.of(context).push<bool>(
+      haloRoute(LockSetupScreen(lock: lock, check: true, checkOnly: true)),
+    ) ??
+    false;
 
 class LockSetupScreen extends StatefulWidget {
-  const LockSetupScreen({super.key, this.lock, this.check = false});
+  const LockSetupScreen({
+    super.key,
+    this.lock,
+    this.check = false,
+    this.checkOnly = false,
+  });
   // the app's own lock when null
   final LockState? lock;
   // a pin is set: it is entered before a new one is chosen
   final bool check;
+  // the check alone: the page closes with true once the pin is taken
+  final bool checkOnly;
   @override
   State<LockSetupScreen> createState() => _LockSetupScreenState();
 }
 
 class _LockSetupScreenState extends State<LockSetupScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, PinShield {
   String _first = '';
   String _pin = '';
   late bool _checking = widget.check;
@@ -37,6 +59,9 @@ class _LockSetupScreenState extends State<LockSetupScreen>
   String? _notIt;
   // the title comes in from where reading goes, or back from where it was
   bool _forward = true;
+  // letters on the check, where a hidden chats passphrase is taken inside
+  // them. it opens on digits
+  bool _letters = false;
 
   LockState get _lock => widget.lock ?? lockState;
   late final AnimationController _shake = AnimationController(
@@ -80,6 +105,8 @@ class _LockSetupScreenState extends State<LockSetupScreen>
         _mismatch = true;
         _notIt = r == PinResult.throttled
             ? tooManyTriesLine(_lock.throttleLeft)
+            : r == PinResult.unavailable
+            ? keyNoteLine(_lock)
             : l10n.lockNotIt;
       });
       if (!MediaQuery.disableAnimationsOf(context)) {
@@ -89,16 +116,21 @@ class _LockSetupScreenState extends State<LockSetupScreen>
       return;
     }
     HapticFeedback.selectionClick();
+    if (widget.checkOnly) {
+      Navigator.of(context).pop(true);
+      return;
+    }
     setState(() {
       _hold = false;
       _checking = false;
+      _letters = false;
       _forward = true;
       _pin = '';
     });
   }
 
   Future<void> _submit() async {
-    if (_hold || _pin.length < kPinMin) return;
+    if (_hold || passLength(_pin) < kPinMin) return;
     if (_checking) return _check();
     if (!_confirming) {
       setState(() => _hold = true);
@@ -128,11 +160,18 @@ class _LockSetupScreenState extends State<LockSetupScreen>
       });
       return;
     }
-    final ok = await _lock.setupPin(_pin);
+    bool ok;
+    String? why;
+    try {
+      ok = await _lock.setupPin(_pin);
+    } on PinKeyBusy {
+      ok = false;
+      why = l10n.lockKeyBusy;
+    }
     if (!ok) {
       HapticFeedback.heavyImpact();
       if (!mounted) return;
-      showHaloToast(context, pinNotTakenLine(_lock));
+      showHaloToast(context, why ?? pinNotTakenLine(_lock));
       setState(() {
         _first = '';
         _pin = '';
@@ -166,7 +205,7 @@ class _LockSetupScreenState extends State<LockSetupScreen>
                   const SizedBox(height: 8),
                   Text(
                     l10n.lockSetupThePinStillWorks,
-                    style: HaloType.sans(size: 13, color: HaloColors.text2),
+                    style: HaloType.sans(size: 13, color: HaloColors.text),
                   ),
                   const SizedBox(height: 16),
                   HaloPrimaryButton(
@@ -228,74 +267,104 @@ class _LockSetupScreenState extends State<LockSetupScreen>
         elevation: 0,
         iconTheme: IconThemeData(color: HaloColors.text2),
       ),
-      body: SafeArea(
-        child: FitColumn(
-          children: [
-            const Spacer(flex: 2),
-            // the confirm step comes in from the side reading goes towards,
-            // as the pin flow's pages do
-            AnimatedSwitcher(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : const Duration(milliseconds: 240),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (c, a) {
-                final rtl = Directionality.of(context) == TextDirection.rtl;
-                final entering = c.key == ValueKey(title);
-                final from = (_forward ? 1.0 : -1.0) * (rtl ? -1 : 1);
-                return FadeTransition(
-                  opacity: a,
-                  child: SlideTransition(
-                    position: Tween(
-                      begin: Offset((entering ? 0.18 : -0.18) * from, 0),
-                      end: Offset.zero,
-                    ).animate(a),
-                    child: c,
-                  ),
-                );
-              },
-              child: Text(
-                title,
-                key: ValueKey(title),
-                style: HaloType.serif(size: 30, color: HaloColors.text),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // the line under the title changes the way the title does, held
-            // off the edges as on the pin flow
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: RiseSwap(
-                alignment: Alignment.center,
+      body: DeskPage(
+        child: SafeArea(
+          child: FitColumn(
+            children: [
+              const Spacer(flex: 2),
+              // the confirm step comes in from the side reading goes towards,
+              // as the pin flow's pages do
+              AnimatedSwitcher(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 240),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (c, a) {
+                  final rtl = Directionality.of(context) == TextDirection.rtl;
+                  final entering = c.key == ValueKey(title);
+                  final from = (_forward ? 1.0 : -1.0) * (rtl ? -1 : 1);
+                  return FadeTransition(
+                    opacity: a,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: Offset((entering ? 0.18 : -0.18) * from, 0),
+                        end: Offset.zero,
+                      ).animate(a),
+                      child: c,
+                    ),
+                  );
+                },
                 child: Text(
-                  hint,
-                  key: ValueKey('$hint$_mismatch'),
-                  textAlign: TextAlign.center,
-                  style: HaloType.sans(
-                    size: 13,
-                    color: _mismatch ? HaloColors.rose : HaloColors.text2,
+                  title,
+                  key: ValueKey(title),
+                  style: HaloType.serif(size: 30, color: HaloColors.text),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // the line under the title changes the way the title does, held
+              // off the edges as on the pin flow
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: RiseSwap(
+                  alignment: Alignment.center,
+                  // a pin that did not match is heard as it appears
+                  child: Semantics(
+                    key: ValueKey('$hint$_mismatch'),
+                    liveRegion: _mismatch,
+                    child: Text(
+                      hint,
+                      textAlign: TextAlign.center,
+                      style: HaloType.sans(
+                        size: 13,
+                        color: _mismatch
+                            ? HaloColors.roseText
+                            : HaloColors.text,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            PinDots(
-              filled: _pin.length,
-              color: HaloColors.amber,
-              wrong: _mismatch,
-              shake: _shake,
-            ),
-            const Spacer(flex: 3),
-            PinPad(
-              onDigit: _onDigit,
-              onBack: _back,
-              onEnter: _submit,
-              canEnter: _pin.length >= kPinMin,
-              enabled: !_hold,
-            ),
-            const SizedBox(height: 22),
-          ],
+              const SizedBox(height: 32),
+              PinDots(
+                filled: passLength(_pin),
+                color: HaloColors.amber,
+                wrong: _mismatch,
+                shake: _shake,
+                letters: _letters,
+              ),
+              const Spacer(flex: 3),
+              if (_checking)
+                PassPad(
+                  letters: _letters,
+                  onLetters: (v) => setState(() {
+                    _letters = v;
+                    _pin = '';
+                  }),
+                  onDigit: _onDigit,
+                  onBack: _back,
+                  onText: (t) => setState(() {
+                    _pin = t;
+                    _mismatch = false;
+                    _notIt = null;
+                  }),
+                  text: _pin,
+                  onEnter: _submit,
+                  canEnter: passLength(_pin) >= kPinMin,
+                  enabled: !_hold,
+                )
+              else
+                PinPad(
+                  onDigit: _onDigit,
+                  onBack: _back,
+                  onEnter: _submit,
+                  canEnter: _pin.length >= kPinMin,
+                  enabled: !_hold,
+                ),
+              if (!_checking) const SizedBox(height: kPassKeyRoom),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );

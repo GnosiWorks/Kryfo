@@ -7,7 +7,6 @@
 // a decoy, never outside onion, never with no network at all, and the same
 // with the phone asking for no movement
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/drafts.dart';
@@ -15,6 +14,31 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/tor_valve.dart';
 import 'package:kryfo/widgets/card_action.dart';
 import 'package:kryfo/widgets/reconnect_valve.dart';
+
+// a container's draft rows in memory, each write logged into [log]
+class _KeptRows implements DraftRows {
+  _KeptRows(this.log);
+  final List<String> log;
+  final rows = <String, String>{};
+  @override
+  HaloContainer get container => HaloContainer.everyday;
+  @override
+  bool get isOpen => true;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
+      rows[chatId] == null ? null : Draft(rows[chatId]!);
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async {
+    log.add('draft');
+    rows[chatId] = d.text;
+  }
+
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      rows.remove(chatId);
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async => [];
+}
 
 void main() {
   final t0 = DateTime(2026, 10, 10, 12);
@@ -45,6 +69,62 @@ void main() {
   test('nothing in the first minute, a reconnect after it', () {
     expect(at(const Duration(seconds: 59)), ValveStage.hidden);
     expect(at(const Duration(seconds: 61)), ValveStage.offer);
+  });
+
+  test('a send held for their accept is no wait on tor: no way out, and '
+      'once their answer lets it go it gets a minute from there', () {
+    ValveStage stage(DateTime? from, DateTime now) => valveStageAt(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: from,
+      now: now,
+      linkUp: true,
+      busy: false,
+      triedAt: null,
+      triedFailed: false,
+    );
+    final written = t0;
+    // held two minutes for the accept: nothing shown
+    final held = valveWaitFrom(written, awaitsAnswer: true);
+    expect(held, isNull);
+    expect(
+      stage(held, t0.add(const Duration(minutes: 2))),
+      ValveStage.hidden,
+    );
+    // the answer came at two minutes: the send is warming, not stuck
+    final answered = t0.add(const Duration(minutes: 2));
+    final going = valveWaitFrom(
+      written,
+      awaitsAnswer: false,
+      answeredAtMs: answered.millisecondsSinceEpoch,
+    );
+    expect(going, answered);
+    expect(
+      stage(going, answered.add(const Duration(seconds: 5))),
+      ValveStage.hidden,
+    );
+    expect(
+      stage(going, answered.add(const Duration(seconds: 59))),
+      ValveStage.hidden,
+    );
+    // still not out a minute after the answer: then it is the route
+    expect(
+      stage(going, answered.add(const Duration(seconds: 61))),
+      ValveStage.offer,
+    );
+    // an answer from before the send changes nothing
+    expect(
+      valveWaitFrom(
+        written,
+        awaitsAnswer: false,
+        answeredAtMs: t0
+            .subtract(const Duration(minutes: 5))
+            .millisecondsSinceEpoch,
+      ),
+      written,
+    );
+    expect(valveWaitFrom(null, awaitsAnswer: false), isNull);
   });
 
   test('never in a decoy, never outside onion, never offline', () {
@@ -184,54 +264,19 @@ void main() {
     expect(order, ['drafts', 'restart']);
   });
 
-  test(
-    'drafts kept for a restart: the everyday ones only, read back once',
-    () async {
-      FlutterSecureStorage.setMockInitialValues({});
-      everydayChats = () async => (people: {'alice'}, groups: {'g1'});
-      final every = '${HaloContainer.everyday.id}|alice';
-      final hidden = '${HaloContainer.vault.id}|bob';
-      final decoy = '${HaloContainer.decoy.id}|carol';
-      draftPerPeer
-        ..clear()
-        ..addAll({every: 'half a thought', hidden: 'secret', decoy: 'x'});
-      draftPerGroup
-        ..clear()
-        ..addAll({'${HaloContainer.everyday.id}|g1': 'see you'});
-      await keepDrafts();
-      draftPerPeer.clear();
-      draftPerGroup.clear();
-      await restoreKeptDrafts();
-      expect(draftPerPeer, {every: 'half a thought'});
-      expect(draftPerGroup, {'${HaloContainer.everyday.id}|g1': 'see you'});
-      draftPerPeer.clear();
-      await restoreKeptDrafts();
-      expect(draftPerPeer, isEmpty);
-    },
-  );
-
-  test(
-    'a restart that does not happen takes the drafts back off disk',
-    () async {
-      FlutterSecureStorage.setMockInitialValues({});
-      everydayChats = () async => (people: {'alice'}, groups: <String>{});
-      final every = '${HaloContainer.everyday.id}|alice';
-      draftPerPeer
-        ..clear()
-        ..[every] = 'half a thought';
-      draftPerGroup.clear();
-      await restartKeepingDrafts(() async => false);
-      draftPerPeer.clear();
-      await restoreKeptDrafts();
-      expect(draftPerPeer, isEmpty);
-      // one that happens leaves them for the next start
-      draftPerPeer[every] = 'half a thought';
-      await restartKeepingDrafts(() async => true);
-      draftPerPeer.clear();
-      await restoreKeptDrafts();
-      expect(draftPerPeer, {every: 'half a thought'});
-    },
-  );
+  test('a restart writes every draft still waiting first', () async {
+    endProcessForTest();
+    final order = <String>[];
+    final rows = _KeptRows(order);
+    typedDraft(rows, 'alice', const Draft('half a thought'), group: false);
+    typedDraft(rows, 'g1', const Draft('see you'), group: true);
+    await restartKeepingDrafts(() async {
+      order.add('restart');
+      return true;
+    });
+    expect(order, ['draft', 'draft', 'restart']);
+    expect(rows.rows, {'alice': 'half a thought', 'g1': 'see you'});
+  });
 
   Widget strip(
     TorValve v, {

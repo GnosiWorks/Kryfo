@@ -7,7 +7,9 @@ import 'dart:convert';
 
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/devchat/dev_frame.dart';
+import 'package:kryfo/file_drop.dart' show DropFrame, kDropHost;
 import 'package:kryfo/media_resend.dart' show NeedFrame;
+import 'package:kryfo/group_shots.dart' show GroupShotsWord;
 import 'package:kryfo/message_envelope.dart';
 
 // the person's everyday identity, planted wherever a frame can carry one
@@ -145,8 +147,20 @@ final frameParams = <String, Object>{
   'sticker': 'fokia:3:1',
   'supportMarker': 1,
   'endNotice': true,
+  'groupShots': const GroupShotsWord(on: true, all: false, at: 1791393419123),
+  'shotsNudge': true,
   'writtenAt': 1791393419123,
   'album': const AlbumTag('0123456789abcdef', 4, 1),
+  'gif': true,
+  'drop': DropFrame(
+    host: kDropHost,
+    id: 'ab' * 16,
+    key: 'cd' * 32,
+    size: 100000,
+    chunks: 2,
+    sum: '12' * 32,
+    token: 'ef' * 32,
+  ),
 };
 
 // the parameters whose frames never go to him
@@ -160,6 +174,9 @@ const neverParams = {
   'vote',
   'pollClose',
   'endNotice',
+  'groupShots',
+  'shotsNudge',
+  'drop',
 };
 
 T? _param<T>(Set<String> on, String k) =>
@@ -204,8 +221,12 @@ Future<String> buildFrame(Set<String> on, {String m = 'hello marios'}) =>
       sticker: _param(on, 'sticker'),
       supportMarker: _param(on, 'supportMarker'),
       endNotice: on.contains('endNotice'),
+      groupShots: _param(on, 'groupShots'),
+      shotsNudge: on.contains('shotsNudge'),
       writtenAt: _param(on, 'writtenAt'),
       album: _param(on, 'album'),
+      gif: on.contains('gif'),
+      drop: _param(on, 'drop'),
     );
 
 // the frames the app's own code builds, as each call site builds them
@@ -295,6 +316,22 @@ final madeFrames = <String, Set<String>>{
   'introduction': {'intro', 'sender'},
   'group control': {'groupId', 'groupControl', 'sender'},
   'group end notice': {'msgUid', 'groupId', 'sender', 'endNotice', 'writtenAt'},
+  'group shots notice': {
+    'msgUid',
+    'groupId',
+    'sender',
+    'shotsNudge',
+    'writtenAt',
+  },
+  'admin group text': {
+    'groupId',
+    'msgUid',
+    'roster',
+    'rosterParticipants',
+    'groupShots',
+    'supporterBadge',
+    'sender',
+  },
   'group text': {
     'groupId',
     'msgUid',
@@ -346,5 +383,6 @@ Map<String, Object?> frameRead(String wrapped) {
     'pb': u.powBitsUsed,
     'w': u.writtenAt,
     'al': u.album?.toWire(),
+    'gf': u.gif,
   };
 }

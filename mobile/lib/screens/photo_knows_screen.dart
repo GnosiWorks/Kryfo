@@ -9,6 +9,7 @@ import '../meta/meta_reader.dart';
 import '../shred.dart';
 import '../theme.dart';
 import '../tools/cleaner.dart';
+import '../tools/desk_tools.dart' show DeskToolLock, DeskToolsIn;
 import '../tools/geo.dart';
 import '../tools/geo_assets.dart';
 import '../tools/photo_story.dart';
@@ -53,7 +54,7 @@ class PhotoKnowsScreen extends StatefulWidget {
 }
 
 class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, DeskToolLock {
   // made with the page, so a page left before a result has one to dispose
   late final AnimationController _reveal;
   StreamSubscription<CopyProgress>? _sub;
@@ -99,7 +100,8 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
 
   void _dropInput() {
     final p = _inPath;
-    if (p == null) return;
+    // the person's own file, read where it is: never ours to shred
+    if (p == null || widget.file.inPlace) return;
     // the sweep takes what will not go
     shredTree(File(p).parent.path).ignore();
   }
@@ -151,7 +153,12 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
     if (path == null) return;
     _handedOn = true;
     Navigator.of(context).pushReplacement(
-      haloRoute(CleanScreen(file: widget.file, localPath: path)),
+      haloRoute(
+        DeskToolsIn.wrap(
+          context,
+          CleanScreen(file: widget.file, localPath: path),
+        ),
+      ),
     );
   }
 
@@ -209,8 +216,8 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
           children: [
             ToolBar(
               title: video
-                  ? l10n.photoKnowsWhatThisVideoKnows
-                  : l10n.photoKnowsWhatThisPhotoKnows,
+                  ? l10n.photoKnowsVideoCleaner
+                  : l10n.photoKnowsPhotoCleaner,
               sub: report == null ? name : '$name · ${prettySize(_bytes)}',
               leading: _inPath == null || report == null
                   ? null
@@ -264,17 +271,6 @@ class _PhotoKnowsScreenState extends State<PhotoKnowsScreen>
                         ),
                         child: _buttons(story),
                       ),
-                    ),
-                  ),
-                  Text(
-                    video
-                        ? l10n.photoKnowsReadOnThisPhone
-                        : l10n.photoKnowsReadOnThisPhoneThePhoto,
-                    textAlign: TextAlign.center,
-                    style: HaloType.mono(
-                      size: 9.5,
-                      letter: 0.12,
-                      color: HaloColors.warm,
                     ),
                   ),
                 ],
@@ -357,7 +353,7 @@ class _Reading extends StatelessWidget {
             Text(
               total > 0 && done > 0
                   ? l10n.photoKnowsOf(prettySize(done), prettySize(total))
-                  : l10n.photoKnowsEverythingStaysOnThis,
+                  : l10n.photoKnowsEverythingStaysOnThisShown,
               style: HaloType.sans(size: 13.5, color: HaloColors.warm),
             ),
             const SizedBox(height: 22),
@@ -507,7 +503,7 @@ class _Body extends StatelessWidget {
                               size: 9.5,
                               letter: 0.1,
                               weight: FontWeight.w500,
-                              color: HaloColors.green,
+                              color: HaloColors.greenText,
                             ),
                           ),
                         ],
@@ -715,7 +711,10 @@ class _NothingFound extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
                     child: Text(
                       l10n.photoKnowsLookedFor,
-                      style: HaloType.mono(size: 11, color: HaloColors.amberText),
+                      style: HaloType.mono(
+                        size: 11,
+                        color: HaloColors.amberText,
+                      ),
                     ),
                   ),
                   for (var i = 0; i < fields.length; i++)
@@ -757,7 +756,7 @@ class _Checked extends StatelessWidget {
             ),
             Text(
               l10n.photoKnowsNotInIt,
-              style: HaloType.mono(size: 10.5, color: HaloColors.green),
+              style: HaloType.mono(size: 10.5, color: HaloColors.greenText),
             ),
             const SizedBox(width: 6),
             Transform.scale(

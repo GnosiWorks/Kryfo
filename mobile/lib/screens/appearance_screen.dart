@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../atmosphere.dart';
 import '../l10n/l10n.dart';
-import '../main.dart' show appState, kPhotoWall, session;
+import '../main.dart' show appState, kPhotoWall, session, AppStatePrefs;
 import '../theme.dart';
 import '../wallpaper.dart';
 import '../widgets/chat_backdrop.dart';
@@ -18,6 +18,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/stroke_icon.dart';
 import 'wallpaper_sheet.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 String accentName(HaloAccent a) => switch (a) {
   HaloAccent.yellow => l10n.accentYellow,
@@ -114,62 +115,66 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         leading: BackButton(color: HaloColors.text2),
         title: Text(l10n.settingsAppearance, style: HaloType.pageTitle()),
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          8,
-          20,
-          32 + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: staggerAll([
-          AccentPreview(background: ChatBackdrop(_default, chat: 'appearance')),
-          HaloSection(l10n.settingsAccentColour),
-          Container(
-            padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
-            decoration: BoxDecoration(
-              color: HaloColors.surface2,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: HaloColors.line, width: 0.5),
+      body: DeskPage(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            8,
+            20,
+            32 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: staggerAll([
+            AccentPreview(
+              background: ChatBackdrop(_default, chat: 'appearance'),
             ),
-            child: Wrap(
-              alignment: WrapAlignment.spaceEvenly,
-              runSpacing: 12,
+            HaloSection(l10n.settingsAccentColour),
+            Container(
+              padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
+              decoration: BoxDecoration(
+                color: HaloColors.surface2,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: HaloColors.line, width: 0.5),
+              ),
+              child: Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                runSpacing: 12,
+                children: [
+                  for (final a in HaloAccent.values)
+                    AccentSwatch(
+                      accent: a,
+                      on: a == HaloColors.accent,
+                      onTap: () => _pick(a),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
+              child: Text(
+                l10n.appearanceAccentHint,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
+              ),
+            ),
+            HaloSection(l10n.appearanceChatWallpaper),
+            HaloGroup(
               children: [
-                for (final a in HaloAccent.values)
-                  AccentSwatch(
-                    accent: a,
-                    on: a == HaloColors.accent,
-                    onTap: () => _pick(a),
-                  ),
+                HaloRow(
+                  icon: Icons.wallpaper_outlined,
+                  label: l10n.appearanceEveryChat,
+                  value: _defaultName,
+                  onTap: _pickDefault,
+                ),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
-            child: Text(
-              l10n.appearanceAccentHint,
-              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
-            ),
-          ),
-          HaloSection(l10n.appearanceChatWallpaper),
-          HaloGroup(
-            children: [
-              HaloRow(
-                icon: Icons.wallpaper_outlined,
-                label: l10n.appearanceEveryChat,
-                value: _defaultName,
-                onTap: _pickDefault,
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
+              child: Text(
+                l10n.appearanceWallpaperHintShown,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(6, 10, 6, 0),
-            child: Text(
-              l10n.appearanceWallpaperHint,
-              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
             ),
-          ),
-        ]),
+          ]),
+        ),
       ),
     );
   }
@@ -270,7 +275,7 @@ class AccentSwatch extends StatelessWidget {
                 style: HaloType.sans(
                   size: 11.5,
                   weight: on ? FontWeight.w600 : FontWeight.w400,
-                  color: on ? HaloColors.text : HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.25,
                 ),
               ),

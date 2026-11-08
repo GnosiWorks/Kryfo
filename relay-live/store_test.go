@@ -162,7 +162,7 @@ func TestRecheckCountsTheWAL(t *testing.T) {
 }
 
 // the ceiling counts at least what a wrap takes in the store, tags written
-// as json, escapes and all
+// as json, escapes and all, and its rows in the recipient index
 func TestStoredSizeCoversTheRow(t *testing.T) {
 	db, _ := testStore(t)
 	to := addr()
@@ -170,6 +170,11 @@ func TestStoredSizeCoversTheRow(t *testing.T) {
 		"plain":      nil,
 		"a slice":    func(e *nostr.Event) { e.Content = strings.Repeat("s", 40<<10) },
 		"empty tags": func(e *nostr.Event) { e.Tags = append(e.Tags, nostr.Tags{{}, {}, {}, {}, {}, {}, {}}...) },
+		"hex runs": func(e *nostr.Event) {
+			for len(e.Tags) < maxTags {
+				e.Tags = append(e.Tags, nostr.Tag{"x", addr(), addr(), addr()})
+			}
+		},
 		"escapes": func(e *nostr.Event) {
 			s := strings.Repeat("<\x01", 1<<10)
 			for len(e.Tags) < maxTags {
@@ -184,12 +189,60 @@ func TestStoredSizeCoversTheRow(t *testing.T) {
 		var row int
 		err := db.QueryRowContext(context.Background(), `SELECT length(CAST(id AS BLOB)) + length(CAST(pubkey AS BLOB))
 			+ length(CAST(sig AS BLOB)) + length(CAST(tags AS BLOB)) + length(CAST(content AS BLOB)) + 16
+			+ (SELECT coalesce(sum(length(address) + length(id) + 8 + 16), 0) * 2 FROM wrap_to WHERE id = event.id)
 			FROM event WHERE id = ?`, ev.ID).Scan(&row)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if n := storedSize(&ev); n < row {
 			t.Errorf("%s: counted %d, the row holds %d", name, n, row)
+		}
+	}
+}
+
+// a page comes back with its store connection already given back, whole,
+// and a reader that goes away lets the rest go
+func TestPageGivesItsConnectionBack(t *testing.T) {
+	db, _ := testStore(t)
+	to := addr()
+	for i := 0; i < 5; i++ {
+		ev := wrap(t, to, nil)
+		if err := db.SaveEvent(context.Background(), &ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	f := nostr.Filter{Kinds: []int{wrapKind}, Tags: nostr.TagMap{"p": {to}}, Limit: 100}
+	ch, err := db.QueryEvents(context.Background(), f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := db.Stats().InUse; n != 0 {
+		t.Fatalf("%d store connections held by a page nobody has read yet", n)
+	}
+	n := 0
+	for range ch {
+		n++
+	}
+	if n != 5 {
+		t.Fatalf("%d of 5 wraps", n)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	ch, err = db.QueryEvents(ctx, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	<-ch
+	cancel()
+	end := time.After(2 * time.Second)
+	for {
+		select {
+		case _, ok := <-ch:
+			if !ok {
+				return
+			}
+		case <-end:
+			t.Fatal("a page went on after its reader went away")
 		}
 	}
 }

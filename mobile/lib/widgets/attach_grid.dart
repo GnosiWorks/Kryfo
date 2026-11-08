@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../theme.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
+import 'entrance.dart';
 
 class AttachItem {
   final Widget Function(Color color) icon;
@@ -36,22 +37,27 @@ class _AttachGridState extends State<AttachGrid>
     vsync: this,
     duration: const Duration(milliseconds: 380),
   );
+  final _entrance = Entrance();
+
+  // motion off: the rows at rest from the first frame
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (entranceOff(context)) _in.value = 1;
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (MediaQuery.of(context).disableAnimations) {
-        _in.value = 1;
-      } else {
-        _in.forward();
-      }
+      _entrance.play(context, _in);
     });
   }
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }
@@ -103,7 +109,7 @@ class _AttachGridState extends State<AttachGrid>
                           textAlign: TextAlign.center,
                           style: HaloType.sans(
                             size: 11.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         ),
                       ),
@@ -181,7 +187,7 @@ class _Tile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
             ],
           ),

@@ -9,7 +9,6 @@ package main
 // stays up whatever frames arrive on it.
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -195,7 +194,7 @@ func TestPollCarriesEachEventUnderItsOwnTag(t *testing.T) {
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	freshInbox(t)
-	_, fcPk, err := nip17FirstContactKeys(0)
+	fcSk, fcPk, err := nip17FirstContactKeysAs(testMain(), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +209,7 @@ func TestPollCarriesEachEventUnderItsOwnTag(t *testing.T) {
 	} {
 		relay.store(openerTo(t, stranger, fcPk, body))
 	}
-	_, rcv, err := nip17RcvAddress(friend.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), friend.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,8 +217,8 @@ func TestPollCarriesEachEventUnderItsOwnTag(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunnerMode(ctx, "firstcontact", [32]byte{}, fcPk, true, 0)
-	go nostrSubscribeRunner(ctx, friendTag, friend.pub, rcv)
+	go nostrSubscribeRunnerFc(ctx, "firstcontact", fcSk, fcPk)
+	go nostrSubscribeRunner(ctx, friendTag, mainPair(friend.pub), rcv)
 	waitFor(t, "every event opened", 10*time.Second, func() bool { return inboxLen() == 5 })
 	got := pollEntries(t)
 	sort.Slice(got, func(i, j int) bool { return got[i].T < got[j].T })
@@ -251,20 +250,20 @@ func TestEventsAreRememberedOnceHandedOver(t *testing.T) {
 	freshInbox(t)
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ev := wrapTo(t, peer, myXPub, "hi")
 	relay.store(ev)
-	seenPath := savedDataDir + "/nostr_seen_" + rcv[:16]
+	seenPath := savedDataDir() + "/nostr_seen_" + rcv[:16]
 	holds := func() bool {
 		b, _ := os.ReadFile(seenPath)
 		return strings.Contains(string(b), ev.ID.Hex())
 	}
 
 	ctx1, cancel1 := context.WithCancel(context.Background())
-	go nostrSubscribeRunner(ctx1, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx1, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the event opened", 10*time.Second, func() bool { return inboxLen() == 1 })
 	if holds() {
 		t.Fatal("remembered before the app took it")
@@ -276,7 +275,7 @@ func TestEventsAreRememberedOnceHandedOver(t *testing.T) {
 	nostrMu.Unlock()
 
 	ctx2, cancel2 := context.WithCancel(context.Background())
-	go nostrSubscribeRunner(ctx2, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx2, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the event came again", 10*time.Second, func() bool { return inboxLen() == 1 })
 	if got := pollEntries(t); len(got) != 1 || got[0].C != "hi" {
 		t.Fatalf("the app got %+v", got)
@@ -288,7 +287,7 @@ func TestEventsAreRememberedOnceHandedOver(t *testing.T) {
 
 	ctx3, cancel3 := context.WithCancel(context.Background())
 	defer cancel3()
-	go nostrSubscribeRunner(ctx3, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx3, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the relay was asked again", 10*time.Second, func() bool { return len(relay.snapshot()) >= 3 })
 	time.Sleep(time.Second)
 	if n := inboxLen(); n != 0 {
@@ -306,7 +305,7 @@ func TestEventsCountUnderTheirOwnID(t *testing.T) {
 	freshInbox(t)
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -324,7 +323,7 @@ func TestEventsCountUnderTheirOwnID(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the real event", 8*time.Second, func() bool { return inboxHas(tag + "|the real one") })
 }
 
@@ -336,14 +335,14 @@ func TestAnchorStaysNearNow(t *testing.T) {
 	freshInbox(t)
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ahead := time.Now().Add(47 * time.Hour)
 	first.store(unopenedTo(t, rcv, ahead, "x"))
 	first.store(wrapToAt(t, peer, myXPub, "stamped ahead", ahead))
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	anchor := func() int64 {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -351,7 +350,7 @@ func TestAnchorStaysNearNow(t *testing.T) {
 	}
 
 	ctx1, cancel1 := context.WithCancel(context.Background())
-	go nostrSubscribeRunner(ctx1, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx1, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the anchor moved", 10*time.Second, func() bool { return anchor() > 0 })
 	cancel1()
 	if lim := time.Now().Add(anchorSlack + 5*time.Second).Unix(); anchor() > lim {
@@ -364,7 +363,7 @@ func TestAnchorStaysNearNow(t *testing.T) {
 	useRelays(second.url())
 	ctx2, cancel2 := context.WithCancel(context.Background())
 	defer cancel2()
-	go nostrSubscribeRunner(ctx2, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx2, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "today's wrap", 8*time.Second, func() bool { return inboxHas(tag + "|sent today") })
 }
 
@@ -373,15 +372,15 @@ func TestAnchorMovesOnlyOnEventsThatOpen(t *testing.T) {
 	useStandIns(t, modeFast, nil, relay)
 	freshInbox(t)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
 	relay.store(unopenedTo(t, rcv, time.Now(), "x"))
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "the catch-up ended", 10*time.Second, func() bool {
 		_, err := os.Stat(lastPath)
 		return err == nil
@@ -398,18 +397,18 @@ func TestAnchorIsNeverLaterThanNow(t *testing.T) {
 	useStandIns(t, modeFast, nil, relay)
 	freshInbox(t)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
-	lastPath := savedDataDir + "/nostr_last_" + rcv[:16]
+	lastPath := savedDataDir() + "/nostr_last_" + rcv[:16]
 	ahead := time.Now().Add(47 * time.Hour).Unix()
 	if err := os.WriteFile(lastPath, []byte(strconv.FormatInt(ahead, 10)), 0600); err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "the anchor put back", 10*time.Second, func() bool {
 		b, _ := os.ReadFile(lastPath)
 		v, _ := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
@@ -498,7 +497,7 @@ func TestSeenFileBoundedWithinOneConnection(t *testing.T) {
 	useStandIns(t, modeFast, nil, relay)
 	freshInbox(t)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -513,7 +512,7 @@ func TestSeenFileBoundedWithinOneConnection(t *testing.T) {
 		}
 		relay.store(ev)
 	}
-	seenPath := savedDataDir + "/nostr_seen_" + rcv[:16]
+	seenPath := savedDataDir() + "/nostr_seen_" + rcv[:16]
 	ck := catchupKey(relay.url(), rcv)
 	// the file between writes: a write that takes it past the cap cuts it
 	// back before anything else may touch it, so a line appended just
@@ -567,7 +566,7 @@ func TestSeenFileBoundedWithinOneConnection(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "the walk to its end", 40*time.Second, func() bool {
 		look()
 		catchupMu.Lock()
@@ -636,12 +635,15 @@ func TestProbeLooksLikeTheSocketsOwnRequest(t *testing.T) {
 	useStandIns(t, modeFast, nil, relay)
 	old := kickSpread
 	kickSpread = 3 * time.Second
-	defer func() { kickSpread = old }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = old
+	}()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// fifteen sockets: their own delays all falling inside the bound below
 	// is about one run in five billion, six made it one in fifteen hundred
-	l := startLanes(t, ctx, 10, 2)
+	l := startLanes(t, alone(ctx), 10, 2)
 	addrs := append([]string{l.fc}, l.contacts...)
 	for _, r := range l.rooms {
 		addrs = append(addrs, r...)
@@ -758,14 +760,14 @@ func TestRelayThatDropsYoungIsRedialledSlower(t *testing.T) {
 	useRelays("ws" + strings.TrimPrefix(srv.URL, "http"))
 	freshInbox(t)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// index 0, our own relay: the shortest pause and the lowest ceiling
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	time.Sleep(15 * time.Second)
 	// 2s, 4s, 8s between them: four in fifteen seconds, where a fixed pace
 	// would have made seven
@@ -793,13 +795,13 @@ func TestRelayOffTheListIsNotDialledAgain(t *testing.T) {
 	useRelays(wsOf(own), wsOf(pub))
 	freshInbox(t)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	deadline := time.Now().Add(10 * time.Second)
 	for ours.Load() == 0 || public.Load() == 0 {
 		if time.Now().After(deadline) {
@@ -860,13 +862,13 @@ func TestSwitchClosesWhatTheOldRouteOpened(t *testing.T) {
 	useStandIns(t, modeBalanced, socks, own)
 	freshInbox(t)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "a direct socket", 10*time.Second, func() bool {
 		return openSubs(own, socks, false) == 1
 	})
@@ -895,13 +897,13 @@ func TestADialFromBeforeTheSwitchAsksNothing(t *testing.T) {
 	useStandIns(t, modeBalanced, socks, own)
 	freshInbox(t)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "a dial", 5*time.Second, func() bool { return len(own.snapshot()) > 0 })
 
 	switchMode(modePrivate)
@@ -924,13 +926,13 @@ func TestARunnerDialFromBeforeTheSwitchEndsWithIt(t *testing.T) {
 	useStandIns(t, modeBalanced, socks, own)
 	freshInbox(t)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "a dial", 5*time.Second, func() bool { return len(own.snapshot()) > 0 })
 	own.mu.Lock()
 	own.upgradeDelay = 0
@@ -955,7 +957,7 @@ func TestAPublishOnTheOldListDialsNothingTheNewWay(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	pub := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, own, pub)
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1002,7 +1004,7 @@ func TestAPublishDialFromBeforeTheSwitchSendsNothing(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	own.upgradeDelay = 30 * time.Second
 	useStandIns(t, modeBalanced, socks, own)
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1048,7 +1050,7 @@ func TestAPairLookupAtTheSwitchAsksAgainTheNewWay(t *testing.T) {
 	own := newRelayStandIn(t, 0)
 	own.reqDelay = 3 * time.Second
 	useStandIns(t, modeFast, socks, own)
-	_, pk, err := pairCodeKeys("482913")
+	_, pk, err := pairBoxKeys("48", 2950000)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1056,7 +1058,7 @@ func TestAPairLookupAtTheSwitchAsksAgainTheNewWay(t *testing.T) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
-		_, _, heard := pairCodeQuery(ctx, pk)
+		_, _, heard := pairCodeQuery(ctx, pairLane(pk), []string{pk})
 		res <- heard
 	}()
 	waitFor(t, "the lookup asked", 5*time.Second, func() bool {
@@ -1090,7 +1092,7 @@ func TestConnectionStaysUpWhateverTheFrames(t *testing.T) {
 	useStandIns(t, modeFast, nil)
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1147,36 +1149,58 @@ func TestConnectionStaysUpWhateverTheFrames(t *testing.T) {
 	useRelays("ws" + strings.TrimPrefix(srv.URL, "http"))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the valid event", 20*time.Second, func() bool { return inboxHas(tag + "|still here") })
 	if n := conns.Load(); n != 1 {
 		t.Fatalf("%d connections, want 1", n)
 	}
 }
 
-// the exports that derive from the identity refuse while none is loaded
+// the exports that derive from an identity refuse one that is not loaded:
+// the main one before the face is, any other before the app put it
 func TestNothingDerivesWithoutAnIdentity(t *testing.T) {
-	mu.Lock()
-	oldPriv, oldPub := myXPriv, myXPub
-	myXPriv, myXPub = [32]byte{}, [32]byte{}
-	mu.Unlock()
+	identsMu.Lock()
+	old, had := idents[mainIdent]
+	delete(idents, mainIdent)
+	identsMu.Unlock()
 	defer func() {
-		mu.Lock()
-		myXPriv, myXPub = oldPriv, oldPub
-		mu.Unlock()
+		if had {
+			putIdentity(mainIdent, old)
+		}
 	}()
 	peer := newXid(t)
-	checks := map[string]error{}
-	_, _, checks["first contact"] = nip17FirstContactKeys(0)
-	_, _, checks["receive address"] = nip17RcvAddress(peer.pub)
-	_, _, checks["role"] = nip17DeriveRole(peer.pub, nip17RcvInfo, "x")
-	_, checks["wrap"] = nip17Wrap(peer.pub, "x")
-	_, checks["first contact wrap"] = nip17WrapFirstContact(peer.pub, strings.Repeat("ab", 32), "x")
-	_, checks["unwrap"] = nip17Unwrap(peer.pub, nostr2.Event{})
-	for what, err := range checks {
-		if err != errNoIdentity {
-			t.Errorf("%s: got %v before an identity was loaded", what, err)
+	peerHex := hex.EncodeToString(peer.pub[:])
+	for _, ident := range []int{mainIdent, 7} {
+		checks := map[string]error{}
+		_, checks["pair"] = pairOf(ident, peer.pub)
+		_, checks["shared key"] = deriveSharedKey(ident, peerHex)
+		checks["let held"] = nostrLetHeld(ident, peerHex, "mark")
+		checks["unsubscribe"] = nostrUnsubscribe(ident, peerHex)
+		want := errNoSuchIdentity
+		if ident == mainIdent {
+			want = errNoIdentity
+			_, _, checks["first contact"] = mainFirstContactKeys(ident, 0)
 		}
+		for what, err := range checks {
+			if err != want {
+				t.Errorf("%d %s: got %v before the identity was loaded", ident, what, err)
+			}
+		}
+		for what, r := range map[string]string{
+			"send":       nostrSend(ident, peerHex, "x"),
+			"subscribe":  nostrSubscribe(ident, peerHex, false),
+			"first send": nostrSendFirstContact(ident, peerHex, strings.Repeat("ab", 32), "x"),
+		} {
+			if !strings.HasPrefix(r, "error:") {
+				t.Errorf("%d %s: %q before the identity was loaded", ident, what, r)
+			}
+		}
+	}
+	// no identity but the main one has a v3 first-contact address
+	putIdentity(9, newXid(t))
+	defer identDrop(9)
+	if _, _, err := mainFirstContactKeys(9, 0); err == nil {
+		t.Error("identity 9 got a v3 first-contact address")
 	}
 }
 
@@ -1216,7 +1240,7 @@ func (c *countingReader) Read(p []byte) (int, error) {
 
 // the relay library's own log lines go through the engine's gate
 func TestLibraryLogsFollowTheGate(t *testing.T) {
-	var buf bytes.Buffer
+	var buf logSink
 	old := log.Writer()
 	log.SetOutput(&buf)
 	oldOn := atomic.LoadInt32(&debugOn)
@@ -1251,7 +1275,7 @@ func TestWipeHoldStopsRunnersAndWrites(t *testing.T) {
 		setStatus(oldStatus)
 	})
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1260,7 +1284,7 @@ func TestWipeHoldStopsRunnersAndWrites(t *testing.T) {
 	nostrMu.Lock()
 	nostrSubs["hold-test"] = cancel
 	nostrMu.Unlock()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "the runner listening", 10*time.Second, func() bool { return len(relay.snapshot()) == 1 })
 
 	if r := wipeHold(); r != "ok" {
@@ -1276,7 +1300,7 @@ func TestWipeHoldStopsRunnersAndWrites(t *testing.T) {
 		c := relay.snapshot()[0]
 		return !c.closed.IsZero()
 	})
-	path := savedDataDir + "/nostr_seen_held"
+	path := savedDataDir() + "/nostr_seen_held"
 	s := loadSeen(path)
 	id := randomID(t)
 	s.claim(id)
@@ -1285,10 +1309,10 @@ func TestWipeHoldStopsRunnersAndWrites(t *testing.T) {
 	if _, err := os.Stat(path); err == nil {
 		t.Fatal("written after the hold")
 	}
-	entries, _ := os.ReadDir(savedDataDir)
+	entries, _ := os.ReadDir(savedDataDir())
 	before := len(entries)
 	time.Sleep(time.Second)
-	entries, _ = os.ReadDir(savedDataDir)
+	entries, _ = os.ReadDir(savedDataDir())
 	if len(entries) != before {
 		t.Fatal("files appeared after the hold")
 	}

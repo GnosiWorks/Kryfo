@@ -11,7 +11,13 @@ import 'package:kryfo/badge_client.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/screens/donate_screen.dart';
 import 'package:kryfo/theme.dart';
@@ -85,6 +91,11 @@ Future<void> _payWithBitcoin(WidgetTester t, _Service s) async {
   await t.pump(const Duration(milliseconds: 100));
   await t.tap(find.text(l10n.donatePayWithBitcoin));
   await t.pump(const Duration(seconds: 1));
+  // a new route's first frame is offstage
+  await t.pump(const Duration(milliseconds: 300));
+  // the review first: the address is made on this tap
+  await t.tap(find.text(l10n.donateShowTheAddress));
+  await t.pump(const Duration(seconds: 1));
 }
 
 // the whole minutes the invoice line says are left
@@ -123,11 +134,12 @@ void main() {
     });
 
     test('a busy or refusing service is not asked again', () async {
-      for (final no in ['error: status 429: busy', 'error: status 400: x']) {
-        final got = await _ask([no, _made], asks: 1);
-        expect(got.invoice, isNull);
-        expect(got.failure, InvoiceFailure.service);
-      }
+      final busy = await _ask(['error: status 429: busy', _made], asks: 1);
+      expect(busy.invoice, isNull);
+      expect(busy.failure, InvoiceFailure.busy);
+      final no = await _ask(['error: status 400: x', _made], asks: 1);
+      expect(no.invoice, isNull);
+      expect(no.failure, InvoiceFailure.service);
     });
 
     test('the countdown is what the service says', () async {
@@ -157,7 +169,7 @@ void main() {
     testWidgets(
       'a service that says no says the service has trouble',
       (t) async {
-        final s = _Service(['error: status 429: busy']);
+        final s = _Service(['error: status 400: unknown tier']);
         await _payWithBitcoin(t, s);
         await t.pump(const Duration(seconds: 1));
         expect(

@@ -1,6 +1,7 @@
 package app.kryfo
 
 import android.app.Application
+import android.os.Build
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
@@ -8,7 +9,8 @@ import io.flutter.plugin.common.MethodChannel
 
 // one flutter engine for the life of the process, not the life of a screen,
 // so tor and the poll timer keep running while the app is in the background.
-class HaloApplication : Application() {
+// open for the play build, which adds google push (src/play)
+open class HaloApplication : Application() {
     companion object {
         const val ENGINE_ID = "halo_engine"
     }
@@ -29,6 +31,33 @@ class HaloApplication : Application() {
                     "clock" -> result.success(QuietRestart.clock(this))
                     "arm" -> result.success(QuietRestart.arm(this))
                     "end" -> result.success(QuietRestart.end())
+                    else -> result.notImplemented()
+                }
+            }
+        // which icon the home screen shows, for a plain notification's glyph
+        // in a process with no screen too
+        MethodChannel(engine.dartExecutor.binaryMessenger, "kryfo/app_icon")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    // with the launcher's label in the phone's language, which
+                    // the app switcher's title takes. null when unread: the app
+                    // keeps the plain look and asks again
+                    "get" -> result.success(
+                        try {
+                            AppIcon.describe(this)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    )
+                    else -> result.notImplemented()
+                }
+            }
+        // the phone's android, for the window rules: boot reads it before a
+        // screen is there, and in a process with none
+        MethodChannel(engine.dartExecutor.binaryMessenger, "kryfo/phone")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "sdk" -> result.success(Build.VERSION.SDK_INT)
                     else -> result.notImplemented()
                 }
             }
@@ -67,6 +96,7 @@ class HaloApplication : Application() {
             }
         // on the engine of the process, so a check-in without a screen hears it too
         NetWatch.start(this, engine)
+        FileTransfers.start(this, engine)
         Tilt.start(this, engine)
         JobSetup.schedule(this)
         // a file handed to another app to open is a copy in cache/open/,

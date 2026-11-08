@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// before someone accepts, two things can be sent to them. a photo or a file
-// takes its slot only once it is cleaned and the developer chat has
+// before someone accepts, two messages can be sent to them, and no photo or
+// file at all (a stranger's request is words alone). to the developer chat
+// a photo or a file takes its slot only once it is cleaned and the chat has
 // started, right before its row is written: nothing that is not sent ever
 // holds one
 import 'package:flutter_test/flutter_test.dart';
@@ -13,7 +14,7 @@ void main() {
 
   test('the slot is taken only once nothing can stop the send', () {
     final start = body.indexOf('_ensureDevStarted()');
-    final locked = body.indexOf('if (_requestLocked)');
+    final locked = body.indexOf('if (_requestLocked || _sayMediaLater())');
     final taken = body.indexOf('_sentCount++');
     final sent = body.indexOf('session.saveMessage(');
     expect(start, greaterThan(0));

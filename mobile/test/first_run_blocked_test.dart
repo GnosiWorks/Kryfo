@@ -1,21 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a new install that says tor is blocked or watched: bridges only, no relay
-// or fast on the way in, while relay stays in settings. closing the sheet
-// leaves the question
+// or fast on the way in (the route step shows private alone), while relay stays in settings and in the offer when
+// nothing got through, after the bridge way. closing the sheet leaves the
+// question
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/bridge_mode.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show HaloEngine, appState, useEngineForTest;
+import 'package:kryfo/main.dart'
+    show HaloEngine, appState, useEngineForTest, AppStateRoute, AppStateBridges;
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/screens/modes_screen.dart';
 import 'package:kryfo/screens/onboarding_screen.dart';
+import 'package:kryfo/widgets/card_action.dart';
 import 'package:kryfo/widgets/tor_boot_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'dev_chat_fakes.dart' show devApp, devWorld;
+import 'dev_chat_fakes.dart' show devApp, devHome, devWorld;
 import 'narrow_settings.dart' show loadAppFonts;
 
 class _Engine implements HaloEngine {
@@ -71,20 +74,6 @@ void main() {
     );
   }
 
-  bool checked(WidgetTester t, String title) => t
-      .widget<Semantics>(
-        find
-            .ancestor(
-              of: find.text(title),
-              matching: find.byWidgetPredicate(
-                (w) => w is Semantics && w.properties.checked != null,
-              ),
-            )
-            .first,
-      )
-      .properties
-      .checked!;
-
   Future<void> openSheet(WidgetTester t, {bool still = false}) async {
     phone(t);
     expect(appState.firstRunAsk, isTrue);
@@ -100,6 +89,44 @@ void main() {
     await t.pump(const Duration(seconds: 2));
   }
 
+  // the route step: [check] sees the cards, [pick] is tapped, then continue
+  // writes the route
+  Future<void> throughRoute(
+    WidgetTester t, {
+    void Function()? check,
+    String? pick,
+  }) async {
+    phone(t);
+    await t.pumpWidget(
+      devApp(OnboardingScreen(appState: appState, onComplete: () {})),
+    );
+    await t.pump(const Duration(seconds: 6));
+    final pages = t.widget<PageView>(find.byType(PageView)).controller!;
+    pages.jumpToPage(3);
+    await t.pump();
+    await t.pump(const Duration(seconds: 2));
+    expect(find.text(l10n.modesPrivate), findsOneWidget);
+    check?.call();
+    if (pick != null) {
+      await t.tap(find.text(pick));
+      await t.pump(const Duration(milliseconds: 300));
+    }
+    await t.tap(find.text(l10n.onboardingContinue));
+    await t.pump();
+    // the route is written first, then the step moves on
+    for (var i = 0; i < 30 && pages.page != 4; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await t.pump(const Duration(milliseconds: 300));
+    }
+    expect(pages.page, 4);
+  }
+
+  // the card picked on the route step, or not
+  void routeOn(WidgetTester t, String title, bool on) =>
+      expect(t.getSemantics(find.text(title)), isSemantics(isChecked: on));
+
   group('the first start', () {
     for (final still in [false, true]) {
       testWidgets('bridges only, no relay (still: $still)', (t) async {
@@ -112,8 +139,8 @@ void main() {
           find.text(l10n.torBootSplashNeverTriesTorPlainly),
           findsOneWidget,
         );
-        expect(find.text(l10n.onboardingRelay), findsNothing);
-        expect(find.text(l10n.modesRelay), findsNothing);
+        expect(find.text(l10n.modesFast), findsNothing);
+        expect(find.text(l10n.modesFast), findsNothing);
         expect(
           find.byWidgetPredicate(
             (w) => w is Semantics && w.properties.checked != null,
@@ -157,16 +184,14 @@ void main() {
     phone(t);
     await t.pumpWidget(devApp(const ModesScreen()));
     await t.pump(const Duration(seconds: 2));
-    final relay = find.text(l10n.modesRelay);
+    final relay = find.text(l10n.modesFast);
     await t.ensureVisible(relay);
     await t.pump();
     expect(relay.hitTestable(), findsOneWidget);
     await done(t);
   });
 
-  testWidgets('the sheet and the send step fit a small phone, every language', (
-    t,
-  ) async {
+  testWidgets('the sheet fits a small phone, every language', (t) async {
     await t.runAsync(loadAppFonts);
     phone(t);
     t.view.physicalSize = const Size(360, 640);
@@ -208,25 +233,6 @@ void main() {
           expect(go.hitTestable(), findsOneWidget, reason: now);
           await t.pumpWidget(const SizedBox());
           await t.pump(const Duration(seconds: 1));
-          await appState.pickFirstRun(risky: true);
-          await t.pumpWidget(
-            devApp(
-              OnboardingScreen(appState: appState, onComplete: () {}),
-              locale: locale,
-              scale: scale,
-            ),
-          );
-          await t.pump(const Duration(seconds: 6));
-          t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
-          await t.pump();
-          await t.pump(const Duration(seconds: 1));
-          expect(
-            find.text(l10n.onboardingContinue).hitTestable(),
-            findsOneWidget,
-            reason: now,
-          );
-          await t.pumpWidget(const SizedBox());
-          await t.pump(const Duration(seconds: 1));
         }
       }
     } finally {
@@ -235,88 +241,170 @@ void main() {
     expect(errs, isEmpty, reason: errs.toSet().join('\n'));
   });
 
-  group('the send step', () {
-    Future<void> toSend(WidgetTester t) async {
-      phone(t);
-      await t.pumpWidget(
-        devApp(OnboardingScreen(appState: appState, onComplete: () {})),
-      );
-      await t.pump(const Duration(seconds: 6));
-      t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
-      await t.pump();
-      await t.pump(const Duration(seconds: 1));
-    }
-
-    testWidgets('connect picked: onion, relay and fast, as before', (t) async {
-      await appState.pickFirstRun(risky: false);
-      await toSend(t);
-      expect(find.text(l10n.onboardingHidesYourAddressFrom), findsOneWidget);
-      expect(find.text(l10n.onboardingAutoFindsAWay), findsNothing);
-      expect(find.text(l10n.onboardingRelay), findsOneWidget);
-      expect(find.text(l10n.onboardingAboutASecondWorks), findsOneWidget);
-      expect(find.text(l10n.onboardingFast), findsOneWidget);
-      expect(find.text(l10n.onboardingSkipOnionIsA), findsOneWidget);
-      expect(checked(t, l10n.onboardingOnion), isTrue);
-      // relay is there to take
-      await t.tap(find.text(l10n.onboardingRelay));
-      await t.pump(const Duration(milliseconds: 300));
-      expect(checked(t, l10n.onboardingRelay), isTrue);
-      await t.tap(find.text(l10n.onboardingUseThis));
-      await t.pump();
+  testWidgets('relay taken where nothing got through stays the pick', (
+    t,
+  ) async {
+    await openSheet(t);
+    await t.tap(find.text(l10n.commonContinue));
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(BridgesScreen), findsOneWidget);
+    appState.setBridgeStatusForTest(
+      const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+    );
+    // the line rises in before its buttons take a tap
+    await t.pump();
+    await t.pump(const Duration(seconds: 2));
+    // what relay costs here, and the bridge way first
+    expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+    expect(
+      t.getRect(find.text(l10n.bridgesGetABridge)).top,
+      lessThan(t.getRect(find.text(l10n.homeUseFast)).top),
+    );
+    await t.tap(find.text(l10n.homeUseFast));
+    for (
+      var i = 0;
+      i < 50 && find.text(l10n.homeSwitchedToFastRoute).evaluate().isEmpty;
+      i++
+    ) {
       await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
       );
-      await t.pump(const Duration(seconds: 1));
-      expect(appState.sendMode, 'balanced');
+      await t.pump(const Duration(milliseconds: 50));
+    }
+    expect(appState.sendMode, 'balanced');
+    await done(t);
+    // the route step offers fast beside private here, and keeps it picked
+    final sem = t.ensureSemantics();
+    await throughRoute(
+      t,
+      check: () {
+        expect(find.text(l10n.modesFast), findsOneWidget);
+        routeOn(t, l10n.modesFast, true);
+        routeOn(t, l10n.modesPrivate, false);
+      },
+    );
+    expect(appState.sendMode, 'balanced');
+    sem.dispose();
+    await done(t);
+  });
+
+  testWidgets('relay taken, then onion again: setup keeps onion', (t) async {
+    await openSheet(t);
+    await t.tap(find.text(l10n.commonContinue));
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    appState.setBridgeStatusForTest(
+      const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+    );
+    await t.pump();
+    await t.pump(const Duration(seconds: 2));
+    await t.tap(find.text(l10n.homeUseFast));
+    for (var i = 0; i < 50 && appState.sendMode != 'balanced'; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await t.pump(const Duration(milliseconds: 50));
+    }
+    expect(appState.sendMode, 'balanced');
+    await done(t);
+    // back to onion before the send step: relay is not the mode now
+    await t.runAsync(() => appState.setSendMode('private'));
+    expect(appState.sendMode, 'private');
+    await throughRoute(
+      t,
+      check: () => expect(find.text(l10n.modesFast), findsNothing),
+    );
+    expect(appState.sendMode, 'private');
+    await done(t);
+  });
+
+  for (final watched in [true, false]) {
+    testWidgets('the home card when nothing got through '
+        '(blocked or watched: $watched)', (t) async {
+      phone(t);
+      appState.bridgeSetupForTest = BridgeSetup(skipDirect: watched);
+      appState.setBridgeStatusForTest(
+        const BridgeStatus(mode: 'auto', phase: 'exhausted'),
+      );
+      addTearDown(() => appState.setBridgeStatusForTest(BridgeStatus.none));
+      expect(appState.homeBridgeCard, 'auto');
+      await t.pumpWidget(devApp(devHome()));
+      await t.pump(const Duration(seconds: 2));
+      CardAction card(String label) => t.widget<CardAction>(
+        find.ancestor(of: find.text(label), matching: find.byType(CardAction)),
+      );
+      final relay = t.getRect(find.text(l10n.homeUseFast));
+      final ask = t.getRect(find.text(l10n.bridgesGetABridge));
+      // either way: the bridge way first and filled, fast last with its
+      // cost
+      expect(find.text(l10n.bridgesRelayThisNetworkSees), findsOneWidget);
+      expect(ask.left, lessThan(relay.left));
+      expect(card(l10n.bridgesGetABridge).fill, isNotNull);
+      expect(card(l10n.homeUseFast).fill, isNull);
       await done(t);
     });
+  }
 
-    for (final still in [false, true]) {
-      testWidgets('blocked or watched: onion through a bridge only '
-          '(still: $still)', (t) async {
-        await appState.pickFirstRun(risky: true);
-        phone(t);
-        await t.pumpWidget(
-          devApp(
-            OnboardingScreen(appState: appState, onComplete: () {}),
-            still: still,
-          ),
-        );
-        await t.pump(const Duration(seconds: 6));
-        t.widget<PageView>(find.byType(PageView)).controller!.jumpToPage(3);
-        await t.pump();
-        await t.pump(const Duration(seconds: 1));
-        expect(find.text(l10n.onboardingOnion), findsOneWidget);
-        expect(find.text(l10n.onboardingAutoFindsAWay), findsOneWidget);
-        // nothing of relay or fast, and nothing that reads as a choice
-        expect(find.text(l10n.onboardingRelay), findsNothing);
-        expect(find.text(l10n.onboardingOurRelaySeesYour), findsNothing);
-        expect(find.text(l10n.onboardingFast), findsNothing);
-        expect(find.text(l10n.onboardingEveryRelayYouUse), findsNothing);
-        expect(find.text(l10n.onboardingKeepOnion), findsNothing);
-        expect(find.text(l10n.onboardingSkipOnionIsA), findsNothing);
-        expect(
-          find.byWidgetPredicate(
-            (w) => w is Semantics && w.properties.checked != null,
-          ),
-          findsNothing,
-        );
-        if (still) expect(t.hasRunningAnimations, isFalse);
-        await t.tap(find.text(l10n.onboardingContinue));
-        await t.pump();
-        // the mode is written first, then the step moves on
-        final pages = t.widget<PageView>(find.byType(PageView)).controller!;
-        for (var i = 0; i < 20 && pages.page != 4; i++) {
-          await t.runAsync(
-            () => Future<void>.delayed(const Duration(milliseconds: 100)),
+  // tor alone not getting through: let kryfo find a bridge first, filled,
+  // and fast after it, quiet, with what this network sees on it
+  testWidgets('tor seems blocked: the bridge way first, fast last', (t) async {
+    phone(t);
+    appState.bridgeSetupForTest = const BridgeSetup(
+      choice: BridgeChoice.direct,
+    );
+    appState.torTryingSinceForTest = DateTime.now().subtract(
+      const Duration(minutes: 5),
+    );
+    addTearDown(() => appState.torTryingSinceForTest = null);
+    expect(appState.homeBridgeCard, 'hint');
+    await t.pumpWidget(devApp(devHome()));
+    await t.pump(const Duration(seconds: 2));
+    CardAction card(String label) => t.widget<CardAction>(
+      find.ancestor(of: find.text(label), matching: find.byType(CardAction)),
+    );
+    expect(find.text(l10n.bridgesBridgeFirstFastSeen), findsOneWidget);
+    final auto = t.getRect(find.text(l10n.bridgesTryAutomatic));
+    final fast = t.getRect(find.text(l10n.homeUseFast));
+    // in reading order, on one line or wrapped
+    expect(
+      auto.top < fast.top - 1 ||
+          ((auto.top - fast.top).abs() <= 1 && auto.left < fast.left),
+      isTrue,
+    );
+    expect(card(l10n.bridgesTryAutomatic).fill, isNotNull);
+    expect(card(l10n.homeUseFast).fill, isNull);
+    await done(t);
+  });
+
+  // the route step: private picked and written on continue. blocked or
+  // watched, it is the only card, with no radio: fast is a plain line a
+  // watcher sees, and stays in settings
+  for (final risky in [false, true]) {
+    testWidgets('the route step keeps private (blocked: $risky)', (t) async {
+      await appState.pickFirstRun(risky: risky);
+      final sem = t.ensureSemantics();
+      await throughRoute(
+        t,
+        check: () {
+          expect(find.text(l10n.modesFast), risky ? findsNothing : findsOne);
+          expect(
+            find.text(l10n.onboardingRouteBlockedLead),
+            risky ? findsOne : findsNothing,
           );
-          await t.pump(const Duration(milliseconds: 300));
-        }
-        expect(appState.sendMode, 'private');
-        // on to the next step
-        expect(pages.page, 4);
-        await done(t);
-      });
-    }
+          routeOn(t, l10n.modesPrivate, !risky);
+        },
+      );
+      expect(appState.sendMode, 'private');
+      sem.dispose();
+      await done(t);
+    });
+  }
+
+  testWidgets('fast picked on the route step is written', (t) async {
+    await appState.pickFirstRun(risky: false);
+    await throughRoute(t, pick: l10n.modesFast);
+    expect(appState.sendMode, 'balanced');
+    await done(t);
   });
 }

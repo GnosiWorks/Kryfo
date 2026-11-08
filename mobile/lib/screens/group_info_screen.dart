@@ -3,7 +3,21 @@
 
 import 'package:flutter/material.dart';
 import '../lock_state.dart' show lockState;
-import '../main.dart' show appState, session, GroupFull;
+import '../main.dart'
+    show
+        ownClearLine,
+        linkedRole,
+        appState,
+        session,
+        sessionQuiet,
+        GroupFull,
+        AppStateGroupShots,
+        AppStateScreen,
+        AppStateMessages,
+        AppStatePrefs,
+        AppStateGroups,
+        AppStateSession,
+        AppStateRooms;
 import '../atmosphere.dart' show Atmo;
 import '../theme.dart';
 import '../widgets/halo_hero.dart';
@@ -38,6 +52,13 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../read_burn.dart' show burnWaitsRow;
 import '../group_end.dart';
+import '../dlog.dart';
+import '../chat_shots.dart' show ShotsPacer;
+import '../group_shots.dart';
+import '../widgets/group_shots_sheet.dart';
+import '../wide/read_width.dart' show DeskPage;
+import '../translate/auto_translate_row.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
 
 // a member as the screens name them: a room key by its short tag
 String memberLabel(String id) => looksLikeRoomKey(id) ? roomTag(id) : id;
@@ -54,11 +75,30 @@ String endedLine(GroupEnd end) {
   return endLine(end, me: appState.sessionId, name: name);
 }
 
+/// what a group's screenshot row says under its label: to its admin, what
+/// the switch does or where it is; to a member, where it is and that only
+/// the admin changes it
+String groupShotsHint(GroupShots s, {required bool admin}) => admin
+    ? (!s.on
+          ? l10n.groupShotsBlocksAllShown
+          : s.forAll
+          ? l10n.groupShotsOnForAllShown
+          : l10n.groupShotsStartsWhenAll)
+    : (!s.on
+          ? l10n.groupShotsOffAdminOnly
+          : s.forAll
+          ? l10n.groupShotsOnAdminOnlyShown
+          : l10n.groupShotsWaitAdminOnly);
+
 // what leaving costs. everything here goes; a group's admin leaves it with
 // no one to change it, and a room's maker takes its link along
 String leaveLine({required bool room, required bool admin}) => room
-    ? (admin ? l10n.groupInfoLeaveRoomMaker : l10n.groupInfoEverythingInItIs)
-    : (admin ? l10n.groupInfoLeaveGroupAdmin : l10n.groupInfoLeaveGroupLine);
+    ? (admin
+          ? l10n.groupInfoLeaveRoomMakerShown
+          : l10n.groupInfoEverythingInItIsShown)
+    : (admin
+          ? l10n.groupInfoLeaveGroupAdminShown
+          : l10n.groupInfoLeaveGroupLineShown);
 
 class GroupInfoScreen extends StatefulWidget {
   final String groupId;
@@ -71,6 +111,9 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   final _scroll = ScrollController();
   String _name = '';
   bool _isAdmin = false;
+  // a group's controls are its phone's on a linked device (GroupOnPhone):
+  // the admin's ways to change it are not offered here
+  bool get _changes => _isAdmin && !_ended && !linkedRole;
   // room fields, null for a plain group
   String? _roomPub;
   bool get _isRoom => _roomPub != null;
@@ -99,6 +142,19 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   bool _mayEnd = false;
   // an end running from this page
   bool _ending = false;
+  // its screenshot block, and this page's hold on the window's flag: the
+  // shared media and the viewers open over it
+  GroupShots _shots = const GroupShots();
+  late final _shotsHold = ShotsPacer(appState.forceSecure);
+  // this phone may turn it: the admin on record, still in it
+  bool _mayShots = false;
+  // the switch moves on the tap; the write follows behind it
+  bool? _shotsNow;
+  // what each member's app can do, and who is blocked here, for the
+  // admin's lists
+  Map<String, Set<String>> _caps = const {};
+  Set<String> _blockedHere = const {};
+  final _waiting = ValueNotifier<List<ShotsWaiter>>(const []);
 
   @override
   void initState() {
@@ -109,8 +165,16 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       _isAdmin = g.isAdmin;
       _seenCount = g.memberCount;
       if (g.endedBy != null) _end = (at: 0, by: g.endedBy!);
+      if (g.expiresAt == null) {
+        _shots = GroupShots(
+          on: g.shotsBlocking,
+          all: g.shotsForAll,
+          known: true,
+        );
+      }
       break;
     }
+    _shotsHold.want(appState.shotsBlocksGroup(widget.groupId), now: true);
     _seenRev = appState.chatRevOf('group:${widget.groupId}');
     appState.addListener(_onApp);
     _load();
@@ -118,8 +182,22 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   @override
+  void deactivate() {
+    _shotsHold.release();
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _shotsHold.want(_shots.blocking, now: true);
+  }
+
+  @override
   void dispose() {
     appState.removeListener(_onApp);
+    _shotsHold.release();
+    _waiting.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -143,6 +221,18 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final g = await session.getGroup(widget.groupId);
     final members = await session.getGroupMembers(widget.groupId);
     final held = await keysHeldShown();
+    // who can block, for the admin's lists: a read that fails leaves
+    // everyone as not known, which only ever says less
+    var caps = const <String, Set<String>>{};
+    var blocked = const <String>{};
+    if (g?['room_pub'] == null) {
+      try {
+        caps = await session.groupDb(widget.groupId).capsOfPeople(members);
+        blocked = await session.blockedIds();
+      } catch (e) {
+        dlog('group shots: not read (${e.runtimeType})');
+      }
+    }
     if (!mounted || gen != _loadGen) return;
     setState(() {
       _held = held;
@@ -152,14 +242,56 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       _members = members;
       _end = groupEndOf(g);
       _mayEnd = mayEndGroup(g, appState.sessionId);
+      _shots = GroupShots.ofRow(g, quiet: sessionQuiet);
+      _mayShots = mayTurnGroupShots(g, appState.sessionId, members);
+      _caps = caps;
+      _blockedHere = blocked;
       _loaded = true;
     });
+    // on at once, off five seconds after the last change
+    _shotsHold.want(_shots.blocking);
+    _waiting.value = _waitersNow();
     final d = await appState.loadChatDisguise(
       widget.groupId,
       group: true,
       burner: g?['room_pub'] != null,
     );
     if (mounted) setState(() => _disguise = d);
+  }
+
+  // the members the block waits for, as the admin's sheet lists them
+  List<ShotsWaiter> _waitersNow() {
+    if (!_mayShots || !_shots.waiting) return const [];
+    return [
+      for (final m in groupShotsWaitsFor(_members, appState.sessionId, _caps))
+        ShotsWaiter(
+          id: m,
+          name: _contactOf(m)?.nickname ?? memberLabel(m),
+          named: _contactOf(m)?.nickname != null,
+          face: _contactOf(m)?.avatar,
+          blocked: _blockedHere.contains(m),
+        ),
+    ];
+  }
+
+  Future<void> _flipShots() async {
+    if (!_mayShots) return;
+    final on = !(_shotsNow ?? _shots.on);
+    HapticFeedback.selectionClick();
+    setState(() => _shotsNow = on);
+    // this phone's own tap: at once either way
+    _shotsHold.want(on, now: true);
+    await appState.setGroupShots(widget.groupId, on);
+    await _load();
+    if (!mounted) return;
+    _shotsHold.want(_shots.blocking, now: true);
+    setState(() => _shotsNow = null);
+  }
+
+  Future<void> _openWaiting() async {
+    final id = await showShotsWaiting(context, _waiting);
+    if (id == null || !mounted || !_members.contains(id)) return;
+    await _confirmRemove(id);
   }
 
   // remembered in the container that holds the group
@@ -258,11 +390,39 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       showHaloToast(context, l10n.groupInfoNoContactsToAdd);
       return;
     }
+    // while the block is on, someone whose app cannot yet says so. one
+    // that will not read is as not known
+    Map<String, Set<String>>? caps;
+    if (_shots.on && !sessionQuiet) {
+      try {
+        caps = await session.groupDb(widget.groupId).capsOfPeople([
+          for (final c in available) c.haloId,
+        ]);
+      } catch (e) {
+        caps = const {};
+      }
+    }
+    if (!mounted) return;
+    final cantYet = {
+      if (caps != null)
+        for (final c in available)
+          if (!groupShotsCan(caps, c.haloId)) c.haloId,
+    };
     final picked = await showHaloSheet<Set<String>>(
       context,
       scroll: true,
-      builder: (c) => _AddMemberSheet(available: available),
+      builder: (c) => _AddMemberSheet(available: available, cantYet: cantYet),
     );
+    if (picked != null && picked.isNotEmpty && picked.any(cantYet.contains)) {
+      if (!mounted) return;
+      final ok = await showConfirmSheet(
+        context,
+        title: l10n.groupShotsAddTitle,
+        line: l10n.groupShotsAddPauses,
+        yes: l10n.commonAdd,
+      );
+      if (!ok) return;
+    }
     if (picked != null && picked.isNotEmpty) {
       try {
         await appState.addMembersToGroup(widget.groupId, picked.toList());
@@ -394,7 +554,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.groupInfoClearThisConversation,
-      line: l10n.groupInfoEveryMessageHereIs,
+      line: ownClearLine(group: true),
       yes: l10n.groupInfoClear,
     );
     if (ok == true) {
@@ -423,8 +583,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final ok = await showConfirmSheet(
       context,
       title: l10n.groupInfoEndThisGroup,
-      line: l10n.groupInfoEndGroupLine,
-      detail: l10n.groupInfoEndGroupDetail,
+      line: l10n.groupInfoEndGroupLineShown,
+      detail: l10n.groupInfoEndGroupDetailShown,
       yes: l10n.groupInfoEndGroup,
       keep: l10n.commonCancel,
     );
@@ -452,6 +612,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       line: _ended
           ? l10n.groupInfoDeleteGroupLine
           : leaveLine(room: _isRoom, admin: _isAdmin),
+      // nobody can change it once its admin has gone
+      detail: !_ended && !_isRoom && _mayShots && _shots.on
+          ? l10n.groupShotsLeaveStays
+          : null,
       yes: _ended ? l10n.commonDelete : l10n.groupInfoLeave,
     );
     if (ok == true) {
@@ -494,303 +658,383 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         ),
         bottom: HeadLine(controller: _scroll),
       ),
-      body: ListView(
-        controller: _scroll,
-        padding: EdgeInsets.fromLTRB(
-          16,
-          4,
-          16,
-          28 + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: staggerAllIn(context, [
-          // big group identity
-          ParallaxHead(
-            controller: _scroll,
-            child: Center(
-              child: Column(
-                children: [
-                  // the same tile flies here from the chat's header
-                  HaloHero(
-                    tag: 'group-${widget.groupId}',
-                    flightShuttleBuilder: (_, _, _, _, _) =>
-                        FittedBox(child: _tile(_name)),
-                    child: _tile(_name),
-                  ),
-                  const SizedBox(height: 14),
-                  PressScale(
-                    onTap: _isAdmin && !_isRoom && !_ended ? _rename : null,
-                    scale: 0.97,
-                    haptic: false,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            _name,
-                            maxLines: 2,
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.serif(
-                              size: 24,
-                              weight: FontWeight.w300,
-                              color: HaloColors.text,
-                            ),
-                          ),
-                        ),
-                        if (_isAdmin && !_isRoom && !_ended) ...[
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 15,
-                            color: HaloColors.text3,
-                          ),
-                        ],
-                      ],
+      body: DeskPage(
+        child: ListView(
+          controller: _scroll,
+          padding: EdgeInsets.fromLTRB(
+            16,
+            4,
+            16,
+            28 + MediaQuery.paddingOf(context).bottom,
+          ),
+          children: staggerAllIn(context, [
+            // big group identity
+            ParallaxHead(
+              controller: _scroll,
+              child: Center(
+                child: Column(
+                  children: [
+                    // the same tile flies here from the chat's header
+                    HaloHero(
+                      tag: 'group-${widget.groupId}',
+                      flightShuttleBuilder: (_, _, _, _, _) =>
+                          FittedBox(child: _tile(_name)),
+                      child: _tile(_name),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  // an ended group counts no one: its line says what it is
-                  if (!_ended)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.groupInfo1Member(
-                            _loaded ? _members.length : _seenCount,
-                          ),
-                          style: HaloType.mono(
-                            size: 11,
-                            color: HaloColors.text2,
-                            letter: 0.1,
-                          ),
-                        ),
-                        if (_isAdmin && !_ended) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: HaloColors.amberSoft,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
+                    const SizedBox(height: 14),
+                    PressScale(
+                      onTap: _changes && !_isRoom ? _rename : null,
+                      scale: 0.97,
+                      haptic: false,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
                             child: Text(
-                              l10n.groupInfoAdmin,
-                              style: HaloType.mono(
-                                size: 9.5,
-                                color: HaloColors.amberText,
-                                weight: FontWeight.w600,
-                                letter: 0.1,
+                              _name,
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: HaloType.serif(
+                                size: 24,
+                                weight: FontWeight.w300,
+                                color: HaloColors.text,
                               ),
                             ),
                           ),
+                          if (_changes && !_isRoom) ...[
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 15,
+                              color: HaloColors.text3,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  // ended: who did, grown in under the count
-                  EaseSize(
-                    child: FadeSwap(
-                      child: _end == null
-                          ? const SizedBox(
-                              key: ValueKey('running'),
-                              width: double.infinity,
-                            )
-                          : Padding(
-                              key: const ValueKey('ended'),
-                              padding: const EdgeInsets.only(top: 4),
+                    const SizedBox(height: 6),
+                    // an ended group counts no one: its line says what it is
+                    if (!_ended)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.groupInfo1Member(
+                              _loaded ? _members.length : _seenCount,
+                            ),
+                            style: HaloType.mono(
+                              size: 11,
+                              color: HaloColors.text,
+                              letter: 0.1,
+                            ),
+                          ),
+                          if (_isAdmin && !_ended) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: HaloColors.amberSoft,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
                               child: Text(
-                                endedLine(_end!),
-                                textAlign: TextAlign.center,
-                                style: HaloType.sans(
-                                  size: 13,
-                                  color: HaloColors.text2,
+                                l10n.groupInfoAdmin,
+                                style: HaloType.mono(
+                                  size: 9.5,
+                                  color: HaloColors.amberText,
+                                  weight: FontWeight.w600,
+                                  letter: 0.1,
                                 ),
                               ),
                             ),
+                          ],
+                        ],
+                      ),
+                    // ended: who did, grown in under the count
+                    EaseSize(
+                      child: FadeSwap(
+                        child: _end == null
+                            ? const SizedBox(
+                                key: ValueKey('running'),
+                                width: double.infinity,
+                              )
+                            : Padding(
+                                key: const ValueKey('ended'),
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  endedLine(_end!),
+                                  textAlign: TextAlign.center,
+                                  style: HaloType.sans(
+                                    size: 13,
+                                    color: HaloColors.text,
+                                  ),
+                                ),
+                              ),
+                      ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+            // an ended group holds nothing more: what was here folds away
+            _fold(
+              'media',
+              Column(
+                children: [
+                  // the section brings its own 18 on top
+                  const SizedBox(height: 4),
+                  SharedMediaSection(
+                    paths: _media,
+                    count: _media.length,
+                    loaded: _mediaLoaded,
+                    onOpen: _media.isEmpty ? null : _openSharedMedia,
                   ),
+                  const SizedBox(height: 18),
                 ],
               ),
             ),
-          ),
-          // an ended group holds nothing more: what was here folds away
-          _fold(
-            'media',
-            Column(
-              children: [
-                // the section brings its own 18 on top
-                const SizedBox(height: 4),
-                SharedMediaSection(
-                  paths: _media,
-                  count: _media.length,
-                  loaded: _mediaLoaded,
-                  onOpen: _media.isEmpty ? null : _openSharedMedia,
-                ),
-                const SizedBox(height: 18),
-              ],
-            ),
-          ),
-          _fold(
-            'settings',
-            HaloGroup(
-              children: [
-                HaloRow(
-                  icon: Icons.theater_comedy_outlined,
-                  label: l10n.voiceDisguiseHere,
-                  toggled: _disguise ?? false,
-                  pending: _disguise == null,
-                  onTap: _flipDisguise,
-                ),
-                HaloRow(
-                  icon: Icons.palette_outlined,
-                  label: l10n.groupInfoWallpaper,
-                  onTap: _pickAtmosphere,
-                ),
-                // always on in a room, on every phone in it
-                if (_isRoom || _roomAtOpen)
+            _fold(
+              'settings',
+              HaloGroup(
+                children: [
                   HaloRow(
-                    icon: Icons.phonelink_lock_outlined,
-                    label: l10n.chatBlockScreenshots,
-                    hint: l10n.roomShotsAlwaysOn,
-                    toggled: true,
+                    icon: Icons.theater_comedy_outlined,
+                    label: l10n.voiceDisguiseHere,
+                    toggled: _disguise ?? false,
+                    pending: _disguise == null,
+                    onTap: _flipDisguise,
                   ),
-                // the maker's alone: known from the list's row, so it is
-                // there from the first frame
-                if ((_isRoom || _roomAtOpen) && _isAdmin)
                   HaloRow(
-                    label: l10n.groupInfoResetLink,
-                    // the glyph turns into a spinner while the reset runs
-                    mark: FadeSwap(
-                      child: _resetting
-                          ? SizedBox(
-                              key: const ValueKey('resetting'),
-                              width: 15,
-                              height: 15,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                    icon: Icons.palette_outlined,
+                    label: l10n.groupInfoWallpaper,
+                    onTap: _pickAtmosphere,
+                  ),
+                  // the same switch as "always translate this chat" in it
+                  if (translationHubIfOn() case final hub? when hub.on)
+                    AutoTranslateRow(chatId: widget.groupId, hub: hub),
+                  // a group's: its admin's switch, read only for the rest
+                  if (!_isRoom && !_roomAtOpen) _shotsRow(),
+                  // always on in a room, on every phone in it
+                  if (_isRoom || _roomAtOpen)
+                    HaloRow(
+                      icon: Icons.phonelink_lock_outlined,
+                      label: l10n.chatBlockScreenshots,
+                      hint: l10n.roomShotsAlwaysOnShown,
+                      toggled: true,
+                    ),
+                  // the maker's alone: known from the list's row, so it is
+                  // there from the first frame
+                  if ((_isRoom || _roomAtOpen) && _isAdmin)
+                    HaloRow(
+                      label: l10n.groupInfoResetLink,
+                      // the glyph turns into a spinner while the reset runs
+                      mark: FadeSwap(
+                        child: _resetting
+                            ? SizedBox(
+                                key: const ValueKey('resetting'),
+                                width: 15,
+                                height: 15,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: HaloColors.amber,
+                                ),
+                              )
+                            : Icon(
+                                Icons.refresh_rounded,
+                                key: const ValueKey('reset'),
+                                size: 17,
                                 color: HaloColors.amber,
                               ),
+                      ),
+                      onTap: _confirmResetLink,
+                    ),
+                  // hidden chats open: out of the everyday list, or back in it
+                  // a room before its first read too
+                  if (lockState.inVault && !_isRoom && !_roomAtOpen)
+                    HaloRow(
+                      icon: session.isHidden(widget.groupId)
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      label: session.isHidden(widget.groupId)
+                          ? l10n.chatShowInList
+                          : l10n.groupHide,
+                      onTap: _moveHidden,
+                    ),
+                ],
+              ),
+            ),
+            // an ended group's members are kept for its end alone: none show
+            _fold(
+              'members',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PageSection(
+                    l10n.groupInfoMembers2,
+                    actions: [
+                      if (_isRoom)
+                        _Pill(
+                          icon: Icons.qr_code_2_outlined,
+                          label: l10n.groupInfoInvite,
+                          color: HaloColors.violet,
+                          onTap: () async {
+                            final link = await appState.roomLinkFor(
+                              widget.groupId,
+                            );
+                            if (link != null && context.mounted) {
+                              await showRoomLinkSheet(context, link);
+                            }
+                          },
+                        ),
+                      if (_changes && !_isRoom)
+                        _Pill(
+                          icon: Icons.add_rounded,
+                          label: l10n.commonAdd,
+                          color: HaloColors.amber,
+                          onTap: _addMembers,
+                        ),
+                    ],
+                  ),
+                  // the card comes in whole once the members are read, over a
+                  // blank one the size the list said
+                  EaseSize(
+                    child: FadeSwap(
+                      child: _loaded
+                          ? MembersCard(
+                              key: const ValueKey('members'),
+                              // under the lock nothing is being watched
+                              quiet: lockGuard.isLocked(),
+                              members: _members,
+                              isMe: (m) =>
+                                  m == myId || (_isRoom && m == _roomPub),
+                              canRemove: _changes,
+                              onRemove: _confirmRemove,
+                              contactOf: _contactOf,
+                              onOpen: _openMember,
+                              held: _held,
+                              onHeld: _openHeld,
                             )
-                          : Icon(
-                              Icons.refresh_rounded,
-                              key: const ValueKey('reset'),
-                              size: 17,
-                              color: HaloColors.amber,
+                          : _MembersWaiting(
+                              key: const ValueKey('members-waiting'),
+                              count: _seenCount,
                             ),
                     ),
-                    onTap: _confirmResetLink,
                   ),
-                // hidden chats open: out of the everyday list, or back in it
-                // a room before its first read too
-                if (lockState.inVault && !_isRoom && !_roomAtOpen)
-                  HaloRow(
-                    icon: session.isHidden(widget.groupId)
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    label: session.isHidden(widget.groupId)
-                        ? l10n.chatShowInList
-                        : l10n.groupHide,
-                    onTap: _moveHidden,
-                  ),
-              ],
-            ),
-          ),
-          // an ended group's members are kept for its end alone: none show
-          _fold(
-            'members',
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                PageSection(
-                  l10n.groupInfoMembers2,
-                  actions: [
-                    if (_isRoom)
-                      _Pill(
-                        icon: Icons.qr_code_2_outlined,
-                        label: l10n.groupInfoInvite,
-                        color: HaloColors.violet,
-                        onTap: () async {
-                          final link = await appState.roomLinkFor(
-                            widget.groupId,
-                          );
-                          if (link != null && context.mounted) {
-                            await showRoomLinkSheet(context, link);
-                          }
-                        },
-                      ),
-                    if (_isAdmin && !_isRoom && !_ended)
-                      _Pill(
-                        icon: Icons.add_rounded,
-                        label: l10n.commonAdd,
-                        color: HaloColors.amber,
-                        onTap: _addMembers,
-                      ),
-                  ],
-                ),
-                // the card comes in whole once the members are read, over a
-                // blank one the size the list said
-                EaseSize(
-                  child: FadeSwap(
-                    child: _loaded
-                        ? MembersCard(
-                            key: const ValueKey('members'),
-                            // under the lock nothing is being watched
-                            quiet: lockGuard.isLocked(),
-                            members: _members,
-                            isMe: (m) =>
-                                m == myId || (_isRoom && m == _roomPub),
-                            canRemove: _isAdmin && !_ended,
-                            onRemove: _confirmRemove,
-                            contactOf: _contactOf,
-                            onOpen: _openMember,
-                            held: _held,
-                            onHeld: _openHeld,
-                          )
-                        : _MembersWaiting(
-                            key: const ValueKey('members-waiting'),
-                            count: _seenCount,
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          // what cannot be taken back, apart and in rose
-          HaloGroup(
-            rose: true,
-            children: [
-              if (!_ended)
-                HaloRow(
-                  icon: Icons.delete_sweep_outlined,
-                  label: l10n.groupInfoClearConversation,
-                  rose: true,
-                  onTap: _confirmClear,
-                ),
-              // the admin's, while it runs and an admin is on record
-              if (_mayEnd && !_ended)
-                HaloRow(
-                  icon: Icons.stop_circle_outlined,
-                  label: l10n.groupInfoEndGroup,
-                  rose: true,
-                  pending: _ending,
-                  onTap: _confirmEnd,
-                ),
-              HaloRow(
-                icon: _ended ? Icons.delete_outline : Icons.logout_rounded,
-                label: _ended
-                    ? l10n.groupInfoDeleteGroup
-                    : _isRoom
-                    ? l10n.groupInfoLeaveRoom2
-                    : l10n.groupInfoLeaveGroup2,
-                rose: true,
-                onTap: _confirmLeave,
+                  // where the admin's add, remove and rename would be
+                  if (linkedRole && _isAdmin && !_ended && !_isRoom)
+                    const _OnPhoneLine(key: ValueKey('members-on-phone')),
+                ],
               ),
-            ],
-          ),
-        ]),
+            ),
+            const SizedBox(height: 14),
+            // what cannot be taken back, apart and in rose
+            HaloGroup(
+              rose: true,
+              children: [
+                if (!_ended)
+                  HaloRow(
+                    icon: Icons.delete_sweep_outlined,
+                    label: l10n.groupInfoClearConversation,
+                    rose: true,
+                    onTap: _confirmClear,
+                  ),
+                // the admin's, while it runs and an admin is on record
+                if (_mayEnd && !_ended && !linkedRole)
+                  HaloRow(
+                    icon: Icons.stop_circle_outlined,
+                    label: l10n.groupInfoEndGroup,
+                    rose: true,
+                    pending: _ending,
+                    onTap: _confirmEnd,
+                  ),
+                // a linked device leaves and ends on its phone; an ended
+                // group still goes from here alone
+                if (linkedRole && !_ended)
+                  HaloRow(
+                    key: const ValueKey('leave-on-phone'),
+                    icon: Icons.smartphone_outlined,
+                    label: _isRoom
+                        ? l10n.groupInfoLeaveRoom2
+                        : l10n.groupInfoLeaveGroup2,
+                    hint: l10n.linkedDoOnPhone,
+                  )
+                else
+                  HaloRow(
+                    icon: _ended ? Icons.delete_outline : Icons.logout_rounded,
+                    label: _ended
+                        ? l10n.groupInfoDeleteGroup
+                        : _isRoom
+                        ? l10n.groupInfoLeaveRoom2
+                        : l10n.groupInfoLeaveGroup2,
+                    rose: true,
+                    onTap: _confirmLeave,
+                  ),
+              ],
+            ),
+          ]),
+        ),
       ),
+    );
+  }
+
+  // the block's row, and under it the admin's way to who it waits for
+  Widget _shotsRow() {
+    final on = _shotsNow ?? _shots.on;
+    // a tap shows where it lands before the write is back
+    final shown = _shotsNow == null
+        ? _shots
+        : GroupShots(
+            on: on,
+            all: groupShotsAll(_members, appState.sessionId, _caps),
+            quiet: _shots.quiet,
+            known: true,
+          );
+    final waits = _waiting.value.length;
+    final admin = _mayShots || (_isAdmin && !_loaded);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        HaloRow(
+          icon: Icons.phonelink_lock_outlined,
+          label: l10n.chatBlockScreenshots,
+          // the admin's switch is the phone's on a linked device
+          hint: admin && linkedRole
+              ? l10n.linkedDoOnPhone
+              : groupShotsHint(shown, admin: admin),
+          toggled: on,
+          pending: !_loaded,
+          onTap: _mayShots && _shotsNow == null && !linkedRole
+              ? _flipShots
+              : null,
+        ),
+        EaseSize(
+          child: FadeSwap(
+            child: _mayShots && _shotsNow == null && shown.waiting && waits > 0
+                ? Column(
+                    key: const ValueKey('waiting'),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 58),
+                        child: Container(height: 0.5, color: HaloColors.line),
+                      ),
+                      HaloRow(
+                        icon: Icons.hourglass_empty_rounded,
+                        label: l10n.groupShotsWaitingFor(waits),
+                        onTap: _openWaiting,
+                      ),
+                    ],
+                  )
+                : const SizedBox(
+                    key: ValueKey('no-waiting'),
+                    width: double.infinity,
+                  ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1015,7 +1259,7 @@ class _MembersCardState extends State<MembersCard> {
                     m,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10, color: HaloColors.text),
                   ),
                 KeyHeldMark(on: held),
                 if (me)
@@ -1114,7 +1358,9 @@ class _MembersWaiting extends StatelessWidget {
 
 class _AddMemberSheet extends StatefulWidget {
   final List<ContactPreview> available;
-  const _AddMemberSheet({required this.available});
+  // people whose app cannot block screenshots in groups yet
+  final Set<String> cantYet;
+  const _AddMemberSheet({required this.available, this.cantYet = const {}});
   @override
   State<_AddMemberSheet> createState() => _AddMemberSheetState();
 }
@@ -1159,6 +1405,9 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                   child: ContactPickRow(
                     contact: c,
                     picked: picked,
+                    note: widget.cantYet.contains(c.haloId)
+                        ? l10n.groupShotsCantYet
+                        : null,
                     onTap: () {
                       HapticFeedback.selectionClick();
                       setState(() {
@@ -1192,4 +1441,27 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
       ),
     );
   }
+}
+
+// a linked device's line where a group's controls would be: they are the
+// phone's (GroupOnPhone)
+class _OnPhoneLine extends StatelessWidget {
+  const _OnPhoneLine({super.key});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsetsDirectional.fromSTEB(4, 10, 4, 0),
+    child: Row(
+      children: [
+        Icon(Icons.smartphone_outlined, size: 15, color: HaloColors.text2),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            l10n.linkedDoOnPhone,
+            style: HaloType.sans(size: 12.5, color: HaloColors.text),
+          ),
+        ),
+      ],
+    ),
+  );
 }

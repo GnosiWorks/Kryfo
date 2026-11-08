@@ -77,7 +77,7 @@ void main() {
       expect(taps, 1);
       final d = boxOf(t, find.text('Clear'));
       expect((d.border as Border).top.color, HaloColors.line);
-      expect(t.widget<Text>(find.text('Clear')).style!.color, HaloColors.text2);
+      expect(t.widget<Text>(find.text('Clear')).style!.color, HaloColors.text);
     });
   });
 
@@ -120,6 +120,66 @@ void main() {
       );
       expect(t.widget<Text>(find.text('Wipe')).style!.color, HaloColors.rose);
       expect(t.widget<Icon>(find.byIcon(Icons.delete)).color, HaloColors.rose);
+    });
+
+    // no grey text: the hint, the note and the value are in the text
+    // colour and hold 4.5:1 on the group's ground in every accent and theme
+    testWidgets('the hint, the note and the value are never grey', (
+      t,
+    ) async {
+      addTearDown(() {
+        HaloColors.setAccent(HaloAccent.yellow);
+        HaloColors.setLight(false);
+      });
+      double ratio(Color x, Color y) {
+        final a = x.computeLuminance(), b = y.computeLuminance();
+        return a > b ? (a + 0.05) / (b + 0.05) : (b + 0.05) / (a + 0.05);
+      }
+
+      for (final light in [false, true]) {
+        HaloColors.setLight(light);
+        for (final accent in HaloAccent.values) {
+          HaloColors.setAccent(accent);
+          final why = '${accent.name} ${light ? 'light' : 'dark'}';
+          await t.pumpWidget(
+            host(
+              HaloGroup(
+                children: [
+                  HaloRow(
+                    label: 'Read receipts',
+                    hint: 'Sent when you read',
+                    note: 'Off the route it needs',
+                    value: 'On',
+                    onTap: () {},
+                  ),
+                  // a long value goes under the label
+                  HaloRow(
+                    label: 'Name',
+                    value: 'A value long enough to stack',
+                  ),
+                ],
+              ),
+            ),
+          );
+          for (final words in [
+            'Sent when you read',
+            'Off the route it needs',
+            'On',
+            'A value long enough to stack',
+          ]) {
+            final c = t.widget<Text>(find.text(words)).style!.color!;
+            final at = '$why: $words';
+            expect(c, HaloColors.text, reason: at);
+            expect(c, isNot(HaloColors.text2), reason: at);
+            expect(c, isNot(HaloColors.text3), reason: at);
+            expect(
+              ratio(c, HaloColors.surface2),
+              greaterThan(4.5),
+              reason: at,
+            );
+          }
+        }
+      }
     });
   });
 

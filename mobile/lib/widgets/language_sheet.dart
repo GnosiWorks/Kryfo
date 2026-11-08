@@ -13,11 +13,12 @@ import 'halo_sheet.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'stroke_icon.dart';
+import 'entrance.dart';
 
 /// the language row's value: the chosen language's own name, or match
 /// phone and the language that is
 String languageValue() => appLocalePref == 'system'
-    ? l10n.languageMatchPhoneValue(kLanguageNames[systemLanguage]!)
+    ? l10n.languageMatchPhoneValueShown(kLanguageNames[systemLanguage]!)
     : kLanguageNames[currentLanguage]!;
 
 /// [tag]'s name in the language kryfo is in now
@@ -28,6 +29,7 @@ String languageNameHere(String tag) => switch (tag) {
   'es' => l10n.languageNameEs,
   'pt' => l10n.languageNamePt,
   'it' => l10n.languageNameIt,
+  'pl' => l10n.languageNamePl,
   'ru' => l10n.languageNameRu,
   'uk' => l10n.languageNameUk,
   'tr' => l10n.languageNameTr,
@@ -35,13 +37,14 @@ String languageNameHere(String tag) => switch (tag) {
   'zh_Hant' => l10n.languageNameZhHant,
   'vi' => l10n.languageNameVi,
   'id' => l10n.languageNameId,
+  'hi' => l10n.languageNameHi,
   'fa' => l10n.languageNameFa,
   'ar' => l10n.languageNameAr,
   _ => kLanguageNames[tag] ?? tag,
 };
 
 // a letter each language is known by, drawn like the initial on an avatar.
-// upright where a slant would be faked (chinese, arabic, persian).
+// upright where a slant would be faked (chinese, arabic, persian, hindi).
 const _glyph = <String, (String, bool)>{
   'en': ('&', true),
   // upright: a slanted ß in fraunces reads as a greek beta
@@ -50,6 +53,7 @@ const _glyph = <String, (String, bool)>{
   'es': ('ñ', true),
   'pt': ('ã', true),
   'it': ('è', true),
+  'pl': ('ł', true),
   'ru': ('Я', true),
   'uk': ('ї', true),
   'tr': ('ş', true),
@@ -57,6 +61,7 @@ const _glyph = <String, (String, bool)>{
   'zh_Hant': ('繁', false),
   'vi': ('ư', true),
   'id': ('ng', true),
+  'hi': ('अ', false),
   'fa': ('پ', false),
   'ar': ('ض', false),
 };
@@ -95,17 +100,21 @@ class _LanguageSheetState extends State<_LanguageSheet>
     vsync: this,
     duration: const Duration(milliseconds: 420),
   );
+  final _entrance = Entrance();
+
+  // motion off: the rows at rest from the first frame
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (entranceOff(context)) _in.value = 1;
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (MediaQuery.of(context).disableAnimations) {
-        _in.value = 1;
-      } else {
-        _in.forward();
-      }
+      _entrance.play(context, _in);
       _reveal();
     });
   }
@@ -118,6 +127,7 @@ class _LanguageSheetState extends State<_LanguageSheet>
 
   @override
   void dispose() {
+    _entrance.dispose();
     _in.dispose();
     super.dispose();
   }
@@ -204,7 +214,7 @@ class _LanguageSheetState extends State<_LanguageSheet>
                           line,
                           style: HaloType.sans(
                             size: 13,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                             height: 1.4,
                           ),
                         ),
@@ -249,7 +259,7 @@ class _LanguageSheetState extends State<_LanguageSheet>
                                 : HaloColors.text2,
                             stroke: 1.5,
                           ),
-                          title: l10n.languageMatchPhone,
+                          title: l10n.languageMatchPhoneShown,
                           sub: kLanguageNames[phone]!,
                           on: _picked == 'system',
                           onTap: () => _choose('system'),
@@ -374,7 +384,7 @@ class _Row extends StatelessWidget {
                         sub!,
                         style: HaloType.sans(
                           size: 12.5,
-                          color: on ? HaloColors.amberText : HaloColors.text2,
+                          color: on ? HaloColors.amberText : HaloColors.text,
                         ),
                       ),
                     ],
@@ -518,7 +528,7 @@ class LanguageRow extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.expand_more_rounded, size: 20, color: HaloColors.text2),
+            Icon(Icons.expand_more_rounded, size: 20, color: HaloColors.text),
           ],
         ),
       ),

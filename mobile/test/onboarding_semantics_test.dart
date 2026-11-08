@@ -9,7 +9,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/screens/onboarding_screen.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/theme.dart';
@@ -55,6 +61,10 @@ void main() {
     addTearDown(
       () => m.setMockMethodCallHandler(SystemChannels.platform, null),
     );
+    var asked = 0;
+    final was = onboardingBackgroundAsk;
+    onboardingBackgroundAsk = (_) async => asked++;
+    addTearDown(() => onboardingBackgroundAsk = was);
     final sem = t.ensureSemantics();
     for (final still in [false, true]) {
       var done = false;
@@ -65,23 +75,20 @@ void main() {
         ),
       );
       await t.pump(const Duration(seconds: 3));
+      // the last step's own button opens the share sheet: "not now" ends
       final buttons = [
         l10n.onboardingBegin,
         l10n.onboardingUseThisName,
+        l10n.onboardingNameSkip,
         l10n.onboardingContinue,
-        l10n.onboardingKeepOnion,
-        l10n.onboardingIUnderstand,
-        l10n.onboardingGotIt,
+        l10n.onboardingContinue,
         l10n.onboardingNotNowAddPeople,
       ];
       // what the last three steps say, and a card each one fades in
       final says = <int, (String, String)>{
-        4: (
-          l10n.onboardingEverythingElseTheApp,
-          l10n.onboardingYourNameIsThreeWords,
-        ),
-        5: (l10n.onboardingAndroidNeedsAVisible, l10n.onboardingSilentAndAtThe),
-        6: (l10n.onboardingTheAppIsReady, l10n.onboardingEveryWayToAdd),
+        3: (l10n.onboardingRouteLead, l10n.onboardingRoutePrivateCost),
+        4: (l10n.onboardingDeliveryLead, l10n.onboardingSilentAndAtThe),
+        5: (l10n.onboardingInviteLead, l10n.onboardingEveryWayToAdd),
       };
       for (var step = 0; step < buttons.length; step++) {
         final label = buttons[step];
@@ -134,6 +141,8 @@ void main() {
       expect(done, isTrue);
       await t.pumpWidget(const SizedBox());
     }
+    // the battery and maker asks came once a run, after the notification
+    expect(asked, 2);
     sem.dispose();
   });
 }

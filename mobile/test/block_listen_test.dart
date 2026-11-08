@@ -11,7 +11,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/main.dart' show AppState, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        useDatabasesForTest,
+        AppStateRoute,
+        AppStateContacts,
+        AppStateReceive,
+        AppStateIdentity;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -212,8 +219,8 @@ void main() {
   test('the call an unlisten makes is one the engine exports', () {
     final app = File('lib/app/engine.dart').readAsStringSync();
     final call = RegExp(
-      r"void nostrUnsubscribeBg\(String \w+\) => _background\(\s*"
-      r"_roomFfiOnIsolate\('(\w+)'",
+      r"void nostrUnsubscribeBg\(int \w+, String \w+\) => _background\(\s*"
+      r"_onPair\([^;]*?_identFfiOnIsolate\('(\w+)'",
     ).firstMatch(app)?.group(1);
     expect(call, 'HaloNostrUnsubscribe');
     final engine = [

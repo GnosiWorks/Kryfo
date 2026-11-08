@@ -31,7 +31,10 @@ import 'package:kryfo/main.dart'
         live,
         session,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute,
+        AppStateVault,
+        AppStateRefresh;
 import 'package:kryfo/picked.dart' show voiceFreeBytes;
 import 'package:kryfo/theme.dart' show haloToastOverlay, haloWhenOpen;
 import 'package:kryfo/media_progress.dart'
@@ -47,7 +50,10 @@ import 'package:kryfo/stickers/sticker_sheet.dart' show StickerButton;
 import 'package:kryfo/widgets/dev_avatar.dart';
 import 'package:kryfo/widgets/dev_note.dart';
 import 'package:kryfo/widgets/kryfo_avatar.dart';
-import 'package:kryfo/widgets/media_bubbles.dart' show VoiceMakingBubble;
+import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
+import 'package:kryfo/voice_opus.dart' show voiceOggForTest, voiceStopForTest;
+import 'package:kryfo/widgets/media_bubbles.dart'
+    show VoiceBubble, VoiceMakingBubble;
 import 'package:kryfo/widgets/swipe_to_reply.dart';
 import 'package:kryfo/widgets/voice_mic.dart'
     show HoldToTalkMic, MicGlyph, VoiceMaking, VoiceTake;
@@ -71,6 +77,12 @@ class _SpyEngine implements HaloEngine {
 }
 
 // a phone's database as the chat screen reads and writes it, kept in maps
+class _OpenDb extends _ChatDb {
+  _OpenDb(super.mem, [super.container]);
+  @override
+  Future<Database> open() async => mem;
+}
+
 class _ChatDb extends DevTestDb {
   _ChatDb(super.mem, [super.container]);
 
@@ -162,6 +174,17 @@ class _ChatDb extends DevTestDb {
   @override
   Future<bool> messageExists(String msgUid) async =>
       mem.rows('messages').any((r) => r['msg_uid'] == msgUid);
+  @override
+  Future<bool> messageFrom(String msgUid, String sender, String? group) async =>
+      mem
+          .rows('messages')
+          .any(
+            (m) =>
+                m['msg_uid'] == msgUid &&
+                (m['direction'] == 'out' ||
+                    (m['peer_id'] == sender &&
+                        (m['group_id'] ?? '') == (group ?? ''))),
+          );
   @override
   Future<void> setPowNonce(String msgUid, int nonce) async {}
   @override
@@ -277,14 +300,19 @@ late Directory _tmp;
 
 // a phone with the dev chat fresh, the everyday one or a decoy's. a decoy
 // keeps what is sent in it, so nothing past the seal needs the engine
-Future<void> _world({HaloContainer container = HaloContainer.everyday}) async {
+// [opens]: its rows open as a database too, for what keeps a table of its
+// own (voice_format.dart)
+Future<void> _world({
+  HaloContainer container = HaloContainer.everyday,
+  bool opens = false,
+}) async {
   forgetDevChoices();
   // an opener grinds its proof of work in an isolate, which a widget test's
   // clock never waits for
   grindPowForTest = (_) => 0;
   _mem = MemDb(except: {'devchat'});
   await devChatTables(_mem, now: _made);
-  final db = _ChatDb(_mem, container);
+  final db = opens ? _OpenDb(_mem, container) : _ChatDb(_mem, container);
   if (container.quiet) {
     final everyday = MemDb(except: {'devchat'});
     await devChatTables(everyday);
@@ -600,6 +628,7 @@ Set<String> _ours() => {
   l10n.devWhoNothingYet,
   l10n.devWhoChoiceStays,
   l10n.devKeyCheckFailed,
+  l10n.devUpdateToWrite,
   l10n.devLockLine,
   l10n.devNamelessLine,
   l10n.devStartNewChat,
@@ -645,6 +674,7 @@ Future<void> _loadFonts() async {
     'Noto Sans Vietnamese': ['NotoSans-Vietnamese.ttf'],
     'Noto Naskh Arabic': ['NotoNaskhArabic-Kryfo.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
   };
   for (final e in families.entries) {
     final loader = FontLoader(e.key);
@@ -1001,6 +1031,25 @@ void main() {
       await _close(t);
     });
 
+    testWidgets('a pinned card too old to start on says to update, calmly, '
+        'and saves nothing', (t) async {
+      await _world();
+      await _open(t);
+      _answer = DevStart.needsUpdate;
+      await _type(t, 'hello marios');
+      await _send(t);
+      expect(find.text(l10n.devUpdateToWrite), findsOneWidget);
+      expect(find.text(l10n.devKeyCheckFailed), findsNothing);
+      expect(_mem.rows('messages'), isEmpty);
+      expect(_row()!.state, DevState.fresh);
+      expect(find.text('hello marios'), findsOneWidget);
+      expect(_sent(), isEmpty);
+      _answer = DevStart.ok;
+      // the words typed stay as a draft: cleared, so the next chat opens empty
+      await _type(t, '');
+      await _close(t);
+    });
+
     testWidgets('the lock line comes at five unanswered, not two', (t) async {
       // two, where a stranger's chat would stop
       await _world();
@@ -1198,6 +1247,158 @@ void main() {
     }
   });
 
+  group('voice in opus', () {
+    // what the row says of their phone. no envelope ever writes it for the
+    // developer's chat: here it stands in for any chat's
+    Future<void> plays(int can) async {
+      final n = await _mem.update(
+        'contacts',
+        {'opus_can': can},
+        where: 'halo_id = ?',
+        whereArgs: [_dev],
+      );
+      expect(n, 1, reason: 'no row for the chat');
+    }
+
+    // the engine's encoder, standing in: the opus copy it writes
+    final ogg = File('test/fixtures/voice/note.ogg').readAsBytesSync();
+    var encodes = 0;
+    setUp(() {
+      encodes = 0;
+      voiceOggForTest = (_, to) async {
+        encodes++;
+        File(to).writeAsBytesSync(ogg);
+        return 'ok 3400 ${ogg.length}';
+      };
+    });
+    tearDown(() => voiceOggForTest = null);
+
+    Future<List<String>?> media(WidgetTester t) => t.runAsync(
+      () async => [
+        for (final e in (await HaloContainer.decoy.mediaDir()).listSync())
+          e.uri.pathSegments.last,
+      ],
+    );
+
+    testWidgets('to a phone that has not said it plays opus: the wav', (
+      t,
+    ) async {
+      await _world(container: HaloContainer.decoy, opens: true);
+      await _open(t);
+      await _speak(t, () => _sent().isNotEmpty);
+      final note = _sent().single;
+      expect(note['file_name'], 'voice.wav');
+      expect(note['file_path'], endsWith('.wav'));
+      expect(encodes, 0);
+      await _close(t);
+    });
+
+    testWidgets('to one that has: opus, and the wav goes', (t) async {
+      await _world(container: HaloContainer.decoy, opens: true);
+      await _started();
+      await _open(t);
+      await plays(1);
+      await _speak(t, () => _sent().isNotEmpty);
+      final note = _sent().single;
+      expect(note['file_name'], 'voice.ogg');
+      expect(note['file_path'], endsWith('/vn_${note['msg_uid']}.ogg'));
+      expect(File(note['file_path']! as String).readAsBytesSync(), ogg);
+      expect(encodes, 1);
+      // the wav is shredded once no player has it
+      for (var i = 0; i < 20; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump(const Duration(milliseconds: 40));
+      }
+      expect(await media(t), ['vn_${note['msg_uid']}.ogg']);
+      // its bubble is the voice note's, playing the opus copy
+      final b = t.widget<VoiceBubble>(find.byType(VoiceBubble));
+      expect(b.path, note['file_path']);
+      await _close(t);
+    });
+
+    testWidgets('one that went back to an older version: the wav again', (
+      t,
+    ) async {
+      await _world(container: HaloContainer.decoy, opens: true);
+      await _started();
+      await _open(t);
+      await plays(1);
+      await plays(-2);
+      await _speak(t, () => _sent().isNotEmpty);
+      expect(_sent().single['file_name'], 'voice.wav');
+      expect(encodes, 0);
+      await _close(t);
+    });
+
+    for (final left in [false, true]) {
+      testWidgets('a lock during the encode stops it, and neither file is left'
+          '${left ? ', the chat left' : ''}', (t) async {
+        final asked = <String>[];
+        voiceStopForTest = asked.add;
+        addTearDown(() => voiceStopForTest = null);
+        final going = Completer<void>();
+        final stop = Completer<String>();
+        voiceOggForTest = (_, to) async {
+          // half an opus copy, then it runs until it is told to stop
+          File(to).writeAsBytesSync(ogg.sublist(0, 4000));
+          going.complete();
+          return stop.future;
+        };
+        await _world(container: HaloContainer.decoy, opens: true);
+        await _started();
+        await _open(t);
+        await plays(1);
+        final root = t.state<NavigatorState>(find.byType(Navigator).first);
+        haloToastOverlay = () => root.overlay;
+        addTearDown(() => haloToastOverlay = null);
+        final take = _file('vn_${_notes++}.wav', _wav());
+        _mic(t).onSend(VoiceTake(path: take, ms: 1200, disguise: false));
+        await _io(t, () => going.isCompleted, why: 'no encode began');
+        // the chat left while it is made: sent is sent, until the lock
+        if (left) t.state<NavigatorState>(find.byType(Navigator).first).pop();
+        for (var i = 0; i < 20; i++) {
+          await t.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await t.pump(const Duration(milliseconds: 60));
+        }
+        lockGuard.locking();
+        await _io(t, () => asked.isNotEmpty, why: 'the encode was not stopped');
+        expect(asked.single, endsWith('.ogg'));
+        stop.complete('error: stopped');
+        for (var i = 0; i < 30; i++) {
+          await t.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await t.pump(const Duration(milliseconds: 60));
+        }
+        expect(await media(t), isEmpty);
+        expect(_sent(), isEmpty);
+        expect(File(take).existsSync(), isFalse);
+        expect(find.text(l10n.voiceLockedNotSent), findsOneWidget);
+        await t.pump(const Duration(seconds: 5));
+        await _close(t);
+      });
+    }
+
+    testWidgets('an encode that fails: the wav goes, nothing else is left', (
+      t,
+    ) async {
+      voiceOggForTest = (_, _) async => 'error: rate';
+      await _world(container: HaloContainer.decoy, opens: true);
+      await _started();
+      await _open(t);
+      await plays(1);
+      await _speak(t, () => _sent().isNotEmpty);
+      final note = _sent().single;
+      expect(note['file_name'], 'voice.wav');
+      expect(await media(t), ['vn_${note['msg_uid']}.wav']);
+      await _close(t);
+    });
+  });
+
   group('a note handed over while its disguise is made', () {
     late Completer<String?> made;
     late bool stopped;
@@ -1388,6 +1589,8 @@ void main() {
             'first_seen': 1,
             'last_seen': 1,
             'accepted': 1,
+            // a friend: a request to a stranger takes no voice note
+            'back_paired': 1,
           });
           final vault = _VaultDb(vaultMem, HaloContainer.decoyVault);
           useDatabasesForTest(live, await Session.withVault(decoy, vault));
@@ -1685,6 +1888,7 @@ void main() {
       'id',
       'fa',
       'ar',
+      'hi',
     ]) {
       testWidgets('$code at the biggest font on a small phone: the note, its '
           'sheet and the chat\'s lines fit', (t) async {
@@ -1847,10 +2051,12 @@ void main() {
       expect(o.started, isFalse);
       thrown = const DevKeyCheckFailed();
       expect(await o.ensure(), DevStart.keyFailed);
+      thrown = const DevCardOld();
+      expect(await o.ensure(), DevStart.needsUpdate);
       thrown = StateError('half way');
       expect(await o.ensure(), DevStart.none);
       expect(o.started, isFalse);
-      expect(asked, 3);
+      expect(asked, 4);
       expect(o.busy, isFalse);
     });
 

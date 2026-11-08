@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show AppState, claimChat, releaseChat, useDatabasesForTest;
+    show AppState, claimChat, releaseChat, useDatabasesForTest, AppStateReceive;
 import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
@@ -69,6 +69,21 @@ class _World {
       chunkTotal: total,
       fileB64: base64Encode(List.filled(300, index)),
       fileName: 'x.bin',
+      sender: asSender(_x),
+    ),
+  );
+
+  // a gif's slice, in the picture lane, marked as one
+  Future<void> gifSlice(String mid, int index, int total) async => from(
+    _x,
+    await wrapMessage(
+      '',
+      msgUid: mid,
+      mediaId: mid,
+      chunkIndex: index,
+      chunkTotal: total,
+      imageB64: base64Encode(List.filled(300, index)),
+      gif: true,
       sender: asSender(_x),
     ),
   );
@@ -137,6 +152,15 @@ void main() {
     );
     await w.slice('f1', 1, 3);
     await w.slice('f1', 2, 3);
+    expect(incomingMediaProgress, isEmpty);
+  });
+
+  test('a gif coming in slices shows no share: it just appears', () async {
+    final w = await _World.make();
+    await w.gifSlice('g1', 0, 3);
+    await w.gifSlice('g1', 1, 3);
+    expect(incomingMediaProgress, isEmpty);
+    await w.gifSlice('g1', 2, 3);
     expect(incomingMediaProgress, isEmpty);
   });
 

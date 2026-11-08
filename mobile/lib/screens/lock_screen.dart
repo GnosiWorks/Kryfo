@@ -6,12 +6,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
+import '../app_icon.dart' show AppFace, appFaceNow;
 import '../lock_state.dart';
+import '../pass_rules.dart';
 import '../wipe.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/fit_column.dart';
 import '../theme.dart';
+import '../widgets/pass_pad.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/press_scale.dart';
+import '../widgets/say.dart';
 import '../l10n/l10n.dart';
 
 class LockScreen extends StatefulWidget {
@@ -26,6 +31,8 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   String _pin = '';
   bool _busy = false;
   bool _wrong = false;
+  // letters for a hidden chats passphrase. every lock opens on digits
+  bool _letters = false;
   LockState get _lock => widget.lock ?? lockState;
   // counts the hold down once a second while the pad is held
   Timer? _holdTick;
@@ -79,6 +86,8 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // a phone that said no before the app had a screen is asked again
       if (!_lock.bioSupported) unawaited(_lock.recheckFinger());
+      // and a pin key that read as gone
+      if (_lock.keyNote == KeyNote.lost) unawaited(_lock.recheckLost());
       _fingerWhenInFront();
     });
   }
@@ -132,13 +141,18 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     setState(() => _pin += d);
   }
 
+  void _onText(String t) {
+    if (_busy) return;
+    setState(() => _pin = t);
+  }
+
   Future<void> _submit() async {
-    if (_busy || _pin.length < kPinMin) return;
+    if (_busy || passLength(_pin) < kPinMin) return;
     setState(() => _busy = true);
     {
       final typed = _pin;
       // the digits leave the screen's hands as soon as they are handed on
-      setState(() => _pin = '*' * typed.length);
+      setState(() => _pin = '*' * passLength(typed));
       final result = await _lock.verifyPin(typed);
       if (result == PinResult.panic) {
         // silent wipe: the screen stays as if processing, then kryfo exits,
@@ -151,6 +165,12 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
         _watchHold();
         setState(() => _wrong = true);
         HapticFeedback.heavyImpact();
+        // heard once: the line goes back to its prompt after the shake, and
+        // a countdown is not read out every second
+        sayOnce(
+          context,
+          _held ? tooManyTriesLine(_lock.throttleLeft) : l10n.lockNotIt,
+        );
         await _shake.forward(from: 0);
         if (mounted) {
           setState(() {
@@ -160,7 +180,106 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
           });
         }
       }
+      // the phone's pin key did not answer: no shake, nothing counted, the
+      // line under the dots says why
+      if (result == PinResult.unavailable && mounted) {
+        _watchHold();
+        HapticFeedback.lightImpact();
+        setState(() {
+          _pin = '';
+          _busy = false;
+        });
+      }
     }
+  }
+
+  // why a pin cannot be checked now: device states, shown before any pin
+  // is typed and the same whatever was
+  Widget _keyNoteLine() {
+    final still = MediaQuery.of(context).disableAnimations;
+    final note = _lock.keyNote;
+    final line = switch (note) {
+      KeyNote.busy => l10n.lockKeyBusy,
+      KeyNote.locked => l10n.lockKeyLocked,
+      KeyNote.waiting => l10n.lockKeyWaiting,
+      KeyNote.lost => l10n.lockKeyLost,
+      null => null,
+    };
+    final shown = line == null
+        ? const SizedBox(key: ValueKey('no key note'), width: double.infinity)
+        : Padding(
+            key: ValueKey(note),
+            padding: const EdgeInsets.fromLTRB(40, 12, 40, 0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    line,
+                    textAlign: TextAlign.center,
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text),
+                  ),
+                ),
+                // Reset only once the key read as gone twice: a busy
+                // keystore can read as gone for a moment
+                if (note == KeyNote.lost && _lock.resetOffered) ...[
+                  const SizedBox(height: 6),
+                  PressScale(
+                    onTap: _reset,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Text(
+                        l10n.lockKeyReset,
+                        style: HaloType.sans(
+                          size: 13,
+                          weight: FontWeight.w600,
+                          color: HaloColors.roseText,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+    if (still) return shown;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: shown,
+      ),
+    );
+  }
+
+  // the way back once the pin key is gone: everything goes, asked twice,
+  // then a backup brings it back
+  Future<void> _reset() async {
+    HapticFeedback.selectionClick();
+    // asked again first: a key that answers now needs no reset
+    if (!await _lock.recheckLost() || !mounted) return;
+    final first = await showConfirmSheet(
+      context,
+      title: l10n.lockKeyResetTitle,
+      line: l10n.lockKeyResetLine,
+      yes: l10n.lockKeyReset,
+    );
+    if (!first || !mounted) return;
+    final sure = await showConfirmSheet(
+      context,
+      title: l10n.lockKeyResetSureTitle,
+      line: l10n.lockKeyResetSureLine,
+      yes: l10n.lockKeyResetSure,
+    );
+    if (!sure || !mounted) return;
+    HapticFeedback.heavyImpact();
+    await wipeHalo();
   }
 
   Widget _fingerButton() {
@@ -200,19 +319,20 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       child: Text(
         l10n.lockFingerAfterPin,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+        style: HaloType.sans(size: 12.5, color: HaloColors.text),
       ),
     );
   }
 
-  // why a finger does nothing: the sensor is locked, or the phone would not
-  // keep a key for Kryfo and the finger is off
+  // why a finger does nothing: the sensor is locked, the phone would not
+  // keep a key for Kryfo and the finger is off, or the phone was busy
   Widget _fingerNoteLine() {
     final still = MediaQuery.of(context).disableAnimations;
     final note = _lock.fingerNote;
     final line = switch (note) {
       FingerNote.lockedOut when _fingerOn => l10n.lockFingerLockedOut,
       FingerNote.refused when !_fingerOn => l10n.lockFingerRefused,
+      FingerNote.tryAgain when _fingerOn => l10n.lockFingerTryAgain,
       _ => null,
     };
     final shown = line == null
@@ -223,7 +343,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
             child: Text(
               line,
               textAlign: TextAlign.center,
-              style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+              style: HaloType.sans(size: 12.5, color: HaloColors.text),
             ),
           );
     // reduced motion: no animation
@@ -248,8 +368,8 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       // the keyboard of the screen under it goes down as it comes up: the
-      // pad stays where it is
-      resizeToAvoidBottomInset: false,
+      // pad stays where it is. in letters the phone's keyboard is the pad
+      resizeToAvoidBottomInset: _letters,
       backgroundColor: HaloColors.ink,
       body: Stack(
         children: [
@@ -280,19 +400,33 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
               builder: (_, _) => FitColumn(
                 children: [
                   const Spacer(flex: 3),
-                  Text(
-                    'Kryfo',
-                    style: HaloType.serif(
-                      size: 40,
-                      color: HaloColors.amberText,
-                      italic: true,
+                  // the name only under kryfo's own icon: one that looks
+                  // like notes says nothing of kryfo when it opens. an
+                  // empty line keeps the pad where it is either way
+                  ValueListenableBuilder<AppFace?>(
+                    valueListenable: appFaceNow,
+                    builder: (context, face, _) => AnimatedSwitcher(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 200),
+                      child: Text(
+                        face == AppFace.kryfo ? 'Kryfo' : '',
+                        key: ValueKey(face == AppFace.kryfo),
+                        style: HaloType.serif(
+                          size: 40,
+                          color: HaloColors.amberText,
+                          italic: true,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
                   Container(width: 28, height: 0.5, color: HaloColors.line2),
                   const SizedBox(height: 18),
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
                     child: Text(
                       _held
                           ? tooManyTriesLine(_lock.throttleLeft)
@@ -303,18 +437,20 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                       style: HaloType.sans(
                         size: 13,
                         color: _wrong || _held
-                            ? HaloColors.rose
-                            : HaloColors.text2,
+                            ? HaloColors.roseText
+                            : HaloColors.text,
                       ),
                     ),
                   ),
                   const SizedBox(height: 30),
                   PinDots(
-                    filled: _pin.length,
+                    filled: passLength(_pin),
+                    letters: _letters,
                     color: HaloColors.amber,
                     wrong: _wrong,
                     shake: _shake,
                   ),
+                  _keyNoteLine(),
                   const SizedBox(height: 26),
                   if (_fingerOn)
                     AnimatedSwitcher(
@@ -325,14 +461,21 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
                     ),
                   _fingerNoteLine(),
                   const Spacer(flex: 2),
-                  PinPad(
+                  PassPad(
+                    letters: _letters,
+                    onLetters: (v) => setState(() {
+                      _letters = v;
+                      _pin = '';
+                    }),
                     onDigit: _onDigit,
                     onBack: _back,
+                    onText: _onText,
+                    text: _pin,
                     onEnter: _submit,
-                    canEnter: _pin.length >= kPinMin,
+                    canEnter: passLength(_pin) >= kPinMin,
                     enabled: !_busy,
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),

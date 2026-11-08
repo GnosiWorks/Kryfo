@@ -17,6 +17,7 @@ import '../lock_guard.dart' show LockDropped;
 import '../lock_state.dart';
 import '../main.dart' hide live;
 import '../notes_export.dart';
+import '../desktop/desktop_mode.dart' show canShareOut;
 import '../open_file.dart' show ShareEnd, shareFileOut;
 import '../theme.dart';
 import '../tools/age_ffi.dart';
@@ -41,6 +42,7 @@ import 'backup_screen.dart'
         stopSaveForDrop;
 import 'lock_file_screen.dart' show ageErrorBody, ageErrorTitle;
 import 'notes_screen.dart' show kNotesPeerId;
+import '../save_names.dart' show savesPlain;
 
 /// the open notes, everyday or a decoy's: never while hidden chats are open
 bool notesExportHere() => !lockState.inVault && !sessionBackupHasHidden;
@@ -247,6 +249,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
         format: _format,
         passphrase: pass,
         dir: await notesOutDir(),
+        plainName: savesPlain(),
         stopped: () => _stop,
         progress: (v) {
           if (mounted) setState(() => _progress = v);
@@ -340,7 +343,9 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
           return answer;
         });
       }
-      if ((!save || answer.state == SaveState.cancelled) && mounted) {
+      if ((!save || answer.state == SaveState.cancelled) &&
+          canShareOut &&
+          mounted) {
         // only an app picked from the sheet has it: one closed keeps the file
         shared =
             await lockState.hold(() async {
@@ -462,7 +467,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                   key: ValueKey(_count),
                   style: HaloType.sans(
                     size: 13.5,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.5,
                   ),
                 ),
@@ -506,7 +511,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                               l10n.notesExportLockLine,
                               style: HaloType.sans(
                                 size: 12.5,
-                                color: HaloColors.text2,
+                                color: HaloColors.text,
                                 height: 1.4,
                               ),
                             ),
@@ -550,7 +555,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                           key: ValueKey(_error),
                           style: HaloType.sans(
                             size: 12,
-                            color: HaloColors.rose,
+                            color: HaloColors.roseText,
                           ),
                         ),
                       ),
@@ -579,7 +584,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                               _gone
                                   ? l10n.notesExportGone
                                   : _installer
-                                  ? l10n.notesExportHoldsInstaller
+                                  ? l10n.notesExportHoldsInstallerShown
                                   : l10n.notesExportNotSaved,
                               textAlign: TextAlign.center,
                               style: HaloType.sans(
@@ -611,7 +616,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
               EaseSize(
                 child: RiseSwap(
                   alignment: Alignment.topCenter,
-                  child: !_notSaved || _installer
+                  child: !_notSaved || _installer || !canShareOut
                       ? const SizedBox(
                           key: ValueKey(false),
                           width: double.infinity,
@@ -635,7 +640,11 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
                     ? const SizedBox(width: double.infinity)
                     : Padding(
                         padding: const EdgeInsets.only(top: 12),
-                        child: HaloBar(value: _progress, height: 3),
+                        child: HaloBar(
+                          value: _progress,
+                          height: 3,
+                          label: l10n.a11yExportProgress,
+                        ),
                       ),
               ),
               const SizedBox(height: 8),
@@ -655,7 +664,7 @@ class _NotesExportScreenState extends State<NotesExportScreen> {
     final color = switch (grade) {
       _ when short => HaloColors.warnText,
       PassGrade.strong => HaloColors.green,
-      PassGrade.none => HaloColors.text2,
+      PassGrade.none => HaloColors.text,
       _ => HaloColors.amber,
     };
     return Column(

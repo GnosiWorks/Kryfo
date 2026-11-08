@@ -42,8 +42,6 @@ class BridgeSetup {
   final String consent;
   // tor is risky here: automatic never tries it without a bridge
   final bool skipDirect;
-  // two letters for the tor project, empty lets it guess
-  final String country;
   // an upgrade from before automatic: offer it once
   final bool offerAuto;
 
@@ -53,7 +51,6 @@ class BridgeSetup {
     this.torProjectLines = '',
     this.consent = 'ask',
     this.skipDirect = false,
-    this.country = '',
     this.offerAuto = false,
   });
 
@@ -63,7 +60,6 @@ class BridgeSetup {
     String? torProjectLines,
     String? consent,
     bool? skipDirect,
-    String? country,
     bool? offerAuto,
   }) => BridgeSetup(
     choice: choice ?? this.choice,
@@ -71,7 +67,6 @@ class BridgeSetup {
     torProjectLines: torProjectLines ?? this.torProjectLines,
     consent: consent ?? this.consent,
     skipDirect: skipDirect ?? this.skipDirect,
-    country: country ?? this.country,
     offerAuto: offerAuto ?? this.offerAuto,
   );
 
@@ -92,7 +87,6 @@ class BridgeSetup {
           jsonEncode({
             'consent': consent,
             if (skipDirect) 'skip_direct': true,
-            if (country.isNotEmpty) 'country': country,
             if (wt.isNotEmpty) 'webtunnel': wt,
           }),
         );
@@ -231,6 +225,8 @@ class BridgeStatus {
   final String snowflake;
   final String errorCode;
   final bool askConsent;
+  // tor runs on bridge lines now, in any phase (the engine's on_bridge)
+  final bool onBridge;
 
   const BridgeStatus({
     this.mode = '',
@@ -247,6 +243,7 @@ class BridgeStatus {
     this.snowflake = '',
     this.errorCode = '',
     this.askConsent = false,
+    this.onBridge = false,
   });
 
   /// before the engine has said anything
@@ -274,6 +271,7 @@ class BridgeStatus {
         snowflake: s('snowflake'),
         errorCode: s('error_code'),
         askConsent: b('ask_consent'),
+        onBridge: b('on_bridge'),
       );
     } catch (_) {
       return none;
@@ -298,6 +296,7 @@ class BridgeStatus {
     snowflake: snowflake,
     errorCode: errorCode,
     askConsent: askConsent,
+    onBridge: onBridge,
   );
 
   /// automatic is past the usual way: tor looked blocked or a disguise is
@@ -310,6 +309,11 @@ class BridgeStatus {
   /// a bridge carries tor now
   bool get throughBridge =>
       phase == 'connected' && method.isNotEmpty && method != 'direct';
+
+  /// tor may be on bridge lines now: the engine says so, or a step with a
+  /// bridge's method is on, in any phase
+  bool get mayRideBridge =>
+      onBridge || (method.isNotEmpty && method != 'direct');
 
   @override
   bool operator ==(Object other) =>
@@ -326,7 +330,8 @@ class BridgeStatus {
       other.limited == limited &&
       other.snowflake == snowflake &&
       other.errorCode == errorCode &&
-      other.askConsent == askConsent;
+      other.askConsent == askConsent &&
+      other.onBridge == onBridge;
 
   @override
   int get hashCode => Object.hash(
@@ -342,6 +347,7 @@ class BridgeStatus {
     snowflake,
     errorCode,
     askConsent,
+    onBridge,
   );
 }
 
@@ -367,6 +373,9 @@ class BridgeLine {
   // how long this way has been tried, in ms, when tor gives no percent:
   // the view counts on from it, so nothing else rebuilds each second
   final int? clockMs;
+  // fast, one tap away, always after [action]: a bridge first, and fast
+  // last with what this network sees on it
+  final bool offerRelay;
 
   const BridgeLine({
     required this.head,
@@ -377,6 +386,7 @@ class BridgeLine {
     this.progress,
     this.action,
     this.clockMs,
+    this.offerRelay = false,
   });
 }
 
@@ -454,16 +464,16 @@ BridgeLine bridgeStatusLine(
         action: BridgeAction.openWifi,
       );
     case 'exhausted':
-      // the words go with the button under them
+      // asking the tor project or trying again first. fast gets through
+      // where no bridge did, offered last: this network sees it
       final ask = consent != 'yes';
       return BridgeLine(
         head: l10n.bridgesNothingGotThrough,
-        detail: ask
-            ? l10n.bridgesTheTorProjectCanSuggest
-            : l10n.bridgesKryfoTriesAgainOnItsOwn,
+        detail: l10n.bridgesRelayThisNetworkSees,
         detailKind: ask ? 'exhausted-ask' : 'exhausted',
         tone: BridgeTone.rose,
         action: ask ? BridgeAction.getBridge : BridgeAction.tryAgain,
+        offerRelay: true,
       );
   }
   // a picked bridge tor cannot use, its listeners down or its lines
@@ -568,6 +578,8 @@ String bridgeChoiceName(BridgeChoice c) => switch (c) {
 /// the method in use, in the words "more" uses. transport names are kept
 /// left to right in a right-to-left language
 String bridgeMethodWords(BridgeStatus s, {BridgeChoice? choice}) {
+  // relay and fast use no bridge, whatever tor keeps for later
+  if (s.phase == 'not_tor_mode') return l10n.bridgesNoneUntilOnion;
   if (s.method.isEmpty) return l10n.bridgesNothingYet;
   if (s.method == 'direct') return l10n.bridgesTorNoBridge;
   // built-in bridges go to the engine as a picked set: named by the pick
@@ -594,18 +606,3 @@ class FriendLines {
   int get broken => used ? checks.where((c) => c.broken).length : total;
   bool get tooLong => checks.any((c) => c.broken && c.tooLong);
 }
-
-/// the countries the tor project has its own advice for
-const kBridgeCountries = ['by', 'cn', 'eg', 'hk', 'ir', 'mm', 'ru', 'tm'];
-
-String bridgeCountryName(String cc) => switch (cc) {
-  'by' => l10n.bridgesBelarus,
-  'cn' => l10n.bridgesChina,
-  'eg' => l10n.bridgesEgypt,
-  'hk' => l10n.bridgesHongKong,
-  'ir' => l10n.bridgesIran,
-  'mm' => l10n.bridgesMyanmar,
-  'ru' => l10n.bridgesRussia,
-  'tm' => l10n.bridgesTurkmenistan,
-  _ => cc.toUpperCase(),
-};

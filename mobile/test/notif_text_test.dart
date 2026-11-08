@@ -12,7 +12,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show AppState, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show AppState, useDatabasesForTest, AppStateMessages, AppStateReceive;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -120,6 +121,22 @@ void main() {
       (_g, '${l10n.notificationsSomeone}: see you there'),
     ]);
   });
+  test('a group that blocks screenshots rings as Kryfo, a new message, and '
+      'nothing of itself', () async {
+    final w = await _World.make();
+    w.live.groupRows[_g]!.addAll({'shots_on': 1, 'shots_at': 5});
+    await w.from(
+      _plain,
+      await wrapMessage(
+        'see you there',
+        msgUid: 'text0009',
+        groupId: _g,
+        sender: asSender(_plain),
+      ),
+    );
+    expect(w.io.shown, [('Kryfo', l10n.notificationsNewMessage)]);
+  });
+
   test('a text from a named contact rings under their name', () async {
     final w = await _World.make();
     await w.from(

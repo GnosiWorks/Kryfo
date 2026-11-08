@@ -10,11 +10,14 @@ import 'package:flutter/services.dart';
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../open_file.dart';
+import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
+import 'sealed_picture.dart';
 import 'video_frame.dart';
 import 'video_viewer.dart' show ViewerRound, ViewerScrubber, ViewerTime;
 import '../lock_guard.dart' show LockGuard, lockGuard;
+import '../phone_seal.dart' show withFileKey;
 
 const _channel = MethodChannel('kryfo/video');
 
@@ -74,12 +77,14 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
         });
       });
     }
+    picturesShut.addListener(_lockChanged);
     _open();
   }
 
   @override
   void dispose() {
     _unguard?.call();
+    picturesShut.removeListener(_lockChanged);
     WidgetsBinding.instance.removeObserver(this);
     _poll?.cancel();
     final id = _id;
@@ -92,16 +97,65 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed && _playing) _pause();
   }
 
-  Future<void> _open() async {
+  // the lock closes the player, so no frame of it is held behind the pin,
+  // and it comes back paused where it was once the lock lifts
+  bool _resting = false;
+  // each rest counts up: an open still on its way from before one is closed
+  int _rests = 0;
+
+  void _lockChanged() {
+    if (picturesShut.value) {
+      _rest();
+    } else {
+      unawaited(_wake());
+    }
+  }
+
+  void _rest() {
+    _stopPoll();
+    _rests++;
+    final id = _id;
+    _id = null;
+    if (id != null) _channel.invokeMethod('close', {'id': id});
+    _resting = true;
+    if (!mounted) return;
+    setState(() {
+      _started = false;
+      _playing = false;
+    });
+  }
+
+  Future<void> _wake() async {
+    if (!_resting || !mounted) return;
+    _resting = false;
+    videoInfoFor(widget.path).then((i) {
+      if (mounted && i != null) setState(() => _info = i);
+    });
+    await _open(play: false);
+    final id = _id;
+    if (id != null && _pos > Duration.zero && !_done) {
+      await _channel.invokeMethod('seek', {
+        'id': id,
+        'ms': _pos.inMilliseconds,
+      });
+    }
+  }
+
+  Future<void> _open({bool play = true}) async {
+    final rests = _rests;
     Map<String, dynamic>? m;
     try {
-      m = await _channel.invokeMapMethod<String, dynamic>('open', {
-        'path': widget.path,
-      });
+      m = await _channel.invokeMapMethod<String, dynamic>(
+        'open',
+        withFileKey(widget.path, {'path': widget.path}),
+      );
     } catch (e) {
       dlog('clip: not opened (${e.runtimeType})');
     }
-    if (!mounted) {
+    // gone, or the lock went up while it opened: a lock and an unlock on
+    // the way leave a newer open, so this one never holds a second player
+    if (!mounted || picturesShut.value || rests != _rests) {
+      if (mounted && picturesShut.value) _resting = true;
       final id = (m?['id'] as num?)?.toInt();
       if (id != null) _channel.invokeMethod('close', {'id': id});
       return;
@@ -118,7 +172,7 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
       final ms = (m['ms'] as num?)?.toInt() ?? 0;
       if (ms > 0) _length = Duration(milliseconds: ms);
     });
-    if (widget.autoplay && !motionStill(context)) unawaited(_play());
+    if (play && widget.autoplay && !motionStill(context)) unawaited(_play());
   }
 
   Future<void> _play() async {
@@ -253,9 +307,11 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
     return VideoFrame(
       aspect: _shape ?? _info?.aspect ?? 16 / 9,
       turns: _turns,
-      under: jpeg != null
-          ? Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true)
-          : const ColoredBox(color: Colors.black),
+      under: SealedPicture(
+        path: widget.path,
+        image: jpeg == null ? null : MemoryImage(jpeg),
+        ground: Colors.black,
+      ),
       texture: id != null && _started ? Texture(textureId: id) : null,
     );
   }
@@ -383,7 +439,7 @@ class _ClipPreviewState extends State<ClipPreview> with WidgetsBindingObserver {
           Icon(Icons.movie_outlined, size: 36, color: HaloColors.amber),
           const SizedBox(height: 12),
           Text(
-            l10n.videoViewerCannotPlay,
+            l10n.videoViewerCannotPlayShown,
             textAlign: TextAlign.center,
             style: HaloType.sans(size: 13, color: Colors.white, height: 1.4),
           ),

@@ -11,19 +11,25 @@ import 'package:flutter/material.dart' hide LockState;
 import 'package:flutter/services.dart';
 
 import '../backup.dart' show sealRestoredHidden;
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../l10n/l10n.dart';
 import '../lock_state.dart';
-import '../main.dart' show appState, session;
+import '../main.dart'
+    show appState, session, linkedRole, AppStateVault, AppStateSession;
+import '../pass_rules.dart';
+import '../pin_shield.dart';
 import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart' show haloRoute;
+import '../widgets/pass_pad.dart';
 import '../widgets/pin_pad.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/swap.dart';
 import '../wipe.dart';
 import 'backup_screen.dart';
 import 'hide_picker.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 enum PinFlow { wipe, decoy, vault }
 
@@ -47,6 +53,8 @@ class PinsHost {
   const PinsHost();
 
   Listenable get changes => appState;
+  // a linked device has neither: they are its phone's
+  bool get decoyAndVault => !linkedRole;
   bool get hasDecoy => appState.hasDecoy;
   Future<bool> setDecoyPin(String pin) => appState.setDecoyPin(pin);
   Future<void> removeDecoy() => appState.removeDecoy();
@@ -112,7 +120,7 @@ class PinFlowScreen extends StatefulWidget {
 }
 
 class _PinFlowScreenState extends State<PinFlowScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, PinShield {
   late _Step _step = widget.skipIntro ? _Step.check : _Step.intro;
   String _pin = '';
   String _first = '';
@@ -124,6 +132,10 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   bool _busy = false;
   // forward or back, for the direction the next page comes in from
   bool _forward = true;
+  // letters for a hidden chats passphrase: on the check, where a vault's own
+  // phrase is taken, and on a vault's choose and confirm. every page opens
+  // on digits but confirm, which keeps what choose used
+  bool _letters = false;
   late final AnimationController _shake;
 
   LockState get _lock => widget.lock ?? lockState;
@@ -146,8 +158,14 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   // a hidden chats pin takes six digits. the pin that lets them in takes
   // what any pin does
   int get _min => _vault && (_step == _Step.choose || _step == _Step.confirm)
-      ? kVaultPinMin
+      ? (_letters ? kPassMin : kVaultPinMin)
       : kPinMin;
+  bool get _lettersHere =>
+      _step == _Step.check ||
+      (_vault && (_step == _Step.choose || _step == _Step.confirm));
+  // the phrase being chosen, as the engine will read it
+  bool get _choosingPhrase =>
+      _letters && _vault && (_step == _Step.choose || _step == _Step.confirm);
   bool get _still => MediaQuery.of(context).disableAnimations;
 
   @override
@@ -170,6 +188,8 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   void _go(_Step s, {bool forward = true}) {
     setState(() {
       _forward = forward;
+      _letters =
+          _letters && _vault && (s == _Step.choose || s == _Step.confirm);
       _step = s;
       _pin = '';
       _error = null;
@@ -205,8 +225,16 @@ class _PinFlowScreenState extends State<PinFlowScreen>
     setState(() => _pin = _pin.substring(0, _pin.length - 1));
   }
 
+  void _onText(String t) {
+    if (_busy) return;
+    setState(() {
+      _pin = t;
+      _error = null;
+    });
+  }
+
   Future<void> _submit() async {
-    if (_busy || _pin.length < _min) return;
+    if (_busy || passLength(_pin) < _min) return;
     setState(() => _busy = true);
     try {
       switch (_step) {
@@ -220,6 +248,8 @@ class _PinFlowScreenState extends State<PinFlowScreen>
             await _fail(
               r == PinResult.throttled
                   ? tooManyTriesLine(_lock.throttleLeft)
+                  : r == PinResult.unavailable
+                  ? keyNoteLine(_lock)
                   : l10n.lockNotIt,
             );
             return;
@@ -232,7 +262,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           HapticFeedback.selectionClick();
           _go(_Step.appConfirm);
         case _Step.appConfirm:
-          if (_pin != _first) {
+          if (passFold(_pin) != passFold(_first)) {
             await _again(
               l10n.panicSetupThoseWereDifferentFrom,
               to: _Step.appChoose,
@@ -251,7 +281,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           HapticFeedback.selectionClick();
           _go(_Step.confirm);
         case _Step.confirm:
-          if (_pin != _first) {
+          if (passFold(_pin) != passFold(_first)) {
             await _again(l10n.panicSetupThoseWereDifferentFrom);
             return;
           }
@@ -280,7 +310,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       }
     } catch (e) {
       await _again(
-        l10n.flowNotSet,
+        e is PinKeyBusy ? l10n.lockKeyBusy : l10n.flowNotSet,
         to: _step == _Step.appConfirm ? _Step.appChoose : _Step.choose,
       );
     } finally {
@@ -329,7 +359,9 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       HapticFeedback.lightImpact();
       _go(_restoring ? _Step.done : _Step.pick);
     } catch (e) {
-      if (mounted) await _rechoose(l10n.flowNotSet);
+      if (mounted) {
+        await _rechoose(e is PinKeyBusy ? l10n.lockKeyBusy : l10n.flowNotSet);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -360,25 +392,29 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           scrolledUnderElevation: 0,
           iconTheme: IconThemeData(color: HaloColors.text2),
         ),
-        body: SafeArea(
-          child: AnimatedSwitcher(
-            duration: still ? Duration.zero : const Duration(milliseconds: 240),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, a) {
-              final entering = child.key == ValueKey(_step);
-              return FadeTransition(
-                opacity: a,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: Offset((entering ? 0.18 : -0.18) * from, 0),
-                    end: Offset.zero,
-                  ).animate(a),
-                  child: child,
-                ),
-              );
-            },
-            child: KeyedSubtree(key: ValueKey(_step), child: _page()),
+        body: DeskPage(
+          child: SafeArea(
+            child: AnimatedSwitcher(
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 240),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, a) {
+                final entering = child.key == ValueKey(_step);
+                return FadeTransition(
+                  opacity: a,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: Offset((entering ? 0.18 : -0.18) * from, 0),
+                      end: Offset.zero,
+                    ).animate(a),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(key: ValueKey(_step), child: _page()),
+            ),
           ),
         ),
       ),
@@ -406,30 +442,31 @@ class _PinFlowScreenState extends State<PinFlowScreen>
   Widget _intro() {
     final lines = switch (widget.flow) {
       PinFlow.wipe => [
-        (Icons.delete_sweep_outlined, l10n.flowWipe1),
+        (Icons.delete_sweep_outlined, l10n.flowWipe1Shown),
         (Icons.layers_clear_outlined, l10n.flowWipe2),
-        (Icons.gavel_outlined, l10n.flowLaw),
+        (Icons.gavel_outlined, l10n.flowLawShown),
       ],
       PinFlow.decoy => [
         (Icons.inbox_outlined, l10n.flowDecoy1),
         if (_lock.bioSupported) (Icons.fingerprint, l10n.flowDecoyFinger),
         (Icons.dialpad_outlined, l10n.flowDecoyDigits),
-        (Icons.notifications_off_outlined, l10n.flowDecoyShade),
-        (Icons.gavel_outlined, l10n.flowLaw),
+        (Icons.notifications_off_outlined, l10n.flowDecoyShadeShown),
+        (Icons.gavel_outlined, l10n.flowLawShown),
       ],
       PinFlow.vault when _restoring => [
         (Icons.visibility_off_outlined, l10n.restoreChooseHiddenPin),
         if (_needsLock)
           (Icons.lock_outline_rounded, l10n.restoreHiddenLockFirst),
-        (Icons.gavel_outlined, l10n.flowLaw),
+        (Icons.gavel_outlined, l10n.flowLawShown),
       ],
       PinFlow.vault => [
         (Icons.visibility_off_outlined, l10n.flowVault1),
         (Icons.notifications_off_outlined, l10n.flowVault2),
-        (Icons.fingerprint, l10n.flowVaultFinger),
+        // no finger on a computer
+        if (!onDesktop) (Icons.fingerprint, l10n.flowVaultFinger),
         (Icons.dialpad_outlined, l10n.flowVaultDigits),
-        (Icons.autorenew_rounded, l10n.flowVaultReplace),
-        (Icons.gavel_outlined, l10n.flowLaw),
+        (Icons.autorenew_rounded, l10n.flowVaultReplaceShown),
+        (Icons.gavel_outlined, l10n.flowLawShown),
       ],
     };
     return FitColumn(
@@ -515,9 +552,11 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         _changing ? l10n.flowEnterHiddenPinLine : l10n.flowEnterYourPinLine,
       // six digits suggested, so the two pins look alike
       _Step.appChoose => l10n.flowVaultDigits,
+      _Step.confirm when _choosingPhrase => l10n.flowVaultPassAgain,
       _Step.confirm || _Step.appConfirm => l10n.panicSetupTheSameFourDigits,
+      _ when _choosingPhrase => l10n.flowVaultPassLineShown,
       _ => switch (widget.flow) {
-        PinFlow.wipe => l10n.pinsWipeLine,
+        PinFlow.wipe => l10n.pinsWipeLineShown,
         PinFlow.decoy => l10n.flowDecoyDigits,
         PinFlow.vault => l10n.flowVaultChooseLine,
       },
@@ -545,8 +584,8 @@ class _PinFlowScreenState extends State<PinFlowScreen>
           // a refusal rises in over the hint, and the hint back over it
           child: RiseSwap(
             alignment: Alignment.center,
-            child: Text(
-              making ? l10n.newGroupCreating : _error ?? line,
+            // an error is heard as it appears
+            child: Semantics(
               key: ValueKey(
                 making
                     ? ('making', '')
@@ -554,31 +593,59 @@ class _PinFlowScreenState extends State<PinFlowScreen>
                     ? ('error', _error!)
                     : ('line', line),
               ),
-              textAlign: TextAlign.center,
-              style: HaloType.sans(
-                size: 13,
-                color: _error != null ? HaloColors.rose : HaloColors.text2,
+              liveRegion: _error != null,
+              child: Text(
+                making ? l10n.newGroupCreating : _error ?? line,
+                textAlign: TextAlign.center,
+                style: HaloType.sans(
+                  size: 13,
+                  color: _error != null ? HaloColors.roseText : HaloColors.text,
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(height: 32),
         PinDots(
-          filled: _pin.length,
+          filled: passLength(_pin),
           color: app ? HaloColors.amber : _tint,
           wrong: _error != null,
           shake: _shake,
-          min: _min,
+          min: _min.clamp(kPinMin, kPinMax),
+          letters: _letters,
         ),
+        // how strong the phrase being chosen is
+        if (_choosingPhrase && _step == _Step.choose) ...[
+          const SizedBox(height: 18),
+          PassStrength(text: _pin),
+        ],
         const Spacer(flex: 3),
-        PinPad(
-          onDigit: _onDigit,
-          onBack: _back,
-          onEnter: _submit,
-          canEnter: _pin.length >= _min,
-          enabled: !_busy,
-        ),
-        const SizedBox(height: 22),
+        if (_lettersHere)
+          PassPad(
+            letters: _letters,
+            onLetters: (v) => setState(() {
+              _letters = v;
+              _pin = '';
+              _error = null;
+            }),
+            onDigit: _onDigit,
+            onBack: _back,
+            onText: _onText,
+            text: _pin,
+            onEnter: _submit,
+            canEnter: passLength(_pin) >= _min,
+            enabled: !_busy,
+          )
+        else
+          PinPad(
+            onDigit: _onDigit,
+            onBack: _back,
+            onEnter: _submit,
+            canEnter: _pin.length >= _min,
+            enabled: !_busy,
+          ),
+        if (!_lettersHere) const SizedBox(height: kPassKeyRoom),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -641,7 +708,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
       Text(
         l10n.flowVaultBackupLine,
         textAlign: TextAlign.center,
-        style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+        style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
       ),
       const Spacer(flex: 3),
       _button(l10n.flowVaultBackupNow, () async {
@@ -700,7 +767,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         Text(
           line,
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 14, color: HaloColors.text2, height: 1.45),
+          style: HaloType.sans(size: 14, color: HaloColors.text, height: 1.45),
         ),
         const Spacer(flex: 3),
         _button(l10n.commonDone, () => Navigator.of(context).pop(true)),
@@ -721,7 +788,7 @@ class _PinFlowScreenState extends State<PinFlowScreen>
         alignment: Alignment.center,
         child: Text(
           label,
-          style: HaloType.sans(size: 14, color: HaloColors.text2),
+          style: HaloType.sans(size: 14, color: HaloColors.text),
         ),
       ),
     ),

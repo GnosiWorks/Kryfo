@@ -15,7 +15,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show AppState, HaloDb, useDatabasesForTest;
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        HaloDb,
+        useDatabasesForTest,
+        AppStateScreen,
+        AppStateReceive,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';

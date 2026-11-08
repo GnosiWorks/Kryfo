@@ -7,11 +7,14 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../desktop/win_record.dart' show micFailedLine, micRefusedLine;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../lock_guard.dart' show lockGuard;
@@ -23,7 +26,9 @@ import '../voice_length.dart';
 import '../voice_live.dart';
 import '../voice_mask.dart';
 import 'motion.dart';
+import 'key_ring.dart';
 import 'press_scale.dart';
+import 'say.dart';
 import 'voice_parts.dart';
 
 /// a note as the mic hands it on. [path] is the raw take, the sender's to
@@ -151,6 +156,9 @@ class HoldToTalkMic extends StatefulWidget {
 
 class HoldToTalkMicState extends State<HoldToTalkMic> {
   final _rec = AudioRecorder();
+  // the mic takes send's place once a message goes: a double click on send
+  // must not start a note
+  final _shownAt = DateTime.now();
   RecordBarEntry? _overlay;
   Timer? _ticker;
   int _ms = 0;
@@ -294,7 +302,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       // one left from a note that never stopped cleanly
       _dropStream();
       if (!await _rec.hasPermission()) {
-        if (mounted) showHaloToast(context, l10n.chatMicPermissionNeeded);
+        if (mounted) showHaloToast(context, micRefusedLine(l10n));
         return;
       }
       // the permission prompt eats the long-press: by the time the user
@@ -371,7 +379,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       roomForVoice(60 * 1000, withTake: true).then((room) {
         if (room || _path != path) return;
         _abort();
-        if (mounted) showHaloToast(context, l10n.voiceNoRoom);
+        if (mounted) showHaloToast(context, l10n.voiceNoRoomShown);
       }).ignore();
     } catch (e) {
       dlog('voice: could not start: $e');
@@ -387,7 +395,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       _path = null;
       // shredFile logs its own failure
       if (p != null) shredFile(p).ignore();
-      if (mounted) showHaloToast(context, l10n.chatTheMicWouldNot);
+      if (mounted) showHaloToast(context, micFailedLine(l10n));
     } finally {
       _busy = false;
     }
@@ -577,7 +585,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
       // no room for it: the take stays, and the chip or the send tries
       // again
       if (mk.noRoom && _chip && mounted) {
-        showHaloToast(context, l10n.voiceNoRoom);
+        showHaloToast(context, l10n.voiceNoRoomShown);
       }
     });
     return mk;
@@ -623,7 +631,7 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
         _asking = false;
         if (_held != held || _chip != chip) return;
         if (!room) {
-          if (mounted) showHaloToast(context, l10n.voiceNoRoom);
+          if (mounted) showHaloToast(context, l10n.voiceNoRoomShown);
           return;
         }
         mk = null;
@@ -834,70 +842,102 @@ class HoldToTalkMicState extends State<HoldToTalkMic> {
     );
   }
 
+  // for anyone who cannot hold: a screen reader, switch access, a keyboard.
+  // recording starts locked, with stop, send and delete on the bar
+  Future<void> _tapRecord() async {
+    if (widget.mayRecord?.call() == false) return;
+    if (_stage != VoiceStage.idle) return;
+    _live = true;
+    await _start();
+    if (!mounted || _stage != VoiceStage.holding) return;
+    _lock();
+    sayOnce(context, l10n.a11yRecording);
+  }
+
   @override
   Widget build(BuildContext context) {
     final on = widget.disguise || widget.disguiseLocked;
+    // a mouse click records at once on a computer, as on signal's desktop
+    final reader =
+        onDesktop || (MediaQuery.maybeAccessibleNavigationOf(context) ?? false);
     return Semantics(
       button: true,
-      label: l10n.chatHoldToRecord,
+      label: reader ? l10n.a11yRecordVoiceNote : l10n.chatHoldToRecord,
       hint: on ? l10n.voiceDisguisedHere : null,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onLongPressStart: (_) {
-          if (widget.mayRecord?.call() == false) return;
-          if (_stage != VoiceStage.idle) return;
-          _live = true;
-          _start();
-        },
-        onLongPressMoveUpdate: (d) {
-          if (_stage != VoiceStage.holding) return;
-          // toward the start side cancels: left, or right in a right-to-left
-          // language, where the mic sits on the left. up locks
-          final rtl = Directionality.of(context) == TextDirection.rtl;
-          final along = d.offsetFromOrigin.dx * (rtl ? -1 : 1);
-          final up = -d.offsetFromOrigin.dy;
-          // the way the finger mostly goes is the one that counts
-          final sideways = -along > up;
-          _dragDx = sideways ? along.clamp(-160.0, 0.0) : 0;
-          _dragUp = sideways ? 0 : up.clamp(0.0, 160.0);
-          if (!sideways && up >= HoldToTalkMic.lockAt) {
-            _lock();
-            return;
-          }
-          final wc = sideways && along < -VoiceRecordBar.cancelAt;
-          if (wc != _willCancel) {
-            _willCancel = wc;
-            if (wc) HapticFeedback.mediumImpact();
-          }
-          _overlay?.rebuild();
-        },
-        onLongPressEnd: (_) {
-          // the lift after a stop at the limit is spent here: a bin or a
-          // lock after it throws the note away as always
-          _liftKeeps = false;
-          // locked: the note records on with no finger on it
-          if (_stage == VoiceStage.locked || _stage == VoiceStage.preview) {
-            return;
-          }
-          _live = false;
-          _end();
-        },
-        // the system took the touch mid-hold: no one let go, so nothing goes
-        onLongPressCancel: () {
-          if (!_live || (!_busy && _stage != VoiceStage.holding)) return;
-          _live = false;
-          _abort();
-        },
-        // a short tap says how it works instead of doing nothing
-        onTap: () {
-          HapticFeedback.selectionClick();
-          showHaloToast(context, l10n.chatHoldToRecord);
-        },
-        // a finger-sized target, clear of the screen's edge
-        child: SizedBox(
-          width: 48,
-          height: 48,
-          child: Center(child: MicGlyph(disguise: on)),
+      customSemanticsActions: {
+        CustomSemanticsAction(label: l10n.a11yRecordVoiceNote): _tapRecord,
+      },
+      child: KeyRing(
+        circle: true,
+        onActivate: _tapRecord,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPressStart: (_) {
+            if (widget.mayRecord?.call() == false) return;
+            if (_stage != VoiceStage.idle) return;
+            _live = true;
+            _start();
+          },
+          onLongPressMoveUpdate: (d) {
+            if (_stage != VoiceStage.holding) return;
+            // toward the start side cancels: left, or right in a right-to-left
+            // language, where the mic sits on the left. up locks
+            final rtl = Directionality.of(context) == TextDirection.rtl;
+            final along = d.offsetFromOrigin.dx * (rtl ? -1 : 1);
+            final up = -d.offsetFromOrigin.dy;
+            // the way the finger mostly goes is the one that counts
+            final sideways = -along > up;
+            _dragDx = sideways ? along.clamp(-160.0, 0.0) : 0;
+            _dragUp = sideways ? 0 : up.clamp(0.0, 160.0);
+            if (!sideways && up >= HoldToTalkMic.lockAt) {
+              _lock();
+              return;
+            }
+            final wc = sideways && along < -VoiceRecordBar.cancelAt;
+            if (wc != _willCancel) {
+              _willCancel = wc;
+              if (wc) HapticFeedback.mediumImpact();
+            }
+            _overlay?.rebuild();
+          },
+          onLongPressEnd: (_) {
+            // the lift after a stop at the limit is spent here: a bin or a
+            // lock after it throws the note away as always
+            _liftKeeps = false;
+            // locked: the note records on with no finger on it
+            if (_stage == VoiceStage.locked || _stage == VoiceStage.preview) {
+              return;
+            }
+            _live = false;
+            _end();
+          },
+          // the system took the touch mid-hold: no one let go, so nothing goes
+          onLongPressCancel: () {
+            if (!_live || (!_busy && _stage != VoiceStage.holding)) return;
+            _live = false;
+            _abort();
+          },
+          // a short tap says how it works instead of doing nothing, or with
+          // a screen reader on records at once
+          onTap: reader
+              ? () {
+                  if (onDesktop &&
+                      DateTime.now().difference(_shownAt) <
+                          const Duration(milliseconds: 700)) {
+                    return;
+                  }
+                  _tapRecord();
+                }
+              : () {
+                  HapticFeedback.selectionClick();
+                  showHaloToast(context, l10n.chatHoldToRecord);
+                },
+          // a finger-sized target, clear of the screen's edge
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(child: MicGlyph(disguise: on)),
+          ),
         ),
       ),
     );

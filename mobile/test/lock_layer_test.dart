@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/app_shell.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_layer.dart';
+import 'package:kryfo/picture_lock.dart';
 import 'package:kryfo/theme.dart';
 
 import 'source_body.dart';
@@ -74,8 +75,12 @@ class _App {
   int padTaps = 0;
   int keys = 0;
   bool quiet = false;
+  // false: no pin is set, so leaving locks nothing
+  bool pin = true;
   // android's word that the person went home or to recents
   int lefts = 0;
+  // android screens that came onto the engine
+  int attaches = 0;
   // the app's own lock-up: a vault session shuts here
   int ups = 0;
   VoidCallback? onUp;
@@ -95,9 +100,12 @@ class _App {
         loaded: () => lock.loaded,
         locked: () => lock.locked,
         load: () async {},
-        leaving: () => lock.set(locked: true),
+        leaving: () {
+          if (pin) lock.set(locked: true);
+        },
         returned: () {},
         left: () => lefts++,
+        attached: () => attaches++,
         guard: guard,
         quiet: () => quiet,
         pad: (_) => _Pad(this),
@@ -446,6 +454,46 @@ void main() {
     expect(a.pads, 1);
   });
 
+  testWidgets('with no pin, read while the app was away, its pictures open '
+      'once it is back', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester)..pin = false;
+    a.lock.loaded = false;
+    await a.pump();
+    expect(picturesShut.value, isTrue, reason: 'nothing decoded unread');
+    // gone before the lock was read, then read with nobody in front
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    a.lock.set(loaded: true);
+    await tester.pump();
+    expect(a.lock.locked, isFalse);
+    expect(picturesShut.value, isTrue);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(picturesShut.value, isFalse);
+    expect(find.text('secret home'), findsOneWidget);
+  });
+
+  testWidgets('with no pin, a tap that waited while the app was away happens '
+      'once it is back', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester)..pin = false;
+    a.lock.loaded = false;
+    await a.pump();
+    var opened = false;
+    await a.guard.afterUnlock(() async => opened = true, key: 'chat:n');
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    a.lock.set(loaded: true);
+    await tester.pump();
+    expect(opened, isFalse);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(opened, isTrue);
+  });
+
   testWidgets('a toast from before the lock is dropped', (tester) async {
     final a = _App(tester);
     await a.pump();
@@ -537,6 +585,36 @@ void main() {
     expect(a.lefts, 1);
   });
 
+  testWidgets('a new android screen reaches the app, and nothing else does', (
+    tester,
+  ) async {
+    final a = _App(tester);
+    await a.pump();
+    await _away(tester, 'attached');
+    expect(a.attaches, 1);
+    expect(a.lefts, 0);
+    expect(a.lock.locked, isFalse);
+    expect(find.text('secret home'), findsOneWidget);
+  });
+
+  test('every android screen says it came onto the engine', () {
+    final k = File(
+      'android/app/src/main/kotlin/app/kryfo/MainActivity.kt',
+    ).readAsStringSync();
+    final w = File(
+      'android/app/src/main/kotlin/app/kryfo/WindowShield.kt',
+    ).readAsStringSync();
+    expect(w, contains('const val ATTACHED = "attached"'));
+    // on the window channel, last in configureFlutterEngine, never thrown
+    final at = k.indexOf('WindowShield.tellAttached { awayChannel?.send(it) }');
+    expect(at, greaterThan(k.indexOf('override fun configureFlutterEngine')));
+    expect(at, greaterThan(k.indexOf('"setSecure" ->')));
+    expect(
+      k.indexOf('\n    }\n', at),
+      lessThan(k.indexOf('\n    // "open with" and share')),
+    );
+  });
+
   test('android says when the person leaves from inside a picker', () {
     final k = File(
       'android/app/src/main/kotlin/app/kryfo/MainActivity.kt',
@@ -621,9 +699,17 @@ void main() {
     final m = File(
       'android/app/src/main/AndroidManifest.xml',
     ).readAsStringSync();
-    final at = m.indexOf('android:name=".MainActivity"');
+    // the screen itself: the launcher entries are aliases of it
+    final at = m.indexOf('android:name=".KryfoActivity"');
     final end = m.indexOf('>', at);
     expect(m.substring(at, end), contains('android:launchMode="singleTask"'));
+    expect(
+      '<activity\n            android:name=".KryfoActivity"'.allMatches(m),
+      hasLength(1),
+    );
+    for (final alias in RegExp(r'<activity-alias[^>]*>').allMatches(m)) {
+      expect(alias[0], contains('android:targetActivity=".KryfoActivity"'));
+    }
   });
 
   testWidgets('a decoy unlock drops what waited', (tester) async {

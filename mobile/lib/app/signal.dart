@@ -3,25 +3,12 @@
 
 part of '../main.dart';
 
-Future<String> makePreKeyBundleB64([SignalSession? of]) async {
-  final ss = of ?? signalSession;
-  final spk = await ss.signedPreKeyStore.loadSignedPreKey(1);
-  // the kept invite prekey, never the lowest one-time key: a handle's
-  // published invite is static, and a one-time key is gone after the first
-  // person uses it
-  final pk = await ss.preKeyStore.loadPreKey(invitePreKeyId);
-  final bundle = {
-    'registrationId': ss.registrationId,
-    'deviceId': 1,
-    'preKeyId': pk.id,
-    'preKeyPublic': base64Encode(pk.getKeyPair().publicKey.serialize()),
-    'signedPreKeyId': spk.id,
-    'signedPreKeyPublic': base64Encode(spk.getKeyPair().publicKey.serialize()),
-    'signedPreKeySignature': base64Encode(spk.signature),
-    'identityKey': base64Encode(ss.identityKeyPair.getPublicKey().serialize()),
-  };
-  return base64Encode(utf8.encode(jsonEncode(bundle)));
-}
+// the card [of] hands out (the everyday store when null). it carries the
+// kept invite prekeys, never the lowest one-time key: a handle's published
+// invite is static, and a one-time key is gone after the first person uses
+// it
+Future<String> makePreKeyBundleB64([SignalSession? of]) =>
+    (of ?? signalSession).makeBundleB64();
 
 /// opens the everyday signal store. the first start after a restore marks
 /// the sessions the file brought back as it opens, before anything can seal
@@ -51,8 +38,14 @@ Future<void> openSignalStore(
 // dev chat the one it was started with. null for a dev chat that has none
 // (not started, deleted, restored without its made name) and for any other
 // id shaped like one: nothing falls back to the everyday store for it
-Future<SignalSession?> signalFor(String peer) async =>
-    isDevId(peer) ? (await devLane.seat(peer))?.store : signalSession;
+// any other contact's is the store of the identity they know (door.dart)
+Future<SignalSession?> signalFor(String peer) async => isDevId(peer)
+    ? (await devLane.seat(peer))?.store
+    : await signalOfIdent(identOfPeer(peer));
+
+/// the x key [peer]'s store holds for them, on the identity they know
+Future<String?> peerXPubOf(String peer) async =>
+    (await signalFor(peer))?.peerXPubHex(peer);
 
 // a session with [haloId] built from their card, in [into] or the store
 // signalFor names
@@ -63,16 +56,7 @@ Future<void> processPeerBundle(
 }) async {
   final ss = into ?? await signalFor(haloId);
   if (ss == null) throw StateError('no signal store for this chat');
-  final preKeyBundle = preKeyBundleOf(bundleB64);
-  final addr = SignalProtocolAddress(haloId, 1);
-  final builder = SessionBuilder(
-    ss.sessionStore,
-    ss.preKeyStore,
-    ss.signedPreKeyStore,
-    ss.identityStore,
-    addr,
-  );
-  await ss.serial(haloId, () => builder.processPreKeyBundle(preKeyBundle));
+  await ss.processBundle(haloId, lsBundleOf(ss.lib, bundleB64));
 }
 
 // best-effort wipe of key or plaintext bytes from ram. dart strings are
@@ -86,31 +70,109 @@ void _zeroBytes(List<int> b) {
 // no session yet with this peer: the next message is an opener
 Future<bool> hasSessionWith(String peerId) async {
   final ss = await signalFor(peerId);
-  return ss != null &&
-      await ss.sessionStore.containsSession(SignalProtocolAddress(peerId, 1));
+  return ss != null && await ss.hasSession(peerId);
 }
 
-// the one place a frame is sealed for a peer. every frame for the dev chat
-// goes through its own seal instead: the allowlist, its store, the token
-// the wire asks for. either store seals one frame at a time per peer
-Future<String> signalEncrypt(String peerId, String plaintext) async {
-  if (isDevId(peerId)) return devLane.encrypt(peerId, plaintext);
+// the one place a frame is sealed for a peer: through the door, on the
+// store of the identity they know. every frame for the dev chat goes
+// through its own seal instead: the allowlist, its store, the token the
+// wire asks for. either store seals one frame at a time per peer
+// [onlySettled]: a frame that must never open a session (a typing frame)
+Future<String> signalEncrypt(
+  String peerId,
+  String plaintext, {
+  bool onlySettled = false,
+}) async =>
+    (await signalSeal(peerId, plaintext, onlySettled: onlySettled)).cipher;
+
+/// as signalEncrypt, with the identity the door sealed on: every relay call
+/// that carries the cipher takes this one, never a second lookup
+Future<({int ident, String cipher})> signalSeal(
+  String peerId,
+  String plaintext, {
+  bool onlySettled = false,
+  // the empty answer to a heal: it carries nothing, and the session it
+  // opens is what a held contact's sends wait on
+  bool unheld = false,
+}) async {
+  if (isDevId(peerId)) {
+    if (onlySettled) throw NotSettled(peerId);
+    return (
+      ident: kMainIdent,
+      cipher: await devLane.encrypt(peerId, plaintext),
+    );
+  }
   plaintext = await appState.shotsOnWire(peerId, plaintext);
+  // a v4 first contact's frames carry the pair's seed until they answer
+  plaintext = await appState.v4OpenerFields(peerId, plaintext);
+  final (ident, framed) = await appState.doorFor(peerId, plaintext);
+  final ss = await signalOfIdent(ident);
   final from = _afreshFrom;
-  return signalSession.encryptTo(
+  Future<String> seal(String frame, int? size) => ss.encryptTo(
     peerId,
-    plaintext,
+    frame,
+    onlySettled: onlySettled,
     afresh: from == null ? null : () => from(peerId),
     // a read that fails seals nothing
-    held: () => appState.keyHeld(peerId, strict: true),
+    held: unheld ? null : () => appState.keyHeld(peerId, strict: true),
     // a card naming another key: flagged as on an open, once out of the lane
     keyMoved: () => unawaited(_keyMoved?.call(peerId)),
+    size: size,
   );
+  // a linked device never seals on the identity pair: its key is its own
+  // device key, and a contact would read it as someone else. its copies go
+  // to every device of theirs and mine, from here, or nothing goes
+  if (linkedDevicesOn && linkedRole) {
+    if (onlySettled || !await _deviceSealHere(ident, ss, peerId, framed)) {
+      throw DeviceCannotReach(peerId);
+    }
+    throw const DeviceSent();
+  }
+  // linked devices: a copy to every device, the phone's back here. a typing
+  // frame is the phone's alone
+  if (linkedDevicesOn && !onlySettled) {
+    final phone = await _deviceSeal(ident, ss, peerId, framed, (
+      measure: (f) => ss.sealSize(peerId, f),
+      seal: seal,
+    ));
+    if (phone != null) return (ident: ident, cipher: phone);
+  }
+  return (ident: ident, cipher: await seal(framed, null));
 }
+
+// a list push's copy for [peer]'s phone (devices_send_app.dart), sealed
+// here at the door on the store of the identity they know, filled to the
+// push's burst. a key held for a check seals nothing
+DevPhone _devicePushPhone(int ident, String peer) => (
+  measure: (f) async => (await signalOfIdent(ident)).sealSize(peer, f),
+  // through the door like every frame to a contact: one naming another
+  // identity of mine goes nowhere
+  seal: (f, size) async => (await signalOfIdent(ident)).encryptTo(
+    peer,
+    await _devDoor(peer, f),
+    held: () => appState.keyHeld(peer, strict: true),
+    size: size,
+  ),
+);
+
+// the one door for a device frame to [peer] (DeviceSend.door): filled for
+// the identity their row names, refused when it names another of mine
+Future<String> _devDoor(String peer, String frame) async =>
+    (await appState.doorFor(peer, frame)).$2;
+
+/// a list push's phone copy as the app seals it, for the tests
+@visibleForTesting
+DevPhone devicePushPhoneForTest(int ident, String peer) =>
+    _devicePushPhone(ident, peer);
+
+/// the device frames' door, for the tests
+@visibleForTesting
+Future<String> devDoorForTest(String peer, String frame) =>
+    _devDoor(peer, frame);
 
 // where a seal finds a peer's card to start a session afresh from, after a
 // restore: the app state's rows. set as it is made
-Future<PreKeyBundle?> Function(String peer)? _afreshFrom;
+Future<LsBundle?> Function(String peer)? _afreshFrom;
 
 bool _eqBytes(List<int> a, List<int> b) {
   if (a.length != b.length) return false;
@@ -123,7 +185,7 @@ bool _eqBytes(List<int> a, List<int> b) {
 bool _isPreKeyWire(String wireB64) {
   try {
     final w = base64Decode(wireB64);
-    return w.isNotEmpty && w[0] == CiphertextMessage.prekeyType;
+    return w.isNotEmpty && w[0] == kLsPreKey;
   } catch (_) {
     return false;
   }
@@ -131,16 +193,8 @@ bool _isPreKeyWire(String wireB64) {
 
 // the identity a store holds for an address: the one it trusts, else the
 // one its session was built with
-Future<List<int>?> _storedIdentity(
-  SignalSession ss,
-  SignalProtocolAddress addr,
-) async {
-  final known = await ss.identityStore.getIdentity(addr);
-  if (known != null) return known.serialize();
-  if (!await ss.sessionStore.containsSession(addr)) return null;
-  final record = await ss.sessionStore.loadSession(addr);
-  return record.sessionState.getRemoteIdentityKey()?.serialize();
-}
+Future<List<int>?> _storedIdentity(SignalSession ss, String peer) async =>
+    await ss.identityStore.getIdentity(peer) ?? await ss.sessionIdentity(peer);
 
 // the identity key a card's prekey bundle carries, null when it does not
 // read
@@ -190,7 +244,7 @@ Future<List<int>?> _boundIdentity(
 }) async {
   if (ss != null) {
     try {
-      final k = await _storedIdentity(ss, SignalProtocolAddress(id, 1));
+      final k = await _storedIdentity(ss, id);
       if (k != null) return k;
     } catch (e) {
       dlog('bound identity: store not read ($e)');
@@ -216,7 +270,8 @@ String unboundIdOf(List<int> identityKey) =>
     sha256.convert(identityKey).toString().substring(0, 16);
 
 // [keep] sees what it opened to before signal stores anything: one it turns
-// down throws ShelfFull, and the keys it took stay unspent
+// down throws ShelfFull, and the keys it took stay unspent. nothing about
+// the peer is written before the message has opened
 Future<String?> signalDecrypt(
   String peerId,
   String wireB64, {
@@ -234,96 +289,63 @@ Future<String?> signalDecrypt(
     if (wire.isEmpty) return null;
     final type = wire[0];
     final body = Uint8List.fromList(wire.sublist(1));
-    final addr = SignalProtocolAddress(peerId, 1);
-    final cipher = SessionCipher(
-      ss.sessionStore,
-      ss.preKeyStore,
-      ss.signedPreKeyStore,
-      ss.identityStore,
-      addr,
-    );
-    // a prekey open checks and saves their key before its mac: what it
-    // changed goes back unless the open goes through, and a new key is
-    // flagged only once it has
-    final guard =
-        type == CiphertextMessage.prekeyType &&
-        !isDevId(peerId) &&
-        peerId != '_pending_back_pair_';
     var moved = false;
-    // opens share the per-peer queue with seals: both step the same record
-    final plain = await ss.serial<Uint8List?>(peerId, () async {
-      if (!guard) {
-        return _open(ss, cipher, peerId, type, body, check, flagKeyChange);
+    Uint8List? remote, record;
+    final Uint8List? plain;
+    try {
+      plain = await _open(
+        ss,
+        peerId,
+        type,
+        body,
+        check,
+        flagKeyChange,
+        () => moved = true,
+        (r, rec) => (remote, record) = (r, rec),
+      );
+    } finally {
+      // a new key is saved only with a session that opened on it: flagged
+      // then, even when a later step threw
+      if (moved && !isDevId(peerId) && peerId != '_pending_back_pair_') {
+        await _keyMoved?.call(peerId);
       }
-      final before = await ss.marksOf(peerId);
-      final was = await _sessionIdentity(ss, addr);
-      try {
-        final out = await _open(
-          ss,
-          cipher,
-          peerId,
-          type,
-          body,
-          check,
-          flagKeyChange,
-        );
-        if (out == null) {
-          await ss.restoreMarks(peerId, before);
-        } else {
-          moved = before.movedTo(await ss.marksOf(peerId));
-        }
-        return out;
-      } catch (_) {
-        // a session stored on the new key before a later step threw is
-        // theirs: the key stays with it
-        final now = await _sessionIdentity(ss, addr);
-        if (now != null && (was == null || !_eqBytes(was, now))) {
-          moved = before.movedTo(await ss.marksOf(peerId));
-        } else {
-          await ss.restoreMarks(peerId, before);
-        }
-        rethrow;
-      }
-    });
-    if (moved) await _keyMoved?.call(peerId);
+    }
     if (plain == null) return null;
+    final (r, rec) = (remote, record);
+    if (r != null && rec != null && linkedDevicesOn) {
+      await _devOpened(ss, peerId, r, rec);
+    }
     final text = unpad(utf8.decode(plain));
     _zeroBytes(plain); // cleartext decoded out, wipe the raw buffer
     return text;
   } on ShelfFull {
     rethrow;
-  } on DuplicateMessageException catch (_) {
-    dlog('signalDecrypt: duplicate from $peerId, dropped');
-    // store-and-forward re-delivers, so a duplicate is expected. the
-    // original already decrypted.
-    _noteOpenedBefore(wireB64);
-    return null;
-  } on UntrustedIdentityException catch (_) {
-    // nothing opened, so nothing is flagged. the dev chat drops a key that
-    // is not the pinned one here
-    return null;
-  } on InvalidKeyIdException catch (_) {
-    // one-time prekey already used. with a session, an earlier copy set it
-    // up and this is a duplicate; without one it cannot be read.
-    final addr = SignalProtocolAddress(peerId, 1);
-    if (await ss.sessionStore.containsSession(addr)) {
-      return null;
+  } on LsError catch (e) {
+    switch (e.code) {
+      case LsError.duplicate:
+        dlog('signalDecrypt: duplicate from $peerId, dropped');
+        // store-and-forward re-delivers, so a duplicate is expected. the
+        // original already decrypted.
+        _noteOpenedBefore(wireB64);
+      case LsError.untrusted:
+        // nothing opened, so nothing is flagged. the dev chat drops a key
+        // that is not the pinned one here
+        break;
+      case LsError.noPreKey:
+        // a one-time prekey already used: an earlier copy set the session
+        // up and this is a duplicate, or without one it cannot be read
+        dlog('signalDecrypt: prekey gone for $peerId');
+      case LsError.classic:
+        // a pre-pq opener for a session not held: their app is too old
+        dlog('signalDecrypt: a classic opener from $peerId, refused');
+      default:
+        dlog('signalDecrypt: $e');
     }
     return null;
   } catch (e) {
     dlog('signalDecrypt: $e');
     return null;
   }
-}
-
-// the identity the session held for [addr] was built with, null with none
-Future<List<int>?> _sessionIdentity(
-  SignalSession ss,
-  SignalProtocolAddress addr,
-) async {
-  if (!await ss.sessionStore.containsSession(addr)) return null;
-  final record = await ss.sessionStore.loadSession(addr);
-  return record.sessionState.getRemoteIdentityKey()?.serialize();
 }
 
 // where a key that moved after an open is flagged: the app state, as it is
@@ -333,54 +355,155 @@ Future<void> Function(String peer)? _keyMoved;
 // one open in the peer's lane
 Future<Uint8List?> _open(
   SignalSession ss,
-  SessionCipher cipher,
   String peerId,
   int type,
   Uint8List body,
   void Function(Uint8List) check,
   bool flagKeyChange,
+  void Function() moved,
+  void Function(Uint8List remote, Uint8List record) opened,
 ) async {
-  final addr = SignalProtocolAddress(peerId, 1);
-  if (type != CiphertextMessage.prekeyType) {
-    return cipher.decryptFromSignalWithCallback(
-      SignalMessage.fromSerialized(body),
-      check,
-    );
-  }
-  final pkm = PreKeySignalMessage(body);
-  // trial decrypt: a prekey opens only under the name its identity is
-  // bound to. another identity, or a name with none yet, arrives as a
-  // first contact and is checked there. targeted decrypts
-  // (flagKeyChange) skip this and keep deliver-and-warn for mitm.
-  if (!flagKeyChange && peerId != '_pending_back_pair_') {
-    final known = await _storedIdentity(ss, addr);
-    if (known == null || !_eqBytes(known, pkm.getIdentityKey().serialize())) {
-      return null;
+  if (type == kLsPreKey) {
+    // trial decrypt: a prekey opens only under the name its identity is
+    // bound to. another identity, or a name with none yet, arrives as a
+    // first contact and is checked there. targeted decrypts
+    // (flagKeyChange) skip this and keep deliver-and-warn for mitm.
+    if (!flagKeyChange && peerId != '_pending_back_pair_') {
+      final known = await _storedIdentity(ss, peerId);
+      final theirs = ss.lib.preKeyMessageInfo(body).identityKey;
+      if (known == null || !_eqBytes(known, theirs)) return null;
     }
-  }
-  if (await ss.sessionStore.containsSession(addr)) {
-    // session exists: use it. rebuilding from the prekey record bad-macs
-    // when the slot was refilled with a fresh key.
-    try {
-      return await cipher.decryptFromSignalWithCallback(
-        pkm.getWhisperMessage(),
-        check,
-      );
-    } on ShelfFull {
-      rethrow;
-    } catch (e) {
-      dlog('signalDecrypt: session path failed ($e), prekey fallback');
-      return cipher.decryptWithCallback(pkm, check);
-    }
-  }
-  final pkId = pkm.getPreKeyId();
-  final havePk =
-      !pkId.isPresent || await ss.preKeyStore.containsPreKey(pkId.value);
-  if (!havePk) {
-    dlog('signalDecrypt: prekey gone, no session for $peerId');
+  } else if (type != kLsWhisper) {
     return null;
   }
-  return cipher.decryptWithCallback(pkm, check);
+  // an opener on a session held opens on it; a new one builds the session
+  // in front of it, the states before it kept behind
+  return ss.open(
+    peerId,
+    type,
+    body,
+    check: check,
+    moved: moved,
+    opened: opened,
+  );
+}
+
+/// a message from [peer]'s phone opened on a session whose remote was
+/// [remote], as ks_decrypt_* returned it: the engine admits it and notes a
+/// post-quantum session for good. never stops the message
+Future<void> _devOpened(
+  SignalSession ss,
+  String peer,
+  Uint8List remote,
+  Uint8List record,
+) async {
+  final ds = _deviceState;
+  if (ds == null || isDevId(peer)) return;
+  // a hidden chat's go to the open vault; nothing while it is shut
+  final home = _devHomeDb(peer);
+  if (home == null) return;
+  try {
+    final db = await home.open();
+    final row = await db.query(
+      'contacts',
+      columns: ['ident', 'ikey'],
+      where: 'halo_id = ?',
+      whereArgs: [peer],
+      limit: 1,
+    );
+    final ikey = row.isEmpty ? null : row.first['ikey'] as String?;
+    if (ikey == null) return;
+    final info = ss.lib.sessionInfo(record);
+    final ident = row.first['ident'] as int? ?? kMainIdent;
+    final sr = SessionRemote.opened(remote);
+    _phoneRemotes.remove(peer);
+    await ds.session(db, 'opened', {
+      'ident': ident,
+      'identity': ikey,
+      'device': 1,
+      'pq': info.version >= 4 && info.pq,
+    }, sr);
+    // the frame's device words are taken under this remote once it is
+    // filed (devices_receive_app.dart), and only after it was admitted
+    _phoneRemotes[peer] = (identity: ikey, remote: sr);
+    // they answered: a list that went to them before is taken
+    await _devSendFor(
+      peer,
+    )?.heard(ident, ikey, DateTime.now().millisecondsSinceEpoch);
+  } on DevRefused catch (e) {
+    dlog('devices: an open not admitted (${e.why})');
+  } catch (e) {
+    dlog('devices: an open not noted (${e.runtimeType})');
+  }
+}
+
+// the remote the last admitted frame from each contact's phone opened under,
+// for its device words (_devPhoneFrames). a frame not admitted takes it out
+final _phoneRemotes = <String, ({String identity, SessionRemote remote})>{};
+
+/// the remote [peer]'s phone's last frame opened under, when it was
+/// admitted and is still [identity]'s
+SessionRemote? _phoneRemoteOf(String peer, String identity) {
+  final r = _phoneRemotes[peer];
+  return r != null && r.identity == identity ? r.remote : null;
+}
+
+/// the remote [peer]'s phone session runs on now, as libsignal holds it,
+/// when it is [identity]: a frame of theirs sealed for the hidden chats
+/// opened on that session, and its device words are taken under it as the
+/// vault opens. the phone's session is pinned to the identity, so another
+/// key there gives none
+Future<SessionRemote?> _heldPhoneRemote(String peer, String identity) async {
+  final ss = await signalFor(peer);
+  final k = ss == null ? null : await ss.sessionIdentity(peer);
+  if (k == null || devHex(k) != identity) return null;
+  return SessionRemote.opened(k);
+}
+
+/// a copy from [identity]'s [device] (a contact's, or one of mine) opened
+/// on its device session at [addr] and admitted by the engine before it is
+/// kept: Admit, or AdmitOpener on the opener's registration id, under the
+/// remote libsignal answered. a refused copy throws DevRefused, its
+/// plaintext wiped and nothing of it stored
+Future<({Uint8List plain, SessionRemote remote})> deviceOpenAt(
+  DatabaseExecutor db,
+  DeviceSessions ds, {
+  required int ident,
+  required String identity,
+  required String addr,
+  required int device,
+  required int type,
+  required Uint8List body,
+  required Uint8List pin,
+  required int reg,
+}) async {
+  final state = _deviceState;
+  if (state == null || !linkedDevicesOn) {
+    throw const DevRefused('off', {});
+  }
+  SessionRemote? remote;
+  final plain = await ds.open(
+    addr,
+    device,
+    type,
+    body,
+    pin,
+    reg: reg,
+    admit: (r, record, {required opener, required reg}) async {
+      final sr = SessionRemote.opened(r);
+      final info = ds.s.lib.sessionInfo(record);
+      await state.session(db, 'opened', {
+        'ident': ident,
+        'identity': identity,
+        'device': device,
+        'opener': opener,
+        'reg': reg,
+        'pq': info.version >= 4 && info.pq,
+      }, sr);
+      remote = sr;
+    },
+  );
+  return (plain: plain, remote: remote!);
 }
 
 // wires a decrypt found opened before: a copy is no sign the sessions went
@@ -397,42 +520,27 @@ void _noteOpenedBefore(String wireB64) {
 bool _takeOpenedBefore(String wireB64) =>
     _openedBefore.remove(sha256.convert(utf8.encode(wireB64)).toString());
 
-// an opener's session filed at [addr]. a record already there is kept: an
+// an opener's session filed for [peer]. a record already there is kept: an
 // opener it took before (a copy off a relay's backlog after a restore, or
 // a second one sent before they heard back) leaves it as it runs, its text
 // still handed on for the uid checks to know. a new one goes in front of it
 // as a fresh start does, the states before it kept behind
 Future<void> keepOpenedSession(
-  SignalProtocolAddress addr,
-  SessionRecord record,
-) async {
-  final store = signalSession.sessionStore;
-  await signalSession.serial<void>(addr.getName(), () async {
-    if (!await store.containsSession(addr)) {
-      await store.storeSession(addr, record);
-      return;
-    }
-    final held = await store.loadSession(addr);
-    final st = record.sessionState;
-    if (held.hasSessionState(st.getSessionVersion(), st.aliceBaseKey)) {
-      dlog('back-pair: an opener held already, the session kept');
-      return;
-    }
-    held.promoteState(st);
-    await store.storeSession(addr, held);
-  });
-}
+  String peer,
+  Uint8List record, {
+  Future<void> Function(Transaction t)? also,
+}) => signalSession.keepOpenedSession(peer, record, also: also);
 
 // a first contact's session moved off a name a hidden chat binds to
 // another key, onto the sender's own id. a name with a trusted key was
 // settled when it opened, and stays. null when it cannot be moved
 Future<String?> _refileFirstContact(String h) async {
-  final addr = SignalProtocolAddress(h, 1);
   try {
-    if (await signalSession.identityStore.getIdentity(addr) != null) return h;
-    final record = await signalSession.sessionStore.loadSession(addr);
-    final key = record.sessionState.getRemoteIdentityKey()?.serialize();
-    await signalSession.sessionStore.deleteSession(addr);
+    if (await signalSession.identityStore.getIdentity(h) != null) return h;
+    final record = await signalSession.sessionStore.load(h);
+    if (record == null) return null;
+    final key = signalSession.lib.sessionInfo(record).remoteIdentity;
+    await signalSession.sessionStore.delete(h);
     if (key == null) return null;
     final at = unboundIdOf(key);
     final held = await _boundIdentity(
@@ -442,7 +550,7 @@ Future<String?> _refileFirstContact(String h) async {
     );
     if (held != null && !_eqBytes(held, key)) return null;
     // kept as any opener's is: one held there already is not run over
-    await keepOpenedSession(SignalProtocolAddress(at, 1), record);
+    await keepOpenedSession(at, record);
     return at;
   } catch (e) {
     dlog('back-pair: not refiled ($e)');

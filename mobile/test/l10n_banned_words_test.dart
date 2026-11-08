@@ -14,6 +14,7 @@ const _banned = {
     'plausible deniability',
     'safe from anyone',
     'untraceable',
+    'hidden from anyone',
   ],
   'de': [
     'unsichtbar',
@@ -62,6 +63,22 @@ const _banned = {
   'zh_Hant': ['隱形', '無法偵測', '不可察覺', '合理推諉'],
   'ar': ['غير مرئي', 'لا يمكن اكتشاف', 'الإنكار المعقول'],
   'fa': ['نامرئی', 'غیرقابل شناسایی', 'انکار موجه'],
+  'hi': [
+    'अदृश्य',
+    'पकड़ में नहीं आ',
+    'पता नहीं लगाया जा सकता',
+    'इनकार की गुंजाइश',
+    'किसी से भी सुरक्षित',
+    'ट्रेस नहीं',
+  ],
+  'pl': [
+    'niewidzialn',
+    'niewykrywaln',
+    'nie do wykrycia',
+    'wiarygodnego zaprzeczenia',
+    'bezpieczne przed każdym',
+    'nie do wyśledzenia',
+  ],
 };
 
 void main() {

@@ -9,9 +9,35 @@ import 'package:flutter/services.dart';
 
 import '../chat_shots.dart' show ChatShots, ShotsPacer;
 import '../contact_status.dart';
+import '../devchat/dev_key.dart' show isDevChat;
 import '../lock_state.dart' show lockState;
-import '../main.dart' show appState, session, sessionQuiet;
+import '../supporter.dart' show SupporterTier, tierGlyph, tierLabel, tierOf;
+import '../main.dart'
+    show
+        ownDeleteLine,
+        ownBlockLine,
+        appState,
+        session,
+        sessionQuiet,
+        AppStateOutbox,
+        AppStateHeal,
+        AppStateMessages,
+        AppStateScreen,
+        AppStateContacts,
+        AppStateSession,
+        AppStatePhotos,
+        AppStateRefresh,
+        kNameShown,
+        nameAsks,
+        nameCheckOf;
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../photo_pick.dart';
+import '../profile_photo.dart' show photoAddOffered, photoBook;
 import '../theme.dart';
+import '../widgets/face_view.dart';
+import '../widgets/photo_sheet.dart';
+import '../translate/auto_translate_row.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
 import '../widgets/halo_buttons.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
@@ -31,11 +57,13 @@ import 'home_screen.dart' show ContactPreview;
 import 'chat_screen.dart' show MediaGalleryScreen;
 import 'key_verification_screen.dart';
 import '../widgets/key_held.dart';
+import '../widgets/not_them.dart';
 import 'vouchers_sheet.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/owned_text.dart';
 import '../l10n/l10n.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../wide/read_width.dart' show DeskPage;
 
 /// the name we give a contact. '' to clear it, null when dismissed
 @visibleForTesting
@@ -65,8 +93,8 @@ Future<String?> showRenameSheet(
               ),
               const SizedBox(height: 6),
               Text(
-                l10n.contactStaysOnThisPhone,
-                style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                l10n.contactStaysOnThisPhoneShown,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
               const SizedBox(height: 14),
               Container(
@@ -135,6 +163,8 @@ class ContactScreen extends StatefulWidget {
   final String? nickname;
   // the key the chat already holds, for the safety number page
   final String peerXPub;
+  // a support chat on his phone: it came through the developer chat
+  final bool support;
   const ContactScreen({
     super.key,
     required this.haloId,
@@ -142,6 +172,7 @@ class ContactScreen extends StatefulWidget {
     required this.peerXPub,
     this.face,
     this.nickname,
+    this.support = false,
   });
   @override
   State<ContactScreen> createState() => _ContactScreenState();
@@ -166,12 +197,20 @@ class _ContactScreenState extends State<ContactScreen> {
   bool? _pinnedNow;
   // verified under one key, holding another now: nothing goes to them
   bool _held = false;
+  // a heal holds them, not a new key (heal.dart's line kind)
+  int? _healHold;
+  // a photo you set for them, on this phone only
+  bool _mine = false;
   bool? _shotsNow;
   // the chat's media is here too: held while the chat blocks, from what
   // the list knows before the first read
   late final _shotsHold = ShotsPacer(appState.forceSecure);
   // read as the page opens: a change after that reads the rows again
   int _rev = 0;
+  // the safety number asked for on this visit, the first to their page.
+  // decided once, on the first read
+  bool _compare = false;
+  bool _compareRead = false;
 
   ChatShots get _shots => ChatShots.ofRow(_c, quiet: sessionQuiet);
 
@@ -230,21 +269,27 @@ class _ContactScreenState extends State<ContactScreen> {
       session.mediaFor(widget.haloId),
       session.firstMessageAt(widget.haloId),
       keyHeldShown(widget.haloId),
+      appState.photosOfContact(widget.haloId),
+      healHoldShown(widget.haloId),
     ]);
     final c = results[0] as Map<String, Object?>?;
     final since = results[3] as int?;
     final vs = results[1] as List<Map<String, Object?>>;
     final rows = results[2] as List<Map<String, Object?>>;
     final held = results[4] as bool;
+    final photos =
+        results[5] as ({Uint8List? mine, Uint8List? theirs, int theirVer});
     // a file that went missing draws as nothing; no stat per file up front
     final paths = [for (final r in rows) r['media_path'] as String];
     final secure = {
       for (final r in rows)
         if ((r['secure'] as int? ?? 0) == 1) r['media_path'] as String,
     };
+    final compare = await _compareOnce(c, held);
     if (!mounted) return;
     setState(() {
       _c = c;
+      if (compare) _compare = true;
       _voucherNames = [
         for (final v in vs)
           (v['nickname'] as String?) ?? v['voucher_id'] as String,
@@ -254,9 +299,82 @@ class _ContactScreenState extends State<ContactScreen> {
       _mediaCount = paths.length;
       _since = since;
       _held = held;
+      _healHold = held ? results[6] as int? : null;
+      _mine = photos.mine != null;
       _loaded = true;
     });
     _shotsHold.want(_shots.blocking);
+  }
+
+  // the first visit to the page of someone added by a code or a link, or
+  // taken in from a request, asks once for the safety number. the button
+  // under the page reaches it after that. no key held, no number to show
+  Future<bool> _compareOnce(Map<String, Object?>? c, bool held) async {
+    if (_compareRead || c == null) return false;
+    _compareRead = true;
+    if (!nameAsks(c) ||
+        (nameCheckOf(c) & kNameShown) != 0 ||
+        held ||
+        (c['key_changed'] as num?)?.toInt() == 1 ||
+        (c['blocked'] as num?)?.toInt() == 1 ||
+        widget.support ||
+        isDevChat(widget.haloId)) {
+      return false;
+    }
+    try {
+      if (await session.heldKey(widget.haloId) == null) return false;
+      await session.setNameCheck(widget.haloId, nameCheckOf(c) | kNameShown);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // a photo for them from the camera or the gallery, or yours taken off
+  Future<void> _photoTapped() async {
+    final id = widget.haloId;
+    final c = await showPhotoSheet(
+      context,
+      title: l10n.photoForThem(_name),
+      line: l10n.photoOnlyHereLineShown,
+      seed: widget.avatarSeed,
+      choice: widget.face ?? (_c?['avatar'] as num?)?.toInt(),
+      add: photoAddOffered(desktop: onDesktop),
+      has: _mine,
+      // a chat that blocks screenshots shows the face, so nothing to look at
+      look: _mine && faceOpens(id),
+    );
+    if (!mounted || c == null) return;
+    switch (c) {
+      case PhotoChoice.view:
+        await openFace(context, id, label: l10n.photoOf(_name));
+      case PhotoChoice.remove:
+        HapticFeedback.mediumImpact();
+        await appState.setContactPhoto(id, null);
+        if (mounted) setState(() => _mine = false);
+      case PhotoChoice.camera || PhotoChoice.gallery:
+        final at = session;
+        final r = await pickProfilePhoto(
+          context,
+          camera: c == PhotoChoice.camera,
+          got: (photo) async {
+            // a lock or another pin meanwhile: it goes nowhere
+            if (!session.holdsSame(at)) return;
+            final kept = await appState.setContactPhoto(id, photo);
+            if (!mounted) return;
+            if (kept) {
+              setState(() => _mine = true);
+            } else {
+              showHaloToast(context, l10n.photoCouldNotUse);
+            }
+          },
+        );
+        if (r == PhotoPicked.unclean && mounted) {
+          showHaloToast(context, l10n.photoCouldNotUse);
+        }
+      case PhotoChoice.faces:
+        break;
+    }
   }
 
   bool _flag(String k) {
@@ -312,7 +430,7 @@ class _ContactScreenState extends State<ContactScreen> {
     await _load();
   }
 
-  Future<void> _checkNumber(bool verified) async {
+  Future<void> _checkNumber(bool verified, {bool notThem = false}) async {
     await Navigator.of(context).push(
       haloRoute(
         KeyVerificationScreen(
@@ -321,15 +439,24 @@ class _ContactScreenState extends State<ContactScreen> {
           myXpub: appState.sessionXPub,
           peerXpub: widget.peerXPub,
           initialVerified: verified,
+          notThemOpen: notThem,
         ),
       ),
     );
+    // a heal's hold ends once the number was looked at
+    if (_healHold != null) await appState.releaseHealHold(widget.haloId);
     await _load();
     if (!_held) unawaited(appState.drainOutbox());
   }
 
   Future<void> _acceptNewKey() async {
-    if (!await acceptNewKeyAsked(context, widget.haloId, _name)) return;
+    if (_healHold != null) {
+      // a heal's way out: the mark stays, sending goes on
+      HapticFeedback.mediumImpact();
+      await appState.releaseHealHold(widget.haloId);
+    } else if (!await acceptNewKeyAsked(context, widget.haloId, _name)) {
+      return;
+    }
     await _load();
   }
 
@@ -354,8 +481,12 @@ class _ContactScreenState extends State<ContactScreen> {
         ? HaloColors.green
         : _voucherNames.isNotEmpty
         ? HaloColors.amber
-        : HaloColors.text2;
+        : HaloColors.text;
     final note = c?['note'] as String?;
+    // the tier they share, as their last message carried it
+    final badge = c != null
+        ? c['supporter_badge'] as String?
+        : _seen?.supporterBadge;
     final still = motionStill(context);
     return Scaffold(
       backgroundColor: HaloColors.surface,
@@ -392,283 +523,444 @@ class _ContactScreenState extends State<ContactScreen> {
           ),
         ),
       ),
-      body: ListView(
-        controller: _scroll,
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-        children: staggerAllIn(context, [
-          ParallaxHead(
-            controller: _scroll,
-            child: Center(
-              child: Column(
-                children: [
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: still ? 1 : 0.9, end: 1),
-                    duration: kHouseTime,
-                    curve: kHouseCurve,
-                    builder: (_, v, child) =>
-                        Transform.scale(scale: v, child: child),
-                    child: HaloHero(
-                      tag: 'face-${widget.avatarSeed}',
-                      child: KryfoAvatar(
-                        seed: widget.avatarSeed,
-                        size: 96,
-                        choice: widget.face ?? (c?['avatar'] as num?)?.toInt(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  PressScale(
-                    onTap: _rename,
-                    scale: 0.97,
-                    haptic: false,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            _name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: HaloType.serif(
-                              size: 26,
-                              weight: FontWeight.w300,
-                              color: HaloColors.text,
-                            ),
+      body: DeskPage(
+        child: ListView(
+          controller: _scroll,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          children: staggerAllIn(context, [
+            ParallaxHead(
+              controller: _scroll,
+              child: Center(
+                child: Column(
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: still ? 1 : 0.9, end: 1),
+                      duration: kHouseTime,
+                      curve: kHouseCurve,
+                      builder: (_, v, child) =>
+                          Transform.scale(scale: v, child: child),
+                      // a photo opens larger, with nothing to save or share
+                      child: ListenableBuilder(
+                        listenable: photoBook,
+                        builder: (context, child) =>
+                            faceOpens(widget.avatarSeed)
+                            ? PressScale(
+                                label: l10n.photoView,
+                                scale: 0.96,
+                                onTap: () => openFace(
+                                  context,
+                                  widget.avatarSeed,
+                                  label: l10n.photoOf(_name),
+                                  tag: 'face-${widget.avatarSeed}',
+                                  radius: 48,
+                                ),
+                                child: child!,
+                              )
+                            : child!,
+                        child: HaloHero(
+                          tag: 'face-${widget.avatarSeed}',
+                          child: KryfoAvatar(
+                            seed: widget.avatarSeed,
+                            size: 96,
+                            choice:
+                                widget.face ?? (c?['avatar'] as num?)?.toInt(),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.edit_outlined,
-                          size: 15,
-                          color: HaloColors.text3,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_nickname != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.haloId,
-                      style: HaloType.mono(size: 12.5, color: HaloColors.amberText),
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  // a new status rises in over the last, and the note eases
-                  // in once it loads instead of shoving the page down
-                  RiseSwap(
-                    alignment: Alignment.center,
-                    child: Text(
-                      status,
-                      key: ValueKey(status),
-                      textAlign: TextAlign.center,
-                      style: HaloType.mono(
-                        size: 11,
-                        color: statusColor,
-                        letter: 0.04,
                       ),
                     ),
-                  ),
-                  EaseSize(
-                    child: note != null && note.isNotEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.only(top: 10),
+                    const SizedBox(height: 16),
+                    PressScale(
+                      onTap: _rename,
+                      scale: 0.97,
+                      haptic: false,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
                             child: Text(
-                              note,
-                              textAlign: TextAlign.center,
+                              _name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: HaloType.serif(
-                                size: 14,
-                                italic: true,
-                                color: HaloColors.text2,
+                                size: 26,
+                                weight: FontWeight.w300,
+                                color: HaloColors.text,
                               ),
                             ),
-                          )
-                        : const SizedBox(width: double.infinity),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // held: the notice and its two ways out, under the status
-          EaseSize(
-            child: _held && !blocked
-                ? KeyHeldCard(
-                    peerName: _name,
-                    margin: const EdgeInsets.only(top: 18),
-                    onCheck: () => _checkNumber(verified),
-                    onAccept: _acceptNewKey,
-                  )
-                : const SizedBox(width: double.infinity),
-          ),
-          const SizedBox(height: 22),
-          // the cards ease in once there is something to put on them
-          EaseSize(
-            child: FadeSwap(
-              child: _loaded
-                  ? _Stats(
-                      key: const ValueKey('stats'),
-                      verified: verified,
-                      vouches: _voucherNames.length,
-                      since: _since,
-                      onVouches: () =>
-                          showVouchersSheet(context, widget.haloId),
-                    )
-                  : const SizedBox(
-                      key: ValueKey('no-stats'),
-                      width: double.infinity,
-                    ),
-            ),
-          ),
-          EaseSize(
-            child: _voucherNames.isNotEmpty
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: HaloGroup(
-                      children: [
-                        HaloRow(
-                          icon: Icons.people_outline,
-                          label: l10n.contactVouches,
-                          hint: status,
-                          onTap: () =>
-                              showVouchersSheet(context, widget.haloId),
-                        ),
-                      ],
-                    ),
-                  )
-                : const SizedBox(width: double.infinity),
-          ),
-          SharedMediaSection(
-            paths: _media,
-            count: _mediaCount,
-            loaded: _loaded,
-            onOpen: _media.isEmpty
-                ? null
-                : () => Navigator.of(context).push(
-                    haloRoute(
-                      MediaGalleryScreen(
-                        paths: _media,
-                        securePaths: _secure,
-                        title: _name,
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 15,
+                            color: HaloColors.text3,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-          ),
-          const SizedBox(height: 18),
-          // the chat itself: how loud it is, where it sits in the list
-          HaloGroup(
-            children: [
-              HaloRow(
-                icon: muted
-                    ? Icons.notifications_off_outlined
-                    : Icons.notifications_none,
-                label: l10n.contactMute,
-                toggled: muted,
-                onTap: () => _setMuted(!muted),
-              ),
-              HaloRow(
-                icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                label: l10n.contactPinToTop,
-                toggled: pinned,
-                onTap: () => _setPinned(!pinned),
-              ),
-              // both phones or neither, once theirs knows how
-              if (accepted && !blocked)
-                HaloRow(
-                  icon: Icons.phonelink_lock_outlined,
-                  label: l10n.chatBlockScreenshots,
-                  hint: !_shots.peerCan
-                      ? l10n.chatShotsWhenTheyUpdate
-                      : (_shotsNow ?? _shots.on)
-                      ? l10n.chatShotsBothPhones
-                      : l10n.chatShotsBlocksBoth,
-                  toggled: _shotsNow ?? _shots.blocking,
-                  pending: !_loaded,
-                  onTap: _shots.peerCan
-                      ? () => _setShots(!(_shotsNow ?? _shots.on))
-                      : null,
+                    if (_nickname != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.haloId,
+                        style: HaloType.mono(
+                          size: 12.5,
+                          color: HaloColors.amberText,
+                        ),
+                      ),
+                    ],
+                    EaseSize(
+                      child: badge != null
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: _Badge(tier: tierOf(badge)),
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
+                    // a new status rises in over the last, and the note eases
+                    // in once it loads instead of shoving the page down
+                    EaseSize(
+                      child: status != null
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: RiseSwap(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  status,
+                                  key: ValueKey(status),
+                                  textAlign: TextAlign.center,
+                                  style: HaloType.mono(
+                                    size: 11,
+                                    color: statusColor,
+                                    letter: 0.04,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
+                    EaseSize(
+                      child: note != null && note.isNotEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Text(
+                                note,
+                                textAlign: TextAlign.center,
+                                style: HaloType.serif(
+                                  size: 14,
+                                  italic: true,
+                                  color: HaloColors.text,
+                                ),
+                              ),
+                            )
+                          : const SizedBox(width: double.infinity),
+                    ),
+                  ],
                 ),
-              HaloRow(
-                icon: Icons.archive_outlined,
-                label: l10n.contactArchive,
-                hint: l10n.contactOutOfTheList,
-                onTap: () async {
-                  await appState.archive(widget.haloId);
-                  if (!context.mounted) return;
-                  Navigator.of(context).popUntil((r) => r.isFirst);
-                },
               ),
-              // hidden chats open: out of the everyday list, or back in it.
-              // its rows move, so the chat is left as an archived one is
-              if (lockState.inVault && accepted && !blocked)
+            ),
+            // held: the notice and its two ways out, under the status
+            EaseSize(
+              child: FadeSwap(
+                child: _held && !blocked
+                    ? KeyHeldCard(
+                        // a heal's card and a new key's card cross
+                        key: ValueKey('held_${_healHold ?? 'key'}'),
+                        peerName: _name,
+                        healKind: _healHold,
+                        margin: const EdgeInsets.only(top: 18),
+                        onCheck: () => _checkNumber(verified),
+                        onAccept: _acceptNewKey,
+                      )
+                    : const SizedBox(
+                        key: ValueKey('held_none'),
+                        width: double.infinity,
+                      ),
+              ),
+            ),
+            // asked once, on the first visit: the number says who they are
+            EaseSize(
+              child: FadeSwap(
+                child: _compare && !verified && !blocked && !_held
+                    ? _CompareCard(
+                        key: const ValueKey('compare'),
+                        peerName: _name,
+                        onVerify: () => _checkNumber(verified),
+                        onLater: () => setState(() => _compare = false),
+                        onNotThem: () => _checkNumber(verified, notThem: true),
+                      )
+                    : const SizedBox(
+                        key: ValueKey('compare_none'),
+                        width: double.infinity,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 22),
+            // the cards ease in once there is something to put on them
+            EaseSize(
+              child: FadeSwap(
+                child: _loaded
+                    ? _Stats(
+                        key: const ValueKey('stats'),
+                        verified: verified,
+                        vouches: _voucherNames.length,
+                        since: _since,
+                        onVouches: () =>
+                            showVouchersSheet(context, widget.haloId),
+                      )
+                    : const SizedBox(
+                        key: ValueKey('no-stats'),
+                        width: double.infinity,
+                      ),
+              ),
+            ),
+            EaseSize(
+              child: _voucherNames.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: HaloGroup(
+                        children: [
+                          HaloRow(
+                            icon: Icons.people_outline,
+                            label: l10n.contactVouches,
+                            hint: status,
+                            onTap: () =>
+                                showVouchersSheet(context, widget.haloId),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
+            SharedMediaSection(
+              paths: _media,
+              count: _mediaCount,
+              loaded: _loaded,
+              onOpen: _media.isEmpty
+                  ? null
+                  : () => Navigator.of(context).push(
+                      haloRoute(
+                        MediaGalleryScreen(
+                          paths: _media,
+                          securePaths: _secure,
+                          title: _name,
+                        ),
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 18),
+            // the chat itself: how loud it is, where it sits in the list
+            HaloGroup(
+              children: [
                 HaloRow(
-                  icon: hidden
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  label: hidden ? l10n.chatShowInList : l10n.chatHide,
+                  icon: muted
+                      ? Icons.notifications_off_outlined
+                      : Icons.notifications_none,
+                  label: l10n.contactMute,
+                  toggled: muted,
+                  onTap: () => _setMuted(!muted),
+                ),
+                HaloRow(
+                  icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                  label: l10n.contactPinToTop,
+                  toggled: pinned,
+                  onTap: () => _setPinned(!pinned),
+                ),
+                // the same switch as "always translate this chat" in a chat
+                if (translationHubIfOn() case final hub? when hub.on)
+                  AutoTranslateRow(chatId: widget.haloId, hub: hub),
+                // a photo of your own choosing for them, never sent
+                if (accepted &&
+                    !widget.support &&
+                    !isDevChat(widget.haloId) &&
+                    (_mine || photoAddOffered(desktop: onDesktop)))
+                  HaloRow(
+                    icon: Icons.add_a_photo_outlined,
+                    label: _mine ? l10n.photoChangeTheirs : l10n.photoSetTheirs,
+                    hint: l10n.photoOnlyHereShown,
+                    onTap: _photoTapped,
+                  ),
+                // both phones or neither, once theirs knows how. the developer
+                // chat never carries the block, so it is not offered there
+                if (accepted &&
+                    !blocked &&
+                    !widget.support &&
+                    !isDevChat(widget.haloId))
+                  HaloRow(
+                    icon: Icons.phonelink_lock_outlined,
+                    label: l10n.chatBlockScreenshots,
+                    hint: !_shots.peerCan
+                        ? l10n.chatShotsWhenTheyUpdateShown
+                        : (_shotsNow ?? _shots.on)
+                        ? l10n.chatShotsBothPhones
+                        : l10n.chatShotsBlocksBoth,
+                    toggled: _shotsNow ?? _shots.blocking,
+                    pending: !_loaded,
+                    onTap: _shots.peerCan
+                        ? () => _setShots(!(_shotsNow ?? _shots.on))
+                        : null,
+                  ),
+                HaloRow(
+                  icon: Icons.archive_outlined,
+                  label: l10n.contactArchive,
+                  hint: l10n.contactOutOfTheList,
                   onTap: () async {
-                    final moved = await moveHiddenChat(
-                      context,
-                      widget.haloId,
-                      group: false,
-                      hide: !hidden,
-                    );
-                    if (!moved || !context.mounted) return;
+                    await appState.archive(widget.haloId);
+                    if (!context.mounted) return;
                     Navigator.of(context).popUntil((r) => r.isFirst);
                   },
                 ),
+                // hidden chats open: out of the everyday list, or back in it.
+                // its rows move, so the chat is left as an archived one is
+                if (lockState.inVault && accepted && !blocked)
+                  HaloRow(
+                    icon: hidden
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    label: hidden ? l10n.chatShowInList : l10n.chatHide,
+                    onTap: () async {
+                      final moved = await moveHiddenChat(
+                        context,
+                        widget.haloId,
+                        group: false,
+                        hide: !hidden,
+                      );
+                      if (!moved || !context.mounted) return;
+                      Navigator.of(context).popUntil((r) => r.isFirst);
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // what cannot be taken back, apart and in rose
+            HaloGroup(
+              rose: true,
+              children: [
+                HaloRow(
+                  icon: Icons.block,
+                  label: blocked ? l10n.commonUnblock : l10n.commonBlock,
+                  rose: !blocked,
+                  onTap: () async {
+                    if (blocked) {
+                      await appState.unblock(widget.haloId);
+                      _load();
+                      return;
+                    }
+                    final ok = await showConfirmSheet(
+                      context,
+                      title: l10n.contactBlock(_name),
+                      line: ownBlockLine(chat: false),
+                      yes: l10n.commonBlock,
+                    );
+                    if (!ok) return;
+                    await appState.block(widget.haloId);
+                    if (!context.mounted) return;
+                    HapticFeedback.mediumImpact();
+                    Navigator.of(context).popUntil((r) => r.isFirst);
+                  },
+                ),
+                HaloRow(
+                  icon: Icons.delete_outline,
+                  label: l10n.contactDeleteChat,
+                  hint: l10n.contactMessagesAndContactGoneShown,
+                  rose: true,
+                  onTap: () async {
+                    final ok = await showConfirmSheet(
+                      context,
+                      title: l10n.contactDeleteThisChat,
+                      line: ownDeleteLine,
+                      yes: l10n.commonDelete,
+                    );
+                    if (!ok) return;
+                    await appState.deleteConversation(widget.haloId);
+                    await appState.refreshContacts();
+                    if (!context.mounted) return;
+                    HapticFeedback.mediumImpact();
+                    showHaloToast(context, l10n.contactDeleted);
+                    Navigator.of(context).popUntil((r) => r.isFirst);
+                  },
+                ),
+              ],
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+// on the first visit to the page of someone added by a code or a link, or
+// taken in from a request: three words prove nothing, the safety number
+// does. later puts it away; the button under the page stays. a number read
+// out that is another opens the safety number with "this isn't them" up
+class _CompareCard extends StatelessWidget {
+  final String peerName;
+  final VoidCallback onVerify;
+  final VoidCallback onLater;
+  final VoidCallback onNotThem;
+  const _CompareCard({
+    super.key,
+    required this.peerName,
+    required this.onVerify,
+    required this.onLater,
+    required this.onNotThem,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+      decoration: BoxDecoration(
+        color: HaloColors.surface2,
+        border: Border.all(color: HaloColors.line, width: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                size: 15,
+                color: HaloColors.amber,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  l10n.chatCompareTitle,
+                  style: HaloType.serif(size: 14, color: HaloColors.text),
+                ),
+              ),
             ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.chatCompareLine(peerName),
+            style: HaloType.sans(size: 13, color: HaloColors.text, height: 1.5),
           ),
           const SizedBox(height: 12),
-          // what cannot be taken back, apart and in rose
-          HaloGroup(
-            rose: true,
+          Row(
             children: [
-              HaloRow(
-                icon: Icons.block,
-                label: blocked ? l10n.commonUnblock : l10n.commonBlock,
-                rose: !blocked,
-                onTap: () async {
-                  if (blocked) {
-                    await appState.unblock(widget.haloId);
-                    _load();
-                    return;
-                  }
-                  final ok = await showConfirmSheet(
-                    context,
-                    title: l10n.contactBlock(_name),
-                    line: l10n.contactTheirMessagesStopArriving,
-                    yes: l10n.commonBlock,
-                  );
-                  if (!ok) return;
-                  await appState.block(widget.haloId);
-                  if (!context.mounted) return;
-                  HapticFeedback.mediumImpact();
-                  Navigator.of(context).popUntil((r) => r.isFirst);
-                },
+              Expanded(
+                child: HaloGhostButton(
+                  quiet: true,
+                  label: l10n.chatCompareLater,
+                  onTap: onLater,
+                ),
               ),
-              HaloRow(
-                icon: Icons.delete_outline,
-                label: l10n.contactDeleteChat,
-                hint: l10n.contactMessagesAndContactGone,
-                rose: true,
-                onTap: () async {
-                  final ok = await showConfirmSheet(
-                    context,
-                    title: l10n.contactDeleteThisChat,
-                    line: l10n.contactEveryMessageAndThe,
-                    yes: l10n.commonDelete,
-                  );
-                  if (!ok) return;
-                  await appState.deleteConversation(widget.haloId);
-                  await appState.refreshContacts();
-                  if (!context.mounted) return;
-                  HapticFeedback.mediumImpact();
-                  showHaloToast(context, l10n.contactDeleted);
-                  Navigator.of(context).popUntil((r) => r.isFirst);
-                },
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: HaloPrimaryButton(
+                  label: l10n.chatCompareNow,
+                  onTap: onVerify,
+                ),
               ),
             ],
           ),
-        ]),
+          // compared already, and their number was another
+          NotThemAsk(compact: true, onTap: onNotThem),
+        ],
       ),
     );
   }
@@ -677,6 +969,35 @@ class _ContactScreenState extends State<ContactScreen> {
 // the three facts about a person: a tick, a count, a duration. a card only
 // exists when there is something to say, and a zero is never drawn. the
 // vouch count is your own contacts who vouched, never a global number.
+// their supporter badge, the tier with its glyph. a tier from a newer app
+// reads as a plain supporter
+class _Badge extends StatelessWidget {
+  final SupporterTier tier;
+  const _Badge({required this.tier});
+
+  @override
+  Widget build(BuildContext context) {
+    final known = tier != SupporterTier.none;
+    final label = known ? tierLabel(tier) : l10n.chatSupporter;
+    return Semantics(
+      label: label,
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: HaloColors.amber.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: HaloColors.amber.withValues(alpha: 0.4)),
+        ),
+        child: Text(
+          known ? '${tierGlyph(tier)} $label' : label,
+          style: HaloType.mono(size: 11, color: HaloColors.amberText),
+        ),
+      ),
+    );
+  }
+}
+
 class _Stats extends StatelessWidget {
   final bool verified;
   final int vouches;
@@ -774,7 +1095,7 @@ class _StatCard extends StatelessWidget {
               label,
               style: HaloType.mono(
                 size: 9.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 letter: 0.12,
               ),
             ),

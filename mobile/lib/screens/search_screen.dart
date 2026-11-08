@@ -18,8 +18,10 @@ import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' hide live;
+import '../widgets/sealed_picture.dart';
 import 'group_info_screen.dart' show endedLine;
 import '../polls.dart';
+import '../quiet_wait.dart';
 import '../rooms.dart';
 import '../search.dart';
 import '../text_fold.dart';
@@ -31,10 +33,10 @@ import '../widgets/halo_hero.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/kryfo_avatar.dart';
+import '../widgets/media_bubbles.dart' show mediaTileLabel;
 import '../widgets/notice_banner.dart';
 import '../widgets/motion.dart' show kHouseCurve, kHouseTime, motionStill;
 import '../widgets/swap.dart' show RiseSwap;
-import '../widgets/photo_viewer.dart' show PhotoTileFade;
 import '../widgets/poll_card.dart' show pollGlyph;
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
@@ -45,6 +47,9 @@ import '../devchat/dev_key.dart' show isDevChat;
 import '../widgets/dev_avatar.dart';
 import '../msg_order.dart' show rowWrittenAt;
 import '../widgets/shift_tap_guard.dart';
+import '../voice_format.dart' show isVoiceName;
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../wide/read_width.dart' show DeskPage, kDeskTile;
 
 /// home's search button grows into the field here
 const kSearchHero = 'home-search';
@@ -233,7 +238,7 @@ class _SearchScreenState extends State<SearchScreen> {
     _peopleSlowTimer?.cancel();
     // tor not up: nothing goes out, nor another way. the line says how to
     // add someone meanwhile
-    if (!sessionQuiet && !appState.servicesReady) {
+    if (!appState.servicesReady) {
       setState(() {
         _torUp = false;
         _peopleAsked = q;
@@ -264,10 +269,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // debug builds only: a canned answer from app_flutter/people_fixture.json.
-  // a release build has only the tor request. a quiet session never reaches
-  // the registry: it answers as adding by handle does there
+  // a release build has only the tor request. a quiet session asks as the
+  // everyday one does (kDecoyLooksUp), or answers as adding by handle does
   Future<String> _peoplePost(String url, String body) async {
-    if (sessionQuiet) return kRegistryNotReached;
+    if (sessionQuiet && !kDecoyLooksUp) {
+      return unreachedLater(kRegistryNotReached);
+    }
     if (kDebugMode) {
       final dir = await getApplicationDocumentsDirectory();
       final f = File('${dir.path}/people_fixture.json');
@@ -276,7 +283,11 @@ class _SearchScreenState extends State<SearchScreen> {
         return f.readAsString();
       }
     }
-    return engine.torPost(url, body);
+    // the decoy on a lane of its own, never the everyday one's circuits;
+    // each everyday search on a circuit of its own
+    return sessionQuiet
+        ? engine.decoyTorPost(url, body)
+        : engine.searchPost(url, body);
   }
 
   void _openPerson(PublicHandle p) {
@@ -416,7 +427,7 @@ class _SearchScreenState extends State<SearchScreen> {
           sender: out ? l10n.groupChatYou : _nameOfPeer(peer),
           when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
           mediaPath: r['media_path'] as String?,
-          fileName: fileName == 'voice.wav' ? null : fileName,
+          fileName: isVoiceName(fileName) ? null : fileName,
           poll: poll != null,
           video:
               fileName != null &&
@@ -455,7 +466,7 @@ class _SearchScreenState extends State<SearchScreen> {
             asked: _peopleAsked == pq,
             busy: _peopleBusy,
             slow: _peopleSlow,
-            torDown: !sessionQuiet && !_torUp,
+            torDown: !_torUp,
             people: _people,
             error: _peopleErr,
             onAsk: _askPeople,
@@ -493,78 +504,80 @@ class _SearchScreenState extends State<SearchScreen> {
       },
       child: Scaffold(
         backgroundColor: HaloColors.surface,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 16, 6),
-                child: Row(
-                  children: [
-                    _in(
-                      IconButton(
-                        tooltip: l10n.commonBack,
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: StrokeIcon(
-                          const ['M15 5l-7 7l7 7'],
-                          size: 22,
-                          color: HaloColors.text,
-                          pointing: true,
+        body: DeskPage(
+          child: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(4, 8, 16, 6),
+                  child: Row(
+                    children: [
+                      _in(
+                        IconButton(
+                          tooltip: l10n.commonBack,
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          icon: StrokeIcon(
+                            const ['M15 5l-7 7l7 7'],
+                            size: 22,
+                            color: HaloColors.text,
+                            pointing: true,
+                          ),
                         ),
+                        still,
                       ),
-                      still,
-                    ),
-                    Expanded(
-                      child: HeroMode(
-                        enabled: !still,
-                        child: HaloHero(
-                          tag: kSearchHero,
-                          createRectTween: _straight,
-                          // a still copy flies: a live field built in the
-                          // flight takes the focus with it and leaves the
-                          // keyboard deaf. on the way back it keeps what was
-                          // typed and the amber edge until it shrinks away
-                          flightShuttleBuilder: (_, a, way, _, _) {
-                            final back = way == HeroFlightDirection.pop;
-                            return _Flight(
-                              t: a,
-                              query: back ? _ctrl.text : '',
-                              focused: back && _wasOn,
-                            );
-                          },
-                          child: Material(
-                            type: MaterialType.transparency,
-                            child: _Field(ctrl: _ctrl, focus: _focus),
+                      Expanded(
+                        child: HeroMode(
+                          enabled: !still,
+                          child: HaloHero(
+                            tag: kSearchHero,
+                            createRectTween: _straight,
+                            // a still copy flies: a live field built in the
+                            // flight takes the focus with it and leaves the
+                            // keyboard deaf. on the way back it keeps what was
+                            // typed and the amber edge until it shrinks away
+                            flightShuttleBuilder: (_, a, way, _, _) {
+                              final back = way == HeroFlightDirection.pop;
+                              return _Flight(
+                                t: a,
+                                query: back ? _ctrl.text : '',
+                                focused: back && _wasOn,
+                              );
+                            },
+                            child: Material(
+                              type: MaterialType.transparency,
+                              child: _Field(ctrl: _ctrl, focus: _focus),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              _in(SearchFilters(kind: _kind, onPick: _pick), still),
-              _in(const _FillLine(), still),
-              Expanded(
-                child: _in(
-                  AnimatedSwitcher(
-                    duration: Duration(milliseconds: still ? 0 : 200),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (c, a) => FadeTransition(
-                      opacity: a,
-                      child: SlideTransition(
-                        position: Tween(
-                          begin: const Offset(0, 0.015),
-                          end: Offset.zero,
-                        ).animate(a),
-                        child: c,
-                      ),
-                    ),
-                    child: KeyedSubtree(key: ValueKey(bodyKey), child: body),
+                    ],
                   ),
-                  still,
                 ),
-              ),
-            ],
+                _in(SearchFilters(kind: _kind, onPick: _pick), still),
+                _in(const _FillLine(), still),
+                Expanded(
+                  child: _in(
+                    AnimatedSwitcher(
+                      duration: Duration(milliseconds: still ? 0 : 200),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (c, a) => FadeTransition(
+                        opacity: a,
+                        child: SlideTransition(
+                          position: Tween(
+                            begin: const Offset(0, 0.015),
+                            end: Offset.zero,
+                          ).animate(a),
+                          child: c,
+                        ),
+                      ),
+                      child: KeyedSubtree(key: ValueKey(bodyKey), child: body),
+                    ),
+                    still,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -708,10 +721,7 @@ class _Morph extends StatelessWidget {
                           textDirection: typed ? writtenDir(query) : null,
                           style: typed
                               ? HaloType.sans(size: 15, color: HaloColors.text)
-                              : HaloType.sans(
-                                  size: 14,
-                                  color: HaloColors.text2,
-                                ),
+                              : HaloType.sans(size: 14, color: HaloColors.text),
                         ),
                       ),
                     ),
@@ -942,7 +952,7 @@ class _SearchFiltersState extends State<SearchFilters> {
                                 : FontWeight.w400,
                             color: k == kind
                                 ? HaloColors.onAmber
-                                : HaloColors.text2,
+                                : HaloColors.text,
                           ),
                           child: Text(label),
                         ),
@@ -982,7 +992,7 @@ class _FillLine extends StatelessWidget {
                     children: [
                       Text(
                         l10n.searchFilling(percent(share)),
-                        style: HaloType.mono(size: 10, color: HaloColors.text2),
+                        style: HaloType.mono(size: 10, color: HaloColors.text),
                       ),
                       const SizedBox(height: 5),
                       HaloBar(value: share, height: 3),
@@ -1002,7 +1012,7 @@ class _Intro extends StatelessWidget {
     return _Centre(
       glyph: searchGlyph,
       title: l10n.searchIntroTitle,
-      line: l10n.searchIntroLine,
+      line: l10n.searchIntroLineShown,
     );
   }
 }
@@ -1071,7 +1081,7 @@ class _Centre extends StatelessWidget {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 13,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.45,
               ),
             ),
@@ -1093,7 +1103,7 @@ class _Label extends StatelessWidget {
       text,
       style: HaloType.mono(
         size: 10,
-        color: HaloColors.text2,
+        color: HaloColors.text,
         weight: FontWeight.w500,
         letter: 0.14,
       ),
@@ -1253,7 +1263,7 @@ class _People extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 l10n.handleStillReaching,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                style: HaloType.sans(size: 13, color: HaloColors.text),
               ),
             ],
           ],
@@ -1268,7 +1278,7 @@ class _People extends StatelessWidget {
           PeopleError.busy => l10n.searchPeopleBusy,
           PeopleError.unreachable => l10n.searchPeopleUnreachable,
           PeopleError.none => l10n.searchPeopleNone,
-        }, style: HaloType.sans(size: 13, color: HaloColors.text2)),
+        }, style: HaloType.sans(size: 13, color: HaloColors.text)),
       );
     } else {
       inner = Column(
@@ -1293,7 +1303,7 @@ class _People extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
           child: Text(
             l10n.searchPeopleLine,
-            style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+            style: HaloType.mono(size: 9.5, color: HaloColors.text),
           ),
         ),
       ],
@@ -1412,7 +1422,7 @@ class _PersonRow extends StatelessWidget {
                       textAlign: startOf(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(size: 12, color: HaloColors.text2),
+                      style: HaloType.sans(size: 12, color: HaloColors.text),
                     ),
                 ],
               ),
@@ -1498,7 +1508,7 @@ class _PersonSheetState extends State<_PersonSheet>
                     l10n.peopleVerified,
                     style: HaloType.mono(
                       size: 10.5,
-                      color: HaloColors.green,
+                      color: HaloColors.greenText,
                       letter: 0.4,
                     ),
                   ),
@@ -1526,7 +1536,7 @@ class _PersonSheetState extends State<_PersonSheet>
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.45,
                 ),
               ),
@@ -1553,7 +1563,7 @@ class _PersonSheetState extends State<_PersonSheet>
                     Text(
                       l10n.peopleFingerprintLine,
                       textAlign: TextAlign.center,
-                      style: HaloType.sans(size: 11.5, color: HaloColors.text2),
+                      style: HaloType.sans(size: 11.5, color: HaloColors.text),
                     ),
                   ],
                 ),
@@ -1589,7 +1599,9 @@ class _PersonSheetState extends State<_PersonSheet>
                       style: HaloType.sans(
                         size: 15,
                         weight: FontWeight.w600,
-                        color: _adding ? HaloColors.amberText : HaloColors.onAmber,
+                        color: _adding
+                            ? HaloColors.amberText
+                            : HaloColors.onAmber,
                       ),
                     ),
                   ),
@@ -1615,7 +1627,7 @@ class _PersonSheetState extends State<_PersonSheet>
                           style: HaloType.sans(
                             size: 13,
                             weight: FontWeight.w500,
-                            color: HaloColors.rose,
+                            color: HaloColors.roseText,
                           ),
                         ),
                       ),
@@ -1696,7 +1708,7 @@ class _NameRow extends StatelessWidget {
                     n.sub,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10.5, color: HaloColors.text),
                   ),
                 ],
               ),
@@ -1796,7 +1808,7 @@ class _ChatBlockState extends State<_ChatBlock> {
                     padding: const EdgeInsets.fromLTRB(12, 2, 12, 12),
                     child: Text(
                       l10n.searchKeptMatches(c.kept),
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
+                      style: HaloType.sans(size: 13, color: HaloColors.text),
                     ),
                   ),
                 )
@@ -1805,7 +1817,15 @@ class _ChatBlockState extends State<_ChatBlock> {
                   padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
                   child: LayoutBuilder(
                     builder: (_, box) {
-                      final w = (box.maxWidth - 8) / 3;
+                      // three to a row; a computer's wide one keeps them
+                      // a thumbnail's size
+                      final n = onDesktop
+                          ? math.max(
+                              3,
+                              ((box.maxWidth + 4) / (kDeskTile + 4)).ceil(),
+                            )
+                          : 3;
+                      final w = (box.maxWidth - 4 * (n - 1)) / n;
                       return Wrap(
                         spacing: 4,
                         runSpacing: 4,
@@ -1815,6 +1835,11 @@ class _ChatBlockState extends State<_ChatBlock> {
                               _Thumb(
                                 path: h.mediaPath!,
                                 size: w,
+                                label: mediaTileLabel(
+                                  h.when,
+                                  from: h.out ? null : h.sender,
+                                  video: h.video,
+                                ),
                                 onTap: () => widget.onOpen(
                                   groupId: c.groupId,
                                   peer: c.peer,
@@ -1917,17 +1942,16 @@ class _HitRow extends StatelessWidget {
             if (hit.mediaPath != null && !hit.poll) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(hit.mediaPath!),
+                child: SizedBox(
                   width: 40,
                   height: 40,
-                  fit: BoxFit.cover,
-                  cacheWidth: decodePx(context, 40),
-                  // it fades up once decoded, not in one frame
-                  frameBuilder: (_, child, frame, sync) =>
-                      PhotoTileFade(shown: sync || frame != null, child: child),
-                  errorBuilder: (_, _, _) =>
-                      const SizedBox(width: 40, height: 40),
+                  // its blur, then the photo fading up once decoded
+                  child: SealedPicture(
+                    path: hit.mediaPath!,
+                    image: mediaImage(hit.mediaPath!, decodePx(context, 40)),
+                    errorBuilder: (_, _, _) =>
+                        const SizedBox(width: 40, height: 40),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1959,7 +1983,7 @@ class _HitRow extends StatelessWidget {
                               size: 10,
                               color: hit.out
                                   ? HaloColors.amberText
-                                  : HaloColors.text2,
+                                  : HaloColors.text,
                             ),
                           ),
                         )
@@ -1968,7 +1992,7 @@ class _HitRow extends StatelessWidget {
                       if (group) const Spacer(),
                       Text(
                         when,
-                        style: HaloType.mono(size: 10, color: HaloColors.text2),
+                        style: HaloType.mono(size: 10, color: HaloColors.text),
                       ),
                     ],
                   ),
@@ -2044,26 +2068,34 @@ class _Thumb extends StatelessWidget {
   final String path;
   final double size;
   final VoidCallback onTap;
-  const _Thumb({required this.path, required this.size, required this.onTap});
+  final String label;
+  const _Thumb({
+    required this.path,
+    required this.size,
+    required this.onTap,
+    required this.label,
+  });
   @override
   Widget build(BuildContext context) {
     return PressScale(
       scale: 0.96,
       haptic: false,
+      label: label,
       onTap: onTap,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.file(
-          File(path),
+        child: SizedBox(
           width: size,
           height: size,
-          fit: BoxFit.cover,
-          cacheWidth: decodePx(context, size),
-          gaplessPlayback: true,
-          frameBuilder: (_, child, frame, sync) =>
-              PhotoTileFade(shown: sync || frame != null, child: child),
-          errorBuilder: (_, _, _) =>
-              Container(width: size, height: size, color: HaloColors.surface3),
+          child: SealedPicture(
+            path: path,
+            image: mediaImage(path, decodePx(context, size)),
+            errorBuilder: (_, _, _) => Container(
+              width: size,
+              height: size,
+              color: HaloColors.surface3,
+            ),
+          ),
         ),
       ),
     );

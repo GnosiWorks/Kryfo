@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // make a burner room: a name, how long it lives, whether it has a cap. one
 // sheet, one button. the link comes right after.
+import '../desktop/desktop_mode.dart' show onDesktop;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../main.dart' show appState, AppState;
+import '../main.dart' show appState, AppState, AppStateRooms;
 import '../rooms.dart';
 import '../theme.dart';
 import '../widgets/notice_banner.dart';
@@ -14,6 +15,7 @@ import '../widgets/ease_size.dart';
 import '../widgets/press_scale.dart';
 import '../l10n/l10n.dart';
 import '../widgets/shift_tap_guard.dart';
+import '../widgets/tor_wait_line.dart';
 
 // returns the new room's group id, or null if the sheet was dismissed
 Future<String?> showRoomCreateSheet(BuildContext context) {
@@ -58,7 +60,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _creating = false);
-      showHaloToast(context, l10n.roomCreateCouldNotCreateThe);
+      showHaloToast(context, torWaitLine() ?? l10n.roomCreateCouldNotCreateThe);
     }
   }
 
@@ -83,13 +85,25 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              l10n.roomCreateARoomThatEnds,
+              l10n.roomCreateARoomThatEndsShown,
               style: HaloType.sans(
                 size: 12,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
+            // on fast a room still goes through tor, and waits for it
+            if (torWaitLine() case final wait?) ...[
+              const SizedBox(height: 8),
+              Text(
+                wait,
+                style: HaloType.sans(
+                  size: 12,
+                  color: HaloColors.amberText,
+                  height: 1.5,
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             ShiftTapGuard(
               controller: _nameCtrl,
@@ -97,6 +111,8 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                 controller: _nameCtrl,
                 enableIMEPersonalizedLearning: false,
                 autofocus: true,
+                // enter makes the room on a computer
+                onSubmitted: onDesktop ? (_) => _create() : null,
                 maxLength: 32,
                 style: HaloType.sans(size: 16, color: HaloColors.text),
                 cursorColor: HaloColors.violet,
@@ -126,7 +142,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
               l10n.roomCreateEndsAfter,
               style: HaloType.mono(
                 size: 10,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 letter: 0.14,
               ),
             ),
@@ -170,7 +186,7 @@ class _RoomCreateSheetState extends State<_RoomCreateSheet> {
                                 ),
                           style: HaloType.mono(
                             size: 9.5,
-                            color: HaloColors.text2,
+                            color: HaloColors.text,
                           ),
                         ),
                       ],
@@ -267,7 +283,7 @@ class _Chip extends StatelessWidget {
             label,
             style: HaloType.mono(
               size: 12,
-              color: on ? HaloColors.violet : HaloColors.text2,
+              color: on ? HaloColors.violetText : HaloColors.text,
             ),
           ),
         ),

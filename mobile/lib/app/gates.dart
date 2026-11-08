@@ -54,6 +54,11 @@ class _OnboardingGateState extends State<_OnboardingGate> {
               appState.retryBoot();
             },
             onReopen: appState.bootStuck ? reopenApp : null,
+            // a database that will not open stays as it is until one of
+            // these is chosen, and start fresh asks twice
+            onRestore: () =>
+                Navigator.of(context).push(haloRoute(const RestoreScreen())),
+            onStartFresh: () => unawaited(wipeHalo()),
           );
         } else if (!appState.ready || _hold || appState.firstRunAsk) {
           before = const TorBootSplash(key: ValueKey('splash'));
@@ -164,8 +169,26 @@ class _LockGate extends StatefulWidget {
 }
 
 class _LockGateState extends State<_LockGate> {
+  // a linked device that unlinked shows only what happened, over the lock
+  // too: nothing behind it opens any more
   @override
-  Widget build(BuildContext context) => LockGate(
+  Widget build(BuildContext context) => ValueListenableBuilder<LinkedEnd?>(
+    valueListenable: deviceUnlinked,
+    builder: (context, why, _) => AnimatedSwitcher(
+      duration: motionStill(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 320),
+      child: why == null
+          ? KeyedSubtree(key: const ValueKey('app'), child: _gate(context))
+          : UnlinkedScreen(
+              key: const ValueKey('unlinked'),
+              why: why,
+              onClose: () => unawaited(_closeUnlinked()),
+            ),
+    ),
+  );
+
+  Widget _gate(BuildContext context) => LockGate(
     app: widget.child,
     lock: lockState,
     loaded: () => lockState.loaded,
@@ -178,13 +201,33 @@ class _LockGateState extends State<_LockGate> {
     quiet: () => sessionQuiet,
     pad: (_) => const LockScreen(),
     lockingUp: appState.lockingUp,
-    inFront: appState.appInFront,
+    inFront: (front) {
+      appState.appInFront(front);
+      // back in front with no lock to lift: kryfo is open, so the plain
+      // line has said its piece
+      if (front && !lockState.locked) _plainSeen();
+      // a person has it in front, unlocked: a linked device is in use
+      if (front && !lockState.locked) linkedUsed();
+      // a read that failed is asked again: until android answers, the app
+      // keeps the plain look
+      if (front && appFaceNow.value == null) unawaited(readAppFace());
+    },
     localesChanged: systemLocalesChanged,
     revealed: () {
       appRevealed = true;
+      linkedUsed();
       homeRevealed();
+      _plainSeen();
+      unawaited(sayFaceChanged());
     },
+    attached: () => unawaited(appState.windowAttached()),
   );
+}
+
+// a decoy clears the whole shade itself, and the plain line stands for
+// nothing of its own
+void _plainSeen() {
+  if (!sessionQuiet) unawaited(clearPlainNotification());
 }
 
 class TorHalo extends StatefulWidget {
@@ -194,54 +237,46 @@ class TorHalo extends StatefulWidget {
   State<TorHalo> createState() => TorHaloState();
 }
 
-/// how long a bare connecting may stand before the pill says what it waits
-/// for
-const pillPatience = Duration(seconds: 30);
+/// rebuilds with the connection's reading (link_view.dart): on every change
+/// of the app state, and at the moment it changes by time alone
+class LinkViewBuilder extends StatefulWidget {
+  const LinkViewBuilder({super.key, required this.builder});
+  final Widget Function(BuildContext context, LinkView view) builder;
+  @override
+  State<LinkViewBuilder> createState() => _LinkViewBuilderState();
+}
 
-/// what the home pill says, and which kind of line it is: the words change
-/// in place within a kind and cross over between kinds. offline is offline
-/// in every mode. a decoy hears connected, connecting or offline
-@visibleForTesting
-({String text, String kind}) pillWords({
-  required String mode,
-  required TorStatus status,
-  required bool online,
-  required bool ready,
-  required int pct,
-  required Duration waited,
-  required bool decoy,
-}) {
-  final off = status == TorStatus.off;
-  if (!online && !(mode == 'private' && off)) {
-    return (text: l10n.appOffline, kind: 'offline');
+class _LinkViewBuilderState extends State<LinkViewBuilder> {
+  final _clock = LinkClock();
+
+  @override
+  void initState() {
+    super.initState();
+    appState.addListener(_changed);
   }
-  if (mode == 'balanced') return (text: l10n.appViaRelay, kind: 'relay');
-  if (mode == 'fast') return (text: l10n.appFast, kind: 'fast');
-  if (off) return (text: l10n.appTorOff, kind: 'off');
-  if (ready) return (text: l10n.appTorReady, kind: 'ready');
-  if (decoy || waited < pillPatience) {
-    return (text: l10n.appConnecting2, kind: 'connecting');
+
+  @override
+  void dispose() {
+    appState.removeListener(_changed);
+    _clock.cancel();
+    super.dispose();
   }
-  // still building its route: how far along. up with no relay through:
-  // that it waits for one
-  if (status == TorStatus.starting) {
-    return (text: l10n.appConnecting(percent(pct / 100)), kind: 'climbing');
+
+  void _changed() {
+    if (mounted) setState(() {});
   }
-  return (text: l10n.appWaitingForARelay, kind: 'relay-wait');
+
+  @override
+  Widget build(BuildContext context) {
+    final v = appState.linkView;
+    _clock.arm(v.recheckAt, _changed);
+    return widget.builder(context, v);
+  }
 }
 
 class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   late final AnimationController _c;
-  // wakes the pill when a bare connecting has stood long enough
-  Timer? _patience;
-  // wakes it when a ready held through a blip runs out
-  Timer? _grace;
-
-  // pulses only while tor is still coming up. once it is usable the chip
-  // says so and rests, even when the onion is never confirmed reachable,
-  // and a bounce inside the pill's grace does not start it
-  bool get _isConnecting =>
-      appState.torStatus == TorStatus.starting && !appState.pillReady;
+  final _clock = LinkClock();
 
   @override
   void initState() {
@@ -265,57 +300,18 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   bool _pulsed = false;
   int _attempt = 0;
 
-  // how long tor has been trying, as the app keeps it
-  Duration get _waited {
-    final t = appState.torTryingSince;
-    return t == null ? Duration.zero : DateTime.now().difference(t);
-  }
-
-  void _armPatience() {
-    final waiting =
-        appState.sendMode == 'private' &&
-        appState.online &&
-        appState.torStatus != TorStatus.off &&
-        !appState.torUsable;
-    final left = pillPatience - _waited;
-    if (!waiting || left <= Duration.zero) {
-      _patience?.cancel();
-      _patience = null;
-      return;
-    }
-    if (_patience?.isActive ?? false) return;
-    _patience = Timer(left + const Duration(milliseconds: 50), () {
-      _patience = null;
-      if (!mounted) return;
-      setState(() {});
-      _armPatience();
-    });
-  }
-
-  void _armGrace() {
-    final end = appState.pillGraceEnd;
-    if (end == null) {
-      _grace?.cancel();
-      _grace = null;
-      return;
-    }
-    if (_grace?.isActive ?? false) return;
-    final left = end.difference(DateTime.now());
-    _grace = Timer(
-      left.isNegative ? Duration.zero : left + const Duration(milliseconds: 50),
-      () {
-        _grace = null;
-        if (!mounted) return;
-        setState(() {});
-        _sync();
-      },
-    );
+  void _tick() {
+    if (!mounted) return;
+    setState(() {});
+    _sync();
   }
 
   void _sync() {
-    _armPatience();
-    _armGrace();
-    if (!_isConnecting) {
+    final v = appState.linkView;
+    _clock.arm(v.recheckAt, _tick);
+    // pulses only while tor is still coming up. a route up with no relay
+    // through rests, and so does a bounce inside the grace
+    if (!v.pulsing) {
       _pulsed = false;
       if (_c.isAnimating) _c.stop();
       return;
@@ -344,8 +340,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     appState.removeListener(_sync);
-    _patience?.cancel();
-    _grace?.cancel();
+    _clock.cancel();
     _c.dispose();
     super.dispose();
   }
@@ -353,93 +348,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
   void _explain() {
     // capped and scrolling: on a small phone the words run taller than the
     // room above the navigation bar
-    showHaloSheet(
-      context,
-      builder: (_) => AnimatedBuilder(
-        animation: appState,
-        builder: (context, _) {
-          final s = appState.torStatus;
-          final pct = appState.bootstrapPct;
-          // no network: tor keeps its last word and the route reads down, but
-          // nothing about relays is true then. the home strip says offline too
-          final offline = s != TorStatus.off && !appState.online;
-          // bootstrapped and publishing both mean tor's client side is live:
-          // messages send and arrive over relays, full 3 hops. the remaining
-          // wait only publishes our own address so peers can dial us direct.
-          // none of it counts while no relay gets through
-          final line = s == TorStatus.off
-              ? l10n.appTorIsOff
-              : offline
-              ? l10n.appOffline
-              : !appState.torUsable && s != TorStatus.starting
-              ? l10n.appConnecting2
-              : s == TorStatus.reachable
-              ? l10n.appConnectedRoutedThrough3
-              : s == TorStatus.publishing
-              ? l10n.appReadyToSendPublishing
-              : s == TorStatus.bootstrapped
-              ? l10n.appReadyToSendFinishing
-              : l10n.appConnecting(percent(pct / 100));
-          return SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SheetHandle(),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.appTor,
-                    style: HaloType.serif(
-                      size: 20,
-                      italic: true,
-                      color: HaloColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TorWarmupGraph(status: s, bootstrapPct: pct),
-                  const SizedBox(height: 16),
-                  Text(
-                    line,
-                    style: HaloType.mono(size: 12, color: HaloColors.text),
-                  ),
-                  if (s != TorStatus.reachable ||
-                      !appState.torUsable ||
-                      offline) ...[
-                    const SizedBox(height: 16),
-                    // past starting with no relay through, the first connection
-                    // line would promise a wait that is already over
-                    Text(
-                      s == TorStatus.off
-                          ? l10n.appTorIsOffTurn
-                          : offline
-                          ? l10n.onboardingKryfoBuildsAPrivateRouteBefore
-                          : !appState.torUsable && s != TorStatus.starting
-                          ? l10n.appTorNoRelayYet
-                          : l10n.appTheFirstConnectionTakes,
-                      style: HaloType.sans(
-                        size: 12.5,
-                        color: HaloColors.text,
-                      ).copyWith(height: 1.5),
-                    ),
-                    // another send mode is no way out of having no network
-                    if (!offline) ...[
-                      const SizedBox(height: 10),
-                      Text(
-                        l10n.appRelayAndFastModes,
-                        style: HaloType.sans(size: 11, color: HaloColors.text2),
-                      ),
-                    ],
-                  ],
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    showHaloSheet(context, builder: (_) => const TorSheet());
   }
 
   Widget _ring(double size, Color color, double w) => Container(
@@ -453,47 +362,35 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // nothing to explain outside onion: no bootstrap, no circuit, no
+    // descriptor
+    final tappable = appState.sendMode == 'private';
     return GestureDetector(
-      // nothing to explain outside onion: no bootstrap, no circuit, no
-      // descriptor
-      onTap: appState.sendMode == 'private' ? _tap : null,
+      onTap: tappable ? _tap : null,
       behavior: HitTestBehavior.opaque,
+      // the tap is on the labelled node below, one stop for a screen reader
+      excludeFromSemantics: true,
       child: AnimatedBuilder(
         animation: Listenable.merge([appState, _c]),
         builder: (context, _) {
-          final s = appState.torStatus;
-          final off = s == TorStatus.off;
-          // the route as the outbox and the offline card see it, held
-          // through a blip shorter than kPillGrace (pill_grace.dart)
-          final ready = appState.pillReady;
-          final secured = ready && s == TorStatus.reachable;
-          final connecting = _isConnecting;
+          final v = appState.linkView;
+          final dim = v.kind == LinkKind.off;
+          final secured =
+              v.kind == LinkKind.ready &&
+              !v.held &&
+              v.status == TorStatus.reachable;
           final still = motionStill(context);
-          final said = pillWords(
-            mode: appState.sendMode,
-            status: s,
-            online: appState.online,
-            ready: ready,
-            pct: appState.bootstrapPct,
-            waited: _waited,
-            decoy: appState.inDecoyView,
-          );
-          // relay does not go through tor, so tor being off never greys it
-          final relay = said.kind == 'relay';
-          final dim = off && !relay;
-          final accent = relay
-              ? HaloColors.sky
-              : off
-              ? HaloColors.text2
-              : said.kind == 'offline'
-              ? HaloColors.warn
-              // one route, one colour. onion stays violet whether tor is
-              // merely usable or fully published.
-              : appState.sendMode == 'fast'
-              ? HaloColors.greenText
-              : ready
-              ? HaloColors.violetText
-              : HaloColors.warnText;
+          // relay does not go through tor, so tor being off never greys it.
+          // one route, one colour: onion stays violet whether tor is merely
+          // usable or fully published
+          final accent = switch (v.kind) {
+            LinkKind.relay => HaloColors.greenText,
+            LinkKind.off => HaloColors.text2,
+            LinkKind.offline => HaloColors.warn,
+            LinkKind.fast => HaloColors.greenText,
+            LinkKind.ready => HaloColors.violetText,
+            _ => HaloColors.warnText,
+          };
           final t = _c.value;
           Widget dot(Color accent) => SizedBox(
             width: 18,
@@ -501,7 +398,7 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                if (connecting)
+                if (v.pulsing)
                   Transform.scale(
                     scale: 0.5 + t,
                     child: Opacity(
@@ -539,45 +436,159 @@ class TorHaloState extends State<TorHalo> with SingleTickerProviderStateMixin {
                 curve: Curves.easeOutCubic,
                 builder: (_, c, _) => build(c ?? accent),
               );
+          final Widget shown;
           if (!widget.label) {
-            return tinted(
+            shown = tinted(
               (c) =>
                   SizedBox(width: 20, height: 20, child: Center(child: dot(c))),
             );
-          }
-          return tinted(
-            (c) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                dot(c),
-                const SizedBox(width: 6),
-                AnimatedSwitcher(
-                  duration: still
-                      ? Duration.zero
-                      : const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeIn,
-                  transitionBuilder: (child, anim) => FadeTransition(
-                    opacity: anim,
-                    child: SlideTransition(
-                      position: Tween(
-                        begin: const Offset(0, 0.35),
-                        end: Offset.zero,
-                      ).animate(anim),
-                      child: child,
+          } else {
+            // the header keeps room for its buttons and the id beside them:
+            // the words grow with large text up to a point, take two lines,
+            // and never shrink below the header's smallest text (pill_fit)
+            final room = MediaQuery.sizeOf(context).width * 0.24;
+            final fit = fitPill(
+              text: v.text,
+              short: v.shortText,
+              style: HaloType.mono(size: kPillPx),
+              room: room,
+              userScale:
+                  MediaQuery.textScalerOf(context).scale(kPillPx) / kPillPx,
+              direction: Directionality.of(context),
+            );
+            shown = tinted(
+              (c) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  dot(c),
+                  const SizedBox(width: 6),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: room),
+                    child: AnimatedSwitcher(
+                      duration: still
+                          ? Duration.zero
+                          : const Duration(milliseconds: 220),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeIn,
+                      layoutBuilder: (now, before) => Stack(
+                        alignment: AlignmentDirectional.centerStart,
+                        children: [...before, ?now],
+                      ),
+                      transitionBuilder: (child, anim) => FadeTransition(
+                        opacity: anim,
+                        child: SlideTransition(
+                          position: Tween(
+                            begin: const Offset(0, 0.35),
+                            end: Offset.zero,
+                          ).animate(anim),
+                          child: child,
+                        ),
+                      ),
+                      // the words change in place within a kind and cross
+                      // over between kinds
+                      child: Text(
+                        fit.text,
+                        key: ValueKey(v.kind),
+                        maxLines: 2,
+                        textScaler: TextScaler.linear(fit.scale),
+                        // offline's dot wears the fill tone, its words the
+                        // text tone
+                        style: HaloType.mono(
+                          size: kPillPx,
+                          color: v.kind == LinkKind.offline
+                              ? HaloColors.warnText
+                              : c,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    said.text,
-                    key: ValueKey(said.kind),
-                    style: HaloType.mono(size: 11, color: c),
-                  ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            );
+          }
+          // heard once per change of state, not per percent, and a tap
+          // explains it
+          return Semantics(
+            container: true,
+            liveRegion: true,
+            button: tappable,
+            label: v.spoken,
+            onTap: tappable ? _tap : null,
+            child: ExcludeSemantics(child: shown),
           );
         },
       ),
     );
   }
+}
+
+/// the sheet behind the pill: tor's route and what it means now, from the
+/// same reading as the pill
+class TorSheet extends StatelessWidget {
+  const TorSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) => LinkViewBuilder(
+    builder: (context, v) {
+      final detail = v.detail;
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SheetHandle(),
+              const SizedBox(height: 8),
+              Text(
+                l10n.appTor,
+                style: HaloType.serif(
+                  size: 20,
+                  italic: true,
+                  color: HaloColors.text,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TorWarmupGraph(
+                status: v.graphStatus,
+                bootstrapPct: v.pct,
+                hold: v.graph,
+                carries: v.graphCarries,
+              ),
+              const SizedBox(height: 16),
+              Semantics(
+                container: true,
+                liveRegion: true,
+                label: v.spokenLine,
+                child: ExcludeSemantics(
+                  child: Text(
+                    v.line,
+                    style: HaloType.mono(size: 12, color: HaloColors.text),
+                  ),
+                ),
+              ),
+              if (detail != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  detail,
+                  style: HaloType.sans(
+                    size: 12.5,
+                    color: HaloColors.text,
+                  ).copyWith(height: 1.5),
+                ),
+                if (v.offerModes) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.appRelayAndFastModes,
+                    style: HaloType.sans(size: 11, color: HaloColors.text),
+                  ),
+                ],
+              ],
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

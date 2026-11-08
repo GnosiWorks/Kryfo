@@ -26,6 +26,7 @@ import '../widgets/text_ground.dart';
 import 'sticker_pack.dart';
 import 'sticker_recents.dart';
 import 'sticker_view.dart';
+import '../widgets/entrance.dart';
 
 // a sticker: a rounded square with its corner peeled, and a smile
 const stickerGlyph = [
@@ -183,6 +184,7 @@ class StickerSheetState extends State<StickerSheet>
     vsync: this,
     duration: const Duration(milliseconds: 380),
   );
+  final _entrance = Entrance();
   late final AnimationController _pill = AnimationController.unbounded(
     vsync: this,
   );
@@ -337,13 +339,11 @@ class StickerSheetState extends State<StickerSheet>
         _tab = 0;
       });
       _pill.value = 0;
+      // motion off: the tiles at rest from their first frame
+      if (entranceOff(context)) _in.value = 1;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        if (_reduce) {
-          _in.value = 1;
-        } else {
-          _in.forward(from: 0);
-        }
+        _entrance.play(context, _in, from: 0);
       });
     } catch (e) {
       dlog('sticker pack: $e');
@@ -385,6 +385,7 @@ class StickerSheetState extends State<StickerSheet>
     _scroll?.removeListener(_scrolled);
     _previewEntry?.remove();
     _previewEntry = null;
+    _entrance.dispose();
     _in.dispose();
     _pill.dispose();
     _drag.dispose();
@@ -717,7 +718,7 @@ class StickerSheetState extends State<StickerSheet>
                           switch (k) {
                             _Kind.stickers => l10n.stickerOpen,
                             _Kind.gifs => l10n.gifTab,
-                            _Kind.phone => l10n.gifPhoneTab,
+                            _Kind.phone => l10n.gifPhoneTabShown,
                           },
                           style: HaloType.sans(
                             size: 14,
@@ -727,7 +728,7 @@ class StickerSheetState extends State<StickerSheet>
                                 : FontWeight.w500,
                             color: k == _kind
                                 ? HaloColors.amberText
-                                : HaloColors.text2,
+                                : HaloColors.text,
                           ),
                         ),
                       ),
@@ -827,7 +828,7 @@ class StickerSheetState extends State<StickerSheet>
           Text(
             l10n.stickerCouldNotLoad,
             textAlign: TextAlign.center,
-            style: HaloType.sans(size: 14, color: HaloColors.text2),
+            style: HaloType.sans(size: 14, color: HaloColors.text),
           ),
           const SizedBox(height: 16),
           Center(
@@ -921,7 +922,7 @@ class StickerSheetState extends State<StickerSheet>
             style: HaloType.sans(
               size: 12.5,
               weight: FontWeight.w600,
-              color: HaloColors.text2,
+              color: HaloColors.text,
             ),
           ),
         ),

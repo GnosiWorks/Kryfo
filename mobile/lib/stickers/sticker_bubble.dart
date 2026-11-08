@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../desktop/desktop_trace.dart' show trace;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
@@ -99,6 +100,7 @@ class _StickerBubbleState extends State<StickerBubble>
   @override
   void initState() {
     super.initState();
+    if (widget.arriving && !widget.isOut) trace('sticker in: bubble built');
     _now = widget.arriving || widget.landing != null;
     final l = widget.landing;
     if (l == null) return;
@@ -362,7 +364,7 @@ class StickerPlaceholder extends StatelessWidget {
                         l10n.stickerLabel,
                         style: HaloType.sans(
                           size: 12.5,
-                          color: HaloColors.text2,
+                          color: HaloColors.text,
                           height: 1.3,
                         ),
                       ),
@@ -378,7 +380,7 @@ class StickerPlaceholder extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: HaloType.mono(
                     size: 10,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                   ).copyWith(height: 1.3),
                 ),
               ),
@@ -417,7 +419,7 @@ class StickerStamp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = HaloType.mono(size: 10, color: HaloColors.text2, letter: 0.3);
+    final style = HaloType.mono(size: 10, color: HaloColors.text, letter: 0.3);
     final alert = this.alert;
     final burn = this.burn;
     final delivered = this.delivered;
@@ -434,7 +436,7 @@ class StickerStamp extends StatelessWidget {
             Flexible(
               child: Text(
                 alert,
-                style: style.copyWith(color: alertColor ?? HaloColors.text2),
+                style: style.copyWith(color: alertColor ?? HaloColors.text),
               ),
             )
           else ...[
@@ -464,7 +466,7 @@ class StickerStamp extends StatelessWidget {
               SentTick(
                 delivered: delivered != null,
                 deliveredLabel: delivered ?? '',
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 labelStyle: style.copyWith(
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
@@ -560,7 +562,7 @@ class StickerQuoteCard extends StatelessWidget {
     final sticker = this.sticker;
     final words = HaloType.sans(
       size: 12.5,
-      color: HaloColors.text2,
+      color: HaloColors.text,
       height: 1.25,
     );
     return GestureDetector(

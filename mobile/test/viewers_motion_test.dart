@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/widgets/photo_viewer.dart';
+import 'package:kryfo/widgets/sealed_picture.dart' show PictureFade;
 import 'package:kryfo/widgets/video_viewer.dart';
 
 import 'bars_check.dart';
@@ -106,6 +107,25 @@ void main() {
       expect(r, lessThan(12));
       await settles(t);
       expect(find.byType(PhotoViewer), findsOneWidget);
+    });
+
+    // its close and share stay off the cutout and the bars
+    testWidgets('its controls clear the bars', (t) async {
+      for (final (nav, top) in [
+        (gestureBar, cutoutTop),
+        (buttonBar, cutoutTop),
+        // android 15 and 16
+        (gestureThin, statusLow),
+        (buttonBar, statusTall),
+      ]) {
+        barsPhone(t, nav: nav, status: top);
+        await open(t);
+        await settles(t);
+        expect(find.byType(PhotoViewer), findsOneWidget);
+        expectClearOfBars(t, reason: 'nav $nav top $top');
+        await t.pumpWidget(const SizedBox());
+        await t.pump(const Duration(seconds: 1));
+      }
     });
 
     testWidgets('a tap flies it home and nothing is left moving', (t) async {
@@ -318,10 +338,22 @@ void main() {
   group('the photo tile', () {
     testWidgets('fades up once, and a cached one shows at once', (t) async {
       await t.pumpWidget(
-        host(const PhotoTileFade(shown: false, child: SizedBox(width: 20))),
+        host(
+          const PictureFade(
+            shown: false,
+            still: false,
+            child: SizedBox(width: 20),
+          ),
+        ),
       );
       await t.pumpWidget(
-        host(const PhotoTileFade(shown: true, child: SizedBox(width: 20))),
+        host(
+          const PictureFade(
+            shown: true,
+            still: false,
+            child: SizedBox(width: 20),
+          ),
+        ),
       );
       await t.pump(const Duration(milliseconds: 80));
       final o = t.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
@@ -397,8 +429,14 @@ void main() {
 
     // close, play and the timeline stay off the cutout and the bars
     testWidgets('its controls clear the bars', (t) async {
-      for (final nav in [gestureBar, buttonBar]) {
-        barsPhone(t, nav: nav);
+      for (final (nav, top) in [
+        (gestureBar, cutoutTop),
+        (buttonBar, cutoutTop),
+        // android 15 and 16
+        (gestureThin, statusLow),
+        (buttonBar, statusTall),
+      ]) {
+        barsPhone(t, nav: nav, status: top);
         quiet(t);
         player(t);
         await t.pumpWidget(
@@ -421,7 +459,7 @@ void main() {
         await t.pump();
         await t.pump(const Duration(milliseconds: 400));
         expect(find.bySemanticsLabel(l10n.commonClose), findsWidgets);
-        expectClearOfBars(t, reason: 'nav $nav');
+        expectClearOfBars(t, reason: 'nav $nav top $top');
         await t.tap(find.bySemanticsLabel(l10n.commonClose).first);
         await t.pumpAndSettle();
       }

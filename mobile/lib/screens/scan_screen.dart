@@ -10,6 +10,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:permission_handler/permission_handler.dart'
     show openAppSettings;
+import '../desktop/desktop_mode.dart' show onDesktop;
 import '../bridge_mode.dart' show looksLikeBridges;
 import '../theme.dart';
 import '../l10n/l10n.dart';
@@ -17,6 +18,9 @@ import '../lock_guard.dart' show lockGuard;
 import '../widgets/halo_buttons.dart';
 import '../widgets/motion.dart' show houseSpring, motionStill;
 import '../widgets/press_scale.dart';
+
+/// how a new device's link code starts (engine/devices OfferPrefix)
+const kLinkCodePrefix = 'kryfo-link:';
 
 // stands in for the camera reader in tests
 @visibleForTesting
@@ -35,7 +39,9 @@ class ScanScreen extends StatefulWidget {
   // true: bridge lines, a plain one or the tor project's list, in place of
   // a kryfo link
   final bool bridges;
-  const ScanScreen({super.key, this.bridges = false});
+  // true: a new device's link code, in place of a kryfo link
+  final bool link;
+  const ScanScreen({super.key, this.bridges = false, this.link = false});
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -90,9 +96,16 @@ class _ScanScreenState extends State<ScanScreen>
     if (scanReaderForTest != null) return;
     try {
       if ((await availableCameras()).isEmpty) {
-        _fail(l10n.cameraNoCameraOnThis, denied: false, again: false);
+        _fail(
+          onDesktop ? l10n.desktopNoCamera : l10n.cameraNoCameraOnThis,
+          denied: false,
+          again: false,
+        );
       }
-    } catch (_) {}
+    } catch (_) {
+      // windows has no camera plugin or reader library
+      if (onDesktop) _fail(l10n.desktopNoCamera, denied: false, again: false);
+    }
   }
 
   void _onCreated(CameraController? c, Exception? e) {
@@ -157,7 +170,12 @@ class _ScanScreenState extends State<ScanScreen>
     if (_handled || !_inFront) return;
     final raw = code.text;
     if (raw == null || raw.isEmpty) return;
-    if (widget.bridges ? !looksLikeBridges(raw) : !raw.startsWith('kryfo://')) {
+    final fits = widget.bridges
+        ? looksLikeBridges(raw)
+        : widget.link
+        ? raw.startsWith(kLinkCodePrefix)
+        : raw.startsWith('kryfo://');
+    if (!fits) {
       // the warning stays while that code is in frame and goes a little
       // after it leaves
       _hintOff?.cancel();
@@ -169,6 +187,8 @@ class _ScanScreenState extends State<ScanScreen>
         setState(
           () => _hint = widget.bridges
               ? l10n.bridgesThatSNotABridge
+              : widget.link
+              ? l10n.scanLinkNotOne
               : l10n.scanThatSNotA,
         );
       }
@@ -309,6 +329,8 @@ class _ScanScreenState extends State<ScanScreen>
                         child: Text(
                           widget.bridges
                               ? l10n.bridgesScanABridgeCode
+                              : widget.link
+                              ? l10n.scanLinkTitle
                               : l10n.scanScanAKryfoQr,
                           style: HaloType.pageTitle().copyWith(
                             color: Colors.white,
@@ -376,6 +398,8 @@ class _ScanScreenState extends State<ScanScreen>
                               _hint ??
                                   (widget.bridges
                                       ? l10n.bridgesPointAtTheBridge
+                                      : widget.link
+                                      ? l10n.scanLinkPoint
                                       : l10n.scanPointAtAKryfo),
                               textAlign: TextAlign.center,
                               style: HaloType.sans(

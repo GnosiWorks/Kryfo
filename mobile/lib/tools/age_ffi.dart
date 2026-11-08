@@ -7,7 +7,9 @@ import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
+import '../desktop/desktop_mode.dart' show withNativeFiles;
 import '../engine_strings.dart';
+import '../native_libs.dart';
 
 typedef _LockC = Pointer<Utf8> Function(Int32, Int32, Pointer<Utf8>);
 typedef _LockD = Pointer<Utf8> Function(int, int, Pointer<Utf8>);
@@ -21,10 +23,12 @@ typedef _ProgressC = Int64 Function();
 typedef _ProgressD = int Function();
 typedef _WordsC = Pointer<Utf8> Function();
 typedef _WordsD = Pointer<Utf8> Function();
+typedef _LockPathC =
+    Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef _BeginPathC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef _FinishPathC = Pointer<Utf8> Function(Pointer<Utf8>);
 
-DynamicLibrary _lib() => Platform.isAndroid
-    ? DynamicLibrary.open('libhalo.so')
-    : DynamicLibrary.process();
+DynamicLibrary _lib() => haloLibrary();
 
 enum AgeError {
   wrongPassword,
@@ -213,6 +217,8 @@ const _oWrite = 0x1, _oCreate = 0x40, _oExcl = 0x80, _oCloexec = 0x80000;
 /// a descriptor of a file in the app's own folders, for the engine to read,
 /// or to write as a new file only this app can read. -1 when it will not open
 int openFd(String path, {bool write = false}) {
+  // windows has no descriptors the engine takes: the tool says it cannot
+  if (Platform.isWindows) return -1;
   final p = path.toNativeUtf8();
   try {
     return _libc().lookupFunction<_OpenFdC, _OpenFdD>('open')(
@@ -225,23 +231,143 @@ int openFd(String path, {bool write = false}) {
   }
 }
 
-void closeFd(int fd) =>
-    _libc().lookupFunction<_CloseFdC, _CloseFdD>('close')(fd);
+void closeFd(int fd) {
+  if (fd < 0 || Platform.isWindows) return;
+  _libc().lookupFunction<_CloseFdC, _CloseFdD>('close')(fd);
+}
 
-/// [inPath] locked into [outPath], which must not exist yet
+/// windows hands the engine paths, as it has no descriptors to hand over.
+/// a test sets it to run the same on linux
+@visibleForTesting
+bool ageByPath = Platform.isWindows;
+
+/// [inPath] locked into [outPath], which must not exist yet: the engine
+/// makes it new, and only there. on desktop a sealed [inPath] goes over as
+/// memory, never as a plain file; what comes out is age's ciphertext
 Future<AgeError?> ageLockPath(
   String inPath,
   String outPath,
   String pass, [
   AgeJob? job,
-]) {
+]) => withNativeFiles(
+  [inPath],
+  const [],
+  (i, _) => _lockPath(i.first, outPath, pass, job),
+);
+
+Future<AgeError?> _lockPath(
+  String inPath,
+  String outPath,
+  String pass,
+  AgeJob? job,
+) {
+  if (ageByPath) {
+    return _inTurn(
+      job ?? AgeJob(),
+      stopped: () => AgeError.cancelled,
+      () => _offUi(() {
+        final fn = _lib().lookupFunction<_LockPathC, _LockPathC>(
+          'HaloAgeLockPath',
+        );
+        final a = inPath.toNativeUtf8(), b = outPath.toNativeUtf8();
+        final k = pass.toNativeUtf8();
+        try {
+          return ageErrorOf(engineTake(fn(a, b, k)));
+        } finally {
+          calloc.free(a);
+          calloc.free(b);
+          freeSecret(k);
+        }
+      }),
+    );
+  }
   final inFd = openFd(inPath);
   final outFd = inFd < 0 ? -1 : openFd(outPath, write: true);
   if (outFd < 0) {
     if (inFd >= 0) closeFd(inFd);
     return Future.value(AgeError.io);
   }
-  return ageLock(inFd, outFd, pass, job);
+  return ageLock(inFd, outFd, pass, job).then((e) {
+    if (e != null) _dropOut(outPath);
+    return e;
+  });
+}
+
+// what a failed lock or open began is not left: it was made new for it
+void _dropOut(String path) {
+  try {
+    File(path).deleteSync();
+  } catch (_) {}
+}
+
+// one engine call by path off the ui thread; anything thrown is an io
+// failure, as a descriptor that would not open is
+Future<AgeError?> _offUi(AgeError? Function() body) async {
+  try {
+    return await Isolate.run(() {
+      try {
+        return body();
+      } catch (_) {
+        return AgeError.io;
+      }
+    });
+  } catch (_) {
+    return AgeError.io;
+  }
+}
+
+/// the password checked against [inPath]'s header, the file kept open by
+/// the engine for [ageOpenFinishPath]
+Future<AgeError?> ageOpenBeginPath(String inPath, String pass) {
+  if (ageByPath) {
+    return _offUi(() {
+      final fn = _lib().lookupFunction<_BeginPathC, _BeginPathC>(
+        'HaloAgeOpenBeginPath',
+      );
+      final a = inPath.toNativeUtf8(), k = pass.toNativeUtf8();
+      try {
+        return ageErrorOf(engineTake(fn(a, k)));
+      } finally {
+        calloc.free(a);
+        freeSecret(k);
+      }
+    });
+  }
+  final fd = openFd(inPath);
+  if (fd < 0) return Future.value(AgeError.io);
+  return ageOpenBegin(fd, pass);
+}
+
+/// the file begun opened into [outPath], made new. a failed one leaves
+/// nothing there
+Future<AgeError?> ageOpenFinishPath(String outPath, [AgeJob? job]) {
+  if (ageByPath) {
+    return _inTurn(
+      job ?? AgeJob(),
+      stopped: () => AgeError.cancelled,
+      inTurn: ageOpenDrop,
+      () => _offUi(() {
+        final fn = _lib().lookupFunction<_FinishPathC, _FinishPathC>(
+          'HaloAgeOpenFinishPath',
+        );
+        final a = outPath.toNativeUtf8();
+        try {
+          return ageErrorOf(engineTake(fn(a)));
+        } finally {
+          calloc.free(a);
+        }
+      }),
+    );
+  }
+  final fd = openFd(outPath, write: true);
+  if (fd < 0) {
+    ageOpenDrop();
+    return Future.value(AgeError.io);
+  }
+  return ageOpenFinish(fd, job).then((e) {
+    if (e != null) _dropOut(outPath);
+    return e;
+  });
 }
 
 void ageOpenDrop() =>

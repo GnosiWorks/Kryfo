@@ -23,6 +23,7 @@ func resetRoute(t *testing.T, status string, pct int) {
 	probeAt, probeNext = time.Time{}, 0
 	answeredIn = map[string]int64{}
 	stallPct, stallSince = -1, time.Time{}
+	lastAnswerAt = time.Time{}
 	routeMu.Unlock()
 	keepRescueJitter(t)
 	setTestStatus(status, pct)
@@ -30,6 +31,7 @@ func resetRoute(t *testing.T, status string, pct int) {
 	atomic.StoreInt32(&reconnectRunning, 0)
 	atomic.StoreInt32(&torRestarting, 0)
 	atomic.StoreInt32(&bounceOff, 0)
+	publishedOnce.Store(false)
 }
 
 // the gaps exact, as the tests count them

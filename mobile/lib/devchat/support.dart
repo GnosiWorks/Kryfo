@@ -259,9 +259,32 @@ class SupportChats {
     );
     return {
       for (final p in people)
-        if (open.contains(p['halo_id']) && p['archived'] != 1)
+        if (open.contains(p['halo_id']) &&
+            p['archived'] != 1 &&
+            await _holdsAny(db, p['halo_id'] as String))
           p['halo_id'] as String: (p['unread'] as num?)?.toInt() ?? 0,
     };
+  }
+
+  // anything of theirs here: a message, one the cap holds, or a file still
+  // coming in slices. a chat they took all of back holds none, nor does
+  // one that only ever brought a take-back: it waits for nothing
+  static Future<bool> _holdsAny(Database db, String id) async {
+    for (final (table, where) in const [
+      ('messages', 'peer_id = ? AND group_id IS NULL'),
+      ('held_onion', 'peer_id = ?'),
+      ('media_wants', 'peer_id = ?'),
+    ]) {
+      final r = await db.query(
+        table,
+        columns: ['peer_id'],
+        where: where,
+        whereArgs: [id],
+        limit: 1,
+      );
+      if (r.isNotEmpty) return true;
+    }
+    return false;
   }
 
   // how many chats wait for a first answer: the home pin's count
@@ -301,6 +324,8 @@ class SupportChats {
       final p = c.first;
       final answered = p['accepted'] == 1;
       if (p['blocked'] == 1 || (!answered && p['archived'] == 1)) continue;
+      // nothing of theirs left before he answered: no chat to show
+      if (!answered && !await _holdsAny(db, id)) continue;
       final last = await db.query(
         'messages',
         columns: [
@@ -440,7 +465,14 @@ class SupportBell {
     required String tag,
     required String title,
     required String body,
-  }) => showSupportMessage(chatId: chatId, tag: tag, title: title, body: body);
+    String? msgUid,
+  }) => showSupportMessage(
+    chatId: chatId,
+    tag: tag,
+    title: title,
+    body: body,
+    msgUid: msgUid,
+  );
 
   Future<void> clear() => clearSupportSummary();
 }

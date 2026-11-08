@@ -3,6 +3,7 @@
 // deep tone 4.5:1, the accent as an icon or large text 3:1 on every surface
 // it sits on, its wash included. the velvet stays clear of the rose that
 // errors and warnings wear.
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -109,23 +110,41 @@ void main() {
         if (light) {
           need('deep / surface', HaloColors.amberDeep, HaloColors.surface, 3);
         }
-        // the bright card in tools, the same in both themes
-        need(
-          'on bright / bright',
-          HaloColors.onAmberBright,
-          HaloColors.amberBright,
-          4.5,
-        );
-        need(
-          'on bright / bright deep',
-          HaloColors.onAmberBright,
-          HaloColors.amberBrightDeep,
-          4.5,
-        );
         expect(fails, isEmpty);
       });
     }
   }
+
+  // the filled violet and rose buttons on home's cards and the valve: their
+  // words 4.5:1 in both themes, the accent's own fill set aside
+  for (final light in [false, true]) {
+    test('filled violet and rose buttons in ${light ? 'light' : 'dark'}', () {
+      HaloColors.setLight(light);
+      expect(
+        ratio(HaloColors.onViolet, HaloColors.violet),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        ratio(HaloColors.onRose, HaloColors.roseFill),
+        greaterThanOrEqualTo(4.5),
+      );
+    });
+  }
+
+  test('no filled violet or rose button keeps the dark ink', () {
+    final bad = <String>[];
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      final s = f.readAsStringSync();
+      final at = RegExp(
+        r'fill: HaloColors\.(violet|rose),\s*ink: HaloColors\.amberInk',
+      );
+      for (final m in at.allMatches(s)) {
+        bad.add('${f.path}: ${m.group(0)}');
+      }
+    }
+    expect(bad, isEmpty);
+  });
 
   // what a status or a warning wears, and the onion pill's own lilac
   List<(String, Color)> statusColours() => [

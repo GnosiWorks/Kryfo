@@ -14,18 +14,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
-import 'package:kryfo/drafts.dart' show draftPerGroup;
+import 'package:kryfo/drafts.dart'
+    show Draft, endProcessForTest, heldDraft, kDraftWait;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
+        wallKey,
         GroupPreview,
         HaloDb,
         HaloEngine,
         appState,
         themeRevision,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateMessages,
+        AppStateRoute;
 import 'package:kryfo/open_outside.dart';
 import 'package:kryfo/polls.dart' show PollVote;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
@@ -51,6 +55,7 @@ import 'package:kryfo/widgets/voice_mic.dart'
     show HoldToTalkMic, HoldToTalkMicState, MicGlyph;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/widgets/room_countdown.dart';
+import 'package:kryfo/widgets/swipe_to_reply.dart';
 import 'package:kryfo/widgets/voice_parts.dart' show VoiceRecordBar;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -104,6 +109,20 @@ class _Db implements HaloDb {
   @override
   HaloContainer get container => box;
 
+  // the drafts table, as the file keeps it across a process
+  final kept = <String, Draft>{};
+  @override
+  bool get isOpen => true;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
+      kept[wallKey(chatId, group: group)];
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async =>
+      kept[wallKey(chatId, group: group)] = d;
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      kept.remove(wallKey(chatId, group: group));
+
   @override
   Future<Map<String, Object?>?> getGroup(String groupId) async {
     await _wait();
@@ -155,13 +174,39 @@ class _Db implements HaloDb {
 
   @override
   Future<Set<String>> blockedIds() async => blocked;
+  // a page as the database gives it: the newest [limit] before a row
   @override
   Future<List<Map<String, Object?>>> groupMessagesPage(
     String groupId, {
     int? beforeRowid,
     int? beforeAt,
     int limit = 60,
-  }) async => [...rows];
+  }) async {
+    final older = [
+      for (final r in rows)
+        if (beforeRowid == null || (r['rowid'] as int) < beforeRowid) r,
+    ];
+    return older.sublist(older.length > limit ? older.length - limit : 0);
+  }
+
+  // one row by its uid, as a kept quote older than the page reads it,
+  // after [quoteGate] when a test holds it
+  int quoteReads = 0;
+  Completer<void>? quoteGate;
+  @override
+  Future<Map<String, Object?>?> groupMessageIn(
+    String groupId,
+    String msgUid,
+  ) async {
+    quoteReads++;
+    final gate = quoteGate;
+    if (gate != null) await gate.future;
+    for (final r in rows) {
+      if (r['msg_uid'] == msgUid && r['group_id'] == groupId) return r;
+    }
+    return null;
+  }
+
   @override
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) async {
     await _wait();
@@ -523,14 +568,244 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       await t.enterText(find.byType(TextField), 'see you at nine');
       await t.pump();
-      final key = HaloContainer.everyday.chatKey(_group);
-      expect(draftPerGroup[key], 'see you at nine');
-      dropGroupDraft(_group);
+      addTearDown(endProcessForTest);
+      Object? kept() =>
+          heldDraft(HaloContainer.everyday, _group, group: true)?.text;
+      expect(kept(), 'see you at nine');
+      await dropGroupDraft(_group);
       await t.pump();
-      expect(draftPerGroup.containsKey(key), isFalse);
+      expect(kept(), isNull);
       // the screen closing does not write them back
       await _close(t);
-      expect(draftPerGroup.containsKey(key), isFalse);
+      expect(kept(), isNull);
+    });
+
+    testWidgets('words and their quote come back after the app was '
+        'stopped, and go once sent', (t) async {
+      final db = _use(t, _Db(rows: [_in(1, _anna, 'dinner at eight?')]));
+      addTearDown(endProcessForTest);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      await t.enterText(find.byType(TextField), 'count me in');
+      await t.pump();
+      // written once typing rests
+      expect(db.kept, isEmpty);
+      await t.pump(kDraftWait);
+      expect(db.kept['group:$_group']?.text, 'count me in');
+      db.kept['group:$_group'] = const Draft(
+        'count me in',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      // android stops the app: only the file is left
+      await _close(t);
+      endProcessForTest();
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      final field = t.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'count me in');
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      // emptied as a send empties it: the row goes at once
+      field.controller!.clear();
+      await t.pump();
+      expect(db.kept, isEmpty);
+      await _close(t);
+    });
+
+    testWidgets('leaving writes the draft at once; a screen whose group '
+        'the session now keeps elsewhere writes nothing', (t) async {
+      final db = _use(t, _Db(members: ['me', _anna]));
+      addTearDown(endProcessForTest);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      await t.enterText(find.byType(TextField), 'on the way');
+      await t.pump();
+      expect(db.kept, isEmpty);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'on the way');
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      // a lock or a hide: the group is another container's now
+      db.box = HaloContainer.vault;
+      await t.enterText(find.byType(TextField), 'typed after');
+      await t.pump(kDraftWait);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'on the way');
+      expect(heldDraft(HaloContainer.vault, _group, group: true), isNull);
+    });
+
+    // seventy lines, a minute apart: the page holds the newest sixty
+    List<Map<String, Object?>> long() {
+      final at = DateTime.now().millisecondsSinceEpoch - 3600000;
+      return [
+        for (var i = 1; i <= 70; i++)
+          {..._in(i, _anna, 'line $i'), 'sent_at': at + i * 60000},
+      ];
+    }
+
+    testWidgets('a kept quote older than the page comes back from its row, '
+        'and stays kept', (t) async {
+      final db = _use(t, _Db(rows: long()));
+      addTearDown(endProcessForTest);
+      db.kept['group:$_group'] = const Draft(
+        'that one, yes',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      final field = t.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'that one, yes');
+      expect(db.quoteReads, 1);
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.text('line 1'), findsOneWidget);
+      // left without a touch: the row keeps its quote
+      await _close(t);
+      expect(db.kept['group:$_group']?.replyTo, 'uid-1');
+    });
+
+    testWidgets('opening a group after a stop keeps a timed draft\'s clock', (
+      t,
+    ) async {
+      final db = _use(t, _Db(members: ['me', _anna]));
+      addTearDown(endProcessForTest);
+      final at = DateTime.now().millisecondsSinceEpoch - 60000;
+      db.kept['group:$_group'] = Draft('bring the map', at: at, burnSecs: 3600);
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      final field = t.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'bring the map');
+      await t.pump(kDraftWait);
+      await _close(t);
+      expect(db.kept['group:$_group']?.burnSecs, 3600);
+      expect(db.kept['group:$_group']?.at, at);
+    });
+
+    testWidgets('a kept quote of a blocked member\'s message stays in the '
+        'draft out of sight, and shows again once they are unblocked', (
+      t,
+    ) async {
+      final blocked = {_anna};
+      final db = _use(t, _Db(rows: long(), blocked: blocked));
+      addTearDown(endProcessForTest);
+      db.kept['group:$_group'] = const Draft(
+        'what she said',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      // read, and read again on each load while they stay blocked
+      expect(db.quoteReads, isPositive);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(find.text('line 1'), findsNothing);
+      // a word more keeps it too
+      await t.enterText(find.byType(TextField), 'what she said, yes');
+      await t.pump(kDraftWait);
+      expect(db.kept['group:$_group']?.replyTo, 'uid-1');
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'what she said, yes');
+      expect(db.kept['group:$_group']?.replyTo, 'uid-1');
+      // unblocked: the next open shows it
+      blocked.clear();
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      expect(find.text('line 1'), findsOneWidget);
+      await _close(t);
+      expect(db.kept['group:$_group']?.replyTo, 'uid-1');
+    });
+
+    testWidgets('a send before the kept quote is looked up answers no '
+        'quote, and the lookup puts none back', (t) async {
+      final db = _use(t, _Db(rows: long(), blocked: {_anna}));
+      addTearDown(endProcessForTest);
+      final gate = Completer<void>();
+      db.quoteGate = gate;
+      db.kept['group:$_group'] = const Draft(
+        'what she said',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(db.quoteReads, 1);
+      final field = t.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'what she said');
+      field.onSubmitted!(field.controller!.text);
+      await t.pump(const Duration(milliseconds: 300));
+      gate.complete();
+      await t.pump(const Duration(seconds: 1));
+      // the bubble sent quotes nothing, and no bar comes back
+      expect(find.text('what she said'), findsOneWidget);
+      expect(find.text(l10n.groupChatMessageUnavailable), findsNothing);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('a reply picked while a blocked quote is looked up drops '
+        'the kept one', (t) async {
+      final at = DateTime.now().millisecondsSinceEpoch;
+      final db = _use(
+        t,
+        _Db(
+          rows: [
+            ...long(),
+            {..._in(71, _bo, 'from bo'), 'sent_at': at},
+          ],
+          members: ['me', _anna, _bo],
+          blocked: {_anna},
+        ),
+      );
+      addTearDown(endProcessForTest);
+      final gate = Completer<void>();
+      db.quoteGate = gate;
+      db.kept['group:$_group'] = const Draft(
+        'what she said',
+        replyTo: 'uid-1',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(db.quoteReads, 1);
+      t
+          .widget<SwipeToReply>(
+            find.ancestor(
+              of: find.text('from bo'),
+              matching: find.byType(SwipeToReply),
+            ),
+          )
+          .onReply();
+      await t.pump(const Duration(milliseconds: 300));
+      gate.complete();
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+      // the bar closed: no quote is left, the blocked one neither
+      await t.tap(find.byIcon(Icons.close_rounded));
+      await t.pump(kDraftWait);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'what she said');
+      expect(db.kept['group:$_group']?.replyTo, isNull);
+    });
+
+    testWidgets('a kept quote of a message gone from the group is let go', (
+      t,
+    ) async {
+      final db = _use(t, _Db(rows: long()));
+      addTearDown(endProcessForTest);
+      db.kept['group:$_group'] = const Draft(
+        'about that',
+        replyTo: 'uid-gone',
+        at: 1,
+      );
+      await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
+      await t.pump(const Duration(seconds: 1));
+      expect(db.quoteReads, 1);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      await _close(t);
+      expect(db.kept['group:$_group']?.text, 'about that');
+      expect(db.kept['group:$_group']?.replyTo, isNull);
     });
 
     for (final room in [true, false]) {
@@ -1756,7 +2031,7 @@ void main() {
       appState.contacts = [_contact(_anna, nick: 'Anna Maria Magdalena')];
       await t.pumpWidget(
         MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(1.6)),
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
           child: app(const GroupChatScreen(groupId: _group)),
         ),
       );
@@ -1872,6 +2147,8 @@ void main() {
     ) async {
       me(t);
       _use(t, _Db()..adminId = 'me');
+      // the admin's page runs past a phone's height: all of it in view
+      t.view.physicalSize = const Size(1080, 4500);
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
       final row = find.text(l10n.groupInfoEndGroup);
@@ -1928,6 +2205,8 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
+      // with translation on the page runs a row longer while it folds
+      await t.scrollUntilVisible(find.text(l10n.groupInfoDeleteGroup), 200);
       expect(find.text(l10n.groupInfoDeleteGroup), findsOneWidget);
       expect(find.text(l10n.groupInfoLeaveGroup2), findsNothing);
       expect(find.text(l10n.groupInfoClearConversation), findsNothing);
@@ -1968,6 +2247,7 @@ void main() {
       expect(find.text(l10n.groupInfo1Member(2)), findsNothing);
       expect(find.byType(MembersCard), findsNothing);
       expect(find.text(l10n.groupEndedBy('Anna')), findsOneWidget);
+      await t.scrollUntilVisible(find.text(l10n.groupInfoDeleteGroup), 200);
       expect(find.text(l10n.groupInfoDeleteGroup), findsOneWidget);
       await _close(t);
     });
@@ -2028,7 +2308,7 @@ void main() {
         HaloColors.setLight(light);
         themeRevision.value++;
         await t.pump();
-        expect(ink(), HaloColors.text2, reason: '$light');
+        expect(ink(), HaloColors.text, reason: '$light');
       }
     });
 
@@ -2058,21 +2338,25 @@ void main() {
   // the composer sits as far above each as above the others
   testWidgets('the group clears the bars and the keyboard', (t) async {
     final gaps = <double>[];
-    for (final (nav, kb) in [
-      (gestureBar, 0.0),
-      (buttonBar, 0.0),
-      (gestureBar, keyboardUp),
+    for (final (nav, kb, top) in [
+      (gestureBar, 0.0, cutoutTop),
+      (buttonBar, 0.0, cutoutTop),
+      (gestureBar, keyboardUp, cutoutTop),
+      // android 15 and 16
+      (gestureThin, 0.0, statusLow),
+      (buttonBar, 0.0, statusTall),
+      (buttonBar, keyboardUp, statusTall),
     ]) {
       _use(t, _Db(rows: [_in(1, _anna, 'hello')]));
-      barsPhone(t, nav: nav, keyboard: kb);
+      barsPhone(t, nav: nav, keyboard: kb, status: top);
       await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
       expect(find.text('hello'), findsOneWidget);
-      expectClearOfBars(t, reason: 'nav $nav keyboard $kb');
+      expectClearOfBars(t, reason: 'nav $nav keyboard $kb top $top');
       gaps.add(gapAboveBottom(t, find.byType(TextField).last));
       final head = t.getRect(find.byTooltip(l10n.commonBack).first);
-      expect(head.top, greaterThanOrEqualTo(cutoutTop));
-      expect(head.top, lessThan(cutoutTop + 24), reason: 'padded twice');
+      expect(head.top, greaterThanOrEqualTo(top));
+      expect(head.top, lessThan(top + 24), reason: 'padded twice');
       await _close(t);
     }
     expect(gaps.first, greaterThanOrEqualTo(0));

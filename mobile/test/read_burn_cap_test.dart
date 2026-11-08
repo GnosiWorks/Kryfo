@@ -18,7 +18,8 @@ import 'package:kryfo/main.dart'
         HaloDb,
         burnUnseenTables,
         runSearchQuery,
-        useDatabasesForTest;
+        useDatabasesForTest,
+        AppStateRooms;
 import 'package:kryfo/read_burn.dart'
     show burnStartBy, burnWaitStarts, burnWaitsRow, kBurnSkew, kBurnWaitMost;
 import 'package:kryfo/router.dart';

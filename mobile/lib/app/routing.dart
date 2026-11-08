@@ -14,10 +14,14 @@ void openRoomSoon(String groupId) {
     () => lockGuard.afterUnlock(
       key: lockGuard.isLocked() ? 'room:$groupId' : null,
       () async {
-        final nav = rootNavKey.currentState;
+        final nav = chatNavigator(rootNavKey.currentState);
         if (nav == null || !await session.groupExists(groupId)) return;
         if (backToOpenGroup(nav, groupId)) return;
-        nav.push(haloRoute(GroupChatScreen(groupId: groupId)));
+        chatPush(
+          nav,
+          haloRoute(GroupChatScreen(groupId: groupId)),
+          'group:$groupId',
+        );
       },
     ),
   );
@@ -82,6 +86,11 @@ Future<void> openChatForHalo(String? haloId) =>
 // the app lock is open, in the containers of the session it opened to
 Future<void> openChatForNotif(String? tag, [int? id]) async {
   if (tag == null || tag.isEmpty) return;
+  // the shared or the plain one: the chat list, never a chat
+  if (tag == kListPayload) {
+    await lockGuard.afterUnlock(openNotifList, key: 'notif:list');
+    return;
+  }
   await lockGuard.afterUnlock(() async {
     final chat = await notifChatFor(tag);
     if (chat == null) return;
@@ -97,6 +106,15 @@ Future<void> openChatForNotif(String? tag, [int? id]) async {
     }
     await openNotifChat(chat, uid);
   }, key: 'notif:$tag');
+}
+
+// the chat list a shared tap opens: whatever was on top goes. tests watch
+// it here
+@visibleForTesting
+Future<void> Function() openNotifList = _openChatList;
+
+Future<void> _openChatList() async {
+  rootNavKey.currentState?.popUntil((r) => r.isFirst);
 }
 
 // what a resolved tap opens, on the message it rang for. tests watch it
@@ -159,7 +177,8 @@ Future<NotifTarget?> notifTargetFor(String payload) async {
 
 Future<void> _openChatFor(String? haloId, [String? uid]) async {
   if (haloId == null || haloId.isEmpty) return;
-  final nav = rootNavKey.currentState;
+  // on desktop into the chat pane
+  final nav = chatNavigator(rootNavKey.currentState);
   if (nav == null) return;
   // the developer's own phone: its support inbox, or one of its chats
   if (haloId.startsWith(kSupportPayload)) {
@@ -169,7 +188,7 @@ Future<void> _openChatFor(String? haloId, [String? uid]) async {
   if (isDevChat(haloId)) {
     if (haloId == currentChatPeer) return;
     if ((await session.devChat.load())?.chatId != haloId) return;
-    nav.push(devChatRoute(haloId, jumpToUid: uid));
+    chatPush(nav, devChatRoute(haloId, jumpToUid: uid), haloId);
     return;
   }
   final target = await notifTargetFor(haloId);
@@ -179,16 +198,23 @@ Future<void> _openChatFor(String? haloId, [String? uid]) async {
     // one already open is gone back to, never stacked twice
     case NotifGroup(:final groupId):
       if (!backToOpenGroup(nav, groupId)) {
-        nav.push(haloRoute(GroupChatScreen(groupId: groupId, jumpToUid: uid)));
+        chatPush(
+          nav,
+          haloRoute(GroupChatScreen(groupId: groupId, jumpToUid: uid)),
+          'group:$groupId',
+        );
       }
       return;
     case NotifRequests():
-      if (!backToRequests(nav)) nav.push(haloRoute(const RequestsScreen()));
+      if (!backToRequests(nav)) {
+        chatPush(nav, haloRoute(const RequestsScreen()), null);
+      }
       return;
     case NotifChat(row: final r):
       row = r;
   }
-  nav.push(
+  chatPush(
+    nav,
     haloRoute(
       ChatScreen(
         peerHaloId: haloId,
@@ -200,6 +226,7 @@ Future<void> _openChatFor(String? haloId, [String? uid]) async {
         jumpToUid: uid,
       ),
     ),
+    haloId,
   );
 }
 
@@ -214,6 +241,7 @@ HaloContainer? _chatOnScreenIn;
 String? get currentChatPeer => lockGuard.isLocked() ? null : _chatOnScreen;
 
 void claimChat(String id) {
+  if (_chatOnScreen != id) desk_trace.trace('chat open');
   _chatOnScreen = id;
   _chatOnScreenIn = session.container;
   appState.chatFirst(id);
@@ -221,6 +249,7 @@ void claimChat(String id) {
 
 void releaseChat(String id) {
   if (_chatOnScreen != id) return;
+  desk_trace.trace('chat closed');
   _chatOnScreen = null;
   _chatOnScreenIn = null;
   appState.chatFirst(null);

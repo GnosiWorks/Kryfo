@@ -16,7 +16,15 @@ import 'package:kryfo/delivery_mode.dart' show deliveryModeName;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateProfile,
+        AppStateDelivery;
 import 'package:kryfo/notifications.dart'
     show loadHideNotifContent, setHideNotifContent;
 import 'package:kryfo/screens/backup_screen.dart' show backupFailLine;
@@ -179,6 +187,18 @@ void main() {
       await drain(t);
     });
 
+    testWidgets('side by side, the qr and the code say both need 0.6: a 0.5.3 '
+        'phone reads the qr as an invalid link', (t) async {
+      phone(t);
+      await t.pumpWidget(framed(const MyKryfoScreen()));
+      await rest(t);
+      expect(find.text(l10n.pairCodeBothNeed06), findsNothing);
+      await t.tap(find.text(l10n.myKryfoTheyReHereWith));
+      await rest(t);
+      expect(find.text(l10n.pairCodeBothNeed06), findsOneWidget);
+      await drain(t);
+    });
+
     testWidgets('in the light theme the code is dark on light', (t) async {
       phone(t);
       HaloColors.setLight(true);
@@ -211,7 +231,7 @@ void main() {
       final at = t.getCenter(find.text('@')).dx;
       final field = t.getCenter(find.byType(TextField).last).dx;
       expect(at, lessThan(field));
-      expect(find.text(l10n.handleWren), findsOneWidget);
+      expect(find.text(l10n.handleHintName), findsOneWidget);
       await drain(t);
     });
   });
@@ -222,12 +242,12 @@ void main() {
       FlutterSecureStorage.setMockInitialValues({'send_mode': 'balanced'});
       appState.sendModeForTest = 'balanced';
       await t.pumpWidget(framed(const ModesScreen()));
-      final pill = find.ancestor(
-        of: find.text(l10n.modesActive),
-        matching: find.byType(Row),
-      );
+      // the tick is on the fast card from the first frame
       expect(
-        find.descendant(of: pill.first, matching: find.text(l10n.modesRelay)),
+        find.descendant(
+          of: find.byKey(const ValueKey('fast')),
+          matching: find.byKey(const ValueKey('on')),
+        ),
         findsOneWidget,
       );
       await rest(t);
@@ -287,39 +307,8 @@ void main() {
       await t.pumpWidget(devApp(const SettingsScreen()));
       await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.chatBlockScreenshots), findsNothing);
-      // as after a turn off in the everyday app
-      expect(find.text(l10n.settingsPerChat), findsOneWidget);
-      await devClose(t);
-    });
-
-    testWidgets('the old switch still waiting on home\'s card: the '
-        'protections say the window is covered', (t) async {
-      SharedPreferences.setMockInitialValues({
-        'battery_opt_prompt_seen': true,
-        'miui_autostart_prompt_seen': true,
-      });
-      await devWorld();
-      FlutterSecureStorage.setMockInitialValues({'block_screenshots': 'true'});
-      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        const MethodChannel('halo/platform'),
-        (_) async => null,
-      );
-      await t.runAsync(() => appState.loadScreenSecure());
-      addTearDown(() async {
-        FlutterSecureStorage.setMockInitialValues({});
-        await appState.loadScreenSecure();
-      });
-      t.view.physicalSize = const Size(1000, 6000);
-      t.view.devicePixelRatio = 2;
-      addTearDown(t.view.reset);
-      await t.pumpWidget(devApp(const SettingsScreen()));
-      await t.pump(const Duration(seconds: 1));
-      final line = t.widget<ProtectionLine>(
-        find.byWidgetPredicate(
-          (w) => w is ProtectionLine && w.label == l10n.settingsScreenshots,
-        ),
-      );
-      expect((line.on, line.state), (true, l10n.settingsBlocked2));
+      // and no line for them in your protections
+      expect(find.text('Screenshots'), findsNothing);
       await devClose(t);
     });
   });

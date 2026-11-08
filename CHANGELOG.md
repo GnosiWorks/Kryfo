@@ -1,5 +1,58 @@
 # Changelog
 
+## [0.6.0] - 2026-11-08
+
+### Added
+- invite someone from the first minute: the link you share opens a page that says what Kryfo is and where to get it, then opens Kryfo. it works in any messenger, also for people without Kryfo.
+- you can pick a public @name while setting up, or skip it and stay unfindable.
+- post-quantum encryption: a chat between two 0.6 phones starts with pqxdh and runs with spqr, signal's post-quantum ratchet. an older chat moves over by itself once both sides have 0.6, and the chat shows a line when it has.
+- pair codes have eight digits. the six digit code is gone.
+- typing indicator: in a 1:1 chat you see "Typing" under your contact's name and in the chat list while they write, and they see yours. it goes straight to them over tor, never through a relay, and only while you both have it on. it is on for everyone, also after the update, and off by itself while tor goes through a bridge or the chat is archived. turn it off under settings, privacy.
+- linked devices: link a computer to your phone. scan the code it shows, compare six digits, and pick what comes over: every chat, text only, or contacts and groups only. new messages reach the phone and the computer, read and deleted ones stay in step, and your supporter badge shows on both. hidden chats, the decoy, invites, rooms and group changes stay on the phone. remove a computer from the phone at any time and it erases itself; one left unused for 30 days erases itself too.
+- test builds for windows and linux. use Kryfo on a computer on its own or link it to your phone. it keeps its data encrypted, locked by your windows account, the linux keyring or a passphrase.
+- a quiet line in the chat when a contact links a new device or removes one.
+- profile photos: pick one in your profile. only contacts you have both added see it, and it never shows in notifications.
+- big files: between 0.6 phones, photos, videos, voice notes and files up to 50 MB wait on our files service until the other side fetches them. the service holds sealed bytes it can't open, is reached over tor, and keeps nothing longer than a week.
+- file transfers show their progress and time left, pause and resume, and keep going with a notification. big files can wait for a tap or for wi-fi.
+- screenshot blocking in groups.
+- note to self keeps photos, gifs, files and voice notes too, and they reach your linked computer.
+- share a saved bridge with someone, as a code or into a chat.
+- the home screen icon and name can look like an everyday app: Notes, Weather, Tasks or News. pick one under settings, security, icon and notifications.
+- google push, in the google play build only and off until you pick it.
+- tips in the google play build. a tip gives a supporter badge and nothing else.
+- if Kryfo can't start, it offers to restore a backup or start fresh.
+- offline translation: translate a message on your phone, never on a server. a language pack downloads once, over tor.
+- a universal apk with both arm builds in one file, on github and the site. it installs on every arm phone.
+- Kryfo in hindi, the 16th language.
+- Kryfo in polish, the 17th language. thanks to padrian772 for reviewing the translation.
+
+### Changed
+- setup is shorter: six steps. your face is drawn from your name (change it in your profile), you choose the route in setup (private is picked, change it later in settings), and the battery guide comes right after notifications.
+- a message you write while Kryfo is still connecting shows as sending and goes as soon as the route is up.
+- on Android 13 and newer, screenshots work again with a PIN set, in chats that don't block them, and Kryfo stays hidden in recent apps. the lock screen, PIN and passphrase screens, hidden chats and blocking chats still block them. on older Android a PIN keeps screenshots blocked, as before.
+- your PINs now only work on this phone: they are tied to the phone's security chip, so they can't be tried on another device. your encrypted backup is the way back in if the chip ever loses its key. thanks to Ami (SleepingAmi) for suggesting it.
+- photos, voice notes and files are encrypted on the phone too, under names that say nothing about them, and no photo stays decoded once Kryfo locks.
+- a request from someone you don't know shows only words until you accept, and links in it stay plain.
+- the safety number card shows once, on a contact's page, instead of in the chat.
+- new contacts need 0.6 on both phones. existing chats with 0.5.3 users keep working; ask them to update before you add each other. a 0.5.3 phone reads a 0.6 qr code as invalid.
+- when a contact still needs to update before you can add each other, Kryfo says so plainly.
+- with message previews off, notifications are one shared "New message" alert for all chats, so nobody can count them. with previews on, each chat gets its own.
+- voice notes go as opus to phones that play it, smaller at the same sound. older phones still get them as before.
+- a heic photo is sent as a jpeg, so every device can show it.
+- the clipboard is cleared when hidden chats or the decoy lock, and copied messages are marked as sensitive.
+- Kryfo keeps fewer connections to relays open, and hidden chats use one of their own.
+- the keyboard reaches every button and switch, screen readers hear pin counts, wrong pins and long jobs, and text grows up to twice its size.
+- tor 0.4.9.15.
+
+### Fixed
+- photos no longer flicker after you unlock.
+- a portrait video stays upright in its bubble.
+- a file send to a group that stalls now ends instead of waiting forever.
+- a deleted message stays gone when a late copy of it arrives.
+
+### Security
+- stability and privacy improvements throughout. update when you can.
+
 ## [0.5.3] - 2026-10-22
 
 ### Added

@@ -6,19 +6,27 @@ import 'dart:typed_data';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'desktop/desktop_mode.dart' show rawFiles;
 import 'dlog.dart';
+import 'photo_blur.dart' show forgetBlurOf;
 
 /// zeros over [path] where its bytes are, then the name goes, also when a
 /// write fails. a link is only unlinked, never followed. [probe] hears the
 /// file's length after each write, for tests
 Future<void> shredFile(String path, {void Function(int length)? probe}) async {
+  // a photo's or a video's blur goes with it, whether it is still there
+  if (!path.endsWith(kBlurLeaf)) {
+    forgetBlurOf(path);
+    await shredFile('$path$kBlurLeaf');
+  }
   final type = await FileSystemEntity.type(path, followLinks: false);
   if (type == FileSystemEntityType.notFound) return;
   if (type == FileSystemEntityType.link) {
     await _unlink(Link(path));
     return;
   }
-  final f = File(path);
+  // the disk's bytes: on desktop a sealed file is overwritten as it lies
+  final f = rawFiles(() => File(path));
   try {
     // append keeps the length and the blocks; a write mode would truncate
     // and the zeros would land in new blocks
@@ -46,6 +54,9 @@ Future<void> shredFile(String path, {void Function(int length)? probe}) async {
     await _unlink(f);
   }
 }
+
+/// what a media file's blur is called after it (photo_blur.dart)
+const kBlurLeaf = '.blur';
 
 Future<void> _unlink(FileSystemEntity e) async {
   try {

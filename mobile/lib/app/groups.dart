@@ -91,6 +91,16 @@ class GroupFull implements Exception {
   String get message => l10n.appGroupHoldsUpTo(AppState.kGroupMemberCap);
 }
 
+/// a group's controls asked of a linked device. its phone takes no group
+/// op from a device, so a rename, add, remove, end, leave or screenshot
+/// switch made there would reach the members and never the phone (a leave
+/// takes me out for them while the phone stays in): on the phone alone in
+/// 0.6, as making a group is
+class GroupOnPhone implements Exception {
+  const GroupOnPhone();
+  String get message => l10n.linkedDoOnPhone;
+}
+
 class GroupPreview {
   final String groupId;
   final String name;
@@ -106,6 +116,9 @@ class GroupPreview {
   final bool hidden;
   // its admin ended it: who, null while it runs
   final String? endedBy;
+  // its screenshot block holds on this phone, and on every member's
+  final bool shotsBlocking;
+  final bool shotsForAll;
   const GroupPreview({
     required this.groupId,
     required this.name,
@@ -118,6 +131,8 @@ class GroupPreview {
     this.joiningAt,
     this.hidden = false,
     this.endedBy,
+    this.shotsBlocking = false,
+    this.shotsForAll = false,
   });
 
   bool get ended => endedBy != null;

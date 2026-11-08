@@ -54,6 +54,8 @@ var (
 	stallSince time.Time
 	// when tor was first seen off while nobody asked for it to be
 	offSince time.Time
+	// the last answer that proved the route, on the monotonic clock
+	lastAnswerAt time.Time
 )
 
 // a relay connect worked. the route carries traffic, whatever came before.
@@ -71,11 +73,14 @@ func routeNoteOKAt(gen int64) bool {
 	}
 	firstFailAt = time.Time{}
 	okGen = routeGen
+	lastAnswerAt = time.Now()
 	rescues = 0
 	deadWait = 0
 	// a route that carried again starts the gaps from the first
 	rescueWait = rescueJitter(rescueGap(0))
 	routeMu.Unlock()
+	startSteps.routeProven()
+	wakeRouteProven()
 	correctStaleStart()
 	return true
 }
@@ -139,15 +144,23 @@ func correctStaleStart() {
 	statusMu.Unlock()
 	if stale {
 		log.Println("halo: a relay connected through tor while it said starting, so it is up")
-		setStatus("publishing")
+		setStatus(upStatus())
 	}
 }
 
 // a relay failed while tor said ready. only our relay, or one that answered on this route, speaks for tor
-func routeNoteFail(u string) {
+func routeNoteFail(u string) { routeNoteFailFrom(u, time.Time{}) }
+
+// the same for an attempt that began at began (zero: unknown). one begun
+// before the route's last answer was that relay's own: the route carried
+// after it began
+func routeNoteFailFrom(u string, began time.Time) {
 	own := isOwnRelay(u)
 	routeMu.Lock()
 	defer routeMu.Unlock()
+	if !began.IsZero() && okGen == routeGen && began.Before(lastAnswerAt) {
+		return
+	}
 	// while nothing has answered on this route, every failure counts: a dead tor is always rescued
 	if g, ok := answeredIn[u]; !own && okGen == routeGen && (!ok || g != routeGen) {
 		return
@@ -157,6 +170,17 @@ func routeNoteFail(u string) {
 		deadWait = rescueJitter(deadFor)
 	}
 	failedSinceOK[u] = true
+}
+
+// the phone slept: a dead spell begun before it starts again from the wake
+func routeSlept() {
+	routeMu.Lock()
+	for k := range failedSinceOK {
+		delete(failedSinceOK, k)
+	}
+	firstFailAt = time.Time{}
+	deadWait = 0
+	routeMu.Unlock()
 }
 
 // the route is about to be torn down on purpose. returns the new generation.
@@ -176,19 +200,52 @@ func routeBump() int64 {
 // true when the route can carry traffic now, judged by relays rather than by
 // tor. outside private mode nothing depends on tor, so it is always true.
 func routeOK() bool {
-	if !modeNeedsTor() {
-		return true
-	}
-	if !torReadyNow() {
-		return false
-	}
+	ok, _ := routeVerdict(torStatusNow())
+	return ok
+}
+
+// the verdict for tor status st, and the generation it was given for, read
+// under one lock so the status line never pairs one with another's
+func routeVerdict(st string) (bool, int64) {
 	routeMu.Lock()
 	defer routeMu.Unlock()
+	if !modeNeedsTor() {
+		return true, routeGen
+	}
+	if st != "bootstrapped" && st != "publishing" && st != "reachable" {
+		return false, routeGen
+	}
 	if okGen != routeGen {
 		// nothing has connected since the latest bounce, or ever
-		return false
+		return false, routeGen
 	}
-	return !(len(failedSinceOK) >= 2 && time.Since(firstFailAt) > 20*time.Second)
+	return !(len(failedSinceOK) >= 2 && time.Since(firstFailAt) > 20*time.Second), routeGen
+}
+
+func torStatusNow() string {
+	statusMu.RLock()
+	defer statusMu.RUnlock()
+	return torStatus
+}
+
+// status|bootstrap|hsdir uploads|route carries traffic|route generation,
+// from one reading of tor's status: the app derives every view from it
+func statusLine() string {
+	statusMu.RLock()
+	st, pct, up := torStatus, bootstrapPct, hsdirUploads
+	statusMu.RUnlock()
+	// after this tor's first publish the address stays up through a bounce:
+	// tor keeps the descriptor and its intro points, and uploads again on
+	// its own clock, so publishing would stand for an hour or two
+	if st == "publishing" && publishedOnce.Load() {
+		st = "reachable"
+	}
+	ok, gen := routeVerdict(st)
+	n := 0
+	if ok {
+		n = 1
+	}
+	return fmt.Sprintf("%s|%d|%d|%d|%d", st, pct, up, n, gen)
 }
 
 func routeGeneration() int64 {
@@ -276,6 +333,8 @@ func routeWatch() {
 // the decision, apart from the loop so it can be tested with a clock. "" when
 // nothing should happen, otherwise the reason. records the rescue it allows.
 func routeNeedsRescue(now time.Time) string {
+	// a spell from before a sleep is not judged on
+	wakeCheck()
 	if !modeNeedsTor() || torIsPaused() {
 		return ""
 	}
@@ -410,11 +469,12 @@ var rescueCircuits = func() {
 // how long tor may sit off before the watch brings it back
 const offFor = 15 * time.Second
 
-// a tor runs in this process and has an address
+// a tor runs in this process and has an address, is a client's, or waits
+// to try its onion again
 func torUp() bool {
 	mu.Lock()
 	defer mu.Unlock()
-	return torNode != nil && myAddr != ""
+	return torNode != nil && (myAddr != "" || torClientOnly() || onionRetrying.Load())
 }
 
 // a new network is a fresh start. the back-off grown while there was none,
@@ -674,7 +734,13 @@ var netValveTry func()
 
 func init() { netValveTry = valveTryTor }
 
+// valve tries still going, so a test can see one out before it puts back
+// what the try reads
+var valveTries atomic.Int32
+
 func valveTryTor() {
+	valveTries.Add(1)
+	defer valveTries.Add(-1)
 	if !netValveOpen.CompareAndSwap(false, true) {
 		return
 	}
@@ -732,6 +798,9 @@ func networkChanged() {
 	// what proved the old network proves nothing about this one
 	routeBump()
 	netEpoch.Add(1)
+	// automatic holds tor off a new network until a pass proves a way:
+	// that pass starts now, not at the loop's next look
+	autoKick()
 	netMu.Lock()
 	netChangedAt = time.Now()
 	if netWorker {
@@ -763,7 +832,11 @@ func netBounceWorker() {
 		if netOnAt.After(netChangedAt) && !torParked.Load() && sameNetwork(netOnNet, now) {
 			netMu.Unlock()
 			log.Println("halo: tor went on this network after the change, no bounce")
-			// the check still runs: tor has to prove itself here all the same
+			// the check still runs: tor has to prove itself here all the same.
+			// the change bumped the route and nothing tore the sockets down:
+			// they ask their probes now, so the proof comes within kickSpread
+			// and not with the next idle probe minutes away
+			kickRelays()
 			go netCheckFor(netEpoch.Load())
 			return
 		}
@@ -776,8 +849,9 @@ func netBounceWorker() {
 		if !modeNeedsTor() || torIsPaused() || netAway() {
 			return
 		}
-		// automatic starts its own pass on the new network
-		if autoGateHeld() {
+		// automatic starts its own pass on the new network, or has one
+		// under way: one bounce for the change, the pass's
+		if autoGateHeld() || autoTakesChange() {
 			log.Println("halo: network bounce left to automatic")
 			return
 		}

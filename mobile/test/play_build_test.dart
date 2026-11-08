@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// the play build offers no way to pay and no way to update itself. flutter
-// test checks the normal build, which keeps its support tab, support card and
-// bitcoin code. the play side runs with the define:
-//   flutter test --dart-define=KRYFO_STORE=play test/play_build_test.dart
+// the play build pays only through google play's tip jar and never updates
+// itself. flutter test checks the normal build, which keeps its donate tab,
+// support card and bitcoin code. the play side runs with the flavor:
+//   flutter test --flavor play test/play_build_test.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState;
+import 'package:kryfo/main.dart' show appState, AppStateRoute;
 import 'package:kryfo/screens/profile_screen.dart';
 import 'package:kryfo/screens/qr_screen.dart';
 import 'package:kryfo/store.dart';
@@ -57,7 +57,7 @@ void main() {
     appState.sendModeForTest = 'balanced';
   });
 
-  testWidgets('the support tab is on the bar only off play', (t) async {
+  testWidgets('the support tab is on the bar in both builds', (t) async {
     await t.pumpWidget(
       framed(
         Scaffold(
@@ -65,29 +65,35 @@ void main() {
         ),
       ),
     );
-    expect(
-      find.text(l10n.navBarSupport),
-      kPlayBuild ? findsNothing : findsOneWidget,
-    );
+    expect(find.text(l10n.navBarSupport), findsOneWidget);
     expect(find.text(l10n.navBarChats), findsOneWidget);
     expect(find.text(l10n.navBarTools), findsOneWidget);
     expect(find.text(l10n.navBarMe), findsOneWidget);
     expect(shownTabs, [
       HaloTab.chats,
       HaloTab.tools,
-      if (!kPlayBuild) HaloTab.support,
+      HaloTab.support,
       HaloTab.me,
     ]);
   });
 
-  testWidgets('me has the support card only off play', (t) async {
+  testWidgets('me has the donate card off play, the tip card on it', (t) async {
     quiet(t);
     await t.pumpWidget(framed(const ProfileScreen()));
     await t.pump(const Duration(seconds: 1));
     final card = find.text(l10n.profileKeepKryfoIndependent);
     final head = find.text(l10n.profileSupportKryfo);
     expect(card, kPlayBuild ? findsNothing : findsOneWidget);
-    expect(head, kPlayBuild ? findsNothing : findsOneWidget);
+    // in english the tip section's title says the same words
+    expect(
+      find.text(kPlayBuild ? l10n.tipsTitle : l10n.profileSupportKryfo),
+      findsOneWidget,
+    );
+    expect(head, findsOneWidget);
+    expect(
+      find.text(l10n.tipsProfileCard),
+      kPlayBuild ? findsOneWidget : findsNothing,
+    );
     // the rest of the page is the same in both
     expect(find.text(l10n.profileMyKryfoCode), findsOneWidget);
     await t.pumpWidget(const SizedBox());
@@ -146,12 +152,76 @@ void main() {
     for (final f in ['home_screen', 'profile_screen']) {
       expect(src['lib/screens/$f.dart'], contains('kPlayBuild'), reason: f);
     }
+    // the tip jar is reached from the same two places and the app's two
+    // hooks, each behind the flavor's constant, so foss compiles it out
+    final tips = [
+      for (final e in src.entries)
+        if (RegExp(
+          r'''import '[^']*tip_(screen|jar)\.dart''',
+        ).hasMatch(e.value))
+          e.key,
+    ]..sort();
+    expect(tips, [
+      'lib/main.dart',
+      'lib/screens/home_screen.dart',
+      'lib/screens/profile_screen.dart',
+      'lib/screens/tip_screen.dart',
+    ]);
+    expect(
+      RegExp(
+        r'kPlayBuild\) TipJar\.instance\.listen',
+      ).hasMatch(src['lib/app/state_boot.dart']!),
+      isTrue,
+    );
+    expect(
+      src['lib/app/state_delivery.dart'],
+      contains('if (front && kPlayBuild) {'),
+    );
     // the open invoice is only ever settled from the donate screen
     final settles = [
       for (final e in src.entries)
         if (e.value.contains('settleOpenInvoice(')) e.key,
     ]..sort();
     expect(settles, ['lib/screens/donate_screen.dart', 'lib/supporter.dart']);
+  });
+
+  // play's payments policy: the tip screen names and links no other way to
+  // pay, and no word of it is a donation
+  test('the tip screen links nowhere and takes no other payment', () {
+    final src = sources();
+    for (final f in ['lib/screens/tip_screen.dart', 'lib/tips/tip_jar.dart']) {
+      final s = src[f]!;
+      expect(
+        RegExp(
+          r'open_outside|openOutside|donate_screen|badge_client|https?:',
+        ).hasMatch(s),
+        isFalse,
+        reason: f,
+      );
+      // the words it shows are the tip jar's own, and the badge's
+      final used = RegExp(
+        r'(?<![/\w])l10n\.(\w+)',
+      ).allMatches(s).map((m) => m[1]!);
+      for (final k in used) {
+        expect(
+          k.startsWith('tips') ||
+              k == 'profileShowMyBadge' ||
+              k == 'commonDone',
+          isTrue,
+          reason: '$f says $k',
+        );
+      }
+    }
+    // the bitcoin amounts are said only on the donate screen, which play
+    // never reaches: play shows only its own prices
+    final fixed = [
+      for (final e in src.entries)
+        if (RegExp(
+          r'l10n\.(donateBadgesStartAt20|donateReviewAmount)\b',
+        ).hasMatch(e.value))
+          e.key,
+    ];
+    expect(fixed, ['lib/screens/donate_screen.dart']);
   });
 
   // play installs and updates apps itself; so does f-droid. kryfo never
@@ -185,15 +255,16 @@ void main() {
   test('the store is read in one place', () {
     final hits = [
       for (final e in sources().entries)
-        if (e.value.contains('KRYFO_STORE')) e.key,
+        if (e.value.contains('FLUTTER_APP_FLAVOR') ||
+            e.value.contains('appFlavor'))
+          e.key,
     ];
     expect(hits, ['lib/store.dart']);
   });
 }
 
 final _takenAway = RegExp(
-  r'<uses-permission(-sdk-23|-sdk-m)? android:name="android\.permission\.'
+  r'<uses-permission(-sdk-23)? android:name="android\.permission\.'
   r'REQUEST_INSTALL_PACKAGES" tools:node="remove" />',
 );
-const _refused =
-    'const val MIME = "application/vnd.android.package-archive"';
+const _refused = 'const val MIME = "application/vnd.android.package-archive"';

@@ -1,0 +1,14 @@
+# the sources libkryfo_translate.so is built from, read by fetch-bergamot.sh.
+# one line each: name, github repo, commit, sha256 of github's archive of
+# that commit, and where it goes in the tree. translations is mozilla's repo
+# at the commit that pins the five submodules under it (cpuinfo is ruy's);
+# pcre2 is its 10.45 tag. a new version changes them together.
+# name           repo                    commit                                    sha256                                                            path
+translations     mozilla/translations   eea6e5a80aa4ddd86d9cc35ce9a65b79aa3ab96d  70e839dc9d62dedc173c7c1060e33920a6db65f748d833ab295823901149ab7d  .
+ssplit-cpp       browsermt/ssplit-cpp   a311f9865ade34db1e8e080e6cc146f55dafb067  937ded1229ee69f340772056a4ff6daaede5b899f12c4c7b091c40f430c56fd8  inference/3rd_party/ssplit-cpp
+sentencepiece    browsermt/sentencepiece ae41b7740d7006596bb9257e83340b2620db9d00 4d2148ae7e240cd113586004d2cf0102f7ab1bae363b91b2934ee83c5ae3dbbe  inference/marian-fork/src/3rd_party/sentencepiece
+intgemm          kpu/intgemm            f7401513da71758dacce52fed1c7855549abee59  8e827c445dbb1b117a9667616bac23b3c945e626da0a3466786cfd058ed2f41d  inference/marian-fork/src/3rd_party/intgemm
+simd_utils       browsermt/simd_utils   d0793d86aea9036a5bc77b9ca7791dff024168ca  829325e164ee2be5dffed51ccf8cc4b776edbb4269d174e79f6708fd89fca59f  inference/marian-fork/src/3rd_party/simd_utils
+ruy              google/ruy             2d950b3bfa7ebfbe7a97ecb44b1cc4da5ac1d6f0  6593ec4323ae69e542bde97711d5680069cb802301512063289b1103c5374244  inference/marian-fork/src/3rd_party/ruy
+cpuinfo          pytorch/cpuinfo        5916273f79a21551890fd3d56fc5375a78d1598d  f3c16d5d393d6d1fa6b6ed8621dd0a535552df9bc88cbba739375dde38a93142  inference/marian-fork/src/3rd_party/ruy/third_party/cpuinfo
+pcre2            PCRE2Project/pcre2     2dce7761b1831fd3f82a9c2bd5476259d945da4d  59a20ebc6f848f77cea0cb745a4f269b9f415bd088372b4e1b802edce6ba4e55  pcre2

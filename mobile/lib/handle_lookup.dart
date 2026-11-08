@@ -28,11 +28,14 @@ String? handleFromInput(String raw) {
 
 // the registry answer is {"names": {handle: pubkey}, "invite": "kryfo://..."}.
 // only a kryfo invite for the handle we asked about is accepted. with
-// [idOf], only one whose id is the three words of the key that claimed it
+// [idOf], only one whose id is the three words of the key that claimed it.
+// a v4 invite only when [v4FaceOf] reads it with every reader check and
+// its face is the key that claimed the handle
 String? inviteFromRegistryJson(
   String body,
   String handle, {
   String Function(String pub)? idOf,
+  String? Function(String invite)? v4FaceOf,
 }) {
   try {
     final j = jsonDecode(body);
@@ -41,6 +44,14 @@ String? inviteFromRegistryJson(
     if (names is! Map || !names.containsKey(handle)) return null;
     final inv = j['invite'];
     if (inv is! String || !inv.startsWith('kryfo://share')) return null;
+    if (Uri.parse(inv).queryParameters['v'] == '4') {
+      final pub = names[handle];
+      final face = v4FaceOf?.call(inv);
+      if (pub is! String || face == null || face != pub.toLowerCase()) {
+        return null;
+      }
+      return inv;
+    }
     if (idOf != null) {
       final pub = names[handle];
       final id = Uri.parse(inv).queryParameters['id'];
@@ -58,6 +69,7 @@ Future<String> resolveHandle(
   String handle,
   Future<String> Function(String url) fetch, {
   String Function(String pub)? idOf,
+  String? Function(String invite)? v4FaceOf,
 }) async {
   final h = handle.toLowerCase();
   if (!_handleRe.hasMatch(h)) return 'error: that is not a handle';
@@ -72,7 +84,7 @@ Future<String> resolveHandle(
         ? 'error: nobody has claimed @$h'
         : "error: couldn't reach the registry";
   }
-  final inv = inviteFromRegistryJson(body, h, idOf: idOf);
+  final inv = inviteFromRegistryJson(body, h, idOf: idOf, v4FaceOf: v4FaceOf);
   if (inv == null) return 'error: nobody has claimed @$h';
   return inv;
 }

@@ -5,4 +5,9 @@
     <string name="service_text">يبقى خطّك المشفّر مفتوحًا لتصل الرسائل</string>
     <string name="channel_name">البقاء متصلًا</string>
     <string name="channel_description">يُبقي Kryfo متصلًا لتصل الرسائل المشفّرة وهو مغلق. إيقاف هذا يوقف التوصيل.</string>
+    <string name="icon_notes">ملاحظات</string>
+    <string name="icon_weather">الطقس</string>
+    <string name="icon_tasks">مهام</string>
+    <string name="icon_news">أخبار</string>
+    <string name="service_title_plain">نشط</string>
 </resources>

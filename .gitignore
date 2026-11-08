@@ -17,8 +17,12 @@
 **/Flutter.framework
 **/Pods/
 **/build/
+**/fcm.json
+**/google-services.json
 **/jniLibs/**/*.so
+**/jniLibs/**/*.stamp
 **/local.properties
+mobile/android/app/src/play/google-services.json
 *.bak
 *.jks
 *.key
@@ -26,6 +30,8 @@
 *.log
 *.pem
 *.swp
+*service-account*.json
+box.key
 *~
 .DS_Store
 .env
@@ -47,6 +53,8 @@ fix2.py
 icon-backup-*/
 mobile/*.py
 mobile/android/key.properties
+mobile/linux/out/
+mobile/windows/out/
 onionfix.py
 patch*.py
 patch_*.py

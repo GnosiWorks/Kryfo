@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"os"
 	"sort"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -37,7 +38,10 @@ func measureStart(t *testing.T, spread time.Duration) (first, all time.Duration)
 	t.Helper()
 	old := subSpread
 	subSpread = spread
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -45,7 +49,7 @@ func measureStart(t *testing.T, spread time.Duration) (first, all time.Duration)
 	// a start as a fresh process has it: no socket has asked since the kick
 	kickRelays()
 	start := time.Now()
-	l := startLanes(t, ctx, 11, 0)
+	l := startLanes(t, alone(ctx), 11, 0)
 	waitFor(t, "every address asked", spread+15*time.Second, func() bool {
 		return len(firstAsks(relay, start)) >= l.subs()
 	})
@@ -88,7 +92,10 @@ func TestTurnsSpreadTheStart(t *testing.T) {
 func TestATurnCountsAsACatchup(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	spendFirstTurn()
 	active, begun := atomic.LoadInt32(&catchupActive), atomic.LoadInt64(&catchupStarted)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -119,7 +126,10 @@ func TestATurnCountsAsACatchup(t *testing.T) {
 func TestOneTurnPerWake(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	quick := func(tn *subTurn) bool {
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
@@ -182,7 +192,10 @@ func TestOneTurnPerWake(t *testing.T) {
 func TestNoTurnStillCounts(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	ctx := context.Background()
 	base := settledActive(t)
 	firstTag.Store("peer-on-screen")
@@ -238,7 +251,10 @@ const (
 func TestTurnsFitACheckIn(t *testing.T) {
 	old, oldKick := subSpread, kickSpread
 	subSpread, kickSpread = time.Minute, time.Minute
-	defer func() { subSpread, kickSpread = old, oldKick }()
+	defer func() {
+		runnersGone(t)
+		subSpread, kickSpread = old, oldKick
+	}()
 	now := time.Date(2026, 10, 12, 12, 0, 0, 0, time.UTC)
 	oldNow := autoNow
 	autoNow = func() time.Time { return now }
@@ -362,7 +378,10 @@ func peakActive(run func()) int32 {
 func TestRealTurnsAndKicks(t *testing.T) {
 	old, oldKick := subSpread, kickSpread
 	subSpread, kickSpread = 2*time.Second, 8*time.Second
-	defer func() { subSpread, kickSpread = old, oldKick }()
+	defer func() {
+		runnersGone(t)
+		subSpread, kickSpread = old, oldKick
+	}()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -370,7 +389,7 @@ func TestRealTurnsAndKicks(t *testing.T) {
 	base := settledActive(t)
 	kickRelays()
 	start := time.Now()
-	l := startLanes(t, ctx, 7, 0)
+	l := startLanes(t, alone(ctx), 7, 0)
 	waitFor(t, "the turns counted", time.Second, func() bool {
 		return atomic.LoadInt32(&catchupActive) > base
 	})
@@ -414,7 +433,10 @@ func TestRealTurnsAndKicks(t *testing.T) {
 func TestAParkedSocketCountsNothing(t *testing.T) {
 	oldKick := kickSpread
 	kickSpread = 50 * time.Millisecond
-	defer func() { kickSpread = oldKick }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldKick
+	}()
 	socks := newSocksStandIn(t)
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, relay)
@@ -424,7 +446,7 @@ func TestAParkedSocketCountsNothing(t *testing.T) {
 		cancel()
 		kickRelays()
 	}()
-	l := startLanes(t, ctx, 1, 0)
+	l := startLanes(t, alone(ctx), 1, 0)
 	waitFor(t, "every address asked", 10*time.Second, func() bool {
 		n := 0
 		for _, c := range relay.snapshot() {
@@ -453,7 +475,10 @@ func TestAParkedSocketCountsNothing(t *testing.T) {
 func TestAFreshAddressTakesNoFirstTurn(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	quick := func(tn *subTurn) bool {
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
@@ -485,7 +510,10 @@ func TestAFreshAddressTakesNoFirstTurn(t *testing.T) {
 func TestAFreshTurnHoldsOnlyRightAfterTheAdd(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	quick := func(tn *subTurn) bool {
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
@@ -533,7 +561,10 @@ func TestAFreshTurnHoldsOnlyRightAfterTheAdd(t *testing.T) {
 func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	kickRelays()
@@ -559,10 +590,10 @@ func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
 		}
 		return false
 	}
-	if r := nostrSubscribe(againHex, false); r != "ok" {
+	if r := nostrSubscribeAs(mainIdent, againHex, false, true); r != "ok" {
 		t.Fatal(r)
 	}
-	if r := nostrSubscribe(addedHex, true); r != "ok" {
+	if r := nostrSubscribeAs(mainIdent, addedHex, true, true); r != "ok" {
 		t.Fatal(r)
 	}
 	start := time.Now()
@@ -581,7 +612,10 @@ func TestAJustAddedAddressAsksAtOnce(t *testing.T) {
 func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
-	defer func() { subSpread = old }()
+	defer func() {
+		runnersGone(t)
+		subSpread = old
+	}()
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -593,7 +627,7 @@ func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
 	// the network comes back: a wake, whose free first turn someone else took
 	kickRelays()
 	spendFirstTurn()
-	go nostrSubscribeRunner(fresh, hex.EncodeToString(added.pub[:]), added.pub, mustRcv(t, added))
+	go nostrSubscribeRunner(fresh, hex.EncodeToString(added.pub[:]), mainPair(added.pub), mustRcv(t, added))
 	time.Sleep(1500 * time.Millisecond)
 	for _, c := range relay.snapshot() {
 		if c.addrs[mustRcv(t, added)] {
@@ -608,7 +642,10 @@ func TestAnAddWhileOfflineAsksAtItsTurn(t *testing.T) {
 func TestAnAddWhileTorStartsAsksAtItsTurn(t *testing.T) {
 	old, oldWait := subSpread, torRetryWait
 	subSpread, torRetryWait = time.Hour, 200*time.Millisecond
-	defer func() { subSpread, torRetryWait = old, oldWait }()
+	defer func() {
+		runnersGone(t)
+		subSpread, torRetryWait = old, oldWait
+	}()
 	socks := newSocksStandIn(t)
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modePrivate, socks, relay)
@@ -625,7 +662,7 @@ func TestAnAddWhileTorStartsAsksAtItsTurn(t *testing.T) {
 	base := settledActive(t)
 	added := newXid(t)
 	rcv := mustRcv(t, added)
-	go nostrSubscribeRunner(asFresh(ctx), hex.EncodeToString(added.pub[:]), added.pub, rcv)
+	go nostrSubscribeRunner(asFresh(ctx), hex.EncodeToString(added.pub[:]), mainPair(added.pub), rcv)
 	time.Sleep(300 * time.Millisecond)
 	// tor is up, well inside the add's free window and with no kick
 	mu.Lock()
@@ -646,5 +683,51 @@ func TestAnAddWhileTorStartsAsksAtItsTurn(t *testing.T) {
 	time.Sleep(time.Second)
 	if asked() {
 		t.Fatal("an address added while tor started asked at tor-up without its turn")
+	}
+}
+
+// the addresses of one batch wait one turn, the socket's, drawn once over
+// the whole spread: the batch dials at a moment of its own, not at the
+// first of eight draws, so a phone's batches do not come up together
+func TestABatchTakesOneTurn(t *testing.T) {
+	old := subSpread
+	subSpread = 800 * time.Millisecond
+	t.Cleanup(func() { subSpread = old })
+	kickRelays()
+	spendFirstTurn()
+	never := make(chan struct{})
+	const nBatches = 30
+	at := make([][]time.Duration, nBatches)
+	start := time.Now()
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for b := 0; b < nBatches; b++ {
+		hk := hubKey{lane: batchLane(contactSet(mainIdent), b), group: "i0", url: "wss://turns.test"}
+		for m := 0; m < batchMax; m++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				tn := subTurn{tag: "batch", ready: func() <-chan struct{} { return never }, batch: &hk}
+				tn.take(context.Background())
+				tn.done()
+				mu.Lock()
+				at[b] = append(at[b], time.Since(start))
+				mu.Unlock()
+			}()
+		}
+	}
+	wg.Wait()
+	var sum time.Duration
+	for b, ts := range at {
+		sort.Slice(ts, func(i, j int) bool { return ts[i] < ts[j] })
+		if apart := ts[len(ts)-1] - ts[0]; apart > 150*time.Millisecond {
+			t.Fatalf("batch %d's addresses took turns %s apart", b, apart)
+		}
+		sum += ts[0]
+	}
+	// one draw each: about 400 ms on average. the first of eight would be
+	// about 90 ms
+	if mean := sum / nBatches; mean < subSpread/4 {
+		t.Fatalf("the batches came up %s after the kick on average, the first of their addresses' draws", mean)
 	}
 }

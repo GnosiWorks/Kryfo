@@ -9,7 +9,15 @@ import 'dart:convert';
 import 'package:kryfo/delivery_mode.dart';
 import 'package:kryfo/helper_delivery.dart';
 import 'package:kryfo/helper_push.dart';
-import 'package:kryfo/main.dart' show AppState, HaloEngine, useEngineForTest;
+import 'package:kryfo/devices/device_state.dart' show linkedDevicesForTest;
+import 'package:kryfo/main.dart'
+    show
+        AppState,
+        HaloEngine,
+        linkedRoleForTest,
+        useEngineForTest,
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -164,7 +172,7 @@ void main() {
       ..sendModeForTest = 'private'
       ..deliveryModeForTest = DeliveryMode.helper;
     eng.live = jsonEncode([
-      {'i': 'abcd', 'g': 'everyday:0'},
+      {'i': 'abcd', 'g': 'everyday:0:0'},
     ]);
     chosen = 'io.heckel.ntfy';
     for (var s = 0; s < 16; s++) {
@@ -173,5 +181,33 @@ void main() {
     await app.helperRoundForTest();
     expect(eng.registered.length, 1);
     expect(eng.registered.single, isNot(contains('"e":""')));
+  });
+
+  // its pushes are its phone's: a linked device registers and forgets
+  // nothing with the relay, whatever mode it was left in
+  test('a linked device registers nothing', () async {
+    SharedPreferences.setMockInitialValues({
+      kHelperForgetKey: jsonEncode([
+        {'i': 'old', 'w': 1},
+      ]),
+    });
+    linkedDevicesForTest = true;
+    linkedRoleForTest = true;
+    addTearDown(() {
+      linkedRoleForTest = false;
+      linkedDevicesForTest = false;
+    });
+    final app = AppState()
+      ..sendModeForTest = 'private'
+      ..deliveryModeForTest = DeliveryMode.helper;
+    eng.live = jsonEncode([
+      {'i': 'abcd', 'g': 'everyday:0:0'},
+    ]);
+    chosen = 'io.heckel.ntfy';
+    expect(await app.helperRoundForTest(), 0);
+    expect(app.helperOffered, isFalse);
+    expect(await app.useHelper(ntfy), isFalse);
+    expect(eng.registered, isEmpty);
+    expect(events, isEmpty);
   });
 }

@@ -17,7 +17,9 @@ import 'package:kryfo/main.dart'
         HaloEngine,
         appState,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/group_chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';
@@ -150,9 +152,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');

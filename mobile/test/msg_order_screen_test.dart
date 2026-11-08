@@ -5,13 +5,17 @@
 // above it there, and one written before the pages held comes in with
 // its own page as the reader scrolls up, once, between its neighbours.
 // the chat's own screen over rows kept in maps
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
+import 'package:kryfo/drafts.dart'
+    show Draft, endProcessForTest, kDraftWait, sweepDrafts;
 import 'package:kryfo/l10n/dates.dart' show hourMinute;
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/l10n/l10n.dart';
@@ -26,14 +30,20 @@ import 'package:kryfo/main.dart'
         processPeerBundle,
         rootNavKey,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        draftTypedIn,
+        emptyComposerOf,
+        AppStateContacts,
+        AppStateMessages,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
+import 'package:kryfo/stickers/sticker_bubble.dart' show StickerBubble;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/chat_parts.dart'
     show JumpDownButton, UnreadDivider;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show Curve;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -43,6 +53,30 @@ const _peer = 'amber-long-thread';
 
 class _Db extends DevTestDb {
   _Db(super.mem);
+
+  // the drafts table, as the file keeps it across a process
+  final kept = <String, Draft>{};
+  @override
+  bool get isOpen => true;
+  // a read of the row that fails, as a busy or damaged file
+  bool readFails = false;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async {
+    if (readFails) throw StateError('not read');
+    return kept[chatId];
+  }
+
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async =>
+      kept[chatId] = d;
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      kept.remove(chatId);
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async => [
+    for (final e in kept.entries)
+      if (e.value.spentAt(now)) (chat: e.key, group: false),
+  ];
 
   // pages fetched above the newest one
   int olderPages = 0;
@@ -194,6 +228,24 @@ class _Db extends DevTestDb {
   }) async => [];
   @override
   Future<bool> messageExists(String msgUid) async => _row(msgUid) != null;
+  // one row by its uid, as a kept quote older than the pages reads it
+  int quoteReads = 0;
+  @override
+  Future<Map<String, Object?>?> messageIn(String peerId, String msgUid) async {
+    quoteReads++;
+    final r = _row(msgUid);
+    return r == null || r['peer_id'] != peerId || r['group_id'] != null
+        ? null
+        : {...r, 'rowid': r['id']};
+  }
+
+  @override
+  Future<void> setBlocked(String haloId, bool blocked) => mem.update(
+    'contacts',
+    {'blocked': blocked ? 1 : 0},
+    where: 'halo_id = ?',
+    whereArgs: [haloId],
+  );
   @override
   Future<void> setPowNonce(String msgUid, int nonce) async {}
   @override
@@ -255,9 +307,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
@@ -282,13 +334,13 @@ void main() {
   int note(int i) => base + i * 120000;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     final amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),
@@ -361,12 +413,13 @@ void main() {
       .firstWhere((s) => s.axisDirection == AxisDirection.up)
       .position;
 
-  Widget chat({String? jumpTo}) => ChatScreen(
+  Widget chat({String? jumpTo, String? text}) => ChatScreen(
     peerHaloId: _peer,
     peerOnion: '',
     peerXPub: 'ab' * 32,
     avatarSeed: _peer,
     jumpToUid: jumpTo,
+    initialText: text,
   );
 
   // one from them that comes now, written at [at]
@@ -384,6 +437,339 @@ void main() {
   Finder text(String s) => find.text(s, findRichText: true);
   bool seen(String s) => text(s).hitTestable().evaluate().isNotEmpty;
   double y(WidgetTester t, String s) => t.getCenter(text(s)).dy;
+
+  testWidgets('words and their quote come back after the app was stopped, '
+      'and go once sent', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.text(l10n.chatReplyingTo), findsNothing);
+    await t.enterText(find.byType(TextField).last, 'on my way');
+    await t.pump();
+    // written once typing rests
+    expect(db.kept, isEmpty);
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'on my way');
+    db.kept[_peer] = const Draft('on my way', replyTo: 'uid4', at: 1);
+    // android stops the app: only the file is left
+    await devClose(t);
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'on my way');
+    expect(find.text(l10n.chatReplyingTo), findsOneWidget);
+    // emptied as a send empties it: the row goes at once
+    field.controller!.clear();
+    await t.pump();
+    expect(db.kept, isEmpty);
+    await devClose(t);
+  });
+
+  testWidgets('a kept quote older than the pages held comes back from its '
+      'row, and stays kept', (t) async {
+    await seed(70);
+    addTearDown(endProcessForTest);
+    db.kept[_peer] = const Draft('yes, this one', replyTo: 'uid4', at: 1);
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'yes, this one');
+    // the newest 60 are held, the quoted one is not among them
+    expect(db.olderPages, 0);
+    expect(find.text(l10n.chatReplyingTo), findsOneWidget);
+    expect(find.text('note 4'), findsOneWidget);
+    // left without a touch: the row keeps its quote
+    await devClose(t);
+    expect(db.kept[_peer]?.replyTo, 'uid4');
+    // and after the app was stopped, again
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.text('note 4'), findsOneWidget);
+    await t.enterText(find.byType(TextField).last, 'yes, this one!');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.replyTo, 'uid4');
+    await devClose(t);
+  });
+
+  testWidgets('with timed messages on, the draft keeps their clock, and '
+      'one past it never shows', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    const s = FlutterSecureStorage();
+    await s.write(key: HaloContainer.everyday.key('ghost_on'), value: '1');
+    await s.write(key: HaloContainer.everyday.key('ghost_secs'), value: '60');
+    await devOpen(t, chat());
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'gone in a minute');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.burnSecs, 60);
+    await devClose(t);
+    // stopped, and opened again after its minute
+    final now = DateTime.now().millisecondsSinceEpoch;
+    db.kept[_peer] = Draft('gone in a minute', at: now - 61000, burnSecs: 60);
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, isEmpty);
+    expect(db.kept, isEmpty);
+    await devClose(t);
+  });
+
+  testWidgets('opening a chat after a stop keeps a timed draft\'s clock; '
+      'only new words take the chat\'s', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    // typed an hour long a minute ago; timed messages are off by now
+    final at = DateTime.now().millisecondsSinceEpoch - 60000;
+    db.kept[_peer] = Draft('meet at the gate', at: at, burnSecs: 3600);
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'meet at the gate');
+    await t.pump(kDraftWait);
+    await devClose(t);
+    expect(db.kept[_peer]?.burnSecs, 3600);
+    expect(db.kept[_peer]?.at, at);
+    // a word more is an edit: the chat's setting, off, is the draft's now
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'meet at the north gate');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.burnSecs, isNull);
+    expect(db.kept[_peer]!.at, greaterThan(at));
+    await devClose(t);
+  });
+
+  for (final away in [
+    'a page on top',
+    'the app in the background',
+    'the lock down',
+  ]) {
+    testWidgets('a timed draft past its time goes with $away, from the open '
+        'composer too; on the page in front it stays', (t) async {
+      await seed(6);
+      addTearDown(endProcessForTest);
+      lockState.openForTest(enabled: true);
+      addTearDown(lockState.openForTest);
+      // the states one at a time, as android goes through them
+      const out = [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+      ];
+      void go(Iterable<AppLifecycleState> to) {
+        for (final st in to) {
+          t.binding.handleAppLifecycleStateChanged(st);
+        }
+      }
+
+      if (t.binding.lifecycleState != AppLifecycleState.resumed) {
+        go([AppLifecycleState.resumed]);
+      }
+      var gone = false;
+      addTearDown(() {
+        if (gone) go([...out.reversed.skip(1), AppLifecycleState.resumed]);
+      });
+      final at = DateTime.now().millisecondsSinceEpoch - 29000;
+      db.kept[_peer] = Draft('gone soon', at: at, burnSecs: 30);
+      await devOpen(t, chat());
+      await settle(t);
+      TextField field() => t.widget<TextField>(find.byType(TextField).last);
+      expect(field().controller!.text, 'gone soon');
+      await t.runAsync(() => Future<void>.delayed(const Duration(seconds: 2)));
+      Future<void> sweep() => t.runAsync(
+        () => sweepDrafts(db, onScreen: draftTypedIn, gone: emptyComposerOf),
+      );
+      // being typed in: left alone
+      await sweep();
+      await t.pump();
+      expect(field().controller!.text, 'gone soon');
+      expect(db.kept[_peer], isNotNull);
+      final ctrl = field().controller!;
+      if (away == 'a page on top') {
+        Navigator.of(
+          t.element(find.byType(ChatScreen)),
+        ).push(MaterialPageRoute<void>(builder: (_) => const SizedBox()));
+        await t.pump(const Duration(seconds: 1));
+      } else if (away == 'the lock down') {
+        lockState.lock();
+      } else {
+        go(out);
+        gone = true;
+      }
+      await sweep();
+      await t.pump();
+      expect(db.kept, isEmpty);
+      expect(ctrl.text, isEmpty);
+      await devClose(t);
+    });
+  }
+
+  testWidgets('a timed draft past its time stays under the chat\'s own '
+      'sheet, and goes under another page', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    lockState.openForTest();
+    if (t.binding.lifecycleState != AppLifecycleState.resumed) {
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    }
+    final at = DateTime.now().millisecondsSinceEpoch - 29000;
+    db.kept[_peer] = Draft('pick a time', at: at, burnSecs: 30);
+    await devOpen(t, chat(), routes: true);
+    await settle(t);
+    final ctrl = t.widget<TextField>(find.byType(TextField).last).controller!;
+    expect(ctrl.text, 'pick a time');
+    await t.runAsync(() => Future<void>.delayed(const Duration(seconds: 2)));
+    Future<void> sweep() async {
+      await t.runAsync(
+        () => sweepDrafts(db, onScreen: draftTypedIn, gone: emptyComposerOf),
+      );
+      await t.pump();
+    }
+
+    final at2 = t.element(find.byType(ChatScreen));
+    // the timer picker, a sheet of its own: still typed in
+    unawaited(
+      showModalBottomSheet<void>(
+        context: at2,
+        builder: (_) => const SizedBox(height: 120),
+      ),
+    );
+    await t.pump(const Duration(seconds: 1));
+    await sweep();
+    expect(ctrl.text, 'pick a time');
+    expect(db.kept[_peer], isNotNull);
+    Navigator.of(at2).pop();
+    await t.pump(const Duration(seconds: 1));
+    // another page over it: left
+    unawaited(
+      Navigator.of(
+        at2,
+      ).push(MaterialPageRoute<void>(builder: (_) => const SizedBox())),
+    );
+    await t.pump(const Duration(seconds: 1));
+    await sweep();
+    expect(ctrl.text, isEmpty);
+    expect(db.kept, isEmpty);
+    await devClose(t);
+  });
+
+  testWidgets('forwarded words are a draft from the start, joined to the '
+      'one kept after a stop', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    await devOpen(t, chat(text: 'look at this'));
+    await settle(t);
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'look at this');
+    await devClose(t);
+    endProcessForTest();
+    db.kept[_peer] = const Draft('mine first', at: 1);
+    await devOpen(t, chat(text: 'and this'));
+    await settle(t);
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'mine first\nand this');
+    await devClose(t);
+  });
+
+  testWidgets('forwarded words never replace a stored draft that would not '
+      'read; they join it once it does', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    lockState.openForTest();
+    db.kept[_peer] = const Draft('mine first', at: 1);
+    db.readFails = true;
+    await devOpen(t, chat(text: 'and this'), routes: true);
+    await settle(t);
+    final ctrl = t.widget<TextField>(find.byType(TextField).last).controller!;
+    expect(ctrl.text, 'and this');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'mine first');
+    final at = t.element(find.byType(ChatScreen));
+    Future<void> away() async {
+      unawaited(
+        Navigator.of(
+          at,
+        ).push(MaterialPageRoute<void>(builder: (_) => const SizedBox())),
+      );
+      await t.pump(const Duration(seconds: 1));
+      Navigator.of(at).pop();
+      await settle(t);
+    }
+
+    // back on top, still unread: nothing emptied, nothing written
+    await away();
+    expect(ctrl.text, 'and this');
+    expect(db.kept[_peer]?.text, 'mine first');
+    // it reads now: the row's words, then the forwarded ones
+    db.readFails = false;
+    await away();
+    expect(ctrl.text, 'mine first\nand this');
+    await t.pump(kDraftWait);
+    expect(db.kept[_peer]?.text, 'mine first\nand this');
+    await devClose(t);
+  });
+
+  testWidgets('leaving the chat writes its draft at once', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    await devOpen(t, chat());
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'back in five');
+    await t.pump();
+    expect(db.kept, isEmpty);
+    await devClose(t);
+    expect(db.kept[_peer]?.text, 'back in five');
+  });
+
+  testWidgets('a kept quote of a message gone from the chat is let go', (
+    t,
+  ) async {
+    await seed(70);
+    addTearDown(endProcessForTest);
+    db.kept[_peer] = const Draft('about that', replyTo: 'uid-gone', at: 1);
+    await devOpen(t, chat());
+    await settle(t);
+    expect(db.quoteReads, 1);
+    expect(find.text(l10n.chatReplyingTo), findsNothing);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'about that');
+    await devClose(t);
+    expect(db.kept[_peer]?.text, 'about that');
+    expect(db.kept[_peer]?.replyTo, isNull);
+  });
+
+  testWidgets('a block keeps the draft under the blocked bar, and an '
+      'unblock gives it back', (t) async {
+    await seed(6);
+    addTearDown(endProcessForTest);
+    await devOpen(t, chat());
+    await settle(t);
+    await t.enterText(find.byType(TextField).last, 'never sent this');
+    await t.pump(kDraftWait);
+    await t.runAsync(() => appState.block(_peer));
+    await settle(t);
+    await devClose(t);
+    expect(db.kept[_peer]?.text, 'never sent this');
+    // after a restart the blocked bar stands where the composer was
+    endProcessForTest();
+    await devOpen(t, chat());
+    await settle(t);
+    expect(find.text('never sent this'), findsNothing);
+    await devClose(t);
+    expect(db.kept[_peer]?.text, 'never sent this');
+    await t.runAsync(() => appState.unblock(_peer));
+    await devOpen(t, chat());
+    await settle(t);
+    final field = t.widget<TextField>(find.byType(TextField).last);
+    expect(field.controller!.text, 'never sent this');
+    await devClose(t);
+  });
 
   testWidgets('one that came late shows where and when it was written, '
       'and a jump lands on it there', (t) async {
@@ -445,6 +831,46 @@ void main() {
       findsOneWidget,
     );
     expect(find.descendant(of: line, matching: text('late two')), findsNothing);
+    await devClose(t);
+  });
+
+  // crash 4: the pc's aot read the last held row's time before its null
+  // check, so the first message into an empty open chat crashed. the chat
+  // of a contact just accepted holds nothing yet
+  Future<void> sticker(String uid, int at) => mem.insert('messages', {
+    'peer_id': _peer,
+    'direction': 'in',
+    'plaintext': '',
+    'sticker': 'fokia:3:1',
+    'sent_at': at,
+    'written_at': at,
+    'msg_uid': uid,
+    'sent': 1,
+  });
+
+  testWidgets('a sticker into an empty open chat, then a burst, then words', (
+    t,
+  ) async {
+    await devOpen(t, chat());
+    await settle(t);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await sticker('st0', now);
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(t.takeException(), isNull);
+    expect(find.byType(StickerBubble), findsOneWidget);
+    // eight in one poll, each told on its own
+    for (var i = 1; i <= 8; i++) {
+      await sticker('st$i', now + i);
+      appState.chatChanged(_peer);
+    }
+    await settle(t);
+    // and one written before the first: it goes up, not below
+    await cameLate('early', 'early words', now - 60000);
+    appState.chatChanged(_peer);
+    await settle(t);
+    expect(t.takeException(), isNull);
+    expect(find.byType(StickerBubble), findsWidgets);
     await devClose(t);
   });
 

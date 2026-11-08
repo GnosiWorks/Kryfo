@@ -11,6 +11,8 @@ import '../dlog.dart';
 import '../widgets/halo_sheet.dart';
 import '../widgets/sheet_handle.dart';
 import 'package:share_plus/share_plus.dart';
+
+import '../desktop/desktop_mode.dart' show canShareOut;
 import '../lock_state.dart';
 import '../main.dart' show appState, session;
 import '../widgets/motion.dart';
@@ -82,7 +84,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                 l10n.roomLinkTheyWillKnowThis,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.45,
                 ),
               ),
@@ -92,7 +94,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 22),
                 child: Text(
                   l10n.roomLinkNoContactsYet,
-                  style: HaloType.sans(size: 13, color: HaloColors.text2),
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
                 ),
               )
             else
@@ -186,7 +188,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                       expiresAt: widget.link.expiresAt,
                       size: 10,
                     ),
-                    style: HaloType.mono(size: 10, color: HaloColors.text2),
+                    style: HaloType.mono(size: 10, color: HaloColors.text),
                   )
                 : Row(
                     children: [
@@ -209,7 +211,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                       style: HaloType.sans(
                         size: 12.5,
                         weight: FontWeight.w600,
-                        color: HaloColors.violet,
+                        color: HaloColors.violetText,
                       ),
                     ),
                   ),
@@ -251,7 +253,7 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
               textAlign: TextAlign.center,
               style: HaloType.sans(
                 size: 12,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.5,
               ),
             ),
@@ -275,12 +277,13 @@ class _RoomLinkSheetState extends State<_RoomLinkSheet> {
                   label: l10n.roomLinkSendToAContact,
                   onTap: () => _toContact(uri),
                 ),
-                _Quiet(
-                  label: l10n.commonShare,
-                  onTap: () => lockState.hold(
-                    () => SharePlus.instance.share(ShareParams(text: uri)),
+                if (canShareOut)
+                  _Quiet(
+                    label: l10n.commonShare,
+                    onTap: () => lockState.hold(
+                      () => SharePlus.instance.share(ShareParams(text: uri)),
+                    ),
                   ),
-                ),
               ],
             ),
           ],
@@ -308,7 +311,7 @@ class _Quiet extends StatelessWidget {
         style: HaloType.sans(
           size: 13,
           weight: FontWeight.w600,
-          color: HaloColors.violet,
+          color: HaloColors.violetText,
         ),
       ),
     ),

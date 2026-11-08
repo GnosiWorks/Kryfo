@@ -14,7 +14,8 @@ import '../devchat/dev_key.dart';
 import '../devchat/dev_start.dart' show forgetDevChoices;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
-import '../main.dart' show appState, session, sessionQuiet;
+import '../main.dart'
+    show appState, session, sessionQuiet, AppStateDevchat, AppStateRefresh;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -26,6 +27,7 @@ import '../widgets/sheet_handle.dart';
 import '../widgets/stagger_in.dart';
 import 'chat_screen.dart';
 import 'home_screen.dart' show ContactPreview;
+import '../wide/wide_pane.dart' show deskPush;
 
 // a key is pinned and this is not the developer's own phone. a decoy is
 // never his
@@ -62,9 +64,13 @@ Future<void> openDevChat(
   String chatId, {
   String? initialText,
   String? jumpToUid,
-}) => Navigator.of(
-  context,
-).push(devChatRoute(chatId, initialText: initialText, jumpToUid: jumpToUid));
+}) =>
+    // on a computer it opens in the pane, as any chat from the list
+    deskPush(
+      context,
+      devChatRoute(chatId, initialText: initialText, jumpToUid: jumpToUid),
+      id: chatId,
+    );
 
 // before the first send the flags are the chat's own row, after it its
 // contact row. either way home reads them back
@@ -306,7 +312,7 @@ class _About extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: HaloType.sans(
                   size: 13.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.5,
                 ),
               ),
@@ -397,7 +403,7 @@ class _KeyCard extends StatelessWidget {
             l10n.devKeyLabel,
             style: HaloType.mono(
               size: 10,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               letter: 0.14,
             ),
           ),

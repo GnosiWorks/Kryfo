@@ -20,6 +20,7 @@
 #
 # usage:
 #   ./verify.sh app-arm64-v8a-release.apk [more.apk...]
+#   ./verify.sh app-universal-release.apk    the universal one (both arm abis)
 #   ./verify.sh --ref v0.2.8 app-arm64-v8a-release.apk
 #   ./verify.sh --compare built.apk published.apk    no container, diff only
 #
@@ -37,7 +38,8 @@
 set -e
 cd "$(dirname "$0")"
 
-IMAGE=kryfo-repro
+# KRYFO_REPRO_IMAGE names the image apart, for a box building two trees at once
+IMAGE=${KRYFO_REPRO_IMAGE:-kryfo-repro}
 REF=HEAD
 CACHE=
 KEEP=
@@ -63,7 +65,7 @@ while [ $# -gt 0 ]; do
     --keep) KEEP=1; shift ;;
     --no-cross) CROSS=; shift ;;
     --compare) shift; COMPARE_ONLY=1 ;;
-    -h|--help) sed -n '2,36p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,37p' "$0"; exit 0 ;;
     *) APKS+=("$1"); shift ;;
   esac
 done
@@ -86,6 +88,18 @@ differing() {
 }
 
 hash_of() { echo "$1" | awk -v e="$2" '$2==e {print substr($1,1,12)}'; }
+
+# the universal apk carries both arm abis
+abis_in() { if [ "$1" = universal ]; then echo armeabi-v7a arm64-v8a; else echo "$1"; fi; }
+
+# an apk without the shim would match a build that skipped it too
+has_shim() {
+  local a
+  for a in $(abis_in "$2"); do
+    unzip -l "$1" | grep -q " lib/$a/libkryfo_signal\.so\$" || return 1
+  done
+}
+shim_sha() { unzip -p "$1" "lib/$2/libkryfo_signal.so" | sha256sum | cut -c1-64; }
 
 # prints MATCH or the differing entries; returns 1 on a difference
 compare() {
@@ -194,6 +208,12 @@ build_at() {
   local srcpath="$1" tag="$2"
   git clone -q "$REPO" "$WORK/$tag"
   git -C "$WORK/$tag" checkout -q "$COMMIT"
+  # KRYFO_TARBALLS=<dir>: the translation sources' tarballs from there, as
+  # release.sh takes them; fetch-bergamot.sh checks each against its pin
+  if [ -n "${KRYFO_TARBALLS:-}" ]; then
+    mkdir -p "$WORK/$tag/engine/translate/native/.third_party/dl"
+    cp "$KRYFO_TARBALLS"/*.tar.gz "$WORK/$tag/engine/translate/native/.third_party/dl/"
+  fi
   mkdir -p "$WORK/out-$tag"
   local mounts=(-v "$WORK/$tag:$srcpath" -v "$WORK/out-$tag:/out")
   if [ -n "$CACHE" ]; then
@@ -204,7 +224,8 @@ build_at() {
   # cgo opens more files at once building tor and openssl than the 1024 a
   # container gets by default
   docker run --rm --ulimit nofile=65536:65536 -u "$(id -u):$(id -g)" \
-    -e "HALO_SRC=$srcpath" -w "$srcpath" "${mounts[@]}" "$IMAGE"
+    -e "HALO_SRC=$srcpath" ${HALO_BUILD_NAME:+-e "HALO_BUILD_NAME=$HALO_BUILD_NAME"} \
+    -w "$srcpath" "${mounts[@]}" "$IMAGE"
 }
 
 build_at "$FDROID_PATH" primary
@@ -228,7 +249,22 @@ for shipped in "${APKS[@]}"; do
     rc=1
     continue
   fi
+  if ! has_shim "$shipped" "$abi" || ! has_shim "$built" "$abi"; then
+    echo "  NO SHIM  $(basename "$shipped"): a lib/*/libkryfo_signal.so is missing"
+    rc=1
+    continue
+  fi
   compare "$built" "$shipped" || rc=1
+done
+
+echo
+echo "== the signal shim in each apk (the stamp build-android.sh writes names the same)"
+for shipped in "${APKS[@]}"; do
+  abi=$(basename "$shipped" | sed -n 's/^app-\(.*\)-release.*\.apk$/\1/p')
+  [ -n "$abi" ] && has_shim "$shipped" "$abi" || continue
+  for a in $(abis_in "$abi"); do
+    echo "  $abi $a shim sha256 $(shim_sha "$shipped" "$a")"
+  done
 done
 
 if [ -n "$CROSS" ]; then

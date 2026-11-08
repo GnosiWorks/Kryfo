@@ -3,7 +3,8 @@ package main
 
 // the decoy's identity, from pure functions that touch no engine state and
 // log nothing. the decoy never goes online: its keys are only shown, and
-// carried by a backup made there.
+// carried by a backup made there. its read-only lookups have a lane of
+// their own, below.
 
 /*
 #include <stdlib.h>
@@ -11,11 +12,14 @@ package main
 import "C"
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"sync"
 
 	bed25519 "github.com/cretz/bine/torutil/ed25519"
 
@@ -114,4 +118,70 @@ func HaloQuietFirstContactPk(cX *C.char, counter C.int) *C.char {
 		return C.CString("error: " + err.Error())
 	}
 	return C.CString(pk)
+}
+
+// the decoy's read-only lookups (a handle, people search, its check) go on a
+// lane of their own, under a socks name made again for every decoy session:
+// nothing they ask shares a circuit or a connection with the everyday app's
+// registry calls, nor with an earlier decoy session's
+var (
+	decoyLaneMu sync.Mutex
+	decoyLaneID string
+)
+
+func decoyLane() (lane, name string) {
+	decoyLaneMu.Lock()
+	defer decoyLaneMu.Unlock()
+	if decoyLaneID == "" {
+		decoyLaneID = freshSocksName()
+	}
+	return "decoy:" + decoyLaneID, decoyLaneID
+}
+
+// a random socks name nothing else has: a decoy session's, a search's
+func freshSocksName() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+// a new decoy session: a new socks name, and the last one's client gone
+func decoyLaneNew() {
+	decoyLaneMu.Lock()
+	old := "decoy:" + decoyLaneID
+	decoyLaneID = freshSocksName()
+	decoyLaneMu.Unlock()
+	cachedNostrClientMu.Lock()
+	if c := cachedNostrClients["tor:"+old]; c != nil {
+		c.CloseIdleConnections()
+	}
+	delete(cachedNostrClients, "tor:"+old)
+	cachedNostrClientMu.Unlock()
+}
+
+func decoyClient(ctx context.Context) (*http.Client, error) {
+	return servicesClientOf(ctx, func() (*http.Client, error) {
+		return servicesTorClientAs(decoyLane())
+	})
+}
+
+//export HaloDecoyLaneNew
+func HaloDecoyLaneNew() *C.char {
+	decoyLaneNew()
+	return C.CString("ok")
+}
+
+//export HaloDecoyHandleCheck
+func HaloDecoyHandleCheck(cHandle *C.char) *C.char {
+	return C.CString(handleCheckOn(goStr(cHandle), decoyClient))
+}
+
+//export HaloDecoyTorGetJSON
+func HaloDecoyTorGetJSON(cUrl *C.char) *C.char {
+	return C.CString(torGetJSONOn(goStr(cUrl), decoyClient))
+}
+
+//export HaloDecoyTorPost
+func HaloDecoyTorPost(cUrl, cBody *C.char) *C.char {
+	return C.CString(torPostOn(goStr(cUrl), goStr(cBody), decoyClient))
 }

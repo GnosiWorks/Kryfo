@@ -416,7 +416,9 @@ func obsSubscribe(t *tor.Tor) {
 		return
 	}
 	obsMu.Unlock()
-	if err := c.AddEventListener(obsCh, control.EventCodeORConn, control.EventCodeCircuit); err != nil {
+	if err := evDo(c, "SETEVENTS ORCONN CIRC", func() error {
+		return c.AddEventListener(obsCh, control.EventCodeORConn, control.EventCodeCircuit)
+	}); err != nil {
 		log.Printf("auto: event subscribe: %v", err)
 		return
 	}
@@ -449,7 +451,9 @@ func obsClose() {
 	c, g := evConn, evGen
 	evMu.Unlock()
 	if c != nil && g == gen {
-		_ = c.RemoveEventListener(obsCh, control.EventCodeORConn, control.EventCodeCircuit)
+		_ = evDo(c, "SETEVENTS", func() error {
+			return c.RemoveEventListener(obsCh, control.EventCodeORConn, control.EventCodeCircuit)
+		})
 	}
 }
 

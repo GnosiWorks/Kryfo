@@ -6,11 +6,25 @@ import 'package:flutter/services.dart';
 import '../store.dart';
 import '../theme.dart';
 import 'avatar_picker_screen.dart';
-import '../main.dart' show appState, session, showAddContact;
+import '../desktop/desktop_mode.dart' show onDesktop;
+import '../main.dart'
+    show
+        appState,
+        linkedRole,
+        session,
+        showAddContact,
+        AppStatePhotos,
+        AppStateProfile,
+        AppStateSession;
+import '../photo_pick.dart';
+import '../profile_photo.dart' show photoAddOffered, photoBook;
+import '../widgets/face_view.dart';
+import '../widgets/photo_sheet.dart';
 import '../supporter.dart';
 import '../widgets/kryfo_avatar.dart';
 import 'settings_screen.dart';
 import 'donate_screen.dart';
+import 'tip_screen.dart';
 import 'my_kryfo_screen.dart';
 import '../widgets/ease_size.dart';
 import '../widgets/motion.dart' show haloRoute, kHouseCurve, kHouseTime;
@@ -19,6 +33,9 @@ import '../widgets/halo_rows.dart';
 import '../widgets/press_scale.dart';
 import '../widgets/unfold.dart';
 import '../l10n/l10n.dart';
+import '../wide/wide_pane.dart';
+import '../wide/read_width.dart' show DeskPage;
+import '../widgets/entrance.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onOpenSupport;
@@ -38,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   late final AnimationController _intro;
   late final AnimationController _pulse;
+  final _entrance = Entrance();
 
   @override
   void initState() {
@@ -52,21 +70,21 @@ class _ProfileScreenState extends State<ProfileScreen>
       duration: const Duration(milliseconds: 1800),
     );
     _loadBadge();
+    // a tip or a restore while this screen is up shows here at once
+    badgeMoves.addListener(_loadBadge);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_intro.isAnimating || _intro.isCompleted) return;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _intro.value = 1;
-    } else {
-      _intro.forward();
-    }
+    _entrance.play(context, _intro);
   }
 
   @override
   void dispose() {
+    badgeMoves.removeListener(_loadBadge);
+    _entrance.dispose();
     _intro.dispose();
     _pulse.dispose();
     super.dispose();
@@ -138,178 +156,253 @@ class _ProfileScreenState extends State<ProfileScreen>
           IconButton(
             tooltip: l10n.commonSettings,
             icon: Icon(Icons.settings_outlined, color: HaloColors.text2),
-            onPressed: () =>
-                Navigator.of(context).push(haloRoute(SettingsScreen())),
+            onPressed: () => deskPush(context, haloRoute(SettingsScreen())),
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _reveal(0, _head(id, hasBadge)),
-              const SizedBox(height: 26),
+      body: DeskPage(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _reveal(0, _head(id, hasBadge)),
+                const SizedBox(height: 26),
 
-              _reveal(1, _Section(l10n.profileIdentity)),
-              _reveal(
-                1,
-                _Card(
+                _reveal(1, _Section(l10n.profileIdentity)),
+                _reveal(
+                  1,
+                  _Card(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _CopyRow(
+                          onTap: () => _copy(id, l10n.profileKryfoId),
+                          copies: _idCopies,
+                          child: Text(
+                            id.isEmpty ? '...' : id,
+                            style: HaloType.mono(
+                              size: 16,
+                              color: HaloColors.amberText,
+                            ),
+                          ),
+                        ),
+                        if (appState.sessionOnion.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Container(
+                              height: 0.5,
+                              color: HaloColors.line,
+                            ),
+                          ),
+                          _CopyRow(
+                            onTap: () => _copy(
+                              appState.sessionOnion,
+                              l10n.profileOnionAddress,
+                              onion: true,
+                            ),
+                            copies: _onionCopies,
+                            child: Text(
+                              appState.sessionOnion,
+                              style: HaloType.mono(
+                                size: 10.5,
+                                color: HaloColors.text,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // a tier read after the intro grows in rather than
+                // pushing the sections under it down at once
+                Unfold(
+                  open: hasBadge,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _CopyRow(
-                        onTap: () => _copy(id, l10n.profileKryfoId),
-                        copies: _idCopies,
-                        child: Text(
-                          id.isEmpty ? '...' : id,
-                          style: HaloType.mono(
-                            size: 16,
-                            color: HaloColors.amberText,
-                          ),
+                      _reveal(2, _Section(l10n.profileSupporterBadge)),
+                      _reveal(
+                        2,
+                        HaloGroup(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: Row(
+                                children: [
+                                  _badgePill(_tier, glow: true),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.profileYouAreAThank(tierKey(_tier)),
+                                      style: HaloType.sans(
+                                        size: 13,
+                                        color: HaloColors.text,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // the switch flips at once; the save follows
+                            HaloRow(
+                              icon: Icons.verified_outlined,
+                              label: l10n.profileShowMyBadge,
+                              hint: l10n.profileOnMyOwnScreens,
+                              toggled: _showSelf,
+                              onTap: () {
+                                final v = !_showSelf;
+                                setState(() => _showSelf = v);
+                                if (v) _glow();
+                                saveShowBadgeSelf(v, session.container);
+                              },
+                            ),
+                            HaloRow(
+                              icon: Icons.people_outline,
+                              label: l10n.profileLetContactsSeeIt,
+                              hint: l10n.profileOffByDefault,
+                              toggled: _share,
+                              onTap: () {
+                                final v = !_share;
+                                setState(() => _share = v);
+                                saveShareBadge(v, session.container);
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                      if (appState.sessionOnion.isNotEmpty) ...[
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Container(height: 0.5, color: HaloColors.line),
-                        ),
-                        _CopyRow(
-                          onTap: () => _copy(
-                            appState.sessionOnion,
-                            l10n.profileOnionAddress,
-                            onion: true,
-                          ),
-                          copies: _onionCopies,
-                          child: Text(
-                            appState.sessionOnion,
-                            style: HaloType.mono(
-                              size: 10.5,
-                              color: HaloColors.text2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
 
-              // a tier read after the intro grows in rather than
-              // pushing the sections under it down at once
-              Unfold(
-                open: hasBadge,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _reveal(2, _Section(l10n.profileSupporterBadge)),
-                    _reveal(
-                      2,
-                      HaloGroup(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(14),
-                            child: Row(
-                              children: [
-                                _badgePill(_tier, glow: true),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    l10n.profileYouAreAThank(tierKey(_tier)),
-                                    style: HaloType.sans(
-                                      size: 13,
-                                      color: HaloColors.text2,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                // the code, the invite and adding are the phone's on a
+                // linked device
+                if (!linkedRole) ...[
+                  _reveal(3, _Section(l10n.profileShareConnect)),
+                  // the same rows as settings: one surface, a tile per row
+                  _reveal(
+                    3,
+                    HaloGroup(
+                      children: [
+                        HaloRow(
+                          icon: Icons.qr_code_2_outlined,
+                          label: l10n.profileMyKryfoCode,
+                          onTap: () => deskPush(
+                            context,
+                            haloRoute(const MyKryfoScreen()),
                           ),
-                          // the switch flips at once; the save follows
-                          HaloRow(
-                            icon: Icons.verified_outlined,
-                            label: l10n.profileShowMyBadge,
-                            hint: l10n.profileOnMyOwnScreens,
-                            toggled: _showSelf,
-                            onTap: () {
-                              final v = !_showSelf;
-                              setState(() => _showSelf = v);
-                              if (v) _glow();
-                              saveShowBadgeSelf(v, session.container);
-                            },
-                          ),
-                          HaloRow(
-                            icon: Icons.people_outline,
-                            label: l10n.profileLetContactsSeeIt,
-                            hint: l10n.profileOffByDefault,
-                            toggled: _share,
-                            onTap: () {
-                              final v = !_share;
-                              setState(() => _share = v);
-                              saveShareBadge(v, session.container);
-                            },
-                          ),
-                        ],
-                      ),
+                        ),
+                        HaloRow(
+                          icon: Icons.person_add_outlined,
+                          label: l10n.profileAddContact,
+                          onTap: () => showAddContact(context),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-
-              _reveal(3, _Section(l10n.profileShareConnect)),
-              // the same rows as settings: one surface, a tile per row
-              _reveal(
-                3,
-                HaloGroup(
-                  children: [
-                    HaloRow(
-                      icon: Icons.qr_code_2_outlined,
-                      label: l10n.profileMyKryfoCode,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).push(haloRoute(const MyKryfoScreen())),
-                    ),
-                    HaloRow(
-                      icon: Icons.person_add_outlined,
-                      label: l10n.profileAddContact,
-                      onTap: () => showAddContact(context),
-                    ),
-                  ],
-                ),
-              ),
-              // the play build offers no way to give
-              if (!kPlayBuild) ...[
+                  ),
+                ],
                 const SizedBox(height: 24),
-                _reveal(
-                  4,
-                  _Section(
-                    hasBadge ? l10n.profileGiveAgain : l10n.profileSupportKryfo,
+                // the play build's way is a tip through google play, and its
+                // words never name another
+                if (kPlayBuild) ...[
+                  _reveal(4, _Section(l10n.tipsTitle)),
+                  _reveal(
+                    4,
+                    _SupportCard(
+                      label: l10n.tipsProfileCard,
+                      onTap:
+                          widget.onOpenSupport ??
+                          () => deskPush(context, haloRoute(const TipScreen())),
+                    ),
                   ),
-                ),
-                _reveal(
-                  4,
-                  _SupportCard(
-                    label: hasBadge
-                        ? l10n.profileKryfoRunsOnWhat
-                        : l10n.profileKeepKryfoIndependent,
-                    onTap:
-                        widget.onOpenSupport ??
-                        () => Navigator.of(
-                          context,
-                        ).push(haloRoute(const DonateScreen())),
+                ] else ...[
+                  _reveal(
+                    4,
+                    _Section(
+                      hasBadge
+                          ? l10n.profileGiveAgain
+                          : l10n.profileSupportKryfo,
+                    ),
                   ),
-                ),
+                  _reveal(
+                    4,
+                    _SupportCard(
+                      label: hasBadge
+                          ? l10n.profileKryfoRunsOnWhat
+                          : l10n.profileKeepKryfoIndependent,
+                      onTap:
+                          widget.onOpenSupport ??
+                          () => deskPush(
+                            context,
+                            haloRoute(const DonateScreen()),
+                          ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  // your photo or face: a photo from the camera or the gallery, a drawn
+  // face, a larger look, or the photo off again
+  Future<void> _faceTapped(String id) async {
+    final has = photoBook.has(id);
+    final add = photoAddOffered(desktop: onDesktop);
+    // nothing to choose but the faces: straight to them
+    if (!add && !has) return _openFaces();
+    final c = await showPhotoSheet(
+      context,
+      title: l10n.photoYourPhoto,
+      line: l10n.photoYourPhotoLine,
+      seed: id.isEmpty ? 'kryfo' : id,
+      choice: appState.myAvatar,
+      add: add,
+      has: has,
+      faces: true,
+    );
+    if (!mounted || c == null) return;
+    switch (c) {
+      case PhotoChoice.faces:
+        await _openFaces();
+      case PhotoChoice.view:
+        await openFace(context, id, label: l10n.photoYourPhoto);
+      case PhotoChoice.remove:
+        HapticFeedback.mediumImpact();
+        await appState.removeMyPhoto();
+      case PhotoChoice.camera || PhotoChoice.gallery:
+        final at = session;
+        final r = await pickProfilePhoto(
+          context,
+          camera: c == PhotoChoice.camera,
+          got: (photo) async {
+            // a lock or another pin meanwhile: it goes nowhere
+            if (!session.holdsSame(at, vault: false)) return;
+            if (!await appState.setMyPhoto(photo) && mounted) {
+              showHaloToast(context, l10n.photoCouldNotUse);
+            }
+          },
+        );
+        if (r == PhotoPicked.unclean && mounted) {
+          showHaloToast(context, l10n.photoCouldNotUse);
+        }
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _openFaces() async {
+    await deskPush(context, haloRoute(const AvatarPickerScreen()));
+    if (mounted) setState(() {});
   }
 
   // the face, on a soft amber glow, and the name under it
@@ -322,14 +415,9 @@ class _ProfileScreenState extends State<ProfileScreen>
             curve: const Interval(0.0, 0.7, curve: Curves.easeOutBack),
           ),
           child: PressScale(
-            label: l10n.profileChangeYourFace,
+            label: l10n.photoYourPhoto,
             scale: 0.95,
-            onTap: () async {
-              await Navigator.of(
-                context,
-              ).push(haloRoute(const AvatarPickerScreen()));
-              if (mounted) setState(() {});
-            },
+            onTap: () => _faceTapped(id),
             child: SizedBox(
               width: 150,
               height: 132,
@@ -377,7 +465,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                           width: 2.5,
                         ),
                       ),
-                      child: Icon(Icons.edit, size: 13, color: HaloColors.onAmber),
+                      child: Icon(
+                        Icons.edit,
+                        size: 13,
+                        color: HaloColors.onAmber,
+                      ),
                     ),
                   ),
                 ],
@@ -616,7 +708,7 @@ class _Section extends StatelessWidget {
       padding: const EdgeInsetsDirectional.fromSTEB(2, 0, 0, 10),
       child: Text(
         label,
-        style: HaloType.mono(size: 10, color: HaloColors.text2),
+        style: HaloType.mono(size: 10, color: HaloColors.text),
       ),
     );
   }

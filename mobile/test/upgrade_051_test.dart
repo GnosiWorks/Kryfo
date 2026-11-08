@@ -12,6 +12,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/devices/device_store.dart' show deviceTables;
+import 'package:kryfo/file_drop.dart' show dropFetchTable;
 import 'package:kryfo/main.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +22,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 85;
+const _version = 96;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -52,11 +54,31 @@ final _steps = <int, (Future<void> Function(Database), String)>{
   83: (shotsColumns, 'ALTER TABLE contacts ADD COLUMN shots_on'),
   84: (albumColumns, 'ALTER TABLE messages ADD COLUMN album_id'),
   85: (wallpaperTable, 'CREATE TABLE IF NOT EXISTS wallpapers'),
+  86: (draftsTable, 'CREATE TABLE IF NOT EXISTS drafts'),
+  87: (opusColumns, 'ALTER TABLE contacts ADD COLUMN opus_can'),
+  88: (capsColumns, 'ALTER TABLE contacts ADD COLUMN caps'),
+  89: (groupShotsColumns, 'ALTER TABLE groups ADD COLUMN shots_on'),
+  90: (dropFetchTable, 'CREATE TABLE IF NOT EXISTS file_seen'),
+  91: (upgradeTo91, 'CREATE TABLE IF NOT EXISTS kyber_prekeys'),
+  92: (upgradeTo92, 'CREATE TABLE IF NOT EXISTS identities'),
+  94: (inviteTables, 'CREATE TABLE IF NOT EXISTS invites'),
+  95: (
+    (db) => deviceTables(db, addColumn),
+    'CREATE TABLE IF NOT EXISTS dev_lists',
+  ),
+  96: (
+    (db) => pqRestartTables(db, upgrade: true),
+    'CREATE TABLE IF NOT EXISTS pq_restarts',
+  ),
+  // photos' runs on every upgrade, after every other step
+  93: (photoTables, 'CREATE TABLE IF NOT EXISTS my_photo'),
 };
 
 // whether the step to [step] runs on a file at [from]. test builds took 81
-// for each step alone, so a file at 81 to 84 takes them all again
-bool _runs(int step, int from) => step > from || from > 80;
+// for each step alone, so a file at 81 to 84 takes them all again. 93,
+// photos', runs on any upgrade
+bool _runs(int step, int from) =>
+    step == 93 || step > from || (from > 80 && from < 85);
 
 // what the steps add, by table
 const _added = {
@@ -68,15 +90,105 @@ const _added = {
     'shots_can',
     'shots_by',
     'shots_when',
+    'caps',
+    'caps_at',
+    'ident',
+    'ikey',
   ],
-  'groups': ['ended_at', 'ended_by'],
+  'groups': [
+    'ended_at',
+    'ended_by',
+    'shots_on',
+    'shots_at',
+    'shots_all',
+    'shots_by',
+    'shots_when',
+    'shots_line',
+    'shots_told',
+  ],
   'messages': ['album_id', 'album_n', 'album_i'],
+  'dev_lists': ['ident', 'owner', 'version', 'wire', 'from_invite'],
+  'dev_pool': ['kyber_id', 'kdb1', 'aged_at', 'last'],
   'wallpapers': ['chat', 'atmo', 'photo'],
+  'drafts': ['chat', 'body', 'reply_to', 'updated_at'],
+  'file_fetches': ['msg_uid', 'sender', 'wire', 'path', 'state'],
+  'kyber_prekeys': ['id', 'record', 'last_resort', 'created_at'],
+  'kyber_used': ['kyber_id', 'signed_id', 'base_key'],
+  'dev_kyber_prekeys': ['id', 'record', 'last_resort', 'created_at'],
+  'dev_kyber_used': ['kyber_id', 'signed_id', 'base_key'],
+  'opener_reads': ['kyber_id', 'opener'],
+  'dev_opener_reads': ['kyber_id', 'opener'],
+  'first_kept': ['opened_id', 'opened_plain'],
+  'identities': [
+    'id',
+    'kind',
+    'x_priv',
+    'reg_id',
+    'created_at',
+    'retired_at',
+    'dev_id',
+    'ident_pub',
+  ],
+  'pairs': ['ident', 'peer', 'their_device', 'my_device', 'conv', 'seed'],
+  'fc_keys': ['ident', 'invite_id', 'sk', 'created_at', 'retired_at'],
+  'sessions': ['ident', 'address', 'device_id', 'record'],
+  'peer_identities': ['ident', 'address', 'identity_key'],
+  'prekeys': ['ident', 'id', 'record'],
+  'signed_prekeys': ['ident', 'id', 'use', 'invite_id', 'retired_at'],
+  'invites': [
+    'ident',
+    'id',
+    'kind',
+    'issued',
+    'expires',
+    'used_at',
+    'retired_at',
+    'spk_id',
+    'kyber_id',
+    'ec_id',
+    'link',
+    'qr',
+    'never_expires',
+  ],
+  'hellos': [
+    'ident',
+    'way',
+    'peer',
+    'invite_id',
+    'hello',
+    'fc',
+    'at',
+    'once',
+    'went_at',
+  ],
+  'pq_restarts': [
+    'ident',
+    'peer',
+    'key',
+    'asked_at',
+    'asks',
+    'pq_at',
+    'dropped_at',
+  ],
+  'hello_seen': ['ident', 'hash', 'at'],
+  'my_photo': ['id', 'ver', 'photo'],
+  'contact_photos': ['halo_id', 'mine', 'theirs', 'their_ver', 'took_at'],
+  'photo_parts': ['halo_id', 'idx', 'ver', 'total', 'part', 'at'],
+  'photo_peers': [
+    'halo_id',
+    'held',
+    'want',
+    'stamp',
+    'next_at',
+    'tries',
+    'sent_at',
+  ],
 };
 const _indexes = [
   'idx_media_chunks_group',
   'idx_group_media_owed_group',
   'idx_messages_album',
+  'idx_contacts_ikey',
 ];
 
 // what the file holds, as sqlite describes it: each table's columns by
@@ -402,5 +514,37 @@ void main() {
       isFalse,
     );
     await db.close();
+  });
+  test('a file at 94 without roster_invites gets it at open, and a group\'s '
+      'rows go there without it; a dev table gets its kept', () async {
+    if (skip()) return;
+    Future<List<String>> colsOf(Database raw) async => [
+      for (final c in await raw.rawQuery("PRAGMA table_info('roster_invites')"))
+        c['name'] as String,
+    ];
+    final db = HaloDb();
+    final raw = await db.open();
+    await raw.execute('DROP TABLE roster_invites');
+    // a member synced away, a removal, an end and a delete fail soft
+    await db.syncGroupMembers('g0a1b2c3d4e5f60718293a4b5c6d7e8f9', []);
+    await db.removeGroupMember('g0a1b2c3d4e5f60718293a4b5c6d7e8f9', 'x');
+    await db.wipeEnded('g0a1b2c3d4e5f60718293a4b5c6d7e8f9');
+    await db.deleteGroup('g0a1b2c3d4e5f60718293a4b5c6d7e8f9');
+    await db.close();
+    final again = HaloDb();
+    final up = await again.open();
+    expect(await up.getVersion(), _version);
+    expect(await colsOf(up), contains('kept'));
+    await up.execute('DROP TABLE roster_invites');
+    await up.execute(
+      'CREATE TABLE roster_invites (group_id TEXT NOT NULL, '
+      'member TEXT NOT NULL, id TEXT NOT NULL, issued INTEGER NOT NULL, '
+      'invite BLOB NOT NULL, pushed INTEGER NOT NULL DEFAULT 1, '
+      'PRIMARY KEY (group_id, member))',
+    );
+    await again.close();
+    final third = HaloDb();
+    expect(await colsOf(await third.open()), contains('kept'));
+    await third.close();
   });
 }

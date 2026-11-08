@@ -2,13 +2,14 @@
 // "introduce <B> to...": pick an accepted contact, add a line if you like,
 // and both get the other's card. a sheet, not a screen: one decision made
 // from inside a conversation.
+import '../desktop/desktop_mode.dart' show onDesktop;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../intro_budget.dart';
 import '../container.dart';
-import '../main.dart' show appState, session;
+import '../main.dart' show appState, session, AppStateContacts;
 import '../screens/home_screen.dart' show ContactPreview;
 import '../theme.dart';
 import '../vouch_text.dart';
@@ -162,7 +163,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                 l10n.introduceBothOfThemGet,
                 style: HaloType.sans(
                   size: 12,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.5,
                 ),
               ),
@@ -173,7 +174,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                       padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                       child: Text(
                         l10n.introduceNoOneElseTo,
-                        style: HaloType.sans(size: 13, color: HaloColors.text2),
+                        style: HaloType.sans(size: 13, color: HaloColors.text),
                       ),
                     )
                   : ListView.builder(
@@ -210,6 +211,8 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                   enableIMEPersonalizedLearning: false,
                   maxLength: _noteMax,
                   onChanged: (_) => setState(() {}),
+                  // enter sends the introduction on a computer
+                  onSubmitted: onDesktop ? (_) => _go() : null,
                   textCapitalization: TextCapitalization.none,
                   style: HaloType.sans(size: 14, color: HaloColors.text),
                   cursorColor: HaloColors.amber,
@@ -224,10 +227,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
                     suffixText: _noteCtrl.text.isEmpty
                         ? null
                         : '${_noteCtrl.text.length}/$_noteMax',
-                    suffixStyle: HaloType.mono(
-                      size: 9,
-                      color: HaloColors.text2,
-                    ),
+                    suffixStyle: HaloType.mono(size: 9, color: HaloColors.text),
                     isDense: true,
                     filled: true,
                     fillColor: HaloColors.surface,
@@ -302,7 +302,7 @@ class _IntroduceSheetState extends State<_IntroduceSheet> {
         textAlign: TextAlign.center,
         style: HaloType.mono(
           size: 10,
-          color: refill == null ? HaloColors.text3 : HaloColors.amberText,
+          color: refill == null ? HaloColors.text : HaloColors.amberText,
         ),
       ),
     );

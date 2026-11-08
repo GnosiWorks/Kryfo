@@ -92,6 +92,23 @@ Future<void> routerTables(Database db) async {
   );
 }
 
+// the chats the vault holds, by id alone: what a copy to another device
+// leaves out whole. nothing else of their cards is read for it
+Future<Set<String>> hiddenChatIds(DatabaseExecutor db) async {
+  final there = await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'hidden_chats'",
+  );
+  if (there.isEmpty) return {};
+  return {
+    // the key and tomb marks name people, not chats
+    for (final r in await db.rawQuery(
+      'SELECT chat_id FROM main.hidden_chats WHERE kind IN (?, ?, ?)',
+      [kHiddenPeer, kHiddenGroup, kHiddenGone],
+    ))
+      r['chat_id'] as String,
+  };
+}
+
 // how to reach one person while the vault is shut
 class RouterCard {
   const RouterCard(
@@ -104,6 +121,7 @@ class RouterCard {
     this.verifiedKey,
     this.markRead = true,
     this.shots,
+    this.devices,
   });
 
   final String id;
@@ -124,6 +142,10 @@ class RouterCard {
   // while it is shut, as their row would say (chat_shots.dart)
   final ShotsWord? shots;
 
+  // linked devices: their device pairs to listen on while the vault is
+  // shut. null with none, and with the switch off
+  final HiddenDevices? devices;
+
   Map<String, Object> toJson() => {
     'h': id,
     'o': onion,
@@ -137,6 +159,8 @@ class RouterCard {
     'vk': verifiedKey ?? '',
     // one width whether set or not
     'ss': (shots ?? const ShotsWord(on: false, at: 0)).toWire(),
+    if (devices case final d? when d.pairs.isNotEmpty || d.lists)
+      'dv': d.toJson(),
   };
 
   static RouterCard? fromJson(Object? j, {String? id}) {
@@ -157,7 +181,82 @@ class RouterCard {
       verifiedKey: vk is String && vk.isNotEmpty ? vk.toLowerCase() : null,
       markRead: vk is String,
       shots: ShotsWord.fromWire(j['ss']),
+      devices: HiddenDevices.fromJson(j['dv']),
     );
+  }
+}
+
+/// one device pair of a hidden chat's contact to listen on: their device
+/// and mine, their device's key (hex), the pair's seed (hex) when one is
+/// held, and whether its opener address is listened on too
+typedef HiddenPair = ({
+  int their,
+  int my,
+  String key,
+  String? seed,
+  bool opener,
+});
+
+/// what the everyday side keeps of a hidden chat's contact's devices while
+/// the vault is shut: their identity key (hex), the identity of mine they
+/// know, the pairs to listen on (every line on them is sealed as it came),
+/// and whether their phone reads lists, so a removal from my list reaches
+/// it at once
+class HiddenDevices {
+  const HiddenDevices(
+    this.identity,
+    this.ident,
+    this.pairs, {
+    this.lists = false,
+  });
+
+  final String identity;
+  final int ident;
+  final List<HiddenPair> pairs;
+  final bool lists;
+
+  Map<String, Object> toJson() => {
+    'k': identity,
+    'i': ident,
+    'p': [
+      for (final p in pairs)
+        [p.their, p.my, p.key, p.seed ?? '', if (p.opener) 1 else 0],
+    ],
+    if (lists) 'r': 1,
+  };
+
+  static HiddenDevices? fromJson(Object? j) {
+    if (j is! Map) return null;
+    final k = j['k'];
+    final i = j['i'];
+    final ps = j['p'];
+    if (k is! String || i is! int || ps is! List) return null;
+    final hex = RegExp(r'^[0-9a-f]+$');
+    if (k.length != 66 || !hex.hasMatch(k)) return null;
+    final pairs = <HiddenPair>[];
+    for (final p in ps) {
+      if (p is! List || p.length != 5) continue;
+      final [their, my, key, seed, opener] = p;
+      if (their is! int || my is! int || key is! String || seed is! String) {
+        continue;
+      }
+      if (their < 1 || their > 127 || my < 1 || my > 127) continue;
+      if (key.length != 66 || !hex.hasMatch(key)) continue;
+      if (seed.isNotEmpty && (seed.length != 64 || !hex.hasMatch(seed))) {
+        continue;
+      }
+      pairs.add((
+        their: their,
+        my: my,
+        key: key,
+        seed: seed.isEmpty ? null : seed,
+        opener: opener == 1,
+      ));
+    }
+    final lists = j['r'] == 1;
+    return pairs.isEmpty && !lists
+        ? null
+        : HiddenDevices(k, i, pairs, lists: lists);
   }
 }
 
@@ -206,6 +305,8 @@ class Unsealed {
     this.receipt,
     this.blockedDrop,
     this.reached,
+    this.deviceTag,
+    this.fromDevice = false,
   });
 
   final String from;
@@ -234,6 +335,12 @@ class Unsealed {
   // no arrival: [from], whom the vault blocked, sent this uid while it was
   // shut. the vault notes it as it would have on arrival
   final String? blockedDrop;
+  // a line on a device pair of [from]'s, as it came: [wire] is its cipher,
+  // opened on the device's session the vault holds as it opens
+  final String? deviceTag;
+  // a contact's device's copy, opened before it was sealed: filed as one,
+  // so it never moves their caps
+  final bool fromDevice;
 }
 
 // the tables, behind a seam so the router runs on a stand-in
@@ -962,6 +1069,20 @@ class VaultRouter {
 
   RouterCard? cardOf(String id) => _peers[id] ?? _members[id];
 
+  /// the hidden people whose devices are listened on, with their pairs
+  Map<String, HiddenDevices> get hiddenDevices => {
+    for (final c in _peers.values)
+      if (c.devices != null) c.id: c.devices!,
+  };
+
+  /// the hidden person whose card names [identity] (hex) for their devices
+  String? hiddenByIdentity(String identity) {
+    for (final c in _peers.values) {
+      if (c.devices?.identity == identity) return c.id;
+    }
+    return null;
+  }
+
   // a card written before cards kept the mark: the vault's rows are read
   // again as it opens
   bool get marksUnread =>
@@ -969,6 +1090,12 @@ class VaultRouter {
 
   // no tick for someone the vault blocked
   bool blocks(String id) => cardOf(id)?.blocked ?? false;
+
+  // a key a hidden chat listens on: its address keeps a relay socket of its
+  // own, never one the everyday chats share
+  bool hidesKey(String xPub) =>
+      xPub.isNotEmpty &&
+      [..._members.values, ..._peers.values].any((c) => c.xpub == xPub);
 
   // the keys to listen on, each to its person. the vault's blocked too,
   // while the block is young: what they send while it holds is dropped as
@@ -1007,6 +1134,8 @@ class VaultRouter {
         'rf': ?a.resendSince,
         'a': ?a.wrapped,
         'bd': ?a.blockedDrop,
+        'dt': ?a.deviceTag,
+        if (a.fromDevice) 'fd': 1,
         if (a.reached case final r?) ...{'rl': r.from, 'rh': r.until},
       }),
     );
@@ -1135,6 +1264,8 @@ class VaultRouter {
         keyChanged: j['kc'] == 1,
         receipt: j['rc'] is String ? j['rc'] as String : null,
         blockedDrop: j['bd'] is String ? j['bd'] as String : null,
+        deviceTag: j['dt'] is String ? j['dt'] as String : null,
+        fromDevice: j['fd'] == 1,
         reached: rl is int && rh is int && rl <= rh
             ? (from: rl, until: rh)
             : null,
@@ -1175,6 +1306,33 @@ Future<Set<String>> scrubHidden(Database db) async {
       final marks = List.filled(part.length, '?').join(', ');
       for (final table in const ['sessions', 'peer_identities']) {
         await t.delete(table, where: 'address IN ($marks)', whereArgs: part);
+      }
+      // their pq restart rows name them and their key
+      try {
+        await t.delete(
+          'pq_restarts',
+          where: 'peer IN ($marks)',
+          whereArgs: part,
+        );
+      } catch (e) {
+        dlog('scrub: no pq restarts (${e.runtimeType})');
+      }
+    }
+    // a hidden chat's unsent words, were any ever left on this side
+    final chats = [
+      for (final (id, group) in router.hiddenChats) group ? 'group:$id' : id,
+    ];
+    for (var i = 0; i < chats.length; i += 400) {
+      final part = chats.sublist(
+        i,
+        i + 400 > chats.length ? chats.length : i + 400,
+      );
+      final marks = List.filled(part.length, '?').join(', ');
+      try {
+        await t.delete('drafts', where: 'chat IN ($marks)', whereArgs: part);
+      } catch (e) {
+        // a file whose drafts table never made holds none
+        dlog('scrub: no drafts (${e.runtimeType})');
       }
     }
   });

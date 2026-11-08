@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // what a quiet session answers in place of the network comes after a wait
-// of two to eight seconds, the same for every stand-in: the handle page,
-// pair codes and gif search
+// of two to eight seconds, the same for every stand-in: the handle checks,
+// and gif search; the decoy's pair codes are in pair_decoy_test
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -27,10 +27,10 @@ void main() {
 
   test('every stand-in answers through it', () {
     final sites = {
-      'lib/screens/handle_screen.dart': 3,
-      'lib/screens/pair_code_screen.dart': 1,
-      'lib/widgets/pair_code_panel.dart': 1,
+      'lib/handle_claim.dart': 3,
       'lib/gifs/gif_source.dart': 2,
+      'lib/app/links.dart': 1,
+      'lib/screens/search_screen.dart': 1,
     };
     for (final MapEntry(key: f, value: n) in sites.entries) {
       final src = File(f).readAsStringSync();
@@ -44,5 +44,22 @@ void main() {
         reason: f,
       );
     }
+  });
+
+  test('the decoy\'s lookups go on its own lane, and its claim '
+      'never goes', () {
+    String src(String f) => File(f).readAsStringSync();
+    expect(src('lib/app/links.dart'), contains('engine.decoyTorGetJson'));
+    expect(
+      src('lib/screens/search_screen.dart'),
+      contains('engine.decoyTorPost(url, body)'),
+    );
+    final claim = src('lib/handle_claim.dart');
+    expect(claim, contains('engine.decoyHandleCheck(h)'));
+    expect(claim, contains('final uri = sessionQuiet ? null'));
+    expect(
+      src('lib/app/state_session.dart'),
+      contains('engine.decoyLaneNew()'),
+    );
   });
 }

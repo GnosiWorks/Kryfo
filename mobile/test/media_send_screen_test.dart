@@ -10,6 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:kryfo/album.dart' show kPickMax;
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/picked.dart';
 import 'package:kryfo/screens/media_send_screen.dart';
 
@@ -41,12 +43,13 @@ void main() {
     bool still = false,
     Locale locale = const Locale('en'),
     int? max,
-    bool request = false,
     Future<bool> Function(List<PickedMedia> items)? beforeSend,
     void Function(List<XFile> videos)? onGone,
   }) async {
     phone(t);
     secure = [];
+    // a lock that was read: nothing is sent before
+    lockState.openForTest();
     final m = t.binding.defaultBinaryMessenger;
     const platform = MethodChannel('halo/platform');
     m.setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
@@ -78,7 +81,6 @@ void main() {
           addMore: more,
           secure: protect,
           max: max ?? kPickMax,
-          request: request,
           beforeSend: beforeSend,
           onGone: onGone,
         ),
@@ -228,18 +230,15 @@ void main() {
     expect((await got)!.items.map(_tagOf), [1]);
   });
 
-  testWidgets('before they accept, only the slots left go, and it says so', (
-    t,
-  ) async {
+  testWidgets('the dev chat\'s slots left go, and it says so', (t) async {
     final got = await open(
       t,
       [_photo(1), _photo(2), _photo(3)],
       max: 1,
-      request: true,
       more: () async => [_photo(4)],
     );
     expect(screen(t).items.map(_tagOf), [1]);
-    expect(find.text('Until they accept, 1 can go'), findsOneWidget);
+    expect(find.text('Up to 1 at a time'), findsOneWidget);
     // nothing more can join
     expect(find.bySemanticsLabel('Add more'), findsNothing);
     await send(t);
@@ -296,5 +295,31 @@ void main() {
     await send(t);
     expect((await got)!.items.map(_tagOf), [9]);
     expect(gone, isEmpty);
+  });
+
+  testWidgets('on a computer enter sends with the caption, shift and enter '
+      'is a new line in it', (t) async {
+    onDesktop = true;
+    addTearDown(() => onDesktop = false);
+    final got = await open(t, [_photo(1)]);
+    await t.enterText(find.byType(TextField), 'look');
+    await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isFalse);
+    await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isTrue);
+    await t.pumpAndSettle();
+    final r = await got;
+    expect(r!.items.map(_tagOf), [1]);
+    expect(r.caption, 'look');
+  });
+
+  testWidgets('on a phone enter stays the keyboard\'s own', (t) async {
+    final got = await open(t, [_photo(1)]);
+    await t.enterText(find.byType(TextField), 'look');
+    expect(await t.sendKeyEvent(LogicalKeyboardKey.enter), isFalse);
+    await t.pumpAndSettle();
+    expect(find.byType(MediaSendScreen), findsOneWidget);
+    await send(t);
+    expect((await got)!.caption, 'look');
   });
 }

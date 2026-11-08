@@ -8,12 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'invites.dart' show isV4Link;
 import 'open_file.dart' show shareFileOut;
 import 'shred.dart' show shredFile;
 
 import 'theme.dart';
 import 'l10n/l10n.dart';
 import 'lock_guard.dart' show lockGuard, LockDropped;
+import 'save_names.dart' show cardName, savesPlain;
 
 class ContactCard extends StatelessWidget {
   final String haloId;
@@ -38,7 +40,7 @@ class ContactCard extends StatelessWidget {
             l10n.contactCardMessageMeOn,
             style: HaloType.mono(
               size: 10,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               letter: 0.18,
             ),
           ),
@@ -86,7 +88,7 @@ class ContactCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: HaloType.sans(
               size: 11,
-              color: HaloColors.text2,
+              color: HaloColors.text,
               height: 1.45,
             ),
           ),
@@ -149,13 +151,20 @@ Future<void> shareContactCard({
     if (bytes == null) throw Exception('could not encode the card');
 
     await _handOutCard(
-      'kryfo-$haloId.png',
+      cardName(plain: savesPlain(), haloId: haloId, ext: 'png'),
       (f) => f.writeAsBytes(bytes.buffer.asUint8List(), flush: true),
-      text: l10n.contactCardMessageMeOnKryfo(haloId),
+      text: cardShareText(haloId, uri),
     );
   } finally {
     overlay.remove();
   }
+}
+
+/// the text beside a shared card: for a v4 invite the line saying it needs
+/// 0.6, as 0.5.x reads its qr as an invalid link
+String cardShareText(String haloId, String uri) {
+  final text = l10n.contactCardMessageMeOnKryfo(haloId);
+  return isV4Link(uri) ? '$text\n${l10n.inviteNeeds06}' : text;
 }
 
 // the same card as a vcard, for people who live in a contacts app. the note
@@ -172,7 +181,7 @@ Future<void> shareContactVcf({
       'URL:$uri\r\n'
       'END:VCARD\r\n';
   await _handOutCard(
-    'kryfo-$haloId.vcf',
+    cardName(plain: savesPlain(), haloId: haloId, ext: 'vcf'),
     (f) => f.writeAsString(vcf, flush: true),
   );
 }
@@ -202,7 +211,8 @@ Future<void> sweepCardLeftovers(Directory cache) async {
   if (!await cache.exists()) return;
   await for (final e in cache.list(followLinks: false)) {
     final n = e.uri.pathSegments.last;
-    if (e is File && RegExp(r'^(kryfo-.+\.(png|vcf)|card_\d+)$').hasMatch(n)) {
+    if (e is File &&
+        RegExp(r'^((kryfo|card)-.+\.(png|vcf)|card_\d+)$').hasMatch(n)) {
       await shredFile(e.path);
     }
   }

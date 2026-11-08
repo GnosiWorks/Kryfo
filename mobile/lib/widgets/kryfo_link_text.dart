@@ -15,9 +15,12 @@ import '../main.dart'
         appState,
         handleHaloUri,
         linkKinOf,
-        parseHaloUri,
+        linkedRole,
+        linkPartsOf,
         rootNavKey,
-        session;
+        session,
+        AppStateSession,
+        AppStateRooms;
 import '../rooms.dart';
 import '../screens/room_preview_sheet.dart';
 import '../theme.dart';
@@ -140,12 +143,14 @@ Future<String?> takeOutsideLink(
   // the door then does
   final link = firstKryfoLink(raw.trim());
   final room = link == null ? null : RoomLink.parse(link);
-  final who = link == null || room != null ? null : parseHaloUri(link)?['id'];
+  final who = link == null || room != null ? null : linkPartsOf(link)?['id'];
   if (link == null || (room == null && who == null)) {
     return l10n.kryfoLinkTextThatLinkIsNot;
   }
   final g = guard ?? lockGuard;
   if (g.isLocked()) return null;
+  // invites and rooms are the phone's: a linked device takes neither
+  if (linkedRole) return l10n.linkedLinkOnPhone;
   final bool ok;
   var moves = false;
   if (room != null) {
@@ -223,7 +228,7 @@ Future<bool> askTakeNameSheet(
     line: chat
         ? l10n.nameTakenChatLine
         : tombed
-        ? l10n.nameTakenTombLine
+        ? l10n.nameTakenTombLineShown
         : deleted
         ? l10n.nameTakenDeletedLine
         : l10n.nameTakenLine,
@@ -296,7 +301,7 @@ class _KryfoLinkTextState extends State<KryfoLinkText> {
   static String _label(String link) {
     final room = RoomLink.parse(link);
     if (room != null) return l10n.kryfoLinkTextJoin(room.name);
-    final who = parseHaloUri(link)?['id'];
+    final who = linkPartsOf(link)?['id'];
     return who == null
         ? l10n.kryfoLinkTextKryfoLink
         : l10n.kryfoLinkTextAdd2(who);
@@ -365,7 +370,7 @@ class RoomInviteCard extends StatelessWidget {
 
   Widget _card(BuildContext context) {
     final fg = onAmber ? HaloColors.onAmber : HaloColors.text;
-    final sub = onAmber ? HaloColors.onAmber : HaloColors.text2;
+    final sub = onAmber ? HaloColors.onAmber : HaloColors.text;
     final closed =
         room.expiresAt <= DateTime.now().millisecondsSinceEpoch ||
         _endedHere(room);

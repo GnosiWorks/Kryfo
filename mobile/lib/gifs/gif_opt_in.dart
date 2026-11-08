@@ -62,7 +62,8 @@ class GifOptIn extends StatelessWidget {
         StrokeIcon(_onionGlyph, size: 18, color: HaloColors.violet),
         HaloColors.violet,
         overTor ? l10n.gifOptInOverTor : l10n.gifOptInThroughKryfo,
-        l10n.gifOptInAsksForYou,
+        // on fast our server sees where the search comes from
+        overTor ? l10n.gifOptInAsksForYou : l10n.gifOptInAsksForYouFast,
       ),
       _point(
         Icon(Icons.lock_outline_rounded, size: 18, color: HaloColors.amber),
@@ -78,7 +79,7 @@ class GifOptIn extends StatelessWidget {
         ),
         HaloColors.green,
         l10n.gifOptInOffWhenever,
-        l10n.gifOptInWhereToTurnOff,
+        l10n.gifOptInWhereToTurnOffShown,
       ),
     ];
     return Padding(
@@ -103,7 +104,7 @@ class GifOptIn extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             l10n.gifOptInLead,
-            style: HaloType.sans(size: 15, color: HaloColors.text2),
+            style: HaloType.sans(size: 15, color: HaloColors.text),
           ),
           const SizedBox(height: 22),
           for (final (i, p) in points.indexed)
@@ -168,7 +169,7 @@ class GifOptIn extends StatelessWidget {
                   body,
                   style: HaloType.sans(
                     size: 14,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.45,
                   ),
                 ),
@@ -269,7 +270,7 @@ class GifOff extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text2 = HaloType.sans(size: 14, color: HaloColors.text2, height: 1.4);
+    final text2 = HaloType.sans(size: 14, color: HaloColors.text, height: 1.4);
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(24, 14, 20, 16),
       child: Column(
@@ -344,7 +345,7 @@ class GifOff extends StatelessWidget {
                     child: Text.rich(
                       TextSpan(
                         children: markedSpans(
-                          l10n.gifSavedOnPhone,
+                          l10n.gifSavedOnPhoneShown,
                           HaloType.sans(
                             size: 14,
                             weight: FontWeight.w600,

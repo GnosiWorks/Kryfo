@@ -100,16 +100,23 @@ class _Synced {
 class HelperDelivery {
   HelperDelivery({
     required this.engine,
-    required this.push,
+    required HelperPush push,
     List<String> Function()? hidden,
     Random? rnd,
     int Function()? nowMs,
-  }) : _hidden = hidden ?? (() => const []),
+  }) : _push = push,
+       _hidden = hidden ?? (() => const []),
        _rnd = rnd ?? Random.secure(),
        _now = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   final KnockEngine engine;
-  final HelperPush push;
+  // what hands out the slots' endpoints: the helper app, or google push
+  HelperPush _push;
+  HelperPush get push => _push;
+
+  /// the slots get their endpoints from [p] from now on. the one before is
+  /// let go with stop first
+  void usePush(HelperPush p) => _push = p;
   // the hidden chats' peers: their addresses are never registered
   final List<String> Function() _hidden;
   final Random _rnd;
@@ -202,9 +209,11 @@ class HelperDelivery {
     Duration wait = const Duration(seconds: 12),
   }) async {
     final book = await _book();
-    await push.register(package, [
+    final asked = await push.register(package, [
       for (var s = 0; s < kHelperSlots; s++) book.instance(s),
     ]);
+    // nothing was asked for: no endpoint is on its way
+    if (asked == 0) return false;
     final until = DateTime.now().add(wait);
     var got = 0;
     while (true) {
@@ -557,10 +566,11 @@ class HelperDelivery {
     }
   }
 
-  /// leaving the mode: the helper app lets every registration go now, so
-  /// the relay's next knock to each finds it gone. what the relay holds is
+  /// leaving the mode: the helper app, or google push, lets every
+  /// registration go now ([from], the one left), so the relay's next knock
+  /// to each finds it gone. what the relay holds is
   /// queued to be forgotten, a round at a time (forgetRound)
-  Future<void> stop() async {
+  Future<void> stop({HelperPush? from}) async {
     final book = await _book();
     final synced = await _synced();
     final prefs = await SharedPreferences.getInstance();
@@ -578,7 +588,7 @@ class HelperDelivery {
       }
     }
     await prefs.setString(kHelperForgetKey, jsonEncode(queued));
-    await push.unregister();
+    await (from ?? push).unregister();
     await prefs.remove(kHelperSyncedKey);
     await prefs.remove(kHelperQuietKey);
     // the next set-up starts on new endpoints: every slot one generation on

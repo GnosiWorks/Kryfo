@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../main.dart' show appState;
+import '../main.dart' show appState, AppStateProfile, AppStateSession;
 import '../theme.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/avatar_mark.dart';
@@ -83,6 +83,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
               ),
             ),
       child: KryfoAvatar(
+        photo: false,
         key: ValueKey(_choice),
         seed: id,
         size: 96,
@@ -111,6 +112,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
                 ),
                 onTap: () => _pick(() => _rot = r),
                 child: KryfoAvatar(
+                  photo: false,
                   seed: id,
                   size: 50,
                   choice: _pal * markCount * rotCount + shape * rotCount + r,
@@ -142,7 +144,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
             child: Text(
               widget.caption ?? l10n.avatarPickerThePeopleYouMessage,
               textAlign: TextAlign.center,
-              style: HaloType.mono(size: 10.5, color: HaloColors.text2),
+              style: HaloType.mono(size: 10.5, color: HaloColors.text),
             ),
           ),
           const SizedBox(height: 26),
@@ -157,7 +159,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
                 selected: _shape == null,
                 label: l10n.avatarPickerYourInitial,
                 onTap: () => _pick(() => _shape = null),
-                child: KryfoAvatar(seed: id, size: 50),
+                child: KryfoAvatar(seed: id, size: 50, photo: false),
               ),
               for (var m = 0; m < markCount; m++)
                 _Swatch(
@@ -169,6 +171,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
                   ),
                   onTap: () => _pick(() => _shape = m),
                   child: KryfoAvatar(
+                    photo: false,
                     seed: id,
                     size: 50,
                     choice: _pal * markCount * rotCount + m * rotCount + _rot,
@@ -194,6 +197,7 @@ class _AvatarChoiceEditorState extends State<AvatarChoiceEditor> {
                   ),
                   onTap: () => _pick(() => _pal = p),
                   child: KryfoAvatar(
+                    photo: false,
                     seed: id,
                     size: 50,
                     choice:
@@ -283,7 +287,7 @@ class _Label extends StatelessWidget {
     text,
     style: HaloType.mono(
       size: 11,
-      color: HaloColors.text2,
+      color: HaloColors.text,
       letter: 0.14,
       weight: FontWeight.w600,
     ),

@@ -35,6 +35,7 @@ Future<void> _loadFonts() async {
     'Noto Sans Vietnamese': ['NotoSans-Vietnamese.ttf'],
     'Noto Naskh Arabic': ['NotoNaskhArabic-Kryfo.ttf'],
     'Noto Sans Arabic': ['NotoSansArabic-Kryfo.ttf'],
+    'Noto Sans Devanagari': ['NotoSansDevanagari-Kryfo.ttf'],
   };
   for (final e in families.entries) {
     final loader = FontLoader(e.key);
@@ -51,16 +52,15 @@ Future<void> _loadFonts() async {
 
 // the words of the table's cells and column names
 Set<String> _cells() => {
-  l10n.seenOnion,
-  l10n.seenRelay,
+  l10n.modesPrivate,
   l10n.seenFast,
   l10n.seenHidden,
   l10n.seenNever,
   l10n.seenOnDevice,
   l10n.seenYours,
   l10n.seenUnaudited,
-  l10n.seenOurRelay,
-  l10n.seenEveryRelay,
+  l10n.seenOurServers,
+  l10n.seenOurServersCould,
   l10n.seenIntroducer,
   l10n.seenRoomKeys,
   l10n.seenOverTor,
@@ -87,6 +87,8 @@ void main() {
     'ar',
     'zh',
     'zh-Hant',
+    'hi',
+    'pl',
   ]) {
     for (final scale in [1.0, _biggest]) {
       testWidgets('$code at $scale: every word of the table whole', (t) async {
@@ -127,4 +129,18 @@ void main() {
       });
     }
   }
+
+  // fast is honest: one ip reads a person's mailboxes, so who they talk to
+  // and their contact graph are warn cells there, and the why says so
+  testWidgets('on fast our servers could tie who talks to whom', (t) async {
+    await devOpen(t, const SeenScreen(), size: _size, ratio: _ratio);
+    expect(find.text(l10n.seenOurServersCould), findsNWidgets(2));
+    await t.tap(find.text(l10n.seenWhoYouTalkTo));
+    await t.pumpAndSettle();
+    expect(find.text(l10n.seenEachConversationGetsIts), findsOneWidget);
+    expect(l10n.seenEachConversationGetsIts, contains('On Fast'));
+    expect(l10n.seenKryfoDoesNotScan, contains('On Fast'));
+    expect(l10n.modesFastLine, contains('Your network can see'));
+    await devClose(t);
+  });
 }

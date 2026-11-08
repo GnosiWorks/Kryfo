@@ -5,15 +5,22 @@
 import 'dart:async';
 import 'dart:math' as math;
 import '../lock_state.dart';
+import '../capture_watch.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../back_on_top.dart';
 import '../forward.dart';
+import '../photo_blur.dart' show makeBlurSoon;
+import '../widgets/composer_hint.dart';
+import '../widgets/desk_menu.dart';
+import '../widgets/sealed_picture.dart';
+import '../widgets/photo_shape.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
+import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import 'media_send_screen.dart';
@@ -22,14 +29,13 @@ import '../widgets/press_scale.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/pins.dart';
 import '../widgets/owned_text.dart';
-import '../widgets/remembered_height.dart';
 import '../widgets/video_bubble.dart';
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
+import '../file_drop.dart' show dropDayDone, dropTryLater;
 import '../file_kind.dart'
     show
         FileShape,
-        bytesSayIsoVideo,
         fileFactsRead,
         fileFits,
         fileShapeNow,
@@ -37,12 +43,23 @@ import '../file_kind.dart'
         readFileFactsFresh;
 import '../file_save.dart' show saveReceivedFile;
 import '../widgets/media_bubbles.dart';
+import '../translate/chat_translation.dart';
+import '../translate/hub_live.dart' show translationHubIfOn;
+import '../translate/translate_bubble.dart';
+import '../translate/foreign.dart' show Offer;
+import '../translate/translate_menu.dart' show neverOffer;
+import '../translate/lang_names.dart' show langName;
+import '../voice/chat_transcripts.dart';
+import '../voice/ui/transcript_line.dart';
+import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
+import '../widgets/desk_select.dart';
 import '../widgets/decode_px.dart';
 import '../atmosphere.dart';
 import '../notifications.dart' show clearNotificationsFor;
 import 'dev_about_sheet.dart' show devForwardTarget;
 import 'chat_screen.dart' show SearchHead, firstUrl;
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, listEquals, setEquals;
 import 'package:flutter/material.dart';
 import '../drafts.dart';
 import '../wallpaper.dart';
@@ -60,7 +77,11 @@ import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
+        typeLeaf,
+        linkedRole,
         appState,
+        AppStateFiles,
+        kNotSent,
         session,
         sessionQuiet,
         claimChat,
@@ -70,16 +91,33 @@ import '../main.dart'
         torValve,
         shredFile,
         kAdminGone,
-        themeRevision;
+        themeRevision,
+        AppStateOutbox,
+        AppStateOldPeers,
+        kOldPeerWait,
+        AppStateMessages,
+        AppStateRoute,
+        AppStatePrefs,
+        AppStateProfile,
+        AppStateScreen,
+        AppStateVault,
+        AppStateGroups,
+        AppStateSession,
+        AppStateVoice,
+        AppStateRefresh,
+        AppStateRooms;
 import '../widgets/reconnect_valve.dart';
 import '../theme.dart';
+import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
+import '../transfers.dart' show fileWaitOf, fileWaits;
+import '../widgets/file_wait.dart';
 import '../msg_order.dart';
 import '../widgets/earlier_chip.dart';
 import '../group_send_watch.dart';
 import '../media_send.dart' show cancelMediaSend, mediaInflight;
+import '../clean_media.dart';
 import '../image_strip.dart';
-import '../mp4_strip.dart';
 import '../widgets/kryfo_avatar.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
@@ -109,6 +147,7 @@ import '../widgets/swipe_to_reply.dart';
 import 'room_link_sheet.dart';
 import '../dlog.dart';
 import '../widgets/sheet_handle.dart';
+import '../widgets/enter_sends.dart';
 import '../widgets/shift_tap_guard.dart';
 import '../widgets/held_menu.dart';
 import '../widgets/menu_backdrop.dart';
@@ -128,7 +167,9 @@ import '../l10n/dates.dart';
 import '../l10n/marked.dart';
 import '../l10n/numbers.dart';
 import '../widgets/video_viewer.dart';
-import '../chat_shots.dart' show shotsKeeps;
+import '../chat_shots.dart' show ShotsPacer, kShotsByMe, shotsKeeps;
+import '../group_shots.dart';
+import '../widgets/shots_line.dart';
 import '../widgets/photo_viewer.dart' show photoHeroTag;
 import '../widgets/voice_mic.dart';
 import '../polls.dart';
@@ -139,12 +180,28 @@ import '../widgets/poll_card.dart';
 import '../widgets/stroke_icon.dart';
 import '../widgets/written_field.dart';
 import '../bidi_safe.dart';
+import '../container.dart' show HaloContainer;
 import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
+import '../voice_format.dart' show isVoiceName, kVoiceWav;
+import '../voice_length.dart' show voiceFileMs;
+import '../voice_opus.dart' show voiceForWire;
+import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
+import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
+import '../desktop/attach_tray.dart';
+import '../desktop/drag_in.dart' show DragInZone;
+import '../wide/read_width.dart';
+import '../wide/wide_pane.dart' show PaneBack, PaneFind;
 
 // our nickname for a member, or nothing so the id shows. a room member is a
 // key, not a person we know, so it gets the short tag instead.
 String? _senderLabel(Map<String, String> nickById, String peer) =>
     nickById[peer] ?? (looksLikeRoomKey(peer) ? roomTag(peer) : null);
+
+/// the widest a group bubble is drawn: the 1:1 cap, so a long line leaves
+/// a gap on the start side, or what its media is drawn at if that is wider
+@visibleForTesting
+double groupBubbleCap(double screenWidth, {double own = 0}) =>
+    math.max(screenWidth * 0.78, own);
 
 /// the row of a file of this phone's, kept by [save] only with its group
 /// still here. a group that ended under the picker, the camera or the
@@ -211,13 +268,43 @@ bool startsSenderRun({
 // rather than stacking a second copy whose draft would win
 final Map<String, List<_GroupChatScreenState>> _openGroups = {};
 
+/// what a group send answers, and what of a kept quote it leaves with the
+/// words: only the bar that shows is answered. one still being looked up,
+/// or one of someone blocked, is never sent, and goes only with the words
+/// it was kept for
+@visibleForTesting
+({String? answers, String? pending, String? hidden}) quoteOnSend({
+  String? shown,
+  String? pending,
+  String? hidden,
+  required bool words,
+}) => (
+  answers: shown,
+  pending: words ? null : pending,
+  hidden: words ? null : hidden,
+);
+
+/// whether [id]'s group is the page in front, its own sheets over it or
+/// not: its composer is being typed in, not a draft left behind
+bool groupOnScreen(String id) => (_openGroups[id] ?? const []).any(
+  (s) => s.mounted && pageInFront(ModalRoute.of(s.context)),
+);
+
+/// [id]'s timed draft in [c] went: a composer of it still open empties,
+/// its quote too
+void emptyGroupComposer(HaloContainer c, String id) {
+  for (final s in _openGroups[id] ?? const <_GroupChatScreenState>[]) {
+    if (s.mounted && s._memo == c.chatKey(id)) s._timedDraftGone();
+  }
+}
+
 /// a group's unsent words go with it, from an open composer too: its screen
 /// closing would write them back
-void dropGroupDraft(String id) {
+Future<void> dropGroupDraft(String id) {
   for (final s in _openGroups[id] ?? const <_GroupChatScreenState>[]) {
     if (s.mounted) s._msgCtrl.clear();
   }
-  draftPerGroup.remove(session.chatKey(id));
+  return dropDraft(session.draftsOf(id), id, group: true);
 }
 
 /// pops [nav] back to [groupId]'s open screen. false when it is not open
@@ -227,89 +314,96 @@ bool backToOpenGroup(NavigatorState nav, String groupId) =>
 
 /// a group message's words to edit. null when cancelled or dismissed
 @visibleForTesting
-Future<String?> showGroupEditSheet(BuildContext context, String text) =>
-    showHaloSheet<String>(
-      context,
-      scroll: true,
-      builder: (_) => OwnedText(
-        initial: text,
-        builder: (ctx, ctrl) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            // the keyboard, or the navigation bar when it is down
-            bottom:
-                math.max(
-                  MediaQuery.paddingOf(ctx).bottom,
-                  MediaQuery.viewInsetsOf(ctx).bottom,
-                ) +
-                20,
+Future<String?> showGroupEditSheet(
+  BuildContext context,
+  String text,
+) => showHaloSheet<String>(
+  context,
+  scroll: true,
+  builder: (_) => OwnedText(
+    initial: text,
+    builder: (ctx, ctrl) => Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        // the keyboard, or the navigation bar when it is down
+        bottom:
+            math.max(
+              MediaQuery.paddingOf(ctx).bottom,
+              MediaQuery.viewInsetsOf(ctx).bottom,
+            ) +
+            20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SheetHandle(),
+          Text(
+            l10n.groupChatEditMessage,
+            style: HaloType.serif(
+              size: 20,
+              italic: true,
+              color: HaloColors.amberText,
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SheetHandle(),
-              Text(
-                l10n.groupChatEditMessage,
-                style: HaloType.serif(
-                  size: 20,
-                  italic: true,
-                  color: HaloColors.amberText,
-                ),
-              ),
-              const SizedBox(height: 14),
-              ShiftTapGuard(
+          const SizedBox(height: 14),
+          // enter saves on a computer, as it sends in the composer
+          EnterSends(
+            controller: ctrl,
+            onSend: () => Navigator.pop(ctx, ctrl.text),
+            child: ShiftTapGuard(
+              controller: ctrl,
+              child: TextField(
                 controller: ctrl,
-                child: TextField(
-                  controller: ctrl,
-                  enableIMEPersonalizedLearning: false,
-                  autofocus: true,
-                  // a long message scrolls in the field, so save stays in view
-                  minLines: 1,
-                  maxLines: 6,
-                  cursorColor: HaloColors.amber,
-                  style: HaloType.sans(size: 15),
-                  decoration: InputDecoration(
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: HaloColors.line2),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: HaloColors.amber),
-                    ),
+                enableIMEPersonalizedLearning: false,
+                autofocus: true,
+                // a long message scrolls in the field, so save stays in view
+                minLines: 1,
+                maxLines: 6,
+                cursorColor: HaloColors.amber,
+                style: HaloType.sans(size: 15),
+                decoration: InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: HaloColors.line2),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: HaloColors.amber),
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(
-                      l10n.commonCancel,
-                      style: HaloType.sans(size: 13, color: HaloColors.text2),
-                    ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  l10n.commonCancel,
+                  style: HaloType.sans(size: 13, color: HaloColors.text),
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, ctrl.text),
+                child: Text(
+                  l10n.commonSave,
+                  style: HaloType.sans(
+                    size: 14,
+                    weight: FontWeight.w500,
+                    color: HaloColors.amberText,
                   ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, ctrl.text),
-                    child: Text(
-                      l10n.commonSave,
-                      style: HaloType.sans(
-                        size: 14,
-                        weight: FontWeight.w500,
-                        color: HaloColors.amberText,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
-    );
+    ),
+  ),
+);
 
 // the newest row id held when a group was last left, keyed by
 // session.chatKey like the drafts
@@ -443,8 +537,26 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // its admin was taken off this phone ("this isn't them"): no change to
   // the group reaches it any more
   bool _adminGone = false;
+  // members on an older Kryfo whom no session here reaches: they get
+  // nothing from this phone until they update
+  List<String> _needUpdate = const [];
+
+  // a member counts only after a while in the group: read again as it
+  // passes
+  Future<void> _needUpdateTick() async {
+    final now = await appState.groupWaitsForUpdate(widget.groupId);
+    if (!mounted || listEquals(now, _needUpdate)) return;
+    setState(() => _needUpdate = now);
+  }
+
   // its admin ended it: what it held is gone, and nothing is written here
   GroupEnd? _end;
+  // its screenshot block, and this screen's hold on the window's flag:
+  // from the list before the first frame, a room's or a group's
+  GroupShots _shots = const GroupShots();
+  late final _shotsHold = ShotsPacer(appState.forceSecure);
+  // who its lines name: the admin on record
+  String? _adminId;
   bool _sending = false;
   // at most six stickers play at once in the whole chat
   final _stickers = StickerBudget(6);
@@ -453,6 +565,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   final Map<String, StickerLanding> _landings = {};
   final List<VoidCallback> _flights = [];
   _GMsg? _replyTo;
+  final _composerFocus = FocusNode();
+  // the quote a kept draft had, until the messages are here to find it in
+  String? _draftReply;
+  // a kept quote of someone blocked: out of sight, never sent, kept in the
+  // draft, and shown again once they are not blocked
+  String? _hiddenQuote;
   // the bubble under an open menu: hidden in the list, drawn lifted above
   // the blur
   String? _liftedUid;
@@ -494,6 +612,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   bool _suppressSticky = true;
   DateTime _lastSticky = DateTime.fromMillisecondsSinceEpoch(0);
   bool _searching = false;
+  // ctrl+f on the desktop's pane
+  final _find = PaneFind();
   final _searchCtrl = TextEditingController();
   List<int> _matches = [];
   // what was looked for, and the same hits as _matches for a row's test
@@ -509,6 +629,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // ghost mode, kept as the 1:1 chats keep it. when on, new messages carry
   // a burn timer; receivers compute the burn deadline locally.
   bool _ghost = false;
+  // the timed setting read: until then new words keep the draft's timer
+  bool _ghostKnown = false;
   // this group's voice notes go out disguised
   bool _disguise = false;
   int _burnSeconds = 300; // 5 min default, same as 1:1
@@ -526,11 +648,46 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // this group in the session that opened it, for what is kept between
   // visits
   late final String _memo;
+  // the group's voice notes as words, made on the phone
+  late final ChatTranscripts? _transcripts = switch (voiceTranscriptsIfOn()) {
+    final hub? => ChatTranscripts(hub, widget.groupId),
+    null => null,
+  };
+
+  // theirs in other languages, translated on the phone
+  late final ChatTranslation? _translation = switch (translationHubIfOn()) {
+    final hub? => ChatTranslation(hub, widget.groupId),
+    null => null,
+  };
+
+  // a message that went: its translation and its note's words go from
+  // memory now, a run for it stops
+  void _forgetTranscript(_GMsg m) {
+    _translation?.forget(trKeyOf(m.msgUid, m.came), m.text);
+    final uid = m.msgUid;
+    if (uid != null && isVoiceName(m.fileName)) _transcripts?.forget(uid);
+  }
+
+  // android's word that this chat was screenshotted or is recorded: one
+  // quiet line here, on this phone alone
+  VoidCallback? _unwatchCaptures;
+  void _captured(Capture what) {
+    if (!mounted || lockState.locked) return;
+    // a secure window came out black: until a phone shows the callback
+    // stays quiet there, nothing is said
+    if (appState.windowSecure) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    showHaloToast(context, captureLine(what));
+  }
 
   @override
   void initState() {
     super.initState();
+    _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.groupId);
+    _tray.addListener(_trayMoved);
+    // a computer: the chat opens ready to type
+    if (onDesktop) _composerFocus.requestFocus();
     _loadWall();
     // set from its info page or under appearance: shown at once
     wallpaperRevision.addListener(_loadWall);
@@ -544,8 +701,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _roomExpiresAt = g.expiresAt;
       _joiningAt = g.joiningAt;
       if (g.endedBy != null) _end = (at: 0, by: g.endedBy!);
+      // and the menus are kept from the first frame on
+      if (g.shotsBlocking && g.expiresAt == null) {
+        _shots = GroupShots(on: true, all: g.shotsForAll, known: true);
+      }
       break;
     }
+    // never drawn uncovered: the read below settles it
+    _shotsHold.want(appState.shotsBlocksGroup(widget.groupId), now: true);
 
     claimChat('group:${widget.groupId}');
     (_openGroups[widget.groupId] ??= []).add(this);
@@ -555,7 +718,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     StickerLibrary.load().ignore();
     lockState.addListener(_lockLifted);
     // a room is never in the app switcher and never screenshotted. the flag
-    // is set the moment we know it is a room and cleared on the way out.
+    // is set the moment we know it is a room, if the list did not know it
+    // yet, and cleared on the way out.
     session.getGroup(widget.groupId).then((g) async {
       if (!mounted || g == null || g['room_pub'] == null) return;
       setState(() {
@@ -563,7 +727,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _roomBanner = (g['room_seen'] as int? ?? 0) == 0;
       });
       // gone already: nothing is held for a screen that let go
-      if (!_left) _holdSecure(true);
+      if (!_left) _shotsHold.want(true);
       // the creator's first open: hand them the invite right away, that is
       // the only thing an empty room is for
       if (_roomBanner && (g['is_admin'] as int? ?? 0) == 1) {
@@ -574,18 +738,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     // opened under the lock: marked read once it lifts
     lockGuard.isLocked() ? _underLock = true : _markRead();
-    // restore a draft left behind last time this group was open.
-    _msgCtrl.text = draftPerGroup[_memo] ?? '';
-    // save it live on every keystroke so it survives leaving regardless of
-    // when dispose runs.
-    _msgCtrl.addListener(() {
-      final t = _msgCtrl.text;
-      if (t.trim().isEmpty) {
-        draftPerGroup.remove(_memo);
-      } else {
-        draftPerGroup[_memo] = t;
-      }
-    });
+    // the draft left behind last time this group was open
+    final rows = session.draftsOf(widget.groupId);
+    final kept = heldDraft(rows.container, widget.groupId, group: true);
+    _msgCtrl.text = kept?.text ?? '';
+    _draftReply = kept?.replyTo;
+    // after a stopped process it is only in its row
+    if (kept == null) unawaited(_readDraft(rows));
+    // kept on every keystroke, so it survives leaving the group and the app
+    _msgCtrl.addListener(_keepDraft);
     _scrollCtrl.addListener(_updateSticky);
     _scrollCtrl.addListener(_onGroupScroll);
     Future.delayed(const Duration(milliseconds: 1200), () {
@@ -598,12 +759,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         setState(() {
           _ghost = p.$1;
           _burnSeconds = p.$2;
+          _ghostKnown = true;
         });
       }
     });
     appState.addListener(_onAppStateChanged);
     groupOwedTick.addListener(_reachMoved);
+    fileWaits.addListener(_waitsMoved);
     _timers.every(const Duration(seconds: 30), _autoRetryTick);
+    _timers.every(kOldPeerWait, () => unawaited(_needUpdateTick()));
     _burn = _timers.until(_burnWait, _burnTick);
     // back in view: what shows now has been read
     _reads.keepTime(_timers);
@@ -661,6 +825,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.didChangeDependencies();
     _timers.watch(context);
     _route = ModalRoute.of(context);
+    _find.attach(context, () {
+      if (!_searching && !_waiting && _end == null) _openSearch();
+    });
     // what covered the chat has gone: what shows now is read
     _reads.look();
   }
@@ -724,6 +891,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       for (final m in expired) {
         m.removing = true;
         if (m.msgUid != null) _earlier.drop(m.msgUid!);
+        _forgetTranscript(m);
       }
       if (back) {
         // it burned while the group was out of view: gone, as it would be
@@ -951,7 +1119,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           nav,
           route,
           removed: removed != null,
-          above: routeStack.above(route),
+          above: watchOf(route).stack.above(route),
         );
         if (closed && removed != null) {
           showHaloToast(nav.context, l10n.groupChatYouWereRemovedFrom(removed));
@@ -993,6 +1161,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final reactions = await session.loadReactionsFor(uids);
       final votes = await session.pollVotesFor(uids);
       final reach = await session.groupFileReach(widget.groupId);
+      final needUpdate = await appState.groupWaitsForUpdate(widget.groupId);
       // local nickname is the display source of truth. fall back to the 3-word
       // id when we have no nickname for that member.
       final nickById = <String, String>{};
@@ -1025,7 +1194,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _joiningAt = joining;
         _isAdmin = ((g['is_admin'] as int?) ?? 0) == 1;
         _adminGone = g['admin_id'] == kAdminGone && g['room_pub'] == null;
+        _needUpdate = needUpdate;
         _end = groupEndOf(g);
+        _shots = GroupShots.ofRow(g, quiet: sessionQuiet);
+        _adminId = g['admin_id'] as String?;
         _reach = reach;
         // a reload rebuilds every row; the retry count rides across, or a
         // failed send never reaches its cap and spins forever
@@ -1081,6 +1253,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 m.autoRetries = c.$1;
                 m.gaveUp = c.$2;
               }
+              _heldForTap(m, r);
               return m;
             }),
           );
@@ -1113,6 +1286,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         _lookEarlierSoon();
       }
       _loaded = true;
+      // a block turned on goes at once, one turned off five seconds after
+      // the last change, so a fast flipper cannot flash the window
+      if (!_left) _shotsHold.want(_isRoom || _shots.blocking);
+      unawaited(_restoreReply());
       unawaited(_refreshPinCount());
     } finally {
       // a throw mid-load must not leave _loading stuck true, or every later
@@ -1149,6 +1326,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (oldest != null && o.when.isBefore(oldest)) continue;
       if (!o.removing) {
         o.removing = true;
+        _forgetTranscript(o);
         Future.delayed(kLeaveGone, () {
           if (mounted) setState(() => _messages.remove(o));
         });
@@ -1162,6 +1340,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // a message some members still lacked moved on: its line follows,
   // without a reload of the whole list
   void _reachMoved() => unawaited(_loadReach());
+
+  // the files still to come: a bubble draws a card or its file by them, so
+  // one read after the chat was drawn draws again. a ring moving does not
+  Set<String> _waitUids = fileWaits.value.keys.toSet();
+  void _waitsMoved() {
+    final now = fileWaits.value.keys.toSet();
+    if (setEquals(now, _waitUids)) return;
+    _waitUids = now;
+    if (mounted) setState(() {});
+  }
 
   Future<void> _loadReach() async {
     final reach = await session.groupFileReach(widget.groupId);
@@ -1366,6 +1554,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       m.cameAt = (r['sent_at'] as num?)?.toInt();
       if (dir == 'in') m.fresh = true;
       _placeLoadedSend(m);
+      _heldForTap(m, r);
       fresh.add(m);
     }
     final nowHave = _messages.map((m) => m.msgUid).toSet();
@@ -1410,6 +1599,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _normaliseMessages();
       if (!follow) _unseenNew += theirs;
     });
+    if (mounted) sayArrivals(context, theirs);
     _lookEarlierSoon();
     if (follow) _scrollToEnd();
   }
@@ -1561,7 +1751,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             (m.preparing ||
                 m.mediaPath != null ||
                 (m.filePath != null &&
-                    m.fileName != 'voice.wav' &&
+                    !isVoiceName(m.fileName) &&
                     fileShapeNow(m.filePath, m.fileName) == FileShape.video) ||
                 (m.direction == 'in' && m.filePath == null)),
       );
@@ -1679,7 +1869,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         quoted = l10n.albumQuoted;
       } else if (orig.mediaPath != null) {
         quoted = l10n.groupChatQuotedPhoto;
-      } else if (orig.fileName == 'voice.wav') {
+      } else if (isVoiceName(orig.fileName)) {
         quoted = l10n.groupChatVoiceMessage;
       } else if (orig.fileName != null) {
         quoted = orig.fileName;
@@ -1730,6 +1920,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         if (showDate) _dateDivider(m.when, row.msgUid ?? 'r${row.rowid}'),
+        ?_shotsLineAt(i, below: false),
         // the bubble alone: what says it has been read
         RowAnchor(
           anchors: _anchors,
@@ -1751,7 +1942,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     for (final x in members) {
                       _touched(x);
                     }
+                    _hiddenQuote = null;
                     setState(() => _replyTo = answer);
+                    _keepDraft();
                   },
                   // the lifted copy in the overlay is the one that animates;
                   // the row underneath just steps aside
@@ -1759,9 +1952,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     opacity: lifted ? 0.0 : 1.0,
                     child: _GroupBubble(
                       m: m,
+                      transcripts: _transcripts,
+                      translation: _translation,
                       album: run,
                       showSender: showSender,
                       kept: _keeps(m),
+                      keptIn: _isRoom ? KeptIn.room : KeptIn.group,
                       stickers: _stickers,
                       stickerOrder: _messages.length - 1 - i,
                       landing: landing,
@@ -1853,6 +2049,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ),
           ),
         ),
+        ?_shotsLineAt(i, below: true),
       ],
     );
   }
@@ -1934,14 +2131,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _send() async {
+    if (onDesktop && !_tray.isEmpty) {
+      _composerFocus.requestFocus();
+      return _sendTray();
+    }
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _sending) return;
     // the words stay in the field until someone is here
     if (_nobodyToRead()) return;
     setState(() => _sending = true);
     _msgCtrl.clear();
+    // a computer: the next words go straight on, the send button's click
+    // took the field's focus
+    if (onDesktop) _composerFocus.requestFocus();
     final uid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote(words: true);
     final burnSeconds = _ghost ? _burnSeconds : null;
     final url = firstUrl(text);
     final preview = url != null && _pendingPreview?['url'] == url
@@ -2059,7 +2263,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           msgUid: m.msgUid!,
           caption: m.text,
           fileName: m.mediaPath != null ? null : m.fileName,
-          voice: m.fileName == 'voice.wav',
+          voice: isVoiceName(m.fileName),
           voiceDisguised: m.voiceDisguised,
           replyTo: m.replyTo,
           burnSeconds: m.burnSecs,
@@ -2162,7 +2366,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // same row, reply, burn timer, ticks and retry
   Future<void> _sendSticker(Sticker s, StickerWire w, StickerPick pick) async {
     final uid = newMsgUid();
-    final replyToUid = _replyTo?.msgUid;
+    final replyToUid = _takeQuote();
     final burnSeconds = _ghost ? _burnSeconds : null;
     final optimistic = _GMsg(
       sender: appState.sessionId,
@@ -2181,6 +2385,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _normaliseMessages();
       _replyTo = null;
     });
+    // the quote is answered: the kept draft lets it go too
+    _keepDraft();
     _scrollToEnd();
     var ok = false;
     try {
@@ -2258,16 +2464,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       builder: (sheetCtx) => AttachGrid(
         note: l10n.chatNoExifNeverSaved,
         items: [
-          AttachItem(
-            icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
-            tint: HaloColors.amber,
-            label: l10n.groupChatCamera,
-            onTap: _openGroupCamera,
-          ),
+          // a computer has no camera to open
+          if (!onDesktop)
+            AttachItem(
+              icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
+              tint: HaloColors.amber,
+              label: l10n.groupChatCamera,
+              onTap: _openGroupCamera,
+            ),
           AttachItem(
             icon: (c) => Icon(Icons.photo_library_outlined, color: c),
             tint: HaloColors.violet,
-            label: l10n.groupChatGallery,
+            label: l10n.groupChatGalleryShown,
             onTap: _pickGroupMultiple,
           ),
           AttachItem(
@@ -2285,7 +2493,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           AttachItem(
             icon: (c) => Icon(Icons.gif_box_outlined, color: c),
             tint: HaloColors.violet,
-            label: l10n.groupChatGifFromPhone,
+            label: l10n.groupChatGifFromPhoneShown,
             onTap: _pickGroupGif,
           ),
           AttachItem(
@@ -2539,7 +2747,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final mediaDir = await session.mediaDirOf(widget.groupId);
     // a png, gif, webp or heic keeps its own kind, and its name says so
     final f = File('${mediaDir.path}/$made.${pictureExt(bytes)}');
-    await f.writeAsBytes(bytes);
+    if (!await writeMadeCopy(f, bytes)) {
+      if (mounted) showHaloToast(context, l10n.cleanFreeSomeSpaceAnd);
+      return null;
+    }
+    makeBlurSoon(f.path);
     return _GReady(made, f.path);
   }
 
@@ -2621,8 +2833,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   // the message being answered goes with the next file, and its bar with it
   String? _takeReply() {
-    final r = _replyTo?.msgUid;
+    final r = _takeQuote();
     if (_replyTo != null && mounted) setState(() => _replyTo = null);
+    // the quote is answered: the kept draft lets it go too
+    if (r != null) _keepDraft();
     return r;
   }
 
@@ -2678,7 +2892,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       msgUid: uid,
       replyTo: reply,
       sending: true,
-      fileName: 'voice.wav',
+      fileName: kVoiceWav,
       voiceDisguised: disguise,
       burnSecs: burn,
     )..fresh = true;
@@ -2759,8 +2973,28 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       final writtenAt = m.when.millisecondsSinceEpoch;
       // from here a lock takes it off the screen as one still being made
       pending = m;
-      final kept = await keepOwnGroupFile(
+      // what goes: opus when every member's phone plays it, else the wav.
+      // the bubble shows the wav until the opus copy is there, then that
+      if (locked) return lockedOut(null, placed: dest.path);
+      // a lock under way stops the encode, and both files go
+      final (wirePath, wireName) = await voiceForWire(
         dest.path,
+        opus: await appState.opusForGroup(group),
+        stop: () => locked,
+      );
+      if (wirePath != dest.path) {
+        voicePeaksSame(dest.path, wirePath);
+        final ms = await voiceFileMs(wirePath);
+        if (ms != null) voiceLengthKnown(wirePath, ms);
+        m
+          ..filePath = wirePath
+          ..fileName = wireName;
+        if (mounted) setState(() {});
+        unawaited(voiceFileFree(dest.path).then((_) => shredFile(dest.path)));
+      }
+      if (locked) return lockedOut(null, placed: wirePath);
+      final kept = await keepOwnGroupFile(
+        wirePath,
         () => appState.keepOwn(group, () async {
           // a lock while it waited for a move: nothing is written
           if (locked) return false;
@@ -2770,8 +3004,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             groupId: group,
             msgUid: uid,
             replyTo: reply,
-            filePath: dest.path,
-            fileName: 'voice.wav',
+            filePath: wirePath,
+            fileName: wireName,
             voiceDisguised: disguise,
             burnSecs: burn,
             writtenAt: writtenAt,
@@ -2792,10 +3026,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           m,
           () => appState.sendMediaToGroup(
             group,
-            dest.path,
+            wirePath,
             msgUid: uid,
             replyTo: reply,
-            fileName: 'voice.wav',
+            fileName: wireName,
             voice: true,
             voiceDisguised: disguise,
             burnSeconds: burn,
@@ -2885,63 +3119,41 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
       return null;
     }
-    if (!fileFits(size)) {
-      if (mounted) showHaloToast(context, fileTooBigLine(size));
+    final most = await appState.fileLimitForGroup(widget.groupId);
+    if (!fileFits(size, most)) {
+      if (mounted) showHaloToast(context, fileTooBigLine(size, most));
       return null;
     }
-    // a picture the lane cannot clean goes only once the sender has read
-    // that its details go with it
+    // a picture the lane cannot clean is drawn again as a clean jpeg, or
+    // goes as it is, never asked about (copyForSend)
     final raw = (await readFileFactsFresh(src, name))?.raw ?? false;
-    if (raw && mounted) {
-      final ok = await showConfirmSheet(
-        context,
-        title: l10n.fileRawPictureTitle,
-        figure: humanFileSize(size),
-        line: l10n.fileRawPictureLine,
-        yes: l10n.chatSendIt,
-        keep: l10n.commonCancel,
-        rose: false,
-      );
-      if (mounted) FocusManager.instance.primaryFocus?.unfocus();
-      if (!ok) return null;
-    }
     // ended while it was picked: nothing is copied
     if (!await _stillHere()) return null;
     final made = uid ?? newMsgUid();
     final mediaDir = await session.mediaDirOf(widget.groupId);
-    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final dest = File('${mediaDir.path}/f_${made}_$safe');
-    await File(src).copy(dest.path);
-    // a gallery video carries what a gallery photo does: where, on what,
-    // and when. stripped in place on our own copy; a file that cannot be
-    // walked is not sent, the same as a jpeg that cannot be. one renamed is
-    // told by its bytes
-    // a raw picture is not one, whatever it is called: the video cleaner
-    // would break it without cleaning it
-    if (!raw &&
-        (videoNameNeedsStrip(name) || await bytesSayIsoVideo(dest.path))) {
-      final ok = await stripMp4Metadata(dest.path);
-      final left = ok == null ? null : await mp4MetadataCount(dest.path);
-      if (ok == null || left != 0) {
-        await shredFile(dest.path);
-        if (mounted) {
-          showHaloToast(context, l10n.groupChatCouldNotCleanThatVideo);
-        }
-        return null;
-      }
-    }
-    // a picture sent as a file is cleaned like one sent as a photo. it is
-    // told by its bytes, not its name: jpeg, png, webp, heic, avif. one the
-    // app cannot read through is not sent; the photo button re-encodes and
-    // will take it.
-    else if (await stripPictureFileOffUi(dest.path) == null) {
-      await shredFile(dest.path);
+    // its type only: the name it was given lives in the database
+    final dest = File('${mediaDir.path}/f_$made${typeLeaf(name)}');
+    // a gallery video carries where, on what and when, like a photo, and a
+    // picture sent as a file is cleaned like one sent as a photo. both are
+    // told by their bytes and cleaned on our own copy by the one cleaner;
+    // one that cannot be read through, or still reads as anything after,
+    // is not sent. a raw picture is never walked as a video. the copy is
+    // made and cleaned out of the media folder and only moved in clean
+    final done = await copyForSend(src, dest.path, name: name, raw: raw);
+    final at = done.path;
+    if (at == null) {
       if (mounted) {
-        showHaloToast(context, l10n.groupChatCouldNotCleanThatPictureSend);
+        showHaloToast(
+          context,
+          done.video
+              ? l10n.groupChatCouldNotCleanThatVideo
+              : l10n.groupChatCouldNotReadThat,
+        );
       }
       return null;
     }
-    return _GReady(made, dest.path, fileName: name);
+    makeBlurSoon(at);
+    return _GReady(made, at, fileName: done.name);
   }
 
   // the group is still here to send into. one gone closes the screen
@@ -3003,6 +3215,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     mediaProgressEnd(uid);
     if (mounted) setState(() => m.removing = true);
     await Future.delayed(kLeaveGone);
+    await appState.takeDropBackOf(uid);
     await session.deleteMessage(uid);
     if (mounted) setState(() => _messages.remove(m));
     // the unsend goes to each member once the send has let go
@@ -3022,6 +3235,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         }
         await _finishGroupMediaSend(m, r);
       });
+
+  // one a restore brought still waiting to go: not sent, and never tried
+  // on its own. a tap sends it
+  void _heldForTap(_GMsg m, Map<String, Object?> r) {
+    if (m.direction != 'out' || r['sent'] != kNotSent) return;
+    m
+      ..sending = false
+      ..failed = true
+      ..gaveUp = true;
+  }
 
   void _placeLoadedSend(_GMsg m) {
     final uid = m.msgUid;
@@ -3111,6 +3334,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       appState.chatChanged('group:${widget.groupId}');
       return;
     }
+    if (dropTryLater(result)) showHaloToast(context, l10n.fileServerTryLater);
+    if (dropDayDone(result)) showHaloToast(context, l10n.fileDayLimit);
     // re-find the on-screen object; a reload may have replaced m.
     final live = _liveMsg(uid) ?? m;
     setState(() {
@@ -3194,7 +3419,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 const SizedBox(height: 4),
                 Text(
                   l10n.groupChatNewMessagesDisappearOnceRead,
-                  style: HaloType.mono(size: 11, color: HaloColors.text2),
+                  style: HaloType.mono(size: 11, color: HaloColors.text),
                 ),
                 const SizedBox(height: 12),
                 for (final opt in options)
@@ -3207,6 +3432,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                         _ghost = true;
                       });
                       appState.saveGhostPref(true, opt.$1);
+                      // the draft takes the group's new clock
+                      _keepDraft(clock: true);
                       Navigator.pop(c);
                     },
                     child: Padding(
@@ -3274,6 +3501,45 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
     final renderBox = bubbleCtx.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
+    // a computer: the small menu at the mouse, nothing lifted or dimmed
+    if (onDesktop) {
+      HapticFeedback.selectionClick();
+      await showDeskMenu<void>(
+        bubbleCtx,
+        label: l10n.a11yMessageActions,
+        note: _menuNote(target),
+        reactions: DeskReactions(
+          emojis: kQuickReactions,
+          selected: target.reactions[''],
+          onPick: (e) {
+            final added = reactOn.reactions[''] != e;
+            _toggleReaction(reactOn, e);
+            if (added) _flashReaction(reactOn);
+          },
+        ),
+        groups: (_) => deskGroupsOf([
+          // the phone's bar has reply beside the reactions
+          MenuAction(
+            icon: Icons.reply_rounded,
+            label: l10n.groupChatReply,
+            onTap: () {
+              if (!mounted || lockGuard.isLocked()) return;
+              _hiddenQuote = null;
+              setState(() => _replyTo = anchor);
+              _keepDraft();
+            },
+          ),
+          ..._menuActions(
+            target,
+            target.direction == 'out',
+            () {},
+            album: album,
+            held: held,
+          ),
+        ]),
+      );
+      return;
+    }
     final pos = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
     // the row that holds the bubble, avatar and sender line: the lifted copy
@@ -3290,7 +3556,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final rows =
         2 +
         (words ? 2 : 0) +
-        (target.filePath != null && target.fileName != 'voice.wav' ? 1 : 0) +
+        (_trOffer(target) != null ? 3 : 0) +
+        (target.filePath != null && !isVoiceName(target.fileName) ? 1 : 0) +
         (isOut ? (words ? 2 : 1) : 0);
     final rowH = 20 + math.max(17.0, mq.textScaler.scale(13.5) * 1.3);
     final menuH = rows * rowH + 16;
@@ -3376,99 +3643,108 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           valueListenable: closing,
           builder: (context, out, _) => IgnorePointer(
             ignoring: out,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: dismiss,
-                    child: fading(const MenuBackdrop()),
-                  ),
-                ),
-                // the position is from the left edge, in either direction
-                Positioned(
-                  left: rowPos.dx,
-                  top: rowPos.dy,
-                  width: rowW,
-                  child: IgnorePointer(
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: still || out ? 0 : 1),
-                      duration: out
-                          ? const Duration(milliseconds: 160)
-                          : kHouseTime,
-                      curve: out ? Curves.easeOut : kHouseCurve,
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: _GroupBubble(
-                          m: target,
-                          album: album,
-                          showSender: showSender,
-                          faceOf: _faceOf,
-                          senderBadge: _badgeFor(target.sender),
-                          quotedText: quotedText,
-                          quotedAuthor: quotedAuthor,
-                          quotedSticker: quotedSticker,
-                        ),
-                      ),
-                      builder: (_, t, child) => Transform.scale(
-                        scale: 1.0 + 0.04 * t,
-                        alignment: isOut
-                            ? AlignmentDirectional.centerEnd
-                            : AlignmentDirectional.centerStart,
-                        child: child,
-                      ),
+            child: MenuScope(
+              onDismiss: dismiss,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: MenuCloser(
+                      onDismiss: dismiss,
+                      child: fading(const MenuBackdrop()),
                     ),
                   ),
-                ),
-                PositionedDirectional(
-                  key: const ValueKey('group-menu-reactions'),
-                  start: isOut ? null : 12,
-                  end: isOut ? 12 : null,
-                  top: reactTop,
-                  child: fading(
-                    MenuPop(
-                      fromRight: isOut,
-                      child: ReactionPicker(
-                        replyLabel: l10n.groupChatReply,
-                        emojis: const ['❤️', '👍', '😂', '😮', '😢', '🔥'],
-                        selected: target.reactions[''],
-                        onPick: (e) {
-                          dismiss();
-                          final added = reactOn.reactions[''] != e;
-                          _toggleReaction(reactOn, e);
-                          if (added) _flashReaction(reactOn);
-                        },
-                        onReply: () {
-                          dismiss();
-                          setState(() => _replyTo = anchor);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                PositionedDirectional(
-                  key: const ValueKey('group-menu-actions'),
-                  start: isOut ? null : 12,
-                  end: isOut ? 12 : null,
-                  top: menuTop,
-                  bottom: menuBottom,
-                  child: fading(
-                    MenuPop(
-                      fromRight: isOut,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: _menuCard(
-                          target,
-                          isOut,
-                          dismiss,
-                          album: album,
-                          held: held,
+                  // the position is from the left edge, in either direction
+                  Positioned(
+                    left: rowPos.dx,
+                    top: rowPos.dy,
+                    width: rowW,
+                    // a copy of the bubble: heard once, on the chat
+                    child: IgnorePointer(
+                      child: ExcludeSemantics(
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: still || out ? 0 : 1),
+                          duration: out
+                              ? const Duration(milliseconds: 160)
+                              : kHouseTime,
+                          curve: out ? Curves.easeOut : kHouseCurve,
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: _GroupBubble(
+                              m: target,
+                              transcripts: _transcripts,
+                              translation: _translation,
+                              album: album,
+                              showSender: showSender,
+                              faceOf: _faceOf,
+                              senderBadge: _badgeFor(target.sender),
+                              quotedText: quotedText,
+                              quotedAuthor: quotedAuthor,
+                              quotedSticker: quotedSticker,
+                            ),
+                          ),
+                          builder: (_, t, child) => Transform.scale(
+                            scale: 1.0 + 0.04 * t,
+                            alignment: isOut
+                                ? AlignmentDirectional.centerEnd
+                                : AlignmentDirectional.centerStart,
+                            child: child,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  PositionedDirectional(
+                    key: const ValueKey('group-menu-reactions'),
+                    start: isOut ? null : 12,
+                    end: isOut ? 12 : null,
+                    top: reactTop,
+                    child: fading(
+                      MenuPop(
+                        fromRight: isOut,
+                        child: ReactionPicker(
+                          replyLabel: l10n.groupChatReply,
+                          emojis: kQuickReactions,
+                          selected: target.reactions[''],
+                          onPick: (e) {
+                            dismiss();
+                            final added = reactOn.reactions[''] != e;
+                            _toggleReaction(reactOn, e);
+                            if (added) _flashReaction(reactOn);
+                          },
+                          onReply: () {
+                            dismiss();
+                            _hiddenQuote = null;
+                            setState(() => _replyTo = anchor);
+                            _keepDraft();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  PositionedDirectional(
+                    key: const ValueKey('group-menu-actions'),
+                    start: isOut ? null : 12,
+                    end: isOut ? 12 : null,
+                    top: menuTop,
+                    bottom: menuBottom,
+                    child: fading(
+                      MenuPop(
+                        fromRight: isOut,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: _menuCard(
+                            target,
+                            isOut,
+                            dismiss,
+                            album: album,
+                            held: held,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -3481,10 +3757,55 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     unguard = lockGuard.closeOnLock(finish);
   }
 
-  // someone else's, in a room, which always blocks: not copied,
-  // forwarded, shared, saved or opened elsewhere (shotsKeeps)
-  bool _keeps(_GMsg m) =>
-      shotsKeeps(blocking: _isRoom, mine: m.direction == 'out');
+  // someone else's, in a room, which always blocks, or in a group that
+  // does: not copied, forwarded, shared, saved or opened elsewhere
+  // (shotsKeeps)
+  bool _keeps(_GMsg m) => shotsKeeps(
+    blocking: _isRoom || _shots.blocking,
+    mine: m.direction == 'out',
+  );
+
+  // where the block last changed: over the first row since, or under the
+  // newest one when nothing came after it. an album's member is drawn by
+  // its lead, so the line goes with the lead's row. a room has none
+  Widget? _shotsLineAt(int ix, {required bool below}) {
+    final s = _shots;
+    if (_isRoom || s.line == kGroupLineNone || s.when <= 0) return null;
+    if (_messages.isEmpty || _end != null) return null;
+    final admin = _adminId;
+    final text = groupShotsLineText(
+      s.line,
+      mine: s.by == kShotsByMe,
+      name: admin == null ? null : _nameOf(admin),
+    );
+    if (text == null) return null;
+    final at = DateTime.fromMillisecondsSinceEpoch(s.when);
+    final run = _albums.runOf(_messages[ix]);
+    final here = run == null
+        ? _shotsLineBy(ix, at, below: below)
+        : run.present.any(
+            (x) => _shotsLineBy(
+              _messages.lastIndexWhere((m) => identical(m, x)),
+              at,
+              below: below,
+            ),
+          );
+    if (!here) return null;
+    return ShotsLine(
+      key: const ValueKey('shots-line'),
+      on: s.on && s.line != kGroupLinePaused,
+      text: text,
+    );
+  }
+
+  // whether the line falls over row [ix], or under it
+  bool _shotsLineBy(int ix, DateTime at, {required bool below}) {
+    if (ix < 0) return false;
+    final m = _messages[ix];
+    if (below) return ix == _messages.length - 1 && m.when.isBefore(at);
+    if (m.when.isBefore(at)) return false;
+    return ix == 0 ? !_hasMore : _messages[ix - 1].when.isBefore(at);
+  }
 
   // what can be done to one message, under it while the menu is open
   Widget _menuCard(
@@ -3494,66 +3815,127 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // an album's pin goes on its first item, a save on the one held
     AlbumRun<_GMsg>? album,
     _GMsg? held,
+  }) => MessageMenuCard(
+    note: _menuNote(target),
+    actions: _menuActions(target, isOut, dismiss, album: album, held: held),
+  );
+
+  // the one quiet line under the actions, for what a kept chat holds back
+  String? _menuNote(_GMsg target) => !_keeps(target)
+      ? null
+      : _isRoom
+      ? l10n.roomShotsMenuNote
+      : l10n.groupShotsMenuNote;
+
+  // theirs in a language the person does not read, when translation is on
+  Offer? _trOffer(_GMsg t) {
+    final tr = _translation;
+    if (tr == null || t.direction == 'out' || t.sticker != null) return null;
+    if (t.text.isEmpty) return null;
+    return tr.offer(t.text);
+  }
+
+  // what the menu can do, the phone's card and the computer's menu alike
+  List<MenuAction> _menuActions(
+    _GMsg target,
+    bool isOut,
+    VoidCallback dismiss, {
+    AlbumRun<_GMsg>? album,
+    _GMsg? held,
   }) {
     final kept = _keeps(target);
     final words = target.text.isNotEmpty && target.sticker == null && !kept;
     final anchor = album?.anchor ?? target;
     final saveOn = held ?? anchor;
     final shareOn = album == null ? target : held;
-    return MessageMenuCard(
-      note: kept ? l10n.roomShotsMenuNote : null,
-      actions: [
+    final translation = _translation;
+    final trOffer = _trOffer(target);
+    final trKey = trKeyOf(target.msgUid, target.came);
+    return [
+      MenuAction(
+        icon: anchor.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+        label: anchor.pinned ? l10n.groupChatUnpin : l10n.groupChatPin,
+        onTap: () {
+          dismiss();
+          _togglePinGroup(anchor);
+        },
+      ),
+      MenuAction(
+        icon: saveOn.saved ? Icons.bookmark : Icons.bookmark_outline,
+        label: saveOn.saved ? l10n.groupChatUnsave : l10n.commonSave,
+        tint: saveOn.saved ? HaloColors.amber : null,
+        // one saved before stays, and can be let go
+        onTap: kept && !saveOn.saved
+            ? null
+            : () {
+                dismiss();
+                _toggleSavedGroup(saveOn);
+              },
+      ),
+      // a sticker is not copied, forwarded or edited
+      MenuAction(
+        icon: Icons.copy_rounded,
+        label: l10n.commonCopy,
+        onTap: !words
+            ? null
+            : () {
+                dismiss();
+                copySensitive(target.text, kept: true);
+                showHaloToast(context, l10n.commonCopied);
+              },
+      ),
+      if (translation != null && trOffer != null) ...[
         MenuAction(
-          icon: anchor.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-          label: anchor.pinned ? l10n.groupChatUnpin : l10n.groupChatPin,
+          icon: Icons.translate_rounded,
+          label: translation.shown(trKey, target.text)
+              ? l10n.translateShowOriginal
+              : l10n.translateAction,
           onTap: () {
             dismiss();
-            _togglePinGroup(anchor);
+            unawaited(askTranslate(context, translation, trKey, target.text));
+          },
+        ),
+        // the translate line's own menu, in rows of their own here
+        MenuAction(
+          icon: Icons.all_inclusive_rounded,
+          label: l10n.translateAlwaysChat,
+          checked: translation.auto == true,
+          onTap: () {
+            dismiss();
+            unawaited(
+              translation.setAuto(translation.auto != true).catchError((_) {}),
+            );
           },
         ),
         MenuAction(
-          icon: saveOn.saved ? Icons.bookmark : Icons.bookmark_outline,
-          label: saveOn.saved ? l10n.groupChatUnsave : l10n.commonSave,
-          tint: saveOn.saved ? HaloColors.amber : null,
-          // one saved before stays, and can be let go
-          onTap: kept && !saveOn.saved
-              ? null
-              : () {
-                  dismiss();
-                  _toggleSavedGroup(saveOn);
-                },
+          icon: Icons.do_not_disturb_on_outlined,
+          label: l10n.translateBarNever(langName(trOffer.seen)),
+          onTap: () {
+            dismiss();
+            unawaited(neverOffer(context, translation.hub, trOffer));
+          },
         ),
-        // a sticker is not copied, forwarded or edited
-        MenuAction(
-          icon: Icons.copy_rounded,
-          label: l10n.commonCopy,
-          onTap: !words
-              ? null
-              : () {
-                  dismiss();
-                  Clipboard.setData(ClipboardData(text: target.text));
-                  showHaloToast(context, l10n.commonCopied);
-                },
-        ),
-        MenuAction(
-          icon: Icons.forward_rounded,
-          label: l10n.groupChatForward,
-          onTap:
-              kept ||
-                  !canForward(
-                    text: target.text,
-                    mediaPath: target.mediaPath,
-                    filePath: target.filePath,
-                    sticker: target.sticker != null,
-                  )
-              ? null
-              : () {
-                  dismiss();
-                  _forwardGroupMessage(target);
-                },
-        ),
-        // a tap opens a file, so sharing it lives here. an app installer is
-        // only ever saved
+      ],
+      MenuAction(
+        icon: Icons.forward_rounded,
+        label: l10n.groupChatForward,
+        onTap:
+            kept ||
+                !canForward(
+                  text: target.text,
+                  mediaPath: target.mediaPath,
+                  filePath: target.filePath,
+                  sticker: target.sticker != null,
+                )
+            ? null
+            : () {
+                dismiss();
+                _forwardGroupMessage(target);
+              },
+      ),
+      // a tap opens a file, so sharing it lives here. an app installer is
+      // only ever saved
+      if (canShareOut)
         MenuAction(
           icon: Icons.ios_share_rounded,
           label: l10n.commonShare,
@@ -3561,7 +3943,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
               (kept ||
                   shareOn == null ||
                   shareOn.filePath == null ||
-                  shareOn.fileName == 'voice.wav' ||
+                  isVoiceName(shareOn.fileName) ||
                   knownInstaller(shareOn.filePath!, shareOn.fileName))
               ? null
               : () {
@@ -3572,55 +3954,50 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   );
                 },
         ),
+      MenuAction(
+        icon: Icons.download_rounded,
+        label: l10n.fileSaveToDevice,
+        // in an album, the one held. nothing a room keeps leaves it
+        onTap:
+            (kept ||
+                shareOn == null ||
+                shareOn.filePath == null ||
+                shareOn.fileName == null ||
+                isVoiceName(shareOn.fileName))
+            ? null
+            : () {
+                dismiss();
+                saveReceivedFile(context, shareOn.filePath!, shareOn.fileName);
+              },
+      ),
+      if (isOut) ...[
         MenuAction(
-          icon: Icons.download_rounded,
-          label: l10n.fileSaveToDevice,
-          // in an album, the one held. nothing a room keeps leaves it
-          onTap:
-              (kept ||
-                  shareOn == null ||
-                  shareOn.filePath == null ||
-                  shareOn.fileName == null ||
-                  shareOn.fileName == 'voice.wav')
-              ? null
-              : () {
+          icon: Icons.edit_outlined,
+          label: l10n.commonEdit,
+          tint: HaloColors.amber,
+          // an album's caption stays as it went
+          onTap: words && album == null
+              ? () {
                   dismiss();
-                  saveReceivedFile(
-                    context,
-                    shareOn.filePath!,
-                    shareOn.fileName,
-                  );
-                },
+                  _editGroupMessage(target);
+                }
+              : null,
         ),
-        if (isOut) ...[
-          MenuAction(
-            icon: Icons.edit_outlined,
-            label: l10n.commonEdit,
-            tint: HaloColors.amber,
-            // an album's caption stays as it went
-            onTap: words && album == null
-                ? () {
-                    dismiss();
-                    _editGroupMessage(target);
-                  }
-                : null,
-          ),
-          MenuAction(
-            icon: Icons.delete_outline,
-            label: l10n.groupChatUnsend,
-            danger: true,
-            onTap: () {
-              dismiss();
-              if (album != null) {
-                _unsendGroupAlbum(album);
-              } else {
-                _unsendGroupMessage(target);
-              }
-            },
-          ),
-        ],
+        MenuAction(
+          icon: Icons.delete_outline,
+          label: l10n.groupChatUnsend,
+          danger: true,
+          onTap: () {
+            dismiss();
+            if (album != null) {
+              _unsendGroupAlbum(album);
+            } else {
+              _unsendGroupMessage(target);
+            }
+          },
+        ),
       ],
-    );
+    ];
   }
 
   bool _sameDay(DateTime a, DateTime b) =>
@@ -4041,8 +4418,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
               child: Text(
-                l10n.groupChatItDisappearsWithNo,
-                style: HaloType.sans(size: 13, color: HaloColors.text2),
+                album
+                    ? l10n.groupChatAlbumItDisappearsWithNoShown
+                    : l10n.groupChatItDisappearsWithNoShown,
+                style: HaloType.sans(size: 13, color: HaloColors.text),
               ),
             ),
             InkWell(
@@ -4062,7 +4441,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     const SizedBox(width: 14),
                     Text(
                       l10n.groupChatUnsend,
-                      style: HaloType.sans(size: 14, color: HaloColors.rose),
+                      style: HaloType.sans(
+                        size: 14,
+                        color: HaloColors.roseText,
+                      ),
                     ),
                   ],
                 ),
@@ -4092,6 +4474,130 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     claimChat('group:${widget.groupId}');
     _markRead();
     _catchUp();
+  }
+
+  // where this group's draft is kept, while the session still holds the
+  // group where it did when it opened: one left behind by a lock or a hide
+  // writes nothing
+  DraftRows? get _draftRows {
+    final rows = session.draftsOf(widget.groupId);
+    return rows.container.chatKey(widget.groupId) == _memo ? rows : null;
+  }
+
+  // [clock]: the person changed the timer, the draft takes it
+  void _keepDraft({bool clock = false}) {
+    final rows = _draftRows;
+    if (rows == null) return;
+    typedDraft(
+      rows,
+      widget.groupId,
+      Draft(
+        _msgCtrl.text,
+        replyTo: _replyTo?.msgUid ?? _draftReply ?? _hiddenQuote,
+        at: DateTime.now().millisecondsSinceEpoch,
+        // a timed group's draft goes as its messages would
+        burnSecs: _ghost ? _burnSeconds : null,
+      ),
+      group: true,
+      clock: clock,
+      timedKnown: _ghostKnown,
+    );
+  }
+
+  // the kept draft read back, unless something was typed meanwhile
+  Future<void> _readDraft(DraftRows rows) async {
+    final before = _msgCtrl.text;
+    final d = await readDraft(rows, widget.groupId, group: true);
+    if (!mounted || d == null || _msgCtrl.text != before) return;
+    _draftReply = d.replyTo;
+    _msgCtrl.value = TextEditingValue(
+      text: d.text,
+      selection: TextSelection.collapsed(offset: d.text.length),
+    );
+    unawaited(_restoreReply());
+  }
+
+  // the quote a kept draft had, once the messages are here: from the pages
+  // held, else from its own row, as it may be older than them. only one
+  // gone from the group, or from someone blocked, is let go; until then
+  // the draft keeps its uid
+  Future<void> _restoreReply() async {
+    final uid = _draftReply ?? _hiddenQuote;
+    if (uid == null || !_loaded || !mounted || _quoteLookup) return;
+    if (_replyTo != null) {
+      _draftReply = null;
+      _hiddenQuote = null;
+      return;
+    }
+    for (final m in _messages) {
+      if (m.msgUid == uid) {
+        _draftReply = null;
+        _hiddenQuote = null;
+        setState(() => _replyTo = m);
+        return;
+      }
+    }
+    Map<String, Object?>? row;
+    _quoteLookup = true;
+    try {
+      row = await session.groupMessageIn(widget.groupId, uid);
+    } catch (e) {
+      // not read: the uid stays, and the next load tries again
+      dlog('draft quote: not read (${e.runtimeType})');
+      return;
+    } finally {
+      _quoteLookup = false;
+    }
+    if (!mounted || (_draftReply ?? _hiddenQuote) != uid) return;
+    _draftReply = null;
+    final from = row?['peer_id'] as String?;
+    // a reply picked meanwhile wins over the kept one
+    if (row == null || from == null || _replyTo != null) {
+      _hiddenQuote = null;
+      return;
+    }
+    // someone blocked: kept, out of sight, tried again on every load
+    if (_blocked.contains(from)) {
+      _hiddenQuote = uid;
+      return;
+    }
+    _hiddenQuote = null;
+    final m = _GMsg(
+      sender: from,
+      senderName: _nameOf(from),
+      direction: row['direction'] as String,
+      text: row['plaintext'] as String? ?? '',
+      when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(row)),
+      sticker: StickerWire.parse(row['sticker']),
+      msgUid: uid,
+      mediaPath: row['media_path'] as String?,
+      fileName: row['file_name'] as String?,
+    );
+    setState(() => _replyTo = m);
+  }
+
+  bool _quoteLookup = false;
+
+  // what a send answers: only the quote bar that shows. [words]: the send
+  // takes the composer's words, and a kept quote goes with them
+  String? _takeQuote({bool words = false}) {
+    final q = quoteOnSend(
+      shown: _replyTo?.msgUid,
+      pending: _draftReply,
+      hidden: _hiddenQuote,
+      words: words,
+    );
+    _draftReply = q.pending;
+    _hiddenQuote = q.hidden;
+    return q.answers;
+  }
+
+  // its timed draft went with the chat's timer: words and quote both
+  void _timedDraftGone() {
+    _draftReply = null;
+    _hiddenQuote = null;
+    if (_replyTo != null) setState(() => _replyTo = null);
+    _msgCtrl.clear();
   }
 
   // a screen pushed over this one closed: this is the one being read again
@@ -4163,19 +4669,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   void _leaveRoomScreen() {
     if (_left) return;
     _left = true;
-    _holdSecure(false);
+    _shotsHold.release();
     // a room still waiting never showed its line
     if (_isRoom && _roomBanner && !_waiting) {
       session.markRoomSeen(widget.groupId);
     }
-  }
-
-  // this screen's one hold on the shield, taken and let go once each
-  bool _secureHeld = false;
-  void _holdSecure(bool on) {
-    if (on == _secureHeld) return;
-    _secureHeld = on;
-    appState.forceSecure(on);
   }
 
   @override
@@ -4183,11 +4681,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     super.activate();
     // came back after a deactivate that was only a reparent
     _left = false;
-    if (_isRoom) _holdSecure(true);
+    _shotsHold.want(_isRoom || _shots.blocking, now: true);
   }
 
   @override
   void dispose() {
+    // the row stays with the group for its next opening
+    _tray.removeListener(_trayMoved);
+    _composerFocus.dispose();
+    _transcripts?.dispose();
+    _translation?.dispose();
+    _find.detach();
+    _unwatchCaptures?.call();
     wallpaperRevision.removeListener(_loadWall);
     final open = _openGroups[widget.groupId]?..remove(this);
     if (open != null && open.isEmpty) _openGroups.remove(widget.groupId);
@@ -4195,12 +4700,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       land();
     }
     _leaveRoomScreen();
-    // persist the draft one more time on the way out.
-    final draft = _msgCtrl.text;
-    if (draft.trim().isEmpty) {
-      draftPerGroup.remove(_memo);
-    } else {
-      draftPerGroup[_memo] = draft;
+    // left: what the composer holds is written now, not after the wait
+    _msgCtrl.removeListener(_keepDraft);
+    _keepDraft();
+    final rows = _draftRows;
+    if (rows != null) {
+      unawaited(writeDraftNow(rows, widget.groupId, group: true));
     }
     _lastRowPerGroup[_memo] = _messages.fold(
       0,
@@ -4217,6 +4722,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     releaseChat('group:${widget.groupId}');
     appState.removeListener(_onAppStateChanged);
     groupOwedTick.removeListener(_reachMoved);
+    fileWaits.removeListener(_waitsMoved);
     _timers.dispose();
     _reads.dispose();
     _msgCtrl.dispose();
@@ -4225,7 +4731,111 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   @override
-  Widget build(BuildContext context) => menuBack(child: _page(context));
+  Widget build(BuildContext context) => menuBack(
+    child: PopScope(
+      canPop: !_escHolds,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _escOne();
+      },
+      child: DragInZone(
+        enabled: _end == null && !_waiting,
+        stage: _stage,
+        couldNotRead: () => l10n.groupChatCouldNotReadThat,
+        child: _page(context),
+      ),
+    ),
+  );
+
+  // this group's row of staged files on a computer, kept by group and
+  // container so it can never go anywhere else
+  late final AttachTray _tray = DeskTrays.of(
+    '${session.container.id}|group:${widget.groupId}',
+  );
+
+  void _trayMoved() {
+    if (mounted) setState(() {});
+  }
+
+  void _stage(List<String> files) {
+    if (_end != null || _waiting) return;
+    unawaited(
+      _tray.add(files, most: () => appState.fileLimitForGroup(widget.groupId)),
+    );
+  }
+
+  // a picture pasted from the clipboard waits there too, in memory only
+  void _stagePicture(Uint8List png) {
+    if (_end != null || _waiting) return;
+    unawaited(
+      _tray.addPicture(
+        png,
+        most: () => appState.fileLimitForGroup(widget.groupId),
+      ),
+    );
+  }
+
+  // enter with files staged: photos and videos as albums with the caption
+  // on the first, as a pick goes, then each file. a file alone takes it
+  Future<void> _sendTray() async {
+    if (_sending || _nobodyToRead()) return;
+    // a second enter while the first reads finds the row taken
+    if (_trayBusy) return;
+    _trayBusy = true;
+    try {
+      await _sendTrayNow();
+    } finally {
+      _trayBusy = false;
+    }
+  }
+
+  bool _trayBusy = false;
+
+  Future<void> _sendTrayNow() async {
+    final caption = _msgCtrl.text.trim();
+    final plan = trayPlan(_tray.items, caption);
+    final picks = <PickedMedia>[];
+    for (final x in plan.media) {
+      if (x.kind == TrayKind.video) {
+        picks.add(PickedMedia.video(XFile(x.path, name: x.name)));
+        continue;
+      }
+      try {
+        picks.add(PickedMedia.photo(await trayBytes(x)));
+      } catch (_) {
+        if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
+      }
+    }
+    // a lock while it read took the row: nothing goes
+    if (!mounted || lockState.locked) return;
+    _tray.clear();
+    _msgCtrl.clear();
+    _keepDraft();
+    if (picks.isNotEmpty) {
+      await _sendPicked(MediaSendResult(items: picks, caption: caption));
+    }
+    for (final (f, words) in plan.files) {
+      if (!mounted || lockState.locked) break;
+      final ready = await _readyGroupFile(f.path, f.name);
+      if (ready != null) await _sendGroupReady(ready, words);
+    }
+  }
+
+  // esc on a computer lets go of the staged files, then the quote, then
+  // the search, and only then closes the chat
+  bool get _escHolds =>
+      onDesktop && (_tray.shown || _replyTo != null || _searching);
+
+  void _escOne() {
+    if (_tray.shown) {
+      _tray.clear();
+    } else if (_replyTo != null) {
+      setState(() => _replyTo = null);
+      _keepDraft();
+    } else if (_searching) {
+      _closeSearch();
+    }
+    if (onDesktop) _composerFocus.requestFocus();
+  }
 
   Widget _page(BuildContext context) {
     // the albums as the thread stands now: a row of one is drawn by its lead
@@ -4260,6 +4870,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       expiresAt: _roomExpiresAt,
                       joiningAt: _waiting ? _joiningAt : null,
                       ended: _end != null,
+                      shotsForAll: !_isRoom && _end == null && _shots.forAll,
                       onBack: () => Navigator.of(context).pop(),
                       onSearch: _waiting || _end != null ? null : _openSearch,
                       pinnedCount: _end != null ? 0 : _pinCount,
@@ -4275,246 +4886,288 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       },
                     ),
             ),
-            // the room's first open: its line eases the thread down
-            // instead of shoving it when the room is known
-            EaseSize(
-              child: _isRoom && _roomBanner && !_waiting
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        NoticeBanner(
-                          glyph: NoticeGlyph.clock,
-                          text: l10n.groupChatThisRoomAndEverything(
-                            expiryWords(
-                              DateTime.fromMillisecondsSinceEpoch(
-                                _roomExpiresAt!,
-                              ).difference(DateTime.now()),
-                            ),
-                          ),
-                          color: HaloColors.violet,
-                          margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
-                          delay: const Duration(milliseconds: 160),
-                        ),
-                        // every phone that opens a room holds the flag on
-                        // it, since the first version with rooms
-                        NoticeBanner(
-                          glyph: NoticeGlyph.shield,
-                          text: l10n.roomShotsBlocked,
-                          color: HaloColors.violet,
-                          margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
-                          delay: const Duration(milliseconds: 220),
-                        ),
-                      ],
-                    )
-                  : const SizedBox(width: double.infinity, height: 0),
-            ),
-            // its admin went with "this isn't them": the group is frozen here
-            EaseSize(
-              child: _adminGone && _end == null
-                  ? _AdminGoneLine(onLeave: _leaveAdminGone)
-                  : const SizedBox(width: double.infinity, height: 0),
-            ),
-            // a send that has waited on tor a minute gets a way out
-            ReconnectValve(
-              valve: torValve,
-              waitingSince: _waitingSince(),
-              private: appState.sendMode == 'private',
-              quiet: sessionQuiet,
-              online: appState.online,
-              linkUp: appState.linkUp,
-              margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
-            ),
-            Divider(height: 0.5, color: HaloColors.line, thickness: 0.5),
-            Expanded(
-              // nothing until the first load lands, so an empty state
-              // never flashes over a group that has messages. the words
-              // cross over when the first person joins, when the room lets
-              // this phone in, and into the first message
-              child: FadeSwap(
-                child: !_loaded
-                    ? const SizedBox.shrink(key: ValueKey('wait'))
-                    : _waiting || _messages.isEmpty || _end != null
-                    ? _end != null
-                          // its admin ended it: the line alone
-                          ? EmptyChat(
-                              key: const ValueKey('ended'),
-                              icon: Icons.stop_circle_outlined,
-                              tint: HaloColors.text2,
-                              title: endedLine(_end!),
-                            )
-                          : _waiting
-                          ? RoomJoinPanel(
-                              key: const ValueKey('joining'),
-                              name: _groupName,
-                              joiningAt: _joiningAt!,
-                              full: _full,
-                              onTryAgain: _knockAgain,
-                              onLeave: _leaveWaiting,
-                            )
-                          : EmptyChat(
-                              key: ValueKey(_alone),
-                              icon: Icons.groups_outlined,
-                              tint: _isRoom ? HaloColors.violet : null,
-                              // a group everyone else left is no new group
-                              title: _alone
-                                  ? _isRoom
-                                        ? l10n.groupChatNobodyHereYet
-                                        : l10n.groupChatNoMessagesYet
-                                  : _isRoom
-                                  ? l10n.chatSayHi
-                                  : _isAdmin
-                                  ? l10n.groupChatGroupCreatedSayHi
-                                  : l10n.groupChatNoMessagesYet,
-                              line: !_alone
-                                  ? l10n.groupChatEveryoneHereReads
-                                  : _isRoom
-                                  ? l10n.groupChatShareTheRoomLink
-                                  : l10n.groupChatNobodyToReadIt,
-                            )
-                    : AtmoScope(
-                        key: const ValueKey('list'),
-                        atmo: _wall.atmo,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: ChatBackdrop(_wall, chat: _memo),
-                            ),
-                            NotificationListener<ScrollMetricsNotification>(
-                              onNotification: _threadResized,
-                              // the newest bubble's time rests above the line
-                              child: EarlierRoom(
-                                shown: _earlier.count > 0,
-                                controller: _scrollCtrl,
-                                reversed: false,
-                                builder: (_, room) => ListView.builder(
-                                  key: _listKey,
-                                  controller: _scrollCtrl,
-                                  padding: EdgeInsets.fromLTRB(
-                                    14,
-                                    12,
-                                    14,
-                                    12 + room,
-                                  ),
-                                  itemCount: _messages.length,
-                                  itemBuilder: (_, i) {
-                                    // one unbuildable message must not cost the
-                                    // whole conversation.
-                                    try {
-                                      return _buildGroupRow(i);
-                                    } catch (e) {
-                                      dlog('group bubble failed: \$e');
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 6,
-                                        ),
-                                        child: Text(
-                                          l10n.groupChatThisMessageCanT,
-                                          style: HaloType.sans(
-                                            size: 12,
-                                            color: HaloColors.text2,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
+            ...readLines([
+              // the room's first open: its line eases the thread down
+              // instead of shoving it when the room is known
+              EaseSize(
+                child: _isRoom && _roomBanner && !_waiting
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          NoticeBanner(
+                            glyph: NoticeGlyph.clock,
+                            text: l10n.groupChatThisRoomAndEverything(
+                              expiryWords(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  _roomExpiresAt!,
+                                ).difference(DateTime.now()),
                               ),
                             ),
-                            Positioned(
-                              top: 8,
-                              left: 0,
-                              right: 0,
-                              child: IgnorePointer(
-                                child: Center(
-                                  child: ValueListenableBuilder<bool>(
-                                    valueListenable: _stickyShown,
-                                    builder: (_, shown, _) => AnimatedOpacity(
-                                      duration: const Duration(
-                                        milliseconds: 220,
+                            color: HaloColors.violet,
+                            margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+                            delay: const Duration(milliseconds: 160),
+                          ),
+                          // every phone that opens a room holds the flag on
+                          // it, since the first version with rooms
+                          NoticeBanner(
+                            glyph: NoticeGlyph.shield,
+                            text: l10n.roomShotsBlockedShown,
+                            color: HaloColors.violet,
+                            margin: const EdgeInsets.fromLTRB(12, 4, 12, 2),
+                            delay: const Duration(milliseconds: 220),
+                          ),
+                        ],
+                      )
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
+              // a member on an older Kryfo: no session here reaches them yet
+              EaseSize(
+                child: _needUpdate.isNotEmpty && _end == null && !_isRoom
+                    ? NoticeBanner(
+                        key: const ValueKey('group-old'),
+                        glyph: NoticeGlyph.clock,
+                        text: _needUpdate.length == 1
+                            ? l10n.groupMemberNeedsUpdate(
+                                _nameOf(_needUpdate.first),
+                              )
+                            : l10n.groupMembersNeedUpdate,
+                        color: HaloColors.warn,
+                        textColor: HaloColors.warnText,
+                        margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+                      )
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
+              // its admin went with "this isn't them": the group is frozen here
+              EaseSize(
+                child: _adminGone && _end == null
+                    ? _AdminGoneLine(
+                        // a linked device leaves on its phone (GroupOnPhone)
+                        onLeave: linkedRole ? null : _leaveAdminGone,
+                      )
+                    : const SizedBox(width: double.infinity, height: 0),
+              ),
+              // a send that has waited on tor a minute gets a way out
+              ReconnectValve(
+                valve: torValve,
+                waitingSince: _waitingSince(),
+                private: appState.sendMode == 'private',
+                quiet: sessionQuiet,
+                online: appState.online,
+                linkUp: appState.linkUp,
+                margin: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+              ),
+              Divider(height: 0.5, color: HaloColors.line, thickness: 0.5),
+              Expanded(
+                // nothing until the first load lands, so an empty state
+                // never flashes over a group that has messages. the words
+                // cross over when the first person joins, when the room lets
+                // this phone in, and into the first message
+                child: FadeSwap(
+                  child: !_loaded
+                      ? const SizedBox.shrink(key: ValueKey('wait'))
+                      : _waiting || _messages.isEmpty || _end != null
+                      ? _end != null
+                            // its admin ended it: the line alone
+                            ? EmptyChat(
+                                key: const ValueKey('ended'),
+                                icon: Icons.stop_circle_outlined,
+                                tint: HaloColors.text2,
+                                title: endedLine(_end!),
+                              )
+                            : _waiting
+                            ? RoomJoinPanel(
+                                key: const ValueKey('joining'),
+                                name: _groupName,
+                                joiningAt: _joiningAt!,
+                                full: _full,
+                                onTryAgain: _knockAgain,
+                                onLeave: _leaveWaiting,
+                              )
+                            : EmptyChat(
+                                key: ValueKey(_alone),
+                                icon: Icons.groups_outlined,
+                                tint: _isRoom ? HaloColors.violet : null,
+                                // a group everyone else left is no new group
+                                title: _alone
+                                    ? _isRoom
+                                          ? l10n.groupChatNobodyHereYet
+                                          : l10n.groupChatNoMessagesYet
+                                    : _isRoom
+                                    ? l10n.chatSayHi
+                                    : _isAdmin
+                                    ? l10n.groupChatGroupCreatedSayHi
+                                    : l10n.groupChatNoMessagesYet,
+                                line: !_alone
+                                    ? l10n.groupChatEveryoneHereReads
+                                    : _isRoom
+                                    ? l10n.groupChatShareTheRoomLink
+                                    : l10n.groupChatNobodyToReadIt,
+                              )
+                      : AtmoScope(
+                          key: const ValueKey('list'),
+                          atmo: _wall.atmo,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: ChatBackdrop(_wall, chat: _memo),
+                              ),
+                              NotificationListener<ScrollMetricsNotification>(
+                                onNotification: _threadResized,
+                                // the newest bubble's time rests above the line
+                                child: EarlierRoom(
+                                  shown: _earlier.count > 0,
+                                  controller: _scrollCtrl,
+                                  reversed: false,
+                                  builder: (_, room) => ReadWidth(
+                                    builder: (_, side) => ListView.builder(
+                                      key: _listKey,
+                                      controller: _scrollCtrl,
+                                      padding: EdgeInsets.fromLTRB(
+                                        14 + side,
+                                        12,
+                                        14 + side,
+                                        12 + room,
                                       ),
-                                      opacity: shown ? 1.0 : 0.0,
-                                      child: ValueListenableBuilder<String?>(
-                                        valueListenable: _stickyLabel,
-                                        builder: (_, label, _) => label == null
-                                            ? const SizedBox.shrink()
-                                            : DayChip(label),
+                                      itemCount: _messages.length,
+                                      itemBuilder: (_, i) {
+                                        // one unbuildable message must not cost the
+                                        // whole conversation.
+                                        try {
+                                          return _buildGroupRow(i);
+                                        } catch (e) {
+                                          dlog('group bubble failed: \$e');
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 6,
+                                            ),
+                                            child: Text(
+                                              l10n.groupChatThisMessageCanT,
+                                              style: HaloType.sans(
+                                                size: 12,
+                                                color: HaloColors.text,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                left: 0,
+                                right: 0,
+                                child: IgnorePointer(
+                                  child: Center(
+                                    child: ValueListenableBuilder<bool>(
+                                      valueListenable: _stickyShown,
+                                      builder: (_, shown, _) => AnimatedOpacity(
+                                        duration: const Duration(
+                                          milliseconds: 220,
+                                        ),
+                                        opacity: shown ? 1.0 : 0.0,
+                                        child: ValueListenableBuilder<String?>(
+                                          valueListenable: _stickyLabel,
+                                          builder: (_, label, _) =>
+                                              label == null
+                                              ? const SizedBox.shrink()
+                                              : DayChip(label),
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
+                              // over the list, or the list takes its taps
+                              _scrollDownButton(),
+                              _earlierLine(),
+                            ],
+                          ),
+                        ),
+                ),
+              ),
+              // grows in over the composer and folds away, as in the 1:1 chat
+              GrowSwap(
+                alignment: Alignment.topCenter,
+                child: _replyTo != null
+                    ? _ReplyQuoteBar(
+                        target: _replyTo!,
+                        onCancel: () {
+                          setState(() => _replyTo = null);
+                          _keepDraft();
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              IncomingMediaBanner(
+                chatKey: _memo,
+                onPause: appState.pauseDownload,
+                onCancel: (uid) {
+                  final m = _liveMsg(uid);
+                  if (m != null) _stopGroupSending(m);
+                },
+              ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _msgCtrl,
+                builder: (_, v, _) => PreviewStrip(
+                  url: !_isRoom && !sessionQuiet && _torUp
+                      ? firstUrl(v.text)
+                      : null,
+                  pending: _pendingPreview,
+                  busy: _previewBusy,
+                  onAdd: _addPreview,
+                  onDrop: () => setState(() => _pendingPreview = null),
+                ),
+              ),
+              // no composer while the room has not let this phone in: it
+              // grows in once the room does
+              GrowSwap(
+                alignment: Alignment.topCenter,
+                child: _end != null
+                    ? const GroupEndedBar(key: ValueKey('ended'))
+                    : _waiting
+                    ? const SizedBox(
+                        key: ValueKey('no-composer'),
+                        width: double.infinity,
+                      )
+                    : KeyedSubtree(
+                        key: const ValueKey('composer'),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TrayStrip(tray: _tray),
+                            PasteFiles(
+                              onFiles: _stage,
+                              onPicture: _stagePicture,
+                              child: _Composer(
+                                staged: !_tray.isEmpty,
+                                controller: _msgCtrl,
+                                focusNode: _composerFocus,
+                                members: _mentionable,
+                                sending: _sending,
+                                ghost: _ghost,
+                                burnSeconds: _burnSeconds,
+                                disguise: _disguise,
+                                onToggleGhost: () {
+                                  setState(() => _ghost = !_ghost);
+                                  appState.saveGhostPref(_ghost, _burnSeconds);
+                                  _keepDraft(clock: true);
+                                },
+                                onLongPressGhost: _showBurnPicker,
+                                onSend: _send,
+                                onAttach: _showAttachSheet,
+                                onStickers: _showStickers,
+                                onCamera: _openGroupCamera,
+                                onVoice: _onVoice,
+                                mayRecord: () => !_nobodyToRead(),
+                              ),
                             ),
-                            // over the list, or the list takes its taps
-                            _scrollDownButton(),
-                            _earlierLine(),
                           ],
                         ),
                       ),
               ),
-            ),
-            // grows in over the composer and folds away, as in the 1:1 chat
-            GrowSwap(
-              alignment: Alignment.topCenter,
-              child: _replyTo != null
-                  ? _ReplyQuoteBar(
-                      target: _replyTo!,
-                      onCancel: () => setState(() => _replyTo = null),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            IncomingMediaBanner(
-              chatKey: _memo,
-              onCancel: (uid) {
-                final m = _liveMsg(uid);
-                if (m != null) _stopGroupSending(m);
-              },
-            ),
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _msgCtrl,
-              builder: (_, v, _) => PreviewStrip(
-                url: !_isRoom && !sessionQuiet && _torUp
-                    ? firstUrl(v.text)
-                    : null,
-                pending: _pendingPreview,
-                busy: _previewBusy,
-                onAdd: _addPreview,
-                onDrop: () => setState(() => _pendingPreview = null),
-              ),
-            ),
-            // no composer while the room has not let this phone in: it
-            // grows in once the room does
-            GrowSwap(
-              alignment: Alignment.topCenter,
-              child: _end != null
-                  ? const GroupEndedBar(key: ValueKey('ended'))
-                  : _waiting
-                  ? const SizedBox(
-                      key: ValueKey('no-composer'),
-                      width: double.infinity,
-                    )
-                  : KeyedSubtree(
-                      key: const ValueKey('composer'),
-                      child: _Composer(
-                        controller: _msgCtrl,
-                        members: _mentionable,
-                        sending: _sending,
-                        ghost: _ghost,
-                        burnSeconds: _burnSeconds,
-                        disguise: _disguise,
-                        onToggleGhost: () {
-                          setState(() => _ghost = !_ghost);
-                          appState.saveGhostPref(_ghost, _burnSeconds);
-                        },
-                        onLongPressGhost: _showBurnPicker,
-                        onSend: _send,
-                        onAttach: _showAttachSheet,
-                        onStickers: _showStickers,
-                        onCamera: _openGroupCamera,
-                        onVoice: _onVoice,
-                        mayRecord: () => !_nobodyToRead(),
-                      ),
-                    ),
-            ),
+            ]),
           ],
         ),
       ),
@@ -4559,7 +5212,7 @@ class GroupEndedBar extends StatelessWidget {
                 style: HaloType.serif(
                   size: 14,
                   italic: true,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                 ),
               ),
             ),
@@ -4579,6 +5232,13 @@ String _fmtBurn(int s) {
 
 // the phone cannot send at all: no network, or onion mode without a route
 bool _cannotSend() => !appState.online || !appState.torReady;
+
+// tor still coming up is not a failure: what waits for it reads as sending
+bool _readsBlocked() => sendReadsBlocked(
+  online: appState.online,
+  torReady: appState.torReady,
+  link: appState.linkView,
+);
 
 // the time on a photo or a video with no caption: a small dark pill in the
 // corner, since there is no bubble under it to carry it
@@ -4636,7 +5296,7 @@ class _GMsg with WordLinks {
   // stops that after six goes
   int autoRetries = 0;
   bool gaveUp = false;
-  bool get looksFailed => failed && (gaveUp || _cannotSend());
+  bool get looksFailed => failed && (gaveUp || _readsBlocked());
   bool get pending => sending || (failed && !looksFailed);
   bool removing = false;
   bool fresh = false; // one-shot: animate entrance, then cleared on first build
@@ -4714,6 +5374,8 @@ class _Header extends StatelessWidget {
   final int? joiningAt;
   // its admin ended it: no count under the name
   final bool ended;
+  // every member's phone blocks screenshots: a small lock by the count
+  final bool shotsForAll;
   final VoidCallback onBack;
   final VoidCallback onTapInfo;
   final VoidCallback? onSearch;
@@ -4727,6 +5389,7 @@ class _Header extends StatelessWidget {
     this.expiresAt,
     this.joiningAt,
     this.ended = false,
+    this.shotsForAll = false,
     required this.onBack,
     required this.onTapInfo,
     this.onSearch,
@@ -4739,13 +5402,18 @@ class _Header extends StatelessWidget {
         expiresAt != null ||
         appState.groups.any((g) => g.groupId == groupId && g.expiresAt != null);
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
+      // a computer's header stands a little roomier, a phone's as it was
+      padding: onDesktop
+          ? const EdgeInsetsDirectional.fromSTEB(8, 10, 12, 10)
+          : const EdgeInsetsDirectional.fromSTEB(4, 6, 8, 6),
       child: Row(
         children: [
-          IconButton(
-            tooltip: l10n.commonBack,
-            icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
-            onPressed: onBack,
+          PaneBack(
+            child: IconButton(
+              tooltip: l10n.commonBack,
+              icon: Icon(Icons.chevron_left, color: HaloColors.text, size: 26),
+              onPressed: onBack,
+            ),
           ),
           Expanded(
             child: InkWell(
@@ -4760,8 +5428,8 @@ class _Header extends StatelessWidget {
                     HaloHero(
                       tag: 'group-$groupId',
                       child: Container(
-                        width: 36,
-                        height: 36,
+                        width: onDesktop ? 40 : 36,
+                        height: onDesktop ? 40 : 36,
                         decoration: BoxDecoration(
                           color: room
                               ? HaloColors.violet.withValues(alpha: 0.14)
@@ -4779,10 +5447,10 @@ class _Header extends StatelessWidget {
                               ? '·'
                               : name.characters.first.toUpperCase(),
                           style: HaloType.serif(
-                            size: 18,
+                            size: onDesktop ? 20 : 18,
                             italic: true,
                             color: room
-                                ? HaloColors.violet
+                                ? HaloColors.violetText
                                 : HaloColors.amberText,
                           ),
                         ),
@@ -4798,46 +5466,81 @@ class _Header extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: HaloType.sans(
-                              size: 15,
+                              size: onDesktop ? 16 : 15,
                               weight: FontWeight.w500,
                               color: HaloColors.text,
                             ),
                           ),
                           // let in, the waiting line rises into the clock
-                          RiseSwap(
-                            child: ended
-                                // the page and its bar say it: no count
-                                ? const SizedBox(key: ValueKey('ended'))
-                                : joiningAt != null
-                                ? RoomJoinLine(
-                                    key: const ValueKey('joining'),
-                                    joiningAt: joiningAt!,
-                                    full: appState.roomFull(groupId),
-                                  )
-                                : expiresAt != null
-                                ? SlotLine(
-                                    key: const ValueKey('room'),
-                                    msg: (t) =>
-                                        l10n.groupChatHere(memberCount, t),
-                                    slot: RoomCountdown(
-                                      expiresAt: expiresAt!,
-                                      size: 10,
-                                    ),
-                                    style: HaloType.mono(
-                                      size: 10,
-                                      color: HaloColors.text2,
-                                    ),
-                                  )
-                                : Text(
-                                    l10n.groupChatMembers(memberCount),
-                                    key: const ValueKey('members'),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: HaloType.mono(
-                                      size: 10,
-                                      color: HaloColors.text2,
-                                    ),
-                                  ),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: RiseSwap(
+                                  child: ended
+                                      // the page and its bar say it: no count
+                                      ? const SizedBox(key: ValueKey('ended'))
+                                      : joiningAt != null
+                                      ? RoomJoinLine(
+                                          key: const ValueKey('joining'),
+                                          joiningAt: joiningAt!,
+                                          full: appState.roomFull(groupId),
+                                        )
+                                      : expiresAt != null
+                                      ? SlotLine(
+                                          key: const ValueKey('room'),
+                                          msg: (t) => l10n.groupChatHere(
+                                            memberCount,
+                                            t,
+                                          ),
+                                          slot: RoomCountdown(
+                                            expiresAt: expiresAt!,
+                                            size: 10,
+                                          ),
+                                          style: HaloType.mono(
+                                            size: 10,
+                                            color: HaloColors.text,
+                                          ),
+                                        )
+                                      : Text(
+                                          l10n.groupChatMembers(memberCount),
+                                          key: const ValueKey('members'),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: HaloType.mono(
+                                            size: 10,
+                                            color: HaloColors.text,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              // every phone in it blocks: a lock by the count
+                              AnimatedSwitcher(
+                                duration: Duration(
+                                  milliseconds: motionStill(context) ? 0 : 220,
+                                ),
+                                child: shotsForAll
+                                    ? Padding(
+                                        key: const ValueKey('shots'),
+                                        padding:
+                                            const EdgeInsetsDirectional.only(
+                                              start: 6,
+                                            ),
+                                        child: Semantics(
+                                          label:
+                                              l10n.groupShotsBlockedHereShown,
+                                          child: Icon(
+                                            Icons.phonelink_lock_outlined,
+                                            size: 11,
+                                            color: HaloColors.text2,
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox(
+                                        key: ValueKey('no-shots'),
+                                        width: 0,
+                                      ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -4918,14 +5621,14 @@ class _ReplyQuoteBar extends StatelessWidget {
                 if (target.sticker case final st?)
                   StickerLine(
                     st,
-                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text),
                   )
                 else
                   Text(
                     target.text,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: HaloType.sans(size: 12.5, color: HaloColors.text2),
+                    style: HaloType.sans(size: 12.5, color: HaloColors.text),
                   ),
               ],
             ),
@@ -4943,6 +5646,7 @@ class _ReplyQuoteBar extends StatelessWidget {
 
 class _Composer extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool sending;
   final bool ghost;
   final int burnSeconds;
@@ -4957,9 +5661,13 @@ class _Composer extends StatelessWidget {
   final bool Function() mayRecord;
   // who @ can offer
   final List<MentionCandidate> members;
+  // files wait in the row above: send shows with nothing typed
+  final bool staged;
   const _Composer({
     this.members = const [],
+    this.staged = false,
     required this.controller,
+    this.focusNode,
     required this.sending,
     required this.ghost,
     this.burnSeconds = 300,
@@ -4991,7 +5699,9 @@ class _Composer extends StatelessWidget {
           ),
         ),
       ),
-      padding: const EdgeInsetsDirectional.fromSTEB(8, 8, 12, 12),
+      padding: onDesktop
+          ? const EdgeInsetsDirectional.fromSTEB(12, 12, 16, 16)
+          : const EdgeInsetsDirectional.fromSTEB(8, 8, 12, 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -5080,19 +5790,20 @@ class _Composer extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               // the camera that keeps its photos inside kryfo
-              PressScale(
-                label: l10n.groupChatOpenTheCamera,
-                onTap: onCamera,
-                scale: 0.86,
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 10),
-                  child: Icon(
-                    Icons.photo_camera_outlined,
-                    size: 22,
-                    color: HaloColors.text2,
+              if (!onDesktop)
+                PressScale(
+                  label: l10n.groupChatOpenTheCamera,
+                  onTap: onCamera,
+                  scale: 0.86,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 10),
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: 22,
+                      color: HaloColors.text2,
+                    ),
                   ),
                 ),
-              ),
               PressScale(
                 label: l10n.groupChatAttachAPhoto,
                 onTap: onAttach,
@@ -5129,33 +5840,34 @@ class _Composer extends StatelessWidget {
                       Expanded(
                         child: WrittenDir(
                           controller: controller,
-                          builder: (dir) => ShiftTapGuard(
+                          builder: (dir) => EnterSends(
                             controller: controller,
-                            child: TextField(
-                              textDirection: dir,
-                              inputFormatters: const [UnmarkedInput()],
+                            onSend: onSend,
+                            child: ShiftTapGuard(
                               controller: controller,
-                              enableIMEPersonalizedLearning: false,
-                              style: HaloType.sans(
-                                size: 14,
-                                color: HaloColors.text,
-                              ),
-                              cursorColor: HaloColors.amber,
-                              decoration: InputDecoration(
-                                hintText: l10n.groupChatMessage,
-                                hintStyle: HaloType.sans(
+                              child: TextField(
+                                textDirection: dir,
+                                inputFormatters: const [UnmarkedInput()],
+                                controller: controller,
+                                focusNode: focusNode,
+                                enableIMEPersonalizedLearning: false,
+                                style: HaloType.sans(
                                   size: 14,
-                                  color: HaloColors.text3,
+                                  color: HaloColors.text,
                                 ),
-                                border: InputBorder.none,
-                                isCollapsed: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                                cursorColor: HaloColors.amber,
+                                decoration: InputDecoration(
+                                  hint: ComposerHint(l10n.groupChatMessage),
+                                  border: InputBorder.none,
+                                  isCollapsed: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: onDesktop ? 15 : 12,
+                                  ),
                                 ),
+                                minLines: 1,
+                                maxLines: 5,
+                                onSubmitted: (_) => onSend(),
                               ),
-                              minLines: 1,
-                              maxLines: 5,
-                              onSubmitted: (_) => onSend(),
                             ),
                           ),
                         ),
@@ -5172,7 +5884,7 @@ class _Composer extends StatelessWidget {
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: controller,
                 builder: (context, value, _) {
-                  final hasText = value.text.trim().isNotEmpty;
+                  final hasText = value.text.trim().isNotEmpty || staged;
                   // empty field: voice lane. text: the send pill. the two
                   // trade places with a small pop instead of a cut
                   return AnimatedSwitcher(
@@ -5351,7 +6063,7 @@ class _MentionPicker extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: HaloType.mono(
                                         size: 10,
-                                        color: HaloColors.text2,
+                                        color: HaloColors.text,
                                       ),
                                     ),
                                   ),
@@ -5417,8 +6129,14 @@ class _GroupBubble extends StatelessWidget {
   final AlbumRun<_GMsg>? album;
   // a tile of the album held: the bubble's context and the tile
   final void Function(BuildContext, int)? onLongPressTile;
+  // the group's voice note transcripts
+  final ChatTranscripts? transcripts;
+  // theirs in other languages, translated on the phone
+  final ChatTranslation? translation;
   const _GroupBubble({
     required this.m,
+    this.transcripts,
+    this.translation,
     this.album,
     this.onLongPressTile,
     required this.showSender,
@@ -5447,10 +6165,13 @@ class _GroupBubble extends StatelessWidget {
     this.linkTitle,
     this.linkBySender = false,
     this.kept = false,
+    this.keptIn = KeptIn.room,
   });
 
-  // someone else's, in a room: opened in no other app
+  // someone else's, in a room or a group that blocks: opened in no other
+  // app, and said so in the words of where it is
   final bool kept;
+  final KeptIn keptIn;
 
   // a search steps what is not a hit back, as in the 1:1 chat
   @override
@@ -5459,7 +6180,7 @@ class _GroupBubble extends StatelessWidget {
     curve: Curves.easeOut,
     opacity: dimmed ? 0.4 : 1.0,
     // a file is drawn by what its bytes are once they are read
-    child: m.filePath == null || m.fileName == 'voice.wav'
+    child: m.filePath == null || isVoiceName(m.fileName)
         ? _bubble(context)
         : ValueListenableBuilder<int>(
             valueListenable: fileFactsRead,
@@ -5475,10 +6196,9 @@ class _GroupBubble extends StatelessWidget {
     final isVideo =
         m.filePath != null &&
         m.text.isEmpty &&
-        m.fileName != 'voice.wav' &&
+        !isVoiceName(m.fileName) &&
         shape == FileShape.video;
     final frameless = m.mediaPath != null || isVideo;
-    final onAmberText = isOut && m.mediaPath == null;
     final reacted = m.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
     return LeaveFold(
@@ -5524,7 +6244,9 @@ class _GroupBubble extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: HaloType.mono(
                                 size: 9.5,
-                                color: _authorColor(m.sender),
+                                color: HaloColors.wordsIn(
+                                  _authorColor(m.sender),
+                                ),
                                 letter: 0.4,
                               ),
                             ),
@@ -5571,596 +6293,675 @@ class _GroupBubble extends StatelessWidget {
                         ),
                         child: BurnFade(
                           active: m.removing,
-                          child: Builder(
-                            builder: (ctx) {
-                              if (m.sticker case final st?) {
-                                return GestureDetector(
-                                  onLongPress: onLongPress == null
-                                      ? null
-                                      : () => onLongPress!(ctx),
-                                  child: _sticker(st),
-                                );
-                              }
-                              // a poll is its own card, on either side
-                              if (m.poll != null) {
-                                return GestureDetector(
-                                  onTap: m.failed ? onRetry : null,
-                                  onLongPress: onLongPress == null
-                                      ? null
-                                      : () => onLongPress!(ctx),
-                                  child: _pollCard(),
-                                );
-                              }
-                              return GestureDetector(
-                                onTap: m.failed ? onRetry : null,
-                                onLongPress: onLongPress == null
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: groupBubbleCap(
+                                MediaQuery.sizeOf(context).width,
+                                own: _ownWidth(isVideo),
+                              ),
+                            ),
+                            child: Builder(
+                              builder: (ctx) => DeskMenuFocus(
+                                onMenu: onLongPress == null
                                     ? null
                                     : () => onLongPress!(ctx),
-                                child: Container(
-                                  padding: frameless
-                                      ? EdgeInsets.zero
-                                      : const EdgeInsets.fromLTRB(12, 8, 12, 9),
-                                  decoration: BoxDecoration(
-                                    // a photo or video goes edge to edge with no
-                                    // bubble fill, so no amber or grey frame
-                                    color: frameless
-                                        ? Colors.transparent
-                                        : (isOut
-                                              ? HaloColors.amber
-                                              : atmoBubbleIn(
-                                                  context,
-                                                  HaloColors.surface2,
-                                                )),
-                                    borderRadius: BorderRadiusDirectional.only(
-                                      topStart: const Radius.circular(14),
-                                      topEnd: const Radius.circular(14),
-                                      bottomStart: Radius.circular(
-                                        isOut ? 14 : 4,
-                                      ),
-                                      bottomEnd: Radius.circular(
-                                        isOut ? 4 : 14,
-                                      ),
-                                    ),
-                                    border: searchRing(isCurrentMatch),
-                                    boxShadow: searchGlow(isCurrentMatch),
-                                  ),
-                                  clipBehavior: frameless
-                                      ? Clip.antiAlias
-                                      : Clip.none,
-                                  child: IntrinsicWidth(
-                                    child: Column(
-                                      crossAxisAlignment: isOut
-                                          ? CrossAxisAlignment.end
-                                          : CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (quotedText != null) ...[
-                                          PressScale(
-                                            scale: 0.97,
-                                            haptic: false,
-                                            onTap: onReplyTap,
-                                            child: Container(
-                                              width: double.infinity,
-                                              margin: const EdgeInsets.only(
-                                                bottom: 6,
+                                child: Builder(
+                                  builder: (ctx) {
+                                    if (m.sticker case final st?) {
+                                      return GestureDetector(
+                                        onLongPress: onLongPress == null
+                                            ? null
+                                            : () => onLongPress!(ctx),
+                                        onSecondaryTap:
+                                            !onDesktop || onLongPress == null
+                                            ? null
+                                            : () => onLongPress!(ctx),
+                                        child: _sticker(st),
+                                      );
+                                    }
+                                    // a poll is its own card, on either side
+                                    if (m.poll != null) {
+                                      return GestureDetector(
+                                        onTap: m.failed ? onRetry : null,
+                                        onLongPress: onLongPress == null
+                                            ? null
+                                            : () => onLongPress!(ctx),
+                                        onSecondaryTap:
+                                            !onDesktop || onLongPress == null
+                                            ? null
+                                            : () => onLongPress!(ctx),
+                                        child: _pollCard(),
+                                      );
+                                    }
+                                    return GestureDetector(
+                                      onTap: m.failed ? onRetry : null,
+                                      onLongPress: onLongPress == null
+                                          ? null
+                                          : () => onLongPress!(ctx),
+                                      // a right click on a computer: the menu
+                                      onSecondaryTap:
+                                          !onDesktop || onLongPress == null
+                                          ? null
+                                          : () => onLongPress!(ctx),
+                                      child: Container(
+                                        padding: frameless
+                                            ? EdgeInsets.zero
+                                            : const EdgeInsets.fromLTRB(
+                                                12,
+                                                8,
+                                                12,
+                                                9,
                                               ),
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                    10,
-                                                    6,
-                                                    10,
-                                                    7,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: isOut
-                                                    ? Colors.black.withValues(
-                                                        alpha: 0.12,
-                                                      )
-                                                    : HaloColors.surface3,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                border: BorderDirectional(
-                                                  start: BorderSide(
-                                                    color: isOut
-                                                        ? HaloColors.onAmber
-                                                              .withValues(
-                                                                alpha: 0.55,
-                                                              )
-                                                        : HaloColors.amber,
-                                                    width: 2.5,
-                                                  ),
+                                        decoration: BoxDecoration(
+                                          // a photo or video goes edge to edge with no
+                                          // bubble fill, so no amber or grey frame
+                                          color: frameless
+                                              ? Colors.transparent
+                                              : (isOut
+                                                    ? HaloColors.amber
+                                                    : atmoBubbleIn(
+                                                        context,
+                                                        HaloColors.surface2,
+                                                      )),
+                                          borderRadius:
+                                              BorderRadiusDirectional.only(
+                                                topStart: const Radius.circular(
+                                                  14,
+                                                ),
+                                                topEnd: const Radius.circular(
+                                                  14,
+                                                ),
+                                                bottomStart: Radius.circular(
+                                                  isOut ? 14 : 4,
+                                                ),
+                                                bottomEnd: Radius.circular(
+                                                  isOut ? 4 : 14,
                                                 ),
                                               ),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  if (quotedAuthor != null)
-                                                    Text(
-                                                      quotedAuthor!,
-                                                      style: HaloType.mono(
-                                                        size: 9.5,
-                                                        color: isOut
-                                                            ? HaloColors.onAmber
-                                                                  .withValues(
-                                                                    alpha: 0.7,
-                                                                  )
-                                                            : HaloColors
-                                                                  .amberText,
-                                                        letter: 0.6,
+                                          border: searchRing(isCurrentMatch),
+                                          boxShadow: searchGlow(isCurrentMatch),
+                                        ),
+                                        clipBehavior: frameless
+                                            ? Clip.antiAlias
+                                            : Clip.none,
+                                        child: IntrinsicWidth(
+                                          child: Column(
+                                            crossAxisAlignment: isOut
+                                                ? CrossAxisAlignment.end
+                                                : CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (quotedText != null) ...[
+                                                PressScale(
+                                                  scale: 0.97,
+                                                  haptic: false,
+                                                  onTap: onReplyTap,
+                                                  child: Container(
+                                                    width: double.infinity,
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                          bottom: 6,
+                                                        ),
+                                                    padding:
+                                                        const EdgeInsets.fromLTRB(
+                                                          10,
+                                                          6,
+                                                          10,
+                                                          7,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: isOut
+                                                          ? Colors.black
+                                                                .withValues(
+                                                                  alpha: 0.12,
+                                                                )
+                                                          : HaloColors.surface3,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                      border: BorderDirectional(
+                                                        start: BorderSide(
+                                                          color: isOut
+                                                              ? HaloColors
+                                                                    .onAmber
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.55,
+                                                                    )
+                                                              : HaloColors
+                                                                    .amber,
+                                                          width: 2.5,
+                                                        ),
                                                       ),
                                                     ),
-                                                  if (quotedAuthor != null)
-                                                    const SizedBox(height: 2),
-                                                  if (quotedSticker
-                                                      case final qs?)
-                                                    StickerLine(
-                                                      qs,
-                                                      style: _quoteStyle(isOut),
-                                                    )
-                                                  else
-                                                    Text(
-                                                      quotedText!,
-                                                      maxLines: 2,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: _quoteStyle(isOut),
-                                                    ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                        if (album case final run?)
-                                          Padding(
-                                            padding: EdgeInsets.only(
-                                              bottom: m.text.isNotEmpty ? 6 : 0,
-                                            ),
-                                            child: _grid(context, run),
-                                          )
-                                        else if (m.making != null)
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 2,
-                                            ),
-                                            child: VoiceMakingBubble(
-                                              progress: m.making!,
-                                              isOut: isOut,
-                                            ),
-                                          )
-                                        else if (m.fileName == 'voice.wav' &&
-                                            m.filePath != null)
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 2,
-                                            ),
-                                            child: VoiceBubble(
-                                              key: ValueKey(
-                                                'gvb_${m.filePath}',
-                                              ),
-                                              path: m.filePath!,
-                                              isOut: isOut,
-                                              disguised: m.voiceDisguised,
-                                              onPlay: onAct,
-                                            ),
-                                          )
-                                        else if (m.filePath != null &&
-                                            shape == FileShape.video)
-                                          VideoBubble(
-                                            key: ValueKey('vid_${m.filePath}'),
-                                            path: m.filePath!,
-                                            fileName: m.fileName!,
-                                            width: 240,
-                                            onOpen: () {
-                                              onAct?.call();
-                                              openVideo(
-                                                context,
-                                                path: m.filePath!,
-                                                fileName: m.fileName,
-                                                kept: kept,
-                                                room: true,
-                                              );
-                                            },
-                                            stamp: m.failed
-                                                ? null
-                                                : _groupStamp(m),
-                                          )
-                                        else if (m.fileName != null)
-                                          PressScale(
-                                            scale: 0.97,
-                                            haptic: false,
-                                            onTap: () {
-                                              onAct?.call();
-                                              if (m.filePath != null) {
-                                                openReceivedFile(
-                                                  context,
-                                                  m.filePath!,
-                                                  m.fileName,
-                                                  kept: kept,
-                                                  room: true,
-                                                );
-                                              }
-                                            },
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 2,
-                                                  ),
-                                              child: fileCard(
-                                                m.filePath,
-                                                m.fileName,
-                                                isOut,
-                                                shape: shape,
-                                              ),
-                                            ),
-                                          ),
-                                        if (album == null &&
-                                            m.mediaPath != null)
-                                          Padding(
-                                            padding: EdgeInsets.only(
-                                              bottom: m.text.isNotEmpty ? 6 : 0,
-                                            ),
-                                            child: PressScale(
-                                              scale: 0.97,
-                                              haptic: false,
-                                              onTap: m.failed
-                                                  ? onRetry
-                                                  : () {
-                                                      onAct?.call();
-                                                      openFullImage(
-                                                        context,
-                                                        m.mediaPath!,
-                                                        tag: photoHeroTag(
-                                                          m.mediaPath!,
-                                                          'chat',
-                                                        ),
-                                                        radius: 10,
-                                                      );
-                                                    },
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                child: Stack(
-                                                  children: [
-                                                    ConstrainedBox(
-                                                      constraints:
-                                                          const BoxConstraints(
-                                                            maxHeight: 280,
-                                                            maxWidth: 240,
-                                                          ),
-                                                      child: RememberedHeight(
-                                                        id: m.mediaPath!,
-                                                        child: HaloHero(
-                                                          tag: photoHeroTag(
-                                                            m.mediaPath!,
-                                                            'chat',
-                                                          ),
-                                                          child: ChatPicture(
-                                                            path: m.mediaPath!,
-                                                            child: Image.file(
-                                                              File(
-                                                                m.mediaPath!,
-                                                              ),
-                                                              semanticLabel:
-                                                                  l10n.appPhoto,
-                                                              cacheWidth:
-                                                                  decodePx(
-                                                                    context,
-                                                                    240,
-                                                                  ),
-                                                              gaplessPlayback:
-                                                                  true,
-                                                              filterQuality:
-                                                                  FilterQuality
-                                                                      .medium,
-                                                              fit: BoxFit.cover,
-                                                              // the file is gone:
-                                                              // say so, not a gap
-                                                              errorBuilder:
-                                                                  (_, _, _) =>
-                                                                      const _MissingPhoto(),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        if (quotedAuthor !=
+                                                            null)
+                                                          Text(
+                                                            quotedAuthor!,
+                                                            style: HaloType.mono(
+                                                              size: 9.5,
+                                                              color: isOut
+                                                                  ? HaloColors
+                                                                        .onAmber
+                                                                        .withValues(
+                                                                          alpha:
+                                                                              0.7,
+                                                                        )
+                                                                  : HaloColors
+                                                                        .amberText,
+                                                              letter: 0.6,
                                                             ),
                                                           ),
+                                                        if (quotedAuthor !=
+                                                            null)
+                                                          const SizedBox(
+                                                            height: 2,
+                                                          ),
+                                                        if (quotedSticker
+                                                            case final qs?)
+                                                          StickerLine(
+                                                            qs,
+                                                            style: _quoteStyle(
+                                                              isOut,
+                                                            ),
+                                                          )
+                                                        else
+                                                          Text(
+                                                            quotedText!,
+                                                            maxLines: 2,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style: _quoteStyle(
+                                                              isOut,
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                              // here before its file: a card
+                                              // that brings it
+                                              if (album == null &&
+                                                  !isOut &&
+                                                  fileWaitOf(m.msgUid) != null)
+                                                Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom: m.text.isNotEmpty
+                                                        ? 6
+                                                        : 0,
+                                                  ),
+                                                  child: FileWaitOr(
+                                                    uid: m.msgUid,
+                                                    fileName: m.fileName,
+                                                    onGet: appState.downloadNow,
+                                                    onPause:
+                                                        appState.pauseDownload,
+                                                    child: () =>
+                                                        const SizedBox.shrink(),
+                                                  ),
+                                                )
+                                              else if (album case final run?)
+                                                Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom: m.text.isNotEmpty
+                                                        ? 6
+                                                        : 0,
+                                                  ),
+                                                  child: _grid(context, run),
+                                                )
+                                              else if (m.making != null)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 2,
+                                                      ),
+                                                  child: VoiceMakingBubble(
+                                                    progress: m.making!,
+                                                    isOut: isOut,
+                                                  ),
+                                                )
+                                              else if (isVoiceName(
+                                                    m.fileName,
+                                                  ) &&
+                                                  m.filePath != null)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 2,
+                                                      ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      VoiceBubble(
+                                                        key: ValueKey(
+                                                          'gvb_${m.msgUid ?? m.filePath}',
                                                         ),
+                                                        path: m.filePath!,
+                                                        isOut: isOut,
+                                                        disguised:
+                                                            m.voiceDisguised,
+                                                        onPlay: onAct,
+                                                      ),
+                                                      VoiceTranscript(
+                                                        chat: transcripts,
+                                                        uid: m.msgUid,
+                                                        path: m.filePath!,
+                                                        isOut: isOut,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )
+                                              else if (m.filePath != null &&
+                                                  shape == FileShape.video)
+                                                VideoBubble(
+                                                  key: ValueKey(
+                                                    'vid_${m.filePath}',
+                                                  ),
+                                                  path: m.filePath!,
+                                                  fileName: m.fileName!,
+                                                  width: 240,
+                                                  onOpen: () {
+                                                    onAct?.call();
+                                                    openVideo(
+                                                      context,
+                                                      path: m.filePath!,
+                                                      fileName: m.fileName,
+                                                      kept: kept,
+                                                      where: keptIn,
+                                                    );
+                                                  },
+                                                  stamp: m.failed
+                                                      ? null
+                                                      : _groupStamp(m),
+                                                )
+                                              else if (m.fileName != null)
+                                                PressScale(
+                                                  scale: 0.97,
+                                                  haptic: false,
+                                                  onTap: () {
+                                                    onAct?.call();
+                                                    if (m.filePath != null) {
+                                                      openReceivedFile(
+                                                        context,
+                                                        m.filePath!,
+                                                        m.fileName,
+                                                        kept: kept,
+                                                        where: keptIn,
+                                                      );
+                                                    }
+                                                  },
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 2,
+                                                        ),
+                                                    child: fileCard(
+                                                      m.filePath,
+                                                      m.fileName,
+                                                      isOut,
+                                                      shape: shape,
+                                                    ),
+                                                  ),
+                                                ),
+                                              if (album == null &&
+                                                  m.mediaPath != null &&
+                                                  (isOut ||
+                                                      fileWaitOf(m.msgUid) ==
+                                                          null))
+                                                Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom: m.text.isNotEmpty
+                                                        ? 6
+                                                        : 0,
+                                                  ),
+                                                  child: PressScale(
+                                                    scale: 0.97,
+                                                    haptic: false,
+                                                    onTap: m.failed
+                                                        ? onRetry
+                                                        : () {
+                                                            onAct?.call();
+                                                            openFullImage(
+                                                              context,
+                                                              m.mediaPath!,
+                                                              tag: photoHeroTag(
+                                                                m.mediaPath!,
+                                                                'chat',
+                                                              ),
+                                                              radius: 10,
+                                                            );
+                                                          },
+                                                    child: ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                      child: Stack(
+                                                        children: [
+                                                          // the photo's own shape, its blur
+                                                          // the same, before the file decodes
+                                                          PhotoShape(
+                                                            path: m.mediaPath!,
+                                                            image: mediaImage(
+                                                              m.mediaPath!,
+                                                              decodePx(
+                                                                context,
+                                                                240,
+                                                              ),
+                                                            ),
+                                                            maxWidth: 240,
+                                                            maxHeight: 280,
+                                                            child: HaloHero(
+                                                              tag: photoHeroTag(
+                                                                m.mediaPath!,
+                                                                'chat',
+                                                              ),
+                                                              child: ChatPicture(
+                                                                path: m
+                                                                    .mediaPath!,
+                                                                child: SealedPicture(
+                                                                  path: m
+                                                                      .mediaPath!,
+                                                                  shaped: false,
+                                                                  decodeWidth:
+                                                                      decodePx(
+                                                                        context,
+                                                                        240,
+                                                                      ),
+                                                                  image: mediaImage(
+                                                                    m.mediaPath!,
+                                                                    decodePx(
+                                                                      context,
+                                                                      240,
+                                                                    ),
+                                                                  ),
+                                                                  semanticLabel:
+                                                                      l10n.appPhoto,
+                                                                  // the file is gone:
+                                                                  // say so, not a gap
+                                                                  errorBuilder:
+                                                                      (
+                                                                        _,
+                                                                        _,
+                                                                        _,
+                                                                      ) =>
+                                                                          const _MissingPhoto(),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          // caption-less photo: float the
+                                                          // time in a pill on the corner,
+                                                          // same as 1:1. captioned photos
+                                                          // keep the time in the row below.
+                                                          if (m.text.isEmpty &&
+                                                              !m.failed)
+                                                            PositionedDirectional(
+                                                              // the reaction chip hangs
+                                                              // at the end on out, the
+                                                              // start on in; the time
+                                                              // takes the free corner
+                                                              end: isOut
+                                                                  ? null
+                                                                  : 8,
+                                                              start: isOut
+                                                                  ? 8
+                                                                  : null,
+                                                              bottom: 8,
+                                                              child:
+                                                                  _groupStamp(
+                                                                    m,
+                                                                  ),
+                                                            ),
+                                                        ],
                                                       ),
                                                     ),
-                                                    // caption-less photo: float the
-                                                    // time in a pill on the corner,
-                                                    // same as 1:1. captioned photos
-                                                    // keep the time in the row below.
-                                                    if (m.text.isEmpty &&
-                                                        !m.failed)
-                                                      PositionedDirectional(
-                                                        // the reaction chip hangs
-                                                        // at the end on out, the
-                                                        // start on in; the time
-                                                        // takes the free corner
-                                                        end: isOut ? null : 8,
-                                                        start: isOut ? 8 : null,
-                                                        bottom: 8,
-                                                        child: _groupStamp(m),
-                                                      ),
-                                                  ],
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                          ),
-                                        if (m.text.isNotEmpty)
-                                          writtenStart(
-                                            m.text,
-                                            Padding(
-                                              padding: m.mediaPath != null
-                                                  ? const EdgeInsets.fromLTRB(
-                                                      4,
-                                                      6,
-                                                      4,
-                                                      0,
-                                                    )
-                                                  : EdgeInsets.zero,
-                                              // a search marks its hits; else
-                                              // a kryfo link is drawn as one,
-                                              // otherwise @three-words in amber
-                                              child: query.isNotEmpty
-                                                  ? Text.rich(
-                                                      TextSpan(
-                                                        style: _bodyStyle(
-                                                          isOut,
-                                                        ),
-                                                        children: searchLit(
-                                                          m.text,
-                                                          query,
-                                                          onAmber: onAmberText,
-                                                        ),
+                                              if (m.text.isNotEmpty)
+                                                DeskSelectable(
+                                                  // a click on these words is the bubble's while it retries
+                                                  enabled: !m.failed,
+                                                  onMenu: onLongPress == null
+                                                      ? null
+                                                      : () => onLongPress!(ctx),
+                                                  child: writtenStart(
+                                                    m.text,
+                                                    TranslatedBody(
+                                                      chat: translation,
+                                                      msgKey: trKeyOf(
+                                                        m.msgUid,
+                                                        m.came,
                                                       ),
-                                                      textDirection: writtenDir(
-                                                        m.text,
-                                                      ),
-                                                    )
-                                                  : m.text.contains('kryfo://')
-                                                  ? KryfoLinkText(
                                                       text: m.text,
-                                                      style: HaloType.sans(
-                                                        size: 14,
+                                                      // theirs only, and not while a search marks its hits
+                                                      enabled:
+                                                          !isOut &&
+                                                          query.isEmpty &&
+                                                          m.sticker == null,
+                                                      original: _words(
+                                                        m.text,
+                                                        isOut,
+                                                      ),
+                                                      translated: (t) =>
+                                                          _words(t, isOut),
+                                                    ),
+                                                  ),
+                                                ),
+                                              if (m.url case final u?) ...[
+                                                const SizedBox(height: 6),
+                                                LinkStub(
+                                                  url: u,
+                                                  isOut: isOut,
+                                                  title: linkTitle,
+                                                  bySender: linkBySender,
+                                                ),
+                                              ],
+                                              if (m.place case final p?) ...[
+                                                const SizedBox(height: 6),
+                                                PlaceStub(
+                                                  place: p,
+                                                  isOut: isOut,
+                                                ),
+                                              ],
+                                              const SizedBox(height: 2),
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (m.burnLeftMs
+                                                      case final left?) ...[
+                                                    Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 5,
+                                                            vertical: 1,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        // an outgoing photo sits on a
+                                                        // transparent bubble where
+                                                        // onAmber (dark) is invisible,
+                                                        // so media rows take amber
                                                         color:
                                                             (isOut &&
                                                                 m.mediaPath ==
                                                                     null)
                                                             ? HaloColors.onAmber
-                                                            : HaloColors.text,
-                                                        height: 1.35,
+                                                                  .withValues(
+                                                                    alpha: 0.15,
+                                                                  )
+                                                            : HaloColors
+                                                                  .amberSoft,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              4,
+                                                            ),
                                                       ),
-                                                      onAmber:
-                                                          isOut &&
-                                                          m.mediaPath == null,
-                                                      linkColor:
-                                                          (isOut &&
-                                                              m.mediaPath ==
-                                                                  null)
-                                                          ? HaloColors.onAmber
-                                                          : HaloColors.amber,
-                                                    )
-                                                  : Text.rich(
-                                                      mentionRich(
-                                                        m.text,
-                                                        HaloType.sans(
-                                                          size: 14,
-                                                          // captions get more
-                                                          // weight to read over
-                                                          // busy images
-                                                          weight:
-                                                              m.mediaPath !=
-                                                                  null
-                                                              ? FontWeight.w600
-                                                              : FontWeight.w400,
-                                                          // a photo caption sits
-                                                          // on a transparent
-                                                          // bubble, where onAmber
-                                                          // is invisible
-                                                          color:
-                                                              (isOut &&
-                                                                  m.mediaPath ==
-                                                                      null)
-                                                              ? HaloColors
-                                                                    .onAmber
-                                                              : HaloColors.text,
-                                                          height: 1.35,
-                                                        ),
-                                                        accent:
+                                                      child: _burnPill(
+                                                        left,
+                                                        waits: m.burnWaits,
+                                                        color:
                                                             (isOut &&
                                                                 m.mediaPath ==
                                                                     null)
                                                             ? HaloColors.onAmber
-                                                            : null,
-                                                      ),
-                                                      textDirection: writtenDir(
-                                                        m.text,
+                                                            : HaloColors.amber,
                                                       ),
                                                     ),
-                                            ),
-                                          ),
-                                        if (m.url case final u?) ...[
-                                          const SizedBox(height: 6),
-                                          LinkStub(
-                                            url: u,
-                                            isOut: isOut,
-                                            title: linkTitle,
-                                            bySender: linkBySender,
-                                          ),
-                                        ],
-                                        if (m.place case final p?) ...[
-                                          const SizedBox(height: 6),
-                                          PlaceStub(place: p, isOut: isOut),
-                                        ],
-                                        const SizedBox(height: 2),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (m.burnLeftMs
-                                                case final left?) ...[
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 5,
-                                                      vertical: 1,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  // an outgoing photo sits on a
-                                                  // transparent bubble where
-                                                  // onAmber (dark) is invisible,
-                                                  // so media rows take amber
-                                                  color:
-                                                      (isOut &&
-                                                          m.mediaPath == null)
-                                                      ? HaloColors.onAmber
-                                                            .withValues(
-                                                              alpha: 0.15,
-                                                            )
-                                                      : HaloColors.amberSoft,
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: _burnPill(
-                                                  left,
-                                                  waits: m.burnWaits,
-                                                  color:
-                                                      (isOut &&
-                                                          m.mediaPath == null)
-                                                      ? HaloColors.onAmber
-                                                      : HaloColors.amber,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                            ],
-                                            if (m.edited) ...[
-                                              Text(
-                                                '${l10n.groupChatEdited} ',
-                                                style: HaloType.mono(
-                                                  size: 9,
-                                                  color:
-                                                      (isOut &&
-                                                          m.mediaPath == null)
-                                                      ? HaloColors.onAmber
-                                                            .withValues(
-                                                              alpha: 0.6,
-                                                            )
-                                                      : isOut
-                                                      ? HaloColors.text2
-                                                      : HaloColors.text3,
-                                                ),
-                                              ),
-                                            ],
-                                            // caption-less photo shows its time on the
-                                            // image overlay, so skip it here to avoid
-                                            // a doubled timestamp.
-                                            if (!(frameless &&
-                                                m.text.isEmpty &&
-                                                !m.looksFailed))
-                                              Text(
-                                                _fmtTime(m.when),
-                                                style: HaloType.mono(
-                                                  size: 9.5,
-                                                  // out photo bubble is transparent:
-                                                  // onAmber (dark) vanishes there
-                                                  color: (isOut && !frameless)
-                                                      ? HaloColors.onAmber
-                                                            .withValues(
-                                                              alpha: 0.7,
-                                                            )
-                                                      : isOut
-                                                      ? HaloColors.text2
-                                                      : HaloColors.text3,
-                                                ),
-                                              ),
-                                            // sent tick: outgoing and delivered,
-                                            // only where the row time shows. a
-                                            // photo bubble is transparent, so it
-                                            // takes a readable colour.
-                                            // it pops in when the send ends
-                                            // with the chat open
-                                            if (isOut)
-                                              AnimatedSwitcher(
-                                                duration: motionStill(context)
-                                                    ? Duration.zero
-                                                    : const Duration(
-                                                        milliseconds: 260,
-                                                      ),
-                                                transitionBuilder: (c, a) =>
-                                                    FadeTransition(
-                                                      opacity: a,
-                                                      child: ScaleTransition(
-                                                        scale: Tween(
-                                                          begin: 0.4,
-                                                          end: 1.0,
-                                                        ).animate(a),
-                                                        child: c,
+                                                    const SizedBox(width: 6),
+                                                  ],
+                                                  if (m.edited) ...[
+                                                    Text(
+                                                      '${l10n.groupChatEdited} ',
+                                                      style: HaloType.mono(
+                                                        size: 9,
+                                                        color:
+                                                            (isOut &&
+                                                                m.mediaPath ==
+                                                                    null)
+                                                            ? HaloColors.onAmber
+                                                            : isOut
+                                                            ? HaloColors.text2
+                                                            : HaloColors.text3,
                                                       ),
                                                     ),
-                                                child:
-                                                    !m.pending &&
-                                                        !m.looksFailed &&
-                                                        !(frameless &&
-                                                            m.text.isEmpty)
-                                                    ? Padding(
-                                                        key: const ValueKey(
-                                                          'tick',
-                                                        ),
-                                                        padding:
-                                                            const EdgeInsetsDirectional.only(
-                                                              start: 3,
+                                                  ],
+                                                  // caption-less photo shows its time on the
+                                                  // image overlay, so skip it here to avoid
+                                                  // a doubled timestamp.
+                                                  if (!(frameless &&
+                                                      m.text.isEmpty &&
+                                                      !m.looksFailed))
+                                                    Text(
+                                                      _fmtTime(m.when),
+                                                      style: HaloType.mono(
+                                                        size: 9.5,
+                                                        // out photo bubble is transparent:
+                                                        // onAmber (dark) vanishes there
+                                                        color:
+                                                            (isOut &&
+                                                                !frameless)
+                                                            ? HaloColors.onAmber
+                                                            : isOut
+                                                            ? HaloColors.text2
+                                                            : HaloColors.text3,
+                                                      ),
+                                                    ),
+                                                  // sent tick: outgoing and delivered,
+                                                  // only where the row time shows. a
+                                                  // photo bubble is transparent, so it
+                                                  // takes a readable colour.
+                                                  // it pops in when the send ends
+                                                  // with the chat open
+                                                  if (isOut)
+                                                    AnimatedSwitcher(
+                                                      duration:
+                                                          motionStill(context)
+                                                          ? Duration.zero
+                                                          : const Duration(
+                                                              milliseconds: 260,
                                                             ),
-                                                        child: Text(
-                                                          '✓',
-                                                          style: TextStyle(
-                                                            fontFamily: HaloType
-                                                                .monoFamily,
-                                                            fontFamilyFallback:
-                                                                HaloType
-                                                                    .monoFallbackNow,
-                                                            fontSize: 11,
-                                                            color:
-                                                                m.mediaPath !=
-                                                                    null
-                                                                ? HaloColors
-                                                                      .text2
-                                                                : HaloColors
-                                                                      .onAmber
-                                                                      .withValues(
-                                                                        alpha:
-                                                                            0.7,
-                                                                      ),
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                            height: 1,
+                                                      transitionBuilder:
+                                                          (
+                                                            c,
+                                                            a,
+                                                          ) => FadeTransition(
+                                                            opacity: a,
+                                                            child:
+                                                                ScaleTransition(
+                                                                  scale: Tween(
+                                                                    begin: 0.4,
+                                                                    end: 1.0,
+                                                                  ).animate(a),
+                                                                  child: c,
+                                                                ),
                                                           ),
-                                                        ),
-                                                      )
-                                                    : const SizedBox.shrink(
-                                                        key: ValueKey(
-                                                          'no-tick',
-                                                        ),
+                                                      child:
+                                                          !m.pending &&
+                                                              !m.looksFailed &&
+                                                              !(frameless &&
+                                                                  m
+                                                                      .text
+                                                                      .isEmpty)
+                                                          ? Padding(
+                                                              key:
+                                                                  const ValueKey(
+                                                                    'tick',
+                                                                  ),
+                                                              padding:
+                                                                  const EdgeInsetsDirectional.only(
+                                                                    start: 3,
+                                                                  ),
+                                                              child: Text(
+                                                                '✓',
+                                                                style: TextStyle(
+                                                                  fontFamily:
+                                                                      HaloType
+                                                                          .monoFamily,
+                                                                  fontFamilyFallback:
+                                                                      HaloType
+                                                                          .monoFallbackNow,
+                                                                  fontSize: 11,
+                                                                  color:
+                                                                      m.mediaPath !=
+                                                                          null
+                                                                      ? HaloColors
+                                                                            .text2
+                                                                      : HaloColors
+                                                                            .onAmber
+                                                                            .withValues(
+                                                                              alpha: 0.7,
+                                                                            ),
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w700,
+                                                                  height: 1,
+                                                                ),
+                                                              ),
+                                                            )
+                                                          : const SizedBox.shrink(
+                                                              key: ValueKey(
+                                                                'no-tick',
+                                                              ),
+                                                            ),
+                                                    ),
+                                                  if (m.looksFailed) ...[
+                                                    const SizedBox(width: 6),
+                                                    Text(
+                                                      l10n.groupChatTapToRetryShown,
+                                                      style: HaloType.mono(
+                                                        size: 9,
+                                                        color: isOut
+                                                            ? HaloColors.onAmber
+                                                            : HaloColors
+                                                                  .roseText,
                                                       ),
-                                              ),
-                                            if (m.looksFailed) ...[
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                l10n.groupChatTapToRetry,
-                                                style: HaloType.mono(
-                                                  size: 9,
-                                                  color: isOut
-                                                      ? HaloColors.onAmber
-                                                      : HaloColors.rose,
-                                                ),
+                                                    ),
+                                                  ],
+                                                ],
                                               ),
                                             ],
-                                          ],
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -6272,19 +7073,54 @@ class _GroupBubble extends StatelessWidget {
     );
   }
 
-  // the words of a bubble: weightier on a photo's caption, dark on ours
-  TextStyle _bodyStyle(bool isOut) => HaloType.sans(
-    size: 14,
-    weight: m.mediaPath != null ? FontWeight.w600 : FontWeight.w400,
-    color: (isOut && m.mediaPath == null)
-        ? HaloColors.onAmber
-        : HaloColors.text,
-    height: 1.35,
-  );
+  // the words of a message, or of its translation in their place
+  Widget _words(String text, bool isOut) {
+    final onAmberText = isOut && m.mediaPath == null;
+    return Padding(
+      padding: m.mediaPath != null
+          ? const EdgeInsets.fromLTRB(4, 6, 4, 0)
+          : EdgeInsets.zero,
+      // a search marks its hits; else
+      // a kryfo link is drawn as one,
+      // otherwise @three-words in amber
+      child: query.isNotEmpty
+          ? Text.rich(
+              TextSpan(
+                style: _bodyStyle(isOut),
+                children: searchLit(text, query, onAmber: onAmberText),
+              ),
+              textDirection: writtenDir(text),
+            )
+          : text.contains('kryfo://')
+          ? KryfoLinkText(
+              text: text,
+              style: _bodyStyle(isOut),
+              onAmber: isOut && m.mediaPath == null,
+              linkColor: (isOut && m.mediaPath == null)
+                  ? HaloColors.onAmber
+                  : HaloColors.amber,
+            )
+          : Text.rich(
+              mentionRich(
+                text,
+                _bodyStyle(isOut),
+                accent: (isOut && m.mediaPath == null)
+                    ? HaloColors.onAmber
+                    : null,
+              ),
+              textDirection: writtenDir(text),
+            ),
+    );
+  }
+
+  // a caption is the words of a text bubble; under a photo there is no
+  // amber behind them
+  TextStyle _bodyStyle(bool isOut) =>
+      HaloType.message(onAmber: isOut && m.mediaPath == null, height: 1.35);
 
   TextStyle _quoteStyle(bool isOut) => HaloType.sans(
     size: 12.5,
-    color: isOut ? HaloColors.onAmber.withValues(alpha: 0.8) : HaloColors.text2,
+    color: isOut ? HaloColors.onAmber : HaloColors.text,
     height: 1.3,
   );
 
@@ -6306,6 +7142,9 @@ class _GroupBubble extends StatelessWidget {
                   lost:
                       !x.preparing && x.mediaPath == null && x.filePath == null,
                   sendingUid: isOut && x.sending ? x.msgUid : null,
+                  waitUid: x.direction == 'in' && fileWaitOf(x.msgUid) != null
+                      ? x.msgUid
+                      : null,
                 ),
       ],
       width: 260,
@@ -6315,19 +7154,21 @@ class _GroupBubble extends StatelessWidget {
       stampAtStart: isOut,
       onOpen: (i) {
         onAct?.call();
+        // one still to come has nothing to show yet
+        String? here(_GMsg? x) => x == null || fileWaitOf(x.msgUid) != null
+            ? null
+            : x.mediaPath ?? x.filePath;
         final items = <AlbumItem>[
           for (final x in shown)
-            if (x != null && (x.mediaPath ?? x.filePath) != null)
-              AlbumItem(
-                (x.mediaPath ?? x.filePath)!,
-                video: x.mediaPath == null,
-                fileName: x.fileName,
-              ),
+            if (here(x) case final p?)
+              AlbumItem(p, video: x!.mediaPath == null, fileName: x.fileName),
         ];
-        final paths = [for (final x in shown) x?.mediaPath ?? x?.filePath];
+        final paths = [for (final x in shown) here(x)];
         final start = albumOpenAt(paths, i);
         if (start != null) openAlbum(context, items, start: start);
       },
+      onGet: appState.downloadNow,
+      onPause: appState.pauseDownload,
       onLongPress: hold == null ? null : (i) => hold(context, i),
     );
   }
@@ -6359,10 +7200,20 @@ class _GroupBubble extends StatelessWidget {
         sent: isOut && !m.pending && !m.looksFailed,
         burn: burn == null ? null : burnLeft(burn),
         burnWaits: m.burnWaits,
-        alert: m.looksFailed ? l10n.groupChatTapToRetry : null,
+        alert: m.looksFailed ? l10n.groupChatTapToRetryShown : null,
         alertColor: HaloColors.rose,
       ),
     );
+  }
+
+  // what a photo, video, album, sticker or poll is drawn at, so the cap
+  // never squeezes it on a narrow screen
+  double _ownWidth(bool isVideo) {
+    if (album != null) return 260;
+    if (m.sticker != null) return kStickerBubble;
+    if (m.poll != null) return 220;
+    if (m.mediaPath != null || isVideo) return 240;
+    return 0;
   }
 
   Widget _pollCard() {
@@ -6400,7 +7251,7 @@ class _GroupBubble extends StatelessWidget {
         children: [
           Text(
             _fmtTime(m.when),
-            style: HaloType.mono(size: 9.5, color: HaloColors.text2),
+            style: HaloType.mono(size: 9.5, color: HaloColors.text),
           ),
           if (isOut && !m.pending && !m.looksFailed) ...[
             const SizedBox(width: 3),
@@ -6419,8 +7270,8 @@ class _GroupBubble extends StatelessWidget {
           if (m.looksFailed) ...[
             const SizedBox(width: 6),
             Text(
-              l10n.groupChatTapToRetry,
-              style: HaloType.mono(size: 9, color: HaloColors.rose),
+              l10n.groupChatTapToRetryShown,
+              style: HaloType.mono(size: 9, color: HaloColors.roseText),
             ),
           ],
         ],
@@ -6428,11 +7279,8 @@ class _GroupBubble extends StatelessWidget {
     );
   }
 
-  PrivacyMode _groupSendMode() => appState.sendMode == 'fast'
-      ? PrivacyMode.fast
-      : appState.sendMode == 'private'
-      ? PrivacyMode.private
-      : PrivacyMode.normal;
+  PrivacyMode _groupSendMode() =>
+      appState.sendMode == 'private' ? PrivacyMode.private : PrivacyMode.fast;
 
   List<Widget> _buildReactionChips(_GMsg m) {
     final counts = <String, int>{};
@@ -6517,7 +7365,7 @@ class _MissingPhoto extends StatelessWidget {
             l10n.chatPhotoUnavailable,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: HaloType.mono(size: 11, color: HaloColors.text2),
+            style: HaloType.mono(size: 11, color: HaloColors.text),
           ),
         ],
       ),
@@ -6528,7 +7376,7 @@ class _MissingPhoto extends StatelessWidget {
 // the line in a group whose admin "this isn't them" took off this phone:
 // nothing it changes reaches here, and the way out
 class _AdminGoneLine extends StatelessWidget {
-  final VoidCallback onLeave;
+  final VoidCallback? onLeave;
   const _AdminGoneLine({required this.onLeave});
 
   @override
@@ -6552,35 +7400,39 @@ class _AdminGoneLine extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
-                l10n.groupAdminGoneLine,
+                l10n.groupAdminGoneLineShown,
                 style: HaloType.sans(
                   size: 12.5,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                   height: 1.4,
                 ),
               ),
             ),
           ),
-          Semantics(
-            button: true,
-            child: PressScale(
-              onTap: onLeave,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                alignment: Alignment.center,
-                color: Colors.transparent,
-                child: Text(
-                  l10n.groupInfoLeave,
-                  style: HaloType.sans(
-                    size: 13,
-                    weight: FontWeight.w600,
-                    color: HaloColors.rose,
+          if (onLeave != null)
+            Semantics(
+              button: true,
+              child: PressScale(
+                onTap: onLeave,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  alignment: Alignment.center,
+                  color: Colors.transparent,
+                  child: Text(
+                    l10n.groupInfoLeave,
+                    style: HaloType.sans(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: HaloColors.roseText,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

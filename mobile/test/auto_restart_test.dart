@@ -23,7 +23,9 @@ import 'package:kryfo/main.dart'
         restartQuietly,
         torValve,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateRoute,
+        AppStateDelivery;
 import 'package:kryfo/session.dart' show Session;
 import 'package:kryfo/tor_valve.dart' show restartHolds;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,6 +75,31 @@ class _Db extends HaloDb {
   Future<void> close() async => log.add('close');
 }
 
+// a container's draft rows in memory, each write logged into [log]
+class _KeptRows implements DraftRows {
+  _KeptRows(this.log);
+  final List<String> log;
+  final rows = <String, String>{};
+  @override
+  HaloContainer get container => HaloContainer.everyday;
+  @override
+  bool get isOpen => true;
+  @override
+  Future<Draft?> draftOf(String chatId, {required bool group}) async =>
+      rows[chatId] == null ? null : Draft(rows[chatId]!);
+  @override
+  Future<void> putDraft(String chatId, Draft d, {required bool group}) async {
+    log.add('draft');
+    rows[chatId] = d.text;
+  }
+
+  @override
+  Future<void> dropDraftRow(String chatId, {required bool group}) async =>
+      rows.remove(chatId);
+  @override
+  Future<List<({String chat, bool group})>> spentDrafts(int now) async => [];
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final t0 = DateTime(2026, 10, 11, 3);
@@ -83,9 +110,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     restartHolds.clear();
-    draftPerPeer.clear();
-    draftPerGroup.clear();
-    everydayChats = () async => (people: {'alice'}, groups: <String>{});
+    endProcessForTest();
   });
 
   group('when', () {
@@ -375,21 +400,12 @@ void main() {
       expect(log, ['reconnect']);
     });
 
-    test('drafts are kept, and taken back when it did not happen', () async {
-      final every = '${HaloContainer.everyday.id}|alice';
-      draftPerPeer[every] = 'half a thought';
+    test('a draft still waiting is written before the restart', () async {
+      final rows = _KeptRows(log);
+      typedDraft(rows, 'alice', const Draft('half a thought'), group: false);
       expect(await life(), [AutoStep.reconnect, AutoStep.restart]);
-      draftPerPeer.clear();
-      await restoreKeptDrafts();
-      expect(draftPerPeer, {every: 'half a thought'});
-
-      SharedPreferences.setMockInitialValues({});
-      reopens = false;
-      draftPerPeer[every] = 'half a thought';
-      expect(await life(), [AutoStep.reconnect, AutoStep.restart]);
-      draftPerPeer.clear();
-      await restoreKeptDrafts();
-      expect(draftPerPeer, isEmpty);
+      expect(log, ['reconnect', 'draft', 'restart']);
+      expect(rows.rows, {'alice': 'half a thought'});
     });
   });
 

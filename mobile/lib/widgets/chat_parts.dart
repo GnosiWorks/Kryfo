@@ -144,7 +144,7 @@ class DayChip extends StatelessWidget {
         maxLines: 1,
         style: HaloType.mono(
           size: 10,
-          color: HaloColors.text2,
+          color: HaloColors.text,
           weight: FontWeight.w500,
           letter: 0.06,
         ),
@@ -420,7 +420,7 @@ class _ReactionChipState extends State<ReactionChip>
               count: widget.count,
               style: HaloType.mono(
                 size: 10,
-                color: widget.mine ? HaloColors.amberText : HaloColors.text2,
+                color: widget.mine ? HaloColors.amberText : HaloColors.text,
                 weight: FontWeight.w600,
               ),
             ),
@@ -483,6 +483,9 @@ class BurnLine extends StatelessWidget {
     );
   }
 }
+
+/// the reactions a menu offers at once, the phone's bar and the computer's
+const kQuickReactions = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
 
 // the reaction pill over a long-pressed bubble, the 1:1 and the group's.
 // it fades in as the menu grows; the emojis pop in one after another

@@ -40,10 +40,24 @@ class SayHiDb extends DevTestDb {
   Future<Map<String, Object?>?> getContact(String haloId) async =>
       _contact(haloId);
   @override
+  Future<int?> lastHeardAt(String peerId) async {
+    int? at;
+    for (final r in mem.rows('messages')) {
+      if (r['peer_id'] != peerId || r['direction'] != 'in') continue;
+      final t = r['sent_at'] as int;
+      if (at == null || t > at) at = t;
+    }
+    return at;
+  }
+  @override
   Future<bool> isAccepted(String haloId) async => _flag(haloId, 'accepted');
   @override
   Future<bool> isBackPaired(String peerId) async =>
       _flag(peerId, 'back_paired');
+  // whose hello was answered here: they know this phone
+  final asked = <String>{};
+  @override
+  Future<bool> theyAsked(String peerId) async => asked.contains(peerId);
   @override
   Future<bool> isBlocked(String haloId) async => _flag(haloId, 'blocked');
   @override
@@ -89,10 +103,20 @@ class SayHiDb extends DevTestDb {
     return rows.length > limit ? rows.sublist(rows.length - limit) : rows;
   }
 
+  // the outbox reads the unsent rows only when a test asks
+  bool outboxOn = false;
+
   @override
   Future<List<Map<String, Object?>>> unsentOutbox({
     Set<String> skip = const {},
-  }) async => [];
+  }) async => [
+    if (outboxOn)
+      for (final r in mem.rows('messages'))
+        if (r['direction'] == 'out' &&
+            r['sent'] == 0 &&
+            !skip.contains(r['peer_id']))
+          r,
+  ];
   @override
   Future<List<Map<String, Object?>>> messagesAfter(
     String peerId,
@@ -177,7 +201,7 @@ class SayHiRelay implements HaloEngine {
   final ciphers = <String>[];
 
   @override
-  Future<String> nostrSend(String peerXPubHex, String b64Cipher) {
+  Future<String> nostrSend(int ident, String peerXPubHex, String b64Cipher) {
     final c = Completer<String>();
     sends.add(c);
     ciphers.add(b64Cipher);
@@ -189,9 +213,9 @@ class SayHiRelay implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');

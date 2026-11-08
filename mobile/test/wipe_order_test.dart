@@ -141,6 +141,9 @@ void main() {
       for (final (f, size) in [
         ('docs/media/v_1.mp4', 4 << 20),
         ('docs/media/in_ab/doc.pdf', 30000),
+        // note to self's own: a file and a voice note kept there
+        ('docs/media/f_n0te.pdf', 30000),
+        ('docs/media/vn_n0te.ogg', 20000),
         ('docs/media_v/h.jpg', 20000),
         ('docs/media_d/d.jpg', 20000),
         ('docs/wallpapers/w.jpg', 20000),
@@ -360,6 +363,64 @@ void main() {
     expect(exited, 0);
   });
 
+  test('a linked device\'s last word goes only once everything is erased, '
+      'before the engine lets go of the network; with stay the process '
+      'lives on until the page closes it', () async {
+    final engine = _Engine();
+    useEngineForTest(engine);
+    bool? erasedAtWord;
+    List<String>? callsAtWord;
+    await wipeHalo(
+      stay: true,
+      afterErase: () async {
+        erasedAtWord = await erased();
+        callsAtWord = [...engine.calls];
+      },
+    );
+    expect(erasedAtWord, isTrue);
+    expect(callsAtWord, isEmpty);
+    expect(engine.calls, ['hold']);
+    expect(left('docs'), isEmpty);
+    expect(exited, isNull);
+    expect(platform, isNot(contains('wipe')));
+    await wipeFinish();
+    expect(platform, contains('wipe'));
+    expect(exited, 0);
+  });
+
+  test('a last word that never answers holds the wipe a few seconds at '
+      'most', () async {
+    useEngineForTest(_Engine());
+    final clock = Stopwatch()..start();
+    await wipeHalo(afterErase: () => Completer<void>().future);
+    expect(clock.elapsed, lessThan(kWipeTellWait + const Duration(seconds: 6)));
+    expect(exited, 0);
+  });
+
+  test('the pin key goes first, before the secrets it guards', () async {
+    useEngineForTest(_Engine());
+    FlutterSecureStorage.setMockInitialValues({
+      'halo.lock.table': '{"v":3}',
+      'halo.db.passphrase': 'k',
+    });
+    var storeLeftAtDrop = -1;
+    final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    m.setMockMethodCallHandler(const MethodChannel('halo/platform'), (
+      call,
+    ) async {
+      platform.add(call.method);
+      if (call.method == 'pinKeyDrop') {
+        storeLeftAtDrop = (await const FlutterSecureStorage().readAll()).length;
+      }
+      return call.method == 'wipe' ? false : null;
+    });
+    await wipeHalo();
+    expect(platform.first, 'pinKeyDrop');
+    expect(storeLeftAtDrop, 2);
+    expect(platform.indexOf('pinKeyDrop'), lessThan(platform.indexOf('wipe')));
+    expect(exited, 0);
+  });
+
   test('the fingerprint key goes before the seal and the rest', () async {
     useEngineForTest(_Engine());
     FlutterSecureStorage.setMockInitialValues({
@@ -367,8 +428,11 @@ void main() {
       'halo.lock.biometric.seal': 'ab' * 257,
     });
     await wipeHalo();
-    expect(platform.first, 'bioDisable');
+    // the pin key before all of it, then the finger's
+    expect(platform.take(2), ['pinKeyDrop', 'bioDisable']);
     expect(platform, contains('wipe'));
+    // the clipboard too, after the keys
+    expect(platform.indexOf('clearClip'), greaterThan(1));
     expect(await const FlutterSecureStorage().readAll(), isEmpty);
     expect(exited, 0);
   });

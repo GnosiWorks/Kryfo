@@ -20,7 +20,13 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/l10n/numbers.dart';
 import 'package:kryfo/quiet_wait.dart';
 import 'package:kryfo/main.dart'
-    show HaloDb, HaloEngine, appState, useDatabasesForTest, useEngineForTest;
+    show
+        HaloDb,
+        HaloEngine,
+        appState,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateRoute;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/stickers/sticker_pack.dart';
 import 'package:kryfo/stickers/sticker_recents.dart';
@@ -218,8 +224,8 @@ const _askTor =
     "GIF search goes through Kryfo's server over Tor. GIPHY never sees you. "
     'Turn it on?';
 const _askKryfo =
-    "GIF search goes through Kryfo's server. GIPHY never sees you. "
-    'Turn it on?';
+    "GIF search goes straight to Kryfo's server, which sees your IP address "
+    'on Fast. GIPHY never sees you. Turn it on?';
 const _off = 'GIF search is off';
 const _pointer = 'GIFs saved on your phone are in On this phone.';
 
@@ -891,6 +897,11 @@ void main() {
         );
         expect(
           find.text('Searched through Kryfo'),
+          tor ? findsNothing : findsOneWidget,
+        );
+        // on fast it says our server sees the ip
+        expect(
+          find.textContaining('our server sees your IP address'),
           tor ? findsNothing : findsOneWidget,
         );
       }

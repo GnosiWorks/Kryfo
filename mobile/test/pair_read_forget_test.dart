@@ -8,7 +8,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/main.dart'
-    show AppState, HaloEngine, useDatabasesForTest, useEngineForTest;
+    show
+        AppState,
+        HaloEngine,
+        useDatabasesForTest,
+        useEngineForTest,
+        AppStateProfile;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,7 +38,7 @@ class _SlowRows extends ArrivalRows {
 class _Engine implements HaloEngine {
   final listened = <int>[];
   @override
-  Future<String> subscribeFirstContact(int counter) async {
+  Future<String> subscribeFirstContact(int ident, int counter) async {
     listened.add(counter);
     return 'ok';
   }

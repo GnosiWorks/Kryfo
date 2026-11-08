@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/hex"
@@ -55,7 +56,7 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	l := startLanes(t, ctx, 3, 1)
-	subs := l.subs()
+	subs := l.sockets()
 	listening := func(conns []siConn) int {
 		n := 0
 		for _, c := range conns {
@@ -75,7 +76,11 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 	// here, what it does is tested on its own
 	oldSpread := kickSpread
 	kickSpread = time.Second
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		cancel()
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	kickRelays()
 	for _, r := range []*relayStandIn{a, b} {
 		waitFor(t, "every socket asked", 15*time.Second, func() bool {
@@ -103,9 +108,8 @@ func TestSubscriptionIDsPerConnection(t *testing.T) {
 			if len(c.subIDs) == 0 {
 				continue
 			}
-			if c.subIDs[0] != "1:" {
-				t.Errorf("relay %s connection %d opened with id %q, want 1:", name, i, c.subIDs[0])
-			}
+			// a batch's addresses ask at once on its socket, so ids may reach
+			// the wire out of order: counted from 1 with none skipped
 			got := append([]string(nil), c.subIDs...)
 			sort.Slice(got, func(x, y int) bool {
 				nx, _ := strconv.Atoi(strings.TrimSuffix(got[x], ":"))
@@ -136,22 +140,25 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	l := startLanes(t, ctx, 2, 2)
-	subs := l.subs()
+	addrs := append([]string{l.fc}, l.contacts...)
+	for _, r := range l.rooms {
+		addrs = append(addrs, r...)
+	}
 	for _, r := range []*relayStandIn{a, b} {
 		waitFor(t, "every subscription connected", 15*time.Second, func() bool {
-			n := 0
-			for _, c := range r.snapshot() {
-				if len(c.subIDs) > 0 {
-					n++
+			on := r.listening()
+			for _, a := range addrs {
+				if on[a] == 0 {
+					return false
 				}
 			}
-			return n == subs
+			return true
 		})
 	}
 
 	// one send of each kind, as the exports make them
 	friend := newXid(t)
-	me, err := myXid()
+	me, err := identityOf(mainIdent)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,12 +177,12 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		t.Fatal(err)
 	}
 	roomSent := gw.Tags.Find("p")[1]
-	_, pairPk, err := pairCodeKeys("482913")
+	_, pairPk, err := pairBoxKeys("48", 2950000)
 	if err != nil {
 		t.Fatal(err)
 	}
 	qctx, qcancel := context.WithTimeout(ctx, 2*time.Second)
-	pairCodeQuery(qctx, pairPk)
+	pairCodeQuery(qctx, pairLane(pairPk), []string{pairPk})
 	qcancel()
 	waitFor(t, "both sends on both relays", 15*time.Second, func() bool {
 		for _, r := range []*relayStandIn{a, b} {
@@ -197,7 +204,7 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		"pair":          {pairPk},
 	}
 	for _, a := range l.contacts {
-		k := "contacts on " + receiveLane(a)
+		k := "contacts on " + receiveLane(mainIdent, a)
 		lanes[k] = append(lanes[k], a)
 	}
 	nameOfLane := map[string]string{}
@@ -264,7 +271,7 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		"check":   handleCheck("wren"),
 		"claim":   handleClaim("wren", "kryfo://share?id=a-b-c", ""),
 		"release": handleRelease("wren"),
-		"search":  torPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`),
+		"search":  searchPost(svc.srv.URL+"/handle/search", `{"q":"wren"}`),
 		"badge":   torGetJSON(svc.srv.URL + "/receipt?id=1"),
 	} {
 		if strings.HasPrefix(r, "error") {
@@ -275,7 +282,6 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	if len(remotes) == 0 {
 		t.Fatal("no call reached the service")
 	}
-	var svcName string
 	for _, rem := range remotes {
 		n, ok := socks.nameOf(rem)
 		if !ok {
@@ -284,13 +290,9 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 		if n == "" {
 			t.Fatal("a service call went through socks without a name")
 		}
-		if svcName != "" && n != svcName {
-			t.Error("the service calls dialled under more than one name")
+		if lane, ok := laneOfName[n]; ok {
+			t.Fatalf("a service call shares a socks name with %s", lane)
 		}
-		svcName = n
-	}
-	if lane, ok := laneOfName[svcName]; ok {
-		t.Fatalf("the service calls share a socks name with %s", lane)
 	}
 
 	// a room that is gone takes its name with it
@@ -302,65 +304,172 @@ func TestLanesDialUnderTheirOwnSocksName(t *testing.T) {
 	}
 }
 
-// a contact's address keeps its lane, and the addresses fill all of them
-func TestReceiveLanesByHash(t *testing.T) {
-	// the first four bytes of sha256, big-endian, mod 4, as measured
-	for a, want := range map[string]string{
-		fmt.Sprintf("%064x", 1): "everyday:0",
-		fmt.Sprintf("%064x", 0): "everyday:1",
-		strings.Repeat("a", 64): "everyday:2",
-		fmt.Sprintf("%064x", 3): "everyday:3",
-	} {
-		if got := receiveLane(a); got != want {
-			t.Errorf("...%s on %s, want %s", a[56:], got, want)
+// a main identity for the book's keys, the one before after the test
+func bookIdentity(t *testing.T) {
+	t.Helper()
+	me := newXid(t)
+	oldPriv, oldPub := myXPriv, myXPub
+	setMainForTest(me.priv, me.pub)
+	t.Cleanup(func() { setMainForTest(oldPriv, oldPub) })
+}
+
+// a contact's address keeps its batch for good, one let go of comes back
+// to its place, and a new one takes a seat never given before
+func TestBatchesNeverMove(t *testing.T) {
+	bookIdentity(t)
+	dir := t.TempDir()
+	old := savedDataDir()
+	setSavedDataDir(dir)
+	t.Cleanup(func() { setSavedDataDir(old) })
+	batchBookReset()
+	t.Cleanup(batchBookReset)
+	addr := func(i int) string { return fmt.Sprintf("%016x%048x", i+1, 0) }
+	set := contactSet(mainIdent)
+	for i := 0; i < 20; i++ {
+		if got, want := batchOf(set, addr(i)), i/batchMax; got != want {
+			t.Fatalf("address %d in batch %d, want %d", i, got, want)
 		}
 	}
-	seen := map[string]int{}
-	for i := 0; i < 400; i++ {
-		a := fmt.Sprintf("%064x", i)
-		l := receiveLane(a)
-		if receiveLane(a) != l {
-			t.Fatal("an address moved lanes")
-		}
-		if l == laneEveryday || l == laneFirstContact || laneKind(l) != laneEveryday {
-			t.Fatalf("a contact's address on lane %q", l)
-		}
-		seen[l]++
+	// lanes of their own, apart from every other kind
+	l := receiveLane(mainIdent, addr(0))
+	if l == laneEveryday || laneKind(l) != laneEveryday || laneKeepsTor(l) {
+		t.Fatalf("a contact's address on lane %q", l)
 	}
-	if len(seen) != receiveLaneCount {
-		t.Fatalf("%d lanes in use, want %d: %v", len(seen), receiveLaneCount, seen)
+	if receiveLane(mainIdent, addr(8)) == l || receiveLane(1, addr(100)) == l {
+		t.Fatal("two batches on one lane")
 	}
-	for l, n := range seen {
-		if n < 50 {
-			t.Errorf("lane %s has %d of 400 addresses", l, n)
+	// one let go of in the first batch: nobody moves, and nobody takes
+	// its seat
+	dropAddressFiles(addr(3))
+	for i := 0; i < 20; i++ {
+		if i != 3 && batchOf(set, addr(i)) != i/batchMax {
+			t.Fatalf("address %d moved after another was let go of", i)
 		}
+	}
+	if got := batchOf(set, addr(20)); got != 2 {
+		t.Fatalf("a new address in batch %d, want 2", got)
+	}
+	for i := 21; i < 24; i++ {
+		batchOf(set, addr(i))
+	}
+	if got := batchOf(set, addr(24)); got != 3 {
+		t.Fatalf("with batch 2 full a new address went to %d, want a new batch 3, never the seat let go of in 0", got)
+	}
+	// read again from the file, as after a restart: nothing moved, and the
+	// one let go of comes back to its own place (a delete and a re-add, a
+	// block aged out and an unblock)
+	batchBookReset()
+	for i := 0; i <= 24; i++ {
+		want := i / batchMax
+		if i == 24 {
+			want = 3
+		}
+		if batchOf(set, addr(i)) != want {
+			t.Fatalf("address %d in another batch after a restart", i)
+		}
+	}
+	// one sealed file: no file per address, no address, no identity, no
+	// batch number in the clear
+	if olds, _ := filepath.Glob(filepath.Join(dir, "nostr_batch_*")); len(olds) > 0 {
+		t.Fatalf("files per address: %v", olds)
+	}
+	raw, err := os.ReadFile(filepath.Join(dir, bookName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range []string{addr(0)[:16], "everyday"} {
+		if strings.Contains(string(raw), s) {
+			t.Fatalf("the book shows %q", s)
+		}
+	}
+	// a book under another identity's key does not open: it starts empty
+	// rather than read wrong
+	b := &batchBook{key: make([]byte, 32), every: map[string]batchPlace{}, top: map[string]batchTop{}}
+	b.read(raw)
+	if len(b.every) != 0 {
+		t.Fatal("the book opened under another key")
 	}
 }
 
-// contacts until every receive lane has one and one lane has two
+// a chat hidden after it was batched keeps its entry, so the book counts
+// no hidden chat: every seat given has its entry, before a hide and after,
+// and the file a hide leaves is the file it found
+func TestAHiddenChatKeepsItsPlace(t *testing.T) {
+	socks := newSocksStandIn(t)
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, socks, r)
+	batchBookReset()
+	t.Cleanup(batchBookReset)
+	t.Cleanup(func() { runnersGone(t) })
+	set := contactSet(mainIdent)
+	var peers []xid
+	for i := 0; i < 12; i++ {
+		p := newXid(t)
+		peers = append(peers, p)
+		if res := nostrSubscribeAs(mainIdent, hex.EncodeToString(p.pub[:]), false, false); res != "ok" {
+			t.Fatal(res)
+		}
+	}
+	whole := func() {
+		t.Helper()
+		batchMu.Lock()
+		defer batchMu.Unlock()
+		b := batchBookNow()
+		given := 0
+		for _, x := range b.top {
+			given += x.n*batchMax + x.given
+		}
+		if given != 12 || len(b.every) != 12 {
+			t.Fatalf("%d seats given, %d entries: a difference counts hidden chats", given, len(b.every))
+		}
+	}
+	whole()
+	path := filepath.Join(savedDataDir(), bookName)
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// one of batch 1 is hidden: listened on again as a hidden chat's
+	hid := peers[9]
+	was := batchOf(set, mustRcv(t, hid))
+	if res := nostrSubscribeAs(mainIdent, hex.EncodeToString(hid.pub[:]), false, true); res != "ok" {
+		t.Fatal(res)
+	}
+	after, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(before, after) {
+		t.Fatal("a hide wrote the book")
+	}
+	// read again, as after a restart: whole, and an unhide finds its place
+	batchBookReset()
+	whole()
+	if got := batchOf(set, mustRcv(t, hid)); got != was {
+		t.Fatalf("an unhidden chat came back to batch %d, want %d", got, was)
+	}
+}
+
+// contacts until two batches are in use
 func contactsOnEveryLane(t *testing.T) map[string][]xid {
 	t.Helper()
+	freshBatches(t)
 	byLane := map[string][]xid{}
-	two := false
-	for i := 0; len(byLane) < receiveLaneCount || !two; i++ {
-		if i == 1000 {
-			t.Fatalf("a thousand contacts on %d receive lanes", len(byLane))
-		}
+	for i := 0; i < batchMax+2; i++ {
 		p := newXid(t)
-		l := receiveLane(mustRcv(t, p))
-		if n := len(byLane[l]); n == 2 || (n == 1 && two) {
-			continue
-		}
+		l := receiveLane(mainIdent, mustRcv(t, p))
 		byLane[l] = append(byLane[l], p)
-		two = two || len(byLane[l]) == 2
+	}
+	if len(byLane) != 2 {
+		t.Fatalf("%d contacts in %d batches", batchMax+2, len(byLane))
 	}
 	return byLane
 }
 
 // the main identity on all its lanes at once: the addresses of one receive
 // lane share its socks name, and no other receive lane, the first-contact
-// address or a send dials under it. the first-contact address and the sends
-// each have a name nothing else uses.
+// address or a send dials under it. the first-contact address, the first
+// contacts and the sends each have a name nothing else uses.
 func TestReceiveLanesDialApart(t *testing.T) {
 	socks := newSocksStandIn(t)
 	r := newRelayStandIn(t, 0)
@@ -373,37 +482,38 @@ func TestReceiveLanesDialApart(t *testing.T) {
 		for _, p := range peers {
 			rcv := mustRcv(t, p)
 			groups[lane] = append(groups[lane], rcv)
-			go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), p.pub, rcv)
+			go nostrSubscribeRunner(ctx, hex.EncodeToString(p.pub[:]), mainPair(p.pub), rcv)
 		}
 	}
-	_, fcPk, err := nip17FirstContactKeys(0)
+	fcSk, fcPk, err := nip17FirstContactKeysAs(testMain(), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var zero [32]byte
-	go nostrSubscribeRunnerMode(ctx, "firstcontact", zero, fcPk, true, 0)
+	go nostrSubscribeRunnerFc(ctx, "firstcontact", fcSk, fcPk)
 	groups[laneFirstContact] = []string{fcPk}
 	subs := 0
 	for _, addrs := range groups {
 		subs += len(addrs)
 	}
 	waitFor(t, "every subscription connected", 15*time.Second, func() bool {
-		n := 0
-		for _, c := range r.snapshot() {
-			if len(c.subIDs) > 0 {
-				n++
+		l := r.listening()
+		for _, addrs := range groups {
+			for _, a := range addrs {
+				if l[a] == 0 {
+					return false
+				}
 			}
 		}
-		return n == subs
+		return len(l) == subs
 	})
 
 	// through the app's own send paths, so their lane choice is what is checked
 	peer := newXid(t)
 	peerHex := hex.EncodeToString(peer.pub[:])
-	if res := nostrSend(peerHex, "hi"); res != "ok" {
+	if res := nostrSend(mainIdent, peerHex, "hi"); res != "ok" {
 		t.Fatalf("send: %s", res)
 	}
-	_, sent, err := nip17DeriveRole(peer.pub, nip17RcvInfo, peerHex)
+	_, sent, err := nip17DeriveRoleAs(testMain(), peer.pub, nip17RcvInfo, peerHex)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -412,18 +522,20 @@ func TestReceiveLanesDialApart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res := nostrSendFirstContact(hex.EncodeToString(stranger.pub[:]), strangerFc, "hi"); res != "ok" {
+	if res := nostrSendFirstContact(mainIdent, hex.EncodeToString(stranger.pub[:]), strangerFc, "hi"); res != "ok" {
 		t.Fatalf("first-contact send: %s", res)
 	}
 	waitFor(t, "the sends on the relay", 15*time.Second, func() bool {
 		c := r.snapshot()
 		return len(connsOn(c, []string{sent})) > 0 && len(connsOn(c, []string{strangerFc})) > 0
 	})
-	groups[laneEveryday] = []string{sent, strangerFc}
+	groups[laneEveryday] = []string{sent}
+	groups[laneHello] = []string{strangerFc}
 
 	conns := r.snapshot()
 	laneOf := map[string]string{}
-	seen := 0
+	// connections, by their far end: two addresses of a lane share one
+	seen := map[string]bool{}
 	for lane, addrs := range groups {
 		for _, a := range addrs {
 			on := connsOn(conns, []string{a})
@@ -431,7 +543,7 @@ func TestReceiveLanesDialApart(t *testing.T) {
 				t.Fatalf("an address of %s never reached the relay", lane)
 			}
 			for _, c := range on {
-				seen++
+				seen[c.remote] = true
 				n, ok := socks.nameOf(c.remote)
 				if !ok || n == "" {
 					t.Fatalf("%s reached the relay without a socks name", lane)
@@ -446,11 +558,11 @@ func TestReceiveLanesDialApart(t *testing.T) {
 			}
 		}
 	}
-	if want := receiveLaneCount + 2; len(laneOf) != want {
+	if want := 2 + 3; len(laneOf) != want {
 		t.Fatalf("%d socks names for the main identity, want %d: %v", len(laneOf), want, laneOf)
 	}
-	if seen != len(conns) {
-		t.Fatalf("%d of %d connections belong to the main identity's lanes", seen, len(conns))
+	if len(seen) != len(conns) {
+		t.Fatalf("%d of %d connections belong to the main identity's lanes", len(seen), len(conns))
 	}
 }
 
@@ -481,7 +593,7 @@ func slowPongRun(t *testing.T, interval, pongWait time.Duration, until func(conn
 	r := newRelayStandIn(t, 1200*time.Millisecond)
 	useStandIns(t, modePrivate, socks, r)
 	peer := newXid(t)
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -490,7 +602,7 @@ func slowPongRun(t *testing.T, interval, pongWait time.Duration, until func(conn
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, rcv)
+	go nostrSubscribeRunner(alone(ctx), hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), rcv)
 	waitFor(t, "pings at the set interval", 30*time.Second, func() bool { return until(r.snapshot()) })
 	r.mu.Lock()
 	resent = r.resent
@@ -500,7 +612,7 @@ func slowPongRun(t *testing.T, interval, pongWait time.Duration, until func(conn
 
 func mustRcv(t *testing.T, peer xid) string {
 	t.Helper()
-	_, rcv, err := nip17RcvAddress(peer.pub)
+	_, rcv, err := nip17RcvAddressAs(testMain(), peer.pub)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -550,8 +662,9 @@ func TestShortPongWaitClosesTheSocket(t *testing.T) {
 	}
 }
 
-// balanced and fast have no tor: one client for every lane, as before, and
-// nothing goes near the socks port even when one is there.
+// balanced and fast skip tor: one client for every lane, as before, and
+// nothing but a burner room's addresses and the first-contact address goes
+// near the socks port
 func TestDirectModesUnchanged(t *testing.T) {
 	for _, m := range []string{modeBalanced, modeFast} {
 		t.Run(m, func(t *testing.T) {
@@ -583,10 +696,16 @@ func TestDirectModesUnchanged(t *testing.T) {
 						n++
 					}
 				}
-				return n == l.subs()
+				return n == l.sockets()
 			})
-			if n := socks.count(); n != 0 {
-				t.Fatalf("%d streams went through socks in %s mode", n, m)
+			// only the room's two addresses and the first-contact address
+			// go through tor (laneKeepsTor)
+			want := 1
+			for _, r := range l.rooms {
+				want += len(r)
+			}
+			if n := socks.count(); n != want {
+				t.Fatalf("%d streams went through socks in %s mode, want the room's and the first-contact address's %d", n, m, want)
 			}
 		})
 	}
@@ -629,7 +748,7 @@ func TestMeasureKeepalive(t *testing.T) {
 				slow.store(ev)
 			}
 			ctx, cancel := context.WithCancel(context.Background())
-			go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), peer.pub, mustRcv(t, peer))
+			go nostrSubscribeRunner(ctx, hex.EncodeToString(peer.pub[:]), mainPair(peer.pub), mustRcv(t, peer))
 			l := startLanes(t, ctx, 3, 1)
 			time.Sleep(window)
 			cancel()
@@ -680,10 +799,10 @@ func TestNewFirstContactAddressGetsANewCircuit(t *testing.T) {
 
 	nameFor := func(counter int) string {
 		t.Helper()
-		if err := subscribeFirstContact(counter); err != nil {
+		if err := subscribeFirstContact(mainIdent, counter); err != nil {
 			t.Fatal(err)
 		}
-		_, fcPk, err := nip17FirstContactKeys(counter)
+		_, fcPk, err := nip17FirstContactKeysAs(testMain(), counter)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -723,6 +842,67 @@ func TestNoFixedSocksName(t *testing.T) {
 		}
 		if m := re.Find(b); m != nil {
 			t.Fatalf("%s: %s", f, m)
+		}
+	}
+}
+
+// a hidden chat's sends go on its own lane, through tor on fast too: never
+// on the everyday sends' circuit, never from this phone's ip. the app says
+// so (HaloNostrSendHidden), and a pair listened on as hidden says so itself
+func TestAHiddenChatSendsOnItsOwnLane(t *testing.T) {
+	socks := newSocksStandIn(t)
+	r := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, socks, r)
+	freshBatches(t)
+	t.Cleanup(func() { runnersGone(t) })
+	sentTo := func(p xid) string {
+		_, sent, err := nip17DeriveRoleAs(testMain(), p.pub, nip17RcvInfo, hex.EncodeToString(p.pub[:]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return sent
+	}
+	everyday, told, listened := newXid(t), newXid(t), newXid(t)
+	if res := nostrSubscribeAs(mainIdent, hex.EncodeToString(listened.pub[:]), false, true); res != "ok" {
+		t.Fatal(res)
+	}
+	if res := nostrSend(mainIdent, hex.EncodeToString(everyday.pub[:]), "hi"); res != "ok" {
+		t.Fatalf("everyday send: %s", res)
+	}
+	if res := nostrSendAs(mainIdent, hex.EncodeToString(told.pub[:]), "hi", true); res != "ok" {
+		t.Fatalf("hidden send: %s", res)
+	}
+	if res := nostrSend(mainIdent, hex.EncodeToString(listened.pub[:]), "hi"); res != "ok" {
+		t.Fatalf("send to a hidden pair: %s", res)
+	}
+	waitFor(t, "the sends on the relay", 15*time.Second, func() bool {
+		c := r.snapshot()
+		for _, p := range []xid{everyday, told, listened} {
+			if len(connsOn(c, []string{sentTo(p)})) == 0 {
+				return false
+			}
+		}
+		return true
+	})
+	conns := r.snapshot()
+	for _, c := range connsOn(conns, []string{sentTo(everyday)}) {
+		if _, ok := socks.nameOf(c.remote); ok {
+			t.Fatal("an everyday send on fast went through tor")
+		}
+	}
+	for name, p := range map[string]xid{"told": told, "listened": listened} {
+		lane := hiddenLane(mustRcv(t, p))
+		for _, c := range connsOn(conns, []string{sentTo(p)}) {
+			n, ok := socks.nameOf(c.remote)
+			if !ok {
+				t.Fatalf("a hidden chat's send (%s) went from this phone's ip on fast", name)
+			}
+			if n != laneName(lane) {
+				t.Fatalf("a hidden chat's send (%s) went under a name that is not its chat's lane", name)
+			}
+			if n == laneName(laneEveryday) {
+				t.Fatalf("a hidden chat's send (%s) went on the everyday sends' lane", name)
+			}
 		}
 	}
 }

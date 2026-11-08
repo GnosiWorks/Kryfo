@@ -4,16 +4,54 @@
 // segments before the image data; dropping them leaves the pixels untouched.
 import 'dart:typed_data';
 
-// segments kept: the picture and what decoding needs, plus app0 (jfif) and
-// the colour profile. app1 (exif, xmp), app3 to app15 and com go. app2 stays
-// only as a colour profile: the same marker carries the multi-picture index
-// phones use to hang a second image off the first.
+import 'meta/icc.dart';
+
+// segments kept: the picture and what decoding needs, plus a bare jfif
+// header, the colour profile and adobe's colour transform. app1 (exif, xmp),
+// app3 to app13, app15, com, a jfif thumbnail and a jfxx segment go. app2
+// stays only as a colour profile: the same marker carries the multi-picture
+// index phones use to hang a second image off the first. app0 and app14 are
+// written fresh by [_rebuilt], so only the fields named there pass.
 bool _keeps(int marker, Uint8List src, int start, int end) {
-  if (marker == 0xE0) return true; // jfif
   if (marker == 0xE2) return _isIcc(src, start, end);
-  if (marker >= 0xE1 && marker <= 0xEF) return false; // exif, xmp, maker
+  if (marker >= 0xE0 && marker <= 0xEF) return false; // exif, xmp, maker
   if (marker == 0xFE) return false; // comment
   return true;
+}
+
+const _jfif = [74, 70, 73, 70, 0]; // JFIF\0
+const _adobe = [65, 100, 111, 98, 101]; // Adobe
+
+bool _starts(Uint8List src, int at, int end, List<int> p) {
+  if (at + p.length > end) return false;
+  for (var k = 0; k < p.length; k++) {
+    if (src[at + k] != p[k]) return false;
+  }
+  return true;
+}
+
+// app0 and app14 rebuilt from the one or two fields decoding needs: the
+// jfif version and pixel density without its thumbnail, and the colour
+// transform that tells a cmyk or ycck file apart. null for anything else
+Uint8List? _rebuilt(int marker, Uint8List src, int start, int end) {
+  final p = start + 4;
+  if (marker == 0xE0 && _starts(src, p, end, _jfif) && p + 12 <= end) {
+    return Uint8List.fromList([
+      0xFF, 0xE0, 0x00, 0x10, ..._jfif, //
+      src[p + 5], src[p + 6], // version
+      src[p + 7], // density units
+      src[p + 8], src[p + 9], src[p + 10], src[p + 11], // density
+      0, 0, // no thumbnail
+    ]);
+  }
+  if (marker == 0xEE && _starts(src, p, end, _adobe) && p + 12 <= end) {
+    return Uint8List.fromList([
+      0xFF, 0xEE, 0x00, 0x0E, ..._adobe, //
+      0x00, 0x64, 0x00, 0x00, 0x00, 0x00, // version 100, no flags
+      src[p + 11], // colour transform
+    ]);
+  }
+  return null;
 }
 
 const _icc = [73, 67, 67, 95, 80, 82, 79, 70, 73, 76, 69, 0]; // ICC_PROFILE\0
@@ -43,6 +81,9 @@ bool _walk(
       i += 1;
       continue;
     }
+    // a decoder skips ff 00 and reads on at the next marker: what it hides
+    // from this walk would pass untouched
+    if (marker == 0x00) return false;
     // start of scan. the picture runs to its end marker and not a byte
     // further: cameras hang trailers, even a second image, after it
     if (marker == 0xDA) return _scan(src, i, out, keep);
@@ -105,6 +146,12 @@ bool _scan(
         return true;
       }
       if (m == 0xDA) break;
+      if (m == 0xFF) {
+        j += 1;
+        continue;
+      }
+      // as before the scan, and no marker that stands alone
+      if (m == 0x00 || m == 0x01 || (m >= 0xD0 && m <= 0xD8)) return false;
       if (j + 4 > src.length) return false;
       final len = (src[j + 2] << 8) | src[j + 3];
       final end = j + 2 + len;
@@ -128,14 +175,71 @@ Uint8List? stripJpegMetadata(Uint8List src) {
   // saves a sideways image and a note to turn it. it goes back in alone, in
   // an exif block built here.
   var turn = 1;
+  final icc = <(int, int, int)>[];
   final seen = _walk(src, null, (marker, a, b) {
     if (marker == 0xE1 && turn == 1) turn = _orientation(src, a, b);
+    if (marker == 0xE2 && _isIcc(src, a, b) && b - a > 18) {
+      icc.add((src[a + 16], a, b));
+    }
     return false;
   });
   if (!seen) return null;
-  if (turn >= 2 && turn <= 8) out.add(_orientationOnly(turn));
-  final ok = _walk(src, out, (marker, a, b) => _keeps(marker, src, a, b));
-  return ok ? out.toBytes() : null;
+  final profile = _iccScrubbed(src, icc);
+  final orient = turn >= 2 && turn <= 8 ? _orientationOnly(turn) : null;
+  var app0 = false, app14 = false, placed = orient == null;
+  final ok = _walk(src, out, (marker, a, b) {
+    // a jfif header comes first, right after the start marker; the
+    // orientation follows it, or leads when there is none
+    if (!placed && marker != 0xE0) {
+      out.add(orient!);
+      placed = true;
+    }
+    final fresh = profile[a];
+    if (fresh != null) {
+      out.add(fresh);
+      return false;
+    }
+    if (_keeps(marker, src, a, b)) return true;
+    final again = _rebuilt(marker, src, a, b);
+    if (again != null) {
+      // one of each, the first one
+      final seen = marker == 0xE0 ? app0 : app14;
+      if (!seen) out.add(again);
+      if (marker == 0xE0) app0 = true;
+      if (marker == 0xEE) app14 = true;
+    }
+    if (marker == 0xE0 && !placed) {
+      out.add(orient!);
+      placed = true;
+    }
+    return false;
+  });
+  // no table or frame header before the scan: not a picture to vouch for
+  return ok && placed ? out.toBytes() : null;
+}
+
+// the colour profile's segments written again where its text names a
+// screen or an app (icc.dart), by where each starts. a profile runs over
+// as many segments as it needs, in the order of their sequence numbers
+Map<int, Uint8List> _iccScrubbed(Uint8List src, List<(int, int, int)> segs) {
+  if (segs.isEmpty) return const {};
+  final order = [...segs]..sort((x, y) => x.$1.compareTo(y.$1));
+  final whole = BytesBuilder(copy: false);
+  for (final (_, a, b) in order) {
+    whole.add(Uint8List.sublistView(src, a + 18, b));
+  }
+  final p = whole.toBytes();
+  final clean = scrubIcc(p);
+  if (identical(clean, p)) return const {};
+  final out = <int, Uint8List>{};
+  var at = 0;
+  for (final (_, a, b) in order) {
+    final seg = Uint8List.fromList(src.sublist(a, b));
+    seg.setRange(18, seg.length, clean, at);
+    at += b - a - 18;
+    out[a] = seg;
+  }
+  return out;
 }
 
 // the orientation tag (0x0112) out of an app1 exif segment, 1 when there is
@@ -180,6 +284,11 @@ bool _isOrientationOnly(Uint8List src, int start, int end) {
   }
   return true;
 }
+
+/// a big-endian tiff with one ifd holding one entry: the orientation, as
+/// png eXIf and webp EXIF carry it
+Uint8List orientationTiff(int turn) =>
+    Uint8List.sublistView(_orientationOnly(turn), 10);
 
 // app1, "Exif", a big-endian tiff with one ifd holding one entry
 Uint8List _orientationOnly(int turn) => Uint8List.fromList([

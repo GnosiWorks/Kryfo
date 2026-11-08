@@ -96,13 +96,16 @@ const _wire = [
   'engine.sendTo(',
   'engine.nostrSend(',
   'engine.sendFirstContact(',
-  'engine.pairCodePublish(',
-  'engine.pairCodeFetch(',
+  'sendFirstContactNoted(',
+  'engine.pairShare',
+  'engine.pairJoin(',
+  'engine.pairStep',
   'engine.handleClaim(',
   'engine.handleCheck(',
   'engine.handleRelease(',
   'engine.handleListing(',
   'engine.torPost(',
+  'engine.searchPost(',
   'torStrictGetOnIsolate(',
   'appState.sendEdit(',
 ];
@@ -169,7 +172,7 @@ void main() {
     for (final f in _libFiles()) {
       if (f.path == 'lib/main.dart' ||
           f.path == 'lib/app/boot.dart' ||
-          f.path == 'lib/app/state.dart' ||
+          RegExp(r'^lib/app/state(_\w+)?\.dart$').hasMatch(f.path) ||
           f.path == 'lib/backup.dart') {
         continue;
       }

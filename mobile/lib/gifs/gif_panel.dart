@@ -20,11 +20,11 @@ import 'gif_source.dart';
 import '../widgets/shift_tap_guard.dart';
 
 /// how the phone reaches our server, as the transport screen names it
-enum GifRoute { onion, relay, fast }
+enum GifRoute { onion, fast }
 
 GifRoute gifRouteOf(String sendMode) => switch (sendMode) {
-  'balanced' => GifRoute.relay,
-  'fast' => GifRoute.fast,
+  // relay and fast are one route now, straight to our servers
+  'balanced' || 'fast' => GifRoute.fast,
   _ => GifRoute.onion,
 };
 
@@ -312,17 +312,12 @@ class GifPanelState extends State<GifPanel> {
     final (label, tint, icon) = switch (widget.route) {
       GifRoute.onion => (
         l10n.settingsOnion3Hops,
-        HaloColors.violet,
+        HaloColors.violetText,
         Icons.lock_rounded,
-      ),
-      GifRoute.relay => (
-        l10n.settingsRelay1Hop,
-        HaloColors.amber,
-        Icons.swap_horiz_rounded,
       ),
       GifRoute.fast => (
         l10n.settingsFast,
-        HaloColors.amber,
+        HaloColors.amberText,
         Icons.bolt_rounded,
       ),
     };
@@ -361,7 +356,7 @@ class GifPanelState extends State<GifPanel> {
               ),
               Text(
                 l10n.gifServiceNeverSeesYou,
-                style: HaloType.sans(size: 12, color: HaloColors.text2),
+                style: HaloType.sans(size: 12, color: HaloColors.text),
               ),
             ],
           ),
@@ -388,7 +383,7 @@ class GifPanelState extends State<GifPanel> {
                 style: HaloType.sans(
                   size: 12.5,
                   weight: FontWeight.w600,
-                  color: HaloColors.text2,
+                  color: HaloColors.text,
                 ),
               ),
             ),
@@ -500,7 +495,7 @@ class GifPanelState extends State<GifPanel> {
           Text(
             text,
             textAlign: TextAlign.center,
-            style: HaloType.sans(size: 14, color: HaloColors.text2),
+            style: HaloType.sans(size: 14, color: HaloColors.text),
           ),
           if (retry != null) ...[
             const SizedBox(height: 14),
@@ -559,7 +554,7 @@ class GifPanelState extends State<GifPanel> {
               l10n.gifNeverSeesYou(_brand),
               style: HaloType.sans(
                 size: 11.5,
-                color: HaloColors.text2,
+                color: HaloColors.text,
                 height: 1.35,
               ),
             ),
@@ -940,9 +935,9 @@ class GifPhonePanel extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Text(
-          l10n.gifPhoneLine,
+          l10n.gifPhoneLineShown,
           textAlign: TextAlign.center,
-          style: HaloType.sans(size: 14, color: HaloColors.text2),
+          style: HaloType.sans(size: 14, color: HaloColors.text),
         ),
         const SizedBox(height: 18),
         Center(

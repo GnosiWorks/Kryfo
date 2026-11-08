@@ -23,7 +23,11 @@ import 'package:kryfo/main.dart'
         makePreKeyBundleB64,
         processPeerBundle,
         useDatabasesForTest,
-        useEngineForTest;
+        useEngineForTest,
+        AppStateOutbox,
+        AppStateMessages,
+        AppStateRoute,
+        AppStateRefresh;
 import 'package:kryfo/message_envelope.dart' show grindPow, powBits, verifyPow;
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/screens/chat_screen.dart';
@@ -31,14 +35,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'package:kryfo/widgets/motion.dart' show SendPill, TorStatus;
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
-    show
-        CiphertextMessage,
-        Curve,
-        PreKeySignalMessage,
-        SessionCipher,
-        SignalMessage,
-        SignalProtocolAddress;
+import 'signal_kit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
@@ -248,7 +245,7 @@ class _Engine implements HaloEngine {
   final ciphers = <String>[];
 
   @override
-  Future<String> nostrSend(String peerXPubHex, String b64Cipher) {
+  Future<String> nostrSend(int ident, String peerXPubHex, String b64Cipher) {
     final c = Completer<String>();
     sends.add(c);
     ciphers.add(b64Cipher);
@@ -260,9 +257,9 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
-  void nostrSubscribeBg(String peerXPubHex, {bool fresh = false}) {}
+  void nostrSubscribeBg(int ident, String peerXPubHex, {bool fresh = false}) {}
   @override
-  void nostrUnsubscribeBg(String peerXPubHex) {}
+  void nostrUnsubscribeBg(int ident, String peerXPubHex) {}
   @override
   dynamic noSuchMethod(Invocation i) =>
       throw UnimplementedError('engine: ${i.memberName}');
@@ -280,13 +277,13 @@ void main() {
   late Directory docs;
 
   setUpAll(() async {
-    final me = Curve.generateKeyPair();
+    final me = testKeyPair();
     await signalSession.bootstrap(
       database: MemDb(),
       xPubBytes: me.publicKey.serialize().sublist(1),
       xPrivBytes: me.privateKey.serialize(),
     );
-    final pair = Curve.generateKeyPair();
+    final pair = testKeyPair();
     amber = SignalSession();
     await amber.bootstrap(
       database: MemDb(),
@@ -440,16 +437,7 @@ void main() {
   Future<Map<String, dynamic>> ambersRead(String cipher) async {
     final w = base64Decode(cipher);
     final body = Uint8List.fromList(w.sublist(1));
-    final c = SessionCipher(
-      amber.sessionStore,
-      amber.preKeyStore,
-      amber.signedPreKeyStore,
-      amber.identityStore,
-      const SignalProtocolAddress('me-to-amber', 1),
-    );
-    final plain = w[0] == CiphertextMessage.prekeyType
-        ? await c.decrypt(PreKeySignalMessage(body))
-        : await c.decryptFromSignal(SignalMessage.fromSerialized(body));
+    final plain = await amber.open('me-to-amber', w[0], body);
     final s = utf8.decode(plain);
     expect(s, startsWith('halo/1:'));
     return jsonDecode(s.substring(7)) as Map<String, dynamic>;
@@ -937,6 +925,71 @@ void main() {
   });
 
   // the last here: the store stays marked restored after it
+  // before the restore below, which marks this phone restored for the rest
+  testWidgets(
+    'a text to someone who has not added us back waits for them in '
+    'its pill, not on the route, and the pill goes back to the route once they have',
+    (t) async {
+      await mem.update(
+        'contacts',
+        {'back_paired': 0},
+        where: 'halo_id = ?',
+        whereArgs: [_peer],
+      );
+      await mem.delete('messages', where: 'peer_id = ?', whereArgs: [_peer]);
+      Future<void> send(String text) async {
+        await t.enterText(find.byType(TextField).last, text);
+        await t.pump();
+        await t.pump(const Duration(seconds: 1));
+        await t.tap(find.byIcon(Icons.arrow_upward));
+        await settle(t);
+      }
+
+      await devOpen(
+        t,
+        ChatScreen(
+          peerHaloId: _peer,
+          peerOnion: '',
+          peerXPub: 'ab' * 32,
+          avatarSeed: _peer,
+        ),
+      );
+      await settle(t);
+      await send('hello there');
+      expect(relay.sends, hasLength(1));
+      // fast shows no route at all, so a waiting one is the only label here
+      expect(find.text(l10n.pairCodeWaitingForThem), findsOneWidget);
+      await devClose(t);
+
+      await mem.update(
+        'contacts',
+        {'back_paired': 1},
+        where: 'halo_id = ?',
+        whereArgs: [_peer],
+      );
+      await devOpen(
+        t,
+        ChatScreen(
+          peerHaloId: _peer,
+          peerOnion: '',
+          peerXPub: 'ab' * 32,
+          avatarSeed: _peer,
+        ),
+      );
+      await settle(t);
+      await send('still there');
+      expect(find.text(l10n.pairCodeWaitingForThem), findsNothing);
+      final pills = t.widgetList<SendPill>(find.byType(SendPill));
+      expect(pills, isNotEmpty);
+      expect(pills.any((p) => p.waiting), isFalse);
+      for (final c in relay.sends) {
+        if (!c.isCompleted) c.complete('');
+      }
+      await settle(t);
+      await devClose(t);
+    },
+  );
+
   testWidgets('after a restore, a text waiting on their card stays going '
       'through the retries and the reloads, and a new one goes on as going', (
     t,

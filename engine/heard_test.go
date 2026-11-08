@@ -43,7 +43,10 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 	freshInbox(t)
 	oldSpread := kickSpread
 	kickSpread = 0
-	defer func() { kickSpread = oldSpread }()
+	defer func() {
+		runnersGone(t)
+		kickSpread = oldSpread
+	}()
 	peer := newXid(t)
 	tag := hex.EncodeToString(peer.pub[:])
 	rcv := mustRcv(t, peer)
@@ -55,7 +58,7 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 	began := time.Now().UnixMilli()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go nostrSubscribeRunner(ctx, tag, peer.pub, rcv)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
 	waitFor(t, "the stored one", 10*time.Second, func() bool { return inboxHas(tag + "|stored") })
 	// nothing was known of the relay before: any time up to the subscribe
 	if d := doneOf(t, tag, "stored"); d.from != 0 || d.until < began || d.until > time.Now().UnixMilli() {
@@ -126,13 +129,13 @@ func TestEachLineSaysWhenItReachedTheRelay(t *testing.T) {
 }
 
 func TestHeardMovesOnlyForwardAndNotForARunnerLetGo(t *testing.T) {
-	savedOld := savedDataDir
-	savedDataDir = t.TempDir()
+	savedOld := savedDataDir()
+	setSavedDataDir(t.TempDir())
 	nostrMu.Lock()
 	oldRelays := nostrRelays
 	nostrMu.Unlock()
 	setRelays([]string{"wss://r", "wss://s"})
-	defer func() { savedDataDir = savedOld; setRelays(oldRelays) }()
+	defer func() { setSavedDataDir(savedOld); setRelays(oldRelays) }()
 	rcv := strings.Repeat("ab", 32)
 	t.Cleanup(func() { dropHeard(rcv) })
 	k := catchupKey("wss://r", rcv)
