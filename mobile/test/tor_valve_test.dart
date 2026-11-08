@@ -88,10 +88,7 @@ void main() {
     // held two minutes for the accept: nothing shown
     final held = valveWaitFrom(written, awaitsAnswer: true);
     expect(held, isNull);
-    expect(
-      stage(held, t0.add(const Duration(minutes: 2))),
-      ValveStage.hidden,
-    );
+    expect(stage(held, t0.add(const Duration(minutes: 2))), ValveStage.hidden);
     // the answer came at two minutes: the send is warming, not stuck
     final answered = t0.add(const Duration(minutes: 2));
     final going = valveWaitFrom(
@@ -242,6 +239,95 @@ void main() {
     expect(v.triedFailed, isFalse);
   });
 
+  test('a wait that goes on reconnects by itself, once', () async {
+    var now = t0;
+    var calls = 0;
+    final v = TorValve(
+      reconnect: () async {
+        calls++;
+        return 'ok';
+      },
+      restart: () async {},
+      clock: () => now,
+    );
+    Future<void> look({bool linkUp = false, bool online = true}) => v.autoTry(
+      private: true,
+      quiet: false,
+      online: online,
+      waitingSince: t0,
+      linkUp: linkUp,
+    );
+    // the strip shows at a minute and gets half a minute for a tap
+    now = t0.add(const Duration(seconds: 80));
+    await look();
+    expect(calls, 0);
+    // offline, or the route back: nothing to do
+    now = t0.add(kValveAutoAfter);
+    await look(online: false);
+    await look(linkUp: true);
+    expect(calls, 0);
+    await look();
+    expect(calls, 1);
+    // tried in this wait: the next step is the restart, by hand
+    now = now.add(const Duration(minutes: 10));
+    await look();
+    expect(calls, 1);
+    expect(
+      v.stageFor(
+        private: true,
+        quiet: false,
+        online: true,
+        waitingSince: t0,
+        linkUp: false,
+      ),
+      ValveStage.restart,
+    );
+    // the route came back and went again, the same send still waiting
+    v.sawLink(true);
+    final back = now;
+    now = back.add(const Duration(minutes: 1));
+    await look();
+    expect(calls, 2);
+    v.sawLink(true);
+    // never more often than kValveAutoEvery, however the route flaps
+    now = back.add(const Duration(minutes: 1, seconds: 70));
+    v.sawLink(true);
+    await look();
+    expect(calls, 2);
+    now = back.add(const Duration(minutes: 1) + kValveAutoEvery);
+    v.sawLink(true);
+    await look();
+    expect(calls, 3);
+  });
+
+  test('an automatic reconnect told to wait still offers one', () async {
+    var now = t0.add(const Duration(minutes: 2));
+    final v = TorValve(
+      reconnect: () async => 'error: automatic is connecting',
+      restart: () async {},
+      passRuns: () => true,
+      clock: () => now,
+    );
+    await v.autoTry(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: t0,
+      linkUp: false,
+    );
+    now = now.add(const Duration(minutes: 2));
+    expect(
+      v.stageFor(
+        private: true,
+        quiet: false,
+        online: true,
+        waitingSince: t0,
+        linkUp: false,
+      ),
+      ValveStage.offer,
+    );
+  });
+
   test('the restart keeps the drafts first, and waits for files', () async {
     final order = <String>[];
     var moving = true;
@@ -353,6 +439,32 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text(l10n.valveStillConnecting), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the strip reconnects by itself when nobody taps', (
+    tester,
+  ) async {
+    var calls = 0;
+    final v = TorValve(
+      reconnect: () async {
+        calls++;
+        return 'ok';
+      },
+      restart: () async {},
+      clock: () => t0,
+    );
+    await tester.pumpWidget(
+      strip(v, since: t0.subtract(const Duration(minutes: 2))),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(calls, 0);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(calls, 1);
+    expect(find.text(l10n.homeReconnecting), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    expect(calls, 1);
     await tester.pumpWidget(const SizedBox());
   });
 

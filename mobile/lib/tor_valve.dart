@@ -15,6 +15,13 @@ const kValveAfter = Duration(seconds: 60);
 /// long after one tor took, and a restart is offered after it
 const kValveGrace = Duration(seconds: 60);
 
+/// a strip on screen this long with the route still down reconnects by
+/// itself: the tap nobody should have to make. once per wait
+const kValveAutoAfter = Duration(seconds: 90);
+
+/// and never more often than this, however the route comes and goes
+const kValveAutoEvery = Duration(minutes: 5);
+
 /// what keeps a restart from being offered: a voice note being recorded.
 /// each recorder puts itself in while it records
 final Set<Object> restartHolds = {};
@@ -102,6 +109,7 @@ class TorValve extends ChangeNotifier {
   bool _busy = false;
   DateTime? _triedAt;
   bool _triedFailed = false;
+  DateTime? _autoAt;
 
   DateTime now() => _clock();
   bool get busy => _busy;
@@ -123,12 +131,70 @@ class TorValve extends ChangeNotifier {
   }
 
   Future<void> tryReconnect() async {
-    if (_busy) return;
+    await _reconnect();
+  }
+
+  /// whether the strip reconnects by itself now: it offers a reconnect, has
+  /// for kValveAutoAfter of waiting, and none was tried in this wait
+  bool autoDue({
+    required bool private,
+    required bool quiet,
+    required bool online,
+    required DateTime? waitingSince,
+    required bool linkUp,
+  }) {
+    final now = _clock();
+    final since = waitingSince;
+    if (linkUp || since == null || _triedAt != null) return false;
+    if (now.difference(since) < kValveAutoAfter) return false;
+    final last = _autoAt;
+    if (last != null && now.difference(last) < kValveAutoEvery) return false;
+    return stageFor(
+          private: private,
+          quiet: quiet,
+          online: online,
+          waitingSince: since,
+          linkUp: linkUp,
+          now: now,
+        ) ==
+        ValveStage.offer;
+  }
+
+  /// the reconnect the strip offers, done for whoever waits. a wait on
+  /// purpose (automatic finding a way, no network) tried nothing, so the
+  /// strip goes on offering it rather than a restart
+  Future<void> autoTry({
+    required bool private,
+    required bool quiet,
+    required bool online,
+    required DateTime? waitingSince,
+    required bool linkUp,
+  }) async {
+    if (!autoDue(
+      private: private,
+      quiet: quiet,
+      online: online,
+      waitingSince: waitingSince,
+      linkUp: linkUp,
+    )) {
+      return;
+    }
+    _autoAt = _clock();
+    final r = await _reconnect();
+    if (torWaitsWith(r, passRuns: passRuns?.call() ?? false)) {
+      _triedAt = null;
+      _triedFailed = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String> _reconnect() async {
+    if (_busy) return 'busy';
     final tried = _triedAt;
     if (tried != null &&
         !_triedFailed &&
         _clock().difference(tried) < kValveGrace) {
-      return;
+      return 'resting';
     }
     _busy = true;
     notifyListeners();
@@ -146,6 +212,7 @@ class TorValve extends ChangeNotifier {
         r.startsWith('error') &&
         !torWaitsWith(r, passRuns: passRuns?.call() ?? false);
     notifyListeners();
+    return r;
   }
 
   Future<void> tryRestart() async {

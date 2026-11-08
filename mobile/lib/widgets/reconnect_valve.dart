@@ -78,7 +78,24 @@ class _ReconnectValveState extends State<ReconnectValve> {
       _tick = null;
       return;
     }
-    _tick ??= Timer.periodic(const Duration(seconds: 5), (_) => _changed());
+    _tick ??= Timer.periodic(const Duration(seconds: 5), (_) {
+      _changed();
+      _autoTry();
+    });
+  }
+
+  // a wait that goes on with the route down gets the reconnect by itself
+  void _autoTry() {
+    if (!mounted) return;
+    unawaited(
+      widget.valve.autoTry(
+        private: widget.private,
+        quiet: widget.quiet,
+        online: widget.online,
+        waitingSince: widget.waitingSince,
+        linkUp: widget.linkUp,
+      ),
+    );
   }
 
   @override
