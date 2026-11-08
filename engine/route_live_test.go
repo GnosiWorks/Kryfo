@@ -92,11 +92,16 @@ func TestAStuckBootstrapOnAValidatedNetwork(t *testing.T) {
 func TestValidatedAgainBouncesADeadRoute(t *testing.T) {
 	useStandIns(t, modePrivate, nil)
 	keepNetDetail(t)
-	keepBounceKnobs(t)
 	var n atomic.Int32
+	oldDo, oldGap := validBackDo, validBackGap
+	validBackDo, validBackGap = func() { n.Add(1) }, 0
+	validBackAt.Store(0)
+	t.Cleanup(func() { validBackDo, validBackGap = oldDo, oldGap })
+	// a change of network bounces through its own path, left out here
+	keepBounceKnobs(t)
 	underNetMu(func() {
-		netQuiet, netGap = 20*time.Millisecond, 20*time.Millisecond
-		netBounce = func() { n.Add(1) }
+		netQuiet, netGap = time.Millisecond, time.Millisecond
+		netBounce = func() {}
 	})
 	resetRoute(t, "reachable", 100)
 	routeNoteOK()
@@ -107,22 +112,31 @@ func TestValidatedAgainBouncesADeadRoute(t *testing.T) {
 	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":7}`)
 	time.Sleep(100 * time.Millisecond)
 	if got := n.Load(); got != 0 {
-		t.Fatalf("bounced %d times when android lost the network's validation", got)
+		t.Fatalf("reconnected %d times when android lost the network's validation", got)
 	}
 	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":7}`)
 	if !waitUntil(2*time.Second, func() bool { return n.Load() == 1 }) {
-		t.Fatalf("validated again with nothing through meanwhile: %d bounces, want 1", n.Load())
+		t.Fatalf("validated again with nothing through meanwhile: %d reconnects, want 1", n.Load())
+	}
+	// another network in its place is a change of network, not this
+	time.Sleep(100 * time.Millisecond)
+	n.Store(0)
+	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":7}`)
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":8}`)
+	time.Sleep(200 * time.Millisecond)
+	if got := n.Load(); got != 0 {
+		t.Fatalf("%d reconnects for a validated wifi that is another one", got)
 	}
 
 	// a relay answered while it was unvalidated: the route carries, nothing to do
 	time.Sleep(100 * time.Millisecond)
 	n.Store(0)
-	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":7}`)
+	networkDetail(`{"on":true,"validated":false,"kind":"wifi","net":8}`)
 	time.Sleep(10 * time.Millisecond)
 	routeNoteOK()
-	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":7}`)
+	networkDetail(`{"on":true,"validated":true,"kind":"wifi","net":8}`)
 	time.Sleep(200 * time.Millisecond)
 	if got := n.Load(); got != 0 {
-		t.Fatalf("bounced %d times a route a relay proved", got)
+		t.Fatalf("reconnected %d times a route a relay proved", got)
 	}
 }

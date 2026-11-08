@@ -14,6 +14,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -113,14 +114,29 @@ var netValidLostAt time.Time
 // android vouches again for a network it stopped vouching for at lost: a
 // wifi that passed nothing for a while and came back, without a change of
 // network. what tor held through it may be dead and the back-off grown, so
-// it is taken as a new network unless a relay answered meanwhile
+// it gets the reconnect the button does, unless a relay answered meanwhile.
+// the same network, so not a new one: automatic keeps its way in
 func validBack(lost time.Time) {
 	if lost.IsZero() || !modeNeedsTor() || torIsPaused() || routeAnsweredSince(lost) {
 		return
 	}
-	log.Println("halo: the network is validated again, taking it as new")
-	networkChanged()
+	now := time.Now().UnixNano()
+	if last := validBackAt.Load(); last != 0 && time.Duration(now-last) < validBackGap {
+		return
+	}
+	validBackAt.Store(now)
+	log.Println("halo: the network is validated again, reconnecting tor")
+	go validBackDo()
 }
+
+// the least time between two such reconnects, should android flap
+var (
+	validBackGap = 30 * time.Second
+	validBackAt  atomic.Int64
+)
+
+// a var for the tests
+var validBackDo = func() { reconnectNowFor(whyNetwork) }
 
 // what android last said of the default network, and whether it has said
 // anything yet
