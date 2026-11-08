@@ -2405,13 +2405,17 @@ class _ContactListState extends State<_ContactList> {
         children: [
           // the developer chat, pinned: above everything, the groups too
           for (final (n, d) in top.indexed) _row(_top, d, n),
-          // the groups heading is always there: it is where a group or a
-          // room is made, even with none yet
-          _GroupsHead(
-            onNewGroup: widget.onNewGroup,
-            onNewRoom: widget.onNewRoom,
-            expiredRoomName: widget.expiredRoomName,
-          ),
+          // on the phone the heading is where a group or a room is made, even
+          // with none yet. a linked device makes neither, so it shows only
+          // over groups or an ended room
+          if (!linkedRole ||
+              groups.isNotEmpty ||
+              widget.expiredRoomName != null)
+            _GroupsHead(
+              onNewGroup: widget.onNewGroup,
+              onNewRoom: widget.onNewRoom,
+              expiredRoomName: widget.expiredRoomName,
+            ),
           for (final (n, g) in groups.indexed) _row(_groups, g, n),
           if (chats.isNotEmpty) ...[
             const SizedBox(height: 10),
