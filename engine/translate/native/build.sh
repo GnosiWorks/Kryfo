@@ -9,8 +9,9 @@
 #   ./build.sh           the three abis
 #   ./build.sh --twice   then again from a copy at another path, and
 #                        compares the bytes
-#   KT_BENCH=1 ./build.sh   also kt_bench, into bench/<abi>/, for timing a
-#                        phone from adb shell (never in the app)
+#   KT_BENCH=1 ./build.sh   also kt_bench and kt_test, into bench/<abi>/,
+#                        for timing a phone from adb shell and checking two
+#                        languages open at once there (never in the app)
 set -euo pipefail
 cd "$(dirname "$0")"
 HERE="$(pwd)"
@@ -113,7 +114,7 @@ build_abi() {
     -DCMAKE_BUILD_TYPE=Release -DBERGAMOT_SRC="$SRC" -DBUILD_ARCH="$arch" \
     -DKT_FLAGS="$flags" -DKT_BENCH="${KT_BENCH:-OFF}" "$@" &&
     "$CMAKE" --build "$b" -j "$JOBS" --target kryfo_translate &&
-    if [[ "${KT_BENCH:-}" == 1 ]]; then "$CMAKE" --build "$b" -j "$JOBS" --target kt_bench; fi; } >"$b.txt" 2>&1; then
+    if [[ "${KT_BENCH:-}" == 1 ]]; then "$CMAKE" --build "$b" -j "$JOBS" --target kt_bench kt_test; fi; } >"$b.txt" 2>&1; then
     tail -30 "$b.txt" >&2
     echo "error: $abi build failed, all of it in $b.txt" >&2
     exit 1
@@ -125,6 +126,7 @@ build_abi() {
   if [[ "${KT_BENCH:-}" == 1 ]]; then
     mkdir -p "$HERE/bench/$abi"
     "$LLVM/llvm-strip" --strip-all -o "$HERE/bench/$abi/kt_bench" "$b/kt_bench"
+    "$LLVM/llvm-strip" --strip-all -o "$HERE/bench/$abi/kt_test" "$b/kt_test"
   fi
   echo "$abi: $(wc -c <"$OUT/$abi/libkryfo_translate.so") bytes in $((SECONDS - t0))s"
 }
@@ -159,7 +161,7 @@ if [[ "${1:-}" == "--twice" ]]; then
   T="$(mktemp -d)"
   trap 'rm -rf "$T"' EXIT
   mkdir -p "$T/elsewhere/translate/native" "$T/elsewhere/voice/native"
-  cp -a CMakeLists.txt exports.map android_compat.h armv7_compat.h kryfo_translate.cpp kryfo_translate.h kt_bench.c bergamot.lock \
+  cp -a CMakeLists.txt exports.map android_compat.h armv7_compat.h kryfo_translate.cpp kryfo_translate.h kt_bench.c kt_test.c bergamot.lock \
     fetch-bergamot.sh build.sh .third_party "$T/elsewhere/translate/native/"
   cp -a ../../voice/native/check-imports.sh "$T/elsewhere/voice/native/"
   echo "again from $T/elsewhere/translate/native"

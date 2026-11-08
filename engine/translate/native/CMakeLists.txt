@@ -106,9 +106,12 @@ if(ANDROID)
   target_link_options(kryfo_translate PRIVATE -Wl,-z,max-page-size=16384)
 endif()
 
-# a bench for a phone's shell (build.sh with KT_BENCH=1), never in the app
-option(KT_BENCH "build kt_bench against the library" OFF)
+# a bench and a test for a phone's shell (build.sh with KT_BENCH=1), never
+# in the app
+option(KT_BENCH "build kt_bench and kt_test against the library" OFF)
 if(KT_BENCH)
   add_executable(kt_bench kt_bench.c)
   target_link_libraries(kt_bench PRIVATE kryfo_translate)
+  add_executable(kt_test kt_test.c)
+  target_link_libraries(kt_test PRIVATE kryfo_translate)
 endif()
