@@ -198,7 +198,8 @@ class _DeskLinkScreenState extends State<DeskLinkScreen> {
                     ),
             ),
           ),
-          HaloPrimaryButton(label: l10n.commonContinue, onTap: _go),
+          // says what it does: this computer's own Kryfo goes for the link
+          HaloPrimaryButton(label: l10n.deskLinkReplace, onTap: _go),
         ]),
       ),
     );

@@ -10435,6 +10435,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'انقطع الربط. ابدأ من جديد برمز جديد.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'هذا الحاسوب مرتبط بالفعل. أزله من الأجهزة المرتبطة، ثم اربطه من جديد.';
+
+  @override
   String get scanLinkTitle => 'قراءة رمز الجهاز';
 
   @override
@@ -10461,6 +10465,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get joinWaiting => 'في انتظار هاتفك';
+
+  @override
+  String get joinPreparing => 'نجهّز رمزك';
+
+  @override
+  String get joinPreparingLine =>
+      'يتصل Kryfo الآن. يظهر رمزك حين يصبح هذا الحاسوب متصلًا.';
+
+  @override
+  String get joinPreparingSlow =>
+      'قد يستغرق التشغيل الأول دقيقة أو دقيقتين حتى يتصل Tor.';
+
+  @override
+  String get homeLinkedChatsComing => 'ما زالت محادثاتك تصل من هاتفك.';
 
   @override
   String get joinCodeLife => 'يعمل الرمز عشر دقائق.';
@@ -10491,9 +10509,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'تأكد أن هاتفك متصل وأن Kryfo مفتوح عليه، ثم جرّب رمزًا جديدًا.';
-
-  @override
-  String get joinNewCode => 'رمز جديد';
 
   @override
   String get devicesNewNotice => 'رُبط جهاز جديد';
@@ -11906,7 +11921,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'تُزال هويته الخاصة وكل محادثة عليه. وتُزال أيضًا المحادثات المخفية والتمويه وملاحظة لنفسي. تبقى الملفات التي حفظتها في مجلداتك.';
+      'تُزال هويته الخاصة ومحادثاته وجهات اتصاله على هذا الحاسوب. وتُزال أيضًا المحادثات المخفية والتمويه وملاحظة لنفسي. تبقى الملفات التي حفظتها في مجلداتك.';
 
   @override
   String get deskLinkBackupRow => 'انسخ احتياطيًا أولًا';
@@ -11921,6 +11936,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'امسح واربط';
+
+  @override
+  String get deskLinkReplace => 'استبدل هوية هذا الحاسوب';
 
   @override
   String get deskLinkErasing => 'جارٍ مسح هذا الحاسوب';

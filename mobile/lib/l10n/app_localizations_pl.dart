@@ -10494,6 +10494,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Coś przerwało łączenie. Zacznij od nowa z nowym kodem.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Ten komputer jest już połączony. Usuń go w Połączonych urządzeniach, a potem połącz ponownie.';
+
+  @override
   String get scanLinkTitle => 'Zeskanuj kod urządzenia';
 
   @override
@@ -10520,6 +10524,21 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get joinWaiting => 'Czekam na twój telefon';
+
+  @override
+  String get joinPreparing => 'Przygotowuję twój kod';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo się łączy. Kod pojawi się, gdy tylko ten komputer będzie online.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Pierwsze uruchomienie może potrwać minutę lub dwie, aż Tor się połączy.';
+
+  @override
+  String get homeLinkedChatsComing =>
+      'Twoje czaty wciąż przychodzą z telefonu.';
 
   @override
   String get joinCodeLife => 'Kod działa przez dziesięć minut.';
@@ -10551,9 +10570,6 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'Sprawdź, czy telefon jest online i ma otwarte Kryfo, a potem spróbuj z nowym kodem.';
-
-  @override
-  String get joinNewCode => 'Nowy kod';
 
   @override
   String get devicesNewNotice => 'Połączono nowe urządzenie';
@@ -11999,7 +12015,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Jego własna tożsamość i wszystkie czaty na nim zostaną usunięte. Ukryte czaty, przynęta i Notatka dla siebie też znikną. Pliki zapisane w twoich własnych folderach zostaną.';
+      'Jego własna tożsamość, czaty i kontakty na tym komputerze zostaną usunięte. Ukryte czaty, przynęta i Notatka dla siebie też znikną. Pliki zapisane w twoich własnych folderach zostaną.';
 
   @override
   String get deskLinkBackupRow => 'Najpierw kopia zapasowa';
@@ -12014,6 +12030,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Wymaż i połącz';
+
+  @override
+  String get deskLinkReplace => 'Zastąp tożsamość tego komputera';
 
   @override
   String get deskLinkErasing => 'Wymazywanie tego komputera';

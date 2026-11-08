@@ -51,7 +51,11 @@ class _RootShellState extends State<RootShell> {
     }
     return HomeScreen(
       key: ValueKey(appState.sessionRev),
-      haloId: appState.sessionId,
+      // a linked computer shows its phone's name, never its own: until
+      // the phone told it, that it is linked
+      haloId: linkedRole && ownShownId.isEmpty
+          ? l10n.settingsLinkedToYourPhone
+          : ownShownId,
       contacts: appState.contacts,
       devRow: appState.devRow,
       pendingCount: appState.pendingCount,

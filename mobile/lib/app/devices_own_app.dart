@@ -50,6 +50,8 @@ void _bootOwnSync(DeviceState ds, DeviceSend send, DeviceReceive recv) {
         limit: 1,
       );
       if (r.isNotEmpty) _ownPhoneId = r.first['v'] as String?;
+      // a linked device that never heard my phone's name asks for it
+      if (linkedRole && _ownPhoneId == null) unawaited(_ownBeat());
       // whether the vault keeps what went too, before its first delete
       await _ownGoneOn(await live.open(), live.container);
       await _madeApp?._ownPass();
@@ -66,6 +68,10 @@ const kOwnPhoneIdMeta = 'own_phone_id';
 /// on a linked device, signal_meta 'own_pb:' and a contact's kryfo id: the
 /// block my phone last told for them (1 or 0)
 const kOwnPhoneBlockMeta = 'own_pb:';
+
+/// on a phone, signal_meta 'own_me:' and a device: my profile was told
+/// again at its first word
+const kOwnMeToldMeta = 'own_me:';
 
 Future<int?> _ownPhoneBlockOf(Database d, String id) async {
   final r = await d.query(
@@ -85,6 +91,31 @@ Future<void> _ownPhoneBlockPut(Database d, String id, int b) => d.insert(
 );
 
 String? _ownPhoneId;
+
+/// a linked device's phone not heard this long: its chats may still be on
+/// their way, and the home says so
+const kLinkedComingQuiet = Duration(days: 1);
+
+/// whether a linked device's chats may still be on their way from its
+/// phone: its history copy not begun, or its phone quiet for
+/// [kLinkedComingQuiet]. a copy under way has its own card. never in the
+/// decoy or a quiet session
+Future<bool> linkedChatsComing({DateTime Function()? now}) async {
+  if (!linkedRole || sessionQuiet || lockState.inDecoy) return false;
+  final s = historyCopyShown.value;
+  if (s == null) return true;
+  if (!historyCopyOver(s.step)) return false;
+  final at = int.tryParse(
+    await devMeta(await live.open(), kPhoneHeardMeta) ?? '',
+  );
+  final t = (now ?? DateTime.now)().millisecondsSinceEpoch;
+  return at == null || t - at > kLinkedComingQuiet.inMilliseconds;
+}
+
+/// the kryfo id to show as mine: a linked device's is its phone's, never
+/// the one its own container made before the link
+String get ownShownId =>
+    linkedRole && !sessionQuiet ? (_ownPhoneId ?? '') : appState.sessionId;
 
 // a person unlocked this device: its phone hears it is in use
 Future<void> _ownBeat() async {
@@ -314,13 +345,26 @@ class _AppOwn implements OwnApply {
 
   @override
   Future<void> heard(int ident, int device, String key, int at) async {
-    await ownDeviceHeard(
-      await live.open(),
-      ident: ident,
-      dev: device,
-      key: key,
-      at: at,
+    final d = await live.open();
+    await ownDeviceHeard(d, ident: ident, dev: device, key: key, at: at);
+    // the first word of a device: my profile again, once for its key. the
+    // one sent at the link can reach it before it takes own frames
+    final k = '$kOwnMeToldMeta$ident/$device/$key';
+    final told = await d.query(
+      'signal_meta',
+      columns: ['v'],
+      where: 'k = ?',
+      whereArgs: [k],
+      limit: 1,
     );
+    if (told.isNotEmpty) return;
+    // kept as told only once it went: a decoy open now or a send that
+    // failed tells it again at the next word
+    if (await _madeApp?._ownTellMe() != true) return;
+    await d.insert('signal_meta', {
+      'k': k,
+      'v': '$at',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }
 
@@ -1332,6 +1376,7 @@ extension AppStateOwn on AppState {
         'v': h,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
+    // the avatar's set tells the home and the profile, my phone's name too
     final av = a['a'];
     if (av is int || av == null) await setMyAvatar(av as int?);
     final bg = a['bg'];
@@ -1366,19 +1411,22 @@ extension AppStateOwn on AppState {
   /// a device just linked: my profile goes to my devices now, the badge
   /// with it, whatever the passes told before (the first pass tells
   /// nothing, and a new device was never told)
-  Future<void> _ownTellMe() async {
+  /// true when my profile went to my devices
+  Future<bool> _ownTellMe() async {
     final own = _ownSync;
-    if (own == null || !_ownSends || linkedRole) return;
+    if (own == null || !_ownSends || linkedRole) return false;
     try {
       final me = <String, Object?>{
         'h': myId,
         'a': _myAvatar,
         'bg': await _ownBadge(),
       };
-      await own.op(kMainIdent, 'profile', null, me);
+      final sent = await own.op(kMainIdent, 'profile', null, me);
       await _ownKept('me', ownDigest(me));
+      return sent;
     } catch (e) {
       dlog('own: my profile not sent (${e.runtimeType})');
+      return false;
     }
   }
 

@@ -9757,6 +9757,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicesLinkInterruptedLine => '关联被中断了。用新的二维码重新开始。';
 
   @override
+  String get devicesLinkAlreadyLine => '这台电脑已经关联过了。先在“已关联的设备”中移除它，再重新关联。';
+
+  @override
   String get scanLinkTitle => '扫描设备的二维码';
 
   @override
@@ -9784,6 +9787,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get joinWaiting => '正在等待你的手机';
 
   @override
+  String get joinPreparing => '正在准备你的二维码';
+
+  @override
+  String get joinPreparingLine => 'Kryfo 正在连接。这台电脑一联网，二维码就会出现。';
+
+  @override
+  String get joinPreparingSlow => '首次启动时 Tor 连接可能需要一两分钟。';
+
+  @override
+  String get homeLinkedChatsComing => '你的聊天仍在从手机传过来。';
+
+  @override
   String get joinCodeLife => '二维码十分钟内有效。';
 
   @override
@@ -9809,9 +9824,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get joinUnreachedLine => '确认手机已联网并打开了 Kryfo，然后换一个新的二维码再试。';
-
-  @override
-  String get joinNewCode => '新二维码';
 
   @override
   String get devicesNewNotice => '已关联新设备';
@@ -11126,7 +11138,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      '它自己的身份和上面的每个聊天都会被移除。隐藏聊天、伪装和给自己的笔记也会一起移除。你存到自己文件夹里的文件会保留。';
+      '这台电脑上它自己的身份、聊天和联系人都会被移除。隐藏聊天、伪装和给自己的笔记也会一起移除。你存到自己文件夹里的文件会保留。';
 
   @override
   String get deskLinkBackupRow => '先备份';
@@ -11139,6 +11151,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => '抹除并关联';
+
+  @override
+  String get deskLinkReplace => '替换这台电脑的身份';
 
   @override
   String get deskLinkErasing => '正在抹除这台电脑';
@@ -20882,6 +20897,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get devicesLinkInterruptedLine => '連結被中斷了。用新的 QR 碼重新開始。';
 
   @override
+  String get devicesLinkAlreadyLine => '這台電腦已經連結過了。先在「已連結的裝置」中移除它，再重新連結。';
+
+  @override
   String get scanLinkTitle => '掃描裝置的 QR 碼';
 
   @override
@@ -20909,6 +20927,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get joinWaiting => '正在等待你的手機';
 
   @override
+  String get joinPreparing => '正在準備你的 QR 碼';
+
+  @override
+  String get joinPreparingLine => 'Kryfo 正在連線。這台電腦一連上網路，QR 碼就會出現。';
+
+  @override
+  String get joinPreparingSlow => '第一次啟動時 Tor 連線可能需要一兩分鐘。';
+
+  @override
+  String get homeLinkedChatsComing => '你的聊天仍在從手機傳過來。';
+
+  @override
   String get joinCodeLife => 'QR 碼十分鐘內有效。';
 
   @override
@@ -20934,9 +20964,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get joinUnreachedLine => '確認手機已連線並開啟 Kryfo，然後換一個新的 QR 碼再試。';
-
-  @override
-  String get joinNewCode => '新 QR 碼';
 
   @override
   String get devicesNewNotice => '已連結新裝置';
@@ -22253,7 +22280,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get deskLinkGoesLine =>
-      '它自己的身分和上面的每個聊天都會被移除。隱藏聊天、偽裝和給自己的筆記也會一起移除。你存到自己資料夾裡的檔案會保留。';
+      '這台電腦上它自己的身分、聊天和聯絡人都會被移除。隱藏聊天、偽裝和給自己的筆記也會一起移除。你存到自己資料夾裡的檔案會保留。';
 
   @override
   String get deskLinkBackupRow => '先備份';
@@ -22267,6 +22294,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get deskLinkConfirmYes => '抹除並連結';
+
+  @override
+  String get deskLinkReplace => '替換這台電腦的身分';
 
   @override
   String get deskLinkErasing => '正在抹除這台電腦';

@@ -1173,6 +1173,17 @@ class DeviceSend {
     return true;
   }
 
+  /// a relay answers again after none did: the last words that waited for
+  /// one go at once, not after their longest wait
+  Future<void> relaysBack() async {
+    final d = await mine();
+    final n = await d.update('dev_farewell', {
+      'tries': 0,
+      'next_at': 0,
+    }, where: 'tries > 0');
+    if (n > 0) await pump();
+  }
+
   /// whether the last word to my own [device] of [ident] on [key] is
   /// sealed and kept already: a removal cut short seals none twice
   Future<bool> farewellHeld(int ident, int device, String key) async =>
@@ -1221,9 +1232,7 @@ class DeviceSend {
     }
 
     final seeded = await one(() => wire.send(ident, last.arg, last.wire));
-    final opened = await one(
-      () => wire.sendOpener(ident, last.arg, last.wire),
-    );
+    final opened = await one(() => wire.sendOpener(ident, last.arg, last.wire));
     return seeded || opened;
   }
 

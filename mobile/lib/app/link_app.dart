@@ -111,6 +111,13 @@ class _PhoneLinkApp implements PhoneLinkHooks {
   @override
   Future<int> phoneReg() async => (await _main()).regId;
 
+  // over counts as full: a list linked before the limit keeps every device
+  @override
+  Future<bool> full() async {
+    final all = await (await ownDevicesSource()).load();
+    return all.where((d) => !d.thisDevice).length >= kMaxLinkedDevices;
+  }
+
   @override
   Future<Uint8List> sign(Uint8List body) async {
     final lib = signalSession.lib;
@@ -267,14 +274,23 @@ class _JoinLinkApp implements JoinLinkHooks {
   }
 
   @override
-  Future<JoinBundles> bundles(int device, int want) async {
+  Future<JoinBundles> bundles(
+    int device,
+    int want, {
+    void Function(int done)? made,
+  }) async {
     final ds = DeviceSessions(signalSession, linked: true);
     final first = await ds.makeBundle(device);
     final last = await ds.lastResortBundle(device);
+    final once = <Uint8List>[];
+    for (var i = 0; i < want; i++) {
+      once.add(await ds.makeBundle(device));
+      made?.call(i + 1);
+    }
     return (
       first: first,
       last: last,
-      once: [for (var i = 0; i < want; i++) await ds.makeBundle(device)],
+      once: once,
       made: DateTime.now().millisecondsSinceEpoch,
     );
   }

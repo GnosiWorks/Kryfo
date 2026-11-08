@@ -10307,6 +10307,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'जोड़ना बीच में रुक गया। नए कोड के साथ फिर से शुरू करें।';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'यह कंप्यूटर पहले से जुड़ा है। जुड़े हुए डिवाइस में इसे हटाएँ, फिर दोबारा जोड़ें।';
+
+  @override
   String get scanLinkTitle => 'डिवाइस का कोड स्कैन करें';
 
   @override
@@ -10333,6 +10337,20 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get joinWaiting => 'आपके फ़ोन का इंतज़ार है';
+
+  @override
+  String get joinPreparing => 'आपका कोड तैयार हो रहा है';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo जुड़ रहा है। जैसे ही यह कंप्यूटर ऑनलाइन होगा, आपका कोड दिखेगा।';
+
+  @override
+  String get joinPreparingSlow =>
+      'पहली बार शुरू होने में एक-दो मिनट लग सकते हैं, जब तक Tor जुड़ता है।';
+
+  @override
+  String get homeLinkedChatsComing => 'आपकी चैट अभी भी आपके फ़ोन से आ रही हैं।';
 
   @override
   String get joinCodeLife => 'यह कोड दस मिनट तक चलता है।';
@@ -10363,9 +10381,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'देखें कि आपका फ़ोन ऑनलाइन है और Kryfo खुला है, फिर नया कोड आज़माएँ।';
-
-  @override
-  String get joinNewCode => 'नया कोड';
 
   @override
   String get devicesNewNotice => 'नया डिवाइस जुड़ा';
@@ -11777,7 +11792,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'इसकी अपनी पहचान और इस पर हर चैट हटा दी जाएगी। छिपी चैट, नकली Kryfo और अपने लिए नोट भी चले जाएँगे। आपके अपने फ़ोल्डरों में सहेजी फ़ाइलें रहेंगी।';
+      'इस कंप्यूटर पर इसकी अपनी पहचान, इसकी चैट और इसके संपर्क हटा दिए जाएँगे। छिपी चैट, नकली Kryfo और अपने लिए नोट भी चले जाएँगे। आपके अपने फ़ोल्डरों में सहेजी फ़ाइलें रहेंगी।';
 
   @override
   String get deskLinkBackupRow => 'पहले बैकअप लें';
@@ -11792,6 +11807,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'मिटाएँ और जोड़ें';
+
+  @override
+  String get deskLinkReplace => 'इस कंप्यूटर की पहचान बदलें';
 
   @override
   String get deskLinkErasing => 'यह कंप्यूटर मिटाया जा रहा है';

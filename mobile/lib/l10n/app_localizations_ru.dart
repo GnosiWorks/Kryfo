@@ -10473,6 +10473,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Связь прервалась. Начните заново с новым кодом.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Этот компьютер уже связан. Удалите его в разделе «Связанные устройства», затем свяжите снова.';
+
+  @override
   String get scanLinkTitle => 'Сканировать код устройства';
 
   @override
@@ -10499,6 +10503,20 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get joinWaiting => 'Ждём ваш телефон';
+
+  @override
+  String get joinPreparing => 'Готовим ваш код';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo подключается. Код появится, как только этот компьютер будет в сети.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Первый запуск может занять минуту-другую, пока подключается Tor.';
+
+  @override
+  String get homeLinkedChatsComing => 'Ваши чаты ещё приходят с телефона.';
 
   @override
   String get joinCodeLife => 'Код действует десять минут.';
@@ -10530,9 +10548,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'Проверьте, что телефон в сети и Kryfo открыт, и попробуйте новый код.';
-
-  @override
-  String get joinNewCode => 'Новый код';
 
   @override
   String get devicesNewNotice => 'Связано новое устройство';
@@ -11959,7 +11974,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Его собственный профиль и все чаты на нём удаляются. Скрытые чаты, приманка и Заметки удаляются тоже. Файлы, сохранённые в ваших папках, останутся.';
+      'Его собственный профиль, чаты и контакты на этом компьютере удаляются. Скрытые чаты, приманка и Заметки удаляются тоже. Файлы, сохранённые в ваших папках, останутся.';
 
   @override
   String get deskLinkBackupRow => 'Сначала резервная копия';
@@ -11974,6 +11989,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Стереть и связать';
+
+  @override
+  String get deskLinkReplace => 'Заменить профиль этого компьютера';
 
   @override
   String get deskLinkErasing => 'Компьютер стирается';

@@ -10314,6 +10314,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'پیوند نیمه‌کاره ماند. با یک کد تازه دوباره شروع کنید.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'این رایانه از قبل پیوند خورده است. آن را در دستگاه‌های پیوندخورده حذف کنید، بعد دوباره پیوند دهید.';
+
+  @override
   String get scanLinkTitle => 'اسکن کد دستگاه';
 
   @override
@@ -10340,6 +10344,21 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get joinWaiting => 'در انتظار گوشی‌تان';
+
+  @override
+  String get joinPreparing => 'در حال آماده کردن کدتان';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo در حال وصل شدن است. کدتان همین که این رایانه آنلاین شود نمایش داده می‌شود.';
+
+  @override
+  String get joinPreparingSlow =>
+      'اولین اجرا ممکن است یکی دو دقیقه طول بکشد تا Tor وصل شود.';
+
+  @override
+  String get homeLinkedChatsComing =>
+      'گفت‌وگوهایتان هنوز از گوشی‌تان در راه‌اند.';
 
   @override
   String get joinCodeLife => 'این کد ده دقیقه کار می‌کند.';
@@ -10371,9 +10390,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'بررسی کنید گوشی‌تان آنلاین باشد و Kryfo روی آن باز باشد، سپس یک کد تازه امتحان کنید.';
-
-  @override
-  String get joinNewCode => 'کد تازه';
 
   @override
   String get devicesNewNotice => 'دستگاه تازه پیوند خورد';
@@ -11781,7 +11797,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'هویت خودش و همه گفت‌وگوهای رویش حذف می‌شوند. گفت‌وگوهای پنهان، فریب و یادداشت برای خود هم می‌روند. فایل‌هایی که در پوشه‌های خودتان ذخیره کرده‌اید می‌مانند.';
+      'هویت خودش، گفت‌وگوها و مخاطبانش روی این رایانه حذف می‌شوند. گفت‌وگوهای پنهان، فریب و یادداشت برای خود هم می‌روند. فایل‌هایی که در پوشه‌های خودتان ذخیره کرده‌اید می‌مانند.';
 
   @override
   String get deskLinkBackupRow => 'اول پشتیبان بگیرید';
@@ -11796,6 +11812,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'پاک کن و پیوند بده';
+
+  @override
+  String get deskLinkReplace => 'جایگزینی هویت این رایانه';
 
   @override
   String get deskLinkErasing => 'در حال پاک کردن این رایانه';

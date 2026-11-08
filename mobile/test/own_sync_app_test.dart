@@ -33,6 +33,11 @@ import 'package:kryfo/main.dart'
         engineDeviceWireForTest,
         ownAddedForTest,
         linkedRoleForTest,
+        linkedChatsComing,
+        historyCopyShown,
+        ownShownId,
+        appState,
+        AppStateSession,
         ownApplyForTest,
         ownPassForTest,
         ownTellMeForTest,
@@ -53,6 +58,9 @@ import 'package:kryfo/main.dart'
         AppStateOutbox,
         AppStateReceive,
         AppStateContacts;
+import 'package:kryfo/devices/history_link.dart'
+    show HistoryCopyStage, HistoryCopyStep;
+import 'package:kryfo/devices/own_device_store.dart' show ownPhoneHeard;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:kryfo/supporter.dart';
@@ -632,6 +640,66 @@ void main() {
       'bg': {'t': 'guardian', 'c': true},
     });
     expect(await loadSupporterTier(), SupporterTier.none);
+  }, skip: skip);
+
+  test('a linked device shows its phone\'s name as its own, never the one '
+      'its container made before the link', () async {
+    linkedRoleForTest = true;
+    await op('profile', null, {'h': 'my-phone'});
+    expect(ownShownId, 'my-phone');
+    linkedRoleForTest = false;
+    expect(ownShownId, appState.sessionId);
+  }, skip: skip);
+
+  test(
+    'my phone tells a device my profile again at its first word, once',
+    () async {
+      await ownApplyForTest.heard(0, 2, 'k2', 1000);
+      expect(told.ops.map((o) => o.$1), ['profile']);
+      expect(told.ops.single.$3['h'], 'me');
+      await ownApplyForTest.heard(0, 2, 'k2', 2000);
+      expect(told.ops, hasLength(1));
+      // a new key on the id is a new device
+      await ownApplyForTest.heard(0, 2, 'k3', 3000);
+      expect(told.ops, hasLength(2));
+    },
+    skip: skip,
+  );
+
+  test(
+    'a profile not told at a first word, the decoy open, goes at the next',
+    () async {
+      final decoy = _Rows(s, HaloContainer.decoy);
+      useDatabasesForTest(db, Session(decoy));
+      await ownApplyForTest.heard(0, 2, 'k2', 1000);
+      expect(told.ops, isEmpty);
+      useDatabasesForTest(db, Session(db));
+      await ownApplyForTest.heard(0, 2, 'k2', 2000);
+      expect(told.ops.map((o) => o.$1), ['profile']);
+      await ownApplyForTest.heard(0, 2, 'k2', 3000);
+      expect(told.ops, hasLength(1));
+    },
+    skip: skip,
+  );
+
+  test('a linked computer says its chats are still coming until its copy '
+      'began and while its phone is quiet a day', () async {
+    final t = DateTime(2026, 11, 8, 22);
+    expect(await linkedChatsComing(now: () => t), isFalse);
+    linkedRoleForTest = true;
+    historyCopyShown.value = null;
+    expect(await linkedChatsComing(now: () => t), isTrue);
+    // a copy under way has its own card
+    historyCopyShown.value = const HistoryCopyStage(HistoryCopyStep.copying);
+    expect(await linkedChatsComing(now: () => t), isFalse);
+    historyCopyShown.value = const HistoryCopyStage(HistoryCopyStep.whole);
+    await ownPhoneHeard(s, t.millisecondsSinceEpoch);
+    expect(await linkedChatsComing(now: () => t), isFalse);
+    expect(
+      await linkedChatsComing(now: () => t.add(const Duration(days: 2))),
+      isTrue,
+    );
+    historyCopyShown.value = null;
   }, skip: skip);
 
   test('nothing is told while the decoy is open', () async {

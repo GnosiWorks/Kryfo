@@ -10416,6 +10416,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Etwas hat die Verknüpfung unterbrochen. Fang mit einem neuen Code noch einmal an.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Dieser Computer ist schon verknüpft. Entferne ihn unter Verknüpfte Geräte und verknüpfe ihn dann neu.';
+
+  @override
   String get scanLinkTitle => 'Code des Geräts scannen';
 
   @override
@@ -10442,6 +10446,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get joinWaiting => 'Warte auf dein Handy';
+
+  @override
+  String get joinPreparing => 'Dein Code wird vorbereitet';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo verbindet sich. Dein Code erscheint, sobald dieser Computer online ist.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Der erste Start kann ein bis zwei Minuten dauern, während sich Tor verbindet.';
+
+  @override
+  String get homeLinkedChatsComing =>
+      'Deine Chats kommen noch von deinem Handy.';
 
   @override
   String get joinCodeLife => 'Der Code gilt zehn Minuten.';
@@ -10473,9 +10492,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'Prüfe, ob dein Handy online ist und Kryfo offen hat, und versuche es dann mit einem neuen Code.';
-
-  @override
-  String get joinNewCode => 'Neuer Code';
 
   @override
   String get devicesNewNotice => 'Neues Gerät verknüpft';
@@ -11910,7 +11926,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Seine eigene Identität und jeder Chat darauf werden entfernt. Versteckte Chats, die Tarnung und Notiz an mich gehen auch. Dateien, die du in deinen eigenen Ordnern gespeichert hast, bleiben.';
+      'Seine eigene Identität, seine Chats und seine Kontakte auf diesem Computer werden entfernt. Versteckte Chats, die Tarnung und Notiz an mich gehen auch. Dateien, die du in deinen eigenen Ordnern gespeichert hast, bleiben.';
 
   @override
   String get deskLinkBackupRow => 'Zuerst sichern';
@@ -11925,6 +11941,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Löschen und verknüpfen';
+
+  @override
+  String get deskLinkReplace => 'Identität dieses Computers ersetzen';
 
   @override
   String get deskLinkErasing => 'Dieser Computer wird gelöscht';

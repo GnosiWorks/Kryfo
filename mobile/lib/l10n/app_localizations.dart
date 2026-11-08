@@ -16525,6 +16525,12 @@ abstract class AppLocalizations {
   /// **'Something interrupted the link. Start again with a new code.'**
   String get devicesLinkInterruptedLine;
 
+  /// phone link page: the computer is on the list already from a link that ended on its side (screens/link_screens.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'This computer is linked already. Remove it in Linked devices, then link it again.'**
+  String get devicesLinkAlreadyLine;
+
   /// screens/scan_screen.dart: the scanner title when the phone links a device
   ///
   /// In en, this message translates to:
@@ -16579,6 +16585,30 @@ abstract class AppLocalizations {
   /// **'Waiting for your phone'**
   String get joinWaiting;
 
+  /// desktop join page, while the code is not shown yet (screens/link_screens.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your code ready'**
+  String get joinPreparing;
+
+  /// desktop join page, under the waiting line before the code shows (screens/link_screens.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo is connecting. Your code shows as soon as this computer is online.'**
+  String get joinPreparingLine;
+
+  /// desktop join page, the same line after twenty seconds (screens/link_screens.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'The first start can take a minute or two while Tor connects.'**
+  String get joinPreparingSlow;
+
+  /// home card on a linked computer whose chats may still be on their way from its phone (screens/home_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Your chats are still coming from your phone.'**
+  String get homeLinkedChatsComing;
+
   /// screens/link_screens.dart: under joinWaiting
   ///
   /// In en, this message translates to:
@@ -16632,12 +16662,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check that your phone is online with Kryfo open, then try a new code.'**
   String get joinUnreachedLine;
-
-  /// screens/link_screens.dart: button: show a fresh code
-  ///
-  /// In en, this message translates to:
-  /// **'New code'**
-  String get joinNewCode;
 
   /// screens/home_screen.dart: card title on every own device after a device was linked. stays until opened
   ///
@@ -18856,7 +18880,7 @@ abstract class AppLocalizations {
   /// desktop settings, link to a phone (screens/desk_link_screen.dart)
   ///
   /// In en, this message translates to:
-  /// **'Its own identity and every chat on it are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.'**
+  /// **'Its own identity, its chats and its contacts on this computer are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.'**
   String get deskLinkGoesLine;
 
   /// desktop settings, link to a phone (screens/desk_link_screen.dart)
@@ -18882,6 +18906,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Erase and link'**
   String get deskLinkConfirmYes;
+
+  /// desktop settings, link to a phone: the button that starts the erase (screens/desk_link_screen.dart)
+  ///
+  /// In en, this message translates to:
+  /// **'Replace this computer\'s identity'**
+  String get deskLinkReplace;
 
   /// desktop settings, link to a phone (screens/desk_link_screen.dart)
   ///

@@ -10303,6 +10303,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Penautan terputus. Mulai lagi dengan kode baru.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Komputer ini sudah tertaut. Hapus di Perangkat tertaut, lalu tautkan lagi.';
+
+  @override
   String get scanLinkTitle => 'Pindai kode perangkat';
 
   @override
@@ -10329,6 +10333,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get joinWaiting => 'Menunggu ponselmu';
+
+  @override
+  String get joinPreparing => 'Menyiapkan kodemu';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo sedang terhubung. Kodemu muncul begitu komputer ini online.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Mulai pertama kali bisa makan waktu satu atau dua menit selagi Tor terhubung.';
+
+  @override
+  String get homeLinkedChatsComing =>
+      'Obrolanmu masih berdatangan dari ponselmu.';
 
   @override
   String get joinCodeLife => 'Kode berlaku sepuluh menit.';
@@ -10360,9 +10379,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'Pastikan ponselmu online dan Kryfo terbuka, lalu coba kode baru.';
-
-  @override
-  String get joinNewCode => 'Kode baru';
 
   @override
   String get devicesNewNotice => 'Perangkat baru tertaut';
@@ -11774,7 +11790,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Identitasnya sendiri dan semua obrolan di dalamnya dihapus. Obrolan tersembunyi, umpan, dan Catatan pribadi juga ikut terhapus. File yang kamu simpan di foldermu sendiri tetap ada.';
+      'Identitasnya sendiri, obrolannya, dan kontaknya di komputer ini dihapus. Obrolan tersembunyi, umpan, dan Catatan pribadi juga ikut terhapus. File yang kamu simpan di foldermu sendiri tetap ada.';
 
   @override
   String get deskLinkBackupRow => 'Cadangkan dulu';
@@ -11789,6 +11805,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Hapus dan tautkan';
+
+  @override
+  String get deskLinkReplace => 'Ganti identitas komputer ini';
 
   @override
   String get deskLinkErasing => 'Menghapus komputer ini';

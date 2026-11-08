@@ -12,7 +12,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../devices/link_flow.dart';
 import '../l10n/l10n.dart';
-import '../l10n/numbers.dart' show whole;
+import '../l10n/numbers.dart' show percent, whole;
 import '../theme.dart';
 import '../widgets/fit_column.dart';
 import '../widgets/halo_buttons.dart';
@@ -101,7 +101,7 @@ class _LinkRunScreenState extends State<LinkRunScreen> {
   Widget _phonePage(BuildContext context, LinkStage v) {
     final flow = widget.flow;
     return switch (v.step) {
-      LinkStep.showing || LinkStep.reaching => _Waiting(
+      LinkStep.preparing || LinkStep.showing || LinkStep.reaching => _Waiting(
         title: l10n.devicesLinkReaching,
         line: l10n.devicesLinkReachingLine,
       ),
@@ -115,6 +115,7 @@ class _LinkRunScreenState extends State<LinkRunScreen> {
         onNoMatch: flow.noMatch,
       ),
       LinkStep.linking => _Waiting(
+        share: v.share,
         title: l10n.devicesLinkLinking,
         line: l10n.devicesLinkLinkingLine,
       ),
@@ -137,22 +138,26 @@ class _LinkRunScreenState extends State<LinkRunScreen> {
           LinkEnd.full => l10n.devicesFull,
           LinkEnd.stopped => l10n.devicesLinkStoppedLine,
           LinkEnd.interrupted => l10n.devicesLinkInterruptedLine,
+          LinkEnd.linkedAlready => l10n.devicesLinkAlreadyLine,
           _ => l10n.devicesLinkUnreachedLine,
         },
-        primary: v.end == LinkEnd.full ? l10n.commonClose : l10n.commonTryAgain,
+        // full or listed already: the devices page is where it goes on
+        primary: _closes(v.end) ? l10n.commonClose : l10n.commonTryAgain,
         onPrimary: () {
-          if (v.end == LinkEnd.full || widget.onAgain == null) {
+          if (_closes(v.end) || widget.onAgain == null) {
             Navigator.of(context).pop(false);
           } else {
             widget.onAgain!();
           }
         },
-        secondary: v.end == LinkEnd.full ? null : l10n.commonClose,
+        secondary: _closes(v.end) ? null : l10n.commonClose,
         onSecondary: () => Navigator.of(context).pop(false),
       ),
     };
   }
 }
+
+bool _closes(LinkEnd? e) => e == LinkEnd.full || e == LinkEnd.linkedAlready;
 
 /// the new device's side: its code until the phone answers, then the rest
 class JoinScreen extends StatefulWidget {
@@ -227,7 +232,13 @@ class _JoinScreenState extends State<JoinScreen> {
                 valueListenable: _flow,
                 builder: (context, v, _) => FadeSwap(
                   child: KeyedSubtree(
-                    key: ValueKey('${v.step}${v.offer != null}'),
+                    // getting ready and the code share one page: the code
+                    // settles into the frame that waited for it
+                    key: ValueKey(
+                      v.step == LinkStep.preparing
+                          ? '${LinkStep.showing}'
+                          : '${v.step}',
+                    ),
                     child: _joinPage(v),
                   ),
                 ),
@@ -241,6 +252,7 @@ class _JoinScreenState extends State<JoinScreen> {
 
   Widget _joinPage(LinkStage v) {
     return switch (v.step) {
+      LinkStep.preparing => const _ShowCode(offer: null),
       LinkStep.showing || LinkStep.reaching => _ShowCode(offer: v.offer),
       LinkStep.digits => _Compare(
         digits: v.digits ?? '',
@@ -252,6 +264,7 @@ class _JoinScreenState extends State<JoinScreen> {
         onNoMatch: _flow.noMatch,
       ),
       LinkStep.linking => _Waiting(
+        share: v.share,
         title: l10n.joinLinking,
         line: l10n.joinLinkingLine,
       ),
@@ -273,7 +286,9 @@ class _JoinScreenState extends State<JoinScreen> {
           LinkEnd.stopped => l10n.devicesLinkStoppedLine,
           _ => l10n.devicesLinkInterruptedLine,
         },
-        primary: l10n.joinNewCode,
+        // a new code on this computer, its own identity untouched: nothing
+        // here falls back to what was before
+        primary: l10n.commonTryAgain,
         onPrimary: _again,
       ),
     };
@@ -345,18 +360,66 @@ class _Title extends StatelessWidget {
 }
 
 class _Waiting extends StatelessWidget {
-  const _Waiting({required this.title, required this.line});
+  const _Waiting({required this.title, required this.line, this.share});
   final String title;
   final String line;
 
+  /// how far, once something is counted: a bar under the words
+  final double? share;
+
   @override
   Widget build(BuildContext context) {
+    final s = share;
     return _Page(
       children: [
         Center(child: OnionLoader(size: 104, color: HaloColors.amber)),
         const SizedBox(height: 28),
         Semantics(liveRegion: true, child: _Title(title, line)),
+        const SizedBox(height: 22),
+        // the bar's place is kept from the start: nothing jumps when it
+        // comes
+        AnimatedOpacity(
+          opacity: s == null ? 0 : 1,
+          duration: motionStill(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 240),
+          child: _LinkBar(share: s ?? 0),
+        ),
       ],
+    );
+  }
+}
+
+class _LinkBar extends StatelessWidget {
+  const _LinkBar({required this.share});
+  final double share;
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 240),
+        child: Semantics(
+          value: percent(share),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: share),
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 360),
+              curve: Curves.easeOutCubic,
+              builder: (context, v, _) => LinearProgressIndicator(
+                value: v,
+                minHeight: 6,
+                color: HaloColors.amber,
+                backgroundColor: HaloColors.surface3,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -607,6 +670,7 @@ class _ShowCode extends StatelessWidget {
     final wide = MediaQuery.sizeOf(context).shortestSide >= 600;
     final size = wide ? 248.0 : 212.0;
     final steps = [l10n.joinStep1, l10n.joinStep2, l10n.joinStep3];
+    final still = motionStill(context);
     return _Page(
       foot: [
         Row(
@@ -615,23 +679,28 @@ class _ShowCode extends StatelessWidget {
             BreathDot(color: HaloColors.amber, size: 6),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(
-                l10n.joinWaiting,
-                style: HaloType.sans(
-                  size: 13,
-                  weight: FontWeight.w500,
-                  color: HaloColors.text,
+              child: FadeSwap(
+                child: Text(
+                  o == null ? l10n.joinPreparing : l10n.joinWaiting,
+                  key: ValueKey(o == null),
+                  style: HaloType.sans(
+                    size: 13,
+                    weight: FontWeight.w500,
+                    color: HaloColors.text,
+                  ),
                 ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 6),
-        Text(
-          l10n.joinCodeLife,
-          textAlign: TextAlign.center,
-          style: HaloType.sans(size: 12.5, color: HaloColors.text),
-        ),
+        o == null
+            ? const _PreparingLine()
+            : Text(
+                l10n.joinCodeLife,
+                textAlign: TextAlign.center,
+                style: HaloType.sans(size: 12.5, color: HaloColors.text),
+              ),
       ],
       children: [
         Center(
@@ -643,18 +712,28 @@ class _ShowCode extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
             ),
-            child: o == null
-                ? const SizedBox()
-                : Semantics(
-                    label: l10n.joinStep3,
-                    image: true,
-                    child: QrImageView(
-                      data: o,
-                      version: QrVersions.auto,
-                      size: size,
-                      backgroundColor: Colors.white,
+            // the code fades into the frame that waited for it
+            child: AnimatedSwitcher(
+              duration: still
+                  ? Duration.zero
+                  : const Duration(milliseconds: 280),
+              child: o == null
+                  ? Center(
+                      key: const ValueKey('ready'),
+                      child: OnionLoader(size: 64, color: HaloColors.amber),
+                    )
+                  : Semantics(
+                      key: const ValueKey('code'),
+                      label: l10n.joinStep3,
+                      image: true,
+                      child: QrImageView(
+                        data: o,
+                        version: QrVersions.auto,
+                        size: size,
+                        backgroundColor: Colors.white,
+                      ),
                     ),
-                  ),
+            ),
           ),
         ),
         const SizedBox(height: 28),
@@ -664,6 +743,44 @@ class _ShowCode extends StatelessWidget {
             child: _JoinStep(n: i + 1, text: s),
           ),
       ],
+    );
+  }
+}
+
+// a first start's tor can take a minute or two: said once it has
+class _PreparingLine extends StatefulWidget {
+  const _PreparingLine();
+  @override
+  State<_PreparingLine> createState() => _PreparingLineState();
+}
+
+class _PreparingLineState extends State<_PreparingLine> {
+  bool _slow = false;
+  Timer? _t;
+
+  @override
+  void initState() {
+    super.initState();
+    _t = Timer(const Duration(seconds: 20), () {
+      if (mounted) setState(() => _slow = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeSwap(
+      child: Text(
+        _slow ? l10n.joinPreparingSlow : l10n.joinPreparingLine,
+        key: ValueKey(_slow),
+        textAlign: TextAlign.center,
+        style: HaloType.sans(size: 12.5, color: HaloColors.text),
+      ),
     );
   }
 }
