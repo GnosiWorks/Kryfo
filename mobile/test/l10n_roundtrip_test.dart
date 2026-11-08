@@ -3525,6 +3525,11 @@ void main() {
     expect(l.supportMovedToChats, "Moved to Chats");
     expect(l.supportMoveToInbox, "Move to inbox");
     expect(l.supportMovedToInbox, "Moved to inbox");
+    expect(l.supportCopyDevCard, "Copy my developer card");
+    expect(
+      l.supportDevCardOff,
+      "This card does not match the pinned one. Nothing was copied.",
+    );
     expect(l.bridgesFindingAWayIn, "Finding a way in…");
     expect(l.torBootSplashStartThroughABridge, "Start through a bridge");
     expect(

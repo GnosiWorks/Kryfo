@@ -13,6 +13,35 @@ extension AppStateDevchat on AppState {
   // developer mode: his own phone, never in a decoy session
   bool get devMode => _devIdentity && !sessionQuiet;
 
+  // his card can be copied: the everyday identity on his own phone, never
+  // in a vault or on a linked device
+  bool get devCardHere => devMode && !lockState.inVault && !linkedRole;
+
+  /// the v3 card every install pins, as his phone hands it out: the kept
+  /// invite keys read as they are, nothing made or moved. null off his
+  /// phone, or when it does not come out as his pinned key and address
+  Future<String?> myDevCard() async {
+    if (!devCardHere || _fcUnread || !signalSession.ready) return null;
+    final pinned = devKeyByXPub(myXPub);
+    if (pinned == null) return null;
+    try {
+      final link = await buildHaloUriV3(myId, myOnion, _fcCounter);
+      final k = DevKey.fromLink(link, keyId: pinned.keyId);
+      if (k == null ||
+          k.xPub != pinned.xPub ||
+          k.fc != pinned.fc ||
+          k.threeWords != pinned.threeWords ||
+          !devCardStarts(k)) {
+        dlog('dev card: not the pinned one');
+        return null;
+      }
+      return link;
+    } catch (e) {
+      dlog('dev card: not read (${e.runtimeType})');
+      return null;
+    }
+  }
+
   // asked by every way a message leaves the dev chat, before anything of it
   // is saved: fresh becomes everyday, or anon under a name made for this
   // chat alone. his card is checked and his session built first, then the

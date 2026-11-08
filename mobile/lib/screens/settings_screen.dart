@@ -1104,13 +1104,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // invites are the phone's: a linked device has none
                 if (linkedRole)
                   ...const <Widget>[]
-                else if (appState.devMode)
+                else if (appState.devMode) ...[
                   HaloRow(
                     icon: Icons.lock_outline,
                     label: l10n.settingsResetMyInviteLink,
                     hint: l10n.supportResetPinned,
-                  )
-                else
+                  ),
+                  if (appState.devCardHere)
+                    HaloRow(
+                      icon: Icons.badge_outlined,
+                      label: l10n.supportCopyDevCard,
+                      onTap: () async {
+                        final card = await appState.myDevCard();
+                        if (card != null) {
+                          await Clipboard.setData(ClipboardData(text: card));
+                        }
+                        if (context.mounted) {
+                          showHaloToast(
+                            context,
+                            card != null
+                                ? l10n.settingsLinkCopied
+                                : l10n.supportDevCardOff,
+                          );
+                        }
+                      },
+                    ),
+                ] else
                   HaloRow(
                     icon: Icons.autorenew,
                     label: l10n.settingsResetMyInviteLink,

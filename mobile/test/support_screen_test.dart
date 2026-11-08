@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
+import 'package:kryfo/devices/device_state.dart' show linkedDevicesForTest;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/main.dart'
     show
         HaloEngine,
@@ -18,7 +20,8 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateContacts,
         AppStateDevchat,
-        AppStateRefresh;
+        AppStateRefresh,
+        linkedRoleForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
@@ -985,6 +988,87 @@ void main() {
       expect(find.text(l10n.settingsResetInviteLink), findsOneWidget);
       await t.tapAt(const Offset(10, 10));
       await _settle(t);
+      await devClose(t);
+    });
+  });
+
+  group('the developer card', () {
+    Future<void> settings(WidgetTester t) async {
+      await devOpen(t, const SettingsScreen());
+      final row = find.text(l10n.settingsResetMyInviteLink);
+      await t.scrollUntilVisible(
+        row,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await Scrollable.ensureVisible(t.element(row), alignment: 0.5);
+      await t.pump(const Duration(milliseconds: 500));
+    }
+
+    Finder card() => find.text(l10n.supportCopyDevCard);
+
+    tearDown(() {
+      lockState.inVault = false;
+      linkedRoleForTest = false;
+      linkedDevicesForTest = null;
+    });
+
+    testWidgets('shows on his phone, and copies nothing it cannot check', (
+      t,
+    ) async {
+      await _world();
+      await settings(t);
+      expect(card(), findsOneWidget);
+      // no signal store here: no card, and it says so
+      await t.tap(card());
+      await _settle(t);
+      expect(find.text(l10n.supportDevCardOff), findsOneWidget);
+      expect(find.text(l10n.settingsLinkCopied), findsNothing);
+      await t.pump(const Duration(seconds: 4));
+      await devClose(t);
+    });
+
+    testWidgets('none on anyone else\'s phone', (t) async {
+      await _world(dev: false);
+      await settings(t);
+      expect(card(), findsNothing);
+      await devClose(t);
+    });
+
+    testWidgets('none in his decoy', (t) async {
+      await _world();
+      final decoy = _Db(MemDb(), HaloContainer.decoy);
+      await devChatTables(decoy.mem, now: 1);
+      useDatabasesForTest(_db, Session(decoy));
+      await appState.refreshContacts();
+      await settings(t);
+      expect(card(), findsNothing);
+      await devClose(t);
+    });
+
+    testWidgets('none in a vault', (t) async {
+      await _world();
+      lockState.inVault = true;
+      await settings(t);
+      expect(find.text(l10n.supportResetPinned), findsOneWidget);
+      expect(card(), findsNothing);
+      await devClose(t);
+    });
+
+    testWidgets('none on a linked device', (t) async {
+      await _world();
+      linkedDevicesForTest = true;
+      linkedRoleForTest = true;
+      await devOpen(t, const SettingsScreen());
+      final why = find.text(l10n.settingsWhyKryfo);
+      await t.scrollUntilVisible(
+        why,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await t.pump(const Duration(milliseconds: 500));
+      expect(card(), findsNothing);
+      expect(find.text(l10n.settingsResetMyInviteLink), findsNothing);
       await devClose(t);
     });
   });

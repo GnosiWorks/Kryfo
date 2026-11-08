@@ -8546,6 +8546,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get supportMovedToInbox => 'Moved to inbox';
 
   @override
+  String get supportCopyDevCard => 'Copy my developer card';
+
+  @override
+  String get supportDevCardOff =>
+      'This card does not match the pinned one. Nothing was copied.';
+
+  @override
   String get settingsWriteToMarios => 'Написать Marios';
 
   @override

@@ -3045,6 +3045,8 @@ final _calls = <_Call>[
   ('supportMovedToChats', [], (l) => l.supportMovedToChats),
   ('supportMoveToInbox', [], (l) => l.supportMoveToInbox),
   ('supportMovedToInbox', [], (l) => l.supportMovedToInbox),
+  ('supportCopyDevCard', [], (l) => l.supportCopyDevCard),
+  ('supportDevCardOff', [], (l) => l.supportDevCardOff),
   ('pairCodeKeyNumber', [], (l) => l.pairCodeKeyNumber),
   ('contactCardScanToAdd', [], (l) => l.contactCardScanToAdd),
   (

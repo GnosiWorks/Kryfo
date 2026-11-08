@@ -13447,6 +13447,18 @@ abstract class AppLocalizations {
   /// **'Moved to inbox'**
   String get supportMovedToInbox;
 
+  /// screens/settings_screen.dart: a row under About: copies the card every install pins for the developer chat. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy my developer card'**
+  String get supportCopyDevCard;
+
+  /// screens/settings_screen.dart: a toast after supportCopyDevCard when the card could not be read or is not the pinned one. Only the developer's own phone shows it, in English.
+  ///
+  /// In en, this message translates to:
+  /// **'This card does not match the pinned one. Nothing was copied.'**
+  String get supportDevCardOff;
+
   /// screens/settings_screen.dart: opens the chat with the developer, and brings it back after a delete
   ///
   /// In en, this message translates to:
