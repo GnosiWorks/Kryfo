@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'app_icon.dart';
 import 'back_on_top.dart';
+import 'desktop/title_bar.dart';
 import 'l10n/app_localizations.dart';
 import 'lock_layer.dart';
 import 'theme.dart';
@@ -44,6 +45,7 @@ MaterialApp haloAppShell({
     // own caps
     builder: (ctx, child) {
       final mq = MediaQuery.of(ctx);
+      windowTitleDark(!HaloColors.isLight);
       // bar icons by theme, for screens without an app bar. read again on
       // every theme switch, as the whole app rebuilds then
       return AnnotatedRegion<SystemUiOverlayStyle>(

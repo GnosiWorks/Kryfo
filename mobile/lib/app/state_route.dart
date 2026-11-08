@@ -622,7 +622,11 @@ extension AppStateRoute on AppState {
     // a relay answering again after none did: the outbox goes now
     final was = _relaysAnswered;
     if (relays != null && relays.isNotEmpty) _relaysAnswered = answers;
-    if (answers && was == false) outboxRouteBack();
+    if (answers && was == false) {
+      outboxRouteBack();
+      // a removed device's last word that waited for a relay goes now
+      unawaited(_deviceSend?.relaysBack());
+    }
     if (_sendMode != 'balanced') {
       _relayDownSince = null;
       return;

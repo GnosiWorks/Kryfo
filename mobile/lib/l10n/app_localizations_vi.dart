@@ -10286,6 +10286,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Việc liên kết bị gián đoạn. Bắt đầu lại với một mã mới.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Máy tính này đã được liên kết. Hãy gỡ nó trong Thiết bị đã liên kết, rồi liên kết lại.';
+
+  @override
   String get scanLinkTitle => 'Quét mã của thiết bị';
 
   @override
@@ -10312,6 +10316,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get joinWaiting => 'Đang chờ điện thoại của bạn';
+
+  @override
+  String get joinPreparing => 'Đang chuẩn bị mã của bạn';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo đang kết nối. Mã của bạn hiện ra ngay khi máy tính này trực tuyến.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Lần khởi động đầu có thể mất một hai phút trong lúc Tor kết nối.';
+
+  @override
+  String get homeLinkedChatsComing =>
+      'Các cuộc trò chuyện vẫn đang được chuyển từ điện thoại của bạn.';
 
   @override
   String get joinCodeLife => 'Mã có hiệu lực mười phút.';
@@ -10343,9 +10362,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'Kiểm tra điện thoại đang trực tuyến và Kryfo đang mở, rồi thử một mã mới.';
-
-  @override
-  String get joinNewCode => 'Mã mới';
 
   @override
   String get devicesNewNotice => 'Đã liên kết thiết bị mới';
@@ -11757,7 +11773,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Danh tính riêng của nó và mọi cuộc trò chuyện trên đó bị xóa. Trò chuyện ẩn, phần ngụy trang và Ghi chú riêng cũng bị xóa. Các tệp bạn đã lưu vào thư mục của mình vẫn còn.';
+      'Danh tính riêng của nó, các cuộc trò chuyện và danh bạ trên máy tính này bị xóa. Trò chuyện ẩn, phần ngụy trang và Ghi chú riêng cũng bị xóa. Các tệp bạn đã lưu vào thư mục của mình vẫn còn.';
 
   @override
   String get deskLinkBackupRow => 'Sao lưu trước';
@@ -11772,6 +11788,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Xóa và liên kết';
+
+  @override
+  String get deskLinkReplace => 'Thay danh tính của máy tính này';
 
   @override
   String get deskLinkErasing => 'Đang xóa máy tính này';

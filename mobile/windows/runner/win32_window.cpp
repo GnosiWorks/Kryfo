@@ -288,7 +288,23 @@ void Win32Window::OnDestroy() {
   // No-op; provided for subclasses.
 }
 
+void Win32Window::SetDarkTitle(bool dark) {
+  app_dark_ = dark ? 1 : 0;
+  if (window_handle_ == nullptr) return;
+  UpdateTheme(window_handle_);
+  // the caption is drawn again with the new colours
+  SetWindowPos(window_handle_, nullptr, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE |
+                   SWP_FRAMECHANGED);
+}
+
 void Win32Window::UpdateTheme(HWND const window) {
+  if (app_dark_ >= 0) {
+    BOOL enable_dark_mode = app_dark_ == 1;
+    DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
+                          &enable_dark_mode, sizeof(enable_dark_mode));
+    return;
+  }
   DWORD light_mode;
   DWORD light_mode_size = sizeof(light_mode);
   LSTATUS result = RegGetValue(HKEY_CURRENT_USER, kGetPreferredBrightnessRegKey,

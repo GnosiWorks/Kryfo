@@ -12878,6 +12878,10 @@
   "@devicesLinkInterruptedLine": {
     "description": "screens/link_screens.dart: under devicesLinkStopped when the link ended for another reason than a no: the other side stopped, a step failed"
   },
+  "devicesLinkAlreadyLine": "This computer is linked already. Remove it in Linked devices, then link it again.",
+  "@devicesLinkAlreadyLine": {
+    "description": "phone link page: the computer is on the list already from a link that ended on its side (screens/link_screens.dart)"
+  },
   "scanLinkTitle": "Scan the device's code",
   "@scanLinkTitle": {
     "description": "screens/scan_screen.dart: the scanner title when the phone links a device"
@@ -12914,6 +12918,22 @@
   "@joinWaiting": {
     "description": "screens/link_screens.dart: the new device waits for the phone to scan"
   },
+  "joinPreparing": "Getting your code ready",
+  "@joinPreparing": {
+    "description": "desktop join page, while the code is not shown yet (screens/link_screens.dart)"
+  },
+  "joinPreparingLine": "Kryfo is connecting. Your code shows as soon as this computer is online.",
+  "@joinPreparingLine": {
+    "description": "desktop join page, under the waiting line before the code shows (screens/link_screens.dart)"
+  },
+  "joinPreparingSlow": "The first start can take a minute or two while Tor connects.",
+  "@joinPreparingSlow": {
+    "description": "desktop join page, the same line after twenty seconds (screens/link_screens.dart)"
+  },
+  "homeLinkedChatsComing": "Your chats are still coming from your phone.",
+  "@homeLinkedChatsComing": {
+    "description": "home card on a linked computer whose chats may still be on their way from its phone (screens/home_screen.dart)"
+  },
   "joinCodeLife": "The code works for ten minutes.",
   "@joinCodeLife": {
     "description": "screens/link_screens.dart: under joinWaiting"
@@ -12949,10 +12969,6 @@
   "joinUnreachedLine": "Check that your phone is online with Kryfo open, then try a new code.",
   "@joinUnreachedLine": {
     "description": "screens/link_screens.dart: under joinUnreached"
-  },
-  "joinNewCode": "New code",
-  "@joinNewCode": {
-    "description": "screens/link_screens.dart: button: show a fresh code"
   },
   "devicesNewNotice": "New device linked",
   "@devicesNewNotice": {
@@ -14759,7 +14775,7 @@
   "@deskLinkGoesTitle": {
     "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
   },
-  "deskLinkGoesLine": "Its own identity and every chat on it are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.",
+  "deskLinkGoesLine": "Its own identity, its chats and its contacts on this computer are removed. Hidden chats, the decoy and Note to self go too. Files you saved to your own folders stay.",
   "@deskLinkGoesLine": {
     "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
   },
@@ -14778,6 +14794,10 @@
   "deskLinkConfirmYes": "Erase and link",
   "@deskLinkConfirmYes": {
     "description": "desktop settings, link to a phone (screens/desk_link_screen.dart)"
+  },
+  "deskLinkReplace": "Replace this computer's identity",
+  "@deskLinkReplace": {
+    "description": "desktop settings, link to a phone: the button that starts the erase (screens/desk_link_screen.dart)"
   },
   "deskLinkErasing": "Erasing this computer",
   "@deskLinkErasing": {

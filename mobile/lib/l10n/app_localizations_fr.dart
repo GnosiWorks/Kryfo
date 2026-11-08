@@ -10405,6 +10405,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Quelque chose a interrompu l’association. Recommencez avec un nouveau code.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Cet ordinateur est déjà associé. Retirez-le dans Appareils associés, puis associez-le à nouveau.';
+
+  @override
   String get scanLinkTitle => 'Scanner le code de l’appareil';
 
   @override
@@ -10431,6 +10435,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get joinWaiting => 'En attente de votre téléphone';
+
+  @override
+  String get joinPreparing => 'Préparation de votre code';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo se connecte. Votre code s’affiche dès que cet ordinateur est en ligne.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Le premier démarrage peut prendre une ou deux minutes, le temps que Tor se connecte.';
+
+  @override
+  String get homeLinkedChatsComing =>
+      'Vos discussions arrivent encore depuis votre téléphone.';
 
   @override
   String get joinCodeLife => 'Le code reste valable dix minutes.';
@@ -10462,9 +10481,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'Vérifiez que votre téléphone est en ligne avec Kryfo ouvert, puis essayez un nouveau code.';
-
-  @override
-  String get joinNewCode => 'Nouveau code';
 
   @override
   String get devicesNewNotice => 'Nouvel appareil associé';
@@ -11899,7 +11915,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Sa propre identité et toutes ses discussions sont supprimées. Les discussions masquées, le leurre et Note pour moi partent aussi. Les fichiers enregistrés dans vos propres dossiers restent.';
+      'Sa propre identité, ses discussions et ses contacts sur cet ordinateur sont supprimés. Les discussions masquées, le leurre et Note pour moi partent aussi. Les fichiers enregistrés dans vos propres dossiers restent.';
 
   @override
   String get deskLinkBackupRow => 'Sauvegarder d’abord';
@@ -11914,6 +11930,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Effacer et associer';
+
+  @override
+  String get deskLinkReplace => 'Remplacer l’identité de cet ordinateur';
 
   @override
   String get deskLinkErasing => 'Effacement de cet ordinateur';

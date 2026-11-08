@@ -182,7 +182,7 @@ Future<void> _openLink(WidgetTester t) async {
 }
 
 Future<void> _typeWord(WidgetTester t, String word) async {
-  await t.tap(find.text(l10n.commonContinue));
+  await t.tap(find.text(l10n.deskLinkReplace));
   await _settle(t);
   expect(find.text(l10n.deskLinkConfirmLine), findsOneWidget);
   await t.enterText(find.byType(TextField).last, word);
@@ -449,7 +449,7 @@ void main() {
       final erases = _erases();
       await _openLink(t);
       // the sheet closed
-      await t.tap(find.text(l10n.commonContinue));
+      await t.tap(find.text(l10n.deskLinkReplace));
       await _settle(t);
       await t.tapAt(const Offset(640, 40));
       await _settle(t);
@@ -527,7 +527,7 @@ void main() {
         const LinkStage(LinkStep.failed, end: LinkEnd.interrupted),
       );
       expect(find.text(l10n.devicesLinkStopped), findsOneWidget);
-      expect(find.text(l10n.joinNewCode), findsOneWidget);
+      expect(find.text(l10n.commonTryAgain), findsOneWidget);
       await t.tap(find.byTooltip(l10n.commonBack).first);
       await _settle(t);
       expect(find.byType(JoinScreen), findsNothing);

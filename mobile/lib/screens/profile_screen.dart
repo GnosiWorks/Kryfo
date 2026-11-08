@@ -11,6 +11,7 @@ import '../main.dart'
     show
         appState,
         linkedRole,
+        ownShownId,
         session,
         showAddContact,
         AppStatePhotos,
@@ -140,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final id = appState.sessionId;
+    final id = ownShownId;
     final hasBadge = _tier != SupporterTier.none;
 
     return Scaffold(
@@ -408,6 +409,9 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // the face, on a soft amber glow, and the name under it
   Widget _head(String id, bool hasBadge) {
+    // the photo book keeps my photo under the session's own id, which on a
+    // linked computer is not the name it shows
+    final photoId = appState.sessionId;
     return Column(
       children: [
         ScaleTransition(
@@ -418,7 +422,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: PressScale(
             label: l10n.photoYourPhoto,
             scale: 0.95,
-            onTap: () => _faceTapped(id),
+            onTap: () => _faceTapped(photoId),
             child: SizedBox(
               width: 150,
               height: 132,
@@ -448,7 +452,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ),
                     child: KryfoAvatar(
-                      seed: id.isEmpty ? 'kryfo' : id,
+                      seed: photoId.isEmpty ? 'kryfo' : photoId,
                       size: 96,
                       choice: appState.myAvatar,
                     ),

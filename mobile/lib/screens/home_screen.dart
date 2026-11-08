@@ -597,6 +597,7 @@ class _ChatsTab extends StatelessWidget {
           const _ComputerBackupCard(),
           if (kLinkedDevicesOn) const _LinkNoticeCard(),
           if (kLinkedDevicesOn) const _HistoryCopyCard(),
+          if (kLinkedDevicesOn) const _LinkedComingCard(),
           StaggerIn(
             index: 1,
             child: _QuickTiles(
@@ -1045,14 +1046,16 @@ class _HomeCard extends StatelessWidget {
                             ),
                           ),
                   ),
-                  const SizedBox(height: 12),
-                  // the answers flow onto a second line in longer languages
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: actions,
-                  ),
+                  if (actions.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    // the answers flow onto a second line in longer languages
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: actions,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1106,6 +1109,56 @@ class _LinkNoticeCard extends StatelessWidget {
       },
     );
   }
+}
+
+// a linked computer whose chats may still be on their way from its phone:
+// a copy not begun, or a phone not heard for a day. it never looks like a
+// home of its own meanwhile
+class _LinkedComingCard extends StatefulWidget {
+  const _LinkedComingCard();
+  @override
+  State<_LinkedComingCard> createState() => _LinkedComingCardState();
+}
+
+class _LinkedComingCardState extends State<_LinkedComingCard> {
+  bool _show = false;
+  Timer? _every;
+  late final Listenable _moves = Listenable.merge([
+    historyCopyShown,
+    lockState,
+  ]);
+
+  Future<void> _check() async {
+    final v = await linkedChatsComing();
+    if (mounted && v != _show) setState(() => _show = v);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _moves.addListener(_check);
+    _every = Timer.periodic(const Duration(minutes: 1), (_) => _check());
+    _check();
+  }
+
+  @override
+  void dispose() {
+    _moves.removeListener(_check);
+    _every?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => _HomeCard(
+    show: _show,
+    id: 'linked-coming',
+    tint: HaloColors.amber,
+    wash: true,
+    title: l10n.settingsLinkedToYourPhone,
+    line: l10n.homeLinkedChatsComing,
+    lineColor: HaloColors.text,
+    actions: const [],
+  );
 }
 
 // a history copy under way, or one that ended and has not been seen: said
@@ -1578,7 +1631,11 @@ class _ComputerBackupCard extends StatelessWidget {
       builder: (context, _) {
         final decoy = lockState.inDecoy;
         return _HomeCard(
-          show: !lockState.inVault && lock.backupCardDue(decoy: decoy),
+          // a linked computer keeps no backup: its phone has every chat
+          show:
+              !lockState.inVault &&
+              !linkedRole &&
+              lock.backupCardDue(decoy: decoy),
           id: 'computer-backup',
           tint: HaloColors.amber,
           title: l10n.desktopBackupCardTitle,

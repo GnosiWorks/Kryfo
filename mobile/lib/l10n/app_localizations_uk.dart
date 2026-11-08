@@ -10470,6 +10470,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Пов’язування перервалося. Почніть знову з новим кодом.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Цей комп’ютер уже пов’язано. Видаліть його в розділі «Пов’язані пристрої», потім пов’яжіть знову.';
+
+  @override
   String get scanLinkTitle => 'Сканувати код пристрою';
 
   @override
@@ -10496,6 +10500,20 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get joinWaiting => 'Чекаємо на ваш телефон';
+
+  @override
+  String get joinPreparing => 'Готуємо ваш код';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo підключається. Код з’явиться, щойно цей комп’ютер буде в мережі.';
+
+  @override
+  String get joinPreparingSlow =>
+      'Перший запуск може тривати хвилину-дві, поки підключається Tor.';
+
+  @override
+  String get homeLinkedChatsComing => 'Ваші чати ще надходять із телефона.';
 
   @override
   String get joinCodeLife => 'Код діє десять хвилин.';
@@ -10527,9 +10545,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'Перевірте, що телефон у мережі й Kryfo відкритий, і спробуйте новий код.';
-
-  @override
-  String get joinNewCode => 'Новий код';
 
   @override
   String get devicesNewNotice => 'Пов’язано новий пристрій';
@@ -11957,7 +11972,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Його власну ідентичність і всі чати на ньому буде видалено. Приховані чати, приманка й Нотатки для себе теж зникнуть. Файли, збережені у ваших власних теках, лишаться.';
+      'Його власну ідентичність, чати й контакти на цьому комп’ютері буде видалено. Приховані чати, приманка й Нотатки для себе теж зникнуть. Файли, збережені у ваших власних теках, лишаться.';
 
   @override
   String get deskLinkBackupRow => 'Спершу резервна копія';
@@ -11972,6 +11987,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Стерти й пов’язати';
+
+  @override
+  String get deskLinkReplace => 'Замінити ідентичність цього комп’ютера';
 
   @override
   String get deskLinkErasing => 'Комп’ютер стирається';

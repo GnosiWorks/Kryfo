@@ -10330,6 +10330,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bağlama yarıda kesildi. Yeni bir kodla baştan başla.';
 
   @override
+  String get devicesLinkAlreadyLine =>
+      'Bu bilgisayar zaten bağlı. Bağlı cihazlar’dan kaldır, sonra yeniden bağla.';
+
+  @override
   String get scanLinkTitle => 'Cihazın kodunu tara';
 
   @override
@@ -10356,6 +10360,20 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get joinWaiting => 'Telefonun bekleniyor';
+
+  @override
+  String get joinPreparing => 'Kodun hazırlanıyor';
+
+  @override
+  String get joinPreparingLine =>
+      'Kryfo bağlanıyor. Bu bilgisayar çevrimiçi olur olmaz kodun görünür.';
+
+  @override
+  String get joinPreparingSlow =>
+      'İlk açılış, Tor bağlanırken bir iki dakika sürebilir.';
+
+  @override
+  String get homeLinkedChatsComing => 'Sohbetlerin hâlâ telefonundan geliyor.';
 
   @override
   String get joinCodeLife => 'Kod on dakika geçerli.';
@@ -10387,9 +10405,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get joinUnreachedLine =>
       'Telefonunun çevrimiçi olduğunu ve Kryfo’nun açık olduğunu kontrol et, sonra yeni bir kod dene.';
-
-  @override
-  String get joinNewCode => 'Yeni kod';
 
   @override
   String get devicesNewNotice => 'Yeni cihaz bağlandı';
@@ -11797,7 +11812,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deskLinkGoesLine =>
-      'Kendi kimliği ve üzerindeki her sohbet kaldırılır. Gizli sohbetler, yem ve Kendime not da gider. Kendi klasörlerine kaydettiğin dosyalar kalır.';
+      'Bu bilgisayardaki kendi kimliği, sohbetleri ve kişileri kaldırılır. Gizli sohbetler, yem ve Kendime not da gider. Kendi klasörlerine kaydettiğin dosyalar kalır.';
 
   @override
   String get deskLinkBackupRow => 'Önce yedekle';
@@ -11812,6 +11827,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deskLinkConfirmYes => 'Sil ve bağla';
+
+  @override
+  String get deskLinkReplace => 'Bu bilgisayarın kimliğini değiştir';
 
   @override
   String get deskLinkErasing => 'Bu bilgisayar siliniyor';

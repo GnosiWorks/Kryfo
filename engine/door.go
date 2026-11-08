@@ -347,6 +347,12 @@ func sendTo(t *tor.Tor, onion, line string) error {
 			}
 			return nil
 		}
+		// a line queued first on a fresh stream to an older door can shut
+		// it before its ack is counted, so the door is not marked yet: once
+		// more on a new stream
+		if fresh && try == 0 && errors.As(err, &shut) && ctx.Err() == nil {
+			continue
+		}
 		if fresh || try > 0 {
 			return err
 		}

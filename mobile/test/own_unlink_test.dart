@@ -2283,6 +2283,139 @@ void main() {
     expect(await linkedStandingForTest(), LinkedEnd.removed);
   });
 
+  test('a removal whose phone has no relay for hours is tried on, goes once '
+      'one takes it, and the computer that gets it erases', () async {
+    if (skip()) return;
+    final lib = shim!;
+    final w = await phone();
+    final anaHex = devHex(w.ana.identity.public);
+    final shimPath = KryfoSignal.loadedFrom!;
+    Future<void> loadOn(Database db) async => DeviceState(
+      DeviceEngine(),
+    ).load(db, await devMineOf(db, lib), shimPath: shimPath);
+
+    final phoneList = await currentList(w);
+    // the computer's own container, placed as a link places it
+    final deskHome = HaloDb(HaloContainer.decoy);
+    opened.add(deskHome);
+    final deskDb = await deskHome.open();
+    await putMainIdentity(deskDb, w.deskKp.privateKey.serialize());
+    final deskState = DeviceState(DeviceEngine());
+    await deskState.load(deskDb, [
+      (
+        ident: kMainIdent,
+        identity: w.ana.identity.public,
+        key: w.desk.identity.public,
+        dev: 4,
+      ),
+    ], shimPath: shimPath);
+    // the rows the engine gives for my phone's list, written by the join
+    List<dynamic> linkRows = const [];
+    try {
+      await deskDb.transaction((t) async {
+        final j = await deskState.session(t, 'own_set', {
+          'ident': kMainIdent,
+          'identity': anaHex,
+          'list': base64Encode(phoneList),
+        }, SessionRemote.opened(w.ana.identity.public));
+        linkRows = j['rows'] as List;
+        throw StateError('kept for the join');
+      });
+    } on StateError {
+      // rolled back: the join writes them
+    }
+    expect(linkRows, isNotEmpty);
+    await joinedRows(
+      deskDb,
+      identity: w.ana.identity.public,
+      device: 4,
+      rows: linkRows,
+      stream: Uint8List(32),
+    );
+    useDatabasesForTest(deskHome, Session(deskHome));
+    linkedRoleForTest = true;
+    final lockDir = Directory('${docs.path}/lock')..createSync();
+    final keys = <String, String>{};
+    linkedLockForTest = LinkedLock(
+      dir: () async => lockDir.path,
+      readKey: (k) async => keys[k],
+      writeKey: (k, v) async => keys[k] = v,
+    );
+    await linkedLock.start();
+    var wipes = 0;
+    linkedWipeForTest = () async => wipes++;
+    linkedEndResetForTest();
+    addTearDown(() {
+      linkedRoleForTest = false;
+      linkedWipeForTest = null;
+      linkedLockForTest = null;
+      linkedEndResetForTest();
+    });
+    expect(await linkedStandingForTest(), isNull);
+    // a restart and a tick: nothing ends
+    await bootDevices();
+    await linkedTickForTest();
+    expect(wipes, 0);
+    expect(deviceUnlinked.value, isNull);
+
+    // the phone's relays fail for six hours while it removes the computer
+    await loadOn(w.db);
+    w.wire.up = false;
+    final t0 = w.clock;
+    expect(await w.unlink.remove(['u4'], why: kGoneRemoved), ['u4']);
+    int tries() => w.wire.sent.where((s) => s.arg.contains('/4/1.')).length;
+    final early = tries();
+    while (w.clock - t0 < const Duration(hours: 6).inMilliseconds) {
+      w.clock += const Duration(minutes: 5).inMilliseconds;
+      await w.send.pump();
+    }
+    // tried again and again, further apart, kept, never let go
+    expect(tries(), greaterThan(early + 5));
+    expect(await w.count('SELECT COUNT(*) FROM dev_farewell'), 1);
+    // its next try is hours away now
+    final next = (await w.db.query('dev_farewell')).single['next_at'] as int;
+    expect(
+      next - w.clock,
+      greaterThan(const Duration(hours: 1).inMilliseconds),
+    );
+    // a relay answers again: the word goes at once on both addresses and
+    // is taken, no wait
+    w.wire.up = true;
+    final openersBefore = w.wire.openers.length;
+    await w.send.relaysBack();
+    expect(w.wire.openers.length, greaterThan(openersBefore));
+    // taken: the usual copies after, not the outage's waits
+    final row = (await w.db.query('dev_farewell')).single;
+    expect(row['tries'], 0);
+    final taken = w.wire.sent.lastWhere((s) => s.arg.contains('/4/1.'));
+    expect(taken.arg, w.wire.openers.last);
+
+    // the computer, online again, gets that copy and erases
+    await loadOn(deskDb);
+    final recv = DeviceReceive(
+      state: deskState,
+      db: () async => deskDb,
+      sessions: (_) async => w.deskDs,
+      send: DeviceSend(
+        state: deskState,
+        db: () async => deskDb,
+        sessions: (_) async => w.deskDs,
+        wire: _Wire(),
+      ),
+      listener: _Listen(),
+      open: deviceOpenAt,
+      me: (_) async =>
+          (ident: kMainIdent, identity: w.ana.identity.public, device: 4),
+      contact: (_, _) async => null,
+      phone: (_, _, _) async => false,
+      sign: (_, _) async => throw StateError('a linked device never signs'),
+    );
+    recv.ownRemoved = deviceReceive!.ownRemoved;
+    await recv.receive('${anaHex.substring(2)}/1/4/opn', taken.cipher);
+    expect(wipes, 1);
+    expect(deviceUnlinked.value, LinkedEnd.removed);
+  });
+
   test('a linked device counts its time in touch with a relay without a '
       'word from its phone; 30 days of it end it, a word starts it again, '
       'time offline counts nothing', () async {
