@@ -50,6 +50,7 @@ void _bootOwnSync(DeviceState ds, DeviceSend send, DeviceReceive recv) {
         limit: 1,
       );
       if (r.isNotEmpty) _ownPhoneId = r.first['v'] as String?;
+      if (linkedRole) await _ownDevInboxLoad(await live.open());
       // a linked device that never heard my phone's name asks for it
       if (linkedRole && _ownPhoneId == null) unawaited(_ownBeat());
       // whether the vault keeps what went too, before its first delete
@@ -176,15 +177,20 @@ Future<bool> _ownChatKnown(OwnChat chat, {bool messages = false}) async {
   if (isOwnNotes(chat)) return messages;
   if (isDevId(chat.id)) return false;
   if (app._routeOf(chat.id, null) != RouteTo.everyday) return false;
-  // a chat deleted or forgotten here (accepted 0) shares nothing more
+  // a chat deleted or forgotten here (accepted 0) shares nothing more,
+  // unless it waits in the developer's inbox for his first answer
   final c = await db.query(
     'contacts',
-    columns: ['shots_on'],
-    where: 'halo_id = ? AND accepted = 1',
+    columns: ['shots_on', 'accepted'],
+    where: 'halo_id = ?',
     whereArgs: [chat.id],
     limit: 1,
   );
-  return c.isNotEmpty && !(messages && c.first['shots_on'] == 1);
+  if (c.isEmpty) return false;
+  if (c.first['accepted'] != 1 && await app._inboxPlace(chat.id) == null) {
+    return false;
+  }
+  return !(messages && c.first['shots_on'] == 1);
 }
 
 @visibleForTesting
@@ -325,10 +331,16 @@ class _AppOwn implements OwnApply {
   }
 
   @override
-  Future<bool> forward(int ident, String sender, String frame, int came) async {
+  Future<bool> forward(
+    int ident,
+    String sender,
+    String frame,
+    int came, {
+    Map<String, dynamic>? inbox,
+  }) async {
     final app = _madeApp;
     if (app == null) return false;
-    return app._fileOwnForward(sender, frame, came);
+    return app._fileOwnForward(sender, frame, came, inbox: inbox);
   }
 
   @override
@@ -876,15 +888,32 @@ extension AppStateOwn on AppState {
 
   // a contact's frame my phone took, that could not reach this device: filed
   // as theirs, its tick already went from the phone
-  Future<bool> _fileOwnForward(String sender, String frame, int came) async {
+  Future<bool> _fileOwnForward(
+    String sender,
+    String frame,
+    int came, {
+    Map<String, dynamic>? inbox,
+  }) async {
     if (!linkedDevicesOn || !linkedRole) return false;
     final env = unwrapMessage(frame);
     if (env.typing) return false;
+    // the inbox's own: filed as on the phone before it lands, and someone
+    // new here gets a row to land in, filled by the phone's next rows
+    if (env.groupId == null && inbox != null) {
+      await _inboxTake(sender, inbox);
+      if (await _inboxPlace(sender) != null) {
+        await live.upsertContactStub(
+          sender,
+          env.senderOnion ?? '',
+          env.senderXPub ?? '',
+        );
+      }
+    }
     // what a chat with screenshots blocked says stays on the phone
     if (env.groupId != null) {
       if (!await _ownChatShared((id: env.groupId!, group: true))) return false;
     } else if (!await _ownChatShared((id: sender, group: false)) ||
-        !await live.isAccepted(sender)) {
+        (!await live.isAccepted(sender) && await _inboxPlace(sender) == null)) {
       // a chat forgotten here (a hide on the phone) takes nothing
       return false;
     }
@@ -936,8 +965,14 @@ extension AppStateOwn on AppState {
     if (deviceWordsOnly(wire)) return;
     final plain = withoutDeviceWords(wire);
     if (await live.isBlocked(sender)) return;
-    // a request stays on the phone until it is accepted there
-    if (env.groupId == null && !await live.isAccepted(sender)) return;
+    // a request stays on the phone until it is accepted there, unless it
+    // waits in the developer's inbox
+    final inbox = env.groupId == null ? await _inboxPlace(sender) : null;
+    if (env.groupId == null &&
+        inbox == null &&
+        !await live.isAccepted(sender)) {
+      return;
+    }
     final chat = env.groupId != null
         ? (id: env.groupId!, group: true)
         : (id: sender, group: false);
@@ -949,7 +984,13 @@ extension AppStateOwn on AppState {
         await _ownHold(chat, sender, plain);
         return;
       }
-      await own.forward(identOfPeer(sender), sender, plain, _clockMs());
+      await own.forward(
+        identOfPeer(sender),
+        sender,
+        plain,
+        _clockMs(),
+        inbox: inbox,
+      );
     } catch (e) {
       dlog('own: a frame not passed on (${e.runtimeType})');
     }
@@ -989,15 +1030,19 @@ extension AppStateOwn on AppState {
         final sender = r['sender'] as String;
         final chat = ownChatOf(r['chat']);
         try {
+          final inbox = chat == null || chat.group
+              ? null
+              : await _inboxPlace(sender);
           if (chat != null &&
               !await live.isBlocked(sender) &&
-              (chat.group || await live.isAccepted(sender)) &&
+              (chat.group || inbox != null || await live.isAccepted(sender)) &&
               await _ownChatShared(chat)) {
             await own.forward(
               identOfPeer(sender),
               sender,
               r['frame'] as String,
               _clockMs(),
+              inbox: inbox,
             );
           }
         } catch (e) {
@@ -1141,7 +1186,12 @@ extension AppStateOwn on AppState {
         return true;
       case 'contact':
         if (chat.group) return false;
-        return _ownContact(chat.id, a['r'], shared: known);
+        return _ownContact(
+          chat.id,
+          a['r'],
+          shared: known,
+          inbox: a.containsKey('sp') ? a['sp'] : null,
+        );
       case 'gone':
         if (chat.group) return false;
         return ownGoneMadeAt(_ownMadeAt(a), () => _ownGone(chat.id));
@@ -1204,7 +1254,12 @@ extension AppStateOwn on AppState {
   }
 
   // a contact's rows: my phone's whole row, or what a linked device set
-  Future<bool> _ownContact(String id, Object? r, {required bool shared}) async {
+  Future<bool> _ownContact(
+    String id,
+    Object? r, {
+    required bool shared,
+    Object? inbox,
+  }) async {
     if (r is! Map) return false;
     final row = r.cast<String, dynamic>();
     final d = await live.open();
@@ -1228,6 +1283,8 @@ extension AppStateOwn on AppState {
       if ((b == 0 || b == 1) && (b == 1) != await live.isBlocked(id)) {
         await live.setBlocked(id, b == 1);
       }
+      // a chat moved in the inbox there moves here
+      if (inbox != null) await _inboxFromDevice(id, inbox);
       await refreshContacts();
       return true;
     }
@@ -1257,6 +1314,8 @@ extension AppStateOwn on AppState {
       await d.update('contacts', put, where: 'halo_id = ?', whereArgs: [id]);
       await _ownPhoneBlock(id, b);
     }
+    // its place in the developer's inbox, as the phone has it
+    await _inboxTake(id, inbox);
     await _ownMarkPass((id: id, group: false));
     await refreshContacts();
     // the device state learns a contact new here
@@ -1381,6 +1440,8 @@ extension AppStateOwn on AppState {
     if (av is int || av == null) await setMyAvatar(av as int?);
     final bg = a['bg'];
     if (bg is Map) await _ownBadgeTake(bg);
+    // the developer's phone: its inbox shows here
+    await _ownDevInboxPut(d, a['dv']);
     await _ownMarkPass(null);
     return true;
   }
@@ -1420,6 +1481,7 @@ extension AppStateOwn on AppState {
         'h': myId,
         'a': _myAvatar,
         'bg': await _ownBadge(),
+        if (devMode) 'dv': true,
       };
       final sent = await own.op(kMainIdent, 'profile', null, me);
       await _ownKept('me', ownDigest(me));
@@ -1588,10 +1650,14 @@ extension AppStateOwn on AppState {
             for (final c in kHistoryContactCols)
               if (ccols.contains(c) && !_kOwnNotTold.contains(c)) c,
           ];
+    // the developer's inbox: a chat waiting for his first answer too
+    final inbox = devInbox && await _inboxTable(d);
     for (final r in await d.query(
       'contacts',
       columns: {'halo_id', ...cols}.toList(),
-      where: 'accepted = 1',
+      where: inbox
+          ? 'accepted = 1 OR halo_id IN (SELECT halo_id FROM support_chats)'
+          : 'accepted = 1',
     )) {
       final id = r['halo_id'] as String;
       final chat = (id: id, group: false);
@@ -1600,7 +1666,10 @@ extension AppStateOwn on AppState {
         for (final c in cols)
           c: r[c] is List<int> ? base64Encode(r[c] as List<int>) : r[c],
       };
-      out[ownChatName(chat)] = (digest: ownDigest(row), op: {'r': row});
+      final sp = await _inboxPlace(id);
+      out[ownChatName(chat)] = sp == null
+          ? (digest: ownDigest(row), op: {'r': row})
+          : (digest: ownDigest({'r': row, 'sp': sp}), op: {'r': row, 'sp': sp});
     }
     if (!linkedRole) {
       final gcols = {
@@ -1634,6 +1703,7 @@ extension AppStateOwn on AppState {
         'h': myId,
         'a': _myAvatar,
         'bg': await _ownBadge(),
+        if (devMode) 'dv': true,
       };
       out['me'] = (digest: ownDigest(me), op: me);
     }

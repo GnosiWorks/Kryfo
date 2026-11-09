@@ -1408,7 +1408,7 @@ extension AppStateArrivals on AppState {
       // his phone: a contact who wrote through the developer chat keeps
       // their chat, and the message says how it came
       viaDev:
-          _devIdentity &&
+          (_devIdentity || devInboxHere) &&
           to == RouteTo.everyday &&
           viaDevChat(
             env,
@@ -1606,7 +1606,17 @@ extension AppStateArrivals on AppState {
     UnwrappedMessage env,
     HaloDb db,
   ) async {
-    if (!_devIdentity || !identical(db, live)) return (on: false, fresh: false);
+    if (!identical(db, live)) return (on: false, fresh: false);
+    // a linked device of his phone files nothing: the phone said where
+    if (devInboxHere) {
+      try {
+        return (on: await db.support.has(sender), fresh: false);
+      } catch (e) {
+        dlog('support: not read (${e.runtimeType})');
+        return (on: false, fresh: false);
+      }
+    }
+    if (!_devIdentity) return (on: false, fresh: false);
     try {
       return await fileSupport(
         db.support,

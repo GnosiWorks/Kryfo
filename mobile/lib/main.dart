@@ -249,6 +249,7 @@ part 'app/database_rooms.dart';
 part 'app/database_search.dart';
 part 'app/dev_screen.dart';
 part 'app/devices_app.dart';
+part 'app/devices_inbox_app.dart';
 part 'app/devices_own_app.dart';
 part 'app/devices_receive_app.dart';
 part 'app/devices_send_app.dart';

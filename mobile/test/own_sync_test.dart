@@ -129,7 +129,13 @@ class _Apply implements OwnApply {
   }
 
   @override
-  Future<bool> forward(int ident, String sender, String frame, int came) async {
+  Future<bool> forward(
+    int ident,
+    String sender,
+    String frame,
+    int came, {
+    Map<String, dynamic>? inbox,
+  }) async {
     forwards.add((sender, frame, came));
     return true;
   }

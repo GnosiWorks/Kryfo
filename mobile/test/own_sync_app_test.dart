@@ -124,7 +124,13 @@ class _Told extends OwnSync {
   }
 
   @override
-  Future<bool> forward(int ident, String sender, String frame, int came) async {
+  Future<bool> forward(
+    int ident,
+    String sender,
+    String frame,
+    int came, {
+    Map<String, Object?>? inbox,
+  }) async {
     forwards.add((sender, frame));
     this.came.add(came);
     return true;

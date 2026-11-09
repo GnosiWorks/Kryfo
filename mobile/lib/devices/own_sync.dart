@@ -246,8 +246,15 @@ abstract class OwnApply {
     List<String> notReached,
   });
 
-  /// a frame [sender] sent my phone, that could not reach my devices
-  Future<bool> forward(int ident, String sender, String frame, int came);
+  /// a frame [sender] sent my phone, that could not reach my devices.
+  /// [inbox]: the chat's place in the developer's inbox there
+  Future<bool> forward(
+    int ident,
+    String sender,
+    String frame,
+    int came, {
+    Map<String, dynamic>? inbox,
+  });
 
   /// a state op of another device of mine
   Future<bool> op(
@@ -369,8 +376,15 @@ class OwnSync {
   }
 
   /// [frame] from [sender], which my phone took at [came], to each of my
-  /// linked devices: phone only
-  Future<bool> forward(int ident, String sender, String frame, int came) async {
+  /// linked devices: phone only. [inbox]: its chat's place in the
+  /// developer's inbox, so a device files it before it lands
+  Future<bool> forward(
+    int ident,
+    String sender,
+    String frame,
+    int came, {
+    Map<String, Object?>? inbox,
+  }) async {
     if (!linkedDevicesOn || frame.length > kOwnFrameMost) return false;
     final m = await me(ident);
     if (m == null || m.device != 1) return false;
@@ -381,7 +395,7 @@ class OwnSync {
       to,
       '$kEnvelopePrefix${jsonEncode({
         'u': 'of:${_hash('$sender\n$frame')}',
-        'of': {'h': sender, 't': came, 'f': frame},
+        'of': {'h': sender, 't': came, 'f': frame, 'sp': ?inbox},
       })}',
     );
     return true;
@@ -505,7 +519,14 @@ class OwnSync {
       }
       final now = _clock();
       final came = t is int && t > 0 && t <= now ? t : now;
-      return apply.forward(m.ident, h, f, came);
+      final sp = of['sp'];
+      return apply.forward(
+        m.ident,
+        h,
+        f,
+        came,
+        inbox: sp is Map ? sp.cast<String, dynamic>() : null,
+      );
     }
     final os = j['os'];
     if (os is Map && u.startsWith('os:')) {

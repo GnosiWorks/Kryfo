@@ -59,7 +59,7 @@ class _RootShellState extends State<RootShell> {
       contacts: appState.contacts,
       devRow: appState.devRow,
       pendingCount: appState.pendingCount,
-      support: appState.devMode ? appState.supportWaiting : null,
+      support: appState.devInbox ? appState.supportWaiting : null,
       groups: appState.groups
           .map(
             (g) => GroupSummary(
