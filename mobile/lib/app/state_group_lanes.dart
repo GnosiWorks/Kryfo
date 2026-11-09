@@ -442,7 +442,7 @@ extension AppStateGroupLanes on AppState {
       if (waiting.contains(m) && !await _ctlLane(d, groupId, m, force: true)) {
         return false;
       }
-      return _sendGroupEnvelope(groupId, m, wrapped);
+      return _sendGroupEnvelope(groupId, m, wrapped, message: true);
     }
 
     final ok = await Future.wait([for (final m in to) one(m)]);

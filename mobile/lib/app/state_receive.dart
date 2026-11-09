@@ -11,8 +11,49 @@ extension AppStateReceive on AppState {
   void chatFirst(String? haloId) {
     // the dev chat's lane is its own, and nothing of it goes before it starts
     if (haloId != null && isDevId(haloId)) haloId = null;
+    // the dev chat asks nothing of the engine before it starts: only a
+    // chat told before is let go
+    if (haloId != null || _doorChat != null) unawaited(_tellDoor(haloId));
     _firstChat = haloId;
     unawaited(_tellFirst());
+  }
+
+  // the open chat's onion to the door's queue: its dials go first
+  Future<void> _tellDoor(String? haloId) async {
+    _doorChat = haloId;
+    var onion = '';
+    if (haloId != null) {
+      try {
+        onion = (await _reach(haloId))?.onion ?? '';
+      } catch (e) {
+        dlog('door: no row (${e.runtimeType})');
+      }
+    }
+    // another chat opened while this read
+    if (_doorChat != haloId) return;
+    try {
+      engine.doorFocus(onion);
+    } catch (e) {
+      dlog('door: not told (${e.runtimeType})');
+    }
+  }
+
+  // a frame from them: their onion is up again, so its dials wait no
+  // longer. at most once a minute per contact
+  void _doorAwakeFor(String id) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final last = _doorAwakeAt[id];
+    if (last != null && now - last >= 0 && now - last < 60000) return;
+    if (_doorAwakeAt.length > 2000) _doorAwakeAt.clear();
+    _doorAwakeAt[id] = now;
+    unawaited(() async {
+      try {
+        final onion = (await _reach(id))?.onion ?? '';
+        if (onion.isNotEmpty) engine.doorAwake(onion);
+      } catch (e) {
+        dlog('door: not woken (${e.runtimeType})');
+      }
+    }());
   }
 
   // the key from the contact's row, else from what is listened on. told

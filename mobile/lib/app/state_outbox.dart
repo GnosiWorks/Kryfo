@@ -835,7 +835,7 @@ extension AppStateOutbox on AppState {
         }
         return;
       }
-      final ok = await _sendOneEnvelope(peer, wrapped);
+      final ok = await _sendOneEnvelope(peer, wrapped, message: true);
       if (ok) {
         dlog('outbox: redelivered $uid');
         await d.markSent(uid);
@@ -935,7 +935,12 @@ extension AppStateOutbox on AppState {
             sender: _mySender(),
             badge: await sharedBadge(),
           );
-      final ok = await _sendOneEnvelope(peer, wrapped, pairOnly: pairOnly);
+      final ok = await _sendOneEnvelope(
+        peer,
+        wrapped,
+        pairOnly: pairOnly,
+        message: true,
+      );
       dlog('openers: $uid ${ok ? "went again" : "did not go again"}');
     } catch (e) {
       dlog('openers: $uid did not go again ($e)');
@@ -1167,6 +1172,8 @@ extension AppStateOutbox on AppState {
     // a seal that waits on a key check or on their card throws, rather
     // than reading as a failed send
     bool holdThrows = false,
+    // a message, new or unsent: its door dial goes ahead of the rest
+    bool message = false,
   }) async {
     // one attempt. the engine calls carry their own timeouts (onion 15s,
     // relay 60s), so retrying here only stacks them. a failed send is marked
@@ -1250,7 +1257,7 @@ extension AppStateOutbox on AppState {
         final rs = await Future.wait([
           if (!backPaired && onion.isNotEmpty)
             Future(
-              () => _io.onionSend(onion, cipher),
+              () => _io.onionSend(onion, cipher, rest: !message),
             ).catchError((Object _) => 'err'),
           Future(
             () => _io.relaySend(ident, xpub, cipher),
@@ -1305,7 +1312,7 @@ extension AppStateOutbox on AppState {
       }
 
       unawaited(
-        Future(() => _io.onionSend(onion, cipher))
+        Future(() => _io.onionSend(onion, cipher, rest: !message))
             .then((r) => settle('onion', r))
             .catchError((_) => settle('onion', 'err')),
       );

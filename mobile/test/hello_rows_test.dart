@@ -209,7 +209,11 @@ class _Io extends AppIo {
   @override
   Future<String> relaySend(int ident, String xPub, String cipher) async => 'ok';
   @override
-  Future<String> onionSend(String onion, String cipher) async => 'ok';
+  Future<String> onionSend(
+    String onion,
+    String cipher, {
+    bool rest = false,
+  }) async => 'ok';
   @override
   Future<String> firstContactSend(
     int ident,

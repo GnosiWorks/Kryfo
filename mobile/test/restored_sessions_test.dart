@@ -168,7 +168,11 @@ class _Io extends AppIo {
   }
 
   @override
-  Future<String> onionSend(String onion, String cipher) async => 'error: off';
+  Future<String> onionSend(
+    String onion,
+    String cipher, {
+    bool rest = false,
+  }) async => 'error: off';
   @override
   Future<String> firstContactSend(
     int ident,

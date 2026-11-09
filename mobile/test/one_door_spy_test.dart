@@ -127,7 +127,7 @@ class _Wire implements HaloEngine {
   }
 
   @override
-  Future<String> sendTo(String onion, String cipher) {
+  Future<String> sendTo(String onion, String cipher, {bool rest = false}) {
     out.add(_Out('onion', null, onion, cipher));
     return Future.value('error: not here');
   }
