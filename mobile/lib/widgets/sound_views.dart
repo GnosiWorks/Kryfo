@@ -33,7 +33,7 @@ Object soundHeroTag(String path, [Object? id]) => ('sound', path, id);
 
 /// a sound whose samples are not read here gets a made-up wave; false
 /// gives it a plain seek bar
-const kMadeUpWave = true;
+const kMadeUpWave = false;
 
 /// a calm wave for a sound whose samples are not read here, the same for
 /// the same file every time. a shape to seek on, not its loudness
