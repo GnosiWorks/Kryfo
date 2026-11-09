@@ -47,6 +47,8 @@ class _Engine implements HaloEngine {
   @override
   String myXPubkey() => 'x-me';
   @override
+  void appFront(bool front) {}
+  @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
