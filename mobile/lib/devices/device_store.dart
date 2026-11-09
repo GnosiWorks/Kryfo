@@ -294,7 +294,19 @@ Future<void> deviceTables(
     CREATE TABLE IF NOT EXISTS own_answers_held (
       uid TEXT PRIMARY KEY,
       chat TEXT NOT NULL,
-      frame TEXT NOT NULL
+      frame TEXT NOT NULL,
+      dev INTEGER NOT NULL,
+      dkey TEXT NOT NULL
+    )
+  ''');
+  // what of a computer's answers the phone took, by hashes alone: an answer
+  // sent again never goes twice, and a take-back or an edit that came
+  // before its words waits for them (text). kept 30 days
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_answers_seen (
+      k TEXT PRIMARY KEY,
+      at INTEGER NOT NULL,
+      text TEXT
     )
   ''');
   // a note to self of mine still owed to my other devices: its uid, when it
@@ -386,6 +398,8 @@ const _allTables = [
   'own_told',
   'own_gone',
   'own_held',
+  'own_answers_held',
+  'own_answers_seen',
   'own_notes_out',
   'dev_farewell',
 ];
