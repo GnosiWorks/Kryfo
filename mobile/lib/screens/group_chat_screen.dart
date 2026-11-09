@@ -44,6 +44,8 @@ import '../file_kind.dart'
         readFileFactsFresh;
 import '../file_save.dart' show saveReceivedFile;
 import '../sound_player.dart' show SoundItem, SoundPlayer;
+import '../recent_files.dart';
+import '../widgets/send_sheet.dart';
 import '../widgets/file_actions.dart'
     show
         FileView,
@@ -185,7 +187,6 @@ import '../widgets/shots_line.dart';
 import '../widgets/photo_viewer.dart' show photoHeroTag;
 import '../widgets/voice_mic.dart';
 import '../polls.dart';
-import '../widgets/attach_grid.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/new_poll_sheet.dart';
 import '../widgets/poll_card.dart';
@@ -2469,56 +2470,86 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
   }
 
-  void _showAttachSheet() {
+  // what goes into the group, in one sheet: the gallery, the phone's
+  // files, and files already in this container's chats
+  Future<void> _showAttachSheet() async {
     if (_nobodyToRead()) return;
     FocusManager.instance.primaryFocus?.unfocus();
-    HapticFeedback.selectionClick();
-    showHaloSheet<void>(
+    final r = await showSendSheet(
       context,
-      builder: (sheetCtx) => AttachGrid(
-        note: l10n.chatNoExifNeverSaved,
-        items: [
-          // a computer has no camera to open
-          if (!onDesktop)
-            AttachItem(
-              icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
-              tint: HaloColors.amber,
-              label: l10n.groupChatCamera,
-              onTap: _openGroupCamera,
-            ),
-          AttachItem(
-            icon: (c) => Icon(Icons.photo_library_outlined, color: c),
-            tint: HaloColors.violet,
-            label: l10n.groupChatGalleryShown,
-            onTap: _pickGroupMultiple,
+      to: _groupName,
+      pickGallery: galleryPicksForSheet,
+      pickFiles: filePicksForSheet,
+      recent: () => recentFilesIn(session.groupDb(widget.groupId)),
+      galleryLabel: l10n.groupChatGalleryShown,
+      shortcuts: [
+        // a computer has no camera to open
+        if (!onDesktop)
+          SendShortcut(
+            (c) => Icon(Icons.photo_camera_outlined, color: c),
+            l10n.groupChatCamera,
+            HaloColors.amber,
+            _openGroupCamera,
           ),
-          AttachItem(
-            icon: (c) => Icon(Icons.videocam_outlined, color: c),
-            tint: HaloColors.rose,
-            label: l10n.groupChatVideo,
-            onTap: _pickGroupVideo,
-          ),
-          AttachItem(
-            icon: (c) => StrokeIcon(pollGlyph, color: c, stroke: 1.9),
-            tint: HaloColors.green,
-            label: l10n.pollAttach,
-            onTap: _newPoll,
-          ),
-          AttachItem(
-            icon: (c) => Icon(Icons.gif_box_outlined, color: c),
-            tint: HaloColors.violet,
-            label: l10n.groupChatGifFromPhoneShown,
-            onTap: _pickGroupGif,
-          ),
-          AttachItem(
-            icon: (c) => Icon(Icons.attach_file, color: c),
-            tint: HaloColors.amber,
-            label: l10n.groupChatFile,
-            onTap: _pickGroupFile,
-          ),
-        ],
-      ),
+        SendShortcut(
+          (c) => Icon(Icons.videocam_outlined, color: c),
+          l10n.groupChatVideo,
+          HaloColors.rose,
+          _pickGroupVideo,
+        ),
+        SendShortcut(
+          (c) => StrokeIcon(pollGlyph, color: c, stroke: 1.9),
+          l10n.pollAttach,
+          HaloColors.green,
+          _newPoll,
+        ),
+        SendShortcut(
+          (c) => Icon(Icons.gif_box_outlined, color: c),
+          l10n.groupChatGifFromPhoneShown,
+          HaloColors.violet,
+          _pickGroupGif,
+        ),
+      ],
     );
+    if (r == null) return;
+    await _sendFromSheet(r);
+  }
+
+  // the sheet's picks, in the order chosen: photos and videos through the
+  // preview, unless they go as files; files each as the file tile sends
+  // one, the caption on the first. the pickers' copies go once done
+  Future<void> _sendFromSheet(SendSheetResult r) async {
+    try {
+      if (!mounted || _nobodyToRead()) return;
+      final media = r.media;
+      final files = r.files;
+      if (media.isNotEmpty) {
+        await sendGalleryPicks(
+          [for (final m in media) m.source as XFile? ?? XFile(m.path)],
+          pickMore: () => lockState.hold(pickGallery),
+          preview: _preview,
+          send: (s) => _sendPicked(
+            s.caption.isEmpty && files.isEmpty && r.caption.isNotEmpty
+                ? MediaSendResult(
+                    items: s.items,
+                    caption: r.caption,
+                    secure: s.secure,
+                  )
+                : s,
+          ),
+        );
+      }
+      var caption = media.isEmpty ? r.caption : '';
+      for (final f in files) {
+        if (!mounted || lockState.locked) break;
+        if (await _sendGroupFileFrom(f.path, f.name, caption: caption)) {
+          caption = '';
+        }
+      }
+    } finally {
+      await r.release();
+      await shredPicked(const []);
+    }
   }
 
   // a poll goes out like a message: timed when the chat is, into a room as
@@ -2595,20 +2626,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     } finally {
       await shredPickedImages([x]);
     }
-  }
-
-  Future<void> _pickGroupMultiple() async {
-    // whole, each in a folder of its own: see readPickedPhotos. videos come
-    // too where android has its photo picker
-    final picked = await lockState.hold(pickGallery);
-    if (picked.isEmpty) return;
-    // one or several: the preview first, and nothing goes without its send
-    await sendGalleryPicks(
-      picked,
-      pickMore: () => lockState.hold(pickGallery),
-      preview: _preview,
-      send: _sendPicked,
-    );
   }
 
   // the send preview: null when the person backed out. a group's items
@@ -3056,29 +3073,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  // the picker's own copy is copied into the media folder; no byte array
-  // crosses the plugin channel. see the 1:1 chat for why.
-  Future<void> _pickGroupFile() async {
-    final PlatformFile? res;
-    try {
-      // every kind of file: apps, archives, anything the phone holds
-      res = await lockState.hold(() => FilePicker.pickFile(type: FileType.any));
-    } on LockDropped {
-      // the session it was picked in is gone: nothing to say
-      return;
-    } catch (e) {
-      // the picker could not copy what was chosen: a provider that will
-      // not hand the file over, a gone download. say so instead of nothing.
-      if (mounted) showHaloToast(context, l10n.groupChatCouldNotReadThat);
-      return;
-    }
-    if (res == null) return;
-    final path = res.path;
-    final name = res.name;
-    if (path != null) await _sendGroupFileFrom(path, name);
-    await shredPicked([res]);
-  }
-
   // the in-app camera: a stripped photo or a clip goes through the send
   // preview; the clip's private copy is shredded once it is done with
   Future<void> _openGroupCamera() async {
@@ -3106,9 +3100,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  Future<void> _sendGroupFileFrom(String src, String picked) async {
+  // true when it went. [caption]: the words under it
+  Future<bool> _sendGroupFileFrom(
+    String src,
+    String picked, {
+    String caption = '',
+  }) async {
     final ready = await _readyGroupFile(src, picked);
-    if (ready != null) await _sendGroupReady(ready, '');
+    if (ready == null) return false;
+    await _sendGroupReady(ready, caption);
+    return true;
   }
 
   // a file checked, copied into the media folder under its own uid and

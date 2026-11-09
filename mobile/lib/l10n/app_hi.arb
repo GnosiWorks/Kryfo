@@ -672,7 +672,6 @@
   "groupChatVideo": "वीडियो",
   "groupChatGifFromPhone": "फ़ोन से GIF",
   "groupChatGifFromPhoneDesk": "कंप्यूटर से GIF",
-  "groupChatFile": "फ़ाइल",
   "groupChatCouldNotReadThat": "वह फ़ाइल पढ़ी नहीं जा सकी",
   "groupChatGifTooBig8": "GIF बहुत बड़ा है · अधिकतम 8 MB",
   "groupChatCouldNotCleanThat": "उस GIF को साफ़ नहीं कर पाए",
@@ -3158,5 +3157,16 @@
   "soundForward15": "15 सेकंड आगे",
   "soundRepeat": "दोहराएँ",
   "soundUpNext": "आगे",
-  "soundVoiceFrom": "{name} का वॉइस मैसेज"
+  "soundVoiceFrom": "{name} का वॉइस मैसेज",
+  "sendSheetTo": "इन्हें भेजें:",
+  "sendSheetCleaned": "भेजने से पहले साफ़ किया जाता है",
+  "sendSheetFiles": "फ़ाइलें",
+  "sendSheetRecent": "हाल के",
+  "sendSheetChoosePhotos": "फ़ोटो और वीडियो चुनें",
+  "sendSheetBrowseFiles": "इस फ़ोन की सभी फ़ाइलें देखें",
+  "sendSheetNoRecent": "आपकी चैट में भेजी और मिली फ़ाइलें यहाँ दिखती हैं.",
+  "sendSheetChosen": "चुना गया, क्रम {n}",
+  "sendSheetAsFile": "फ़ाइल के रूप में भेजें",
+  "sendSheetAsFileLine": "मूल क्वालिटी, बिना कंप्रेशन",
+  "sendSheetSend": "{count, plural, other{{count} भेजें}}"
 }

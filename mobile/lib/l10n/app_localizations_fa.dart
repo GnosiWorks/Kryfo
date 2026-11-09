@@ -2595,9 +2595,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupChatGifFromPhoneDesk => 'گیف از رایانه';
 
   @override
-  String get groupChatFile => 'فایل';
-
-  @override
   String get groupChatCouldNotReadThat => 'آن فایل خوانده نشد';
 
   @override
@@ -11948,10 +11945,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count خط',
+      other: '$countString خط',
       one: '۱ خط',
     );
     return '$_temp0';
@@ -11968,10 +11969,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count صفحه',
+      other: '$countString صفحه',
       one: '۱ صفحه',
     );
     return '$_temp0';
@@ -12034,5 +12039,52 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String soundVoiceFrom(String name) {
     return 'پیام صوتی از $name';
+  }
+
+  @override
+  String get sendSheetTo => 'ارسال به';
+
+  @override
+  String get sendSheetCleaned => 'پیش از ارسال پاک‌سازی می‌شود';
+
+  @override
+  String get sendSheetFiles => 'فایل‌ها';
+
+  @override
+  String get sendSheetRecent => 'اخیر';
+
+  @override
+  String get sendSheetChoosePhotos => 'انتخاب عکس و ویدیو';
+
+  @override
+  String get sendSheetBrowseFiles => 'مرور همه فایل‌های این گوشی';
+
+  @override
+  String get sendSheetNoRecent =>
+      'فایل‌هایی که در گفتگوهایتان می‌فرستید و می‌گیرید اینجا نشان داده می‌شوند.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'انتخاب‌شده، شماره $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'ارسال به‌صورت فایل';
+
+  @override
+  String get sendSheetAsFileLine => 'کیفیت اصلی، بدون فشرده‌سازی';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ارسال $countString',
+    );
+    return '$_temp0';
   }
 }

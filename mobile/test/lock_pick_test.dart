@@ -193,11 +193,12 @@ void main() {
     final chat = sourceOf('lib/screens/chat_screen.dart');
     final group = sourceOf('lib/screens/group_chat_screen.dart');
     final qr = sourceOf('lib/screens/qr_screen.dart');
+    final sheet = sourceOf('lib/recent_files.dart');
     for (final (src, fn) in [
-      (chat, 'Future<void> _pickAndSendFile('),
+      (sheet, 'Future<List<SendPick>> filePicksForSheet('),
+      (sheet, 'Future<List<SendPick>> galleryPicksForSheet('),
       (chat, 'Future<void> _pickAndSendGif('),
       (group, 'Future<void> _pickGroupGif('),
-      (group, 'Future<void> _pickGroupFile('),
       (qr, 'Future<void> _out('),
     ]) {
       final body = bodyOf(src, fn);

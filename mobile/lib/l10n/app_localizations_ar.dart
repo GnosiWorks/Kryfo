@@ -2659,9 +2659,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get groupChatGifFromPhoneDesk => 'صورة GIF من الحاسوب';
 
   @override
-  String get groupChatFile => 'ملف';
-
-  @override
   String get groupChatCouldNotReadThat => 'تعذّرت قراءة ذلك الملف';
 
   @override
@@ -12072,12 +12069,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count سطر',
-      many: '$count سطرًا',
-      few: '$count أسطر',
+      other: '$countString سطر',
+      many: '$countString سطرًا',
+      few: '$countString أسطر',
       two: 'سطران',
       one: 'سطر واحد',
       zero: 'لا أسطر',
@@ -12096,12 +12097,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count صفحة',
-      many: '$count صفحة',
-      few: '$count صفحات',
+      other: '$countString صفحة',
+      many: '$countString صفحة',
+      few: '$countString صفحات',
       two: 'صفحتان',
       one: 'صفحة واحدة',
       zero: 'لا صفحات',
@@ -12166,5 +12171,53 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String soundVoiceFrom(String name) {
     return 'رسالة صوتية من $name';
+  }
+
+  @override
+  String get sendSheetTo => 'إرسال إلى';
+
+  @override
+  String get sendSheetCleaned => 'يُنظَّف قبل الإرسال';
+
+  @override
+  String get sendSheetFiles => 'الملفات';
+
+  @override
+  String get sendSheetRecent => 'الأخيرة';
+
+  @override
+  String get sendSheetChoosePhotos => 'اختر صورًا ومقاطع فيديو';
+
+  @override
+  String get sendSheetBrowseFiles => 'تصفّح كل الملفات على هذا الهاتف';
+
+  @override
+  String get sendSheetNoRecent =>
+      'تظهر هنا الملفات التي ترسلها وتستلمها في محادثاتك.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'محدّد، رقم $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'إرسال كملف';
+
+  @override
+  String get sendSheetAsFileLine => 'الجودة الأصلية، دون ضغط';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إرسال $countString',
+      zero: 'إرسال',
+    );
+    return '$_temp0';
   }
 }

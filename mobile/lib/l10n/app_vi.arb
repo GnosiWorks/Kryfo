@@ -767,7 +767,6 @@
   "groupChatVideo": "Video",
   "groupChatGifFromPhone": "Gif từ điện thoại",
   "groupChatGifFromPhoneDesk": "Gif từ máy tính",
-  "groupChatFile": "Tệp",
   "groupChatCouldNotReadThat": "Không đọc được tệp đó",
   "groupChatGifTooBig8": "Gif quá lớn · tối đa 8 mb",
   "groupChatCouldNotCleanThat": "Không làm sạch được gif đó",
@@ -3158,5 +3157,16 @@
   "soundForward15": "Tiến 15 giây",
   "soundRepeat": "Lặp lại",
   "soundUpNext": "Tiếp theo",
-  "soundVoiceFrom": "Tin nhắn thoại từ {name}"
+  "soundVoiceFrom": "Tin nhắn thoại từ {name}",
+  "sendSheetTo": "Gửi cho",
+  "sendSheetCleaned": "Được làm sạch trước khi gửi",
+  "sendSheetFiles": "Tệp",
+  "sendSheetRecent": "Gần đây",
+  "sendSheetChoosePhotos": "Chọn ảnh và video",
+  "sendSheetBrowseFiles": "Duyệt mọi tệp trên điện thoại này",
+  "sendSheetNoRecent": "Các tệp bạn gửi và nhận trong cuộc trò chuyện sẽ hiện ở đây.",
+  "sendSheetChosen": "Đã chọn, số {n}",
+  "sendSheetAsFile": "Gửi dưới dạng tệp",
+  "sendSheetAsFileLine": "Chất lượng gốc, không nén",
+  "sendSheetSend": "{count, plural, other{Gửi {count}}}"
 }

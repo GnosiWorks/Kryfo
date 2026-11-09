@@ -2600,9 +2600,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get groupChatGifFromPhoneDesk => 'Bilgisayardan gif';
 
   @override
-  String get groupChatFile => 'Dosya';
-
-  @override
   String get groupChatCouldNotReadThat => 'Bu dosya okunamadı';
 
   @override
@@ -11964,10 +11961,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count satır',
+      other: '$countString satır',
     );
     return '$_temp0';
   }
@@ -11983,10 +11984,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count sayfa',
+      other: '$countString sayfa',
     );
     return '$_temp0';
   }
@@ -12048,5 +12053,52 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String soundVoiceFrom(String name) {
     return '$name adlı kişiden sesli mesaj';
+  }
+
+  @override
+  String get sendSheetTo => 'Gönder:';
+
+  @override
+  String get sendSheetCleaned => 'Göndermeden önce temizlenir';
+
+  @override
+  String get sendSheetFiles => 'Dosyalar';
+
+  @override
+  String get sendSheetRecent => 'Son';
+
+  @override
+  String get sendSheetChoosePhotos => 'Fotoğraf ve video seç';
+
+  @override
+  String get sendSheetBrowseFiles => 'Bu telefondaki tüm dosyalara göz at';
+
+  @override
+  String get sendSheetNoRecent =>
+      'Sohbetlerinde gönderdiğin ve aldığın dosyalar burada görünür.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'Seçildi, sıra $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'Dosya olarak gönder';
+
+  @override
+  String get sendSheetAsFileLine => 'Orijinal kalite, sıkıştırma yok';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString gönder',
+    );
+    return '$_temp0';
   }
 }

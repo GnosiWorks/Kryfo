@@ -767,7 +767,6 @@
   "groupChatVideo": "فيديو",
   "groupChatGifFromPhone": "صورة GIF من الهاتف",
   "groupChatGifFromPhoneDesk": "صورة GIF من الحاسوب",
-  "groupChatFile": "ملف",
   "groupChatCouldNotReadThat": "تعذّرت قراءة ذلك الملف",
   "groupChatGifTooBig8": "ملف GIF كبير جدًا · ٨ م.ب كحد أقصى",
   "groupChatCouldNotCleanThat": "تعذّر تنظيف ملف GIF هذا",
@@ -3158,5 +3157,16 @@
   "soundForward15": "تقديم 15 ثانية",
   "soundRepeat": "تكرار",
   "soundUpNext": "التالي",
-  "soundVoiceFrom": "رسالة صوتية من {name}"
+  "soundVoiceFrom": "رسالة صوتية من {name}",
+  "sendSheetTo": "إرسال إلى",
+  "sendSheetCleaned": "يُنظَّف قبل الإرسال",
+  "sendSheetFiles": "الملفات",
+  "sendSheetRecent": "الأخيرة",
+  "sendSheetChoosePhotos": "اختر صورًا ومقاطع فيديو",
+  "sendSheetBrowseFiles": "تصفّح كل الملفات على هذا الهاتف",
+  "sendSheetNoRecent": "تظهر هنا الملفات التي ترسلها وتستلمها في محادثاتك.",
+  "sendSheetChosen": "محدّد، رقم {n}",
+  "sendSheetAsFile": "إرسال كملف",
+  "sendSheetAsFileLine": "الجودة الأصلية، دون ضغط",
+  "sendSheetSend": "{count, plural, =0{إرسال} other{إرسال {count}}}"
 }

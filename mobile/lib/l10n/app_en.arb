@@ -3212,10 +3212,6 @@
   "@groupChatGifFromPhoneDesk": {
     "description": "groupChatGifFromPhone as a computer shows it (linux and windows)"
   },
-  "groupChatFile": "File",
-  "@groupChatFile": {
-    "description": "screens/group_chat_screen.dart"
-  },
   "groupChatCouldNotReadThat": "Could not read that file",
   "@groupChatCouldNotReadThat": {
     "description": "screens/group_chat_screen.dart"
@@ -14999,7 +14995,8 @@
     "description": "text viewer head: how many lines the file has",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15021,7 +15018,8 @@
     "description": "pdf bubble and viewer: how many pages",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15108,6 +15106,61 @@
     "placeholders": {
       "name": {
         "type": "String"
+      }
+    }
+  },
+  "sendSheetTo": "Send to",
+  "@sendSheetTo": {
+    "description": "sending sheet title, before the chat's name in italics"
+  },
+  "sendSheetCleaned": "Cleaned before sending",
+  "@sendSheetCleaned": {
+    "description": "sending sheet, under the title: what the camera and the phone wrote into a file is taken out first"
+  },
+  "sendSheetFiles": "Files",
+  "@sendSheetFiles": {
+    "description": "sending sheet tab"
+  },
+  "sendSheetRecent": "Recent",
+  "@sendSheetRecent": {
+    "description": "sending sheet tab: files that came or went lately in the chats"
+  },
+  "sendSheetChoosePhotos": "Choose photos and videos",
+  "@sendSheetChoosePhotos": {
+    "description": "sending sheet, gallery tab: opens the phone's photo picker"
+  },
+  "sendSheetBrowseFiles": "Browse all files on this phone",
+  "@sendSheetBrowseFiles": {
+    "description": "sending sheet, files tab: opens the phone's file browser"
+  },
+  "sendSheetNoRecent": "Files you send and get in your chats show up here.",
+  "@sendSheetNoRecent": {
+    "description": "sending sheet, recent tab, empty"
+  },
+  "sendSheetChosen": "Chosen, number {n}",
+  "@sendSheetChosen": {
+    "description": "sending sheet, for screen readers: the pick's place in the order chosen",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "sendSheetAsFile": "Send as file",
+  "@sendSheetAsFile": {
+    "description": "sending sheet switch: photos and videos go as files"
+  },
+  "sendSheetAsFileLine": "Original quality, no compression",
+  "@sendSheetAsFileLine": {
+    "description": "under Send as file"
+  },
+  "sendSheetSend": "{count, plural, =1{Send 1} other{Send {count}}}",
+  "@sendSheetSend": {
+    "description": "sending sheet button with how many go",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   }

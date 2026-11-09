@@ -767,7 +767,6 @@
   "groupChatVideo": "视频",
   "groupChatGifFromPhone": "手机里的 GIF",
   "groupChatGifFromPhoneDesk": "电脑里的 GIF",
-  "groupChatFile": "文件",
   "groupChatCouldNotReadThat": "无法读取这个文件",
   "groupChatGifTooBig8": "GIF 太大 · 最大 8 MB",
   "groupChatCouldNotCleanThat": "无法清理这个 GIF",
@@ -3158,5 +3157,16 @@
   "soundForward15": "快进 15 秒",
   "soundRepeat": "重复播放",
   "soundUpNext": "下一个",
-  "soundVoiceFrom": "来自 {name} 的语音消息"
+  "soundVoiceFrom": "来自 {name} 的语音消息",
+  "sendSheetTo": "发送给",
+  "sendSheetCleaned": "发送前已清理",
+  "sendSheetFiles": "文件",
+  "sendSheetRecent": "最近",
+  "sendSheetChoosePhotos": "选择照片和视频",
+  "sendSheetBrowseFiles": "浏览此手机上的所有文件",
+  "sendSheetNoRecent": "你在聊天中收发的文件会显示在这里。",
+  "sendSheetChosen": "已选，第 {n} 个",
+  "sendSheetAsFile": "以文件发送",
+  "sendSheetAsFileLine": "原始画质，不压缩",
+  "sendSheetSend": "{count, plural, other{发送 {count} 个}}"
 }

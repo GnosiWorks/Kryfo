@@ -2462,9 +2462,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatGifFromPhoneDesk => '电脑里的 GIF';
 
   @override
-  String get groupChatFile => '文件';
-
-  @override
   String get groupChatCouldNotReadThat => '无法读取这个文件';
 
   @override
@@ -11279,10 +11276,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count 行',
+      other: '$countString 行',
     );
     return '$_temp0';
   }
@@ -11297,10 +11298,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count 页',
+      other: '$countString 页',
     );
     return '$_temp0';
   }
@@ -11360,6 +11365,52 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String soundVoiceFrom(String name) {
     return '来自 $name 的语音消息';
+  }
+
+  @override
+  String get sendSheetTo => '发送给';
+
+  @override
+  String get sendSheetCleaned => '发送前已清理';
+
+  @override
+  String get sendSheetFiles => '文件';
+
+  @override
+  String get sendSheetRecent => '最近';
+
+  @override
+  String get sendSheetChoosePhotos => '选择照片和视频';
+
+  @override
+  String get sendSheetBrowseFiles => '浏览此手机上的所有文件';
+
+  @override
+  String get sendSheetNoRecent => '你在聊天中收发的文件会显示在这里。';
+
+  @override
+  String sendSheetChosen(String n) {
+    return '已选，第 $n 个';
+  }
+
+  @override
+  String get sendSheetAsFile => '以文件发送';
+
+  @override
+  String get sendSheetAsFileLine => '原始画质，不压缩';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '发送 $countString 个',
+    );
+    return '$_temp0';
   }
 }
 
@@ -13819,9 +13870,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatGifFromPhoneDesk => '電腦裡的 GIF';
-
-  @override
-  String get groupChatFile => '檔案';
 
   @override
   String get groupChatCouldNotReadThat => '無法讀取那個檔案';
@@ -22518,10 +22566,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count 行',
+      other: '$countString 行',
     );
     return '$_temp0';
   }
@@ -22536,10 +22588,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count 頁',
+      other: '$countString 頁',
     );
     return '$_temp0';
   }
@@ -22599,5 +22655,51 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String soundVoiceFrom(String name) {
     return '來自 $name 的語音訊息';
+  }
+
+  @override
+  String get sendSheetTo => '傳送給';
+
+  @override
+  String get sendSheetCleaned => '傳送前已清理';
+
+  @override
+  String get sendSheetFiles => '檔案';
+
+  @override
+  String get sendSheetRecent => '最近';
+
+  @override
+  String get sendSheetChoosePhotos => '選擇相片和影片';
+
+  @override
+  String get sendSheetBrowseFiles => '瀏覽此手機上的所有檔案';
+
+  @override
+  String get sendSheetNoRecent => '你在聊天中收發的檔案會顯示在這裡。';
+
+  @override
+  String sendSheetChosen(String n) {
+    return '已選，第 $n 個';
+  }
+
+  @override
+  String get sendSheetAsFile => '以檔案傳送';
+
+  @override
+  String get sendSheetAsFileLine => '原始畫質，不壓縮';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '傳送 $countString 個',
+    );
+    return '$_temp0';
   }
 }

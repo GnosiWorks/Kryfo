@@ -2624,9 +2624,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get groupChatGifFromPhoneDesk => 'Gif del ordenador';
 
   @override
-  String get groupChatFile => 'Archivo';
-
-  @override
   String get groupChatCouldNotReadThat => 'No se pudo leer ese archivo';
 
   @override
@@ -12030,10 +12027,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count líneas',
+      other: '$countString líneas',
       one: '1 línea',
     );
     return '$_temp0';
@@ -12050,10 +12051,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count páginas',
+      other: '$countString páginas',
       one: '1 página',
     );
     return '$_temp0';
@@ -12116,5 +12121,52 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String soundVoiceFrom(String name) {
     return 'Mensaje de voz de $name';
+  }
+
+  @override
+  String get sendSheetTo => 'Enviar a';
+
+  @override
+  String get sendSheetCleaned => 'Limpio antes de enviar';
+
+  @override
+  String get sendSheetFiles => 'Archivos';
+
+  @override
+  String get sendSheetRecent => 'Recientes';
+
+  @override
+  String get sendSheetChoosePhotos => 'Elegir fotos y vídeos';
+
+  @override
+  String get sendSheetBrowseFiles => 'Ver todos los archivos de este teléfono';
+
+  @override
+  String get sendSheetNoRecent =>
+      'Aquí aparecen los archivos que envías y recibes en tus chats.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'Elegido, número $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'Enviar como archivo';
+
+  @override
+  String get sendSheetAsFileLine => 'Calidad original, sin compresión';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Enviar $countString',
+    );
+    return '$_temp0';
   }
 }

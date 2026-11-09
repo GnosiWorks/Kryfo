@@ -4162,12 +4162,6 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'File'**
-  String get groupChatFile;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Could not read that file'**
   String get groupChatCouldNotReadThat;
 
@@ -19248,6 +19242,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voice message from {name}'**
   String soundVoiceFrom(String name);
+
+  /// sending sheet title, before the chat's name in italics
+  ///
+  /// In en, this message translates to:
+  /// **'Send to'**
+  String get sendSheetTo;
+
+  /// sending sheet, under the title: what the camera and the phone wrote into a file is taken out first
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaned before sending'**
+  String get sendSheetCleaned;
+
+  /// sending sheet tab
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get sendSheetFiles;
+
+  /// sending sheet tab: files that came or went lately in the chats
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get sendSheetRecent;
+
+  /// sending sheet, gallery tab: opens the phone's photo picker
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photos and videos'**
+  String get sendSheetChoosePhotos;
+
+  /// sending sheet, files tab: opens the phone's file browser
+  ///
+  /// In en, this message translates to:
+  /// **'Browse all files on this phone'**
+  String get sendSheetBrowseFiles;
+
+  /// sending sheet, recent tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Files you send and get in your chats show up here.'**
+  String get sendSheetNoRecent;
+
+  /// sending sheet, for screen readers: the pick's place in the order chosen
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen, number {n}'**
+  String sendSheetChosen(String n);
+
+  /// sending sheet switch: photos and videos go as files
+  ///
+  /// In en, this message translates to:
+  /// **'Send as file'**
+  String get sendSheetAsFile;
+
+  /// under Send as file
+  ///
+  /// In en, this message translates to:
+  /// **'Original quality, no compression'**
+  String get sendSheetAsFileLine;
+
+  /// sending sheet button with how many go
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Send 1} other{Send {count}}}'**
+  String sendSheetSend(int count);
 }
 
 class _AppLocalizationsDelegate

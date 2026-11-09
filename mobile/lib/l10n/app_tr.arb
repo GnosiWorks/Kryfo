@@ -767,7 +767,6 @@
   "groupChatVideo": "Video",
   "groupChatGifFromPhone": "Telefondan gif",
   "groupChatGifFromPhoneDesk": "Bilgisayardan gif",
-  "groupChatFile": "Dosya",
   "groupChatCouldNotReadThat": "Bu dosya okunamadı",
   "groupChatGifTooBig8": "Gif çok büyük · en fazla 8 mb",
   "groupChatCouldNotCleanThat": "Bu gif temizlenemedi",
@@ -3158,5 +3157,16 @@
   "soundForward15": "15 saniye ileri",
   "soundRepeat": "Tekrarla",
   "soundUpNext": "Sıradaki",
-  "soundVoiceFrom": "{name} adlı kişiden sesli mesaj"
+  "soundVoiceFrom": "{name} adlı kişiden sesli mesaj",
+  "sendSheetTo": "Gönder:",
+  "sendSheetCleaned": "Göndermeden önce temizlenir",
+  "sendSheetFiles": "Dosyalar",
+  "sendSheetRecent": "Son",
+  "sendSheetChoosePhotos": "Fotoğraf ve video seç",
+  "sendSheetBrowseFiles": "Bu telefondaki tüm dosyalara göz at",
+  "sendSheetNoRecent": "Sohbetlerinde gönderdiğin ve aldığın dosyalar burada görünür.",
+  "sendSheetChosen": "Seçildi, sıra {n}",
+  "sendSheetAsFile": "Dosya olarak gönder",
+  "sendSheetAsFileLine": "Orijinal kalite, sıkıştırma yok",
+  "sendSheetSend": "{count, plural, other{{count} gönder}}"
 }

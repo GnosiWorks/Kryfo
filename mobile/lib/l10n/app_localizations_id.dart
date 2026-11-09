@@ -2595,9 +2595,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupChatGifFromPhoneDesk => 'Gif dari komputer';
 
   @override
-  String get groupChatFile => 'File';
-
-  @override
   String get groupChatCouldNotReadThat => 'Gagal membaca file itu';
 
   @override
@@ -11941,10 +11938,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count baris',
+      other: '$countString baris',
     );
     return '$_temp0';
   }
@@ -11960,10 +11961,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count halaman',
+      other: '$countString halaman',
     );
     return '$_temp0';
   }
@@ -12025,5 +12030,52 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String soundVoiceFrom(String name) {
     return 'Pesan suara dari $name';
+  }
+
+  @override
+  String get sendSheetTo => 'Kirim ke';
+
+  @override
+  String get sendSheetCleaned => 'Dibersihkan sebelum dikirim';
+
+  @override
+  String get sendSheetFiles => 'File';
+
+  @override
+  String get sendSheetRecent => 'Terbaru';
+
+  @override
+  String get sendSheetChoosePhotos => 'Pilih foto dan video';
+
+  @override
+  String get sendSheetBrowseFiles => 'Jelajahi semua file di ponsel ini';
+
+  @override
+  String get sendSheetNoRecent =>
+      'File yang kamu kirim dan terima di chat muncul di sini.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'Dipilih, nomor $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'Kirim sebagai file';
+
+  @override
+  String get sendSheetAsFileLine => 'Kualitas asli, tanpa kompresi';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Kirim $countString',
+    );
+    return '$_temp0';
   }
 }

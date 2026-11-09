@@ -2589,9 +2589,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatGifFromPhoneDesk => 'Gif từ máy tính';
 
   @override
-  String get groupChatFile => 'Tệp';
-
-  @override
   String get groupChatCouldNotReadThat => 'Không đọc được tệp đó';
 
   @override
@@ -11924,10 +11921,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count dòng',
+      other: '$countString dòng',
     );
     return '$_temp0';
   }
@@ -11943,10 +11944,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count trang',
+      other: '$countString trang',
     );
     return '$_temp0';
   }
@@ -12008,5 +12013,52 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String soundVoiceFrom(String name) {
     return 'Tin nhắn thoại từ $name';
+  }
+
+  @override
+  String get sendSheetTo => 'Gửi cho';
+
+  @override
+  String get sendSheetCleaned => 'Được làm sạch trước khi gửi';
+
+  @override
+  String get sendSheetFiles => 'Tệp';
+
+  @override
+  String get sendSheetRecent => 'Gần đây';
+
+  @override
+  String get sendSheetChoosePhotos => 'Chọn ảnh và video';
+
+  @override
+  String get sendSheetBrowseFiles => 'Duyệt mọi tệp trên điện thoại này';
+
+  @override
+  String get sendSheetNoRecent =>
+      'Các tệp bạn gửi và nhận trong cuộc trò chuyện sẽ hiện ở đây.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'Đã chọn, số $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'Gửi dưới dạng tệp';
+
+  @override
+  String get sendSheetAsFileLine => 'Chất lượng gốc, không nén';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gửi $countString',
+    );
+    return '$_temp0';
   }
 }

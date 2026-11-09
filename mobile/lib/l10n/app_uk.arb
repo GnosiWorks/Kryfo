@@ -767,7 +767,6 @@
   "groupChatVideo": "Відео",
   "groupChatGifFromPhone": "GIF з телефону",
   "groupChatGifFromPhoneDesk": "GIF з комп’ютера",
-  "groupChatFile": "Файл",
   "groupChatCouldNotReadThat": "Не вдалося прочитати файл",
   "groupChatGifTooBig8": "GIF завеликий · макс. 8 МБ",
   "groupChatCouldNotCleanThat": "Не вдалося очистити цей GIF",
@@ -3158,5 +3157,16 @@
   "soundForward15": "Вперед на 15 секунд",
   "soundRepeat": "Повтор",
   "soundUpNext": "Далі",
-  "soundVoiceFrom": "Голосове від {name}"
+  "soundVoiceFrom": "Голосове від {name}",
+  "sendSheetTo": "Надіслати:",
+  "sendSheetCleaned": "Очищується перед надсиланням",
+  "sendSheetFiles": "Файли",
+  "sendSheetRecent": "Нещодавні",
+  "sendSheetChoosePhotos": "Вибрати фото й відео",
+  "sendSheetBrowseFiles": "Усі файли на цьому телефоні",
+  "sendSheetNoRecent": "Тут з’являться файли, які ти надсилаєш і отримуєш у чатах.",
+  "sendSheetChosen": "Вибрано, номер {n}",
+  "sendSheetAsFile": "Надіслати файлом",
+  "sendSheetAsFileLine": "Оригінальна якість, без стиснення",
+  "sendSheetSend": "{count, plural, other{Надіслати {count}}}"
 }

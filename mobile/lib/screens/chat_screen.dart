@@ -63,6 +63,8 @@ import '../widgets/pins.dart';
 import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
 import '../sound_player.dart' show SoundItem, SoundPlayer;
+import '../recent_files.dart';
+import '../widgets/send_sheet.dart';
 import '../widgets/file_actions.dart'
     show
         FileView,
@@ -199,7 +201,6 @@ import '../widgets/shots_line.dart';
 import '../chat_shots.dart'
     show ChatShots, ShotsPacer, kShotsByMe, kShotsByNone, shotsKeeps;
 import '../widgets/message_menu.dart';
-import '../widgets/attach_grid.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/place_stub.dart';
@@ -4067,48 +4068,78 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   // the same tiles as the group chat's, so attaching looks one way
-  void _showAttachSheet() {
-    HapticFeedback.selectionClick();
-    showHaloSheet<void>(
+  // what goes into the chat, in one sheet: the gallery, the phone's
+  // files, and files already in this container's chats
+  Future<void> _showAttachSheet() async {
+    final r = await showSendSheet(
       context,
-      builder: (sheetCtx) => AttachGrid(
-        note: l10n.chatNoExifNeverSaved,
-        items: [
-          // a computer has no camera to open
-          if (!onDesktop)
-            AttachItem(
-              icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
-              tint: HaloColors.amber,
-              label: l10n.chatCamera,
-              onTap: _openCamera,
-            ),
-          AttachItem(
-            icon: (c) => Icon(Icons.photo_library_outlined, color: c),
-            tint: HaloColors.violet,
-            label: l10n.chatGalleryShown,
-            onTap: _pickAndSendMultiple,
+      to: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
+      pickGallery: galleryPicksForSheet,
+      pickFiles: filePicksForSheet,
+      recent: () => recentFilesIn(session.peerDb(widget.peerHaloId)),
+      galleryLabel: l10n.chatGalleryShown,
+      shortcuts: [
+        // a computer has no camera to open
+        if (!onDesktop)
+          SendShortcut(
+            (c) => Icon(Icons.photo_camera_outlined, color: c),
+            l10n.chatCamera,
+            HaloColors.amber,
+            _openCamera,
           ),
-          AttachItem(
-            icon: (c) => Icon(Icons.videocam_outlined, color: c),
-            tint: HaloColors.rose,
-            label: l10n.chatVideo,
-            onTap: _pickAndSendVideo,
-          ),
-          AttachItem(
-            icon: (c) => Icon(Icons.gif_box_outlined, color: c),
-            tint: HaloColors.violet,
-            label: l10n.chatGifFromPhoneShown,
-            onTap: _pickAndSendGif,
-          ),
-          AttachItem(
-            icon: (c) => Icon(Icons.attach_file, color: c),
-            tint: HaloColors.amber,
-            label: l10n.chatFile2,
-            onTap: _pickAndSendFile,
-          ),
-        ],
-      ),
+        SendShortcut(
+          (c) => Icon(Icons.videocam_outlined, color: c),
+          l10n.chatVideo,
+          HaloColors.rose,
+          _pickAndSendVideo,
+        ),
+        SendShortcut(
+          (c) => Icon(Icons.gif_box_outlined, color: c),
+          l10n.chatGifFromPhoneShown,
+          HaloColors.violet,
+          _pickAndSendGif,
+        ),
+      ],
     );
+    if (r == null) return;
+    await _sendFromSheet(r);
+  }
+
+  // the sheet's picks, in the order chosen: photos and videos through the
+  // preview, unless they go as files; files each as the file tile sends
+  // one, the caption on the first. the pickers' copies go once done
+  Future<void> _sendFromSheet(SendSheetResult r) async {
+    try {
+      if (!mounted || _requestLocked || _sayMediaLater()) return;
+      final media = r.media;
+      final files = r.files;
+      if (media.isNotEmpty) {
+        await sendGalleryPicks(
+          [for (final m in media) m.source as XFile? ?? XFile(m.path)],
+          pickMore: () => lockState.hold(pickGallery),
+          preview: _preview,
+          send: (s) => _sendPicked(
+            s.caption.isEmpty && files.isEmpty && r.caption.isNotEmpty
+                ? MediaSendResult(
+                    items: s.items,
+                    caption: r.caption,
+                    secure: s.secure,
+                  )
+                : s,
+          ),
+        );
+      }
+      var caption = media.isEmpty ? r.caption : '';
+      for (final f in files) {
+        if (!mounted || lockState.locked) break;
+        if (await _sendFileFrom(f.path, f.name, caption: caption)) {
+          caption = '';
+        }
+      }
+    } finally {
+      await r.release();
+      await shredPicked(const []);
+    }
   }
 
   // remembered in the container that holds the chat
@@ -4389,30 +4420,6 @@ class _ChatScreenState extends State<ChatScreen>
     return ok;
   }
 
-  // the picker hands back a path to its own copy, copied from there into the
-  // media folder, so no byte array crosses the plugin channel. withData
-  // keeps three copies in memory and gives null bytes on 32-bit phones.
-  Future<void> _pickAndSendFile() async {
-    final PlatformFile? res;
-    try {
-      // every kind of file: apps, archives, anything the phone holds
-      res = await lockState.hold(() => FilePicker.pickFile(type: FileType.any));
-    } on LockDropped {
-      // the session it was picked in is gone: nothing to say
-      return;
-    } catch (e) {
-      // the picker could not copy what was chosen: a provider that will
-      // not hand the file over, a gone download. say so instead of nothing.
-      if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
-      return;
-    }
-    if (res == null) return;
-    final path = res.path;
-    final name = res.name;
-    if (path != null) await _sendFileFrom(path, name);
-    await shredPicked([res]);
-  }
-
   // the in-app camera: a stripped photo or a clip goes through the send
   // preview as a pick does; the clip's private copy is shredded once it is
   // done with, sent or not
@@ -4442,10 +4449,17 @@ class _ChatScreenState extends State<ChatScreen>
 
   // src is a file this app can read: the picker's copy or a camera clip.
   // it is copied into the media folder, never read into memory.
-  Future<void> _sendFileFrom(String src, String picked) async {
-    if (_requestLocked || _sayMediaLater()) return;
+  // true when it went. [caption]: the words under it
+  Future<bool> _sendFileFrom(
+    String src,
+    String picked, {
+    String caption = '',
+  }) async {
+    if (_requestLocked || _sayMediaLater()) return false;
     final ready = await _readyFile(src, picked);
-    if (ready != null) await _sendReady(ready, '');
+    if (ready == null) return false;
+    await _sendReady(ready, caption);
+    return true;
   }
 
   // a file made ready to go: checked, copied into the media folder under
@@ -4982,20 +4996,6 @@ class _ChatScreenState extends State<ChatScreen>
     } finally {
       await shredPickedImages([x]);
     }
-  }
-
-  Future<void> _pickAndSendMultiple() async {
-    // whole, each in a folder of its own: see readPickedPhotos. videos come
-    // too where android has its photo picker
-    final picked = await lockState.hold(pickGallery);
-    if (picked.isEmpty) return;
-    // one or several: the preview first, and nothing goes without its send
-    await sendGalleryPicks(
-      picked,
-      pickMore: () => lockState.hold(pickGallery),
-      preview: _preview,
-      send: _sendPicked,
-    );
   }
 
   // when the oldest of ours still going was written. a file that is

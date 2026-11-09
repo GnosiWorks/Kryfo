@@ -767,7 +767,6 @@
   "groupChatVideo": "Video",
   "groupChatGifFromPhone": "Gif dari ponsel",
   "groupChatGifFromPhoneDesk": "Gif dari komputer",
-  "groupChatFile": "File",
   "groupChatCouldNotReadThat": "Gagal membaca file itu",
   "groupChatGifTooBig8": "Gif terlalu besar · maks 8 mb",
   "groupChatCouldNotCleanThat": "Gagal membersihkan gif itu",
@@ -3158,5 +3157,16 @@
   "soundForward15": "Maju 15 detik",
   "soundRepeat": "Ulangi",
   "soundUpNext": "Berikutnya",
-  "soundVoiceFrom": "Pesan suara dari {name}"
+  "soundVoiceFrom": "Pesan suara dari {name}",
+  "sendSheetTo": "Kirim ke",
+  "sendSheetCleaned": "Dibersihkan sebelum dikirim",
+  "sendSheetFiles": "File",
+  "sendSheetRecent": "Terbaru",
+  "sendSheetChoosePhotos": "Pilih foto dan video",
+  "sendSheetBrowseFiles": "Jelajahi semua file di ponsel ini",
+  "sendSheetNoRecent": "File yang kamu kirim dan terima di chat muncul di sini.",
+  "sendSheetChosen": "Dipilih, nomor {n}",
+  "sendSheetAsFile": "Kirim sebagai file",
+  "sendSheetAsFileLine": "Kualitas asli, tanpa kompresi",
+  "sendSheetSend": "{count, plural, other{Kirim {count}}}"
 }

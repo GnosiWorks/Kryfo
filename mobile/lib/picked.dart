@@ -36,6 +36,14 @@ Future<void> shredPicked(Iterable<PlatformFile> files) async {
   }
 }
 
+/// one pick's copy gone, the others the picker made left for their send:
+/// shredPicked empties the picker's whole folder
+Future<void> shredPickedOne(PlatformFile f) async {
+  final cache = (await getTemporaryDirectory()).path;
+  final path = f.path;
+  if (path != null && path.startsWith(cache)) await shredFile(path);
+}
+
 // the gallery picker copies each pick whole, exif and all, to
 // cache/<uuid>/<its own name>. asked to shrink it, it writes
 // cache/scaled_<that name> beside it and hands back only that

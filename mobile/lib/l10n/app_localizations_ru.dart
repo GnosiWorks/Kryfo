@@ -2654,9 +2654,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupChatGifFromPhoneDesk => 'GIF с компьютера';
 
   @override
-  String get groupChatFile => 'Файл';
-
-  @override
   String get groupChatCouldNotReadThat => 'Не удалось прочитать файл';
 
   @override
@@ -12126,13 +12123,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String fileLines(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count строки',
-      many: '$count строк',
-      few: '$count строки',
-      one: '$count строка',
+      other: '$countString строки',
+      many: '$countString строк',
+      few: '$countString строки',
+      one: '$countString строка',
     );
     return '$_temp0';
   }
@@ -12148,13 +12149,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String filePages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count страницы',
-      many: '$count страниц',
-      few: '$count страницы',
-      one: '$count страница',
+      other: '$countString страницы',
+      many: '$countString страниц',
+      few: '$countString страницы',
+      one: '$countString страница',
     );
     return '$_temp0';
   }
@@ -12216,5 +12221,52 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String soundVoiceFrom(String name) {
     return 'Голосовое от $name';
+  }
+
+  @override
+  String get sendSheetTo => 'Отправить:';
+
+  @override
+  String get sendSheetCleaned => 'Очищается перед отправкой';
+
+  @override
+  String get sendSheetFiles => 'Файлы';
+
+  @override
+  String get sendSheetRecent => 'Недавние';
+
+  @override
+  String get sendSheetChoosePhotos => 'Выбрать фото и видео';
+
+  @override
+  String get sendSheetBrowseFiles => 'Все файлы на этом телефоне';
+
+  @override
+  String get sendSheetNoRecent =>
+      'Здесь появятся файлы, которые ты отправляешь и получаешь в чатах.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'Выбрано, номер $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'Отправить файлом';
+
+  @override
+  String get sendSheetAsFileLine => 'Исходное качество, без сжатия';
+
+  @override
+  String sendSheetSend(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Отправить $countString',
+    );
+    return '$_temp0';
   }
 }

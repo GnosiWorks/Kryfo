@@ -808,6 +808,32 @@ mixin _MessageRows {
     ];
   }
 
+  /// the files that came or went lately, any chat in this container, the
+  /// newest first: what the sending sheet's recent tab offers. voice notes
+  /// and pictures sent as photos are not files
+  Future<List<Map<String, Object?>>> recentFiles({int limit = 40}) async {
+    final db = await open();
+    final rows = await db.query(
+      'messages',
+      columns: const [
+        'file_path',
+        'file_name',
+        'sent_at',
+        'direction',
+        'peer_id',
+        'group_id',
+        'secure',
+      ],
+      // a timed one goes with its timer: it is never offered on
+      where:
+          "file_path IS NOT NULL AND file_path != '' AND file_name IS NOT NULL "
+          'AND burn_secs IS NULL AND burn_at IS NULL',
+      orderBy: 'rowid DESC',
+      limit: limit * 2,
+    );
+    return rows;
+  }
+
   // when the first message with a peer was, either way. null before any.
   Future<int?> firstMessageAt(String peerId) async {
     final db = await open();
