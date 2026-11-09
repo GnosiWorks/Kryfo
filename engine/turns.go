@@ -107,10 +107,6 @@ var phoneEv struct {
 	ch chan struct{}
 }
 
-// how long after such an event a wake's first redials still rank: the
-// sockets a sleep killed are found at once or a ping later
-var phoneMadeFor = 30 * time.Second
-
 // the app is in front, as it last said
 var appFront atomic.Bool
 
@@ -156,11 +152,14 @@ func phoneChan() <-chan struct{} {
 	return phoneEv.ch
 }
 
-// one came at or after from, and lately
-func phoneMadeSince(from time.Time) bool {
+// the last one, if it came at or after from; zero for none
+func phoneMadeAfter(from time.Time) time.Time {
 	phoneEv.Lock()
 	defer phoneEv.Unlock()
-	return !phoneEv.at.IsZero() && !phoneEv.at.Before(from) && time.Since(phoneEv.at) <= phoneMadeFor
+	if phoneEv.at.IsZero() || phoneEv.at.Before(from) {
+		return time.Time{}
+	}
+	return phoneEv.at
 }
 
 // the longest turn the first-contact listener waits on our own relays at a
@@ -266,6 +265,18 @@ type subTurn struct {
 	// not: a server can cause them at will, so those take no rank
 	// (dialpace.go) and the open chat waits its turn
 	made bool
+	// when its socket last went down, zero for never up
+	downAt time.Time
+}
+
+// its socket went down: a relay's drop, a dead ping, a probe unanswered
+func (t *subTurn) lost() { t.downAt = time.Now() }
+
+// its socket was down already at ev, a zero ev being none. a socket a
+// relay drops after the event was up at it: its redial must not name the
+// open chat, however soon it comes
+func (t *subTurn) downBefore(ev time.Time) bool {
+	return !ev.IsZero() && !t.downAt.After(ev)
 }
 
 // a shared socket's turn under a kick or a wake: drawn once, by the first
@@ -406,11 +417,15 @@ func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wak
 	now := autoNow()
 	first := t.kick == nil && t.fresh.holds(kc, now)
 	had := t.wake == n
+	newKick := t.kick != kc
 	t.kick, t.wake, t.free = kc, n, first
 	// the wake's own turn, if the app came to the front or the network
-	// changed since the wake: a push wakes the phone too. the one more
-	// after a socket that got through died again is a drop's
-	t.made = !had && phoneMadeSince(wakeSeenAt(n))
+	// changed since the wake (a push wakes the phone too) while this
+	// socket was down, or under a kick one of those made after the wake
+	// that this socket did not answer live. the one more after a socket
+	// that got through died again is a drop's
+	seen := wakeSeenAt(n)
+	t.made = !had && (t.downBefore(phoneMadeAfter(seen)) || newKick && kickMadeSince(kc, seen))
 	// a retry after a failed turn goes at its own backoff's pace
 	if (had && !t.up) || first || t.made && isFirstTag(t.tag) {
 		return ctx.Err() == nil

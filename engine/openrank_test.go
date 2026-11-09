@@ -3,6 +3,9 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
+	"slices"
 	"testing"
 	"time"
 )
@@ -91,6 +94,17 @@ func TestAPushWakeGivesTheOpenChatNoPriority(t *testing.T) {
 	if tn.made || rankOf(tn) != paceAny {
 		t.Fatalf("the open chat's dial in a push wake ranks %d, want %d", rankOf(tn), paceAny)
 	}
+	// down at a network change's kick before the sleep: that kick is no
+	// reason to rank in the push wake after it
+	wakeReset()
+	wakeCheck()
+	tn = openRunner(t)
+	tn.lost()
+	kickRelaysMade()
+	sleep(10 * time.Minute)
+	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+		t.Fatal("a phone's kick from before the sleep ranked the open chat in a push wake")
+	}
 	// a check-in's kick in a wake changes nothing
 	wakeReset()
 	wakeCheck()
@@ -175,32 +189,89 @@ func TestAPhoneEventEndsTheOpenChatsWait(t *testing.T) {
 	}
 }
 
-// a wake the app came to the front in: the open chat's first redial in it
-// goes first, but only soon after the front, not at a drop minutes later
-func TestAWakeInFrontKeepsTheOpenChatFirst(t *testing.T) {
+// a wake the app came to the front in, or the network changed in: the open
+// chat's first redial ranks if its socket was down already at the event, or
+// it did not answer that event's kick live. a socket that was up at the
+// event and dropped after it does not, however soon the drop comes
+func TestAWakeRanksOnlySocketsDownAtThePhonesEvent(t *testing.T) {
 	openChatOn(t)
 	// a big inbox: the wake's turns are minutes wide
 	countSockets(t, 0, 4000)
 	sleep := fakeSleep(t)
-	tn := openRunner(t)
-	sleep(10 * time.Minute)
-	noteAppFront(true)
-	if !takeWithin(tn, 200*time.Millisecond) || !tn.made || rankOf(tn) != paceFirst {
-		t.Fatalf("in a wake with the app in front the open chat ranks %d (made %v), want %d at once", rankOf(tn), tn.made, paceFirst)
+	asleep := func() *subTurn {
+		wakeReset()
+		wakeCheck()
+		tn := openRunner(t)
+		sleep(10 * time.Minute)
+		// a runner sees the wake
+		wakeCheck()
+		return tn
 	}
-	// the front long gone: a relay's drop in a later wake ranks nothing
-	old := phoneMadeFor
-	phoneMadeFor = 50 * time.Millisecond
-	t.Cleanup(func() { phoneMadeFor = old })
-	wakeReset()
-	wakeCheck()
-	tn = openRunner(t)
-	sleep(10 * time.Minute)
-	noteAppFront(false)
-	noteAppFront(true)
-	time.Sleep(100 * time.Millisecond)
+	front := func() {
+		noteAppFront(false)
+		noteAppFront(true)
+	}
+	// found dead on the wake, then the app came to the front
+	tn := asleep()
+	tn.lost()
+	time.Sleep(time.Millisecond)
+	front()
+	if !takeWithin(tn, 200*time.Millisecond) || !tn.made || rankOf(tn) != paceFirst {
+		t.Fatalf("a socket down before the front ranks %d (made %v), want %d at once", rankOf(tn), tn.made, paceFirst)
+	}
+	// up at the front, dropped by the relay right after it
+	tn = asleep()
+	front()
+	time.Sleep(time.Millisecond)
+	tn.lost()
 	if takeWithin(tn, 200*time.Millisecond) || tn.made {
-		t.Fatal("a redial long after the front went first in the wake")
+		t.Fatal("a socket the relay dropped after the front went first in the wake")
+	}
+	// down at a network change's kick after the wake
+	tn = asleep()
+	tn.lost()
+	kickRelaysMade()
+	if !takeWithin(tn, 200*time.Millisecond) || !tn.made || rankOf(tn) != paceFirst {
+		t.Fatalf("a socket down at the phone's kick in a wake ranks %d (made %v), want %d at once", rankOf(tn), tn.made, paceFirst)
+	}
+	// answered that kick live, dropped after it
+	tn = asleep()
+	kickRelaysMade()
+	tn.skip()
+	tn.lost()
+	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+		t.Fatal("a socket that answered the phone's kick live went first after a drop")
+	}
+}
+
+// a runner's first ask is the start's only while the process is young: one
+// made hours later in a process never kicked since is no start
+func TestTheStartRanksOnlyAtTheStart(t *testing.T) {
+	openChatOn(t)
+	oldStart, oldFor := procStart, startMadeFor
+	// a kick of no one's: the start's own
+	kickRelays()
+	startFirst.Lock()
+	oldKick := startFirst.kick
+	startFirst.kick = kickChan()
+	startFirst.Unlock()
+	t.Cleanup(func() {
+		procStart, startMadeFor = oldStart, oldFor
+		startFirst.Lock()
+		startFirst.kick = oldKick
+		startFirst.Unlock()
+	})
+	startMadeFor = 15 * time.Minute
+	spendFirstTurn()
+	procStart = time.Now().Round(0)
+	tn := &subTurn{tag: openTag, lane: paceLane}
+	if !takeWithin(tn, 200*time.Millisecond) || !tn.made {
+		t.Fatal("the open chat waited a turn at the start")
+	}
+	procStart = time.Now().Round(0).Add(-time.Hour)
+	tn = &subTurn{tag: openTag, lane: paceLane}
+	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+		t.Fatal("a runner made an hour into the process asked as the start's")
 	}
 }
 
@@ -240,5 +311,70 @@ func TestAPhoneEventRaisesTheOpenChatsPlace(t *testing.T) {
 		if !at[0].Before(a) {
 			t.Fatalf("the open chat's batch got its place after redial %d", i)
 		}
+	}
+}
+
+// private mode with automatic bridges: a network change's reconnect is
+// automatic's pass, and only the first reconnect of a pass a network change
+// started gives the open chat no turn
+func TestAutomaticsPassForANetworkMarksItsKick(t *testing.T) {
+	f := useFakeAuto(t, wifi())
+	var got []string
+	runLoop(t, f, func(n int, why string) string {
+		// the last pass reconnects nothing: its mark goes with it
+		if n == 3 {
+			got = append(got, why)
+			stopLoop()
+			return seenOK
+		}
+		got = append(got, fmt.Sprintf("%s:%v:%v", why, reconnectMade(whyAuto), reconnectMade(whyAuto)))
+		netEpoch.Add(1)
+		return passInterrupted
+	})
+	if want := []string{"start:false:false", "network:true:false", "network"}; !slices.Equal(got, want) {
+		t.Fatalf("passes and their reconnects %v, want %v", got, want)
+	}
+	if reconnectMade(whyAuto) || reconnectMade(whyRelays) || !reconnectMade(whyNetwork) {
+		t.Fatal("a reconnect outside a network pass gave the open chat no turn")
+	}
+}
+
+// the runners themselves: sockets up at the app's front and dropped by the
+// relay after it redial at their wake turns, the open chat's too
+func TestARelaysDropAfterTheFrontNamesNoChat(t *testing.T) {
+	setLiveCap(t, 1000, 1000*time.Hour)
+	own := newRelayStandIn(t, 0)
+	pub := newRelayStandIn(t, 0)
+	useStandIns(t, modeFast, nil, own, pub)
+	// a big inbox: the public relay's wake turns begin past 20 s
+	countSockets(t, 4000, 4000)
+	appFront.Store(false)
+	t.Cleanup(func() {
+		firstTag.Store("")
+		appFront.Store(false)
+	})
+	sleep := fakeSleep(t)
+	ctx := lanesCtx(t)
+	l := startLanes(t, alone(ctx), 3, 0)
+	open := l.contacts[0]
+	firstTag.Store(hex.EncodeToString(l.peers[0].pub[:]))
+	waitFor(t, "every address on both relays", 15*time.Second, func() bool {
+		for _, a := range append(append([]string(nil), l.contacts...), l.fc) {
+			if openOn(own, a) != 1 || openOn(pub, a) != 1 {
+				return false
+			}
+		}
+		return true
+	})
+	sleep(2 * time.Hour)
+	noteAppFront(true)
+	at := time.Now()
+	own.dropAll()
+	pub.dropAll()
+	// a drop's own pause on the public relay is 5 s: a redial with no turn
+	// would be back well inside this
+	time.Sleep(10 * time.Second)
+	if back := redials(pub, at, []string{open}); len(back) != 0 {
+		t.Fatalf("the open chat's address was back on the public relay %s after a drop that followed the front", back[0])
 	}
 }
