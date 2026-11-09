@@ -722,9 +722,7 @@ class _VideoPageState extends State<_VideoPage> {
                     // its blur, the first frame fading up over it
                     under: SealedPicture(
                       path: widget.item.path,
-                      image: jpeg == null
-                          ? null
-                          : frameImage(jpeg, screenPx(context)),
+                      image: jpeg == null ? null : MemoryImage(jpeg),
                       ground: Colors.black,
                     ),
                     texture: id != null && _v.started

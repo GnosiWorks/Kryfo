@@ -20,7 +20,6 @@ import 'halo_hero.dart';
 import 'key_ring.dart' show HoverTip;
 import 'motion.dart' show kText2, motionStill;
 import 'press_scale.dart';
-import 'decode_px.dart';
 import 'sealed_picture.dart';
 import 'text_ground.dart';
 import '../l10n/l10n.dart';
@@ -328,7 +327,7 @@ class _VideoViewerState extends State<_VideoViewer>
         // its blur, the first frame fading up over it
         under: SealedPicture(
           path: widget.path,
-          image: jpeg == null ? null : frameImage(jpeg, screenPx(context)),
+          image: jpeg == null ? null : MemoryImage(jpeg),
           ground: Colors.black,
         ),
         texture: id != null && _v.started ? Texture(textureId: id) : null,

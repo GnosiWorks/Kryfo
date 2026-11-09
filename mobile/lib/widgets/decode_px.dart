@@ -7,6 +7,11 @@ import 'package:flutter/widgets.dart';
 int decodePx(BuildContext context, double dp) =>
     (dp * MediaQuery.devicePixelRatioOf(context)).ceil();
 
+// decode width for a picture of [aspect] (width / height) that covers a
+// w x h box: a wide one fills the height, so it is wider than the box
+int coverPx(BuildContext context, double w, double h, double aspect) =>
+    decodePx(context, w > h * aspect ? w : h * aspect);
+
 // the screen's width, or a fraction or multiple of it
 int screenPx(BuildContext context, {double times = 1}) {
   final mq = MediaQuery.of(context);

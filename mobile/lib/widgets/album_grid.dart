@@ -386,7 +386,11 @@ class _VideoFaceState extends State<_VideoFace> {
       path: widget.path,
       image: jpeg == null
           ? null
-          : frameImage(jpeg, decodePx(context, widget.width)),
+          // a square tile: a wide frame fills its height
+          : frameImage(
+              jpeg,
+              coverPx(context, widget.width, widget.width, _info!.aspect),
+            ),
       ground: HaloColors.surface3,
     );
   }
