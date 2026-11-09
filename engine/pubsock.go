@@ -103,6 +103,9 @@ func pubGet(ctx context.Context, key pubKey, client *http.Client) (s *pubSock, f
 	pubSocks[key] = s
 	pubMu.Unlock()
 
+	// a send goes at once; batch sockets in line wait a gap after it
+	paceCount(key.lane, key.url)
+
 	// the dial is shared by every wrap that comes while it runs, so it is
 	// not tied to this caller's context, only to the route its client is of
 	// a burst can outlast a minute, and over a busy circuit the library's
@@ -249,6 +252,7 @@ func pubCloseURL(u string) {
 func publishTo(ctx context.Context, lane, u string, client *http.Client, ev nostr.Event) error {
 	addr := wrapAddr(ev)
 	if addr == "" {
+		paceCount(lane, u)
 		r := nostr.NewRelay(ctx, u, nostr.RelayOptions{})
 		dctx, dcancel := relayDialCtx(ctx, u)
 		err := r.ConnectWithClient(dctx, client)

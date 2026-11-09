@@ -15,6 +15,7 @@ import (
 // sockets subscribe at once in tests, unless a test asks for turns
 func TestMain(m *testing.M) {
 	subSpread = 0
+	paceGap.Store(0)
 	os.Exit(m.Run())
 }
 

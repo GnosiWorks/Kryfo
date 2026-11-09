@@ -2108,7 +2108,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				conn, connDone := context.WithCancel(ctx)
 				dialAt := time.Now()
 				dialGen := routeGeneration()
-				r, fresh, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry)
+				r, fresh, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry, paceRankFor(tag, lane))
 				dialOver()
 				turn.dialed(err == nil)
 				if err != nil && routeGone(routeC) {
@@ -2796,6 +2796,7 @@ func nostrSendOn(c convPair, msg, lane string) string {
 	}
 	nostrMu.Unlock()
 
+	paceNoteSent(c)
 	ctx, cancel := context.WithTimeout(context.Background(), publishWait)
 	defer cancel()
 	ok := nostrPublishMulti(ctx, lane, ev)
