@@ -13,13 +13,13 @@ import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import 'motion.dart' show kHouseCurve, motionStill;
-import 'ease_size.dart';
 import 'sealed_picture.dart';
-import 'swap.dart';
 import 'photo_viewer.dart';
 import 'voice_parts.dart';
+import 'file_bubble.dart';
+
+export 'file_bubble.dart' show FileCard, FileSendRing;
 import '../file_kind.dart';
-import '../file_save.dart' show savingFiles;
 import '../devices/history_files.dart' show historyFilesComing;
 import '../dlog.dart';
 import '../lock_guard.dart' show lockGuard;
@@ -72,6 +72,9 @@ Widget fileCard(
   String? fileName,
   bool isOut, {
   FileShape? shape,
+  String? sendingUid,
+  VoidCallback? onCancel,
+  Object? heroTag,
 }) {
   final drawn = shape ?? fileShapeNow(filePath, fileName);
   if (filePath != null && drawn == FileShape.picture) {
@@ -107,7 +110,14 @@ Widget fileCard(
       ),
     );
   }
-  return FileCard(path: filePath, name: fileName, isOut: isOut);
+  return FileCard(
+    path: filePath,
+    name: fileName,
+    isOut: isOut,
+    sendingUid: sendingUid,
+    onCancel: onCancel,
+    heroTag: heroTag,
+  );
 }
 
 /// a shown name split before its last extension, which is never cut
@@ -116,260 +126,6 @@ Widget fileCard(
   if (e.isEmpty) return (shown, '');
   final at = shown.length - e.length - 1;
   return (shown.substring(0, at), shown.substring(at));
-}
-
-final _rtlStart = RegExp(
-  '^[^A-Za-z]*[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
-);
-
-/// a file in a chat: what kind it is, its name with the real extension
-/// always in view, and its size. the kind is read from the bytes, so a
-/// renamed app installer still shows as one, with a line about it; its
-/// tap saves instead of opening
-class FileCard extends StatefulWidget {
-  final String? path;
-  final String? name;
-  final bool isOut;
-  const FileCard({
-    super.key,
-    required this.path,
-    required this.name,
-    required this.isOut,
-  });
-
-  @override
-  State<FileCard> createState() => _FileCardState();
-}
-
-class _FileCardState extends State<FileCard> {
-  FileFacts? _facts;
-  int? _size;
-
-  @override
-  void initState() {
-    super.initState();
-    _start();
-  }
-
-  @override
-  void didUpdateWidget(FileCard old) {
-    super.didUpdateWidget(old);
-    if (old.path != widget.path || old.name != widget.name) _start();
-  }
-
-  void _start() {
-    final p = widget.path;
-    _facts = p == null ? null : fileFactsNow(p, widget.name);
-    _size = null;
-    if (p != null) _read(p, widget.name);
-  }
-
-  Future<void> _read(String p, String? name) async {
-    final facts = await readFileFacts(p, name);
-    int? size;
-    try {
-      size = await File(p).length();
-    } catch (_) {
-      // gone or unreadable: the card shows no size
-    }
-    if (!mounted || p != widget.path || name != widget.name) return;
-    setState(() {
-      _facts = facts;
-      _size = size;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isOut = widget.isOut;
-    final facts =
-        _facts ??
-        FileFacts(kindOfName(widget.name), extOf(safeFileName(widget.name)));
-    final installer = facts.installer;
-    final fg = isOut ? HaloColors.onAmber : HaloColors.text;
-    final sub = isOut ? HaloColors.onAmber : HaloColors.text;
-    // the name it is saved and handed on under: what is seen is what is
-    // saved
-    final shown = safeFileName(widget.name, facts: facts);
-    final (stem, ext) = splitFileName(shown);
-    final nameDir = _rtlStart.hasMatch(stem)
-        ? TextDirection.rtl
-        : TextDirection.ltr;
-    final kind = facts.ext.isEmpty
-        ? l10n.mediaBubblesFile
-        : facts.ext.toUpperCase();
-    final size = _size;
-    final meta = size == null ? kind : '$kind · ${humanFileSize(size)}';
-    final still = motionStill(context);
-    final nameStyle = HaloType.sans(
-      size: 13.5,
-      color: fg,
-      weight: FontWeight.w600,
-    );
-    return ValueListenableBuilder<Set<String>>(
-      valueListenable: savingFiles,
-      builder: (context, saving, _) {
-        final busy = widget.path != null && saving.contains(widget.path);
-        final Widget mark = busy
-            ? SizedBox(
-                key: const ValueKey('saving'),
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: isOut ? HaloColors.onAmber : HaloColors.amber,
-                ),
-              )
-            : Icon(
-                installer ? Icons.download_rounded : fileGlyph(facts.kind),
-                key: ValueKey(installer ? 'save' : facts.kind),
-                size: 20,
-                color: isOut ? HaloColors.onAmber : HaloColors.amber,
-              );
-        return Semantics(
-          container: true,
-          button: widget.path != null,
-          label: [
-            shown,
-            installer ? l10n.fileAppInstaller : kind,
-            if (size != null) humanFileSize(size),
-            if (installer) l10n.fileInstallerLine,
-          ].join(', '),
-          hint: widget.path == null
-              ? null
-              : installer
-              ? l10n.fileSaveToDevice
-              : l10n.fileOpenHint,
-          excludeSemantics: true,
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 260),
-            padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
-            decoration: BoxDecoration(
-              color: isOut
-                  ? HaloColors.onAmber.withValues(alpha: 0.12)
-                  : HaloColors.surface3,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: EaseSize(
-              duration: const Duration(milliseconds: 220),
-              alignment: AlignmentDirectional.topStart,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isOut
-                              ? HaloColors.onAmber.withValues(alpha: 0.16)
-                              : HaloColors.amberSoft,
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: AnimatedSwitcher(
-                          duration: still
-                              ? Duration.zero
-                              : const Duration(milliseconds: 220),
-                          switchInCurve: kHouseCurve,
-                          switchOutCurve: Curves.easeInCubic,
-                          transitionBuilder: (c, a) => FadeTransition(
-                            opacity: a,
-                            child: ScaleTransition(
-                              scale: Tween(begin: 0.6, end: 1.0).animate(a),
-                              child: c,
-                            ),
-                          ),
-                          child: mark,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // the extension stays in view however long the
-                            // name, so photo.jpg.apk never reads as a photo
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              textDirection: nameDir,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    stem,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textDirection: nameDir,
-                                    // as wide as what is drawn, so the
-                                    // extension sits right after the dots
-                                    textWidthBasis: TextWidthBasis.longestLine,
-                                    style: nameStyle,
-                                  ),
-                                ),
-                                if (ext.isNotEmpty)
-                                  Text(
-                                    ext,
-                                    maxLines: 1,
-                                    textDirection: TextDirection.ltr,
-                                    style: nameStyle,
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 3),
-                            RiseSwap(
-                              child: Text(
-                                meta,
-                                key: ValueKey(meta),
-                                maxLines: 1,
-                                style: HaloType.mono(size: 10, color: sub),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (installer)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 9),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 1),
-                            child: Icon(
-                              Icons.shield_outlined,
-                              size: 14,
-                              color: sub,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              l10n.fileInstallerLine,
-                              style: HaloType.sans(
-                                size: 12,
-                                color: sub,
-                                height: 1.35,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 void openFullImage(

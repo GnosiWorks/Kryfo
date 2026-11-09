@@ -11319,7 +11319,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => 'Нажми, чтобы скачать';
+  String get transferTapToDownload => 'Нажми, чтобы получить';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -11366,9 +11366,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsFiles => 'Файлы';
-
-  @override
-  String get fileSheetOpenWith => 'Открыть в другом приложении';
 
   @override
   String get desktopLockAccountBody =>
@@ -12111,4 +12108,84 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Вы его читаете';
+
+  @override
+  String get fileViewInKryfo => 'Открыть в Kryfo';
+
+  @override
+  String get fileOpenWith => 'Открыть в…';
+
+  @override
+  String get fileOpenWithNote =>
+      'Другое приложение увидит этот файл. До тех пор Kryfo хранит его зашифрованным.';
+
+  @override
+  String fileFrom(String name) {
+    return 'От $name';
+  }
+
+  @override
+  String fileLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count строки',
+      many: '$count строк',
+      few: '$count строки',
+      one: '$count строка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords =>
+      'Этот файл не текст. Его можно сохранить или открыть в другом приложении.';
+
+  @override
+  String fileShowsFirst(String size) {
+    return 'Здесь показаны первые $size. Сохрани файл, чтобы прочитать его целиком.';
+  }
+
+  @override
+  String filePages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count страницы',
+      many: '$count страниц',
+      few: '$count страницы',
+      one: '$count страница',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return 'Страница $page';
+  }
+
+  @override
+  String get fileSearchIn => 'Поиск в файле';
+
+  @override
+  String get fileSearchHint => 'Найти слова в этом PDF';
+
+  @override
+  String get fileZoomIn => 'Увеличить';
+
+  @override
+  String get fileZoomOut => 'Уменьшить';
+
+  @override
+  String get filePdfLocked =>
+      'У этого PDF есть пароль. Открой его в другом приложении, чтобы прочитать.';
+
+  @override
+  String get filePdfUnreadable =>
+      'Kryfo не может показать этот PDF. Его можно сохранить или открыть в другом приложении.';
 }

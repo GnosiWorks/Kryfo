@@ -11116,7 +11116,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => 'Chạm để tải xuống';
+  String get transferTapToDownload => 'Chạm để nhận';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -11163,9 +11163,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsFiles => 'Tệp';
-
-  @override
-  String get fileSheetOpenWith => 'Mở bằng ứng dụng khác';
 
   @override
   String get desktopLockAccountBody =>
@@ -11909,4 +11906,78 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Bạn đọc được';
+
+  @override
+  String get fileViewInKryfo => 'Xem trong Kryfo';
+
+  @override
+  String get fileOpenWith => 'Mở bằng…';
+
+  @override
+  String get fileOpenWithNote =>
+      'Ứng dụng kia có thể thấy tệp này. Đến lúc đó Kryfo vẫn giữ nó được mã hóa.';
+
+  @override
+  String fileFrom(String name) {
+    return 'Từ $name';
+  }
+
+  @override
+  String fileLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count dòng',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords =>
+      'Tệp này không phải văn bản. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác.';
+
+  @override
+  String fileShowsFirst(String size) {
+    return 'Đây là $size đầu tiên. Hãy lưu tệp để đọc toàn bộ.';
+  }
+
+  @override
+  String filePages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trang',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return 'Trang $page';
+  }
+
+  @override
+  String get fileSearchIn => 'Tìm trong tệp';
+
+  @override
+  String get fileSearchHint => 'Tìm từ trong PDF này';
+
+  @override
+  String get fileZoomIn => 'Phóng to';
+
+  @override
+  String get fileZoomOut => 'Thu nhỏ';
+
+  @override
+  String get filePdfLocked =>
+      'PDF này có mật khẩu. Hãy mở bằng ứng dụng khác để đọc.';
+
+  @override
+  String get filePdfUnreadable =>
+      'Kryfo không hiển thị được PDF này. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác.';
 }

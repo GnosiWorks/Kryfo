@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 
 import 'desktop/desktop_mode.dart' show rawFiles;
 import 'dlog.dart';
+import 'file_peek.dart' show forgetFirstLinesOf;
+import 'pdf_pages.dart' show forgetPdfGlance;
 import 'photo_blur.dart' show forgetBlurOf;
 
 /// zeros over [path] where its bytes are, then the name goes, also when a
@@ -17,6 +19,9 @@ Future<void> shredFile(String path, {void Function(int length)? probe}) async {
   // a photo's or a video's blur goes with it, whether it is still there
   if (!path.endsWith(kBlurLeaf)) {
     forgetBlurOf(path);
+    // and what a file bubble kept of it
+    forgetFirstLinesOf(path);
+    forgetPdfGlance(path);
     await shredFile('$path$kBlurLeaf');
   }
   final type = await FileSystemEntity.type(path, followLinks: false);

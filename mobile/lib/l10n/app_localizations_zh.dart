@@ -10537,7 +10537,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => '点按下载';
+  String get transferTapToDownload => '点按获取';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -10582,9 +10582,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsFiles => '文件';
-
-  @override
-  String get fileSheetOpenWith => '用其他应用打开';
 
   @override
   String get desktopLockAccountBody => 'Kryfo 在这台电脑上保存的所有内容都已加密。它会用你的用户账户打开。';
@@ -11265,6 +11262,76 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translateTagRead => '你读的语言';
+
+  @override
+  String get fileViewInKryfo => '在 Kryfo 中查看';
+
+  @override
+  String get fileOpenWith => '打开方式…';
+
+  @override
+  String get fileOpenWithNote => '其他应用可以看到此文件。在此之前，Kryfo 会一直加密保存它。';
+
+  @override
+  String fileFrom(String name) {
+    return '来自 $name';
+  }
+
+  @override
+  String fileLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 行',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords => '此文件不是文本。你可以保存它，或用其他应用打开。';
+
+  @override
+  String fileShowsFirst(String size) {
+    return '这里显示前 $size。保存文件即可读完整内容。';
+  }
+
+  @override
+  String filePages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 页',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return '第 $page 页';
+  }
+
+  @override
+  String get fileSearchIn => '在文件中搜索';
+
+  @override
+  String get fileSearchHint => '在此 PDF 中查找文字';
+
+  @override
+  String get fileZoomIn => '放大';
+
+  @override
+  String get fileZoomOut => '缩小';
+
+  @override
+  String get filePdfLocked => '此 PDF 有密码。请用其他应用打开阅读。';
+
+  @override
+  String get filePdfUnreadable => 'Kryfo 无法显示此 PDF。你可以保存它，或用其他应用打开。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -21677,7 +21744,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get transferTapToDownload => '輕觸即可下載';
+  String get transferTapToDownload => '輕觸即可取得';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -21722,9 +21789,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsFiles => '檔案';
-
-  @override
-  String get fileSheetOpenWith => '用其他 App 開啟';
 
   @override
   String get desktopLockAccountBody => 'Kryfo 在這台電腦上保存的所有內容都已加密。它會用你的使用者帳戶開啟。';
@@ -22408,4 +22472,74 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateTagRead => '你讀的語言';
+
+  @override
+  String get fileViewInKryfo => '在 Kryfo 中檢視';
+
+  @override
+  String get fileOpenWith => '開啟方式…';
+
+  @override
+  String get fileOpenWithNote => '其他 App 可以看到此檔案。在那之前，Kryfo 會一直加密保存它。';
+
+  @override
+  String fileFrom(String name) {
+    return '來自 $name';
+  }
+
+  @override
+  String fileLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 行',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords => '此檔案不是文字。你可以儲存它，或用其他 App 開啟。';
+
+  @override
+  String fileShowsFirst(String size) {
+    return '這裡顯示前 $size。儲存檔案即可讀完整內容。';
+  }
+
+  @override
+  String filePages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 頁',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return '第 $page 頁';
+  }
+
+  @override
+  String get fileSearchIn => '在檔案中搜尋';
+
+  @override
+  String get fileSearchHint => '在此 PDF 中尋找文字';
+
+  @override
+  String get fileZoomIn => '放大';
+
+  @override
+  String get fileZoomOut => '縮小';
+
+  @override
+  String get filePdfLocked => '此 PDF 有密碼。請用其他 App 開啟閱讀。';
+
+  @override
+  String get filePdfUnreadable => 'Kryfo 無法顯示此 PDF。你可以儲存它，或用其他 App 開啟。';
 }

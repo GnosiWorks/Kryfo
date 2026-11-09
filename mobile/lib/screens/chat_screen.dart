@@ -62,6 +62,15 @@ import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
 import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
+import '../widgets/file_actions.dart'
+    show
+        canForwardFile,
+        fileHeroTag,
+        fileFactsOrName,
+        fileViewOf,
+        forwardFile,
+        openFileOutside,
+        viewInKryfo;
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
 import '../file_drop.dart' show dropDayDone, dropTryLater;
@@ -2387,7 +2396,10 @@ class _ChatScreenState extends State<ChatScreen>
                   ? 1
                   : 0) +
               (out && !media && target.sticker == null ? 1 : 0) -
-              (out ? 0 : 1);
+              (out ? 0 : 1) +
+              (target.filePath != null && !isVoiceName(target.fileName)
+                  ? 4
+                  : 0);
     final rowH =
         20 + math.max(17.0, MediaQuery.textScalerOf(context).scale(13.5) * 1.3);
     final menuH = rows * rowH + 16;
@@ -2417,6 +2429,16 @@ class _ChatScreenState extends State<ChatScreen>
       reactTop = bubbleBottom + 10;
       menuTop = reactTop + pickerH + 8;
     }
+    // a file of its own, not a voice note: it is looked at, sent on and
+    // handed out from here
+    final fileOn =
+        album == null &&
+        canForwardFile(target.filePath, target.fileName, kept: kept);
+    final fileView =
+        album == null &&
+        target.filePath != null &&
+        !isVoiceName(target.fileName) &&
+        fileViewOf(fileFactsOrName(target.filePath!, target.fileName)) != null;
     // pin the bar to the message's side so it never runs off the edge
     final alignRight = target.direction == 'out';
     final still = motionStill(context);
@@ -2426,6 +2448,23 @@ class _ChatScreenState extends State<ChatScreen>
     List<MenuAction> actionsWith(
       void Function({bool now, VoidCallback? then}) dismiss,
     ) => [
+      // a file kryfo can show opens here first, before any way out
+      if (fileView)
+        MenuAction(
+          icon: Icons.visibility_outlined,
+          label: l10n.fileViewInKryfo,
+          tint: HaloColors.amber,
+          onTap: () {
+            dismiss(now: true);
+            viewInKryfo(
+              context,
+              target.filePath!,
+              target.fileName,
+              kept: kept,
+              from: _fileFrom(target),
+            );
+          },
+        ),
       // his first line: copy, and nothing else
       if (!welcome)
         MenuAction(
@@ -2507,30 +2546,16 @@ class _ChatScreenState extends State<ChatScreen>
                     filePath: target.filePath,
                     sticker: target.sticker != null,
                   )
-              ? null
+              ? (fileOn
+                    ? () {
+                        dismiss(now: true);
+                        forwardFile(context, target.filePath!, target.fileName);
+                      }
+                    : null)
               : () {
                   // a sheet takes its place: no copy over it
                   dismiss(now: true);
                   _forwardMessage(target);
-                },
-        ),
-      // a tap opens a file, so sharing it lives here. an
-      // app installer is only ever saved
-      if (canShareOut)
-        MenuAction(
-          icon: Icons.ios_share_rounded,
-          label: l10n.commonShare,
-          onTap:
-              kept ||
-                  !canShare ||
-                  knownInstaller(shareOn.filePath!, shareOn.fileName)
-              ? null
-              : () {
-                  dismiss(now: true);
-                  lockState.hold(
-                    () =>
-                        shareFileOut(shareOn.filePath!, name: shareOn.fileName),
-                  );
                 },
         ),
       MenuAction(
@@ -2549,6 +2574,42 @@ class _ChatScreenState extends State<ChatScreen>
             : () {
                 dismiss(now: true);
                 saveReceivedFile(context, shareOn.filePath!, shareOn.fileName);
+              },
+      ),
+      // a tap opens a file, so sharing it lives here. an
+      // app installer is only ever saved
+      if (canShareOut)
+        MenuAction(
+          icon: Icons.ios_share_rounded,
+          label: l10n.commonShare,
+          apart: true,
+          onTap:
+              kept ||
+                  !canShare ||
+                  knownInstaller(shareOn.filePath!, shareOn.fileName)
+              ? null
+              : () {
+                  dismiss(now: true);
+                  lockState.hold(
+                    () =>
+                        shareFileOut(shareOn.filePath!, name: shareOn.fileName),
+                  );
+                },
+        ),
+      // the way out: another app sees the file, and the note says so
+      MenuAction(
+        icon: Icons.open_in_new_rounded,
+        label: l10n.fileOpenWith,
+        apart: true,
+        aside: l10n.fileOpenWithNote,
+        onTap:
+            kept ||
+                !canShare ||
+                knownInstaller(shareOn.filePath!, shareOn.fileName)
+            ? null
+            : () {
+                dismiss(now: true);
+                openFileOutside(context, shareOn.filePath!, shareOn.fileName);
               },
       ),
       // words can be edited; a photo, a file or a voice note
@@ -5750,6 +5811,8 @@ class _ChatScreenState extends State<ChatScreen>
                   () =>
                       _revealedUid = _revealedUid == m.msgUid ? null : m.msgUid,
                 ),
+          onStop: _stopSending,
+          fromName: _fileFrom(m),
           onRetry: run == null
               ? _tapRetry
               : (_) {
@@ -6497,6 +6560,13 @@ class _ChatScreenState extends State<ChatScreen>
       showHaloToast(context, next ? l10n.chatSaved : l10n.chatRemovedFromSaved);
     }
   }
+
+  // who sent a file, for its viewer's head: theirs only
+  String? _fileFrom(_Msg m) => m.direction == 'out'
+      ? null
+      : _isDev
+      ? l10n.devName
+      : _nickname ?? widget.peerHaloId;
 
   Future<void> _forwardMessage(_Msg m) async {
     final id = await pickWordsChat(
@@ -8663,6 +8733,10 @@ class _Bubble extends StatelessWidget {
   static final Set<String> _entered = {};
   final _Msg msg;
   final void Function(_Msg)? onRetry;
+  // a file's ring: stops it on its way
+  final void Function(_Msg)? onStop;
+  // who they are, for a file viewer's head
+  final String? fromName;
   final void Function(BuildContext)? onLongPress;
   // its photo, video or file opened, or its voice note played
   final VoidCallback? onAct;
@@ -8719,6 +8793,8 @@ class _Bubble extends StatelessWidget {
     this.landing,
     this.quotedSticker,
     this.onRetry,
+    this.onStop,
+    this.fromName,
     this.onLongPress,
     this.onAct,
     this.onReact,
@@ -9170,6 +9246,11 @@ class _Bubble extends StatelessWidget {
                                                 msg.filePath!,
                                                 msg.fileName,
                                                 kept: kept,
+                                                from: fromName,
+                                                heroTag: fileHeroTag(
+                                                  msg.filePath!,
+                                                  'chat',
+                                                ),
                                               );
                                             }
                                           },
@@ -9182,6 +9263,18 @@ class _Bubble extends StatelessWidget {
                                               msg.fileName,
                                               isOut,
                                               shape: shape,
+                                              sendingUid: isOut && msg.sending
+                                                  ? msg.msgUid
+                                                  : null,
+                                              heroTag: msg.filePath == null
+                                                  ? null
+                                                  : fileHeroTag(
+                                                      msg.filePath!,
+                                                      'chat',
+                                                    ),
+                                              onCancel: onStop == null
+                                                  ? null
+                                                  : () => onStop!(msg),
                                             ),
                                           ),
                                         ),
@@ -9706,10 +9799,12 @@ class _Bubble extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 // an album's tiles show their own
+                                // a file card shows its own in its ring
                                 if (album == null &&
                                     msg.msgUid != null &&
                                     (msg.mediaPath != null ||
-                                        msg.filePath != null)) ...[
+                                        (msg.filePath != null &&
+                                            shape != FileShape.card))) ...[
                                   SendProgressLabel(msgUid: msg.msgUid!),
                                   const SizedBox(width: 6),
                                 ],

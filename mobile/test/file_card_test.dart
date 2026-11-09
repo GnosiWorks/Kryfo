@@ -115,8 +115,7 @@ void main() {
   testWidgets('a pdf named as a photo is labelled by what it is', (t) async {
     final f = made('in_5_scan.jpg', '%PDF-1.7\n'.codeUnits);
     await show(t, f.path, 'scan.jpg');
-    expect(find.byIcon(Icons.picture_as_pdf_outlined), findsOneWidget);
-    expect(find.textContaining('PDF'), findsOneWidget);
+    expect(find.text('PDF'), findsOneWidget);
   });
 
   testWidgets('a hidden direction mark never reaches the screen', (t) async {
@@ -181,7 +180,7 @@ void main() {
     );
     await show(t, f.path, 'a.zip', isOut: true);
     expect(t.widget<Text>(find.text('a')).style?.color, HaloColors.onAmber);
-    expect(find.byIcon(Icons.folder_zip_outlined), findsOneWidget);
+    expect(find.text('ZIP'), findsOneWidget);
   });
 
   test('sizes read like the rest of the app', () {
@@ -190,12 +189,8 @@ void main() {
   });
 
   test('the card answers the intrinsic pass of a bubble: no LayoutBuilder', () {
-    final src = File('lib/widgets/media_bubbles.dart').readAsStringSync();
-    final card = src.substring(src.indexOf('class FileCard'));
-    expect(
-      card.substring(0, card.indexOf('\nclass VoiceBubble')),
-      isNot(contains('LayoutBuilder')),
-    );
+    final src = File('lib/widgets/file_bubble.dart').readAsStringSync();
+    expect(src, isNot(contains('LayoutBuilder')));
   });
 
   testWidgets('the card shows the name the file is saved under', (t) async {

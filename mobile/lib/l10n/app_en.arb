@@ -13939,9 +13939,9 @@
       }
     }
   },
-  "transferTapToDownload": "Tap to download",
+  "transferTapToDownload": "Tap to get it",
   "@transferTapToDownload": {
-    "description": "waiting file bubble: automatic download is off for this kind of file"
+    "description": "waiting file bubble, after the size: a tap brings the file"
   },
   "transferSizeLine": "{size} · {state}",
   "@transferSizeLine": {
@@ -14006,10 +14006,6 @@
   "settingsFiles": "Files",
   "@settingsFiles": {
     "description": "settings: section header for files and downloads"
-  },
-  "fileSheetOpenWith": "Open with another app",
-  "@fileSheetOpenWith": {
-    "description": "file sheet: hands the file to an app the person picks"
   },
   "desktopLockAccountBody": "Everything Kryfo keeps on this computer is encrypted. It opens with your computer account.",
   "@desktopLockAccountBody": {
@@ -14976,5 +14972,102 @@
   "translateTagRead": "You read it",
   "@translateTagRead": {
     "description": "languages screen: a mark on a language the person reads"
+  },
+  "fileViewInKryfo": "View in Kryfo",
+  "@fileViewInKryfo": {
+    "description": "file menu, first row: opens the file in Kryfo's own viewer"
+  },
+  "fileOpenWith": "Open with…",
+  "@fileOpenWith": {
+    "description": "file menu and viewers: hands the file to another app"
+  },
+  "fileOpenWithNote": "The other app can see this file. Kryfo keeps it encrypted until then.",
+  "@fileOpenWithNote": {
+    "description": "under Open with…: what handing the file out means"
+  },
+  "fileFrom": "From {name}",
+  "@fileFrom": {
+    "description": "file viewer head: who sent the file",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileLines": "{count, plural, =1{1 line} other{{count} lines}}",
+  "@fileLines": {
+    "description": "text viewer head: how many lines the file has",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileNotWords": "This file isn't text. You can save it or open it with another app.",
+  "@fileNotWords": {
+    "description": "text viewer: the file's bytes are not words"
+  },
+  "fileShowsFirst": "This shows the first {size}. Save the file to read all of it.",
+  "@fileShowsFirst": {
+    "description": "text viewer, at the end of a long file",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "filePages": "{count, plural, =1{1 page} other{{count} pages}}",
+  "@filePages": {
+    "description": "pdf bubble and viewer: how many pages",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filePageOf": "{page} / {total}",
+  "@filePageOf": {
+    "description": "pdf viewer pill: the page in view of all pages, numbers already in the language's digits",
+    "placeholders": {
+      "page": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "filePage": "Page {page}",
+  "@filePage": {
+    "description": "pdf viewer: a page or a small page, for screen readers",
+    "placeholders": {
+      "page": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSearchIn": "Search in file",
+  "@fileSearchIn": {
+    "description": "pdf viewer head: opens the search"
+  },
+  "fileSearchHint": "Find words in this PDF",
+  "@fileSearchHint": {
+    "description": "pdf viewer search field hint"
+  },
+  "fileZoomIn": "Zoom in",
+  "@fileZoomIn": {
+    "description": "pdf viewer zoom button"
+  },
+  "fileZoomOut": "Zoom out",
+  "@fileZoomOut": {
+    "description": "pdf viewer zoom button"
+  },
+  "filePdfLocked": "This PDF has a password. Open it with another app to read it.",
+  "@filePdfLocked": {
+    "description": "pdf viewer: the renderer does not open password pdfs"
+  },
+  "filePdfUnreadable": "Kryfo can't draw this PDF. You can save it or open it with another app.",
+  "@filePdfUnreadable": {
+    "description": "pdf viewer: the renderer could not open the file"
   }
 }

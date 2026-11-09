@@ -11276,7 +11276,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => 'انقر للتنزيل';
+  String get transferTapToDownload => 'انقر لجلبه';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -11323,9 +11323,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsFiles => 'الملفات';
-
-  @override
-  String get fileSheetOpenWith => 'فتح بتطبيق آخر';
 
   @override
   String get desktopLockAccountBody =>
@@ -12057,4 +12054,88 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get translateTagRead => 'تقرؤها';
+
+  @override
+  String get fileViewInKryfo => 'عرض في Kryfo';
+
+  @override
+  String get fileOpenWith => 'فتح باستخدام…';
+
+  @override
+  String get fileOpenWithNote =>
+      'يمكن للتطبيق الآخر رؤية هذا الملف. يبقيه Kryfo مشفّرًا حتى ذلك الحين.';
+
+  @override
+  String fileFrom(String name) {
+    return 'من $name';
+  }
+
+  @override
+  String fileLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count سطر',
+      many: '$count سطرًا',
+      few: '$count أسطر',
+      two: 'سطران',
+      one: 'سطر واحد',
+      zero: 'لا أسطر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords =>
+      'هذا الملف ليس نصًا. يمكنك حفظه أو فتحه بتطبيق آخر.';
+
+  @override
+  String fileShowsFirst(String size) {
+    return 'يظهر هنا أول $size. احفظ الملف لقراءته كاملًا.';
+  }
+
+  @override
+  String filePages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صفحة',
+      many: '$count صفحة',
+      few: '$count صفحات',
+      two: 'صفحتان',
+      one: 'صفحة واحدة',
+      zero: 'لا صفحات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return 'الصفحة $page';
+  }
+
+  @override
+  String get fileSearchIn => 'البحث في الملف';
+
+  @override
+  String get fileSearchHint => 'ابحث عن كلمات في ملف PDF هذا';
+
+  @override
+  String get fileZoomIn => 'تكبير';
+
+  @override
+  String get fileZoomOut => 'تصغير';
+
+  @override
+  String get filePdfLocked =>
+      'ملف PDF هذا محمي بكلمة مرور. افتحه بتطبيق آخر لقراءته.';
+
+  @override
+  String get filePdfUnreadable =>
+      'لا يستطيع Kryfo عرض ملف PDF هذا. يمكنك حفظه أو فتحه بتطبيق آخر.';
 }

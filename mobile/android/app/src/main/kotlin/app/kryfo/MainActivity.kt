@@ -52,6 +52,7 @@ import io.flutter.plugin.common.StringCodec
 open class MainActivity : FlutterFragmentActivity() {
     private val tools = ToolsBridge(this)
     private var videos: VideoPlayers? = null
+    private var pdfs: PdfPages? = null
     companion object {
         private const val NOTIF_PERM_REQUEST = 1001
         private const val PERM_PREFS = "halo_perm"
@@ -437,6 +438,8 @@ open class MainActivity : FlutterFragmentActivity() {
     // a player belongs to the screen that showed it
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         videos?.releaseAll()
+        pdfs?.releaseAll()
+        pdfs = null
         videos = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
@@ -456,6 +459,10 @@ open class MainActivity : FlutterFragmentActivity() {
         videos = VideoPlayers(flutterEngine.renderer).also { v ->
             MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/video")
                 .setMethodCallHandler { call, result -> v.handle(call, result) }
+        }
+        pdfs = PdfPages().also { d ->
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/pdf")
+                .setMethodCallHandler { call, result -> d.handle(call, result) }
         }
         PinKey.attach(applicationContext)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "halo/platform")

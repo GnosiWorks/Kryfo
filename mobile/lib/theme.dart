@@ -286,6 +286,13 @@ class HaloColors {
 
   static Color get onWarn => _y.on;
 
+  /// a video file's tile, apart from the sky that code wears
+  static Color get fileBlue =>
+      isLight ? const Color(0xFF1B4FB0) : const Color(0xFF60A5FA);
+
+  /// the extension written on a file's tile
+  static Color get onFileBadge => isLight ? const Color(0xFFFFFFFF) : amberInk;
+
   /// words on a filled violet button: the dark ink is ~3.3:1 on the light
   /// theme's violet, white is 5.6:1
   static Color get onViolet => isLight ? const Color(0xFFFFFFFF) : amberInk;

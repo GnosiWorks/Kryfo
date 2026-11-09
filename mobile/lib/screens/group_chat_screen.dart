@@ -43,6 +43,15 @@ import '../file_kind.dart'
         knownInstaller,
         readFileFactsFresh;
 import '../file_save.dart' show saveReceivedFile;
+import '../widgets/file_actions.dart'
+    show
+        canForwardFile,
+        fileHeroTag,
+        fileFactsOrName,
+        fileViewOf,
+        forwardFile,
+        openFileOutside,
+        viewInKryfo;
 import '../widgets/media_bubbles.dart';
 import '../translate/chat_translation.dart';
 import '../translate/hub_live.dart' show translationHubIfOn;
@@ -2010,6 +2019,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               quotedAuthor: quotedAuthor,
                               quotedSticker: quotedSticker,
                             ),
+                      onStop: () => _stopGroupSending(m),
                       onRetry: m.looksFailed
                           ? () {
                               for (final x in members) {
@@ -3558,7 +3568,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         2 +
         (words ? 2 : 0) +
         (_trOffer(target) != null ? 3 : 0) +
-        (target.filePath != null && !isVoiceName(target.fileName) ? 1 : 0) +
+        (target.filePath != null && !isVoiceName(target.fileName) ? 5 : 0) +
         (isOut ? (words ? 2 : 1) : 0);
     final rowH = 20 + math.max(17.0, mq.textScaler.scale(13.5) * 1.3);
     final menuH = rows * rowH + 16;
@@ -3852,7 +3862,34 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final translation = _translation;
     final trOffer = _trOffer(target);
     final trKey = trKeyOf(target.msgUid, target.came);
+    // a file of its own, not a voice note: looked at, sent on and handed
+    // out from here
+    final fileOn =
+        album == null &&
+        canForwardFile(target.filePath, target.fileName, kept: kept);
+    final fileView =
+        album == null &&
+        target.filePath != null &&
+        !isVoiceName(target.fileName) &&
+        fileViewOf(fileFactsOrName(target.filePath!, target.fileName)) != null;
     return [
+      // a file kryfo can show opens here first, before any way out
+      if (fileView)
+        MenuAction(
+          icon: Icons.visibility_outlined,
+          label: l10n.fileViewInKryfo,
+          tint: HaloColors.amber,
+          onTap: () {
+            dismiss();
+            viewInKryfo(
+              context,
+              target.filePath!,
+              target.fileName,
+              kept: kept,
+              from: isOut ? null : target.senderName,
+            );
+          },
+        ),
       MenuAction(
         icon: anchor.pinned ? Icons.push_pin : Icons.push_pin_outlined,
         label: anchor.pinned ? l10n.groupChatUnpin : l10n.groupChatPin,
@@ -3928,10 +3965,31 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   filePath: target.filePath,
                   sticker: target.sticker != null,
                 )
-            ? null
+            ? (fileOn
+                  ? () {
+                      dismiss();
+                      forwardFile(context, target.filePath!, target.fileName);
+                    }
+                  : null)
             : () {
                 dismiss();
                 _forwardGroupMessage(target);
+              },
+      ),
+      MenuAction(
+        icon: Icons.download_rounded,
+        label: l10n.fileSaveToDevice,
+        // in an album, the one held. nothing a room keeps leaves it
+        onTap:
+            (kept ||
+                shareOn == null ||
+                shareOn.filePath == null ||
+                shareOn.fileName == null ||
+                isVoiceName(shareOn.fileName))
+            ? null
+            : () {
+                dismiss();
+                saveReceivedFile(context, shareOn.filePath!, shareOn.fileName);
               },
       ),
       // a tap opens a file, so sharing it lives here. an app installer is
@@ -3940,6 +3998,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         MenuAction(
           icon: Icons.ios_share_rounded,
           label: l10n.commonShare,
+          apart: true,
           onTap:
               (kept ||
                   shareOn == null ||
@@ -3955,20 +4014,22 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   );
                 },
         ),
+      // the way out: another app sees the file, and the note says so
       MenuAction(
-        icon: Icons.download_rounded,
-        label: l10n.fileSaveToDevice,
-        // in an album, the one held. nothing a room keeps leaves it
+        icon: Icons.open_in_new_rounded,
+        label: l10n.fileOpenWith,
+        apart: true,
+        aside: l10n.fileOpenWithNote,
         onTap:
             (kept ||
                 shareOn == null ||
                 shareOn.filePath == null ||
-                shareOn.fileName == null ||
-                isVoiceName(shareOn.fileName))
+                isVoiceName(shareOn.fileName) ||
+                knownInstaller(shareOn.filePath!, shareOn.fileName))
             ? null
             : () {
                 dismiss();
-                saveReceivedFile(context, shareOn.filePath!, shareOn.fileName);
+                openFileOutside(context, shareOn.filePath!, shareOn.fileName);
               },
       ),
       if (isOut) ...[
@@ -6102,6 +6163,8 @@ class _GroupBubble extends StatelessWidget {
   // its photo, video or file opened, or its voice note played
   final VoidCallback? onAct;
   final VoidCallback? onRetry;
+  // a file's ring: stops it on its way
+  final VoidCallback? onStop;
   // a tap on a chip puts the same emoji on from here, or takes it off
   final void Function(String emoji)? onReact;
   final bool ripple;
@@ -6158,6 +6221,7 @@ class _GroupBubble extends StatelessWidget {
     this.onLongPress,
     this.onAct,
     this.onRetry,
+    this.onStop,
     this.onReact,
     this.ripple = false,
     this.query = '',
@@ -6607,6 +6671,13 @@ class _GroupBubble extends StatelessWidget {
                                                         m.fileName,
                                                         kept: kept,
                                                         where: keptIn,
+                                                        from: isOut
+                                                            ? null
+                                                            : m.senderName,
+                                                        heroTag: fileHeroTag(
+                                                          m.filePath!,
+                                                          'group',
+                                                        ),
                                                       );
                                                     }
                                                   },
@@ -6620,6 +6691,18 @@ class _GroupBubble extends StatelessWidget {
                                                       m.fileName,
                                                       isOut,
                                                       shape: shape,
+                                                      sendingUid:
+                                                          isOut && m.sending
+                                                          ? m.msgUid
+                                                          : null,
+                                                      onCancel: onStop,
+                                                      heroTag:
+                                                          m.filePath == null
+                                                          ? null
+                                                          : fileHeroTag(
+                                                              m.filePath!,
+                                                              'group',
+                                                            ),
                                                     ),
                                                   ),
                                                 ),
@@ -7047,9 +7130,11 @@ class _GroupBubble extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // a file card shows its own in its ring
                                   if (m.msgUid != null &&
                                       (m.mediaPath != null ||
-                                          m.filePath != null)) ...[
+                                          (m.filePath != null &&
+                                              shape != FileShape.card))) ...[
                                     SendProgressLabel(msgUid: m.msgUid!),
                                     const SizedBox(width: 6),
                                   ],

@@ -11260,7 +11260,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => 'Zum Laden tippen';
+  String get transferTapToDownload => 'Zum Holen tippen';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -11307,9 +11307,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsFiles => 'Dateien';
-
-  @override
-  String get fileSheetOpenWith => 'Mit anderer App öffnen';
 
   @override
   String get desktopLockAccountBody =>
@@ -12063,4 +12060,80 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Liest du';
+
+  @override
+  String get fileViewInKryfo => 'In Kryfo ansehen';
+
+  @override
+  String get fileOpenWith => 'Öffnen mit…';
+
+  @override
+  String get fileOpenWithNote =>
+      'Die andere App kann diese Datei sehen. Bis dahin hält Kryfo sie verschlüsselt.';
+
+  @override
+  String fileFrom(String name) {
+    return 'Von $name';
+  }
+
+  @override
+  String fileLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Zeilen',
+      one: '1 Zeile',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords =>
+      'Diese Datei ist kein Text. Du kannst sie speichern oder mit einer anderen App öffnen.';
+
+  @override
+  String fileShowsFirst(String size) {
+    return 'Hier stehen die ersten $size. Speichere die Datei, um alles zu lesen.';
+  }
+
+  @override
+  String filePages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Seiten',
+      one: '1 Seite',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return 'Seite $page';
+  }
+
+  @override
+  String get fileSearchIn => 'In Datei suchen';
+
+  @override
+  String get fileSearchHint => 'Wörter in diesem PDF finden';
+
+  @override
+  String get fileZoomIn => 'Vergrößern';
+
+  @override
+  String get fileZoomOut => 'Verkleinern';
+
+  @override
+  String get filePdfLocked =>
+      'Dieses PDF hat ein Passwort. Öffne es mit einer anderen App, um es zu lesen.';
+
+  @override
+  String get filePdfUnreadable =>
+      'Kryfo kann dieses PDF nicht anzeigen. Du kannst es speichern oder mit einer anderen App öffnen.';
 }

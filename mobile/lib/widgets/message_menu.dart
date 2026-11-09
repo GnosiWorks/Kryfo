@@ -22,6 +22,10 @@ class MenuAction {
   final Color? tint;
   // a row that turns something on or off: a check at its end while on
   final bool? checked;
+  // set apart from the rows above it by a line, as the way out of the app
+  final bool apart;
+  // a short note in a box under the row: what the row means
+  final String? aside;
   const MenuAction({
     required this.icon,
     required this.label,
@@ -29,6 +33,8 @@ class MenuAction {
     this.danger = false,
     this.tint,
     this.checked,
+    this.apart = false,
+    this.aside,
   });
 }
 
@@ -112,7 +118,10 @@ class _MessageMenuCardState extends State<MessageMenuCard>
     final rows = <Widget>[];
     for (var i = 0; i < live.length; i++) {
       final a = live[i];
-      if (a.danger && i > 0 && !live[i - 1].danger) {
+      final cut =
+          (a.danger && i > 0 && !live[i - 1].danger) ||
+          (a.apart && i > 0 && !live[i - 1].apart && !a.danger);
+      if (cut) {
         rows.add(
           Container(
             height: 0.5,
@@ -122,6 +131,25 @@ class _MessageMenuCardState extends State<MessageMenuCard>
         );
       }
       rows.add(_rowIn(_in, i, live.length, _beat, 6, _MenuRow(action: a)));
+      final aside = a.aside;
+      if (aside != null) {
+        rows.add(
+          _rowIn(
+            _in,
+            i,
+            live.length,
+            _beat,
+            6,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 2, 4, 4),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 250),
+                child: AsideNote(aside),
+              ),
+            ),
+          ),
+        );
+      }
     }
     final note = widget.note;
     if (note != null) {
@@ -172,6 +200,42 @@ class _MessageMenuCardState extends State<MessageMenuCard>
       ),
     );
   }
+}
+
+/// a short note in a soft box with an info mark: what the row above it
+/// means
+class AsideNote extends StatelessWidget {
+  final String text;
+  const AsideNote(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsetsDirectional.fromSTEB(10, 9, 12, 9),
+    decoration: BoxDecoration(
+      color: HaloColors.surface3,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Icon(
+            Icons.info_outline_rounded,
+            size: 15,
+            color: HaloColors.amber,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            text,
+            style: HaloType.sans(size: 12, color: HaloColors.text, height: 1.4),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _MenuRow extends StatelessWidget {

@@ -17827,10 +17827,10 @@ abstract class AppLocalizations {
   /// **'Paused · {detail}'**
   String transferPausedAt(String detail);
 
-  /// waiting file bubble: automatic download is off for this kind of file
+  /// waiting file bubble, after the size: a tap brings the file
   ///
   /// In en, this message translates to:
-  /// **'Tap to download'**
+  /// **'Tap to get it'**
   String get transferTapToDownload;
 
   /// waiting file bubble: the file size, then transferOnWifi or transferTapToDownload
@@ -17916,12 +17916,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files'**
   String get settingsFiles;
-
-  /// file sheet: hands the file to an app the person picks
-  ///
-  /// In en, this message translates to:
-  /// **'Open with another app'**
-  String get fileSheetOpenWith;
 
   /// desktop/desktop_lock_screen.dart: first start with a system keyring, under the title
   ///
@@ -19104,6 +19098,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You read it'**
   String get translateTagRead;
+
+  /// file menu, first row: opens the file in Kryfo's own viewer
+  ///
+  /// In en, this message translates to:
+  /// **'View in Kryfo'**
+  String get fileViewInKryfo;
+
+  /// file menu and viewers: hands the file to another app
+  ///
+  /// In en, this message translates to:
+  /// **'Open with…'**
+  String get fileOpenWith;
+
+  /// under Open with…: what handing the file out means
+  ///
+  /// In en, this message translates to:
+  /// **'The other app can see this file. Kryfo keeps it encrypted until then.'**
+  String get fileOpenWithNote;
+
+  /// file viewer head: who sent the file
+  ///
+  /// In en, this message translates to:
+  /// **'From {name}'**
+  String fileFrom(String name);
+
+  /// text viewer head: how many lines the file has
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line} other{{count} lines}}'**
+  String fileLines(int count);
+
+  /// text viewer: the file's bytes are not words
+  ///
+  /// In en, this message translates to:
+  /// **'This file isn\'t text. You can save it or open it with another app.'**
+  String get fileNotWords;
+
+  /// text viewer, at the end of a long file
+  ///
+  /// In en, this message translates to:
+  /// **'This shows the first {size}. Save the file to read all of it.'**
+  String fileShowsFirst(String size);
+
+  /// pdf bubble and viewer: how many pages
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 page} other{{count} pages}}'**
+  String filePages(int count);
+
+  /// pdf viewer pill: the page in view of all pages, numbers already in the language's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{page} / {total}'**
+  String filePageOf(String page, String total);
+
+  /// pdf viewer: a page or a small page, for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page}'**
+  String filePage(String page);
+
+  /// pdf viewer head: opens the search
+  ///
+  /// In en, this message translates to:
+  /// **'Search in file'**
+  String get fileSearchIn;
+
+  /// pdf viewer search field hint
+  ///
+  /// In en, this message translates to:
+  /// **'Find words in this PDF'**
+  String get fileSearchHint;
+
+  /// pdf viewer zoom button
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get fileZoomIn;
+
+  /// pdf viewer zoom button
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get fileZoomOut;
+
+  /// pdf viewer: the renderer does not open password pdfs
+  ///
+  /// In en, this message translates to:
+  /// **'This PDF has a password. Open it with another app to read it.'**
+  String get filePdfLocked;
+
+  /// pdf viewer: the renderer could not open the file
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo can\'t draw this PDF. You can save it or open it with another app.'**
+  String get filePdfUnreadable;
 }
 
 class _AppLocalizationsDelegate
