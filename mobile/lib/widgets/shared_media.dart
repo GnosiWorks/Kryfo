@@ -491,18 +491,27 @@ class SharedScreenState extends State<SharedScreen> {
     if (_coming.any((u) => !fileWaits.value.containsKey(u))) _load();
   }
 
-  void _go(SharedTab t) {
-    if (t == _tab) return;
+  // a tap's slide passes the pages between: they do not take the tab
+  bool _sliding = false;
+
+  Future<void> _go(SharedTab t) async {
+    // the pages are not up until the rows are read
+    if (t == _tab || !_pages.hasClients) return;
     HapticFeedback.selectionClick();
     setState(() => _tab = t);
     if (motionStill(context)) {
       _pages.jumpToPage(t.index);
-    } else {
-      _pages.animateToPage(
+      return;
+    }
+    _sliding = true;
+    try {
+      await _pages.animateToPage(
         t.index,
         duration: const Duration(milliseconds: 320),
         curve: kHouseCurve,
       );
+    } finally {
+      _sliding = false;
     }
   }
 
@@ -538,7 +547,7 @@ class SharedScreenState extends State<SharedScreen> {
                         key: const ValueKey('read'),
                         controller: _pages,
                         onPageChanged: (i) {
-                          if (i == _tab.index) return;
+                          if (_sliding || i == _tab.index) return;
                           HapticFeedback.selectionClick();
                           setState(() => _tab = SharedTab.values[i]);
                         },

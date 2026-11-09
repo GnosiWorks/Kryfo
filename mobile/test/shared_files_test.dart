@@ -244,6 +244,11 @@ void main() {
       final page = t.state<SharedScreenState>(find.byType(SharedScreen));
       expect(page.tab, SharedTab.files);
       await t.tap(find.text(l10n.sharedTabLinks));
+      // the slide passes the voice page without the tab stopping there
+      for (var i = 0; i < 20; i++) {
+        await t.pump(const Duration(milliseconds: 20));
+        expect(page.tab, SharedTab.links);
+      }
       await t.pumpAndSettle();
       expect(page.tab, SharedTab.links);
       expect(find.text('kryfo.app'), findsOneWidget);
