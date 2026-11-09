@@ -11,7 +11,7 @@ import 'package:just_audio/just_audio.dart';
 
 import 'dlog.dart';
 import 'lock_guard.dart' show LockGuard, lockGuard;
-import 'phone_seal.dart' show PlainView, plainViewOf;
+import 'phone_seal.dart' show PlainView, plainViewOfLater;
 import 'widgets/voice_parts.dart' show VoiceTurn, holdVoiceFile, letVoiceFileGo;
 
 /// one sound to play: a file, who sent it and when
@@ -175,7 +175,7 @@ class SoundPlayer extends ChangeNotifier {
     _letGo();
     PlainView? v;
     try {
-      v = plainViewOf(it.path);
+      v = await plainViewOfLater(it.path, stop: guard.isLocked);
       final d = await e.load(v.path);
       if (_item != it) {
         v.close();
