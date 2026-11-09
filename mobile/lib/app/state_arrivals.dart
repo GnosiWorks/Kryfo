@@ -217,7 +217,6 @@ extension AppStateArrivals on AppState {
     // typing rides the onion door alone (receiveOnion): on any other lane,
     // or sealed for later, it is dropped unseen
     if (env.typing) return RouteTo.dropped;
-    if (!fromDevice) _doorAwakeFor(senderHaloId);
     // the dev chat takes a frame only while it runs, and only what his
     // chat may carry, said by his pinned key. the rest is dropped unseen
     if (isDevId(senderHaloId)) {
@@ -230,6 +229,8 @@ extension AppStateArrivals on AppState {
       wire = kept;
       env = unwrapMessage(kept);
     }
+    // a frame let in: their onion is up
+    if (!fromDevice) _doorAwakeFor(senderHaloId);
     if (into != null) {
       return _fileArrival(
         senderHaloId,
