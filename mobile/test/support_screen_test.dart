@@ -770,6 +770,26 @@ void main() {
       await devClose(t);
     });
 
+    testWidgets('on a computer linked to his phone, opens the inbox too', (
+      t,
+    ) async {
+      await _world(dev: false);
+      linkedRoleForTest = true;
+      devInboxForTest = true;
+      addTearDown(() {
+        linkedRoleForTest = false;
+        devInboxForTest = false;
+      });
+      final nav = await host(t);
+      final going = openSupportTap(nav, '');
+      await _settle(t);
+      expect(find.byType(SupportScreen), findsOneWidget);
+      nav.pop();
+      await _settle(t);
+      await going;
+      await devClose(t);
+    });
+
     testWidgets('does nothing in a decoy', (t) async {
       await _world();
       useDatabasesForTest(_db, Session(_Db(MemDb(), HaloContainer.decoy)));

@@ -434,11 +434,28 @@ void main() {
       expect((await place('answered'))!['state'], 'open');
       await moves('answered', 'out');
       expect((await place('answered'))!['state'], 'out');
+      // put away is for a chat in the inbox: one in Chats stays there
+      await moves('answered', 'done');
+      expect((await place('answered'))!['state'], 'out');
       await moves('moved', 'open');
       expect((await place('moved'))!['state'], 'open');
       // bob never wrote through the developer chat
       await moves('bob', 'open');
       expect(await place('bob'), isNull);
+      // one who did comes into the inbox only on a move there
+      await person('via');
+      await s.insert('messages', {
+        'peer_id': 'via',
+        'direction': 'in',
+        'plaintext': 'through the dev chat',
+        'sent_at': 1,
+        'via_dev': 1,
+      });
+      await moves('via', 'done');
+      await moves('via', 'out');
+      expect(await place('via'), isNull);
+      await moves('via', 'open');
+      expect((await place('via'))!['state'], 'open');
       // and a state the inbox has no place for moves nothing
       await moves('answered', 'gone');
       expect((await place('answered'))!['state'], 'out');
@@ -454,6 +471,46 @@ void main() {
       await ownTellMeForTest();
       final his = told.ops.where((o) => o.$1 == 'profile').single.$3;
       expect(his['dv'], isTrue);
+    }, skip: skip);
+  });
+
+  group('his phone, the guards', () {
+    test('my passes keep telling my devices the inbox is here', () async {
+      devPhone();
+      await ownPassForTest();
+      await s.delete('own_told', where: "chat = 'me'");
+      told.ops.clear();
+      await ownPassForTest();
+      final me = told.ops.where((o) => o.$1 == 'profile').single.$3;
+      expect(me['dv'], isTrue);
+    }, skip: skip);
+
+    test('my desk reads a waiting chat for me too', () async {
+      devPhone();
+      await inbox('waiting', 'open', accepted: 0);
+      expect(await op('read', 'p:waiting', {}), isTrue);
+      await person('asking', caps: '', accepted: 0);
+      expect(await op('read', 'p:asking', {}), isFalse);
+    }, skip: skip);
+
+    test(
+      'anyone else\'s phone passes no request on, whatever rows it has',
+      () async {
+        await inbox('waiting', 'open', accepted: 0);
+        await comes('waiting', _f({'u': 'u-x', 'm': 'hi', 'sp': 1}));
+        expect(told.forwards, isEmpty);
+      },
+      skip: skip,
+    );
+
+    test('anyone else\'s phone moves nothing on a device\'s word, whatever '
+        'rows it has', () async {
+      await inbox('answered', 'open');
+      await op('contact', 'p:answered', {
+        'r': {'nickname': null},
+        'sp': {'s': 'done'},
+      });
+      expect((await place('answered'))!['state'], 'open');
     }, skip: skip);
   });
 
@@ -520,6 +577,105 @@ void main() {
       final o = told.ops.where((o) => o.$2 == 'p:answered').single;
       expect(o.$1, 'contact');
       expect(o.$3['sp'], {'s': 'out'});
+    }, skip: skip);
+
+    test('a chat that came through the developer chat moves to the inbox '
+        'from here too, and goes to the phone on its rows', () async {
+      devDesk();
+      await person('via');
+      await s.insert('messages', {
+        'peer_id': 'via',
+        'direction': 'in',
+        'plaintext': 'through the dev chat',
+        'sent_at': 1,
+        'via_dev': 1,
+      });
+      await ownPassForTest();
+      told.ops.clear();
+      expect(await app.movableToInbox('via'), isTrue);
+      await app.moveToInbox('via');
+      expect((await place('via'))!['state'], 'open');
+      await ownPassForTest();
+      final o = told.ops.where((o) => o.$2 == 'p:via').single;
+      expect(o.$3['sp'], {'s': 'open'});
+    }, skip: skip);
+
+    test('a quiet session shows no inbox', () async {
+      devDesk();
+      expect(devInboxHere, isTrue);
+      useDatabasesForTest(db, Session(_Rows(s, HaloContainer.decoy)));
+      expect(devInboxHere, isFalse);
+      useDatabasesForTest(db, Session(db));
+    }, skip: skip);
+
+    test('the developer chat is never a chat of the inbox here', () async {
+      devDesk();
+      await s.insert('support_chats', {
+        'halo_id': 'dev:k1',
+        'first_at': 1,
+        'state': 'open',
+      });
+      expect(await app.inboxChatHere('dev:k1'), isFalse);
+      await inbox('answered', 'open');
+      expect(await app.inboxChatHere('answered'), isTrue);
+    }, skip: skip);
+
+    test('a state the inbox has no place for files nothing here', () async {
+      devDesk();
+      await inbox('answered', 'open');
+      await op('contact', 'p:answered', {
+        'r': {'halo_id': 'answered', 'accepted': 1},
+        'sp': {'s': 'gone'},
+      });
+      expect((await place('answered'))!['state'], 'open');
+      await person('new-one', caps: '', accepted: 0);
+      expect(
+        await forward('new-one', _f({'u': 'u-g', 'm': 'hi', 'sp': 1}), {
+          's': 'gone',
+        }),
+        isFalse,
+      );
+      expect(await place('new-one'), isNull);
+    }, skip: skip);
+
+    test('a waiting chat takes the inbox\'s five, not a stranger\'s two, '
+        'as the phone filed it', () async {
+      devDesk();
+      await inbox('waiting', 'open', accepted: 0);
+      for (var i = 0; i < 4; i++) {
+        expect(
+          await forward('waiting', _f({'u': 'u-$i', 'm': 'help $i', 'sp': 1}), {
+            's': 'open',
+          }),
+          isTrue,
+          reason: '$i',
+        );
+      }
+      for (var i = 0; i < 4; i++) {
+        expect(await rows('u-$i'), hasLength(1), reason: '$i');
+      }
+    }, skip: skip);
+
+    test('a message through the developer chat wears its tag here as on the '
+        'phone; one in a chat the inbox filed does not', () async {
+      devDesk();
+      expect(
+        await forward(
+          'bob',
+          _f({'u': 'u-v', 'm': 'via the dev chat', 'sp': 1}),
+          null,
+        ),
+        isTrue,
+      );
+      expect((await rows('u-v')).single['via_dev'], 1);
+      await inbox('answered', 'open');
+      expect(
+        await forward('answered', _f({'u': 'u-f', 'm': 'filed one', 'sp': 1}), {
+          's': 'open',
+        }),
+        isTrue,
+      );
+      expect((await rows('u-f')).single['via_dev'], 0);
     }, skip: skip);
 
     test('the phone\'s profile says whether the inbox shows here', () async {

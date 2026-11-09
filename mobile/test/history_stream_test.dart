@@ -683,6 +683,33 @@ void main() {
     out.close();
   }, skip: skip);
 
+  test('a chat this device filed already keeps its place, a discard leaves '
+      'it, and a place the inbox has none of files nothing', () async {
+    final ph = await _phone();
+    await ph.db.update('support_chats', {
+      'state': 'gone',
+    }, where: "halo_id = '$_supportOut'");
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    await d.db.insert('support_chats', {
+      'halo_id': _support,
+      'first_at': 3,
+      'state': 'done',
+    });
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    Future<Map<Object?, Object?>> inbox() async => {
+      for (final r in await d.db.query('support_chats'))
+        r['halo_id']: (r['state'], r['first_at']),
+    };
+    expect(await inbox(), {_support: ('done', 3)});
+    await imp.discard();
+    expect(await inbox(), {_support: ('done', 3)});
+    out.close();
+  }, skip: skip);
+
   test('a chat with screenshots blocked stays on the phone', () async {
     final ph = await _phone();
     final l = _Link();
