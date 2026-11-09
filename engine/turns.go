@@ -189,6 +189,10 @@ type subTurn struct {
 	batch *hubKey
 	// the longest turn, 0 for subSpread
 	spread time.Duration
+	// the last take began its turn under a kick, wake or start the phone
+	// made. a redial under the same one after a drop is not: a relay can
+	// drop sockets at will, so that dial takes no rank (dialpace.go)
+	made bool
 }
 
 // a shared socket's turn under a kick or a wake: drawn once, by the first
@@ -248,6 +252,7 @@ func (t *subTurn) take(ctx context.Context) bool {
 	// every dial is counted until it is over (dialed), turn or none
 	t.hold()
 	wakeCheck()
+	t.made = false
 	kc := kickChan()
 	if n, w, ok := wakeNow(); ok {
 		return t.takeWake(ctx, kc, n, w)
@@ -255,6 +260,7 @@ func (t *subTurn) take(ctx context.Context) bool {
 	if t.kick == kc {
 		return ctx.Err() == nil
 	}
+	t.made = true
 	again := t.kick != nil && !t.up && !t.free
 	first := t.kick == nil && t.fresh.holds(kc, autoNow())
 	t.kick = kc
@@ -312,6 +318,9 @@ func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wak
 	first := t.kick == nil && t.fresh.holds(kc, now)
 	had := t.wake == n
 	t.kick, t.wake, t.free = kc, n, first
+	// the wake's own turn. the one more after a socket that got through
+	// died again is a drop's
+	t.made = !had
 	// a retry after a failed turn goes at its own backoff's pace
 	if (had && !t.up) || first || isFirstTag(t.tag) {
 		return ctx.Err() == nil

@@ -2108,7 +2108,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				conn, connDone := context.WithCancel(ctx)
 				dialAt := time.Now()
 				dialGen := routeGeneration()
-				r, fresh, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry, paceRankFor(tag, lane))
+				r, fresh, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry, paceRankFor(tag, lane, turn.made))
 				dialOver()
 				turn.dialed(err == nil)
 				if err != nil && routeGone(routeC) {

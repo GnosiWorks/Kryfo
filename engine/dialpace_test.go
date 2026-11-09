@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"maps"
 	"sort"
 	"strings"
 	"sync"
@@ -230,6 +231,21 @@ func TestFastRedialsArePaced(t *testing.T) {
 	openAddr := mustRcv(t, peers[open])
 	firstTag.Store(tags[open])
 	defer firstTag.Store("")
+	// the ranks the places after the drop went by
+	var rankMu sync.Mutex
+	ranks := map[int]int{}
+	dialPace.Lock()
+	paceGrantHook = func(tk *paceTicket) {
+		rankMu.Lock()
+		ranks[tk.rank]++
+		rankMu.Unlock()
+	}
+	dialPace.Unlock()
+	t.Cleanup(func() {
+		dialPace.Lock()
+		paceGrantHook = nil
+		dialPace.Unlock()
+	})
 	drop := time.Now()
 	from = drop
 	a.dropAll()
@@ -254,33 +270,72 @@ func TestFastRedialsArePaced(t *testing.T) {
 	if len(ts) < 12 || back > 15*time.Second {
 		t.Fatalf("%d new connections, every address back after %v", len(ts), back)
 	}
-	// the open chat's batch on both stores among the first three
-	firstThree := 0
-	for _, c := range conns {
-		if !c.addrs[openAddr] {
-			continue
-		}
-		earlier := 0
-		for _, x := range ts {
-			if x.Before(c.opened) {
-				earlier++
-			}
-		}
-		if earlier < 3 {
-			firstThree++
-		}
-	}
 	var seen []string
 	sort.Slice(conns, func(i, j int) bool { return conns[i].opened.Before(conns[j].opened) })
 	for _, c := range conns {
 		seen = append(seen, fmt.Sprintf("%v:%d:%v", c.opened.Sub(drop).Round(10*time.Millisecond), len(c.addrs), c.addrs[openAddr]))
 	}
 	t.Logf("sockets after the drop, back after %v: %v", back.Round(100*time.Millisecond), seen)
-	if firstThree < 2 {
-		t.Fatalf("the open chat's batch was among the first three sockets on %d stores, want 2", firstThree)
+	// the relays dropped them: no place went by the open chat or a chat
+	// written to, or the order would name it
+	rankMu.Lock()
+	got := maps.Clone(ranks)
+	rankMu.Unlock()
+	if got[paceAny] == 0 || len(got) != 1 {
+		t.Fatalf("places after a relay's drop by rank %v, want only %d (no rank)", got, paceAny)
 	}
 	for i := 0; i < n; i += 8 {
 		body := "while down " + tags[i][:8]
 		waitFor(t, body, 20*time.Second, func() bool { return inboxHas(tags[i] + "|" + body) })
+	}
+}
+
+// a socket the relay dropped redials with no rank; one under the phone's
+// own kick or start keeps it
+func TestPaceRedialAfterADropTakesNoRank(t *testing.T) {
+	firstTag.Store("peer")
+	t.Cleanup(func() { firstTag.Store("") })
+	tu := subTurn{tag: "peer", lane: paceLane}
+	defer tu.done()
+	ctx := context.Background()
+	if !tu.take(ctx) || paceRankFor(tu.tag, tu.lane, tu.made) != paceFirst {
+		t.Fatalf("the start's dial of the open chat ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceFirst)
+	}
+	tu.dialed(true)
+	// the socket died under the same kick: the relay may have closed it
+	if !tu.take(ctx) || paceRankFor(tu.tag, tu.lane, tu.made) != paceAny {
+		t.Fatalf("a redial after a drop ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceAny)
+	}
+	tu.dialed(true)
+	kickRelays()
+	if !tu.take(ctx) || paceRankFor(tu.tag, tu.lane, tu.made) != paceFirst {
+		t.Fatalf("a redial at the phone's kick ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceFirst)
+	}
+}
+
+// redials with no rank go in a drawn order, not the order they came
+func TestPaceDrawsTheOrderOfRedials(t *testing.T) {
+	u := paceStore(t)
+	paceWith(t, 3*time.Millisecond, 0)
+	var ts []*paceTicket
+	for range 12 {
+		ts = append(ts, paceJoin(paceLane, u, paceAny))
+	}
+	first := paceJoin(paceLane, u, paceRest)
+	at := paceGrants(t, append(ts, first))
+	// the first went at once into the empty line, a ranked one next
+	for i := 1; i < len(ts); i++ {
+		if !at[12].Before(at[i]) {
+			t.Fatalf("a ranked socket went after redial %d", i)
+		}
+	}
+	inOrder := true
+	for i := 2; i < len(ts); i++ {
+		if at[i].Before(at[i-1]) {
+			inOrder = false
+		}
+	}
+	if inOrder {
+		t.Fatal("eleven redials had their places in the order they came")
 	}
 }

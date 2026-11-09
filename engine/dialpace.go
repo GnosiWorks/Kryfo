@@ -37,6 +37,10 @@ const (
 	// the start's first batch, the chats on top of the list
 	paceTop
 	paceRest
+	// a redial after a drop the phone did not make: the relay can drop an
+	// ip's sockets at will, so these take no rank and go in a drawn order,
+	// or the open chat's batch coming back first would name it
+	paceAny
 )
 
 // how long a chat written to counts as waiting for an answer: its batch
@@ -160,9 +164,22 @@ func paceRunLocked() {
 			best = i
 		}
 	}
+	if dialPace.q[best].rank == paceAny {
+		// one drawn from them, not the first to come
+		var drawn []int
+		for i, t := range dialPace.q {
+			if t.rank == paceAny {
+				drawn = append(drawn, i)
+			}
+		}
+		best = drawn[mrand.IntN(len(drawn))]
+	}
 	t := dialPace.q[best]
 	dialPace.q = slices.Delete(dialPace.q, best, best+1)
 	t.at = now
+	if h := paceGrantHook; h != nil {
+		h(t)
+	}
 	close(t.ok)
 	dialPace.next = now.Add(paceDraw())
 	paceRunLocked()
@@ -211,8 +228,15 @@ func paceOpenLane() string {
 	return knockNotes[f].lane
 }
 
-// the rank of a runner's socket: tag its peer, lane its batch's or own
-func paceRankFor(tag, lane string) int {
+// called with each place given, under dialPace. for the tests
+var paceGrantHook func(*paceTicket)
+
+// the rank of a runner's socket: tag its peer, lane its batch's or own.
+// made: its turn came from a kick, wake or start the phone made itself
+func paceRankFor(tag, lane string, made bool) int {
+	if !made {
+		return paceAny
+	}
 	switch {
 	case isFirstTag(tag), lane == paceOpenLane(), paceSentLately(lane):
 		return paceFirst
