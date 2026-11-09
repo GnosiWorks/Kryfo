@@ -20,14 +20,19 @@ import (
 	"github.com/cretz/bine/tor"
 )
 
-// a socks port that behaves like tor towards onions: every stream takes one
-// of tor's pending circuits (MaxClientCircuitsPending, 32 by default) while
-// it is built, and a stream past them waits for one. an offline onion holds
-// its circuit while tor walks the hsdirs and then fails, a stuck one holds
-// it until the client gives up.
+// a socks port that behaves like tor towards onions: a stream takes two or
+// three of tor's pending circuits (MaxClientCircuitsPending, 32 by default)
+// and a stream past them waits. tor goes on building them for their time
+// even once the client gave up. an offline onion holds two while tor walks
+// the hsdirs and then fails, and fails at once when asked again within the
+// hsdir requery period; a stuck one holds three until the client gives up
+// and 10 s more.
 type onionTor struct {
-	ln      net.Listener
-	pending chan struct{}
+	ln        net.Listener
+	pending   int // circuits tor may build at once
+	building  int
+	mostBuilt int // the most circuits building at once this round
+	failedAt  map[string]time.Time
 
 	mu   sync.Mutex
 	plan map[string]onionPlan
@@ -53,7 +58,7 @@ func newOnionTor(t *testing.T, pending int) *onionTor {
 	if err != nil {
 		t.Fatal(err)
 	}
-	o := &onionTor{ln: ln, pending: make(chan struct{}, pending), plan: map[string]onionPlan{},
+	o := &onionTor{ln: ln, pending: pending, failedAt: map[string]time.Time{}, plan: map[string]onionPlan{},
 		dials: map[string]int{}, dialsSince: map[string]int{}, clients: map[net.Conn]bool{}}
 	o.serving.Add(1)
 	go func() {
@@ -77,6 +82,31 @@ func newOnionTor(t *testing.T, pending int) *onionTor {
 		o.serving.Wait()
 	})
 	return o
+}
+
+// waits for n of the pending circuits, false when the client went first
+func (o *onionTor) takeCircuits(n int, gone chan struct{}) bool {
+	for {
+		o.mu.Lock()
+		if o.building+n <= o.pending {
+			o.building += n
+			o.mostBuilt = max(o.mostBuilt, o.building)
+			o.mu.Unlock()
+			return true
+		}
+		o.mu.Unlock()
+		select {
+		case <-gone:
+			return false
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+}
+
+func (o *onionTor) freeCircuits(n int) {
+	o.mu.Lock()
+	o.building -= n
+	o.mu.Unlock()
 }
 
 func (o *onionTor) port() int { return o.ln.Addr().(*net.TCPAddr).Port }
@@ -165,27 +195,51 @@ func (o *onionTor) serve(c net.Conn) {
 			close(gone)
 		}
 	}()
+	// an offline onion asked again within tor's hsdir requery period
+	// fails at once: every hsdir was asked lately, nothing is built
+	o.mu.Lock()
+	again := p.fail && !o.failedAt[host].IsZero() && time.Since(o.failedAt[host]) < 15*time.Minute
+	o.mu.Unlock()
+	if again {
+		time.Sleep(50 * time.Millisecond)
+		c.Write([]byte{5, 4, 0, 1, 0, 0, 0, 0, 0, 0})
+		return
+	}
+	// an onion dial takes circuits: the hsdir fetch, then the intro and the
+	// rendezvous; an offline one walks the hsdirs on two at a time. tor
+	// keeps building them for their time even once the client went
+	need, hold := 3, p.build
+	if p.fail {
+		need = 2
+	}
 	bump(&o.wait, &o.maxWait)
-	select {
-	case o.pending <- struct{}{}:
-		atomic.AddInt32(&o.wait, -1)
-	case <-gone:
+	if !o.takeCircuits(need, gone) {
 		atomic.AddInt32(&o.wait, -1)
 		return
 	}
-	free := func() { <-o.pending }
+	atomic.AddInt32(&o.wait, -1)
 	if p.stuck {
 		<-gone
-		free()
+		go func() {
+			time.Sleep(10 * time.Second)
+			o.freeCircuits(need)
+		}()
 		return
 	}
+	go func() {
+		time.Sleep(hold)
+		o.freeCircuits(need)
+	}()
 	select {
 	case <-time.After(p.build):
 	case <-gone:
-		free()
 		return
 	}
-	free()
+	if p.fail {
+		o.mu.Lock()
+		o.failedAt[host] = time.Now()
+		o.mu.Unlock()
+	}
 	if p.fail {
 		// tor's reply for an onion it could not reach
 		c.Write([]byte{5, 4, 0, 1, 0, 0, 0, 0, 0, 0})
@@ -229,6 +283,7 @@ func (o *onionTor) dialsTo(hosts []string, since bool) int {
 func (o *onionTor) newRound() {
 	o.mu.Lock()
 	o.dialsSince = map[string]int{}
+	o.mostBuilt = o.building
 	o.mu.Unlock()
 	atomic.StoreInt32(&o.maxLive, atomic.LoadInt32(&o.live))
 	atomic.StoreInt32(&o.maxWait, atomic.LoadInt32(&o.wait))
@@ -393,6 +448,10 @@ func herdLine(t *testing.T, name string, o *onionTor, h herd, r herdResult) (ope
 		slowOK, len(h.slow), lastFail.Round(10*time.Millisecond),
 		atomic.LoadInt32(&o.maxLive), atomic.LoadInt32(&o.maxWait),
 		o.dialsTo(append(append([]string{}, h.offline...), h.stuck...), true))
+	o.mu.Lock()
+	built := o.mostBuilt
+	o.mu.Unlock()
+	t.Logf("  tor circuits building most at once %d of %d", built, o.pending)
 	if d, op := measurePeaks(); d >= 0 {
 		t.Logf("  engine peaks: %d dials, %d streams", d, op)
 	}
