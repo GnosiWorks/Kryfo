@@ -186,7 +186,8 @@ class HaloEngine {
   String nostrKick() => engineTake(_nostrKick());
 
   // the open chat's peer key, '' for none: its address asks first after a
-  // start or wake, with no turn. looked up on first use so older engines load
+  // start, the app to the front or a network change, with no turn. looked
+  // up on first use so older engines load
   late final OneArgFnDart _nostrFirst = _lib
       .lookupFunction<OneArgFn, OneArgFnDart>('HaloNostrFirst');
   void nostrFirst(String peerXPubHex) {
@@ -197,6 +198,19 @@ class HaloEngine {
       // an older engine without the call
     } finally {
       malloc.free(p);
+    }
+  }
+
+  // the window came to the front or left it: only that and a network change
+  // give the open chat's address its no-turn ask, never a check-in or a
+  // push. looked up on first use so older engines load
+  late final CounterFnDart _appFront = _lib
+      .lookupFunction<CounterFn, CounterFnDart>('HaloAppFront');
+  void appFront(bool front) {
+    try {
+      _take(_appFront(front ? 1 : 0));
+    } catch (_) {
+      // an older engine without the call
     }
   }
 

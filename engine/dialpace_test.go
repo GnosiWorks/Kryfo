@@ -299,15 +299,16 @@ func TestFastRedialsArePaced(t *testing.T) {
 }
 
 // a socket the relay dropped redials with no rank; one under the phone's
-// own kick or start keeps it
+// own kick keeps it
 func TestPaceRedialAfterADropTakesNoRank(t *testing.T) {
 	firstTag.Store("peer")
 	t.Cleanup(func() { firstTag.Store("") })
 	tu := subTurn{tag: "peer", lane: paceLane}
 	defer tu.done()
 	ctx := context.Background()
+	kickRelaysMade()
 	if !tu.take(ctx) || paceRankFor(tu.tag, tu.lane, tu.made) != paceFirst {
-		t.Fatalf("the start's dial of the open chat ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceFirst)
+		t.Fatalf("the open chat's dial under the phone's kick ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceFirst)
 	}
 	tu.dialed(true)
 	// the socket died under the same kick: the relay may have closed it
@@ -315,7 +316,7 @@ func TestPaceRedialAfterADropTakesNoRank(t *testing.T) {
 		t.Fatalf("a redial after a drop ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceAny)
 	}
 	tu.dialed(true)
-	kickRelays()
+	kickRelaysMade()
 	if !tu.take(ctx) || paceRankFor(tu.tag, tu.lane, tu.made) != paceFirst {
 		t.Fatalf("a redial at the phone's kick ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceFirst)
 	}

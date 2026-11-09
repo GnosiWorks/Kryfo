@@ -63,6 +63,8 @@ class _Engine implements HaloEngine {
   @override
   void networkChanged({bool online = true}) {}
   @override
+  void appFront(bool front) {}
+  @override
   Future<String> reconnectNow() async => 'ok';
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);

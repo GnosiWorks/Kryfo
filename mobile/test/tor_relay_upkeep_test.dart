@@ -50,6 +50,7 @@ class _Engine implements HaloEngine {
   bool paused = false;
   // what each resume answers, the last one repeating
   List<String> resumes = ['ok'];
+  void Function()? onResume;
   // a stop that takes its time, as one over a slow control port
   Completer<void>? stopGate;
   // what each stop answers, the last one repeating. a refused one leaves
@@ -66,6 +67,7 @@ class _Engine implements HaloEngine {
 
   @override
   Future<String> torResume() async {
+    onResume?.call();
     log.add('resume');
     paused = false;
     return resumes.length > 1 ? resumes.removeAt(0) : resumes.first;
@@ -107,6 +109,11 @@ class _Engine implements HaloEngine {
   @override
   void networkChanged({bool online = true}) =>
       log.add(online ? 'network' : 'offline');
+  // only the front gives the open chat its no-turn ask: kept apart from
+  // the log the tor tests read
+  final fronts = <bool>[];
+  @override
+  void appFront(bool front) => fronts.add(front);
   @override
   void networkDetail(String json) => log.add('detail');
   @override
@@ -300,6 +307,27 @@ void main() {
       final head = poll.substring(0, poll.indexOf('final raw = engine'));
       expect(head, contains("_sendMode == 'balanced'"));
       expect(head, contains('sampleRelayHealth()'));
+    });
+  });
+
+  group('the front', () {
+    // the engine hears of the front before tor wakes, so the wake's kick
+    // is the front's and the open chat asks with no turn under it
+    testWidgets('is told to the engine before tor wakes', (t) async {
+      final app = AppState()..deliveryModeForTest = DeliveryMode.checkins;
+      app.appInFront(false);
+      await t.pump(const Duration(seconds: 95));
+      expect(eng.fronts, [false]);
+      log.clear();
+      var frontsAtResume = <bool>[];
+      eng.onResume = () => frontsAtResume = List.of(eng.fronts);
+      app.appInFront(true);
+      await t.pump();
+      expect(log.first, 'resume');
+      expect(frontsAtResume, [false, true]);
+      app.appInFront(false);
+      await t.pump(const Duration(seconds: 95));
+      expect(eng.fronts, [false, true, false]);
     });
   });
 

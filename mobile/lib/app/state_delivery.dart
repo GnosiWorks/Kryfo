@@ -608,6 +608,8 @@ extension AppStateDelivery on AppState {
   // the window came to the front, or left it
   void appInFront(bool front) {
     _inFront = front;
+    // before tor wakes, so its kick counts as the front's
+    engine.appFront(front);
     // left the screen: a quiet moment for what a removal owes the file. a
     // vault is tidied right after a removal in it, and as it opens, never
     // as it shuts

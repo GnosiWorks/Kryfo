@@ -61,6 +61,7 @@ type paceTicket struct {
 	rank int
 	seq  uint64
 	url  string
+	lane string
 	// u was failing at the join: this is the one dial failingDialBegin let
 	// through, and it is not skipped
 	probe bool
@@ -94,7 +95,7 @@ func paceJoin(lane, u string, rank int) *paceTicket {
 	dialPace.Lock()
 	defer dialPace.Unlock()
 	dialPace.seq++
-	t := &paceTicket{rank: rank, seq: dialPace.seq, url: u, probe: relayFailingNow(u), ok: make(chan struct{})}
+	t := &paceTicket{rank: rank, seq: dialPace.seq, url: u, lane: lane, probe: relayFailingNow(u), ok: make(chan struct{})}
 	dialPace.q = append(dialPace.q, t)
 	paceRunLocked()
 	return t
@@ -172,6 +173,23 @@ func (t *paceTicket) raise(rank int) {
 	if rank < t.rank {
 		t.rank = rank
 	}
+}
+
+// a network change or the app to the front: the open chat's batch still
+// in line goes first
+func paceRaiseOpen() {
+	lane := paceOpenLane()
+	if lane == "" {
+		return
+	}
+	dialPace.Lock()
+	defer dialPace.Unlock()
+	for _, t := range dialPace.q {
+		if t.lane == lane && paceFirst < t.rank {
+			t.rank = paceFirst
+		}
+	}
+	paceRunLocked()
 }
 
 // a dial that took no place went now: the next place waits a gap after it
@@ -302,7 +320,8 @@ func relayFailingNow(u string) bool {
 }
 
 // the rank of a runner's socket: tag its peer, lane its batch's or own.
-// made: its turn came from a kick, wake or start the phone made itself
+// made: its turn came from the start, or from a network change or the app
+// coming to the front (subTurn.made)
 func paceRankFor(tag, lane string, made bool) int {
 	if !made {
 		return paceAny

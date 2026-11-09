@@ -650,7 +650,7 @@ func networkChangedTo(online bool) {
 // again, through tor once the bounce has put it back on the network
 func netBack() {
 	if !modeNeedsTor() || !torParked.Load() {
-		kickRelays()
+		kickRelaysMade()
 	}
 }
 
@@ -849,6 +849,8 @@ func netValveProven() bool {
 }
 
 func networkChanged() {
+	// no server can cause one: the open chat goes first again
+	phoneMade()
 	// direct was welcome on the old network, maybe not on this one. a
 	// check-in under way puts this network's way back at once. both wait on
 	// tor's control port, so neither holds up the caller
@@ -902,7 +904,7 @@ func netBounceWorker() {
 			// the change bumped the route and nothing tore the sockets down:
 			// they ask their probes now, so the proof comes within kickSpread
 			// and not with the next idle probe minutes away
-			kickRelays()
+			kickRelaysMade()
 			go netCheckFor(netEpoch.Load())
 			return
 		}

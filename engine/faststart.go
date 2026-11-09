@@ -162,6 +162,13 @@ func isStartKick(kc chan struct{}) bool {
 	return startKickLocked(kc) == kc
 }
 
+// kc is the start's kick, or would be: no turn was drawn yet. sets nothing
+func startKickPeek(kc chan struct{}) bool {
+	startFirst.Lock()
+	defer startFirst.Unlock()
+	return startFirst.kick == nil || startFirst.kick == kc
+}
+
 // the start's first batch, "" for none
 func startFirstLane() string {
 	startFirst.Lock()
