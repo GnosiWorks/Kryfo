@@ -3,6 +3,7 @@
 // and a play mark, with no bubble around it, as a photo has none. a tap
 // opens it in the app's own player (video_viewer.dart), out of this frame.
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,7 @@ import 'file_sheet.dart';
 import 'halo_hero.dart';
 import 'press_scale.dart';
 import 'remembered_height.dart';
+import 'decode_px.dart';
 import 'sealed_picture.dart';
 import '../l10n/l10n.dart';
 import 'shots_line.dart' show KeptIn, keptOpenLine;
@@ -193,7 +195,19 @@ class _VideoBubbleState extends State<VideoBubble> {
                   // its blur, the first frame fading up over it
                   child: SealedPicture(
                     path: widget.path,
-                    image: jpeg == null ? null : MemoryImage(jpeg),
+                    // cover: the frame's height fills the box too
+                    image: jpeg == null
+                        ? null
+                        : frameImage(
+                            jpeg,
+                            decodePx(
+                              context,
+                              math.max(
+                                widget.width,
+                                h * (info?.aspect ?? aspect),
+                              ),
+                            ),
+                          ),
                     ground: HaloColors.surface3,
                   ),
                 ),

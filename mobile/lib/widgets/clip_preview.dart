@@ -11,6 +11,7 @@ import '../open_file.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'motion.dart' show kHouseCurve, kHouseTime, motionStill;
+import 'decode_px.dart';
 import 'sealed_picture.dart';
 import 'video_frame.dart';
 import 'video_viewer.dart' show ViewerRound, ViewerScrubber, ViewerTime;
@@ -168,7 +169,7 @@ class _ClipPreviewState extends State<ClipPreview> {
       turns: _v.turns,
       under: SealedPicture(
         path: widget.path,
-        image: jpeg == null ? null : MemoryImage(jpeg),
+        image: jpeg == null ? null : frameImage(jpeg, screenPx(context)),
         ground: Colors.black,
       ),
       texture: id != null && _v.started ? Texture(textureId: id) : null,

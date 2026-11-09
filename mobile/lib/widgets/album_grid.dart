@@ -195,7 +195,7 @@ class _Cell extends StatelessWidget {
                 flightShuttleBuilder: (_, a, _, _, _) =>
                     albumFlight(a, path, video: video, radius: 4),
                 child: video
-                    ? _VideoFace(path: path)
+                    ? _VideoFace(path: path, width: width)
                     : _PhotoFace(path: path, width: width),
               ),
             ),
@@ -348,7 +348,8 @@ class _PhotoFace extends StatelessWidget {
 
 class _VideoFace extends StatefulWidget {
   final String path;
-  const _VideoFace({required this.path});
+  final double width;
+  const _VideoFace({required this.path, required this.width});
   @override
   State<_VideoFace> createState() => _VideoFaceState();
 }
@@ -383,7 +384,9 @@ class _VideoFaceState extends State<_VideoFace> {
     // its blur, the first frame fading up over it
     return SealedPicture(
       path: widget.path,
-      image: jpeg == null ? null : MemoryImage(jpeg),
+      image: jpeg == null
+          ? null
+          : frameImage(jpeg, decodePx(context, widget.width)),
       ground: HaloColors.surface3,
     );
   }

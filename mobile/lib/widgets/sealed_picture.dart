@@ -27,6 +27,11 @@ const kPictureFade = Duration(milliseconds: 200);
 ImageProvider mediaImage(String path, [int? width]) =>
     ResizeImage.resizeIfNeeded(width, null, FileImage(File(path)));
 
+/// a video's first frame (640 across at most) decoded [width] pixels across
+/// at most: a grid tile needs a quarter of its pixels
+ImageProvider frameImage(Uint8List jpeg, [int? width]) =>
+    ResizeImage.resizeIfNeeded(width, null, MemoryImage(jpeg));
+
 class SealedPicture extends StatefulWidget {
   const SealedPicture({
     super.key,

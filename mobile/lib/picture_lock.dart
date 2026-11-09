@@ -3,7 +3,10 @@
 // image cache is emptied and kept empty, the app's own caches of frames and
 // blurs go, and every picture of a chat drops what it drew (sealed_picture
 // .dart). as it lifts each picture shows its blur at once, read sealed from
-// next to its file, and the photo fades up over it once decoded again
+// next to its file, and the photo fades up over it once decoded again.
+// two minutes in the background do the same, so the gpu lets go of them
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/scheduler.dart';
@@ -18,6 +21,49 @@ import 'photo_blur.dart' show forgetBlurs, stopBlurs;
 final picturesShut = ValueNotifier<bool>(false);
 
 int? _cacheBytes;
+
+// decoded pictures kept for a scroll back: flutter keeps 100 MB and 1000
+const kImageCacheBytes = 40 << 20;
+const kImageCacheCount = 200;
+// how long in the background before every picture lets go, as under the lock
+const kPicturesAwayAfter = Duration(minutes: 2);
+
+/// the image cache held to [kImageCacheBytes], once at start
+void capPictureCache() {
+  final cache = PaintingBinding.instance.imageCache;
+  cache.maximumSize = kImageCacheCount;
+  // under the lock it stays empty, and gets the cap as it lifts
+  if (picturesShut.value) {
+    _cacheBytes = kImageCacheBytes;
+  } else {
+    cache.maximumSizeBytes = kImageCacheBytes;
+  }
+}
+
+// shut for the background, not the lock: only coming back opens them
+bool _away = false;
+Timer? _awayTimer;
+
+/// the app left: the cache now, the pictures after [kPicturesAwayAfter]
+void picturesLeaving() {
+  PaintingBinding.instance.imageCache.clear();
+  _awayTimer?.cancel();
+  _awayTimer = Timer(kPicturesAwayAfter, () {
+    _awayTimer = null;
+    _away = true;
+    if (!picturesShut.value) shutPictures();
+  });
+}
+
+/// the app is back: openPictures opens them again unless the lock is up
+void picturesBack() {
+  _awayTimer?.cancel();
+  _awayTimer = null;
+  _away = false;
+}
+
+@visibleForTesting
+bool get picturesAway => _away;
 
 /// the lock is going up: everything decoded goes now, the rest with the
 /// frame that takes the pictures down
@@ -42,9 +88,9 @@ void shutPictures() {
 
 /// the lock lifted
 void openPictures() {
-  if (!picturesShut.value) return;
+  if (!picturesShut.value || _away) return;
   final cache = PaintingBinding.instance.imageCache;
-  cache.maximumSizeBytes = _cacheBytes ?? (100 << 20);
+  cache.maximumSizeBytes = _cacheBytes ?? kImageCacheBytes;
   picturesShut.value = false;
 }
 
@@ -64,6 +110,7 @@ bool picturesGone() {
 
 @visibleForTesting
 void resetPicturesForTest() {
+  picturesBack();
   openPictures();
   picturesShut.value = false;
 }
