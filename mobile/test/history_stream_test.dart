@@ -43,6 +43,7 @@ const _dev = 'dev:k7';
 const _cara = 'warm-slate-meadow';
 const _shotsGroup = 'g-0002';
 const _support = 'brisk-lime-anchor';
+const _supportOut = 'quiet-fern-ledge';
 const _group = 'g-0001';
 const _room = 'r-0001';
 
@@ -164,7 +165,7 @@ Future<_Phone> _phone({int ana = 30}) async {
   await msg(_ben, 'a document', file: put('doc.pdf', 1500, seed: 9), ago: 3000);
   // a timed message burns where it is
   await msg(_ben, 'this burns in ten seconds', more: {'burn_secs': 10});
-  // what came through the developer's lane stays with it
+  // what came through the developer chat goes with its tag
   await msg(_ben, 'came through the dev lane', more: {'via_dev': 1});
   final reacted = (await db.query(
     'messages',
@@ -256,9 +257,22 @@ Future<_Phone> _phone({int ana = 30}) async {
   // the developer chat, and on the developer's phone a chat it started
   await contact(_dev);
   await msg(_dev, 'hello marios');
-  await contact(_support);
+  await contact(_support, accepted: 0);
   await db.insert('support_chats', {'halo_id': _support, 'first_at': now});
   await msg(_support, 'a support question');
+  // one he moved to Chats, and one he hid: the hidden one stays
+  await contact(_supportOut);
+  await db.insert('support_chats', {
+    'halo_id': _supportOut,
+    'first_at': now - 5,
+    'state': 'out',
+  });
+  await msg(_supportOut, 'moved to chats');
+  await db.insert('support_chats', {
+    'halo_id': _hid,
+    'first_at': now - 7,
+    'state': 'done',
+  });
 
   // a burner room
   await db.insert('groups', {
@@ -330,10 +344,7 @@ Future<_Phone> _phone({int ana = 30}) async {
     'hg-0009',
     _dev,
     'hello marios',
-    _support,
-    'a support question',
     'this burns',
-    'dev lane',
     _room,
     'Burner',
     'room words',
@@ -519,7 +530,7 @@ void main() {
       'SELECT COUNT(*) AS c FROM messages WHERE $w',
     )).first['c'];
     expect(await n("peer_id = '$_ana' AND group_id IS NULL"), 37);
-    expect(await n("peer_id = '$_ben' AND group_id IS NULL"), 3);
+    expect(await n("peer_id = '$_ben' AND group_id IS NULL"), 4);
     expect(await n("group_id = '$_group'"), 3);
     // the month's files, byte for byte; the older one stays on the phone
     for (final f in ['p1.jpg', 'v1.mp4', 'doc.pdf', 'vn1.ogg', 'fake.ogg']) {
@@ -628,6 +639,76 @@ void main() {
     },
     skip: skip,
   );
+
+  test('the developer inbox comes with its states, a hidden one stays, '
+      'and a message through the developer chat keeps its tag', () async {
+    final ph = await _phone();
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    final inbox = {
+      for (final r in await d.db.query('support_chats'))
+        r['halo_id']: (r['state'], r['first_at']),
+    };
+    expect(inbox, {
+      _support: ('open', ph.now),
+      _supportOut: ('out', ph.now - 5),
+    });
+    // a waiting one comes as it waits: not accepted, its words there
+    final c = await d.db.query(
+      'contacts',
+      where: 'halo_id = ?',
+      whereArgs: [_support],
+    );
+    expect(c.single['accepted'], 0);
+    final m = await d.db.query(
+      'messages',
+      where: 'peer_id = ?',
+      whereArgs: [_support],
+    );
+    expect(m.single['plaintext'], 'a support question');
+    final via = await d.db.query(
+      'messages',
+      where: "plaintext = 'came through the dev lane'",
+    );
+    expect(via.single['via_dev'], 1);
+    final plain = await d.db.query('messages', where: "plaintext = 'ben here'");
+    expect(plain.single['via_dev'], 0);
+    // a discard takes the inbox rows back with the rest
+    await imp.discard();
+    expect(await d.db.query('support_chats'), isEmpty);
+    out.close();
+  }, skip: skip);
+
+  test('a chat this device filed already keeps its place, a discard leaves '
+      'it, and a place the inbox has none of files nothing', () async {
+    final ph = await _phone();
+    await ph.db.update('support_chats', {
+      'state': 'gone',
+    }, where: "halo_id = '$_supportOut'");
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    await d.db.insert('support_chats', {
+      'halo_id': _support,
+      'first_at': 3,
+      'state': 'done',
+    });
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    expect((await imp.finish()).gaps, isEmpty);
+    Future<Map<Object?, Object?>> inbox() async => {
+      for (final r in await d.db.query('support_chats'))
+        r['halo_id']: (r['state'], r['first_at']),
+    };
+    expect(await inbox(), {_support: ('done', 3)});
+    await imp.discard();
+    expect(await inbox(), {_support: ('done', 3)});
+    out.close();
+  }, skip: skip);
 
   test('a chat with screenshots blocked stays on the phone', () async {
     final ph = await _phone();

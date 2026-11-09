@@ -20,7 +20,9 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateContacts,
         AppStateDevchat,
+        AppStateInbox,
         AppStateRefresh,
+        devInboxForTest,
         linkedRoleForTest;
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/home_screen.dart';
@@ -225,7 +227,7 @@ Widget _home() => ListenableBuilder(
     contacts: appState.contacts,
     devRow: appState.devRow,
     pendingCount: appState.pendingCount,
-    support: appState.devMode ? appState.supportWaiting : null,
+    support: appState.devInbox ? appState.supportWaiting : null,
     onAddContact: () {},
     onNewGroup: () {},
     onNewRoom: () {},
@@ -542,6 +544,55 @@ void main() {
       await devClose(t);
     });
 
+    testWidgets('a computer linked to his phone: the pin and the inbox as '
+        'the phone keeps them, done and Chats in the menu, never a block or '
+        'a delete; any other computer has none', (t) async {
+      await _world(dev: false);
+      linkedRoleForTest = true;
+      addTearDown(() {
+        linkedRoleForTest = false;
+        devInboxForTest = false;
+      });
+      await appState.refreshContacts();
+      expect(appState.devInbox, isFalse);
+      devInboxForTest = true;
+      await appState.refreshContacts();
+      expect(appState.supportWaiting, 1);
+      await devOpen(t, _home());
+      expect(_pin, findsOneWidget);
+      for (final id in [_s, _t, _r]) {
+        expect(find.text(id), findsNothing, reason: id);
+      }
+      await devClose(t);
+      await devOpen(t, const SupportScreen());
+      await t.longPress(find.text(_t));
+      await _settle(t);
+      final sheet = find.byType(BottomSheet);
+      for (final (w, n) in [
+        (l10n.supportMarkDone, findsOneWidget),
+        (l10n.supportMoveToChats, findsOneWidget),
+        (l10n.commonBlock, findsNothing),
+        (l10n.homeDeleteChat, findsNothing),
+      ]) {
+        expect(
+          find.descendant(of: sheet, matching: find.text(w)),
+          n,
+          reason: w,
+        );
+      }
+      await t.tap(
+        find.descendant(of: sheet, matching: find.text(l10n.supportMarkDone)),
+      );
+      await _settle(t);
+      expect(
+        _mem
+            .rows('support_chats')
+            .firstWhere((r) => r['halo_id'] == _t)['state'],
+        'done',
+      );
+      await devClose(t);
+    });
+
     testWidgets('mark all waiting as done', (t) async {
       await _world();
       await devOpen(t, const SupportScreen());
@@ -716,6 +767,26 @@ void main() {
       await openSupportTap(nav, 'some-other-one');
       await _settle(t);
       expect(find.text('home'), findsOneWidget);
+      await devClose(t);
+    });
+
+    testWidgets('on a computer linked to his phone, opens the inbox too', (
+      t,
+    ) async {
+      await _world(dev: false);
+      linkedRoleForTest = true;
+      devInboxForTest = true;
+      addTearDown(() {
+        linkedRoleForTest = false;
+        devInboxForTest = false;
+      });
+      final nav = await host(t);
+      final going = openSupportTap(nav, '');
+      await _settle(t);
+      expect(find.byType(SupportScreen), findsOneWidget);
+      nav.pop();
+      await _settle(t);
+      await going;
       await devClose(t);
     });
 

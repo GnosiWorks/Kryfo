@@ -11265,6 +11265,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translateTagRead => '你读的语言';
+
+  @override
+  String get chatInboxAnswerFromPhone => '请在手机上回复这个聊天。';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline => '手机在线后就会发出。';
+
+  @override
+  String get chatInboxFilesFromPhone => '请在手机上发送文件。';
+
+  @override
+  String get devicesManyAnswersNotice => '检查一下你的电脑';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name 在一小时内试图发送超过 $count 条回复。如果不是你，请移除它。';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22408,4 +22425,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateTagRead => '你讀的語言';
+
+  @override
+  String get chatInboxAnswerFromPhone => '請在手機上回覆這個聊天。';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline => '手機上線後就會送出。';
+
+  @override
+  String get chatInboxFilesFromPhone => '請在手機上傳送檔案。';
+
+  @override
+  String get devicesManyAnswersNotice => '檢查一下你的電腦';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name 在一小時內試圖傳送超過 $count 則回覆。如果不是你，請移除它。';
+  }
 }

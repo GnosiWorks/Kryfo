@@ -192,6 +192,14 @@ void main() {
     ], _now);
     expect(unknown.title, l10n.devicesUnknownNotice);
     expect(unknown.line, l10n.devicesUnknownLine);
+    // a computer that handed the developer's phone too many answers
+    final many = linkNoticeWords([
+      (name: 'Lap', at: at, why: null),
+      (name: 'Desk', at: at, why: 'answers'),
+    ], _now);
+    expect(many.title, l10n.devicesManyAnswersNotice);
+    expect(many.line, contains('Desk'));
+    expect(many.line, contains('120'));
   });
 
   test('use comes in four steps, never a time', () {

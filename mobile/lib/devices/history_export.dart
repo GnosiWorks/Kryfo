@@ -4,9 +4,9 @@
 // rest is skipped). a file sealed at rest goes as it lies on the disk, with
 // its own key beside its row, so the device opens that file and no other.
 // read from the everyday database alone, every everyday chat as this phone
-// holds it. hidden chats (whole, by id), the decoy, the chat with the
-// developer, burner rooms, timed messages and chats with screenshots
-// blocked stay here
+// holds it, the developer's inbox with its states. hidden chats (whole,
+// by id), the decoy, the chat with the developer, burner rooms, timed
+// messages and chats with screenshots blocked stay here
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -34,6 +34,12 @@ const kHistoryVoiceMax = 10 << 20;
 
 /// why a chat came only as its row
 const kHistoryStaysShots = 'shots';
+
+/// a chat of the developer's inbox: its state there and when it came
+const kHistorySupport = 'support';
+
+/// a message that came through the developer chat
+const kHistoryViaDev = 'x_via_dev';
 
 /// a record of the copy that is no chat: what the device needs to go on
 /// where the phone is (lists the phone holds and what its engine learnt of
@@ -395,16 +401,16 @@ Future<HistoryOutgoing> exportHistory({
   // the chats and their messages, read while the vault stays still
   Future<void> text() async {
     hidden = await hiddenChatIds(db);
-    final support = <String>{
+    // the developer's inbox goes with its state, moved to Chats or not
+    final support = <String, Map<String, Object?>>{
       if (await _hasTable(db, 'support_chats'))
         for (final r in await db.rawQuery(
-          'SELECT halo_id FROM main.support_chats',
+          'SELECT halo_id, first_at, state FROM main.support_chats',
         ))
-          r['halo_id'] as String,
+          r['halo_id'] as String: {'f': r['first_at'], 's': r['state']},
     };
-    // whole chats that stay: the vault's, the developer's and what it started
-    bool stays(String id) =>
-        hidden.contains(id) || support.contains(id) || _isDev(id);
+    // whole chats that stay: the vault's and the developer chat
+    bool stays(String id) => hidden.contains(id) || _isDev(id);
 
     final ccols = await _colsOf(db, 'contacts');
     final gcols = await _colsOf(db, 'groups');
@@ -504,6 +510,7 @@ Future<HistoryOutgoing> exportHistory({
             ? {'group_id': row['group_id'], 'name': row['name'], 'shots_on': 1}
             : row,
         if (shots) 'stays': kHistoryStaysShots,
+        if (!group && support.containsKey(id)) kHistorySupport: support[id],
       };
       if (group && !shots) {
         meta['members'] = await db.rawQuery(
@@ -547,10 +554,8 @@ Future<HistoryOutgoing> exportHistory({
         after = page.last['id'] as int;
         final keep = [
           for (final m in page)
-            // timed messages burn where they are; what came through the
-            // developer's lane stays with it
-            if (m['via_dev'] != 1 &&
-                m['burn_at'] == null &&
+            // timed messages burn where they are
+            if (m['burn_at'] == null &&
                 m['burn_secs'] == null &&
                 (m['burn_unseen'] ?? 0) == 0)
               m,
@@ -644,6 +649,8 @@ Future<HistoryOutgoing> exportHistory({
                   base64Encode(k);
             }
           }
+          // the tag a message through the developer chat wears
+          if (m['via_dev'] == 1) row[kHistoryViaDev] = 1;
           final uid = m['msg_uid'];
           if (uid is String) {
             if (reactions[uid] case final r?) row['x_reactions'] = r;

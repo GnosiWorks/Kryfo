@@ -11928,4 +11928,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get translateTagRead => 'आप इसे पढ़ते हैं';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'इस चैट का जवाब अपने फ़ोन से दें।';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline => 'आपका फ़ोन ऑनलाइन होते ही जाएगा।';
+
+  @override
+  String get chatInboxFilesFromPhone => 'फ़ाइलें अपने फ़ोन से भेजें।';
+
+  @override
+  String get devicesManyAnswersNotice => 'अपना कंप्यूटर जाँचें';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name ने एक घंटे में $count से ज़्यादा जवाब भेजने की कोशिश की। अगर यह आप नहीं थे, तो इसे हटा दें।';
+  }
 }

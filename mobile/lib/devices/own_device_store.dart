@@ -480,24 +480,38 @@ Future<bool> linkedRoleOf(DatabaseExecutor db) async {
 const kUnknownDeviceMark = 'alarm:unknown_device';
 const _kUnknownDeviceSeen = 'seen:unknown_device';
 
+/// the mark the developer's phone keeps for a computer that handed it more
+/// answers in an hour than it sends (devices_answer_app.dart), by its uid
+const kManyAnswersNoticeMark = 'alarm:many_answers';
+
 /// the notices not opened yet, read into [linkNotices]: a device another
 /// copy of my phone linked first, then the devices that went, then the
 /// ones linked, oldest first in each
 Future<List<LinkNotice>> readLinkNotices(DatabaseExecutor db) async {
+  // the marks in one read: a device another copy linked, and a computer
+  // that handed the developer's phone too many answers, by its name
+  final marks = await db.rawQuery(
+    'SELECT m.kind, m.key, m.at, o.name FROM dev_marks m LEFT JOIN '
+    'own_devices o ON o.uid = m.key WHERE m.kind IN (?, ?) ORDER BY m.at',
+    [kUnknownDeviceMark, kManyAnswersNoticeMark],
+  );
   final out = [
-    for (final r in await db.query(
-      'dev_marks',
-      columns: ['key', 'at'],
-      where: 'kind = ?',
-      whereArgs: [kUnknownDeviceMark],
-      orderBy: 'at',
-    ))
-      LinkNotice(
-        uid: 'unknown:${r['key']}',
-        name: '',
-        at: DateTime.fromMillisecondsSinceEpoch(r['at'] as int),
-        why: 'unknown',
-      ),
+    for (final r in marks)
+      if (r['kind'] == kUnknownDeviceMark)
+        LinkNotice(
+          uid: 'unknown:${r['key']}',
+          name: '',
+          at: DateTime.fromMillisecondsSinceEpoch(r['at'] as int),
+          why: 'unknown',
+        ),
+    for (final r in marks)
+      if (r['kind'] == kManyAnswersNoticeMark && r['name'] is String)
+        LinkNotice(
+          uid: 'answers:${r['key']}',
+          name: r['name'] as String,
+          at: DateTime.fromMillisecondsSinceEpoch(r['at'] as int),
+          why: 'answers',
+        ),
     for (final r in await db.query(
       'own_devices',
       columns: ['uid', 'name', 'removed_at', 'gone_why'],
@@ -535,6 +549,11 @@ Future<void> openLinkNotices(DatabaseExecutor db) async {
     where: 'kind = ?',
     whereArgs: [kUnknownDeviceMark],
     conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+  await db.delete(
+    'dev_marks',
+    where: 'kind = ?',
+    whereArgs: [kManyAnswersNoticeMark],
   );
   linkNotices.value = const [];
 }

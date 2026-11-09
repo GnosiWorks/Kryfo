@@ -14976,5 +14976,33 @@
   "translateTagRead": "You read it",
   "@translateTagRead": {
     "description": "languages screen: a mark on a language the person reads"
+  },
+  "chatInboxAnswerFromPhone": "Answer this chat from your phone.",
+  "@chatInboxAnswerFromPhone": {
+    "description": "screens/chat_screen.dart: on a computer linked to the developer's phone, in place of the composer in a chat from his inbox (people who wrote through the developer chat), while his phone does not take answers from the computer"
+  },
+  "chatInboxSendsWhenPhoneOnline": "Sends when your phone is online.",
+  "@chatInboxSendsWhenPhoneOnline": {
+    "description": "screens/chat_screen.dart: on a computer linked to the developer's phone, above the composer in a chat from his inbox, while an answer written there waits for his phone to send it"
+  },
+  "chatInboxFilesFromPhone": "Send files from your phone.",
+  "@chatInboxFilesFromPhone": {
+    "description": "screens/chat_screen.dart: on a computer linked to the developer's phone, a short toast when the attach, camera, voice or sticker button is tapped in a chat from his inbox: only text goes from the computer there"
+  },
+  "devicesManyAnswersNotice": "Check your computer",
+  "@devicesManyAnswersNotice": {
+    "description": "screens/home_screen.dart link notice card title on the developer's phone: one of his linked computers handed the phone more answers for his inbox in an hour than the phone sends"
+  },
+  "devicesManyAnswersLine": "{name} tried to send more than {count} answers in an hour. If that wasn't you, remove it.",
+  "@devicesManyAnswersLine": {
+    "description": "the line under devicesManyAnswersNotice. {name}: the computer's name; {count}: how many answers an hour the phone sends from one computer (120)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
   }
 }

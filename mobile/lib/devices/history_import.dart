@@ -34,7 +34,9 @@ import 'history_export.dart'
         kHistoryContactCols,
         kHistoryMaterial,
         kHistoryGroupCols,
-        kHistoryMessageCols;
+        kHistoryMessageCols,
+        kHistorySupport,
+        kHistoryViaDev;
 import 'history_ffi.dart';
 
 // files on their way in, beside the media folder's own
@@ -125,6 +127,10 @@ const _madeMember = 'member';
 const _madeGone = 'gone';
 const _madeProven = 'proven';
 const _madePq = 'pq';
+const _madeSupport = 'support';
+
+// the inbox states a copy may set: a chat the phone moved to Chats stays out
+const _supportStates = {'open', 'done', 'out'};
 
 Future<void> _made(
   DatabaseExecutor t,
@@ -813,6 +819,7 @@ class HistoryImport {
         await t.update('contacts', c, where: 'halo_id = ?', whereArgs: [id]);
       }
     }
+    if (!group) await _support(t, id, meta[kHistorySupport]);
     final stays = meta['stays'];
     await t.insert('history_chats', {
       'n': n,
@@ -821,6 +828,22 @@ class HistoryImport {
       'stays': stays is String ? stays : null,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     _chats[n] = HistoryChatRef(group, id);
+  }
+
+  // a chat of the developer's inbox, as the phone files it. one this device
+  // filed already keeps its own state
+  Future<void> _support(Transaction t, String id, Object? sp) async {
+    if (sp is! Map) return;
+    final s = sp['s'], f = sp['f'];
+    if (s is! String || !_supportStates.contains(s)) return;
+    if ((await _colsOf(t, 'support_chats')).isEmpty) return;
+    if (await _exists(t, 'support_chats', 'halo_id = ?', [id])) return;
+    await t.insert('support_chats', {
+      'halo_id': id,
+      'first_at': f is int ? f : 0,
+      'state': s,
+    });
+    await _made(t, _madeSupport, id);
   }
 
   // what is no chat. the phone deleted these lately: noted gone here too,
@@ -1009,6 +1032,7 @@ class HistoryImport {
           if (_safe(v)) _rowFiles.add(_final(v));
         }
       }
+      if (r[kHistoryViaDev] == 1 && have.contains('via_dev')) m['via_dev'] = 1;
       // the keys of the files the phone keeps sealed, for when they land
       if (r['x_keys'] case final Map keys) {
         for (final e in keys.entries) {
@@ -1402,6 +1426,12 @@ class HistoryImport {
             }
           case _madeGroup:
             await t.delete('groups', where: 'group_id = ?', whereArgs: [a]);
+          case _madeSupport:
+            await t.delete(
+              'support_chats',
+              where: 'halo_id = ?',
+              whereArgs: [a],
+            );
           case _madeMember:
             await t.delete(
               'group_members',

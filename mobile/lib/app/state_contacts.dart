@@ -550,7 +550,7 @@ extension AppStateContacts on AppState {
   // a contact's chat in Chats that came through the developer chat, by a
   // tagged message or a filing before. never by name or words
   Future<bool> movableToInbox(String haloId) async {
-    if (!devMode || isDevChat(haloId) || session.isHidden(haloId)) {
+    if (!devInbox || isDevChat(haloId) || session.isHidden(haloId)) {
       return false;
     }
     final s = session.primary;
@@ -572,7 +572,7 @@ extension AppStateContacts on AppState {
   // the inbox chat shows in Chats instead. only someone accepted has a
   // place there
   Future<void> moveToChats(String haloId) async {
-    if (!devMode || !await session.isAccepted(haloId)) return;
+    if (!devInbox || !await session.isAccepted(haloId)) return;
     await session.support.moveOut(haloId);
     // what rang for it in the inbox would open nothing now
     unawaited(clearNotificationsFor('$kSupportPayload$haloId'));

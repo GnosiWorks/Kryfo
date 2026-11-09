@@ -12015,4 +12015,23 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Lo lees';
+
+  @override
+  String get chatInboxAnswerFromPhone =>
+      'Responde a este chat desde tu teléfono.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'Se envía cuando tu teléfono esté en línea.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'Envía archivos desde tu teléfono.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Revisa tu ordenador';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name intentó enviar más de $count respuestas en una hora. Si no fuiste tú, quítalo.';
+  }
 }

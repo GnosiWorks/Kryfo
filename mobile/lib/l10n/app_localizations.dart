@@ -19104,6 +19104,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You read it'**
   String get translateTagRead;
+
+  /// screens/chat_screen.dart: on a computer linked to the developer's phone, in place of the composer in a chat from his inbox (people who wrote through the developer chat), while his phone does not take answers from the computer
+  ///
+  /// In en, this message translates to:
+  /// **'Answer this chat from your phone.'**
+  String get chatInboxAnswerFromPhone;
+
+  /// screens/chat_screen.dart: on a computer linked to the developer's phone, above the composer in a chat from his inbox, while an answer written there waits for his phone to send it
+  ///
+  /// In en, this message translates to:
+  /// **'Sends when your phone is online.'**
+  String get chatInboxSendsWhenPhoneOnline;
+
+  /// screens/chat_screen.dart: on a computer linked to the developer's phone, a short toast when the attach, camera, voice or sticker button is tapped in a chat from his inbox: only text goes from the computer there
+  ///
+  /// In en, this message translates to:
+  /// **'Send files from your phone.'**
+  String get chatInboxFilesFromPhone;
+
+  /// screens/home_screen.dart link notice card title on the developer's phone: one of his linked computers handed the phone more answers for his inbox in an hour than the phone sends
+  ///
+  /// In en, this message translates to:
+  /// **'Check your computer'**
+  String get devicesManyAnswersNotice;
+
+  /// the line under devicesManyAnswersNotice. {name}: the computer's name; {count}: how many answers an hour the phone sends from one computer (120)
+  ///
+  /// In en, this message translates to:
+  /// **'{name} tried to send more than {count} answers in an hour. If that wasn\'t you, remove it.'**
+  String devicesManyAnswersLine(String name, String count);
 }
 
 class _AppLocalizationsDelegate

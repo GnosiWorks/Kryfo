@@ -12012,4 +12012,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Você lê';
+
+  @override
+  String get chatInboxAnswerFromPhone =>
+      'Responda a esta conversa pelo seu celular.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'Será enviada quando seu celular estiver online.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'Envie arquivos pelo seu celular.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Confira seu computador';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name tentou enviar mais de $count respostas em uma hora. Se não foi você, remova o aparelho.';
+  }
 }

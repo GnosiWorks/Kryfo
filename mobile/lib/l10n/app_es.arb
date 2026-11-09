@@ -3134,5 +3134,10 @@
   "translateRemoveLine": "Esto libera {size}. Las traducciones guardadas con él también se eliminan. Puedes volver a descargarlo cuando quieras.",
   "translateResumeShort": "Reanudar",
   "translateTagApp": "Idioma de la app",
-  "translateTagRead": "Lo lees"
+  "translateTagRead": "Lo lees",
+  "chatInboxAnswerFromPhone": "Responde a este chat desde tu teléfono.",
+  "chatInboxSendsWhenPhoneOnline": "Se envía cuando tu teléfono esté en línea.",
+  "chatInboxFilesFromPhone": "Envía archivos desde tu teléfono.",
+  "devicesManyAnswersNotice": "Revisa tu ordenador",
+  "devicesManyAnswersLine": "{name} intentó enviar más de {count} respuestas en una hora. Si no fuiste tú, quítalo."
 }

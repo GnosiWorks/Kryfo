@@ -288,6 +288,27 @@ Future<void> deviceTables(
       frame TEXT NOT NULL
     )
   ''');
+  // a computer's answer in the developer's inbox the phone took while the
+  // decoy was open, to send once the everyday side sends again
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_answers_held (
+      uid TEXT PRIMARY KEY,
+      chat TEXT NOT NULL,
+      frame TEXT NOT NULL,
+      dev INTEGER NOT NULL,
+      dkey TEXT NOT NULL
+    )
+  ''');
+  // what of a computer's answers the phone took, by hashes alone: an answer
+  // sent again never goes twice, and a take-back or an edit that came
+  // before its words waits for them (text). kept 30 days
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_answers_seen (
+      k TEXT PRIMARY KEY,
+      at INTEGER NOT NULL,
+      text TEXT
+    )
+  ''');
   // a note to self of mine still owed to my other devices: its uid, when it
   // was kept, and when it is tried next (notes_own_app.dart)
   await db.execute('''
@@ -377,6 +398,8 @@ const _allTables = [
   'own_told',
   'own_gone',
   'own_held',
+  'own_answers_held',
+  'own_answers_seen',
   'own_notes_out',
   'dev_farewell',
 ];

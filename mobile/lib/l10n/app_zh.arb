@@ -3134,5 +3134,10 @@
   "translateRemoveLine": "这会释放 {size}。用它保存的翻译也会一并删除。你随时可以重新下载。",
   "translateResumeShort": "继续",
   "translateTagApp": "应用语言",
-  "translateTagRead": "你读的语言"
+  "translateTagRead": "你读的语言",
+  "chatInboxAnswerFromPhone": "请在手机上回复这个聊天。",
+  "chatInboxSendsWhenPhoneOnline": "手机在线后就会发出。",
+  "chatInboxFilesFromPhone": "请在手机上发送文件。",
+  "devicesManyAnswersNotice": "检查一下你的电脑",
+  "devicesManyAnswersLine": "{name} 在一小时内试图发送超过 {count} 条回复。如果不是你，请移除它。"
 }

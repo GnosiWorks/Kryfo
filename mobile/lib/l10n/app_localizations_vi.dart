@@ -11909,4 +11909,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Bạn đọc được';
+
+  @override
+  String get chatInboxAnswerFromPhone =>
+      'Hãy trả lời cuộc trò chuyện này từ điện thoại của bạn.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'Sẽ gửi khi điện thoại của bạn trực tuyến.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'Hãy gửi tệp từ điện thoại của bạn.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Hãy kiểm tra máy tính của bạn';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name đã cố gửi hơn $count câu trả lời trong một giờ. Nếu đó không phải bạn, hãy gỡ thiết bị đó.';
+  }
 }

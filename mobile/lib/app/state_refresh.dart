@@ -20,7 +20,8 @@ extension AppStateRefresh on AppState {
   }
 
   // developer mode as a session has it: his own phone, never its decoy
-  bool _devModeIn(Session s) => _devIdentity && !s.container.quiet;
+  bool _devModeIn(Session s) =>
+      (_devIdentity || devInboxHere) && !s.container.quiet;
 
   // how a row says its last message, and when it was sent
   (String?, DateTime?) _lastLine(Map<String, Object?>? last) {

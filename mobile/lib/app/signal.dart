@@ -102,6 +102,11 @@ Future<({int ident, String cipher})> signalSeal(
       cipher: await devLane.encrypt(peerId, plaintext),
     );
   }
+  // a computer linked to the developer's phone: a chat of his inbox is
+  // answered by the phone alone, on his key. nothing seals here
+  if (linkedDevicesOn && linkedRole && await appState.inboxChatHere(peerId)) {
+    await appState._ownAnswerSeal(peerId, plaintext, onlySettled: onlySettled);
+  }
   plaintext = await appState.shotsOnWire(peerId, plaintext);
   // a v4 first contact's frames carry the pair's seed until they answer
   plaintext = await appState.v4OpenerFields(peerId, plaintext);

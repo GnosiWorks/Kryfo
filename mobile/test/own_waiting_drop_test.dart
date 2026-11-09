@@ -94,8 +94,9 @@ class _Told extends OwnSync {
     int ident,
     String sender,
     String frame,
-    int came,
-  ) async => true;
+    int came, {
+    Map<String, Object?>? inbox,
+  }) async => true;
 
   @override
   Future<bool> copy(

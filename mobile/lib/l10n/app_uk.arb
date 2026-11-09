@@ -3134,5 +3134,10 @@
   "translateRemoveLine": "Звільниться {size}. Збережені з нею переклади теж видаляться. Завантажити її знову можна будь-коли.",
   "translateResumeShort": "Продовжити",
   "translateTagApp": "Мова застосунку",
-  "translateTagRead": "Ви нею читаєте"
+  "translateTagRead": "Ви нею читаєте",
+  "chatInboxAnswerFromPhone": "Відповідай у цьому чаті з телефона.",
+  "chatInboxSendsWhenPhoneOnline": "Надішлеться, щойно телефон буде в мережі.",
+  "chatInboxFilesFromPhone": "Файли надсилай з телефона.",
+  "devicesManyAnswersNotice": "Перевір свій комп’ютер",
+  "devicesManyAnswersLine": "{name} намагався надіслати понад {count} відповідей за годину. Якщо це був не ти, видали цей пристрій."
 }
