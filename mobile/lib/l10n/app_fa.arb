@@ -3137,10 +3137,10 @@
   "fileOpenWith": "باز کردن با…",
   "fileOpenWithNote": "برنامه دیگر می‌تواند این فایل را ببیند. Kryfo تا آن موقع آن را رمزگذاری‌شده نگه می‌دارد.",
   "fileFrom": "از {name}",
-  "fileLines": "{count, plural, =1{۱ خط} other{{count} خط}}",
+  "fileLines": "{count, plural, =1{{n} خط} other{{n} خط}}",
   "fileNotWords": "این فایل متن نیست. می‌توانید آن را ذخیره کنید یا با برنامه دیگری باز کنید.",
   "fileShowsFirst": "اینجا {size} اول نمایش داده می‌شود. برای خواندن همه، فایل را ذخیره کنید.",
-  "filePages": "{count, plural, =1{۱ صفحه} other{{count} صفحه}}",
+  "filePages": "{count, plural, =1{{n} صفحه} other{{n} صفحه}}",
   "filePageOf": "{page} / {total}",
   "filePage": "صفحه {page}",
   "fileSearchIn": "جستجو در فایل",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "انتخاب‌شده، شماره {n}",
   "sendSheetAsFile": "ارسال به‌صورت فایل",
   "sendSheetAsFileLine": "کیفیت اصلی، بدون فشرده‌سازی",
-  "sendSheetSend": "{count, plural, other{ارسال {count}}}"
+  "sendSheetSend": "{count, plural, other{ارسال {n}}}"
 }

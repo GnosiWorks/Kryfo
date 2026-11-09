@@ -842,7 +842,7 @@ class _Foot extends StatelessWidget {
                       const SizedBox(width: 10),
                       Semantics(
                         button: true,
-                        label: l10n.sendSheetSend(count),
+                        label: l10n.sendSheetSend(count, whole(count)),
                         excludeSemantics: true,
                         child: PressScale(
                           scale: 0.94,
@@ -860,7 +860,7 @@ class _Foot extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  l10n.sendSheetSend(count),
+                                  l10n.sendSheetSend(count, whole(count)),
                                   style: HaloType.sans(
                                     size: 14.5,
                                     weight: FontWeight.w700,

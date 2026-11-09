@@ -3137,10 +3137,10 @@
   "fileOpenWith": "開啟方式…",
   "fileOpenWithNote": "其他 App 可以看到此檔案。在那之前，Kryfo 會一直加密保存它。",
   "fileFrom": "來自 {name}",
-  "fileLines": "{count, plural, other{{count} 行}}",
+  "fileLines": "{count, plural, other{{n} 行}}",
   "fileNotWords": "此檔案不是文字。你可以儲存它，或用其他 App 開啟。",
   "fileShowsFirst": "這裡顯示前 {size}。儲存檔案即可讀完整內容。",
-  "filePages": "{count, plural, other{{count} 頁}}",
+  "filePages": "{count, plural, other{{n} 頁}}",
   "filePageOf": "{page} / {total}",
   "filePage": "第 {page} 頁",
   "fileSearchIn": "在檔案中搜尋",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "已選，第 {n} 個",
   "sendSheetAsFile": "以檔案傳送",
   "sendSheetAsFileLine": "原始畫質，不壓縮",
-  "sendSheetSend": "{count, plural, other{傳送 {count} 個}}"
+  "sendSheetSend": "{count, plural, other{傳送 {n} 個}}"
 }

@@ -116,12 +116,28 @@ void main() {
     await t.pumpAndSettle();
     expect(sheet(t).chosen, [a, b, c]);
     expect(find.text('3'), findsOneWidget);
-    expect(find.text(l10n.sendSheetSend(3)), findsOneWidget);
+    expect(find.text(l10n.sendSheetSend(3, '3')), findsOneWidget);
     // one taken back: the rest close up
     await t.tap(find.text('c'));
     await t.pumpAndSettle();
     expect(sheet(t).chosen, [a, b]);
-    expect(find.text(l10n.sendSheetSend(2)), findsOneWidget);
+    expect(find.text(l10n.sendSheetSend(2, '2')), findsOneWidget);
+  });
+
+  testWidgets('arabic counts in its own digits on the button too', (t) async {
+    setL10nLocale(const Locale('ar'));
+    addTearDown(() => setL10nLocale(const Locale('en')));
+    final b = pick('b.pdf', SendTab.files);
+    final c = pick('c.py', SendTab.files);
+    await open(t, files: [b, c], dir: TextDirection.rtl);
+    await t.tap(find.text(l10n.sendSheetFiles));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.sendSheetBrowseFiles));
+    await t.pumpAndSettle();
+    final send = l10n.sendSheetSend(2, '٢');
+    expect(find.text(send), findsOneWidget);
+    expect(find.text('٢'), findsOneWidget, reason: 'the order badge');
+    expect(l10n.filePages(12, '١٢'), contains('١٢'));
   });
 
   testWidgets('send as file shows only for photos and videos', (t) async {
@@ -149,7 +165,7 @@ void main() {
     await t.tap(find.text(l10n.sendSheetAsFile));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField), 'for the lease');
-    await t.tap(find.text(l10n.sendSheetSend(1)));
+    await t.tap(find.text(l10n.sendSheetSend(1, '1')));
     await t.pumpAndSettle();
     final r = result!;
     expect(r.picks, [a]);

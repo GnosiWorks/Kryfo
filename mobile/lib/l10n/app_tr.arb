@@ -3137,10 +3137,10 @@
   "fileOpenWith": "Birlikte aç…",
   "fileOpenWithNote": "Diğer uygulama bu dosyayı görebilir. O ana kadar Kryfo onu şifreli tutar.",
   "fileFrom": "{name} gönderdi",
-  "fileLines": "{count, plural, other{{count} satır}}",
+  "fileLines": "{count, plural, other{{n} satır}}",
   "fileNotWords": "Bu dosya metin değil. Kaydedebilir ya da başka bir uygulamayla açabilirsin.",
   "fileShowsFirst": "Burada ilk {size} görünüyor. Tamamını okumak için dosyayı kaydet.",
-  "filePages": "{count, plural, other{{count} sayfa}}",
+  "filePages": "{count, plural, other{{n} sayfa}}",
   "filePageOf": "{page} / {total}",
   "filePage": "Sayfa {page}",
   "fileSearchIn": "Dosyada ara",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "Seçildi, sıra {n}",
   "sendSheetAsFile": "Dosya olarak gönder",
   "sendSheetAsFileLine": "Orijinal kalite, sıkıştırma yok",
-  "sendSheetSend": "{count, plural, other{{count} gönder}}"
+  "sendSheetSend": "{count, plural, other{{n} gönder}}"
 }

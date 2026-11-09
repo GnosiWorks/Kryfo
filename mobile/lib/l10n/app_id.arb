@@ -3137,10 +3137,10 @@
   "fileOpenWith": "Buka dengan…",
   "fileOpenWithNote": "Aplikasi lain bisa melihat file ini. Sampai saat itu Kryfo menyimpannya terenkripsi.",
   "fileFrom": "Dari {name}",
-  "fileLines": "{count, plural, other{{count} baris}}",
+  "fileLines": "{count, plural, other{{n} baris}}",
   "fileNotWords": "File ini bukan teks. Kamu bisa menyimpannya atau membukanya dengan aplikasi lain.",
   "fileShowsFirst": "Ini menampilkan {size} pertama. Simpan file untuk membaca semuanya.",
-  "filePages": "{count, plural, other{{count} halaman}}",
+  "filePages": "{count, plural, other{{n} halaman}}",
   "filePageOf": "{page} / {total}",
   "filePage": "Halaman {page}",
   "fileSearchIn": "Cari di file",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "Dipilih, nomor {n}",
   "sendSheetAsFile": "Kirim sebagai file",
   "sendSheetAsFileLine": "Kualitas asli, tanpa kompresi",
-  "sendSheetSend": "{count, plural, other{Kirim {count}}}"
+  "sendSheetSend": "{count, plural, other{Kirim {n}}}"
 }

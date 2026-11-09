@@ -16,7 +16,7 @@ import '../file_peek.dart';
 import '../pdf_pages.dart';
 import '../file_save.dart' show savingFiles;
 import '../l10n/l10n.dart';
-import '../l10n/numbers.dart' show percent;
+import '../l10n/numbers.dart' show percent, whole;
 import '../media_progress.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
@@ -666,7 +666,7 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
-                    l10n.filePages(pages),
+                    l10n.filePages(pages, whole(pages)),
                     textScaler: MediaQuery.textScalerOf(
                       context,
                     ).clamp(maxScaleFactor: 1.3),

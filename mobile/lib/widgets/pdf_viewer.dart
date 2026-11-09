@@ -401,7 +401,7 @@ class PdfViewerState extends State<PdfViewer>
     final sub = [
       if (widget.from != null) l10n.fileFrom(widget.from!),
       if (widget.size != null) humanFileSize(widget.size!),
-      if (d != null) l10n.filePages(d.pages),
+      if (d != null) l10n.filePages(d.pages, whole(d.pages)),
     ].join(' · ');
     final kept = widget.kept;
     return ColoredBox(

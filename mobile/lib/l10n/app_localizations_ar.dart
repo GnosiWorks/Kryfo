@@ -12068,17 +12068,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String fileLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String fileLines(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString سطر',
-      many: '$countString سطرًا',
-      few: '$countString أسطر',
+      other: '$n سطر',
+      many: '$n سطرًا',
+      few: '$n أسطر',
       two: 'سطران',
       one: 'سطر واحد',
       zero: 'لا أسطر',
@@ -12096,17 +12092,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String filePages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String filePages(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString صفحة',
-      many: '$countString صفحة',
-      few: '$countString صفحات',
+      other: '$n صفحة',
+      many: '$n صفحة',
+      few: '$n صفحات',
       two: 'صفحتان',
       one: 'صفحة واحدة',
       zero: 'لا صفحات',
@@ -12207,15 +12199,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sendSheetAsFileLine => 'الجودة الأصلية، دون ضغط';
 
   @override
-  String sendSheetSend(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String sendSheetSend(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'إرسال $countString',
+      other: 'إرسال $n',
       zero: 'إرسال',
     );
     return '$_temp0';

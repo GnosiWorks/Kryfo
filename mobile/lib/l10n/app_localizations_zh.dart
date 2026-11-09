@@ -11275,15 +11275,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String fileLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String fileLines(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString 行',
+      other: '$n 行',
     );
     return '$_temp0';
   }
@@ -11297,15 +11293,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String filePages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String filePages(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString 页',
+      other: '$n 页',
     );
     return '$_temp0';
   }
@@ -11400,15 +11392,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendSheetAsFileLine => '原始画质，不压缩';
 
   @override
-  String sendSheetSend(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String sendSheetSend(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '发送 $countString 个',
+      other: '发送 $n 个',
     );
     return '$_temp0';
   }
@@ -22565,15 +22553,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String fileLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String fileLines(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString 行',
+      other: '$n 行',
     );
     return '$_temp0';
   }
@@ -22587,15 +22571,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String filePages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String filePages(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString 頁',
+      other: '$n 頁',
     );
     return '$_temp0';
   }
@@ -22690,15 +22670,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get sendSheetAsFileLine => '原始畫質，不壓縮';
 
   @override
-  String sendSheetSend(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String sendSheetSend(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '傳送 $countString 個',
+      other: '傳送 $n 個',
     );
     return '$_temp0';
   }

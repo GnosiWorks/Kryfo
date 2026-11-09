@@ -141,7 +141,7 @@ class _TextViewerState extends State<TextViewer> {
     final sub = [
       if (widget.from != null) l10n.fileFrom(widget.from!),
       if (size != null) humanFileSize(size),
-      if (_lines != null) l10n.fileLines(_lines!.length),
+      if (_lines != null) l10n.fileLines(_lines!.length, whole(_lines!.length)),
     ].join(' · ');
     final kept = widget.kept;
     return ColoredBox(

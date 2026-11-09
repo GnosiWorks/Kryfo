@@ -254,7 +254,7 @@ void main() {
       );
       await settle(t);
       expect(find.byType(PdfFirstPage), findsOneWidget);
-      expect(find.text(l10n.filePages(12)), findsOneWidget);
+      expect(find.text(l10n.filePages(12, '12')), findsOneWidget);
       // the glance's document is shut once its page is drawn
       expect(fake.live, isEmpty);
       expect(pdfGlanceNow(f.path), isNotNull);
@@ -271,7 +271,7 @@ void main() {
         host(FileCard(path: f.path, name: 'l.pdf', isOut: false)),
       );
       await settle(t);
-      expect(find.text(l10n.filePages(3)), findsNothing);
+      expect(find.text(l10n.filePages(3, '3')), findsNothing);
     });
 
     testWidgets('large text cuts nothing in a narrow bubble', (t) async {
@@ -549,7 +549,7 @@ void main() {
       final fake = FakePdf()..pages = 12;
       final v = await openPdf(t, fake);
       expect(fake.rendered, greaterThan(0));
-      expect(find.textContaining(l10n.filePages(12)), findsOneWidget);
+      expect(find.textContaining(l10n.filePages(12, '12')), findsOneWidget);
       expect(v.scale, 1);
       await t.tap(find.bySemanticsLabel(l10n.fileZoomIn));
       await settle(t);

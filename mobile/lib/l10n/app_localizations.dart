@@ -19117,11 +19117,11 @@ abstract class AppLocalizations {
   /// **'From {name}'**
   String fileFrom(String name);
 
-  /// text viewer head: how many lines the file has
+  /// text viewer head: how many lines the file has. n is count written in the language's digits
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 line} other{{count} lines}}'**
-  String fileLines(int count);
+  /// **'{count, plural, =1{{n} line} other{{n} lines}}'**
+  String fileLines(int count, String n);
 
   /// text viewer: the file's bytes are not words
   ///
@@ -19135,11 +19135,11 @@ abstract class AppLocalizations {
   /// **'This shows the first {size}. Save the file to read all of it.'**
   String fileShowsFirst(String size);
 
-  /// pdf bubble and viewer: how many pages
+  /// pdf bubble and viewer: how many pages. n is count written in the language's digits
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 page} other{{count} pages}}'**
-  String filePages(int count);
+  /// **'{count, plural, =1{{n} page} other{{n} pages}}'**
+  String filePages(int count, String n);
 
   /// pdf viewer pill: the page in view of all pages, numbers already in the language's digits
   ///
@@ -19303,11 +19303,11 @@ abstract class AppLocalizations {
   /// **'Original quality, no compression'**
   String get sendSheetAsFileLine;
 
-  /// sending sheet button with how many go
+  /// sending sheet button with how many go. n is count written in the language's digits
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{Send 1} other{Send {count}}}'**
-  String sendSheetSend(int count);
+  /// **'{count, plural, =1{Send {n}} other{Send {n}}}'**
+  String sendSheetSend(int count, String n);
 }
 
 class _AppLocalizationsDelegate

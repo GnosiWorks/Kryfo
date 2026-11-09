@@ -565,7 +565,7 @@ Future<void> _speak(WidgetTester t, bool Function() done) async {
 // the sending sheet's gallery: the picker, then all it gave sent
 Future<void> _galleryInSheet(WidgetTester t) async {
   await t.tap(find.text(l10n.sendSheetChoosePhotos));
-  final sends = {for (var n = 1; n < 5; n++) l10n.sendSheetSend(n)};
+  final sends = {for (var n = 1; n < 5; n++) l10n.sendSheetSend(n, '$n')};
   final send = find.byWidgetPredicate(
     (w) => w is Text && sends.contains(w.data),
   );
@@ -590,7 +590,7 @@ Future<void> _attach(WidgetTester t, String tile, bool Function() done) async {
             : l10n.sendSheetChoosePhotos,
       ),
     );
-    final sends = {for (var n = 1; n < 5; n++) l10n.sendSheetSend(n)};
+    final sends = {for (var n = 1; n < 5; n++) l10n.sendSheetSend(n, '$n')};
     final send = find.byWidgetPredicate(
       (w) => w is Text && sends.contains(w.data),
     );

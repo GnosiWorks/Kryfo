@@ -3137,10 +3137,10 @@
   "fileOpenWith": "Відкрити в…",
   "fileOpenWithNote": "Інший застосунок побачить цей файл. Доти Kryfo зберігає його зашифрованим.",
   "fileFrom": "Від {name}",
-  "fileLines": "{count, plural, one{{count} рядок} few{{count} рядки} many{{count} рядків} other{{count} рядка}}",
+  "fileLines": "{count, plural, one{{n} рядок} few{{n} рядки} many{{n} рядків} other{{n} рядка}}",
   "fileNotWords": "Цей файл не текст. Його можна зберегти або відкрити в іншому застосунку.",
   "fileShowsFirst": "Тут показано перші {size}. Збережи файл, щоб прочитати його повністю.",
-  "filePages": "{count, plural, one{{count} сторінка} few{{count} сторінки} many{{count} сторінок} other{{count} сторінки}}",
+  "filePages": "{count, plural, one{{n} сторінка} few{{n} сторінки} many{{n} сторінок} other{{n} сторінки}}",
   "filePageOf": "{page} / {total}",
   "filePage": "Сторінка {page}",
   "fileSearchIn": "Пошук у файлі",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "Вибрано, номер {n}",
   "sendSheetAsFile": "Надіслати файлом",
   "sendSheetAsFileLine": "Оригінальна якість, без стиснення",
-  "sendSheetSend": "{count, plural, other{Надіслати {count}}}"
+  "sendSheetSend": "{count, plural, other{Надіслати {n}}}"
 }

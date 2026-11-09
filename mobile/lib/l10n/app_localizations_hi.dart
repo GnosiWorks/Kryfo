@@ -11939,16 +11939,12 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String fileLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String fileLines(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString पंक्तियाँ',
-      one: '1 पंक्ति',
+      other: '$n पंक्तियाँ',
+      one: '$n पंक्ति',
     );
     return '$_temp0';
   }
@@ -11963,16 +11959,12 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String filePages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String filePages(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString पेज',
-      one: '1 पेज',
+      other: '$n पेज',
+      one: '$n पेज',
     );
     return '$_temp0';
   }
@@ -12070,15 +12062,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sendSheetAsFileLine => 'मूल क्वालिटी, बिना कंप्रेशन';
 
   @override
-  String sendSheetSend(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String sendSheetSend(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString भेजें',
+      other: '$n भेजें',
     );
     return '$_temp0';
   }

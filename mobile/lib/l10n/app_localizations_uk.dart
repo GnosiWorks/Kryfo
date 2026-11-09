@@ -12120,18 +12120,14 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String fileLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String fileLines(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString рядка',
-      many: '$countString рядків',
-      few: '$countString рядки',
-      one: '$countString рядок',
+      other: '$n рядка',
+      many: '$n рядків',
+      few: '$n рядки',
+      one: '$n рядок',
     );
     return '$_temp0';
   }
@@ -12146,18 +12142,14 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String filePages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String filePages(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString сторінки',
-      many: '$countString сторінок',
-      few: '$countString сторінки',
-      one: '$countString сторінка',
+      other: '$n сторінки',
+      many: '$n сторінок',
+      few: '$n сторінки',
+      one: '$n сторінка',
     );
     return '$_temp0';
   }
@@ -12255,15 +12247,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sendSheetAsFileLine => 'Оригінальна якість, без стиснення';
 
   @override
-  String sendSheetSend(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String sendSheetSend(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Надіслати $countString',
+      other: 'Надіслати $n',
     );
     return '$_temp0';
   }

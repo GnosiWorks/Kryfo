@@ -11920,15 +11920,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String fileLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String fileLines(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString dòng',
+      other: '$n dòng',
     );
     return '$_temp0';
   }
@@ -11943,15 +11939,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String filePages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String filePages(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString trang',
+      other: '$n trang',
     );
     return '$_temp0';
   }
@@ -12049,15 +12041,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sendSheetAsFileLine => 'Chất lượng gốc, không nén';
 
   @override
-  String sendSheetSend(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String sendSheetSend(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Gửi $countString',
+      other: 'Gửi $n',
     );
     return '$_temp0';
   }

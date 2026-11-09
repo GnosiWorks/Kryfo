@@ -3137,10 +3137,10 @@
   "fileOpenWith": "فتح باستخدام…",
   "fileOpenWithNote": "يمكن للتطبيق الآخر رؤية هذا الملف. يبقيه Kryfo مشفّرًا حتى ذلك الحين.",
   "fileFrom": "من {name}",
-  "fileLines": "{count, plural, =0{لا أسطر} =1{سطر واحد} =2{سطران} few{{count} أسطر} many{{count} سطرًا} other{{count} سطر}}",
+  "fileLines": "{count, plural, =0{لا أسطر} =1{سطر واحد} =2{سطران} few{{n} أسطر} many{{n} سطرًا} other{{n} سطر}}",
   "fileNotWords": "هذا الملف ليس نصًا. يمكنك حفظه أو فتحه بتطبيق آخر.",
   "fileShowsFirst": "يظهر هنا أول {size}. احفظ الملف لقراءته كاملًا.",
-  "filePages": "{count, plural, =0{لا صفحات} =1{صفحة واحدة} =2{صفحتان} few{{count} صفحات} many{{count} صفحة} other{{count} صفحة}}",
+  "filePages": "{count, plural, =0{لا صفحات} =1{صفحة واحدة} =2{صفحتان} few{{n} صفحات} many{{n} صفحة} other{{n} صفحة}}",
   "filePageOf": "{page} / {total}",
   "filePage": "الصفحة {page}",
   "fileSearchIn": "البحث في الملف",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "محدّد، رقم {n}",
   "sendSheetAsFile": "إرسال كملف",
   "sendSheetAsFileLine": "الجودة الأصلية، دون ضغط",
-  "sendSheetSend": "{count, plural, =0{إرسال} other{إرسال {count}}}"
+  "sendSheetSend": "{count, plural, =0{إرسال} other{إرسال {n}}}"
 }

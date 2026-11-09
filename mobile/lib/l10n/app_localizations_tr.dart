@@ -11960,15 +11960,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String fileLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String fileLines(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString satır',
+      other: '$n satır',
     );
     return '$_temp0';
   }
@@ -11983,15 +11979,11 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String filePages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String filePages(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString sayfa',
+      other: '$n sayfa',
     );
     return '$_temp0';
   }
@@ -12089,15 +12081,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sendSheetAsFileLine => 'Orijinal kalite, sıkıştırma yok';
 
   @override
-  String sendSheetSend(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String sendSheetSend(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString gönder',
+      other: '$n gönder',
     );
     return '$_temp0';
   }

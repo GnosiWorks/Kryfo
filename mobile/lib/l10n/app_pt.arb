@@ -3137,10 +3137,10 @@
   "fileOpenWith": "Abrir com…",
   "fileOpenWithNote": "O outro app pode ver este arquivo. Até lá, o Kryfo o mantém criptografado.",
   "fileFrom": "De {name}",
-  "fileLines": "{count, plural, =1{1 linha} other{{count} linhas}}",
+  "fileLines": "{count, plural, =1{{n} linha} other{{n} linhas}}",
   "fileNotWords": "Este arquivo não é texto. Você pode salvá-lo ou abri-lo com outro app.",
   "fileShowsFirst": "Aqui aparecem os primeiros {size}. Salve o arquivo para ler tudo.",
-  "filePages": "{count, plural, =1{1 página} other{{count} páginas}}",
+  "filePages": "{count, plural, =1{{n} página} other{{n} páginas}}",
   "filePageOf": "{page} / {total}",
   "filePage": "Página {page}",
   "fileSearchIn": "Buscar no arquivo",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "Escolhido, número {n}",
   "sendSheetAsFile": "Enviar como arquivo",
   "sendSheetAsFileLine": "Qualidade original, sem compressão",
-  "sendSheetSend": "{count, plural, other{Enviar {count}}}"
+  "sendSheetSend": "{count, plural, other{Enviar {n}}}"
 }

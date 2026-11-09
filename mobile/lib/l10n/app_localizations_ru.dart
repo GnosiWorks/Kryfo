@@ -12122,18 +12122,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String fileLines(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String fileLines(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString строки',
-      many: '$countString строк',
-      few: '$countString строки',
-      one: '$countString строка',
+      other: '$n строки',
+      many: '$n строк',
+      few: '$n строки',
+      one: '$n строка',
     );
     return '$_temp0';
   }
@@ -12148,18 +12144,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String filePages(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String filePages(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString страницы',
-      many: '$countString страниц',
-      few: '$countString страницы',
-      one: '$countString страница',
+      other: '$n страницы',
+      many: '$n страниц',
+      few: '$n страницы',
+      one: '$n страница',
     );
     return '$_temp0';
   }
@@ -12257,15 +12249,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sendSheetAsFileLine => 'Исходное качество, без сжатия';
 
   @override
-  String sendSheetSend(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
+  String sendSheetSend(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Отправить $countString',
+      other: 'Отправить $n',
     );
     return '$_temp0';
   }

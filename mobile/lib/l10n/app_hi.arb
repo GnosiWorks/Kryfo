@@ -3137,10 +3137,10 @@
   "fileOpenWith": "इससे खोलें…",
   "fileOpenWithNote": "दूसरा ऐप यह फ़ाइल देख सकता है. तब तक Kryfo इसे एन्क्रिप्ट करके रखता है.",
   "fileFrom": "{name} से",
-  "fileLines": "{count, plural, =1{1 पंक्ति} other{{count} पंक्तियाँ}}",
+  "fileLines": "{count, plural, =1{{n} पंक्ति} other{{n} पंक्तियाँ}}",
   "fileNotWords": "यह फ़ाइल टेक्स्ट नहीं है. आप इसे सेव कर सकते हैं या दूसरे ऐप से खोल सकते हैं.",
   "fileShowsFirst": "यहाँ पहले {size} दिख रहे हैं. पूरी फ़ाइल पढ़ने के लिए उसे सेव करें.",
-  "filePages": "{count, plural, =1{1 पेज} other{{count} पेज}}",
+  "filePages": "{count, plural, =1{{n} पेज} other{{n} पेज}}",
   "filePageOf": "{page} / {total}",
   "filePage": "पेज {page}",
   "fileSearchIn": "फ़ाइल में खोजें",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "चुना गया, क्रम {n}",
   "sendSheetAsFile": "फ़ाइल के रूप में भेजें",
   "sendSheetAsFileLine": "मूल क्वालिटी, बिना कंप्रेशन",
-  "sendSheetSend": "{count, plural, other{{count} भेजें}}"
+  "sendSheetSend": "{count, plural, other{{n} भेजें}}"
 }

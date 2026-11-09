@@ -14990,13 +14990,15 @@
       }
     }
   },
-  "fileLines": "{count, plural, =1{1 line} other{{count} lines}}",
+  "fileLines": "{count, plural, =1{{n} line} other{{n} lines}}",
   "@fileLines": {
-    "description": "text viewer head: how many lines the file has",
+    "description": "text viewer head: how many lines the file has. n is count written in the language's digits",
     "placeholders": {
       "count": {
-        "type": "int",
-        "format": "decimalPattern"
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
       }
     }
   },
@@ -15013,13 +15015,15 @@
       }
     }
   },
-  "filePages": "{count, plural, =1{1 page} other{{count} pages}}",
+  "filePages": "{count, plural, =1{{n} page} other{{n} pages}}",
   "@filePages": {
-    "description": "pdf bubble and viewer: how many pages",
+    "description": "pdf bubble and viewer: how many pages. n is count written in the language's digits",
     "placeholders": {
       "count": {
-        "type": "int",
-        "format": "decimalPattern"
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
       }
     }
   },
@@ -15154,13 +15158,15 @@
   "@sendSheetAsFileLine": {
     "description": "under Send as file"
   },
-  "sendSheetSend": "{count, plural, =1{Send 1} other{Send {count}}}",
+  "sendSheetSend": "{count, plural, =1{Send {n}} other{Send {n}}}",
   "@sendSheetSend": {
-    "description": "sending sheet button with how many go",
+    "description": "sending sheet button with how many go. n is count written in the language's digits",
     "placeholders": {
       "count": {
-        "type": "int",
-        "format": "decimalPattern"
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
       }
     }
   }

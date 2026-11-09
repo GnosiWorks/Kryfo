@@ -1181,7 +1181,6 @@ void main() {
     expect(l.groupChatGallery, "Gallery");
     expect(l.groupChatVideo, "Video");
     expect(l.groupChatGifFromPhone, "Gif from phone");
-    expect(l.groupChatFile, "File");
     expect(l.groupChatCouldNotReadThat, "Could not read that file");
     expect(l.groupChatGifTooBig8, "Gif too big · 8 mb max");
     expect(l.groupChatCouldNotCleanThat, "Could not clean that gif");

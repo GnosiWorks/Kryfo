@@ -3137,10 +3137,10 @@
   "fileOpenWith": "Mở bằng…",
   "fileOpenWithNote": "Ứng dụng kia có thể thấy tệp này. Đến lúc đó Kryfo vẫn giữ nó được mã hóa.",
   "fileFrom": "Từ {name}",
-  "fileLines": "{count, plural, other{{count} dòng}}",
+  "fileLines": "{count, plural, other{{n} dòng}}",
   "fileNotWords": "Tệp này không phải văn bản. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác.",
   "fileShowsFirst": "Đây là {size} đầu tiên. Hãy lưu tệp để đọc toàn bộ.",
-  "filePages": "{count, plural, other{{count} trang}}",
+  "filePages": "{count, plural, other{{n} trang}}",
   "filePageOf": "{page} / {total}",
   "filePage": "Trang {page}",
   "fileSearchIn": "Tìm trong tệp",
@@ -3168,5 +3168,5 @@
   "sendSheetChosen": "Đã chọn, số {n}",
   "sendSheetAsFile": "Gửi dưới dạng tệp",
   "sendSheetAsFileLine": "Chất lượng gốc, không nén",
-  "sendSheetSend": "{count, plural, other{Gửi {count}}}"
+  "sendSheetSend": "{count, plural, other{Gửi {n}}}"
 }
