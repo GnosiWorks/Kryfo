@@ -31,6 +31,10 @@ import 'voice_parts.dart' show VoiceWave, voicePeaksNow, kVoiceBars;
 /// the tag the bubble's play mark shares with the player's picture
 Object soundHeroTag(String path, [Object? id]) => ('sound', path, id);
 
+/// a sound whose samples are not read here gets a made-up wave; false
+/// gives it a plain seek bar
+const kMadeUpWave = true;
+
 /// a calm wave for a sound whose samples are not read here, the same for
 /// the same file every time. a shape to seek on, not its loudness
 List<double> soundWave(String seed, [int bars = kVoiceBars]) {
@@ -343,14 +347,16 @@ class _SeekWave extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final peaks = voicePeaksNow(path) ?? soundWave(path);
-    final wave = VoiceWave(
-      peaks: peaks,
-      progress: share,
-      played: played,
-      rest: rest,
-      height: height,
-    );
+    final peaks = voicePeaksNow(path) ?? (kMadeUpWave ? soundWave(path) : null);
+    final Widget wave = peaks == null
+        ? _PlainBar(share: share, played: played, rest: rest, height: height)
+        : VoiceWave(
+            peaks: peaks,
+            progress: share,
+            played: played,
+            rest: rest,
+            height: height,
+          );
     final seek = onSeek;
     if (seek == null) return wave;
     final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -800,6 +806,45 @@ class _Skip extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// a plain seek bar: a thin track, the played part filled from the start
+class _PlainBar extends StatelessWidget {
+  final double share;
+  final Color played;
+  final Color rest;
+  final double height;
+  const _PlainBar({
+    required this.share,
+    required this.played,
+    required this.rest,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: height,
+    width: double.infinity,
+    child: Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(2),
+        child: SizedBox(
+          height: 4,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ColoredBox(color: rest),
+              FractionallySizedBox(
+                alignment: AlignmentDirectional.centerStart,
+                widthFactor: share.clamp(0.0, 1.0),
+                child: ColoredBox(color: played),
+              ),
+            ],
+          ),
         ),
       ),
     ),
