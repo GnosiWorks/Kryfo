@@ -27,6 +27,8 @@ cd "$work"
 # no build path or date inside the library
 export SOURCE_DATE_EPOCH=0
 export CFLAGS="-O2 ${EXTRA_CFLAGS:-} -ffile-prefix-map=$work=/sqlcipher -DSQLITE_HAS_CODEC -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown"
+# its own sqlite3_* calls stay inside it: gtk may have loaded the system
+# sqlite first, and binding to that one crashes the database open
 export LDFLAGS="${EXTRA_LDFLAGS:-} -Wl,-Bsymbolic -lcrypto"
 ./configure --with-tempstore=yes --fts5 --disable-tcl --disable-static \
   --disable-readline --disable-rpath --dll-basename=libsqlcipher --soname=legacy >configure.log 2>&1 || {

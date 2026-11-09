@@ -81,6 +81,12 @@ def flatpak(repo, app):
     for opt in re.findall(r"--[a-z0-9-]+(?:=\S+)?", sh.split("./configure", 1)[1].split(">", 1)[0]):
         if opt not in cfg:
             fail("build-sqlcipher.sh configures %s, the flatpak does not" % opt)
+    ld = re.search(r'^export LDFLAGS="\$\{EXTRA_LDFLAGS:-\} (.*)"$', sh, re.M).group(1)
+    if ld.split() != str(mods["sqlcipher"]["build-options"]["ldflags"]).split():
+        fail("the flatpak's sqlcipher links with %r, build-sqlcipher.sh with %r"
+             % (mods["sqlcipher"]["build-options"]["ldflags"], ld))
+    else:
+        ok("sqlcipher ldflags equal build-sqlcipher.sh")
 
     # lay the kryfo module's sources out as flatpak-builder would, then run
     # its build commands with /app moved to app-out

@@ -33,6 +33,10 @@ fi
 if [ -f "$B/lib/libsqlcipher.so.0" ] && ldd "$B/lib/libsqlcipher.so.0" | grep -q 'not found'; then
   no "libsqlcipher.so.0 does not resolve"
 fi
+# a system sqlite gtk loaded first must not take the sqlcipher's own calls
+if [ -f "$B/lib/libsqlcipher.so.0" ] && ! readelf -d "$B/lib/libsqlcipher.so.0" | grep -q '(SYMBOLIC)'; then
+  no "libsqlcipher.so.0 is not linked with -Bsymbolic"
+fi
 ls "$B/lib" | grep -q '^libsqlite3' && no "a plain sqlite is in lib/"
 [ -f "$B/data/kryfo.png" ] || no "data/kryfo.png missing"
 [ -e "$B/lib/libdartjni.so" ] && no "lib/libdartjni.so is in the bundle (it needs a java vm)"
