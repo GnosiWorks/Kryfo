@@ -236,6 +236,65 @@ PlainView plainViewOf(String path) {
   }
 }
 
+/// [path] too big for the reader that asked
+class PlainTooBig implements Exception {
+  const PlainTooBig();
+}
+
+/// a copy ended by its caller, the lock
+class PlainStopped implements Exception {
+  const PlainStopped();
+}
+
+/// [plainViewOf] a chunk at a time, letting the screen draw between them,
+/// so a big file does not hold a frame. [most]: refused above it, in
+/// plaintext bytes. [stop]: asked between chunks, true ends the copy (the
+/// lock went up) and the view is closed
+Future<PlainView> plainViewOfLater(
+  String path, {
+  int? most,
+  bool Function()? stop,
+}) async {
+  final io = _io;
+  if (io == null || !io.areas.sealedPlace(path) || !_sealedHead(path)) {
+    if (most != null && File(path).lengthSync() > most) {
+      throw const PlainTooBig();
+    }
+    return _Same(path);
+  }
+  if (most != null && File(path).lengthSync() > most) {
+    throw const PlainTooBig();
+  }
+  final v = _emptyView(io.areas);
+  RandomAccessFile? src, dst;
+  try {
+    final from = File(path).openSync();
+    src = from;
+    final to = rawFileAccess(() => File(v.path).openSync(mode: FileMode.write));
+    dst = to;
+    var n = 0;
+    while (true) {
+      final b = from.readSync(chunkPlain);
+      if (b.isEmpty) break;
+      to.writeFromSync(b);
+      b.fillRange(0, b.length, 0);
+      // a frame's room every few chunks
+      if (++n % 8 == 0) {
+        await Future<void>.delayed(Duration.zero);
+        if (stop?.call() ?? false) throw const PlainStopped();
+      }
+    }
+    to.flushSync();
+    return v;
+  } catch (_) {
+    v.close();
+    rethrow;
+  } finally {
+    src?.closeSync();
+    dst?.closeSync();
+  }
+}
+
 PlainView _emptyView(SealedAreas areas) {
   if (memfdWorks()) {
     final m = _MemView.create();

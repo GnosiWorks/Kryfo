@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../desktop/desktop_mode.dart' show onDesktop;
-import '../dlog.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../main.dart' show appState, AppStateScreen;
@@ -28,7 +27,7 @@ import 'text_ground.dart';
 import 'video_frame.dart';
 import 'video_viewer.dart' show ViewerRound, ViewerScrubber, ViewerTime;
 import '../lock_guard.dart' show lockGuard;
-import '../phone_seal.dart' show withFileKey;
+import '../video_playback.dart';
 
 class AlbumItem {
   final String path;
@@ -36,8 +35,6 @@ class AlbumItem {
   final String? fileName;
   const AlbumItem(this.path, {this.video = false, this.fileName});
 }
-
-const _channel = MethodChannel('kryfo/video');
 
 // an album on its way up: a second tap opens nothing more
 bool _opening = false;
@@ -576,94 +573,56 @@ class _VideoPage extends StatefulWidget {
   State<_VideoPage> createState() => _VideoPageState();
 }
 
-class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
-  int? _id;
-  bool _opening = false;
-  bool _failed = false;
-  bool _started = false;
-  bool _playing = false;
+class _VideoPageState extends State<_VideoPage> {
+  // the one player every screen shares: a page out of view sleeps
+  late final VideoPlayback _v = VideoPlayback(
+    widget.item.path,
+    aspect: videoInfoNow(widget.item.path)?.aspect ?? 16 / 9,
+    length: videoInfoNow(widget.item.path)?.length ?? Duration.zero,
+  )..wanted = widget.active;
   bool _done = false;
   bool _controls = true;
-  double _aspect = 16 / 9;
-  int _turns = 0;
-  Duration _length = Duration.zero;
-  Duration _pos = Duration.zero;
   double? _scrub;
-  Timer? _poll;
   Timer? _hide;
-  VoidCallback? _unguard;
   late VideoInfo? _info = videoInfoNow(widget.item.path);
+
+  bool get _playing => _v.playing;
+  bool get _failed => _v.failed;
+  int? get _id => _v.textureId;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     widget.route.addStatusListener(_routeStatus);
-    if (_info case final i?) {
-      _aspect = i.aspect;
-      _length = i.length;
-    } else {
-      videoInfoFor(widget.item.path).then((i) {
-        if (!mounted || i == null) return;
-        setState(() {
-          _info = i;
-          if (_id == null) _aspect = i.aspect;
-          if (_length == Duration.zero) _length = i.length;
-        });
-      });
-    }
+    _v.addListener(_moved);
     picturesShut.addListener(_lockChanged);
+    if (_info == null) _askInfo();
     if (widget.active) _open();
   }
 
-  // the lock closes the player, so no frame of it is held behind the pin,
-  // and it comes back paused where it was once the lock lifts
-  bool _resting = false;
+  void _askInfo() => videoInfoFor(widget.item.path).then((i) {
+    if (mounted && i != null) setState(() => _info = i);
+  });
 
+  // the first frame the lock took comes back under the blur after it
   void _lockChanged() {
-    if (picturesShut.value) {
-      _rest();
-    } else {
-      unawaited(_wake());
-    }
+    if (!picturesShut.value) _askInfo();
   }
 
-  void _rest() {
-    _poll?.cancel();
-    _poll = null;
-    _hide?.cancel();
-    final id = _id;
-    _id = null;
-    if (id != null) _channel.invokeMethod('close', {'id': id});
-    _resting = true;
+  void _moved() {
     if (!mounted) return;
+    final ended = _v.done && !_done;
     setState(() {
-      _started = false;
-      _playing = false;
-      _controls = true;
+      _done = _v.done;
+      if (ended) _controls = true;
     });
-  }
-
-  Future<void> _wake() async {
-    if (!_resting || !mounted) return;
-    _resting = false;
-    videoInfoFor(widget.item.path).then((i) {
-      if (mounted && i != null) setState(() => _info = i);
-    });
-    if (!widget.active) return;
-    await _open(play: false);
-    final id = _id;
-    if (id != null && _pos > Duration.zero && !_done) {
-      await _channel.invokeMethod('seek', {
-        'id': id,
-        'ms': _pos.inMilliseconds,
-      });
-    }
+    if (ended) widget.onChrome(true);
   }
 
   @override
   void didUpdateWidget(_VideoPage old) {
     super.didUpdateWidget(old);
+    _v.wanted = widget.active;
     if (widget.active && !old.active) {
       _open();
     } else if (!widget.active && old.active && _playing) {
@@ -673,100 +632,38 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _unguard?.call();
-    picturesShut.removeListener(_lockChanged);
-    WidgetsBinding.instance.removeObserver(this);
     widget.route.removeStatusListener(_routeStatus);
-    _poll?.cancel();
+    picturesShut.removeListener(_lockChanged);
+    _v.removeListener(_moved);
+    _v.dispose();
     _hide?.cancel();
-    final id = _id;
-    if (id != null) _channel.invokeMethod('close', {'id': id});
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed && _playing) _pause();
-  }
-
   void _routeStatus(AnimationStatus s) {
-    if (s == AnimationStatus.completed && widget.active && !_started) {
+    if (s == AnimationStatus.completed && widget.active && !_v.started) {
       _play();
     }
   }
 
-  Future<void> _open({bool play = true}) async {
-    if (_id != null) {
-      if (play && widget.route.status == AnimationStatus.completed) _play();
-      return;
-    }
-    if (_opening || _failed) return;
-    _opening = true;
-    Map<String, dynamic>? m;
-    try {
-      m = await _channel.invokeMapMethod<String, dynamic>(
-        'open',
-        withFileKey(widget.item.path, {'path': widget.item.path}),
-      );
-    } catch (e) {
-      dlog('album video: not opened (${e.runtimeType})');
-    }
-    _opening = false;
-    // gone, or the lock went up while it opened
-    if (!mounted || picturesShut.value) {
-      if (mounted) _resting = true;
-      final id = (m?['id'] as num?)?.toInt();
-      if (id != null) _channel.invokeMethod('close', {'id': id});
-      return;
-    }
-    if (m == null) {
-      setState(() => _failed = true);
-      return;
-    }
-    final shape = VideoShape.from(m, _aspect);
-    setState(() {
-      _id = (m!['id'] as num).toInt();
-      _aspect = shape.aspect;
-      _turns = shape.turns;
-      final ms = (m['ms'] as num?)?.toInt() ?? 0;
-      if (ms > 0) _length = Duration(milliseconds: ms);
-    });
-    if (play &&
-        widget.active &&
-        widget.route.status == AnimationStatus.completed) {
-      _play();
-    }
-  }
+  Future<void> _open() => _v
+      .open(
+        play: widget.active && widget.route.status == AnimationStatus.completed,
+      )
+      .then((_) {
+        if (mounted && _playing) _hideSoon();
+      });
 
   Future<void> _play() async {
-    final id = _id;
-    if (id == null || lockGuard.isLocked() || !widget.active) return;
-    await _channel.invokeMethod('play', {'id': id});
-    if (!mounted) return;
-    setState(() {
-      _started = true;
-      _playing = true;
-      _done = false;
-    });
-    _unguard ??= lockGuard.closeOnLock(() {
-      _unguard = null;
-      if (mounted && _playing) _pause();
-    });
-    _poll ??= Timer.periodic(const Duration(milliseconds: 200), (_) => _read());
-    _hideSoon();
+    if (lockGuard.isLocked() || !widget.active) return;
+    await _v.play();
+    if (mounted && _playing) _hideSoon();
   }
 
   Future<void> _pause() async {
-    final id = _id;
-    if (id == null) return;
-    _poll?.cancel();
-    _poll = null;
-    await _channel.invokeMethod('pause', {'id': id});
+    await _v.pause();
     if (!mounted) return;
-    setState(() {
-      _playing = false;
-      _controls = true;
-    });
+    setState(() => _controls = true);
     widget.onChrome(true);
     _hide?.cancel();
   }
@@ -774,30 +671,6 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
   void _toggle() {
     HapticFeedback.selectionClick();
     _playing ? _pause() : _play();
-  }
-
-  Future<void> _read() async {
-    final id = _id;
-    if (id == null || _scrub != null) return;
-    final m = await _channel.invokeMapMethod<String, dynamic>('state', {
-      'id': id,
-    });
-    if (!mounted || m == null || _scrub != null) return;
-    final done = m['done'] == true;
-    if (done) {
-      _poll?.cancel();
-      _poll = null;
-    }
-    setState(() {
-      _pos = Duration(milliseconds: (m['ms'] as num?)?.toInt() ?? 0);
-      _playing = m['playing'] == true;
-      if (done && !_done) {
-        _done = true;
-        _controls = true;
-        _pos = _length;
-      }
-    });
-    if (done) widget.onChrome(true);
   }
 
   void _hideSoon() {
@@ -816,14 +689,7 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
     if (_controls) _hideSoon();
   }
 
-  void _seekTo(double f) {
-    final id = _id;
-    if (id == null) return;
-    _channel.invokeMethod('seek', {
-      'id': id,
-      'ms': (f * _length.inMilliseconds).round(),
-    });
-  }
+  void _seekTo(double f) => _v.seekShare(f);
 
   @override
   Widget build(BuildContext context) {
@@ -831,8 +697,8 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
     final jpeg = _info?.jpeg;
     final id = _id;
     final visible = _controls || !_playing;
-    final len = _length.inMilliseconds;
-    final at = _scrub ?? (len <= 0 ? 0.0 : _pos.inMilliseconds / len);
+    final len = _v.length.inMilliseconds;
+    final at = _scrub ?? _v.share;
     final fade = motionStill(context)
         ? Duration.zero
         : const Duration(milliseconds: 180);
@@ -851,15 +717,15 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
                     style: HaloType.sans(size: 14, color: Colors.white),
                   )
                 : VideoFrame(
-                    aspect: _aspect,
-                    turns: _turns,
+                    aspect: _v.aspect,
+                    turns: _v.turns,
                     // its blur, the first frame fading up over it
                     under: SealedPicture(
                       path: widget.item.path,
                       image: jpeg == null ? null : MemoryImage(jpeg),
                       ground: Colors.black,
                     ),
-                    texture: id != null && _started
+                    texture: id != null && _v.started
                         ? Texture(textureId: id)
                         : null,
                   ),
@@ -876,7 +742,7 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
                     label: _done
                         ? l10n.videoViewerPlayAgain
                         : l10n.videoViewerPlay,
-                    onTap: _id == null ? _open : _toggle,
+                    onTap: _id == null ? _play : _toggle,
                     child: Icon(
                       _done ? Icons.replay_rounded : Icons.play_arrow_rounded,
                       size: 38,
@@ -945,6 +811,7 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
                               onStart: (f) {
                                 HapticFeedback.selectionClick();
                                 _hide?.cancel();
+                                _v.holdReads = true;
                                 setState(() => _scrub = f);
                                 _seekTo(f);
                               },
@@ -953,22 +820,14 @@ class _VideoPageState extends State<_VideoPage> with WidgetsBindingObserver {
                                 _seekTo(f);
                               },
                               onEnd: () {
-                                final f = _scrub;
-                                setState(() {
-                                  if (f != null) {
-                                    _pos = Duration(
-                                      milliseconds: (f * len).round(),
-                                    );
-                                    _done = false;
-                                  }
-                                  _scrub = null;
-                                });
+                                _v.holdReads = false;
+                                setState(() => _scrub = null);
                                 if (_playing) _hideSoon();
                               },
                             ),
                           ),
                           const SizedBox(width: 10),
-                          ViewerTime(_length),
+                          ViewerTime(_v.length),
                         ],
                       ),
                     ),

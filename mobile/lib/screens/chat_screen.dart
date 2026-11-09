@@ -31,6 +31,7 @@ import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import '../widgets/sealed_picture.dart';
+import '../widgets/shared_media.dart' show openShared;
 import '../widgets/photo_shape.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
@@ -63,6 +64,19 @@ import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
 import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
+import '../sound_player.dart' show SoundItem, SoundPlayer;
+import '../recent_files.dart';
+import '../widgets/send_sheet.dart';
+import '../widgets/file_actions.dart'
+    show
+        FileView,
+        canForwardFile,
+        fileHeroTag,
+        fileFactsOrName,
+        fileViewOf,
+        forwardFile,
+        openFileOutside,
+        viewInKryfo;
 import '../widgets/kryfo_link_text.dart';
 import '../open_file.dart';
 import '../file_drop.dart' show dropDayDone, dropTryLater;
@@ -191,7 +205,6 @@ import '../widgets/shots_line.dart';
 import '../chat_shots.dart'
     show ChatShots, ShotsPacer, kShotsByMe, kShotsByNone, shotsKeeps;
 import '../widgets/message_menu.dart';
-import '../widgets/attach_grid.dart';
 import '../widgets/halo_hero.dart';
 import '../widgets/link_stub.dart';
 import '../widgets/place_stub.dart';
@@ -2421,7 +2434,10 @@ class _ChatScreenState extends State<ChatScreen>
                   ? 1
                   : 0) +
               (out && !media && target.sticker == null ? 1 : 0) -
-              (out ? 0 : 1);
+              (out ? 0 : 1) +
+              (target.filePath != null && !isVoiceName(target.fileName)
+                  ? 4
+                  : 0);
     final rowH =
         20 + math.max(17.0, MediaQuery.textScalerOf(context).scale(13.5) * 1.3);
     final menuH = rows * rowH + 16;
@@ -2451,6 +2467,16 @@ class _ChatScreenState extends State<ChatScreen>
       reactTop = bubbleBottom + 10;
       menuTop = reactTop + pickerH + 8;
     }
+    // a file of its own, not a voice note: it is looked at, sent on and
+    // handed out from here
+    final fileOn =
+        album == null &&
+        canForwardFile(target.filePath, target.fileName, kept: kept);
+    final fileView =
+        album == null &&
+        target.filePath != null &&
+        !isVoiceName(target.fileName) &&
+        fileViewOf(fileFactsOrName(target.filePath!, target.fileName)) != null;
     // pin the bar to the message's side so it never runs off the edge
     final alignRight = target.direction == 'out';
     final still = motionStill(context);
@@ -2460,6 +2486,23 @@ class _ChatScreenState extends State<ChatScreen>
     List<MenuAction> actionsWith(
       void Function({bool now, VoidCallback? then}) dismiss,
     ) => [
+      // a file kryfo can show opens here first, before any way out
+      if (fileView)
+        MenuAction(
+          icon: Icons.visibility_outlined,
+          label: l10n.fileViewInKryfo,
+          tint: HaloColors.amber,
+          onTap: () {
+            dismiss(now: true);
+            viewInKryfo(
+              context,
+              target.filePath!,
+              target.fileName,
+              kept: kept,
+              from: _fileFrom(target),
+            );
+          },
+        ),
       // his first line: copy, and nothing else
       if (!welcome)
         MenuAction(
@@ -2541,30 +2584,16 @@ class _ChatScreenState extends State<ChatScreen>
                     filePath: target.filePath,
                     sticker: target.sticker != null,
                   )
-              ? null
+              ? (fileOn
+                    ? () {
+                        dismiss(now: true);
+                        forwardFile(context, target.filePath!, target.fileName);
+                      }
+                    : null)
               : () {
                   // a sheet takes its place: no copy over it
                   dismiss(now: true);
                   _forwardMessage(target);
-                },
-        ),
-      // a tap opens a file, so sharing it lives here. an
-      // app installer is only ever saved
-      if (canShareOut)
-        MenuAction(
-          icon: Icons.ios_share_rounded,
-          label: l10n.commonShare,
-          onTap:
-              kept ||
-                  !canShare ||
-                  knownInstaller(shareOn.filePath!, shareOn.fileName)
-              ? null
-              : () {
-                  dismiss(now: true);
-                  lockState.hold(
-                    () =>
-                        shareFileOut(shareOn.filePath!, name: shareOn.fileName),
-                  );
                 },
         ),
       MenuAction(
@@ -2583,6 +2612,42 @@ class _ChatScreenState extends State<ChatScreen>
             : () {
                 dismiss(now: true);
                 saveReceivedFile(context, shareOn.filePath!, shareOn.fileName);
+              },
+      ),
+      // a tap opens a file, so sharing it lives here. an
+      // app installer is only ever saved
+      if (canShareOut)
+        MenuAction(
+          icon: Icons.ios_share_rounded,
+          label: l10n.commonShare,
+          apart: true,
+          onTap:
+              kept ||
+                  !canShare ||
+                  knownInstaller(shareOn.filePath!, shareOn.fileName)
+              ? null
+              : () {
+                  dismiss(now: true);
+                  lockState.hold(
+                    () =>
+                        shareFileOut(shareOn.filePath!, name: shareOn.fileName),
+                  );
+                },
+        ),
+      // the way out: another app sees the file, and the note says so
+      MenuAction(
+        icon: Icons.open_in_new_rounded,
+        label: l10n.fileOpenWith,
+        apart: true,
+        aside: l10n.fileOpenWithNote,
+        onTap:
+            kept ||
+                !canShare ||
+                knownInstaller(shareOn.filePath!, shareOn.fileName)
+            ? null
+            : () {
+                dismiss(now: true);
+                openFileOutside(context, shareOn.filePath!, shareOn.fileName);
               },
       ),
       // words can be edited; a photo, a file or a voice note
@@ -4051,48 +4116,81 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   // the same tiles as the group chat's, so attaching looks one way
-  void _showAttachSheet() {
-    HapticFeedback.selectionClick();
-    showHaloSheet<void>(
+  // what goes into the chat, in one sheet: the gallery, the phone's
+  // files, and files already in this container's chats
+  Future<void> _showAttachSheet() async {
+    final r = await showSendSheet(
       context,
-      builder: (sheetCtx) => AttachGrid(
-        note: l10n.chatNoExifNeverSaved,
-        items: [
-          // a computer has no camera to open
-          if (!onDesktop)
-            AttachItem(
-              icon: (c) => Icon(Icons.photo_camera_outlined, color: c),
-              tint: HaloColors.amber,
-              label: l10n.chatCamera,
-              onTap: _openCamera,
-            ),
-          AttachItem(
-            icon: (c) => Icon(Icons.photo_library_outlined, color: c),
-            tint: HaloColors.violet,
-            label: l10n.chatGalleryShown,
-            onTap: _pickAndSendMultiple,
-          ),
-          AttachItem(
-            icon: (c) => Icon(Icons.videocam_outlined, color: c),
-            tint: HaloColors.rose,
-            label: l10n.chatVideo,
-            onTap: _pickAndSendVideo,
-          ),
-          AttachItem(
-            icon: (c) => Icon(Icons.gif_box_outlined, color: c),
-            tint: HaloColors.violet,
-            label: l10n.chatGifFromPhoneShown,
-            onTap: _pickAndSendGif,
-          ),
-          AttachItem(
-            icon: (c) => Icon(Icons.attach_file, color: c),
-            tint: HaloColors.amber,
-            label: l10n.chatFile2,
-            onTap: _pickAndSendFile,
-          ),
-        ],
+      to: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
+      pickGallery: galleryPicksForSheet,
+      pickFiles: filePicksForSheet,
+      recent: () => recentFilesIn(
+        session.peerDb(widget.peerHaloId),
+        homeOf: sessionHomeOf,
       ),
+      galleryLabel: l10n.chatGalleryShown,
+      shortcuts: [
+        // a computer has no camera to open
+        if (!onDesktop)
+          SendShortcut(
+            (c) => Icon(Icons.photo_camera_outlined, color: c),
+            l10n.chatCamera,
+            HaloColors.amber,
+            _openCamera,
+          ),
+        SendShortcut(
+          (c) => Icon(Icons.videocam_outlined, color: c),
+          l10n.chatVideo,
+          HaloColors.rose,
+          _pickAndSendVideo,
+        ),
+        SendShortcut(
+          (c) => Icon(Icons.gif_box_outlined, color: c),
+          l10n.chatGifFromPhoneShown,
+          HaloColors.violet,
+          _pickAndSendGif,
+        ),
+      ],
     );
+    if (r == null) return;
+    await _sendFromSheet(r);
+  }
+
+  // the sheet's picks, in the order chosen: photos and videos through the
+  // preview, unless they go as files; files each as the file tile sends
+  // one, the caption on the first. the pickers' copies go once done
+  Future<void> _sendFromSheet(SendSheetResult r) async {
+    try {
+      if (!mounted || _requestLocked || _sayMediaLater()) return;
+      final media = r.media;
+      final files = r.files;
+      if (media.isNotEmpty) {
+        await sendGalleryPicks(
+          [for (final m in media) m.source as XFile? ?? XFile(m.path)],
+          pickMore: () => lockState.hold(pickGallery),
+          preview: _preview,
+          send: (s) => _sendPicked(
+            s.caption.isEmpty && files.isEmpty && r.caption.isNotEmpty
+                ? MediaSendResult(
+                    items: s.items,
+                    caption: r.caption,
+                    secure: s.secure,
+                  )
+                : s,
+          ),
+        );
+      }
+      var caption = media.isEmpty ? r.caption : '';
+      for (final f in files) {
+        if (!mounted || lockState.locked) break;
+        if (await _sendFileFrom(f.path, f.name, caption: caption)) {
+          caption = '';
+        }
+      }
+    } finally {
+      await r.release();
+      await shredPicked(const []);
+    }
   }
 
   // remembered in the container that holds the chat
@@ -4373,30 +4471,6 @@ class _ChatScreenState extends State<ChatScreen>
     return ok;
   }
 
-  // the picker hands back a path to its own copy, copied from there into the
-  // media folder, so no byte array crosses the plugin channel. withData
-  // keeps three copies in memory and gives null bytes on 32-bit phones.
-  Future<void> _pickAndSendFile() async {
-    final PlatformFile? res;
-    try {
-      // every kind of file: apps, archives, anything the phone holds
-      res = await lockState.hold(() => FilePicker.pickFile(type: FileType.any));
-    } on LockDropped {
-      // the session it was picked in is gone: nothing to say
-      return;
-    } catch (e) {
-      // the picker could not copy what was chosen: a provider that will
-      // not hand the file over, a gone download. say so instead of nothing.
-      if (mounted) showHaloToast(context, l10n.chatCouldNotReadThat);
-      return;
-    }
-    if (res == null) return;
-    final path = res.path;
-    final name = res.name;
-    if (path != null) await _sendFileFrom(path, name);
-    await shredPicked([res]);
-  }
-
   // the in-app camera: a stripped photo or a clip goes through the send
   // preview as a pick does; the clip's private copy is shredded once it is
   // done with, sent or not
@@ -4426,10 +4500,17 @@ class _ChatScreenState extends State<ChatScreen>
 
   // src is a file this app can read: the picker's copy or a camera clip.
   // it is copied into the media folder, never read into memory.
-  Future<void> _sendFileFrom(String src, String picked) async {
-    if (_requestLocked || _sayMediaLater()) return;
+  // true when it went. [caption]: the words under it
+  Future<bool> _sendFileFrom(
+    String src,
+    String picked, {
+    String caption = '',
+  }) async {
+    if (_requestLocked || _sayMediaLater()) return false;
     final ready = await _readyFile(src, picked);
-    if (ready != null) await _sendReady(ready, '');
+    if (ready == null) return false;
+    await _sendReady(ready, caption);
+    return true;
   }
 
   // a file made ready to go: checked, copied into the media folder under
@@ -4966,20 +5047,6 @@ class _ChatScreenState extends State<ChatScreen>
     } finally {
       await shredPickedImages([x]);
     }
-  }
-
-  Future<void> _pickAndSendMultiple() async {
-    // whole, each in a folder of its own: see readPickedPhotos. videos come
-    // too where android has its photo picker
-    final picked = await lockState.hold(pickGallery);
-    if (picked.isEmpty) return;
-    // one or several: the preview first, and nothing goes without its send
-    await sendGalleryPicks(
-      picked,
-      pickMore: () => lockState.hold(pickGallery),
-      preview: _preview,
-      send: _sendPicked,
-    );
   }
 
   // when the oldest of ours still going was written. a file that is
@@ -5798,6 +5865,9 @@ class _ChatScreenState extends State<ChatScreen>
                   () =>
                       _revealedUid = _revealedUid == m.msgUid ? null : m.msgUid,
                 ),
+          onStop: _stopSending,
+          fromName: _fileFrom(m),
+          soundsAfter: _soundsAfter,
           onRetry: run == null
               ? _tapRetry
               : (_) {
@@ -5828,6 +5898,7 @@ class _ChatScreenState extends State<ChatScreen>
                 },
           secure: m.secure,
           kept: _keeps(m),
+          known: _accepted && !_blocked,
           quotedText: quoted,
           onQuoteTap: m.replyTo == null
               ? null
@@ -5937,6 +6008,11 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    // a sound of this chat stops with it
+    final playing = SoundPlayer.instance.item?.path;
+    if (playing != null && _messages.any((m) => m.filePath == playing)) {
+      SoundPlayer.instance.stop();
+    }
     if (_sharedHeld.isNotEmpty) {
       unawaited(SharedInbox.release(_sharedHeld.toList()));
     }
@@ -5991,30 +6067,12 @@ class _ChatScreenState extends State<ChatScreen>
     super.dispose();
   }
 
-  Future<void> _openMediaGallery() async {
-    final rows = await session.messagesFor(widget.peerHaloId);
-    final paths = <String>[];
-    final securePaths = <String>{};
-    for (final r in rows) {
-      // one not read yet shows in the thread alone
-      if (burnWaitsRow(r)) continue;
-      final mp = r['media_path'] as String?;
-      if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
-        paths.add(mp);
-        if ((r['secure'] as int? ?? 0) == 1) securePaths.add(mp);
-      }
-    }
-    if (!mounted) return;
-    Navigator.of(context).push(
-      haloRoute(
-        MediaGalleryScreen(
-          paths: paths.reversed.toList(),
-          securePaths: securePaths,
-          title: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
-        ),
-      ),
-    );
-  }
+  Future<void> _openMediaGallery() => openShared(
+    context,
+    chatId: widget.peerHaloId,
+    title: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
+    blocking: _shots.blocking,
+  );
 
   // his chat's menu: its photos and what his sheet does. no contact page,
   // introduction, note, wallpaper, clear, block or hide
@@ -6032,7 +6090,7 @@ class _ChatScreenState extends State<ChatScreen>
               [
                 MenuSheetRow(
                   icon: Icons.photo_library_outlined,
-                  label: l10n.chatSharedPhotos,
+                  label: l10n.groupInfoSharedMedia,
                   onTap: () => pick('photos'),
                 ),
               ],
@@ -6172,7 +6230,7 @@ class _ChatScreenState extends State<ChatScreen>
               ),
             MenuSheetRow(
               icon: Icons.photo_library_outlined,
-              label: l10n.chatSharedPhotos,
+              label: l10n.groupInfoSharedMedia,
               onTap: () => pick('photos'),
             ),
           ],
@@ -6545,6 +6603,35 @@ class _ChatScreenState extends State<ChatScreen>
       showHaloToast(context, next ? l10n.chatSaved : l10n.chatRemovedFromSaved);
     }
   }
+
+  // the sounds and voice notes under [m], in the order they came: what
+  // the player plays after it
+  List<SoundItem> _soundsAfter(_Msg m) {
+    final at = _messages.indexOf(m);
+    if (at < 0) return const [];
+    return [
+      for (final x in _messages.skip(at + 1))
+        if (x.filePath != null &&
+            (isVoiceName(x.fileName) ||
+                fileViewOf(fileFactsOrName(x.filePath!, x.fileName)) ==
+                    FileView.audio))
+          SoundItem(
+            x.filePath!,
+            name: x.fileName,
+            from: _fileFrom(x),
+            when: x.when,
+            voice: isVoiceName(x.fileName),
+            kept: _keeps(x),
+          ),
+    ];
+  }
+
+  // who sent a file, for its viewer's head: theirs only
+  String? _fileFrom(_Msg m) => m.direction == 'out'
+      ? null
+      : _isDev
+      ? l10n.devName
+      : _nickname ?? widget.peerHaloId;
 
   Future<void> _forwardMessage(_Msg m) async {
     final id = await pickWordsChat(
@@ -8738,6 +8825,12 @@ class _Bubble extends StatelessWidget {
   static final Set<String> _entered = {};
   final _Msg msg;
   final void Function(_Msg)? onRetry;
+  // a file's ring: stops it on its way
+  final void Function(_Msg)? onStop;
+  // who they are, for a file viewer's head
+  final String? fromName;
+  // a sound file: the sounds below it, which play after it
+  final List<SoundItem> Function(_Msg)? soundsAfter;
   final void Function(BuildContext)? onLongPress;
   // its photo, video or file opened, or its voice note played
   final VoidCallback? onAct;
@@ -8774,6 +8867,8 @@ class _Bubble extends StatelessWidget {
   final bool unconfirmed;
   // theirs, in a chat that blocks: opened in no other app
   final bool kept;
+  // from someone this phone accepted: a pdf's first page may be drawn
+  final bool known;
   // an album: [msg] stands for all of it, and its grid is drawn
   final AlbumRun<_Msg>? album;
   // a tile of the album held: the bubble's context and the tile
@@ -8794,6 +8889,9 @@ class _Bubble extends StatelessWidget {
     this.landing,
     this.quotedSticker,
     this.onRetry,
+    this.onStop,
+    this.fromName,
+    this.soundsAfter,
     this.onLongPress,
     this.onAct,
     this.onReact,
@@ -8815,6 +8913,7 @@ class _Bubble extends StatelessWidget {
     this.lastInGroup = true,
     this.unconfirmed = false,
     this.kept = false,
+    this.known = false,
   });
 
   // builds the message body, underlining query matches in amber. plain
@@ -9245,6 +9344,11 @@ class _Bubble extends StatelessWidget {
                                                 msg.filePath!,
                                                 msg.fileName,
                                                 kept: kept,
+                                                from: fromName,
+                                                heroTag: fileHeroTag(
+                                                  msg.filePath!,
+                                                  'chat',
+                                                ),
                                               );
                                             }
                                           },
@@ -9257,6 +9361,25 @@ class _Bubble extends StatelessWidget {
                                               msg.fileName,
                                               isOut,
                                               shape: shape,
+                                              sendingUid: isOut && msg.sending
+                                                  ? msg.msgUid
+                                                  : null,
+                                              heroTag: msg.filePath == null
+                                                  ? null
+                                                  : fileHeroTag(
+                                                      msg.filePath!,
+                                                      'chat',
+                                                    ),
+                                              from: fromName,
+                                              kept: kept,
+                                              glance: known,
+                                              when: msg.when,
+                                              upNext: soundsAfter == null
+                                                  ? null
+                                                  : () => soundsAfter!(msg),
+                                              onCancel: onStop == null
+                                                  ? null
+                                                  : () => onStop!(msg),
                                             ),
                                           ),
                                         ),
@@ -9781,10 +9904,16 @@ class _Bubble extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 // an album's tiles show their own
+                                // a file card shows its own in its ring, a voice
+                                // note has none
                                 if (album == null &&
                                     msg.msgUid != null &&
                                     (msg.mediaPath != null ||
-                                        msg.filePath != null)) ...[
+                                        (msg.filePath != null &&
+                                            (shape != FileShape.card ||
+                                                isVoiceName(
+                                                  msg.fileName,
+                                                ))))) ...[
                                   SendProgressLabel(msgUid: msg.msgUid!),
                                   const SizedBox(width: 6),
                                 ],
@@ -10185,16 +10314,7 @@ class _ReplyQuoteBar extends StatelessWidget {
 }
 
 class _EmptyConversation extends StatelessWidget {
-  // the shared photos page says it has none the same way
-  final IconData icon;
-  final String? title;
-  final bool withLine;
-  const _EmptyConversation({
-    super.key,
-    this.icon = Icons.lock_outline_rounded,
-    this.title,
-    this.withLine = true,
-  });
+  const _EmptyConversation({super.key});
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -10233,20 +10353,24 @@ class _EmptyConversation extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(icon, color: HaloColors.amber, size: 25),
+                child: Icon(
+                  Icons.lock_outline_rounded,
+                  color: HaloColors.amber,
+                  size: 25,
+                ),
               ),
               const SizedBox(height: 20),
               Text(
-                title ?? l10n.chatSayHi,
+                l10n.chatSayHi,
                 textAlign: TextAlign.center,
                 style: HaloType.serif(
-                  size: withLine ? 24 : 20,
+                  size: 24,
                   weight: FontWeight.w300,
                   italic: true,
                   color: HaloColors.text,
                 ),
               ),
-              if (withLine) ...[
+              ...[
                 const SizedBox(height: 8),
                 Text(
                   l10n.chatJustTheTwoOf,
@@ -10603,106 +10727,6 @@ class _Composer extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class MediaGalleryScreen extends StatelessWidget {
-  final List<String> paths;
-  // which of them the sender marked. a protected photo must stay protected
-  // wherever it is opened from, or the gallery is a second door.
-  final Set<String> securePaths;
-  final String title;
-  const MediaGalleryScreen({
-    super.key,
-    required this.paths,
-    this.securePaths = const {},
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      appBar: AppBar(
-        backgroundColor: HaloColors.surface,
-        elevation: 0,
-        leading: IconButton(
-          tooltip: l10n.commonBack,
-          icon: const Icon(Icons.chevron_left, size: 26),
-          color: HaloColors.text,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.chatSharedPhotos,
-              style: HaloType.serif(size: 17, color: HaloColors.text),
-            ),
-            Text(
-              l10n.chatSharedPhotoCount(paths.length, title),
-              style: HaloType.mono(size: 10, color: HaloColors.text),
-            ),
-          ],
-        ),
-      ),
-      body: paths.isEmpty
-          ? _EmptyConversation(
-              icon: Icons.photo_library_outlined,
-              title: l10n.chatNoPhotosInThis,
-              withLine: false,
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(2),
-              // a computer's window is wide: tiles keep a thumbnail's size
-              gridDelegate: onDesktop
-                  ? const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: kDeskTile,
-                      mainAxisSpacing: 2,
-                      crossAxisSpacing: 2,
-                    )
-                  : const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 2,
-                      crossAxisSpacing: 2,
-                    ),
-              itemCount: paths.length,
-              itemBuilder: (context, i) {
-                final path = paths[i];
-                final tag = photoHeroTag(path, 'gallery');
-                return PressScale(
-                  scale: 0.96,
-                  haptic: false,
-                  onTap: () => _openFullImage(
-                    context,
-                    path,
-                    secure: securePaths.contains(path),
-                    tag: tag,
-                  ),
-                  child: HaloHero(
-                    tag: tag,
-                    // each tile shows its blur, its photo fading up over it
-                    child: SealedPicture(
-                      path: path,
-                      image: mediaImage(path, 360),
-                      filterQuality: FilterQuality.low,
-                      // a photo whose file is gone says so, not a black square
-                      errorBuilder: (_, _, _) => Container(
-                        color: HaloColors.surface2,
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          size: 22,
-                          color: HaloColors.text3,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
     );
   }
 }

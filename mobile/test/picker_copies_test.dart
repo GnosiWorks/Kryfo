@@ -152,8 +152,8 @@ void main() {
     // several at a time go through sendGalleryPicks, and its photos
     // through readGalleryPicks and readPickedPhotos
     for (final (src, fn) in [
-      (chat, 'Future<void> _pickAndSendMultiple('),
-      (group, 'Future<void> _pickGroupMultiple('),
+      (chat, 'Future<void> _sendFromSheet('),
+      (group, 'Future<void> _sendFromSheet('),
     ]) {
       expect(bodyOf(src, fn), contains('await sendGalleryPicks('), reason: fn);
     }

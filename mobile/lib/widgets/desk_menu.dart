@@ -157,10 +157,16 @@ List<List<DeskMenuItem>> deskGroupsOf(List<MenuAction> actions) {
     tint: a.tint,
     checked: a.checked,
   );
+  // the rows set apart get a group of their own, between the rest and the
+  // ones that take something away
   return [
     [
       for (final a in actions)
-        if (a.onTap != null && !a.danger) item(a),
+        if (a.onTap != null && !a.danger && !a.apart) item(a),
+    ],
+    [
+      for (final a in actions)
+        if (a.onTap != null && !a.danger && a.apart) item(a),
     ],
     [
       for (final a in actions)

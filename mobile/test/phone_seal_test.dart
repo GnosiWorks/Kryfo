@@ -14,12 +14,14 @@ import 'package:kryfo/desktop/sealed_file.dart';
 import 'package:kryfo/desktop/sealed_format.dart';
 import 'package:kryfo/desktop/sealed_io.dart';
 import 'package:kryfo/media_names.dart';
+import 'package:kryfo/pdf_pages.dart';
 import 'package:kryfo/phone_seal.dart';
 import 'package:kryfo/shred.dart' show shredFile;
 import 'package:kryfo/voice_opus.dart';
 import 'package:path/path.dart' as p;
 
 import 'desktop/sealed_file_test.dart' show ToyCrypto;
+import 'files_in_app_test.dart' show FakePdf;
 import 'host_engine.dart';
 import 'sqlite_ffi.dart';
 
@@ -463,6 +465,51 @@ void main() {
       },
       skip: _noCorpus,
     );
+
+    test('a sealed pdf reaches the renderer as memory, zeroed before the '
+        'renderer lets go', () async {
+      openEveryday();
+      final at = p.join(docs, 'media', 'f_pdf.pdf');
+      final body = [...'%PDF-1.7\n'.codeUnits, ...List.filled(90000, 7)];
+      File(at).writeAsBytesSync(body);
+      expect(isSealedHead(_raw(at)), isTrue);
+      final fake = FakePdf();
+      pdfBackendForTest = fake;
+      pdfMarksDirForTest = (Directory(p.join(root.path, 'marks'))
+            ..createSync())
+          .path;
+      addTearDown(() {
+        pdfBackendForTest = null;
+        pdfMarksDirForTest = null;
+      });
+      final d = await PdfDoc.open(at);
+      expect(fake.paths.single, startsWith('/proc/self/fd/'));
+      expect(fake.seen.single, body, reason: 'the plaintext, not the seal');
+      await d.close();
+      expect(fake.readableAtClose, [false]);
+    });
+
+    test('the later view copies in steps, refuses what is too big and stops '
+        'for the lock', () async {
+      openEveryday();
+      final at = p.join(docs, 'media', 'f_big.bin');
+      File(at).writeAsBytesSync(List.filled(chunkPlain * 20, 3));
+      final v = await plainViewOfLater(at);
+      expect(v.path, startsWith('/proc/self/fd/'));
+      expect(_raw(v.path), List.filled(chunkPlain * 20, 3));
+      v.close();
+      await expectLater(
+        plainViewOfLater(at, most: chunkPlain),
+        throwsA(isA<PlainTooBig>()),
+      );
+      await expectLater(
+        plainViewOfLater(at, stop: () => true),
+        throwsA(isA<PlainStopped>()),
+      );
+      final out = p.join(cache, 'plain.bin');
+      File(out).writeAsBytesSync([1, 2, 3]);
+      expect((await plainViewOfLater(out)).path, out);
+    });
 
     test('where memory will not reopen, a copy in the cache goes at once', () {
       memfdWorksForTest = false;

@@ -15,24 +15,29 @@ import 'source_body.dart';
 void main() {
   const screens = {
     'lib/screens/chat_screen.dart': (
-      'Future<void> _pickAndSendFile(',
+      'Future<void> _showAttachSheet(',
       'Future<_Ready?> _readyFile(',
     ),
     'lib/screens/group_chat_screen.dart': (
-      'Future<void> _pickGroupFile(',
+      'Future<void> _showAttachSheet(',
       'Future<_GReady?> _readyGroupFile(',
     ),
   };
 
   test('the picker shows every kind of file', () {
+    // both chats pick through the sending sheet
+    final pick = bodyOf(
+      sourceOf('lib/recent_files.dart'),
+      'Future<List<SendPick>> filePicksForSheet(',
+    );
+    expect(pick, contains('FilePicker.pickFiles(type: FileType.any)'));
+    expect(pick, isNot(contains('allowedExtensions')));
     screens.forEach((file, sig) {
-      final pick = bodyOf(sourceOf(file), sig.$1);
       expect(
-        pick,
-        contains('FilePicker.pickFile(type: FileType.any)'),
+        bodyOf(sourceOf(file), sig.$1),
+        contains('pickFiles: filePicksForSheet'),
         reason: file,
       );
-      expect(pick, isNot(contains('allowedExtensions')), reason: file);
     });
   });
 
@@ -166,7 +171,7 @@ void main() {
   test('both chats draw a file with the one card', () {
     expect(
       sourceOf('lib/screens/chat_screen.dart').replaceAll(RegExp(r'\s+'), ''),
-      contains('fileCard(msg.filePath,msg.fileName,isOut,shape:shape,)'),
+      contains('fileCard(msg.filePath,msg.fileName,isOut,shape:shape,'),
     );
     expect(
       sourceOf('lib/screens/chat_screen.dart'),

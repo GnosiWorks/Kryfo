@@ -1521,23 +1521,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatViewContact => '查看联系人';
 
   @override
-  String get chatSharedPhotos => '共享的照片';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 张照片',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => '取消通知静音';
 
   @override
@@ -1796,9 +1779,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get commonSend => '发送';
-
-  @override
-  String get chatNoPhotosInThis => '这个聊天里还没有照片';
 
   @override
   String get chatHoldToRecord => '按住录制语音消息';
@@ -2460,9 +2440,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupChatGifFromPhoneDesk => '电脑里的 GIF';
-
-  @override
-  String get groupChatFile => '文件';
 
   @override
   String get groupChatCouldNotReadThat => '无法读取这个文件';
@@ -10537,7 +10514,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => '点按下载';
+  String get transferTapToDownload => '点按获取';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -10582,9 +10559,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsFiles => '文件';
-
-  @override
-  String get fileSheetOpenWith => '用其他应用打开';
 
   @override
   String get desktopLockAccountBody => 'Kryfo 在这台电脑上保存的所有内容都已加密。它会用你的用户账户打开。';
@@ -11282,6 +11256,187 @@ class AppLocalizationsZh extends AppLocalizations {
   String devicesManyAnswersLine(String name, String count) {
     return '$name 在一小时内试图发送超过 $count 条回复。如果不是你，请移除它。';
   }
+
+  @override
+  String get fileViewInKryfo => '在 Kryfo 中查看';
+
+  @override
+  String get fileOpenWith => '打开方式…';
+
+  @override
+  String get fileOpenWithNote => '其他应用可以看到此文件。在此之前，Kryfo 会一直加密保存它。';
+
+  @override
+  String fileFrom(String name) {
+    return '来自 $name';
+  }
+
+  @override
+  String fileLines(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n 行',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords => '此文件不是文本。你可以保存它，或用其他应用打开。';
+
+  @override
+  String fileShowsFirst(String size) {
+    return '这里显示前 $size。保存文件即可读完整内容。';
+  }
+
+  @override
+  String filePages(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n 页',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return '第 $page 页';
+  }
+
+  @override
+  String get fileSearchIn => '在文件中搜索';
+
+  @override
+  String get fileSearchHint => '在此 PDF 中查找文字';
+
+  @override
+  String get fileZoomIn => '放大';
+
+  @override
+  String get fileZoomOut => '缩小';
+
+  @override
+  String get filePdfLocked => '此 PDF 有密码。请用其他应用打开阅读。';
+
+  @override
+  String get filePdfUnreadable => 'Kryfo 无法显示此 PDF。你可以保存它，或用其他应用打开。';
+
+  @override
+  String get soundOpenPlayer => '打开播放器';
+
+  @override
+  String get soundSpeed => '播放速度';
+
+  @override
+  String get soundClosePlayer => '关闭播放器';
+
+  @override
+  String get soundPlayingInKryfo => '正在 Kryfo 中播放';
+
+  @override
+  String get soundBack15 => '后退 15 秒';
+
+  @override
+  String get soundForward15 => '快进 15 秒';
+
+  @override
+  String get soundRepeat => '重复播放';
+
+  @override
+  String get soundUpNext => '下一个';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return '来自 $name 的语音消息';
+  }
+
+  @override
+  String get sendSheetTo => '发送给';
+
+  @override
+  String get sendSheetCleaned => '发送前已清理';
+
+  @override
+  String get sendSheetFiles => '文件';
+
+  @override
+  String get sendSheetRecent => '最近';
+
+  @override
+  String get sendSheetChoosePhotos => '选择照片和视频';
+
+  @override
+  String get sendSheetBrowseFiles => '浏览此手机上的所有文件';
+
+  @override
+  String get sendSheetNoRecent => '你在聊天中收发的文件会显示在这里。';
+
+  @override
+  String sendSheetChosen(String n) {
+    return '已选，第 $n 个';
+  }
+
+  @override
+  String get sendSheetAsFile => '以文件发送';
+
+  @override
+  String get sendSheetAsFileLine => '原始画质，不压缩';
+
+  @override
+  String sendSheetSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '发送 $n 个',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharedWith(String name) {
+    return '与 $name 共享的内容';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return '$name 中共享的内容';
+  }
+
+  @override
+  String get sharedTabMedia => '媒体';
+
+  @override
+  String get sharedTabFiles => '文件';
+
+  @override
+  String get sharedTabVoice => '语音';
+
+  @override
+  String get sharedTabLinks => '链接';
+
+  @override
+  String get sharedNoPhotos => '这个聊天里发送的照片会显示在这里。';
+
+  @override
+  String get sharedNoFiles => '这个聊天里发送的文件会显示在这里。';
+
+  @override
+  String get sharedNoVoice => '这个聊天里的语音消息会显示在这里。';
+
+  @override
+  String get sharedNoLinks => '这个聊天里发送的链接会显示在这里。';
+
+  @override
+  String get sharedYourVoice => '你的语音消息';
+
+  @override
+  String get sharedOpensLink => '在其他应用中打开链接';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12801,23 +12956,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatViewContact => '查看聯絡人';
 
   @override
-  String get chatSharedPhotos => '分享的照片';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 張照片',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => '取消通知靜音';
 
   @override
@@ -13075,9 +13213,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get commonSend => '傳送';
-
-  @override
-  String get chatNoPhotosInThis => '這個聊天裡還沒有照片';
 
   @override
   String get chatHoldToRecord => '按住即可錄製語音訊息';
@@ -13740,9 +13875,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatGifFromPhoneDesk => '電腦裡的 GIF';
-
-  @override
-  String get groupChatFile => '檔案';
 
   @override
   String get groupChatCouldNotReadThat => '無法讀取那個檔案';
@@ -21694,7 +21826,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get transferTapToDownload => '輕觸即可下載';
+  String get transferTapToDownload => '輕觸即可取得';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -21739,9 +21871,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get settingsFiles => '檔案';
-
-  @override
-  String get fileSheetOpenWith => '用其他 App 開啟';
 
   @override
   String get desktopLockAccountBody => 'Kryfo 在這台電腦上保存的所有內容都已加密。它會用你的使用者帳戶開啟。';
@@ -22442,4 +22571,185 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String devicesManyAnswersLine(String name, String count) {
     return '$name 在一小時內試圖傳送超過 $count 則回覆。如果不是你，請移除它。';
   }
+
+  @override
+  String get fileViewInKryfo => '在 Kryfo 中檢視';
+
+  @override
+  String get fileOpenWith => '開啟方式…';
+
+  @override
+  String get fileOpenWithNote => '其他 App 可以看到此檔案。在那之前，Kryfo 會一直加密保存它。';
+
+  @override
+  String fileFrom(String name) {
+    return '來自 $name';
+  }
+
+  @override
+  String fileLines(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n 行',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords => '此檔案不是文字。你可以儲存它，或用其他 App 開啟。';
+
+  @override
+  String fileShowsFirst(String size) {
+    return '這裡顯示前 $size。儲存檔案即可讀完整內容。';
+  }
+
+  @override
+  String filePages(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n 頁',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return '第 $page 頁';
+  }
+
+  @override
+  String get fileSearchIn => '在檔案中搜尋';
+
+  @override
+  String get fileSearchHint => '在此 PDF 中尋找文字';
+
+  @override
+  String get fileZoomIn => '放大';
+
+  @override
+  String get fileZoomOut => '縮小';
+
+  @override
+  String get filePdfLocked => '此 PDF 有密碼。請用其他 App 開啟閱讀。';
+
+  @override
+  String get filePdfUnreadable => 'Kryfo 無法顯示此 PDF。你可以儲存它，或用其他 App 開啟。';
+
+  @override
+  String get soundOpenPlayer => '開啟播放器';
+
+  @override
+  String get soundSpeed => '播放速度';
+
+  @override
+  String get soundClosePlayer => '關閉播放器';
+
+  @override
+  String get soundPlayingInKryfo => '正在 Kryfo 中播放';
+
+  @override
+  String get soundBack15 => '倒退 15 秒';
+
+  @override
+  String get soundForward15 => '快轉 15 秒';
+
+  @override
+  String get soundRepeat => '重複播放';
+
+  @override
+  String get soundUpNext => '下一個';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return '來自 $name 的語音訊息';
+  }
+
+  @override
+  String get sendSheetTo => '傳送給';
+
+  @override
+  String get sendSheetCleaned => '傳送前已清理';
+
+  @override
+  String get sendSheetFiles => '檔案';
+
+  @override
+  String get sendSheetRecent => '最近';
+
+  @override
+  String get sendSheetChoosePhotos => '選擇相片和影片';
+
+  @override
+  String get sendSheetBrowseFiles => '瀏覽此手機上的所有檔案';
+
+  @override
+  String get sendSheetNoRecent => '你在聊天中收發的檔案會顯示在這裡。';
+
+  @override
+  String sendSheetChosen(String n) {
+    return '已選，第 $n 個';
+  }
+
+  @override
+  String get sendSheetAsFile => '以檔案傳送';
+
+  @override
+  String get sendSheetAsFileLine => '原始畫質，不壓縮';
+
+  @override
+  String sendSheetSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '傳送 $n 個',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharedWith(String name) {
+    return '與 $name 分享的內容';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return '$name 中分享的內容';
+  }
+
+  @override
+  String get sharedTabMedia => '媒體';
+
+  @override
+  String get sharedTabFiles => '檔案';
+
+  @override
+  String get sharedTabVoice => '語音';
+
+  @override
+  String get sharedTabLinks => '連結';
+
+  @override
+  String get sharedNoPhotos => '這個聊天裡傳送的照片會顯示在這裡。';
+
+  @override
+  String get sharedNoFiles => '這個聊天裡傳送的檔案會顯示在這裡。';
+
+  @override
+  String get sharedNoVoice => '這個聊天裡的語音訊息會顯示在這裡。';
+
+  @override
+  String get sharedNoLinks => '這個聊天裡傳送的連結會顯示在這裡。';
+
+  @override
+  String get sharedYourVoice => '你的語音訊息';
+
+  @override
+  String get sharedOpensLink => '在其他應用程式中開啟連結';
 }

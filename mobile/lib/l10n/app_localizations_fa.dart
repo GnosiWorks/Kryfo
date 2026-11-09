@@ -1592,24 +1592,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatViewContact => 'دیدن مخاطب';
 
   @override
-  String get chatSharedPhotos => 'عکس‌های مشترک';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ عکس',
-      one: '⁨$countString⁩ عکس',
-    );
-    return '$_temp0 · ⁨$title⁩';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'باصدا کردن اعلان‌ها';
 
   @override
@@ -1874,9 +1856,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get commonSend => 'ارسال';
-
-  @override
-  String get chatNoPhotosInThis => 'هنوز عکسی در این گفت‌وگو نیست';
 
   @override
   String get chatHoldToRecord => 'برای ضبط پیام صوتی نگه دارید';
@@ -2593,9 +2572,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupChatGifFromPhoneDesk => 'گیف از رایانه';
-
-  @override
-  String get groupChatFile => 'فایل';
 
   @override
   String get groupChatCouldNotReadThat => 'آن فایل خوانده نشد';
@@ -11146,7 +11122,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => 'برای دانلود بزنید';
+  String get transferTapToDownload => 'برای گرفتنش بزنید';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -11193,9 +11169,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsFiles => 'فایل‌ها';
-
-  @override
-  String get fileSheetOpenWith => 'باز کردن با برنامه دیگر';
 
   @override
   String get desktopLockAccountBody =>
@@ -11951,4 +11924,196 @@ class AppLocalizationsFa extends AppLocalizations {
   String devicesManyAnswersLine(String name, String count) {
     return '$name خواست در یک ساعت بیش از $count پاسخ بفرستد. اگر شما نبودید، آن را بردارید.';
   }
+
+  @override
+  String get fileViewInKryfo => 'دیدن در Kryfo';
+
+  @override
+  String get fileOpenWith => 'باز کردن با…';
+
+  @override
+  String get fileOpenWithNote =>
+      'برنامه دیگر می‌تواند این فایل را ببیند. Kryfo تا آن موقع آن را رمزگذاری‌شده نگه می‌دارد.';
+
+  @override
+  String fileFrom(String name) {
+    return 'از $name';
+  }
+
+  @override
+  String fileLines(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n خط',
+      one: '$n خط',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords =>
+      'این فایل متن نیست. می‌توانید آن را ذخیره کنید یا با برنامه دیگری باز کنید.';
+
+  @override
+  String fileShowsFirst(String size) {
+    return 'اینجا $size اول نمایش داده می‌شود. برای خواندن همه، فایل را ذخیره کنید.';
+  }
+
+  @override
+  String filePages(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n صفحه',
+      one: '$n صفحه',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return 'صفحه $page';
+  }
+
+  @override
+  String get fileSearchIn => 'جستجو در فایل';
+
+  @override
+  String get fileSearchHint => 'یافتن واژه‌ها در این PDF';
+
+  @override
+  String get fileZoomIn => 'بزرگ‌نمایی';
+
+  @override
+  String get fileZoomOut => 'کوچک‌نمایی';
+
+  @override
+  String get filePdfLocked =>
+      'این PDF رمز دارد. برای خواندن، آن را با برنامه دیگری باز کنید.';
+
+  @override
+  String get filePdfUnreadable =>
+      'Kryfo نمی‌تواند این PDF را نمایش دهد. می‌توانید آن را ذخیره کنید یا با برنامه دیگری باز کنید.';
+
+  @override
+  String get soundOpenPlayer => 'پخش‌کننده را باز می‌کند';
+
+  @override
+  String get soundSpeed => 'سرعت پخش';
+
+  @override
+  String get soundClosePlayer => 'بستن پخش‌کننده';
+
+  @override
+  String get soundPlayingInKryfo => 'در حال پخش در Kryfo';
+
+  @override
+  String get soundBack15 => '۱۵ ثانیه عقب';
+
+  @override
+  String get soundForward15 => '۱۵ ثانیه جلو';
+
+  @override
+  String get soundRepeat => 'تکرار';
+
+  @override
+  String get soundUpNext => 'بعدی';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return 'پیام صوتی از $name';
+  }
+
+  @override
+  String get sendSheetTo => 'ارسال به';
+
+  @override
+  String get sendSheetCleaned => 'پیش از ارسال پاک‌سازی می‌شود';
+
+  @override
+  String get sendSheetFiles => 'فایل‌ها';
+
+  @override
+  String get sendSheetRecent => 'اخیر';
+
+  @override
+  String get sendSheetChoosePhotos => 'انتخاب عکس و ویدیو';
+
+  @override
+  String get sendSheetBrowseFiles => 'مرور همه فایل‌های این گوشی';
+
+  @override
+  String get sendSheetNoRecent =>
+      'فایل‌هایی که در گفتگوهایتان می‌فرستید و می‌گیرید اینجا نشان داده می‌شوند.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'انتخاب‌شده، شماره $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'ارسال به‌صورت فایل';
+
+  @override
+  String get sendSheetAsFileLine => 'کیفیت اصلی، بدون فشرده‌سازی';
+
+  @override
+  String sendSheetSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ارسال $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharedWith(String name) {
+    return 'مشترک با $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'مشترک در $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'رسانه';
+
+  @override
+  String get sharedTabFiles => 'فایل‌ها';
+
+  @override
+  String get sharedTabVoice => 'صدا';
+
+  @override
+  String get sharedTabLinks => 'پیوندها';
+
+  @override
+  String get sharedNoPhotos =>
+      'عکس‌هایی که در این گفتگو فرستاده می‌شوند اینجا نشان داده می‌شوند.';
+
+  @override
+  String get sharedNoFiles =>
+      'فایل‌هایی که در این گفتگو فرستاده می‌شوند اینجا نشان داده می‌شوند.';
+
+  @override
+  String get sharedNoVoice =>
+      'پیام‌های صوتی این گفتگو اینجا نشان داده می‌شوند.';
+
+  @override
+  String get sharedNoLinks =>
+      'پیوندهایی که در این گفتگو فرستاده می‌شوند اینجا نشان داده می‌شوند.';
+
+  @override
+  String get sharedYourVoice => 'پیام صوتی شما';
+
+  @override
+  String get sharedOpensLink => 'پیوند را در برنامه‌ای دیگر باز می‌کند';
 }

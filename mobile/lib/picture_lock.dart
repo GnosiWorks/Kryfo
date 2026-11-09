@@ -9,6 +9,8 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'dlog.dart';
+import 'file_peek.dart' show forgetFirstLines;
+import 'pdf_pages.dart' show closeAllPdfs;
 import 'open_file.dart' show forgetVideoFrames;
 import 'photo_blur.dart' show forgetBlurs, stopBlurs;
 
@@ -22,6 +24,8 @@ int? _cacheBytes;
 void shutPictures() {
   picturesShut.value = true;
   forgetVideoFrames();
+  forgetFirstLines();
+  closeAllPdfs();
   stopBlurs();
   forgetBlurs();
   final cache = PaintingBinding.instance.imageCache;

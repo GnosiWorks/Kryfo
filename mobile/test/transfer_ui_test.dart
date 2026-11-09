@@ -118,7 +118,7 @@ void main() {
       expect(
         t.getSemantics(find.byType(WaitingFileCard)),
         matchesSemantics(
-          label: 'plan.pdf, 2 kb · Tap to download',
+          label: 'plan.pdf, 2 kb · Tap to get it',
           hint: 'Download',
           isButton: true,
           hasTapAction: true,
@@ -258,7 +258,8 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text('plan.pdf'), findsOneWidget);
       expect(find.text('PDF · 3 kb'), findsOneWidget);
-      expect(find.text(l10n.fileSheetOpenWith), findsOneWidget);
+      expect(find.text(l10n.fileOpenWith), findsOneWidget);
+      expect(find.text(l10n.fileOpenWithNote), findsOneWidget);
       await t.tap(find.text(l10n.fileSaveToDevice));
       await t.pumpAndSettle();
       // the answer lands on the zone the sheet was opened from

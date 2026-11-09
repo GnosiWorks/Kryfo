@@ -299,7 +299,10 @@ class MemDb implements Database, Transaction {
           });
         case 'LIKE':
           final p = (args![at++] as String).toLowerCase();
-          final body = p.endsWith('%') ? p.substring(0, p.length - 1) : p;
+          // 'x%' and '%x%'
+          final inside = p.length > 1 && p.startsWith('%') && p.endsWith('%');
+          var body = p.endsWith('%') ? p.substring(0, p.length - 1) : p;
+          if (inside) body = body.substring(1);
           if (body.contains('%') || body.contains('_')) {
             throw UnimplementedError('like: $p');
           }
@@ -307,6 +310,7 @@ class MemDb implements Database, Transaction {
             final x = _get(t, r, col);
             if (x is! String) return false;
             final l = x.toLowerCase();
+            if (inside) return l.contains(body);
             return p.endsWith('%') ? l.startsWith(body) : l == body;
           });
         case 'IN':

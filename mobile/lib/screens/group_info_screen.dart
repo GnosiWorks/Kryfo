@@ -26,7 +26,6 @@ import '../rooms.dart';
 import 'room_link_sheet.dart';
 import '../widgets/motion.dart' show haloRoute;
 import 'package:flutter/services.dart';
-import 'chat_screen.dart' show MediaGalleryScreen;
 import 'contact_screen.dart';
 import 'home_screen.dart' show ContactPreview;
 import '../widgets/contact_pick_row.dart';
@@ -50,7 +49,6 @@ import '../widgets/row_motion.dart';
 import '../widgets/confirm_sheet.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
-import '../read_burn.dart' show burnWaitsRow;
 import '../group_end.dart';
 import '../dlog.dart';
 import '../chat_shots.dart' show ShotsPacer;
@@ -130,9 +128,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   // row, so the tile can fly in and only the members fill in
   bool _loaded = false;
   int _seenCount = 0;
-  List<String> _media = const [];
+  SharedLists _shared = const SharedLists();
   bool _mediaLoaded = false;
-  Set<String> _secure = const {};
   // this group's voice notes go out disguised. null while it is read
   bool? _disguise;
   // its admin ended it, null while it runs
@@ -302,33 +299,14 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   // apart from the members, so a long history never holds the list back.
-  // newest first; a file that went missing draws as a missing tile, so
-  // nothing is stat'ed up front
+  // newest first, a blocked member's out of sight as in the chat; a file
+  // that went missing draws as a missing tile, so nothing is stat'ed up front
   Future<void> _loadMedia() async {
     final gen = ++_mediaGen;
-    final results = await Future.wait([
-      session.loadGroupMessages(widget.groupId),
-      session.blockedIds(),
-    ]);
-    final rows = results[0] as List<Map<String, Object?>>;
-    // a blocked member is out of sight here too, as in the chat
-    final blocked = results[1] as Set<String>;
-    final media = <String>[];
-    final secure = <String>{};
-    for (final r in rows.reversed) {
-      if (blocked.contains(r['peer_id'])) continue;
-      // a timed photo not read yet shows in the thread alone, where reading
-      // it starts its clock
-      if (burnWaitsRow(r)) continue;
-      final mp = r['media_path'] as String?;
-      if (mp == null || mp.isEmpty) continue;
-      media.add(mp);
-      if ((r['secure'] as int? ?? 0) == 1) secure.add(mp);
-    }
+    final shared = await loadShared(widget.groupId, group: true);
     if (!mounted || gen != _mediaGen) return;
     setState(() {
-      _media = media;
-      _secure = secure;
+      _shared = shared;
       _mediaLoaded = true;
     });
   }
@@ -545,13 +523,19 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     wallpaperRevision.value++;
   }
 
-  void _openSharedMedia() {
-    Navigator.of(context).push(
-      haloRoute(
-        MediaGalleryScreen(paths: _media, securePaths: _secure, title: _name),
-      ),
-    );
-  }
+  Future<void> _openShared(SharedTab tab) => openShared(
+    context,
+    chatId: widget.groupId,
+    title: _name,
+    group: true,
+    start: tab,
+    // as the chat holds it: a room always keeps, and so does a group that
+    // blocks, before this page has read its row too
+    blocking:
+        _isRoom || _shots.blocking || appState.shotsBlocksGroup(widget.groupId),
+    nameOf: (id) =>
+        id == null ? null : _contactOf(id)?.nickname ?? memberLabel(id),
+  );
 
   Future<void> _confirmClear() async {
     final ok = await showConfirmSheet(
@@ -790,10 +774,16 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   // the section brings its own 18 on top
                   const SizedBox(height: 4),
                   SharedMediaSection(
-                    paths: _media,
-                    count: _media.length,
+                    paths: [for (final m in _shared.media) m.path!],
+                    count: _shared.media.length,
                     loaded: _mediaLoaded,
-                    onOpen: _media.isEmpty ? null : _openSharedMedia,
+                    files: _shared.files.length,
+                    voice: _shared.voice.length,
+                    links: _shared.links.length,
+                    onOpen: _shared.media.isEmpty
+                        ? null
+                        : () => _openShared(SharedTab.media),
+                    onOpenTab: _openShared,
                   ),
                   const SizedBox(height: 18),
                 ],

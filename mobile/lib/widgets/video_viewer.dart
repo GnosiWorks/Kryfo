@@ -24,13 +24,10 @@ import 'sealed_picture.dart';
 import 'text_ground.dart';
 import '../l10n/l10n.dart';
 import 'shots_line.dart' show KeptIn, keptOpenLine;
-import 'video_bubble.dart' show openReceivedFile;
+import 'file_actions.dart' show openFileOutside;
 import 'video_frame.dart';
 import '../lock_guard.dart' show LockGuard, lockGuard;
-import '../dlog.dart';
-import '../phone_seal.dart' show withFileKey;
-
-const _channel = MethodChannel('kryfo/video');
+import '../video_playback.dart';
 
 // the lock nothing plays under. tests stand in for it
 @visibleForTesting
@@ -115,16 +112,15 @@ class _VideoViewer extends StatefulWidget {
 }
 
 class _VideoViewerState extends State<_VideoViewer>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
-  int? _id;
-  double _aspect = 16 / 9;
-  int _turns = 0;
-  Duration _length = Duration.zero;
-  Duration _pos = Duration.zero;
-  bool _playing = false;
+    with SingleTickerProviderStateMixin {
+  // the one player every screen shares
+  late final VideoPlayback _v = VideoPlayback(
+    widget.path,
+    aspect: videoInfoNow(widget.path)?.aspect ?? 16 / 9,
+    length: videoInfoNow(widget.path)?.length ?? Duration.zero,
+    guard: videoGuard,
+  );
   bool _done = false;
-  bool _failed = false;
-  bool _started = false;
   bool _controls = true;
   bool _closing = false;
   // a scrub in progress: where the thumb is, 0 to 1
@@ -134,196 +130,74 @@ class _VideoViewerState extends State<_VideoViewer>
   // made up front: made lazily, a player closed without a pull would make
   // it in dispose, off a tree that is going away
   late final AnimationController _settle;
-  Timer? _poll;
   Timer? _hide;
+
+  bool get _playing => _v.playing;
+  bool get _failed => _v.failed;
+  int? get _id => _v.textureId;
 
   static const _closeAt = 110.0;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _settle = AnimationController.unbounded(vsync: this)
       ..addListener(() => setState(() => _drag = _settle.value));
-    final info = videoInfoNow(widget.path);
-    if (info != null) {
-      _aspect = info.aspect;
-      _length = info.length;
-    }
     widget.route.addStatusListener(_routeStatus);
+    _v.addListener(_moved);
     picturesShut.addListener(_lockChanged);
-    _open();
+    // plays once it has landed, not while it flies
+    _v.open(play: widget.route.status == AnimationStatus.completed);
   }
 
   @override
   void dispose() {
-    _unguard?.call();
-    picturesShut.removeListener(_lockChanged);
-    WidgetsBinding.instance.removeObserver(this);
     widget.route.removeStatusListener(_routeStatus);
-    _poll?.cancel();
+    _v.removeListener(_moved);
+    picturesShut.removeListener(_lockChanged);
+    _v.dispose();
     _hide?.cancel();
     _settle.dispose();
-    final id = _id;
-    if (id != null) _channel.invokeMethod('close', {'id': id});
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed && _playing) _pause();
-  }
-
-  void _routeStatus(AnimationStatus s) {
-    // plays once it has landed, not while it flies
-    if (s == AnimationStatus.completed && _id != null && !_started) _play();
-  }
-
-  // the lock closes the player, so no frame of it is held behind the pin,
-  // and it comes back paused where it was once the lock lifts
-  bool _resting = false;
-  // each rest counts up: an open still on its way from before one is closed
-  int _rests = 0;
-
-  void _lockChanged() {
-    if (picturesShut.value) {
-      _rest();
-    } else {
-      unawaited(_wake());
-    }
-  }
-
-  void _rest() {
-    _stopPoll();
-    _hide?.cancel();
-    _rests++;
-    final id = _id;
-    _id = null;
-    if (id != null) _channel.invokeMethod('close', {'id': id});
-    _resting = true;
+  void _moved() {
     if (!mounted) return;
     setState(() {
-      _started = false;
-      _playing = false;
-      _controls = true;
+      // at its end the controls come back
+      if (_v.done && !_done) _controls = true;
+      _done = _v.done;
+      if (!_v.playing) _controls = _controls || !_v.started;
     });
   }
 
-  Future<void> _wake() async {
-    if (!_resting || !mounted) return;
-    _resting = false;
-    // the first frame the lock took, back under the blur
+  // the first frame the lock took comes back under the blur after it
+  void _lockChanged() {
+    if (picturesShut.value) return;
     videoInfoFor(widget.path).then((_) {
       if (mounted) setState(() {});
     });
-    await _open(play: false);
-    final id = _id;
-    if (id != null && _pos > Duration.zero && !_done) {
-      await _channel.invokeMethod('seek', {
-        'id': id,
-        'ms': _pos.inMilliseconds,
-      });
-    }
   }
 
-  Future<void> _open({bool play = true}) async {
-    final rests = _rests;
-    Map<String, dynamic>? m;
-    try {
-      m = await _channel.invokeMapMethod<String, dynamic>(
-        'open',
-        withFileKey(widget.path, {'path': widget.path}),
-      );
-    } catch (e) {
-      dlog('video: not opened (${e.runtimeType})');
-    }
-    // gone, or the lock went up while it opened: a lock and an unlock on
-    // the way leave a newer open, so this one never holds a second player
-    if (!mounted || picturesShut.value || rests != _rests) {
-      if (mounted && picturesShut.value) _resting = true;
-      final id = (m?['id'] as num?)?.toInt();
-      if (id != null) _channel.invokeMethod('close', {'id': id});
-      return;
-    }
-    if (m == null) {
-      setState(() => _failed = true);
-      return;
-    }
-    final shape = VideoShape.from(m, _aspect);
-    setState(() {
-      _id = (m!['id'] as num).toInt();
-      _aspect = shape.aspect;
-      _turns = shape.turns;
-      final ms = (m['ms'] as num?)?.toInt() ?? 0;
-      if (ms > 0) _length = Duration(milliseconds: ms);
-    });
-    if (play && widget.route.status == AnimationStatus.completed) _play();
+  void _routeStatus(AnimationStatus s) {
+    if (s == AnimationStatus.completed && !_v.started) _play();
   }
-
-  // the lock pauses a video that is playing
-  VoidCallback? _unguard;
 
   Future<void> _play() async {
-    final id = _id;
-    if (id == null || videoGuard.isLocked()) return;
-    await _channel.invokeMethod('play', {'id': id});
-    if (!mounted) return;
-    setState(() {
-      _started = true;
-      _playing = true;
-      _done = false;
-    });
-    _unguard ??= videoGuard.closeOnLock(() {
-      _unguard = null;
-      if (mounted && _playing) _pause();
-    });
-    _poll ??= Timer.periodic(const Duration(milliseconds: 200), (_) => _read());
-    _hideSoon();
-  }
-
-  // asks the player where it is only while it plays: a paused or finished
-  // video, or one behind the app, costs nothing
-  void _stopPoll() {
-    _poll?.cancel();
-    _poll = null;
+    await _v.play();
+    if (mounted && _v.playing) _hideSoon();
   }
 
   Future<void> _pause() async {
-    final id = _id;
-    if (id == null) return;
-    _stopPoll();
-    await _channel.invokeMethod('pause', {'id': id});
+    await _v.pause();
     if (!mounted) return;
-    setState(() {
-      _playing = false;
-      _controls = true;
-    });
+    setState(() => _controls = true);
     _hide?.cancel();
   }
 
   void _toggle() {
     HapticFeedback.selectionClick();
     _playing ? _pause() : _play();
-  }
-
-  Future<void> _read() async {
-    final id = _id;
-    if (id == null || _scrub != null) return;
-    final m = await _channel.invokeMapMethod<String, dynamic>('state', {
-      'id': id,
-    });
-    if (!mounted || m == null || _scrub != null) return;
-    final done = m['done'] == true;
-    if (done) _stopPoll();
-    setState(() {
-      _pos = Duration(milliseconds: (m['ms'] as num?)?.toInt() ?? 0);
-      _playing = m['playing'] == true;
-      if (done && !_done) {
-        _done = true;
-        _controls = true;
-        _pos = _length;
-      }
-    });
   }
 
   // controls go while it plays, and come back on a tap
@@ -341,12 +215,7 @@ class _VideoViewerState extends State<_VideoViewer>
     if (_controls) _hideSoon();
   }
 
-  void _seekTo(double f) {
-    final id = _id;
-    if (id == null) return;
-    final ms = (f * _length.inMilliseconds).round();
-    _channel.invokeMethod('seek', {'id': id, 'ms': ms});
-  }
+  void _seekTo(double f) => _v.seekShare(f);
 
   void _close() {
     if (_closing) return;
@@ -453,23 +322,23 @@ class _VideoViewerState extends State<_VideoViewer>
       flightShuttleBuilder: (c, a, dir, from, to) =>
           videoFlight(c, a, dir, from, to, widget.path),
       child: VideoFrame(
-        aspect: _aspect,
-        turns: _turns,
+        aspect: _v.aspect,
+        turns: _v.turns,
         // its blur, the first frame fading up over it
         under: SealedPicture(
           path: widget.path,
           image: jpeg == null ? null : MemoryImage(jpeg),
           ground: Colors.black,
         ),
-        texture: id != null && _started ? Texture(textureId: id) : null,
+        texture: id != null && _v.started ? Texture(textureId: id) : null,
       ),
     );
   }
 
   List<Widget> _chrome(EdgeInsets pad, double fade) {
     final visible = _controls || !_playing;
-    final len = _length.inMilliseconds;
-    final at = _scrub ?? (len <= 0 ? 0.0 : _pos.inMilliseconds / len);
+    final len = _v.length.inMilliseconds;
+    final at = _scrub ?? _v.share;
     return [
       // close
       PositionedDirectional(
@@ -493,10 +362,10 @@ class _VideoViewerState extends State<_VideoViewer>
       // the big mark while it is not playing
       Positioned.fill(
         child: IgnorePointer(
-          ignoring: _playing || _id == null,
+          ignoring: _playing || (_id == null && !_v.asleep),
           child: Center(
             child: _Fade(
-              visible: !_playing && _id != null && _drag == 0,
+              visible: !_playing && (_id != null || _v.asleep) && _drag == 0,
               opacity: fade,
               child: ViewerRound(
                 size: 66,
@@ -575,6 +444,7 @@ class _VideoViewerState extends State<_VideoViewer>
                       onStart: (f) {
                         HapticFeedback.selectionClick();
                         _hide?.cancel();
+                        _v.holdReads = true;
                         setState(() => _scrub = f);
                         _seekTo(f);
                       },
@@ -583,20 +453,14 @@ class _VideoViewerState extends State<_VideoViewer>
                         _seekTo(f);
                       },
                       onEnd: () {
-                        final f = _scrub;
-                        setState(() {
-                          if (f != null) {
-                            _pos = Duration(milliseconds: (f * len).round());
-                            _done = false;
-                          }
-                          _scrub = null;
-                        });
+                        _v.holdReads = false;
+                        setState(() => _scrub = null);
                         if (_playing) _hideSoon();
                       },
                     ),
                   ),
                   const SizedBox(width: 10),
-                  ViewerTime(_length),
+                  ViewerTime(_v.length),
                 ],
               ),
             ),
@@ -632,7 +496,7 @@ class _VideoViewerState extends State<_VideoViewer>
               scale: 0.96,
               onTap: () async {
                 final nav = Navigator.of(context);
-                await openReceivedFile(context, widget.path, widget.fileName);
+                await openFileOutside(context, widget.path, widget.fileName);
                 if (mounted) nav.pop();
               },
               child: Container(

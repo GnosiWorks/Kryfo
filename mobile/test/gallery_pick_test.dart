@@ -326,21 +326,29 @@ void main() {
     for (final (file, sig, send, video) in [
       (
         'lib/screens/chat_screen.dart',
-        'Future<void> _pickAndSendMultiple(',
+        'Future<void> _sendFromSheet(',
         'Future<void> _sendPicked(',
         'madeVideoName(v.name)',
       ),
       (
         'lib/screens/group_chat_screen.dart',
-        'Future<void> _pickGroupMultiple(',
+        'Future<void> _sendFromSheet(',
         'Future<void> _sendPicked(',
         'madeVideoName(v.name)',
       ),
     ]) {
       final src = sourceOf(file);
       final body = bodyOf(src, sig);
-      expect(body, contains('await lockState.hold(pickGallery)'), reason: file);
+      // the sending sheet picks, held; the chat sends through the preview
+      expect(
+        bodyOf(
+          sourceOf('lib/recent_files.dart'),
+          'Future<List<SendPick>> galleryPicksForSheet(',
+        ),
+        contains('await lockState.hold(pickGallery)'),
+      );
       expect(body, contains('await sendGalleryPicks('), reason: file);
+      expect(body, contains('preview: _preview,'), reason: file);
       expect(body, contains('pickMore: () => lockState.hold(pickGallery)'));
       expect(body, isNot(contains('ImagePicker()')), reason: file);
       expect(bodyOf(src, send), contains(video), reason: file);

@@ -562,10 +562,44 @@ Future<void> _speak(WidgetTester t, bool Function() done) async {
   await _io(t, done);
 }
 
+// the sending sheet's gallery: the picker, then all it gave sent
+Future<void> _galleryInSheet(WidgetTester t) async {
+  await t.tap(find.text(l10n.sendSheetChoosePhotos));
+  final sends = {for (var n = 1; n < 5; n++) l10n.sendSheetSend(n, '$n')};
+  final send = find.byWidgetPredicate(
+    (w) => w is Text && sends.contains(w.data),
+  );
+  await _io(t, () => send.evaluate().isNotEmpty, why: 'nothing picked');
+  await _beat(t, 300);
+  await t.tap(send.last);
+}
+
 Future<void> _attach(WidgetTester t, String tile, bool Function() done) async {
   await t.tap(find.byIcon(Icons.add_photo_alternate_outlined));
   await _beat(t, 500);
-  await t.tap(find.text(tile));
+  // the sending sheet: photos and files are picked in it, then sent
+  if (tile == l10n.chatGallery || tile == l10n.chatFile2) {
+    if (tile == l10n.chatFile2) {
+      await t.tap(find.text(l10n.sendSheetFiles));
+      await _beat(t, 300);
+    }
+    await t.tap(
+      find.text(
+        tile == l10n.chatFile2
+            ? l10n.sendSheetBrowseFiles
+            : l10n.sendSheetChoosePhotos,
+      ),
+    );
+    final sends = {for (var n = 1; n < 5; n++) l10n.sendSheetSend(n, '$n')};
+    final send = find.byWidgetPredicate(
+      (w) => w is Text && sends.contains(w.data),
+    );
+    await _io(t, () => send.evaluate().isNotEmpty, why: 'nothing picked');
+    await _beat(t, 300);
+    await t.tap(send.last);
+  } else {
+    await t.tap(find.text(tile));
+  }
   await _beat(t, 300);
   // a gallery or video pick waits in the send preview until it is sent
   if (tile == l10n.chatGallery || tile == l10n.chatVideo) {
@@ -894,7 +928,7 @@ void main() {
       await t.tap(find.byTooltip(l10n.devChatOptions));
       await _beat(t, 900);
       for (final s in [
-        l10n.chatSharedPhotos,
+        l10n.groupInfoSharedMedia,
         l10n.chatMuteNotifications,
         l10n.chatUnpin,
         l10n.chatArchiveChat,
@@ -1161,10 +1195,9 @@ void main() {
       expect(body['_sendFileFrom'], contains('_sendReady('));
       for (final p in [
         '_openCamera',
-        '_pickAndSendMultiple',
+        '_sendFromSheet',
         '_pickAndSendGif',
         '_pickAndSendVideo',
-        '_pickAndSendFile',
       ]) {
         expect(body[p], isNot(contains('saveMessage(')), reason: p);
         expect(
@@ -2159,7 +2192,7 @@ void main() {
       await _open(t);
       await t.tap(find.byIcon(Icons.add_photo_alternate_outlined));
       await _beat(t, 500);
-      await t.tap(find.text(l10n.chatGallery));
+      await _galleryInSheet(t);
       await _beat(t, 300);
       final preview = find.byType(MediaSendScreen);
       await _io(t, () => preview.evaluate().isNotEmpty, why: 'no preview');

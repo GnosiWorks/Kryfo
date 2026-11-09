@@ -6,6 +6,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'source_body.dart';
+
 Iterable<File> _dart(String dir) => Directory(dir)
     .listSync(recursive: true)
     .whereType<File>()
@@ -37,7 +39,19 @@ void main() {
               (best, c) => best == null || c.start > best.start ? c : best,
             );
         final body = around == null ? s : s.substring(around.start, around.end);
-        if (!body.contains('closeOnLock(')) {
+        // the shared players hand themselves to the lock: a screen that
+        // draws one's texture, and the sound engine only the sound player
+        // makes, count as handed. the player hooks the lock where it loads,
+        // so a paused sound goes too
+        final shared =
+            (m.group(0) == 'Texture(' && body.contains('VideoPlayback(')) ||
+            (m.group(0) == 'AudioPlayer(' &&
+                body.contains('implements SoundEngine') &&
+                bodyOf(
+                  File('lib/sound_player.dart').readAsStringSync(),
+                  'Future<bool> _load(',
+                ).contains('closeOnLock('));
+        if (!body.contains('closeOnLock(') && !shared) {
           final line = '\n'.allMatches(s.substring(0, m.start)).length + 1;
           missing.add('${f.path}:$line ${m.group(0)}');
         }

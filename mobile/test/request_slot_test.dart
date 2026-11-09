@@ -30,7 +30,7 @@ void main() {
 
   test('a file and a photo both take it there and nowhere else', () {
     for (final fn in [
-      'Future<void> _sendFileFrom(',
+      'Future<bool> _sendFileFrom(',
       'Future<void> _sendOneImage(',
       'Future<_Ready?> _readyFile(',
       'Future<_Ready?> _readyPhoto(',

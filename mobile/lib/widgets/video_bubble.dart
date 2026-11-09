@@ -6,16 +6,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../file_kind.dart' show FileShape, fileShapeOf, readFileFacts;
+import '../file_kind.dart' show readFileFacts;
 import '../file_save.dart';
 import '../lock_state.dart';
 import '../open_file.dart';
 import '../photo_blur.dart' show blurNow;
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
+import 'file_actions.dart' show fileViewOf, openFileOutside, viewInKryfo;
 import 'file_sheet.dart';
 import 'halo_hero.dart';
-import 'photo_viewer.dart';
 import 'press_scale.dart';
 import 'remembered_height.dart';
 import 'sealed_picture.dart';
@@ -24,12 +24,13 @@ import 'shots_line.dart' show KeptIn, keptOpenLine;
 import '../l10n/numbers.dart';
 import 'video_viewer.dart';
 
-/// a tap on a file or a video: a picture opens in the app's own viewer;
-/// anything else gets the file sheet, which opens it in whatever the phone
-/// has for it (the share sheet when nothing does), saves or shares it. an app installer is never opened
-/// or shared: it is saved where the person picks. held against the app
-/// lock: leaving for the viewer is not leaving. [kept]: the other person's,
-/// in a chat that blocks, which goes to no other app (shotsKeeps)
+/// a tap on a file: one kryfo has a viewer for opens in it, so no other
+/// app gets a decrypted copy (with screenshots blocked in a chat that
+/// blocks). anything else gets the file sheet: a save, another app (the
+/// share sheet when nothing opens it), a share. an app installer is never
+/// opened or shared: it is saved where the person picks. held against the
+/// app lock: leaving for the viewer is not leaving. [kept]: the other
+/// person's, in a chat that blocks, which goes to no other app (shotsKeeps)
 Future<void> openReceivedFile(
   BuildContext context,
   String path,
@@ -37,13 +38,21 @@ Future<void> openReceivedFile(
   bool kept = false,
   // a group's or a room's, which say so in their own words
   KeptIn where = KeptIn.chat,
+  // who sent it, for a viewer's head
+  String? from,
+  Object? heroTag,
 }) async {
   final facts = await readFileFacts(path, name);
   if (!context.mounted) return;
-  // a picture sent as a file opens here like a photo, so no other app gets
-  // a decrypted copy; in a chat that blocks, with screenshots blocked
-  if (!facts.installer && fileShapeOf(facts) == FileShape.picture) {
-    await openPhoto(context, path, secure: kept);
+  if (fileViewOf(facts) != null) {
+    await viewInKryfo(
+      context,
+      path,
+      name,
+      kept: kept,
+      from: from,
+      heroTag: heroTag,
+    );
     return;
   }
   if (kept) {
@@ -70,16 +79,7 @@ Future<void> openReceivedFile(
     await lockState.hold(() => shareFileOut(path, name: name));
     return;
   }
-  final opened = await lockState.hold(
-    () => openWithAnotherApp(path, name: name),
-  );
-  if (opened == OpenAnswer.opened || !context.mounted) return;
-  if (opened == OpenAnswer.refused) {
-    await saveReceivedFile(context, path, name);
-    return;
-  }
-  showHaloToast(context, l10n.videoBubbleNothingHereOpensThat);
-  await lockState.hold(() => shareFileOut(path, name: name));
+  await openFileOutside(context, path, name);
 }
 
 class VideoBubble extends StatefulWidget {

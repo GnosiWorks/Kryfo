@@ -1982,23 +1982,6 @@
   "@chatViewContact": {
     "description": "screens/chat_screen.dart"
   },
-  "chatSharedPhotos": "Shared photos",
-  "@chatSharedPhotos": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatSharedPhotoCount": "{count, plural, one{{count} photo} other{{count} photos}} · {title}",
-  "@chatSharedPhotoCount": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      },
-      "title": {
-        "type": "Object"
-      }
-    }
-  },
   "chatUnmuteNotifications": "Unmute notifications",
   "@chatUnmuteNotifications": {
     "description": "screens/chat_screen.dart"
@@ -2335,10 +2318,6 @@
   "commonSend": "Send",
   "@commonSend": {
     "description": "screens/chat_screen.dart, screens/group_chat_screen.dart, widgets/media_bubbles.dart"
-  },
-  "chatNoPhotosInThis": "No photos in this chat yet",
-  "@chatNoPhotosInThis": {
-    "description": "screens/chat_screen.dart"
   },
   "chatHoldToRecord": "Hold to record a voice note",
   "@chatHoldToRecord": {
@@ -3211,10 +3190,6 @@
   "groupChatGifFromPhoneDesk": "Gif from computer",
   "@groupChatGifFromPhoneDesk": {
     "description": "groupChatGifFromPhone as a computer shows it (linux and windows)"
-  },
-  "groupChatFile": "File",
-  "@groupChatFile": {
-    "description": "screens/group_chat_screen.dart"
   },
   "groupChatCouldNotReadThat": "Could not read that file",
   "@groupChatCouldNotReadThat": {
@@ -13939,9 +13914,9 @@
       }
     }
   },
-  "transferTapToDownload": "Tap to download",
+  "transferTapToDownload": "Tap to get it",
   "@transferTapToDownload": {
-    "description": "waiting file bubble: automatic download is off for this kind of file"
+    "description": "waiting file bubble, after the size: a tap brings the file"
   },
   "transferSizeLine": "{size} · {state}",
   "@transferSizeLine": {
@@ -14006,10 +13981,6 @@
   "settingsFiles": "Files",
   "@settingsFiles": {
     "description": "settings: section header for files and downloads"
-  },
-  "fileSheetOpenWith": "Open with another app",
-  "@fileSheetOpenWith": {
-    "description": "file sheet: hands the file to an app the person picks"
   },
   "desktopLockAccountBody": "Everything Kryfo keeps on this computer is encrypted. It opens with your computer account.",
   "@desktopLockAccountBody": {
@@ -15004,5 +14975,264 @@
         "type": "String"
       }
     }
+  },
+  "fileViewInKryfo": "View in Kryfo",
+  "@fileViewInKryfo": {
+    "description": "file menu, first row: opens the file in Kryfo's own viewer"
+  },
+  "fileOpenWith": "Open with…",
+  "@fileOpenWith": {
+    "description": "file menu and viewers: hands the file to another app"
+  },
+  "fileOpenWithNote": "The other app can see this file. Kryfo keeps it encrypted until then.",
+  "@fileOpenWithNote": {
+    "description": "under Open with…: what handing the file out means"
+  },
+  "fileFrom": "From {name}",
+  "@fileFrom": {
+    "description": "file viewer head: who sent the file",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileLines": "{count, plural, =1{{n} line} other{{n} lines}}",
+  "@fileLines": {
+    "description": "text viewer head: how many lines the file has. n is count written in the language's digits",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "fileNotWords": "This file isn't text. You can save it or open it with another app.",
+  "@fileNotWords": {
+    "description": "text viewer: the file's bytes are not words"
+  },
+  "fileShowsFirst": "This shows the first {size}. Save the file to read all of it.",
+  "@fileShowsFirst": {
+    "description": "text viewer, at the end of a long file",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "filePages": "{count, plural, =1{{n} page} other{{n} pages}}",
+  "@filePages": {
+    "description": "pdf bubble and viewer: how many pages. n is count written in the language's digits",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "filePageOf": "{page} / {total}",
+  "@filePageOf": {
+    "description": "pdf viewer pill: the page in view of all pages, numbers already in the language's digits",
+    "placeholders": {
+      "page": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "filePage": "Page {page}",
+  "@filePage": {
+    "description": "pdf viewer: a page or a small page, for screen readers",
+    "placeholders": {
+      "page": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSearchIn": "Search in file",
+  "@fileSearchIn": {
+    "description": "pdf viewer head: opens the search"
+  },
+  "fileSearchHint": "Find words in this PDF",
+  "@fileSearchHint": {
+    "description": "pdf viewer search field hint"
+  },
+  "fileZoomIn": "Zoom in",
+  "@fileZoomIn": {
+    "description": "pdf viewer zoom button"
+  },
+  "fileZoomOut": "Zoom out",
+  "@fileZoomOut": {
+    "description": "pdf viewer zoom button"
+  },
+  "filePdfLocked": "This PDF has a password. Open it with another app to read it.",
+  "@filePdfLocked": {
+    "description": "pdf viewer: the renderer does not open password pdfs"
+  },
+  "filePdfUnreadable": "Kryfo can't draw this PDF. You can save it or open it with another app.",
+  "@filePdfUnreadable": {
+    "description": "pdf viewer: the renderer could not open the file"
+  },
+  "soundOpenPlayer": "Opens the player",
+  "@soundOpenPlayer": {
+    "description": "sound file bubble: what a tap does, for screen readers"
+  },
+  "soundSpeed": "Playback speed",
+  "@soundSpeed": {
+    "description": "sound player speed button"
+  },
+  "soundClosePlayer": "Close player",
+  "@soundClosePlayer": {
+    "description": "sound player close button"
+  },
+  "soundPlayingInKryfo": "Playing in Kryfo",
+  "@soundPlayingInKryfo": {
+    "description": "sound player head: the sound stays inside the app"
+  },
+  "soundBack15": "Back 15 seconds",
+  "@soundBack15": {
+    "description": "sound player button"
+  },
+  "soundForward15": "Forward 15 seconds",
+  "@soundForward15": {
+    "description": "sound player button"
+  },
+  "soundRepeat": "Repeat",
+  "@soundRepeat": {
+    "description": "sound player button: plays the sound again at its end"
+  },
+  "soundUpNext": "Up next",
+  "@soundUpNext": {
+    "description": "sound player: the sound that plays after this one"
+  },
+  "soundVoiceFrom": "Voice message from {name}",
+  "@soundVoiceFrom": {
+    "description": "sound player up next: a voice note",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sendSheetTo": "Send to",
+  "@sendSheetTo": {
+    "description": "sending sheet title, before the chat's name in italics"
+  },
+  "sendSheetCleaned": "Cleaned before sending",
+  "@sendSheetCleaned": {
+    "description": "sending sheet, under the title: what the camera and the phone wrote into a file is taken out first"
+  },
+  "sendSheetFiles": "Files",
+  "@sendSheetFiles": {
+    "description": "sending sheet tab"
+  },
+  "sendSheetRecent": "Recent",
+  "@sendSheetRecent": {
+    "description": "sending sheet tab: files that came or went lately in the chats"
+  },
+  "sendSheetChoosePhotos": "Choose photos and videos",
+  "@sendSheetChoosePhotos": {
+    "description": "sending sheet, gallery tab: opens the phone's photo picker"
+  },
+  "sendSheetBrowseFiles": "Browse all files on this phone",
+  "@sendSheetBrowseFiles": {
+    "description": "sending sheet, files tab: opens the phone's file browser"
+  },
+  "sendSheetNoRecent": "Files you send and get in your chats show up here.",
+  "@sendSheetNoRecent": {
+    "description": "sending sheet, recent tab, empty"
+  },
+  "sendSheetChosen": "Chosen, number {n}",
+  "@sendSheetChosen": {
+    "description": "sending sheet, for screen readers: the pick's place in the order chosen",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "sendSheetAsFile": "Send as file",
+  "@sendSheetAsFile": {
+    "description": "sending sheet switch: photos and videos go as files"
+  },
+  "sendSheetAsFileLine": "Original quality, no compression",
+  "@sendSheetAsFileLine": {
+    "description": "under Send as file"
+  },
+  "sendSheetSend": "{count, plural, =1{Send {n}} other{Send {n}}}",
+  "@sendSheetSend": {
+    "description": "sending sheet button with how many go. n is count written in the language's digits",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedWith": "Shared with {name}",
+  "@sharedWith": {
+    "description": "shared page title: what a 1:1 chat shared. the name shows in italics",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedIn": "Shared in {name}",
+  "@sharedIn": {
+    "description": "shared page title for a group, the group name in italics",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedTabMedia": "Media",
+  "@sharedTabMedia": {
+    "description": "shared page tab: photos"
+  },
+  "sharedTabFiles": "Files",
+  "@sharedTabFiles": {
+    "description": "shared page tab, and the row on the contact page"
+  },
+  "sharedTabVoice": "Voice",
+  "@sharedTabVoice": {
+    "description": "shared page tab: voice messages, and the row on the contact page"
+  },
+  "sharedTabLinks": "Links",
+  "@sharedTabLinks": {
+    "description": "shared page tab: links sent in messages, and the row on the contact page"
+  },
+  "sharedNoPhotos": "Photos sent in this chat show up here.",
+  "@sharedNoPhotos": {
+    "description": "shared page, photos tab, empty"
+  },
+  "sharedNoFiles": "Files sent in this chat show up here.",
+  "@sharedNoFiles": {
+    "description": "shared page, files tab, empty"
+  },
+  "sharedNoVoice": "Voice messages sent in this chat show up here.",
+  "@sharedNoVoice": {
+    "description": "shared page, voice tab, empty"
+  },
+  "sharedNoLinks": "Links sent in this chat show up here.",
+  "@sharedNoLinks": {
+    "description": "shared page, links tab, empty"
+  },
+  "sharedYourVoice": "Your voice message",
+  "@sharedYourVoice": {
+    "description": "shared page, for screen readers: a voice message this phone sent"
+  },
+  "sharedOpensLink": "Opens the link in another app",
+  "@sharedOpensLink": {
+    "description": "shared page, for screen readers: what a tap on a link does"
   }
 }

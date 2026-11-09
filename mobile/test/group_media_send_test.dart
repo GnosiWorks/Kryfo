@@ -563,7 +563,7 @@ void main() {
       }
       for (final sig in [
         'Future<void> _sendGroupImage(',
-        'Future<void> _sendGroupFileFrom(',
+        'Future<bool> _sendGroupFileFrom(',
       ]) {
         expect(bodyOf(screen, sig), contains('_sendGroupReady('), reason: sig);
       }

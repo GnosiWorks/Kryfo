@@ -11,7 +11,9 @@ import '../file_kind.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import 'halo_sheet.dart';
-import 'media_bubbles.dart' show fileGlyph, humanFileSize;
+import 'file_badge.dart';
+import 'file_viewer_parts.dart' show OpenWithNote;
+import 'media_bubbles.dart' show humanFileSize;
 import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'stagger_in.dart';
@@ -61,20 +63,7 @@ Future<FileSheetPick?> showFileSheet(
             const SizedBox(height: 14),
             Row(
               children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: HaloColors.amberSoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    fileGlyph(facts.kind),
-                    size: 22,
-                    color: HaloColors.amber,
-                  ),
-                ),
+                FileBadge(facts: facts, size: 46),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -101,7 +90,7 @@ Future<FileSheetPick?> showFileSheet(
               ],
             ),
             const SizedBox(height: 14),
-            for (final p in fileSheetPicks(facts))
+            for (final p in fileSheetPicks(facts)) ...[
               _PickLine(
                 icon: switch (p) {
                   FileSheetPick.open => Icons.open_in_new_rounded,
@@ -109,12 +98,15 @@ Future<FileSheetPick?> showFileSheet(
                   FileSheetPick.share => Icons.ios_share_rounded,
                 },
                 label: switch (p) {
-                  FileSheetPick.open => l10n.fileSheetOpenWith,
+                  FileSheetPick.open => l10n.fileOpenWith,
                   FileSheetPick.save => l10n.fileSaveToDevice,
                   FileSheetPick.share => l10n.commonShare,
                 },
                 onTap: () => Navigator.pop(ctx, p),
               ),
+              // the way out says what it means, under it
+              if (p == FileSheetPick.open) const OpenWithNote(),
+            ],
           ]),
         ),
       ),

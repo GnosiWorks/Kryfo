@@ -1582,23 +1582,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatViewContact => 'Xem liên hệ';
 
   @override
-  String get chatSharedPhotos => 'Ảnh đã chia sẻ';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString ảnh',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Bật lại thông báo';
 
   @override
@@ -1863,9 +1846,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get commonSend => 'Gửi';
-
-  @override
-  String get chatNoPhotosInThis => 'Chưa có ảnh nào trong cuộc trò chuyện này';
 
   @override
   String get chatHoldToRecord => 'Nhấn giữ để ghi tin nhắn thoại';
@@ -2587,9 +2567,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupChatGifFromPhoneDesk => 'Gif từ máy tính';
-
-  @override
-  String get groupChatFile => 'Tệp';
 
   @override
   String get groupChatCouldNotReadThat => 'Không đọc được tệp đó';
@@ -11116,7 +11093,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => 'Chạm để tải xuống';
+  String get transferTapToDownload => 'Chạm để nhận';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -11163,9 +11140,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsFiles => 'Tệp';
-
-  @override
-  String get fileSheetOpenWith => 'Mở bằng ứng dụng khác';
 
   @override
   String get desktopLockAccountBody =>
@@ -11928,4 +11902,194 @@ class AppLocalizationsVi extends AppLocalizations {
   String devicesManyAnswersLine(String name, String count) {
     return '$name đã cố gửi hơn $count câu trả lời trong một giờ. Nếu đó không phải bạn, hãy gỡ thiết bị đó.';
   }
+
+  @override
+  String get fileViewInKryfo => 'Xem trong Kryfo';
+
+  @override
+  String get fileOpenWith => 'Mở bằng…';
+
+  @override
+  String get fileOpenWithNote =>
+      'Ứng dụng kia có thể thấy tệp này. Đến lúc đó Kryfo vẫn giữ nó được mã hóa.';
+
+  @override
+  String fileFrom(String name) {
+    return 'Từ $name';
+  }
+
+  @override
+  String fileLines(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n dòng',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords =>
+      'Tệp này không phải văn bản. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác.';
+
+  @override
+  String fileShowsFirst(String size) {
+    return 'Đây là $size đầu tiên. Hãy lưu tệp để đọc toàn bộ.';
+  }
+
+  @override
+  String filePages(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n trang',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return 'Trang $page';
+  }
+
+  @override
+  String get fileSearchIn => 'Tìm trong tệp';
+
+  @override
+  String get fileSearchHint => 'Tìm từ trong PDF này';
+
+  @override
+  String get fileZoomIn => 'Phóng to';
+
+  @override
+  String get fileZoomOut => 'Thu nhỏ';
+
+  @override
+  String get filePdfLocked =>
+      'PDF này có mật khẩu. Hãy mở bằng ứng dụng khác để đọc.';
+
+  @override
+  String get filePdfUnreadable =>
+      'Kryfo không hiển thị được PDF này. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác.';
+
+  @override
+  String get soundOpenPlayer => 'Mở trình phát';
+
+  @override
+  String get soundSpeed => 'Tốc độ phát';
+
+  @override
+  String get soundClosePlayer => 'Đóng trình phát';
+
+  @override
+  String get soundPlayingInKryfo => 'Đang phát trong Kryfo';
+
+  @override
+  String get soundBack15 => 'Lùi 15 giây';
+
+  @override
+  String get soundForward15 => 'Tiến 15 giây';
+
+  @override
+  String get soundRepeat => 'Lặp lại';
+
+  @override
+  String get soundUpNext => 'Tiếp theo';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return 'Tin nhắn thoại từ $name';
+  }
+
+  @override
+  String get sendSheetTo => 'Gửi cho';
+
+  @override
+  String get sendSheetCleaned => 'Được làm sạch trước khi gửi';
+
+  @override
+  String get sendSheetFiles => 'Tệp';
+
+  @override
+  String get sendSheetRecent => 'Gần đây';
+
+  @override
+  String get sendSheetChoosePhotos => 'Chọn ảnh và video';
+
+  @override
+  String get sendSheetBrowseFiles => 'Duyệt mọi tệp trên điện thoại này';
+
+  @override
+  String get sendSheetNoRecent =>
+      'Các tệp bạn gửi và nhận trong cuộc trò chuyện sẽ hiện ở đây.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'Đã chọn, số $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'Gửi dưới dạng tệp';
+
+  @override
+  String get sendSheetAsFileLine => 'Chất lượng gốc, không nén';
+
+  @override
+  String sendSheetSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gửi $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharedWith(String name) {
+    return 'Đã chia sẻ với $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Đã chia sẻ trong $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Ảnh';
+
+  @override
+  String get sharedTabFiles => 'Tệp';
+
+  @override
+  String get sharedTabVoice => 'Thoại';
+
+  @override
+  String get sharedTabLinks => 'Liên kết';
+
+  @override
+  String get sharedNoPhotos =>
+      'Ảnh gửi trong cuộc trò chuyện này sẽ hiện ở đây.';
+
+  @override
+  String get sharedNoFiles =>
+      'Tệp gửi trong cuộc trò chuyện này sẽ hiện ở đây.';
+
+  @override
+  String get sharedNoVoice =>
+      'Tin nhắn thoại trong cuộc trò chuyện này sẽ hiện ở đây.';
+
+  @override
+  String get sharedNoLinks =>
+      'Liên kết gửi trong cuộc trò chuyện này sẽ hiện ở đây.';
+
+  @override
+  String get sharedYourVoice => 'Tin nhắn thoại của bạn';
+
+  @override
+  String get sharedOpensLink => 'Mở liên kết trong ứng dụng khác';
 }

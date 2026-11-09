@@ -178,20 +178,20 @@ void main() {
     for (final (file, picker, send, ready) in [
       (
         'lib/screens/chat_screen.dart',
-        'Future<void> _pickAndSendMultiple(',
+        'Future<void> _sendFromSheet(',
         'Future<void> _sendPicked(',
         '_readyPhoto(',
       ),
       (
         'lib/screens/group_chat_screen.dart',
-        'Future<void> _pickGroupMultiple(',
+        'Future<void> _sendFromSheet(',
         'Future<void> _sendPicked(',
         '_readyGroupPhoto(',
       ),
     ]) {
       final src = sourceOf(file);
       final body = bodyOf(src, picker);
-      expect(body, contains('send: _sendPicked'));
+      expect(body, contains('send: (s) => _sendPicked('));
       final sends = bodyOf(src, send);
       expect(sends, contains(ready));
       for (final b in [body, sends]) {

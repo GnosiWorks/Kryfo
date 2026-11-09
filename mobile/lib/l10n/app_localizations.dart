@@ -2530,18 +2530,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Shared photos'**
-  String get chatSharedPhotos;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{{count} photo} other{{count} photos}} · {title}'**
-  String chatSharedPhotoCount(int count, Object title);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Unmute notifications'**
   String get chatUnmuteNotifications;
 
@@ -3006,12 +2994,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send'**
   String get commonSend;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'No photos in this chat yet'**
-  String get chatNoPhotosInThis;
 
   /// screens/chat_screen.dart
   ///
@@ -4158,12 +4140,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gif from computer'**
   String get groupChatGifFromPhoneDesk;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'File'**
-  String get groupChatFile;
 
   /// screens/group_chat_screen.dart
   ///
@@ -17827,10 +17803,10 @@ abstract class AppLocalizations {
   /// **'Paused · {detail}'**
   String transferPausedAt(String detail);
 
-  /// waiting file bubble: automatic download is off for this kind of file
+  /// waiting file bubble, after the size: a tap brings the file
   ///
   /// In en, this message translates to:
-  /// **'Tap to download'**
+  /// **'Tap to get it'**
   String get transferTapToDownload;
 
   /// waiting file bubble: the file size, then transferOnWifi or transferTapToDownload
@@ -17916,12 +17892,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files'**
   String get settingsFiles;
-
-  /// file sheet: hands the file to an app the person picks
-  ///
-  /// In en, this message translates to:
-  /// **'Open with another app'**
-  String get fileSheetOpenWith;
 
   /// desktop/desktop_lock_screen.dart: first start with a system keyring, under the title
   ///
@@ -19134,6 +19104,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} tried to send more than {count} answers in an hour. If that wasn\'t you, remove it.'**
   String devicesManyAnswersLine(String name, String count);
+
+  /// file menu, first row: opens the file in Kryfo's own viewer
+  ///
+  /// In en, this message translates to:
+  /// **'View in Kryfo'**
+  String get fileViewInKryfo;
+
+  /// file menu and viewers: hands the file to another app
+  ///
+  /// In en, this message translates to:
+  /// **'Open with…'**
+  String get fileOpenWith;
+
+  /// under Open with…: what handing the file out means
+  ///
+  /// In en, this message translates to:
+  /// **'The other app can see this file. Kryfo keeps it encrypted until then.'**
+  String get fileOpenWithNote;
+
+  /// file viewer head: who sent the file
+  ///
+  /// In en, this message translates to:
+  /// **'From {name}'**
+  String fileFrom(String name);
+
+  /// text viewer head: how many lines the file has. n is count written in the language's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{n} line} other{{n} lines}}'**
+  String fileLines(int count, String n);
+
+  /// text viewer: the file's bytes are not words
+  ///
+  /// In en, this message translates to:
+  /// **'This file isn\'t text. You can save it or open it with another app.'**
+  String get fileNotWords;
+
+  /// text viewer, at the end of a long file
+  ///
+  /// In en, this message translates to:
+  /// **'This shows the first {size}. Save the file to read all of it.'**
+  String fileShowsFirst(String size);
+
+  /// pdf bubble and viewer: how many pages. n is count written in the language's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{n} page} other{{n} pages}}'**
+  String filePages(int count, String n);
+
+  /// pdf viewer pill: the page in view of all pages, numbers already in the language's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{page} / {total}'**
+  String filePageOf(String page, String total);
+
+  /// pdf viewer: a page or a small page, for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page}'**
+  String filePage(String page);
+
+  /// pdf viewer head: opens the search
+  ///
+  /// In en, this message translates to:
+  /// **'Search in file'**
+  String get fileSearchIn;
+
+  /// pdf viewer search field hint
+  ///
+  /// In en, this message translates to:
+  /// **'Find words in this PDF'**
+  String get fileSearchHint;
+
+  /// pdf viewer zoom button
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get fileZoomIn;
+
+  /// pdf viewer zoom button
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get fileZoomOut;
+
+  /// pdf viewer: the renderer does not open password pdfs
+  ///
+  /// In en, this message translates to:
+  /// **'This PDF has a password. Open it with another app to read it.'**
+  String get filePdfLocked;
+
+  /// pdf viewer: the renderer could not open the file
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo can\'t draw this PDF. You can save it or open it with another app.'**
+  String get filePdfUnreadable;
+
+  /// sound file bubble: what a tap does, for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the player'**
+  String get soundOpenPlayer;
+
+  /// sound player speed button
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get soundSpeed;
+
+  /// sound player close button
+  ///
+  /// In en, this message translates to:
+  /// **'Close player'**
+  String get soundClosePlayer;
+
+  /// sound player head: the sound stays inside the app
+  ///
+  /// In en, this message translates to:
+  /// **'Playing in Kryfo'**
+  String get soundPlayingInKryfo;
+
+  /// sound player button
+  ///
+  /// In en, this message translates to:
+  /// **'Back 15 seconds'**
+  String get soundBack15;
+
+  /// sound player button
+  ///
+  /// In en, this message translates to:
+  /// **'Forward 15 seconds'**
+  String get soundForward15;
+
+  /// sound player button: plays the sound again at its end
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get soundRepeat;
+
+  /// sound player: the sound that plays after this one
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get soundUpNext;
+
+  /// sound player up next: a voice note
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message from {name}'**
+  String soundVoiceFrom(String name);
+
+  /// sending sheet title, before the chat's name in italics
+  ///
+  /// In en, this message translates to:
+  /// **'Send to'**
+  String get sendSheetTo;
+
+  /// sending sheet, under the title: what the camera and the phone wrote into a file is taken out first
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaned before sending'**
+  String get sendSheetCleaned;
+
+  /// sending sheet tab
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get sendSheetFiles;
+
+  /// sending sheet tab: files that came or went lately in the chats
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get sendSheetRecent;
+
+  /// sending sheet, gallery tab: opens the phone's photo picker
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photos and videos'**
+  String get sendSheetChoosePhotos;
+
+  /// sending sheet, files tab: opens the phone's file browser
+  ///
+  /// In en, this message translates to:
+  /// **'Browse all files on this phone'**
+  String get sendSheetBrowseFiles;
+
+  /// sending sheet, recent tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Files you send and get in your chats show up here.'**
+  String get sendSheetNoRecent;
+
+  /// sending sheet, for screen readers: the pick's place in the order chosen
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen, number {n}'**
+  String sendSheetChosen(String n);
+
+  /// sending sheet switch: photos and videos go as files
+  ///
+  /// In en, this message translates to:
+  /// **'Send as file'**
+  String get sendSheetAsFile;
+
+  /// under Send as file
+  ///
+  /// In en, this message translates to:
+  /// **'Original quality, no compression'**
+  String get sendSheetAsFileLine;
+
+  /// sending sheet button with how many go. n is count written in the language's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Send {n}} other{Send {n}}}'**
+  String sendSheetSend(int count, String n);
+
+  /// shared page title: what a 1:1 chat shared. the name shows in italics
+  ///
+  /// In en, this message translates to:
+  /// **'Shared with {name}'**
+  String sharedWith(String name);
+
+  /// shared page title for a group, the group name in italics
+  ///
+  /// In en, this message translates to:
+  /// **'Shared in {name}'**
+  String sharedIn(String name);
+
+  /// shared page tab: photos
+  ///
+  /// In en, this message translates to:
+  /// **'Media'**
+  String get sharedTabMedia;
+
+  /// shared page tab, and the row on the contact page
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get sharedTabFiles;
+
+  /// shared page tab: voice messages, and the row on the contact page
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get sharedTabVoice;
+
+  /// shared page tab: links sent in messages, and the row on the contact page
+  ///
+  /// In en, this message translates to:
+  /// **'Links'**
+  String get sharedTabLinks;
+
+  /// shared page, photos tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Photos sent in this chat show up here.'**
+  String get sharedNoPhotos;
+
+  /// shared page, files tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Files sent in this chat show up here.'**
+  String get sharedNoFiles;
+
+  /// shared page, voice tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Voice messages sent in this chat show up here.'**
+  String get sharedNoVoice;
+
+  /// shared page, links tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Links sent in this chat show up here.'**
+  String get sharedNoLinks;
+
+  /// shared page, for screen readers: a voice message this phone sent
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice message'**
+  String get sharedYourVoice;
+
+  /// shared page, for screen readers: what a tap on a link does
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the link in another app'**
+  String get sharedOpensLink;
 }
 
 class _AppLocalizationsDelegate

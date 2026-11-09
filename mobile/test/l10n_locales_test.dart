@@ -639,37 +639,6 @@ final _calls = <_Call>[
   ('chatVoiceMessage', [], (l) => l.chatVoiceMessage),
   ('chatQuotedPhoto', [], (l) => l.chatQuotedPhoto),
   ('chatViewContact', [], (l) => l.chatViewContact),
-  ('chatSharedPhotos', [], (l) => l.chatSharedPhotos),
-  (
-    'chatSharedPhotoCount',
-    ["⟨title⟩"],
-    (l) => l.chatSharedPhotoCount(0, "⟨title⟩"),
-  ),
-  (
-    'chatSharedPhotoCount',
-    ["⟨title⟩"],
-    (l) => l.chatSharedPhotoCount(1, "⟨title⟩"),
-  ),
-  (
-    'chatSharedPhotoCount',
-    ["⟨title⟩"],
-    (l) => l.chatSharedPhotoCount(2, "⟨title⟩"),
-  ),
-  (
-    'chatSharedPhotoCount',
-    ["⟨title⟩"],
-    (l) => l.chatSharedPhotoCount(5, "⟨title⟩"),
-  ),
-  (
-    'chatSharedPhotoCount',
-    ["⟨title⟩"],
-    (l) => l.chatSharedPhotoCount(21, "⟨title⟩"),
-  ),
-  (
-    'chatSharedPhotoCount',
-    ["⟨title⟩"],
-    (l) => l.chatSharedPhotoCount(1000, "⟨title⟩"),
-  ),
   ('chatUnmuteNotifications', [], (l) => l.chatUnmuteNotifications),
   ('chatMuteNotifications', [], (l) => l.chatMuteNotifications),
   ('chatArchiveChat', [], (l) => l.chatArchiveChat),
@@ -761,7 +730,6 @@ final _calls = <_Call>[
   ('chatAttachAPhoto', [], (l) => l.chatAttachAPhoto),
   ('chatMessage', [], (l) => l.chatMessage),
   ('commonSend', [], (l) => l.commonSend),
-  ('chatNoPhotosInThis', [], (l) => l.chatNoPhotosInThis),
   ('chatSecurityCodeChanged', [], (l) => l.chatSecurityCodeChanged),
   (
     'chatMayHaveReinstalledOr',
@@ -1012,7 +980,6 @@ final _calls = <_Call>[
   ('groupChatGallery', [], (l) => l.groupChatGallery),
   ('groupChatVideo', [], (l) => l.groupChatVideo),
   ('groupChatGifFromPhone', [], (l) => l.groupChatGifFromPhone),
-  ('groupChatFile', [], (l) => l.groupChatFile),
   ('groupChatCouldNotReadThat', [], (l) => l.groupChatCouldNotReadThat),
   ('groupChatGifTooBig8', [], (l) => l.groupChatGifTooBig8),
   ('groupChatCouldNotCleanThat', [], (l) => l.groupChatCouldNotCleanThat),

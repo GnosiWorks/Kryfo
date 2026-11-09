@@ -9,13 +9,13 @@ import '../file_kind.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../transfers.dart';
-import 'media_bubbles.dart' show fileGlyph, humanFileSize, splitFileName;
+import 'file_bubble.dart' show fileNameDir;
+import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'press_scale.dart';
 
 /// the bubble's line under the name: its size and what it waits for, or
 /// how far it is
-@visibleForTesting
 String fileWaitLine(FileWait w, {required bool unmetered, int? left}) {
   final size = humanFileSize(w.size);
   switch (w.state) {
@@ -84,9 +84,6 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
         ? l10n.appPhoto
         : safeFileName(name, facts: FileFacts(kindOfName(name), extOf(name)));
     final (stem, ext) = splitFileName(title);
-    final glyph = name == null
-        ? Icons.image_outlined
-        : fileGlyph(kindOfName(name));
     final line = fileWaitLine(
       w,
       unmetered: _unmetered,
@@ -107,13 +104,18 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
       child: PressScale(
         scale: 0.97,
         onTap: coming ? widget.onPause : widget.onGet,
+        // a file's sits in its bubble; a photo's has none around it
         child: Container(
           constraints: const BoxConstraints(maxWidth: 260),
-          padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
-          decoration: BoxDecoration(
-            color: HaloColors.surface3,
-            borderRadius: BorderRadius.circular(14),
-          ),
+          padding: name == null
+              ? const EdgeInsets.fromLTRB(10, 10, 12, 10)
+              : EdgeInsets.zero,
+          decoration: name == null
+              ? BoxDecoration(
+                  color: HaloColors.surface3,
+                  borderRadius: BorderRadius.circular(14),
+                )
+              : null,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -126,16 +128,17 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
                   children: [
                     Row(
                       mainAxisSize: MainAxisSize.min,
+                      textDirection: fileNameDir(stem),
                       children: [
-                        Icon(glyph, size: 14, color: HaloColors.text2),
-                        const SizedBox(width: 5),
                         Flexible(
                           child: Text(
                             stem,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            textDirection: fileNameDir(stem),
+                            textWidthBasis: TextWidthBasis.longestLine,
                             style: HaloType.sans(
-                              size: 13.5,
+                              size: 14,
                               color: HaloColors.text,
                               weight: FontWeight.w600,
                             ),
@@ -145,8 +148,9 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
                           Text(
                             ext,
                             maxLines: 1,
+                            textDirection: TextDirection.ltr,
                             style: HaloType.sans(
-                              size: 13.5,
+                              size: 14,
                               color: HaloColors.text,
                               weight: FontWeight.w600,
                             ),
@@ -216,10 +220,21 @@ class FileWaitMark extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Container(
+          // one that asks is an open ring with an arrow; the soft fill
+          // comes in once it moves
+          AnimatedContainer(
+            duration: still ? Duration.zero : const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              color: HaloColors.amberSoft,
+              color: w.state == WaitState.asks
+                  ? Colors.transparent
+                  : HaloColors.amberSoft,
               shape: BoxShape.circle,
+              border: Border.all(
+                color: w.state == WaitState.asks
+                    ? HaloColors.amber
+                    : Colors.transparent,
+                width: 2,
+              ),
             ),
           ),
           // the ring eases in and fills as the file comes

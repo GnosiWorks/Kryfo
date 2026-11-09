@@ -1627,26 +1627,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatViewContact => 'Переглянути контакт';
 
   @override
-  String get chatSharedPhotos => 'Спільні фото';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString фото',
-      many: '$countString фото',
-      few: '$countString фото',
-      one: '$countString фото',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Увімкнути сповіщення';
 
   @override
@@ -1916,9 +1896,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get commonSend => 'Надіслати';
-
-  @override
-  String get chatNoPhotosInThis => 'У цьому чаті ще немає фото';
 
   @override
   String get chatHoldToRecord => 'Утримуй, щоб записати голосове повідомлення';
@@ -2651,9 +2628,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get groupChatGifFromPhoneDesk => 'GIF з комп’ютера';
-
-  @override
-  String get groupChatFile => 'Файл';
 
   @override
   String get groupChatCouldNotReadThat => 'Не вдалося прочитати файл';
@@ -11315,7 +11289,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => 'Торкнися, щоб завантажити';
+  String get transferTapToDownload => 'Торкнися, щоб отримати';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -11362,9 +11336,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsFiles => 'Файли';
-
-  @override
-  String get fileSheetOpenWith => 'Відкрити в іншому застосунку';
 
   @override
   String get desktopLockAccountBody =>
@@ -12127,4 +12098,196 @@ class AppLocalizationsUk extends AppLocalizations {
   String devicesManyAnswersLine(String name, String count) {
     return '$name намагався надіслати понад $count відповідей за годину. Якщо це був не ти, видали цей пристрій.';
   }
+
+  @override
+  String get fileViewInKryfo => 'Відкрити в Kryfo';
+
+  @override
+  String get fileOpenWith => 'Відкрити в…';
+
+  @override
+  String get fileOpenWithNote =>
+      'Інший застосунок побачить цей файл. Доти Kryfo зберігає його зашифрованим.';
+
+  @override
+  String fileFrom(String name) {
+    return 'Від $name';
+  }
+
+  @override
+  String fileLines(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n рядка',
+      many: '$n рядків',
+      few: '$n рядки',
+      one: '$n рядок',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords =>
+      'Цей файл не текст. Його можна зберегти або відкрити в іншому застосунку.';
+
+  @override
+  String fileShowsFirst(String size) {
+    return 'Тут показано перші $size. Збережи файл, щоб прочитати його повністю.';
+  }
+
+  @override
+  String filePages(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n сторінки',
+      many: '$n сторінок',
+      few: '$n сторінки',
+      one: '$n сторінка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return 'Сторінка $page';
+  }
+
+  @override
+  String get fileSearchIn => 'Пошук у файлі';
+
+  @override
+  String get fileSearchHint => 'Знайти слова в цьому PDF';
+
+  @override
+  String get fileZoomIn => 'Збільшити';
+
+  @override
+  String get fileZoomOut => 'Зменшити';
+
+  @override
+  String get filePdfLocked =>
+      'Цей PDF має пароль. Відкрий його в іншому застосунку, щоб прочитати.';
+
+  @override
+  String get filePdfUnreadable =>
+      'Kryfo не може показати цей PDF. Його можна зберегти або відкрити в іншому застосунку.';
+
+  @override
+  String get soundOpenPlayer => 'Відкриває плеєр';
+
+  @override
+  String get soundSpeed => 'Швидкість відтворення';
+
+  @override
+  String get soundClosePlayer => 'Закрити плеєр';
+
+  @override
+  String get soundPlayingInKryfo => 'Грає в Kryfo';
+
+  @override
+  String get soundBack15 => 'Назад на 15 секунд';
+
+  @override
+  String get soundForward15 => 'Вперед на 15 секунд';
+
+  @override
+  String get soundRepeat => 'Повтор';
+
+  @override
+  String get soundUpNext => 'Далі';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return 'Голосове від $name';
+  }
+
+  @override
+  String get sendSheetTo => 'Надіслати:';
+
+  @override
+  String get sendSheetCleaned => 'Очищується перед надсиланням';
+
+  @override
+  String get sendSheetFiles => 'Файли';
+
+  @override
+  String get sendSheetRecent => 'Нещодавні';
+
+  @override
+  String get sendSheetChoosePhotos => 'Вибрати фото й відео';
+
+  @override
+  String get sendSheetBrowseFiles => 'Усі файли на цьому телефоні';
+
+  @override
+  String get sendSheetNoRecent =>
+      'Тут з’являться файли, які ти надсилаєш і отримуєш у чатах.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'Вибрано, номер $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'Надіслати файлом';
+
+  @override
+  String get sendSheetAsFileLine => 'Оригінальна якість, без стиснення';
+
+  @override
+  String sendSheetSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Надіслати $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharedWith(String name) {
+    return 'Спільне з $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Спільне в $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Медіа';
+
+  @override
+  String get sharedTabFiles => 'Файли';
+
+  @override
+  String get sharedTabVoice => 'Голосові';
+
+  @override
+  String get sharedTabLinks => 'Посилання';
+
+  @override
+  String get sharedNoPhotos => 'Тут з’являться фото з цього чату.';
+
+  @override
+  String get sharedNoFiles => 'Тут з’являться файли з цього чату.';
+
+  @override
+  String get sharedNoVoice => 'Тут з’являться голосові з цього чату.';
+
+  @override
+  String get sharedNoLinks => 'Тут з’являться посилання з цього чату.';
+
+  @override
+  String get sharedYourVoice => 'Твоє голосове';
+
+  @override
+  String get sharedOpensLink => 'Відкриває посилання в іншому застосунку';
 }

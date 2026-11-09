@@ -63,6 +63,15 @@ String monthYear(DateTime d) {
   return dateCaps(first) + s.substring(first.length);
 }
 
+/// "October" this year, "October 2025" otherwise, for a heading
+String monthMaybeYear(DateTime d, {DateTime? now}) {
+  if (d.year != (now ?? DateTime.now()).year) return monthYear(d);
+  final s = DateFormat.LLLL(_locale).format(d);
+  if (s.isEmpty) return s;
+  final first = String.fromCharCode(s.runes.first);
+  return dateCaps(first) + s.substring(first.length);
+}
+
 /// the day the language's week starts on, as [DateTime.weekday]: monday
 /// for british english, sunday for brazil, saturday for persian
 int weekStartDay() => DateFormat.yMMMM(_locale).dateSymbols.FIRSTDAYOFWEEK + 1;

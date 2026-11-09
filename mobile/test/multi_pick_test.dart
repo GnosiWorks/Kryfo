@@ -196,11 +196,8 @@ void main() {
       contains('await readPickedPhotos('),
     );
     for (final (file, sig) in [
-      ('lib/screens/chat_screen.dart', 'Future<void> _pickAndSendMultiple('),
-      (
-        'lib/screens/group_chat_screen.dart',
-        'Future<void> _pickGroupMultiple(',
-      ),
+      ('lib/screens/chat_screen.dart', 'Future<void> _sendFromSheet('),
+      ('lib/screens/group_chat_screen.dart', 'Future<void> _sendFromSheet('),
     ]) {
       final body = bodyOf(sourceOf(file), sig);
       expect(body, contains('lockState.hold(pickGallery)'), reason: file);

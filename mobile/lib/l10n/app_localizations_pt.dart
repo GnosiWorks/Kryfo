@@ -1604,24 +1604,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatViewContact => 'Ver contato';
 
   @override
-  String get chatSharedPhotos => 'Fotos compartilhadas';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString fotos',
-      one: '$countString foto',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Ativar notificações';
 
   @override
@@ -1887,9 +1869,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get commonSend => 'Enviar';
-
-  @override
-  String get chatNoPhotosInThis => 'Nenhuma foto nesta conversa ainda';
 
   @override
   String get chatHoldToRecord => 'Segure para gravar um áudio';
@@ -2617,9 +2596,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get groupChatGifFromPhoneDesk => 'Gif do computador';
-
-  @override
-  String get groupChatFile => 'Arquivo';
 
   @override
   String get groupChatCouldNotReadThat => 'Não foi possível ler esse arquivo';
@@ -11212,7 +11188,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get transferTapToDownload => 'Toque para baixar';
+  String get transferTapToDownload => 'Toque para receber';
 
   @override
   String transferSizeLine(String size, String state) {
@@ -11259,9 +11235,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsFiles => 'Arquivos';
-
-  @override
-  String get fileSheetOpenWith => 'Abrir com outro app';
 
   @override
   String get desktopLockAccountBody =>
@@ -12031,4 +12004,195 @@ class AppLocalizationsPt extends AppLocalizations {
   String devicesManyAnswersLine(String name, String count) {
     return '$name tentou enviar mais de $count respostas em uma hora. Se não foi você, remova o aparelho.';
   }
+
+  @override
+  String get fileViewInKryfo => 'Ver no Kryfo';
+
+  @override
+  String get fileOpenWith => 'Abrir com…';
+
+  @override
+  String get fileOpenWithNote =>
+      'O outro app pode ver este arquivo. Até lá, o Kryfo o mantém criptografado.';
+
+  @override
+  String fileFrom(String name) {
+    return 'De $name';
+  }
+
+  @override
+  String fileLines(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n linhas',
+      one: '$n linha',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fileNotWords =>
+      'Este arquivo não é texto. Você pode salvá-lo ou abri-lo com outro app.';
+
+  @override
+  String fileShowsFirst(String size) {
+    return 'Aqui aparecem os primeiros $size. Salve o arquivo para ler tudo.';
+  }
+
+  @override
+  String filePages(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n páginas',
+      one: '$n página',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filePageOf(String page, String total) {
+    return '$page / $total';
+  }
+
+  @override
+  String filePage(String page) {
+    return 'Página $page';
+  }
+
+  @override
+  String get fileSearchIn => 'Buscar no arquivo';
+
+  @override
+  String get fileSearchHint => 'Encontrar palavras neste PDF';
+
+  @override
+  String get fileZoomIn => 'Aumentar zoom';
+
+  @override
+  String get fileZoomOut => 'Diminuir zoom';
+
+  @override
+  String get filePdfLocked =>
+      'Este PDF tem senha. Abra com outro app para ler.';
+
+  @override
+  String get filePdfUnreadable =>
+      'O Kryfo não consegue mostrar este PDF. Você pode salvá-lo ou abri-lo com outro app.';
+
+  @override
+  String get soundOpenPlayer => 'Abre o player';
+
+  @override
+  String get soundSpeed => 'Velocidade de reprodução';
+
+  @override
+  String get soundClosePlayer => 'Fechar player';
+
+  @override
+  String get soundPlayingInKryfo => 'Tocando no Kryfo';
+
+  @override
+  String get soundBack15 => 'Voltar 15 segundos';
+
+  @override
+  String get soundForward15 => 'Avançar 15 segundos';
+
+  @override
+  String get soundRepeat => 'Repetir';
+
+  @override
+  String get soundUpNext => 'A seguir';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return 'Mensagem de voz de $name';
+  }
+
+  @override
+  String get sendSheetTo => 'Enviar para';
+
+  @override
+  String get sendSheetCleaned => 'Limpo antes de enviar';
+
+  @override
+  String get sendSheetFiles => 'Arquivos';
+
+  @override
+  String get sendSheetRecent => 'Recentes';
+
+  @override
+  String get sendSheetChoosePhotos => 'Escolher fotos e vídeos';
+
+  @override
+  String get sendSheetBrowseFiles => 'Ver todos os arquivos deste celular';
+
+  @override
+  String get sendSheetNoRecent =>
+      'Os arquivos que você envia e recebe nas conversas aparecem aqui.';
+
+  @override
+  String sendSheetChosen(String n) {
+    return 'Escolhido, número $n';
+  }
+
+  @override
+  String get sendSheetAsFile => 'Enviar como arquivo';
+
+  @override
+  String get sendSheetAsFileLine => 'Qualidade original, sem compressão';
+
+  @override
+  String sendSheetSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Enviar $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sharedWith(String name) {
+    return 'Compartilhado com $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Compartilhado em $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Mídia';
+
+  @override
+  String get sharedTabFiles => 'Arquivos';
+
+  @override
+  String get sharedTabVoice => 'Voz';
+
+  @override
+  String get sharedTabLinks => 'Links';
+
+  @override
+  String get sharedNoPhotos =>
+      'As fotos enviadas nesta conversa aparecem aqui.';
+
+  @override
+  String get sharedNoFiles =>
+      'Os arquivos enviados nesta conversa aparecem aqui.';
+
+  @override
+  String get sharedNoVoice =>
+      'As mensagens de voz desta conversa aparecem aqui.';
+
+  @override
+  String get sharedNoLinks => 'Os links enviados nesta conversa aparecem aqui.';
+
+  @override
+  String get sharedYourVoice => 'Sua mensagem de voz';
+
+  @override
+  String get sharedOpensLink => 'Abre o link em outro app';
 }
