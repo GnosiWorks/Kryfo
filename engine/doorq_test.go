@@ -37,6 +37,17 @@ func doorqSetup(t *testing.T, pending int) (*onionTor, *tor.Tor) {
 	return o, torNode
 }
 
+// one onion's dial works, so tor is shown to reach onions and a failed
+// dial after it says something of its peer
+func proveDoors(t *testing.T, o *onionTor, tn *tor.Tor) {
+	t.Helper()
+	ok := fakeOnion(90000)
+	setPlan(o, ok, onionPlan{build: 20 * time.Millisecond})
+	if err := sendToAs(tn, ok, doorLine(t, 300), doorMessage); err != nil {
+		t.Fatalf("a reachable onion: %v", err)
+	}
+}
+
 func setPlan(o *onionTor, onion string, p onionPlan) {
 	o.mu.Lock()
 	o.plan[onion] = p
@@ -132,6 +143,7 @@ func TestOpenChatGoesPastStuckOnes(t *testing.T) {
 func TestStuckDialIsCutAndRests(t *testing.T) {
 	doorqVar(t, &doorDialMost, time.Second)
 	o, tn := doorqSetup(t, 32)
+	proveDoors(t, o, tn)
 	stuck := fakeOnion(1)
 	setPlan(o, stuck, onionPlan{stuck: true})
 	start := time.Now()
@@ -156,6 +168,7 @@ func TestStuckDialIsCutAndRests(t *testing.T) {
 // opened ends the rest at once
 func TestOfflineOnionBacksOffAndWakes(t *testing.T) {
 	o, tn := doorqSetup(t, 32)
+	proveDoors(t, o, tn)
 	off := fakeOnion(2)
 	setPlan(o, off, onionPlan{build: 50 * time.Millisecond, fail: true})
 	if err := sendTo(tn, off, doorLine(t, 300)); err == nil {
@@ -287,7 +300,7 @@ func TestIdleStreamGivesWay(t *testing.T) {
 // queue: nothing is left waiting
 func TestQueuedLineLeavesInTime(t *testing.T) {
 	doorqVar(t, &doorDialsMost, 2)
-	doorqVar(t, &doorDialLeast, 19*time.Second)
+	doorqVar(t, &doorDialLeast, doorLineBudget-time.Second)
 	doorqVar(t, &doorDialMost, 3*time.Second)
 	o, tn := doorqSetup(t, 32)
 	hang := fakeOnion(20)
@@ -356,5 +369,135 @@ func TestNewDialsArePaced(t *testing.T) {
 	// an onion that just answered is dialled again at once
 	if d := doorPaceFor(open, doorRest); d != 0 {
 		t.Fatalf("a redial to an onion up a moment ago waits %v", d)
+	}
+}
+
+// a receipt to x waits for a slot; x's chat opens and a reply goes: the
+// reply joins the receipt's dial and takes it to the open chat's place
+// (review F1)
+func TestOpenChatReplyIsNotBehindAReceipt(t *testing.T) {
+	doorqVar(t, &doorDialsMost, 2)
+	doorqVar(t, &doorOpenMost, 3)
+	doorqVar(t, &doorDialMost, 10*time.Second)
+	o, tn := doorqSetup(t, 32)
+	stuck := fakeOnion(1)
+	setPlan(o, stuck, onionPlan{stuck: true})
+	x := fakeOnion(2)
+	setPlan(o, x, onionPlan{build: 100 * time.Millisecond})
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() { defer wg.Done(); sendToAs(tn, stuck, doorLine(t, 300), doorMessage) }()
+	time.Sleep(200 * time.Millisecond)
+	go func() { defer wg.Done(); sendToAs(tn, x, doorLine(t, 300), doorRest) }()
+	time.Sleep(200 * time.Millisecond)
+	doorFocus(x)
+	start := time.Now()
+	if err := sendTo(tn, x, doorLine(t, 300)); err != nil {
+		t.Fatalf("open chat line: %v", err)
+	}
+	if took := time.Since(start); took > 2*time.Second {
+		t.Fatalf("open chat waited %v behind a receipt's queue place", took)
+	}
+	// a message joining a receipt's dial moves it up the same way
+	y := fakeOnion(3)
+	setPlan(o, y, onionPlan{build: 100 * time.Millisecond})
+	doorQMu.Lock()
+	w := &doorWaiter{onion: y, pri: doorRest, since: time.Now(), grant: make(chan struct{})}
+	doorWaiters = append(doorWaiters, w)
+	doorQMu.Unlock()
+	doorRaise(y, doorMessage)
+	doorQMu.Lock()
+	got := w.pri
+	for i, x := range doorWaiters {
+		if x == w {
+			doorWaiters = append(doorWaiters[:i], doorWaiters[i+1:]...)
+			break
+		}
+	}
+	if w.given {
+		doorDialing--
+		doorOpen--
+	}
+	doorQMu.Unlock()
+	if got != doorMessage {
+		t.Fatalf("a receipt's waiter kept place %d under a message", got)
+	}
+	wg.Wait()
+}
+
+// with no onion dial working on this tor lately, a failed dial rests
+// nobody: in fast mode routeOK is true whatever tor does (review F2)
+func TestNoRestUntilAnotherOnionAnswers(t *testing.T) {
+	doorqVar(t, &doorDialMost, time.Second)
+	o, tn := doorqSetup(t, 32)
+	transportMode.Store(modeFast)
+	off := fakeOnion(4)
+	setPlan(o, off, onionPlan{build: 50 * time.Millisecond, fail: true})
+	sendTo(tn, off, doorLine(t, 300))
+	if doorResting(off) != 0 {
+		t.Fatal("rested with no onion dial working on this tor")
+	}
+	proveDoors(t, o, tn)
+	sendTo(tn, off, doorLine(t, 300))
+	if doorResting(off) == 0 {
+		t.Fatal("not rested after another onion answered")
+	}
+	// an answer from long ago proves nothing now
+	doorAwake(off)
+	doorQMu.Lock()
+	doorOKAt = time.Now().Add(-doorOKFor - time.Second)
+	doorQMu.Unlock()
+	sendTo(tn, off, doorLine(t, 300))
+	if doorResting(off) != 0 {
+		t.Fatal("rested on an old answer")
+	}
+}
+
+// the open chat's onion collects no rest while it is open (review F4)
+func TestOpenChatNeverRests(t *testing.T) {
+	o, tn := doorqSetup(t, 32)
+	proveDoors(t, o, tn)
+	off := fakeOnion(5)
+	setPlan(o, off, onionPlan{build: 50 * time.Millisecond, fail: true})
+	doorFocus(off)
+	for i := 0; i < 3; i++ {
+		sendTo(tn, off, doorLine(t, 300))
+	}
+	doorFocus("")
+	if r := doorResting(off); r != 0 {
+		t.Fatalf("the open chat's onion rests %v after it closed", r)
+	}
+}
+
+// a contact who wrote still waits for the pace: only a dial that worked
+// skips it (review F5)
+func TestAWordFromThemDoesNotSkipThePace(t *testing.T) {
+	doorqVar(t, &doorPaceGap, time.Second)
+	doorqSetup(t, 32)
+	for i := 0; i < doorPaceBurst+2; i++ {
+		doorPaceFor(fakeOnion(300+i), doorRest)
+	}
+	wrote := fakeOnion(6)
+	doorAwake(wrote)
+	if d := doorPaceFor(wrote, doorRest); d == 0 {
+		t.Fatal("a contact who wrote skipped the pace")
+	}
+}
+
+// a receipt to the open chat keeps the rest's place, so its timing does not
+// tell the peer their chat is open; a message or typing takes the open
+// chat's
+func TestReceiptToTheOpenChatKeepsItsPlace(t *testing.T) {
+	doorqSetup(t, 32)
+	x := fakeOnion(7)
+	doorFocus(x)
+	if p := doorPlaceNow(x, doorRest); p != doorRest {
+		t.Fatalf("a receipt to the open chat took place %d", p)
+	}
+	if p := doorPlaceNow(x, doorMessage); p != doorOpenChat {
+		t.Fatalf("a message to the open chat took place %d", p)
+	}
+	if p := doorPlaceNow(fakeOnion(8), doorMessage); p != doorMessage {
+		t.Fatalf("a message elsewhere took place %d", p)
 	}
 }

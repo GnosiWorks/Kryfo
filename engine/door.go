@@ -121,6 +121,12 @@ func doorGetOnce(ctx context.Context, t *tor.Tor, onion string, pri int) (*doorS
 		s.mu.Unlock()
 		if ok {
 			doorMu.Unlock()
+			// a line that joins a dial still waiting takes it to its place
+			select {
+			case <-s.ready:
+			default:
+				doorRaise(onion, pri)
+			}
 			select {
 			case <-s.ready:
 			case <-ctx.Done():
@@ -162,7 +168,10 @@ func doorGetOnce(ctx context.Context, t *tor.Tor, onion string, pri int) (*doorS
 		close(s.ready)
 		return nil, true, err
 	}
-	s.conn, s.slot = conn, slot
+	s.mu.Lock()
+	s.slot = slot
+	s.mu.Unlock()
+	s.conn = conn
 	close(s.ready)
 	go s.readAcks()
 	return s, true, nil
@@ -172,13 +181,17 @@ func doorGetOnce(ctx context.Context, t *tor.Tor, onion string, pri int) (*doorS
 // the slot's dial part is given back when the dial ends, the stream part
 // when the stream closes
 func doorDialQueued(ctx context.Context, t *tor.Tor, onion string, pri int) (net.Conn, *doorSlot, error) {
+	// a raise is for this dial alone
+	defer func() {
+		doorQMu.Lock()
+		delete(doorRaisedOpen, onion)
+		doorQMu.Unlock()
+	}()
 	slot, err := doorSlotFor(ctx, onion, pri)
 	if err != nil {
 		return nil, nil, err
 	}
-	if onion == doorFocusNow() {
-		pri = doorOpenChat
-	}
+	pri = doorPlaceNow(onion, pri)
 	// the turn ends with time left for the dial, as the queue's wait does
 	turn := ctx
 	if d, ok := ctx.Deadline(); ok {
@@ -186,7 +199,8 @@ func doorDialQueued(ctx context.Context, t *tor.Tor, onion string, pri int) (net
 		turn, cancel = context.WithDeadline(ctx, d.Add(-doorDialLeast))
 		defer cancel()
 	}
-	if !doorPace(turn, onion, pri) {
+	ok := doorPace(turn, onion, pri)
+	if !ok {
 		slot.closed()
 		return nil, nil, errDoorBusy
 	}
@@ -302,6 +316,7 @@ func (s *doorStream) fail(err error, byDoor bool) {
 	oneLine := first && byDoor && s.acks == 1 && time.Since(s.lastAck) < 3*time.Second
 	waiting := s.waiting
 	s.waiting = nil
+	slot := s.slot
 	s.mu.Unlock()
 	if oneLine {
 		doorMu.Lock()
@@ -315,7 +330,7 @@ func (s *doorStream) fail(err error, byDoor bool) {
 	if s.conn != nil {
 		s.conn.Close()
 	}
-	s.slot.closed()
+	slot.closed()
 	doorMu.Lock()
 	if doorStreams[s.onion] == s {
 		delete(doorStreams, s.onion)
@@ -385,11 +400,9 @@ func sendTo(t *tor.Tor, onion, line string) error {
 
 // sendTo with the line's place in the queue (doorq.go)
 func sendToAs(t *tor.Tor, onion, line string, pri int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), doorLineBudget)
 	defer cancel()
-	if onion == doorFocusNow() {
-		pri = doorOpenChat
-	}
+	pri = doorPlaceNow(onion, pri)
 	if pri != doorOpenChat && doorResting(onion) > 0 {
 		return errDoorResting
 	}
@@ -445,6 +458,11 @@ func sendOneLine(ctx context.Context, t *tor.Tor, onion, line string, pri int) e
 	}
 	return nil
 }
+
+// a line's whole time, queue and dial included: under the app's 15 s onion
+// wait, so the engine has given up before the app goes on without it and
+// no dial runs for a line nobody waits for
+var doorLineBudget = 14 * time.Second
 
 var errLineTooLong = errors.New("line too long")
 

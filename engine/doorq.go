@@ -82,6 +82,8 @@ type doorPeer struct {
 	until time.Time
 	// the last sign they were up: a dial that worked or a frame from them
 	upAt time.Time
+	// the last dial to them that worked
+	dialUpAt time.Time
 }
 
 var (
@@ -91,6 +93,14 @@ var (
 	doorWaiters []*doorWaiter
 	doorPeers   = map[string]*doorPeer{}
 	doorFocused string
+	// waiters raised to the open chat's place, by onion: their dial skips
+	// the pace too
+	doorRaisedOpen = map[string]bool{}
+	// the last dial that worked, to which onion and in which route generation:
+	// only then does a failed dial say something of its peer
+	doorOKAt    time.Time
+	doorOKOnion string
+	doorOKGen   int64 = -1
 	// the most at once since the last reset, for the transport page and tests
 	doorDialPeak, doorOpenPeak int
 )
@@ -176,14 +186,46 @@ func doorTake() {
 	doorOpenPeak = max(doorOpenPeak, doorOpen)
 }
 
+// a line of place pri joined onion's stream while it waits for its dial:
+// the waiter for that dial moves up to the line's place, so a reply in the
+// open chat never waits behind a receipt queued before it
+func doorRaise(onion string, pri int) {
+	doorQMu.Lock()
+	defer doorQMu.Unlock()
+	if pri == doorOpenChat {
+		doorRaisedOpen[onion] = true
+	}
+	for _, w := range doorWaiters {
+		if w.onion == onion && pri < w.pri {
+			w.pri = pri
+		}
+	}
+	doorPump()
+}
+
+// the dial's own place now: raised while it waited, or the open chat's for
+// what is not the rest. a receipt to the open chat keeps the rest's place,
+// so its timing does not tell the peer their chat is open here
+func doorPlaceNow(onion string, pri int) int {
+	doorQMu.Lock()
+	defer doorQMu.Unlock()
+	return doorPlaceOf(onion, pri)
+}
+
+// under doorQMu
+func doorPlaceOf(onion string, pri int) int {
+	if doorRaisedOpen[onion] || onion == doorFocused && pri != doorRest {
+		return doorOpenChat
+	}
+	return pri
+}
+
 // a slot for a dial to onion, or errDoorBusy once ctx has too little left
 // for a dial. an open chat's line only waits for the open chat's slot
 func doorSlotFor(ctx context.Context, onion string, pri int) (*doorSlot, error) {
-	if onion == doorFocusNow() {
-		pri = doorOpenChat
-	}
-	w := &doorWaiter{onion: onion, pri: pri, since: time.Now(), grant: make(chan struct{})}
+	w := &doorWaiter{onion: onion, since: time.Now(), grant: make(chan struct{})}
 	doorQMu.Lock()
+	w.pri = doorPlaceOf(onion, pri)
 	doorWaiters = append(doorWaiters, w)
 	doorPump()
 	given := w.given
@@ -255,19 +297,28 @@ func doorPaceFor(onion string, pri int) time.Duration {
 	return wait + rand.N(doorPaceGap/2)
 }
 
-// waits out a dial's turn, or false when ctx ends first
+// waits out a dial's turn, or false when ctx ends first. a dial raised to
+// the open chat's place while it waits goes at once
 func doorPace(ctx context.Context, onion string, pri int) bool {
 	d := doorPaceFor(onion, pri)
 	if d <= 0 {
 		return true
 	}
-	tm := time.NewTimer(d)
-	defer tm.Stop()
-	select {
-	case <-tm.C:
-		return true
-	case <-ctx.Done():
-		return false
+	end := time.NewTimer(d)
+	defer end.Stop()
+	look := time.NewTicker(100 * time.Millisecond)
+	defer look.Stop()
+	for {
+		select {
+		case <-end.C:
+			return true
+		case <-look.C:
+			if doorPlaceNow(onion, pri) == doorOpenChat {
+				return true
+			}
+		case <-ctx.Done():
+			return false
+		}
 	}
 }
 
@@ -307,7 +358,7 @@ func doorJustUp(onion string) bool {
 	doorQMu.Lock()
 	defer doorQMu.Unlock()
 	p := doorPeers[onion]
-	return p != nil && p.fails == 0 && !p.upAt.IsZero() && time.Since(p.upAt) < time.Minute
+	return p != nil && p.fails == 0 && !p.dialUpAt.IsZero() && time.Since(p.dialUpAt) < time.Minute
 }
 
 // how long onion still rests, zero when it may be dialled
@@ -323,21 +374,33 @@ func doorResting(onion string) time.Duration {
 
 // a dial to onion worked: whatever it rested for is over
 func doorDialOK(onion string) {
+	gen := routeGeneration()
 	doorQMu.Lock()
 	defer doorQMu.Unlock()
 	p := doorPeer0(onion)
-	p.fails, p.until, p.upAt = 0, time.Time{}, time.Now()
+	now := time.Now()
+	p.fails, p.until, p.upAt, p.dialUpAt = 0, time.Time{}, now, now
+	doorOKAt, doorOKOnion, doorOKGen = now, onion, gen
 }
 
-// a dial to onion failed. only a failure while the route carried, through
-// the same tor it began on, is the onion's: a tor that stalls under every
-// dial says nothing of the peers
+// how lately another onion's dial must have worked, on the same tor, for a
+// failed dial to say something of its peer
+var doorOKFor = 2 * time.Minute
+
+// a dial to onion failed. it is the onion's only while the route carried,
+// through the same tor it began on, and another onion's dial worked on that
+// tor lately: a tor that stalls under every dial, or a route that only the
+// relays prove (fast and relay modes), says nothing of the peers. the open
+// chat's onion never rests
 func doorDialFailed(onion string, gen int64) {
 	if !routeOK() || routeGeneration() != gen {
 		return
 	}
 	doorQMu.Lock()
 	defer doorQMu.Unlock()
+	if onion == doorFocused || doorOKGen != gen || doorOKOnion == onion || time.Since(doorOKAt) > doorOKFor {
+		return
+	}
 	p := doorPeer0(onion)
 	p.fails++
 	p.until = time.Now().Add(doorRestFor(p.fails))
@@ -393,8 +456,8 @@ func doorFocusNow() string {
 	return doorFocused
 }
 
-// the queue now, for the transport page: dials, open streams, waiting lines,
-// onions resting
+// the queue now, for tests: dials, open streams, waiting lines, onions
+// resting
 func doorQueueNow() (dialing, open, waiting, resting int) {
 	doorQMu.Lock()
 	defer doorQMu.Unlock()
@@ -413,6 +476,8 @@ func doorQueueReset() {
 	defer doorQMu.Unlock()
 	doorPeers = map[string]*doorPeer{}
 	doorFocused = ""
+	doorRaisedOpen = map[string]bool{}
+	doorOKAt, doorOKOnion, doorOKGen = time.Time{}, "", -1
 	doorPaceMu.Lock()
 	doorPaceNext = time.Time{}
 	doorPaceMu.Unlock()
