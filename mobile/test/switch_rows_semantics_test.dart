@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/bridge_mode.dart' show BridgeSetup;
 import 'package:kryfo/main.dart'
@@ -36,6 +37,7 @@ import 'package:kryfo/tools/tools_bridge.dart' show PickedFile;
 import 'package:kryfo/widgets/halo_sheet.dart';
 import 'package:kryfo/widgets/message_menu.dart';
 import 'package:kryfo/widgets/new_poll_sheet.dart';
+import 'package:kryfo/widgets/send_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pin_flow_fakes.dart'
@@ -238,6 +240,35 @@ void main() {
     sem.dispose();
   }
 
+  testWidgets('sending sheet: send as file', (t) async {
+    phone(t);
+    sendSheetGuard = LockGuard(isLocked: () => false);
+    addTearDown(() => sendSheetGuard = lockGuard);
+    final photo = SendPick(
+      path: '/x/a.jpg',
+      name: 'a.jpg',
+      size: 2048,
+      from: SendTab.gallery,
+      media: true,
+    );
+    await _open(
+      t,
+      _app(
+        (ctx) => showSendSheet(
+          ctx,
+          to: 'Lena',
+          pickGallery: () async => [photo],
+          pickFiles: () async => const [],
+          recent: () async => const [],
+        ),
+      ),
+    );
+    await t.tap(find.text(l10n.sendSheetChoosePhotos));
+    await _rest(t);
+    await _flips(t, l10n.sendSheetAsFile, line: l10n.sendSheetAsFileLine);
+    await done(t);
+  });
+
   testWidgets('new poll: more than one answer', (t) async {
     phone(t);
     await _open(t, _app((ctx) => showNewPollSheet(ctx)));
@@ -399,6 +430,7 @@ void main() {
       'notes_export_screen.dart',
       'pins_screen.dart',
       'room_create_sheet.dart',
+      'send_sheet.dart',
     ]);
   });
 }

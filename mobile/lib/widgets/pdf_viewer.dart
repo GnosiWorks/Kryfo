@@ -468,6 +468,7 @@ class PdfViewerState extends State<PdfViewer>
           Expanded(
             child: TextField(
               controller: _words,
+              enableIMEPersonalizedLearning: false,
               autofocus: true,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _find(),

@@ -9819,12 +9819,16 @@ class _Bubble extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 // an album's tiles show their own
-                                // a file card shows its own in its ring
+                                // a file card shows its own in its ring, a voice
+                                // note has none
                                 if (album == null &&
                                     msg.msgUid != null &&
                                     (msg.mediaPath != null ||
                                         (msg.filePath != null &&
-                                            shape != FileShape.card))) ...[
+                                            (shape != FileShape.card ||
+                                                isVoiceName(
+                                                  msg.fileName,
+                                                ))))) ...[
                                   SendProgressLabel(msgUid: msg.msgUid!),
                                   const SizedBox(width: 6),
                                 ],

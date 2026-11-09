@@ -123,13 +123,13 @@ void main() {
       );
       expect(fileWaitLine(w, unmetered: false), '4.0 mb · Downloads on Wi-Fi');
       // on wi-fi it is about to come; a tap is still the way
-      expect(fileWaitLine(w, unmetered: true), '4.0 mb · Tap to download');
+      expect(fileWaitLine(w, unmetered: true), '4.0 mb · Tap to get it');
       const n = FileWait(
         size: 4 * mb,
         state: WaitState.asks,
         rule: AutoGet.never,
       );
-      expect(fileWaitLine(n, unmetered: false), '4.0 mb · Tap to download');
+      expect(fileWaitLine(n, unmetered: false), '4.0 mb · Tap to get it');
     });
 
     test('how far it is', () {

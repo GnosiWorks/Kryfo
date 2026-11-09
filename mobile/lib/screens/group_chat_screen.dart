@@ -7168,11 +7168,15 @@ class _GroupBubble extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // a file card shows its own in its ring
+                                  // a file card shows its own in its ring, a
+                                  // voice note has none
                                   if (m.msgUid != null &&
                                       (m.mediaPath != null ||
                                           (m.filePath != null &&
-                                              shape != FileShape.card))) ...[
+                                              (shape != FileShape.card ||
+                                                  isVoiceName(
+                                                    m.fileName,
+                                                  ))))) ...[
                                     SendProgressLabel(msgUid: m.msgUid!),
                                     const SizedBox(width: 6),
                                   ],

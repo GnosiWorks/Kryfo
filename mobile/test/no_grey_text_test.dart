@@ -18,6 +18,7 @@ const _iconHolders = [
   'EmptyChat(',
   '(Icons.',
   '_MarkPainter(',
+  '_SeekWave(',
 ];
 const _textHolders = ['HaloType.', 'TextStyle(', 'Text('];
 

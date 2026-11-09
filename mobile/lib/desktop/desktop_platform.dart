@@ -35,6 +35,8 @@ const androidChannels = [
   'kryfo/net',
   'kryfo/phone',
   'kryfo/video',
+  // the pdf viewer is android's renderer; a computer opens pdfs outside
+  'kryfo/pdf',
   'kryfo/transfers',
 ];
 

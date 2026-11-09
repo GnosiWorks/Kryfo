@@ -760,6 +760,7 @@ class _Foot extends StatelessWidget {
                           ),
                           child: TextField(
                             controller: caption,
+                            enableIMEPersonalizedLearning: false,
                             minLines: 1,
                             maxLines: 4,
                             textCapitalization: TextCapitalization.sentences,

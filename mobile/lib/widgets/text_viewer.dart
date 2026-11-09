@@ -223,7 +223,7 @@ class _Lines extends StatelessWidget {
     ).copyWith(height: 1.5);
     final gutter = HaloType.mono(
       size: 11,
-      color: HaloColors.text2,
+      color: HaloColors.text,
       weight: FontWeight.w400,
     ).copyWith(height: 1.65);
     final digits = whole(lines.length).length;
