@@ -70,6 +70,8 @@ class SoundFileBubble extends StatefulWidget {
   // what plays after it: the sounds below it in the chat
   final List<SoundItem> Function()? upNext;
   final Object? heroTag;
+  // theirs, in a chat that blocks screenshots
+  final bool kept;
   const SoundFileBubble({
     super.key,
     required this.path,
@@ -79,6 +81,7 @@ class SoundFileBubble extends StatefulWidget {
     this.when,
     this.upNext,
     this.heroTag,
+    this.kept = false,
   });
 
   @override
@@ -115,6 +118,7 @@ class _SoundFileBubbleState extends State<SoundFileBubble> {
     name: widget.name,
     from: widget.from,
     when: widget.when,
+    kept: widget.kept,
   );
 
   void _play() {
@@ -127,10 +131,13 @@ class _SoundFileBubbleState extends State<SoundFileBubble> {
   }
 
   void _open() {
-    if (!_player.isOn(widget.path)) {
-      _player.play(_item, next: widget.upNext?.call() ?? const []);
-    }
-    openSoundPlayer(context, heroTag: widget.heroTag);
+    final next = widget.upNext?.call() ?? const <SoundItem>[];
+    if (!_player.isOn(widget.path)) _player.play(_item, next: next);
+    openSoundPlayer(
+      context,
+      heroTag: widget.heroTag,
+      secure: soundsKept(_item, next),
+    );
   }
 
   @override
@@ -381,8 +388,23 @@ class _SeekWave extends StatelessWidget {
 
 // ---- the player
 
-Future<void> openSoundPlayer(BuildContext context, {Object? heroTag}) =>
-    openFileViewer(context, (_) => SoundPlayerScreen(heroTag: heroTag));
+/// [secure]: a kept sound may come up, so screenshots stay blocked
+Future<void> openSoundPlayer(
+  BuildContext context, {
+  Object? heroTag,
+  bool secure = false,
+}) => openFileViewer(
+  context,
+  (_) => SoundPlayerScreen(heroTag: heroTag),
+  secure: secure,
+);
+
+/// whether [it] or one after it is kept
+bool soundsKept(SoundItem it, List<SoundItem> next) =>
+    it.kept || next.any((x) => x.kept);
+
+/// the player's more menu: nothing for a voice note or a kept sound
+bool soundHasMore(SoundItem it) => !it.voice && !it.kept;
 
 class SoundPlayerScreen extends StatelessWidget {
   final Object? heroTag;
@@ -464,19 +486,20 @@ class _PlayingState extends State<_Playing> {
       backgroundColor: HaloColors.surface,
       showDragHandle: true,
       builder: (ctx) => FileViewerBar(
-        onForward: canForwardFile(it.path, it.name, kept: false) && !it.voice
+        onForward:
+            soundHasMore(it) && canForwardFile(it.path, it.name, kept: it.kept)
             ? () {
                 Navigator.pop(ctx);
                 forwardFile(context, it.path, it.name);
               }
             : null,
-        onSave: it.voice
+        onSave: !soundHasMore(it)
             ? null
             : () {
                 Navigator.pop(ctx);
                 saveReceivedFile(context, it.path, it.name);
               },
-        onOpenWith: it.voice
+        onOpenWith: !soundHasMore(it)
             ? null
             : () {
                 Navigator.pop(ctx);
@@ -549,7 +572,7 @@ class _PlayingState extends State<_Playing> {
               ViewerIconButton(
                 icon: Icons.more_horiz_rounded,
                 label: l10n.bridgesMore,
-                onTap: it.voice ? null : _more,
+                onTap: soundHasMore(it) ? _more : null,
               ),
             ],
           ),

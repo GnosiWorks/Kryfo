@@ -3235,6 +3235,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             from: x.direction == 'out' ? null : x.senderName,
             when: x.when,
             voice: isVoiceName(x.fileName),
+            kept: _keeps(x),
           ),
     ];
   }
@@ -6741,6 +6742,7 @@ class _GroupBubble extends StatelessWidget {
                                                           : m.senderName,
                                                       when: m.when,
                                                       upNext: soundsAfter,
+                                                      kept: kept,
                                                     ),
                                                   ),
                                                 ),

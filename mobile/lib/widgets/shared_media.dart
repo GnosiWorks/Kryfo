@@ -43,7 +43,7 @@ import 'pill_tabs.dart';
 import 'press_scale.dart';
 import 'sealed_picture.dart';
 import 'shots_line.dart' show KeptIn;
-import 'sound_views.dart' show openSoundPlayer;
+import 'sound_views.dart' show openSoundPlayer, soundsKept;
 import 'swap.dart';
 import 'video_bubble.dart' show openReceivedFile;
 
@@ -515,6 +515,10 @@ class SharedScreenState extends State<SharedScreen> {
     }
   }
 
+  /// the other side's, in a chat that blocks screenshots: it goes to no
+  /// other app
+  bool _keeps(SharedItem it) => widget.blocking && !it.mine;
+
   String? _from(SharedItem it) {
     if (it.mine) return null;
     return widget.nameOf?.call(it.peer) ?? (widget.group ? null : widget.title);
@@ -650,7 +654,7 @@ class SharedScreenState extends State<SharedScreen> {
       context,
       path,
       it.name,
-      kept: widget.blocking && !it.mine,
+      kept: _keeps(it),
       where: widget.group ? KeptIn.group : KeptIn.chat,
       from: _from(it),
       heroTag: fileHeroTag(path, 'shared'),
@@ -666,17 +670,17 @@ class SharedScreenState extends State<SharedScreen> {
       from: _from(x),
       when: x.when,
       voice: true,
+      kept: _keeps(x),
     );
+    final first = sound(it);
+    final next = [for (final x in all.take(at).toList().reversed) sound(x)];
     final p = SoundPlayer.instance;
-    if (!p.isOn(it.path!)) {
-      unawaited(
-        p.play(
-          sound(it),
-          next: [for (final x in all.take(at).toList().reversed) sound(x)],
-        ),
-      );
-    }
-    await openSoundPlayer(context, heroTag: fileHeroTag(it.path!, 'shared'));
+    if (!p.isOn(it.path!)) unawaited(p.play(first, next: next));
+    await openSoundPlayer(
+      context,
+      heroTag: fileHeroTag(it.path!, 'shared'),
+      secure: soundsKept(first, next),
+    );
   }
 }
 

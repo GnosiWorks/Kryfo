@@ -6569,6 +6569,7 @@ class _ChatScreenState extends State<ChatScreen>
             from: _fileFrom(x),
             when: x.when,
             voice: isVoiceName(x.fileName),
+            kept: _keeps(x),
           ),
     ];
   }
@@ -9288,6 +9289,7 @@ class _Bubble extends StatelessWidget {
                                                       'chat',
                                                     ),
                                               from: fromName,
+                                              kept: kept,
                                               when: msg.when,
                                               upNext: soundsAfter == null
                                                   ? null

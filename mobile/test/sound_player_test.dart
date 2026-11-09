@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart';
+import 'package:kryfo/main.dart' show AppStateScreen, appState;
 import 'package:kryfo/shred.dart';
 import 'package:kryfo/sound_player.dart';
 import 'package:kryfo/theme.dart';
@@ -279,6 +280,109 @@ void main() {
       await t.pump(const Duration(milliseconds: 100));
     }
     expect(find.byType(SoundPlayerScreen), findsNothing);
+  });
+
+  test('a paused sound goes at the lock too, with its file', () async {
+    final a = item('a.m4a');
+    await p.play(a, next: [item('b.m4a')]);
+    p.pause();
+    expect(p.item, a);
+    var free = false;
+    unawaited(voiceFileFree(a.path).then((_) => free = true));
+    await Future<void>.delayed(Duration.zero);
+    expect(free, isFalse, reason: 'held while loaded');
+    locked = true;
+    guard.locking();
+    await Future<void>.delayed(Duration.zero);
+    expect(p.item, isNull);
+    expect(p.upNext, isEmpty);
+    await Future<void>.delayed(Duration.zero);
+    expect(free, isTrue, reason: 'let go');
+  });
+
+  test('a kept sound has no more menu, and keeps the screen blocked', () {
+    const theirs = SoundItem('/x/a.mp3', kept: true);
+    const mine = SoundItem('/x/b.mp3');
+    const voice = SoundItem('/x/v.wav', voice: true);
+    expect(soundHasMore(theirs), isFalse);
+    expect(soundHasMore(voice), isFalse);
+    expect(soundHasMore(mine), isTrue);
+    expect(soundsKept(mine, const [theirs]), isTrue);
+    expect(soundsKept(mine, const []), isFalse);
+  });
+
+  for (final kept in [true, false]) {
+    testWidgets('their sound in a chat that blocks: '
+        '${kept ? 'no save, share or forward' : 'the more menu as ever'}', (
+      t,
+    ) async {
+      audioViewHereForTest = true;
+      final a = item('song.mp3');
+      late BuildContext ctx;
+      await t.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: Builder(
+              builder: (c) {
+                ctx = c;
+                return const Scaffold();
+              },
+            ),
+          ),
+        ),
+      );
+      final held = appState.secureForced;
+      unawaited(viewInKryfo(ctx, a.path, 'song.mp3', kept: kept));
+      for (var i = 0; i < 10; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)),
+        );
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(SoundPlayerScreen), findsOneWidget);
+      expect(p.item?.kept, kept);
+      expect(appState.secureForced, kept || held);
+      await t.tap(find.bySemanticsLabel(l10n.bridgesMore));
+      await t.pump(const Duration(milliseconds: 400));
+      expect(
+        find.text(l10n.fileSaveToDevice),
+        kept ? findsNothing : findsOneWidget,
+      );
+      expect(
+        find.text(l10n.fileOpenWith),
+        kept ? findsNothing : findsOneWidget,
+      );
+      // the player goes with the lock
+      locked = true;
+      guard.locking();
+      for (var i = 0; i < 6; i++) {
+        await t.pump(const Duration(milliseconds: 100));
+      }
+    });
+  }
+
+  testWidgets('a kept bubble plays its sound kept', (t) async {
+    final a = item('rain.m4a');
+    await t.pumpWidget(
+      host(
+        SoundFileBubble(
+          path: a.path,
+          name: 'Rain.m4a',
+          isOut: false,
+          kept: true,
+        ),
+      ),
+    );
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await t.tap(find.byIcon(Icons.play_arrow_rounded));
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    await t.pump();
+    expect(p.item?.kept, isTrue);
   });
 
   testWidgets('large text and right to left cut nothing', (t) async {

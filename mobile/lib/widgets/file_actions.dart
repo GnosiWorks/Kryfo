@@ -24,7 +24,7 @@ import '../voice_format.dart' show isVoiceName;
 import 'file_badge.dart';
 import 'pdf_viewer.dart';
 import 'photo_viewer.dart';
-import 'sound_views.dart' show openSoundPlayer;
+import 'sound_views.dart' show openSoundPlayer, soundsKept;
 import 'text_viewer.dart';
 import 'video_viewer.dart';
 
@@ -118,15 +118,14 @@ Future<bool> viewInKryfo(
       );
     case FileView.audio:
       final p = SoundPlayer.instance;
-      if (!p.isOn(path)) {
-        unawaited(
-          p.play(
-            SoundItem(path, name: name, from: from),
-            next: upNext?.call() ?? const [],
-          ),
-        );
-      }
-      await openSoundPlayer(context, heroTag: heroTag);
+      final it = SoundItem(path, name: name, from: from, kept: kept);
+      final next = upNext?.call() ?? const <SoundItem>[];
+      if (!p.isOn(path)) unawaited(p.play(it, next: next));
+      await openSoundPlayer(
+        context,
+        heroTag: heroTag,
+        secure: soundsKept(it, next),
+      );
     case null:
       return false;
   }

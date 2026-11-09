@@ -82,6 +82,8 @@ Widget fileCard(
   String? from,
   DateTime? when,
   List<SoundItem> Function()? upNext,
+  // theirs, in a chat that blocks screenshots
+  bool kept = false,
 }) {
   // a sound kryfo plays is a player of its own, once it is all here
   if (filePath != null && sendingUid == null) {
@@ -95,6 +97,7 @@ Widget fileCard(
         when: when,
         upNext: upNext,
         heroTag: heroTag == null ? null : soundHeroTag(filePath, heroTag),
+        kept: kept,
       );
     }
   }

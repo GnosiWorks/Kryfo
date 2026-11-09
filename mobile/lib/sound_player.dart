@@ -22,12 +22,16 @@ class SoundItem {
   final DateTime? when;
   // a voice note: no name of its own
   final bool voice;
+  // the other side's, in a chat that blocks screenshots: it goes to no
+  // other app, is not saved and not forwarded
+  final bool kept;
   const SoundItem(
     this.path, {
     this.name,
     this.from,
     this.when,
     this.voice = false,
+    this.kept = false,
   });
 
   @override
@@ -157,6 +161,12 @@ class SoundPlayer extends ChangeNotifier {
 
   Future<bool> _load(SoundItem it) async {
     final e = _made();
+    // from the first byte read until stop, played or paused: the lock takes
+    // the plaintext, the name and what plays next
+    _unguard ??= guard.closeOnLock(() {
+      _unguard = null;
+      stop();
+    });
     _loading = true;
     _item = it;
     _pos = Duration.zero;
@@ -179,7 +189,7 @@ class SoundPlayer extends ChangeNotifier {
     } catch (err) {
       dlog('sound: not loaded (${err.runtimeType})');
       v?.close();
-      if (_item == it) _item = null;
+      if (_item == it) stop();
       return false;
     } finally {
       _loading = false;
@@ -192,21 +202,16 @@ class SoundPlayer extends ChangeNotifier {
     if (e == null || guard.isLocked()) return;
     // a voice note playing stops where it is
     VoiceTurn.take(this, pause);
-    _unguard ??= guard.closeOnLock(() {
-      _unguard = null;
-      stop();
-    });
     _playing = true;
     notifyListeners();
     e.play();
   }
 
+  // paused, it stays loaded: the lock still takes it (_load)
   void pause() {
     _engine?.pause();
     _playing = false;
     VoiceTurn.letGo(this);
-    _unguard?.call();
-    _unguard = null;
     notifyListeners();
   }
 
