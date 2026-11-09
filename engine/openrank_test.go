@@ -52,6 +52,17 @@ func openRunner(t *testing.T) *subTurn {
 
 func rankOf(tn *subTurn) int { return paceRankFor(tn.tag, tn.lane, tn.made) }
 
+// takes tn's turn: whether it ranked for what the test did. a phone event
+// after its socket went down, from outside the test (a network worker an
+// earlier test left), would be a reason of its own: then false
+func rankedOnItsOwn(tn *subTurn) bool {
+	takeWithin(tn, 200*time.Millisecond)
+	if !phoneMadeAfter(tn.downAt).IsZero() || kickMadeSince(kickChan(), tn.downAt) {
+		return false
+	}
+	return tn.made
+}
+
 func TestServerEventsGiveTheOpenChatNoPriority(t *testing.T) {
 	openChatOn(t)
 	cases := []struct {
@@ -226,7 +237,7 @@ func TestAWakeRanksOnlySocketsDownAtThePhonesEvent(t *testing.T) {
 	front()
 	time.Sleep(time.Millisecond)
 	tn.lost()
-	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+	if rankedOnItsOwn(tn) {
 		t.Fatal("a socket the relay dropped after the front went first in the wake")
 	}
 	// down at a network change's kick after the wake
@@ -241,7 +252,7 @@ func TestAWakeRanksOnlySocketsDownAtThePhonesEvent(t *testing.T) {
 	kickRelaysMade()
 	tn.skip()
 	tn.lost()
-	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+	if rankedOnItsOwn(tn) {
 		t.Fatal("a socket that answered the phone's kick live went first after a drop")
 	}
 	// up, catching up when that kick came and so never answering it, then
@@ -250,7 +261,7 @@ func TestAWakeRanksOnlySocketsDownAtThePhonesEvent(t *testing.T) {
 	kickRelaysMade()
 	time.Sleep(time.Millisecond)
 	tn.lost()
-	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+	if rankedOnItsOwn(tn) {
 		t.Fatal("a socket up at the phone's kick in a wake went first after a later drop")
 	}
 }
@@ -314,7 +325,7 @@ func TestAKickWhileUpRanksNoLaterDrop(t *testing.T) {
 	time.Sleep(time.Millisecond)
 	tn.lost()
 	spendFirstTurn()
-	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+	if rankedOnItsOwn(tn) {
 		t.Fatal("a drop after a phone's kick that came mid-dial ranked the open chat")
 	}
 	// up and catching up when the kick came, dropped after it
@@ -323,7 +334,7 @@ func TestAKickWhileUpRanksNoLaterDrop(t *testing.T) {
 	time.Sleep(time.Millisecond)
 	tn.lost()
 	spendFirstTurn()
-	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+	if rankedOnItsOwn(tn) {
 		t.Fatal("a drop after a phone's kick that came while up ranked the open chat")
 	}
 	// up when the kick came and gone by a way that said nothing: no rank
