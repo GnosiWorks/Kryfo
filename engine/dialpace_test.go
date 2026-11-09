@@ -316,6 +316,8 @@ func TestPaceRedialAfterADropTakesNoRank(t *testing.T) {
 		t.Fatalf("a redial after a drop ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceAny)
 	}
 	tu.dialed(true)
+	// down when the phone's kick came
+	tu.lost()
 	kickRelaysMade()
 	if !tu.take(ctx) || paceRankFor(tu.tag, tu.lane, tu.made) != paceFirst {
 		t.Fatalf("a redial at the phone's kick ranks %d, want %d", paceRankFor(tu.tag, tu.lane, tu.made), paceFirst)

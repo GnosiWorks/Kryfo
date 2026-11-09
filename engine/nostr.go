@@ -66,6 +66,7 @@ var (
 	// the kick an event a server can't cause made, nil for none: see
 	// phoneMade
 	kickMadeCh chan struct{}
+	kickMadeAt time.Time
 )
 
 // the newest relay event: when the sender's relay stamped it and when it
@@ -1173,7 +1174,7 @@ func kickRelaysAs(made bool) {
 	kickCh = make(chan struct{})
 	kickMadeCh = nil
 	if made {
-		kickMadeCh = kickCh
+		kickMadeCh, kickMadeAt = kickCh, time.Now()
 	}
 	kickMu.Unlock()
 }
@@ -1183,6 +1184,13 @@ func kickIsMade(kc chan struct{}) bool {
 	kickMu.Lock()
 	defer kickMu.Unlock()
 	return kc != nil && kc == kickMadeCh
+}
+
+// the same, and the kick came at or after from
+func kickMadeSince(kc chan struct{}, from time.Time) bool {
+	kickMu.Lock()
+	defer kickMu.Unlock()
+	return kc != nil && kc == kickMadeCh && !kickMadeAt.Before(from)
 }
 
 func relayOK(u string) {
@@ -2677,6 +2685,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 					}
 				}
 			reconnect:
+				turn.lost()
 				ccancel()
 				settled()
 				connDone()

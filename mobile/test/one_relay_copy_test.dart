@@ -21,7 +21,10 @@ import 'package:kryfo/main.dart'
         AppStateProfile,
         AppStateReceive,
         AppStatePairing,
-        AppStateIdentity;
+        AppStateIdentity,
+        AppStateSession;
+import 'package:kryfo/lock_guard.dart' show lockGuard;
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
@@ -132,6 +135,7 @@ void main() {
       ..myId = 'me'
       ..sendModeForTest = 'fast';
     useDatabasesForTest(db, Session(db));
+    lockState.openForTest();
     await app.rememberPeerFc(_amy, 'fc-$_amy');
   });
 
@@ -222,5 +226,29 @@ void main() {
     await app.subscribePeer(_amy);
     await settle();
     expect(engine.first.last, 'x-later');
+  });
+
+  test('the chat left open behind the lock goes first no more until it '
+      'lifts, and not after a decoy unlock', () async {
+    engine.first.clear();
+    app.chatFirst(_amy);
+    await settle();
+    expect(engine.first, ['x-$_amy']);
+    lockState.unloadForTest();
+    app.lockingUp();
+    await settle();
+    expect(engine.first, ['x-$_amy', '']);
+    lockState.openForTest();
+    lockGuard.lifted();
+    await settle();
+    expect(engine.first, ['x-$_amy', '', 'x-$_amy']);
+    // a decoy pin: what waited for the lift is dropped
+    lockState.unloadForTest();
+    app.lockingUp();
+    await settle();
+    lockState.openForTest();
+    lockGuard.dropHeld();
+    await settle();
+    expect(engine.first, ['x-$_amy', '', 'x-$_amy', '']);
   });
 }

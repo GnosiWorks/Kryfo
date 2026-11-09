@@ -162,8 +162,21 @@ func isStartKick(kc chan struct{}) bool {
 	return startKickLocked(kc) == kc
 }
 
-// kc is the start's kick, or would be: no turn was drawn yet. sets nothing
+// when the process began, by the boot clock: a sleep counts, a clock set
+// back does not reopen the start
+var procStart = ownClock()
+
+// how long after the process began a runner's first ask is the start's:
+// past tor's longest climb and the start's turns. one made hours later in a
+// process never kicked since is no start
+var startMadeFor = startGateLongest + 5*time.Minute
+
+// kc is the start's kick, or would be: no turn was drawn yet, and the
+// process began lately. sets nothing
 func startKickPeek(kc chan struct{}) bool {
+	if ownClock()-procStart > startMadeFor {
+		return false
+	}
 	startFirst.Lock()
 	defer startFirst.Unlock()
 	return startFirst.kick == nil || startFirst.kick == kc
