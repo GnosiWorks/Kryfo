@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../container.dart' show HaloContainer;
+import '../devices/own_answer.dart' show kAnswerBurns;
 import '../drafts.dart';
 import '../heal.dart'
     show
@@ -1122,6 +1123,10 @@ class _ChatScreenState extends State<ChatScreen>
         setState(() {
           _phoneOnly = line;
           _viaPhone = viaPhone;
+          // a shorter clock than the phone sends from here takes its floor
+          if (viaPhone && !kAnswerBurns.contains(_burnSeconds)) {
+            _burnSeconds = kAnswerBurns.first;
+          }
         });
       }
     } catch (e) {
@@ -1501,7 +1506,9 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) {
         setState(() {
           _ghost = p.$1;
-          _burnSeconds = p.$2;
+          _burnSeconds = _viaPhone && !kAnswerBurns.contains(p.$2)
+              ? kAnswerBurns.first
+              : p.$2;
           _lastGhost = p.$1;
           _lastBurnSeconds = p.$2;
           _ghostKnown = true;
@@ -3175,6 +3182,10 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _loading = true;
     try {
+      // a computer's timed answers on his phone count from now, read here
+      if (!linkedRole && !lockGuard.isLocked()) {
+        await appState.answersSeen(widget.peerHaloId);
+      }
       await _loadMessagesInner();
     } finally {
       _loading = false;
@@ -3813,9 +3824,12 @@ class _ChatScreenState extends State<ChatScreen>
       line: l10n.chatHowLongAfterReading,
       current: _burnSeconds,
       choices: [
-        SheetChoice(30, l10n.chat30Seconds),
-        SheetChoice(60, l10n.chat1Minute),
-        SheetChoice(300, l10n.chat5Minutes),
+        // an answer the phone sends lives an hour at least
+        if (!_viaPhone) ...[
+          SheetChoice(30, l10n.chat30Seconds),
+          SheetChoice(60, l10n.chat1Minute),
+          SheetChoice(300, l10n.chat5Minutes),
+        ],
         SheetChoice(3600, l10n.chat1Hour),
         SheetChoice(86400, l10n.chat24Hours),
       ],

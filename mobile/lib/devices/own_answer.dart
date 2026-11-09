@@ -22,8 +22,9 @@ const kAnswerDropped = {
   'w', 'h', 'e', 'o', 'x', 'av', 'bg', 'pw', 'pb', 'cp', 'sc', kOpusWire, //
 };
 
-/// the longest a timer on an answer may be: a month
-const kAnswerBurnMost = 30 * 24 * 3600;
+/// the clocks an answer may carry: the composer's from an hour up, so a
+/// computer's answer never vanishes before anyone saw it
+const kAnswerBurns = [3600, 86400];
 
 final _uidShape = RegExp(r'^[A-Za-z0-9_\-]{1,64}$');
 
@@ -91,7 +92,7 @@ OwnAnswer? ownAnswerOf(String frame) {
   final q = j['q'];
   if (q != null && uidOf(q) == null) return null;
   final b = j['b'];
-  if (b != null && (b is! int || b <= 0 || b > kAnswerBurnMost)) return null;
+  if (b != null && !kAnswerBurns.contains(b)) return null;
   Map<String, String>? preview;
   final pv = j['pv'];
   if (pv != null) {

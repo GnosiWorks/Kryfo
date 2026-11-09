@@ -53,6 +53,7 @@ void _bootOwnSync(DeviceState ds, DeviceSend send, DeviceReceive recv) {
       if (linkedRole) {
         await _ownDevInboxLoad(await live.open());
         await _ownDevAnswersLoad(await live.open());
+        unawaited(_ownSayInbox());
       }
       // a linked device that never heard my phone's name asks for it
       if (linkedRole && _ownPhoneId == null) unawaited(_ownBeat());
@@ -129,6 +130,47 @@ Future<void> _ownBeat() async {
     await own.beat(kMainIdent);
   } catch (e) {
     dlog('own: no beat (${e.runtimeType})');
+  }
+}
+
+// a linked device on a version that shows the developer's inbox says so
+// to its phone once, at once: its waiting chats come only after that
+Future<void> _ownSayInbox() async {
+  final own = _ownSync;
+  if (own == null || !_ownSends || !linkedRole) return;
+  try {
+    final d = await live.open();
+    final r = await d.query(
+      'signal_meta',
+      columns: ['v'],
+      where: 'k = ?',
+      whereArgs: [kOwnInboxToldMeta],
+      limit: 1,
+    );
+    if (r.isNotEmpty) return;
+    if (!await own.beat(kMainIdent, now: true)) return;
+    await d.insert('signal_meta', {
+      'k': kOwnInboxToldMeta,
+      'v': '1',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  } catch (e) {
+    dlog('own: inbox word not sent (${e.runtimeType})');
+  }
+}
+
+/// on a linked device, signal_meta: its phone was told it shows the inbox
+const kOwnInboxToldMeta = 'own_inbox_told';
+
+// on his phone: every device of mine shows the inbox, so a waiting chat
+// may go to them
+Future<bool> _ownDevicesTakeInbox() async {
+  final own = _ownSync;
+  if (own == null) return false;
+  try {
+    return await own.devicesTakeInbox(kMainIdent);
+  } catch (e) {
+    dlog('own: inbox word not read (${e.runtimeType})');
+    return false;
   }
 }
 
@@ -988,8 +1030,8 @@ extension AppStateOwn on AppState {
     // waits in the developer's inbox
     final inbox = env.groupId == null ? await _inboxPlace(sender) : null;
     if (env.groupId == null &&
-        inbox == null &&
-        !await live.isAccepted(sender)) {
+        !await live.isAccepted(sender) &&
+        (inbox == null || !await _ownDevicesTakeInbox())) {
       return;
     }
     final chat = env.groupId != null
@@ -1054,7 +1096,9 @@ extension AppStateOwn on AppState {
               : await _inboxPlace(sender);
           if (chat != null &&
               !await live.isBlocked(sender) &&
-              (chat.group || inbox != null || await live.isAccepted(sender)) &&
+              (chat.group ||
+                  await live.isAccepted(sender) ||
+                  (inbox != null && await _ownDevicesTakeInbox())) &&
               await _ownChatShared(chat)) {
             await own.forward(
               identOfPeer(sender),
@@ -1299,8 +1343,11 @@ extension AppStateOwn on AppState {
       if (set.isNotEmpty) {
         await d.update('contacts', set, where: 'halo_id = ?', whereArgs: [id]);
       }
-      // a block goes the way a block here goes
-      final b = kOwnChatEndsBothWays ? row['blocked'] : null;
+      // a block goes the way a block here goes. his phone keeps a block a
+      // device lifts: a stolen computer opens no chat for itself
+      final b = kOwnChatEndsBothWays && !(devMode && row['blocked'] == 0)
+          ? row['blocked']
+          : null;
       if ((b == 0 || b == 1) && (b == 1) != await live.isBlocked(id)) {
         await live.setBlocked(id, b == 1);
       }
@@ -1673,8 +1720,12 @@ extension AppStateOwn on AppState {
             for (final c in kHistoryContactCols)
               if (ccols.contains(c) && !_kOwnNotTold.contains(c)) c,
           ];
-    // the developer's inbox: a chat waiting for his first answer too
-    final inbox = devInbox && await _inboxTable(d);
+    // the developer's inbox: a chat waiting for his first answer too, once
+    // every device of his says it shows the inbox
+    final inbox =
+        devInbox &&
+        await _inboxTable(d) &&
+        (linkedRole || await _ownDevicesTakeInbox());
     for (final r in await d.query(
       'contacts',
       columns: {'halo_id', ...cols}.toList(),

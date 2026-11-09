@@ -113,6 +113,11 @@ class _Told extends OwnSync {
   @override
   Future<List<OwnPeer>> others(int ident) async => [(id: 4, key: 'k', reg: 1)];
 
+  // whether my desk said it shows the inbox
+  var takesInbox = true;
+  @override
+  Future<bool> devicesTakeInbox(int ident) async => takesInbox;
+
   @override
   Future<bool> op(
     int ident,
@@ -358,6 +363,50 @@ void main() {
       ]);
       // the marker rides on: the device tags what it should
       expect(jsonDecode(told.forwards.first.$2.substring(7))['sp'], 1);
+    }, skip: skip);
+
+    test('a waiting chat goes only once my devices say they show the inbox; '
+        'an answered one goes either way', () async {
+      devPhone();
+      told.takesInbox = false;
+      await inbox('waiting', 'open', accepted: 0);
+      await inbox('answered', 'done');
+      await comes('waiting', _f({'u': 'u-w', 'm': 'help', 'sp': 1}));
+      await comes('answered', _f({'u': 'u-a', 'm': 'again', 'sp': 1}));
+      expect(told.forwards.map((x) => x.$1), ['answered']);
+      await ownPassForTest();
+      await s.update('contacts', {
+        'nickname': 'W',
+      }, where: "halo_id = 'waiting'");
+      await s.update('contacts', {
+        'nickname': 'A',
+      }, where: "halo_id = 'answered'");
+      told.ops.clear();
+      await ownPassForTest();
+      final named = {
+        for (final (k, c, _) in told.ops)
+          if (k == 'contact') c,
+      };
+      expect(named, {'p:answered'});
+      told.takesInbox = true;
+      told.ops.clear();
+      await ownPassForTest();
+      expect(told.ops.where((o) => o.$2 == 'p:waiting'), isNotEmpty);
+    }, skip: skip);
+
+    test('a waiting chat\'s frame held in the decoy goes on only while my '
+        'devices say they show the inbox', () async {
+      devPhone();
+      await inbox('waiting', 'open', accepted: 0);
+      final decoy = _Rows(s, HaloContainer.decoy);
+      useDatabasesForTest(db, Session(decoy));
+      await comes('waiting', _f({'u': 'u-dh', 'm': 'in the decoy', 'sp': 1}));
+      expect(await s.query('own_held'), hasLength(1));
+      // a device linked meanwhile that does not show the inbox
+      told.takesInbox = false;
+      useDatabasesForTest(db, Session(db));
+      await ownHeldGoForTest();
+      expect(told.forwards, isEmpty);
     }, skip: skip);
 
     test('a hidden inbox chat never goes', () async {

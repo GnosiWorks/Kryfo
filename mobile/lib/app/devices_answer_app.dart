@@ -12,6 +12,13 @@ part of '../main.dart';
 /// the most answers kept on the phone while the decoy is open
 const kOwnAnswersHeldMost = 512;
 
+/// how long the phone keeps what it took of a computer's answers
+const kOwnAnswersKeptFor = Duration(days: 30);
+
+/// a computer's timed answer on the phone, its clock not started: it starts
+/// once the chat is opened there (answersSeen)
+const kAnswerUnseenBurn = 8640000000000000;
+
 /// on a linked device, signal_meta: '1' while its phone sends its answers
 const kOwnDevAnswersMeta = 'own_dev_answers';
 
@@ -130,8 +137,13 @@ extension AppStateAnswers on AppState {
     final a = ownAnswerOf(frame);
     if (a == null) return false;
     final d = await live.open();
-    // one sent already, here or from another device, goes no more
-    if (a.kind == AnswerKind.text && await live.messageExists(a.uid)) {
+    // one taken already goes no more: the same frame sent again, or words
+    // sent once, here or from another device, taken back or burnt since
+    final fk = _answerKey('f', chat, frame);
+    final tk = a.kind == AnswerKind.text ? _answerKey('t', chat, a.uid) : null;
+    if (await _answerSeen(d, fk) != null) return true;
+    if (tk != null &&
+        (await _answerSeen(d, tk) != null || await live.messageExists(a.uid))) {
       return true;
     }
     if (!await _ownAnswerCounted(d, from)) {
@@ -139,8 +151,11 @@ extension AppStateAnswers on AppState {
       await _ownAnswerNo(chat, a, kAnswerTooMany);
       return false;
     }
+    await _answerNote(d, fk);
+    if (tk != null) await _answerNote(d, tk);
     // nothing of the everyday account leaves while the decoy is open: it
-    // waits in the everyday database, and goes once the pin opens it
+    // waits in the everyday database with its device, and goes once the
+    // pin opens it
     if (everydayHeld) {
       final n =
           Sqflite.firstIntValue(
@@ -149,32 +164,75 @@ extension AppStateAnswers on AppState {
           0;
       if (n >= kOwnAnswersHeldMost) return false;
       await d.insert('own_answers_held', {
-        'uid': ownHash('${ownChatName(chat)}\n$frame'),
+        'uid': fk,
         'chat': ownChatName(chat),
         'frame': frame,
+        'dev': from.id,
+        'dkey': from.key,
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
       return true;
     }
     return _ownAnswerGo(chat, a);
   }
 
+  // a key of own_answers_seen: what kind, in which chat, of what
+  String _answerKey(String kind, OwnChat chat, String of) =>
+      ownHash('$kind\n${ownChatName(chat)}\n$of');
+
+  // a kept key: null when not kept, else its words ('' for none)
+  Future<String?> _answerSeen(Database d, String k) async {
+    final r = await d.query(
+      'own_answers_seen',
+      columns: ['text'],
+      where: 'k = ?',
+      whereArgs: [k],
+      limit: 1,
+    );
+    return r.isEmpty ? null : (r.first['text'] as String? ?? '');
+  }
+
+  Future<void> _answerNote(Database d, String k, [String? text]) async {
+    final now = answerClock();
+    await d.delete(
+      'own_answers_seen',
+      where: 'at < ?',
+      whereArgs: [now - kOwnAnswersKeptFor.inMilliseconds],
+    );
+    await d.insert('own_answers_seen', {
+      'k': k,
+      'at': now,
+      'text': text,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   // what waited while the decoy was open goes now, by the rules as they
   // stand now
   Future<void> _ownAnswersHeldGo() async {
-    if (linkedRole || !_ownSends || !_devIdentity || everydayHeld) return;
+    final own = _ownSync;
+    if (own == null || linkedRole || !_ownSends || !_devIdentity) return;
+    if (everydayHeld) return;
     final d = await live.open();
-    for (final r in await d.query('own_answers_held', limit: 64)) {
-      await d.delete(
-        'own_answers_held',
-        where: 'uid = ?',
-        whereArgs: [r['uid']],
-      );
+    final listed = await own.others(kMainIdent);
+    for (final r in await d.query(
+      'own_answers_held',
+      orderBy: 'rowid',
+      limit: 64,
+    )) {
+      Future<void> done() =>
+          d.delete('own_answers_held', where: 'uid = ?', whereArgs: [r['uid']]);
       final chat = ownChatOf(r['chat']);
       final a = ownAnswerOf(r['frame'] as String);
-      if (chat == null || a == null) continue;
+      // a device removed meanwhile hands nothing, held or not
+      final still = listed.any((p) => p.id == r['dev'] && p.key == r['dkey']);
+      if (chat == null || a == null || !still) {
+        await done();
+        continue;
+      }
       try {
         await _ownAnswerGo(chat, a);
+        await done();
       } catch (e) {
+        // kept for the next pass
         dlog('answers: one held not sent (${e.runtimeType})');
       }
     }
@@ -214,6 +272,12 @@ extension AppStateAnswers on AppState {
     switch (a.kind) {
       case AnswerKind.text:
         if (await live.messageExists(a.uid)) return true;
+        // taken back on the computer before its words came: they never go
+        if (await _answerSeen(d, _answerKey('un', chat, a.uid)) != null) {
+          return true;
+        }
+        // edited there first: the words as they stand now go
+        final edited = await _answerSeen(d, _answerKey('ed', chat, a.uid));
         final q = a.reply;
         final quoted = q != null && (await live.chatOf(q))?.$1 == id;
         // the first answer takes a waiting chat on, as his own does
@@ -221,13 +285,23 @@ extension AppStateAnswers on AppState {
         await live.saveMessage(
           id,
           'out',
-          a.text,
+          edited != null && edited.isNotEmpty ? edited : a.text,
           msgUid: a.uid,
           replyTo: quoted ? q : null,
           burnSecs: a.burn,
           preview: a.preview == null ? null : jsonEncode(a.preview),
           sent: 0,
         );
+        // its clock here starts once the chat is opened on this phone: a
+        // timed answer from a computer never burns unseen
+        if (a.burn != null) {
+          await d.update(
+            'messages',
+            {'burn_at': kAnswerUnseenBurn},
+            where: "msg_uid = ? AND direction = 'out' AND burn_at IS NULL",
+            whereArgs: [a.uid],
+          );
+        }
         unawaited(_ownAnswerSend(id, a.uid));
       case AnswerKind.reaction:
         final at = await live.chatOf(a.uid);
@@ -239,10 +313,20 @@ extension AppStateAnswers on AppState {
         }
         await reactInChat(id, a.uid, a.text);
       case AnswerKind.edit:
+        // its words not here yet: the edit waits for them
+        if (!await live.messageExists(a.uid)) {
+          await _answerNote(d, _answerKey('ed', chat, a.uid), a.text);
+          return true;
+        }
         if (!await mine(a.uid, edit: true)) return false;
         await live.editMessage(a.uid, a.text);
         await editInChat(id, a.uid, a.text);
       case AnswerKind.takeBack:
+        // its words not here yet: they never go when they come
+        if (!await live.messageExists(a.uid)) {
+          await _answerNote(d, _answerKey('un', chat, a.uid));
+          return true;
+        }
         if (!await mine(a.uid)) return false;
         await takeDropBackOf(a.uid);
         await live.deleteMessage(a.uid);
@@ -283,35 +367,63 @@ extension AppStateAnswers on AppState {
     }
   }
 
-  // one more answer of [from]'s this hour, or none past the cap
+  // one more answer of [from]'s this hour, or none past the cap. read and
+  // written in one go, so two at once cannot both take the last place
   Future<bool> _ownAnswerCounted(Database d, OwnPeer from) async {
     final k = 'own_answers:${from.id}:${from.key}';
     final now = answerClock();
-    final r = await d.query(
-      'signal_meta',
-      columns: ['v'],
-      where: 'k = ?',
-      whereArgs: [k],
-      limit: 1,
-    );
-    var at = <int>[];
-    if (r.isNotEmpty) {
-      try {
-        at = [
-          for (final x in jsonDecode(r.first['v'] as String) as List)
-            if (x is int && x <= now && now - x < 3600000) x,
-        ];
-      } catch (_) {
-        // a count that does not read starts again
+    return d.transaction((t) async {
+      final r = await t.query(
+        'signal_meta',
+        columns: ['v'],
+        where: 'k = ?',
+        whereArgs: [k],
+        limit: 1,
+      );
+      var at = <int>[];
+      if (r.isNotEmpty) {
+        try {
+          at = [
+            for (final x in jsonDecode(r.first['v'] as String) as List)
+              if (x is int && x <= now && now - x < 3600000) x,
+          ];
+        } catch (_) {
+          // a count that does not read starts again
+        }
       }
+      if (at.length >= kOwnAnswersAnHour) return false;
+      at.add(now);
+      await t.insert('signal_meta', {
+        'k': k,
+        'v': jsonEncode(at),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return true;
+    });
+  }
+
+  /// on his phone: a computer's timed answers in [peer]'s chat start their
+  /// clocks, now that the chat is open here
+  Future<void> answersSeen(String peer) async {
+    if (linkedRole || sessionQuiet || !_devIdentity) return;
+    final d = await live.open();
+    final rows = await d.query(
+      'messages',
+      columns: ['id', 'burn_secs'],
+      where: "peer_id = ? AND direction = 'out' AND burn_at = ?",
+      whereArgs: [peer, kAnswerUnseenBurn],
+    );
+    if (rows.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final r in rows) {
+      final secs = (r['burn_secs'] as num?)?.toInt() ?? 0;
+      await d.update(
+        'messages',
+        {'burn_at': now + secs * 1000},
+        where: 'id = ? AND burn_at = ?',
+        whereArgs: [r['id'], kAnswerUnseenBurn],
+      );
     }
-    if (at.length >= kOwnAnswersAnHour) return false;
-    at.add(now);
-    await d.insert('signal_meta', {
-      'k': k,
-      'v': jsonEncode(at),
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-    return true;
+    chatChanged(peer);
   }
 
   // a computer past its answers: the devices notice on the home, once

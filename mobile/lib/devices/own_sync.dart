@@ -176,9 +176,10 @@ Set<String> frameMessageUids(String frame) {
   };
 }
 
-/// the chat an own copy or a passed-on frame [plain] (oc or of) is of, as
-/// ownChatName names it, and the messages it carries or speaks of; whether
-/// it is a linked device's group copy its phone passes on to members (n).
+/// the chat an own copy, a passed-on frame or an answer [plain] (oc, of
+/// or oa) is of, as ownChatName names it, and the messages it carries or
+/// speaks of; whether it is a linked device's group copy its phone passes
+/// on to members (n).
 /// null for any other own frame: an op, a beat, a receipt
 ({String chat, Set<String> uids, bool passOn})? ownFrameMessages(String plain) {
   if (!plain.startsWith(kEnvelopePrefix)) return null;
@@ -212,6 +213,15 @@ Set<String> frameMessageUids(String frame) {
         ? ownChatName((id: g, group: true))
         : ownChatName((id: of['h'] as String, group: false));
     return (chat: chat, uids: frameMessageUids(f), passOn: false);
+  }
+  // an answer handed to my phone, still waiting here
+  final oa = j['oa'];
+  if (oa is Map && oa['c'] is String && oa['f'] is String) {
+    return (
+      chat: oa['c'] as String,
+      uids: frameMessageUids(oa['f'] as String),
+      passOn: false,
+    );
   }
   return null;
 }
@@ -434,28 +444,32 @@ class OwnSync {
   }
 
   /// a linked device's word to its phone that a person uses it: at most
-  /// once a [kOwnBeatEvery], after an unlock. true when one went
-  Future<bool> beat(int ident) async {
+  /// once a [kOwnBeatEvery], after an unlock, or now when [now] (its first
+  /// start on a version that shows the developer's inbox). it says the
+  /// device takes the inbox's waiting chats. true when one went
+  Future<bool> beat(int ident, {bool now = false}) async {
     if (!linkedDevicesOn) return false;
     final m = await me(ident);
     if (m == null || m.device == 1) return false;
     final d = await db();
-    final now = _clock();
+    final at = _clock();
     final last = int.tryParse(await _meta(d, 'own_beat:$ident') ?? '') ?? 0;
-    if (last <= now && now - last < kOwnBeatEvery.inMilliseconds) return false;
+    if (!now && last <= at && at - last < kOwnBeatEvery.inMilliseconds) {
+      return false;
+    }
     final phone = [
       for (final p in await others(ident))
         if (p.id == 1) p,
     ];
     if (phone.isEmpty) return false;
-    await _putMeta(d, 'own_beat:$ident', '$now');
-    final day = now ~/ Duration.millisecondsPerDay;
+    await _putMeta(d, 'own_beat:$ident', '$at');
+    final day = at ~/ Duration.millisecondsPerDay;
     await _toAll(
       m,
       phone,
       '$kEnvelopePrefix${jsonEncode({
-        'u': 'ob:${m.device}:$day',
-        'ob': {'t': now},
+        'u': 'ob:${m.device}:$day${now ? ':n' : ''}',
+        'ob': {'t': at, 'in': 1},
       })}',
     );
     return true;
@@ -482,6 +496,20 @@ class OwnSync {
       );
     }
   }
+
+  /// on my phone: whether every other device of mine on [ident] said it
+  /// shows the developer's inbox. an older one would show a waiting chat
+  /// as a request
+  Future<bool> devicesTakeInbox(int ident) async {
+    final d = await db();
+    for (final p in await others(ident)) {
+      if (await _meta(d, _inboxMeta(ident, p)) != '1') return false;
+    }
+    return true;
+  }
+
+  String _inboxMeta(int ident, OwnPeer p) =>
+      'own_inbox_dev:$ident/${p.id}/${p.key}';
 
   // ---- taking ----
 
@@ -602,6 +630,10 @@ class OwnSync {
     final ob = j['ob'];
     if (ob is Map && u.startsWith('ob:')) {
       if (m.device != 1 || from.id == 1) return false;
+      // a device that shows the developer's inbox says so
+      if (ob['in'] == 1) {
+        await _putMeta(await db(), _inboxMeta(m.ident, from), '1');
+      }
       await apply.heard(m.ident, from.id, from.key, _clock());
       return true;
     }

@@ -11,12 +11,16 @@ String _f(Map<String, Object?> j) => 'halo/1:${jsonEncode(j)}';
 
 void main() {
   test('words, with a reply, a link\'s title and a timer', () {
+    expect(
+      ownAnswerOf(_f({'m': 'a day', 'u': 'u-2', 'b': 86400}))!.burn,
+      86400,
+    );
     final a = ownAnswerOf(
       _f({
         'm': 'see the site',
         'u': 'u-1',
         'q': 'u-0',
-        'b': 30,
+        'b': 3600,
         'pv': {'url': 'https://kryfo.app', 'title': 'Kryfo', 'by': 'sender'},
         'w': 1,
         'h': 'me',
@@ -26,7 +30,7 @@ void main() {
     expect(a.kind, AnswerKind.text);
     expect(a.uid, 'u-1');
     expect(a.reply, 'u-0');
-    expect(a.burn, 30);
+    expect(a.burn, 3600);
     expect(a.preview!['title'], 'Kryfo');
   });
 
@@ -92,7 +96,10 @@ void main() {
       {'m': '  ', 'u': 'u-1'},
       {'m': 'f', 'u': 'u-1', 'q': 'a b'},
       {'m': 'f', 'u': 'u-1', 'b': 0},
-      {'m': 'f', 'u': 'u-1', 'b': kAnswerBurnMost + 1},
+      // a computer's clock is an hour at least, one of the composer's
+      {'m': 'f', 'u': 'u-1', 'b': 30},
+      {'m': 'f', 'u': 'u-1', 'b': 300},
+      {'m': 'f', 'u': 'u-1', 'b': 7200},
       {
         'm': '',
         'r': {'u': 'u-1', 'e': 'x' * 33},

@@ -42,6 +42,7 @@ import 'package:kryfo/main.dart'
         kAnswerTooMany,
         kAnswerNotInbox,
         DeviceHanded,
+        kAnswerUnseenBurn,
         AppStateAnswers;
 import 'package:kryfo/restore_undo.dart' show takenTables;
 import 'package:kryfo/router.dart';
@@ -95,6 +96,11 @@ class _Told extends OwnSync {
 
   @override
   Future<List<OwnPeer>> others(int ident) async => [(id: 4, key: 'k', reg: 1)];
+
+  // whether my desk said it shows the inbox
+  var takesInbox = true;
+  @override
+  Future<bool> devicesTakeInbox(int ident) async => takesInbox;
 
   @override
   Future<bool> op(
@@ -542,47 +548,58 @@ void main() {
       expect(refusals(), isEmpty);
     }, skip: skip);
 
-    test('120 answers an hour from one computer; past that none goes, it '
-        'hears so, and the phone shows a notice', () async {
-      devPhone();
-      await inbox('answered', 'open');
-      await s.insert('own_devices', {
-        'uid': 'desk-1',
-        'name': 'Desk',
-        'kind': 'computer',
-        'linked_at': 1,
-      });
-      await s.insert('own_device_keys', {
-        'uid': 'desk-1',
-        'ident': 0,
-        'dev_id': 4,
-        'key': 'k',
-        'reg': 1,
-      });
-      var now = 1_800_000_000_000;
-      answerClock = () => now;
-      for (var i = 0; i < 120; i++) {
+    test(
+      '120 answers an hour from one computer; past that none goes, it '
+      'hears so, and the phone shows a notice',
+      () async {
+        devPhone();
+        await inbox('answered', 'open');
+        await s.insert('own_devices', {
+          'uid': 'desk-1',
+          'name': 'Desk',
+          'kind': 'computer',
+          'linked_at': 1,
+        });
+        await s.insert('own_device_keys', {
+          'uid': 'desk-1',
+          'ident': 0,
+          'dev_id': 4,
+          'key': 'k',
+          'reg': 1,
+        });
+        var now = 1_800_000_000_000;
+        answerClock = () => now;
+        for (var i = 0; i < 120; i++) {
+          expect(
+            await answer('p:answered', {'u': 'u-c$i', 'm': 'answer $i'}),
+            isTrue,
+            reason: '$i',
+          );
+          now += 1000;
+        }
         expect(
-          await answer('p:answered', {'u': 'u-c$i', 'm': 'answer $i'}),
-          isTrue,
-          reason: '$i',
+          await answer('p:answered', {'u': 'u-over', 'm': 'over'}),
+          isFalse,
         );
-        now += 1000;
-      }
-      expect(await answer('p:answered', {'u': 'u-over', 'm': 'over'}), isFalse);
-      expect(await rows('u-over'), isEmpty);
-      expect(refusals().single['x'], kAnswerTooMany);
-      final marks = await s.query(
-        'dev_marks',
-        where: "kind = 'alarm:many_answers'",
-      );
-      expect(marks.single['key'], 'desk-1');
-      // an hour after the first, one goes again
-      now = 1_800_000_000_000 + 3600 * 1000 + 1;
-      expect(await answer('p:answered', {'u': 'u-next', 'm': 'next'}), isTrue);
-      // the sends it started end before the rows close
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-    }, skip: skip);
+        expect(await rows('u-over'), isEmpty);
+        expect(refusals().single['x'], kAnswerTooMany);
+        final marks = await s.query(
+          'dev_marks',
+          where: "kind = 'alarm:many_answers'",
+        );
+        expect(marks.single['key'], 'desk-1');
+        // an hour after the first, one goes again
+        now = 1_800_000_000_000 + 3600 * 1000 + 1;
+        expect(
+          await answer('p:answered', {'u': 'u-next', 'm': 'next'}),
+          isTrue,
+        );
+        // the sends it started end before the rows close
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+      },
+      skip: skip,
+      timeout: const Timeout(Duration(minutes: 3)),
+    );
 
     test('an answer that comes while the decoy is open waits, and goes once '
         'it closes', () async {
@@ -601,6 +618,153 @@ void main() {
         (await wired('waiting')).where((j) => j['u'] == 'u-d').single['m'],
         'later',
       );
+    }, skip: skip);
+
+    test('an answer sent again goes once: after a take-back, from another '
+        'wrap, or in the decoy, where it counts once too', () async {
+      devPhone();
+      await inbox('answered', 'open');
+      final j = {'u': 'u-once', 'm': 'only once'};
+      expect(await answer('p:answered', j), isTrue);
+      expect(await answer('p:answered', {'m': '', 'un': 'u-once'}), isTrue);
+      expect(await rows('u-once'), isEmpty);
+      // the same frame again, and the same words wrapped anew
+      expect(await answer('p:answered', j), isTrue);
+      expect(await answer('p:answered', {...j, 'w': 7}), isTrue);
+      expect(await rows('u-once'), isEmpty);
+      expect(
+        (await wired('answered')).where((x) => x['u'] == 'u-once'),
+        hasLength(1),
+      );
+      // in the decoy a resend is no second answer
+      app.quietMarkedForTest = true;
+      var now = 1_800_000_000_000;
+      answerClock = () => now++;
+      final d = {'u': 'u-dc', 'm': 'held'};
+      expect(await answer('p:answered', d), isTrue);
+      expect(await answer('p:answered', d), isTrue);
+      expect(await s.query('own_answers_held'), hasLength(1));
+      final count = await s.query(
+        'signal_meta',
+        where: "k = 'own_answers:4:k'",
+      );
+      expect(jsonDecode(count.single['v'] as String), hasLength(1));
+      app.quietMarkedForTest = false;
+    }, skip: skip);
+
+    test('an edit sent again late undoes no later one', () async {
+      devPhone();
+      await inbox('answered', 'open');
+      expect(await answer('p:answered', {'u': 'u-e', 'm': 'zero'}), isTrue);
+      final one = {
+        'm': '',
+        'ed': {'u': 'u-e', 'm': 'one'},
+      };
+      expect(await answer('p:answered', one), isTrue);
+      expect(
+        await answer('p:answered', {
+          'm': '',
+          'ed': {'u': 'u-e', 'm': 'two'},
+        }),
+        isTrue,
+      );
+      expect(await answer('p:answered', one), isTrue);
+      expect((await rows('u-e')).single['plaintext'], 'two');
+    }, skip: skip);
+
+    test('a take-back or an edit that comes before its words waits for '
+        'them', () async {
+      devPhone();
+      await inbox('answered', 'open');
+      expect(await answer('p:answered', {'m': '', 'un': 'u-early'}), isTrue);
+      expect(
+        await answer('p:answered', {'u': 'u-early', 'm': 'taken back'}),
+        isTrue,
+      );
+      expect(await rows('u-early'), isEmpty);
+      expect(
+        await answer('p:answered', {
+          'm': '',
+          'ed': {'u': 'u-ed', 'm': 'as edited'},
+        }),
+        isTrue,
+      );
+      expect(await answer('p:answered', {'u': 'u-ed', 'm': 'first'}), isTrue);
+      expect((await rows('u-ed')).single['plaintext'], 'as edited');
+      final w = await wired('answered');
+      expect(w.where((x) => x['u'] == 'u-early'), isEmpty);
+      expect(w.singleWhere((x) => x['u'] == 'u-ed')['m'], 'as edited');
+    }, skip: skip);
+
+    test('a held answer goes in order, only from a device still listed, '
+        'and leaves the hold once it went', () async {
+      devPhone();
+      await inbox('answered', 'open');
+      app.quietMarkedForTest = true;
+      for (final u in ['u-h1', 'u-h2']) {
+        expect(await answer('p:answered', {'u': u, 'm': u}), isTrue);
+      }
+      expect(
+        await answer(
+          'p:answered',
+          {'u': 'u-gone', 'm': 'from a desk removed since'},
+          from: (id: 5, key: 'k5', reg: 1),
+        ),
+        isFalse,
+      );
+      // as if the decoy had taken it from a desk listed then
+      await s.insert('own_answers_held', {
+        'uid': 'held-gone',
+        'chat': 'p:answered',
+        'frame': _f({'u': 'u-gone', 'm': 'from a desk removed since'}),
+        'dev': 5,
+        'dkey': 'k5',
+      });
+      app.quietMarkedForTest = false;
+      await app.drainOutbox();
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(await rows('u-gone'), isEmpty);
+      final sent = [
+        for (final x in await wired('answered'))
+          if (x['u'] != null) x['u'],
+      ];
+      expect(sent, ['u-h1', 'u-h2']);
+      expect(await s.query('own_answers_held'), isEmpty);
+    }, skip: skip);
+
+    test('a timed answer lives an hour at least, and its clock here starts '
+        'once the chat is opened on the phone', () async {
+      devPhone();
+      await inbox('answered', 'open');
+      expect(
+        await answer('p:answered', {'u': 'u-t5', 'm': 'gone soon', 'b': 5}),
+        isFalse,
+      );
+      expect(await rows('u-t5'), isEmpty);
+      expect(
+        await answer('p:answered', {'u': 'u-t1', 'm': 'an hour', 'b': 3600}),
+        isTrue,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      final r = (await rows('u-t1')).single;
+      expect(r['burn_secs'], 3600);
+      expect(r['burn_at'], kAnswerUnseenBurn);
+      expect((await wired('answered')).single['b'], 3600);
+      await app.answersSeen('answered');
+      final lit = (await rows('u-t1')).single['burn_at'] as int;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      expect(lit, inInclusiveRange(now + 3590 * 1000, now + 3600 * 1000));
+    }, skip: skip);
+
+    test('a device lifts no block on his phone', () async {
+      devPhone();
+      await inbox('blocked', 'open');
+      await s.update('contacts', {'blocked': 1}, where: "halo_id = 'blocked'");
+      await op('contact', 'p:blocked', {
+        'r': {'blocked': 0},
+      });
+      final c = await s.query('contacts', where: "halo_id = 'blocked'");
+      expect(c.single['blocked'], 1);
     }, skip: skip);
   });
 

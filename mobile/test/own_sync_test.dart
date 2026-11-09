@@ -653,6 +653,58 @@ void main() {
     expect(w.apply.answers, isEmpty);
   });
 
+  test('a desk says it shows the developer\'s inbox, at once on its first '
+      'start, and my phone keeps the word per device', () async {
+    if (skip()) return;
+    final p = await phone();
+    expect(await p.own.devicesTakeInbox(kMainIdent), isFalse);
+    Future<void> take(String f) async =>
+        p.recv.receive(p.deskTag(opener: true), await p.seal(f));
+    await take(
+      _frame({
+        'u': 'ob:4:1',
+        'ob': {'t': 1},
+      }),
+    );
+    expect(await p.own.devicesTakeInbox(kMainIdent), isFalse);
+    await take(
+      _frame({
+        'u': 'ob:4:2',
+        'ob': {'t': 2, 'in': 1},
+      }),
+    );
+    expect(await p.own.devicesTakeInbox(kMainIdent), isTrue);
+  });
+
+  test('a desk\'s beat says it shows the inbox, and goes at once when '
+      'asked, beside the day\'s', () async {
+    if (skip()) return;
+    final w = await desk();
+    expect(await w.own.beat(kMainIdent), isTrue);
+    expect(await w.own.beat(kMainIdent), isFalse);
+    expect(await w.own.beat(kMainIdent, now: true), isTrue);
+    final beats = [
+      for (final r in await w.db.query('dev_out', where: 'own = 1'))
+        _json(r['plain'] as String)['ob'],
+    ];
+    expect(beats, hasLength(2));
+    expect(beats.every((b) => b['in'] == 1), isTrue);
+  });
+
+  test('an answer still waiting names its chat and its message, so a delete '
+      'here takes it', () {
+    const f = 'halo/1:{"u":"u-a","m":"hi"}';
+    final m = ownFrameMessages(
+      _frame({
+        'u': 'oa:x',
+        'oa': {'c': 'p:cat', 'f': f},
+      }),
+    )!;
+    expect(m.chat, 'p:cat');
+    expect(m.uids, {'u-a'});
+    expect(m.passOn, isFalse);
+  });
+
   test('my phone takes from a linked device only what a device may send, '
       'never a forward, and hears its daily word', () async {
     if (skip()) return;

@@ -316,6 +316,8 @@ void main() {
         'uid': 'held-$w',
         'chat': 'p:$w',
         'frame': 'halo/1:{}',
+        'dev': 4,
+        'dkey': 'k',
       });
     }
     expect(await naming(raw, _p), isNotEmpty);
