@@ -11909,4 +11909,8 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Bạn đọc được';
+
+  @override
+  String get chatInboxAnswerFromPhone =>
+      'Hãy trả lời cuộc trò chuyện này từ điện thoại của bạn.';
 }

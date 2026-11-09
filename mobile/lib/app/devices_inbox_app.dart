@@ -75,6 +75,19 @@ extension AppStateInbox on AppState {
     return {'s': r.first['state'], if (!linkedRole) 'f': r.first['first_at']};
   }
 
+  /// a chat of the developer's inbox on a linked device of his phone: one
+  /// filed there, or one a message came into through the developer chat
+  Future<bool> inboxChatHere(String id) async {
+    if (!devInboxHere || isDevChat(id)) return false;
+    if (await _inboxPlace(id) != null) return true;
+    try {
+      return await live.hasViaDev(id);
+    } catch (e) {
+      dlog('inbox: via dev not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
   // on a linked device, the phone's word on a chat's place: filed as the
   // phone has it, or no longer filed. nothing else files here. only his
   // phone keeps an inbox, so its word says this device shows one

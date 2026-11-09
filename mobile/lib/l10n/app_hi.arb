@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "इससे {size} जगह खाली होगी। इससे सेव किए गए अनुवाद भी डिलीट हो जाएँगे। आप इसे कभी भी फिर से डाउनलोड कर सकते हैं।",
   "translateResumeShort": "जारी रखें",
   "translateTagApp": "ऐप की भाषा",
-  "translateTagRead": "आप इसे पढ़ते हैं"
+  "translateTagRead": "आप इसे पढ़ते हैं",
+  "chatInboxAnswerFromPhone": "इस चैट का जवाब अपने फ़ोन से दें।"
 }

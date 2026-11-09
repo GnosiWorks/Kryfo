@@ -143,6 +143,7 @@ import '../main.dart'
         TorHalo,
         LinkViewBuilder,
         AppStateOutbox,
+        AppStateInbox,
         AppStateHeal,
         AppStateOldPeers,
         HelloWait,
@@ -1084,7 +1085,10 @@ class _ChatScreenState extends State<ChatScreen>
       final c = full.characters;
       final name = c.length > 24 ? '${c.take(22)}\u2026' : full;
       final String? line;
-      if (row['shots_on'] == 1) {
+      if (await appState.inboxChatHere(widget.peerHaloId)) {
+        // his inbox: only his phone answers on the developer's key
+        line = l10n.chatInboxAnswerFromPhone;
+      } else if (row['shots_on'] == 1) {
         line = l10n.historyChatStaysShots;
       } else if (!capsOfText(row['caps'] as String?).contains(kCapDevices)) {
         // their caps came without the devices word: an older Kryfo. none

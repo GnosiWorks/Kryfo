@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "این کار {size} جا آزاد می‌کند. ترجمه‌هایی که با آن ذخیره شده‌اند هم پاک می‌شوند. هر وقت بخواهید می‌توانید دوباره دانلودش کنید.",
   "translateResumeShort": "ادامه",
   "translateTagApp": "زبان برنامه",
-  "translateTagRead": "آن را می‌خوانید"
+  "translateTagRead": "آن را می‌خوانید",
+  "chatInboxAnswerFromPhone": "به این گفتگو از گوشی خود پاسخ دهید."
 }

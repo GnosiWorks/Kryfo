@@ -11949,4 +11949,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Okuduğun dil';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'Bu sohbete telefonundan yanıt ver.';
 }

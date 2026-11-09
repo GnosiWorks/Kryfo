@@ -11933,4 +11933,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get translateTagRead => 'آن را می‌خوانید';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'به این گفتگو از گوشی خود پاسخ دهید.';
 }

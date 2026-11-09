@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "Isso libera {size}. As traduções salvas com ele também são apagadas. Você pode baixar de novo quando quiser.",
   "translateResumeShort": "Continuar",
   "translateTagApp": "Idioma do app",
-  "translateTagRead": "Você lê"
+  "translateTagRead": "Você lê",
+  "chatInboxAnswerFromPhone": "Responda a esta conversa pelo seu celular."
 }

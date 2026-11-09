@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "Bu, {size} yer açar. Onunla kaydedilen çeviriler de silinir. İstediğin zaman yeniden indirebilirsin.",
   "translateResumeShort": "Devam et",
   "translateTagApp": "Uygulama dili",
-  "translateTagRead": "Okuduğun dil"
+  "translateTagRead": "Okuduğun dil",
+  "chatInboxAnswerFromPhone": "Bu sohbete telefonundan yanıt ver."
 }

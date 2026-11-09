@@ -12063,4 +12063,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Liest du';
+
+  @override
+  String get chatInboxAnswerFromPhone =>
+      'Antworte in diesem Chat von deinem Handy aus.';
 }

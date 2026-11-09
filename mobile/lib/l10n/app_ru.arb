@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "Освободится {size}. Сохранённые с ним переводы тоже удалятся. Скачать его снова можно в любой момент.",
   "translateResumeShort": "Продолжить",
   "translateTagApp": "Язык приложения",
-  "translateTagRead": "Вы его читаете"
+  "translateTagRead": "Вы его читаете",
+  "chatInboxAnswerFromPhone": "Ответь в этом чате с телефона."
 }

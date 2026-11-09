@@ -12152,4 +12152,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Czytasz w nim';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'Odpowiedz na ten czat z telefonu.';
 }

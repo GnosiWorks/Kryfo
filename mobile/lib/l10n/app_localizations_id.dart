@@ -11926,4 +11926,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Kamu membacanya';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'Balas obrolan ini dari ponselmu.';
 }

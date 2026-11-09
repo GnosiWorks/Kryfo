@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "Việc này giải phóng {size}. Các bản dịch đã lưu bằng gói này cũng bị xóa. Bạn có thể tải lại bất cứ lúc nào.",
   "translateResumeShort": "Tiếp tục",
   "translateTagApp": "Ngôn ngữ ứng dụng",
-  "translateTagRead": "Bạn đọc được"
+  "translateTagRead": "Bạn đọc được",
+  "chatInboxAnswerFromPhone": "Hãy trả lời cuộc trò chuyện này từ điện thoại của bạn."
 }

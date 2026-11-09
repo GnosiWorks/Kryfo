@@ -12111,4 +12111,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Вы его читаете';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'Ответь в этом чате с телефона.';
 }

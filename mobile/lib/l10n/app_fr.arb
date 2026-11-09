@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "Cela libère {size}. Les traductions enregistrées avec ce pack sont aussi supprimées. Vous pouvez le télécharger de nouveau à tout moment.",
   "translateResumeShort": "Reprendre",
   "translateTagApp": "Langue de l’app",
-  "translateTagRead": "Vous la lisez"
+  "translateTagRead": "Vous la lisez",
+  "chatInboxAnswerFromPhone": "Répondez à cette discussion depuis votre téléphone."
 }

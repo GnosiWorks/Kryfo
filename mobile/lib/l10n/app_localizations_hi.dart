@@ -11928,4 +11928,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get translateTagRead => 'आप इसे पढ़ते हैं';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'इस चैट का जवाब अपने फ़ोन से दें।';
 }

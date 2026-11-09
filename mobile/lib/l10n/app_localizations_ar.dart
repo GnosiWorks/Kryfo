@@ -12057,4 +12057,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get translateTagRead => 'تقرؤها';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'ردّ على هذه المحادثة من هاتفك.';
 }

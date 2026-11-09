@@ -11265,6 +11265,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translateTagRead => '你读的语言';
+
+  @override
+  String get chatInboxAnswerFromPhone => '请在手机上回复这个聊天。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22408,4 +22411,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get translateTagRead => '你讀的語言';
+
+  @override
+  String get chatInboxAnswerFromPhone => '請在手機上回覆這個聊天。';
 }

@@ -19104,6 +19104,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You read it'**
   String get translateTagRead;
+
+  /// screens/chat_screen.dart: on a computer linked to the developer's phone, in place of the composer in a chat from his inbox (people who wrote through the developer chat), while his phone does not take answers from the computer
+  ///
+  /// In en, this message translates to:
+  /// **'Answer this chat from your phone.'**
+  String get chatInboxAnswerFromPhone;
 }
 
 class _AppLocalizationsDelegate

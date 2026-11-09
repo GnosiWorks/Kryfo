@@ -11921,4 +11921,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translateTagRead => 'You read it';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'Answer this chat from your phone.';
 }

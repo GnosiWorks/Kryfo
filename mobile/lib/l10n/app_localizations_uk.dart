@@ -12109,4 +12109,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Ви нею читаєте';
+
+  @override
+  String get chatInboxAnswerFromPhone => 'Відповідай у цьому чаті з телефона.';
 }

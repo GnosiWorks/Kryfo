@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "这会释放 {size}。用它保存的翻译也会一并删除。你随时可以重新下载。",
   "translateResumeShort": "继续",
   "translateTagApp": "应用语言",
-  "translateTagRead": "你读的语言"
+  "translateTagRead": "你读的语言",
+  "chatInboxAnswerFromPhone": "请在手机上回复这个聊天。"
 }

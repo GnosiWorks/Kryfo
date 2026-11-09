@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "Ini mengosongkan {size}. Terjemahan yang disimpan dengannya juga dihapus. Kamu bisa mengunduhnya lagi kapan saja.",
   "translateResumeShort": "Lanjutkan",
   "translateTagApp": "Bahasa aplikasi",
-  "translateTagRead": "Kamu membacanya"
+  "translateTagRead": "Kamu membacanya",
+  "chatInboxAnswerFromPhone": "Balas obrolan ini dari ponselmu."
 }

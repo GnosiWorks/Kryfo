@@ -21,10 +21,11 @@ import '../main.dart'
         appState,
         claimChat,
         currentChatPeer,
+        linkedRole,
         releaseChat,
         session,
         AppStateContacts,
-        AppStateDevchat,
+        AppStateInbox,
         AppStateRefresh;
 import '../notifications.dart' show clearNotificationsFor;
 import '../theme.dart';
@@ -79,7 +80,7 @@ Future<void> openSupportChat(NavigatorState nav, String id) async {
 // a notification's tap on his phone: the inbox, or the chat it named. not
 // in a decoy, and not twice over
 Future<void> openSupportTap(NavigatorState nav, String chatId) async {
-  if (!appState.devMode) return;
+  if (!appState.devInbox) return;
   final here = currentChatPeer;
   if (chatId.isEmpty) {
     if (here == kSupportPayload) return;
@@ -341,20 +342,23 @@ class _SupportScreenState extends State<SupportScreen> {
                 onTap: () => pick('chats'),
               ),
           ],
-          [
-            MenuSheetRow(
-              icon: Icons.block,
-              label: l10n.commonBlock,
-              danger: true,
-              onTap: () => pick('block'),
-            ),
-            MenuSheetRow(
-              icon: Icons.delete_outline,
-              label: l10n.homeDeleteChat,
-              danger: true,
-              onTap: () => pick('delete'),
-            ),
-          ],
+          // a block or a delete is his phone's: a computer keeps the inbox
+          // as the phone has it
+          if (!linkedRole)
+            [
+              MenuSheetRow(
+                icon: Icons.block,
+                label: l10n.commonBlock,
+                danger: true,
+                onTap: () => pick('block'),
+              ),
+              MenuSheetRow(
+                icon: Icons.delete_outline,
+                label: l10n.homeDeleteChat,
+                danger: true,
+                onTap: () => pick('delete'),
+              ),
+            ],
         ];
       },
     ).then((a) {

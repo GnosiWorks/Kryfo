@@ -3134,5 +3134,6 @@
   "translateRemoveLine": "Das gibt {size} frei. Damit gespeicherte Übersetzungen werden mit gelöscht. Du kannst es jederzeit wieder laden.",
   "translateResumeShort": "Fortsetzen",
   "translateTagApp": "App-Sprache",
-  "translateTagRead": "Liest du"
+  "translateTagRead": "Liest du",
+  "chatInboxAnswerFromPhone": "Antworte in diesem Chat von deinem Handy aus."
 }

@@ -12052,4 +12052,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get translateTagRead => 'Vous la lisez';
+
+  @override
+  String get chatInboxAnswerFromPhone =>
+      'Répondez à cette discussion depuis votre téléphone.';
 }
