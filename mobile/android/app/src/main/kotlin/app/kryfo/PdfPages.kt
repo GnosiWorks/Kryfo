@@ -29,6 +29,10 @@ class PdfPages {
     // the most pixels one page may take: a huge page is drawn smaller
     private val mostPixels = 4_200_000
 
+    // a pdf with more pages is not drawn here: every page is opened once
+    // to read its size
+    private val mostPages = 5000
+
     fun handle(call: MethodCall, result: MethodChannel.Result) {
         if (worker.isShutdown) {
             result.success(null)
@@ -37,7 +41,10 @@ class PdfPages {
         worker.execute {
             val answer: Any? = try {
                 when (call.method) {
-                    "open" -> open(call.argument<String>("path"))
+                    "open" -> open(
+                        call.argument<String>("path"),
+                        call.argument<Boolean>("first") == true,
+                    )
                     "render" -> render(
                         call.argument<Number>("id")?.toInt(),
                         call.argument<Number>("page")?.toInt() ?: 0,
@@ -67,7 +74,9 @@ class PdfPages {
 
     private object NotImplemented
 
-    private fun open(path: String?): Any? {
+    // [first]: only the first page's size, for a bubble's glance. the
+    // document is kept only once every size is read, and closed on a throw
+    private fun open(path: String?, first: Boolean): Any? {
         if (path == null) return null
         val fd = ParcelFileDescriptor.open(File(path), ParcelFileDescriptor.MODE_READ_ONLY)
         val r = try {
@@ -76,15 +85,24 @@ class PdfPages {
             fd.close()
             throw e
         }
+        val sizes = ArrayList<Int>()
+        try {
+            if (r.pageCount <= 0 || r.pageCount > mostPages) {
+                throw IllegalStateException("pages")
+            }
+            for (i in 0 until if (first) 1 else r.pageCount) {
+                r.openPage(i).use {
+                    sizes.add(it.width)
+                    sizes.add(it.height)
+                }
+            }
+        } catch (e: Exception) {
+            try { r.close() } catch (_: Exception) {}
+            try { fd.close() } catch (_: Exception) {}
+            throw e
+        }
         val id = next++
         docs[id] = Doc(fd, r)
-        val sizes = ArrayList<Int>(r.pageCount * 2)
-        for (i in 0 until r.pageCount) {
-            r.openPage(i).use {
-                sizes.add(it.width)
-                sizes.add(it.height)
-            }
-        }
         return mapOf(
             "id" to id,
             "pages" to r.pageCount,
