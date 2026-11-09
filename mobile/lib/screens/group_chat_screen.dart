@@ -43,8 +43,10 @@ import '../file_kind.dart'
         knownInstaller,
         readFileFactsFresh;
 import '../file_save.dart' show saveReceivedFile;
+import '../sound_player.dart' show SoundItem, SoundPlayer;
 import '../widgets/file_actions.dart'
     show
+        FileView,
         canForwardFile,
         fileHeroTag,
         fileFactsOrName,
@@ -2020,6 +2022,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               quotedSticker: quotedSticker,
                             ),
                       onStop: () => _stopGroupSending(m),
+                      soundsAfter: () => _soundsAfter(m),
                       onRetry: m.looksFailed
                           ? () {
                               for (final x in members) {
@@ -3214,6 +3217,27 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   // stop a photo or file mid-send. the workers end between slices, the row
   // goes here, and the group is told to drop what it has.
+  // the sounds and voice notes under [m], in the order they came: what
+  // the player plays after it
+  List<SoundItem> _soundsAfter(_GMsg m) {
+    final at = _messages.indexOf(m);
+    if (at < 0) return const [];
+    return [
+      for (final x in _messages.skip(at + 1))
+        if (x.filePath != null &&
+            (isVoiceName(x.fileName) ||
+                fileViewOf(fileFactsOrName(x.filePath!, x.fileName)) ==
+                    FileView.audio))
+          SoundItem(
+            x.filePath!,
+            name: x.fileName,
+            from: x.direction == 'out' ? null : x.senderName,
+            when: x.when,
+            voice: isVoiceName(x.fileName),
+          ),
+    ];
+  }
+
   Future<void> _stopGroupSending(_GMsg m) async {
     final uid = m.msgUid;
     if (uid == null) return;
@@ -4748,6 +4772,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    // a sound of this group stops with it
+    final playing = SoundPlayer.instance.item?.path;
+    if (playing != null && _messages.any((m) => m.filePath == playing)) {
+      SoundPlayer.instance.stop();
+    }
     // the row stays with the group for its next opening
     _tray.removeListener(_trayMoved);
     _composerFocus.dispose();
@@ -6165,6 +6194,8 @@ class _GroupBubble extends StatelessWidget {
   final VoidCallback? onRetry;
   // a file's ring: stops it on its way
   final VoidCallback? onStop;
+  // a sound file: the sounds below it, which play after it
+  final List<SoundItem> Function()? soundsAfter;
   // a tap on a chip puts the same emoji on from here, or takes it off
   final void Function(String emoji)? onReact;
   final bool ripple;
@@ -6222,6 +6253,7 @@ class _GroupBubble extends StatelessWidget {
     this.onAct,
     this.onRetry,
     this.onStop,
+    this.soundsAfter,
     this.onReact,
     this.ripple = false,
     this.query = '',
@@ -6703,6 +6735,11 @@ class _GroupBubble extends StatelessWidget {
                                                               m.filePath!,
                                                               'group',
                                                             ),
+                                                      from: isOut
+                                                          ? null
+                                                          : m.senderName,
+                                                      when: m.when,
+                                                      upNext: soundsAfter,
                                                     ),
                                                   ),
                                                 ),

@@ -3149,5 +3149,14 @@
   "fileZoomIn": "Perbesar",
   "fileZoomOut": "Perkecil",
   "filePdfLocked": "PDF ini memakai kata sandi. Buka dengan aplikasi lain untuk membacanya.",
-  "filePdfUnreadable": "Kryfo tidak bisa menampilkan PDF ini. Kamu bisa menyimpannya atau membukanya dengan aplikasi lain."
+  "filePdfUnreadable": "Kryfo tidak bisa menampilkan PDF ini. Kamu bisa menyimpannya atau membukanya dengan aplikasi lain.",
+  "soundOpenPlayer": "Membuka pemutar",
+  "soundSpeed": "Kecepatan putar",
+  "soundClosePlayer": "Tutup pemutar",
+  "soundPlayingInKryfo": "Diputar di Kryfo",
+  "soundBack15": "Mundur 15 detik",
+  "soundForward15": "Maju 15 detik",
+  "soundRepeat": "Ulangi",
+  "soundUpNext": "Berikutnya",
+  "soundVoiceFrom": "Pesan suara dari {name}"
 }

@@ -3149,5 +3149,14 @@
   "fileZoomIn": "Збільшити",
   "fileZoomOut": "Зменшити",
   "filePdfLocked": "Цей PDF має пароль. Відкрий його в іншому застосунку, щоб прочитати.",
-  "filePdfUnreadable": "Kryfo не може показати цей PDF. Його можна зберегти або відкрити в іншому застосунку."
+  "filePdfUnreadable": "Kryfo не може показати цей PDF. Його можна зберегти або відкрити в іншому застосунку.",
+  "soundOpenPlayer": "Відкриває плеєр",
+  "soundSpeed": "Швидкість відтворення",
+  "soundClosePlayer": "Закрити плеєр",
+  "soundPlayingInKryfo": "Грає в Kryfo",
+  "soundBack15": "Назад на 15 секунд",
+  "soundForward15": "Вперед на 15 секунд",
+  "soundRepeat": "Повтор",
+  "soundUpNext": "Далі",
+  "soundVoiceFrom": "Голосове від {name}"
 }

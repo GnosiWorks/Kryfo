@@ -62,8 +62,10 @@ import '../widgets/hidden_mark.dart';
 import '../widgets/pins.dart';
 import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
+import '../sound_player.dart' show SoundItem, SoundPlayer;
 import '../widgets/file_actions.dart'
     show
+        FileView,
         canForwardFile,
         fileHeroTag,
         fileFactsOrName,
@@ -5813,6 +5815,7 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
           onStop: _stopSending,
           fromName: _fileFrom(m),
+          soundsAfter: _soundsAfter,
           onRetry: run == null
               ? _tapRetry
               : (_) {
@@ -5952,6 +5955,11 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    // a sound of this chat stops with it
+    final playing = SoundPlayer.instance.item?.path;
+    if (playing != null && _messages.any((m) => m.filePath == playing)) {
+      SoundPlayer.instance.stop();
+    }
     if (_sharedHeld.isNotEmpty) {
       unawaited(SharedInbox.release(_sharedHeld.toList()));
     }
@@ -6559,6 +6567,27 @@ class _ChatScreenState extends State<ChatScreen>
     if (mounted) {
       showHaloToast(context, next ? l10n.chatSaved : l10n.chatRemovedFromSaved);
     }
+  }
+
+  // the sounds and voice notes under [m], in the order they came: what
+  // the player plays after it
+  List<SoundItem> _soundsAfter(_Msg m) {
+    final at = _messages.indexOf(m);
+    if (at < 0) return const [];
+    return [
+      for (final x in _messages.skip(at + 1))
+        if (x.filePath != null &&
+            (isVoiceName(x.fileName) ||
+                fileViewOf(fileFactsOrName(x.filePath!, x.fileName)) ==
+                    FileView.audio))
+          SoundItem(
+            x.filePath!,
+            name: x.fileName,
+            from: _fileFrom(x),
+            when: x.when,
+            voice: isVoiceName(x.fileName),
+          ),
+    ];
   }
 
   // who sent a file, for its viewer's head: theirs only
@@ -8737,6 +8766,8 @@ class _Bubble extends StatelessWidget {
   final void Function(_Msg)? onStop;
   // who they are, for a file viewer's head
   final String? fromName;
+  // a sound file: the sounds below it, which play after it
+  final List<SoundItem> Function(_Msg)? soundsAfter;
   final void Function(BuildContext)? onLongPress;
   // its photo, video or file opened, or its voice note played
   final VoidCallback? onAct;
@@ -8795,6 +8826,7 @@ class _Bubble extends StatelessWidget {
     this.onRetry,
     this.onStop,
     this.fromName,
+    this.soundsAfter,
     this.onLongPress,
     this.onAct,
     this.onReact,
@@ -9272,6 +9304,11 @@ class _Bubble extends StatelessWidget {
                                                       msg.filePath!,
                                                       'chat',
                                                     ),
+                                              from: fromName,
+                                              when: msg.when,
+                                              upNext: soundsAfter == null
+                                                  ? null
+                                                  : () => soundsAfter!(msg),
                                               onCancel: onStop == null
                                                   ? null
                                                   : () => onStop!(msg),

@@ -3149,5 +3149,14 @@
   "fileZoomIn": "ज़ूम इन",
   "fileZoomOut": "ज़ूम आउट",
   "filePdfLocked": "इस PDF पर पासवर्ड है. पढ़ने के लिए इसे दूसरे ऐप से खोलें.",
-  "filePdfUnreadable": "Kryfo यह PDF नहीं दिखा सकता. आप इसे सेव कर सकते हैं या दूसरे ऐप से खोल सकते हैं."
+  "filePdfUnreadable": "Kryfo यह PDF नहीं दिखा सकता. आप इसे सेव कर सकते हैं या दूसरे ऐप से खोल सकते हैं.",
+  "soundOpenPlayer": "प्लेयर खोलता है",
+  "soundSpeed": "प्लेबैक स्पीड",
+  "soundClosePlayer": "प्लेयर बंद करें",
+  "soundPlayingInKryfo": "Kryfo में चल रहा है",
+  "soundBack15": "15 सेकंड पीछे",
+  "soundForward15": "15 सेकंड आगे",
+  "soundRepeat": "दोहराएँ",
+  "soundUpNext": "आगे",
+  "soundVoiceFrom": "{name} का वॉइस मैसेज"
 }

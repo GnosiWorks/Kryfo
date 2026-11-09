@@ -12001,4 +12001,33 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get filePdfUnreadable =>
       'Kryfo यह PDF नहीं दिखा सकता. आप इसे सेव कर सकते हैं या दूसरे ऐप से खोल सकते हैं.';
+
+  @override
+  String get soundOpenPlayer => 'प्लेयर खोलता है';
+
+  @override
+  String get soundSpeed => 'प्लेबैक स्पीड';
+
+  @override
+  String get soundClosePlayer => 'प्लेयर बंद करें';
+
+  @override
+  String get soundPlayingInKryfo => 'Kryfo में चल रहा है';
+
+  @override
+  String get soundBack15 => '15 सेकंड पीछे';
+
+  @override
+  String get soundForward15 => '15 सेकंड आगे';
+
+  @override
+  String get soundRepeat => 'दोहराएँ';
+
+  @override
+  String get soundUpNext => 'आगे';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return '$name का वॉइस मैसेज';
+  }
 }

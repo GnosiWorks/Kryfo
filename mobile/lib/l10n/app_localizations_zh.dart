@@ -11332,6 +11332,35 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filePdfUnreadable => 'Kryfo 无法显示此 PDF。你可以保存它，或用其他应用打开。';
+
+  @override
+  String get soundOpenPlayer => '打开播放器';
+
+  @override
+  String get soundSpeed => '播放速度';
+
+  @override
+  String get soundClosePlayer => '关闭播放器';
+
+  @override
+  String get soundPlayingInKryfo => '正在 Kryfo 中播放';
+
+  @override
+  String get soundBack15 => '后退 15 秒';
+
+  @override
+  String get soundForward15 => '快进 15 秒';
+
+  @override
+  String get soundRepeat => '重复播放';
+
+  @override
+  String get soundUpNext => '下一个';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return '来自 $name 的语音消息';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22542,4 +22571,33 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get filePdfUnreadable => 'Kryfo 無法顯示此 PDF。你可以儲存它，或用其他 App 開啟。';
+
+  @override
+  String get soundOpenPlayer => '開啟播放器';
+
+  @override
+  String get soundSpeed => '播放速度';
+
+  @override
+  String get soundClosePlayer => '關閉播放器';
+
+  @override
+  String get soundPlayingInKryfo => '正在 Kryfo 中播放';
+
+  @override
+  String get soundBack15 => '倒退 15 秒';
+
+  @override
+  String get soundForward15 => '快轉 15 秒';
+
+  @override
+  String get soundRepeat => '重複播放';
+
+  @override
+  String get soundUpNext => '下一個';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return '來自 $name 的語音訊息';
+  }
 }

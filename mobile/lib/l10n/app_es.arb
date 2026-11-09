@@ -3149,5 +3149,14 @@
   "fileZoomIn": "Acercar",
   "fileZoomOut": "Alejar",
   "filePdfLocked": "Este PDF tiene contraseña. Ábrelo con otra app para leerlo.",
-  "filePdfUnreadable": "Kryfo no puede mostrar este PDF. Puedes guardarlo o abrirlo con otra app."
+  "filePdfUnreadable": "Kryfo no puede mostrar este PDF. Puedes guardarlo o abrirlo con otra app.",
+  "soundOpenPlayer": "Abre el reproductor",
+  "soundSpeed": "Velocidad de reproducción",
+  "soundClosePlayer": "Cerrar reproductor",
+  "soundPlayingInKryfo": "Sonando en Kryfo",
+  "soundBack15": "Atrás 15 segundos",
+  "soundForward15": "Adelante 15 segundos",
+  "soundRepeat": "Repetir",
+  "soundUpNext": "A continuación",
+  "soundVoiceFrom": "Mensaje de voz de {name}"
 }

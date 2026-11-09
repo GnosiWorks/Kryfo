@@ -16,7 +16,10 @@ import 'motion.dart' show kHouseCurve, motionStill;
 import 'sealed_picture.dart';
 import 'photo_viewer.dart';
 import 'voice_parts.dart';
+import 'file_actions.dart' show FileView, fileFactsOrName, fileViewOf;
 import 'file_bubble.dart';
+import 'sound_views.dart' show SoundFileBubble, soundHeroTag;
+import '../sound_player.dart' show SoundItem;
 
 export 'file_bubble.dart' show FileCard, FileSendRing;
 import '../file_kind.dart';
@@ -75,7 +78,26 @@ Widget fileCard(
   String? sendingUid,
   VoidCallback? onCancel,
   Object? heroTag,
+  // a sound file: who sent it, when, and what plays after it
+  String? from,
+  DateTime? when,
+  List<SoundItem> Function()? upNext,
 }) {
+  // a sound kryfo plays is a player of its own, once it is all here
+  if (filePath != null && sendingUid == null) {
+    final facts = fileFactsOrName(filePath, fileName);
+    if (fileViewOf(facts) == FileView.audio) {
+      return SoundFileBubble(
+        path: filePath,
+        name: fileName,
+        isOut: isOut,
+        from: from,
+        when: when,
+        upNext: upNext,
+        heroTag: heroTag == null ? null : soundHeroTag(filePath, heroTag),
+      );
+    }
+  }
   final drawn = shape ?? fileShapeNow(filePath, fileName);
   if (filePath != null && drawn == FileShape.picture) {
     final fallback = FileCard(path: filePath, name: fileName, isOut: isOut);

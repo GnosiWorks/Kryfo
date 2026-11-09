@@ -12138,4 +12138,33 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get filePdfUnreadable =>
       'لا يستطيع Kryfo عرض ملف PDF هذا. يمكنك حفظه أو فتحه بتطبيق آخر.';
+
+  @override
+  String get soundOpenPlayer => 'يفتح المشغّل';
+
+  @override
+  String get soundSpeed => 'سرعة التشغيل';
+
+  @override
+  String get soundClosePlayer => 'إغلاق المشغّل';
+
+  @override
+  String get soundPlayingInKryfo => 'يُشغَّل في Kryfo';
+
+  @override
+  String get soundBack15 => 'رجوع 15 ثانية';
+
+  @override
+  String get soundForward15 => 'تقديم 15 ثانية';
+
+  @override
+  String get soundRepeat => 'تكرار';
+
+  @override
+  String get soundUpNext => 'التالي';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return 'رسالة صوتية من $name';
+  }
 }

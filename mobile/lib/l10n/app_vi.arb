@@ -3149,5 +3149,14 @@
   "fileZoomIn": "Phóng to",
   "fileZoomOut": "Thu nhỏ",
   "filePdfLocked": "PDF này có mật khẩu. Hãy mở bằng ứng dụng khác để đọc.",
-  "filePdfUnreadable": "Kryfo không hiển thị được PDF này. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác."
+  "filePdfUnreadable": "Kryfo không hiển thị được PDF này. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác.",
+  "soundOpenPlayer": "Mở trình phát",
+  "soundSpeed": "Tốc độ phát",
+  "soundClosePlayer": "Đóng trình phát",
+  "soundPlayingInKryfo": "Đang phát trong Kryfo",
+  "soundBack15": "Lùi 15 giây",
+  "soundForward15": "Tiến 15 giây",
+  "soundRepeat": "Lặp lại",
+  "soundUpNext": "Tiếp theo",
+  "soundVoiceFrom": "Tin nhắn thoại từ {name}"
 }

@@ -11994,4 +11994,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get filePdfUnreadable =>
       'Kryfo can\'t draw this PDF. You can save it or open it with another app.';
+
+  @override
+  String get soundOpenPlayer => 'Opens the player';
+
+  @override
+  String get soundSpeed => 'Playback speed';
+
+  @override
+  String get soundClosePlayer => 'Close player';
+
+  @override
+  String get soundPlayingInKryfo => 'Playing in Kryfo';
+
+  @override
+  String get soundBack15 => 'Back 15 seconds';
+
+  @override
+  String get soundForward15 => 'Forward 15 seconds';
+
+  @override
+  String get soundRepeat => 'Repeat';
+
+  @override
+  String get soundUpNext => 'Up next';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return 'Voice message from $name';
+  }
 }

@@ -3149,5 +3149,14 @@
   "fileZoomIn": "بزرگ‌نمایی",
   "fileZoomOut": "کوچک‌نمایی",
   "filePdfLocked": "این PDF رمز دارد. برای خواندن، آن را با برنامه دیگری باز کنید.",
-  "filePdfUnreadable": "Kryfo نمی‌تواند این PDF را نمایش دهد. می‌توانید آن را ذخیره کنید یا با برنامه دیگری باز کنید."
+  "filePdfUnreadable": "Kryfo نمی‌تواند این PDF را نمایش دهد. می‌توانید آن را ذخیره کنید یا با برنامه دیگری باز کنید.",
+  "soundOpenPlayer": "پخش‌کننده را باز می‌کند",
+  "soundSpeed": "سرعت پخش",
+  "soundClosePlayer": "بستن پخش‌کننده",
+  "soundPlayingInKryfo": "در حال پخش در Kryfo",
+  "soundBack15": "۱۵ ثانیه عقب",
+  "soundForward15": "۱۵ ثانیه جلو",
+  "soundRepeat": "تکرار",
+  "soundUpNext": "بعدی",
+  "soundVoiceFrom": "پیام صوتی از {name}"
 }

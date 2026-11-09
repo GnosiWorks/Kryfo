@@ -3149,5 +3149,14 @@
   "fileZoomIn": "Yakınlaştır",
   "fileZoomOut": "Uzaklaştır",
   "filePdfLocked": "Bu PDF'in parolası var. Okumak için başka bir uygulamayla aç.",
-  "filePdfUnreadable": "Kryfo bu PDF'i gösteremiyor. Kaydedebilir ya da başka bir uygulamayla açabilirsin."
+  "filePdfUnreadable": "Kryfo bu PDF'i gösteremiyor. Kaydedebilir ya da başka bir uygulamayla açabilirsin.",
+  "soundOpenPlayer": "Oynatıcıyı açar",
+  "soundSpeed": "Oynatma hızı",
+  "soundClosePlayer": "Oynatıcıyı kapat",
+  "soundPlayingInKryfo": "Kryfo'da çalıyor",
+  "soundBack15": "15 saniye geri",
+  "soundForward15": "15 saniye ileri",
+  "soundRepeat": "Tekrarla",
+  "soundUpNext": "Sıradaki",
+  "soundVoiceFrom": "{name} adlı kişiden sesli mesaj"
 }

@@ -11,6 +11,7 @@ import 'dlog.dart';
 import 'file_peek.dart' show forgetFirstLinesOf;
 import 'pdf_pages.dart' show forgetPdfGlance;
 import 'photo_blur.dart' show forgetBlurOf;
+import 'sound_player.dart' show SoundPlayer;
 
 /// zeros over [path] where its bytes are, then the name goes, also when a
 /// write fails. a link is only unlinked, never followed. [probe] hears the
@@ -22,6 +23,8 @@ Future<void> shredFile(String path, {void Function(int length)? probe}) async {
     // and what a file bubble kept of it
     forgetFirstLinesOf(path);
     forgetPdfGlance(path);
+    // a sound file that goes stops playing first
+    SoundPlayer.instance.forget(path);
     await shredFile('$path$kBlurLeaf');
   }
   final type = await FileSystemEntity.type(path, followLinks: false);

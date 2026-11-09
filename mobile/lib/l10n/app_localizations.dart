@@ -19194,6 +19194,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Kryfo can\'t draw this PDF. You can save it or open it with another app.'**
   String get filePdfUnreadable;
+
+  /// sound file bubble: what a tap does, for screen readers
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the player'**
+  String get soundOpenPlayer;
+
+  /// sound player speed button
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get soundSpeed;
+
+  /// sound player close button
+  ///
+  /// In en, this message translates to:
+  /// **'Close player'**
+  String get soundClosePlayer;
+
+  /// sound player head: the sound stays inside the app
+  ///
+  /// In en, this message translates to:
+  /// **'Playing in Kryfo'**
+  String get soundPlayingInKryfo;
+
+  /// sound player button
+  ///
+  /// In en, this message translates to:
+  /// **'Back 15 seconds'**
+  String get soundBack15;
+
+  /// sound player button
+  ///
+  /// In en, this message translates to:
+  /// **'Forward 15 seconds'**
+  String get soundForward15;
+
+  /// sound player button: plays the sound again at its end
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get soundRepeat;
+
+  /// sound player: the sound that plays after this one
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get soundUpNext;
+
+  /// sound player up next: a voice note
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message from {name}'**
+  String soundVoiceFrom(String name);
 }
 
 class _AppLocalizationsDelegate

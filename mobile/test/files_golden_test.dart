@@ -15,6 +15,7 @@ import 'package:kryfo/transfers.dart';
 import 'package:kryfo/widgets/file_actions.dart';
 import 'package:kryfo/widgets/file_bubble.dart';
 import 'package:kryfo/widgets/file_wait.dart';
+import 'package:kryfo/widgets/sound_views.dart';
 
 import 'narrow_settings.dart' show loadAppFonts;
 
@@ -70,6 +71,7 @@ void main() {
     tmp.deleteSync(recursive: true);
     pdfBackendForTest = null;
     pdfViewHereForTest = null;
+    audioViewHereForTest = null;
     forgetPdfPreviews();
     fileWaits.value = const {};
   });
@@ -90,6 +92,7 @@ void main() {
       addTearDown(() => HaloColors.setLight(false));
       pdfBackendForTest = _Paper();
       pdfViewHereForTest = true;
+      audioViewHereForTest = true;
       final pdf = File('${tmp.path}/in_a.pdf')
         ..writeAsBytesSync(
           List.filled(2400 * 1024, 1)..setAll(0, '%PDF-1.7\n'.codeUnits),
@@ -167,7 +170,7 @@ void main() {
                 ),
                 bubble(
                   false,
-                  FileCard(
+                  SoundFileBubble(
                     path: m4a.path,
                     name: 'Rain on the balcony.m4a',
                     isOut: false,

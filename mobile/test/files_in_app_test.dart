@@ -11,6 +11,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
 import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/file_peek.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -300,6 +301,48 @@ void main() {
       await settle(t);
       expect(t.takeException(), isNull);
       expect(find.text('.docx'), findsOneWidget);
+    });
+  });
+
+  group('on a computer', () {
+    setUp(() => onDesktop = true);
+    tearDown(() => onDesktop = false);
+
+    testWidgets('a pdf is a tile with no drawn page, and opens outside', (
+      t,
+    ) async {
+      final fake = FakePdf();
+      pdfBackendForTest = fake;
+      final calls = <String>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('halo/platform'),
+        (c) async {
+          calls.add(c.method);
+          return c.method == 'openFile' ? true : null;
+        },
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          const MethodChannel('halo/platform'),
+          null,
+        ),
+      );
+      fileSheetPickForTest = () => FileSheetPick.open;
+      final f = made('in_m.pdf', '%PDF-1.7\n');
+      expect(fileViewOf(const FileFacts(FileKind.pdf, 'pdf')), isNull);
+      await t.pumpWidget(
+        host(FileCard(path: f.path, name: 'Lease.pdf', isOut: false)),
+      );
+      await settle(t);
+      expect(find.text('PDF'), findsOneWidget);
+      expect(find.byType(PdfFirstPage), findsNothing);
+      expect(fake.opens, 0, reason: 'nothing draws a pdf on a computer');
+      final ctx = t.element(find.byType(FileCard));
+      unawaited(openReceivedFile(ctx, f.path, 'Lease.pdf'));
+      await settle(t);
+      expect(find.byType(PdfViewer), findsNothing);
+      expect(calls, contains('openFile'));
+      await t.pump(const Duration(seconds: 3));
     });
   });
 

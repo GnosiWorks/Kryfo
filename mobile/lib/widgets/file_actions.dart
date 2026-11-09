@@ -2,6 +2,7 @@
 // what a file in a chat can do: be looked at here, in kryfo's own viewers,
 // so no other app gets a decrypted copy; go to another chat; be saved; or,
 // last and said plainly, be handed to another app
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,11 +18,13 @@ import '../screens/dev_about_sheet.dart' show devForwardTarget;
 import '../screens/forward_sheet.dart' show pickWordsChat;
 import '../screens/share_files_sheet.dart' show landFiles;
 import '../share_files.dart' show SharedCopy;
+import '../sound_player.dart';
 import '../theme.dart';
 import '../voice_format.dart' show isVoiceName;
 import 'file_badge.dart';
 import 'pdf_viewer.dart';
 import 'photo_viewer.dart';
+import 'sound_views.dart' show openSoundPlayer;
 import 'text_viewer.dart';
 import 'video_viewer.dart';
 
@@ -37,9 +40,15 @@ bool? pdfViewHereForTest;
 bool get pdfViewHere =>
     pdfViewHereForTest ?? (Platform.isAndroid && !onDesktop);
 
-/// the sound player is not here yet: it comes with the viewers' next step
+/// a phone plays any sound file; a computer only what its own player reads
+/// (ogg opus and wav, desktop_audio.dart)
 @visibleForTesting
-bool audioViewHere = false;
+bool? audioViewHereForTest;
+bool audioViewHere(FileFacts facts) =>
+    audioViewHereForTest ??
+    (onDesktop
+        ? const {'ogg', 'opus', 'wav'}.contains(facts.ext)
+        : Platform.isAndroid);
 
 /// the facts read from the bytes, or by the name until they are
 FileFacts fileFactsOrName(String path, String? name) =>
@@ -54,7 +63,7 @@ FileView? fileViewOf(FileFacts facts) {
   if (fileShapeOf(facts) == FileShape.video) return FileView.video;
   if (facts.kind == FileKind.pdf) return pdfViewHere ? FileView.pdf : null;
   if (facts.kind == FileKind.audio) {
-    return audioViewHere ? FileView.audio : null;
+    return audioViewHere(facts) ? FileView.audio : null;
   }
   if (textViewable(facts.ext)) return FileView.text;
   return null;
@@ -71,6 +80,8 @@ Future<bool> viewInKryfo(
   String? from,
   // the bubble's tile, which flies to the viewer's head
   Object? heroTag,
+  // a sound: what plays after it
+  List<SoundItem> Function()? upNext,
 }) async {
   final facts = await readFileFacts(path, name);
   if (!context.mounted) return false;
@@ -106,8 +117,16 @@ Future<bool> viewInKryfo(
         size: size,
       );
     case FileView.audio:
-      // the sound player lands in the next step
-      return false;
+      final p = SoundPlayer.instance;
+      if (!p.isOn(path)) {
+        unawaited(
+          p.play(
+            SoundItem(path, name: name, from: from),
+            next: upNext?.call() ?? const [],
+          ),
+        );
+      }
+      await openSoundPlayer(context, heroTag: heroTag);
     case null:
       return false;
   }

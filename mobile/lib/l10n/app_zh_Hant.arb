@@ -3149,5 +3149,14 @@
   "fileZoomIn": "放大",
   "fileZoomOut": "縮小",
   "filePdfLocked": "此 PDF 有密碼。請用其他 App 開啟閱讀。",
-  "filePdfUnreadable": "Kryfo 無法顯示此 PDF。你可以儲存它，或用其他 App 開啟。"
+  "filePdfUnreadable": "Kryfo 無法顯示此 PDF。你可以儲存它，或用其他 App 開啟。",
+  "soundOpenPlayer": "開啟播放器",
+  "soundSpeed": "播放速度",
+  "soundClosePlayer": "關閉播放器",
+  "soundPlayingInKryfo": "正在 Kryfo 中播放",
+  "soundBack15": "倒退 15 秒",
+  "soundForward15": "快轉 15 秒",
+  "soundRepeat": "重複播放",
+  "soundUpNext": "下一個",
+  "soundVoiceFrom": "來自 {name} 的語音訊息"
 }

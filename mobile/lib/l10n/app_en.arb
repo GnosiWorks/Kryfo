@@ -15069,5 +15069,46 @@
   "filePdfUnreadable": "Kryfo can't draw this PDF. You can save it or open it with another app.",
   "@filePdfUnreadable": {
     "description": "pdf viewer: the renderer could not open the file"
+  },
+  "soundOpenPlayer": "Opens the player",
+  "@soundOpenPlayer": {
+    "description": "sound file bubble: what a tap does, for screen readers"
+  },
+  "soundSpeed": "Playback speed",
+  "@soundSpeed": {
+    "description": "sound player speed button"
+  },
+  "soundClosePlayer": "Close player",
+  "@soundClosePlayer": {
+    "description": "sound player close button"
+  },
+  "soundPlayingInKryfo": "Playing in Kryfo",
+  "@soundPlayingInKryfo": {
+    "description": "sound player head: the sound stays inside the app"
+  },
+  "soundBack15": "Back 15 seconds",
+  "@soundBack15": {
+    "description": "sound player button"
+  },
+  "soundForward15": "Forward 15 seconds",
+  "@soundForward15": {
+    "description": "sound player button"
+  },
+  "soundRepeat": "Repeat",
+  "@soundRepeat": {
+    "description": "sound player button: plays the sound again at its end"
+  },
+  "soundUpNext": "Up next",
+  "@soundUpNext": {
+    "description": "sound player: the sound that plays after this one"
+  },
+  "soundVoiceFrom": "Voice message from {name}",
+  "@soundVoiceFrom": {
+    "description": "sound player up next: a voice note",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

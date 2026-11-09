@@ -11980,4 +11980,33 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get filePdfUnreadable =>
       'Kryfo không hiển thị được PDF này. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác.';
+
+  @override
+  String get soundOpenPlayer => 'Mở trình phát';
+
+  @override
+  String get soundSpeed => 'Tốc độ phát';
+
+  @override
+  String get soundClosePlayer => 'Đóng trình phát';
+
+  @override
+  String get soundPlayingInKryfo => 'Đang phát trong Kryfo';
+
+  @override
+  String get soundBack15 => 'Lùi 15 giây';
+
+  @override
+  String get soundForward15 => 'Tiến 15 giây';
+
+  @override
+  String get soundRepeat => 'Lặp lại';
+
+  @override
+  String get soundUpNext => 'Tiếp theo';
+
+  @override
+  String soundVoiceFrom(String name) {
+    return 'Tin nhắn thoại từ $name';
+  }
 }
