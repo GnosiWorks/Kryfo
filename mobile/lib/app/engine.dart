@@ -540,6 +540,10 @@ class HaloEngine {
   // 'ok' or why not. off the ui thread: it waits on tor's control port
   Future<String> reconnectNow() => _torCtlOnIsolate('HaloReconnectNow');
 
+  // the same for a send that waited long, made by the strip itself: refused
+  // while a bounce under a minute old still brings the route back
+  Future<String> reconnectForWait() => _torCtlOnIsolate('HaloReconnectWaiting');
+
   // android reports a new default network: tor is bounced once it has been
   // quiet a few seconds. looked up on first use so older engines still load.
   late final CounterFnDart _networkState = _lib

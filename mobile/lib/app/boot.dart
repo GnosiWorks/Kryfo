@@ -6,6 +6,7 @@ part of '../main.dart';
 // the way out of a send stuck on tor, shared by every chat and the home card
 final torValve = TorValve(
   reconnect: () => appState.reconnectNow(),
+  autoReconnect: () => appState.reconnectForWait(),
   restart: () => restartKeepingDrafts(reopenApp),
   busyElsewhere: () =>
       mediaInflight.isNotEmpty ||

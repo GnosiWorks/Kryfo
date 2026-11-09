@@ -261,9 +261,14 @@ extension AppStateRoute on AppState {
   }
 
   // the same, waited on, for the way out a stuck send offers
-  Future<String> reconnectNow() {
+  Future<String> reconnectNow() => _reconnectBy(engine.reconnectNow);
+
+  // the one the strip makes by itself, which waits out a fresh bounce
+  Future<String> reconnectForWait() => _reconnectBy(engine.reconnectForWait);
+
+  Future<String> _reconnectBy(Future<String> Function() go) {
     _newRoute();
-    return engine.reconnectNow().then((r) {
+    return go().then((r) {
       // turned down: no bounce is coming, the next bump is not this one
       if (r.startsWith('error')) _routeOnPurpose = 0;
       return r;

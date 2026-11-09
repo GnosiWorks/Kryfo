@@ -39,6 +39,7 @@ ValveStage valveStageAt({
   required DateTime? triedAt,
   required bool triedFailed,
   bool restartBlocked = false,
+  bool triedAuto = false,
 }) {
   // a decoy sends nothing, outside onion there is no tor to restart, and
   // with no network at all neither would help
@@ -52,6 +53,9 @@ ValveStage valveStageAt({
   if (tried != null) {
     final waited = now.difference(tried);
     if (!triedFailed && waited < kValveGrace) return ValveStage.cooling;
+    // one the strip made itself that tor took: nobody asked for more, and
+    // in an outage the restart would not help. the reconnect stays offered
+    if (triedAuto && !triedFailed) return ValveStage.offer;
     if (!linkUp && (triedFailed || waited >= kValveGrace)) {
       return restartBlocked ? ValveStage.offer : ValveStage.restart;
     }
@@ -80,6 +84,7 @@ class TorValve extends ChangeNotifier {
   TorValve({
     required this.reconnect,
     required this.restart,
+    this.autoReconnect,
     this.beforeRestart,
     this.busyElsewhere,
     this.passRuns,
@@ -88,6 +93,10 @@ class TorValve extends ChangeNotifier {
 
   /// tor reconnected now, past every guard. 'ok' or why not
   final Future<String> Function() reconnect;
+
+  /// the reconnect the strip makes by itself: the engine refuses it while a
+  /// bounce under a minute old still brings the route back. null: [reconnect]
+  final Future<String> Function()? autoReconnect;
 
   /// the app started again in a new process. the queue is in the database
   final Future<void> Function() restart;
@@ -110,6 +119,7 @@ class TorValve extends ChangeNotifier {
   DateTime? _triedAt;
   bool _triedFailed = false;
   DateTime? _autoAt;
+  bool _triedAuto = false;
 
   DateTime now() => _clock();
   bool get busy => _busy;
@@ -128,6 +138,7 @@ class TorValve extends ChangeNotifier {
     if (!_triedFailed && _clock().difference(tried) < kValveGrace) return;
     _triedAt = null;
     _triedFailed = false;
+    _triedAuto = false;
   }
 
   Future<void> tryReconnect() async {
@@ -180,15 +191,16 @@ class TorValve extends ChangeNotifier {
       return;
     }
     _autoAt = _clock();
-    final r = await _reconnect();
+    final r = await _reconnect(auto: true);
     if (torWaitsWith(r, passRuns: passRuns?.call() ?? false)) {
       _triedAt = null;
       _triedFailed = false;
+      _triedAuto = false;
       notifyListeners();
     }
   }
 
-  Future<String> _reconnect() async {
+  Future<String> _reconnect({bool auto = false}) async {
     if (_busy) return 'busy';
     final tried = _triedAt;
     if (tried != null &&
@@ -200,12 +212,13 @@ class TorValve extends ChangeNotifier {
     notifyListeners();
     String r;
     try {
-      r = await reconnect();
+      r = await ((auto ? autoReconnect : null) ?? reconnect)();
     } catch (e) {
       r = 'error: $e';
     }
     _busy = false;
     _triedAt = _clock();
+    _triedAuto = auto;
     // a wait on purpose is not a stuck tor: asleep for the check-ins, no
     // network, or automatic still finding its way in
     _triedFailed =
@@ -246,5 +259,6 @@ class TorValve extends ChangeNotifier {
     triedAt: _triedAt,
     triedFailed: _triedFailed,
     restartBlocked: restartBlocked,
+    triedAuto: _triedAuto,
   );
 }

@@ -268,20 +268,19 @@ void main() {
     expect(calls, 0);
     await look();
     expect(calls, 1);
-    // tried in this wait: the next step is the restart, by hand
+    // tried in this wait, and tor took it: nobody asked for a restart, so
+    // the reconnect stays offered, by hand from now on
     now = now.add(const Duration(minutes: 10));
     await look();
     expect(calls, 1);
-    expect(
-      v.stageFor(
-        private: true,
-        quiet: false,
-        online: true,
-        waitingSince: t0,
-        linkUp: false,
-      ),
-      ValveStage.restart,
+    ValveStage stage() => v.stageFor(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: t0,
+      linkUp: false,
     );
+    expect(stage(), ValveStage.offer);
     // the route came back and went again, the same send still waiting
     v.sawLink(true);
     final back = now;
@@ -298,6 +297,101 @@ void main() {
     v.sawLink(true);
     await look();
     expect(calls, 3);
+  });
+
+  test('one the strip made that tor would not take offers the restart, '
+      'one by hand after it as before', () async {
+    var now = t0.add(const Duration(minutes: 2));
+    final v = TorValve(
+      reconnect: () async => 'ok',
+      autoReconnect: () async => 'error: control port timeout',
+      restart: () async {},
+      clock: () => now,
+    );
+    ValveStage stage() => v.stageFor(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: t0,
+      linkUp: false,
+    );
+    await v.autoTry(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: t0,
+      linkUp: false,
+    );
+    expect(stage(), ValveStage.restart);
+
+    final w = TorValve(
+      reconnect: () async => 'ok',
+      autoReconnect: () async => 'ok',
+      restart: () async {},
+      clock: () => now,
+    );
+    ValveStage wStage() => w.stageFor(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: t0,
+      linkUp: false,
+    );
+    await w.autoTry(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: t0,
+      linkUp: false,
+    );
+    now = now.add(kValveGrace);
+    expect(wStage(), ValveStage.offer);
+    await w.tryReconnect();
+    now = now.add(kValveGrace);
+    expect(wStage(), ValveStage.restart);
+  });
+
+  test('the strip makes its own engine call, and none in a decoy', () async {
+    final calls = <String>[];
+    final v = TorValve(
+      reconnect: () async {
+        calls.add('hand');
+        return 'ok';
+      },
+      autoReconnect: () async {
+        calls.add('strip');
+        return 'error: too soon';
+      },
+      restart: () async {},
+      clock: () => t0.add(const Duration(minutes: 2)),
+    );
+    await v.autoTry(
+      private: true,
+      quiet: true,
+      online: true,
+      waitingSince: t0,
+      linkUp: false,
+    );
+    expect(calls, isEmpty);
+    await v.autoTry(
+      private: true,
+      quiet: false,
+      online: true,
+      waitingSince: t0,
+      linkUp: false,
+    );
+    expect(calls, ['strip']);
+    // a fresh bounce made it wait: the strip still offers the reconnect
+    expect(
+      v.stageFor(
+        private: true,
+        quiet: false,
+        online: true,
+        waitingSince: t0,
+        linkUp: false,
+      ),
+      ValveStage.offer,
+    );
   });
 
   test('an automatic reconnect told to wait still offers one', () async {
