@@ -286,12 +286,15 @@ func (p Pair) Config(dir string) string {
 	return b.String()
 }
 
+// workspace: the pinned bergamot reserves 5 MB and grows it as a batch asks,
+// so it reads no workspace line (2 to 512 time and weigh the same on the
+// host); 32 keeps a build that does read it from reserving 128 per model
 const engineOptions = `beam-size: 1
 normalize: 1.0
 word-penalty: 0
 max-length-break: 128
 mini-batch-words: 1024
-workspace: 128
+workspace: 32
 max-length-factor: 2.0
 skip-cost: true
 cpu-threads: 0
