@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -131,6 +132,12 @@ func TestPaceLeavesNoOneBehindAGoneWaiter(t *testing.T) {
 	cancel()
 	if err := gone.wait(ctx); err == nil {
 		t.Fatal("a waiter whose wait ended got through")
+	}
+	dialPace.Lock()
+	still := slices.Contains(dialPace.q, gone)
+	dialPace.Unlock()
+	if still {
+		t.Fatal("a waiter whose wait ended is still in line")
 	}
 	// a place handed out and never used holds nothing either: the dial runs
 	// on its own
