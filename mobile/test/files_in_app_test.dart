@@ -16,6 +16,7 @@ import 'package:kryfo/file_kind.dart';
 import 'package:kryfo/file_peek.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
+import 'package:kryfo/main.dart' show AppStateScreen, appState;
 import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/pdf_pages.dart';
 import 'package:kryfo/picture_lock.dart';
@@ -797,10 +798,23 @@ void main() {
       expect(v.page, 6);
     });
 
-    testWidgets('in a chat that blocks, no way out', (t) async {
-      await openPdf(t, FakePdf(), kept: true);
-      expect(find.text(l10n.fileOpenWith), findsNothing);
-    });
+    for (final kept in [true, false]) {
+      testWidgets(
+        kept
+            ? 'in a chat that blocks: no forward, save or way out, and no '
+                  'screenshots'
+            : 'elsewhere: forward, save and the way out',
+        (t) async {
+          final held = appState.secureForced;
+          await openPdf(t, FakePdf(), kept: kept);
+          final shown = kept ? findsNothing : findsOneWidget;
+          expect(find.text(l10n.fileOpenWith), shown);
+          expect(find.text(l10n.fileSaveToDevice), shown);
+          expect(find.text(l10n.chatForward), shown);
+          expect(appState.secureForced, kept || held);
+        },
+      );
+    }
   });
 
   test('the lock reaches the file glances and documents', () {
