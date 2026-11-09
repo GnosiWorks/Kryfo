@@ -34,7 +34,7 @@ if [ -f "$B/lib/libsqlcipher.so.0" ] && ldd "$B/lib/libsqlcipher.so.0" | grep -q
   no "libsqlcipher.so.0 does not resolve"
 fi
 # a system sqlite gtk loaded first must not take the sqlcipher's own calls
-if [ -f "$B/lib/libsqlcipher.so.0" ] && ! readelf -d "$B/lib/libsqlcipher.so.0" | grep -q '(SYMBOLIC)'; then
+if [ -f "$B/lib/libsqlcipher.so.0" ] && ! readelf -d "$B/lib/libsqlcipher.so.0" | grep -qE '\(SYMBOLIC\)|\(FLAGS\).*SYMBOLIC'; then
   no "libsqlcipher.so.0 is not linked with -Bsymbolic"
 fi
 ls "$B/lib" | grep -q '^libsqlite3' && no "a plain sqlite is in lib/"

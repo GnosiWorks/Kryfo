@@ -35,7 +35,7 @@ cat > /tmp/db.py <<'PY'
 import ctypes, sys
 ctypes.CDLL("libgtk-3.so.0", mode=ctypes.RTLD_GLOBAL)
 if "libsqlite3" not in open("/proc/self/maps").read():
-    print("note gtk loads no system sqlite here, the check below proves less")
+    sys.exit("gtk loaded no system sqlite: the gate would prove nothing, check the pin")
 c = ctypes.CDLL(sys.argv[1])
 db = ctypes.c_void_p()
 assert c.sqlite3_initialize() == 0
