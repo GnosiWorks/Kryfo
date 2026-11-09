@@ -490,6 +490,20 @@ void main() {
       ]);
     }, skip: skip);
 
+    test('a refused answer leaves no key: my computer\'s try again goes once '
+        'the chat is in the inbox', () async {
+      devPhone();
+      expect(await answer('p:bob', {'u': 'u-again', 'm': 'later'}), isFalse);
+      expect(await rows('u-again'), isEmpty);
+      await s.insert('support_chats', {
+        'halo_id': 'bob',
+        'first_at': 7,
+        'state': 'open',
+      });
+      expect(await answer('p:bob', {'u': 'u-again', 'm': 'later'}), isTrue);
+      expect((await rows('u-again')).single['plaintext'], 'later');
+    }, skip: skip);
+
     test('never a file, a picture, a voice note, a sticker, a poll or an '
         'introduction', () async {
       devPhone();
