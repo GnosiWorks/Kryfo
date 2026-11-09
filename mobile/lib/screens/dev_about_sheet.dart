@@ -173,8 +173,10 @@ Future<void> writeToMarios(BuildContext context) async {
 
 // a forward lands only in a chat that has started, so it never skips what
 // the chat says before the first send. a retired key takes nothing, and
-// nor does a chat that only reads
+// nor does a chat that only reads. one rule for every picker: an open vault
+// sends nothing out to it, and a decoy offers its own row
 DevRow? get devForwardTarget {
+  if (session.vault != null) return null;
   final d = appState.devRow;
   if (d == null ||
       !d.started ||
