@@ -265,18 +265,31 @@ type subTurn struct {
 	// not: a server can cause them at will, so those take no rank
 	// (dialpace.go) and the open chat waits its turn
 	made bool
-	// when its socket last went down, zero for never up
-	downAt time.Time
+	// when its socket last came up and last went down, zero for never
+	upAt, downAt time.Time
+}
+
+func later(a, b time.Time) time.Time {
+	if a.After(b) {
+		return a
+	}
+	return b
 }
 
 // its socket went down: a relay's drop, a dead ping, a probe unanswered
 func (t *subTurn) lost() { t.downAt = time.Now() }
 
+// down since it was last up. one that came up and ended by a way that did
+// not say so counts as up: it takes no rank
+func (t *subTurn) downNow() bool {
+	return t.upAt.IsZero() || !t.downAt.Before(t.upAt)
+}
+
 // its socket was down already at ev, a zero ev being none. a socket a
-// relay drops after the event was up at it: its redial must not name the
-// open chat, however soon it comes
+// relay drops after the event was up at it, or dialling and up soon after:
+// its redial must not name the open chat, however soon it comes
 func (t *subTurn) downBefore(ev time.Time) bool {
-	return !ev.IsZero() && !t.downAt.After(ev)
+	return !ev.IsZero() && t.downNow() && !t.downAt.After(ev)
 }
 
 // a shared socket's turn under a kick or a wake: drawn once, by the first
@@ -346,7 +359,10 @@ func (t *subTurn) take(ctx context.Context) bool {
 	if t.kick == kc {
 		return ctx.Err() == nil
 	}
-	t.made = kickIsMade(kc) || t.kick == nil && startKickPeek(kc)
+	// under a phone's kick only if the socket was down when it came: one
+	// that was dialling, in line or catching up then never took it, and a
+	// relay could drop it later at a time of its own choosing
+	t.made = t.downNow() && kickMadeSince(kc, t.downAt) || t.kick == nil && startKickPeek(kc)
 	again := t.kick != nil && !t.up && !t.free
 	first := t.kick == nil && t.fresh.holds(kc, autoNow())
 	t.kick = kc
@@ -425,7 +441,8 @@ func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wak
 	// that this socket did not answer live. the one more after a socket
 	// that got through died again is a drop's
 	seen := wakeSeenAt(n)
-	t.made = !had && (t.downBefore(phoneMadeAfter(seen)) || newKick && kickMadeSince(kc, seen))
+	t.made = !had && (t.downBefore(phoneMadeAfter(seen)) ||
+		newKick && t.downNow() && kickMadeSince(kc, later(seen, t.downAt)))
 	// a retry after a failed turn goes at its own backoff's pace
 	if (had && !t.up) || first || t.made && isFirstTag(t.tag) {
 		return ctx.Err() == nil
@@ -476,7 +493,7 @@ func (t *subTurn) done() {
 // the dial is over, through or not
 func (t *subTurn) dialed(ok bool) {
 	if ok {
-		t.up = true
+		t.up, t.upAt = true, time.Now()
 	}
 	t.done()
 }

@@ -118,15 +118,17 @@ func TestAPushWakeGivesTheOpenChatNoPriority(t *testing.T) {
 
 func TestPhoneEventsKeepTheOpenChatFirst(t *testing.T) {
 	openChatOn(t)
-	// the network came back
+	// the network came back, the socket down since it went
 	tn := openRunner(t)
+	tn.lost()
 	netBack()
 	spendFirstTurn()
 	if !takeWithin(tn, 200*time.Millisecond) || !tn.made || rankOf(tn) != paceFirst {
 		t.Fatalf("after the network came back the open chat ranks %d (made %v), want %d at once", rankOf(tn), tn.made, paceFirst)
 	}
-	// tor woke because the app came to the front
+	// tor woke because the app came to the front, the socket down in its sleep
 	tn = openRunner(t)
+	tn.lost()
 	noteAppFront(true)
 	kickForTorBack()
 	spendFirstTurn()
@@ -242,6 +244,15 @@ func TestAWakeRanksOnlySocketsDownAtThePhonesEvent(t *testing.T) {
 	if takeWithin(tn, 200*time.Millisecond) || tn.made {
 		t.Fatal("a socket that answered the phone's kick live went first after a drop")
 	}
+	// up, catching up when that kick came and so never answering it, then
+	// dropped after it
+	tn = asleep()
+	kickRelaysMade()
+	time.Sleep(time.Millisecond)
+	tn.lost()
+	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+		t.Fatal("a socket up at the phone's kick in a wake went first after a later drop")
+	}
 }
 
 // a runner's first ask is the start's only while the process is young: one
@@ -263,15 +274,72 @@ func TestTheStartRanksOnlyAtTheStart(t *testing.T) {
 	})
 	startMadeFor = 15 * time.Minute
 	spendFirstTurn()
-	procStart = time.Now().Round(0)
+	procStart = ownClock()
 	tn := &subTurn{tag: openTag, lane: paceLane}
 	if !takeWithin(tn, 200*time.Millisecond) || !tn.made {
 		t.Fatal("the open chat waited a turn at the start")
 	}
-	procStart = time.Now().Round(0).Add(-time.Hour)
+	procStart = ownClock() - time.Hour
 	tn = &subTurn{tag: openTag, lane: paceLane}
 	if takeWithin(tn, 200*time.Millisecond) || tn.made {
 		t.Fatal("a runner made an hour into the process asked as the start's")
+	}
+	// the start is timed by the boot clock: an hour on it ends the start
+	// whatever the wall clock says, and a wall clock set back opens nothing
+	var ahead time.Duration
+	setOwnClock(t, func() time.Duration { return bootClock() + ahead })
+	procStart = ownClock()
+	if !startKickPeek(kickChan()) {
+		t.Fatal("no start just after the process began")
+	}
+	ahead = time.Hour
+	if startKickPeek(kickChan()) {
+		t.Fatal("still the start an hour on by the boot clock")
+	}
+}
+
+// a phone's kick that came while the socket was dialling or catching up was
+// never taken by it: a relay's drop later must not rank its redial
+func TestAKickWhileUpRanksNoLaterDrop(t *testing.T) {
+	openChatOn(t)
+	// down, redialling under a kick of no one's; the phone's kick lands
+	// during the dial, the dial gets through, and the relay drops it later
+	tn := openRunner(t)
+	tn.lost()
+	kickRelays()
+	spendFirstTurn()
+	takeWithin(tn, 50*time.Millisecond)
+	kickRelaysMade()
+	tn.dialed(true)
+	time.Sleep(time.Millisecond)
+	tn.lost()
+	spendFirstTurn()
+	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+		t.Fatal("a drop after a phone's kick that came mid-dial ranked the open chat")
+	}
+	// up and catching up when the kick came, dropped after it
+	tn = openRunner(t)
+	kickRelaysMade()
+	time.Sleep(time.Millisecond)
+	tn.lost()
+	spendFirstTurn()
+	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+		t.Fatal("a drop after a phone's kick that came while up ranked the open chat")
+	}
+	// up when the kick came and gone by a way that said nothing: no rank
+	tn = openRunner(t)
+	kickRelaysMade()
+	spendFirstTurn()
+	if takeWithin(tn, 200*time.Millisecond) || tn.made {
+		t.Fatal("a socket up at the phone's kick ranked its redial")
+	}
+	// down when the kick came: it ranks
+	tn = openRunner(t)
+	tn.lost()
+	kickRelaysMade()
+	spendFirstTurn()
+	if !takeWithin(tn, 200*time.Millisecond) || !tn.made || rankOf(tn) != paceFirst {
+		t.Fatalf("a socket down at the phone's kick ranks %d (made %v), want %d", rankOf(tn), tn.made, paceFirst)
 	}
 }
 
