@@ -21,7 +21,10 @@ import 'narrow_settings.dart' show loadAppFonts;
 
 class _Paper implements PdfBackend {
   @override
-  Future<Map<Object?, Object?>?> open(String path) async => {
+  Future<Map<Object?, Object?>?> open(
+    String path, {
+    bool first = false,
+  }) async => {
     'id': 1,
     'pages': 12,
     'sizes': [
@@ -68,6 +71,7 @@ void main() {
   late Directory tmp;
   setUp(() => tmp = Directory.systemTemp.createTempSync('files_golden'));
   tearDown(() {
+    resetPdfGlancesForTest();
     tmp.deleteSync(recursive: true);
     pdfBackendForTest = null;
     pdfViewHereForTest = null;
@@ -156,6 +160,7 @@ void main() {
                     path: pdf.path,
                     name: 'Lease-draft.pdf',
                     isOut: false,
+                    glance: true,
                   ),
                 ),
                 bubble(

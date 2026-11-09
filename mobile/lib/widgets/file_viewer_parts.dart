@@ -11,7 +11,9 @@ import '../l10n/l10n.dart';
 import '../main.dart' show appState, AppStateScreen;
 import '../theme.dart';
 import 'file_badge.dart';
+import 'file_bubble.dart' show fileNameDir;
 import 'halo_hero.dart';
+import 'media_bubbles.dart' show splitFileName;
 import 'message_menu.dart' show AsideNote;
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'press_scale.dart';
@@ -120,10 +122,9 @@ class FileViewerHead extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                // a long name loses its middle, never its extension
+                FileNameLine(
                   shown,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: HaloType.sans(
                     size: 15,
                     weight: FontWeight.w600,
@@ -143,6 +144,41 @@ class FileViewerHead extends StatelessWidget {
           ...actions,
         ],
       ),
+    );
+  }
+}
+
+/// a file's name on one line, the stem cut and the extension kept, in the
+/// name's own direction at the start of the line
+class FileNameLine extends StatelessWidget {
+  final String shown;
+  final TextStyle style;
+  const FileNameLine(this.shown, {super.key, required this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    final (stem, ext) = splitFileName(shown);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      textDirection: fileNameDir(stem),
+      children: [
+        Flexible(
+          child: Text(
+            stem,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textDirection: fileNameDir(stem),
+            style: style,
+          ),
+        ),
+        if (ext.isNotEmpty)
+          Text(
+            ext,
+            maxLines: 1,
+            textDirection: TextDirection.ltr,
+            style: style,
+          ),
+      ],
     );
   }
 }

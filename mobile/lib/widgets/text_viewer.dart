@@ -57,6 +57,32 @@ Future<void> openTextFile(
   return (lines: lines, cut: cut);
 }
 
+/// the longest piece of a line one row draws: a minified file is one line
+/// of megabytes, and one text of it would be laid out whole
+const kTextRowMost = 4000;
+
+/// [lines] as the reader's rows: a long line goes on in rows of its own
+/// with no number of their own
+@visibleForTesting
+List<(int?, String)> textRowsOf(List<String> lines, {int most = kTextRowMost}) {
+  final rows = <(int?, String)>[];
+  for (var i = 0; i < lines.length; i++) {
+    final l = lines[i];
+    if (l.length <= most) {
+      rows.add((i + 1, l));
+      continue;
+    }
+    for (var at = 0; at < l.length; at += most) {
+      var end = at + most < l.length ? at + most : l.length;
+      // never between the two halves of a surrogate pair
+      if (end < l.length && (l.codeUnitAt(end) & 0xFC00) == 0xDC00) end--;
+      rows.add((at == 0 ? i + 1 : null, l.substring(at, end)));
+      at = end - most;
+    }
+  }
+  return rows;
+}
+
 class TextViewer extends StatefulWidget {
   final String path;
   final String? name;
@@ -203,7 +229,7 @@ class _TextViewerState extends State<TextViewer> {
   }
 }
 
-class _Lines extends StatelessWidget {
+class _Lines extends StatefulWidget {
   final List<String> lines;
   final bool cut;
   final bool prose;
@@ -213,6 +239,19 @@ class _Lines extends StatelessWidget {
     required this.cut,
     required this.prose,
   });
+
+  @override
+  State<_Lines> createState() => _LinesState();
+}
+
+class _LinesState extends State<_Lines> {
+  late var _rows = textRowsOf(widget.lines);
+
+  @override
+  void didUpdateWidget(_Lines old) {
+    super.didUpdateWidget(old);
+    if (old.lines != widget.lines) _rows = textRowsOf(widget.lines);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -226,15 +265,19 @@ class _Lines extends StatelessWidget {
       color: HaloColors.text,
       weight: FontWeight.w400,
     ).copyWith(height: 1.65);
+    final lines = widget.lines;
+    final rows = _rows;
+    final cut = widget.cut;
+    final prose = widget.prose;
     final digits = whole(lines.length).length;
     final scaler = MediaQuery.textScalerOf(context);
     final gutterW = scaler.scale(11) * 0.62 * digits + 16;
     return Scrollbar(
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(0, 10, 14, 24),
-        itemCount: lines.length + (cut ? 1 : 0),
+        itemCount: rows.length + (cut ? 1 : 0),
         itemBuilder: (_, i) {
-          if (i == lines.length) {
+          if (i == rows.length) {
             return Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
               child: Text(
@@ -243,7 +286,7 @@ class _Lines extends StatelessWidget {
               ),
             );
           }
-          final l = lines[i];
+          final (n, l) = rows[i];
           return Directionality(
             // code runs left to right in every language
             textDirection: TextDirection.ltr,
@@ -256,7 +299,7 @@ class _Lines extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: Text(
-                        whole(i + 1),
+                        n == null ? '' : whole(n),
                         textAlign: TextAlign.right,
                         style: gutter,
                       ),

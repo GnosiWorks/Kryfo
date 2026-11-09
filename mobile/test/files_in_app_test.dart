@@ -623,6 +623,33 @@ void main() {
       expect(find.text(l10n.fileNotWords), findsOneWidget);
     });
 
+    test('a line of megabytes is drawn in rows, numbered once', () {
+      final long = 'a' * 9000;
+      final rows = textRowsOf(['x', long, 'y']);
+      expect([for (final r in rows) r.$1], [1, 2, null, null, 3]);
+      expect(rows[1].$2.length, kTextRowMost);
+      expect([for (final r in rows.sublist(1, 4)) r.$2].join(), long);
+      // a pair that makes one character is never split
+      final pairs = '${'b' * (kTextRowMost - 1)}\u{1F600}tail';
+      final cut = textRowsOf([pairs]);
+      expect(cut.first.$2.length, kTextRowMost - 1);
+      expect(cut.map((r) => r.$2).join(), pairs);
+    });
+
+    testWidgets('a long name keeps its extension in the head', (t) async {
+      final f = made('in_n.txt', 'words\n');
+      final ctx = await base(t);
+      unawaited(
+        openReceivedFile(
+          ctx,
+          f.path,
+          'a-very-long-name-that-goes-on-and-on-past-any-phone-width.txt',
+        ),
+      );
+      await settle(t);
+      expect(find.text('.txt'), findsOneWidget);
+    });
+
     test('a long file says where it stops', () {
       final r = textLinesOf('a\nb'.codeUnits, whole: kTextViewMost + 10);
       expect(r.cut, isTrue);
