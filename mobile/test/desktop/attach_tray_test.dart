@@ -280,7 +280,10 @@ void main() {
       );
       final waits = body.indexOf('if (_mediaWaits)');
       expect(waits, greaterThan(0));
-      expect(body, contains('_tray.say(l10n.requestSenderMediaLater)'));
+      // a stranger's request, or an inbox chat on his computer
+      expect(body, contains('_tray.say(_mediaLaterLine)'));
+      final line = sourceOf('lib/screens/chat_screen.dart');
+      expect(line, contains(': l10n.requestSenderMediaLater;'));
       expect(waits, lessThan(body.indexOf('_tray.add(')));
       expect(
         bodyOf(

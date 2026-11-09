@@ -2225,7 +2225,7 @@ String? ownCopyOf(int ident, String peer, String frame) {
 const _notCopied = {
   'dr', 'dl', 'db', 'dq', 'dh', 'dn', 'dk', 'dz', 'da', 'dw', 'dy', 'fl', //
   'dp', 'oc', 'os', 'of', 'ob', 'hs', 'ou', 'ty', 'pp', 'rq', 'nd', 'in', //
-  'gc',
+  'gc', 'oa',
 };
 
 // my words on a message that carry its uid inside

@@ -11936,4 +11936,19 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatInboxAnswerFromPhone => 'به این گفتگو از گوشی خود پاسخ دهید.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'وقتی گوشی‌تان آنلاین شود فرستاده می‌شود.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'فایل‌ها را از گوشی خود بفرستید.';
+
+  @override
+  String get devicesManyAnswersNotice => 'رایانه‌تان را بررسی کنید';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name خواست در یک ساعت بیش از $count پاسخ بفرستد. اگر شما نبودید، آن را بردارید.';
+  }
 }

@@ -50,7 +50,10 @@ void _bootOwnSync(DeviceState ds, DeviceSend send, DeviceReceive recv) {
         limit: 1,
       );
       if (r.isNotEmpty) _ownPhoneId = r.first['v'] as String?;
-      if (linkedRole) await _ownDevInboxLoad(await live.open());
+      if (linkedRole) {
+        await _ownDevInboxLoad(await live.open());
+        await _ownDevAnswersLoad(await live.open());
+      }
       // a linked device that never heard my phone's name asks for it
       if (linkedRole && _ownPhoneId == null) unawaited(_ownBeat());
       // whether the vault keeps what went too, before its first delete
@@ -356,6 +359,18 @@ class _AppOwn implements OwnApply {
   }
 
   @override
+  Future<bool> answer(
+    int ident,
+    OwnPeer from,
+    OwnChat chat,
+    String frame,
+  ) async {
+    final app = _madeApp;
+    if (app == null) return false;
+    return app._ownAnswerIn(ident, from, chat, frame);
+  }
+
+  @override
   Future<void> heard(int ident, int device, String key, int at) async {
     final d = await live.open();
     await ownDeviceHeard(d, ident: ident, dev: device, key: key, at: at);
@@ -398,9 +413,12 @@ enum _DeviceSend { sent, cannot, failed }
 const kNotFromDevice = 'error: not from this device';
 
 /// what a send makes of a seal that threw on a linked device: 'ok' when its
-/// copies went from here (DeviceSent), [kNotFromDevice] when no device of
-/// theirs holds a session with this one, null for any other failure
-String? deviceSealOutcome(Object e) => e is DeviceSent
+/// copies went from here (DeviceSent), 'parked' when its phone sends it
+/// (DeviceHanded), [kNotFromDevice] when no device of theirs holds a
+/// session with this one, null for any other failure
+String? deviceSealOutcome(Object e) => e is DeviceHanded
+    ? 'parked'
+    : e is DeviceSent
     ? 'ok'
     : e is DeviceCannotReach
     ? kNotFromDevice
@@ -686,7 +704,8 @@ extension AppStateOwn on AppState {
     final sliced = AppState._sliced(env);
     final uid = sliced ? env.mediaId : env.msgUid;
     if (uid == null) return false;
-    if (await db.messageExists(uid)) return false;
+    // one here already: an answer this device handed its phone went now
+    if (await db.messageExists(uid)) return _ownAnswerWent(chat, uid);
     final now = DateTime.now().millisecondsSinceEpoch;
     final written = env.writtenAt != null && env.writtenAt! <= now
         ? env.writtenAt!
@@ -1103,6 +1122,8 @@ extension AppStateOwn on AppState {
     if (!linkedDevicesOn) return false;
     if (kind == 'profile') return _ownProfile(a);
     if (chat == null) return false;
+    // my phone sent no answer of this device's
+    if (kind == 'answer') return _ownAnswerRefused(chat, a);
     // note to self takes a delete and a clear, nothing a chat's rows carry
     if (isOwnNotes(chat) && !kOwnNoteOps.contains(kind)) return false;
     // a contact or a group new here comes only from my phone
@@ -1440,8 +1461,9 @@ extension AppStateOwn on AppState {
     if (av is int || av == null) await setMyAvatar(av as int?);
     final bg = a['bg'];
     if (bg is Map) await _ownBadgeTake(bg);
-    // the developer's phone: its inbox shows here
+    // the developer's phone: its inbox shows here, answered from here
     await _ownDevInboxPut(d, a['dv']);
+    await _ownDevAnswersPut(d, a['oa']);
     await _ownMarkPass(null);
     return true;
   }
@@ -1482,6 +1504,7 @@ extension AppStateOwn on AppState {
         'a': _myAvatar,
         'bg': await _ownBadge(),
         if (devMode) 'dv': true,
+        if (devMode) 'oa': true,
       };
       final sent = await own.op(kMainIdent, 'profile', null, me);
       await _ownKept('me', ownDigest(me));
@@ -1704,6 +1727,7 @@ extension AppStateOwn on AppState {
         'a': _myAvatar,
         'bg': await _ownBadge(),
         if (devMode) 'dv': true,
+        if (devMode) 'oa': true,
       };
       out['me'] = (digest: ownDigest(me), op: me);
     }

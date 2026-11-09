@@ -288,6 +288,15 @@ Future<void> deviceTables(
       frame TEXT NOT NULL
     )
   ''');
+  // a computer's answer in the developer's inbox the phone took while the
+  // decoy was open, to send once the everyday side sends again
+  await db.execute('''
+    CREATE TABLE IF NOT EXISTS own_answers_held (
+      uid TEXT PRIMARY KEY,
+      chat TEXT NOT NULL,
+      frame TEXT NOT NULL
+    )
+  ''');
   // a note to self of mine still owed to my other devices: its uid, when it
   // was kept, and when it is tried next (notes_own_app.dart)
   await db.execute('''

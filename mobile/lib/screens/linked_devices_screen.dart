@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../devices/own_answer.dart' show kOwnAnswersAnHour;
 import '../devices/own_devices.dart';
 import '../l10n/dates.dart' show dayMonthMaybeYear;
 import '../l10n/l10n.dart';
@@ -54,6 +55,20 @@ String devicesRowValue(List<OwnDevice> all) {
   ];
   if (unknown.isNotEmpty) {
     return (title: l10n.devicesUnknownNotice, line: l10n.devicesUnknownLine);
+  }
+  // a computer that handed the developer's phone too many answers at once
+  final many = [
+    for (final n in all)
+      if (n.why == 'answers') n,
+  ];
+  if (many.isNotEmpty) {
+    return (
+      title: l10n.devicesManyAnswersNotice,
+      line: l10n.devicesManyAnswersLine(
+        many.first.name,
+        whole(kOwnAnswersAnHour),
+      ),
+    );
   }
   final gone = [
     for (final n in all)

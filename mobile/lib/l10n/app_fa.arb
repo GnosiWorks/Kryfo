@@ -3135,5 +3135,9 @@
   "translateResumeShort": "ادامه",
   "translateTagApp": "زبان برنامه",
   "translateTagRead": "آن را می‌خوانید",
-  "chatInboxAnswerFromPhone": "به این گفتگو از گوشی خود پاسخ دهید."
+  "chatInboxAnswerFromPhone": "به این گفتگو از گوشی خود پاسخ دهید.",
+  "chatInboxSendsWhenPhoneOnline": "وقتی گوشی‌تان آنلاین شود فرستاده می‌شود.",
+  "chatInboxFilesFromPhone": "فایل‌ها را از گوشی خود بفرستید.",
+  "devicesManyAnswersNotice": "رایانه‌تان را بررسی کنید",
+  "devicesManyAnswersLine": "{name} خواست در یک ساعت بیش از {count} پاسخ بفرستد. اگر شما نبودید، آن را بردارید."
 }

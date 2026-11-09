@@ -12056,4 +12056,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get chatInboxAnswerFromPhone =>
       'Répondez à cette discussion depuis votre téléphone.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'Part dès que votre téléphone est en ligne.';
+
+  @override
+  String get chatInboxFilesFromPhone =>
+      'Envoyez les fichiers depuis votre téléphone.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Vérifiez votre ordinateur';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name a voulu envoyer plus de $count réponses en une heure. Si ce n’était pas vous, retirez-le.';
+  }
 }

@@ -89,7 +89,7 @@ typedef DevAlarm = ({int ident, String peer, String kind, String key});
 /// the device frames: lists, bundles, asks, handbacks, the own frames
 const kDeviceWords = {
   'as', 'dl', 'db', 'dq', 'dh', 'dw', 'dn', 'dz', 'dk', 'da', 'dy', 'fl', //
-  'oc', 'os', 'of', 'ob', 'hs', 'ou', 'dp',
+  'oc', 'os', 'of', 'ob', 'oa', 'hs', 'ou', 'dp',
 };
 
 /// how often a linked device asks its phone to push my list to one

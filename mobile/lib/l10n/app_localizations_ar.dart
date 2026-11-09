@@ -12060,4 +12060,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatInboxAnswerFromPhone => 'ردّ على هذه المحادثة من هاتفك.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline => 'يُرسَل عندما يكون هاتفك متصلًا.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'أرسل الملفات من هاتفك.';
+
+  @override
+  String get devicesManyAnswersNotice => 'تحقّق من حاسوبك';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return 'حاول $name إرسال أكثر من $count ردًّا خلال ساعة. إن لم تكن أنت، فأزِله.';
+  }
 }

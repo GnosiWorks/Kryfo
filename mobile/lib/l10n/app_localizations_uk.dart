@@ -12112,4 +12112,19 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatInboxAnswerFromPhone => 'Відповідай у цьому чаті з телефона.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'Надішлеться, щойно телефон буде в мережі.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'Файли надсилай з телефона.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Перевір свій комп’ютер';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name намагався надіслати понад $count відповідей за годину. Якщо це був не ти, видали цей пристрій.';
+  }
 }

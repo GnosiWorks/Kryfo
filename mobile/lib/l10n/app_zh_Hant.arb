@@ -3135,5 +3135,9 @@
   "translateResumeShort": "繼續",
   "translateTagApp": "App 語言",
   "translateTagRead": "你讀的語言",
-  "chatInboxAnswerFromPhone": "請在手機上回覆這個聊天。"
+  "chatInboxAnswerFromPhone": "請在手機上回覆這個聊天。",
+  "chatInboxSendsWhenPhoneOnline": "手機上線後就會送出。",
+  "chatInboxFilesFromPhone": "請在手機上傳送檔案。",
+  "devicesManyAnswersNotice": "檢查一下你的電腦",
+  "devicesManyAnswersLine": "{name} 在一小時內試圖傳送超過 {count} 則回覆。如果不是你，請移除它。"
 }

@@ -3135,5 +3135,9 @@
   "translateResumeShort": "Lanjutkan",
   "translateTagApp": "Bahasa aplikasi",
   "translateTagRead": "Kamu membacanya",
-  "chatInboxAnswerFromPhone": "Balas obrolan ini dari ponselmu."
+  "chatInboxAnswerFromPhone": "Balas obrolan ini dari ponselmu.",
+  "chatInboxSendsWhenPhoneOnline": "Terkirim saat ponselmu online.",
+  "chatInboxFilesFromPhone": "Kirim file dari ponselmu.",
+  "devicesManyAnswersNotice": "Periksa komputermu",
+  "devicesManyAnswersLine": "{name} mencoba mengirim lebih dari {count} balasan dalam satu jam. Kalau itu bukan kamu, hapus perangkat itu."
 }

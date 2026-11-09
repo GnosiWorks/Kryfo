@@ -3135,5 +3135,9 @@
   "translateResumeShort": "Fortsetzen",
   "translateTagApp": "App-Sprache",
   "translateTagRead": "Liest du",
-  "chatInboxAnswerFromPhone": "Antworte in diesem Chat von deinem Handy aus."
+  "chatInboxAnswerFromPhone": "Antworte in diesem Chat von deinem Handy aus.",
+  "chatInboxSendsWhenPhoneOnline": "Wird gesendet, sobald dein Handy online ist.",
+  "chatInboxFilesFromPhone": "Sende Dateien von deinem Handy aus.",
+  "devicesManyAnswersNotice": "Prüfe deinen Computer",
+  "devicesManyAnswersLine": "{name} wollte mehr als {count} Antworten in einer Stunde senden. Warst du das nicht, entferne das Gerät."
 }

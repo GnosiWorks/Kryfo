@@ -3135,5 +3135,9 @@
   "translateResumeShort": "Wznów",
   "translateTagApp": "Język aplikacji",
   "translateTagRead": "Czytasz w nim",
-  "chatInboxAnswerFromPhone": "Odpowiedz na ten czat z telefonu."
+  "chatInboxAnswerFromPhone": "Odpowiedz na ten czat z telefonu.",
+  "chatInboxSendsWhenPhoneOnline": "Wyśle się, gdy telefon będzie online.",
+  "chatInboxFilesFromPhone": "Pliki wysyłaj z telefonu.",
+  "devicesManyAnswersNotice": "Sprawdź swój komputer",
+  "devicesManyAnswersLine": "{name} próbował wysłać ponad {count} odpowiedzi w godzinę. Jeśli to nie ty, usuń to urządzenie."
 }

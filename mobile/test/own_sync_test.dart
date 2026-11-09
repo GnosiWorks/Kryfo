@@ -114,6 +114,8 @@ class _Listen implements DeviceListen {
 class _Apply implements OwnApply {
   final copies = <(OwnChat, String, List<String>)>[];
   final forwards = <(String, String, int)>[];
+  final inboxes = <Map<String, dynamic>?>[];
+  final answers = <(int, String, String)>[];
   final ops = <(OwnChat?, String, int)>[];
   final beats = <int>[];
 
@@ -137,6 +139,18 @@ class _Apply implements OwnApply {
     Map<String, dynamic>? inbox,
   }) async {
     forwards.add((sender, frame, came));
+    inboxes.add(inbox);
+    return true;
+  }
+
+  @override
+  Future<bool> answer(
+    int ident,
+    OwnPeer from,
+    OwnChat chat,
+    String frame,
+  ) async {
+    answers.add((from.id, ownChatName(chat), frame));
     return true;
   }
 
@@ -543,6 +557,100 @@ void main() {
       ('cat-old-oak', f, w.clock - 50),
       ('cat-old-oak', f, w.clock),
     ]);
+  });
+
+  test('my phone\'s forward carries its chat\'s place in the developer\'s '
+      'inbox', () async {
+    if (skip()) return;
+    final sp = {'s': 'open', 'f': 7};
+    const f = 'halo/1:{"u":"u-w","m":"help","sp":1}';
+    final p = await phone();
+    expect(
+      await p.own.forward(kMainIdent, 'cat-old-oak', f, 1, inbox: sp),
+      isTrue,
+    );
+    final out = await p.db.query('dev_out', where: 'device = 4 AND own = 1');
+    expect(_json(out.single['plain'] as String)['of']['sp'], sp);
+  });
+
+  test('a desk takes a forward\'s place in the inbox with it', () async {
+    if (skip()) return;
+    final sp = {'s': 'open', 'f': 7};
+    const f = 'halo/1:{"u":"u-w","m":"help","sp":1}';
+    final w = await desk();
+    await w.recv.receive(
+      w.tag(opener: true),
+      await w.seal(
+        _frame({
+          'u': 'of:${ownHash('cat-old-oak\n$f')}',
+          'of': {'h': 'cat-old-oak', 't': 1, 'f': f, 'sp': sp},
+        }),
+      ),
+    );
+    expect(w.apply.inboxes, [sp]);
+  });
+
+  const answerF = 'halo/1:{"u":"u-a","m":"answered from my desk"}';
+  String oa(String chat, String f, {String? u}) => _frame({
+    'u': u ?? 'oa:${ownHash('$chat\n$f')}',
+    'oa': {'c': chat, 'f': f},
+  });
+
+  test('my phone takes an answer only from a device, in a chat, when its '
+      'uid names it, and hands none on itself', () async {
+    if (skip()) return;
+    const f = answerF;
+    final p = await phone();
+    // a phone hands no answer on
+    expect(
+      await p.own.answer(kMainIdent, (id: 'cat', group: false), f),
+      isFalse,
+    );
+    Future<void> take(String x) async =>
+        p.recv.receive(p.deskTag(opener: true), await p.seal(x));
+    await take(oa('p:cat-old-oak', f));
+    await take(oa('p:cat-old-oak', f, u: 'oa:${ownHash('p:other\n$f')}'));
+    await take(oa('g:g1', f));
+    await take(oa('p:cat-old-oak', 'not a frame'));
+    expect(p.apply.answers, [(4, 'p:cat-old-oak', f)]);
+    // the phone's word that it sent none is the phone's alone
+    expect(
+      await p.own.op(
+        kMainIdent,
+        'answer',
+        (id: 'cat', group: false),
+        {'u': 'u-a'},
+      ),
+      isTrue,
+    );
+  });
+
+  test('a desk hands an answer to its phone alone, never takes one, and '
+      'never says the phone sent none', () async {
+    if (skip()) return;
+    const f = answerF;
+    final w = await desk();
+    expect(
+      await w.own.answer(kMainIdent, (id: 'cat-old-oak', group: false), f),
+      isTrue,
+    );
+    expect(await w.own.answer(kMainIdent, (id: 'g1', group: true), f), isFalse);
+    expect(
+      await w.own.op(kMainIdent, 'answer', (id: 'cat', group: false), {}),
+      isFalse,
+    );
+    final sent = await w.db.query('dev_out', where: 'own = 1');
+    expect(sent.single['device'], 1);
+    expect(_json(sent.single['plain'] as String)['oa'], {
+      'c': 'p:cat-old-oak',
+      'f': f,
+    });
+    // a desk never takes an answer: one from its phone is no device's
+    await w.recv.receive(
+      w.tag(opener: true),
+      await w.seal(oa('p:cat-old-oak', f)),
+    );
+    expect(w.apply.answers, isEmpty);
   });
 
   test('my phone takes from a linked device only what a device may send, '

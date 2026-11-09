@@ -12067,4 +12067,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get chatInboxAnswerFromPhone =>
       'Antworte in diesem Chat von deinem Handy aus.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'Wird gesendet, sobald dein Handy online ist.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'Sende Dateien von deinem Handy aus.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Prüfe deinen Computer';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name wollte mehr als $count Antworten in einer Stunde senden. Warst du das nicht, entferne das Gerät.';
+  }
 }

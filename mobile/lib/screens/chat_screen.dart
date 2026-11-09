@@ -144,6 +144,7 @@ import '../main.dart'
         LinkViewBuilder,
         AppStateOutbox,
         AppStateInbox,
+        AppStateAnswers,
         AppStateHeal,
         AppStateOldPeers,
         HelloWait,
@@ -1046,6 +1047,9 @@ class _ChatScreenState extends State<ChatScreen>
   // on a linked device, a chat it cannot answer: what the bar says instead
   // of the composer (an older Kryfo, a chat with screenshots blocked)
   String? _phoneOnly;
+  // a chat of the developer's inbox on a computer linked to his phone: what
+  // is written here goes to the phone, which sends it on his key
+  bool _viaPhone = false;
   bool _barSettled = false;
   bool _muted = false;
   bool _verified = false;
@@ -1072,6 +1076,10 @@ class _ChatScreenState extends State<ChatScreen>
 
   // what this chat shows about their key, read again whenever a key changes
   // or a mark is set somewhere else
+  // an answer of mine here that waits for the phone to send it
+  bool get _answersWait =>
+      _messages.any((m) => m.direction == 'out' && m.parked && !m.failed);
+
   // a linked device answers only a contact whose app reads its copies, and
   // never a chat with screenshots blocked: the phone does
   Future<void> _readPhoneOnly() async {
@@ -1085,9 +1093,12 @@ class _ChatScreenState extends State<ChatScreen>
       final c = full.characters;
       final name = c.length > 24 ? '${c.take(22)}\u2026' : full;
       final String? line;
+      var viaPhone = false;
       if (await appState.inboxChatHere(widget.peerHaloId)) {
-        // his inbox: only his phone answers on the developer's key
-        line = l10n.chatInboxAnswerFromPhone;
+        // his inbox: only his phone answers on the developer's key, from
+        // here when it takes answers
+        viaPhone = await appState.answersViaPhone(widget.peerHaloId);
+        line = viaPhone ? null : l10n.chatInboxAnswerFromPhone;
       } else if (row['shots_on'] == 1) {
         line = l10n.historyChatStaysShots;
       } else if (!capsOfText(row['caps'] as String?).contains(kCapDevices)) {
@@ -1107,7 +1118,12 @@ class _ChatScreenState extends State<ChatScreen>
         line = null;
       }
       if (!mounted) return;
-      if (line != _phoneOnly) setState(() => _phoneOnly = line);
+      if (line != _phoneOnly || viaPhone != _viaPhone) {
+        setState(() {
+          _phoneOnly = line;
+          _viaPhone = viaPhone;
+        });
+      }
     } catch (e) {
       dlog('chat: phone-only not read (${e.runtimeType})');
     }
@@ -1293,7 +1309,7 @@ class _ChatScreenState extends State<ChatScreen>
   // file, voice note or gif goes from here, and their side holds any that
   // come. an introduced one, the dev chat and his support chats keep theirs
   bool get _mediaWaits =>
-      _requestPending && !_vouched && !_isDev && !widget.support;
+      _viaPhone || (_requestPending && !_vouched && !_isDev && !widget.support);
   // their side of it: what a stranger sent with a file waits, unshown,
   // until the accept. a decline shreds it
   bool _heldBack(_Msg m) =>
@@ -1305,9 +1321,16 @@ class _ChatScreenState extends State<ChatScreen>
   // said wherever media was reached for in a request still waiting
   bool _sayMediaLater() {
     if (!_mediaWaits) return false;
-    if (mounted) showHaloToast(context, l10n.requestSenderMediaLater);
+    if (mounted) showHaloToast(context, _mediaLaterLine);
     return true;
   }
+
+  // what a file reached for where only words go says
+  String get _mediaLaterLine =>
+      _viaPhone ? l10n.chatInboxFilesFromPhone : l10n.requestSenderMediaLater;
+
+  // an attach or camera tap where only words go
+  void _sayFilesFromPhone() => _sayMediaLater();
 
   // what the scam shield saw on this stranger, if anything and not dismissed
   ShieldFlag? _flag;
@@ -3755,8 +3778,9 @@ class _ChatScreenState extends State<ChatScreen>
       } catch (e) {
         // a linked device: its copies went from here, or its phone answers
         final out = deviceSealOutcome(e);
-        if (out == 'ok') {
-          await _finishTextSend(msg, 'ok');
+        if (out == 'ok' || out == 'parked') {
+          // handed to the phone: it waits for the phone's copy
+          await _finishTextSend(msg, out!);
           return;
         }
         if (!mounted) return;
@@ -3911,6 +3935,11 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _showStickers() async {
+    // a sticker is no answer a computer hands the phone
+    if (_viaPhone) {
+      _sayMediaLater();
+      return;
+    }
     final pick = await showStickerSheet(
       context,
       container: session.container,
@@ -5157,7 +5186,8 @@ class _ChatScreenState extends State<ChatScreen>
         // a fresh session is an opener whatever the history: the far side
         // may have let us go and its gate asks again
         final fresh = !await hasSessionWith(widget.peerHaloId);
-        if (_recvCount == 0 || fresh) {
+        // an answer the phone sends carries none: his never do
+        if (!_viaPhone && (_recvCount == 0 || fresh)) {
           final int n =
               grindPowForTest?.call(text) ?? await compute(_grindPowTask, text);
           powNonce = n;
@@ -5203,9 +5233,9 @@ class _ChatScreenState extends State<ChatScreen>
       } catch (e) {
         // a linked device: its copies went from here, or its phone answers
         final out = deviceSealOutcome(e);
-        if (out == 'ok') {
+        if (out == 'ok' || out == 'parked') {
           mounted ? setState(() => sealing(false)) : sealing(false);
-          await _finishTextSend(msg, 'ok');
+          await _finishTextSend(msg, out!);
           return;
         }
         // no session yet, and a hello of mine waits for their answer: it
@@ -6965,7 +6995,7 @@ class _ChatScreenState extends State<ChatScreen>
   void _stage(List<String> files) {
     if (!_composerShown) return;
     if (_mediaWaits) {
-      _tray.say(l10n.requestSenderMediaLater);
+      _tray.say(_mediaLaterLine);
       return;
     }
     unawaited(
@@ -6977,7 +7007,7 @@ class _ChatScreenState extends State<ChatScreen>
   void _stagePicture(Uint8List png) {
     if (!_composerShown) return;
     if (_mediaWaits) {
-      _tray.say(l10n.requestSenderMediaLater);
+      _tray.say(_mediaLaterLine);
       return;
     }
     unawaited(
@@ -7419,6 +7449,26 @@ class _ChatScreenState extends State<ChatScreen>
                   ),
                 ),
               ),
+              // answers handed to the phone, not sent by it yet
+              _Fold(
+                _viaPhone && _answersWait
+                    ? Padding(
+                        key: const ValueKey('answers-wait'),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                        child: Text(
+                          l10n.chatInboxSendsWhenPhoneOnline,
+                          textAlign: TextAlign.center,
+                          style: HaloType.mono(
+                            size: 10,
+                            color: HaloColors.amberText,
+                          ),
+                        ),
+                      )
+                    : const SizedBox(
+                        key: ValueKey('answers-wait-none'),
+                        width: 0,
+                      ),
+              ),
               _Fold(
                 _friendlyStatus(_status).isNotEmpty && !appState.movedAway
                     ? Padding(
@@ -7626,11 +7676,18 @@ class _ChatScreenState extends State<ChatScreen>
                               onFiles: _stage,
                               onPicture: _stagePicture,
                               child: _Composer(
-                                media: !_mediaWaits,
+                                // a computer answering through the phone
+                                // shows them, and says files go from there
+                                media: !_mediaWaits || _viaPhone,
+                                voice: !_viaPhone,
                                 staged: !_tray.isEmpty,
-                                onAttach: _showAttachSheet,
+                                onAttach: _viaPhone
+                                    ? _sayFilesFromPhone
+                                    : _showAttachSheet,
                                 onStickers: _showStickers,
-                                onCamera: _openCamera,
+                                onCamera: _viaPhone
+                                    ? _sayFilesFromPhone
+                                    : _openCamera,
                                 ghost: _ghost,
                                 secure: _secureNext,
                                 onToggleSecure: () {
@@ -10215,6 +10272,8 @@ class _Composer extends StatelessWidget {
   // photos, files, the camera and voice notes: off in a request to a
   // stranger until they accept
   final bool media;
+  // the voice note's mic, where media is on
+  final bool voice;
   // files wait in the row above: send shows with nothing typed
   final bool staged;
 
@@ -10236,6 +10295,7 @@ class _Composer extends StatelessWidget {
     required this.disguise,
     this.disguiseLocked = false,
     required this.onVoice,
+    this.voice = true,
   });
 
   @override
@@ -10454,7 +10514,7 @@ class _Composer extends StatelessWidget {
                   // a send still grinding takes the next one behind it
                   final canSend = hasText;
                   // mic and send trade places with a small pop instead of a cut
-                  final Widget end = !hasText && media
+                  final Widget end = !hasText && media && voice
                       ? KeyedSubtree(
                           key: const ValueKey('mic'),
                           child: HoldToTalkMic(

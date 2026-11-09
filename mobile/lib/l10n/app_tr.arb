@@ -3135,5 +3135,9 @@
   "translateResumeShort": "Devam et",
   "translateTagApp": "Uygulama dili",
   "translateTagRead": "Okuduğun dil",
-  "chatInboxAnswerFromPhone": "Bu sohbete telefonundan yanıt ver."
+  "chatInboxAnswerFromPhone": "Bu sohbete telefonundan yanıt ver.",
+  "chatInboxSendsWhenPhoneOnline": "Telefonun çevrimiçi olunca gider.",
+  "chatInboxFilesFromPhone": "Dosyaları telefonundan gönder.",
+  "devicesManyAnswersNotice": "Bilgisayarını kontrol et",
+  "devicesManyAnswersLine": "{name} bir saatte {count} yanıttan fazlasını göndermeye çalıştı. Sen değilsen onu kaldır."
 }

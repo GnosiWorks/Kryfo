@@ -3135,5 +3135,9 @@
   "translateResumeShort": "Riprendi",
   "translateTagApp": "Lingua dell’app",
   "translateTagRead": "La leggi",
-  "chatInboxAnswerFromPhone": "Rispondi a questa chat dal tuo telefono."
+  "chatInboxAnswerFromPhone": "Rispondi a questa chat dal tuo telefono.",
+  "chatInboxSendsWhenPhoneOnline": "Parte quando il tuo telefono è online.",
+  "chatInboxFilesFromPhone": "Invia i file dal tuo telefono.",
+  "devicesManyAnswersNotice": "Controlla il tuo computer",
+  "devicesManyAnswersLine": "{name} ha provato a inviare più di {count} risposte in un’ora. Se non sei stato tu, rimuovilo."
 }

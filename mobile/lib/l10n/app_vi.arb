@@ -3135,5 +3135,9 @@
   "translateResumeShort": "Tiếp tục",
   "translateTagApp": "Ngôn ngữ ứng dụng",
   "translateTagRead": "Bạn đọc được",
-  "chatInboxAnswerFromPhone": "Hãy trả lời cuộc trò chuyện này từ điện thoại của bạn."
+  "chatInboxAnswerFromPhone": "Hãy trả lời cuộc trò chuyện này từ điện thoại của bạn.",
+  "chatInboxSendsWhenPhoneOnline": "Sẽ gửi khi điện thoại của bạn trực tuyến.",
+  "chatInboxFilesFromPhone": "Hãy gửi tệp từ điện thoại của bạn.",
+  "devicesManyAnswersNotice": "Hãy kiểm tra máy tính của bạn",
+  "devicesManyAnswersLine": "{name} đã cố gửi hơn {count} câu trả lời trong một giờ. Nếu đó không phải bạn, hãy gỡ thiết bị đó."
 }

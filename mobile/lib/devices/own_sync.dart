@@ -6,7 +6,8 @@
 // chat gone, my profile), each with a counter of its device's so a late
 // one never undoes a newer; 'of' (phone only) a contact's frame that could
 // not reach my devices; 'ob' a device's daily word after a person unlocked
-// it. each is answered by a receipt and sent again until it comes. none is
+// it; 'oa' (to the phone only) a device's answer in the developer's inbox,
+// which the phone sends as its own. each is answered by a receipt and sent again until it comes. none is
 // ever taken from a contact's session, from a hidden chat or in the decoy,
 // and nothing here runs with the switch off
 import 'dart:async';
@@ -22,7 +23,7 @@ import 'device_state.dart';
 import 'own_device_store.dart' show ownPhoneFresh;
 
 /// the own words
-const kOwnWords = {'oc', 'os', 'of', 'ob'};
+const kOwnWords = {'oc', 'os', 'of', 'ob', 'oa'};
 
 /// the most a frame inside an own copy or a forward may be, in characters:
 /// a slice of a file is about 22k, and the copy's wrap must still fit the
@@ -50,6 +51,8 @@ const kOwnOps = {
   'group': 'st',
   'ungroup': 'st',
   'profile': 'st',
+  // the phone's word that it did not send an answer of a device's
+  'answer': '',
 };
 
 /// the ops that end a chat on my other devices: kept until each device
@@ -266,6 +269,10 @@ abstract class OwnApply {
 
   /// my device [device] said it is in use, at [at] by this clock
   Future<void> heard(int ident, int device, String key, int at);
+
+  /// on my phone: [from]'s answer [frame] in [chat] of the developer's
+  /// inbox, for my phone to send as its own
+  Future<bool> answer(int ident, OwnPeer from, OwnChat chat, String frame);
 }
 
 class OwnSync {
@@ -396,6 +403,31 @@ class OwnSync {
       '$kEnvelopePrefix${jsonEncode({
         'u': 'of:${_hash('$sender\n$frame')}',
         'of': {'h': sender, 't': came, 'f': frame, 'sp': ?inbox},
+      })}',
+    );
+    return true;
+  }
+
+  /// a linked device's [frame] in [chat] to its phone, which sends it as
+  /// its own (the developer's inbox): device only, to the phone alone
+  Future<bool> answer(int ident, OwnChat chat, String frame) async {
+    if (!linkedDevicesOn || chat.group || frame.length > kOwnFrameMost) {
+      return false;
+    }
+    final m = await me(ident);
+    if (m == null || m.device == 1) return false;
+    final phone = [
+      for (final p in await others(ident))
+        if (p.id == 1) p,
+    ];
+    if (phone.isEmpty) return false;
+    final c = ownChatName(chat);
+    await _toAll(
+      m,
+      phone,
+      '$kEnvelopePrefix${jsonEncode({
+        'u': 'oa:${_hash('$c\n$frame')}',
+        'oa': {'c': c, 'f': frame},
       })}',
     );
     return true;
@@ -553,6 +585,20 @@ class OwnSync {
       }
       return apply.op(m.ident, chat, k, os.cast<String, dynamic>());
     }
+    final oa = j['oa'];
+    if (oa is Map && u.startsWith('oa:')) {
+      // only my phone sends a device's answer, and only a device hands one
+      if (m.device != 1 || from.id == 1) return false;
+      final chat = ownChatOf(oa['c']);
+      final f = oa['f'];
+      if (chat == null || chat.group) return false;
+      if (f is! String || f.length > kOwnFrameMost) return false;
+      if (!f.startsWith(kEnvelopePrefix) ||
+          'oa:${_hash('${oa['c']}\n$f')}' != u) {
+        return false;
+      }
+      return apply.answer(m.ident, from, chat, f);
+    }
     final ob = j['ob'];
     if (ob is Map && u.startsWith('ob:')) {
       if (m.device != 1 || from.id == 1) return false;
@@ -612,7 +658,8 @@ bool _ownUid(String u) =>
     (u.startsWith('oc:') ||
         u.startsWith('os:') ||
         u.startsWith('of:') ||
-        u.startsWith('ob:'));
+        u.startsWith('ob:') ||
+        u.startsWith('oa:'));
 
 /// the hash an own frame's uid carries
 String ownHash(String s) =>

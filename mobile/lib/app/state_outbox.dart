@@ -452,6 +452,8 @@ extension AppStateOutbox on AppState {
     unawaited(_replayHeld());
     // linked devices: what reached the phone while the decoy was open
     unawaited(_ownHeldGo());
+    // and the answers a computer handed it meanwhile
+    if (linkedDevicesOn) unawaited(_ownAnswersHeldGo());
     unawaited(_drainEdits());
     unawaited(_drainPins());
     unawaited(_drainFrames());
@@ -512,6 +514,14 @@ extension AppStateOutbox on AppState {
       }
       // held rows stay out of the window; one that came in anyway waits too
       if (held.contains(r['peer_id'])) continue;
+      // a computer's answer in the developer's inbox went to the phone,
+      // and waits for the phone's copy, not for a send of its own
+      if (linkedRole &&
+          to != null &&
+          (g == null || g.isEmpty) &&
+          await answersViaPhone(to)) {
+        continue;
+      }
       // a send fired seconds ago still has its own future running; leave it be.
       final now = outboxClock().millisecondsSinceEpoch;
       final age = now - (r['sent_at'] as int);

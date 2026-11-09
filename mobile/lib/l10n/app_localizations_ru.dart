@@ -12114,4 +12114,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatInboxAnswerFromPhone => 'Ответь в этом чате с телефона.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'Отправится, когда телефон будет в сети.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'Файлы отправляй с телефона.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Проверь свой компьютер';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name пытался отправить больше $count ответов за час. Если это был не ты, удали это устройство.';
+  }
 }

@@ -3135,5 +3135,9 @@
   "translateResumeShort": "Продолжить",
   "translateTagApp": "Язык приложения",
   "translateTagRead": "Вы его читаете",
-  "chatInboxAnswerFromPhone": "Ответь в этом чате с телефона."
+  "chatInboxAnswerFromPhone": "Ответь в этом чате с телефона.",
+  "chatInboxSendsWhenPhoneOnline": "Отправится, когда телефон будет в сети.",
+  "chatInboxFilesFromPhone": "Файлы отправляй с телефона.",
+  "devicesManyAnswersNotice": "Проверь свой компьютер",
+  "devicesManyAnswersLine": "{name} пытался отправить больше {count} ответов за час. Если это был не ты, удали это устройство."
 }

@@ -343,6 +343,7 @@ const _ownRows = {
   'frame_order': "msg_uid = 'os:' || {c}",
   'own_told': 'chat = {c}',
   'own_held': 'chat = {c}',
+  'own_answers_held': 'chat = {c}',
 };
 
 // what went of a chat, kept from my devices' late copies (own_gone.dart):

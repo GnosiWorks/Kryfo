@@ -5,17 +5,22 @@
 // its composer, and on anyone else's computer nothing changes
 import 'dart:io';
 
-import 'package:flutter/material.dart' show Locale, Size, ValueKey;
+import 'package:flutter/material.dart'
+    show Icons, Locale, Size, TextField, ValueKey;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
-import 'package:kryfo/devices/device_state.dart' show linkedDevicesForTest;
+import 'package:kryfo/devices/device_send.dart';
+import 'package:kryfo/devices/device_state.dart';
+import 'package:kryfo/devices/own_sync.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
     show
         appState,
+        devAnswersForTest,
         devInboxForTest,
+        ownSyncForTest,
         deviceReachesForTest,
         linkedRoleForTest,
         makePreKeyBundleB64,
@@ -26,6 +31,7 @@ import 'package:kryfo/main.dart'
         AppStateRoute,
         AppStateRefresh;
 import 'package:kryfo/screens/chat_screen.dart';
+import 'package:kryfo/widgets/voice_mic.dart' show HoldToTalkMic;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
 import 'signal_kit.dart';
@@ -51,6 +57,39 @@ class _Db extends SayHiDb {
 }
 
 const _name = 'Heron';
+
+class _NoState implements DeviceState {
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+class _NoSend implements DeviceSend {
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+class _NoApply implements OwnApply {
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+// the phone of this computer: what it is handed, noted
+class _Phone extends OwnSync {
+  _Phone()
+    : super(
+        state: _NoState(),
+        db: () async => throw StateError('no own rows here'),
+        send: _NoSend(),
+        me: (_) async => null,
+        apply: _NoApply(),
+      );
+  final handed = <String>[];
+  @override
+  Future<bool> answer(int ident, OwnChat chat, String frame) async {
+    handed.add(frame);
+    return true;
+  }
+}
 
 void main() {
   late MemDb mem;
@@ -127,6 +166,8 @@ void main() {
     linkedRoleForTest = false;
     linkedDevicesForTest = null;
     devInboxForTest = false;
+    devAnswersForTest = false;
+    ownSyncForTest(null);
     mockChannel('plugins.flutter.io/path_provider', null);
     mockChannel('com.llfbandit.record/messages', null);
     docs.deleteSync(recursive: true);
@@ -180,6 +221,34 @@ void main() {
       await devClose(t);
     });
   }
+
+  testWidgets('his phone sends answers: the composer is here, files go from '
+      'the phone, and a sent one waits for it', (t) async {
+    await setUpWith(state: 'open');
+    devInboxForTest = true;
+    devAnswersForTest = true;
+    final phone = _Phone();
+    ownSyncForTest(phone);
+    await open(t);
+    expect(composer, findsOneWidget);
+    expect(phoneOnly, findsNothing);
+    expect(find.text(l10n.chatInboxAnswerFromPhone), findsNothing);
+    // the mic is gone; attach says where files go
+    expect(find.byType(HoldToTalkMic), findsNothing);
+    await t.tap(find.byIcon(Icons.add_photo_alternate_outlined));
+    await settle(t, 2);
+    expect(find.text(l10n.chatInboxFilesFromPhone), findsOneWidget);
+    await t.enterText(find.byType(TextField).last, 'from my desk');
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    await t.tap(find.byIcon(Icons.arrow_upward));
+    await settle(t, 10);
+    expect(phone.handed, hasLength(1));
+    expect(phone.handed.single, contains('from my desk'));
+    expect(phone.handed.single, isNot(contains('"pw"')));
+    expect(find.text(l10n.chatInboxSendsWhenPhoneOnline), findsOneWidget);
+    await devClose(t);
+  });
 
   testWidgets('an ordinary chat on his computer keeps its composer', (t) async {
     await setUpWith();

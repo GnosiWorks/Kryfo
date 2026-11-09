@@ -3135,5 +3135,9 @@
   "translateResumeShort": "متابعة",
   "translateTagApp": "لغة التطبيق",
   "translateTagRead": "تقرؤها",
-  "chatInboxAnswerFromPhone": "ردّ على هذه المحادثة من هاتفك."
+  "chatInboxAnswerFromPhone": "ردّ على هذه المحادثة من هاتفك.",
+  "chatInboxSendsWhenPhoneOnline": "يُرسَل عندما يكون هاتفك متصلًا.",
+  "chatInboxFilesFromPhone": "أرسل الملفات من هاتفك.",
+  "devicesManyAnswersNotice": "تحقّق من حاسوبك",
+  "devicesManyAnswersLine": "حاول {name} إرسال أكثر من {count} ردًّا خلال ساعة. إن لم تكن أنت، فأزِله."
 }

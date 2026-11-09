@@ -122,7 +122,7 @@ extension AppStateInbox on AppState {
     if (linkedRole || !devMode || sp is! Map) return;
     final want = sp['s'];
     if (want is! String || !kInboxStates.contains(want)) return;
-    final s = session.primary.support;
+    final s = session.support;
     final had = await _inboxPlace(id);
     final now = had?['s'];
     if (now == null) {

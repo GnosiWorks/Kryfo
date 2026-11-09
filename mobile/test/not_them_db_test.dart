@@ -182,6 +182,8 @@ void main() {
           t == 'own_told' ||
           t == 'own_gone' ||
           t == 'own_notes_out' ||
+          // keyed by the chat's own name, filled below
+          t == 'own_answers_held' ||
           t.contains('fts')) {
         continue;
       }
@@ -308,6 +310,14 @@ void main() {
         'polls_gone',
       ]),
     );
+    // a computer's answer to them held on the decoy, by the chat's name
+    for (final w in [_p, _q]) {
+      await raw.insert('own_answers_held', {
+        'uid': 'held-$w',
+        'chat': 'p:$w',
+        'frame': 'halo/1:{}',
+      });
+    }
     expect(await naming(raw, _p), isNotEmpty);
     final qBefore = (await naming(raw, _q)).toSet();
 

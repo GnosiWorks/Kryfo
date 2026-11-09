@@ -3135,5 +3135,9 @@
   "translateResumeShort": "जारी रखें",
   "translateTagApp": "ऐप की भाषा",
   "translateTagRead": "आप इसे पढ़ते हैं",
-  "chatInboxAnswerFromPhone": "इस चैट का जवाब अपने फ़ोन से दें।"
+  "chatInboxAnswerFromPhone": "इस चैट का जवाब अपने फ़ोन से दें।",
+  "chatInboxSendsWhenPhoneOnline": "आपका फ़ोन ऑनलाइन होते ही जाएगा।",
+  "chatInboxFilesFromPhone": "फ़ाइलें अपने फ़ोन से भेजें।",
+  "devicesManyAnswersNotice": "अपना कंप्यूटर जाँचें",
+  "devicesManyAnswersLine": "{name} ने एक घंटे में {count} से ज़्यादा जवाब भेजने की कोशिश की। अगर यह आप नहीं थे, तो इसे हटा दें।"
 }

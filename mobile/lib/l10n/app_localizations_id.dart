@@ -11929,4 +11929,18 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatInboxAnswerFromPhone => 'Balas obrolan ini dari ponselmu.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline => 'Terkirim saat ponselmu online.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'Kirim file dari ponselmu.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Periksa komputermu';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name mencoba mengirim lebih dari $count balasan dalam satu jam. Kalau itu bukan kamu, hapus perangkat itu.';
+  }
 }

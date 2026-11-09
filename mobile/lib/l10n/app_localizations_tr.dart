@@ -11952,4 +11952,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatInboxAnswerFromPhone => 'Bu sohbete telefonundan yanıt ver.';
+
+  @override
+  String get chatInboxSendsWhenPhoneOnline =>
+      'Telefonun çevrimiçi olunca gider.';
+
+  @override
+  String get chatInboxFilesFromPhone => 'Dosyaları telefonundan gönder.';
+
+  @override
+  String get devicesManyAnswersNotice => 'Bilgisayarını kontrol et';
+
+  @override
+  String devicesManyAnswersLine(String name, String count) {
+    return '$name bir saatte $count yanıttan fazlasını göndermeye çalıştı. Sen değilsen onu kaldır.';
+  }
 }
