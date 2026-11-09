@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/widgets/shared_media.dart' show loadShared;
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devices/history_open.dart';
@@ -1812,6 +1813,8 @@ void main() {
         ], isNot(contains('h0')));
         expect(await session.pinnedIn(peerId: _h), isEmpty);
         expect(await session.mediaFor(_h), isEmpty);
+        // the shared page of a hidden chat finds nothing outside
+        expect((await loadShared(_h)).isEmpty, isTrue);
         expect(await session.getContact(_h), isNull);
         expect(await session.getGroup(_g2), isNull);
         expect(await session.pendingRequestCount(), 1);

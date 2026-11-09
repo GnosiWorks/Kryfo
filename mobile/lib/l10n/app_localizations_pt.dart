@@ -1604,24 +1604,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get chatViewContact => 'Ver contato';
 
   @override
-  String get chatSharedPhotos => 'Fotos compartilhadas';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString fotos',
-      one: '$countString foto',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Ativar notificações';
 
   @override
@@ -1887,9 +1869,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get commonSend => 'Enviar';
-
-  @override
-  String get chatNoPhotosInThis => 'Nenhuma foto nesta conversa ainda';
 
   @override
   String get chatHoldToRecord => 'Segure para gravar um áudio';
@@ -12154,4 +12133,47 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Compartilhado com $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Compartilhado em $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Mídia';
+
+  @override
+  String get sharedTabFiles => 'Arquivos';
+
+  @override
+  String get sharedTabVoice => 'Voz';
+
+  @override
+  String get sharedTabLinks => 'Links';
+
+  @override
+  String get sharedNoPhotos =>
+      'As fotos enviadas nesta conversa aparecem aqui.';
+
+  @override
+  String get sharedNoFiles =>
+      'Os arquivos enviados nesta conversa aparecem aqui.';
+
+  @override
+  String get sharedNoVoice =>
+      'As mensagens de voz desta conversa aparecem aqui.';
+
+  @override
+  String get sharedNoLinks => 'Os links enviados nesta conversa aparecem aqui.';
+
+  @override
+  String get sharedYourVoice => 'Sua mensagem de voz';
+
+  @override
+  String get sharedOpensLink => 'Abre o link em outro app';
 }

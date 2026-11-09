@@ -1592,24 +1592,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatViewContact => 'View contact';
 
   @override
-  String get chatSharedPhotos => 'Shared photos';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString photos',
-      one: '$countString photo',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Unmute notifications';
 
   @override
@@ -1874,9 +1856,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonSend => 'Send';
-
-  @override
-  String get chatNoPhotosInThis => 'No photos in this chat yet';
 
   @override
   String get chatHoldToRecord => 'Hold to record a voice note';
@@ -12064,4 +12043,44 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Shared with $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Shared in $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Media';
+
+  @override
+  String get sharedTabFiles => 'Files';
+
+  @override
+  String get sharedTabVoice => 'Voice';
+
+  @override
+  String get sharedTabLinks => 'Links';
+
+  @override
+  String get sharedNoPhotos => 'Photos sent in this chat show up here.';
+
+  @override
+  String get sharedNoFiles => 'Files sent in this chat show up here.';
+
+  @override
+  String get sharedNoVoice => 'Voice messages sent in this chat show up here.';
+
+  @override
+  String get sharedNoLinks => 'Links sent in this chat show up here.';
+
+  @override
+  String get sharedYourVoice => 'Your voice message';
+
+  @override
+  String get sharedOpensLink => 'Opens the link in another app';
 }

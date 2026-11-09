@@ -15,6 +15,7 @@
   "qrWiFi"
  ],
  "de": [
+  "sharedTabLinks",
   "a11yVideoOn",
   "albumQuoted",
   "appOffline",
@@ -239,7 +240,6 @@
   "chat5Minutes",
   "chatMessage",
   "chatQuotedPhoto",
-  "chatSharedPhotoCount",
   "deliveryModeStateLast",
   "donateBitcoin",
   "donateBtc",
@@ -335,6 +335,7 @@
   "videoBubbleMb"
  ],
  "id": [
+  "sharedTabMedia",
   "a11yVideoOn",
   "albumQuoted",
   "appOffline",
@@ -411,6 +412,7 @@
   "videoBubbleVideo"
  ],
  "it": [
+  "sharedTabMedia",
   "a11yVideoOn",
   "accentLime",
   "albumQuoted",
@@ -525,6 +527,7 @@
   "transportTransport"
  ],
  "pt": [
+  "sharedTabLinks",
   "appDev",
   "appOffline",
   "appOk",

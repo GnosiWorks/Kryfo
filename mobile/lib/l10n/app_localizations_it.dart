@@ -1605,24 +1605,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get chatViewContact => 'Vedi contatto';
 
   @override
-  String get chatSharedPhotos => 'Foto condivise';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString foto',
-      one: '$countString foto',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Riattiva notifiche';
 
   @override
@@ -1887,9 +1869,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get commonSend => 'Invia';
-
-  @override
-  String get chatNoPhotosInThis => 'Ancora nessuna foto in questa chat';
 
   @override
   String get chatHoldToRecord =>
@@ -12164,4 +12143,44 @@ class AppLocalizationsIt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Condiviso con $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Condiviso in $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Media';
+
+  @override
+  String get sharedTabFiles => 'File';
+
+  @override
+  String get sharedTabVoice => 'Vocali';
+
+  @override
+  String get sharedTabLinks => 'Link';
+
+  @override
+  String get sharedNoPhotos => 'Qui compaiono le foto inviate in questa chat.';
+
+  @override
+  String get sharedNoFiles => 'Qui compaiono i file inviati in questa chat.';
+
+  @override
+  String get sharedNoVoice => 'Qui compaiono i messaggi vocali di questa chat.';
+
+  @override
+  String get sharedNoLinks => 'Qui compaiono i link inviati in questa chat.';
+
+  @override
+  String get sharedYourVoice => 'Il tuo messaggio vocale';
+
+  @override
+  String get sharedOpensLink => 'Apre il link in un\'altra app';
 }

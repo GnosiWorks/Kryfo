@@ -735,11 +735,6 @@ void main() {
     expect(l.chatVoiceMessage, "Voice message");
     expect(l.chatQuotedPhoto, "Photo");
     expect(l.chatViewContact, "View contact");
-    expect(l.chatSharedPhotos, "Shared photos");
-    expect(l.chatSharedPhotoCount(0, "<title>"), "0 photos · <title>");
-    expect(l.chatSharedPhotoCount(1, "<title>"), "1 photo · <title>");
-    expect(l.chatSharedPhotoCount(2, "<title>"), "2 photos · <title>");
-    expect(l.chatSharedPhotoCount(5, "<title>"), "5 photos · <title>");
     expect(l.chatUnmuteNotifications, "Unmute notifications");
     expect(l.chatMuteNotifications, "Mute notifications");
     expect(l.chatArchiveChat, "Archive chat");
@@ -860,7 +855,6 @@ void main() {
     expect(l.chatAttachAPhoto, "Attach a photo");
     expect(l.chatMessage, "Message");
     expect(l.commonSend, "Send");
-    expect(l.chatNoPhotosInThis, "No photos in this chat yet");
     expect(l.chatSecurityCodeChanged, "Security code changed");
     expect(
       l.chatMayHaveReinstalledOr("<peerName>"),

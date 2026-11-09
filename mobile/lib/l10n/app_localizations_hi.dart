@@ -1596,24 +1596,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chatViewContact => 'संपर्क देखें';
 
   @override
-  String get chatSharedPhotos => 'शेयर की गई फ़ोटो';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString फ़ोटो',
-      one: '$countString फ़ोटो',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'सूचनाएँ फिर चालू करें';
 
   @override
@@ -1881,9 +1863,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get commonSend => 'भेजें';
-
-  @override
-  String get chatNoPhotosInThis => 'इस चैट में अभी कोई फ़ोटो नहीं';
 
   @override
   String get chatHoldToRecord => 'वॉइस नोट रिकॉर्ड करने के लिए दबाकर रखें';
@@ -12070,4 +12049,44 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return '$name के साथ शेयर किया';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return '$name में शेयर किया';
+  }
+
+  @override
+  String get sharedTabMedia => 'मीडिया';
+
+  @override
+  String get sharedTabFiles => 'फ़ाइलें';
+
+  @override
+  String get sharedTabVoice => 'वॉइस';
+
+  @override
+  String get sharedTabLinks => 'लिंक';
+
+  @override
+  String get sharedNoPhotos => 'इस चैट में भेजी गई फ़ोटो यहाँ दिखती हैं.';
+
+  @override
+  String get sharedNoFiles => 'इस चैट में भेजी गई फ़ाइलें यहाँ दिखती हैं.';
+
+  @override
+  String get sharedNoVoice => 'इस चैट के वॉइस मैसेज यहाँ दिखते हैं.';
+
+  @override
+  String get sharedNoLinks => 'इस चैट में भेजे गए लिंक यहाँ दिखते हैं.';
+
+  @override
+  String get sharedYourVoice => 'आपका वॉइस मैसेज';
+
+  @override
+  String get sharedOpensLink => 'लिंक को दूसरे ऐप में खोलता है';
 }

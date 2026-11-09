@@ -1583,23 +1583,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatViewContact => 'Lihat kontak';
 
   @override
-  String get chatSharedPhotos => 'Foto yang dibagikan';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString foto',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Bunyikan notifikasi';
 
   @override
@@ -1865,9 +1848,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get commonSend => 'Kirim';
-
-  @override
-  String get chatNoPhotosInThis => 'Belum ada foto di obrolan ini';
 
   @override
   String get chatHoldToRecord => 'Tahan untuk merekam pesan suara';
@@ -12066,4 +12046,44 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Dibagikan dengan $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Dibagikan di $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Media';
+
+  @override
+  String get sharedTabFiles => 'File';
+
+  @override
+  String get sharedTabVoice => 'Suara';
+
+  @override
+  String get sharedTabLinks => 'Tautan';
+
+  @override
+  String get sharedNoPhotos => 'Foto yang dikirim di chat ini muncul di sini.';
+
+  @override
+  String get sharedNoFiles => 'File yang dikirim di chat ini muncul di sini.';
+
+  @override
+  String get sharedNoVoice => 'Pesan suara di chat ini muncul di sini.';
+
+  @override
+  String get sharedNoLinks => 'Tautan yang dikirim di chat ini muncul di sini.';
+
+  @override
+  String get sharedYourVoice => 'Pesan suaramu';
+
+  @override
+  String get sharedOpensLink => 'Membuka tautan di aplikasi lain';
 }

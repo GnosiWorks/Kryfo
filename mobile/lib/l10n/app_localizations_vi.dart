@@ -1582,23 +1582,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatViewContact => 'Xem liên hệ';
 
   @override
-  String get chatSharedPhotos => 'Ảnh đã chia sẻ';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString ảnh',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Bật lại thông báo';
 
   @override
@@ -1863,9 +1846,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get commonSend => 'Gửi';
-
-  @override
-  String get chatNoPhotosInThis => 'Chưa có ảnh nào trong cuộc trò chuyện này';
 
   @override
   String get chatHoldToRecord => 'Nhấn giữ để ghi tin nhắn thoại';
@@ -12049,4 +12029,48 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Đã chia sẻ với $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Đã chia sẻ trong $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Ảnh';
+
+  @override
+  String get sharedTabFiles => 'Tệp';
+
+  @override
+  String get sharedTabVoice => 'Thoại';
+
+  @override
+  String get sharedTabLinks => 'Liên kết';
+
+  @override
+  String get sharedNoPhotos =>
+      'Ảnh gửi trong cuộc trò chuyện này sẽ hiện ở đây.';
+
+  @override
+  String get sharedNoFiles =>
+      'Tệp gửi trong cuộc trò chuyện này sẽ hiện ở đây.';
+
+  @override
+  String get sharedNoVoice =>
+      'Tin nhắn thoại trong cuộc trò chuyện này sẽ hiện ở đây.';
+
+  @override
+  String get sharedNoLinks =>
+      'Liên kết gửi trong cuộc trò chuyện này sẽ hiện ở đây.';
+
+  @override
+  String get sharedYourVoice => 'Tin nhắn thoại của bạn';
+
+  @override
+  String get sharedOpensLink => 'Mở liên kết trong ứng dụng khác';
 }

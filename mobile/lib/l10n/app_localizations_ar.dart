@@ -1640,28 +1640,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatViewContact => 'عرض جهة الاتصال';
 
   @override
-  String get chatSharedPhotos => 'الصور المشتركة';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ صورة',
-      many: '⁨$countString⁩ صورة',
-      few: '⁨$countString⁩ صور',
-      two: 'صورتان',
-      one: 'صورة واحدة',
-      zero: '⁨$countString⁩ صورة',
-    );
-    return '$_temp0 · ⁨$title⁩';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'إلغاء كتم الإشعارات';
 
   @override
@@ -1929,9 +1907,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get commonSend => 'إرسال';
-
-  @override
-  String get chatNoPhotosInThis => 'لا صور في هذه المحادثة بعد';
 
   @override
   String get chatHoldToRecord => 'اضغط مطولًا لتسجيل رسالة صوتية';
@@ -12208,4 +12183,44 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'المشترك مع $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'المشترك في $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'الوسائط';
+
+  @override
+  String get sharedTabFiles => 'الملفات';
+
+  @override
+  String get sharedTabVoice => 'الصوت';
+
+  @override
+  String get sharedTabLinks => 'الروابط';
+
+  @override
+  String get sharedNoPhotos => 'تظهر هنا الصور المرسلة في هذه المحادثة.';
+
+  @override
+  String get sharedNoFiles => 'تظهر هنا الملفات المرسلة في هذه المحادثة.';
+
+  @override
+  String get sharedNoVoice => 'تظهر هنا الرسائل الصوتية في هذه المحادثة.';
+
+  @override
+  String get sharedNoLinks => 'تظهر هنا الروابط المرسلة في هذه المحادثة.';
+
+  @override
+  String get sharedYourVoice => 'رسالتك الصوتية';
+
+  @override
+  String get sharedOpensLink => 'يفتح الرابط في تطبيق آخر';
 }

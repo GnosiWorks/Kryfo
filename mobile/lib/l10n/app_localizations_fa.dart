@@ -1592,24 +1592,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatViewContact => 'دیدن مخاطب';
 
   @override
-  String get chatSharedPhotos => 'عکس‌های مشترک';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '⁨$countString⁩ عکس',
-      one: '⁨$countString⁩ عکس',
-    );
-    return '$_temp0 · ⁨$title⁩';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'باصدا کردن اعلان‌ها';
 
   @override
@@ -1874,9 +1856,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get commonSend => 'ارسال';
-
-  @override
-  String get chatNoPhotosInThis => 'هنوز عکسی در این گفت‌وگو نیست';
 
   @override
   String get chatHoldToRecord => 'برای ضبط پیام صوتی نگه دارید';
@@ -12075,4 +12054,48 @@ class AppLocalizationsFa extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'مشترک با $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'مشترک در $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'رسانه';
+
+  @override
+  String get sharedTabFiles => 'فایل‌ها';
+
+  @override
+  String get sharedTabVoice => 'صدا';
+
+  @override
+  String get sharedTabLinks => 'پیوندها';
+
+  @override
+  String get sharedNoPhotos =>
+      'عکس‌هایی که در این گفتگو فرستاده می‌شوند اینجا نشان داده می‌شوند.';
+
+  @override
+  String get sharedNoFiles =>
+      'فایل‌هایی که در این گفتگو فرستاده می‌شوند اینجا نشان داده می‌شوند.';
+
+  @override
+  String get sharedNoVoice =>
+      'پیام‌های صوتی این گفتگو اینجا نشان داده می‌شوند.';
+
+  @override
+  String get sharedNoLinks =>
+      'پیوندهایی که در این گفتگو فرستاده می‌شوند اینجا نشان داده می‌شوند.';
+
+  @override
+  String get sharedYourVoice => 'پیام صوتی شما';
+
+  @override
+  String get sharedOpensLink => 'پیوند را در برنامه‌ای دیگر باز می‌کند';
 }

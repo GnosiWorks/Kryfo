@@ -779,32 +779,57 @@ mixin _MessageRows {
     return {for (final r in rows) r['peer_id'] as String: r};
   }
 
-  // the media a chat holds, newest first, and nothing else about the
-  // messages: a contact page has no use for the text. a timed photo not
-  // read yet is left out: it shows in the thread alone, where reading it
-  // starts its clock
+  // what a 1:1 chat shared, newest first: its photos, files, voice notes and
+  // messages with a link, with only what the shared lists draw. three narrow
+  // queries rather than one pass over every message. a timed one not read
+  // yet is left out: it shows in the thread alone, where reading it starts
+  // its clock
   Future<List<Map<String, Object?>>> mediaFor(String peerId) async {
     final db = await open();
-    final rows = await db.query(
-      'messages',
-      columns: [
-        'media_path',
-        'secure',
-        'direction',
-        'burn_secs',
-        'burn_at',
-        'burn_unseen',
-      ],
-      where:
-          'peer_id = ? AND group_id IS NULL AND media_path IS NOT NULL '
-          'AND media_path != ?',
-      whereArgs: [peerId, ''],
-      orderBy: 'rowid DESC',
-    );
+    const cols = [
+      'id',
+      'media_path',
+      'file_path',
+      'file_name',
+      'secure',
+      'direction',
+      'sent_at',
+      'msg_uid',
+      'plaintext',
+      'preview',
+      'burn_secs',
+      'burn_at',
+      'burn_unseen',
+    ];
+    const chat = 'peer_id = ? AND group_id IS NULL';
+    final parts = await Future.wait([
+      db.query(
+        'messages',
+        columns: cols,
+        where: '$chat AND media_path IS NOT NULL AND media_path != ?',
+        whereArgs: [peerId, ''],
+      ),
+      db.query(
+        'messages',
+        columns: cols,
+        where: '$chat AND file_name IS NOT NULL',
+        whereArgs: [peerId],
+      ),
+      db.query(
+        'messages',
+        columns: cols,
+        where: '$chat AND plaintext LIKE ?',
+        whereArgs: [peerId, '%://%'],
+      ),
+    ]);
+    final byId = <int, Map<String, Object?>>{
+      for (final part in parts)
+        for (final r in part) r['id'] as int: r,
+    };
+    final ids = byId.keys.toList()..sort((a, b) => b.compareTo(a));
     return [
-      for (final r in rows)
-        if (!burnWaitsRow(r))
-          {'media_path': r['media_path'], 'secure': r['secure']},
+      for (final id in ids)
+        if (!burnWaitsRow(byId[id]!)) byId[id]!,
     ];
   }
 

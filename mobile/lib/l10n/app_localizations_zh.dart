@@ -1521,23 +1521,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatViewContact => '查看联系人';
 
   @override
-  String get chatSharedPhotos => '共享的照片';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 张照片',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => '取消通知静音';
 
   @override
@@ -1796,9 +1779,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get commonSend => '发送';
-
-  @override
-  String get chatNoPhotosInThis => '这个聊天里还没有照片';
 
   @override
   String get chatHoldToRecord => '按住录制语音消息';
@@ -11400,6 +11380,46 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return '与 $name 共享的内容';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return '$name 中共享的内容';
+  }
+
+  @override
+  String get sharedTabMedia => '媒体';
+
+  @override
+  String get sharedTabFiles => '文件';
+
+  @override
+  String get sharedTabVoice => '语音';
+
+  @override
+  String get sharedTabLinks => '链接';
+
+  @override
+  String get sharedNoPhotos => '这个聊天里发送的照片会显示在这里。';
+
+  @override
+  String get sharedNoFiles => '这个聊天里发送的文件会显示在这里。';
+
+  @override
+  String get sharedNoVoice => '这个聊天里的语音消息会显示在这里。';
+
+  @override
+  String get sharedNoLinks => '这个聊天里发送的链接会显示在这里。';
+
+  @override
+  String get sharedYourVoice => '你的语音消息';
+
+  @override
+  String get sharedOpensLink => '在其他应用中打开链接';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -12919,23 +12939,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get chatViewContact => '查看聯絡人';
 
   @override
-  String get chatSharedPhotos => '分享的照片';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString 張照片',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => '取消通知靜音';
 
   @override
@@ -13193,9 +13196,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get commonSend => '傳送';
-
-  @override
-  String get chatNoPhotosInThis => '這個聊天裡還沒有照片';
 
   @override
   String get chatHoldToRecord => '按住即可錄製語音訊息';
@@ -22678,4 +22678,44 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return '與 $name 分享的內容';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return '$name 中分享的內容';
+  }
+
+  @override
+  String get sharedTabMedia => '媒體';
+
+  @override
+  String get sharedTabFiles => '檔案';
+
+  @override
+  String get sharedTabVoice => '語音';
+
+  @override
+  String get sharedTabLinks => '連結';
+
+  @override
+  String get sharedNoPhotos => '這個聊天裡傳送的照片會顯示在這裡。';
+
+  @override
+  String get sharedNoFiles => '這個聊天裡傳送的檔案會顯示在這裡。';
+
+  @override
+  String get sharedNoVoice => '這個聊天裡的語音訊息會顯示在這裡。';
+
+  @override
+  String get sharedNoLinks => '這個聊天裡傳送的連結會顯示在這裡。';
+
+  @override
+  String get sharedYourVoice => '你的語音訊息';
+
+  @override
+  String get sharedOpensLink => '在其他應用程式中開啟連結';
 }

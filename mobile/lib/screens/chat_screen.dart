@@ -30,6 +30,7 @@ import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
 import '../widgets/sealed_picture.dart';
+import '../widgets/shared_media.dart' show openShared;
 import '../widgets/photo_shape.dart';
 import 'media_send_screen.dart';
 import '../sent_name.dart';
@@ -6014,30 +6015,12 @@ class _ChatScreenState extends State<ChatScreen>
     super.dispose();
   }
 
-  Future<void> _openMediaGallery() async {
-    final rows = await session.messagesFor(widget.peerHaloId);
-    final paths = <String>[];
-    final securePaths = <String>{};
-    for (final r in rows) {
-      // one not read yet shows in the thread alone
-      if (burnWaitsRow(r)) continue;
-      final mp = r['media_path'] as String?;
-      if (mp != null && mp.isNotEmpty && await File(mp).exists()) {
-        paths.add(mp);
-        if ((r['secure'] as int? ?? 0) == 1) securePaths.add(mp);
-      }
-    }
-    if (!mounted) return;
-    Navigator.of(context).push(
-      haloRoute(
-        MediaGalleryScreen(
-          paths: paths.reversed.toList(),
-          securePaths: securePaths,
-          title: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
-        ),
-      ),
-    );
-  }
+  Future<void> _openMediaGallery() => openShared(
+    context,
+    chatId: widget.peerHaloId,
+    title: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
+    blocking: _shots.blocking,
+  );
 
   // his chat's menu: its photos and what his sheet does. no contact page,
   // introduction, note, wallpaper, clear, block or hide
@@ -6055,7 +6038,7 @@ class _ChatScreenState extends State<ChatScreen>
               [
                 MenuSheetRow(
                   icon: Icons.photo_library_outlined,
-                  label: l10n.chatSharedPhotos,
+                  label: l10n.groupInfoSharedMedia,
                   onTap: () => pick('photos'),
                 ),
               ],
@@ -6195,7 +6178,7 @@ class _ChatScreenState extends State<ChatScreen>
               ),
             MenuSheetRow(
               icon: Icons.photo_library_outlined,
-              label: l10n.chatSharedPhotos,
+              label: l10n.groupInfoSharedMedia,
               onTap: () => pick('photos'),
             ),
           ],
@@ -10242,16 +10225,7 @@ class _ReplyQuoteBar extends StatelessWidget {
 }
 
 class _EmptyConversation extends StatelessWidget {
-  // the shared photos page says it has none the same way
-  final IconData icon;
-  final String? title;
-  final bool withLine;
-  const _EmptyConversation({
-    super.key,
-    this.icon = Icons.lock_outline_rounded,
-    this.title,
-    this.withLine = true,
-  });
+  const _EmptyConversation({super.key});
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -10290,20 +10264,24 @@ class _EmptyConversation extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(icon, color: HaloColors.amber, size: 25),
+                child: Icon(
+                  Icons.lock_outline_rounded,
+                  color: HaloColors.amber,
+                  size: 25,
+                ),
               ),
               const SizedBox(height: 20),
               Text(
-                title ?? l10n.chatSayHi,
+                l10n.chatSayHi,
                 textAlign: TextAlign.center,
                 style: HaloType.serif(
-                  size: withLine ? 24 : 20,
+                  size: 24,
                   weight: FontWeight.w300,
                   italic: true,
                   color: HaloColors.text,
                 ),
               ),
-              if (withLine) ...[
+              ...[
                 const SizedBox(height: 8),
                 Text(
                   l10n.chatJustTheTwoOf,
@@ -10657,106 +10635,6 @@ class _Composer extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class MediaGalleryScreen extends StatelessWidget {
-  final List<String> paths;
-  // which of them the sender marked. a protected photo must stay protected
-  // wherever it is opened from, or the gallery is a second door.
-  final Set<String> securePaths;
-  final String title;
-  const MediaGalleryScreen({
-    super.key,
-    required this.paths,
-    this.securePaths = const {},
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: HaloColors.surface,
-      appBar: AppBar(
-        backgroundColor: HaloColors.surface,
-        elevation: 0,
-        leading: IconButton(
-          tooltip: l10n.commonBack,
-          icon: const Icon(Icons.chevron_left, size: 26),
-          color: HaloColors.text,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.chatSharedPhotos,
-              style: HaloType.serif(size: 17, color: HaloColors.text),
-            ),
-            Text(
-              l10n.chatSharedPhotoCount(paths.length, title),
-              style: HaloType.mono(size: 10, color: HaloColors.text),
-            ),
-          ],
-        ),
-      ),
-      body: paths.isEmpty
-          ? _EmptyConversation(
-              icon: Icons.photo_library_outlined,
-              title: l10n.chatNoPhotosInThis,
-              withLine: false,
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(2),
-              // a computer's window is wide: tiles keep a thumbnail's size
-              gridDelegate: onDesktop
-                  ? const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: kDeskTile,
-                      mainAxisSpacing: 2,
-                      crossAxisSpacing: 2,
-                    )
-                  : const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 2,
-                      crossAxisSpacing: 2,
-                    ),
-              itemCount: paths.length,
-              itemBuilder: (context, i) {
-                final path = paths[i];
-                final tag = photoHeroTag(path, 'gallery');
-                return PressScale(
-                  scale: 0.96,
-                  haptic: false,
-                  onTap: () => _openFullImage(
-                    context,
-                    path,
-                    secure: securePaths.contains(path),
-                    tag: tag,
-                  ),
-                  child: HaloHero(
-                    tag: tag,
-                    // each tile shows its blur, its photo fading up over it
-                    child: SealedPicture(
-                      path: path,
-                      image: mediaImage(path, 360),
-                      filterQuality: FilterQuality.low,
-                      // a photo whose file is gone says so, not a black square
-                      errorBuilder: (_, _, _) => Container(
-                        color: HaloColors.surface2,
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          size: 22,
-                          color: HaloColors.text3,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
     );
   }
 }

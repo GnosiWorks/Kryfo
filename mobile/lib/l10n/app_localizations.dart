@@ -2530,18 +2530,6 @@ abstract class AppLocalizations {
   /// screens/chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Shared photos'**
-  String get chatSharedPhotos;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{{count} photo} other{{count} photos}} · {title}'**
-  String chatSharedPhotoCount(int count, Object title);
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Unmute notifications'**
   String get chatUnmuteNotifications;
 
@@ -3006,12 +2994,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send'**
   String get commonSend;
-
-  /// screens/chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'No photos in this chat yet'**
-  String get chatNoPhotosInThis;
 
   /// screens/chat_screen.dart
   ///
@@ -19308,6 +19290,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Send {n}} other{Send {n}}}'**
   String sendSheetSend(int count, String n);
+
+  /// shared page title: what a 1:1 chat shared. the name shows in italics
+  ///
+  /// In en, this message translates to:
+  /// **'Shared with {name}'**
+  String sharedWith(String name);
+
+  /// shared page title for a group, the group name in italics
+  ///
+  /// In en, this message translates to:
+  /// **'Shared in {name}'**
+  String sharedIn(String name);
+
+  /// shared page tab: photos
+  ///
+  /// In en, this message translates to:
+  /// **'Media'**
+  String get sharedTabMedia;
+
+  /// shared page tab, and the row on the contact page
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get sharedTabFiles;
+
+  /// shared page tab: voice messages, and the row on the contact page
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get sharedTabVoice;
+
+  /// shared page tab: links sent in messages, and the row on the contact page
+  ///
+  /// In en, this message translates to:
+  /// **'Links'**
+  String get sharedTabLinks;
+
+  /// shared page, photos tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Photos sent in this chat show up here.'**
+  String get sharedNoPhotos;
+
+  /// shared page, files tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Files sent in this chat show up here.'**
+  String get sharedNoFiles;
+
+  /// shared page, voice tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Voice messages sent in this chat show up here.'**
+  String get sharedNoVoice;
+
+  /// shared page, links tab, empty
+  ///
+  /// In en, this message translates to:
+  /// **'Links sent in this chat show up here.'**
+  String get sharedNoLinks;
+
+  /// shared page, for screen readers: a voice message this phone sent
+  ///
+  /// In en, this message translates to:
+  /// **'Your voice message'**
+  String get sharedYourVoice;
+
+  /// shared page, for screen readers: what a tap on a link does
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the link in another app'**
+  String get sharedOpensLink;
 }
 
 class _AppLocalizationsDelegate

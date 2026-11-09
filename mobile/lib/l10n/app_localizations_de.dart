@@ -1604,24 +1604,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatViewContact => 'Kontakt ansehen';
 
   @override
-  String get chatSharedPhotos => 'Geteilte Fotos';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString Fotos',
-      one: '$countString Foto',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Stummschaltung aufheben';
 
   @override
@@ -1891,9 +1873,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get commonSend => 'Senden';
-
-  @override
-  String get chatNoPhotosInThis => 'Noch keine Fotos in diesem Chat';
 
   @override
   String get chatHoldToRecord =>
@@ -12206,4 +12185,45 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Geteilt mit $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Geteilt in $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Medien';
+
+  @override
+  String get sharedTabFiles => 'Dateien';
+
+  @override
+  String get sharedTabVoice => 'Sprache';
+
+  @override
+  String get sharedTabLinks => 'Links';
+
+  @override
+  String get sharedNoPhotos => 'Fotos aus diesem Chat erscheinen hier.';
+
+  @override
+  String get sharedNoFiles => 'Dateien aus diesem Chat erscheinen hier.';
+
+  @override
+  String get sharedNoVoice =>
+      'Sprachnachrichten aus diesem Chat erscheinen hier.';
+
+  @override
+  String get sharedNoLinks => 'Links aus diesem Chat erscheinen hier.';
+
+  @override
+  String get sharedYourVoice => 'Deine Sprachnachricht';
+
+  @override
+  String get sharedOpensLink => 'Öffnet den Link in einer anderen App';
 }

@@ -1630,26 +1630,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chatViewContact => 'Zobacz kontakt';
 
   @override
-  String get chatSharedPhotos => 'Udostępnione zdjęcia';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString zdjęcia',
-      many: '$countString zdjęć',
-      few: '$countString zdjęcia',
-      one: '$countString zdjęcie',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Włącz powiadomienia';
 
   @override
@@ -1919,9 +1899,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get commonSend => 'Wyślij';
-
-  @override
-  String get chatNoPhotosInThis => 'W tym czacie nie ma jeszcze zdjęć';
 
   @override
   String get chatHoldToRecord => 'Przytrzymaj, żeby nagrać wiadomość głosową';
@@ -12299,4 +12276,45 @@ class AppLocalizationsPl extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Udostępnione z $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Udostępnione w $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Multimedia';
+
+  @override
+  String get sharedTabFiles => 'Pliki';
+
+  @override
+  String get sharedTabVoice => 'Głosowe';
+
+  @override
+  String get sharedTabLinks => 'Linki';
+
+  @override
+  String get sharedNoPhotos => 'Tu pojawiają się zdjęcia wysłane w tym czacie.';
+
+  @override
+  String get sharedNoFiles => 'Tu pojawiają się pliki wysłane w tym czacie.';
+
+  @override
+  String get sharedNoVoice =>
+      'Tu pojawiają się wiadomości głosowe z tego czatu.';
+
+  @override
+  String get sharedNoLinks => 'Tu pojawiają się linki wysłane w tym czacie.';
+
+  @override
+  String get sharedYourVoice => 'Twoja wiadomość głosowa';
+
+  @override
+  String get sharedOpensLink => 'Otwiera link w innej aplikacji';
 }

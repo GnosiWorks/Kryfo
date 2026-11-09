@@ -928,7 +928,7 @@ void main() {
       await t.tap(find.byTooltip(l10n.devChatOptions));
       await _beat(t, 900);
       for (final s in [
-        l10n.chatSharedPhotos,
+        l10n.groupInfoSharedMedia,
         l10n.chatMuteNotifications,
         l10n.chatUnpin,
         l10n.chatArchiveChat,

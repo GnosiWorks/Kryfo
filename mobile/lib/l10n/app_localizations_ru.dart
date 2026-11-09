@@ -1630,26 +1630,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatViewContact => 'Открыть контакт';
 
   @override
-  String get chatSharedPhotos => 'Общие фото';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString фото',
-      many: '$countString фото',
-      few: '$countString фото',
-      one: '$countString фото',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Включить уведомления';
 
   @override
@@ -1918,9 +1898,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get commonSend => 'Отправить';
-
-  @override
-  String get chatNoPhotosInThis => 'В этом чате пока нет фото';
 
   @override
   String get chatHoldToRecord =>
@@ -12257,4 +12234,44 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Общее с $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Общее в $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Медиа';
+
+  @override
+  String get sharedTabFiles => 'Файлы';
+
+  @override
+  String get sharedTabVoice => 'Голосовые';
+
+  @override
+  String get sharedTabLinks => 'Ссылки';
+
+  @override
+  String get sharedNoPhotos => 'Здесь появятся фото из этого чата.';
+
+  @override
+  String get sharedNoFiles => 'Здесь появятся файлы из этого чата.';
+
+  @override
+  String get sharedNoVoice => 'Здесь появятся голосовые из этого чата.';
+
+  @override
+  String get sharedNoLinks => 'Здесь появятся ссылки из этого чата.';
+
+  @override
+  String get sharedYourVoice => 'Твоё голосовое';
+
+  @override
+  String get sharedOpensLink => 'Открывает ссылку в другом приложении';
 }

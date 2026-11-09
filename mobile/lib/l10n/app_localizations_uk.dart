@@ -1627,26 +1627,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatViewContact => 'Переглянути контакт';
 
   @override
-  String get chatSharedPhotos => 'Спільні фото';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString фото',
-      many: '$countString фото',
-      few: '$countString фото',
-      one: '$countString фото',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Увімкнути сповіщення';
 
   @override
@@ -1916,9 +1896,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get commonSend => 'Надіслати';
-
-  @override
-  String get chatNoPhotosInThis => 'У цьому чаті ще немає фото';
 
   @override
   String get chatHoldToRecord => 'Утримуй, щоб записати голосове повідомлення';
@@ -12255,4 +12232,44 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return 'Спільне з $name';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return 'Спільне в $name';
+  }
+
+  @override
+  String get sharedTabMedia => 'Медіа';
+
+  @override
+  String get sharedTabFiles => 'Файли';
+
+  @override
+  String get sharedTabVoice => 'Голосові';
+
+  @override
+  String get sharedTabLinks => 'Посилання';
+
+  @override
+  String get sharedNoPhotos => 'Тут з’являться фото з цього чату.';
+
+  @override
+  String get sharedNoFiles => 'Тут з’являться файли з цього чату.';
+
+  @override
+  String get sharedNoVoice => 'Тут з’являться голосові з цього чату.';
+
+  @override
+  String get sharedNoLinks => 'Тут з’являться посилання з цього чату.';
+
+  @override
+  String get sharedYourVoice => 'Твоє голосове';
+
+  @override
+  String get sharedOpensLink => 'Відкриває посилання в іншому застосунку';
 }

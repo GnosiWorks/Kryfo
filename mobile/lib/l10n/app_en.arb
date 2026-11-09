@@ -1982,23 +1982,6 @@
   "@chatViewContact": {
     "description": "screens/chat_screen.dart"
   },
-  "chatSharedPhotos": "Shared photos",
-  "@chatSharedPhotos": {
-    "description": "screens/chat_screen.dart"
-  },
-  "chatSharedPhotoCount": "{count, plural, one{{count} photo} other{{count} photos}} · {title}",
-  "@chatSharedPhotoCount": {
-    "description": "screens/chat_screen.dart",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "format": "decimalPattern"
-      },
-      "title": {
-        "type": "Object"
-      }
-    }
-  },
   "chatUnmuteNotifications": "Unmute notifications",
   "@chatUnmuteNotifications": {
     "description": "screens/chat_screen.dart"
@@ -2335,10 +2318,6 @@
   "commonSend": "Send",
   "@commonSend": {
     "description": "screens/chat_screen.dart, screens/group_chat_screen.dart, widgets/media_bubbles.dart"
-  },
-  "chatNoPhotosInThis": "No photos in this chat yet",
-  "@chatNoPhotosInThis": {
-    "description": "screens/chat_screen.dart"
   },
   "chatHoldToRecord": "Hold to record a voice note",
   "@chatHoldToRecord": {
@@ -15169,5 +15148,63 @@
         "type": "String"
       }
     }
+  },
+  "sharedWith": "Shared with {name}",
+  "@sharedWith": {
+    "description": "shared page title: what a 1:1 chat shared. the name shows in italics",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedIn": "Shared in {name}",
+  "@sharedIn": {
+    "description": "shared page title for a group, the group name in italics",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedTabMedia": "Media",
+  "@sharedTabMedia": {
+    "description": "shared page tab: photos"
+  },
+  "sharedTabFiles": "Files",
+  "@sharedTabFiles": {
+    "description": "shared page tab, and the row on the contact page"
+  },
+  "sharedTabVoice": "Voice",
+  "@sharedTabVoice": {
+    "description": "shared page tab: voice messages, and the row on the contact page"
+  },
+  "sharedTabLinks": "Links",
+  "@sharedTabLinks": {
+    "description": "shared page tab: links sent in messages, and the row on the contact page"
+  },
+  "sharedNoPhotos": "Photos sent in this chat show up here.",
+  "@sharedNoPhotos": {
+    "description": "shared page, photos tab, empty"
+  },
+  "sharedNoFiles": "Files sent in this chat show up here.",
+  "@sharedNoFiles": {
+    "description": "shared page, files tab, empty"
+  },
+  "sharedNoVoice": "Voice messages sent in this chat show up here.",
+  "@sharedNoVoice": {
+    "description": "shared page, voice tab, empty"
+  },
+  "sharedNoLinks": "Links sent in this chat show up here.",
+  "@sharedNoLinks": {
+    "description": "shared page, links tab, empty"
+  },
+  "sharedYourVoice": "Your voice message",
+  "@sharedYourVoice": {
+    "description": "shared page, for screen readers: a voice message this phone sent"
+  },
+  "sharedOpensLink": "Opens the link in another app",
+  "@sharedOpensLink": {
+    "description": "shared page, for screen readers: what a tap on a link does"
   }
 }

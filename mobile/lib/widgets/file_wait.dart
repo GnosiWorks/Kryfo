@@ -16,7 +16,6 @@ import 'press_scale.dart';
 
 /// the bubble's line under the name: its size and what it waits for, or
 /// how far it is
-@visibleForTesting
 String fileWaitLine(FileWait w, {required bool unmetered, int? left}) {
   final size = humanFileSize(w.size);
   switch (w.state) {

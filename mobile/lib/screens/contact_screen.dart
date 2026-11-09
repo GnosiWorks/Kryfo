@@ -55,7 +55,6 @@ import '../widgets/ease_size.dart';
 import '../widgets/shared_media.dart';
 import '../widgets/swap.dart';
 import 'home_screen.dart' show ContactPreview;
-import 'chat_screen.dart' show MediaGalleryScreen;
 import 'key_verification_screen.dart';
 import '../widgets/key_held.dart';
 import '../widgets/not_them.dart';
@@ -184,9 +183,7 @@ class _ContactScreenState extends State<ContactScreen> {
   Map<String, Object?>? _c;
   List<String> _voucherNames = const [];
   int? _since;
-  List<String> _media = const [];
-  Set<String> _secure = const {};
-  int _mediaCount = 0;
+  SharedLists _shared = const SharedLists();
   // the first read is in: until then the list's own row stands in
   bool _loaded = false;
   // what the chat list already knows about them, for the first frame
@@ -281,11 +278,7 @@ class _ContactScreenState extends State<ContactScreen> {
     final photos =
         results[5] as ({Uint8List? mine, Uint8List? theirs, int theirVer});
     // a file that went missing draws as nothing; no stat per file up front
-    final paths = [for (final r in rows) r['media_path'] as String];
-    final secure = {
-      for (final r in rows)
-        if ((r['secure'] as int? ?? 0) == 1) r['media_path'] as String,
-    };
+    final shared = sortShared(rows);
     final compare = await _compareOnce(c, held);
     if (!mounted) return;
     setState(() {
@@ -295,9 +288,7 @@ class _ContactScreenState extends State<ContactScreen> {
         for (final v in vs)
           (v['nickname'] as String?) ?? v['voucher_id'] as String,
       ];
-      _media = paths;
-      _secure = secure;
-      _mediaCount = paths.length;
+      _shared = shared;
       _since = since;
       _held = held;
       _healHold = held ? results[6] as int? : null;
@@ -395,6 +386,14 @@ class _ContactScreenState extends State<ContactScreen> {
       ? _c!['nickname'] as String?
       : widget.nickname ?? _seen?.nickname;
   String get _name => _nickname ?? widget.haloId;
+
+  Future<void> _openShared(SharedTab tab) => openShared(
+    context,
+    chatId: widget.haloId,
+    title: _name,
+    start: tab,
+    blocking: _shots.blocking,
+  );
 
   Future<void> _setMuted(bool on) async {
     HapticFeedback.selectionClick();
@@ -732,20 +731,16 @@ class _ContactScreenState extends State<ContactScreen> {
                   : const SizedBox(width: double.infinity),
             ),
             SharedMediaSection(
-              paths: _media,
-              count: _mediaCount,
+              paths: [for (final m in _shared.media) m.path!],
+              count: _shared.media.length,
               loaded: _loaded,
-              onOpen: _media.isEmpty
+              files: _shared.files.length,
+              voice: _shared.voice.length,
+              links: _shared.links.length,
+              onOpen: _shared.media.isEmpty
                   ? null
-                  : () => Navigator.of(context).push(
-                      haloRoute(
-                        MediaGalleryScreen(
-                          paths: _media,
-                          securePaths: _secure,
-                          title: _name,
-                        ),
-                      ),
-                    ),
+                  : () => _openShared(SharedTab.media),
+              onOpenTab: _openShared,
             ),
             const SizedBox(height: 18),
             // the chat itself: how loud it is, where it sits in the list

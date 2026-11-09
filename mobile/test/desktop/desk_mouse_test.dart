@@ -14,13 +14,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/desktop_mode.dart' show onDesktop;
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/screens/chat_screen.dart' show MediaGalleryScreen;
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/transfers.dart' show unmeteredIn;
 import 'package:kryfo/wide/read_width.dart' show kDeskTile;
 import 'package:kryfo/widgets/album_viewer.dart';
 import 'package:kryfo/widgets/key_ring.dart' show HoverTip, hoverWash;
 import 'package:kryfo/widgets/press_scale.dart';
+import 'package:kryfo/widgets/shared_media.dart' show SharedPhotoGrid;
 import 'package:kryfo/widgets/swipe_actions.dart';
 import 'package:kryfo/widgets/swipe_to_reply.dart';
 
@@ -385,7 +385,7 @@ void main() {
       t.view.devicePixelRatio = 1;
       addTearDown(t.view.reset);
       final paths = [for (var i = 0; i < 12; i++) '/nowhere/$i.jpg'];
-      await t.pumpWidget(_app(MediaGalleryScreen(paths: paths, title: 'Wren')));
+      await t.pumpWidget(_app(Scaffold(body: SharedPhotoGrid(paths: paths))));
       await t.pump();
       final grid = t.widget<GridView>(find.byType(GridView));
       final d = grid.gridDelegate as SliverGridDelegateWithMaxCrossAxisExtent;
@@ -397,7 +397,7 @@ void main() {
     testWidgets('the phone: three to a row', (t) async {
       onDesktop = false;
       await t.pumpWidget(
-        _app(const MediaGalleryScreen(paths: ['/nowhere/1.jpg'], title: 'W')),
+        _app(const Scaffold(body: SharedPhotoGrid(paths: ['/nowhere/1.jpg']))),
       );
       await t.pump();
       final grid = t.widget<GridView>(find.byType(GridView));

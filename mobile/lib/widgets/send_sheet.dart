@@ -25,6 +25,7 @@ import 'halo_sheet.dart';
 import 'halo_switch.dart';
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show kHouseCurve, motionStill;
+import 'pill_tabs.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
 
@@ -300,12 +301,16 @@ class SendSheetState extends State<SendSheet> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _Tabs(
-                tab: _tab,
-                gallery: widget.galleryLabel ?? l10n.chatGalleryShown,
-                onTab: (t) {
+              child: PillTabs(
+                labels: [
+                  widget.galleryLabel ?? l10n.chatGalleryShown,
+                  l10n.sendSheetFiles,
+                  l10n.sendSheetRecent,
+                ],
+                at: _tab.index,
+                onTap: (i) {
                   HapticFeedback.selectionClick();
-                  setState(() => _tab = t);
+                  setState(() => _tab = SendTab.values[i]);
                 },
               ),
             ),
@@ -413,69 +418,6 @@ class SendSheetState extends State<SendSheet> {
         _PickRow(pick: p, order: _chosen.indexOf(p), onTap: () => _toggle(p)),
     ],
   );
-}
-
-class _Tabs extends StatelessWidget {
-  final SendTab tab;
-  final String gallery;
-  final ValueChanged<SendTab> onTab;
-  const _Tabs({required this.tab, required this.gallery, required this.onTab});
-
-  @override
-  Widget build(BuildContext context) {
-    final still = motionStill(context);
-    String label(SendTab t) => switch (t) {
-      SendTab.gallery => gallery,
-      SendTab.files => l10n.sendSheetFiles,
-      SendTab.recent => l10n.sendSheetRecent,
-    };
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: HaloColors.surface3,
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Row(
-        children: [
-          for (final t in SendTab.values)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: t == tab,
-                label: label(t),
-                excludeSemantics: true,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onTab(t),
-                  child: AnimatedContainer(
-                    duration: still
-                        ? Duration.zero
-                        : const Duration(milliseconds: 200),
-                    curve: kHouseCurve,
-                    padding: const EdgeInsets.symmetric(vertical: 9),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: t == tab ? HaloColors.amber : Colors.transparent,
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                    child: Text(
-                      label(t),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: HaloType.sans(
-                        size: 13.5,
-                        weight: FontWeight.w600,
-                        color: t == tab ? HaloColors.onAmber : HaloColors.text,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 }
 
 class _Shortcut extends StatelessWidget {
@@ -650,6 +592,7 @@ class _PickRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       textDirection: fileNameDir(stem),
                       children: [
                         Flexible(

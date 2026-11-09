@@ -1598,24 +1598,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatViewContact => 'Kişiyi gör';
 
   @override
-  String get chatSharedPhotos => 'Paylaşılan fotoğraflar';
-
-  @override
-  String chatSharedPhotoCount(int count, Object title) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString fotoğraf',
-      one: '$countString fotoğraf',
-    );
-    return '$_temp0 · $title';
-  }
-
-  @override
   String get chatUnmuteNotifications => 'Bildirimleri sessizden çıkar';
 
   @override
@@ -1880,9 +1862,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get commonSend => 'Gönder';
-
-  @override
-  String get chatNoPhotosInThis => 'Bu sohbette henüz fotoğraf yok';
 
   @override
   String get chatHoldToRecord => 'Sesli mesaj kaydetmek için basılı tut';
@@ -12089,4 +12068,46 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String sharedWith(String name) {
+    return '$name ile paylaşılanlar';
+  }
+
+  @override
+  String sharedIn(String name) {
+    return '$name içinde paylaşılanlar';
+  }
+
+  @override
+  String get sharedTabMedia => 'Medya';
+
+  @override
+  String get sharedTabFiles => 'Dosyalar';
+
+  @override
+  String get sharedTabVoice => 'Ses';
+
+  @override
+  String get sharedTabLinks => 'Bağlantılar';
+
+  @override
+  String get sharedNoPhotos =>
+      'Bu sohbette gönderilen fotoğraflar burada görünür.';
+
+  @override
+  String get sharedNoFiles => 'Bu sohbette gönderilen dosyalar burada görünür.';
+
+  @override
+  String get sharedNoVoice => 'Bu sohbetteki sesli mesajlar burada görünür.';
+
+  @override
+  String get sharedNoLinks =>
+      'Bu sohbette gönderilen bağlantılar burada görünür.';
+
+  @override
+  String get sharedYourVoice => 'Sesli mesajın';
+
+  @override
+  String get sharedOpensLink => 'Bağlantıyı başka bir uygulamada açar';
 }
