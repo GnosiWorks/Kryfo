@@ -239,5 +239,17 @@ void main() {
       looksLike(await say(said['ru']!, 'ru', 'ar'), 'ar', 'ru-ar again');
       looksLike(await say(said['zh']!, 'zh', 'ru'), 'ru', 'zh-ru again');
     });
+
+    test('the background mid-pivot lets both legs finish first', () async {
+      await hub.away();
+      final out = say(said['de']!, 'de', 'zh');
+      // the app goes to the background while the first leg runs
+      await Future<void>.delayed(Duration.zero);
+      await hub.away();
+      expect(t.idle.awayPending, isTrue);
+      looksLike(await out, 'zh', 'de-zh mid-pivot');
+      expect(t.idle.awayPending, isFalse);
+      expect(t.idle.busy, 0);
+    });
   });
 }
