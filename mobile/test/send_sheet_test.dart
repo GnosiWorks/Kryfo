@@ -328,6 +328,8 @@ void main() {
         'name': 'r',
         'created_at': 1,
         'room_pub': 'pub',
+        // ended: its block no longer reads as on
+        'ended_at': 1,
       });
       await db.saveMessage(
         'zed',
