@@ -305,8 +305,48 @@ void main() {
         filePath: '${docs.path}/gone.txt',
         fileName: 'gone.txt',
       );
+      // a chat that blocks screenshots keeps theirs, not ours
+      await db.upsertContact('mira', 'x', 'ab' * 32);
+      final raw = await db.open();
+      await raw.update(
+        'contacts',
+        {'shots_on': 1, 'shots_can': 1, 'shots_at': 1},
+        where: 'halo_id = ?',
+        whereArgs: ['mira'],
+      );
+      await db.saveMessage(
+        'mira',
+        'in',
+        '',
+        msgUid: 'u8',
+        filePath: file('f_8.txt'),
+        fileName: 'kept.txt',
+      );
+      // a room keeps the others' files, ended or not
+      await raw.insert('groups', {
+        'group_id': 'room1',
+        'name': 'r',
+        'created_at': 1,
+        'room_pub': 'pub',
+      });
+      await db.saveMessage(
+        'zed',
+        'in',
+        '',
+        msgUid: 'u9',
+        groupId: 'room1',
+        filePath: file('f_9.txt'),
+        fileName: 'room.txt',
+      );
       final got = await recentFilesIn(db);
       expect([for (final p in got) p.name], ['rent.py', 'plan.pdf']);
+      // a row of a chat the session reads from another container now
+      final moved = await recentFilesIn(
+        db,
+        homeOf: (r) =>
+            r['peer_id'] == 'lena' && r['direction'] == 'in' ? HaloDb() : db,
+      );
+      expect([for (final p in moved) p.name], ['plan.pdf']);
       expect(
         got.every((p) => p.release == null),
         isTrue,

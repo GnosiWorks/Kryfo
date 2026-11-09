@@ -4077,7 +4077,10 @@ class _ChatScreenState extends State<ChatScreen>
       to: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
       pickGallery: galleryPicksForSheet,
       pickFiles: filePicksForSheet,
-      recent: () => recentFilesIn(session.peerDb(widget.peerHaloId)),
+      recent: () => recentFilesIn(
+        session.peerDb(widget.peerHaloId),
+        homeOf: sessionHomeOf,
+      ),
       galleryLabel: l10n.chatGalleryShown,
       shortcuts: [
         // a computer has no camera to open

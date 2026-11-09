@@ -2481,7 +2481,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       to: _groupName,
       pickGallery: galleryPicksForSheet,
       pickFiles: filePicksForSheet,
-      recent: () => recentFilesIn(session.groupDb(widget.groupId)),
+      recent: () =>
+          recentFilesIn(session.groupDb(widget.groupId), homeOf: sessionHomeOf),
       galleryLabel: l10n.groupChatGalleryShown,
       shortcuts: [
         // a computer has no camera to open

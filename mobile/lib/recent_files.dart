@@ -14,11 +14,18 @@ import 'lock_guard.dart' show LockDropped;
 import 'lock_state.dart';
 import 'picked.dart';
 import 'file_kind.dart' show knownInstaller;
-import 'main.dart' show HaloDb;
+import 'main.dart' show HaloDb, session;
 import 'voice_format.dart' show isVoiceName;
 import 'widgets/send_sheet.dart';
 
-Future<List<SendPick>> recentFilesIn(HaloDb db, {int most = 30}) async {
+/// [homeOf]: the container the session reads a row's chat from. a row this
+/// database still holds for a chat that lives elsewhere now (a hide cut
+/// short) is not offered
+Future<List<SendPick>> recentFilesIn(
+  HaloDb db, {
+  int most = 30,
+  HaloDb Function(Map<String, Object?> row)? homeOf,
+}) async {
   final rows = await db.recentFiles(limit: most);
   final blocks = <String, bool>{};
   Future<bool> keeps(Map<String, Object?> r) async {
@@ -27,8 +34,15 @@ Future<List<SendPick>> recentFilesIn(HaloDb db, {int most = 30}) async {
     final group = r['group_id'] as String?;
     final peer = r['peer_id'] as String? ?? '';
     final key = group ?? peer;
+    Future<bool> groupKeeps(String g) async {
+      // a room keeps everything of the others', ended or not
+      final row = await db.getGroup(g);
+      if (row != null && row['room_pub'] != null) return true;
+      return (await db.groupShotsOf(g)).blocking;
+    }
+
     final blocking = blocks[key] ??= group != null && group.isNotEmpty
-        ? (await db.groupShotsOf(group)).blocking
+        ? await groupKeeps(group)
         : (await db.shotsOf(peer)).blocking;
     return shotsKeeps(blocking: blocking, mine: false);
   }
@@ -39,6 +53,7 @@ Future<List<SendPick>> recentFilesIn(HaloDb db, {int most = 30}) async {
     final path = r['file_path'] as String;
     final name = r['file_name'] as String;
     if (!seen.add(path) || isVoiceName(name)) continue;
+    if (homeOf != null && !identical(homeOf(r), db)) continue;
     if (knownInstaller(path, name)) continue;
     if (await keeps(r)) continue;
     final int size;
@@ -61,6 +76,14 @@ Future<List<SendPick>> recentFilesIn(HaloDb db, {int most = 30}) async {
     if (out.length >= most) break;
   }
   return out;
+}
+
+/// the container [session] reads [row]'s chat from
+HaloDb sessionHomeOf(Map<String, Object?> row) {
+  final group = row['group_id'] as String?;
+  return group != null && group.isNotEmpty
+      ? session.groupDb(group)
+      : session.peerDb(row['peer_id'] as String? ?? '');
 }
 
 /// the phone's photo picker, its picks ready for the sheet. each pick's

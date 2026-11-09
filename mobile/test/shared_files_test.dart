@@ -19,6 +19,7 @@ import 'package:kryfo/widgets/text_viewer.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
 import 'mem_db.dart';
+import 'source_body.dart';
 
 class _Rows extends HaloDb {
   _Rows(this.mem);
@@ -323,6 +324,55 @@ void main() {
       await settle(t);
       expect(find.byType(TextViewer), findsOneWidget);
       expect(calls, isNot(contains('openFile')));
+    });
+  });
+
+  group('kept', () {
+    testWidgets('in a chat that blocks, their file opens in no other app, '
+        'ours as ever', (t) async {
+      final theirs = File('${tmp.path}/a.xyz')..writeAsBytesSync([1, 2, 3]);
+      t.view.physicalSize = const Size(390, 844);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      final when = DateTime(2025, 11, 9);
+      await t.pumpWidget(
+        MaterialApp(
+          home: SharedScreen(
+            chatId: 'p',
+            title: 'Lena',
+            start: SharedTab.files,
+            blocking: true,
+            load: () async => SharedLists(
+              files: [SharedItem(path: theirs.path, name: 'a.xyz', when: when)],
+            ),
+          ),
+        ),
+      );
+      for (var i = 0; i < 10; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+        await t.pump();
+      }
+      await t.tap(find.text('a'));
+      for (var i = 0; i < 10; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.text(l10n.chatShotsKeptOpen), findsOneWidget);
+      expect(find.text(l10n.fileOpenWith), findsNothing);
+      await t.pump(const Duration(seconds: 5));
+    });
+
+    test('group info hands the room and the block to the shared page', () {
+      final body = bodyOf(
+        File('lib/screens/group_info_screen.dart').readAsStringSync(),
+        'Future<void> _openShared(',
+      );
+      expect(body, contains('_isRoom'));
+      expect(body, contains('appState.shotsBlocksGroup('));
     });
   });
 

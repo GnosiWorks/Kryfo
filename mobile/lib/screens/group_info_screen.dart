@@ -529,7 +529,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     title: _name,
     group: true,
     start: tab,
-    blocking: _shots.blocking,
+    // as the chat holds it: a room always keeps, and so does a group that
+    // blocks, before this page has read its row too
+    blocking:
+        _isRoom || _shots.blocking || appState.shotsBlocksGroup(widget.groupId),
     nameOf: (id) =>
         id == null ? null : _contactOf(id)?.nickname ?? memberLabel(id),
   );
