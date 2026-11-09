@@ -206,6 +206,16 @@ func wakeNow() (int64, wakeTurns, bool) {
 	return wakeN, wakeWindowsLocked(), true
 }
 
+// when wake n was seen, or the far future once a later one was
+func wakeSeenAt(n int64) time.Time {
+	wakeMu.Lock()
+	defer wakeMu.Unlock()
+	if wakeN != n || wakeTurnsAt.IsZero() {
+		return time.Now().Add(wakeHold)
+	}
+	return wakeTurnsAt
+}
+
 // true for our relay's first redial in wake n: it goes at once, so the
 // route is proven as soon as before
 func takeWakeFirst(n int64) bool {

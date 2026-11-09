@@ -1204,7 +1204,7 @@ func reconnectTorFresh(force, auto bool, why string, fresh time.Duration) string
 		atomic.StoreInt32(&reconnectRunning, 1)
 	}
 	reconnectMu.Unlock()
-	r := reconnectOn(t, addr, me, auto)
+	r := reconnectOn(t, addr, me, auto, why == whyNetwork)
 	if reconnectMine(me) {
 		noteOutcome(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
 	}
@@ -1218,7 +1218,8 @@ func reconnectTorFresh(force, auto bool, why string, fresh time.Duration) string
 // status. against other control users ctrlDo's own bounded lock serializes.
 // for automatic the relay side is redone in the background: it waits on
 // dialers that can take half a minute, and a switch is judged by tor alone.
-func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
+// made: for a network change, whose kick the open chat takes no turn under
+func reconnectOn(t *tor.Tor, addr string, me int64, auto, made bool) string {
 	step := func(name string) bool {
 		if !reconnectMine(me) {
 			log.Printf("halo: reconnect replaced before %q", name)
@@ -1362,12 +1363,12 @@ func reconnectOn(t *tor.Tor, addr string, me int64, auto bool) string {
 		go func() {
 			nostrResetClient()
 			relayClearBenches()
-			kickRelays()
+			kickRelaysAs(made)
 		}()
 	} else {
 		nostrResetClient()
 		relayClearBenches()
-		kickRelays()
+		kickRelaysAs(made)
 	}
 	goWatchBootstrap(t)
 	goWatchPublished(t, strings.TrimSuffix(addr, ".onion"))
@@ -1514,7 +1515,7 @@ func torResume() string {
 	// every relay runner that found tor asleep is parked in a fifteen-minute
 	// sleep that only a kick ends, so the wake kicks, whoever asked for it.
 	relayClearBenches()
-	kickRelays()
+	kickForTorBack()
 	log.Println("halo: tor is back on the network")
 	return "ok"
 }

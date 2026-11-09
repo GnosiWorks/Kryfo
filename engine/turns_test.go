@@ -123,7 +123,8 @@ func TestATurnCountsAsACatchup(t *testing.T) {
 // one turn per start and per wake: a socket that redials without a kick in
 // between goes at once, one that has not got through since its last turn
 // takes no new one, and a kick it answered on its live socket gives it no
-// second turn. the open chat's address asks with no turn at all
+// second turn. the open chat's address asks with no turn under a kick the
+// phone made (openrank_test.go has the ones a server can cause)
 func TestOneTurnPerWake(t *testing.T) {
 	old := subSpread
 	subSpread = time.Hour
@@ -173,10 +174,10 @@ func TestOneTurnPerWake(t *testing.T) {
 	if quick(&b) {
 		t.Fatal("a second socket after a wake went at once too")
 	}
-	// the open chat's address goes at once
+	// the open chat's address goes at once under the phone's own kick
 	firstTag.Store("peer-on-screen")
 	defer firstTag.Store("")
-	kickRelays()
+	kickRelaysMade()
 	spendFirstTurn()
 	open := subTurn{tag: "peer-on-screen"}
 	if !quick(&open) {
@@ -202,7 +203,7 @@ func TestNoTurnStillCounts(t *testing.T) {
 	firstTag.Store("peer-on-screen")
 	defer firstTag.Store("")
 	open := subTurn{tag: "peer-on-screen"}
-	kickRelays()
+	kickRelaysMade()
 	spendFirstTurn()
 	if !open.take(ctx) {
 		t.Fatal("the open chat's address waited")

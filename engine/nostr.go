@@ -63,6 +63,9 @@ var (
 var (
 	kickMu sync.Mutex
 	kickCh = make(chan struct{})
+	// the kick an event a server can't cause made, nil for none: see
+	// phoneMade
+	kickMadeCh chan struct{}
 )
 
 // the newest relay event: when the sender's relay stamped it and when it
@@ -1158,11 +1161,28 @@ func relayListed(ctx context.Context, u string) bool {
 
 // end every runner's backoff now, so it dials again instead of waiting out a
 // sleep that was sized for the route that is gone.
-func kickRelays() {
+func kickRelays() { kickRelaysAs(false) }
+
+// the same, for a network change or the app coming to the front: the open
+// chat's address takes no turn under it
+func kickRelaysMade() { kickRelaysAs(true) }
+
+func kickRelaysAs(made bool) {
 	kickMu.Lock()
 	close(kickCh)
 	kickCh = make(chan struct{})
+	kickMadeCh = nil
+	if made {
+		kickMadeCh = kickCh
+	}
 	kickMu.Unlock()
+}
+
+// kc is the latest kick and a network change or the app in front made it
+func kickIsMade(kc chan struct{}) bool {
+	kickMu.Lock()
+	defer kickMu.Unlock()
+	return kc != nil && kc == kickMadeCh
 }
 
 func relayOK(u string) {

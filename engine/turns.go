@@ -4,8 +4,9 @@ package main
 // every relay socket waits a turn of its own before it subscribes, at the
 // start and after each wake, so a relay does not see all of one phone's
 // addresses ask in the same instant. only the first goes at once, and the
-// open chat's address, and a just-added one's first ask right after the add,
-// go with no turn. at the start our own relays wait less: the first batch
+// open chat's address under a network change or the app coming to the
+// front, and a just-added one's first ask right after the add, go with no
+// turn. at the start our own relays wait less: the first batch
 // and the first-contact listener go at once there, the first socket of ours
 // too when there is no first batch (a linked device has none), and the rest
 // of ours within ownStartSpread.
@@ -77,6 +78,7 @@ func takeFirstTurn(kc chan struct{}) bool {
 }
 
 // the runner tag of the chat open on screen: its address asks with no turn
+// under an event a server can't cause (phoneMade)
 var firstTag atomic.Value // string
 
 // the open chat's peer key, "" for none
@@ -90,6 +92,75 @@ func HaloNostrFirst(cTag *C.char) *C.char {
 func isFirstTag(tag string) bool {
 	f, _ := firstTag.Load().(string)
 	return tag != "" && f == tag
+}
+
+// the open chat's priority (no turn, the first redial) holds only after an
+// event no server can cause: a network change or the app coming to the
+// front. a check-in or drain kick, a push wake or a relay's drop can be had
+// from our relays or the push gateway at will, and which address comes
+// first would name the open chat each time
+var phoneEv struct {
+	sync.Mutex
+	// the last one, zero for none
+	at time.Time
+	// closed at each one: the open chat's waiting turn ends
+	ch chan struct{}
+}
+
+// how long after such an event a wake's first redials still rank: the
+// sockets a sleep killed are found at once or a ping later
+var phoneMadeFor = 30 * time.Second
+
+// the app is in front, as it last said
+var appFront atomic.Bool
+
+// the app came to the front (1) or left it (0)
+//
+//export HaloAppFront
+func HaloAppFront(on C.int) *C.char {
+	noteAppFront(on != 0)
+	return C.CString("ok")
+}
+
+func noteAppFront(on bool) {
+	if was := appFront.Swap(on); on && !was {
+		phoneMade()
+	}
+}
+
+// a network change or the app to the front
+func phoneMade() {
+	// a wake it came out of is seen first, so the event counts after it
+	wakeCheck()
+	phoneEv.Lock()
+	phoneEv.at = time.Now()
+	if phoneEv.ch != nil {
+		close(phoneEv.ch)
+	}
+	phoneEv.ch = make(chan struct{})
+	phoneEv.Unlock()
+	paceRaiseOpen()
+}
+
+// tor woke from its sleep: the app in front asked, or a check-in that a
+// push or the job began. only the first is the phone's own
+func kickForTorBack() { kickRelaysAs(appFront.Load()) }
+
+// closed at the next phoneMade
+func phoneChan() <-chan struct{} {
+	phoneEv.Lock()
+	defer phoneEv.Unlock()
+	if phoneEv.ch == nil {
+		phoneEv.ch = make(chan struct{})
+	}
+	return phoneEv.ch
+}
+
+// one came at or after from, and lately
+func phoneMadeSince(from time.Time) bool {
+	phoneEv.Lock()
+	defer phoneEv.Unlock()
+	return !phoneEv.at.IsZero() && !phoneEv.at.Before(from) && time.Since(phoneEv.at) <= phoneMadeFor
 }
 
 // the longest turn the first-contact listener waits on our own relays at a
@@ -189,9 +260,11 @@ type subTurn struct {
 	batch *hubKey
 	// the longest turn, 0 for subSpread
 	spread time.Duration
-	// the last take began its turn under a kick, wake or start the phone
-	// made. a redial under the same one after a drop is not: a relay can
-	// drop sockets at will, so that dial takes no rank (dialpace.go)
+	// the last take began its turn under the start, a kick a network
+	// change or the app in front made, or a wake one of those came after.
+	// a redial after a drop, a check-in or drain kick and a push wake are
+	// not: a server can cause them at will, so those take no rank
+	// (dialpace.go) and the open chat waits its turn
 	made bool
 }
 
@@ -253,19 +326,21 @@ func (t *subTurn) take(ctx context.Context) bool {
 	t.hold()
 	wakeCheck()
 	t.made = false
+	// before the look, so an event between the two still ends the wait
+	pc := phoneChan()
 	kc := kickChan()
 	if n, w, ok := wakeNow(); ok {
-		return t.takeWake(ctx, kc, n, w)
+		return t.takeWake(ctx, kc, n, w, pc)
 	}
 	if t.kick == kc {
 		return ctx.Err() == nil
 	}
-	t.made = true
+	t.made = kickIsMade(kc) || t.kick == nil && startKickPeek(kc)
 	again := t.kick != nil && !t.up && !t.free
 	first := t.kick == nil && t.fresh.holds(kc, autoNow())
 	t.kick = kc
 	t.free = first
-	if again || first || isFirstTag(t.tag) {
+	if again || first || t.made && isFirstTag(t.tag) {
 		return ctx.Err() == nil
 	}
 	t.up = false
@@ -296,15 +371,29 @@ func (t *subTurn) take(ctx context.Context) bool {
 	if d <= 0 {
 		return ctx.Err() == nil
 	}
+	return t.wait(ctx, d, up, pc)
+}
+
+// waits out a turn of d. a network change or the app coming to the front
+// meanwhile ends the open chat's, and its dial ranks then
+func (t *subTurn) wait(ctx context.Context, d time.Duration, up, pc <-chan struct{}) bool {
 	tm := time.NewTimer(d)
 	defer tm.Stop()
-	select {
-	case <-tm.C:
-		return true
-	case <-up:
-		return ctx.Err() == nil
-	case <-ctx.Done():
-		return false
+	for {
+		select {
+		case <-tm.C:
+			return true
+		case <-up:
+			return ctx.Err() == nil
+		case <-pc:
+			if isFirstTag(t.tag) {
+				t.made = true
+				return ctx.Err() == nil
+			}
+			pc = phoneChan()
+		case <-ctx.Done():
+			return false
+		}
 	}
 }
 
@@ -313,16 +402,17 @@ func (t *subTurn) take(ctx context.Context) bool {
 // either way they would redial together. one turn per wake, and one more
 // once it got through, as a socket that dies again after that does. ours
 // before the public relays, the first of ours at once
-func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wakeTurns) bool {
+func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wakeTurns, pc <-chan struct{}) bool {
 	now := autoNow()
 	first := t.kick == nil && t.fresh.holds(kc, now)
 	had := t.wake == n
 	t.kick, t.wake, t.free = kc, n, first
-	// the wake's own turn. the one more after a socket that got through
-	// died again is a drop's
-	t.made = !had
+	// the wake's own turn, if the app came to the front or the network
+	// changed since the wake: a push wakes the phone too. the one more
+	// after a socket that got through died again is a drop's
+	t.made = !had && phoneMadeSince(wakeSeenAt(n))
 	// a retry after a failed turn goes at its own backoff's pace
-	if (had && !t.up) || first || isFirstTag(t.tag) {
+	if (had && !t.up) || first || t.made && isFirstTag(t.tag) {
 		return ctx.Err() == nil
 	}
 	t.up = false
@@ -339,16 +429,7 @@ func (t *subTurn) takeWake(ctx context.Context, kc chan struct{}, n int64, w wak
 	if d <= 0 {
 		return ctx.Err() == nil
 	}
-	tm := time.NewTimer(d)
-	defer tm.Stop()
-	select {
-	case <-tm.C:
-		return true
-	case <-up:
-		return ctx.Err() == nil
-	case <-ctx.Done():
-		return false
-	}
+	return t.wait(ctx, d, up, pc)
 }
 
 // the kick was answered on the live socket: no turn for it
