@@ -81,6 +81,8 @@ class _App {
   int lefts = 0;
   // android screens that came onto the engine
   int attaches = 0;
+  // out at the app's own camera or picker
+  bool held = false;
   // the app's own lock-up: a vault session shuts here
   int ups = 0;
   VoidCallback? onUp;
@@ -106,6 +108,7 @@ class _App {
         returned: () {},
         left: () => lefts++,
         attached: () => attaches++,
+        held: () => held,
         guard: guard,
         quiet: () => quiet,
         pad: (_) => _Pad(this),
@@ -462,6 +465,27 @@ void main() {
     await tester.pump();
     expect(picturesShut.value, isFalse);
     expect(picturesAway, isFalse);
+  });
+
+  testWidgets('out at our own camera, the pictures wait until it is '
+      'done', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester)
+      ..pin = false
+      ..held = true;
+    await a.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(minutes: 5));
+    expect(picturesShut.value, isFalse);
+    // the hold ran out with the person still away: the next round lets go
+    a.held = false;
+    await tester.pump(const Duration(minutes: 2));
+    expect(picturesShut.value, isTrue);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(picturesShut.value, isFalse);
   });
 
   testWidgets('back within two minutes, nothing lets go', (tester) async {

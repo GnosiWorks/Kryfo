@@ -44,15 +44,21 @@ void capPictureCache() {
 bool _away = false;
 Timer? _awayTimer;
 
-/// the app left: the cache now, the pictures after [kPicturesAwayAfter]
-void picturesLeaving() {
+/// the app left: the cache now, the pictures after [kPicturesAwayAfter].
+/// while [held] (our own camera or picker) they wait another round
+void picturesLeaving({bool Function()? held}) {
   PaintingBinding.instance.imageCache.clear();
-  _awayTimer?.cancel();
-  _awayTimer = Timer(kPicturesAwayAfter, () {
-    _awayTimer = null;
-    _away = true;
-    if (!picturesShut.value) shutPictures();
-  });
+  void wait() {
+    _awayTimer?.cancel();
+    _awayTimer = Timer(kPicturesAwayAfter, () {
+      _awayTimer = null;
+      if (held?.call() ?? false) return wait();
+      _away = true;
+      if (!picturesShut.value) shutPictures();
+    });
+  }
+
+  wait();
 }
 
 /// the app is back: openPictures opens them again unless the lock is up
