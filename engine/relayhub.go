@@ -133,6 +133,8 @@ type hubConn struct {
 	// closed once the dial is over, err its outcome
 	dialed chan struct{}
 	err    error
+	// when the dial began, after its place
+	dialAt time.Time
 	slots  chan struct{}
 	// unix ms of the last frame something on it took
 	heard  atomic.Int64
@@ -185,7 +187,9 @@ func (c *hubConn) close() {
 func (c *hubConn) dial(client *http.Client) {
 	// the wait ends with the socket and with its route
 	pctx, pcancel := onRoute(c.ctx, c.routeC)
-	if err := c.place.wait(pctx); err != nil {
+	err := c.place.wait(pctx)
+	c.dialAt = c.place.placeAt()
+	if err != nil {
 		pcancel()
 		c.err = err
 		close(c.dialed)
@@ -205,7 +209,7 @@ func (c *hubConn) dial(client *http.Client) {
 	r := nostr.NewRelay(c.ctx, c.url, opts)
 	rctx, rcancel := onRoute(c.ctx, c.routeC)
 	dctx, dcancel := relayDialCtx(rctx, c.url)
-	err := r.ConnectWithClient(dctx, client)
+	err = r.ConnectWithClient(dctx, client)
 	dcancel()
 	rcancel()
 	if err == nil && c.ctx.Err() != nil {
@@ -240,15 +244,17 @@ func (c *hubConn) watch() {
 }
 
 // joins the socket of k, dialling it if there is none. ctx is the join's:
-// the join leaves when it ends
-func hubJoin(ctx context.Context, k hubKey, addr string, client *http.Client, routeC <-chan struct{}, paced bool, rank int) (*hubMember, bool, error) {
+// the join leaves when it ends. at: when its dial began, or the join for a
+// socket dialled before it
+func hubJoin(ctx context.Context, k hubKey, addr string, client *http.Client, routeC <-chan struct{}, paced bool, rank int) (*hubMember, bool, time.Time, error) {
+	joined := time.Now()
 	hubsMu.Lock()
 	h := hubOf(k)
 	c := h.cur
 	if c != nil && c.routeC != routeC && routeGone(routeC) {
 		// the join is the old route's: the socket is the new one's
 		hubsMu.Unlock()
-		return nil, false, errors.New("the route changed")
+		return nil, false, joined, errors.New("the route changed")
 	}
 	if c != nil && (c.ctx.Err() != nil || c.routeC != routeC) {
 		// one of the old route is not taken on to the new one
@@ -290,17 +296,21 @@ func hubJoin(ctx context.Context, k hubKey, addr string, client *http.Client, ro
 	case <-c.dialed:
 	case <-mctx.Done():
 		m.leave()
-		return nil, false, mctx.Err()
+		return nil, false, joined, mctx.Err()
+	}
+	at := joined
+	if c.dialAt.After(at) {
+		at = c.dialAt
 	}
 	if c.err != nil {
 		m.leave()
-		return nil, false, c.err
+		return nil, false, at, c.err
 	}
 	if mctx.Err() != nil {
 		m.leave()
-		return nil, false, errors.New("socket closed")
+		return nil, false, at, errors.New("socket closed")
 	}
-	return m, dialing, nil
+	return m, dialing, at, nil
 }
 
 // one address's join of a socket
@@ -881,31 +891,36 @@ func (s soloLink) drop(time.Time) { s.r.Close() }
 
 // the runner's connection to relay u: a socket of its own when group is
 // "", else its join of the group's socket. fresh: it dialled now, or the
-// socket carried something lately, so it says the route works
-func relayJoin(conn context.Context, k hubKey, addr string, client *http.Client, routeC <-chan struct{}, paced bool, rank int) (link relayLink, fresh bool, err error) {
+// socket carried something lately, so it says the route works. at: when
+// its dial began, after its place in line, so the wait counts for neither
+// a failure nor the connect time
+func relayJoin(conn context.Context, k hubKey, addr string, client *http.Client, routeC <-chan struct{}, paced bool, rank int) (link relayLink, fresh bool, at time.Time, err error) {
 	if k.group == "" {
 		// a dial still under way when the mode changes ends there
 		rctx, rcancel := onRoute(conn, routeC)
-		if err := paceJoin(k.lane, k.url, rank).wait(rctx); err != nil {
+		t := paceJoin(k.lane, k.url, rank)
+		err := t.wait(rctx)
+		at = t.placeAt()
+		if err != nil {
 			rcancel()
-			return nil, false, err
+			return nil, false, at, err
 		}
 		r := nostr.NewRelay(conn, k.url, relayOptionsFor(k.url))
 		noteRelayDial(k.url)
 		dctx, dcancel := relayDialCtx(rctx, k.url)
-		err := r.ConnectWithClient(dctx, client)
+		err = r.ConnectWithClient(dctx, client)
 		dcancel()
 		rcancel()
 		if err != nil {
-			return nil, false, err
+			return nil, false, at, err
 		}
-		return soloLink{conn, r}, true, nil
+		return soloLink{conn, r}, true, at, nil
 	}
-	m, dialed, err := hubJoin(conn, k, addr, client, routeC, paced, rank)
+	m, dialed, at, err := hubJoin(conn, k, addr, client, routeC, paced, rank)
 	if err != nil {
-		return nil, false, err
+		return nil, false, at, err
 	}
-	return m, dialed || m.c.heardWithin(hubFresh), nil
+	return m, dialed || m.c.heardWithin(hubFresh), at, nil
 }
 
 // which socket an address shares, set on its runner's context. none: a

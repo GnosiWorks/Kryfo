@@ -12,6 +12,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	mrand "math/rand/v2"
 	"slices"
 	"sync"
@@ -43,6 +44,15 @@ const (
 	paceAny
 )
 
+// the place was not used: the relay went failing while the ticket waited,
+// and failingDialBegin lets one dial a round to it, not one per socket
+var errPaceSkip = errors.New("relay failing, no place")
+
+// the longest a ticket waits in line in a check-in: the app stops waiting
+// 120 s into the job, after the turns (15 s), the dial (30 s) and a long
+// catch-up (40 s)
+var checkInPaceWait = 20 * time.Second
+
 // how long a chat written to counts as waiting for an answer: its batch
 // goes first
 var paceSentFor = 10 * time.Minute
@@ -50,9 +60,14 @@ var paceSentFor = 10 * time.Minute
 type paceTicket struct {
 	rank int
 	seq  uint64
-	// closed once its place came, at at
-	ok chan struct{}
-	at time.Time
+	url  string
+	// u was failing at the join: this is the one dial failingDialBegin let
+	// through, and it is not skipped
+	probe bool
+	// closed once its place came, at at, or once it was skipped
+	ok   chan struct{}
+	at   time.Time
+	skip bool
 }
 
 var dialPace struct {
@@ -79,22 +94,44 @@ func paceJoin(lane, u string, rank int) *paceTicket {
 	dialPace.Lock()
 	defer dialPace.Unlock()
 	dialPace.seq++
-	t := &paceTicket{rank: rank, seq: dialPace.seq, ok: make(chan struct{})}
+	t := &paceTicket{rank: rank, seq: dialPace.seq, url: u, probe: relayFailingNow(u), ok: make(chan struct{})}
 	dialPace.q = append(dialPace.q, t)
 	paceRunLocked()
 	return t
 }
 
 // waits for t's place. a nil ticket has it. an error once ctx ends first:
-// t has left the line then
+// t has left the line then. errPaceSkip when its relay went failing
 func (t *paceTicket) wait(ctx context.Context) error {
 	if t == nil {
 		return nil
 	}
+	// in a check-in a ticket goes after checkInPaceWait whatever its place
+	var bound <-chan time.Time
+	if inCheckIn() {
+		tm := time.NewTimer(checkInPaceWait)
+		defer tm.Stop()
+		bound = tm.C
+	}
 	select {
 	case <-t.ok:
-		return nil
+		return t.used()
 	case <-ctx.Done():
+	case <-bound:
+		dialPace.Lock()
+		defer dialPace.Unlock()
+		if isClosed(t.ok) {
+			return t.used()
+		}
+		t.leaveLocked()
+		now := time.Now()
+		t.at = now
+		close(t.ok)
+		// the ones still in line keep their gap after it
+		if next := now.Add(paceDraw()); next.After(dialPace.next) {
+			dialPace.next = next
+		}
+		return nil
 	}
 	dialPace.Lock()
 	defer dialPace.Unlock()
@@ -102,8 +139,27 @@ func (t *paceTicket) wait(ctx context.Context) error {
 		// the place came with the end: it is used, the dial is not made
 		return ctx.Err()
 	}
-	dialPace.q = slices.DeleteFunc(dialPace.q, func(x *paceTicket) bool { return x == t })
+	t.leaveLocked()
 	return ctx.Err()
+}
+
+func (t *paceTicket) used() error {
+	if t.skip {
+		return errPaceSkip
+	}
+	return nil
+}
+
+func (t *paceTicket) leaveLocked() {
+	dialPace.q = slices.DeleteFunc(dialPace.q, func(x *paceTicket) bool { return x == t })
+}
+
+// the time t's dial may count from: its place, or now for no ticket
+func (t *paceTicket) placeAt() time.Time {
+	if t == nil || t.at.IsZero() {
+		return time.Now()
+	}
+	return t.at
 }
 
 // t moves up to rank, if that is better and it still waits
@@ -140,8 +196,15 @@ func paceDraw() time.Duration {
 }
 
 // under dialPace: the best ticket gets its place if its time came, else a
-// timer is set for then
+// timer is set for then. one whose relay went failing leaves at once
 func paceRunLocked() {
+	for _, t := range dialPace.q {
+		if !t.probe && relayFailingNow(t.url) {
+			t.skip = true
+			close(t.ok)
+		}
+	}
+	dialPace.q = slices.DeleteFunc(dialPace.q, func(t *paceTicket) bool { return t.skip })
 	if len(dialPace.q) == 0 {
 		return
 	}
@@ -230,6 +293,13 @@ func paceOpenLane() string {
 
 // called with each place given, under dialPace. for the tests
 var paceGrantHook func(*paceTicket)
+
+// u has failed since it last answered
+func relayFailingNow(u string) bool {
+	relayHealthMu.Lock()
+	defer relayHealthMu.Unlock()
+	return relayFails[u] > 0
+}
 
 // the rank of a runner's socket: tag its peer, lane its batch's or own.
 // made: its turn came from a kick, wake or start the phone made itself

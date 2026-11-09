@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"maps"
 	"sort"
@@ -337,5 +338,119 @@ func TestPaceDrawsTheOrderOfRedials(t *testing.T) {
 	}
 	if inOrder {
 		t.Fatal("eleven redials had their places in the order they came")
+	}
+}
+
+// a relay that went failing while its sockets waited: they leave the line
+// with no place, the one dial its streak allows still gets one
+func TestPaceSkipsAFailingRelay(t *testing.T) {
+	u := paceStore(t)
+	gap := 60 * time.Millisecond
+	paceWith(t, gap, 0)
+	t.Cleanup(relayClearBenches)
+	head := paceJoin(paceLane, u, paceRest)
+	var ts []*paceTicket
+	for range 4 {
+		ts = append(ts, paceJoin(paceLane, u, paceRest))
+	}
+	relayHealthMu.Lock()
+	relayFails[u] = 1
+	relayHealthMu.Unlock()
+	probe := paceJoin(paceLane, u, paceRest)
+	if err := head.wait(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	for i, tk := range ts {
+		if err := tk.wait(context.Background()); !errors.Is(err, errPaceSkip) {
+			t.Fatalf("socket %d of a failing relay: %v, want it skipped", i, err)
+		}
+	}
+	if err := probe.wait(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if d := probe.at.Sub(head.at); d > 2*gap {
+		t.Fatalf("the failing relay's one dial came %v after the head, want one gap", d)
+	}
+}
+
+// in a check-in no socket waits in line past checkInPaceWait
+func TestPaceCheckInBoundsTheWait(t *testing.T) {
+	u := paceStore(t)
+	paceWith(t, time.Minute, 0)
+	old := checkInPaceWait
+	checkInPaceWait = 50 * time.Millisecond
+	checkInMu.Lock()
+	checkInUntil = autoNow().Add(time.Minute)
+	checkInMu.Unlock()
+	t.Cleanup(func() {
+		checkInPaceWait = old
+		checkInMu.Lock()
+		checkInUntil = time.Time{}
+		checkInMu.Unlock()
+	})
+	start := time.Now()
+	ts := []*paceTicket{paceJoin(paceLane, u, paceRest), paceJoin(paceLane, u, paceRest), paceJoin(paceLane, u, paceRest)}
+	paceGrants(t, ts)
+	if d := time.Since(start); d > 5*time.Second {
+		t.Fatalf("three places in a check-in took %v, a gap is a minute", d)
+	}
+	dialPace.Lock()
+	left := len(dialPace.q)
+	dialPace.Unlock()
+	if left != 0 {
+		t.Fatalf("%d tickets still in line", left)
+	}
+}
+
+// a runner ended while its socket waits in line counts no failure on the
+// store: a failing store takes one dial at a time
+func TestPaceACancelledRunnerFailsNoStore(t *testing.T) {
+	u := paceStore(t)
+	paceWith(t, time.Minute, 0)
+	statusForTest(t, "reachable")
+	routeNoteOK()
+	// the free place is gone, the next is a minute away
+	paceJoin(paceLane, u, paceRest)
+	peer := newXid(t)
+	tag := hex.EncodeToString(peer.pub[:])
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), mustRcv(t, peer))
+	waitFor(t, "the runner's socket in line", 10*time.Second, func() bool {
+		dialPace.Lock()
+		defer dialPace.Unlock()
+		return len(dialPace.q) > 0
+	})
+	cancel()
+	waitFor(t, "the runner ended", 10*time.Second, func() bool { return runnersLive.Load() == 0 })
+	if relayFailingNow(u) {
+		t.Fatal("a runner ended in line counted a failure on the store")
+	}
+}
+
+// a dial's time counts from its place, not from when it joined the line:
+// the wait is neither connect time nor part of a failure
+func TestPaceDialTimeIsThePlace(t *testing.T) {
+	u := paceStore(t)
+	gap := 300 * time.Millisecond
+	paceWith(t, gap, 0)
+	client, err := relayClientFor(paceLane, u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, group := range []string{"", "g"} {
+		paceJoin(paceLane, u, paceRest)
+		start := time.Now()
+		ctx, cancel := context.WithCancel(context.Background())
+		l, _, at, err := relayJoin(ctx, hubKey{paceLane, group, u}, "addr", client, nil, true, paceRest)
+		if err != nil {
+			cancel()
+			t.Fatal(err)
+		}
+		l.close()
+		cancel()
+		if d := at.Sub(start); d < gap-20*time.Millisecond {
+			t.Fatalf("group %q: the dial counts from %v after the join, want its place a gap on", group, d)
+		}
 	}
 }

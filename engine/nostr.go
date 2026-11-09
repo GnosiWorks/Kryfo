@@ -2106,14 +2106,25 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				// everything the library starts for it end with the connection
 				// and not with the subscription. ending it closes the relay.
 				conn, connDone := context.WithCancel(ctx)
-				dialAt := time.Now()
 				dialGen := routeGeneration()
-				r, fresh, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry, paceRankFor(tag, lane, turn.made))
+				r, fresh, dialAt, err := relayJoin(conn, hk, rcvPk, client, routeC, ownEntry, paceRankFor(tag, lane, turn.made))
 				dialOver()
 				turn.dialed(err == nil)
+				// a runner ended while in line or dialling: no failure of the store
+				if err != nil && ctx.Err() != nil {
+					connDone()
+					return
+				}
 				if err != nil && routeGone(routeC) {
 					connDone()
 					nap(rejoin)
+					continue
+				}
+				// its relay went failing while it waited: the one dial a
+				// round goes from another try
+				if errors.Is(err, errPaceSkip) {
+					connDone()
+					nap(relayRetryAfter(u, retryFor(u, retry, own), own))
 					continue
 				}
 				if err != nil {
