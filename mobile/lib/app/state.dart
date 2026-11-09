@@ -772,6 +772,9 @@ class AppState extends ChangeNotifier {
   // the chat on screen's address asks first after a start or a wake
   String _firstKey = '';
   String? _firstChat;
+  // the chat told to the door's queue, and when each contact last woke it
+  String? _doorChat;
+  final Map<String, int> _doorAwakeAt = {};
 
   // peers waiting on a bundle swap, and when a bundle control last went to
   // each. both forget anything older than an hour so they cannot grow with

@@ -200,6 +200,35 @@ class HaloEngine {
     }
   }
 
+  // the open chat's onion, '' for none: its door dials go first and its
+  // onion stops resting. looked up on first use so older engines load
+  late final OneArgFnDart _doorFocus = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloDoorFocus');
+  void doorFocus(String onion) {
+    final p = onion.toNativeUtf8();
+    try {
+      engineTake(_doorFocus(p));
+    } catch (_) {
+      // an older engine without the call
+    } finally {
+      malloc.free(p);
+    }
+  }
+
+  // a frame came from them: their onion stops resting
+  late final OneArgFnDart _doorAwake = _lib
+      .lookupFunction<OneArgFn, OneArgFnDart>('HaloDoorAwake');
+  void doorAwake(String onion) {
+    final p = onion.toNativeUtf8();
+    try {
+      engineTake(_doorAwake(p));
+    } catch (_) {
+      // an older engine without the call
+    } finally {
+      malloc.free(p);
+    }
+  }
+
   // the start's steps since the last call, for a computer's trace: times
   // and counts only. looked up on first use so older engines still load
   late final CStrFnDart _startSteps = _lib.lookupFunction<CStrFn, CStrFnDart>(
@@ -328,6 +357,7 @@ class HaloEngine {
                 b: padRumor(b64Cipher),
                 // a hidden chat's: on its own lane, over tor on every route
                 hidden: hiddenSendPeer(peerXPubHex),
+                rest: false,
               )).timeout(
                 const Duration(seconds: 60),
                 onTimeout: () => 'error: relay timeout',
@@ -1238,20 +1268,24 @@ class HaloEngine {
   }
 
   // offloaded to a background isolate so a slow tor dial never freezes the ui.
-  Future<String> sendTo(String addr, String msg) => devGate.sendTo(
-    addr,
-    out: () =>
-        _sendOnIsolate((
-          nostr: false,
-          ident: kMainIdent,
-          a: addr,
-          b: msg,
-          hidden: false,
-        )).timeout(
-          const Duration(seconds: 15),
-          onTimeout: () => 'error: onion timeout',
-        ),
-  );
+  // [rest]: not a message (a receipt, an edit, a control), so its dial
+  // waits behind messages in the engine's queue
+  Future<String> sendTo(String addr, String msg, {bool rest = false}) =>
+      devGate.sendTo(
+        addr,
+        out: () =>
+            _sendOnIsolate((
+              nostr: false,
+              ident: kMainIdent,
+              a: addr,
+              b: msg,
+              hidden: false,
+              rest: rest,
+            )).timeout(
+              const Duration(seconds: 15),
+              onTimeout: () => 'error: onion timeout',
+            ),
+      );
 
   // a typing frame to a peer's door (HaloSendTyping): the private route
   // only, one try, nothing kept. an engine without the call sends nothing
@@ -1737,7 +1771,7 @@ Future<String> _ffiOnIsolate(
 
 // [ident]: the identity a relay send seals on; an onion send has none
 Future<String> _sendOnIsolate(
-  ({bool nostr, int ident, String a, String b, bool hidden}) args,
+  ({bool nostr, int ident, String a, String b, bool hidden, bool rest}) args,
 ) {
   return Isolate.run(() {
     final lib = haloLibrary();
@@ -1749,6 +1783,16 @@ Future<String> _sendOnIsolate(
           lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>(
             args.hidden ? 'HaloNostrSendHidden' : 'HaloNostrSend',
           )(args.ident, p1, p2),
+        );
+      }
+      if (args.rest) {
+        // 2: the rest's place in the door's queue
+        return engineTake(
+          lib.lookupFunction<IdentTwoFn, IdentTwoFnDart>('HaloSendToAs')(
+            2,
+            p1,
+            p2,
+          ),
         );
       }
       final fn = lib.lookupFunction<TwoArgFn, TwoArgFnDart>('HaloSendTo');

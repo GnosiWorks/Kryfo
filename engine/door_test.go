@@ -137,7 +137,7 @@ func sendAll(t *testing.T, tn *tor.Tor, onion string, lines []string, n int, one
 				}
 				var err error
 				if one {
-					err = sendOneLine(t.Context(), tn, onion, lines[i])
+					err = sendOneLine(t.Context(), tn, onion, lines[i], doorMessage)
 				} else {
 					err = sendTo(tn, onion, lines[i])
 				}

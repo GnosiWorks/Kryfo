@@ -166,7 +166,11 @@ class _Io extends AppIo {
   @override
   Future<String> relaySend(int ident, String xPub, String cipher) async => 'ok';
   @override
-  Future<String> onionSend(String onion, String cipher) async => 'error: off';
+  Future<String> onionSend(
+    String onion,
+    String cipher, {
+    bool rest = false,
+  }) async => 'error: off';
   @override
   void listen(int ident, String xPub, {bool fresh = false}) {}
 

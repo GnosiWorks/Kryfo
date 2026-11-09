@@ -61,7 +61,11 @@ class _Io extends ArrivalIo {
   }
 
   @override
-  Future<String> onionSend(String onion, String cipher) async {
+  Future<String> onionSend(
+    String onion,
+    String cipher, {
+    bool rest = false,
+  }) async {
     if (_misses('onion', onion.substring(2), cipher)) return 'error: down';
     return super.onionSend(onion, cipher);
   }

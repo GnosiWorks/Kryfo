@@ -283,7 +283,11 @@ class ArrivalIo implements AppIo {
   }
 
   @override
-  Future<String> onionSend(String onion, String cipher) async {
+  Future<String> onionSend(
+    String onion,
+    String cipher, {
+    bool rest = false,
+  }) async {
     if (down) return 'error: down';
     sent.add(('onion $onion', cipher));
     return 'ok';

@@ -59,7 +59,8 @@ modules:
       - LDFLAGS.libsqlite3.soname=-Wl,-soname,libsqlcipher.so.0
     build-options:
       cflags: -DSQLITE_HAS_CODEC -DSQLITE_EXTRA_INIT=sqlcipher_extra_init -DSQLITE_EXTRA_SHUTDOWN=sqlcipher_extra_shutdown
-      ldflags: -lcrypto
+      # its own sqlite3_* calls stay inside it, not in the runtime's sqlite
+      ldflags: -Wl,-Bsymbolic -lcrypto
     post-install:
       # the app opens /app/lib/libsqlcipher.so.0 by full path
       - cd ${FLATPAK_DEST}/lib && [ -e libsqlcipher.so.0 ] || ln -s "$(ls libsqlcipher.so.*.* | head -n1)" libsqlcipher.so.0

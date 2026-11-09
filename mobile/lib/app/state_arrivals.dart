@@ -229,6 +229,8 @@ extension AppStateArrivals on AppState {
       wire = kept;
       env = unwrapMessage(kept);
     }
+    // a frame let in: their onion is up
+    if (!fromDevice) _doorAwakeFor(senderHaloId);
     if (into != null) {
       return _fileArrival(
         senderHaloId,

@@ -107,7 +107,11 @@ class PqIo extends AppIo {
   }
 
   @override
-  Future<String> onionSend(String onion, String cipher) async => 'err';
+  Future<String> onionSend(
+    String onion,
+    String cipher, {
+    bool rest = false,
+  }) async => 'err';
   @override
   Future<String> firstContactSend(
     int ident,
