@@ -22,7 +22,8 @@ func dropTime() time.Duration {
 			return d
 		}
 	}
-	return 6 * time.Minute
+	// long enough for release-061's waits to grow past the bound
+	return 20 * time.Minute
 }
 
 // how long after the wifi works again the app may still be unable to send
