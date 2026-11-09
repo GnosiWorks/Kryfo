@@ -15583,6 +15583,12 @@ abstract class AppLocalizations {
   /// **'Google sees when your phone wakes up.\nNever who wrote or what was said.\nInstant and light on battery.'**
   String get notificationsGoogleBody;
 
+  /// google push card, only on the Fast route: our servers see the IP while waking the phone and keep none
+  ///
+  /// In en, this message translates to:
+  /// **'On Fast, our servers see your IP while they wake your phone, but we never keep it.'**
+  String get notificationsGoogleOnFast;
+
   /// google push is starting
   ///
   /// In en, this message translates to:

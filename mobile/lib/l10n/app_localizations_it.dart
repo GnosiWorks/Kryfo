@@ -9789,6 +9789,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Google vede quando il tuo telefono si sveglia.\nMai chi ha scritto o cosa è stato detto.\nImmediato e leggero sulla batteria.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'Su Veloce, i nostri server vedono il tuo IP mentre svegliano il telefono, ma non lo conserviamo mai.';
+
+  @override
   String get notificationsGoogleStarting => 'Attivazione…';
 
   @override

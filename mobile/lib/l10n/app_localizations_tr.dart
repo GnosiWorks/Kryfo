@@ -9735,6 +9735,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Google telefonunun ne zaman uyandığını görür.\nKimin yazdığını ya da ne yazıldığını asla.\nAnında ve pili yormaz.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'Hızlı’da sunucularımız telefonunu uyandırırken IP adresini görür, ama onu asla saklamayız.';
+
+  @override
   String get notificationsGoogleStarting => 'Açılıyor…';
 
   @override

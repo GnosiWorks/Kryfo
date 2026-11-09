@@ -9892,6 +9892,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Google widzi, kiedy twój telefon się budzi.\nNigdy, kto pisał ani co napisał.\nOd razu i lekko dla baterii.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'W trybie Szybki nasze serwery widzą twój IP, gdy budzą telefon, ale nigdy go nie zachowujemy.';
+
+  @override
   String get notificationsGoogleStarting => 'Włączam…';
 
   @override

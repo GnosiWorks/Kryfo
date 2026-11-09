@@ -2548,6 +2548,7 @@
   "notificationsHowTheyReachYou": "消息如何送达",
   "notificationsRecommended": "推荐",
   "notificationsGoogleBody": "Google 能看到你的手机何时被唤醒。\n但从不知道是谁写的或说了什么。\n即时且省电。",
+  "notificationsGoogleOnFast": "在快速模式下，我们的服务器在唤醒你的手机时会看到你的 IP，但我们从不保存。",
   "notificationsGoogleStarting": "正在开启…",
   "notificationsGoogleNoStart": "谷歌推送没能启动。请检查网络后再试一次。",
   "notificationsGoogleNote": "其中混有假的唤醒，让 Google 更难分辨真消息何时到达。我们的中继只保存它无法彼此关联的地址。推送服务运行在我们的第二台服务器上。两台服务器合起来能够把它们关联起来，借助 Google 还能关联到你的 Google 账号。只查扣其中一台做不到，但两台都由我们运营，所以我们能做到。如果你在意这一点，请选择其他方式。隐藏聊天、前几个之后的房间，以及偶尔（大约五个月中有一个月）某位普通联系人，要等 Kryfo 每 15 分钟一次的定时查收。",

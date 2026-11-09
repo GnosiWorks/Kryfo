@@ -2548,6 +2548,7 @@
   "notificationsHowTheyReachYou": "Wie Nachrichten dich erreichen",
   "notificationsRecommended": "Empfohlen",
   "notificationsGoogleBody": "Google sieht, wann dein Handy aufwacht.\nNie, wer geschrieben hat oder was darin steht.\nSofort und sparsam beim Akku.",
+  "notificationsGoogleOnFast": "Auf Schnell sehen unsere Server deine IP, während sie dein Handy wecken, aber wir speichern sie nie.",
   "notificationsGoogleStarting": "Wird eingeschaltet…",
   "notificationsGoogleNoStart": "Google-Push ließ sich nicht starten. Prüf die Verbindung und versuch es noch einmal.",
   "notificationsGoogleNote": "Dazwischen kommen falsche Weckrufe. So kann Google schwerer erkennen, wann echte Nachrichten ankommen. Unser Relais speichert nur Adressen, die es nicht miteinander verbinden kann. Der Push-Dienst läuft auf unserem zweiten Server. Beide Server zusammen könnten sie verbinden, mit Googles Hilfe sogar mit deinem Google-Konto. Wer nur einen beschlagnahmt, kann das nicht, aber wir betreiben beide, also könnten wir es. Wenn dir das wichtig ist, wähl einen anderen Weg. Versteckte Chats, Räume nach den ersten paar und hin und wieder ein gewöhnlicher Kontakt, etwa einen von fünf Monaten, warten auf den Check-in, den Kryfo weiterhin alle 15 Minuten macht.",

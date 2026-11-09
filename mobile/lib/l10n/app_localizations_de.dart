@@ -9822,6 +9822,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Google sieht, wann dein Handy aufwacht.\nNie, wer geschrieben hat oder was darin steht.\nSofort und sparsam beim Akku.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'Auf Schnell sehen unsere Server deine IP, während sie dein Handy wecken, aber wir speichern sie nie.';
+
+  @override
   String get notificationsGoogleStarting => 'Wird eingeschaltet…';
 
   @override

@@ -9809,6 +9809,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Google voit quand votre téléphone se réveille.\nJamais qui a écrit ni ce qui a été dit.\nInstantané et léger pour la batterie.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'Sur Rapide, nos serveurs voient votre IP pendant qu’ils réveillent votre téléphone, mais nous ne la gardons jamais.';
+
+  @override
   String get notificationsGoogleStarting => 'Activation…';
 
   @override

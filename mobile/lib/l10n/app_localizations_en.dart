@@ -9705,6 +9705,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Google sees when your phone wakes up.\nNever who wrote or what was said.\nInstant and light on battery.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'On Fast, our servers see your IP while they wake your phone, but we never keep it.';
+
+  @override
   String get notificationsGoogleStarting => 'Turning on…';
 
   @override

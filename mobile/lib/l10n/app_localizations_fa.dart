@@ -9717,6 +9717,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'Google می‌بیند گوشی‌تان کِی بیدار می‌شود.\nهرگز نه اینکه چه کسی نوشته یا چه گفته شده.\nفوری و کم‌مصرف.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'در حالت سریع، سرورهای ما هنگام بیدار کردن گوشی‌تان IP شما را می‌بینند، اما هرگز آن را نگه نمی‌داریم.';
+
+  @override
   String get notificationsGoogleStarting => 'در حال روشن شدن…';
 
   @override

@@ -9709,6 +9709,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Google melihat kapan ponselmu bangun.\nTidak pernah siapa yang menulis atau apa isinya.\nSeketika dan hemat baterai.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'Di Cepat, server kami melihat IP-mu saat membangunkan ponselmu, tapi kami tidak pernah menyimpannya.';
+
+  @override
   String get notificationsGoogleStarting => 'Menyalakan…';
 
   @override

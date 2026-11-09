@@ -9843,6 +9843,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'ترى Google متى يستيقظ هاتفك.\nولا ترى أبدًا من كتب أو ماذا قيل.\nفوري وخفيف على البطارية.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'على الوضع السريع، ترى خوادمنا عنوان IP الخاص بك أثناء إيقاظ هاتفك، لكننا لا نحتفظ به أبدًا.';
+
+  @override
   String get notificationsGoogleStarting => 'جارٍ التشغيل…';
 
   @override

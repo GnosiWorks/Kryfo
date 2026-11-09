@@ -254,13 +254,14 @@ void main() {
           await close(t);
           appState.bridgeSetupForTest = const BridgeSetup();
 
-          // fast: google push and the helper app shown, not pickable
+          // fast: google push with its fast line, the helper app shown,
+          // not pickable
           appState.sendModeForTest = 'balanced';
           pages = await open(t);
           await step(t, pages, 4);
           expect(
             find.text(l10n.gettingMessagesHelperOnionOnly),
-            findsNWidgets(2),
+            findsOneWidget,
           );
           bad.addAll(_misfits(t, 'delivery, fast'));
           await close(t);

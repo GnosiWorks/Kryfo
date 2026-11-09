@@ -9715,6 +9715,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'Google देख सकता है कि आपका फ़ोन कब जागता है।\nयह कभी नहीं कि किसने लिखा या क्या कहा।\nतुरंत और बैटरी पर हल्का।';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'तेज़ पर, आपका फ़ोन जगाते समय हमारे सर्वर आपका IP देखते हैं, पर हम उसे कभी नहीं रखते।';
+
+  @override
   String get notificationsGoogleStarting => 'चालू हो रहा है…';
 
   @override

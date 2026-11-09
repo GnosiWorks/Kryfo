@@ -9871,6 +9871,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Google бачить, коли твій телефон прокидається.\nАле не хто написав і що сказано.\nОдразу й ощадно для батареї.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'На режимі «Швидкий» наші сервери бачать твій IP, поки будять телефон, але ми його ніколи не зберігаємо.';
+
+  @override
   String get notificationsGoogleStarting => 'Вмикаємо…';
 
   @override

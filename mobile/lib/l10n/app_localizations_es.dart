@@ -9783,6 +9783,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Google ve cuándo se despierta tu teléfono.\nNunca quién escribió ni qué se dijo.\nAl instante y ligero para la batería.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'En Rápido, nuestros servidores ven tu IP mientras despiertan tu teléfono, pero nunca la guardamos.';
+
+  @override
   String get notificationsGoogleStarting => 'Activando…';
 
   @override

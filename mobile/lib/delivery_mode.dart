@@ -63,6 +63,12 @@ Future<void> saveDeliveryMode(DeliveryMode m) async {
   await prefs.setString(kDeliveryModeKey, m.name);
 }
 
+/// the google card's words: google's line on every route, and on fast also
+/// what our servers see while they wake the phone
+String googleCardBody({required bool onion}) => onion
+    ? l10n.notificationsGoogleBody
+    : '${l10n.notificationsGoogleBody}\n${l10n.notificationsGoogleOnFast}';
+
 String deliveryModeName(DeliveryMode m) => switch (m) {
   DeliveryMode.always => l10n.deliveryModeAlwaysOn,
   DeliveryMode.checkins => l10n.deliveryModeCheckIns,

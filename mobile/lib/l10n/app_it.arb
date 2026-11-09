@@ -2548,6 +2548,7 @@
   "notificationsHowTheyReachYou": "Come ti arrivano i messaggi",
   "notificationsRecommended": "Consigliato",
   "notificationsGoogleBody": "Google vede quando il tuo telefono si sveglia.\nMai chi ha scritto o cosa è stato detto.\nImmediato e leggero sulla batteria.",
+  "notificationsGoogleOnFast": "Su Veloce, i nostri server vedono il tuo IP mentre svegliano il telefono, ma non lo conserviamo mai.",
   "notificationsGoogleStarting": "Attivazione…",
   "notificationsGoogleNoStart": "Il push di Google non è partito. Controlla la connessione e riprova.",
   "notificationsGoogleNote": "Vengono mescolati falsi risvegli, così per Google è più difficile capire quando arrivano i messaggi veri. Il nostro relay conserva solo indirizzi che non può collegare tra loro. Il servizio push gira sul nostro secondo server. I due server insieme potrebbero collegarli, e con l'aiuto di Google al tuo account Google. Sequestrarne uno solo non basta, ma li gestiamo entrambi, quindi noi potremmo. Se per te conta, scegli un altro modo. Le chat nascoste, le stanze oltre le prime e, ogni tanto, un contatto normale, circa un mese su cinque, aspettano il controllo che Kryfo fa comunque ogni 15 minuti.",

@@ -9874,6 +9874,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Google видит, когда твой телефон просыпается.\nНо не кто написал и что сказано.\nСразу и бережно к батарее.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'На режиме «Быстрый» наши серверы видят твой IP, пока будят телефон, но мы его никогда не храним.';
+
+  @override
   String get notificationsGoogleStarting => 'Включаем…';
 
   @override

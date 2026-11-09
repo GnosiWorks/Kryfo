@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -229,8 +230,8 @@ func TestKnockRouteSwitchEndsTheBatch(t *testing.T) {
 	knockAddresses("")
 	var sent atomic.Int32
 	old := knockPublish
-	knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error {
-		err := old(ctx, lane, ev)
+	knockPublish = func(ctx context.Context, lane string, ev nostr.Event, direct bool) error {
+		err := old(ctx, lane, ev, direct)
 		if sent.Add(1) == 2 {
 			transportMode.Store("fast")
 			nostrResetClient()
@@ -269,6 +270,53 @@ func TestKnockRegistersOnlyOnThePrivateRoute(t *testing.T) {
 		if _, viaTor := socks.nameOf(c.remote); !viaTor {
 			t.Fatal("a forget went outside tor")
 		}
+	}
+}
+
+// google push on fast: its registrations go to our relay over the direct
+// connection, a helper app's still wait, a forget still goes over tor
+func TestKnockGoogleRegistersDirectOnFast(t *testing.T) {
+	own := newRelayStandIn(t, 0)
+	socks := newSocksStandIn(t)
+	useStandIns(t, modePrivate, socks, own)
+	w := knockSubs(t, 3)
+	knockAddresses("")
+	transportMode.Store("fast")
+	nostrResetClient()
+	google := knockGateway + "sealed-token"
+	out := runRegister(t, []knockItem{
+		{I: knockID(w.contacts[0]), E: google},
+		{I: knockID(w.contacts[1]), E: "https://push.example.org/up"},
+		{I: knockID(w.contacts[2]), E: ""},
+	})
+	want := []string{knockID(w.contacts[0]), knockID(w.contacts[2])}
+	slices.Sort(want)
+	if !slices.Equal(out.Done, want) {
+		t.Fatalf("on fast: done %v, want google's and the forget", out.Done)
+	}
+	var direct, viaTor int
+	for _, c := range own.snapshot() {
+		for _, ev := range c.got {
+			if ev.Kind != knockKind {
+				continue
+			}
+			_, tor := socks.nameOf(c.remote)
+			switch {
+			case ev.Content == google && !tor:
+				direct++
+			case ev.Content == "" && tor:
+				viaTor++
+			default:
+				t.Fatalf("%q went the wrong way (tor %v)", ev.Content, tor)
+			}
+		}
+	}
+	if direct != 1 || viaTor != 1 {
+		t.Fatalf("direct %d, over tor %d, want 1 each", direct, viaTor)
+	}
+	// a gateway name with nothing sealed after it is no google endpoint
+	if knockDirectOK(knockGateway) || knockDirectOK("https://relay.kryfo.app/pushx") {
+		t.Fatal("not a sealed google endpoint, yet it would go direct")
 	}
 }
 
@@ -334,7 +382,7 @@ func TestKnockRegisterReportsDuplicates(t *testing.T) {
 	w := knockSubs(t, 2)
 	knockAddresses("")
 	old := knockPublish
-	knockPublish = func(_ context.Context, _ string, ev nostr.Event) error {
+	knockPublish = func(_ context.Context, _ string, ev nostr.Event, _ bool) error {
 		if ev.PubKey.Hex() == w.contacts[0] {
 			return errorString("msg: duplicate: not newer than what is kept")
 		}
@@ -352,7 +400,7 @@ func TestKnockRegisterReportsRefusals(t *testing.T) {
 	w := knockSubs(t, 2)
 	knockAddresses("")
 	old := knockPublish
-	knockPublish = func(_ context.Context, _ string, ev nostr.Event) error {
+	knockPublish = func(_ context.Context, _ string, ev nostr.Event, _ bool) error {
 		if ev.PubKey.Hex() == w.contacts[0] {
 			return errorString("msg: invalid: created_at is too far from now")
 		}
@@ -424,7 +472,7 @@ func TestKnockOnlyLastingRefusalsCount(t *testing.T) {
 		w.contacts[3]: "msg: rate-limited: too many new registrations at once",
 	}
 	old := knockPublish
-	knockPublish = func(_ context.Context, _ string, ev nostr.Event) error {
+	knockPublish = func(_ context.Context, _ string, ev nostr.Event, _ bool) error {
 		return errorString(answers[ev.PubKey.Hex()])
 	}
 	t.Cleanup(func() { knockPublish = old })

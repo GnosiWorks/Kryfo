@@ -3953,6 +3953,10 @@ void main() {
       l.notificationsGoogleBody,
       "Google sees when your phone wakes up.\nNever who wrote or what was said.\nInstant and light on battery.",
     );
+    expect(
+      l.notificationsGoogleOnFast,
+      "On Fast, our servers see your IP while they wake your phone, but we never keep it.",
+    );
     expect(l.notificationsGoogleStarting, "Turning on…");
     expect(
       l.notificationsGoogleNoStart,

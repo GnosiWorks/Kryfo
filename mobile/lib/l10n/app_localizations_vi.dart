@@ -9696,6 +9696,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Google thấy khi nào điện thoại của bạn thức dậy.\nKhông bao giờ biết ai viết hay viết gì.\nĐến ngay và nhẹ pin.';
 
   @override
+  String get notificationsGoogleOnFast =>
+      'Ở chế độ Nhanh, máy chủ của chúng tôi thấy IP của bạn khi đánh thức điện thoại, nhưng chúng tôi không bao giờ lưu lại.';
+
+  @override
   String get notificationsGoogleStarting => 'Đang bật…';
 
   @override
