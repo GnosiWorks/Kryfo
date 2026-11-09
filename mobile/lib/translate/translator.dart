@@ -46,4 +46,7 @@ abstract class Translator {
 
   // the models out of memory, say when the app goes to the background
   Future<void> close();
+
+  // back in front: a close still waiting for a translation is called off
+  void back();
 }

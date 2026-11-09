@@ -82,6 +82,10 @@ class ModelIdle {
     });
   }
 
+  // back in front before the last one ended: the models stay, and go
+  // [after] it as usual
+  void back() => _away = false;
+
   // the app went to the background: now, or once the last one ends
   void away() {
     if (_busy > 0) {

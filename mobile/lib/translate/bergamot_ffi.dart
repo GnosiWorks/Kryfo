@@ -190,6 +190,9 @@ class BergamotTranslator implements Translator {
   @override
   Future<void> close() async => _idle.away();
 
+  @override
+  void back() => _idle.back();
+
   void _shut() {
     final port = _port;
     _port = null;

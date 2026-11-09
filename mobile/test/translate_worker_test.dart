@@ -7,9 +7,11 @@
 
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/translate/bergamot_ffi.dart';
 import 'package:kryfo/translate/foreign.dart';
+import 'package:kryfo/translate/hub.dart';
 import 'package:kryfo/translate/model_cache.dart';
 import 'package:kryfo/translate/translator.dart';
 
@@ -313,6 +315,27 @@ void main() {
       expect(shuts, 1);
       expect(idle.awayPending, isFalse);
       expect(idle.timing, isFalse);
+    });
+
+    testWidgets('back in front before the running one ends, the close is '
+        'called off', (t) async {
+      idle.begin();
+      idle.away();
+      idle.back();
+      idle.end();
+      expect(shuts, 0);
+      expect(idle.awayPending, isFalse);
+      // and the models go two idle minutes later, as ever
+      await t.pump(kModelIdle);
+      expect(shuts, 1);
+    });
+
+    test('the hub closes on the background and calls it off on return', () {
+      final f = fakeHub(installed: true);
+      final away = TranslateAway(f.hub);
+      away.didChangeAppLifecycleState(AppLifecycleState.paused);
+      away.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      expect(f.translator.backs, 1);
     });
 
     test('a pivot holds the worker for both legs', () async {
