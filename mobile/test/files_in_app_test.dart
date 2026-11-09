@@ -38,17 +38,35 @@ class FakePdf implements PdfBackend {
   List<int> hits = const [];
   int rendered = 0;
 
+  // what each open asked for, the bytes it found, and whether the file
+  // could still be read when its document was closed
+  final List<bool> firsts = [];
+  final List<List<int>> seen = [];
+  final List<bool> readableAtClose = [];
+  final Map<int, String> _pathOf = {};
+  // an open that does not answer until completed: a renderer stuck, or
+  // one that took the app down
+  Completer<void>? hold;
+
   @override
-  Future<Map<Object?, Object?>?> open(String path) async {
+  Future<Map<Object?, Object?>?> open(String path, {bool first = false}) async {
     paths.add(path);
+    firsts.add(first);
+    try {
+      seen.add(File(path).readAsBytesSync());
+    } catch (_) {
+      seen.add(const []);
+    }
+    await hold?.future;
     if (error != null) return {'error': error};
     final id = ++opens;
     live.add(id);
+    _pathOf[id] = path;
     return {
       'id': id,
       'pages': pages,
       'sizes': [
-        for (var i = 0; i < pages; i++) ...[612, 792],
+        for (var i = 0; i < (first ? 1 : pages); i++) ...[612, 792],
       ],
       'find': true,
     };
@@ -74,22 +92,39 @@ class FakePdf implements PdfBackend {
   Future<List<int>> find(int id, String words) async => hits;
 
   @override
-  Future<void> close(int id) async => live.remove(id);
+  Future<void> close(int id) async {
+    final path = _pathOf.remove(id);
+    if (path != null) {
+      var readable = true;
+      try {
+        final b = File(path).readAsBytesSync();
+        readable = b.any((x) => x != 0);
+      } catch (_) {
+        readable = false;
+      }
+      readableAtClose.add(readable);
+    }
+    live.remove(id);
+  }
 }
 
 void main() {
   late Directory tmp;
   setUp(() {
     tmp = Directory.systemTemp.createTempSync('files_in_app');
+    pdfMarksDirForTest = (Directory('${tmp.path}/marks')..createSync()).path;
     lockState.openForTest();
     openPictures();
   });
   tearDown(() {
     pdfBackendForTest = null;
     pdfViewHereForTest = null;
+    pdfMarksDirForTest = null;
+    pdfOpenedByHand.clear();
+    pdfPageBudget = 80 << 20;
     fileSheetPickForTest = null;
     forgetFirstLines();
-    forgetPdfPreviews();
+    resetPdfGlancesForTest();
     HaloColors.setLight(false);
     openPictures();
     tmp.deleteSync(recursive: true);
@@ -250,11 +285,20 @@ void main() {
       pdfViewHereForTest = true;
       final f = made('in_e.pdf', '%PDF-1.7\n');
       await t.pumpWidget(
-        host(FileCard(path: f.path, name: 'Lease-draft.pdf', isOut: false)),
+        host(
+          FileCard(
+            path: f.path,
+            name: 'Lease-draft.pdf',
+            isOut: false,
+            glance: true,
+          ),
+        ),
       );
       await settle(t);
       expect(find.byType(PdfFirstPage), findsOneWidget);
       expect(find.text(l10n.filePages(12, '12')), findsOneWidget);
+      // a glance reads the first page's size only
+      expect(fake.firsts, [true]);
       // the glance's document is shut once its page is drawn
       expect(fake.live, isEmpty);
       expect(pdfGlanceNow(f.path), isNotNull);
@@ -268,10 +312,87 @@ void main() {
       pdfViewHereForTest = true;
       final f = made('in_f.pdf', '%PDF-1.7\n');
       await t.pumpWidget(
-        host(FileCard(path: f.path, name: 'l.pdf', isOut: false)),
+        host(FileCard(path: f.path, name: 'l.pdf', isOut: false, glance: true)),
       );
       await settle(t);
       expect(find.text(l10n.filePages(3, '3')), findsNothing);
+    });
+
+    testWidgets('a stranger\'s pdf is not drawn until it is opened by hand', (
+      t,
+    ) async {
+      final fake = FakePdf();
+      pdfBackendForTest = fake;
+      pdfViewHereForTest = true;
+      final f = made('in_s.pdf', '%PDF-1.7\n');
+      await t.pumpWidget(
+        host(FileCard(path: f.path, name: 's.pdf', isOut: false)),
+      );
+      await settle(t);
+      expect(find.byType(PdfFirstPage), findsNothing);
+      expect(fake.opens, 0, reason: 'nothing handed to the renderer');
+      pdfOpenedByHand.add(f.path);
+      await t.pumpWidget(const SizedBox());
+      await t.pumpWidget(
+        host(FileCard(path: f.path, name: 's.pdf', isOut: false)),
+      );
+      await settle(t);
+      await settle(t);
+      expect(find.byType(PdfFirstPage), findsOneWidget);
+      expect(fake.opens, 1);
+    });
+
+    testWidgets('a pdf over ten mb keeps its tile in the bubble', (t) async {
+      final fake = FakePdf();
+      pdfBackendForTest = fake;
+      pdfViewHereForTest = true;
+      final f = made('in_b.pdf', '%PDF-1.7\n');
+      f.openSync(mode: FileMode.append)
+        ..truncateSync(kGlanceMostBytes + 1)
+        ..closeSync();
+      await t.pumpWidget(
+        host(FileCard(path: f.path, name: 'b.pdf', isOut: false, glance: true)),
+      );
+      await settle(t);
+      expect(fake.paths, isEmpty);
+      expect(find.text(l10n.filePages(3, '3')), findsNothing);
+    });
+
+    testWidgets('a pdf that took the app down is never drawn here again', (
+      t,
+    ) async {
+      final fake = FakePdf()..hold = Completer<void>();
+      pdfBackendForTest = fake;
+      final marks = Directory('${tmp.path}/marks');
+      final f = made('in_c.pdf', '%PDF-1.7\n');
+      // the renderer is inside the file: its mark is down
+      unawaited(PdfDoc.open(f.path).then((d) => d.close(), onError: (_) {}));
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      expect(marks.listSync(), hasLength(1));
+      // the app went down there and starts again: the mark is still down
+      pdfMarksDirForTest = marks.path;
+      expect(await t.runAsync(() => pdfStruck(f.path)), isTrue);
+      final before = fake.paths.length;
+      final refused = await t.runAsync(() async {
+        try {
+          await PdfDoc.open(f.path);
+          return false;
+        } on PdfOpenFailed {
+          return true;
+        }
+      });
+      expect(refused, isTrue);
+      expect(fake.paths.length, before, reason: 'never handed over again');
+      // a pdf drawn to the end leaves no mark
+      fake.hold!.complete();
+      fake.hold = null;
+      final g = made('in_d.pdf', '%PDF-1.7\n');
+      final d = await t.runAsync(() => PdfDoc.open(g.path));
+      await t.runAsync(() => d!.page(0, 100));
+      await t.runAsync(() => d!.close());
+      expect(await t.runAsync(() => pdfStruck(g.path)), isFalse);
     });
 
     testWidgets('large text cuts nothing in a narrow bubble', (t) async {
@@ -579,14 +700,53 @@ void main() {
       expect(v.pagesKept, greaterThan(0));
     });
 
-    testWidgets('the plaintext goes over as memory or a copy that goes', (
-      t,
-    ) async {
+    testWidgets('a file outside the seal is read where it is', (t) async {
+      // the sealed case, memory zeroed before the renderer lets go, is in
+      // phone_seal_test
       final fake = FakePdf();
       await openPdf(t, fake);
-      // not sealed in a test: the file is read where it is, never copied
-      // anywhere else
       expect(fake.paths.single, endsWith('in_l.pdf'));
+      expect(fake.firsts, [false]);
+    });
+
+    testWidgets('a lock and an unlock while it opens leave one document', (
+      t,
+    ) async {
+      final fake = FakePdf()..hold = Completer<void>();
+      pdfBackendForTest = fake;
+      pdfViewHereForTest = true;
+      final f = made('in_m.pdf', '%PDF-1.7\n');
+      await t.pumpWidget(
+        MaterialApp(
+          home: PdfViewer(
+            path: f.path,
+            name: 'm.pdf',
+            facts: const FileFacts(FileKind.pdf, 'pdf'),
+          ),
+        ),
+      );
+      await settle(t);
+      shutPictures();
+      await settle(t);
+      openPictures();
+      await settle(t);
+      fake.hold!.complete();
+      await settle(t);
+      expect(fake.live, hasLength(1));
+      expect(pdfDocsOpen, 1);
+    });
+
+    testWidgets('drawn pages stay inside the memory budget', (t) async {
+      final fake = FakePdf()..pages = 6;
+      pdfPageBudget = 400 * 1024;
+      final v = await openPdf(t, fake);
+      for (var i = 0; i < 6; i++) {
+        v.jumpTo(i);
+        await settle(t);
+      }
+      expect(fake.rendered, greaterThan(2));
+      expect(v.drawnBytes, lessThan(1 << 20), reason: 'the newest page alone');
+      expect(v.pagesKept, greaterThan(0));
     });
 
     testWidgets('a password pdf says how to read it', (t) async {

@@ -84,6 +84,8 @@ Widget fileCard(
   List<SoundItem> Function()? upNext,
   // theirs, in a chat that blocks screenshots
   bool kept = false,
+  // from someone known: a pdf's first page may be drawn (FileCard.glance)
+  bool glance = false,
 }) {
   // a sound kryfo plays is a player of its own, once it is all here
   if (filePath != null && sendingUid == null) {
@@ -142,6 +144,7 @@ Widget fileCard(
     sendingUid: sendingUid,
     onCancel: onCancel,
     heroTag: heroTag,
+    glance: glance || isOut,
   );
 }
 

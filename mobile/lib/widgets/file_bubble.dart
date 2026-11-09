@@ -66,6 +66,10 @@ class FileCard extends StatefulWidget {
   final VoidCallback? onCancel;
   // the tile flies to the viewer's head under this tag
   final Object? heroTag;
+  // a pdf's first page is drawn only for a file from someone known (ours,
+  // a contact's) or one the person opened by hand: a stranger's pdf that
+  // came on its own is not handed to the phone's renderer unasked
+  final bool glance;
   const FileCard({
     super.key,
     required this.path,
@@ -74,6 +78,7 @@ class FileCard extends StatefulWidget {
     this.sendingUid,
     this.onCancel,
     this.heroTag,
+    this.glance = false,
   });
 
   @override
@@ -372,7 +377,9 @@ class _FileCardState extends State<FileCard> {
     if (textViewable(facts.ext)) {
       return FileTextPreview(path: path, isOut: widget.isOut);
     }
-    if (facts.kind == FileKind.pdf && pdfViewHere) {
+    if (facts.kind == FileKind.pdf &&
+        pdfViewHere &&
+        (widget.glance || pdfOpenedByHand.contains(path))) {
       return PdfFirstPage(path: path);
     }
     return null;

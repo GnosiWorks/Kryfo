@@ -79,7 +79,7 @@ class NoteMedia extends StatelessWidget {
         scale: 0.97,
         haptic: false,
         onTap: () => openReceivedFile(context, file, name),
-        child: fileCard(file, name, false, shape: shape),
+        child: fileCard(file, name, false, shape: shape, glance: true),
       );
     }
     if (media == null) return const SizedBox.shrink();

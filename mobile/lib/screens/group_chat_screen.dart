@@ -1971,6 +1971,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       showSender: showSender,
                       kept: _keeps(m),
                       keptIn: _isRoom ? KeptIn.room : KeptIn.group,
+                      known: _knownSender(m.sender),
                       stickers: _stickers,
                       stickerOrder: _messages.length - 1 - i,
                       landing: landing,
@@ -3797,6 +3798,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // someone else's, in a room, which always blocks, or in a group that
   // does: not copied, forwarded, shared, saved or opened elsewhere
   // (shotsKeeps)
+  // a contact of this phone, not blocked
+  bool _knownSender(String id) =>
+      appState.contacts.any((c) => c.haloId == id && !c.blocked);
+
   bool _keeps(_GMsg m) => shotsKeeps(
     blocking: _isRoom || _shots.blocking,
     mine: m.direction == 'out',
@@ -6266,12 +6271,15 @@ class _GroupBubble extends StatelessWidget {
     this.linkBySender = false,
     this.kept = false,
     this.keptIn = KeptIn.room,
+    this.known = false,
   });
 
   // someone else's, in a room or a group that blocks: opened in no other
   // app, and said so in the words of where it is
   final bool kept;
   final KeptIn keptIn;
+  // from one of this phone's contacts: a pdf's first page may be drawn
+  final bool known;
 
   // a search steps what is not a hit back, as in the 1:1 chat
   @override
@@ -6743,6 +6751,7 @@ class _GroupBubble extends StatelessWidget {
                                                       when: m.when,
                                                       upNext: soundsAfter,
                                                       kept: kept,
+                                                      glance: known,
                                                     ),
                                                   ),
                                                 ),

@@ -51,6 +51,11 @@ const _gap = 12.0;
 const _side = 12.0;
 const _most = 5.0;
 
+/// the most memory the viewer's drawn pages take: a page at 3x on a big
+/// phone is up to 16.8 mb, so about five of those. tests make it small
+@visibleForTesting
+int pdfPageBudget = 80 << 20;
+
 class PdfViewer extends StatefulWidget {
   final String path;
   final String? name;
@@ -139,19 +144,27 @@ class PdfViewerState extends State<PdfViewer>
     super.dispose();
   }
 
+  // each open's turn: one overtaken by the lock, or by a newer open,
+  // closes what it gets
+  int _opens = 0;
+
   Future<void> _open() async {
+    final mine = ++_opens;
     try {
       final d = await PdfDoc.open(widget.path);
-      if (!mounted) {
+      if (!mounted || mine != _opens || picturesShut.value) {
         await d.close();
         return;
       }
+      pdfOpenedByHand.add(widget.path);
       setState(() {
         _doc = d;
         _trouble = null;
       });
     } on PdfOpenFailed catch (e) {
-      if (mounted && !picturesShut.value) setState(() => _trouble = e.why);
+      if (mounted && mine == _opens && !picturesShut.value) {
+        setState(() => _trouble = e.why);
+      }
     }
   }
 
@@ -159,6 +172,7 @@ class PdfViewerState extends State<PdfViewer>
   // again where it was
   void _lock() {
     if (picturesShut.value) {
+      _opens++;
       _drop();
       final d = _doc;
       _doc = null;
@@ -168,6 +182,11 @@ class PdfViewerState extends State<PdfViewer>
       _open();
     }
   }
+
+  /// the memory the drawn pages take
+  @visibleForTesting
+  int get drawnBytes =>
+      _drawn.values.fold(0, (n, i) => n + i.width * i.height * 4);
 
   void _drop() {
     for (final i in _drawn.values) {
@@ -280,11 +299,13 @@ class PdfViewerState extends State<PdfViewer>
         return;
       }
       setState(() {
+        _drawn.remove(key)?.dispose();
         _drawn[key] = img;
         _order.remove(key);
         _order.add(key);
-        // the oldest pages go: the thumbnails count less
-        while (_order.length > 18) {
+        // the oldest pages go once the drawn ones pass the budget; the
+        // newest always stays
+        while (_order.length > 1 && drawnBytes > pdfPageBudget) {
           final old = _order.removeAt(0);
           _drawn.remove(old)?.dispose();
         }

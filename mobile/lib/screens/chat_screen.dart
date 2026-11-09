@@ -5847,6 +5847,7 @@ class _ChatScreenState extends State<ChatScreen>
                 },
           secure: m.secure,
           kept: _keeps(m),
+          known: _accepted && !_blocked,
           quotedText: quoted,
           onQuoteTap: m.replyTo == null
               ? null
@@ -8788,6 +8789,8 @@ class _Bubble extends StatelessWidget {
   final bool unconfirmed;
   // theirs, in a chat that blocks: opened in no other app
   final bool kept;
+  // from someone this phone accepted: a pdf's first page may be drawn
+  final bool known;
   // an album: [msg] stands for all of it, and its grid is drawn
   final AlbumRun<_Msg>? album;
   // a tile of the album held: the bubble's context and the tile
@@ -8832,6 +8835,7 @@ class _Bubble extends StatelessWidget {
     this.lastInGroup = true,
     this.unconfirmed = false,
     this.kept = false,
+    this.known = false,
   });
 
   // builds the message body, underlining query matches in amber. plain
@@ -9290,6 +9294,7 @@ class _Bubble extends StatelessWidget {
                                                     ),
                                               from: fromName,
                                               kept: kept,
+                                              glance: known,
                                               when: msg.when,
                                               upNext: soundsAfter == null
                                                   ? null
