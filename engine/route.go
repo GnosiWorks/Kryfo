@@ -100,18 +100,23 @@ func routeAliveOn(gen int64, u string) {
 	}
 }
 
-// whether the route is in doubt since t: nothing answered through tor
-// after it, and something failed after it or the route is not proven
-func routeDoubtedSince(t time.Time) bool {
+// whether the route is in doubt since t, when the bootstrap stood at pct:
+// nothing answered through tor after t, the bootstrap has not climbed past
+// pct, and something failed after t or the route is not proven
+func routeDoubtedSince(t time.Time, pct int) bool {
+	statusMu.RLock()
+	st, now := torStatus, bootstrapPct
+	statusMu.RUnlock()
 	ok := routeOK()
 	routeMu.Lock()
 	answered, failed := lastAnswerAt, lastFailAt
 	routeMu.Unlock()
-	return doubtedSince(t, answered, failed, ok)
+	return doubtedSince(t, answered, failed, ok, st == "starting" && now > pct)
 }
 
-func doubtedSince(t, answered, failed time.Time, ok bool) bool {
-	return !answered.After(t) && (failed.After(t) || !ok)
+// a bootstrap that climbed since t is left to climb
+func doubtedSince(t, answered, failed time.Time, ok, climbed bool) bool {
+	return !answered.After(t) && !climbed && (failed.After(t) || !ok)
 }
 
 // relay u answered in route generation gen (below zero: now)
@@ -304,19 +309,36 @@ const (
 	probeWhy    = "probe: "
 )
 
-// on a network android validated, a dead route is tor's own state far more
-// often than the network's, as when a wifi passed no tcp for a while and
-// said nothing. the waits stop growing there, so the route comes back
-// within minutes of the network and not a quarter of an hour after it
+// on a network android validated where the route carried lately, a dead
+// route is tor's own state far more often than the network's, as when a
+// wifi passed no tcp for a while and said nothing. the waits stop growing
+// there for a while, so the route comes back within minutes of the network.
+// never with bridges, and never where tor did not carry lately: a censored
+// network android validates would get a bounce every few minutes for good
 var (
 	rescueGapLive  = 3 * time.Minute
 	stallLimitLive = 6 * time.Minute
+	// how long after the route's last answer the waits stay short
+	liveProvenFor = 30 * time.Minute
 )
 
-// android says the default network is there and reaches the internet
+// android has said the default network is there and reaches the internet,
+// and no bridge is in use. before its first word, as on a computer: no
 func netValidated() bool {
-	n, _ := netDetailNow()
-	return n.On && n.Validated && !n.Limited
+	n, ok := netDetailTrusted()
+	return ok && n.On && n.Validated && !n.Limited && !bridgesEnabled()
+}
+
+// when the network now in place came, by the last change said
+func netSince() time.Time {
+	netMu.Lock()
+	defer netMu.Unlock()
+	return netChangedAt
+}
+
+// the route answered on this network within liveProvenFor of now. routeMu
+func provenHereLately(now, since time.Time) bool {
+	return !lastAnswerAt.IsZero() && lastAnswerAt.After(since) && now.Sub(lastAnswerAt) < liveProvenFor
 }
 
 // how long a bootstrap may sit at one percentage before it is bounced. it is
@@ -388,9 +410,11 @@ func routeNeedsRescue(now time.Time) string {
 	// before routeMu: it takes mu
 	up := st == "off" && torUp()
 	live := netValidated()
+	since := netSince()
 
 	routeMu.Lock()
 	defer routeMu.Unlock()
+	live = live && provenHereLately(now, since)
 
 	if st != "starting" {
 		stallPct = -1

@@ -169,7 +169,7 @@ func TestThreeClaimsEachCloseTheirOwn(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				me, prev, done, why := reconnectClaim(true)
+				me, prev, done, why := reconnectClaim(true, 0)
 				if why != "" || done == nil {
 					t.Errorf("claim: %q", why)
 					return

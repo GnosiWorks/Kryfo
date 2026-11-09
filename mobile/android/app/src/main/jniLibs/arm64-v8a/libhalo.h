@@ -181,6 +181,7 @@ extern int HaloOpenChunk(char* cKey, unsigned long long index, unsigned char typ
 extern char* HaloBridgeLineChecks(void);
 extern char* HaloRestartTor(void);
 extern char* HaloReconnectNow(void);
+extern char* HaloReconnectWaiting(void);
 extern char* HaloNetworkChanged(void);
 extern char* HaloConnectivitySeen(int on);
 extern char* HaloNetworkState(int on);

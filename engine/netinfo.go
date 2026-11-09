@@ -53,6 +53,11 @@ func setNetInfo(n netInfo) {
 		n.Validated, n.Limited, n.Net = false, false, 0
 	}
 	n.known = true
+	// before netInfoMu: the bootstrap as it stands, kept if this word loses
+	// the network its validation
+	statusMu.RLock()
+	pct := bootstrapPct
+	statusMu.RUnlock()
 	netInfoMu.Lock()
 	prev := netInfoNow
 	// the word a relay through tor proved wrong, said again: not taken
@@ -66,9 +71,9 @@ func setNetInfo(n netInfo) {
 	case !n.On || !prev.known || !sameNetwork(prev, n):
 		netValidLostAt = time.Time{}
 	case !valid && prev.On && prev.Validated && !prev.Limited && netValidLostAt.IsZero():
-		netValidLostAt = time.Now()
+		netValidLostAt, netValidLostPct = time.Now(), pct
 	}
-	lostAt := netValidLostAt
+	lostAt, lostPct := netValidLostAt, netValidLostPct
 	if valid {
 		netValidLostAt = time.Time{}
 	}
@@ -101,7 +106,7 @@ func setNetInfo(n netInfo) {
 	if prev.known && n.On && n.Validated && !n.Limited && (!prev.Validated || prev.Limited) {
 		autoValidFlips.Add(1)
 		if !was && sameNetwork(prev, n) {
-			validBack(lostAt)
+			validBack(lostAt, lostPct)
 		}
 	}
 	autoKick()
@@ -111,35 +116,42 @@ func setNetInfo(n netInfo) {
 // while it vouches. netInfoMu
 var netValidLostAt time.Time
 
+// the bootstrap percentage then. netInfoMu
+var netValidLostPct int
+
 // android vouches again for a network it stopped vouching for at lost: a
 // wifi that passed nothing for a while and came back, without a change of
 // network. what tor held through it may be dead and the back-off grown, so
 // it gets the reconnect the button does, when the route is in doubt since:
 // nothing answered and something failed. an idle phone whose relays never
-// noticed is left to the route watch. the same network, so not a new one:
-// automatic keeps its way in
-func validBack(lost time.Time) {
-	if lost.IsZero() || !modeNeedsTor() || torIsPaused() || !routeDoubted(lost) {
+// noticed is left to the route watch, a bootstrap still climbing to itself,
+// and a bounce under a minute old is still bringing the route back. the
+// same network, so not a new one: automatic keeps its way in
+func validBack(lost time.Time, lostPct int) {
+	if lost.IsZero() || !modeNeedsTor() || torIsPaused() || bouncedWithin(time.Minute) || !routeDoubted(lost, lostPct) {
 		return
 	}
 	now := time.Now().UnixNano()
-	if last := validBackAt.Load(); last != 0 && time.Duration(now-last) < validBackGap {
+	last := validBackAt.Load()
+	if last != 0 && time.Duration(now-last) < validBackGap {
 		return
 	}
-	validBackAt.Store(now)
+	if !validBackAt.CompareAndSwap(last, now) {
+		return
+	}
 	log.Println("halo: the network is validated again, reconnecting tor")
 	go validBackDo()
 }
 
 // the least time between two such reconnects, should android flap
 var (
-	validBackGap = 30 * time.Second
+	validBackGap = 3 * time.Minute
 	validBackAt  atomic.Int64
 )
 
 // vars for the tests: whatever runs beside a test can answer meanwhile
 var (
-	validBackDo  = func() { reconnectNowFor(whyNetwork) }
+	validBackDo  = func() { reconnectNowAfter(whyNetwork, time.Minute) }
 	routeDoubted = routeDoubtedSince
 )
 

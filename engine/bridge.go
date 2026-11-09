@@ -1014,7 +1014,11 @@ var reconnectStepHook func(owner int64, step string)
 func reconnectNow() string { return reconnectNowFor(whyByHand) }
 
 // the same for a change the app asked for, named for the transport screen
-func reconnectNowFor(why string) string {
+func reconnectNowFor(why string) string { return reconnectNowAfter(why, 0) }
+
+// the same, refused when another bounce took the slot less than fresh ago
+// or still runs (fresh above zero): that one is still bringing the route back
+func reconnectNowAfter(why string, fresh time.Duration) string {
 	if torIsPaused() {
 		return "error: tor is asleep"
 	}
@@ -1034,10 +1038,37 @@ func reconnectNowFor(why string) string {
 		log.Println("halo: reconnect deferred: automatic is trying a way in")
 		return "error: automatic is connecting"
 	}
+	if fresh > 0 && bouncedWithin(fresh) {
+		return "error: too soon"
+	}
 	routeFreshNetwork()
 	atomic.StoreInt64(&lastTorRestart, 0)
 	routeBump()
-	return reconnectTorAs(true, why)
+	return reconnectTorFresh(true, false, why, fresh)
+}
+
+// the strip's own reconnect for a send that has waited long: the button's,
+// but never within a minute of another bounce, which is still bringing the
+// route back then. a refusal is a wait, and the strip goes on offering it
+//
+//export HaloReconnectWaiting
+func HaloReconnectWaiting() *C.char { return C.CString(reconnectForWait()) }
+
+func reconnectForWait() string { return reconnectNowAfter(whyRelays, time.Minute) }
+
+// when a reconnect last took the slot. never zeroed, unlike lastTorRestart,
+// which the watch clears before its own. reconnectMu
+var lastBounceAt time.Time
+
+// a reconnect runs, or one took the slot less than d ago
+func bouncedWithin(d time.Duration) bool {
+	reconnectMu.Lock()
+	defer reconnectMu.Unlock()
+	return bouncedWithinLocked(d)
+}
+
+func bouncedWithinLocked(d time.Duration) bool {
+	return reconnectDone != nil || (!lastBounceAt.IsZero() && time.Since(lastBounceAt) < d)
 }
 
 // takes the running slot, or says why not. force, or a running one stuck
@@ -1045,9 +1076,13 @@ func reconnectNowFor(why string) string {
 // done channel to wait on before touching tor
 // and the new run's own done channel, all taken under the one lock: it
 // closes that channel and no other
-func reconnectClaim(force bool) (me int64, prev, done chan struct{}, err string) {
+func reconnectClaim(force bool, fresh time.Duration) (me int64, prev, done chan struct{}, err string) {
 	reconnectMu.Lock()
 	defer reconnectMu.Unlock()
+	// checked where the slot is taken, so two such asks can never both pass
+	if fresh > 0 && bouncedWithinLocked(fresh) {
+		return 0, nil, nil, "error: too soon"
+	}
 	if reconnectDone != nil {
 		since := atomic.LoadInt64(&reconnectSince)
 		if !force && (since == 0 || time.Since(time.Unix(0, since)) < stuckAfter) {
@@ -1060,6 +1095,7 @@ func reconnectClaim(force bool) (me int64, prev, done chan struct{}, err string)
 	me = reconnectOwner
 	done = make(chan struct{})
 	reconnectDone = done
+	lastBounceAt = time.Now()
 	atomic.StoreInt32(&torRestarting, 1)
 	reconnectRuns.Add(1)
 	reconnectsLive.Add(1)
@@ -1093,6 +1129,11 @@ func reconnectTorAs(force bool, why string) string { return reconnectTorBy(force
 // switch or a manual restart would cut its attempt short. the gate has a
 // lifetime cap, see autoGateHeld.
 func reconnectTorBy(force, auto bool, why string) string {
+	return reconnectTorFresh(force, auto, why, 0)
+}
+
+// the same, refused as reconnectClaim says for fresh
+func reconnectTorFresh(force, auto bool, why string, fresh time.Duration) string {
 	// asleep on purpose: the check-in mode takes tor off the network between
 	// checks, and every watchdog that finds it quiet comes through here. none
 	// of them may bring it back: that is the app's call, not a watchdog's.
@@ -1104,7 +1145,7 @@ func reconnectTorBy(force, auto bool, why string) string {
 		log.Println("halo: reconnect deferred: automatic is trying a way in")
 		return "error: automatic is connecting"
 	}
-	me, prev, done, refused := reconnectClaim(force)
+	me, prev, done, refused := reconnectClaim(force, fresh)
 	if refused != "" {
 		return refused
 	}
