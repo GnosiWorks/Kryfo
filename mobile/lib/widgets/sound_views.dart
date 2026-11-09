@@ -347,7 +347,9 @@ class _SeekWave extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final peaks = voicePeaksNow(path) ?? (kMadeUpWave ? soundWave(path) : null);
+    final peaks =
+        voicePeaksNow(path) ??
+        (kMadeUpWave ? soundWave(path.split('/').last) : null);
     final Widget wave = peaks == null
         ? _PlainBar(share: share, played: played, rest: rest, height: height)
         : VoiceWave(
