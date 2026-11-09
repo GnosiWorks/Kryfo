@@ -94,6 +94,7 @@ func resetByCensor(a *attemptSeen, el time.Duration) {
 
 func useFakeAuto(t *testing.T, n netInfo) *fakeAuto {
 	t.Helper()
+	quietValidBack(t)
 	stopAutoLoops(t)
 	f := &fakeAuto{now: t0Auto, started: true, script: map[string]func(*attemptSeen, time.Duration){}, applyErr: map[string]string{}}
 	oldNow, oldSleep, oldW := autoNow, autoSleep, autoW

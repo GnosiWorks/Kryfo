@@ -713,6 +713,7 @@ func init() {
 // asking tor anything.
 func useStandIns(t *testing.T, mode string, socks *socksStandIn, relays ...*relayStandIn) {
 	t.Helper()
+	quietValidBack(t)
 	// made first, so it is removed only after the cleanup below saw the
 	// runners out: they write into it until then
 	dir := t.TempDir()

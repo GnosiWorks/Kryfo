@@ -12,6 +12,15 @@ import (
 // samsung, 2026-11-08). android goes on calling it validated, so the dead
 // route is tor's own state and the waits between bounces stop growing.
 
+// the wifi-recheck reconnect left out: a test moving one network to
+// validated would otherwise start a real reconnect behind its own back
+func quietValidBack(t *testing.T) {
+	t.Helper()
+	old := validBackDo
+	validBackDo = func() {}
+	t.Cleanup(func() { validBackDo = old })
+}
+
 // what android says, put in place without the actions a change takes
 func setNetDetailForTest(n netInfo) {
 	netInfoMu.Lock()
