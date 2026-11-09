@@ -9,6 +9,7 @@ import '../file_kind.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart';
 import '../transfers.dart';
+import 'file_bubble.dart' show fileNameDir;
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'press_scale.dart';
@@ -128,12 +129,15 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
                   children: [
                     Row(
                       mainAxisSize: MainAxisSize.min,
+                      textDirection: fileNameDir(stem),
                       children: [
                         Flexible(
                           child: Text(
                             stem,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            textDirection: fileNameDir(stem),
+                            textWidthBasis: TextWidthBasis.longestLine,
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,
@@ -145,6 +149,7 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
                           Text(
                             ext,
                             maxLines: 1,
+                            textDirection: TextDirection.ltr,
                             style: HaloType.sans(
                               size: 14,
                               color: HaloColors.text,

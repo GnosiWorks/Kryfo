@@ -21,13 +21,21 @@ import '../media_progress.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'file_actions.dart' show pdfViewHere;
+import 'ease_size.dart';
 import 'file_badge.dart';
 import 'halo_hero.dart';
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'swap.dart';
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 
-final _rtlStart = RegExp('^[^A-Za-z]*[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]');
+final _rtlStart = RegExp(
+  '^[^A-Za-z]*[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]',
+);
+
+/// the way a file's name runs: by its own first letters, so a latin name
+/// keeps its extension at its end in a right to left app
+TextDirection fileNameDir(String stem) =>
+    _rtlStart.hasMatch(stem) ? TextDirection.rtl : TextDirection.ltr;
 
 /// the preview box's width: fixed, so the bubble's intrinsic pass needs no
 /// layout of its own
@@ -134,9 +142,7 @@ class _FileCardState extends State<FileCard> {
     // saved
     final shown = safeFileName(widget.name, facts: facts);
     final (stem, ext) = splitFileName(shown);
-    final nameDir = _rtlStart.hasMatch(stem)
-        ? TextDirection.rtl
-        : TextDirection.ltr;
+    final nameDir = fileNameDir(stem);
     final kind = facts.ext.isEmpty
         ? l10n.mediaBubblesFile
         : facts.ext.toUpperCase();
@@ -224,7 +230,12 @@ class _FileCardState extends State<FileCard> {
               : l10n.fileOpenHint,
           excludeSemantics: going == null || widget.onCancel == null,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 260),
+            // large text gets a little more room, never past the bubble's
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.textScalerOf(context).scale(10) > 12
+                  ? 320
+                  : 260,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -293,8 +304,8 @@ class _FileCardState extends State<FileCard> {
                                 child: Text(
                                   meta,
                                   key: ValueKey(going == null ? meta : 'going'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  // wraps at large sizes: nothing is cut
+                                  maxLines: 3,
                                   style: HaloType.mono(size: 10, color: fg),
                                 ),
                               ),
@@ -492,16 +503,14 @@ class _FileTextPreviewState extends State<FileTextPreview> {
   @override
   Widget build(BuildContext context) {
     final lines = _lines;
-    final still = motionStill(context);
     // a glance, not the reader: it grows with the text size, only so far
     final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.4);
     final style = HaloType.mono(
       size: 10.5,
       color: HaloColors.text,
     ).copyWith(height: 1.45);
-    return AnimatedSize(
-      duration: still ? Duration.zero : const Duration(milliseconds: 220),
-      curve: kHouseCurve,
+    return EaseSize(
+      duration: const Duration(milliseconds: 220),
       alignment: AlignmentDirectional.topStart,
       child: lines == null
           ? const SizedBox(width: kFilePreviewWidth)
@@ -515,6 +524,8 @@ class _FileTextPreviewState extends State<FileTextPreview> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
+                // code starts at the left whatever the app's language
+                textDirection: TextDirection.ltr,
                 children: [
                   for (final l in lines)
                     Text(

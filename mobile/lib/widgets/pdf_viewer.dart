@@ -19,6 +19,7 @@ import '../pdf_pages.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'file_actions.dart';
+import 'ease_size.dart';
 import 'file_viewer_parts.dart';
 import 'media_bubbles.dart' show humanFileSize;
 import 'motion.dart' show kHouseCurve, motionStill;
@@ -403,7 +404,6 @@ class PdfViewerState extends State<PdfViewer>
       if (d != null) l10n.filePages(d.pages),
     ].join(' · ');
     final kept = widget.kept;
-    final still = motionStill(context);
     return ColoredBox(
       color: HaloColors.ink,
       child: SafeArea(
@@ -428,11 +428,8 @@ class PdfViewerState extends State<PdfViewer>
                   ),
               ],
             ),
-            AnimatedSize(
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              curve: kHouseCurve,
+            EaseSize(
+              duration: const Duration(milliseconds: 220),
               child: _finding
                   ? _findRow()
                   : const SizedBox(width: double.infinity),
