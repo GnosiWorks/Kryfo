@@ -96,6 +96,8 @@ var (
 	// waiters raised to the open chat's place, by onion: their dial skips
 	// the pace too
 	doorRaisedOpen = map[string]bool{}
+	// dials under way by onion (doorDialQueued), so a raise lands on one
+	doorDialsTo = map[string]int{}
 	// the last dial that worked, to which onion and in which route generation:
 	// only then does a failed dial say something of its peer
 	doorOKAt    time.Time
@@ -192,7 +194,7 @@ func doorTake() {
 func doorRaise(onion string, pri int) {
 	doorQMu.Lock()
 	defer doorQMu.Unlock()
-	if pri == doorOpenChat {
+	if pri == doorOpenChat && doorDialsTo[onion] > 0 {
 		doorRaisedOpen[onion] = true
 	}
 	for _, w := range doorWaiters {

@@ -181,10 +181,17 @@ func doorGetOnce(ctx context.Context, t *tor.Tor, onion string, pri int) (*doorS
 // the slot's dial part is given back when the dial ends, the stream part
 // when the stream closes
 func doorDialQueued(ctx context.Context, t *tor.Tor, onion string, pri int) (net.Conn, *doorSlot, error) {
-	// a raise is for this dial alone
+	// a raise is for this dial alone, and only while one is under way: a
+	// raise that comes after it ended would lift the next dial to onion
+	doorQMu.Lock()
+	doorDialsTo[onion]++
+	doorQMu.Unlock()
 	defer func() {
 		doorQMu.Lock()
-		delete(doorRaisedOpen, onion)
+		if doorDialsTo[onion]--; doorDialsTo[onion] <= 0 {
+			delete(doorDialsTo, onion)
+			delete(doorRaisedOpen, onion)
+		}
 		doorQMu.Unlock()
 	}()
 	slot, err := doorSlotFor(ctx, onion, pri)
