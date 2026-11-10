@@ -6,6 +6,7 @@ import '../capture_watch.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'home_screen.dart' show ContactPreview;
 import '../container.dart' show HaloContainer;
 import '../devices/own_answer.dart' show kAnswerBurns;
 import '../drafts.dart';
@@ -5898,7 +5899,14 @@ class _ChatScreenState extends State<ChatScreen>
                 },
           secure: m.secure,
           kept: _keeps(m),
-          known: _accepted && !_blocked,
+          // the db's answer can come after the first frame: until then
+          // only a contact the app already holds counts as known
+          known: pdfPeerKnown(
+            widget.peerHaloId,
+            appState.contacts,
+            accepted: _accepted,
+            blocked: _blocked,
+          ),
           quotedText: quoted,
           onQuoteTap: m.replyTo == null
               ? null
@@ -10734,6 +10742,18 @@ class _Composer extends StatelessWidget {
 // the saved mode string as the pill's enum. private is full tor, 3 hops.
 PrivacyMode _pmFrom(String m) =>
     m == 'private' ? PrivacyMode.private : PrivacyMode.fast;
+
+/// whose pdf a bubble may draw a first page of unasked: an accepted
+/// contact this phone holds, not blocked, even before the chat's own reads
+/// answered
+@visibleForTesting
+bool pdfPeerKnown(
+  String peer,
+  Iterable<ContactPreview> contacts, {
+  required bool accepted,
+  required bool blocked,
+}) =>
+    accepted && !blocked && contacts.any((c) => c.haloId == peer && !c.blocked);
 
 // shown at the top of a chat when a known contact's identity key changed.
 // a reinstall looks the same as an attack, so we prompt to verify instead

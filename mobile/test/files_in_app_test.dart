@@ -29,6 +29,8 @@ import 'package:kryfo/widgets/message_menu.dart';
 import 'package:kryfo/widgets/pdf_viewer.dart';
 import 'package:kryfo/widgets/text_viewer.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show openReceivedFile;
+import 'package:kryfo/screens/chat_screen.dart' show pdfPeerKnown;
+import 'package:kryfo/screens/home_screen.dart' show ContactPreview;
 
 class FakePdf implements PdfBackend {
   int opens = 0;
@@ -815,6 +817,36 @@ void main() {
         },
       );
     }
+  });
+
+  test('a chat whose reads have not answered draws no stranger\'s pdf', () {
+    ContactPreview c(String id, {bool blocked = false}) =>
+        ContactPreview(haloId: id, avatarSeed: id, blocked: blocked);
+    // the chat starts out taking the peer as accepted, before the db says
+    expect(
+      pdfPeerKnown('s', const [], accepted: true, blocked: false),
+      isFalse,
+    );
+    expect(
+      pdfPeerKnown('s', [c('a')], accepted: true, blocked: false),
+      isFalse,
+    );
+    expect(pdfPeerKnown('a', [c('a')], accepted: true, blocked: false), isTrue);
+    expect(
+      pdfPeerKnown(
+        'a',
+        [c('a', blocked: true)],
+        accepted: true,
+        blocked: false,
+      ),
+      isFalse,
+    );
+    expect(
+      pdfPeerKnown('a', [c('a')], accepted: false, blocked: false),
+      isFalse,
+    );
+    final src = File('lib/screens/chat_screen.dart').readAsStringSync();
+    expect(src, isNot(contains('known: _accepted && !_blocked')));
   });
 
   test('the lock reaches the file glances and documents', () {
