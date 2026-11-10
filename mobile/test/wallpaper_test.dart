@@ -534,7 +534,7 @@ void main() {
       // the lock and a session switch both put them out
       expect(
         File('lib/lock_layer.dart').readAsStringSync(),
-        contains('WallImages.clear();'),
+        contains('WallImages.clear)'),
       );
       final main = File('lib/app/routing.dart').readAsStringSync();
       final renew = main.indexOf('void renewRootNavigator() {');

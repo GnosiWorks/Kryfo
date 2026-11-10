@@ -136,7 +136,7 @@ void main() {
       'wipe shred it', () {
     final main = sourceOf('lib/app/state.dart');
     final lock = bodyOf(main, 'void lockingUp(');
-    expect(lock, contains('unawaited(dropOpenCopies());'));
+    expect(lock, contains('unawaited(dropOpenCopies())'));
     expect(
       lock,
       contains('_lockedIn = (_session.vault ?? _session.primary).container;'),

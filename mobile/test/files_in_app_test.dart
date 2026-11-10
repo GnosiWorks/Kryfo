@@ -819,8 +819,8 @@ void main() {
 
   test('the lock reaches the file glances and documents', () {
     final src = File('lib/picture_lock.dart').readAsStringSync();
-    expect(src, contains('forgetFirstLines();'));
-    expect(src, contains('closeAllPdfs();'));
+    expect(src, contains('forgetFirstLines)'));
+    expect(src, contains('closeAllPdfs)'));
     final shred = File('lib/shred.dart').readAsStringSync();
     expect(shred, contains('forgetFirstLinesOf(path)'));
     expect(shred, contains('forgetPdfGlance(path)'));
