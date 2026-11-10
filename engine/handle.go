@@ -76,9 +76,7 @@ func handleReleaseBody(priv ed25519.PrivateKey, h string, ts int64) []byte {
 }
 
 func handleKey() ed25519.PrivateKey {
-	mu.Lock()
-	defer mu.Unlock()
-	return myEdPriv
+	return edKeyCopy()
 }
 
 // the own handle's lane, apart from people search and the circuits that
@@ -187,6 +185,7 @@ func handleClaim(raw, invite, bio string) string {
 	if priv == nil {
 		return "error: no identity yet"
 	}
+	defer clear(priv)
 	return handlePost("/handle/claim", handleClaimBody(priv, h, invite, bio, time.Now().Unix()))
 }
 
@@ -203,6 +202,7 @@ func handleRelease(raw string) string {
 	if priv == nil {
 		return "error: no identity yet"
 	}
+	defer clear(priv)
 	return handlePost("/handle/release", handleReleaseBody(priv, h, time.Now().Unix()))
 }
 
@@ -287,6 +287,7 @@ func HaloHandleListing(cHandle *C.char, cListed *C.char, cName *C.char) *C.char 
 	if priv == nil {
 		return C.CString("error: no identity yet")
 	}
+	defer clear(priv)
 	body := handleListingBody(priv, h, listed, name, time.Now().Unix())
 	return C.CString(handlePost("/handle/listing", body))
 }

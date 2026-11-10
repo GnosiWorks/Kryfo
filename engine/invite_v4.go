@@ -43,12 +43,11 @@ func faceSign(msg []byte) ([]byte, error) {
 	if !bytes.Equal(msg[len(faceText)+1:len(faceText)+33], me.pub[:]) {
 		return nil, errors.New("not the main identity's key")
 	}
-	mu.Lock()
-	priv := myEdPriv
-	mu.Unlock()
+	priv := edKeyCopy()
 	if priv == nil {
 		return nil, errNoIdentity
 	}
+	defer clear(priv)
 	return ed25519.Sign(priv, msg), nil
 }
 

@@ -8,6 +8,7 @@ import "C"
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
@@ -141,10 +142,7 @@ func HaloGenerateIdentity() *C.char {
 	if err != nil {
 		return C.CString(fmt.Sprintf("error: ed keygen: %v", err))
 	}
-	// the key it replaces goes from memory
-	clear(myEdPriv)
-	myEdPub = pub
-	myEdPriv = priv
+	setEdKeyLocked(priv)
 
 	if _, err := rand.Read(myXPriv[:]); err != nil {
 		return C.CString(fmt.Sprintf("error: x keygen: %v", err))
@@ -182,9 +180,7 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 	}
 	defer clear(xPrivBytes)
 
-	clear(myEdPriv)
-	myEdPriv = ed25519.PrivateKey(edPrivBytes)
-	myEdPub = myEdPriv.Public().(ed25519.PublicKey)
+	setEdKeyLocked(ed25519.PrivateKey(edPrivBytes))
 
 	copy(myXPriv[:], xPrivBytes)
 	curve25519.ScalarBaseMult(&myXPub, &myXPriv)
@@ -195,6 +191,24 @@ func HaloRestoreIdentity(cEdPriv *C.char, cXPriv *C.char) *C.char {
 	myId = idFromPubkey(myEdPub)
 	log.Printf("halo: identity restored: %s", myId)
 	return C.CString(myId)
+}
+
+// swaps the main ed key, mu held. the key it replaces goes from memory:
+// readers only ever hold a copy (edKeyCopy), so none signs with zeros
+func setEdKeyLocked(priv ed25519.PrivateKey) {
+	clear(myEdPriv)
+	myEdPriv = priv
+	myEdPub = priv.Public().(ed25519.PublicKey)
+}
+
+// a copy of the main ed key for one use, nil with none. the caller clears it
+func edKeyCopy() ed25519.PrivateKey {
+	mu.Lock()
+	defer mu.Unlock()
+	if myEdPriv == nil {
+		return nil
+	}
+	return bytes.Clone(myEdPriv)
 }
 
 //export HaloMyId
