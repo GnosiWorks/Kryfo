@@ -10,7 +10,9 @@ import "C"
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1262,9 +1264,6 @@ func nostrDropClients() {
 	cachedNostrClientMu.Lock()
 	cachedNostrClients = map[string]*http.Client{}
 	cachedNostrClientMu.Unlock()
-	torOnlyMu.Lock()
-	torOnlyClient = nil
-	torOnlyMu.Unlock()
 }
 
 // called from shutdown and from every bounce. the cached client pins the
@@ -1273,12 +1272,6 @@ func nostrResetClient() {
 	cachedNostrClientMu.Lock()
 	cachedNostrClients = map[string]*http.Client{}
 	cachedNostrClientMu.Unlock()
-	// the preview client dials the tor it was built on. after a restart
-	// that tor is gone, and a client kept from before would dial a dead
-	// port for the rest of the process
-	torOnlyMu.Lock()
-	torOnlyClient = nil
-	torOnlyMu.Unlock()
 	updateResetClient()
 	dropSocksAddr()
 	// kept sockets and door streams dialled the old way go with it
@@ -3743,49 +3736,47 @@ func pollEntriesOf(lines []string) ([]pollEntry, []int) {
 	return out, took
 }
 
-// a client that only ever dials through tor, whatever the send mode. the
-// shared client above goes direct in balanced and fast modes, which is right
-// for relays and wrong for a link preview: a preview that cannot go over
-// tor does not go. built once, no redirects past two, and never a plain
-// fallback.
-var (
-	torOnlyMu     sync.Mutex
-	torOnlyClient *http.Client
-)
-
+// a client that only ever dials through tor, whatever the send mode: a
+// preview that cannot go over tor does not go. a fresh one per preview, on a
+// circuit of its own and with no kept connection, so previews of links from
+// different chats never share an exit
 func torOnlyHTTP() (*http.Client, error) {
-	torOnlyMu.Lock()
-	defer torOnlyMu.Unlock()
-	if torOnlyClient != nil {
-		return torOnlyClient, nil
-	}
 	mu.Lock()
 	t := torNode
 	mu.Unlock()
 	if t == nil {
 		return nil, fmt.Errorf("tor not started")
 	}
-	d, err := torDialer(context.Background(), t)
+	var b [8]byte
+	rand.Read(b[:])
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	d, err := torDialerAs(ctx, t, "preview-"+hex.EncodeToString(b[:]))
 	if err != nil {
 		return nil, fmt.Errorf("tor dialer: %v", err)
 	}
-	torOnlyClient = &http.Client{
+	return &http.Client{
 		Transport: &http.Transport{
 			DialContext:           d.DialContext,
+			DisableKeepAlives:     true,
 			TLSHandshakeTimeout:   10 * time.Second,
 			ResponseHeaderTimeout: 10 * time.Second,
 		},
-		Timeout: 15 * time.Second,
-		// two redirects at most: a shortener into a canonical url is
-		// ordinary, a longer chain is not worth following
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) > 2 {
-				return fmt.Errorf("too many redirects")
-			}
-			return nil
-		},
+		Timeout:       15 * time.Second,
+		CheckRedirect: previewRedirect,
+	}, nil
+}
+
+// two redirects at most: a shortener into a canonical url is ordinary, a
+// longer chain is not worth following. once on https it stays there
+func previewRedirect(req *http.Request, via []*http.Request) error {
+	if len(via) > 2 {
+		return fmt.Errorf("too many redirects")
 	}
-	return torOnlyClient, nil
+	if len(via) > 0 && via[len(via)-1].URL.Scheme == "https" && req.URL.Scheme != "https" {
+		return fmt.Errorf("redirect off https")
+	}
+	return nil
 }
 
 // GET a page over tor and nothing else, for the sender-side link preview.
@@ -3794,17 +3785,20 @@ func torOnlyHTTP() (*http.Client, error) {
 //
 //export HaloTorGetStrict
 func HaloTorGetStrict(cUrl *C.char) *C.char {
-	url := goStr(cUrl)
+	return C.CString(torGetStrict(goStr(cUrl)))
+}
+
+func torGetStrict(url string) string {
 	if url == "" {
-		return C.CString("error: empty url")
+		return "error: empty url"
 	}
 	client, err := torOnlyHTTP()
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: tor: %v", err))
+		return fmt.Sprintf("error: tor: %v", err)
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: req: %v", err))
+		return fmt.Sprintf("error: req: %v", err)
 	}
 	req.Header.Set("User-Agent", "")
 	req.Header.Set("Accept", "text/html")
@@ -3812,17 +3806,17 @@ func HaloTorGetStrict(cUrl *C.char) *C.char {
 	defer cancel()
 	resp, err := client.Do(req.WithContext(ctx))
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: get: %v", err))
+		return fmt.Sprintf("error: get: %v", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return C.CString(fmt.Sprintf("error: status %d", resp.StatusCode))
+		return fmt.Sprintf("error: status %d", resp.StatusCode)
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 128*1024))
 	if err != nil {
-		return C.CString(fmt.Sprintf("error: read: %v", err))
+		return fmt.Sprintf("error: read: %v", err)
 	}
-	return C.CString(string(body))
+	return string(body)
 }
 
 // POST json over tor, returning the response body. used for the badge
