@@ -134,6 +134,7 @@ class AppState extends ChangeNotifier {
     devLane.onPqOver = (peer) => unawaited(notePqOver(peer));
     // the opener to a one-time invite went: the rest waits for the answer
     signalSession.holdOpener = _onceOpenerWent;
+    signalSession.openerSealed = _onceSealed;
   }
 
   // signal, the engine and android, as the receive side reaches them

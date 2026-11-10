@@ -446,6 +446,10 @@ class SignalSession {
   /// so this one waits for their answer
   Future<bool> Function(String peer)? holdOpener;
 
+  /// an opener [holdOpener] let through came out as [cipher], or nothing
+  /// came of it (null): what the hold noted for it goes with its own send
+  void Function(String peer, String? cipher)? openerSealed;
+
   /// [job] run after every earlier one queued for [peer] has ended
   Future<T> serial<T>(String peer, Future<T> Function() job) {
     final out = (_steps[peer] ?? Future<void>.value()).then((_) => job());
@@ -685,10 +689,31 @@ class SignalSession {
     if (onlySettled && opener) throw NotSettled(peer);
     // the opener went to an address that is gone now: the rest waits for
     // their answer, which opens the session for plain messages
-    if (opener && holdOpener != null && await holdOpener!(peer)) {
+    final asked = opener && holdOpener != null;
+    if (asked && await holdOpener!(peer)) {
       _awaiting.add(peer);
       throw WaitsForAnswer(peer);
     }
+    if (!asked) return _sealOn(peer, plain, record, pinned, opener, size);
+    final String out;
+    try {
+      out = await _sealOn(peer, plain, record, pinned, opener, size);
+    } catch (_) {
+      openerSealed?.call(peer, null);
+      rethrow;
+    }
+    openerSealed?.call(peer, out);
+    return out;
+  }
+
+  Future<String> _sealOn(
+    String peer,
+    String plain,
+    Uint8List record,
+    Uint8List? pinned,
+    bool opener,
+    int? size,
+  ) async {
     final String padded;
     if (opener && lib.sessionInfo(record).version >= 4) {
       // a post-quantum opener carries the kyber ciphertext: filled smaller,

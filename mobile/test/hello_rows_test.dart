@@ -877,6 +877,43 @@ void main() {
     expect(engine.unsubscribed, contains(once.id));
   });
 
+  test('the one more opener\'s stamp is its own: another send to the same '
+      'address that ends first never takes it (3c)', () async {
+    final p = await _Phone.make('once-token', 88);
+    final once = await makeInvite(
+      p.db,
+      p.ss,
+      kind: kInviteOneTime,
+      fcPkOf: _fcPkOf,
+    );
+    final inv = readInvite(p.ss.lib, once.link);
+    await live.upsertContact(p.words, '', p.x);
+    await app.startFromInvite(p.words, inv);
+    final fc = _hex(inv.firstContact);
+    final first = await signalSession.encryptTo(p.words, 'first');
+    expect(await sendFirstContactNoted(0, p.x, fc, first), 'ok');
+    final old = DateTime.now()
+        .subtract(const Duration(days: 16))
+        .millisecondsSinceEpoch;
+    await db.update(
+      'hellos',
+      {'went_at': old},
+      where: 'way = ? AND peer = ?',
+      whereArgs: ['open', p.keyHex],
+    );
+    final late = await signalSession.encryptTo(p.words, 'late');
+    expect(base64Decode(late)[0], kLsPreKey);
+    // the first opener sent once more, and it goes before the late one
+    expect(await sendFirstContactNoted(0, p.x, fc, first), 'ok');
+    // the late one fails: its own stamp goes, the next is not held
+    engine.firstContactAnswer = 'error: no relay';
+    expect(await sendFirstContactNoted(0, p.x, fc, late), isNot('ok'));
+    engine.firstContactAnswer = 'ok';
+    expect((await hellosOf('open', p.keyHex)).single['went_at'], isNull);
+    final retry = await signalSession.encryptTo(p.words, 'late again');
+    expect(base64Decode(retry)[0], kLsPreKey);
+  });
+
   test('after the opener went to their one-time invite, the next seal waits '
       'for their answer and goes once it came; a main invite holds nothing '
       '(3c)', () async {
