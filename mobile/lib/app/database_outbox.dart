@@ -558,8 +558,9 @@ Future<int> holdRestoredOutbox(DatabaseExecutor db, {int? before}) => db.update(
 
 /// on the first start after a restore that landed at [landed], from a file
 /// made at [made]: the rows the file brought wait for a tap, never one
-/// written here since. a failure is said, and the next start runs it again
-Future<int> holdOutboxAfterRestore(
+/// written here since. how many, null when it failed: the restore's mark
+/// then stays and the next start runs it again
+Future<int?> holdOutboxAfterRestore(
   DatabaseExecutor db, {
   int? landed,
   int? made,
@@ -575,7 +576,7 @@ Future<int> holdOutboxAfterRestore(
     return n;
   } catch (e) {
     dlog('restore: waiting rows not held (${e.runtimeType})');
-    return 0;
+    return null;
   }
 }
 

@@ -282,6 +282,16 @@ void main() {
       () => testKeyPair().privateKey.serialize(),
     );
     expect(ident, 1);
+    // random ids can meet (one in 16380): apart here, so a mixed up one shows
+    final drawn = (await identityRow(mem, ident))!.regId;
+    if (drawn == main0.regId) {
+      await mem.update(
+        'identities',
+        {'reg_id': drawn % 16380 + 1},
+        where: 'id = ?',
+        whereArgs: [ident],
+      );
+    }
     ciStore = SignalSession(null, ident);
     await ciStore.bootstrapIdentity(mem);
     ciRegId = (await identityRow(mem, ident))!.regId;

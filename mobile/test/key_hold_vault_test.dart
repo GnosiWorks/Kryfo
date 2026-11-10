@@ -753,12 +753,14 @@ void main() {
   });
 
   test(
-    'freed pages are zeroed',
+    'freed pages are zeroed, and no journal keeps old ones',
     () async {
       final db = SqliteMem.open()!;
       await eraseFreedPages(db);
       final r = await db.rawQuery('PRAGMA secure_delete');
       expect(r.single.values.single.toString(), '1');
+      final j = await db.rawQuery('PRAGMA journal_size_limit');
+      expect(j.single.values.single.toString(), '0');
     },
     skip: SqliteMem.open() == null ? 'no sqlite on this host' : null,
   );

@@ -138,6 +138,9 @@ type linkRun struct {
 	poll  time.Duration
 	clock func() time.Time
 	onion func() string
+	// how long a last line waits for the phone's keep, and between tries
+	keptWait time.Duration
+	backoffs []time.Duration
 
 	// phone
 	p        *devices.Linker
@@ -166,9 +169,10 @@ var (
 	linkRuns = map[string]*linkRun{}
 )
 
-// a run on the wire, door, clock and onion of now
+// a run on the wire, door, clock, onion and waits of now
 func (r *linkRun) world() *linkRun {
 	r.wire, r.dial, r.poll, r.clock, r.onion = linkWireNow, linkDialNow, linkPoll, linkClock, linkOnionOf
+	r.keptWait, r.backoffs = linkKeptWait, linkBackoffs
 	return r
 }
 
@@ -241,7 +245,7 @@ func (r *linkRun) postOn(ctx context.Context, seed [32]byte, msg []byte) error {
 		select {
 		case <-ctx.Done():
 			return errLinkUnreached
-		case <-time.After(linkBackoff(try)):
+		case <-time.After(linkBackoff(r.backoffs, try)):
 		}
 	}
 }
@@ -563,7 +567,7 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 		return ctx.Err()
 	}
 	r.set(lsSending, "")
-	if err := sendLinkBundles(ctx, r.dial, place, klb1, func(at, of int) {
+	if err := sendLinkBundles(ctx, r.dial, r.backoffs, place, klb1, func(at, of int) {
 		r.mu.Lock()
 		r.at, r.of, r.moved = at, of, r.clock()
 		r.mu.Unlock()
@@ -586,7 +590,7 @@ func devShimNow() *kshim.Lib {
 // how many lines are through, of how many. the last line, once tried, is
 // tried on for linkKeptFor and each try counts as moving: the phone may
 // have kept the device with its ack lost, and only that line tells
-func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1 []byte, sent func(at, of int), trying func()) error {
+func sendLinkBundles(ctx context.Context, dial linkDialer, backoffs []time.Duration, p devices.Place, klb1 []byte, sent func(at, of int), trying func()) error {
 	n := (len(klb1) + linkChunk - 1) / linkChunk
 	tok := hex.EncodeToString(p.Token[:])
 	sent(0, n)
@@ -620,7 +624,7 @@ func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1
 			select {
 			case <-ctx.Done():
 				return errLinkUnreached
-			case <-time.After(linkBackoff(try)):
+			case <-time.After(linkBackoff(backoffs, try)):
 			}
 		}
 	}
@@ -629,8 +633,8 @@ func sendLinkBundles(ctx context.Context, dial linkDialer, p devices.Place, klb1
 
 var linkBackoffs = []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second, 20 * time.Second, 30 * time.Second}
 
-func linkBackoff(try int) time.Duration {
-	return linkBackoffs[min(try, len(linkBackoffs)-1)]
+func linkBackoff(bs []time.Duration, try int) time.Duration {
+	return bs[min(try, len(bs)-1)]
 }
 
 // ---- the phone ----
@@ -907,7 +911,7 @@ func linkDoorTake(line string) bool {
 	// the last line is acked only once the phone's app kept the device:
 	// a page closed or a keep that failed leaves the new device unlinked
 	// too, never half
-	t := time.NewTimer(linkKeptWait)
+	t := time.NewTimer(r.keptWait)
 	defer t.Stop()
 	select {
 	case <-kept:
@@ -932,7 +936,7 @@ func (r *linkRun) ackAgain() bool {
 	r.mu.Lock()
 	kept := r.keptCh
 	r.mu.Unlock()
-	t := time.NewTimer(linkKeptWait)
+	t := time.NewTimer(r.keptWait)
 	defer t.Stop()
 	select {
 	case <-kept:

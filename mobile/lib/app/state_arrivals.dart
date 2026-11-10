@@ -764,17 +764,23 @@ extension AppStateArrivals on AppState {
         // home's row shows the last line, and only a refresh rereads it
         await refreshContacts();
         notifyListeners();
-      } else if (!await db.messageExists(env.edit!.targetUid)) {
+      } else if (!await db.messageFrom(
+        env.edit!.targetUid,
+        senderHaloId,
+        env.groupId,
+      )) {
+        // a row of that uid someone else sent first never hides theirs
         await early(env.edit!.targetUid);
       }
       return to;
     }
     // 2.6) unsend: sender recalled a message; delete our copy
     if (env.unsend != null) {
-      // a row that exists must be theirs. a half-file with no row yet has
-      // nothing to protect, and its sender stopping it is the point.
-      if (await db.messageExists(env.unsend!) &&
-          !await db.isTheirs(env.unsend!, senderHaloId)) {
+      // a row of mine or theirs must be theirs. a half-file with no row yet
+      // has nothing to protect, and its sender stopping it is the point. a
+      // row someone else sent first under that uid stops nothing
+      final held = await db.messageFrom(env.unsend!, senderHaloId, env.groupId);
+      if (held && !await db.isTheirs(env.unsend!, senderHaloId)) {
         return to;
       }
       if (env.groupId == null &&
@@ -791,7 +797,7 @@ extension AppStateArrivals on AppState {
       // to be tried again or they are someone accepted. a stranger's word
       // on any other uid is noted in memory only, so it fills no disk
       if (env.groupId == null &&
-          !await db.messageExists(env.unsend!) &&
+          !held &&
           (await db.isAccepted(senderHaloId) ||
               await db.firstKeptHas(senderHaloId, env.unsend!))) {
         await db.noteTakenBack(senderHaloId, env.unsend!);
@@ -802,7 +808,7 @@ extension AppStateArrivals on AppState {
       // group this phone is not in, is held in memory only, as a stranger's
       if (env.groupId != null &&
           goneKept(env.groupId) &&
-          !await db.messageExists(env.unsend!) &&
+          !held &&
           await db.getGroup(env.groupId!) != null &&
           (await db.getGroupMembers(env.groupId!)).contains(senderHaloId)) {
         await db.noteTakenBack(

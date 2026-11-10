@@ -1153,9 +1153,11 @@ Future<void> tieVerifiedToKeys(DatabaseExecutor db) async {
 }
 
 // freed pages are zeroed, so a row deleted or rewritten does not linger in
-// the file. the cost is a few percent on writes
+// the file. the cost is a few percent on writes. a journal or wal left
+// behind is cut back to nothing, so it keeps no old pages either
 Future<void> eraseFreedPages(DatabaseExecutor db) async {
   await db.rawQuery('PRAGMA secure_delete = 1');
+  await db.rawQuery('PRAGMA journal_size_limit = 0');
 }
 
 // a message's words leave the search index with it, not as a mark laid

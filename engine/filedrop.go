@@ -219,7 +219,10 @@ var dropSecret = func() ([]byte, error) {
 	if len(k) == 0 {
 		return nil, errors.New("no identity")
 	}
-	return dropMac(k.Seed(), "kryfo-files"), nil
+	defer clear(k)
+	seed := k.Seed()
+	defer clear(seed)
+	return dropMac(seed, "kryfo-files"), nil
 }
 
 func fileSum(path string) ([]byte, int64, error) {
