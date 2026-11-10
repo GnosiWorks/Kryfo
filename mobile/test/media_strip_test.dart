@@ -62,21 +62,21 @@ void main() {
   });
 
   testWidgets('at 1.5x text the strip still keeps Cancel in place', (t) async {
-    t.view.physicalSize = const Size(260, 400);
+    t.view.physicalSize = const Size(360, 400);
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.reset);
     await t.pumpWidget(
       MaterialApp(
-        home: MediaQuery(
-          data: const MediaQueryData(
-            size: Size(260, 400),
-            textScaler: TextScaler.linear(1.5),
-          ),
-          child: Scaffold(
-            body: Align(
-              alignment: Alignment.bottomCenter,
-              child: IncomingMediaBanner(chatKey: 'c', onCancel: (_) {}),
-            ),
+        builder: (c, child) => MediaQuery(
+          data: MediaQuery.of(
+            c,
+          ).copyWith(textScaler: const TextScaler.linear(1.5)),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: IncomingMediaBanner(chatKey: 'c', onCancel: (_) {}),
           ),
         ),
       ),
@@ -91,5 +91,10 @@ void main() {
     mediaProgressUpdate('u1', 0.28);
     await t.pumpAndSettle();
     expect(t.getRect(cancel), short);
+    // the target grows with the words: two lines of them fit beside it
+    final target = t.getSize(
+      find.ancestor(of: cancel, matching: find.byType(GestureDetector)).first,
+    );
+    expect(target.height, greaterThanOrEqualTo(48));
   });
 }

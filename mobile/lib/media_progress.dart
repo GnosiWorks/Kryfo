@@ -426,14 +426,19 @@ class _StripAction extends StatelessWidget {
           onTap: onTap,
           child: Container(
             constraints: BoxConstraints(minWidth: 48, minHeight: tap),
-            alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(
-              label,
-              style: HaloType.mono(
-                size: 10.5,
-                weight: FontWeight.w700,
-                color: HaloColors.text,
+            // as big as its words and the minimum, never all the height a
+            // parent offers
+            child: Align(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(
+                label,
+                style: HaloType.mono(
+                  size: 10.5,
+                  weight: FontWeight.w700,
+                  color: HaloColors.text,
+                ),
               ),
             ),
           ),
