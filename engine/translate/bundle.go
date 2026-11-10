@@ -166,6 +166,7 @@ func FetchBundleWith(ctx context.Context, f Fetcher, m *Manifest, lang, dir stri
 	fh.Close()
 	os.Remove(part)
 	os.Remove(gotPath)
+	os.Remove(gotPath + ".new")
 	return nil
 }
 

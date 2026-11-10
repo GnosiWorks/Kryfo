@@ -464,3 +464,26 @@ func TestWhy(t *testing.T) {
 		}
 	}
 }
+
+// a .bundle.got that cannot be written whole leaves the one before it
+func TestGotFileIsReplacedWhole(t *testing.T) {
+	dir := t.TempDir()
+	got := filepath.Join(dir, gotName)
+	if err := writeGot(got, gotText(2*Chunk, map[int64]bool{4 * Chunk: true})); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(got + ".new"); !os.IsNotExist(err) {
+		t.Fatalf("temp left: %v", err)
+	}
+	// the temp's place is taken: the write fails and the old list stays
+	if err := os.Mkdir(got+".new", 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeGot(got, []byte("9")); err == nil {
+		t.Fatal("a write that could not happen said it did")
+	}
+	b, err := os.ReadFile(got)
+	if err != nil || string(b) != fmt.Sprintf("%d\n%d", 2*Chunk, 4*Chunk) {
+		t.Fatalf("got %q, %v", b, err)
+	}
+}

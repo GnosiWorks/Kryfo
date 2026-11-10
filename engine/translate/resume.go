@@ -153,6 +153,16 @@ func gotText(prefix int64, in map[int64]bool) []byte {
 	return b
 }
 
+// the .bundle.got file replaced whole: a stop mid-write leaves the old one,
+// never half a list
+func writeGot(path string, b []byte) error {
+	tmp := path + ".new"
+	if err := os.WriteFile(tmp, b, 0o600); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
+}
+
 // [have]: chunks above got already in the part file, not asked again
 func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath string, got int64, have map[int64]bool, gz, wire int64, prog Progress) error {
 	if got >= wire {
@@ -210,7 +220,7 @@ func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath stri
 		}
 		// every chunk in is written down, not only the prefix: with lanes
 		// a stop leaves chunks above a hole, and a resume keeps them
-		if err := os.WriteFile(gotPath, gotText(st.prefix, st.in), 0o600); err != nil {
+		if err := writeGot(gotPath, gotText(st.prefix, st.in)); err != nil {
 			return err
 		}
 		if prog != nil {
