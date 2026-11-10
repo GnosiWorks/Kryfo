@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 )
 
@@ -25,10 +24,11 @@ func TestPreviewsTakeACircuitEach(t *testing.T) {
 	}
 	socks.mu.Lock()
 	defer socks.mu.Unlock()
+	// nothing else dials here: every name is a preview's
 	names := 0
 	for n, c := range socks.byName {
-		if !strings.HasPrefix(n, "preview-") {
-			continue
+		if n == "" {
+			t.Error("a preview went with no name")
 		}
 		names++
 		if c != 1 {

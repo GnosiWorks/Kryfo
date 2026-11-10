@@ -3747,11 +3747,11 @@ func torOnlyHTTP() (*http.Client, error) {
 	if t == nil {
 		return nil, fmt.Errorf("tor not started")
 	}
-	var b [8]byte
+	var b [16]byte
 	rand.Read(b[:])
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	d, err := torDialerAs(ctx, t, "preview-"+hex.EncodeToString(b[:]))
+	d, err := torDialerAs(ctx, t, hex.EncodeToString(b[:]))
 	if err != nil {
 		return nil, fmt.Errorf("tor dialer: %v", err)
 	}
