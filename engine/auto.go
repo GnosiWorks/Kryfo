@@ -12,8 +12,9 @@ package main
 // order: what worked here last, direct, the tor project's advice (only
 // with consent, only through meek, never plain), built-in obfs4, built-in
 // snowflake, webtunnel lines the app keeps. direct is skipped on a network
-// type where it was blocked in the last 30 days. where tor looks blocked,
-// the built-in obfs4 goes after snowflake and webtunnel.
+// type where it was blocked in the last 30 days, and inside a tor vpn,
+// whose exits do not reach tor's relays. where tor looks blocked, the
+// built-in obfs4 goes after snowflake and webtunnel.
 
 import "C"
 
@@ -52,6 +53,15 @@ type modeOpts struct {
 	Lines []string `json:"lines,omitempty"`
 	// webtunnel lines the app keeps, for automatic's last step
 	Webtunnel []string `json:"webtunnel,omitempty"`
+	// inside a tor vpn: no direct step, and the network is not counted as
+	// censored. from the network (netOpts), never from the app
+	inTorVPN bool
+}
+
+// the mode's options on network n
+func netOpts(o modeOpts, n netInfo) modeOpts {
+	o.inTorVPN = n.TorVPN
+	return o
 }
 
 var (
@@ -284,7 +294,8 @@ func planPass(kind string, mem autoMemory, opts modeOpts, today int64) []autoSte
 	if d, ok := mem.Blocked[kind]; ok && fresh(d, today) {
 		directBlocked = true
 	}
-	skipDirect := directBlocked || opts.SkipDirect
+	censored := directBlocked || opts.SkipDirect
+	skipDirect := censored || opts.inTorVPN
 	if u, ok := mem.Last[kind]; ok && fresh(u.Day, today) {
 		lines := linesFor(u, opts)
 		switch {
@@ -309,7 +320,7 @@ func planPass(kind string, mem autoMemory, opts modeOpts, today int64) []autoSte
 	// tor said blocked or watched here, or direct blocked lately on this
 	// type of network: a censor that cuts tor's relays cuts the public obfs4
 	// bridges too. another type of network keeps its own order
-	if skipDirect {
+	if censored {
 		steps = obfs4Last(steps, 0)
 	}
 	return steps
@@ -732,7 +743,8 @@ func captiveWay(gen int64) {
 		return
 	}
 	_, opts, _ := bridgeMode()
-	s, ok := checkInStep(currentNet().Kind, memSnapshot(), opts, dayOf(autoNow()))
+	n := currentNet()
+	s, ok := checkInStep(n.Kind, memSnapshot(), netOpts(opts, n), dayOf(autoNow()))
 	if !ok {
 		return
 	}
@@ -788,6 +800,7 @@ func runPass(gen, epoch int64, why string) string {
 	n := currentNet()
 	kind := n.Kind
 	_, opts, _ := bridgeMode()
+	opts = netOpts(opts, n)
 	today := dayOf(autoNow())
 	steps := planPass(kind, memSnapshot(), opts, today)
 	// counted as the status line counts them: the ask of moat is no way in
@@ -1411,9 +1424,10 @@ func checkInStep(kind string, mem autoMemory, opts modeOpts, today int64) (autoS
 	if !ok || !fresh(u.Day, today) {
 		return autoStep{}, false
 	}
-	// direct only where it is still welcome: not risky, not blocked lately
+	// direct only where it is still welcome: not risky, not blocked lately,
+	// not inside a tor vpn
 	if u.Method == "direct" {
-		if d, blocked := mem.Blocked[kind]; opts.SkipDirect || (blocked && fresh(d, today)) {
+		if d, blocked := mem.Blocked[kind]; opts.SkipDirect || opts.inTorVPN || (blocked && fresh(d, today)) {
 			return autoStep{}, false
 		}
 	}
@@ -1465,12 +1479,13 @@ func putCheckInStep() string {
 		return "ok"
 	}
 	kind, mem, today := n.Kind, memSnapshot(), dayOf(autoNow())
+	opts = netOpts(opts, n)
 	s, ok := checkInStep(kind, mem, opts, today)
 	if !ok {
 		// nothing remembered here: tor alone where that is welcome, else
 		// the built-in bridges, never direct
 		s = autoStep{Method: "direct"}
-		if d, b := mem.Blocked[kind]; opts.SkipDirect || (b && fresh(d, today)) {
+		if d, b := mem.Blocked[kind]; opts.SkipDirect || opts.inTorVPN || (b && fresh(d, today)) {
 			s = autoStep{Method: "obfs4", Source: "builtin", Lines: builtinLines("obfs4")}
 			// no line to use is a hold: no lines and no direct step
 			if len(s.Lines) == 0 {
@@ -1576,6 +1591,8 @@ type bridgeStatusView struct {
 	AskConsent bool   `json:"ask_consent,omitempty"`
 	Network    string `json:"network"`
 	VPN        bool   `json:"vpn"`
+	// inside a tor vpn automatic starts on a bridge, and the app says why
+	TorVPN bool `json:"tor_vpn,omitempty"`
 	// tor's lines are bridge lines now, whatever step automatic is on: the
 	// one fact the typing indicator goes by
 	OnBridge bool `json:"on_bridge"`
@@ -1596,7 +1613,7 @@ func linesMethod() string {
 func bridgeStatus() bridgeStatusView {
 	mode, _, _ := bridgeMode()
 	n := currentNet()
-	v := bridgeStatusView{Mode: mode, VPN: n.VPN, CanSend: routeOK(), OnBridge: bridgesEnabled()}
+	v := bridgeStatusView{Mode: mode, VPN: n.VPN, TorVPN: n.TorVPN, CanSend: routeOK(), OnBridge: bridgesEnabled()}
 	switch {
 	case !n.On:
 		v.Network = "none"

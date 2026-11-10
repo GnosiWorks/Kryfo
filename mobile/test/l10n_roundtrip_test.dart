@@ -3203,6 +3203,10 @@ void main() {
       l.bridgesKryfoFindsAWay,
       "Kryfo finds a way that works where you are.",
     );
+    expect(
+      l.bridgesTorVpnLine,
+      "Tor can't run inside a Tor VPN like Orbot, so Kryfo goes straight to a bridge.",
+    );
     expect(l.bridgesDirect, "Direct");
     expect(
       l.bridgesFastestWhereTorIsnt,

@@ -184,3 +184,48 @@ func TestNotTorModeHasNothingInUse(t *testing.T) {
 		t.Fatalf("back on onion: %+v", st)
 	}
 }
+
+// inside a tor vpn tor cannot reach its relays: automatic starts on a
+// bridge at once, keeps the usual bridge order, and says why
+func TestTorVPNGoesStraightToABridge(t *testing.T) {
+	today := dayOf(t0Auto)
+	in := modeOpts{inTorVPN: true}
+	if got := planNames(planPass("vpn", autoMemory{}, in, today)); got != "moat/ obfs4/builtin snowflake/builtin" {
+		t.Fatalf("plan inside a tor vpn: %s", got)
+	}
+	// direct remembered on this kind of network is not tried there either
+	mem := autoMemory{Last: map[string]autoUse{"vpn": {Method: "direct", Day: today}}}
+	if got := planNames(planPass("vpn", mem, in, today)); strings.Contains(got, "direct") {
+		t.Fatalf("plan inside a tor vpn kept direct: %s", got)
+	}
+	if _, ok := checkInStep("vpn", mem, in, today); ok {
+		t.Fatal("a check-in inside a tor vpn would go direct")
+	}
+
+	f := useFakeAuto(t, netInfo{On: true, Validated: true, VPN: true, TorVPN: true, Kind: "wifi"})
+	f.script["obfs4"] = worksAfter(5 * time.Second)
+	if r := pass(t, modeOpts{}); r != seenOK {
+		t.Fatalf("pass %s, tried %v", r, f.applied)
+	}
+	if got := strings.Join(f.applied, " "); got != "obfs4/builtin" {
+		t.Fatalf("tried %s", got)
+	}
+	if st := bridgeStatus(); !st.TorVPN || !st.VPN {
+		t.Fatalf("status %+v, want tor_vpn", st)
+	}
+	// nothing was learned as blocked: it is the vpn, not a censor
+	if m := memSnapshot(); len(m.Blocked) != 0 {
+		t.Fatalf("remembered as blocked: %+v", m.Blocked)
+	}
+}
+
+// a tor vpn app on the phone with no vpn up says nothing
+func TestTorVPNNeedsAVPN(t *testing.T) {
+	useFakeAuto(t, netInfo{On: true, Validated: true, TorVPN: true, Kind: "wifi"})
+	if n := currentNet(); n.TorVPN {
+		t.Fatalf("tor vpn without a vpn: %+v", n)
+	}
+	if st := bridgeStatus(); st.TorVPN {
+		t.Fatal("status says tor vpn without a vpn")
+	}
+}

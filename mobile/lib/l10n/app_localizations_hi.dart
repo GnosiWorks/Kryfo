@@ -7367,6 +7367,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'Kryfo ऐसा तरीक़ा ढूँढता है जो आपकी जगह पर काम करे।';
 
   @override
+  String get bridgesTorVpnLine =>
+      'Tor, Orbot जैसे Tor VPN के अंदर नहीं चल सकता, इसलिए Kryfo सीधे ब्रिज लेता है।';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'यह ब्रिज पार नहीं हो पा रहा';
 
   @override

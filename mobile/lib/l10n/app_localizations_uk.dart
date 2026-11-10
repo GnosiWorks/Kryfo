@@ -7493,6 +7493,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Kryfo сам знаходить спосіб, що працює там, де ти є.';
 
   @override
+  String get bridgesTorVpnLine =>
+      'Tor не працює всередині Tor-VPN на кшталт Orbot, тому Kryfo одразу бере міст.';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'Через цей міст не пробитися';
 
   @override

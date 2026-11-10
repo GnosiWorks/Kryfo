@@ -354,5 +354,10 @@
         <intent>
             <action android:name="org.unifiedpush.android.distributor.REGISTER"/>
         </intent>
+        <!-- tor vpn apps: inside one, automatic starts on a bridge (NetWatch) -->
+        <package android:name="org.torproject.android"/>
+        <package android:name="org.torproject.vpn"/>
+        <package android:name="pan.alexander.tordnscrypt"/>
+        <package android:name="pan.alexander.tordnscrypt.stable"/>
     </queries>
 </manifest>

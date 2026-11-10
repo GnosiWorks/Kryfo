@@ -325,6 +325,7 @@
   "bridgesOffline": "Offline",
   "bridgesTorNoBridge": "Tor, tanpa jembatan",
   "bridgesKryfoFindsAWay": "Kryfo mencari cara yang berhasil di tempatmu.",
+  "bridgesTorVpnLine": "Tor tidak bisa berjalan di dalam VPN Tor seperti Orbot, jadi Kryfo langsung memakai jembatan.",
   "bridgesNothingGotThrough": "Tidak ada yang tembus",
   "bridgesBridgeFromAFriend": "Jembatan dari teman",
   "bridgesKryfoCanAskThe": "Kryfo bisa meminta jembatan ke Tor Project untuk menembus blokir itu.",

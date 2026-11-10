@@ -11809,6 +11809,12 @@ abstract class AppLocalizations {
   /// **'Kryfo finds a way that works where you are.'**
   String get bridgesKryfoFindsAWay;
 
+  /// connection page, automatic picked while a tor vpn such as orbot seems to be on: why a bridge is used at once
+  ///
+  /// In en, this message translates to:
+  /// **'Tor can\'t run inside a Tor VPN like Orbot, so Kryfo goes straight to a bridge.'**
+  String get bridgesTorVpnLine;
+
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:

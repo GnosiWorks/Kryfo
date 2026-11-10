@@ -1947,6 +1947,7 @@
   "bridgesKryfoCouldNotRead": "{count, plural, one{Kryfo nie umie odczytać {count} z tych linii} few{Kryfo nie umie odczytać {count} z tych linii} many{Kryfo nie umie odczytać {count} z tych linii} other{Kryfo nie umie odczytać {count} z tych linii}}",
   "bridgesTorNoBridge": "Tor, bez mostka",
   "bridgesKryfoFindsAWay": "Kryfo znajdzie drogę, która u ciebie działa.",
+  "bridgesTorVpnLine": "Tor nie działa wewnątrz VPN-a Tor, takiego jak Orbot, więc Kryfo od razu używa mostka.",
   "bridgesThisBridgeIsnTGetting": "Ten mostek się nie przebija",
   "bridgesBridgesTheTorProject": "Mostki, które dał ci wcześniej Tor Project.",
   "bridgesConnectingDots": "Łączenie…",

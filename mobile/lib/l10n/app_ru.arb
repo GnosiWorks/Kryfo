@@ -325,6 +325,7 @@
   "bridgesOffline": "Не в сети",
   "bridgesTorNoBridge": "Tor, без моста",
   "bridgesKryfoFindsAWay": "Kryfo сам находит способ, который работает там, где ты.",
+  "bridgesTorVpnLine": "Tor не работает внутри Tor-VPN вроде Orbot, поэтому Kryfo сразу берёт мост.",
   "bridgesNothingGotThrough": "Пробиться не удалось",
   "bridgesBridgeFromAFriend": "Мост от друга",
   "bridgesKryfoCanAskThe": "Kryfo может попросить у проекта Tor мост, чтобы обойти блокировку.",

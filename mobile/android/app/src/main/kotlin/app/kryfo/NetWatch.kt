@@ -1,6 +1,7 @@
 package app.kryfo
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -61,9 +62,33 @@ object NetWatch {
 
     private val main = Handler(Looper.getMainLooper())
     private var channel: MethodChannel? = null
+    @Volatile private var packages: PackageManager? = null
     @Volatile private var last = describe(null, null)
 
+    // tor vpn apps (the manifest's queries name them). inside one tor cannot
+    // reach its relays, so automatic starts on a bridge. android does not
+    // say whose vpn is up, so an app here with a vpn up is taken as one
+    private val torVpnApps = listOf(
+        "org.torproject.android",
+        "org.torproject.vpn",
+        "pan.alexander.tordnscrypt",
+        "pan.alexander.tordnscrypt.stable",
+    )
+
+    private fun torVpnApp(): Boolean {
+        val pm = packages ?: return false
+        return torVpnApps.any {
+            try {
+                pm.getPackageInfo(it, 0)
+                true
+            } catch (e: PackageManager.NameNotFoundException) {
+                false
+            }
+        }
+    }
+
     fun start(context: Context, engine: FlutterEngine) {
+        packages = context.applicationContext.packageManager
         val ch = MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
         ch.setMethodCallHandler { call, result ->
             if (call.method == "state") result.success(last) else result.notImplemented()
@@ -120,7 +145,9 @@ object NetWatch {
         o.put("on", true)
         o.put("validated", caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED))
         o.put("limited", caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL))
-        o.put("vpn", caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN))
+        val vpn = caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        o.put("vpn", vpn)
+        if (vpn && torVpnApp()) o.put("tor_vpn", true)
         o.put(
             "kind",
             when {

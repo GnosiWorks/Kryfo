@@ -9255,6 +9255,10 @@
   "bridgesKryfoCouldNotRead": "{count, plural, one{Kryfo couldn't read {count} of these lines} other{Kryfo couldn't read {count} of these lines}}",
   "bridgesTorNoBridge": "Tor, no bridge",
   "bridgesKryfoFindsAWay": "Kryfo finds a way that works where you are.",
+  "bridgesTorVpnLine": "Tor can't run inside a Tor VPN like Orbot, so Kryfo goes straight to a bridge.",
+  "@bridgesTorVpnLine": {
+    "description": "connection page, automatic picked while a tor vpn such as orbot seems to be on: why a bridge is used at once"
+  },
   "@bridgesTryingAnotherWay": {
     "description": "screens/bridges_screen.dart"
   },

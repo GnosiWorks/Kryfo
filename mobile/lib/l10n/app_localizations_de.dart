@@ -7450,6 +7450,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kryfo findet einen Weg, der dort funktioniert, wo du bist.';
 
   @override
+  String get bridgesTorVpnLine =>
+      'Tor läuft nicht in einem Tor-VPN wie Orbot, also nimmt Kryfo gleich eine Brücke.';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'Diese Brücke kommt nicht durch';
 
   @override

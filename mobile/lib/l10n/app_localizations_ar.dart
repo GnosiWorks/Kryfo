@@ -7483,6 +7483,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesKryfoFindsAWay => 'يجد Kryfo طريقة تعمل حيث أنت.';
 
   @override
+  String get bridgesTorVpnLine =>
+      'لا يعمل Tor داخل شبكة VPN خاصة بـ Tor مثل Orbot، لذا ينتقل Kryfo مباشرة إلى جسر.';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'لا يستطيع هذا الجسر العبور';
 
   @override

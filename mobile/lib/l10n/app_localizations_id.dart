@@ -7362,6 +7362,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo mencari cara yang berhasil di tempatmu.';
 
   @override
+  String get bridgesTorVpnLine =>
+      'Tor tidak bisa berjalan di dalam VPN Tor seperti Orbot, jadi Kryfo langsung memakai jembatan.';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'Jembatan ini tidak tembus';
 
   @override

@@ -19,11 +19,14 @@ import (
 )
 
 type netInfo struct {
-	On        bool   `json:"on"`
-	Validated bool   `json:"validated"`
-	Limited   bool   `json:"limited"`
-	VPN       bool   `json:"vpn"`
-	Kind      string `json:"kind"`
+	On        bool `json:"on"`
+	Validated bool `json:"validated"`
+	Limited   bool `json:"limited"`
+	VPN       bool `json:"vpn"`
+	// a tor vpn app such as orbot is on the phone while a vpn carries the
+	// network: android cannot say whose vpn it is, so this is a hint too
+	TorVPN bool   `json:"tor_vpn"`
+	Kind   string `json:"kind"`
 	// android's handle for the network, the same for as long as it lasts.
 	// zero when there is none, or the app did not say
 	Net int64 `json:"net"`
@@ -46,6 +49,7 @@ func setNetInfo(n netInfo) {
 	if n.VPN {
 		n.Kind = "vpn"
 	}
+	n.TorVPN = n.TorVPN && n.VPN
 	if !netKinds[n.Kind] {
 		n.Kind = "other"
 	}
@@ -168,7 +172,7 @@ func netDetailNow() (netInfo, bool) {
 var netDisproved *netInfo
 
 func sameNet(a, b netInfo) bool {
-	return a.On == b.On && a.Validated == b.Validated && a.Limited == b.Limited && a.VPN == b.VPN && a.Kind == b.Kind && a.Net == b.Net
+	return a.On == b.On && a.Validated == b.Validated && a.Limited == b.Limited && a.VPN == b.VPN && a.TorVPN == b.TorVPN && a.Kind == b.Kind && a.Net == b.Net
 }
 
 // one network by the watch's word: there or not, its type, and android's
@@ -218,7 +222,7 @@ func currentNet() netInfo {
 }
 
 // the default network as android sees it, as json:
-// {"on":true,"validated":true,"limited":false,"vpn":false,"kind":"wifi","net":123}.
+// {"on":true,"validated":true,"limited":false,"vpn":false,"tor_vpn":false,"kind":"wifi","net":123}.
 // once it has come, whether there is a network is its word, not
 // HaloNetworkState's. tor leaves the network when it says none, and a
 // network back is bounced on if nothing else will.

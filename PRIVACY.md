@@ -32,7 +32,7 @@ the contact's phone learns when you type and pause, never what. the tor relays o
 
 ## bridges
 
-bridges help tor start when your network blocks it. on automatic, where new installs start, Kryfo first tries tor the usual way and only tries a bridge when that is blocked. you can also pick a bridge yourself, or pick direct, and then Kryfo makes none of the connections below on its own.
+bridges help tor start when your network blocks it. on automatic, where new installs start, Kryfo first tries tor the usual way and only tries a bridge when that is blocked. inside a tor vpn such as orbot it starts on a bridge, since tor cannot run inside tor: to tell, it looks on the phone itself whether such an app is there while a vpn is on, and tells no one. you can also pick a bridge yourself, or pick direct, and then Kryfo makes none of the connections below on its own.
 
 when a bridge is used, some connections leave your phone outside tor so that tor can start. an obfs4 bridge, built in or from a friend, is reached directly at its address. a webtunnel bridge is reached at its web address. snowflake asks public stun servers for your address, reaches the tor project's broker through a cdn, and connects through a volunteer's computer. these see your ip address and when you connect.
 

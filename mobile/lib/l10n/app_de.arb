@@ -325,6 +325,7 @@
   "bridgesOffline": "Offline",
   "bridgesTorNoBridge": "Tor, ohne Brücke",
   "bridgesKryfoFindsAWay": "Kryfo findet einen Weg, der dort funktioniert, wo du bist.",
+  "bridgesTorVpnLine": "Tor läuft nicht in einem Tor-VPN wie Orbot, also nimmt Kryfo gleich eine Brücke.",
   "bridgesNothingGotThrough": "Nichts kam durch",
   "bridgesBridgeFromAFriend": "Brücke von Freunden",
   "bridgesKryfoCanAskThe": "Kryfo kann das Tor-Projekt nach einer Brücke fragen, um die Sperre zu umgehen.",
