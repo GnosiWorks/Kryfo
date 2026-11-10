@@ -35,4 +35,33 @@ void main() {
       await s.close();
     }, skip: skip);
   }
+
+  test('a file with the table but not its time index gets the index', () async {
+    final s = SqliteMem.open()!;
+    await appSchemaOn(s);
+    Future<void> add(d, String sql) async {
+      try {
+        await d.execute(sql);
+      } catch (_) {
+        // a column the schema has already
+      }
+    }
+
+    await deviceTables(s, add);
+    Future<bool> indexed() async => (await s.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?",
+      ['idx_own_answers_seen_at'],
+    )).isNotEmpty;
+    expect(await indexed(), isTrue);
+    // as the first dev-inbox-pc build left it
+    await s.execute('DROP INDEX idx_own_answers_seen_at');
+    await deviceTablesAtOpen(s, add);
+    expect(await indexed(), isTrue);
+    // the sweep reads by it
+    final plan = await s.rawQuery(
+      'EXPLAIN QUERY PLAN DELETE FROM own_answers_seen WHERE at < 5',
+    );
+    expect(plan.toString(), contains('idx_own_answers_seen_at'));
+    await s.close();
+  }, skip: skip);
 }

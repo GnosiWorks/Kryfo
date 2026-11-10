@@ -417,7 +417,8 @@ extension AppStateAnswers on AppState {
     final rows = await d.query(
       'messages',
       columns: ['id', 'burn_secs'],
-      where: "peer_id = ? AND direction = 'out' AND burn_at = ?",
+      // one still on its way starts its clock once it went, not before
+      where: "peer_id = ? AND direction = 'out' AND burn_at = ? AND sent = 1",
       whereArgs: [peer, kAnswerUnseenBurn],
     );
     if (rows.isEmpty) return;

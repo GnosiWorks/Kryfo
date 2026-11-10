@@ -764,6 +764,11 @@ void main() {
       expect(r['burn_secs'], 3600);
       expect(r['burn_at'], kAnswerUnseenBurn);
       expect((await wired('answered')).single['b'], 3600);
+      // not gone out yet: its clock waits for it to go
+      await s.update('messages', {'sent': 0}, where: "msg_uid = 'u-t1'");
+      await app.answersSeen('answered');
+      expect((await rows('u-t1')).single['burn_at'], kAnswerUnseenBurn);
+      await s.update('messages', {'sent': 1}, where: "msg_uid = 'u-t1'");
       await app.answersSeen('answered');
       final lit = (await rows('u-t1')).single['burn_at'] as int;
       final now = DateTime.now().millisecondsSinceEpoch;
