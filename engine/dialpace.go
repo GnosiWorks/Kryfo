@@ -53,6 +53,10 @@ var errPaceSkip = errors.New("relay failing, no place")
 // catch-up (40 s)
 var checkInPaceWait = 20 * time.Second
 
+// the gap between tickets whose check-in wait ran out: shorter than a
+// place's, so they are out in time, but never all in one second
+var paceDueGap = newDur(150 * time.Millisecond)
+
 // how long a chat written to counts as waiting for an answer: its batch
 // goes first
 var paceSentFor = 10 * time.Minute
@@ -75,7 +79,9 @@ var dialPace struct {
 	sync.Mutex
 	q []*paceTicket
 	// no place before this
-	next  time.Time
+	next time.Time
+	// the last place given, or taken by a ticket whose wait ran out
+	last  time.Time
 	seq   uint64
 	timer *time.Timer
 	// batch lanes written to, until when they go first
@@ -120,19 +126,34 @@ func (t *paceTicket) wait(ctx context.Context) error {
 	case <-ctx.Done():
 	case <-bound:
 		dialPace.Lock()
-		defer dialPace.Unlock()
 		if isClosed(t.ok) {
+			dialPace.Unlock()
 			return t.used()
 		}
 		t.leaveLocked()
-		now := time.Now()
-		t.at = now
+		// the next place a short gap after the last one, not at once: at a
+		// check-in's end every ticket's wait runs out within a second
+		at := dialPace.last.Add(time.Duration(paceDueGap.Load()))
+		if now := time.Now(); at.Before(now) {
+			at = now
+		}
+		dialPace.last = at
+		t.at = at
 		close(t.ok)
 		// the ones still in line keep their gap after it
-		if next := now.Add(paceDraw()); next.After(dialPace.next) {
+		if next := at.Add(paceDraw()); next.After(dialPace.next) {
 			dialPace.next = next
 		}
-		return nil
+		dialPace.Unlock()
+		tm := time.NewTimer(time.Until(at))
+		defer tm.Stop()
+		select {
+		case <-tm.C:
+			return nil
+		case <-ctx.Done():
+			// the place came with the end: it is used, the dial is not made
+			return ctx.Err()
+		}
 	}
 	dialPace.Lock()
 	defer dialPace.Unlock()
@@ -262,6 +283,7 @@ func paceRunLocked() {
 		h(t)
 	}
 	close(t.ok)
+	dialPace.last = now
 	dialPace.next = now.Add(paceDraw())
 	paceRunLocked()
 }

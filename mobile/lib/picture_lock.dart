@@ -71,20 +71,35 @@ void picturesBack() {
 @visibleForTesting
 bool get picturesAway => _away;
 
+/// one step of a lock-up. a step that throws is logged and the next one
+/// runs: one broken cache must never keep the pad away or the rest decoded
+void lockStep(String what, VoidCallback step) {
+  try {
+    step();
+  } catch (e) {
+    dlog('lock: $what failed (${e.runtimeType})');
+  }
+}
+
+/// a step that throws first, for the tests that prove the rest still run
+@visibleForTesting
+VoidCallback? shutFaultForTest;
+
 /// the lock is going up: everything decoded goes now, the rest with the
 /// frame that takes the pictures down
 void shutPictures() {
   picturesShut.value = true;
-  forgetVideoFrames();
-  forgetFirstLines();
-  closeAllPdfs();
-  stopBlurs();
-  forgetBlurs();
+  if (shutFaultForTest case final f?) lockStep('test fault', f);
+  lockStep('video frames', forgetVideoFrames);
+  lockStep('first lines', forgetFirstLines);
+  lockStep('pdfs', closeAllPdfs);
+  lockStep('blurs stop', stopBlurs);
+  lockStep('blurs', forgetBlurs);
   final cache = PaintingBinding.instance.imageCache;
   // nothing that finishes decoding from here on is kept
   if (cache.maximumSizeBytes > 0) _cacheBytes = cache.maximumSizeBytes;
   cache.maximumSizeBytes = 0;
-  _empty(cache);
+  lockStep('image cache', () => _empty(cache));
   SchedulerBinding.instance.addPostFrameCallback((_) {
     if (!picturesShut.value) return;
     _empty(cache);

@@ -732,6 +732,7 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
             SharedMediaSection(
               paths: [for (final m in _shared.media) m.path!],
+              videos: _shared.videos,
               count: _shared.media.length,
               loaded: _loaded,
               files: _shared.files.length,

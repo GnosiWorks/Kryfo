@@ -490,6 +490,20 @@ void main() {
       ]);
     }, skip: skip);
 
+    test('a refused answer leaves no key: my computer\'s try again goes once '
+        'the chat is in the inbox', () async {
+      devPhone();
+      expect(await answer('p:bob', {'u': 'u-again', 'm': 'later'}), isFalse);
+      expect(await rows('u-again'), isEmpty);
+      await s.insert('support_chats', {
+        'halo_id': 'bob',
+        'first_at': 7,
+        'state': 'open',
+      });
+      expect(await answer('p:bob', {'u': 'u-again', 'm': 'later'}), isTrue);
+      expect((await rows('u-again')).single['plaintext'], 'later');
+    }, skip: skip);
+
     test('never a file, a picture, a voice note, a sticker, a poll or an '
         'introduction', () async {
       devPhone();
@@ -750,6 +764,11 @@ void main() {
       expect(r['burn_secs'], 3600);
       expect(r['burn_at'], kAnswerUnseenBurn);
       expect((await wired('answered')).single['b'], 3600);
+      // not gone out yet: its clock waits for it to go
+      await s.update('messages', {'sent': 0}, where: "msg_uid = 'u-t1'");
+      await app.answersSeen('answered');
+      expect((await rows('u-t1')).single['burn_at'], kAnswerUnseenBurn);
+      await s.update('messages', {'sent': 1}, where: "msg_uid = 'u-t1'");
       await app.answersSeen('answered');
       final lit = (await rows('u-t1')).single['burn_at'] as int;
       final now = DateTime.now().millisecondsSinceEpoch;

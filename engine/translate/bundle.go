@@ -130,11 +130,11 @@ func FetchBundleWith(ctx context.Context, f Fetcher, m *Manifest, lang, dir stri
 		return err
 	}
 	defer fh.Close()
-	got := resumeAt(fh, gotPath, gz, wire)
+	got, have := resumeAt(fh, gotPath, gz, wire)
 	if prog != nil {
-		prog(got, wire)
+		prog(got+int64(len(have))*Chunk, wire)
 	}
-	if err := f.fill(ctx, m.Base+m.BundleName(lang), fh, gotPath, got, gz, wire, prog); err != nil {
+	if err := f.fill(ctx, m.Base+m.BundleName(lang), fh, gotPath, got, have, gz, wire, prog); err != nil {
 		return err
 	}
 	if err := fh.Sync(); err != nil {
@@ -166,31 +166,52 @@ func FetchBundleWith(ctx context.Context, f Fetcher, m *Manifest, lang, dir stri
 	fh.Close()
 	os.Remove(part)
 	os.Remove(gotPath)
+	os.Remove(gotPath + ".new")
 	return nil
 }
 
 // where a bundle under way goes on from: whole Chunks only, and never past
-// what the part file holds
-func resumeAt(fh *os.File, gotPath string, gz, wire int64) int64 {
+// what the part file holds. [have]: the chunks in above that, by their
+// first byte, each one the part file holds whole
+func resumeAt(fh *os.File, gotPath string, gz, wire int64) (int64, map[int64]bool) {
 	var got int64
+	var above string
 	if b, err := os.ReadFile(gotPath); err == nil {
-		got, _ = strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
+		first, rest, _ := strings.Cut(strings.TrimSpace(string(b)), "\n")
+		got, _ = strconv.ParseInt(strings.TrimSpace(first), 10, 64)
+		above = strings.TrimSpace(rest)
 	}
-	have, err := fh.Seek(0, io.SeekEnd)
+	size, err := fh.Seek(0, io.SeekEnd)
 	if err != nil {
-		have = 0
+		size = 0
 	}
 	if got < 0 || got > wire {
 		got = 0
 	}
-	if have < min(got, gz) {
-		got = have
+	if size < min(got, gz) {
+		got = size
 	}
 	got -= got % Chunk
-	if have > min(got, gz) {
-		fh.Truncate(min(got, gz))
+	have := map[int64]bool{}
+	keep := min(got, gz)
+	if above != "" {
+		for _, t := range strings.Split(above, ",") {
+			off, err := strconv.ParseInt(strings.TrimSpace(t), 10, 64)
+			if err != nil || off < got || off%Chunk != 0 || off >= wire {
+				continue
+			}
+			end := min(off+Chunk, gz)
+			if off < gz && size < end {
+				continue
+			}
+			have[off] = true
+			keep = max(keep, end)
+		}
 	}
-	return got
+	if size > keep {
+		fh.Truncate(keep)
+	}
+	return got, have
 }
 
 // BundleInstalled reports whether every file of lang's bundle is under dir

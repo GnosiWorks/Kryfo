@@ -256,6 +256,8 @@ class IncomingMediaBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
+    // two lines of the strip's words fit at any text size
+    final tap = stripTapOf(MediaQuery.textScalerOf(context));
     return ValueListenableBuilder<int>(
       valueListenable: mediaProgressTick,
       builder: (_, _, _) {
@@ -277,6 +279,7 @@ class IncomingMediaBanner extends StatelessWidget {
         Widget strip = const SizedBox(width: double.infinity);
         if (v != null) {
           strip = _strip(
+            tap: tap,
             v: v,
             outUid: outUid,
             sending: outV != null,
@@ -300,6 +303,7 @@ class IncomingMediaBanner extends StatelessWidget {
   }
 
   Widget _strip({
+    required double tap,
     required double v,
     required String? outUid,
     required bool sending,
@@ -327,69 +331,86 @@ class IncomingMediaBanner extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         decoration: BoxDecoration(
           color: HaloColors.surface,
           borderRadius: BorderRadius.circular(9),
           border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
         ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 10,
-              height: 10,
-              // the ring eases to each new share instead of jumping
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(end: v.clamp(0.05, 1.0)),
-                duration: still
-                    ? Duration.zero
-                    : const Duration(milliseconds: 400),
-                curve: Curves.easeOutCubic,
-                builder: (_, x, _) => CircularProgressIndicator(
-                  strokeWidth: 1.6,
-                  value: x,
-                  color: HaloColors.amber,
-                  backgroundColor: HaloColors.line,
+        // one line or two, the strip keeps its height and its buttons stay
+        // where the finger is going
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: tap),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 10,
+                height: 10,
+                // the ring eases to each new share instead of jumping
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: v.clamp(0.05, 1.0)),
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, x, _) => CircularProgressIndicator(
+                    strokeWidth: 1.6,
+                    value: x,
+                    color: HaloColors.amber,
+                    backgroundColor: HaloColors.line,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 9),
-            Flexible(
-              child: Text(
-                line,
-                style: HaloType.mono(
-                  size: 10.5,
-                  color: stalled ? HaloColors.text : HaloColors.amberText,
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  line,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.mono(
+                    size: 10.5,
+                    color: stalled ? HaloColors.text : HaloColors.amberText,
+                  ),
                 ),
               ),
-            ),
-            if (pauseUid != null && pause != null && !stalled)
-              _StripAction(
-                label: l10n.transferPause,
-                hint: l10n.transferPauseDownload,
-                onTap: () => pause(pauseUid),
-              ),
-            if (sending && cancelUid != null && cancel != null)
-              _StripAction(
-                label: l10n.commonCancel,
-                hint: l10n.mediaProgressCancelSending,
-                onTap: () => cancel(cancelUid),
-              ),
-          ],
+              if (pauseUid != null && pause != null && !stalled)
+                _StripAction(
+                  label: l10n.transferPause,
+                  hint: l10n.transferPauseDownload,
+                  onTap: () => pause(pauseUid),
+                  tap: tap,
+                ),
+              if (sending && cancelUid != null && cancel != null)
+                _StripAction(
+                  label: l10n.commonCancel,
+                  hint: l10n.mediaProgressCancelSending,
+                  onTap: () => cancel(cancelUid),
+                  tap: tap,
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+// the strip's buttons, and its height with them
+const _kStripTap = 32.0;
+
+/// the strip's height and its buttons', grown with the text
+double stripTapOf(TextScaler t) => t.scale(_kStripTap);
+
 class _StripAction extends StatelessWidget {
   final String label;
   final String hint;
   final VoidCallback onTap;
+  final double tap;
   const _StripAction({
     required this.label,
     required this.hint,
     required this.onTap,
+    required this.tap,
   });
 
   @override
@@ -403,14 +424,21 @@ class _StripAction extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            child: Text(
-              label,
-              style: HaloType.mono(
-                size: 10.5,
-                weight: FontWeight.w700,
-                color: HaloColors.text,
+          child: Container(
+            constraints: BoxConstraints(minWidth: 48, minHeight: tap),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            // as big as its words and the minimum, never all the height a
+            // parent offers
+            child: Align(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(
+                label,
+                style: HaloType.mono(
+                  size: 10.5,
+                  weight: FontWeight.w700,
+                  color: HaloColors.text,
+                ),
               ),
             ),
           ),

@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/app_shell.dart';
 import 'package:kryfo/lock_guard.dart';
 import 'package:kryfo/lock_layer.dart';
+import 'package:kryfo/pdf_pages.dart';
 import 'package:kryfo/picture_lock.dart';
 import 'package:kryfo/theme.dart';
 
@@ -61,6 +62,32 @@ class _PadState extends State<_Pad> {
       ),
     ),
   );
+}
+
+// a renderer that only opens and closes
+class _Pdf implements PdfBackend {
+  final Set<int> live = {};
+  int _n = 0;
+  @override
+  Future<Map<Object?, Object?>?> open(String path, {bool first = false}) async {
+    live.add(++_n);
+    return {
+      'id': _n,
+      'pages': 1,
+      'sizes': [612, 792],
+    };
+  }
+
+  @override
+  Future<({int w, int h, Uint8List rgba})?> render(
+    int id,
+    int page,
+    int width,
+  ) async => null;
+  @override
+  Future<List<int>> find(int id, String words) async => const [];
+  @override
+  Future<void> close(int id) async => live.remove(id);
 }
 
 class _App {
@@ -819,6 +846,47 @@ void main() {
     a.quiet = false;
     await a.unlock();
     expect(opened, isTrue);
+  });
+
+  testWidgets('a lock-up step that throws still brings the pad and every '
+      'other wipe', (tester) async {
+    final a = _App(tester);
+    await a.pump();
+    final pdf = _Pdf();
+    pdfBackendForTest = pdf;
+    final dir = Directory.systemTemp.createTempSync('lockstep');
+    addTearDown(() {
+      shutFaultForTest = null;
+      pdfBackendForTest = null;
+      resetPicturesForTest();
+      dir.deleteSync(recursive: true);
+    });
+    pdfMarksDirForTest = dir.path;
+    final f = File('${dir.path}/a.pdf')..writeAsStringSync('%PDF-1.7\n');
+    await tester.runAsync(() => PdfDoc.open(f.path));
+    expect(pdfDocsOpen, 1);
+    // a read-only frame, a broken cache: whatever it is, it throws
+    shutFaultForTest = () => throw UnsupportedError('read-only');
+    var stopped = false;
+    a.guard.closeOnLock(() => throw StateError('player'));
+    a.guard.closeOnLock(() => stopped = true);
+    a.onUp = () => throw StateError('vault');
+    await a.lockUp();
+    await tester.pump();
+    expect(find.byType(_Pad), findsOneWidget);
+    expect(a.pads, 1);
+    expect(find.text('secret home'), findsNothing);
+    // the steps after the throwing one ran
+    expect(stopped, isTrue);
+    expect(pdfDocsOpen, 0);
+    expect(picturesShut.value, isTrue);
+    expect(PaintingBinding.instance.imageCache.maximumSizeBytes, 0);
+    expect(a.ups, 1);
+    a.onUp = null;
+    shutFaultForTest = null;
+    await a.unlock();
+    expect(find.byType(_Pad), findsNothing);
+    expect(find.text('secret home'), findsOneWidget);
   });
 
   testWidgets('the lock going up tells the app once', (tester) async {

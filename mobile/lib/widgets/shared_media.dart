@@ -21,6 +21,7 @@ import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
 import '../link_preview.dart' show domainOf, firstUrl;
 import '../main.dart' show AppStateFiles, appState, session;
+import '../open_file.dart' show nameSaysVideo;
 import '../open_outside.dart';
 import '../read_burn.dart' show burnWaitsRow;
 import '../sound_player.dart';
@@ -28,6 +29,7 @@ import '../theme.dart';
 import '../transfers.dart';
 import '../voice_format.dart' show isVoiceName;
 import '../wide/read_width.dart' show kDeskTile;
+import 'album_grid.dart' show VideoFace, VideoMarks;
 import 'ease_size.dart';
 import 'file_badge.dart';
 import 'file_bubble.dart' show fileNameDir;
@@ -46,6 +48,7 @@ import 'shots_line.dart' show KeptIn;
 import 'sound_views.dart' show openSoundPlayer, soundsKept;
 import 'swap.dart';
 import 'video_bubble.dart' show openReceivedFile;
+import 'video_viewer.dart' show openVideo, videoFlight, videoHeroTag;
 
 enum SharedTab { media, files, voice, links }
 
@@ -71,6 +74,8 @@ class SharedItem {
   final String? peer;
   final String? url;
   final String? title;
+  // a video among the media, drawn and opened as one
+  final bool video;
   const SharedItem({
     this.path,
     this.name,
@@ -81,6 +86,7 @@ class SharedItem {
     this.peer,
     this.url,
     this.title,
+    this.video = false,
   });
 }
 
@@ -105,6 +111,12 @@ class SharedLists {
 
   bool get isEmpty =>
       media.isEmpty && files.isEmpty && voice.isEmpty && links.isEmpty;
+
+  /// the media that are videos
+  Set<String> get videos => {
+    for (final m in media)
+      if (m.video) m.path!,
+  };
 }
 
 /// [rows] newest first into the four lists. a timed one not read yet and
@@ -135,7 +147,7 @@ SharedLists sortShared(
     final filePath = text(r['file_path']);
     final name = text(r['file_name']);
     final coming = !mine && waiting(uid);
-    SharedItem item(String? path) => SharedItem(
+    SharedItem item(String? path, {bool video = false}) => SharedItem(
       path: path,
       name: name,
       uid: uid,
@@ -143,11 +155,19 @@ SharedLists sortShared(
       secure: secure,
       when: when,
       peer: peer,
+      video: video,
     );
     if (mediaPath != null) {
       if (!coming) media.add(item(mediaPath));
     } else if (name != null && isVoiceName(name)) {
       if (filePath != null && !coming) voice.add(item(filePath));
+    } else if (name != null &&
+        filePath != null &&
+        !coming &&
+        nameSaysVideo(name)) {
+      // a video is drawn as one in the chat, so it is media here too. one
+      // still to come stays with the files, where its wait shows
+      media.add(item(filePath, video: true));
     } else if (name != null) {
       if (coming) {
         files.add(item(null));
@@ -203,6 +223,8 @@ Future<SharedLists> loadShared(String chatId, {bool group = false}) async {
 
 class SharedMediaSection extends StatelessWidget {
   final List<String> paths;
+  // which of [paths] are videos
+  final Set<String> videos;
   final int count;
   // false while the rows are still being read
   final bool loaded;
@@ -215,6 +237,7 @@ class SharedMediaSection extends StatelessWidget {
   const SharedMediaSection({
     super.key,
     required this.paths,
+    this.videos = const {},
     required this.count,
     this.loaded = true,
     this.onOpen,
@@ -279,6 +302,7 @@ class SharedMediaSection extends StatelessWidget {
                     : _Tile(
                         path: shown[i],
                         side: side,
+                        video: videos.contains(shown[i]),
                         more: i == 3 && count > 4 ? more : 0,
                       ),
               ),
@@ -336,9 +360,15 @@ class _BlankTile extends StatelessWidget {
 class _Tile extends StatelessWidget {
   final String path;
   final double side;
+  final bool video;
   // shown over the last tile: how many more there are
   final int more;
-  const _Tile({required this.path, required this.side, this.more = 0});
+  const _Tile({
+    required this.path,
+    required this.side,
+    this.video = false,
+    this.more = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -347,17 +377,21 @@ class _Tile extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // its blur, the photo fading up over it as it decodes
-          SealedPicture(
-            path: path,
-            image: mediaImage(
-              path,
-              (side * MediaQuery.devicePixelRatioOf(context)).round(),
+          if (video) ...[
+            VideoFace(path: path, width: side),
+            if (more == 0) VideoMarks(path: path),
+          ] else
+            // its blur, the photo fading up over it as it decodes
+            SealedPicture(
+              path: path,
+              image: mediaImage(
+                path,
+                (side * MediaQuery.devicePixelRatioOf(context)).round(),
+              ),
+              // a black square would read as a broken app, not a photo
+              // whose file is gone
+              errorBuilder: (_, _, _) => MissingTile(size: side),
             ),
-            // a black square would read as a broken app, not a photo whose
-            // file is gone
-            errorBuilder: (_, _, _) => MissingTile(size: side),
-          ),
           if (more > 0)
             ColoredBox(
               color: HaloColors.ink.withValues(alpha: 0.62),
@@ -582,6 +616,20 @@ class SharedScreenState extends State<SharedScreen> {
       securePaths: {
         for (final m in media)
           if (m.secure) m.path!,
+      },
+      videos: {
+        for (final m in media)
+          if (m.video) m.path!,
+      },
+      onVideo: (path) {
+        final it = media.firstWhere((m) => m.path == path);
+        openVideo(
+          context,
+          path: path,
+          fileName: it.name,
+          kept: _keeps(it),
+          where: widget.group ? KeptIn.group : KeptIn.chat,
+        );
       },
     );
   }
@@ -1099,10 +1147,15 @@ class _Empty extends StatelessWidget {
 class SharedPhotoGrid extends StatelessWidget {
   final List<String> paths;
   final Set<String> securePaths;
+  // which of [paths] are videos, opened in the player by [onVideo]
+  final Set<String> videos;
+  final ValueChanged<String>? onVideo;
   const SharedPhotoGrid({
     super.key,
     required this.paths,
     this.securePaths = const {},
+    this.videos = const {},
+    this.onVideo,
   });
 
   @override
@@ -1129,6 +1182,7 @@ class SharedPhotoGrid extends StatelessWidget {
       itemCount: paths.length,
       itemBuilder: (context, i) {
         final path = paths[i];
+        if (videos.contains(path)) return _videoTile(context, path);
         final tag = photoHeroTag(path, 'gallery');
         return PressScale(
           scale: 0.96,
@@ -1162,4 +1216,31 @@ class SharedPhotoGrid extends StatelessWidget {
       },
     );
   }
+
+  Widget _videoTile(BuildContext context, String path) => LayoutBuilder(
+    builder: (context, box) => Semantics(
+      button: true,
+      label: l10n.videoBubbleVideo,
+      excludeSemantics: true,
+      onTap: onVideo == null ? null : () => onVideo!(path),
+      child: PressScale(
+        scale: 0.96,
+        haptic: false,
+        onTap: onVideo == null ? null : () => onVideo!(path),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // the frame flies into the player, as from the chat
+            HaloHero(
+              tag: videoHeroTag(path),
+              flightShuttleBuilder: (c, a, dir, from, to) =>
+                  videoFlight(c, a, dir, from, to, path),
+              child: VideoFace(path: path, width: box.maxWidth),
+            ),
+            VideoMarks(path: path),
+          ],
+        ),
+      ),
+    ),
+  );
 }

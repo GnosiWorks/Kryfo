@@ -151,8 +151,13 @@ extension AppStateAnswers on AppState {
       await _ownAnswerNo(chat, a, kAnswerTooMany);
       return false;
     }
-    await _answerNote(d, fk);
-    if (tk != null) await _answerNote(d, tk);
+    // kept only once taken: a throw or a refusal leaves no key, so the
+    // computer's try again goes through and hears the refusal again
+    Future<void> taken() async {
+      await _answerNote(d, fk);
+      if (tk != null) await _answerNote(d, tk);
+    }
+
     // nothing of the everyday account leaves while the decoy is open: it
     // waits in the everyday database with its device, and goes once the
     // pin opens it
@@ -170,9 +175,12 @@ extension AppStateAnswers on AppState {
         'dev': from.id,
         'dkey': from.key,
       }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      await taken();
       return true;
     }
-    return _ownAnswerGo(chat, a);
+    if (!await _ownAnswerGo(chat, a)) return false;
+    await taken();
+    return true;
   }
 
   // a key of own_answers_seen: what kind, in which chat, of what
@@ -409,7 +417,8 @@ extension AppStateAnswers on AppState {
     final rows = await d.query(
       'messages',
       columns: ['id', 'burn_secs'],
-      where: "peer_id = ? AND direction = 'out' AND burn_at = ?",
+      // one still on its way starts its clock once it went, not before
+      where: "peer_id = ? AND direction = 'out' AND burn_at = ? AND sent = 1",
       whereArgs: [peer, kAnswerUnseenBurn],
     );
     if (rows.isEmpty) return;

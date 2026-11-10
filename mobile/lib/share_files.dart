@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import 'lock_state.dart';
 import 'picked.dart' show PickedMedia;
+import 'picture_convert.dart' show kConvertMost;
 import 'shred.dart';
 import 'tools/tools_bridge.dart' show PickedFile;
 
@@ -34,9 +35,10 @@ const _photoExts = {'.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'};
 SharedKind kindOfPicked(PickedFile f) => sharedKindOf(f.mime, f.name);
 
 /// the most a shared photo is copied in at: it is shrunk as a gallery pick
-/// is, so only what it weighs once shrunk meets the chat's limit. this one
-/// keeps a raw camera file from filling the memory
-const kSharedPhotoMost = 200 * 1024 * 1024;
+/// is, so only what it weighs once shrunk meets the chat's limit. no more
+/// than the shrink itself takes, so thirty of them at once stay in memory's
+/// reach and none is copied only to be refused
+const kSharedPhotoMost = kConvertMost;
 
 /// the most [f] is copied in at, for a chat that takes files up to [most]
 int copyMostOf(PickedFile f, int most) =>

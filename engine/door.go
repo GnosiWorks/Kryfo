@@ -150,9 +150,16 @@ func doorGetOnce(ctx context.Context, t *tor.Tor, onion string, pri int) (*doorS
 	}
 	s := &doorStream{onion: onion, busy: 1, ready: make(chan struct{})}
 	doorStreams[onion] = s
+	// counted before the stream shows, so a line that joins it before its
+	// dial is queued still raises it
+	doorDialStarts(onion)
 	doorMu.Unlock()
+	if h := doorBeforeDialHook; h != nil {
+		h(onion)
+	}
 
 	conn, slot, err := doorDialQueued(ctx, t, onion, pri)
+	doorDialEnds(onion)
 	if err != nil {
 		s.mu.Lock()
 		s.err = err
@@ -177,16 +184,34 @@ func doorGetOnce(ctx context.Context, t *tor.Tor, onion string, pri int) (*doorS
 	return s, true, nil
 }
 
+// the tests' hook between a new stream showing and its dial being queued
+var doorBeforeDialHook func(onion string)
+
+// a dial to onion is under way: a raise lands on it until it ends
+func doorDialStarts(onion string) {
+	doorQMu.Lock()
+	doorDialsTo[onion]++
+	doorQMu.Unlock()
+}
+
+// the raise goes with the last dial under way to onion
+func doorDialEnds(onion string) {
+	doorQMu.Lock()
+	if doorDialsTo[onion]--; doorDialsTo[onion] <= 0 {
+		delete(doorDialsTo, onion)
+		delete(doorRaisedOpen, onion)
+	}
+	doorQMu.Unlock()
+}
+
 // a dial in its turn (doorq.go): a slot first, then at most doorDialMost.
 // the slot's dial part is given back when the dial ends, the stream part
 // when the stream closes
 func doorDialQueued(ctx context.Context, t *tor.Tor, onion string, pri int) (net.Conn, *doorSlot, error) {
-	// a raise is for this dial alone
-	defer func() {
-		doorQMu.Lock()
-		delete(doorRaisedOpen, onion)
-		doorQMu.Unlock()
-	}()
+	// a raise is for this dial alone, and only while one is under way: a
+	// raise that comes after it ended would lift the next dial to onion
+	doorDialStarts(onion)
+	defer doorDialEnds(onion)
 	slot, err := doorSlotFor(ctx, onion, pri)
 	if err != nil {
 		return nil, nil, err

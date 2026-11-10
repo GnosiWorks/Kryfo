@@ -501,3 +501,58 @@ func TestReceiptToTheOpenChatKeepsItsPlace(t *testing.T) {
 		t.Fatalf("a message elsewhere took place %d", p)
 	}
 }
+
+// a raise with no dial under way to its onion is let go: it would lift the
+// next dial there, a receipt among them, to the open chat's place
+func TestRaiseWithNoDialGoesStale(t *testing.T) {
+	doorqSetup(t, 32)
+	x := fakeOnion(9)
+	doorRaise(x, doorOpenChat)
+	if p := doorPlaceNow(x, doorRest); p != doorRest {
+		t.Fatalf("a receipt took place %d from a raise with no dial", p)
+	}
+	// while a dial is under way the raise holds, and goes with it
+	doorQMu.Lock()
+	doorDialsTo[x]++
+	doorQMu.Unlock()
+	doorRaise(x, doorOpenChat)
+	if p := doorPlaceNow(x, doorRest); p != doorOpenChat {
+		t.Fatalf("a raised dial took place %d", p)
+	}
+	doorQMu.Lock()
+	delete(doorDialsTo, x)
+	delete(doorRaisedOpen, x)
+	doorQMu.Unlock()
+}
+
+// a line that joins a new stream before its dial is queued still raises
+// that dial: the dial counts from the moment the stream shows
+func TestRaiseInTheGapBeforeTheDialHolds(t *testing.T) {
+	o, tn := doorqSetup(t, 32)
+	x := fakeOnion(11)
+	setPlan(o, x, onionPlan{build: 50 * time.Millisecond})
+	raised := make(chan bool, 1)
+	doorBeforeDialHook = func(onion string) {
+		if onion != x {
+			return
+		}
+		doorRaise(x, doorOpenChat)
+		doorQMu.Lock()
+		raised <- doorRaisedOpen[x]
+		doorQMu.Unlock()
+	}
+	t.Cleanup(func() { doorBeforeDialHook = nil })
+	if err := sendToAs(tn, x, doorLine(t, 300), doorRest); err != nil {
+		t.Fatal(err)
+	}
+	if !<-raised {
+		t.Fatal("a raise between the stream and its dial was dropped")
+	}
+	// gone with the dial
+	doorQMu.Lock()
+	left := doorRaisedOpen[x] || doorDialsTo[x] != 0
+	doorQMu.Unlock()
+	if left {
+		t.Fatal("the raise outlived its dial")
+	}
+}

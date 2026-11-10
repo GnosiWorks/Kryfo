@@ -29,8 +29,10 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/chat_screen.dart';
 import 'package:kryfo/screens/media_send_screen.dart';
 import 'package:kryfo/screens/photo_knows_screen.dart';
-import 'package:kryfo/screens/share_files_sheet.dart' show sharePeekLimit;
+import 'package:kryfo/screens/share_files_sheet.dart'
+    show copyIdleLimit, sharePeekLimit;
 import 'package:kryfo/session.dart';
+import 'package:kryfo/picture_convert.dart' show kConvertMost;
 import 'package:kryfo/share_files.dart';
 import 'package:kryfo/tools/tools_bridge.dart' show PickedFile;
 import 'package:kryfo/widgets/media_bubbles.dart'
@@ -581,6 +583,29 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a copy that stopped moving says so', (t) async {
+    copyIdleLimit = const Duration(seconds: 2);
+    addTearDown(() => copyIdleLimit = const Duration(seconds: 45));
+    await home(t);
+    await android.share(t, 'f40', [
+      {
+        'uri': 'content://hang/2',
+        'mime': 'application/pdf',
+        'name': 'h.pdf',
+        'size': 10,
+      },
+    ]);
+    await settle(t);
+    await t.tap(offered(_amber));
+    await settle(t, 30);
+    expect(android.cancels, greaterThan(0));
+    expect(find.text(l10n.chatCouldNotReadThat), findsOneWidget);
+    expect(find.byType(ChatScreen), findsNothing);
+    nothingSent();
+    await settle(t, 40);
+    await devClose(t);
+  });
+
   testWidgets('a look android never answers ends, and the next one works', (
     t,
   ) async {
@@ -613,6 +638,26 @@ void main() {
     await settle(t, 60);
     expect(android.allGone(), isTrue);
     expect(SharedInbox.takenCount, 0);
+    nothingSent();
+    await devClose(t);
+  });
+
+  testWidgets('a lock while the chat picker is up drops the share', (t) async {
+    lockState.openForTest(enabled: true);
+    await home(t);
+    await android.share(t, 'f29', [_pdf()]);
+    await settle(t);
+    expect(find.text(l10n.shareChooseChat), findsOneWidget);
+    lockState.lock();
+    await settle(t);
+    lockState.openForTest(enabled: true);
+    lockGuard.lifted();
+    await settle(t);
+    // nothing of the share is waiting behind the pin
+    expect(find.text(l10n.shareChooseChat), findsNothing);
+    expect(offered(_amber), findsNothing);
+    expect(android.dropped, ['f29']);
+    expect(android.copied, isEmpty);
     nothingSent();
     await devClose(t);
   });
@@ -749,6 +794,18 @@ void main() {
     await settle(t, 20);
     expect(android.allGone(), isTrue);
     await devClose(t);
+  });
+
+  test('a shared photo is copied no bigger than the shrink takes', () {
+    // a bigger one would sit in memory whole, only to be refused there
+    expect(kSharedPhotoMost, lessThanOrEqualTo(kConvertMost));
+    final photo = PickedFile(
+      uri: 'content://x/1',
+      name: 'p.png',
+      mime: 'image/png',
+      size: 1,
+    );
+    expect(copyMostOf(photo, 1 << 40), kConvertMost);
   });
 
   testWidgets('a photo too big to read at all is said and never copied', (

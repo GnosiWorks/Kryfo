@@ -11,8 +11,9 @@ set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 tgz=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 secs=${2:-30}
-day=$(sed -n 's|^ARG DAY=\([0-9]*\)/\([0-9]*\)/\([0-9]*\)$|\1\2\3|p' "$here/arch/Dockerfile")
-img=kryfo-arch-smoke:$day
+# tagged by the whole Dockerfile: a new digest or package list on the same
+# day builds a new image
+img=kryfo-arch-smoke:$(sha256sum "$here/arch/Dockerfile" | cut -c1-16)
 docker image inspect "$img" >/dev/null 2>&1 || docker build -q -t "$img" "$here/arch" >/dev/null
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT INT TERM
@@ -71,4 +72,4 @@ EOF
 docker run --rm --user 1000:1000 \
   --tmpfs /run/user/1000:uid=1000,gid=1000,mode=0700 -e XDG_RUNTIME_DIR=/run/user/1000 \
   -v "$tgz:/k.tar.gz:ro" -v "$work/in.sh:/in.sh:ro" -v "$here/smoke-tor.sh:/smoke-tor.sh:ro" \
-  "$img" dbus-run-session -- sh -c 'exec sh /in.sh "$1" 2>&1' sh "$secs" 2>/dev/null
+  "$img" dbus-run-session -- sh -c 'exec sh /in.sh "$1" 2>&1' sh "$secs"

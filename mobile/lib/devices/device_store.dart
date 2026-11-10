@@ -309,6 +309,10 @@ Future<void> deviceTables(
       text TEXT
     )
   ''');
+  // every kept answer key goes through the 30 day sweep by its time
+  await db.execute(
+    'CREATE INDEX IF NOT EXISTS $_answersSeenAt ON own_answers_seen(at)',
+  );
   // a note to self of mine still owed to my other devices: its uid, when it
   // was kept, and when it is tried next (notes_own_app.dart)
   await db.execute('''
@@ -404,6 +408,8 @@ const _allTables = [
   'dev_farewell',
 ];
 
+const _answersSeenAt = 'idx_own_answers_seen_at';
+
 /// at every open: [deviceTables] only when one is missing, so a file that
 /// took a later number without them (a branch's 96 before this step
 /// merged) gets them, and an open of a whole file writes nothing
@@ -428,8 +434,13 @@ Future<void> deviceTablesAtOpen(
   final own = have.contains('own_devices')
       ? await colsOf('own_devices')
       : const <String>{};
+  final indexed = (await db.rawQuery(
+    "SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?",
+    [_answersSeenAt],
+  )).isNotEmpty;
   final whole =
       _allTables.every(have.contains) &&
+      indexed &&
       own.contains('notice') &&
       own.contains('stream') &&
       own.contains('heard_at') &&

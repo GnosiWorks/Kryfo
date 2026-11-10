@@ -136,7 +136,7 @@ void main() {
       'wipe shred it', () {
     final main = sourceOf('lib/app/state.dart');
     final lock = bodyOf(main, 'void lockingUp(');
-    expect(lock, contains('unawaited(dropOpenCopies());'));
+    expect(lock, contains('unawaited(dropOpenCopies())'));
     expect(
       lock,
       contains('_lockedIn = (_session.vault ?? _session.primary).container;'),
@@ -305,6 +305,21 @@ void main() {
       );
       final call = tools.substring(tools.indexOf('"sweep" -> {'));
       expect(call.substring(0, call.indexOf('"sdk" ->')), contains('Thread {'));
+    });
+
+    test('a copy in asks the provider about its file with a deadline', () {
+      final copy = bodyOf(
+        sourceOf('$kt/ToolsBridge.kt'),
+        'private fun copyIn(',
+      );
+      expect(copy, isNot(contains('val info = describe(uri, null)')));
+      expect(
+        copy,
+        contains(
+          '.get(DESCRIBE_MS, java.util.concurrent.TimeUnit.MILLISECONDS)',
+        ),
+      );
+      expect(copy, contains('ex.shutdownNow()'));
     });
 
     test('a shrink runs off the ui thread', () {

@@ -115,8 +115,9 @@ class _LockLayerState extends State<LockLayer>
       GestureBinding.instance.cancelPointer(p);
     }
     _down.clear();
-    FocusManager.instance.primaryFocus?.unfocus();
-    widget.onLockUp?.call();
+    lockStep('unfocus', () => FocusManager.instance.primaryFocus?.unfocus());
+    // the pad comes whatever a step of the lock-up throws
+    lockStep('lock up', () => widget.onLockUp?.call());
     lockBack.locked = true;
     _fade.stop();
     _fade.value = 1;
@@ -334,13 +335,14 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     loaded: widget.loaded,
     locked: widget.locked,
     pad: widget.pad,
+    // each in its own step: one that throws leaves the rest to run
     onLockUp: () {
-      widget.guard.locking();
-      haloClearToasts();
+      lockStep('guard', widget.guard.locking);
+      lockStep('toasts', haloClearToasts);
       // no chat's photo or frame stays decoded behind the pin
-      WallImages.clear();
-      shutPictures();
-      widget.lockingUp?.call();
+      lockStep('wallpapers', WallImages.clear);
+      lockStep('pictures', shutPictures);
+      lockStep('app', () => widget.lockingUp?.call());
     },
     onLifted: () {
       // the app was left while the pin was checked: it locks again before

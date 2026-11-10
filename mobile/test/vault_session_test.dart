@@ -39,6 +39,8 @@ import 'package:kryfo/main.dart'
         session,
         sessionQuiet,
         useDatabasesForTest,
+        vaultShutFaultForTest,
+        navRevision,
         AppStateOutbox,
         AppStateRoute,
         AppStateVault,
@@ -1907,6 +1909,23 @@ void main() {
         expect(w.app.pendingCount, 1);
       },
     );
+
+    test('a lock-up step that throws still shuts the vault: its handle '
+        'closes, home lists only the everyday chats, its routes go', () async {
+      final w = await _World.make();
+      await w.open();
+      final opened = w.handle;
+      expect(w.homeIds, containsAll([_h, _g2]));
+      final routes = navRevision.value;
+      vaultShutFaultForTest = () => throw StateError('vault side');
+      addTearDown(() => vaultShutFaultForTest = null);
+      await w.lockUp();
+      expect(session.vault, isNull);
+      expect(opened.closed, isTrue);
+      expect(w.homeIds, isNot(contains(_h)));
+      expect(w.homeIds, isNot(contains(_g2)));
+      expect(navRevision.value, greaterThan(routes));
+    });
 
     test('a vault shut by an unlock that finds it open', () async {
       final w = await _World.make();

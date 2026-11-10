@@ -5,9 +5,11 @@
 // it means. the text and pdf viewers read through the seal into memory
 // only, and the lock takes everything they drew
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,6 +31,8 @@ import 'package:kryfo/widgets/message_menu.dart';
 import 'package:kryfo/widgets/pdf_viewer.dart';
 import 'package:kryfo/widgets/text_viewer.dart';
 import 'package:kryfo/widgets/video_bubble.dart' show openReceivedFile;
+import 'package:kryfo/screens/chat_screen.dart' show pdfPeerKnown;
+import 'package:kryfo/screens/home_screen.dart' show ContactPreview;
 
 class FakePdf implements PdfBackend {
   int opens = 0;
@@ -694,6 +698,29 @@ void main() {
       return t.state<PdfViewerState>(find.byType(PdfViewer));
     }
 
+    testWidgets('a pdf that took the app down gets one more try by hand', (
+      t,
+    ) async {
+      // its mark is down, as a kill mid-draw left it
+      final path = '${tmp.path}/in_l.pdf';
+      final mark = sha256
+          .convert(utf8.encode(path))
+          .toString()
+          .substring(0, 32);
+      File('${tmp.path}/marks/$mark').createSync();
+      final fake = FakePdf()..pages = 4;
+      await openPdf(t, fake);
+      expect(fake.opens, 0);
+      expect(find.text(l10n.filePdfUnreadable), findsOneWidget);
+      await t.tap(find.text(l10n.commonTryAgain));
+      await settle(t);
+      expect(fake.opens, 1);
+      expect(find.text(l10n.filePdfUnreadable), findsNothing);
+      expect(find.textContaining(l10n.filePages(4, '4')), findsOneWidget);
+      // drawn to the end: no mark is left
+      expect(File('${tmp.path}/marks/$mark').existsSync(), isFalse);
+    });
+
     testWidgets('pages, zoom buttons and a page to jump to', (t) async {
       final fake = FakePdf()..pages = 12;
       final v = await openPdf(t, fake);
@@ -817,10 +844,53 @@ void main() {
     }
   });
 
+  test('a chat whose reads have not answered draws no stranger\'s pdf', () {
+    ContactPreview c(String id, {bool blocked = false}) =>
+        ContactPreview(haloId: id, avatarSeed: id, blocked: blocked);
+    // the chat starts out taking the peer as accepted, before the db says
+    expect(
+      pdfPeerKnown('s', const [], accepted: true, blocked: false),
+      isFalse,
+    );
+    expect(
+      pdfPeerKnown('s', [c('a')], accepted: true, blocked: false),
+      isFalse,
+    );
+    expect(pdfPeerKnown('a', [c('a')], accepted: true, blocked: false), isTrue);
+    expect(
+      pdfPeerKnown(
+        'a',
+        [c('a', blocked: true)],
+        accepted: true,
+        blocked: false,
+      ),
+      isFalse,
+    );
+    expect(
+      pdfPeerKnown('a', [c('a')], accepted: false, blocked: false),
+      isFalse,
+    );
+    // the developer's chat draws its pdfs; a user in his inbox does not
+    expect(
+      pdfPeerKnown('dev:k1', const [], accepted: false, blocked: false),
+      isTrue,
+    );
+    expect(
+      pdfPeerKnown('dev:k1', const [], accepted: true, blocked: true),
+      isFalse,
+    );
+    expect(
+      pdfPeerKnown('u-inbox', const [], accepted: false, blocked: false),
+      isFalse,
+    );
+    final src = File('lib/screens/chat_screen.dart').readAsStringSync();
+    expect(src, isNot(contains('known: _accepted && !_blocked')));
+  });
+
   test('the lock reaches the file glances and documents', () {
     final src = File('lib/picture_lock.dart').readAsStringSync();
-    expect(src, contains('forgetFirstLines();'));
-    expect(src, contains('closeAllPdfs();'));
+    expect(src, contains('forgetFirstLines)'));
+    expect(src, contains('closeAllPdfs)'));
     final shred = File('lib/shred.dart').readAsStringSync();
     expect(shred, contains('forgetFirstLinesOf(path)'));
     expect(shred, contains('forgetPdfGlance(path)'));

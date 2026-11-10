@@ -775,6 +775,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   const SizedBox(height: 4),
                   SharedMediaSection(
                     paths: [for (final m in _shared.media) m.path!],
+                    videos: _shared.videos,
                     count: _shared.media.length,
                     loaded: _mediaLoaded,
                     files: _shared.files.length,

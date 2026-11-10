@@ -633,13 +633,28 @@ extension AppStateInvites on AppState {
         whereArgs: [ident, kHelloOpen, key, 1],
       );
       final fc = o.first['fc'] as String?;
-      if (fc != null) _onceRestamped[fc] = now;
+      // the stamp is this seal's alone: handed to its own send by its cipher
+      if (fc != null) _restampFor[peer] = (fc, now);
       dlog('v4 opener: one more to their one-time invite');
       return false;
     } catch (e) {
       dlog('v4 opener: rows not read (${e.runtimeType})');
       return false;
     }
+  }
+
+  // the seal the stale hold let through came out as [cipher], or nothing
+  // came of it and its stamp goes now
+  void _onceSealed(String peer, String? cipher) {
+    final r = _restampFor.remove(peer);
+    if (r == null) return;
+    if (cipher == null) {
+      unawaited(_onceNotWent(r.$1, r.$2));
+      return;
+    }
+    // one parked and never sent is let go of in time
+    if (_restampOf.length >= 64) _restampOf.remove(_restampOf.keys.first);
+    _restampOf[cipher] = r;
   }
 
   // whether a v4 first contact to [peer] waits for its answer. rows that
@@ -1130,18 +1145,22 @@ Future<String> sendFirstContactNoted(
   String cipher,
 ) async {
   final r = await engine.sendFirstContact(ident, xPub, fc, cipher);
-  final stamp = _onceRestamped.remove(fc);
+  // only this cipher's own stamp: another send to the same fc that ends
+  // first never takes it
+  final stamp = _restampOf.remove(cipher);
   if (r == 'ok') {
     await noteOnceWent(fc);
   } else if (stamp != null) {
-    await _onceNotWent(fc, stamp);
+    await _onceNotWent(stamp.$1, stamp.$2);
   }
   return r;
 }
 
-// the stamp a stale hold put on the one-time invite at an fc, until the
-// send of the one more opener says how it went
-final _onceRestamped = <String, int>{};
+// the stamp a stale hold put on the one-time invite at an fc (fc, when),
+// by the peer until its seal is done, then by that seal's cipher until its
+// send says how it went
+final _restampFor = <String, (String, int)>{};
+final _restampOf = <String, (String, int)>{};
 
 // that opener did not go: its stamp goes, and the next seal is not held.
 // a stamp a later seal put there stays
