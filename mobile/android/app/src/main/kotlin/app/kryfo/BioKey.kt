@@ -8,7 +8,6 @@ import android.os.CancellationSignal
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
-import android.util.Log
 import androidx.annotation.RequiresApi
 import java.security.KeyPairGenerator
 import java.security.KeyStore
@@ -278,7 +277,7 @@ object BioKey {
                 c = c.cause
             }
             val name = e?.javaClass?.simpleName?.let { " $it" } ?: ""
-            Log.i("kryfo", "finger key $what$name$code")
+            DebugLog.i("kryfo", "finger key $what$name$code")
         } catch (_: Throwable) {
         }
     }

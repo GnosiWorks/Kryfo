@@ -12,7 +12,6 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
-import android.util.Log
 import androidx.core.app.NotificationCompat
 
 class HaloListenerService : Service() {
@@ -40,7 +39,7 @@ class HaloListenerService : Service() {
 
         fun debugLog(context: Context, line: String) {
             if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
-                Log.i("halo-engine", line)
+                DebugLog.i("halo-engine", line)
             }
         }
 

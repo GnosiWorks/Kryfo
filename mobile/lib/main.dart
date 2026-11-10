@@ -313,6 +313,7 @@ part 'app/state_files.dart';
 void main() async {
   dlog('launch main');
   WidgetsFlutterBinding.ensureInitialized();
+  quietUncaught();
   capPictureCache();
   // the media folders sealed before anything reads or writes them
   await openPhoneSeal();

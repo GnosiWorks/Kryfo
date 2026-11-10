@@ -197,7 +197,7 @@ open class MainActivity : FlutterFragmentActivity() {
         try {
             startListenerService(plainFirst = true)
         } catch (e: Exception) {
-            android.util.Log.i(
+            DebugLog.i(
                 "halo-engine",
                 "resume: listener not started: ${e.javaClass.simpleName}"
             )
@@ -402,7 +402,7 @@ open class MainActivity : FlutterFragmentActivity() {
     // every step went through
     private fun setSecureWindow(on: Boolean): Boolean {
         val held = shield.hold(on)
-        quietly { android.util.Log.i("kryfo", "setSecure on=$on") }
+        quietly { DebugLog.i("kryfo", "setSecure on=$on") }
         val kept = quietly { getSharedPreferences("kryfo_window", MODE_PRIVATE).edit().putBoolean("secure", on).apply() }
         val surface = quietly { findSurface(window.decorView)?.setSecure(on) }
         // no surface recreate on the way off, it flashes the window. one ui

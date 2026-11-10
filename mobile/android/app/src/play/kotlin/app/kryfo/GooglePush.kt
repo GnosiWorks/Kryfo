@@ -2,7 +2,6 @@
 package app.kryfo
 
 import android.content.Context
-import android.util.Log
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailabilityLight
 import com.google.android.gms.tasks.Task
@@ -74,7 +73,7 @@ object GooglePush {
         return try {
             FirebaseApp.initializeApp(c.applicationContext)
         } catch (e: Exception) {
-            Log.i("halo-engine", "google: firebase not started: ${e.javaClass.simpleName}")
+            DebugLog.i("halo-engine", "google: firebase not started: ${e.javaClass.simpleName}")
             null
         }
     }
@@ -231,7 +230,7 @@ object GooglePush {
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL).invokeMethod(method, null)
         } catch (e: Exception) {
-            Log.i("halo-engine", "google: dart not reachable: ${e.javaClass.simpleName}")
+            DebugLog.i("halo-engine", "google: dart not reachable: ${e.javaClass.simpleName}")
         }
     }
 }
