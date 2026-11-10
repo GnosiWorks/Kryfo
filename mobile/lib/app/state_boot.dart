@@ -588,7 +588,7 @@ extension AppStateBoot on AppState {
         held =
             await holdOutboxAfterRestore(
               database,
-              landed: restoreLandedAt,
+              landed: restoreHoldLanding(prefs),
               made: from,
             ) !=
             null;
