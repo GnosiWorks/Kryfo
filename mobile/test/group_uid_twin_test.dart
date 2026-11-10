@@ -187,4 +187,23 @@ void main() {
     await comes('bob', await unsend('gm-u', 'bob'));
     expect(await rows('gm-u'), 0);
   }, skip: skip);
+
+  test('an edit before its message, with the uid taken first by another, '
+      'waits for the message', () async {
+    await comes('carol', await said('gm-ee', by: 'carol'));
+    await comes('bob', await edit('gm-ee', 'bob', 'running late'));
+    await comes('bob', await said('gm-ee'));
+    expect(await held('gm-ee'), [
+      ('bob', 'running late'),
+      ('carol', 'see you there'),
+    ]);
+  }, skip: skip);
+
+  test('a take-back before its message, with the uid taken first by '
+      'another, keeps the message away', () async {
+    await comes('carol', await said('gm-eu', by: 'carol'));
+    await comes('bob', await unsend('gm-eu', 'bob'));
+    await comes('bob', await said('gm-eu'));
+    expect(await held('gm-eu'), [('carol', 'see you there')]);
+  }, skip: skip);
 }
