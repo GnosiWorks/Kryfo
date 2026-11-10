@@ -28,6 +28,7 @@ import 'package:kryfo/main.dart'
 import 'package:kryfo/screens/bridge_share_sheet.dart';
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
+import 'package:kryfo/theme.dart' show HaloColors;
 import 'package:kryfo/widgets/halo_buttons.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot, kHouseCurve;
 import 'package:kryfo/widgets/press_scale.dart';
@@ -526,6 +527,37 @@ void main() {
   });
 
   group('the cards', () {
+    testWidgets('inside a tor vpn automatic says why it goes to a bridge, in '
+        'one line', (t) async {
+      const inVpn = BridgeStatus(
+        mode: 'auto',
+        phase: 'trying',
+        method: 'obfs4',
+        source: 'builtin',
+        attempt: 1,
+        attempts: 3,
+        torVpn: true,
+      );
+      expect(BridgeStatus.parse('{"tor_vpn":true}').torVpn, isTrue);
+      expect(BridgeStatus.parse('{"vpn":true}').torVpn, isFalse);
+      await _open(t, status: inVpn);
+      final said = find.text(l10n.bridgesTorVpnLine);
+      expect(said, findsOneWidget);
+      expect(t.widget<Text>(said).style?.color, HaloColors.text);
+      await _done(t);
+      // not with another way picked, nor with no tor vpn
+      await _open(
+        t,
+        status: inVpn,
+        setup: const BridgeSetup(choice: BridgeChoice.direct),
+      );
+      expect(find.text(l10n.bridgesTorVpnLine), findsNothing);
+      await _done(t);
+      await _open(t, status: _another);
+      expect(find.text(l10n.bridgesTorVpnLine), findsNothing);
+      await _done(t);
+    });
+
     testWidgets('a pick shows at once and reaches the engine, no save', (
       t,
     ) async {

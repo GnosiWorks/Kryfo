@@ -33,6 +33,7 @@ import 'package:kryfo/screens/notes_screen.dart';
 import 'package:kryfo/screens/requests_screen.dart';
 import 'package:kryfo/screens/saved_screen.dart';
 import 'package:kryfo/session.dart';
+import 'package:kryfo/store.dart' show playBuildForTest;
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/breathing_ring.dart';
 import 'package:kryfo/widgets/message_menu.dart' show MenuSheet;
@@ -300,6 +301,31 @@ void main() {
       await t.pump(const Duration(seconds: 1));
     }
     expect(asked, ['ask']);
+    await drain(t);
+  });
+
+  testWidgets('the google push card says on fast what our servers see, '
+      'and on private google\'s line alone', (t) async {
+    phone(t);
+    playBuildForTest = true;
+    addTearDown(() => playBuildForTest = null);
+    appState.googleAvailableForTest = true;
+    addTearDown(() => appState.googleAvailableForTest = false);
+    appState.googleOfferForTest = 'due';
+    addTearDown(() => appState.googleOfferForTest = '');
+    addTearDown(() => appState.sendModeForTest = 'private');
+    for (final (route, line) in [
+      ('balanced', '${l10n.homeGoogleLine}\n${l10n.notificationsGoogleOnFast}'),
+      ('private', l10n.homeGoogleLine),
+    ]) {
+      appState.sendModeForTest = route;
+      await t.pumpWidget(
+        framed(KeyedSubtree(key: ValueKey(route), child: _home())),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(find.text(l10n.homeGoogleTitle), findsOneWidget);
+      expect(find.text(line), findsOneWidget);
+    }
     await drain(t);
   });
 

@@ -246,14 +246,11 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         : checking
         ? l10n.gettingMessagesHelperChecking
         : l10n.gettingMessagesHelperRelayNotYet;
-    // google push needs the onion route, as the helper app does, and says
-    // so while it starts
+    // google push works on every route, and says so while it starts
     final google = appState.googleOffered || mode == DeliveryMode.google;
     final String? googleWait = _starting
         ? l10n.notificationsGoogleStarting
-        : mode == DeliveryMode.google || onOnion
-        ? null
-        : l10n.gettingMessagesHelperOnionOnly;
+        : null;
     // the reading the home pill and the tor sheet show, grace and words
     // alike. tor resting between check-ins keeps the check-in lines
     final link = appState.linkView;
@@ -352,18 +349,11 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     key: const ValueKey('googleCard'),
                     title: l10n.deliveryModeGooglePush,
                     tag: l10n.notificationsRecommended,
-                    body: l10n.notificationsGoogleBody,
+                    body: googleCardBody(onion: onOnion),
                     on: mode == DeliveryMode.google,
                     wait: googleWait,
                     checking: _starting,
-                    action: mode == DeliveryMode.google || onOnion || _starting
-                        ? null
-                        : l10n.gettingMessagesHelperUseOnion,
-                    onTap: _starting
-                        ? null
-                        : onOnion || mode == DeliveryMode.google
-                        ? () => _pick(DeliveryMode.google)
-                        : _toOnion,
+                    onTap: _starting ? null : () => _pick(DeliveryMode.google),
                   ),
                 if (!onDesktop) ...[
                   _ModeCard(

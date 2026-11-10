@@ -1469,7 +1469,10 @@ class _GooglePushCardState extends State<_GooglePushCard> {
         tint: HaloColors.amber,
         wash: true,
         title: l10n.homeGoogleTitle,
-        line: l10n.homeGoogleLine,
+        // on fast it also says what our servers see while they wake it
+        line: appState.sendMode == 'private'
+            ? l10n.homeGoogleLine
+            : '${l10n.homeGoogleLine}\n${l10n.notificationsGoogleOnFast}',
         lineColor: HaloColors.warm,
         actions: [
           CardAction(

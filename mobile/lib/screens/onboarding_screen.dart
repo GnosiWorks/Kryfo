@@ -1573,10 +1573,10 @@ class _RouteScreenState extends State<_RouteScreen> {
 
 // ---- 05 when messages arrive ----
 //
-// play with play services: google push first and picked already on the
-// private route, with what google sees said plainly. everywhere else, and
-// on fast: always on picked, check-ins and the helper app beside it. the
-// other ways are a tap away here and later in notifications.
+// play with play services: google push first and picked already, with what
+// google sees said plainly, and on fast what our servers see. everywhere
+// else: always on picked, check-ins and the helper app beside it. the other
+// ways are a tap away here and later in notifications.
 
 /// the ways the step lists, in order
 List<DeliveryMode> onboardingModes({required bool google}) => [
@@ -1586,15 +1586,13 @@ List<DeliveryMode> onboardingModes({required bool google}) => [
   DeliveryMode.helper,
 ];
 
-/// what the step starts on: google push where it can be used now. it and
-/// the helper app register over the private route only
-DeliveryMode onboardingPick({required bool google, required bool onion}) =>
-    google && onion ? DeliveryMode.google : DeliveryMode.always;
+/// what the step starts on: google push where it can be used, on any route
+DeliveryMode onboardingPick({required bool google}) =>
+    google ? DeliveryMode.google : DeliveryMode.always;
 
-/// google push and the helper app register over tor: on fast they are shown,
-/// with why, and never picked
-bool needsPrivateRoute(DeliveryMode m) =>
-    m == DeliveryMode.google || m == DeliveryMode.helper;
+/// the helper app registers over tor: on fast it is shown, with why, and
+/// never picked. google push registers direct on fast
+bool needsPrivateRoute(DeliveryMode m) => m == DeliveryMode.helper;
 
 class _DeliveryScreen extends StatefulWidget {
   final VoidCallback onContinue;
@@ -1617,9 +1615,7 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
         c != null &&
         onboardingModes(google: appState.googleOffered).contains(c) &&
         (onion || !needsPrivateRoute(c));
-    return ok
-        ? c
-        : onboardingPick(google: appState.googleOffered, onion: onion);
+    return ok ? c : onboardingPick(google: appState.googleOffered);
   }
 
   // the background sheets are up: a second tap waits for them
@@ -1670,7 +1666,7 @@ class _DeliveryScreenState extends State<_DeliveryScreen> {
           final (title, body, tag) = switch (m) {
             DeliveryMode.google => (
               l10n.deliveryModeGooglePush,
-              l10n.notificationsGoogleBody,
+              googleCardBody(onion: onion),
               l10n.notificationsRecommended,
             ),
             DeliveryMode.always => (

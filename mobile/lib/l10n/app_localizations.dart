@@ -11809,6 +11809,12 @@ abstract class AppLocalizations {
   /// **'Kryfo finds a way that works where you are.'**
   String get bridgesKryfoFindsAWay;
 
+  /// connection page, automatic picked while a tor vpn such as orbot seems to be on: it starts on a bridge
+  ///
+  /// In en, this message translates to:
+  /// **'Inside a Tor VPN like Orbot, Kryfo starts on a bridge.'**
+  String get bridgesTorVpnLine;
+
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
@@ -15582,6 +15588,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google sees when your phone wakes up.\nNever who wrote or what was said.\nInstant and light on battery.'**
   String get notificationsGoogleBody;
+
+  /// google push card, only on the Fast route: our servers see the IP while waking the phone and keep none
+  ///
+  /// In en, this message translates to:
+  /// **'On Fast, our servers see your IP while they wake your phone, but we never keep it.'**
+  String get notificationsGoogleOnFast;
 
   /// google push is starting
   ///

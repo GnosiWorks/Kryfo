@@ -7348,6 +7348,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Kryfo tự tìm cách dùng được ở nơi bạn đang ở.';
 
   @override
+  String get bridgesTorVpnLine =>
+      'Bên trong VPN Tor như Orbot, Kryfo bắt đầu bằng cầu nối.';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'Cầu nối này không kết nối được';
 
   @override
@@ -9694,6 +9698,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get notificationsGoogleBody =>
       'Google thấy khi nào điện thoại của bạn thức dậy.\nKhông bao giờ biết ai viết hay viết gì.\nĐến ngay và nhẹ pin.';
+
+  @override
+  String get notificationsGoogleOnFast =>
+      'Ở chế độ Nhanh, máy chủ của chúng tôi thấy IP của bạn khi đánh thức điện thoại, nhưng chúng tôi không bao giờ lưu lại.';
 
   @override
   String get notificationsGoogleStarting => 'Đang bật…';

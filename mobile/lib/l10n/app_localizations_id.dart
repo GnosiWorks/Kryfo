@@ -7362,6 +7362,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Kryfo mencari cara yang berhasil di tempatmu.';
 
   @override
+  String get bridgesTorVpnLine =>
+      'Di dalam VPN Tor seperti Orbot, Kryfo mulai lewat jembatan.';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'Jembatan ini tidak tembus';
 
   @override
@@ -9707,6 +9711,10 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get notificationsGoogleBody =>
       'Google melihat kapan ponselmu bangun.\nTidak pernah siapa yang menulis atau apa isinya.\nSeketika dan hemat baterai.';
+
+  @override
+  String get notificationsGoogleOnFast =>
+      'Di Cepat, server kami melihat IP-mu saat membangunkan ponselmu, tapi kami tidak pernah menyimpannya.';
 
   @override
   String get notificationsGoogleStarting => 'Menyalakan…';

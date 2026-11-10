@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
+import 'package:kryfo/delivery_mode.dart' show googleCardBody;
 import 'package:kryfo/google_push.dart';
 import 'package:kryfo/handle_claim.dart';
 import 'package:kryfo/invite_share.dart';
@@ -423,32 +424,37 @@ void main() {
       sem.dispose();
     });
 
-    testWidgets('play on fast: google push and the helper app say why they '
-        'cannot be picked, always on is picked', (t) async {
+    testWidgets('play on fast: google push picked, with what our servers '
+        'see; the helper app says why it cannot be picked', (t) async {
       appState.sendModeForTest = 'balanced';
       final sem = t.ensureSemantics();
       await toDelivery(t, play: true);
-      expect(find.text(l10n.gettingMessagesHelperOnionOnly), findsNWidgets(2));
-      final google = t.getSemantics(find.text(l10n.deliveryModeGooglePush));
-      expect(google, isNot(radio(true)));
-      expect(google, isNot(radio(false)));
+      expect(find.text(l10n.gettingMessagesHelperOnionOnly), findsOneWidget);
       expect(
-        t.getSemantics(find.text(l10n.gettingMessagesAlwaysOn)),
+        t.getSemantics(find.text(l10n.deliveryModeGooglePush)),
         radio(true),
       );
-      // a tap on google push picks nothing new
-      await t.tap(find.text(l10n.deliveryModeGooglePush));
+      final card = find.byKey(const ValueKey('deliveryCard-google'));
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.text(googleCardBody(onion: false)),
+        ),
+        findsOneWidget,
+      );
+      // the helper app picks nothing new
+      await t.tap(find.text(l10n.deliveryModeThroughAHelperApp));
       await t.pump();
       expect(
-        t.getSemantics(find.text(l10n.gettingMessagesAlwaysOn)),
+        t.getSemantics(find.text(l10n.deliveryModeGooglePush)),
         radio(true),
       );
       await t.pumpWidget(const SizedBox());
       sem.dispose();
     });
 
-    testWidgets('google push picked, then fast on the route step: always on '
-        'is picked, never nothing', (t) async {
+    testWidgets('google push picked, then fast on the route step: google '
+        'push stays picked', (t) async {
       final sem = t.ensureSemantics();
       await toDelivery(t, play: true);
       await t.tap(find.text(l10n.gettingMessagesCheckIns));
@@ -462,7 +468,7 @@ void main() {
       appState.notifyListeners();
       await t.pump();
       expect(
-        t.getSemantics(find.text(l10n.gettingMessagesAlwaysOn)),
+        t.getSemantics(find.text(l10n.deliveryModeGooglePush)),
         radio(true),
       );
       await t.pumpWidget(const SizedBox());

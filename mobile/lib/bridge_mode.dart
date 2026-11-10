@@ -227,6 +227,9 @@ class BridgeStatus {
   final bool askConsent;
   // tor runs on bridge lines now, in any phase (the engine's on_bridge)
   final bool onBridge;
+  // a tor vpn such as orbot seems to carry the network: automatic starts
+  // on a bridge (the engine's tor_vpn)
+  final bool torVpn;
 
   const BridgeStatus({
     this.mode = '',
@@ -244,6 +247,7 @@ class BridgeStatus {
     this.errorCode = '',
     this.askConsent = false,
     this.onBridge = false,
+    this.torVpn = false,
   });
 
   /// before the engine has said anything
@@ -272,6 +276,7 @@ class BridgeStatus {
         errorCode: s('error_code'),
         askConsent: b('ask_consent'),
         onBridge: b('on_bridge'),
+        torVpn: b('tor_vpn'),
       );
     } catch (_) {
       return none;
@@ -297,6 +302,7 @@ class BridgeStatus {
     errorCode: errorCode,
     askConsent: askConsent,
     onBridge: onBridge,
+    torVpn: torVpn,
   );
 
   /// automatic is past the usual way: tor looked blocked or a disguise is
@@ -331,7 +337,8 @@ class BridgeStatus {
       other.snowflake == snowflake &&
       other.errorCode == errorCode &&
       other.askConsent == askConsent &&
-      other.onBridge == onBridge;
+      other.onBridge == onBridge &&
+      other.torVpn == torVpn;
 
   @override
   int get hashCode => Object.hash(
@@ -348,6 +355,7 @@ class BridgeStatus {
     errorCode,
     askConsent,
     onBridge,
+    torVpn,
   );
 }
 
