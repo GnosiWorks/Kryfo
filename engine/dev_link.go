@@ -567,7 +567,7 @@ func (r *linkRun) joinSteps(ctx context.Context) error {
 		return ctx.Err()
 	}
 	r.set(lsSending, "")
-	if err := sendLinkBundles(ctx, r.dial, r.backoffs, place, klb1, func(at, of int) {
+	if err := sendLinkBundles(ctx, r.dial, r.backoffs, r.keptWait, place, klb1, func(at, of int) {
 		r.mu.Lock()
 		r.at, r.of, r.moved = at, of, r.clock()
 		r.mu.Unlock()
@@ -590,7 +590,7 @@ func devShimNow() *kshim.Lib {
 // how many lines are through, of how many. the last line, once tried, is
 // tried on for linkKeptFor and each try counts as moving: the phone may
 // have kept the device with its ack lost, and only that line tells
-func sendLinkBundles(ctx context.Context, dial linkDialer, backoffs []time.Duration, p devices.Place, klb1 []byte, sent func(at, of int), trying func()) error {
+func sendLinkBundles(ctx context.Context, dial linkDialer, backoffs []time.Duration, keptWait time.Duration, p devices.Place, klb1 []byte, sent func(at, of int), trying func()) error {
 	n := (len(klb1) + linkChunk - 1) / linkChunk
 	tok := hex.EncodeToString(p.Token[:])
 	sent(0, n)
@@ -609,7 +609,10 @@ func sendLinkBundles(ctx context.Context, dial linkDialer, backoffs []time.Durat
 				}
 				trying()
 			}
-			err := dial(ctx, p.Onion, line)
+			// a stream of its own, held for the phone's keep on the last line
+			dctx, cancel := context.WithTimeout(ctx, keptWait+linkDoorSlack)
+			err := dial(dctx, p.Onion, line)
+			cancel()
 			// one dial may take most of the idle wait: its end counts too
 			if last {
 				trying()
@@ -630,6 +633,9 @@ func sendLinkBundles(ctx context.Context, dial linkDialer, backoffs []time.Durat
 	}
 	return nil
 }
+
+// a door stream lives this much past the phone's keep wait
+const linkDoorSlack = 30 * time.Second
 
 var linkBackoffs = []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second, 20 * time.Second, 30 * time.Second}
 

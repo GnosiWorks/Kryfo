@@ -450,3 +450,32 @@ func TestAConfirmedRunEndsAfterAnHour(t *testing.T) {
 		t.Fatalf("a run past its hour: %+v", s)
 	}
 }
+
+// each door stream lives the run's own keep wait and a little more, not
+// whatever the global says when it dials
+func TestADoorStreamTakesItsRunsKeepWait(t *testing.T) {
+	var left []time.Duration
+	dial := func(ctx context.Context, onion, line string) error {
+		d, ok := ctx.Deadline()
+		if !ok {
+			left = append(left, -1)
+		} else {
+			left = append(left, time.Until(d))
+		}
+		return nil
+	}
+	p := devices.Place{Onion: testPhoneOnion}
+	err := sendLinkBundles(context.Background(), dial, []time.Duration{time.Millisecond}, 7*time.Second,
+		p, make([]byte, linkChunk+1), func(int, int) {}, func() {})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(left) != 2 {
+		t.Fatalf("%d dials", len(left))
+	}
+	for _, l := range left {
+		if l < 7*time.Second+linkDoorSlack-2*time.Second || l > 7*time.Second+linkDoorSlack {
+			t.Fatalf("a stream bounded at %s", l)
+		}
+	}
+}
