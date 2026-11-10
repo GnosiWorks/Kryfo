@@ -50,8 +50,9 @@ void main() {
     expect(toggle.indexOf('_player.play()'), greaterThan(take));
     expect(
       'VoiceTurn.letGo(this)'.allMatches(src).length,
-      // paused, finished, stopped by the lock, gone
-      4,
+      // paused, finished, stopped by the lock while playing, its file
+      // let go at the lock, gone
+      5,
     );
   });
 }
