@@ -26,7 +26,7 @@ func paceWith(t *testing.T, gap, jitter time.Duration) {
 	oldGap, oldJitter := paceGap.Load(), paceJitter.Load()
 	reset := func() {
 		dialPace.Lock()
-		dialPace.q, dialPace.next, dialPace.sent = nil, time.Time{}, nil
+		dialPace.q, dialPace.next, dialPace.last, dialPace.sent = nil, time.Time{}, time.Time{}, nil
 		if dialPace.timer != nil {
 			dialPace.timer.Stop()
 			dialPace.timer = nil
@@ -409,6 +409,40 @@ func TestPaceCheckInBoundsTheWait(t *testing.T) {
 	dialPace.Unlock()
 	if left != 0 {
 		t.Fatalf("%d tickets still in line", left)
+	}
+}
+
+// tickets whose check-in wait runs out together go a short gap apart, not
+// all at once (fast-pace review: ~9 dials a second near a check-in's end)
+func TestPaceCheckInEndIsSpaced(t *testing.T) {
+	u := paceStore(t)
+	paceWith(t, time.Minute, 0)
+	old := checkInPaceWait
+	checkInPaceWait = 50 * time.Millisecond
+	checkInMu.Lock()
+	checkInUntil = autoNow().Add(time.Minute)
+	checkInMu.Unlock()
+	t.Cleanup(func() {
+		checkInPaceWait = old
+		checkInMu.Lock()
+		checkInUntil = time.Time{}
+		checkInMu.Unlock()
+	})
+	var ts []*paceTicket
+	for range 6 {
+		ts = append(ts, paceJoin(paceLane, u, paceRest))
+	}
+	at := paceGrants(t, ts)
+	slices.SortFunc(at, func(a, b time.Time) int { return a.Compare(b) })
+	gap := time.Duration(paceDueGap.Load())
+	for i := 1; i < len(at); i++ {
+		if d := at[i].Sub(at[i-1]); d < gap-time.Millisecond {
+			t.Fatalf("places %d and %d %v apart, want %v at least: %v", i-1, i, d, gap, at)
+		}
+	}
+	// and they are out in time, not a minute's gap each
+	if d := at[len(at)-1].Sub(at[0]); d > 5*gap+time.Second {
+		t.Fatalf("six places took %v", d)
 	}
 }
 
