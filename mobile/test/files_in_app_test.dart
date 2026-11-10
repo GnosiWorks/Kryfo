@@ -5,9 +5,11 @@
 // it means. the text and pdf viewers read through the seal into memory
 // only, and the lock takes everything they drew
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -695,6 +697,29 @@ void main() {
       await settle(t);
       return t.state<PdfViewerState>(find.byType(PdfViewer));
     }
+
+    testWidgets('a pdf that took the app down gets one more try by hand', (
+      t,
+    ) async {
+      // its mark is down, as a kill mid-draw left it
+      final path = '${tmp.path}/in_l.pdf';
+      final mark = sha256
+          .convert(utf8.encode(path))
+          .toString()
+          .substring(0, 32);
+      File('${tmp.path}/marks/$mark').createSync();
+      final fake = FakePdf()..pages = 4;
+      await openPdf(t, fake);
+      expect(fake.opens, 0);
+      expect(find.text(l10n.filePdfUnreadable), findsOneWidget);
+      await t.tap(find.text(l10n.commonTryAgain));
+      await settle(t);
+      expect(fake.opens, 1);
+      expect(find.text(l10n.filePdfUnreadable), findsNothing);
+      expect(find.textContaining(l10n.filePages(4, '4')), findsOneWidget);
+      // drawn to the end: no mark is left
+      expect(File('${tmp.path}/marks/$mark').existsSync(), isFalse);
+    });
 
     testWidgets('pages, zoom buttons and a page to jump to', (t) async {
       final fake = FakePdf()..pages = 12;

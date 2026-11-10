@@ -20,6 +20,7 @@ import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'file_actions.dart';
 import 'ease_size.dart';
+import 'halo_buttons.dart' show HaloGhostButton;
 import 'file_viewer_parts.dart';
 import 'media_bubbles.dart' show humanFileSize;
 import 'motion.dart' show kHouseCurve, motionStill;
@@ -83,6 +84,8 @@ class PdfViewerState extends State<PdfViewer>
     with SingleTickerProviderStateMixin {
   PdfDoc? _doc;
   PdfTrouble? _trouble;
+  // a pdf that took the app down gets one more try from here, by hand
+  bool _retried = false;
   final _zoom = TransformationController();
   late final AnimationController _ease = AnimationController(
     vsync: this,
@@ -166,6 +169,13 @@ class PdfViewerState extends State<PdfViewer>
         setState(() => _trouble = e.why);
       }
     }
+  }
+
+  Future<void> _retry() async {
+    setState(() => _retried = true);
+    await pdfUnstrike(widget.path);
+    if (!mounted) return;
+    await _open();
   }
 
   // the lock: the document closes and its pages go; after it, it opens
@@ -551,6 +561,10 @@ class PdfViewerState extends State<PdfViewer>
                 textAlign: TextAlign.center,
                 style: HaloType.sans(size: 14, color: HaloColors.text),
               ),
+              if (t == PdfTrouble.struck && !_retried) ...[
+                const SizedBox(height: 16),
+                HaloGhostButton(label: l10n.commonTryAgain, onTap: _retry),
+              ],
             ],
           ),
         ),

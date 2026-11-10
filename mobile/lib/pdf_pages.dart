@@ -22,8 +22,8 @@ import 'picture_lock.dart' show picturesShut;
 
 const _channel = MethodChannel('kryfo/pdf');
 
-/// why a pdf did not open
-enum PdfTrouble { locked, unreadable }
+/// why a pdf did not open. struck: it took the app down once while drawn
+enum PdfTrouble { locked, unreadable, struck }
 
 class PdfOpenFailed implements Exception {
   final PdfTrouble why;
@@ -129,6 +129,18 @@ Future<bool> pdfStruck(String path) async {
   return File(_markOf(dir, path)).existsSync();
 }
 
+/// the person asked for [path] to be drawn again: its mark goes. a kill
+/// the next draw brings puts it back, so this is one try, not a free pass
+Future<void> pdfUnstrike(String path) async {
+  final dir = await _marks();
+  if (dir == null || (_drawing[path] ?? 0) > 0) return;
+  try {
+    File(_markOf(dir, path)).deleteSync();
+  } catch (_) {
+    // not there
+  }
+}
+
 /// runs [call] into the renderer for [path] under its mark
 Future<T> _marked<T>(String path, Future<T> Function() call) async {
   final dir = await _marks();
@@ -205,7 +217,7 @@ class PdfDoc {
   }) async {
     if (picturesShut.value) throw const PdfOpenFailed(PdfTrouble.unreadable);
     if (await pdfStruck(path)) {
-      throw const PdfOpenFailed(PdfTrouble.unreadable);
+      throw const PdfOpenFailed(PdfTrouble.struck);
     }
     PlainView? view;
     try {
