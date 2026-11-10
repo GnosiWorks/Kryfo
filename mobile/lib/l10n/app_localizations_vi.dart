@@ -7465,6 +7465,17 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get bridgesWatchedTitle => 'Mạng của tôi bị theo dõi';
+
+  @override
+  String get bridgesWatchedLine =>
+      'Kryfo không bao giờ thử Tor khi không có cầu nối.';
+
+  @override
+  String get bridgesWatchedFastCost =>
+      'Mạng của bạn có thể thấy bạn dùng Kryfo.';
+
+  @override
   String get bridgesAskTorProject => 'Hỏi Dự án Tor';
 
   @override

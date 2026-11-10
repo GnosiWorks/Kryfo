@@ -1869,6 +1869,123 @@ void main() {
   });
 
   // keeps the haptics channel quiet
+  group('my network is watched', () {
+    final sw = find.byKey(const ValueKey('watchedSwitch'));
+
+    // what the store holds once the writes are through
+    Future<BridgeSetup> kept(WidgetTester t) async {
+      late BridgeSetup b;
+      await t.runAsync(() async {
+        final app = AppState();
+        await app.loadBridgesForTest();
+        app.dropBridgeHooks();
+        b = app.bridge;
+      });
+      return b;
+    }
+
+    testWidgets('on: automatic goes again without the direct step', (t) async {
+      await _open(t);
+      expect(sw, findsOneWidget);
+      expect(find.text(l10n.bridgesWatchedTitle), findsOneWidget);
+      expect(find.text(l10n.bridgesWatchedLine), findsOneWidget);
+      await t.tap(sw);
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _in(t);
+      expect(appState.networkWatched, isTrue);
+      expect(_eng.calls, hasLength(1));
+      expect(_eng.calls.single, startsWith('auto '));
+      expect(_eng.calls.single, contains('"skip_direct":true'));
+      expect((await kept(t)).skipDirect, isTrue);
+      // off: back to the usual way, the direct step first
+      await t.tap(sw);
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _in(t);
+      expect(appState.networkWatched, isFalse);
+      expect(_eng.calls, hasLength(2));
+      expect(_eng.calls.last, startsWith('auto '));
+      expect(_eng.calls.last, isNot(contains('skip_direct')));
+      expect((await kept(t)).skipDirect, isFalse);
+      await _done(t);
+    });
+
+    testWidgets('kept across a restart, and handed over at boot', (t) async {
+      await t.runAsync(() => appState.setNetworkWatched(true));
+      final b = await kept(t);
+      expect(b.skipDirect, isTrue);
+      expect(b.engineMode()!.$2, contains('"skip_direct":true'));
+      await t.runAsync(() => appState.setNetworkWatched(false));
+      expect((await kept(t)).skipDirect, isFalse);
+    });
+
+    testWidgets('another pick keeps it for later, the engine untouched', (
+      t,
+    ) async {
+      await _open(t, setup: const BridgeSetup(choice: BridgeChoice.direct));
+      await t.tap(sw);
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _in(t);
+      expect(appState.networkWatched, isTrue);
+      expect(_eng.calls, isEmpty);
+      expect((await kept(t)).skipDirect, isTrue);
+      await _done(t);
+    });
+
+    testWidgets('a decoy has no switch and changes nothing', (t) async {
+      lockState.inDecoy = true;
+      await _open(t);
+      expect(sw, findsNothing);
+      await appState.setNetworkWatched(true);
+      expect(appState.networkWatched, isFalse);
+      expect(_eng.calls, isEmpty);
+      await _done(t);
+    });
+
+    testWidgets('right to left: the switch on the left', (t) async {
+      await _open(t, locale: const Locale('ar'));
+      final row = t.getRect(sw);
+      final title = t.getRect(find.text(l10n.bridgesWatchedTitle));
+      expect(row.right - title.right, lessThan(30));
+      expect(title.left - row.left, greaterThan(40));
+      await _done(t);
+    });
+
+    for (final light in [false, true]) {
+      testWidgets('every language, 360x640 at 1.5, '
+          '${light ? 'light' : 'dark'}', (t) async {
+        HaloColors.setLight(light);
+        addTearDown(() => HaloColors.setLight(false));
+        final errs = <String>[];
+        final was = FlutterError.onError;
+        FlutterError.onError = (d) => errs.add(
+          '${d.exceptionAsString().split('\n').first} '
+          '${RegExp(r'The relevant error-causing widget was:\s*\n\s*.*\n\s*(.*)').firstMatch(d.toString())?.group(1)}',
+        );
+        try {
+          for (final lang in [..._langs, 'hi', 'pl']) {
+            await _open(
+              t,
+              setup: const BridgeSetup(skipDirect: true),
+              locale: _loc(lang),
+              scale: 1.5,
+              size: const Size(360, 640),
+            );
+            await t.scrollUntilVisible(
+              sw,
+              200,
+              scrollable: find.byType(Scrollable).first,
+            );
+            if (sw.evaluate().isEmpty) errs.add('[$lang] no switch');
+            await _done(t);
+          }
+        } finally {
+          FlutterError.onError = was;
+        }
+        expect(errs, isEmpty, reason: errs.toSet().join('\n'));
+      });
+    }
+  });
+
   group('a private bridge, once automatic failed', () {
     const failed = BridgeStatus(mode: 'auto', phase: 'exhausted');
     final hint = find.byKey(const ValueKey('privateBridgeHint'));

@@ -156,6 +156,8 @@ class _ModesScreenState extends State<ModesScreen> {
                       : null,
                   onTap: () => _pick('balanced'),
                 ),
+                // fast on a watched network still goes; the cost is said
+                const _WatchedFastCost(),
                 const _BothLine(),
               ]),
               const Spacer(),
@@ -705,4 +707,49 @@ class _BottomLink extends StatelessWidget {
       ),
     );
   }
+}
+
+/// under fast while the network is marked watched: what fast costs there
+class _WatchedFastCost extends StatelessWidget {
+  const _WatchedFastCost();
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: appState,
+    builder: (context, _) {
+      final on = appState.networkWatched && !appState.inDecoyView;
+      return EaseSize(
+        child: !on
+            ? const SizedBox(width: double.infinity)
+            : Padding(
+                key: const ValueKey('watchedFastCost'),
+                padding: const EdgeInsetsDirectional.fromSTEB(30, 10, 28, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Icon(
+                        Icons.visibility_outlined,
+                        size: 15,
+                        color: HaloColors.amber,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.bridgesWatchedFastCost,
+                        style: HaloType.sans(
+                          size: 12.5,
+                          color: HaloColors.amberText,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      );
+    },
+  );
 }

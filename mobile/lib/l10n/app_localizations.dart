@@ -11989,6 +11989,24 @@ abstract class AppLocalizations {
   /// **'Open {what}'**
   String bridgesPrivateOpen(Object what);
 
+  /// bridges screen: switch, the network here is watched or blocks tor (the first-run answer)
+  ///
+  /// In en, this message translates to:
+  /// **'My network is watched'**
+  String get bridgesWatchedTitle;
+
+  /// bridges screen: under the watched-network switch
+  ///
+  /// In en, this message translates to:
+  /// **'Kryfo never tries Tor without a bridge.'**
+  String get bridgesWatchedLine;
+
+  /// speed and privacy: under fast while the network is marked watched
+  ///
+  /// In en, this message translates to:
+  /// **'Your network can see you use Kryfo.'**
+  String get bridgesWatchedFastCost;
+
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:

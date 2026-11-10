@@ -7479,6 +7479,17 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get bridgesWatchedTitle => 'Jaringanku diawasi';
+
+  @override
+  String get bridgesWatchedLine =>
+      'Kryfo tidak pernah mencoba Tor tanpa jembatan.';
+
+  @override
+  String get bridgesWatchedFastCost =>
+      'Jaringanmu bisa melihat kamu memakai Kryfo.';
+
+  @override
   String get bridgesAskTorProject => 'Tanya Tor Project';
 
   @override

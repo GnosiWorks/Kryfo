@@ -7603,6 +7603,15 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get bridgesWatchedTitle => 'شبكتي مراقَبة';
+
+  @override
+  String get bridgesWatchedLine => 'لا يجرّب Kryfo شبكة Tor أبدًا من دون جسر.';
+
+  @override
+  String get bridgesWatchedFastCost => 'يمكن لشبكتك أن ترى أنك تستخدم Kryfo.';
+
+  @override
   String get bridgesAskTorProject => 'اسأل مشروع Tor';
 
   @override

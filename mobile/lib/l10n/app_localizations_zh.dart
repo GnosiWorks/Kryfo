@@ -7131,6 +7131,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get bridgesWatchedTitle => '我的网络受到监控';
+
+  @override
+  String get bridgesWatchedLine => 'Kryfo 绝不会在没有网桥的情况下尝试 Tor。';
+
+  @override
+  String get bridgesWatchedFastCost => '你的网络能看到你在使用 Kryfo。';
+
+  @override
   String get bridgesAskTorProject => '询问 Tor 项目';
 
   @override
@@ -18602,6 +18611,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String bridgesPrivateOpen(Object what) {
     return '打開 $what';
   }
+
+  @override
+  String get bridgesWatchedTitle => '我的網路受到監控';
+
+  @override
+  String get bridgesWatchedLine => 'Kryfo 絕不會在沒有橋接的情況下嘗試 Tor。';
+
+  @override
+  String get bridgesWatchedFastCost => '你的網路能看到你在使用 Kryfo。';
 
   @override
   String get bridgesAskTorProject => '詢問 Tor 專案';

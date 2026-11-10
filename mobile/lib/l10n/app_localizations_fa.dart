@@ -7482,6 +7482,17 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get bridgesWatchedTitle => 'شبکه‌ام زیر نظر است';
+
+  @override
+  String get bridgesWatchedLine =>
+      'Kryfo هیچ‌وقت Tor را بدون پل امتحان نمی‌کند.';
+
+  @override
+  String get bridgesWatchedFastCost =>
+      'شبکه‌تان می‌تواند ببیند که از Kryfo استفاده می‌کنید.';
+
+  @override
   String get bridgesAskTorProject => 'پرسیدن از پروژه‌ی Tor';
 
   @override

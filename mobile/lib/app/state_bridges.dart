@@ -273,6 +273,20 @@ extension AppStateBridges on AppState {
     if (p != null && !p.isCompleted) p.complete();
   }
 
+  /// the network is watched, as the first-run answer says it: automatic
+  /// never tries tor without a bridge. a change reaches the engine at once,
+  /// so tor out plainly now comes off and goes again through a bridge
+  bool get networkWatched => _bridge.skipDirect;
+
+  Future<void> setNetworkWatched(bool on) async {
+    if (inDecoyView || on == _bridge.skipDirect) return;
+    _bridge = _bridge.copyWith(skipDirect: on);
+    notifyListeners();
+    // only automatic reads it; another pick keeps it for when it is back
+    if (_bridge.choice == BridgeChoice.auto) applyBridgeNow();
+    await _writeBridgeSetup(_bridge);
+  }
+
   /// hands the choice to the engine now. "ok" or why not
   String applyBridgeNow() {
     _bridgeApply?.cancel();

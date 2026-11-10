@@ -9414,6 +9414,18 @@
       }
     }
   },
+  "bridgesWatchedTitle": "My network is watched",
+  "@bridgesWatchedTitle": {
+    "description": "bridges screen: switch, the network here is watched or blocks tor (the first-run answer)"
+  },
+  "bridgesWatchedLine": "Kryfo never tries Tor without a bridge.",
+  "@bridgesWatchedLine": {
+    "description": "bridges screen: under the watched-network switch"
+  },
+  "bridgesWatchedFastCost": "Your network can see you use Kryfo.",
+  "@bridgesWatchedFastCost": {
+    "description": "speed and privacy: under fast while the network is marked watched"
+  },
   "bridgesAskTorProject": "Ask the Tor Project",
   "bridgesTooLongForTor": "Too long for Tor to use",
   "bridgesMethodFrom": "{method}, {from}",

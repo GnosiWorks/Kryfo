@@ -7478,6 +7478,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get bridgesWatchedTitle => 'My network is watched';
+
+  @override
+  String get bridgesWatchedLine => 'Kryfo never tries Tor without a bridge.';
+
+  @override
+  String get bridgesWatchedFastCost => 'Your network can see you use Kryfo.';
+
+  @override
   String get bridgesAskTorProject => 'Ask the Tor Project';
 
   @override

@@ -177,6 +177,22 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     ],
                   ),
                 ),
+                // the first-run answer, to change later: automatic never
+                // tries tor without a bridge
+                if (!decoy) ...[
+                  const SizedBox(height: 12),
+                  _Box(
+                    children: [
+                      _SwitchRow(
+                        key: const ValueKey('watchedSwitch'),
+                        title: l10n.bridgesWatchedTitle,
+                        body: l10n.bridgesWatchedLine,
+                        value: b.skipDirect,
+                        onChanged: appState.setNetworkWatched,
+                      ),
+                    ],
+                  ),
+                ],
                 // a way picked under "more" shows here, so no card stands
                 // unexplained with none selected
                 if (!decoy)
@@ -1036,6 +1052,7 @@ class _RowChoice extends StatelessWidget {
 
 class _SwitchRow extends StatelessWidget {
   const _SwitchRow({
+    super.key,
     required this.title,
     required this.body,
     required this.value,

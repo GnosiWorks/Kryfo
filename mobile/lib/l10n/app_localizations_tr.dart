@@ -7503,6 +7503,15 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get bridgesWatchedTitle => 'Ağım izleniyor';
+
+  @override
+  String get bridgesWatchedLine => 'Kryfo, Tor\'u asla köprüsüz denemez.';
+
+  @override
+  String get bridgesWatchedFastCost => 'Ağın Kryfo kullandığını görebilir.';
+
+  @override
   String get bridgesAskTorProject => 'Tor Projesine sor';
 
   @override

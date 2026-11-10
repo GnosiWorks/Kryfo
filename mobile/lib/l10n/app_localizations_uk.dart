@@ -7613,6 +7613,16 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get bridgesWatchedTitle => 'Моя мережа під наглядом';
+
+  @override
+  String get bridgesWatchedLine => 'Kryfo ніколи не пробує Tor без моста.';
+
+  @override
+  String get bridgesWatchedFastCost =>
+      'Твоя мережа може бачити, що ти користуєшся Kryfo.';
+
+  @override
   String get bridgesAskTorProject => 'Запитати проєкт Tor';
 
   @override
