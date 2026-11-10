@@ -1082,7 +1082,16 @@ var (
 	autoLoopRuns  atomic.Int32
 	// bumped when android validates a network it could not before
 	autoValidFlips atomic.Int64
+	// a pass a network change started runs: its first reconnect's kick is
+	// the change's (reconnectMade)
+	autoPassMade atomic.Bool
 )
+
+// a reconnect's kick gives the open chat no turn: a network change's, or
+// the first of automatic's pass for one. no other reason is the phone's
+func reconnectMade(why string) bool {
+	return why == whyNetwork || why == whyAuto && autoPassMade.CompareAndSwap(true, false)
+}
 
 func autoKick() {
 	select {
@@ -1255,7 +1264,9 @@ func autoLoop(gen int64) {
 			kind = currentNet().Kind
 			lastPass = autoNow()
 			autoLastSet(gen, epoch, kind, result)
+			autoPassMade.Store(start == "network")
 			result = autoRunPass(gen, epoch, start)
+			autoPassMade.Store(false)
 			autoLastSet(gen, epoch, kind, result)
 			downSince, upSince = time.Time{}, time.Time{}
 			switch result {

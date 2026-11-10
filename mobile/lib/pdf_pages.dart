@@ -61,7 +61,8 @@ class _PhoneBackend implements PdfBackend {
     });
     final b = m?['rgba'];
     if (m == null || b is! Uint8List) return null;
-    return (w: m['w'] as int, h: m['h'] as int, rgba: b);
+    // the channel's bytes are read-only: a copy the page can zero after
+    return (w: m['w'] as int, h: m['h'] as int, rgba: Uint8List.fromList(b));
   }
 
   @override

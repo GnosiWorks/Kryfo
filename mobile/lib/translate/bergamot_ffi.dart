@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // bergamot through engine/translate/native/kryfo_translate.h, in its own
-// library. one long-lived isolate keeps the recent models open, since
-// opening one reads about 50 MB
+// library. one isolate keeps the recent models open while translations
+// come, since opening one reads about 50 MB, and goes when they stop
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
@@ -18,6 +18,10 @@ const kTranslateLib = 'libkryfo_translate.so';
 // models open at once: a pivot and one more. a 32-bit phone has little
 // memory and address space to spare, so there a pivot alone
 final int kMaxOpenModels = sizeOf<IntPtr>() == 4 ? 2 : 3;
+
+// each open model holds its weights and workspace, so they go this long
+// after the last translation
+const kModelIdle = Duration(minutes: 2);
 
 typedef _OpenC = Pointer<Void> Function(Pointer<Utf8>, Pointer<Pointer<Utf8>>);
 typedef _TrC =
@@ -54,9 +58,16 @@ class BergamotTranslator implements Translator {
     this.lib = kTranslateLib,
     this.probe = libraryOpens,
     int? maxOpen,
-  }) : maxOpen = maxOpen ?? kMaxOpenModels;
+    Duration idleAfter = kModelIdle,
+  }) : maxOpen = maxOpen ?? kMaxOpenModels {
+    _idle = ModelIdle(idleAfter, _shut);
+  }
 
   final int maxOpen;
+
+  late final ModelIdle _idle;
+  @visibleForTesting
+  ModelIdle get idle => _idle;
 
   // whether the library opens here; a test hands in its own
   final bool Function(String lib) probe;
@@ -113,6 +124,7 @@ class BergamotTranslator implements Translator {
     for (final k in keys) {
       _held[k] = (_held[k] ?? 0) + 1;
     }
+    _idle.begin();
     try {
       return await run();
     } finally {
@@ -128,6 +140,7 @@ class BergamotTranslator implements Translator {
       }
       // what was kept past the cap for this one can go now
       if (freed) _trim();
+      _idle.end();
     }
   }
 
@@ -158,23 +171,33 @@ class BergamotTranslator implements Translator {
     final cfg = config(from, to);
     if (cfg == null) throw const TranslateUnavailable(TranslateBlock.noLib);
     if (texts.isEmpty) return const [];
-    final out = await (await _worker()).ask('$from-$to', cfg, texts, [
-      ..._held.keys,
-    ]);
+    _idle.begin();
+    final Object? out;
+    try {
+      out = await (await _worker()).ask('$from-$to', cfg, texts, [
+        ..._held.keys,
+      ]);
+    } finally {
+      _idle.end();
+    }
     if (out is List && out.length == texts.length) {
       return [for (final s in out) s as String];
     }
     throw StateError('translate: ${out is Map ? out['err'] : 'no answer'}');
   }
 
+  // never under a translation: the worker goes once nothing runs
   @override
-  Future<void> close() async {
+  Future<void> close() async => _idle.away();
+
+  @override
+  void back() => _idle.back();
+
+  void _shut() {
     final port = _port;
     _port = null;
     if (port == null) return;
-    try {
-      (await port).port.send(null);
-    } catch (_) {}
+    port.then((w) => w.port.send(null), onError: (Object _) {});
   }
 }
 

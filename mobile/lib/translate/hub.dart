@@ -396,7 +396,8 @@ class TranslationHub extends ChangeNotifier {
   }
 }
 
-// the models closed while the app is in the background
+// the models closed while the app is in the background, and kept when it
+// comes back before a running translation ended
 class TranslateAway with WidgetsBindingObserver {
   final TranslationHub hub;
   TranslateAway(this.hub);
@@ -406,6 +407,8 @@ class TranslateAway with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       unawaited(hub.away());
+    } else if (state == AppLifecycleState.resumed) {
+      hub.translator.back();
     }
   }
 }

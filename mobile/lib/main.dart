@@ -29,6 +29,7 @@ import 'devices/linked_lock.dart';
 import 'devices/own_devices.dart'
     show DecoyDevices, DeviceKind, LinkHistory, OwnDevices, kMaxLinkedDevices;
 import 'photo_blur.dart' show makeBlurSoon;
+import 'picture_lock.dart' show capPictureCache;
 import 'secure_store.dart';
 import 'desktop/desk_frames.dart' show deskRunApp;
 import 'desktop/desktop_trace.dart' as desk_trace;
@@ -310,6 +311,7 @@ part 'app/state_files.dart';
 void main() async {
   dlog('launch main');
   WidgetsFlutterBinding.ensureInitialized();
+  capPictureCache();
   // the media folders sealed before anything reads or writes them
   await openPhoneSeal();
   // a key saved for someone that is not the one held before: open pages that

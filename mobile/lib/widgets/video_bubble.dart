@@ -18,6 +18,7 @@ import 'file_sheet.dart';
 import 'halo_hero.dart';
 import 'press_scale.dart';
 import 'remembered_height.dart';
+import 'decode_px.dart';
 import 'sealed_picture.dart';
 import '../l10n/l10n.dart';
 import 'shots_line.dart' show KeptIn, keptOpenLine;
@@ -193,7 +194,12 @@ class _VideoBubbleState extends State<VideoBubble> {
                   // its blur, the first frame fading up over it
                   child: SealedPicture(
                     path: widget.path,
-                    image: jpeg == null ? null : MemoryImage(jpeg),
+                    image: jpeg == null
+                        ? null
+                        : frameImage(
+                            jpeg,
+                            coverPx(context, widget.width, h, info!.aspect),
+                          ),
                     ground: HaloColors.surface3,
                   ),
                 ),

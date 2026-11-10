@@ -4,6 +4,7 @@ package translate
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -142,6 +143,22 @@ func TestConfig(t *testing.T) {
 		if !strings.Contains(c, want) {
 			t.Errorf("config lacks %q:\n%s", want, c)
 		}
+	}
+	// a workspace of 128 for each open model was the old ceiling
+	if !strings.Contains(c, "workspace: 32\n") {
+		t.Errorf("workspace not 32:\n%s", c)
+	}
+	// bergamot aborts the process when a sentence's longest output is past
+	// a batch (batching_pool.cpp)
+	var brk, batch int
+	var factor float64
+	for _, l := range strings.Split(c, "\n") {
+		fmt.Sscanf(l, "max-length-break: %d", &brk)
+		fmt.Sscanf(l, "mini-batch-words: %d", &batch)
+		fmt.Sscanf(l, "max-length-factor: %g", &factor)
+	}
+	if brk == 0 || factor == 0 || float64(brk)*factor > float64(batch) {
+		t.Errorf("max-length-break %d x factor %g past mini-batch-words %d", brk, factor, batch)
 	}
 	en, _ := m.Pair("en", "zh")
 	c = en.Config("/m/it's")

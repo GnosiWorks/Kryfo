@@ -2,14 +2,18 @@
 // the translation worker: one that dies, or a library it cannot use, ends
 // the translations waiting on it with an error, never a wait that does not
 // end. its open models: the least recently used close past the cap, never
-// one a translation holds, both legs of a pivot kept together
+// one a translation holds, both legs of a pivot kept together. the worker
+// goes after two idle minutes and on the background, never mid-translation
 
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/translate/bergamot_ffi.dart';
 import 'package:kryfo/translate/foreign.dart';
+import 'package:kryfo/translate/hub.dart';
 import 'package:kryfo/translate/model_cache.dart';
+import 'package:kryfo/translate/translator.dart';
 
 import 'translate_fakes.dart';
 
@@ -241,6 +245,148 @@ void main() {
       expect(await out, '[de] [en] Привет');
       expect(f.translator.holdingNow, isEmpty);
       expect(f.translator.asked, ['ru-en:Привет', 'en-de:[en] Привет']);
+    });
+  });
+  group('idle close', () {
+    late int shuts;
+    late ModelIdle idle;
+    setUp(() {
+      shuts = 0;
+      idle = ModelIdle(kModelIdle, () => shuts++);
+    });
+
+    testWidgets('closes two minutes after the last translation', (t) async {
+      idle.begin();
+      await t.pump(const Duration(minutes: 5));
+      expect(shuts, 0);
+      idle.end();
+      await t.pump(const Duration(seconds: 119));
+      expect(shuts, 0);
+      await t.pump(const Duration(seconds: 1));
+      expect(shuts, 1);
+      // once, not again every two minutes
+      await t.pump(const Duration(minutes: 10));
+      expect(shuts, 1);
+    });
+
+    testWidgets('each new translation starts the two minutes again', (t) async {
+      idle.begin();
+      idle.end();
+      await t.pump(const Duration(seconds: 90));
+      idle.begin();
+      idle.end();
+      await t.pump(const Duration(seconds: 90));
+      expect(shuts, 0);
+      await t.pump(const Duration(seconds: 30));
+      expect(shuts, 1);
+    });
+
+    testWidgets('never while another translation still runs', (t) async {
+      idle.begin();
+      idle.begin();
+      idle.end();
+      await t.pump(const Duration(minutes: 3));
+      expect(shuts, 0);
+      idle.end();
+      await t.pump(kModelIdle);
+      expect(shuts, 1);
+    });
+
+    testWidgets('the background closes at once when nothing runs', (t) async {
+      idle.begin();
+      idle.end();
+      idle.away();
+      expect(shuts, 1);
+      expect(idle.timing, isFalse);
+      await t.pump(const Duration(minutes: 3));
+      expect(shuts, 1);
+    });
+
+    testWidgets('the background waits for the running one, then closes', (
+      t,
+    ) async {
+      idle.begin();
+      idle.away();
+      expect(shuts, 0);
+      expect(idle.awayPending, isTrue);
+      await t.pump(const Duration(minutes: 3));
+      expect(shuts, 0);
+      idle.end();
+      expect(shuts, 1);
+      expect(idle.awayPending, isFalse);
+      expect(idle.timing, isFalse);
+    });
+
+    testWidgets('back in front before the running one ends, the close is '
+        'called off', (t) async {
+      idle.begin();
+      idle.away();
+      idle.back();
+      idle.end();
+      expect(shuts, 0);
+      expect(idle.awayPending, isFalse);
+      // and the models go two idle minutes later, as ever
+      await t.pump(kModelIdle);
+      expect(shuts, 1);
+    });
+
+    test('the hub closes on the background and calls it off on return', () {
+      final f = fakeHub(installed: true);
+      final away = TranslateAway(f.hub);
+      away.didChangeAppLifecycleState(AppLifecycleState.paused);
+      away.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      expect(f.translator.backs, 1);
+    });
+
+    test('a pivot holds the worker for both legs', () async {
+      final t = BergamotTranslator(
+        probe: (_) => false,
+        config: (_, _) => null,
+        installed: (_, _) => true,
+      );
+      const pivot = [('ru', 'en'), ('en', 'ar')];
+      final gate = Completer<void>();
+      final run = t.holding(pivot, () async {
+        await gate.future;
+        // the second leg, after the app went to the background
+        expect(t.idle.busy, 1);
+        expect(t.idle.awayPending, isTrue);
+      });
+      await t.close();
+      expect(t.idle.awayPending, isTrue);
+      gate.complete();
+      await run;
+      expect(t.idle.busy, 0);
+      expect(t.idle.awayPending, isFalse);
+      expect(t.idle.timing, isFalse);
+    });
+
+    test('a failed translation lets go of the worker too', () async {
+      final t = _with('libc.so.6');
+      await expectLater(
+        t
+            .translate('hello', from: 'en', to: 'zh')
+            .timeout(const Duration(seconds: 20)),
+        throwsA(isA<StateError>()),
+      );
+      expect(t.idle.busy, 0);
+      expect(t.idle.timing, isTrue);
+      await t.close();
+      expect(t.idle.timing, isFalse);
+    });
+
+    test('a blocked one never takes the worker', () async {
+      final t = BergamotTranslator(
+        probe: (_) => true,
+        config: (_, _) => 'models: []',
+        installed: (_, _) => false,
+      );
+      await expectLater(
+        t.translate('hello', from: 'en', to: 'zh'),
+        throwsA(isA<TranslateUnavailable>()),
+      );
+      expect(t.idle.busy, 0);
+      expect(t.idle.timing, isFalse);
     });
   });
 }

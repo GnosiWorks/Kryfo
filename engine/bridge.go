@@ -1204,7 +1204,7 @@ func reconnectTorFresh(force, auto bool, why string, fresh time.Duration) string
 		atomic.StoreInt32(&reconnectRunning, 1)
 	}
 	reconnectMu.Unlock()
-	r := reconnectOn(t, addr, me, auto, why == whyNetwork)
+	r := reconnectOn(t, addr, me, auto, reconnectMade(why))
 	if reconnectMine(me) {
 		noteOutcome(fmt.Sprintf("%s after %s", r, time.Since(started).Round(time.Millisecond)))
 	}

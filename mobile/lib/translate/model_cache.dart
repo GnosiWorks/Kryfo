@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'dart:async';
+
 // the worker's open models by direction, least recently used first. each
 // is about 50 MB, so past [max] the oldest goes before another opens. a held
 // one (a translation under way, both legs of a pivot) is never closed: it
@@ -45,5 +47,58 @@ class ModelCache<H extends Object> {
     final all = [..._open.values];
     _open.clear();
     all.forEach(_close);
+  }
+}
+
+// models stay in memory only while used: the worker goes [after] the last
+// translation or hold let go, and on away() as soon as nothing runs. a
+// translation or a hold under way (both legs of a pivot) is never cut
+class ModelIdle {
+  final Duration after;
+  final void Function() _shut;
+  ModelIdle(this.after, this._shut);
+
+  int _busy = 0;
+  int get busy => _busy;
+  Timer? _timer;
+  bool get timing => _timer != null;
+  bool _away = false;
+  bool get awayPending => _away;
+
+  void begin() {
+    _busy++;
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void end() {
+    if (_busy > 0) _busy--;
+    if (_busy > 0) return;
+    if (_away) return shut();
+    _timer?.cancel();
+    _timer = Timer(after, () {
+      _timer = null;
+      if (_busy == 0) shut();
+    });
+  }
+
+  // back in front before the last one ended: the models stay, and go
+  // [after] it as usual
+  void back() => _away = false;
+
+  // the app went to the background: now, or once the last one ends
+  void away() {
+    if (_busy > 0) {
+      _away = true;
+      return;
+    }
+    shut();
+  }
+
+  void shut() {
+    _away = false;
+    _timer?.cancel();
+    _timer = null;
+    _shut();
   }
 }

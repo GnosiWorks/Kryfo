@@ -93,6 +93,10 @@ class FakeTranslator implements Translator {
 
   @override
   Future<void> close() async => closes++;
+
+  int backs = 0;
+  @override
+  void back() => backs++;
 }
 
 // a pack download the test moves along by hand

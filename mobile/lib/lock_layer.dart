@@ -221,6 +221,7 @@ class LockGate extends StatefulWidget {
     this.localesChanged,
     this.revealed,
     this.attached,
+    this.held,
   });
 
   final Widget app;
@@ -245,6 +246,8 @@ class LockGate extends StatefulWidget {
   final VoidCallback? revealed;
   // a new android screen came onto the engine
   final VoidCallback? attached;
+  // the app sent the person to its own camera or picker: not left
+  final bool Function()? held;
 
   @override
   State<LockGate> createState() => _LockGateState();
@@ -309,8 +312,10 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
         state == AppLifecycleState.hidden) {
       widget.leaving();
       widget.inFront?.call(false);
+      picturesLeaving(held: widget.held);
     } else if (state == AppLifecycleState.resumed) {
       _away = false;
+      picturesBack();
       widget.returned();
       // back with no lock up: an app without a pin, left while the lock was
       // read, never lifted one, and its pictures open here

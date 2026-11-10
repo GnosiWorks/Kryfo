@@ -61,7 +61,13 @@ extension AppStateReceive on AppState {
   Future<void> _tellFirst() async {
     final id = _firstChat;
     var key = '';
-    if (id != null) {
+    // behind the pin no chat is open: told again once it lifts, and a
+    // decoy unlock drops that
+    final held = id != null && lockGuard.isLocked();
+    if (held) {
+      unawaited(lockGuard.afterUnlock(_tellFirst, slot: 'first-chat'));
+    }
+    if (id != null && !held) {
       try {
         key = (await _reach(id))?.xpub ?? '';
       } catch (e) {

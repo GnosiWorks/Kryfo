@@ -196,7 +196,11 @@ Future<VideoInfo?> _askVideoInfo(String path) async {
     );
     if (m == null) return null;
     return VideoInfo(
-      m['jpeg'] as Uint8List?,
+      // the channel's bytes are read-only: a copy the lock can zero
+      switch (m['jpeg']) {
+        final Uint8List j => Uint8List.fromList(j),
+        _ => null,
+      },
       Duration(milliseconds: (m['ms'] as num?)?.toInt() ?? 0),
       (m['w'] as num?)?.toInt() ?? 16,
       (m['h'] as num?)?.toInt() ?? 9,

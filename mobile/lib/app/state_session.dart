@@ -698,6 +698,8 @@ extension AppStateSession on AppState {
           : dropOurClip(quietOnly: true),
     );
     unawaited(dropNotesExports());
+    // the chat left open goes first no more until the lock lifts
+    unawaited(_tellFirst());
     unawaited(
       vaultSetupDone().catchError((Object e) {
         dlog('vault: setup key (${e.runtimeType})');

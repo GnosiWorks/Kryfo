@@ -81,6 +81,8 @@ class _App {
   int lefts = 0;
   // android screens that came onto the engine
   int attaches = 0;
+  // out at the app's own camera or picker
+  bool held = false;
   // the app's own lock-up: a vault session shuts here
   int ups = 0;
   VoidCallback? onUp;
@@ -106,6 +108,7 @@ class _App {
         returned: () {},
         left: () => lefts++,
         attached: () => attaches++,
+        held: () => held,
         guard: guard,
         quiet: () => quiet,
         pad: (_) => _Pad(this),
@@ -439,6 +442,83 @@ void main() {
     await tester.pump();
     expect(find.byType(_Pad), findsNothing);
     expect(find.text('secret home'), findsOneWidget);
+  });
+
+  testWidgets('two minutes in the background let go of every picture, and '
+      'coming back opens them', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester)..pin = false;
+    await a.pump();
+    expect(picturesShut.value, isFalse);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(seconds: 119));
+    expect(picturesShut.value, isFalse);
+    await tester.pump(const Duration(seconds: 1));
+    expect(picturesShut.value, isTrue);
+    expect(picturesAway, isTrue);
+    // the lock lifting is not coming back: they stay shut
+    openPictures();
+    expect(picturesShut.value, isTrue);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(picturesShut.value, isFalse);
+    expect(picturesAway, isFalse);
+  });
+
+  testWidgets('out at our own camera, the pictures wait until it is '
+      'done', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester)
+      ..pin = false
+      ..held = true;
+    await a.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(minutes: 5));
+    expect(picturesShut.value, isFalse);
+    // the hold ran out with the person still away: the next round lets go
+    a.held = false;
+    await tester.pump(const Duration(minutes: 2));
+    expect(picturesShut.value, isTrue);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(picturesShut.value, isFalse);
+  });
+
+  testWidgets('back within two minutes, nothing lets go', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester)..pin = false;
+    await a.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(seconds: 90));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(minutes: 5));
+    expect(picturesShut.value, isFalse);
+    expect(picturesAway, isFalse);
+  });
+
+  testWidgets('with a pin, the pictures let go in the background stay shut '
+      'until it lifts', (tester) async {
+    addTearDown(resetPicturesForTest);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final a = _App(tester);
+    await a.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(minutes: 3));
+    expect(picturesShut.value, isTrue);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(a.lock.locked, isTrue);
+    expect(picturesShut.value, isTrue);
+    a.lock.set(locked: false);
+    await tester.pumpAndSettle();
+    expect(picturesShut.value, isFalse);
   });
 
   testWidgets('only ink shows before the lock is read', (tester) async {
