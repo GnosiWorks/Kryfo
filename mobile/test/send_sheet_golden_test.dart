@@ -12,8 +12,16 @@ import 'narrow_settings.dart' show loadAppFonts;
 
 void main() {
   setUpAll(loadAppFonts);
-  setUp(() => sendSheetGuard = LockGuard(isLocked: () => false));
-  tearDown(() => sendSheetGuard = lockGuard);
+  // a fixed day, so the day lines stay what the goldens show
+  final day = DateTime(2026, 11, 9, 12);
+  setUp(() {
+    sendSheetGuard = LockGuard(isLocked: () => false);
+    sendSheetNow = () => day;
+  });
+  tearDown(() {
+    sendSheetGuard = lockGuard;
+    sendSheetNow = DateTime.now;
+  });
 
   for (final (v, light, locale) in [
     ('dark', false, const Locale('en')),
@@ -28,7 +36,6 @@ void main() {
       setL10nLocale(locale);
       addTearDown(() => setL10nLocale(const Locale('en')));
       addTearDown(() => HaloColors.setLight(false));
-      final day = DateTime.now();
       SendPick f(String n, int kb, int daysAgo) => SendPick(
         path: '/x/$n',
         name: n,

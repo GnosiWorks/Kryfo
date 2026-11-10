@@ -99,6 +99,10 @@ class SendShortcut {
 @visibleForTesting
 LockGuard sendSheetGuard = lockGuard;
 
+/// the clock the day lines read, fixed by the goldens
+@visibleForTesting
+DateTime Function() sendSheetNow = DateTime.now;
+
 /// the sheet, up over the chat [to]. null when it was closed without a send
 Future<SendSheetResult?> showSendSheet(
   BuildContext context, {
@@ -519,13 +523,13 @@ class _BigPick extends StatelessWidget {
 
 /// "today", "yesterday", or the day
 String _whenLine(DateTime d) {
-  final now = DateTime.now();
+  final now = sendSheetNow();
   final day = DateTime(d.year, d.month, d.day);
   final today = DateTime(now.year, now.month, now.day);
   final n = today.difference(day).inDays;
   if (n == 0) return l10n.chatToday;
   if (n == 1) return l10n.chatYesterday;
-  return dayMonthMaybeYear(d);
+  return dayMonthMaybeYear(d, now: now);
 }
 
 class _PickRow extends StatelessWidget {
