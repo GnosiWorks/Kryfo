@@ -265,6 +265,22 @@ void main() {
                 as BoxDecoration)
             .color;
 
+    testWidgets('on fast with tor not up yet it says first contacts wait '
+        'for tor; on private it does not', (t) async {
+      expect(appState.torUsable, isFalse);
+      appState.sendModeForTest = 'balanced';
+      addTearDown(() => appState.sendModeForTest = 'private');
+      await open(t);
+      expect(find.text(l10n.fastRoomsWaitForTor), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+      appState.sendModeForTest = 'private';
+      await open(t);
+      expect(find.text(l10n.fastRoomsWaitForTor), findsNothing);
+      await t.pumpWidget(const SizedBox());
+      await t.pump(const Duration(seconds: 1));
+    });
+
     testWidgets('"add them" fills once there is something to add', (t) async {
       await open(t);
       expect(addThem(t), Colors.transparent);

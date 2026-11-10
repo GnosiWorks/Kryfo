@@ -223,6 +223,28 @@ class _AddSheetState extends State<_AddSheet>
               l10n.appScanTheirCodeOrShown,
               style: HaloType.sans(size: 12.5, color: HaloColors.text),
             ),
+            // on fast a first contact still goes through tor, and waits for
+            // it: said here, before anyone is added
+            ListenableBuilder(
+              listenable: appState,
+              builder: (_, _) => EaseSize(
+                child: switch (torWaitLine()) {
+                  final wait? => Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      wait,
+                      key: const ValueKey('addTorWait'),
+                      style: HaloType.sans(
+                        size: 12,
+                        color: HaloColors.amberText,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                  null => const SizedBox(width: double.infinity),
+                },
+              ),
+            ),
             // no camera on a computer: the field below is the way in
             if (!onDesktop) ...[
               const SizedBox(height: 16),
