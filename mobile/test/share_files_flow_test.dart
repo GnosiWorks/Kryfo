@@ -866,23 +866,22 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('the developer chat is offered on the everyday side, never in '
-      'a decoy', (t) async {
+  testWidgets('the developer chat is offered on the everyday side and in a '
+      'decoy as its own row, never in a vault', (t) async {
     const dev = DevRow(keyId: 'k1', chatId: 'dev:k1', started: true);
+    Finder devTile() => find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.byType(DevForwardTile),
+    );
     appState.devRow = dev;
     await home(t);
     await android.share(t, 'f33', [_pdf()]);
     await settle(t);
-    expect(
-      find.descendant(
-        of: find.byType(BottomSheet),
-        matching: find.byType(DevForwardTile),
-      ),
-      findsOneWidget,
-    );
+    expect(devTile(), findsOneWidget);
     await letGo(t);
     await devClose(t);
 
+    // the decoy's row is its own chat, read from its own database
     final decoyMem = MemDb(except: {'devchat'});
     await devChatTables(decoyMem, now: 1);
     await _contact(decoyMem, _decoyOne);
@@ -894,6 +893,24 @@ void main() {
     await android.share(t, 'f34', [_pdf()]);
     await settle(t);
     expect(offered(_decoyOne), findsOneWidget);
+    expect(devTile(), findsOneWidget);
+    await letGo(t);
+    await devClose(t);
+    lockState.inDecoy = false;
+
+    final vaultMem = MemDb(except: {'devchat'});
+    await devChatTables(vaultMem, now: 1);
+    await _contact(vaultMem, _hidden, seen: 5);
+    final vault = _Db(vaultMem, HaloContainer.vault)..holds = {_hidden};
+    useDatabasesForTest(db, await Session.withVault(db, vault));
+    lockState.inVault = true;
+    addTearDown(() => lockState.inVault = false);
+    await appState.refreshContacts();
+    appState.devRow = dev;
+    await home(t);
+    await android.share(t, 'f35', [_pdf()]);
+    await settle(t);
+    expect(offered(_hidden), findsOneWidget);
     expect(find.byType(DevForwardTile), findsNothing);
     await letGo(t);
     await devClose(t);

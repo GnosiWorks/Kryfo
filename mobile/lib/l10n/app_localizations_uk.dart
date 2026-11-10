@@ -7493,6 +7493,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Kryfo сам знаходить спосіб, що працює там, де ти є.';
 
   @override
+  String get bridgesTorVpnLine =>
+      'Усередині Tor-VPN на кшталт Orbot Kryfo починає з мосту.';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'Через цей міст не пробитися';
 
   @override
@@ -9869,6 +9873,10 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get notificationsGoogleBody =>
       'Google бачить, коли твій телефон прокидається.\nАле не хто написав і що сказано.\nОдразу й ощадно для батареї.';
+
+  @override
+  String get notificationsGoogleOnFast =>
+      'На режимі «Швидкий» наші сервери бачать твій IP, поки будять телефон, але ми його ніколи не зберігаємо.';
 
   @override
   String get notificationsGoogleStarting => 'Вмикаємо…';

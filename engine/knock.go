@@ -16,7 +16,9 @@ package main
 // only, over that address's lane, through tor's socks port whatever the
 // route: a route switch in the middle of a batch ends the batch. a slot with
 // no address gets a registration for a key that belongs to nothing, on a
-// lane of its own.
+// lane of its own. the one exception is google push on fast: its
+// registrations go over the direct connection, as the relay sees that
+// phone's address on its sockets there anyway.
 
 import (
 	"context"
@@ -52,6 +54,8 @@ const (
 	knockBack = time.Hour
 	// the capability check's own lane: it ties to nothing else
 	laneKnockInfo = "knockinfo"
+	// google push's endpoints, our gateway's (mobile/lib/google_push.dart)
+	knockGateway = "https://relay.kryfo.app/push/"
 )
 
 // the call's bound, the app waits a little longer (app/engine.dart)
@@ -294,16 +298,41 @@ func knockTorClient(lane string) (*http.Client, error) {
 	return c, nil
 }
 
-// sends one registration to our relay on lane. a var for the tests
-var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error {
+// the direct client fast's sockets use, never tor's
+func knockDirectClient() *http.Client {
+	cachedNostrClientMu.Lock()
+	defer cachedNostrClientMu.Unlock()
+	if c := cachedNostrClients[""]; c != nil {
+		return c
+	}
+	c := directNostrClient()
+	cachedNostrClients[""] = c
+	return c
+}
+
+// google push alone registers over fast's direct connection; a helper
+// app's registration waits for the private route
+func knockDirectOK(endpoint string) bool {
+	return strings.HasPrefix(endpoint, knockGateway) && len(endpoint) > len(knockGateway)
+}
+
+// sends one registration to our relay on lane, over tor or [direct]. a var
+// for the tests
+var knockPublish = func(ctx context.Context, lane string, ev nostr.Event, direct bool) error {
 	// the first store's entries alone: the knock table lives with it
 	own := storeEntries(relaysWhenSet(ctx), storeFirst)
 	if len(own) == 0 {
 		return fmt.Errorf("no relay")
 	}
-	client, err := knockTorClient(lane)
-	if err != nil {
-		return err
+	var client *http.Client
+	if direct {
+		client = knockDirectClient()
+	} else {
+		c, err := knockTorClient(lane)
+		if err != nil {
+			return err
+		}
+		client = c
 	}
 	var last error
 	for _, u := range own {
@@ -323,8 +352,8 @@ var knockPublish = func(ctx context.Context, lane string, ev nostr.Event) error 
 // listened on now or hidden, and those our relay refused for good (invalid,
 // blocked). what went nowhere, tor down, the relay unreached, or a refusal
 // for now (error, rate-limited), is in none.
-// a registration needs the private route; a forget goes over tor on any
-// route. both only for an address listened on now, on its lane as it is
+// a registration needs the private route, but for google push's, which on
+// fast goes direct; a forget goes over tor on any route. both only for an address listened on now, on its lane as it is
 // now: an address that is gone, a first-contact address replaced, a chat
 // hidden, is never signed for again, its registration lapses
 //
@@ -396,7 +425,9 @@ func knockRegister(raw string) string {
 		default:
 			continue
 		}
-		if !forget && !private {
+		// off the private route only google push registers, and direct
+		direct := !forget && !private
+		if direct && !knockDirectOK(it.E) {
 			continue
 		}
 		ev, err := knockEvent(sk, pk, it.E, it.at(now))
@@ -415,7 +446,7 @@ func knockRegister(raw string) string {
 			if moved() {
 				return
 			}
-			err := knockPublish(ctx, lane, ev)
+			err := knockPublish(ctx, lane, ev, direct)
 			dmu.Lock()
 			defer dmu.Unlock()
 			switch {

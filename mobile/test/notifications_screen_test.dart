@@ -136,6 +136,22 @@ void main() {
       _y(t, l10n.deliveryModeGooglePush),
       lessThan(_y(t, l10n.gettingMessagesAlwaysOn)),
     );
+    expect(find.text(googleCardBody(onion: false)), findsNothing);
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('on fast google push keeps google\'s line, adds what our '
+      'servers see, and needs no route switch', (t) async {
+    await _open(t, play: true, google: true, route: 'balanced');
+    expect(find.text(googleCardBody(onion: false)), findsOneWidget);
+    final card = find.byKey(const ValueKey('googleCard'));
+    for (final w in [
+      l10n.gettingMessagesHelperUseOnion,
+      l10n.gettingMessagesHelperOnionOnly,
+    ]) {
+      expect(find.descendant(of: card, matching: find.text(w)), findsNothing);
+    }
+    appState.sendModeForTest = 'private';
     await t.pumpWidget(const SizedBox());
   });
 

@@ -9,8 +9,14 @@ import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show LockGuard;
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
-    show appState, AppStateRoute, AppStateDevchat, AppStateRefresh;
+    show
+        appState,
+        AppStateRoute,
+        AppStateDevchat,
+        AppStateRefresh,
+        useDatabasesForTest;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/dev_about_sheet.dart';
 import 'package:kryfo/screens/home_screen.dart';
@@ -18,12 +24,14 @@ import 'package:kryfo/screens/pin_flow_screen.dart' show PinsHost;
 import 'package:kryfo/screens/search_screen.dart';
 import 'package:kryfo/screens/seen_screen.dart';
 import 'package:kryfo/screens/settings_screen.dart';
+import 'package:kryfo/session.dart';
 import 'package:kryfo/widgets/count_badge.dart';
 import 'package:kryfo/widgets/dev_avatar.dart';
 import 'package:kryfo/widgets/message_menu.dart' show MenuSheet;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dev_chat_fakes.dart';
+import 'mem_db.dart';
 
 late DevKey _key;
 var _groups = <GroupSummary>[];
@@ -498,6 +506,27 @@ void main() {
       useDevKeysForTest([devCard('m1', status: DevKeyStatus.retired)]);
       await appState.refreshContacts();
       expect(devForwardTarget, isNull);
+    });
+
+    test('a forward from an open vault never reaches it; a decoy keeps its '
+        'own', () async {
+      await devWorld();
+      await devTestChat.begin(_key);
+      final db = DevTestDb(devMem);
+      final vault = DevTestDb(MemDb(except: {'devchat'}), HaloContainer.vault);
+      // the row stays the primary's while its vault is open
+      await appState.refreshContacts();
+      useDatabasesForTest(db, await Session.withVault(db, vault));
+      lockState.inVault = true;
+      addTearDown(() => lockState.inVault = false);
+      expect(appState.devRow?.chatId, _key.chatId);
+      expect(devForwardTarget, isNull);
+      lockState.inVault = false;
+
+      await devWorld(container: HaloContainer.decoy);
+      await devTestChat.begin(_key);
+      await appState.refreshContacts();
+      expect(devForwardTarget?.chatId, _key.chatId);
     });
 
     test('its place among chats: first when pinned, else by time', () {

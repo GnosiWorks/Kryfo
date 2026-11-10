@@ -49,8 +49,10 @@ import 'desktop/desktop_mode.dart'
 import 'store.dart' show kPlayBuild, playBuild;
 import 'wide/wide_pane.dart' show chatNavigator, chatPush, deskPush;
 import 'widgets/boot_failed.dart';
+import 'widgets/ease_size.dart';
 import 'widgets/fade_over.dart';
 import 'widgets/tor_boot_splash.dart';
+import 'widgets/tor_wait_line.dart';
 import 'widgets/theme_refresh.dart';
 import 'widgets/wall_images.dart';
 import 'dart:convert';

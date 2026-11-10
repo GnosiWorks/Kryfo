@@ -341,12 +341,11 @@ extension AppStateDelivery on AppState {
   set googleAvailableForTest(bool v) => _googleAvailable = v;
 
   /// the card that offers google push once, to a phone set up before it
-  /// came. never in a decoy, and only on the onion route it needs
+  /// came. never in a decoy
   bool get googleCardDue =>
       googleOffered &&
       _googleOffer == 'due' &&
       !inDecoyView &&
-      _sendMode == 'private' &&
       _deliveryMode != DeliveryMode.google;
   @visibleForTesting
   set googleOfferForTest(String v) => _googleOffer = v;
@@ -543,7 +542,9 @@ extension AppStateDelivery on AppState {
     var more = false;
     try {
       var sent = false;
-      if (knockMode(_deliveryMode) && _sendMode == 'private') {
+      // google push registers on any route, the helper app over tor only
+      if (_deliveryMode == DeliveryMode.google ||
+          (_deliveryMode == DeliveryMode.helper && _sendMode == 'private')) {
         n = await _helperOp(() => helper.sync());
         more = helper.more;
         sent = helper.sent;

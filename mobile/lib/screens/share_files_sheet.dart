@@ -179,11 +179,8 @@ class ShareFiles {
             empty: appState.contacts.isEmpty
                 ? l10n.shareNoChats
                 : l10n.shareNoOne,
-            // a screenshot for a bug report goes to him; a decoy never
-            // shows his chat
-            dev: lockState.inDecoy || session.container.quiet
-                ? null
-                : devForwardTarget,
+            // a screenshot for a bug report goes to him
+            dev: devForwardTarget,
             onSheet: _onSheet,
           ),
           null,

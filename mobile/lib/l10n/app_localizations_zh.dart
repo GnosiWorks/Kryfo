@@ -7019,6 +7019,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesKryfoFindsAWay => 'Kryfo 会找出在你那里能用的方式。';
 
   @override
+  String get bridgesTorVpnLine => '在 Orbot 这类 Tor VPN 里，Kryfo 会从网桥开始连接。';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => '这个网桥连不出去';
 
   @override
@@ -9218,6 +9221,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get notificationsGoogleBody =>
       'Google 能看到你的手机何时被唤醒。\n但从不知道是谁写的或说了什么。\n即时且省电。';
+
+  @override
+  String get notificationsGoogleOnFast =>
+      '在快速模式下，我们的服务器在唤醒你的手机时会看到你的 IP，但我们从不保存。';
 
   @override
   String get notificationsGoogleStarting => '正在开启…';
@@ -18456,6 +18463,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesKryfoFindsAWay => 'Kryfo 會找出在你那裡行得通的方式。';
 
   @override
+  String get bridgesTorVpnLine => '在 Orbot 這類 Tor VPN 裡，Kryfo 會從橋接開始連線。';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => '這個橋接連不出去';
 
   @override
@@ -20530,6 +20540,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get notificationsGoogleBody =>
       'Google 能看到你的手機何時被喚醒。\n但從不知道是誰寫的或說了什麼。\n即時且省電。';
+
+  @override
+  String get notificationsGoogleOnFast =>
+      '在快速模式下，我們的伺服器在喚醒你的手機時會看到你的 IP，但我們從不保存。';
 
   @override
   String get notificationsGoogleStarting => '正在開啟…';

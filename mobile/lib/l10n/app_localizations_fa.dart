@@ -7365,6 +7365,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'Kryfo راهی پیدا می‌کند که جایی که هستید جواب بدهد.';
 
   @override
+  String get bridgesTorVpnLine =>
+      'درون یک VPN مربوط به Tor مثل Orbot، Kryfo با یک پل شروع می‌کند.';
+
+  @override
   String get bridgesThisBridgeIsnTGetting => 'این پل راه پیدا نمی‌کند';
 
   @override
@@ -9715,6 +9719,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get notificationsGoogleBody =>
       'Google می‌بیند گوشی‌تان کِی بیدار می‌شود.\nهرگز نه اینکه چه کسی نوشته یا چه گفته شده.\nفوری و کم‌مصرف.';
+
+  @override
+  String get notificationsGoogleOnFast =>
+      'در حالت سریع، سرورهای ما هنگام بیدار کردن گوشی‌تان IP شما را می‌بینند، اما هرگز آن را نگه نمی‌داریم.';
 
   @override
   String get notificationsGoogleStarting => 'در حال روشن شدن…';

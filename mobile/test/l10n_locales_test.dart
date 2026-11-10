@@ -59,6 +59,7 @@ final _calls = <_Call>[
   ('notificationsHowTheyReachYou', [], (l) => l.notificationsHowTheyReachYou),
   ('notificationsRecommended', [], (l) => l.notificationsRecommended),
   ('notificationsGoogleBody', [], (l) => l.notificationsGoogleBody),
+  ('notificationsGoogleOnFast', [], (l) => l.notificationsGoogleOnFast),
   ('notificationsGoogleStarting', [], (l) => l.notificationsGoogleStarting),
   ('notificationsGoogleNoStart', [], (l) => l.notificationsGoogleNoStart),
   ('notificationsGoogleNote', [], (l) => l.notificationsGoogleNote),

@@ -172,7 +172,7 @@ Future<void> forwardFile(
     context,
     title: l10n.chatForwardTo,
     empty: l10n.chatNoContactsToForward,
-    dev: lockState.inDecoy || session.container.quiet ? null : devForwardTarget,
+    dev: devForwardTarget,
   );
   if (id == null || !context.mounted || lockState.locked) return;
   if (!await File(path).exists()) return;

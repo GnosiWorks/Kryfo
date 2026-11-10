@@ -100,6 +100,28 @@ class _BridgesScreenState extends State<BridgesScreen> {
                   onAction: decoy ? null : (a) => _act(a),
                   onRelay: decoy ? null : () => switchToRelay(context),
                 ),
+                // inside a tor vpn automatic starts on a bridge: why, in one
+                // line
+                if (!decoy)
+                  EaseSize(
+                    child: s.torVpn && chosen == BridgeChoice.auto
+                        ? Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                              start: 4,
+                              top: 10,
+                            ),
+                            child: Text(
+                              l10n.bridgesTorVpnLine,
+                              key: const ValueKey('torVpnLine'),
+                              style: HaloType.sans(
+                                size: 13,
+                                height: 1.45,
+                                color: HaloColors.text,
+                              ),
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
                 const SizedBox(height: 18),
                 if (!decoy)
                   EaseSize(

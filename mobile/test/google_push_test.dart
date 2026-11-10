@@ -22,7 +22,7 @@ import 'package:kryfo/main.dart'
         AppStateDelivery,
         AppStateIdentity;
 import 'package:kryfo/screens/onboarding_screen.dart'
-    show onboardingModes, onboardingPick;
+    show needsPrivateRoute, onboardingModes, onboardingPick;
 import 'package:kryfo/store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -85,13 +85,18 @@ class _Knocks implements KnockEngine {
 }
 
 class _Engine implements HaloEngine {
+  // the registration calls, in order
+  final registers = <String>[];
   @override
   Future<String> knockCheck() async => 'yes';
   @override
   Future<String> knockAddresses(String excludeJson) async => '[]';
   @override
-  Future<String> knockRegister(String itemsJson) async =>
-      '{"done":[],"dup":[],"unknown":[]}';
+  Future<String> knockRegister(String itemsJson) async {
+    registers.add(itemsJson);
+    return '{"done":[],"dup":[],"unknown":[]}';
+  }
+
   @override
   String pushSeal(String publicKey, String token) => 'error: unused';
   @override
@@ -296,8 +301,8 @@ void main() {
       expect(s.text, l10n.deliveryModeWokenByNoWake('Google'));
     });
 
-    test('onboarding lists google push first and picks it on the onion '
-        'route only', () {
+    test('onboarding lists google push first and picks it on every '
+        'route', () {
       expect(onboardingModes(google: true), [
         DeliveryMode.google,
         DeliveryMode.always,
@@ -308,9 +313,20 @@ void main() {
         onboardingModes(google: false),
         isNot(contains(DeliveryMode.google)),
       );
-      expect(onboardingPick(google: true, onion: true), DeliveryMode.google);
-      expect(onboardingPick(google: true, onion: false), DeliveryMode.always);
-      expect(onboardingPick(google: false, onion: true), DeliveryMode.always);
+      expect(onboardingPick(google: true), DeliveryMode.google);
+      expect(onboardingPick(google: false), DeliveryMode.always);
+      // on fast it registers direct: only the helper app waits for tor
+      expect(needsPrivateRoute(DeliveryMode.google), isFalse);
+      expect(needsPrivateRoute(DeliveryMode.helper), isTrue);
+    });
+
+    test('the card keeps google\'s line on every route, and on fast says '
+        'what our servers see', () {
+      expect(googleCardBody(onion: true), l10n.notificationsGoogleBody);
+      expect(
+        googleCardBody(onion: false),
+        '${l10n.notificationsGoogleBody}\n${l10n.notificationsGoogleOnFast}',
+      );
     });
   });
 
@@ -375,10 +391,7 @@ void main() {
         onboardingModes(google: app.googleOffered),
         isNot(contains(DeliveryMode.google)),
       );
-      expect(
-        onboardingPick(google: app.googleOffered, onion: true),
-        DeliveryMode.always,
-      );
+      expect(onboardingPick(google: app.googleOffered), DeliveryMode.always);
       expect(await app.useGoogle(), isFalse);
       expect(fb.calls, ['available']);
     });
@@ -405,16 +418,38 @@ void main() {
       expect(fb.calls, isEmpty);
     });
 
-    test('off the onion route google push gives way to check-ins', () async {
+    test('google push stays on fast, and starts there too', () async {
       playBuildForTest = true;
       final app = AppState()
         ..sendModeForTest = 'private'
         ..googleAvailableForTest = true;
       await app.useGoogle();
       await app.setSendMode('fast');
-      expect(app.deliveryMode, DeliveryMode.checkins);
+      expect(app.deliveryMode, DeliveryMode.google);
       await Future.delayed(const Duration(milliseconds: 50));
-      expect(fb.on, isFalse);
+      expect(fb.on, isTrue);
+
+      final onFast = AppState()
+        ..sendModeForTest = 'balanced'
+        ..googleAvailableForTest = true
+        ..googleOfferForTest = 'due';
+      expect(onFast.googleCardDue, isTrue);
+      expect(await onFast.useGoogle(), isTrue);
+      expect(onFast.deliveryMode, DeliveryMode.google);
+      // its round goes to the relay on fast, where the engine sends direct
+      final e = _Engine();
+      useEngineForTest(e);
+      await onFast.helperRoundForTest();
+      expect(e.registers, isNotEmpty);
+    });
+
+    test('the helper app still gives way to check-ins off the onion '
+        'route', () async {
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..deliveryModeForTest = DeliveryMode.helper;
+      await app.setSendMode('fast');
+      expect(app.deliveryMode, DeliveryMode.checkins);
     });
 
     test('play services gone: back to check-ins, said once', () async {
