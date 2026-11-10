@@ -9,6 +9,7 @@ import (
 	"math/rand/v2"
 	"net"
 	"os"
+	"slices"
 	"strconv"
 	"sync"
 	"syscall"
@@ -130,13 +131,45 @@ type filling struct {
 	err     error
 }
 
-func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath string, got, gz, wire int64, prog Progress) error {
+// what a .bundle.got file says: the whole chunks below a prefix, and on a
+// second line the chunks in above it, which other lanes brought
+func gotText(prefix int64, in map[int64]bool) []byte {
+	b := strconv.AppendInt(nil, prefix, 10)
+	if len(in) == 0 {
+		return b
+	}
+	offs := make([]int64, 0, len(in))
+	for off := range in {
+		offs = append(offs, off)
+	}
+	slices.Sort(offs)
+	b = append(b, '\n')
+	for i, off := range offs {
+		if i > 0 {
+			b = append(b, ',')
+		}
+		b = strconv.AppendInt(b, off, 10)
+	}
+	return b
+}
+
+// [have]: chunks above got already in the part file, not asked again
+func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath string, got int64, have map[int64]bool, gz, wire int64, prog Progress) error {
 	if got >= wire {
 		return nil
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	st := &filling{next: got, prefix: got, in: map[int64]bool{}, count: got, lastNew: time.Now()}
+	in := make(map[int64]bool, len(have))
+	for off := range have {
+		in[off] = true
+	}
+	st := &filling{next: got, prefix: got, in: in, count: got + int64(len(in))*Chunk, lastNew: time.Now()}
+	for st.in[st.prefix] {
+		delete(st.in, st.prefix)
+		st.prefix += Chunk
+	}
+	st.next = st.prefix
 	fail := func(err error) {
 		st.mu.Lock()
 		if st.err == nil {
@@ -148,6 +181,9 @@ func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath stri
 	take := func() (int64, bool) {
 		st.mu.Lock()
 		defer st.mu.Unlock()
+		for st.in[st.next] {
+			st.next += Chunk
+		}
 		if st.next >= wire {
 			return 0, false
 		}
@@ -168,16 +204,14 @@ func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath stri
 		st.in[off] = true
 		st.count += Chunk
 		st.lastNew = time.Now()
-		moved := false
 		for st.in[st.prefix] {
 			delete(st.in, st.prefix)
 			st.prefix += Chunk
-			moved = true
 		}
-		if moved {
-			if err := os.WriteFile(gotPath, []byte(strconv.FormatInt(st.prefix, 10)), 0o600); err != nil {
-				return err
-			}
+		// every chunk in is written down, not only the prefix: with lanes
+		// a stop leaves chunks above a hole, and a resume keeps them
+		if err := os.WriteFile(gotPath, gotText(st.prefix, st.in), 0o600); err != nil {
+			return err
 		}
 		if prog != nil {
 			prog(st.count, wire)

@@ -22,11 +22,13 @@ type badMirror struct {
 	dir string
 	srv *httptest.Server
 
-	mu    sync.Mutex
-	n     int           // requests so far
-	by    map[int64]int // requests per chunk
-	plan  func(n int) string
-	conns map[string]bool
+	mu   sync.Mutex
+	n    int           // requests so far
+	by   map[int64]int // requests per chunk
+	plan func(n int) string
+	// by the chunk asked for, over plan when set
+	planAt func(off int64) string
+	conns  map[string]bool
 }
 
 func newBadMirror(t *testing.T, dir string, plan func(n int) string) *badMirror {
@@ -47,6 +49,9 @@ func (bm *badMirror) serve(w http.ResponseWriter, r *http.Request) {
 	bm.by[a]++
 	bm.conns[r.RemoteAddr] = true
 	what := bm.plan(bm.n)
+	if bm.planAt != nil {
+		what = bm.planAt(a)
+	}
 	bm.mu.Unlock()
 	body, err := os.ReadFile(filepath.Join(bm.dir, filepath.Base(r.URL.Path)))
 	if err != nil {
@@ -317,6 +322,66 @@ func TestBundleGivesUpWithoutProgress(t *testing.T) {
 	defer bm.mu.Unlock()
 	if bm.by[0] != 0 || bm.by[Chunk] != 0 {
 		t.Fatalf("asked again for what came: %v", bm.by)
+	}
+}
+
+// with lanes, chunks above one that will not come are kept for the next
+// try: only what is missing is asked again (translate-all run 2026-11-08,
+// three lanes kept 2 of 26 MB)
+func TestBundleResumeKeepsOtherLanesChunks(t *testing.T) {
+	bf := newBundleFix(t)
+	first := true
+	bm := newBadMirror(t, bf.mirror, func(int) string { return "slow" })
+	bm.planAt = func(off int64) string {
+		if first && off == 0 {
+			return "busy"
+		}
+		return "slow"
+	}
+	var stops []Stop
+	var smu sync.Mutex
+	made := 0
+	f := laneFetcher(bm, 3, &stops, &smu, &made)
+	f.GiveUp = 300 * time.Millisecond
+	f.Wait = func(int) time.Duration { return 20 * time.Millisecond }
+	dir := t.TempDir()
+	m := bm.manifest(bf.m)
+	err := FetchBundleWith(context.Background(), f, m, "zh", dir, nil)
+	if err == nil || !strings.Contains(err.Error(), "no chunk for") {
+		t.Fatalf("got %v", err)
+	}
+	bm.mu.Lock()
+	first = false
+	asked := len(bm.by)
+	bm.by = map[int64]int{}
+	bm.mu.Unlock()
+	if asked < 3 {
+		t.Fatalf("only %d chunks asked before the stop", asked)
+	}
+	var back int64 = -1
+	if err := FetchBundleWith(context.Background(), f, m, "zh", dir, func(d, n int64) {
+		if back < 0 {
+			back = d
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if !BundleInstalled(m, "zh", dir) {
+		t.Fatal("not installed")
+	}
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+	if bm.by[0] != 1 {
+		t.Fatalf("the missing chunk asked %d times", bm.by[0])
+	}
+	for off, n := range bm.by {
+		if off != 0 && off < int64(asked)*Chunk {
+			t.Fatalf("asked again for chunk at %d (%d times): %v", off, n, bm.by)
+		}
+	}
+	// the progress starts from what was kept, not from nothing
+	if back < Chunk {
+		t.Fatalf("progress started at %d", back)
 	}
 }
 
