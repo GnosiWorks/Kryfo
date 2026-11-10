@@ -123,7 +123,8 @@ class _HintRowState extends State<_HintRow> {
     final u = widget.link;
     if (u == null) return;
     HapticFeedback.selectionClick();
-    await openOutside(u);
+    // no browser took it: the address goes on the clipboard instead
+    if (!await openOutside(u) && mounted) await _copy();
   }
 
   @override
