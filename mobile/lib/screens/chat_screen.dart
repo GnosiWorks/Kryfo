@@ -10744,8 +10744,8 @@ PrivacyMode _pmFrom(String m) =>
     m == 'private' ? PrivacyMode.private : PrivacyMode.fast;
 
 /// whose pdf a bubble may draw a first page of unasked: an accepted
-/// contact this phone holds, not blocked, even before the chat's own reads
-/// answered
+/// contact this phone holds, or the developer's chat, not blocked, even
+/// before the chat's own reads answered
 @visibleForTesting
 bool pdfPeerKnown(
   String peer,
@@ -10753,7 +10753,11 @@ bool pdfPeerKnown(
   required bool accepted,
   required bool blocked,
 }) =>
-    accepted && !blocked && contacts.any((c) => c.haloId == peer && !c.blocked);
+    !blocked &&
+    // the developer's chat on a user's phone is no stranger's; his inbox
+    // chats on his own phone are, and keep the tile
+    (isDevChat(peer) ||
+        accepted && contacts.any((c) => c.haloId == peer && !c.blocked));
 
 // shown at the top of a chat when a known contact's identity key changed.
 // a reinstall looks the same as an attack, so we prompt to verify instead

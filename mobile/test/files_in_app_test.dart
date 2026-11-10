@@ -870,6 +870,19 @@ void main() {
       pdfPeerKnown('a', [c('a')], accepted: false, blocked: false),
       isFalse,
     );
+    // the developer's chat draws its pdfs; a user in his inbox does not
+    expect(
+      pdfPeerKnown('dev:k1', const [], accepted: false, blocked: false),
+      isTrue,
+    );
+    expect(
+      pdfPeerKnown('dev:k1', const [], accepted: true, blocked: true),
+      isFalse,
+    );
+    expect(
+      pdfPeerKnown('u-inbox', const [], accepted: false, blocked: false),
+      isFalse,
+    );
     final src = File('lib/screens/chat_screen.dart').readAsStringSync();
     expect(src, isNot(contains('known: _accepted && !_blocked')));
   });
