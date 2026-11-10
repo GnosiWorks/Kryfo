@@ -257,6 +257,24 @@ static void test_words(const char *path, const struct wav *w) {
   CHECK(strstr(s.text, "Americans") != NULL);
   free(h.pcm);
 
+  // silence runs nothing and says the language asked for
+  struct wav quiet = {calloc(16000 * 8, 2), 16000 * 8, 16000, 1};
+  seen_init(&s);
+  CHECK(kv_run(m, quiet.pcm, quiet.frames, quiet.rate, 1, "de", 4, NULL, on_segment, &s, lang) == KV_OK);
+  CHECK(s.count == 0);
+  CHECK(strcmp(lang, "de") == 0);
+  free(quiet.pcm);
+
+  // a long note comes in pieces: the first words within its first
+  // seconds, the times in order across the whole note
+  struct wav four = repeat(w, 4);
+  seen_init(&s);
+  CHECK(kv_run(m, four.pcm, four.frames, four.rate, four.channels, "en", 4, NULL, on_segment, &s, lang) == KV_OK);
+  printf("44 s in %d segments, last ends %lld ms: %s\n", s.count, (long long)s.last_t1, s.text);
+  CHECK(s.ordered && s.count >= 4);
+  CHECK(s.last_t1 > 30000 && s.last_t1 <= 44100);
+  free(four.pcm);
+
   struct wav longer = repeat(w, 4);
   volatile int32_t stop = 0;
   seen_init(&s);
