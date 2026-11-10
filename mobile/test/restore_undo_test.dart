@@ -141,6 +141,10 @@ void main() {
       await dropTaken(db, uid: 'e1');
       await dropTaken(db, uid: 'u1');
       expect(left(), {'u1', 'q1', 'g1', 'h1'});
+      // a cleared chat keeps its take-backs, its edits go
+      await dropTaken(db, peer: 'p', editsOnly: true);
+      await dropTaken(db, group: 'h', editsOnly: true);
+      expect(left(), {'u1', 'q1', 'g1', 'h1'});
       await dropTaken(db, peer: 'q');
       await dropTaken(db, group: 'g');
       expect(left(), {'u1', 'h1'});

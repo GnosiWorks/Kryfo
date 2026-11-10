@@ -368,7 +368,7 @@ mixin _DeleteRows {
       [peerId],
     );
     await db.delete('messages', where: _kOneToOne, whereArgs: [peerId]);
-    await dropTaken(db, peer: peerId);
+    await dropTaken(db, peer: peerId, editsOnly: true);
     await _dropFilesComingFrom(db, peerId);
     await _scrubMedia(media);
   }
@@ -401,7 +401,7 @@ mixin _DeleteRows {
     );
     await _dropGroupFiles(db, groupId);
     await db.delete('messages', where: 'group_id = ?', whereArgs: [groupId]);
-    await dropTaken(db, group: groupId);
+    await dropTaken(db, group: groupId, editsOnly: true);
     await _scrubMedia(media);
   }
 
