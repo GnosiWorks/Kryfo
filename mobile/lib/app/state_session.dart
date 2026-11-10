@@ -729,37 +729,48 @@ extension AppStateSession on AppState {
     if (everyday) _closeDone = done;
     _session = Session(was.primary);
     lockState.inVault = false;
-    _forgetVaultSide();
-    // its file on the way stops, and its waits go. the decoy's fetches
-    // nothing, and the everyday side is not read from it
-    if (everyday) _vaultFetchStops(v);
-    // its contacts' photos off at once, before anything is drawn
-    photoBook.put({
-      for (final MapEntry(:key, :value) in photoBook.all.entries)
-        if (!was.isHidden(key)) key: value,
-    });
-    // its chats off home now; the rest is read again below
-    contacts = [
-      for (final c in contacts)
-        if (!was.isHidden(c.haloId)) c,
-    ];
-    groups = [
-      for (final g in groups)
-        if (!was.isHidden(g.groupId)) g,
-    ];
-    expiredRoomName = null;
-    renewRootNavigator();
-    sessionRev++;
-    notifyListeners();
-    _listsBack = () async {
-      try {
-        await refreshContacts();
-        await refreshGroups();
-      } catch (e) {
-        dlog('lists after the vault: $e');
-      }
-    }();
-    unawaited(everyday ? _closeVault(v, done) : _closeDecoyVault(v));
+    // each step on its own: one that throws leaves the rest to run, and
+    // the vault's handle, with its key, closes whatever happened above
+    try {
+      if (vaultShutFaultForTest case final f?) lockStep('vault test fault', f);
+      lockStep('vault side', _forgetVaultSide);
+      // its file on the way stops, and its waits go. the decoy's fetches
+      // nothing, and the everyday side is not read from it
+      if (everyday) lockStep('vault fetches', () => _vaultFetchStops(v));
+      // its contacts' photos off at once, before anything is drawn
+      lockStep(
+        'vault photos',
+        () => photoBook.put({
+          for (final MapEntry(:key, :value) in photoBook.all.entries)
+            if (!was.isHidden(key)) key: value,
+        }),
+      );
+      // its chats off home now; the rest is read again below
+      lockStep('vault lists', () {
+        contacts = [
+          for (final c in contacts)
+            if (!was.isHidden(c.haloId)) c,
+        ];
+        groups = [
+          for (final g in groups)
+            if (!was.isHidden(g.groupId)) g,
+        ];
+        expiredRoomName = null;
+      });
+      lockStep('vault routes', renewRootNavigator);
+      sessionRev++;
+      lockStep('vault tell', notifyListeners);
+      _listsBack = () async {
+        try {
+          await refreshContacts();
+          await refreshGroups();
+        } catch (e) {
+          dlog('lists after the vault: $e');
+        }
+      }();
+    } finally {
+      unawaited(everyday ? _closeVault(v, done) : _closeDecoyVault(v));
+    }
   }
 
   // once a move under way is done, and its key goes with the handle
@@ -825,3 +836,7 @@ Future<void> _keepDecoyNote(String note) async {
   if (!sessionQuiet) return;
   await SqlRouterStore(_session.primary.open).putMeta(kComputerDecoyNote, note);
 }
+
+/// a vault shut step that throws, for the test that proves the rest run
+@visibleForTesting
+VoidCallback? vaultShutFaultForTest;
