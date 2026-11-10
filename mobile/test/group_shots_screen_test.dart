@@ -7,6 +7,7 @@
 // the text it fits, and with reduced motion it shows at once. the
 // database is a stand-in
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -595,6 +596,48 @@ void main() {
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await _settle(t);
       expect(find.text(l10n.chatBlockScreenshots), findsNothing);
+      await _close(t);
+    });
+
+    testWidgets('a room\'s file opened from its shared page stays in Kryfo', (
+      t,
+    ) async {
+      final dir = Directory.systemTemp.createTempSync('room_shared');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final f = File('${dir.path}/notes.zip')
+        ..writeAsBytesSync([0x50, 0x4B, 3, 4, 0, 0, 0, 0]);
+      _use(
+        t,
+        _Db(
+          room: true,
+          members: [_roomPub, _joiner],
+          rows: [
+            {
+              ..._in(1, _joiner, ''),
+              'plaintext': null,
+              'file_path': f.path,
+              'file_name': 'notes.zip',
+            },
+          ],
+        ),
+      );
+      await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
+      await _settle(t);
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await _settle(t);
+      await t.tap(find.text(l10n.sharedTabFiles));
+      await _settle(t);
+      await t.tap(find.text('notes'));
+      for (var i = 0; i < 30; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump(const Duration(milliseconds: 100));
+      }
+      // no other app, no save: the room keeps what its members send
+      expect(find.text(l10n.groupShotsKeptOpen), findsOneWidget);
       await _close(t);
     });
 
