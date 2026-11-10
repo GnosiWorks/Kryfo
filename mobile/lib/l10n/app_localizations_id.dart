@@ -7226,7 +7226,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'Tempel baris dari orang yang kamu percaya.';
+      'Tempel baris dari Tor Project atau dari orang yang kamu percaya.';
 
   @override
   String get bridgesDetails => 'Detail';
@@ -7289,7 +7289,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Tempel baris yang mereka kirim, atau pindai kodenya. Ambil baris jembatan dari orang yang kamu kenal.';
+      'Tempel baris jembatan, atau pindai kodenya. Ambil baris dari Tor Project atau dari orang yang kamu kenal.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7297,7 +7297,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'Tempel atau pindai baris dari orang yang kamu percaya.';
+      'Tempel atau pindai baris dari Tor Project atau dari orang yang kamu percaya.';
 
   @override
   String get bridgesNothingYet => 'Belum ada';
@@ -7393,7 +7393,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'Tempel baris yang mereka kirim. Ambil baris jembatan dari orang yang kamu kenal.';
+      'Tempel baris jembatan. Ambil baris dari Tor Project atau dari orang yang kamu kenal.';
 
   @override
   String get bridgesFromAFriendLower => 'dari teman';
@@ -7448,7 +7448,35 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo memilih jembatan secara otomatis. Snowflake dan WebTunnel berfungsi di sebagian besar tempat. Kalau salah satunya tidak tersambung, coba yang lain, atau minta baris jembatan dari teman.';
+      'Kryfo memilih jembatan secara otomatis. Snowflake dan WebTunnel berfungsi di sebagian besar tempat. Kalau salah satunya tidak tersambung, coba yang lain, minta jembatan pribadi dari Tor Project, atau minta baris jembatan dari teman.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'Tidak bisa tersambung otomatis? Minta jembatan pribadi dari Tor Project, lalu tempel di bawah.';
+
+  @override
+  String get bridgesPrivateWebsite => 'Situs web';
+
+  @override
+  String get bridgesPrivateEmail => 'Surel';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Kirim dari Gmail atau Riseup';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'Salin $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '$what disalin';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'Buka $what';
+  }
 
   @override
   String get bridgesAskTorProject => 'Tanya Tor Project';

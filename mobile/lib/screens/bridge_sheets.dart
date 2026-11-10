@@ -24,6 +24,7 @@ import '../widgets/motion.dart' show haloRoute;
 import '../widgets/press_scale.dart';
 import '../widgets/sheet_handle.dart';
 import '../widgets/swap.dart';
+import 'bridge_private_hint.dart';
 import 'scan_screen.dart';
 import '../widgets/shift_tap_guard.dart';
 import '../desktop/desktop_mode.dart' show onDesktop;
@@ -341,6 +342,13 @@ class _FriendSheetState extends State<_FriendSheet> {
               ),
             ),
             const SizedBox(height: 14),
+            // automatic found no way in: where a private bridge comes from
+            ListenableBuilder(
+              listenable: appState,
+              builder: (_, _) => PrivateBridgeHint(
+                show: !appState.inDecoyView && appState.bridgeStatus.autoFailed,
+              ),
+            ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(

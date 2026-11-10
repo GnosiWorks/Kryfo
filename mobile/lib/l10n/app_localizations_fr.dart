@@ -7303,7 +7303,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'Collez une ligne donnée par une personne de confiance.';
+      'Collez une ligne du Projet Tor ou d’une personne de confiance.';
 
   @override
   String get bridgesDetails => 'Détails';
@@ -7366,7 +7366,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Collez la ligne qu’on vous a envoyée, ou scannez son code. Prenez les lignes de pont de personnes que vous connaissez.';
+      'Collez une ligne de pont ou scannez son code. Prenez des lignes du Projet Tor ou de personnes que vous connaissez.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7374,7 +7374,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'Collez ou scannez une ligne donnée par une personne de confiance.';
+      'Collez ou scannez une ligne du Projet Tor ou d’une personne de confiance.';
 
   @override
   String get bridgesNothingYet => 'Rien pour l’instant';
@@ -7469,7 +7469,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'Collez la ligne qu’on vous a envoyée. Prenez les lignes de pont de personnes que vous connaissez.';
+      'Collez une ligne de pont. Prenez des lignes du Projet Tor ou de personnes que vous connaissez.';
 
   @override
   String get bridgesFromAFriendLower => 'd’un proche';
@@ -7524,7 +7524,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo choisit les ponts automatiquement. Snowflake et WebTunnel fonctionnent presque partout. Si l’un ne se connecte pas, essayez-en un autre ou demandez une ligne de pont à un proche.';
+      'Kryfo choisit les ponts automatiquement. Snowflake et WebTunnel fonctionnent presque partout. Si l’un ne se connecte pas, essayez-en un autre, obtenez un pont privé auprès du Projet Tor ou demandez une ligne de pont à un proche.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'Pas de connexion automatique ? Obtenez un pont privé auprès du Projet Tor, puis collez-le ci-dessous.';
+
+  @override
+  String get bridgesPrivateWebsite => 'Site web';
+
+  @override
+  String get bridgesPrivateEmail => 'E-mail';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Envoyez-le depuis Gmail ou Riseup';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'Copier $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '$what copié';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'Ouvrir $what';
+  }
 
   @override
   String get bridgesAskTorProject => 'Demander au Projet Tor';

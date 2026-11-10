@@ -7345,7 +7345,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesBuiltIn => 'مدمج';
 
   @override
-  String get bridgesPasteOrScanALineDesk => 'الصق سطرًا أعطاك إياه شخص تثق به.';
+  String get bridgesPasteOrScanALineDesk =>
+      'الصق سطرًا من مشروع Tor أو من شخص تثق به.';
 
   @override
   String get bridgesDetails => 'التفاصيل';
@@ -7408,7 +7409,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'الصق السطر الذي أرسله إليك، أو اقرأ رمزه. خذ أسطر الجسور ممن تعرفهم.';
+      'الصق سطر جسر، أو امسح رمزه. خذ الأسطر من مشروع Tor أو من أشخاص تعرفهم.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7416,7 +7417,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'الصق سطرًا أعطاك إياه شخص تثق به، أو اقرأ رمزه.';
+      'الصق أو امسح سطرًا من مشروع Tor أو من شخص تثق به.';
 
   @override
   String get bridgesNothingYet => 'لا شيء بعد';
@@ -7514,7 +7515,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'الصق السطر الذي أرسله إليك. خذ أسطر الجسور ممن تعرفهم.';
+      'الصق سطر جسر. خذ الأسطر من مشروع Tor أو من أشخاص تعرفهم.';
 
   @override
   String get bridgesFromAFriendLower => 'من صديق';
@@ -7571,7 +7572,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'يختار Kryfo الجسور تلقائيًا. يعمل Snowflake وWebTunnel في معظم الأماكن. إذا لم يتصل أحدها، فجرّب غيره، أو اطلب سطر جسر من صديق.';
+      'يختار Kryfo الجسور تلقائيًا. يعمل Snowflake وWebTunnel في معظم الأماكن. إذا لم يتصل أحدها، فجرّب غيره، أو احصل على جسر خاص من مشروع Tor، أو اطلب سطر جسر من صديق.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'تعذّر الاتصال تلقائيًا؟ احصل على جسر خاص من مشروع Tor، ثم الصقه في الأسفل.';
+
+  @override
+  String get bridgesPrivateWebsite => 'الموقع';
+
+  @override
+  String get bridgesPrivateEmail => 'البريد الإلكتروني';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'أرسله من Gmail أو Riseup';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'نسخ $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return 'نُسخ $what';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'افتح $what';
+  }
 
   @override
   String get bridgesAskTorProject => 'اسأل مشروع Tor';

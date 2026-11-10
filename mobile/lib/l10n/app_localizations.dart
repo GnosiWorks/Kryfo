@@ -11590,7 +11590,7 @@ abstract class AppLocalizations {
   /// bridgesPasteOrScanALine as a computer shows it (linux and windows)
   ///
   /// In en, this message translates to:
-  /// **'Paste a line someone you trust gave you.'**
+  /// **'Paste a line from the Tor Project or someone you trust.'**
   String get bridgesPasteOrScanALineDesk;
 
   /// screens/bridges_screen.dart
@@ -11704,7 +11704,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Paste the line they sent you, or scan its code. Take bridge lines from people you know.'**
+  /// **'Paste a bridge line, or scan its code. Take lines from the Tor Project or from people you know.'**
   String get bridgesPasteTheLineThey;
 
   /// screens/bridges_screen.dart
@@ -11716,7 +11716,7 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Paste or scan a line someone you trust gave you.'**
+  /// **'Paste or scan a line from the Tor Project or someone you trust.'**
   String get bridgesPasteOrScanALine;
 
   /// screens/bridges_screen.dart
@@ -11866,7 +11866,7 @@ abstract class AppLocalizations {
   /// bridgesPasteTheLineThey as a computer shows it (linux and windows)
   ///
   /// In en, this message translates to:
-  /// **'Paste the line they sent you. Take bridge lines from people you know.'**
+  /// **'Paste a bridge line. Take lines from the Tor Project or from people you know.'**
   String get bridgesPasteTheLineTheyDesk;
 
   /// screens/bridges_screen.dart
@@ -11944,8 +11944,50 @@ abstract class AppLocalizations {
   /// bridges screen: plain advice over the choices, the same for everyone, no country
   ///
   /// In en, this message translates to:
-  /// **'Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn\'t connect, try another, or ask a friend for a bridge line.'**
+  /// **'Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn\'t connect, try another, get a private bridge from the Tor Project, or ask a friend for a bridge line.'**
   String get bridgesPlainAdvice;
+
+  /// bridges, friend sheet: over the paste box once automatic could not connect
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t connect automatically? Get a private bridge from the Tor Project, then paste it below.'**
+  String get bridgesPrivateHint;
+
+  /// bridges, private bridge hint: the row label for bridges.torproject.org
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get bridgesPrivateWebsite;
+
+  /// bridges, private bridge hint: the row label for bridges@torproject.org
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get bridgesPrivateEmail;
+
+  /// bridges, private bridge hint: under the email address, which mail services the tor project answers
+  ///
+  /// In en, this message translates to:
+  /// **'Send it from Gmail or Riseup'**
+  String get bridgesPrivateEmailFrom;
+
+  /// bridges, private bridge hint: the copy button's name, what is the address
+  ///
+  /// In en, this message translates to:
+  /// **'Copy {what}'**
+  String bridgesPrivateCopy(Object what);
+
+  /// bridges, private bridge hint: toast after a copy, what is the address
+  ///
+  /// In en, this message translates to:
+  /// **'{what} copied'**
+  String bridgesPrivateCopied(Object what);
+
+  /// bridges, private bridge hint: a screen reader's name for the tappable website, what is the address
+  ///
+  /// In en, this message translates to:
+  /// **'Open {what}'**
+  String bridgesPrivateOpen(Object what);
 
   /// screens/bridges_screen.dart
   ///

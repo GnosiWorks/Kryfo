@@ -7358,7 +7358,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'Вставь строку, которую тебе дал тот, кому ты доверяешь.';
+      'Вставь строку от проекта Tor или от того, кому доверяешь.';
 
   @override
   String get bridgesDetails => 'Подробнее';
@@ -7421,7 +7421,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Вставь строку, которую тебе прислали, или отсканируй её код. Бери строки мостов у тех, кого знаешь.';
+      'Вставь строку моста или отсканируй её код. Бери строки у проекта Tor или у тех, кого знаешь.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7429,7 +7429,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'Вставь или отсканируй строку, которую тебе дал тот, кому ты доверяешь.';
+      'Вставь или отсканируй строку от проекта Tor или от того, кому доверяешь.';
 
   @override
   String get bridgesNothingYet => 'Пока ничего';
@@ -7527,7 +7527,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'Вставь строку, которую тебе прислали. Бери строки мостов у тех, кого знаешь.';
+      'Вставь строку моста. Бери строки у проекта Tor или у тех, кого знаешь.';
 
   @override
   String get bridgesFromAFriendLower => 'от друга';
@@ -7585,7 +7585,35 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo выбирает мосты сам. Snowflake и WebTunnel работают почти везде. Если один не подключается, попробуй другой или попроси у друга строку моста.';
+      'Kryfo выбирает мосты сам. Snowflake и WebTunnel работают почти везде. Если один не подключается, попробуй другой, получи личный мост у проекта Tor или попроси у друга строку моста.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'Не подключается автоматически? Получи личный мост у проекта Tor и вставь его ниже.';
+
+  @override
+  String get bridgesPrivateWebsite => 'Сайт';
+
+  @override
+  String get bridgesPrivateEmail => 'Почта';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Отправь с Gmail или Riseup';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'Копировать $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '$what скопировано';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'Открыть $what';
+  }
 
   @override
   String get bridgesAskTorProject => 'Спросить проект Tor';

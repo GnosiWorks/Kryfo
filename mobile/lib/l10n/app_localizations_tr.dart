@@ -7249,7 +7249,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'Güvendiğin birinin verdiği bir satırı yapıştır.';
+      'Tor Projesinden ya da güvendiğin birinden gelen bir satırı yapıştır.';
 
   @override
   String get bridgesDetails => 'Ayrıntılar';
@@ -7312,7 +7312,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Sana gönderilen satırı yapıştır ya da kodunu tara. Köprü satırlarını tanıdığın kişilerden al.';
+      'Bir köprü satırı yapıştır ya da kodunu tara. Satırları Tor Projesinden ya da tanıdığın kişilerden al.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7320,7 +7320,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'Güvendiğin birinin verdiği bir satırı yapıştır ya da tara.';
+      'Tor Projesinden ya da güvendiğin birinden gelen bir satırı yapıştır veya tara.';
 
   @override
   String get bridgesNothingYet => 'Henüz yok';
@@ -7416,7 +7416,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'Sana gönderilen satırı yapıştır. Köprü satırlarını tanıdığın kişilerden al.';
+      'Bir köprü satırı yapıştır. Satırları Tor Projesinden ya da tanıdığın kişilerden al.';
 
   @override
   String get bridgesFromAFriendLower => 'bir arkadaştan';
@@ -7472,7 +7472,35 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo köprüleri otomatik seçer. Snowflake ve WebTunnel çoğu yerde çalışır. Biri bağlanmazsa başka birini dene ya da bir arkadaşından köprü satırı iste.';
+      'Kryfo köprüleri otomatik seçer. Snowflake ve WebTunnel çoğu yerde çalışır. Biri bağlanmazsa başka birini dene, Tor Projesinden özel bir köprü al ya da bir arkadaşından köprü satırı iste.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'Otomatik bağlanamıyor musun? Tor Projesinden özel bir köprü al, sonra aşağıya yapıştır.';
+
+  @override
+  String get bridgesPrivateWebsite => 'Web sitesi';
+
+  @override
+  String get bridgesPrivateEmail => 'E-posta';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Gmail veya Riseup\'tan gönder';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return '$what kopyala';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '$what kopyalandı';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return '$what aç';
+  }
 
   @override
   String get bridgesAskTorProject => 'Tor Projesine sor';

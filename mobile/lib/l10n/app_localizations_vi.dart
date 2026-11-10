@@ -7212,7 +7212,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'Dán một dòng do người bạn tin tưởng đưa cho bạn.';
+      'Dán một dòng từ Dự án Tor hoặc từ người bạn tin tưởng.';
 
   @override
   String get bridgesDetails => 'Chi tiết';
@@ -7276,7 +7276,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Dán dòng họ gửi cho bạn, hoặc quét mã của nó. Hãy nhận dòng cầu nối từ người bạn quen biết.';
+      'Dán một dòng cầu nối, hoặc quét mã của nó. Hãy lấy dòng từ Dự án Tor hoặc từ người bạn quen.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7284,7 +7284,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'Dán hoặc quét một dòng do người bạn tin tưởng đưa cho bạn.';
+      'Dán hoặc quét một dòng từ Dự án Tor hoặc từ người bạn tin tưởng.';
 
   @override
   String get bridgesNothingYet => 'Chưa có';
@@ -7379,7 +7379,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'Dán dòng họ gửi cho bạn. Hãy nhận dòng cầu nối từ người bạn quen biết.';
+      'Dán một dòng cầu nối. Hãy lấy dòng từ Dự án Tor hoặc từ người bạn quen.';
 
   @override
   String get bridgesFromAFriendLower => 'từ bạn bè';
@@ -7434,7 +7434,35 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo tự động chọn cầu nối. Snowflake và WebTunnel hoạt động ở hầu hết mọi nơi. Nếu một cầu nối không kết nối được, hãy thử cái khác hoặc xin bạn bè một dòng cầu nối.';
+      'Kryfo tự động chọn cầu nối. Snowflake và WebTunnel hoạt động ở hầu hết mọi nơi. Nếu một cầu nối không kết nối được, hãy thử cái khác, lấy một cầu nối riêng từ Dự án Tor, hoặc xin bạn bè một dòng cầu nối.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'Không tự kết nối được? Hãy lấy một cầu nối riêng từ Dự án Tor, rồi dán vào bên dưới.';
+
+  @override
+  String get bridgesPrivateWebsite => 'Trang web';
+
+  @override
+  String get bridgesPrivateEmail => 'Thư điện tử';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Gửi từ Gmail hoặc Riseup';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'Sao chép $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return 'Đã sao chép $what';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'Mở $what';
+  }
 
   @override
   String get bridgesAskTorProject => 'Hỏi Dự án Tor';

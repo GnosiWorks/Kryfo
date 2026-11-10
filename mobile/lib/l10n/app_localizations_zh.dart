@@ -6892,7 +6892,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesBuiltIn => '内置';
 
   @override
-  String get bridgesPasteOrScanALineDesk => '粘贴你信任的人给你的网桥配置。';
+  String get bridgesPasteOrScanALineDesk => '粘贴来自 Tor 项目或你信任的人的网桥配置。';
 
   @override
   String get bridgesDetails => '详情';
@@ -6952,13 +6952,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesInUse => '正在使用';
 
   @override
-  String get bridgesPasteTheLineThey => '粘贴对方发给你的那一行配置，或者扫码。网桥配置要找你认识的人拿。';
+  String get bridgesPasteTheLineThey =>
+      '粘贴一条网桥配置，或者扫码。网桥配置可以从 Tor 项目获取，或者找你认识的人拿。';
 
   @override
   String get bridgesYouReOnAMode => '你当前的模式不使用 Tor。切换回来后，这些选择才会生效。';
 
   @override
-  String get bridgesPasteOrScanALine => '粘贴或扫描你信任的人给你的网桥配置。';
+  String get bridgesPasteOrScanALine => '粘贴或扫描来自 Tor 项目或你信任的人的网桥配置。';
 
   @override
   String get bridgesNothingYet => '暂无';
@@ -7046,7 +7047,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesSavedLines => '已保存的地址';
 
   @override
-  String get bridgesPasteTheLineTheyDesk => '粘贴对方发给你的那一行配置。网桥配置要找你认识的人拿。';
+  String get bridgesPasteTheLineTheyDesk =>
+      '粘贴一条网桥配置。网桥配置可以从 Tor 项目获取，或者找你认识的人拿。';
 
   @override
   String get bridgesFromAFriendLower => '来自朋友';
@@ -7099,7 +7101,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo 会自动选择网桥。Snowflake 和 WebTunnel 在大多数地方都能用。如果一个连不上，就换一个试试，或者向朋友要一条网桥配置。';
+      'Kryfo 会自动选择网桥。Snowflake 和 WebTunnel 在大多数地方都能用。如果一个连不上，就换一个试试，或者从 Tor 项目获取私人网桥，也可以向朋友要一条网桥配置。';
+
+  @override
+  String get bridgesPrivateHint => '无法自动连接？从 Tor 项目获取一个私人网桥，然后粘贴到下面。';
+
+  @override
+  String get bridgesPrivateWebsite => '网站';
+
+  @override
+  String get bridgesPrivateEmail => '邮件';
+
+  @override
+  String get bridgesPrivateEmailFrom => '请用 Gmail 或 Riseup 发送';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return '复制 $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '已复制 $what';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return '打开 $what';
+  }
 
   @override
   String get bridgesAskTorProject => '询问 Tor 项目';
@@ -18336,7 +18365,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesBuiltIn => '內建';
 
   @override
-  String get bridgesPasteOrScanALineDesk => '貼上你信任的人給你的橋接設定。';
+  String get bridgesPasteOrScanALineDesk => '貼上來自 Tor 專案或你信任的人的橋接設定。';
 
   @override
   String get bridgesDetails => '詳情';
@@ -18396,13 +18425,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesInUse => '使用中';
 
   @override
-  String get bridgesPasteTheLineThey => '貼上對方傳給你的設定，或掃描它的 QR 碼。橋接設定請向你認識的人拿。';
+  String get bridgesPasteTheLineThey =>
+      '貼上一條橋接設定，或者掃描條碼。橋接設定可以從 Tor 專案取得，或者找你認識的人拿。';
 
   @override
   String get bridgesYouReOnAMode => '你目前的模式不使用 Tor。切換回去後，這些選擇才會生效。';
 
   @override
-  String get bridgesPasteOrScanALine => '貼上或掃描你信任的人給你的橋接設定。';
+  String get bridgesPasteOrScanALine => '貼上或掃描來自 Tor 專案或你信任的人的橋接設定。';
 
   @override
   String get bridgesNothingYet => '還沒有';
@@ -18490,7 +18520,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesSavedLines => '已儲存的設定';
 
   @override
-  String get bridgesPasteTheLineTheyDesk => '貼上對方傳給你的設定。橋接設定請向你認識的人拿。';
+  String get bridgesPasteTheLineTheyDesk =>
+      '貼上一條橋接設定。橋接設定可以從 Tor 專案取得，或者找你認識的人拿。';
 
   @override
   String get bridgesFromAFriendLower => '來自朋友';
@@ -18543,7 +18574,34 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo 會自動選擇橋接。Snowflake 和 WebTunnel 在大多數地方都能用。如果一個連不上，就換一個試試，或者向朋友要一條橋接設定。';
+      'Kryfo 會自動選擇橋接。Snowflake 和 WebTunnel 在大多數地方都能用。如果一個連不上，就換一個試試，或者從 Tor 專案取得私人橋接，也可以向朋友要一條橋接設定。';
+
+  @override
+  String get bridgesPrivateHint => '無法自動連線？從 Tor 專案取得一個私人橋接，然後貼到下面。';
+
+  @override
+  String get bridgesPrivateWebsite => '網站';
+
+  @override
+  String get bridgesPrivateEmail => '電子郵件';
+
+  @override
+  String get bridgesPrivateEmailFrom => '請用 Gmail 或 Riseup 寄送';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return '複製 $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '已複製 $what';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return '打開 $what';
+  }
 
   @override
   String get bridgesAskTorProject => '詢問 Tor 專案';

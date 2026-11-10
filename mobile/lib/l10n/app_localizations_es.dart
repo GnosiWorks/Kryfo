@@ -7287,7 +7287,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'Pega una línea que te dio alguien de confianza.';
+      'Pega una línea del Proyecto Tor o de alguien de confianza.';
 
   @override
   String get bridgesDetails => 'Detalles';
@@ -7351,7 +7351,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Pega la línea que te enviaron o escanea su código. Acepta líneas de puente de personas que conoces.';
+      'Pega una línea de puente o escanea su código. Usa líneas del Proyecto Tor o de personas que conoces.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7359,7 +7359,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'Pega o escanea una línea que te dio alguien de confianza.';
+      'Pega o escanea una línea del Proyecto Tor o de alguien de confianza.';
 
   @override
   String get bridgesNothingYet => 'Nada aún';
@@ -7457,7 +7457,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'Pega la línea que te enviaron. Acepta líneas de puente de personas que conoces.';
+      'Pega una línea de puente. Usa líneas del Proyecto Tor o de personas que conoces.';
 
   @override
   String get bridgesFromAFriendLower => 'de un amigo';
@@ -7513,7 +7513,35 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo elige los puentes automáticamente. Snowflake y WebTunnel funcionan en la mayoría de lugares. Si uno no conecta, prueba otro o pide a un amigo una línea de puente.';
+      'Kryfo elige los puentes automáticamente. Snowflake y WebTunnel funcionan en la mayoría de lugares. Si uno no conecta, prueba otro, consigue un puente privado del Proyecto Tor o pide a un amigo una línea de puente.';
+
+  @override
+  String get bridgesPrivateHint =>
+      '¿No conecta automáticamente? Consigue un puente privado del Proyecto Tor y pégalo abajo.';
+
+  @override
+  String get bridgesPrivateWebsite => 'Sitio web';
+
+  @override
+  String get bridgesPrivateEmail => 'Correo';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Envíalo desde Gmail o Riseup';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'Copiar $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '$what copiado';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'Abrir $what';
+  }
 
   @override
   String get bridgesAskTorProject => 'Preguntar al Proyecto Tor';

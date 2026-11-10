@@ -25,6 +25,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute,
         AppStateBridges;
+import 'package:kryfo/open_outside.dart';
+import 'package:kryfo/screens/bridge_private_hint.dart';
 import 'package:kryfo/screens/bridge_share_sheet.dart';
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
@@ -1294,8 +1296,16 @@ void main() {
       await _in(t);
       // named by the pick, not by how the engine was handed it
       expect(find.textContaining(l10n.bridgesBuiltIn), findsWidgets);
+      // the advice names the tor project as a way to a bridge; no line
+      // names it as where this one came from
       expect(
-        find.textContaining(l10n.bridgesFromTheTorProjectLower),
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              (w.data ?? '').contains(l10n.bridgesFromTheTorProjectLower) &&
+              w.data != l10n.bridgesPlainAdvice &&
+              w.data != l10n.bridgesPasteOrScanALineShown,
+        ),
         findsNothing,
       );
       await _done(t);
@@ -1859,6 +1869,192 @@ void main() {
   });
 
   // keeps the haptics channel quiet
+  group('a private bridge, once automatic failed', () {
+    const failed = BridgeStatus(mode: 'auto', phase: 'exhausted');
+    final hint = find.byKey(const ValueKey('privateBridgeHint'));
+
+    Future<void> sheet(
+      WidgetTester t, {
+      BridgeStatus status = failed,
+      Locale locale = const Locale('en'),
+      double scale = 1,
+      Size size = const Size(400, 900),
+      bool still = false,
+    }) async {
+      await _open(
+        t,
+        status: status,
+        locale: locale,
+        scale: scale,
+        size: size,
+        still: still,
+      );
+      final card = find.text(l10n.bridgesBridgeFromAFriend);
+      await t.scrollUntilVisible(
+        card,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await t.ensureVisible(card);
+      await t.pump(const Duration(milliseconds: 300));
+      await t.tap(card);
+      await _in(t);
+    }
+
+    testWidgets('over the paste box after automatic failed', (t) async {
+      await sheet(t);
+      expect(hint, findsOneWidget);
+      expect(find.text(l10n.bridgesPrivateHint), findsOneWidget);
+      for (final v in [kGetBridgesBot, kBridgesSite, kBridgesMail]) {
+        expect(find.text(v), findsOneWidget);
+      }
+      expect(find.text(l10n.bridgesPrivateEmailFrom), findsOneWidget);
+      expect(
+        t.getRect(hint).bottom,
+        lessThanOrEqualTo(t.getRect(find.byType(TextField)).top),
+      );
+      await _done(t);
+    });
+
+    testWidgets('never while connected, trying, or before automatic', (
+      t,
+    ) async {
+      for (final s in [
+        _through,
+        _another,
+        BridgeStatus.none,
+        // another way picked: not automatic's failure
+        const BridgeStatus(mode: 'own', phase: 'exhausted'),
+        const BridgeStatus(mode: 'auto', phase: 'exhausted', canSend: true),
+      ]) {
+        await sheet(t, status: s);
+        expect(hint, findsNothing, reason: '$s');
+        expect(find.text(l10n.bridgesPrivateHint), findsNothing);
+        await _done(t);
+      }
+    });
+
+    testWidgets('goes once tor connects, comes back if it fails again', (
+      t,
+    ) async {
+      await sheet(t);
+      expect(hint, findsOneWidget);
+      appState.setBridgeStatusForTest(_through);
+      await _in(t);
+      expect(hint, findsNothing);
+      appState.setBridgeStatusForTest(failed);
+      await _in(t);
+      expect(hint, findsOneWidget);
+      await _done(t);
+    });
+
+    testWidgets('a decoy never sees it', (t) async {
+      lockState.inDecoy = true;
+      await _open(t, status: failed);
+      // a decoy has no friend card to open the sheet from
+      expect(find.text(l10n.bridgesBridgeFromAFriend), findsNothing);
+      expect(hint, findsNothing);
+      await _done(t);
+    });
+
+    testWidgets('each row copies its address', (t) async {
+      final copied = <String?>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (c) async {
+          if (c.method == 'Clipboard.setData') {
+            copied.add((c.arguments as Map)['text'] as String?);
+          }
+          return null;
+        },
+      );
+      await sheet(t);
+      for (final v in [kGetBridgesBot, kBridgesSite, kBridgesMail]) {
+        await t.tap(find.byTooltip(l10n.bridgesPrivateCopy(v)));
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 300));
+        expect(copied.last, v);
+        expect(find.text(l10n.bridgesPrivateCopied(v)), findsOneWidget);
+        await t.pump(const Duration(seconds: 4));
+      }
+      expect(copied, [kGetBridgesBot, kBridgesSite, kBridgesMail]);
+      await _done(t);
+    });
+
+    testWidgets('the website opens in the browser', (t) async {
+      final opened = <Uri>[];
+      openOutsideForTest = (u) async {
+        opened.add(u);
+        return true;
+      };
+      addTearDown(() => openOutsideForTest = null);
+      await sheet(t);
+      await t.tap(find.text(kBridgesSite));
+      await t.pump();
+      expect(opened, [Uri.parse('https://bridges.torproject.org/')]);
+      // the bot and the address are copied, never opened
+      await t.tap(find.text(kGetBridgesBot));
+      await t.tap(find.text(kBridgesMail));
+      await t.pump();
+      expect(opened, hasLength(1));
+      await _done(t);
+    });
+
+    testWidgets('right to left: the words lead from the right, the '
+        'addresses stay left to right', (t) async {
+      await sheet(t, locale: const Locale('ar'));
+      final box = t.getRect(hint);
+      final words = t.getRect(find.text(l10n.bridgesPrivateHint));
+      expect(box.right - words.right, lessThan(24));
+      final site = t.widget<Text>(find.text(kBridgesSite));
+      expect(site.textDirection, TextDirection.ltr);
+      // the copy button sits at the end, on the left
+      final copy = t.getRect(
+        find.byTooltip(l10n.bridgesPrivateCopy(kBridgesSite)),
+      );
+      expect(copy.left - box.left, lessThan(24));
+      await _done(t);
+    });
+
+    testWidgets('reduced motion: there at once', (t) async {
+      await sheet(t, still: true);
+      expect(hint, findsOneWidget);
+      appState.setBridgeStatusForTest(_through);
+      await t.pump();
+      expect(hint, findsNothing);
+      await _done(t);
+    });
+
+    for (final light in [false, true]) {
+      testWidgets('every language, 360x640 at 1.5, '
+          '${light ? 'light' : 'dark'}', (t) async {
+        HaloColors.setLight(light);
+        addTearDown(() => HaloColors.setLight(false));
+        final errs = <String>[];
+        final was = FlutterError.onError;
+        FlutterError.onError = (d) => errs.add(
+          '${d.exceptionAsString().split('\n').first} '
+          '${RegExp(r'The relevant error-causing widget was:\s*\n\s*.*\n\s*(.*)').firstMatch(d.toString())?.group(1)}',
+        );
+        try {
+          for (final lang in [..._langs, 'hi', 'pl']) {
+            await sheet(
+              t,
+              locale: _loc(lang),
+              scale: 1.5,
+              size: const Size(360, 640),
+            );
+            if (hint.evaluate().isEmpty) errs.add('[$lang] no hint');
+            await _done(t);
+          }
+        } finally {
+          FlutterError.onError = was;
+        }
+        expect(errs, isEmpty, reason: errs.toSet().join('\n'));
+      });
+    }
+  });
+
   setUpAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (_) async => null);
