@@ -90,6 +90,8 @@ extension AppStateBoot on AppState {
     HaloDb? d,
     bool vaultOpen = false,
   ]) async {
+    // what came in plain and was never sealed is sealed before the sweep
+    await sealLeftFetches(d ?? live, before);
     try {
       final gone = [
         ...await sweepableMedia(
