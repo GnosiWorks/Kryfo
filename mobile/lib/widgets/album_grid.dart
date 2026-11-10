@@ -195,7 +195,7 @@ class _Cell extends StatelessWidget {
                 flightShuttleBuilder: (_, a, _, _, _) =>
                     albumFlight(a, path, video: video, radius: 4),
                 child: video
-                    ? _VideoFace(path: path, width: width)
+                    ? VideoFace(path: path, width: width)
                     : _PhotoFace(path: path, width: width),
               ),
             ),
@@ -216,7 +216,7 @@ class _Cell extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             face,
-            if (video && path != null) _VideoMarks(path: path),
+            if (video && path != null) VideoMarks(path: path),
             if (t?.sendingUid case final uid?) _Progress(uid: uid),
             if (more > 0)
               ColoredBox(
@@ -346,15 +346,16 @@ class _PhotoFace extends StatelessWidget {
   );
 }
 
-class _VideoFace extends StatefulWidget {
+/// a video's first frame over its blur, in an album and on the shared page
+class VideoFace extends StatefulWidget {
   final String path;
   final double width;
-  const _VideoFace({required this.path, required this.width});
+  const VideoFace({super.key, required this.path, required this.width});
   @override
-  State<_VideoFace> createState() => _VideoFaceState();
+  State<VideoFace> createState() => _VideoFaceState();
 }
 
-class _VideoFaceState extends State<_VideoFace> {
+class _VideoFaceState extends State<VideoFace> {
   late VideoInfo? _info = videoInfoNow(widget.path);
 
   @override
@@ -396,15 +397,15 @@ class _VideoFaceState extends State<_VideoFace> {
   }
 }
 
-// a play mark in the middle and the length in the top corner
-class _VideoMarks extends StatefulWidget {
+/// a play mark in the middle and the length in the top corner
+class VideoMarks extends StatefulWidget {
   final String path;
-  const _VideoMarks({required this.path});
+  const VideoMarks({super.key, required this.path});
   @override
-  State<_VideoMarks> createState() => _VideoMarksState();
+  State<VideoMarks> createState() => _VideoMarksState();
 }
 
-class _VideoMarksState extends State<_VideoMarks> {
+class _VideoMarksState extends State<VideoMarks> {
   late Duration? _len = videoInfoNow(widget.path)?.length;
 
   @override

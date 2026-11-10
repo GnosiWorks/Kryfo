@@ -115,6 +115,27 @@ void main() {
       expect(s.media, isEmpty);
     });
 
+    test('a video from the gallery is media, as the chat draws it', () {
+      final s = sortShared([
+        row(1, media: '/m/a.jpg'),
+        row(2, file: '/f/v1.mp4', name: 'video_ed9dcc06.mp4'),
+        row(3, file: '/f/v2.mov', name: 'trip.MOV'),
+        row(4, file: '/f/lease.pdf', name: 'lease.pdf'),
+        // one still to come waits with the files, where its ring is
+        row(5, name: 'video_d4b932b8.mp4', uid: 'w5'),
+      ], waiting: (u) => u == 'w5');
+      expect(
+        [for (final m in s.media) m.path],
+        ['/m/a.jpg', '/f/v1.mp4', '/f/v2.mov'],
+      );
+      expect([for (final m in s.media) m.video], [false, true, true]);
+      expect(s.videos, {'/f/v1.mp4', '/f/v2.mov'});
+      expect(
+        [for (final f in s.files) f.name],
+        ['lease.pdf', 'video_d4b932b8.mp4'],
+      );
+    });
+
     test('a blocked member and a timed one not read yet stay out', () {
       final s = sortShared(
         [
@@ -270,6 +291,27 @@ void main() {
       await t.tap(find.text(l10n.sharedTabMedia));
       await t.pump();
       expect(find.text(l10n.sharedNoPhotos), findsOneWidget);
+    });
+
+    testWidgets('a video shows in the media grid as a video', (t) async {
+      final when = DateTime(2025, 11, 9);
+      await open(
+        t,
+        SharedLists(
+          media: [
+            SharedItem(
+              path: '/f/v.mp4',
+              name: 'video_ed9dcc06.mp4',
+              when: when,
+              video: true,
+            ),
+          ],
+        ),
+        start: SharedTab.media,
+      );
+      expect(find.text(l10n.sharedNoPhotos), findsNothing);
+      expect(find.bySemanticsLabel(l10n.videoBubbleVideo), findsOneWidget);
+      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
     });
 
     testWidgets('a file still to come shows its ring and how big it is', (
