@@ -14,6 +14,7 @@ import '../devchat/dev_key.dart';
 import '../devchat/dev_start.dart' show forgetDevChoices;
 import '../dlog.dart';
 import '../l10n/l10n.dart';
+import '../lock_state.dart' show lockState;
 import '../main.dart'
     show appState, session, sessionQuiet, AppStateDevchat, AppStateRefresh;
 import '../notifications.dart' show clearNotificationsFor;
@@ -176,7 +177,7 @@ Future<void> writeToMarios(BuildContext context) async {
 // nor does a chat that only reads. one rule for every picker: an open vault
 // sends nothing out to it, and a decoy offers its own row
 DevRow? get devForwardTarget {
-  if (session.vault != null) return null;
+  if (lockState.inVault) return null;
   final d = appState.devRow;
   if (d == null ||
       !d.started ||

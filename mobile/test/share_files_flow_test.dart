@@ -846,6 +846,8 @@ void main() {
     await _contact(vaultMem, _hidden, seen: 5);
     final vault = _Db(vaultMem, HaloContainer.vault)..holds = {_hidden};
     useDatabasesForTest(db, await Session.withVault(db, vault));
+    lockState.inVault = true;
+    addTearDown(() => lockState.inVault = false);
     await appState.refreshContacts();
     appState.devRow = dev;
     await home(t);

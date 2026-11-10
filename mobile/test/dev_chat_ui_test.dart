@@ -9,6 +9,7 @@ import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_guard.dart' show LockGuard;
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
         appState,
@@ -516,8 +517,11 @@ void main() {
       // the row stays the primary's while its vault is open
       await appState.refreshContacts();
       useDatabasesForTest(db, await Session.withVault(db, vault));
+      lockState.inVault = true;
+      addTearDown(() => lockState.inVault = false);
       expect(appState.devRow?.chatId, _key.chatId);
       expect(devForwardTarget, isNull);
+      lockState.inVault = false;
 
       await devWorld(container: HaloContainer.decoy);
       await devTestChat.begin(_key);
