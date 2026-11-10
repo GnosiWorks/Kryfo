@@ -274,9 +274,14 @@ class ShareFiles {
       _bridge.cancelCopy();
     }
 
+    // stopped because nothing moved: said, unlike a cancel or a lock
+    var stuck = false;
     void moved() {
       idle?.cancel();
-      idle = Timer(copyIdleLimit, stop);
+      idle = Timer(copyIdleLimit, () {
+        stuck = !stopped.isCompleted;
+        stop();
+      });
     }
 
     final sub = _bridge.progress.listen((c) {
@@ -349,6 +354,12 @@ class ShareFiles {
       idle?.cancel();
       await sub.cancel();
       lockState.removeListener(onLock);
+      // stopped: the copies go before anything waits on a frame, which
+      // never comes while the app is away under the lock
+      if (stopped.isCompleted) {
+        await shredCopies(List.of(out));
+        out.clear();
+      }
       // asked for but not built yet: it is, a frame on
       if (asked && sheet == null) await WidgetsBinding.instance.endOfFrame;
       final s = sheet;
@@ -356,9 +367,10 @@ class ShareFiles {
       // its own route, wherever it sits now: never whatever is on top
       if (r != null && r.isActive) r.navigator?.removeRoute(r);
     }
-    final cancelled = stopped.isCompleted;
-    if (cancelled) {
-      await shredCopies(out);
+    if (stopped.isCompleted) {
+      if (stuck && context.mounted) {
+        showHaloToast(context, l10n.chatCouldNotReadThat);
+      }
       return const [];
     }
     final line = said;

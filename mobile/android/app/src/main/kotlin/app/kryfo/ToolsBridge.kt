@@ -396,7 +396,18 @@ class ToolsBridge(private val activity: Activity) {
         Thread {
             var out: File? = null
             try {
-                val info = describe(uri, null)
+                // a provider that never answers the look leaves the copy
+                // unnamed and of no known size, not this thread stuck
+                val ex = java.util.concurrent.Executors.newSingleThreadExecutor()
+                val info = try {
+                    ex.submit<Map<String, Any?>> { describe(uri, null) }
+                        .get(DESCRIBE_MS, java.util.concurrent.TimeUnit.MILLISECONDS)
+                } catch (e: java.util.concurrent.TimeoutException) {
+                    mapOf("uri" to uri.toString(), "mime" to null, "name" to null, "size" to -1L)
+                } finally {
+                    ex.shutdownNow()
+                }
+                if (cancel.get()) throw InterruptedException()
                 val total = info["size"] as Long
                 if (most != null && total > most) {
                     activity.runOnUiThread { result.error("big", "over the limit", null) }

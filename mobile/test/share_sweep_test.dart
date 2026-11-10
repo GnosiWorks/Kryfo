@@ -307,6 +307,21 @@ void main() {
       expect(call.substring(0, call.indexOf('"sdk" ->')), contains('Thread {'));
     });
 
+    test('a copy in asks the provider about its file with a deadline', () {
+      final copy = bodyOf(
+        sourceOf('$kt/ToolsBridge.kt'),
+        'private fun copyIn(',
+      );
+      expect(copy, isNot(contains('val info = describe(uri, null)')));
+      expect(
+        copy,
+        contains(
+          '.get(DESCRIBE_MS, java.util.concurrent.TimeUnit.MILLISECONDS)',
+        ),
+      );
+      expect(copy, contains('ex.shutdownNow()'));
+    });
+
     test('a shrink runs off the ui thread', () {
       final act = sourceOf('$kt/MainActivity.kt');
       final call = act.substring(act.indexOf('"shrinkJpeg" -> {'));
