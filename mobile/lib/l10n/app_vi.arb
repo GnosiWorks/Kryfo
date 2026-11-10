@@ -325,7 +325,7 @@
   "bridgesOffline": "Ngoại tuyến",
   "bridgesTorNoBridge": "Tor, không cầu nối",
   "bridgesKryfoFindsAWay": "Kryfo tự tìm cách dùng được ở nơi bạn đang ở.",
-  "bridgesTorVpnLine": "Tor không chạy được bên trong VPN Tor như Orbot, nên Kryfo dùng cầu nối ngay.",
+  "bridgesTorVpnLine": "Bên trong VPN Tor như Orbot, Kryfo bắt đầu bằng cầu nối.",
   "bridgesNothingGotThrough": "Không cách nào kết nối được",
   "bridgesBridgeFromAFriend": "Cầu nối từ bạn bè",
   "bridgesKryfoCanAskThe": "Kryfo có thể xin Dự án Tor một cầu nối để vượt qua việc chặn.",

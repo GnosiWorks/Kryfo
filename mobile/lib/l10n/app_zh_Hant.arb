@@ -325,7 +325,7 @@
   "bridgesOffline": "離線",
   "bridgesTorNoBridge": "Tor，無橋接",
   "bridgesKryfoFindsAWay": "Kryfo 會找出在你那裡行得通的方式。",
-  "bridgesTorVpnLine": "Tor 無法在 Orbot 這類 Tor VPN 裡執行，所以 Kryfo 直接使用橋接。",
+  "bridgesTorVpnLine": "在 Orbot 這類 Tor VPN 裡，Kryfo 會從橋接開始連線。",
   "bridgesNothingGotThrough": "都沒能連上",
   "bridgesBridgeFromAFriend": "朋友給的橋接",
   "bridgesKryfoCanAskThe": "Kryfo 可以向 Tor 專案索取橋接，繞過封鎖。",

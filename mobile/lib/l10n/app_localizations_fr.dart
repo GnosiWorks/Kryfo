@@ -7439,7 +7439,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bridgesTorVpnLine =>
-      'Tor ne peut pas tourner dans un VPN Tor comme Orbot, alors Kryfo passe tout de suite par un pont.';
+      'Dans un VPN Tor comme Orbot, Kryfo démarre par un pont.';
 
   @override
   String get bridgesThisBridgeIsnTGetting => 'Ce pont ne passe pas';

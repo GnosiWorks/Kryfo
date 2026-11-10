@@ -7515,7 +7515,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesTorVpnLine =>
-      'Tor nie działa wewnątrz VPN-a Tor, takiego jak Orbot, więc Kryfo od razu używa mostka.';
+      'W VPN-ie Tor, takim jak Orbot, Kryfo zaczyna od mostka.';
 
   @override
   String get bridgesThisBridgeIsnTGetting => 'Ten mostek się nie przebija';

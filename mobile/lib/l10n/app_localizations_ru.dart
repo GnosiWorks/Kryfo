@@ -7497,7 +7497,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bridgesTorVpnLine =>
-      'Tor не работает внутри Tor-VPN вроде Orbot, поэтому Kryfo сразу берёт мост.';
+      'Внутри Tor-VPN вроде Orbot Kryfo начинает с моста.';
 
   @override
   String get bridgesThisBridgeIsnTGetting => 'Через этот мост не пробиться';

@@ -325,7 +325,7 @@
   "bridgesOffline": "Офлайн",
   "bridgesTorNoBridge": "Tor, без моста",
   "bridgesKryfoFindsAWay": "Kryfo сам знаходить спосіб, що працює там, де ти є.",
-  "bridgesTorVpnLine": "Tor не працює всередині Tor-VPN на кшталт Orbot, тому Kryfo одразу бере міст.",
+  "bridgesTorVpnLine": "Усередині Tor-VPN на кшталт Orbot Kryfo починає з мосту.",
   "bridgesNothingGotThrough": "Пробитися не вдалося",
   "bridgesBridgeFromAFriend": "Міст від друга",
   "bridgesKryfoCanAskThe": "Kryfo може попросити в проєкту Tor міст, щоб обійти блокування.",

@@ -3205,7 +3205,7 @@ void main() {
     );
     expect(
       l.bridgesTorVpnLine,
-      "Tor can't run inside a Tor VPN like Orbot, so Kryfo goes straight to a bridge.",
+      "Inside a Tor VPN like Orbot, Kryfo starts on a bridge.",
     );
     expect(l.bridgesDirect, "Direct");
     expect(

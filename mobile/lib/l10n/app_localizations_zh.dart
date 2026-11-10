@@ -7019,8 +7019,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesKryfoFindsAWay => 'Kryfo 会找出在你那里能用的方式。';
 
   @override
-  String get bridgesTorVpnLine =>
-      'Tor 无法在 Orbot 这类 Tor VPN 里运行，所以 Kryfo 直接使用网桥。';
+  String get bridgesTorVpnLine => '在 Orbot 这类 Tor VPN 里，Kryfo 会从网桥开始连接。';
 
   @override
   String get bridgesThisBridgeIsnTGetting => '这个网桥连不出去';
@@ -18464,8 +18463,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesKryfoFindsAWay => 'Kryfo 會找出在你那裡行得通的方式。';
 
   @override
-  String get bridgesTorVpnLine =>
-      'Tor 無法在 Orbot 這類 Tor VPN 裡執行，所以 Kryfo 直接使用橋接。';
+  String get bridgesTorVpnLine => '在 Orbot 這類 Tor VPN 裡，Kryfo 會從橋接開始連線。';
 
   @override
   String get bridgesThisBridgeIsnTGetting => '這個橋接連不出去';

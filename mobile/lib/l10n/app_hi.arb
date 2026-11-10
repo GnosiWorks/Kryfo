@@ -1942,7 +1942,7 @@
   "bridgesKryfoCouldNotRead": "{count, plural, one{Kryfo इनमें से {count} लाइन नहीं पढ़ पाया} other{Kryfo इनमें से {count} लाइनें नहीं पढ़ पाया}}",
   "bridgesTorNoBridge": "Tor, बिना ब्रिज",
   "bridgesKryfoFindsAWay": "Kryfo ऐसा तरीक़ा ढूँढता है जो आपकी जगह पर काम करे।",
-  "bridgesTorVpnLine": "Tor, Orbot जैसे Tor VPN के अंदर नहीं चल सकता, इसलिए Kryfo सीधे ब्रिज लेता है।",
+  "bridgesTorVpnLine": "Orbot जैसे Tor VPN के अंदर, Kryfo ब्रिज से शुरू करता है।",
   "bridgesThisBridgeIsnTGetting": "यह ब्रिज पार नहीं हो पा रहा",
   "bridgesBridgesTheTorProject": "Tor Project के पहले दिए हुए ब्रिज।",
   "bridgesConnectingDots": "जुड़ रहा है…",

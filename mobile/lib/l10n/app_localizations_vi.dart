@@ -7349,7 +7349,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bridgesTorVpnLine =>
-      'Tor không chạy được bên trong VPN Tor như Orbot, nên Kryfo dùng cầu nối ngay.';
+      'Bên trong VPN Tor như Orbot, Kryfo bắt đầu bằng cầu nối.';
 
   @override
   String get bridgesThisBridgeIsnTGetting => 'Cầu nối này không kết nối được';

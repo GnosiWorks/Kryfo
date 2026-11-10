@@ -325,7 +325,7 @@
   "bridgesOffline": "غير متصل",
   "bridgesTorNoBridge": "Tor، دون جسر",
   "bridgesKryfoFindsAWay": "يجد Kryfo طريقة تعمل حيث أنت.",
-  "bridgesTorVpnLine": "لا يعمل Tor داخل شبكة VPN خاصة بـ Tor مثل Orbot، لذا ينتقل Kryfo مباشرة إلى جسر.",
+  "bridgesTorVpnLine": "داخل شبكة VPN خاصة بـ Tor مثل Orbot، يبدأ Kryfo عبر جسر.",
   "bridgesNothingGotThrough": "لم تنجح أي طريقة",
   "bridgesBridgeFromAFriend": "جسر من صديق",
   "bridgesKryfoCanAskThe": "يستطيع Kryfo أن يطلب من مشروع Tor جسرًا لتجاوز الحجب.",

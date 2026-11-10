@@ -7484,7 +7484,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bridgesTorVpnLine =>
-      'لا يعمل Tor داخل شبكة VPN خاصة بـ Tor مثل Orbot، لذا ينتقل Kryfo مباشرة إلى جسر.';
+      'داخل شبكة VPN خاصة بـ Tor مثل Orbot، يبدأ Kryfo عبر جسر.';
 
   @override
   String get bridgesThisBridgeIsnTGetting => 'لا يستطيع هذا الجسر العبور';

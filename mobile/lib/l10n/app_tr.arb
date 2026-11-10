@@ -325,7 +325,7 @@
   "bridgesOffline": "Çevrimdışı",
   "bridgesTorNoBridge": "Tor, köprüsüz",
   "bridgesKryfoFindsAWay": "Kryfo bulunduğun yerde işe yarayan bir yol bulur.",
-  "bridgesTorVpnLine": "Tor, Orbot gibi bir Tor VPN’inin içinde çalışamaz, bu yüzden Kryfo doğrudan bir köprüye geçer.",
+  "bridgesTorVpnLine": "Orbot gibi bir Tor VPN’inin içinde Kryfo bir köprüyle başlar.",
   "bridgesNothingGotThrough": "Hiçbiri geçemedi",
   "bridgesBridgeFromAFriend": "Arkadaştan köprü",
   "bridgesKryfoCanAskThe": "Kryfo bunu aşmak için Tor Projesinden bir köprü isteyebilir.",
