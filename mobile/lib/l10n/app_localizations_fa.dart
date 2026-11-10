@@ -7493,6 +7493,14 @@ class AppLocalizationsFa extends AppLocalizations {
       'شبکه‌تان می‌تواند ببیند که از Kryfo استفاده می‌کنید.';
 
   @override
+  String get bridgesWatchedDirectCost =>
+      'شبکه‌تان می‌تواند ببیند که از Tor استفاده می‌کنید.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'حالا روی «خودکار» است، پس Tor همیشه با یک پل شروع می‌شود';
+
+  @override
   String get bridgesAskTorProject => 'پرسیدن از پروژه‌ی Tor';
 
   @override

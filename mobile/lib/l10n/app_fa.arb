@@ -396,6 +396,8 @@
   "bridgesWatchedTitle": "شبکه‌ام زیر نظر است",
   "bridgesWatchedLine": "Kryfo هیچ‌وقت Tor را بدون پل امتحان نمی‌کند.",
   "bridgesWatchedFastCost": "شبکه‌تان می‌تواند ببیند که از Kryfo استفاده می‌کنید.",
+  "bridgesWatchedDirectCost": "شبکه‌تان می‌تواند ببیند که از Tor استفاده می‌کنید.",
+  "bridgesWatchedNowAuto": "حالا روی «خودکار» است، پس Tor همیشه با یک پل شروع می‌شود",
   "bridgesAskTorProject": "پرسیدن از پروژه‌ی Tor",
   "bridgesTooLongForTor": "برای Tor بیش از حد بلند است",
   "bridgesInUse": "در حال استفاده",

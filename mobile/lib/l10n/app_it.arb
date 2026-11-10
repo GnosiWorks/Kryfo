@@ -396,6 +396,8 @@
   "bridgesWatchedTitle": "La mia rete è sorvegliata",
   "bridgesWatchedLine": "Kryfo non prova mai Tor senza un bridge.",
   "bridgesWatchedFastCost": "La tua rete può vedere che usi Kryfo.",
+  "bridgesWatchedDirectCost": "La tua rete può vedere che usi Tor.",
+  "bridgesWatchedNowAuto": "Ora su Automatico, così Tor parte sempre da un bridge",
   "bridgesAskTorProject": "Chiedi al Progetto Tor",
   "bridgesTooLongForTor": "Troppo lunga per Tor",
   "bridgesInUse": "In uso",

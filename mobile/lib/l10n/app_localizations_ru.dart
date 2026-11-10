@@ -7626,6 +7626,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Твоя сеть может видеть, что ты пользуешься Kryfo.';
 
   @override
+  String get bridgesWatchedDirectCost =>
+      'Твоя сеть может видеть, что ты пользуешься Tor.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Теперь «Авто»: Tor всегда начинает через мост';
+
+  @override
   String get bridgesAskTorProject => 'Спросить проект Tor';
 
   @override

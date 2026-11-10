@@ -7558,6 +7558,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesWatchedFastCost => 'La tua rete può vedere che usi Kryfo.';
 
   @override
+  String get bridgesWatchedDirectCost => 'La tua rete può vedere che usi Tor.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Ora su Automatico, così Tor parte sempre da un bridge';
+
+  @override
   String get bridgesAskTorProject => 'Chiedi al Progetto Tor';
 
   @override

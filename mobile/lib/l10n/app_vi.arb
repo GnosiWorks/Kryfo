@@ -396,6 +396,8 @@
   "bridgesWatchedTitle": "Mạng của tôi bị theo dõi",
   "bridgesWatchedLine": "Kryfo không bao giờ thử Tor khi không có cầu nối.",
   "bridgesWatchedFastCost": "Mạng của bạn có thể thấy bạn dùng Kryfo.",
+  "bridgesWatchedDirectCost": "Mạng của bạn có thể thấy bạn dùng Tor.",
+  "bridgesWatchedNowAuto": "Đã chuyển sang Tự động, nên Tor luôn bắt đầu qua cầu nối",
   "bridgesAskTorProject": "Hỏi Dự án Tor",
   "bridgesTooLongForTor": "Quá dài để Tor dùng được",
   "bridgesInUse": "Đang dùng",

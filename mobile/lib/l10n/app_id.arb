@@ -396,6 +396,8 @@
   "bridgesWatchedTitle": "Jaringanku diawasi",
   "bridgesWatchedLine": "Kryfo tidak pernah mencoba Tor tanpa jembatan.",
   "bridgesWatchedFastCost": "Jaringanmu bisa melihat kamu memakai Kryfo.",
+  "bridgesWatchedDirectCost": "Jaringanmu bisa melihat kamu memakai Tor.",
+  "bridgesWatchedNowAuto": "Sekarang Otomatis, jadi Tor selalu mulai lewat jembatan",
   "bridgesAskTorProject": "Tanya Tor Project",
   "bridgesTooLongForTor": "Terlalu panjang untuk Tor",
   "bridgesInUse": "Dipakai",

@@ -12007,6 +12007,18 @@ abstract class AppLocalizations {
   /// **'Your network can see you use Kryfo.'**
   String get bridgesWatchedFastCost;
 
+  /// bridges screen: on the direct card while the network is marked watched
+  ///
+  /// In en, this message translates to:
+  /// **'Your network can see you use Tor.'**
+  String get bridgesWatchedDirectCost;
+
+  /// bridges screen: toast when the watched switch moved the pick from direct to automatic
+  ///
+  /// In en, this message translates to:
+  /// **'Now on Automatic, so Tor always starts on a bridge'**
+  String get bridgesWatchedNowAuto;
+
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:

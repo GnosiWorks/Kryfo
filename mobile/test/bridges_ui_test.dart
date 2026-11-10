@@ -32,6 +32,7 @@ import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/theme.dart' show HaloColors;
 import 'package:kryfo/widgets/halo_buttons.dart';
+import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot, kHouseCurve;
 import 'package:kryfo/widgets/press_scale.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -1909,6 +1910,19 @@ void main() {
       await _done(t);
     });
 
+    testWidgets('kept before the engine hears of it', (t) async {
+      // how many engine calls had gone when the store took the new answer
+      int? callsAtWrite;
+      bridgeWriteTap = (k) {
+        if (k == 'bridge_skip_direct') callsAtWrite ??= _eng.calls.length;
+      };
+      addTearDown(() => bridgeWriteTap = null);
+      await t.runAsync(() => appState.setNetworkWatched(true));
+      expect(callsAtWrite, 0);
+      expect(_eng.calls, hasLength(1));
+      await t.runAsync(() => appState.setNetworkWatched(false));
+    });
+
     testWidgets('kept across a restart, and handed over at boot', (t) async {
       await t.runAsync(() => appState.setNetworkWatched(true));
       final b = await kept(t);
@@ -1921,13 +1935,61 @@ void main() {
     testWidgets('another pick keeps it for later, the engine untouched', (
       t,
     ) async {
-      await _open(t, setup: const BridgeSetup(choice: BridgeChoice.direct));
+      await _open(t, setup: const BridgeSetup(choice: BridgeChoice.snowflake));
       await t.tap(sw);
       await t.runAsync(() => Future<void>.delayed(Duration.zero));
       await _in(t);
       expect(appState.networkWatched, isTrue);
       expect(_eng.calls, isEmpty);
       expect((await kept(t)).skipDirect, isTrue);
+      await _done(t);
+    });
+
+    testWidgets('on with direct picked: automatic takes its place, said', (
+      t,
+    ) async {
+      await _open(t, setup: const BridgeSetup(choice: BridgeChoice.direct));
+      expect(find.byKey(const ValueKey('directSeen')), findsNothing);
+      await t.tap(sw);
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _in(t);
+      expect(appState.networkWatched, isTrue);
+      expect(appState.bridgeChoice, BridgeChoice.auto);
+      expect(find.text(l10n.bridgesWatchedNowAuto), findsOneWidget);
+      expect(_eng.calls, hasLength(1));
+      expect(_eng.calls.single, startsWith('auto '));
+      expect(_eng.calls.single, contains('"skip_direct":true'));
+      final b = await kept(t);
+      expect(b.choice, BridgeChoice.auto);
+      expect(b.skipDirect, isTrue);
+      await _done(t);
+    });
+
+    testWidgets('direct picked by hand turns it off, its cost said first', (
+      t,
+    ) async {
+      await _open(t, setup: const BridgeSetup(skipDirect: true));
+      final seen = find.byKey(const ValueKey('directSeen'));
+      expect(seen, findsOneWidget);
+      expect(find.text(l10n.bridgesWatchedDirectCost), findsOneWidget);
+      await t.tap(find.text(l10n.bridgesDirect));
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await t.pump(const Duration(seconds: 2));
+      expect(appState.bridgeChoice, BridgeChoice.direct);
+      expect(appState.networkWatched, isFalse);
+      expect(
+        t
+            .widget<HaloSwitch>(
+              find.descendant(of: sw, matching: find.byType(HaloSwitch)),
+            )
+            .value,
+        isFalse,
+      );
+      expect(seen, findsNothing);
+      expect(_eng.calls, ['direct {}']);
+      final b = await kept(t);
+      expect(b.choice, BridgeChoice.direct);
+      expect(b.skipDirect, isFalse);
       await _done(t);
     });
 
@@ -2114,6 +2176,32 @@ void main() {
       await t.tap(find.text(kBridgesMail));
       await t.pump();
       expect(opened, hasLength(1));
+      await _done(t);
+    });
+
+    testWidgets('no browser: the website is copied instead', (t) async {
+      final copied = <String?>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (c) async {
+          if (c.method == 'Clipboard.setData') {
+            copied.add((c.arguments as Map)['text'] as String?);
+          }
+          return null;
+        },
+      );
+      openOutsideForTest = (u) async => false;
+      addTearDown(() => openOutsideForTest = null);
+      await sheet(t);
+      await t.tap(find.text(kBridgesSite));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(copied, [kBridgesSite]);
+      expect(
+        find.text(l10n.bridgesPrivateCopied(kBridgesSite)),
+        findsOneWidget,
+      );
+      await t.pump(const Duration(seconds: 4));
       await _done(t);
     });
 

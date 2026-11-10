@@ -1974,6 +1974,8 @@
   "bridgesWatchedTitle": "मेरे नेटवर्क पर नज़र रखी जाती है",
   "bridgesWatchedLine": "Kryfo कभी बिना ब्रिज के Tor नहीं आज़माता।",
   "bridgesWatchedFastCost": "आपका नेटवर्क देख सकता है कि आप Kryfo इस्तेमाल करते हैं।",
+  "bridgesWatchedDirectCost": "आपका नेटवर्क देख सकता है कि आप Tor इस्तेमाल करते हैं।",
+  "bridgesWatchedNowAuto": "अब अपने-आप पर है, इसलिए Tor हमेशा ब्रिज से शुरू होता है",
   "bridgesAskTorProject": "Tor Project से पूछें",
   "bridgesTooLongForTor": "Tor के लिए बहुत लंबी",
   "bridgesMethodFrom": "{method}, {from}",

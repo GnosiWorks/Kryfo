@@ -7476,6 +7476,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mạng của bạn có thể thấy bạn dùng Kryfo.';
 
   @override
+  String get bridgesWatchedDirectCost =>
+      'Mạng của bạn có thể thấy bạn dùng Tor.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Đã chuyển sang Tự động, nên Tor luôn bắt đầu qua cầu nối';
+
+  @override
   String get bridgesAskTorProject => 'Hỏi Dự án Tor';
 
   @override

@@ -9426,6 +9426,14 @@
   "@bridgesWatchedFastCost": {
     "description": "speed and privacy: under fast while the network is marked watched"
   },
+  "bridgesWatchedDirectCost": "Your network can see you use Tor.",
+  "@bridgesWatchedDirectCost": {
+    "description": "bridges screen: on the direct card while the network is marked watched"
+  },
+  "bridgesWatchedNowAuto": "Now on Automatic, so Tor always starts on a bridge",
+  "@bridgesWatchedNowAuto": {
+    "description": "bridges screen: toast when the watched switch moved the pick from direct to automatic"
+  },
   "bridgesAskTorProject": "Ask the Tor Project",
   "bridgesTooLongForTor": "Too long for Tor to use",
   "bridgesMethodFrom": "{method}, {from}",

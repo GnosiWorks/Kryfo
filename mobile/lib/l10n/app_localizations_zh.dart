@@ -7140,6 +7140,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesWatchedFastCost => '你的网络能看到你在使用 Kryfo。';
 
   @override
+  String get bridgesWatchedDirectCost => '你的网络能看到你在使用 Tor。';
+
+  @override
+  String get bridgesWatchedNowAuto => '已切换到自动，Tor 总会通过网桥启动';
+
+  @override
   String get bridgesAskTorProject => '询问 Tor 项目';
 
   @override
@@ -18620,6 +18626,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get bridgesWatchedFastCost => '你的網路能看到你在使用 Kryfo。';
+
+  @override
+  String get bridgesWatchedDirectCost => '你的網路能看到你在使用 Tor。';
+
+  @override
+  String get bridgesWatchedNowAuto => '已切換到自動，Tor 總會透過橋接啟動';
 
   @override
   String get bridgesAskTorProject => '詢問 Tor 專案';

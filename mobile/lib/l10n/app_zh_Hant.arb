@@ -396,6 +396,8 @@
   "bridgesWatchedTitle": "我的網路受到監控",
   "bridgesWatchedLine": "Kryfo 絕不會在沒有橋接的情況下嘗試 Tor。",
   "bridgesWatchedFastCost": "你的網路能看到你在使用 Kryfo。",
+  "bridgesWatchedDirectCost": "你的網路能看到你在使用 Tor。",
+  "bridgesWatchedNowAuto": "已切換到自動，Tor 總會透過橋接啟動",
   "bridgesAskTorProject": "詢問 Tor 專案",
   "bridgesTooLongForTor": "太長，Tor 無法使用",
   "bridgesInUse": "使用中",

@@ -396,6 +396,8 @@
   "bridgesWatchedTitle": "Mein Netzwerk wird überwacht",
   "bridgesWatchedLine": "Kryfo versucht Tor nie ohne Brücke.",
   "bridgesWatchedFastCost": "Dein Netzwerk kann sehen, dass du Kryfo nutzt.",
+  "bridgesWatchedDirectCost": "Dein Netzwerk kann sehen, dass du Tor nutzt.",
+  "bridgesWatchedNowAuto": "Jetzt auf Automatisch, Tor startet also immer über eine Brücke",
   "bridgesAskTorProject": "Tor-Projekt fragen",
   "bridgesTooLongForTor": "Zu lang für Tor",
   "bridgesInUse": "Aktiv",

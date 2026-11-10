@@ -278,13 +278,22 @@ extension AppStateBridges on AppState {
   /// so tor out plainly now comes off and goes again through a bridge
   bool get networkWatched => _bridge.skipDirect;
 
-  Future<void> setNetworkWatched(bool on) async {
-    if (inDecoyView || on == _bridge.skipDirect) return;
-    _bridge = _bridge.copyWith(skipDirect: on);
+  /// true when direct was picked and automatic took its place: tor alone
+  /// and a watched network do not go together
+  Future<bool> setNetworkWatched(bool on) async {
+    if (inDecoyView || on == _bridge.skipDirect) return false;
+    final moved = on && _bridge.choice == BridgeChoice.direct;
+    _bridge = _bridge.copyWith(
+      skipDirect: on,
+      choice: moved ? BridgeChoice.auto : null,
+      offerAuto: moved ? false : null,
+    );
+    if (moved) _typingBridgesMoved();
     notifyListeners();
+    await _writeBridgeSetup(_bridge);
     // only automatic reads it; another pick keeps it for when it is back
     if (_bridge.choice == BridgeChoice.auto) applyBridgeNow();
-    await _writeBridgeSetup(_bridge);
+    return moved;
   }
 
   /// hands the choice to the engine now. "ok" or why not
@@ -313,7 +322,13 @@ extension AppStateBridges on AppState {
   Future<void> chooseBridge(BridgeChoice c) async {
     if (inDecoyView) return;
     final was = _bridge.choice;
-    _bridge = _bridge.copyWith(choice: c, offerAuto: false);
+    // tor alone: the network is no longer taken as watched, so the switch
+    // never shows on while tor goes out plainly
+    _bridge = _bridge.copyWith(
+      choice: c,
+      offerAuto: false,
+      skipDirect: c == BridgeChoice.direct ? false : null,
+    );
     _typingBridgesMoved();
     notifyListeners();
     _bridgeApply?.cancel();

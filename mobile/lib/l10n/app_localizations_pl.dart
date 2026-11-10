@@ -7643,6 +7643,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bridgesWatchedFastCost => 'Twoja sieć widzi, że używasz Kryfo.';
 
   @override
+  String get bridgesWatchedDirectCost => 'Twoja sieć widzi, że używasz Tora.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Teraz Automatycznie, więc Tor zawsze startuje przez mostek';
+
+  @override
   String get bridgesAskTorProject => 'Zapytaj Tor Project';
 
   @override

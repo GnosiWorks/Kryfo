@@ -396,6 +396,8 @@
   "bridgesWatchedTitle": "Моя сеть под наблюдением",
   "bridgesWatchedLine": "Kryfo никогда не пробует Tor без моста.",
   "bridgesWatchedFastCost": "Твоя сеть может видеть, что ты пользуешься Kryfo.",
+  "bridgesWatchedDirectCost": "Твоя сеть может видеть, что ты пользуешься Tor.",
+  "bridgesWatchedNowAuto": "Теперь «Авто»: Tor всегда начинает через мост",
   "bridgesAskTorProject": "Спросить проект Tor",
   "bridgesTooLongForTor": "Слишком длинная для Tor",
   "bridgesInUse": "Используется",

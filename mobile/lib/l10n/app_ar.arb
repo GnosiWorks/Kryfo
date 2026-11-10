@@ -396,6 +396,8 @@
   "bridgesWatchedTitle": "شبكتي مراقَبة",
   "bridgesWatchedLine": "لا يجرّب Kryfo شبكة Tor أبدًا من دون جسر.",
   "bridgesWatchedFastCost": "يمكن لشبكتك أن ترى أنك تستخدم Kryfo.",
+  "bridgesWatchedDirectCost": "يمكن لشبكتك أن ترى أنك تستخدم Tor.",
+  "bridgesWatchedNowAuto": "صار على «تلقائي»، لذا يبدأ Tor دائمًا عبر جسر",
   "bridgesAskTorProject": "اسأل مشروع Tor",
   "bridgesTooLongForTor": "أطول من أن يستخدمه Tor",
   "bridgesInUse": "قيد الاستخدام",

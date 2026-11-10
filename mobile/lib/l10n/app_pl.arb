@@ -1980,6 +1980,8 @@
   "bridgesWatchedTitle": "Moja sieć jest obserwowana",
   "bridgesWatchedLine": "Kryfo nigdy nie próbuje Tora bez mostka.",
   "bridgesWatchedFastCost": "Twoja sieć widzi, że używasz Kryfo.",
+  "bridgesWatchedDirectCost": "Twoja sieć widzi, że używasz Tora.",
+  "bridgesWatchedNowAuto": "Teraz Automatycznie, więc Tor zawsze startuje przez mostek",
   "bridgesAskTorProject": "Zapytaj Tor Project",
   "bridgesTooLongForTor": "Za długie dla Tor",
   "bridgesMethodFrom": "{method}, {from}",

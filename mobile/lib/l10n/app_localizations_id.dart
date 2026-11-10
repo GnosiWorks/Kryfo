@@ -7490,6 +7490,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Jaringanmu bisa melihat kamu memakai Kryfo.';
 
   @override
+  String get bridgesWatchedDirectCost =>
+      'Jaringanmu bisa melihat kamu memakai Tor.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Sekarang Otomatis, jadi Tor selalu mulai lewat jembatan';
+
+  @override
   String get bridgesAskTorProject => 'Tanya Tor Project';
 
   @override

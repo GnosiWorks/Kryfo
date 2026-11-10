@@ -7489,7 +7489,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String bridgesPrivateCopy(Object what) {
-    return '$what kopyala';
+    return 'Kopyala: $what';
   }
 
   @override
@@ -7499,7 +7499,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String bridgesPrivateOpen(Object what) {
-    return '$what aç';
+    return 'Aç: $what';
   }
 
   @override
@@ -7510,6 +7510,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get bridgesWatchedFastCost => 'Ağın Kryfo kullandığını görebilir.';
+
+  @override
+  String get bridgesWatchedDirectCost => 'Ağın Tor kullandığını görebilir.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Artık Otomatik: Tor her zaman bir köprüyle başlar';
 
   @override
   String get bridgesAskTorProject => 'Tor Projesine sor';

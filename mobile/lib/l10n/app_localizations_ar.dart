@@ -7612,6 +7612,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesWatchedFastCost => 'يمكن لشبكتك أن ترى أنك تستخدم Kryfo.';
 
   @override
+  String get bridgesWatchedDirectCost => 'يمكن لشبكتك أن ترى أنك تستخدم Tor.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'صار على «تلقائي»، لذا يبدأ Tor دائمًا عبر جسر';
+
+  @override
   String get bridgesAskTorProject => 'اسأل مشروع Tor';
 
   @override

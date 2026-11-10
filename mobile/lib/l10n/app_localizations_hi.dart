@@ -7495,6 +7495,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपका नेटवर्क देख सकता है कि आप Kryfo इस्तेमाल करते हैं।';
 
   @override
+  String get bridgesWatchedDirectCost =>
+      'आपका नेटवर्क देख सकता है कि आप Tor इस्तेमाल करते हैं।';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'अब अपने-आप पर है, इसलिए Tor हमेशा ब्रिज से शुरू होता है';
+
+  @override
   String get bridgesAskTorProject => 'Tor Project से पूछें';
 
   @override

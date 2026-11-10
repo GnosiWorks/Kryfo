@@ -7623,6 +7623,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Твоя мережа може бачити, що ти користуєшся Kryfo.';
 
   @override
+  String get bridgesWatchedDirectCost =>
+      'Твоя мережа може бачити, що ти користуєшся Tor.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Тепер «Авто»: Tor завжди починає через міст';
+
+  @override
   String get bridgesAskTorProject => 'Запитати проєкт Tor';
 
   @override
