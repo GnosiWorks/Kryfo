@@ -65,6 +65,8 @@ modules:
       # the app opens /app/lib/libsqlcipher.so.0 by full path
       - cd ${FLATPAK_DEST}/lib && [ -e libsqlcipher.so.0 ] || ln -s "$(ls libsqlcipher.so.*.* | head -n1)" libsqlcipher.so.0
       - nm -D --defined-only ${FLATPAK_DEST}/lib/libsqlcipher.so.0 | grep -q ' T sqlite3_key$'
+      # -Bsymbolic really reached the link, as check-bundle.sh asks of the tarball
+      - readelf -d ${FLATPAK_DEST}/lib/libsqlcipher.so.0 | grep -qE '\(SYMBOLIC\)|\(FLAGS\).*SYMBOLIC'
     cleanup:
       - /bin
       - /include
