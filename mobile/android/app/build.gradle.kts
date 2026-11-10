@@ -110,8 +110,6 @@ android {
     packaging {
         jniLibs {
             keepDebugSymbols += "**/libhalo.so"
-            // voice transcripts are off: a stray copy in jniLibs never ships
-            excludes += "**/libkryfo_voice.so"
             // the shim's build script checks these exact bytes
             keepDebugSymbols += "**/libkryfo_signal.so"
         }

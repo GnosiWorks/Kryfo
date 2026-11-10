@@ -33,8 +33,7 @@ import 'voice_ffi.dart';
 import 'voice_models.dart';
 import 'voice_text.dart';
 
-// off until the model is packaged, mirrored and measured on the phones
-const kVoiceTranscripts = false;
+const kVoiceTranscripts = true;
 
 /// the one model there is
 const kVoiceModelId = 'base';

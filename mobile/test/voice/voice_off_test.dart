@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// voice transcripts ship off: the switch is off, nothing is built behind
-// it, the screens reach it only through the switch, the engine side draws
-// nothing, and the android build does not package the library
+// voice transcripts ship on: the switch builds one hub, the screens reach
+// it only through the switch, the engine side draws nothing, and the
+// android build packages the library the release builds from the pin
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -15,16 +15,17 @@ Iterable<File> _dart(String dir) => Directory(dir)
     .where((f) => f.path.endsWith('.dart'));
 
 void main() {
-  test('the switch is off', () {
-    expect(kVoiceTranscripts, isFalse);
+  test('the switch is on', () {
+    expect(kVoiceTranscripts, isTrue);
   });
 
-  test('nothing is built while it is off', () {
+  test('the switch builds one hub and hands out the same one', () {
     VoiceTranscripts.instance = null;
-    expect(voiceTranscriptsIfOn(), isNull);
-    // a second ask does not build one either
-    expect(voiceTranscriptsIfOn(), isNull);
-    expect(VoiceTranscripts.instance, isNull);
+    addTearDown(() => VoiceTranscripts.instance = null);
+    final hub = voiceTranscriptsIfOn();
+    expect(hub, isNotNull);
+    expect(voiceTranscriptsIfOn(), same(hub));
+    expect(VoiceTranscripts.instance, same(hub));
   });
 
   test('a test can stand one in', () {
@@ -116,7 +117,7 @@ void main() {
     }
   });
 
-  test('while off, the android build leaves the library out', () {
+  test('the android build leaves the library in once on', () {
     final hits = [
       for (final f
           in Directory('android')
@@ -137,7 +138,7 @@ void main() {
     expect(VoiceLibrary.hostBuilt, contains('build/host'));
   });
 
-  test('while off, no copy of the library sits in jniLibs', () {
+  test('while off, no copy of the library would sit in jniLibs', () {
     final jni = Directory('android/app/src/main/jniLibs');
     final hits = [
       if (jni.existsSync())
