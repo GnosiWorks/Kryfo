@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/file_save.dart' show savingFiles;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/l10n/numbers.dart' show percent;
+import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/media_bubbles.dart';
 
@@ -109,6 +111,55 @@ void main() {
     expect(find.text(l10n.fileInstallerLine), findsNothing);
     final s = t.getSemantics(find.byType(FileCard));
     expect(s.hint, l10n.fileOpenHint);
+    h.dispose();
+  });
+
+  testWidgets('a file kryfo shows itself is not said to open elsewhere', (
+    t,
+  ) async {
+    final f = made('in_8_notes.txt', 'shopping list\n'.codeUnits);
+    final h = t.ensureSemantics();
+    await show(t, f.path, 'notes.txt');
+    final s = t.getSemantics(find.byType(FileCard));
+    expect(s.hint, l10n.fileViewInKryfo);
+    expect(s.hint, isNot(l10n.fileOpenHint));
+    h.dispose();
+  });
+
+  testWidgets('a picture that will not draw keeps its send for the screen '
+      'reader', (t) async {
+    // a heic the phone sends as a file, which this side cannot decode
+    final f = made('in_9_big.heic', List.filled(4096, 3));
+    addTearDown(() => mediaProgressEnd('s9'));
+    mediaProgressStart('s9', chatKey: 'c', bytes: 32300000);
+    mediaProgressUpdate('s9', 0.27);
+    final h = t.ensureSemantics();
+    await t.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: fileCard(
+              f.path,
+              'big.heic',
+              true,
+              sendingUid: 's9',
+              onCancel: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    for (var i = 0; i < 60; i++) {
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 5)),
+      );
+      await t.pump();
+    }
+    expect(find.byType(FileCard), findsOneWidget);
+    final s = t.getSemantics(find.byType(FileCard).first);
+    expect(s.label, contains(percent(0.27)));
+    expect(s.hint, isNot(l10n.fileOpenHint));
+    expect(find.bySemanticsLabel(l10n.chatStopSending), findsOneWidget);
     h.dispose();
   });
 

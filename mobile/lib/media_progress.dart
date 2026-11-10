@@ -327,60 +327,70 @@ class IncomingMediaBanner extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         decoration: BoxDecoration(
           color: HaloColors.surface,
           borderRadius: BorderRadius.circular(9),
           border: Border.all(color: HaloColors.amber.withValues(alpha: 0.35)),
         ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 10,
-              height: 10,
-              // the ring eases to each new share instead of jumping
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(end: v.clamp(0.05, 1.0)),
-                duration: still
-                    ? Duration.zero
-                    : const Duration(milliseconds: 400),
-                curve: Curves.easeOutCubic,
-                builder: (_, x, _) => CircularProgressIndicator(
-                  strokeWidth: 1.6,
-                  value: x,
-                  color: HaloColors.amber,
-                  backgroundColor: HaloColors.line,
+        // one line or two, the strip keeps its height and its buttons stay
+        // where the finger is going
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: _kStripTap),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 10,
+                height: 10,
+                // the ring eases to each new share instead of jumping
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: v.clamp(0.05, 1.0)),
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, x, _) => CircularProgressIndicator(
+                    strokeWidth: 1.6,
+                    value: x,
+                    color: HaloColors.amber,
+                    backgroundColor: HaloColors.line,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 9),
-            Flexible(
-              child: Text(
-                line,
-                style: HaloType.mono(
-                  size: 10.5,
-                  color: stalled ? HaloColors.text : HaloColors.amberText,
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text(
+                  line,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: HaloType.mono(
+                    size: 10.5,
+                    color: stalled ? HaloColors.text : HaloColors.amberText,
+                  ),
                 ),
               ),
-            ),
-            if (pauseUid != null && pause != null && !stalled)
-              _StripAction(
-                label: l10n.transferPause,
-                hint: l10n.transferPauseDownload,
-                onTap: () => pause(pauseUid),
-              ),
-            if (sending && cancelUid != null && cancel != null)
-              _StripAction(
-                label: l10n.commonCancel,
-                hint: l10n.mediaProgressCancelSending,
-                onTap: () => cancel(cancelUid),
-              ),
-          ],
+              if (pauseUid != null && pause != null && !stalled)
+                _StripAction(
+                  label: l10n.transferPause,
+                  hint: l10n.transferPauseDownload,
+                  onTap: () => pause(pauseUid),
+                ),
+              if (sending && cancelUid != null && cancel != null)
+                _StripAction(
+                  label: l10n.commonCancel,
+                  hint: l10n.mediaProgressCancelSending,
+                  onTap: () => cancel(cancelUid),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+// the strip's buttons, and its height with them
+const _kStripTap = 32.0;
 
 class _StripAction extends StatelessWidget {
   final String label;
@@ -403,8 +413,13 @@ class _StripAction extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          child: Container(
+            constraints: const BoxConstraints(
+              minWidth: 48,
+              minHeight: _kStripTap,
+            ),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Text(
               label,
               style: HaloType.mono(

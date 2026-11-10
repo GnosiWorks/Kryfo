@@ -105,7 +105,16 @@ Widget fileCard(
   }
   final drawn = shape ?? fileShapeNow(filePath, fileName);
   if (filePath != null && drawn == FileShape.picture) {
-    final fallback = FileCard(path: filePath, name: fileName, isOut: isOut);
+    // the card a picture that will not draw falls back to: its ring, its
+    // cross and what the screen reader says of the send stay with it
+    final fallback = FileCard(
+      path: filePath,
+      name: fileName,
+      isOut: isOut,
+      sendingUid: sendingUid,
+      onCancel: onCancel,
+      glance: glance || isOut,
+    );
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 230),
       // its blur, the picture fading up over it, the name underneath. a

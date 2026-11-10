@@ -20,7 +20,7 @@ import '../l10n/numbers.dart' show percent, whole;
 import '../media_progress.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
-import 'file_actions.dart' show pdfViewHere;
+import 'file_actions.dart' show fileViewOf, pdfViewHere;
 import 'ease_size.dart';
 import 'file_badge.dart';
 import 'halo_hero.dart';
@@ -232,6 +232,9 @@ class _FileCardState extends State<FileCard> {
               ? l10n.fileSaveToDevice
               : going != null
               ? null
+              // a pdf, a text or a sound opens in kryfo's own viewer
+              : fileViewOf(facts) != null
+              ? l10n.fileViewInKryfo
               : l10n.fileOpenHint,
           excludeSemantics: going == null || widget.onCancel == null,
           child: ConstrainedBox(
