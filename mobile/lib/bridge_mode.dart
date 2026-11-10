@@ -285,6 +285,10 @@ class BridgeStatus {
 
   bool get exhausted => phase == 'exhausted';
 
+  /// automatic tried every way it has and none got through: the page
+  /// points at the tor project's own ways to a private bridge
+  bool get autoFailed => mode == 'auto' && exhausted && !canSend;
+
   /// the same, at a later count of how long the attempt has run
   BridgeStatus withSince(int ms) => BridgeStatus(
     mode: mode,

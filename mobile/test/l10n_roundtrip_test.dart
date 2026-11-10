@@ -3215,7 +3215,7 @@ void main() {
     expect(l.bridgesBridgeFromAFriend, "Bridge from a friend");
     expect(
       l.bridgesPasteOrScanALine,
-      "Paste or scan a line someone you trust gave you.",
+      "Paste or scan a line from the Tor Project or someone you trust.",
     );
     expect(l.bridgesMore, "More");
     expect(l.bridgesConnectingDots, "Connecting…");
@@ -3287,8 +3287,8 @@ void main() {
     expect(
       l.bridgesPlainAdvice,
       "Kryfo picks bridges automatically. Snowflake and WebTunnel work in "
-      "most places. If one doesn't connect, try another, or ask a friend for "
-      "a bridge line.",
+      "most places. If one doesn't connect, try another, get a private bridge "
+      "from the Tor Project, or ask a friend for a bridge line.",
     );
     expect(
       l.bridgesWhenTorIsBlockedAutomatic,
@@ -3350,7 +3350,7 @@ void main() {
     );
     expect(
       l.bridgesPasteTheLineThey,
-      "Paste the line they sent you, or scan its code. Take bridge lines from people you know.",
+      "Paste a bridge line, or scan its code. Take lines from the Tor Project or from people you know.",
     );
     expect(l.bridgesYourBridgeCouldNot, "Your bridge couldn't start");
     expect(

@@ -191,6 +191,82 @@ void main() {
     await done(t);
   });
 
+  testWidgets('fast on a watched network says what it costs', (t) async {
+    phone(t);
+    final cost = find.byKey(const ValueKey('watchedFastCost'));
+    await t.pumpWidget(devApp(const ModesScreen()));
+    await t.pump(const Duration(seconds: 2));
+    expect(cost, findsNothing);
+    await appState.pickFirstRun(risky: true);
+    await t.pump(const Duration(seconds: 1));
+    expect(cost, findsOneWidget);
+    expect(find.text(l10n.bridgesWatchedFastCost), findsOneWidget);
+    // under fast, which still goes
+    expect(
+      t.getRect(find.text(l10n.modesFast)).top,
+      lessThan(t.getRect(cost).top),
+    );
+    await t.runAsync(() => appState.setNetworkWatched(false));
+    await t.pump(const Duration(seconds: 1));
+    expect(cost, findsNothing);
+    await done(t);
+  });
+
+  testWidgets('the cost line fits, every language at 1.5, rtl too', (t) async {
+    await t.runAsync(loadAppFonts);
+    await appState.pickFirstRun(risky: true);
+    phone(t);
+    t.view.physicalSize = const Size(360, 640);
+    final errs = <String>[];
+    final was = FlutterError.onError;
+    FlutterError.onError = (d) =>
+        errs.add(d.exceptionAsString().split('\n').first);
+    try {
+      for (final lang in [
+        'en',
+        'ar',
+        'de',
+        'es',
+        'fa',
+        'fr',
+        'hi',
+        'id',
+        'it',
+        'pl',
+        'pt',
+        'ru',
+        'tr',
+        'uk',
+        'vi',
+        'zh',
+        'zh_Hant',
+      ]) {
+        final p = lang.split('_');
+        final loc = Locale.fromSubtags(
+          languageCode: p[0],
+          scriptCode: p.length > 1 ? p[1] : null,
+        );
+        setL10nLocale(loc);
+        await t.pumpWidget(
+          devApp(const ModesScreen(), locale: loc, scale: 1.5),
+        );
+        await t.pump(const Duration(seconds: 2));
+        final cost = find.text(l10n.bridgesWatchedFastCost);
+        if (cost.evaluate().isEmpty) {
+          errs.add('[$lang] no cost line');
+        } else if (lang == 'ar') {
+          // starts from the right, under fast
+          final r = t.getRect(cost);
+          if (360 - r.right > 60) errs.add('[ar] not from the right');
+        }
+        await done(t);
+      }
+    } finally {
+      FlutterError.onError = was;
+    }
+    expect(errs, isEmpty, reason: errs.toSet().join('\n'));
+  });
+
   testWidgets('the sheet fits a small phone, every language', (t) async {
     await t.runAsync(loadAppFonts);
     phone(t);

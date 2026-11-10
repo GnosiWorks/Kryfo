@@ -105,7 +105,8 @@
   "videoBubbleKb",
   "videoBubbleMb",
   "videoBubbleVideo",
-  "videoViewerPause"
+  "videoViewerPause",
+  "bridgesPrivateWebsite"
  ],
  "es": [
   "a11yVideoOn",

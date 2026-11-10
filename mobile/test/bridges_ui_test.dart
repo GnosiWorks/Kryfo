@@ -25,11 +25,14 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute,
         AppStateBridges;
+import 'package:kryfo/open_outside.dart';
+import 'package:kryfo/screens/bridge_private_hint.dart';
 import 'package:kryfo/screens/bridge_share_sheet.dart';
 import 'package:kryfo/screens/bridge_sheets.dart';
 import 'package:kryfo/screens/bridges_screen.dart';
 import 'package:kryfo/theme.dart' show HaloColors;
 import 'package:kryfo/widgets/halo_buttons.dart';
+import 'package:kryfo/widgets/halo_switch.dart';
 import 'package:kryfo/widgets/motion.dart' show BreathDot, kHouseCurve;
 import 'package:kryfo/widgets/press_scale.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -1294,8 +1297,16 @@ void main() {
       await _in(t);
       // named by the pick, not by how the engine was handed it
       expect(find.textContaining(l10n.bridgesBuiltIn), findsWidgets);
+      // the advice names the tor project as a way to a bridge; no line
+      // names it as where this one came from
       expect(
-        find.textContaining(l10n.bridgesFromTheTorProjectLower),
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              (w.data ?? '').contains(l10n.bridgesFromTheTorProjectLower) &&
+              w.data != l10n.bridgesPlainAdvice &&
+              w.data != l10n.bridgesPasteOrScanALineShown,
+        ),
         findsNothing,
       );
       await _done(t);
@@ -1859,6 +1870,396 @@ void main() {
   });
 
   // keeps the haptics channel quiet
+  group('my network is watched', () {
+    final sw = find.byKey(const ValueKey('watchedSwitch'));
+
+    // what the store holds once the writes are through
+    Future<BridgeSetup> kept(WidgetTester t) async {
+      late BridgeSetup b;
+      await t.runAsync(() async {
+        final app = AppState();
+        await app.loadBridgesForTest();
+        app.dropBridgeHooks();
+        b = app.bridge;
+      });
+      return b;
+    }
+
+    testWidgets('on: automatic goes again without the direct step', (t) async {
+      await _open(t);
+      expect(sw, findsOneWidget);
+      expect(find.text(l10n.bridgesWatchedTitle), findsOneWidget);
+      expect(find.text(l10n.bridgesWatchedLine), findsOneWidget);
+      await t.tap(sw);
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _in(t);
+      expect(appState.networkWatched, isTrue);
+      expect(_eng.calls, hasLength(1));
+      expect(_eng.calls.single, startsWith('auto '));
+      expect(_eng.calls.single, contains('"skip_direct":true'));
+      expect((await kept(t)).skipDirect, isTrue);
+      // off: back to the usual way, the direct step first
+      await t.tap(sw);
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _in(t);
+      expect(appState.networkWatched, isFalse);
+      expect(_eng.calls, hasLength(2));
+      expect(_eng.calls.last, startsWith('auto '));
+      expect(_eng.calls.last, isNot(contains('skip_direct')));
+      expect((await kept(t)).skipDirect, isFalse);
+      await _done(t);
+    });
+
+    testWidgets('kept before the engine hears of it', (t) async {
+      // how many engine calls had gone when the store took the new answer
+      int? callsAtWrite;
+      bridgeWriteTap = (k) {
+        if (k == 'bridge_skip_direct') callsAtWrite ??= _eng.calls.length;
+      };
+      addTearDown(() => bridgeWriteTap = null);
+      await t.runAsync(() => appState.setNetworkWatched(true));
+      expect(callsAtWrite, 0);
+      expect(_eng.calls, hasLength(1));
+      await t.runAsync(() => appState.setNetworkWatched(false));
+    });
+
+    testWidgets('kept across a restart, and handed over at boot', (t) async {
+      await t.runAsync(() => appState.setNetworkWatched(true));
+      final b = await kept(t);
+      expect(b.skipDirect, isTrue);
+      expect(b.engineMode()!.$2, contains('"skip_direct":true'));
+      await t.runAsync(() => appState.setNetworkWatched(false));
+      expect((await kept(t)).skipDirect, isFalse);
+    });
+
+    testWidgets('another pick keeps it for later, the engine untouched', (
+      t,
+    ) async {
+      await _open(t, setup: const BridgeSetup(choice: BridgeChoice.snowflake));
+      await t.tap(sw);
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _in(t);
+      expect(appState.networkWatched, isTrue);
+      expect(_eng.calls, isEmpty);
+      expect((await kept(t)).skipDirect, isTrue);
+      await _done(t);
+    });
+
+    testWidgets('on with direct picked: automatic takes its place, said', (
+      t,
+    ) async {
+      await _open(t, setup: const BridgeSetup(choice: BridgeChoice.direct));
+      expect(find.byKey(const ValueKey('directSeen')), findsNothing);
+      await t.tap(sw);
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _in(t);
+      expect(appState.networkWatched, isTrue);
+      expect(appState.bridgeChoice, BridgeChoice.auto);
+      expect(find.text(l10n.bridgesWatchedNowAuto), findsOneWidget);
+      expect(_eng.calls, hasLength(1));
+      expect(_eng.calls.single, startsWith('auto '));
+      expect(_eng.calls.single, contains('"skip_direct":true'));
+      final b = await kept(t);
+      expect(b.choice, BridgeChoice.auto);
+      expect(b.skipDirect, isTrue);
+      await _done(t);
+    });
+
+    testWidgets('direct picked by hand turns it off, its cost said first', (
+      t,
+    ) async {
+      await _open(t, setup: const BridgeSetup(skipDirect: true));
+      final seen = find.byKey(const ValueKey('directSeen'));
+      expect(seen, findsOneWidget);
+      expect(find.text(l10n.bridgesWatchedDirectCost), findsOneWidget);
+      await t.tap(find.text(l10n.bridgesDirect));
+      await t.runAsync(() => Future<void>.delayed(Duration.zero));
+      await t.pump(const Duration(seconds: 2));
+      expect(appState.bridgeChoice, BridgeChoice.direct);
+      expect(appState.networkWatched, isFalse);
+      expect(
+        t
+            .widget<HaloSwitch>(
+              find.descendant(of: sw, matching: find.byType(HaloSwitch)),
+            )
+            .value,
+        isFalse,
+      );
+      expect(seen, findsNothing);
+      expect(_eng.calls, ['direct {}']);
+      final b = await kept(t);
+      expect(b.choice, BridgeChoice.direct);
+      expect(b.skipDirect, isFalse);
+      await _done(t);
+    });
+
+    testWidgets('a decoy has no switch and changes nothing', (t) async {
+      lockState.inDecoy = true;
+      await _open(t);
+      expect(sw, findsNothing);
+      await appState.setNetworkWatched(true);
+      expect(appState.networkWatched, isFalse);
+      expect(_eng.calls, isEmpty);
+      await _done(t);
+    });
+
+    testWidgets('right to left: the switch on the left', (t) async {
+      await _open(t, locale: const Locale('ar'));
+      final row = t.getRect(sw);
+      final title = t.getRect(find.text(l10n.bridgesWatchedTitle));
+      expect(row.right - title.right, lessThan(30));
+      expect(title.left - row.left, greaterThan(40));
+      await _done(t);
+    });
+
+    for (final light in [false, true]) {
+      testWidgets('every language, 360x640 at 1.5, '
+          '${light ? 'light' : 'dark'}', (t) async {
+        HaloColors.setLight(light);
+        addTearDown(() => HaloColors.setLight(false));
+        final errs = <String>[];
+        final was = FlutterError.onError;
+        FlutterError.onError = (d) => errs.add(
+          '${d.exceptionAsString().split('\n').first} '
+          '${RegExp(r'The relevant error-causing widget was:\s*\n\s*.*\n\s*(.*)').firstMatch(d.toString())?.group(1)}',
+        );
+        try {
+          for (final lang in [..._langs, 'hi', 'pl']) {
+            await _open(
+              t,
+              setup: const BridgeSetup(skipDirect: true),
+              locale: _loc(lang),
+              scale: 1.5,
+              size: const Size(360, 640),
+            );
+            await t.scrollUntilVisible(
+              sw,
+              200,
+              scrollable: find.byType(Scrollable).first,
+            );
+            if (sw.evaluate().isEmpty) errs.add('[$lang] no switch');
+            await _done(t);
+          }
+        } finally {
+          FlutterError.onError = was;
+        }
+        expect(errs, isEmpty, reason: errs.toSet().join('\n'));
+      });
+    }
+  });
+
+  group('a private bridge, once automatic failed', () {
+    const failed = BridgeStatus(mode: 'auto', phase: 'exhausted');
+    final hint = find.byKey(const ValueKey('privateBridgeHint'));
+
+    Future<void> sheet(
+      WidgetTester t, {
+      BridgeStatus status = failed,
+      Locale locale = const Locale('en'),
+      double scale = 1,
+      Size size = const Size(400, 900),
+      bool still = false,
+    }) async {
+      await _open(
+        t,
+        status: status,
+        locale: locale,
+        scale: scale,
+        size: size,
+        still: still,
+      );
+      final card = find.text(l10n.bridgesBridgeFromAFriend);
+      await t.scrollUntilVisible(
+        card,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await t.ensureVisible(card);
+      await t.pump(const Duration(milliseconds: 300));
+      await t.tap(card);
+      await _in(t);
+    }
+
+    testWidgets('over the paste box after automatic failed', (t) async {
+      await sheet(t);
+      expect(hint, findsOneWidget);
+      expect(find.text(l10n.bridgesPrivateHint), findsOneWidget);
+      for (final v in [kGetBridgesBot, kBridgesSite, kBridgesMail]) {
+        expect(find.text(v), findsOneWidget);
+      }
+      expect(find.text(l10n.bridgesPrivateEmailFrom), findsOneWidget);
+      expect(
+        t.getRect(hint).bottom,
+        lessThanOrEqualTo(t.getRect(find.byType(TextField)).top),
+      );
+      await _done(t);
+    });
+
+    testWidgets('never while connected, trying, or before automatic', (
+      t,
+    ) async {
+      for (final s in [
+        _through,
+        _another,
+        BridgeStatus.none,
+        // another way picked: not automatic's failure
+        const BridgeStatus(mode: 'own', phase: 'exhausted'),
+        const BridgeStatus(mode: 'auto', phase: 'exhausted', canSend: true),
+      ]) {
+        await sheet(t, status: s);
+        expect(hint, findsNothing, reason: '$s');
+        expect(find.text(l10n.bridgesPrivateHint), findsNothing);
+        await _done(t);
+      }
+    });
+
+    testWidgets('goes once tor connects, comes back if it fails again', (
+      t,
+    ) async {
+      await sheet(t);
+      expect(hint, findsOneWidget);
+      appState.setBridgeStatusForTest(_through);
+      await _in(t);
+      expect(hint, findsNothing);
+      appState.setBridgeStatusForTest(failed);
+      await _in(t);
+      expect(hint, findsOneWidget);
+      await _done(t);
+    });
+
+    testWidgets('a decoy never sees it', (t) async {
+      lockState.inDecoy = true;
+      await _open(t, status: failed);
+      // a decoy has no friend card to open the sheet from
+      expect(find.text(l10n.bridgesBridgeFromAFriend), findsNothing);
+      expect(hint, findsNothing);
+      await _done(t);
+    });
+
+    testWidgets('each row copies its address', (t) async {
+      final copied = <String?>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (c) async {
+          if (c.method == 'Clipboard.setData') {
+            copied.add((c.arguments as Map)['text'] as String?);
+          }
+          return null;
+        },
+      );
+      await sheet(t);
+      for (final v in [kGetBridgesBot, kBridgesSite, kBridgesMail]) {
+        await t.tap(find.byTooltip(l10n.bridgesPrivateCopy(v)));
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 300));
+        expect(copied.last, v);
+        expect(find.text(l10n.bridgesPrivateCopied(v)), findsOneWidget);
+        await t.pump(const Duration(seconds: 4));
+      }
+      expect(copied, [kGetBridgesBot, kBridgesSite, kBridgesMail]);
+      await _done(t);
+    });
+
+    testWidgets('the website opens in the browser', (t) async {
+      final opened = <Uri>[];
+      openOutsideForTest = (u) async {
+        opened.add(u);
+        return true;
+      };
+      addTearDown(() => openOutsideForTest = null);
+      await sheet(t);
+      await t.tap(find.text(kBridgesSite));
+      await t.pump();
+      expect(opened, [Uri.parse('https://bridges.torproject.org/')]);
+      // the bot and the address are copied, never opened
+      await t.tap(find.text(kGetBridgesBot));
+      await t.tap(find.text(kBridgesMail));
+      await t.pump();
+      expect(opened, hasLength(1));
+      await _done(t);
+    });
+
+    testWidgets('no browser: the website is copied instead', (t) async {
+      final copied = <String?>[];
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (c) async {
+          if (c.method == 'Clipboard.setData') {
+            copied.add((c.arguments as Map)['text'] as String?);
+          }
+          return null;
+        },
+      );
+      openOutsideForTest = (u) async => false;
+      addTearDown(() => openOutsideForTest = null);
+      await sheet(t);
+      await t.tap(find.text(kBridgesSite));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(copied, [kBridgesSite]);
+      expect(
+        find.text(l10n.bridgesPrivateCopied(kBridgesSite)),
+        findsOneWidget,
+      );
+      await t.pump(const Duration(seconds: 4));
+      await _done(t);
+    });
+
+    testWidgets('right to left: the words lead from the right, the '
+        'addresses stay left to right', (t) async {
+      await sheet(t, locale: const Locale('ar'));
+      final box = t.getRect(hint);
+      final words = t.getRect(find.text(l10n.bridgesPrivateHint));
+      expect(box.right - words.right, lessThan(24));
+      final site = t.widget<Text>(find.text(kBridgesSite));
+      expect(site.textDirection, TextDirection.ltr);
+      // the copy button sits at the end, on the left
+      final copy = t.getRect(
+        find.byTooltip(l10n.bridgesPrivateCopy(kBridgesSite)),
+      );
+      expect(copy.left - box.left, lessThan(24));
+      await _done(t);
+    });
+
+    testWidgets('reduced motion: there at once', (t) async {
+      await sheet(t, still: true);
+      expect(hint, findsOneWidget);
+      appState.setBridgeStatusForTest(_through);
+      await t.pump();
+      expect(hint, findsNothing);
+      await _done(t);
+    });
+
+    for (final light in [false, true]) {
+      testWidgets('every language, 360x640 at 1.5, '
+          '${light ? 'light' : 'dark'}', (t) async {
+        HaloColors.setLight(light);
+        addTearDown(() => HaloColors.setLight(false));
+        final errs = <String>[];
+        final was = FlutterError.onError;
+        FlutterError.onError = (d) => errs.add(
+          '${d.exceptionAsString().split('\n').first} '
+          '${RegExp(r'The relevant error-causing widget was:\s*\n\s*.*\n\s*(.*)').firstMatch(d.toString())?.group(1)}',
+        );
+        try {
+          for (final lang in [..._langs, 'hi', 'pl']) {
+            await sheet(
+              t,
+              locale: _loc(lang),
+              scale: 1.5,
+              size: const Size(360, 640),
+            );
+            if (hint.evaluate().isEmpty) errs.add('[$lang] no hint');
+            await _done(t);
+          }
+        } finally {
+          FlutterError.onError = was;
+        }
+        expect(errs, isEmpty, reason: errs.toSet().join('\n'));
+      });
+    }
+  });
+
   setUpAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (_) async => null);

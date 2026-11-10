@@ -7224,7 +7224,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'Paste a line someone you trust gave you.';
+      'Paste a line from the Tor Project or someone you trust.';
 
   @override
   String get bridgesDetails => 'Details';
@@ -7287,7 +7287,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Paste the line they sent you, or scan its code. Take bridge lines from people you know.';
+      'Paste a bridge line, or scan its code. Take lines from the Tor Project or from people you know.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7295,7 +7295,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'Paste or scan a line someone you trust gave you.';
+      'Paste or scan a line from the Tor Project or someone you trust.';
 
   @override
   String get bridgesNothingYet => 'Nothing yet';
@@ -7391,7 +7391,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'Paste the line they sent you. Take bridge lines from people you know.';
+      'Paste a bridge line. Take lines from the Tor Project or from people you know.';
 
   @override
   String get bridgesFromAFriendLower => 'from a friend';
@@ -7447,7 +7447,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn\'t connect, try another, or ask a friend for a bridge line.';
+      'Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn\'t connect, try another, get a private bridge from the Tor Project, or ask a friend for a bridge line.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'Can\'t connect automatically? Get a private bridge from the Tor Project, then paste it below.';
+
+  @override
+  String get bridgesPrivateWebsite => 'Website';
+
+  @override
+  String get bridgesPrivateEmail => 'Email';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Send it from Gmail or Riseup';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'Copy $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '$what copied';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'Open $what';
+  }
+
+  @override
+  String get bridgesWatchedTitle => 'My network is watched';
+
+  @override
+  String get bridgesWatchedLine => 'Kryfo never tries Tor without a bridge.';
+
+  @override
+  String get bridgesWatchedFastCost => 'Your network can see you use Kryfo.';
+
+  @override
+  String get bridgesWatchedDirectCost => 'Your network can see you use Tor.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Now on Automatic, so Tor always starts on a bridge';
 
   @override
   String get bridgesAskTorProject => 'Ask the Tor Project';

@@ -7229,7 +7229,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'خطی را که کسی مورد اعتمادتان به شما داده جای‌گذاری کنید.';
+      'خطی از پروژه‌ی Tor یا از کسی مورد اعتمادتان را جای‌گذاری کنید.';
 
   @override
   String get bridgesDetails => 'جزئیات';
@@ -7292,7 +7292,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'خطی را که برایتان فرستاده جای‌گذاری کنید، یا کدش را اسکن کنید. خط‌های پل را از کسانی بگیرید که می‌شناسید.';
+      'یک خط پل جای‌گذاری کنید، یا کدش را اسکن کنید. خط‌ها را از پروژه‌ی Tor یا از کسانی بگیرید که می‌شناسید.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7300,7 +7300,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'خطی را که کسی مورد اعتمادتان به شما داده جای‌گذاری یا اسکن کنید.';
+      'خطی از پروژه‌ی Tor یا از کسی مورد اعتمادتان را جای‌گذاری یا اسکن کنید.';
 
   @override
   String get bridgesNothingYet => 'هنوز هیچ';
@@ -7396,7 +7396,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'خطی را که برایتان فرستاده جای‌گذاری کنید. خط‌های پل را از کسانی بگیرید که می‌شناسید.';
+      'یک خط پل جای‌گذاری کنید. خط‌ها را از پروژه‌ی Tor یا از کسانی بگیرید که می‌شناسید.';
 
   @override
   String get bridgesFromAFriendLower => 'از یک دوست';
@@ -7451,7 +7451,54 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo پل‌ها را خودکار انتخاب می‌کند. Snowflake و WebTunnel در بیشتر جاها کار می‌کنند. اگر یکی وصل نشد، یکی دیگر را امتحان کنید یا از یک دوست خط پل بخواهید.';
+      'Kryfo پل‌ها را خودکار انتخاب می‌کند. Snowflake و WebTunnel در بیشتر جاها کار می‌کنند. اگر یکی وصل نشد، یکی دیگر را امتحان کنید، یک پل خصوصی از پروژه‌ی Tor بگیرید یا از یک دوست خط پل بخواهید.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'خودکار وصل نمی‌شود؟ یک پل خصوصی از پروژه‌ی Tor بگیرید و پایین جای‌گذاری کنید.';
+
+  @override
+  String get bridgesPrivateWebsite => 'وب‌سایت';
+
+  @override
+  String get bridgesPrivateEmail => 'ایمیل';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'از Gmail یا Riseup بفرستید';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'کپی $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '$what کپی شد';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'باز کردن $what';
+  }
+
+  @override
+  String get bridgesWatchedTitle => 'شبکه‌ام زیر نظر است';
+
+  @override
+  String get bridgesWatchedLine =>
+      'Kryfo هیچ‌وقت Tor را بدون پل امتحان نمی‌کند.';
+
+  @override
+  String get bridgesWatchedFastCost =>
+      'شبکه‌تان می‌تواند ببیند که از Kryfo استفاده می‌کنید.';
+
+  @override
+  String get bridgesWatchedDirectCost =>
+      'شبکه‌تان می‌تواند ببیند که از Tor استفاده می‌کنید.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'حالا روی «خودکار» است، پس Tor همیشه با یک پل شروع می‌شود';
 
   @override
   String get bridgesAskTorProject => 'پرسیدن از پروژه‌ی Tor';

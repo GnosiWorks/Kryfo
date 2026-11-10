@@ -9084,7 +9084,7 @@
   "@bridgesPasteOrScanALine": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesPasteOrScanALineDesk": "Paste a line someone you trust gave you.",
+  "bridgesPasteOrScanALineDesk": "Paste a line from the Tor Project or someone you trust.",
   "@bridgesPasteOrScanALineDesk": {
     "description": "bridgesPasteOrScanALine as a computer shows it (linux and windows)"
   },
@@ -9189,12 +9189,12 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesInUse": "In use",
-  "bridgesPasteTheLineThey": "Paste the line they sent you, or scan its code. Take bridge lines from people you know.",
+  "bridgesPasteTheLineThey": "Paste a bridge line, or scan its code. Take lines from the Tor Project or from people you know.",
   "bridgesYouReOnAMode": "Your mode doesn't use Tor. These choices apply when you switch back.",
   "@bridgesKryfoCanGetAround": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesPasteOrScanALine": "Paste or scan a line someone you trust gave you.",
+  "bridgesPasteOrScanALine": "Paste or scan a line from the Tor Project or someone you trust.",
   "bridgesNothingYet": "Nothing yet",
   "@bridgesThroughABridge": {
     "description": "screens/bridges_screen.dart"
@@ -9303,7 +9303,7 @@
   "@bridgesPasteTheLineThey": {
     "description": "screens/bridges_screen.dart"
   },
-  "bridgesPasteTheLineTheyDesk": "Paste the line they sent you. Take bridge lines from people you know.",
+  "bridgesPasteTheLineTheyDesk": "Paste a bridge line. Take lines from the Tor Project or from people you know.",
   "@bridgesPasteTheLineTheyDesk": {
     "description": "bridgesPasteTheLineThey as a computer shows it (linux and windows)"
   },
@@ -9367,9 +9367,72 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesWhenTorIsBlockedAutomatic": "When Tor is blocked, Automatic asks the Tor Project what works in your country.",
-  "bridgesPlainAdvice": "Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn't connect, try another, or ask a friend for a bridge line.",
+  "bridgesPlainAdvice": "Kryfo picks bridges automatically. Snowflake and WebTunnel work in most places. If one doesn't connect, try another, get a private bridge from the Tor Project, or ask a friend for a bridge line.",
   "@bridgesPlainAdvice": {
     "description": "bridges screen: plain advice over the choices, the same for everyone, no country"
+  },
+  "bridgesPrivateHint": "Can't connect automatically? Get a private bridge from the Tor Project, then paste it below.",
+  "@bridgesPrivateHint": {
+    "description": "bridges, friend sheet: over the paste box once automatic could not connect"
+  },
+  "bridgesPrivateWebsite": "Website",
+  "@bridgesPrivateWebsite": {
+    "description": "bridges, private bridge hint: the row label for bridges.torproject.org"
+  },
+  "bridgesPrivateEmail": "Email",
+  "@bridgesPrivateEmail": {
+    "description": "bridges, private bridge hint: the row label for bridges@torproject.org"
+  },
+  "bridgesPrivateEmailFrom": "Send it from Gmail or Riseup",
+  "@bridgesPrivateEmailFrom": {
+    "description": "bridges, private bridge hint: under the email address, which mail services the tor project answers"
+  },
+  "bridgesPrivateCopy": "Copy {what}",
+  "@bridgesPrivateCopy": {
+    "description": "bridges, private bridge hint: the copy button's name, what is the address",
+    "placeholders": {
+      "what": {
+        "type": "Object"
+      }
+    }
+  },
+  "bridgesPrivateCopied": "{what} copied",
+  "@bridgesPrivateCopied": {
+    "description": "bridges, private bridge hint: toast after a copy, what is the address",
+    "placeholders": {
+      "what": {
+        "type": "Object"
+      }
+    }
+  },
+  "bridgesPrivateOpen": "Open {what}",
+  "@bridgesPrivateOpen": {
+    "description": "bridges, private bridge hint: a screen reader's name for the tappable website, what is the address",
+    "placeholders": {
+      "what": {
+        "type": "Object"
+      }
+    }
+  },
+  "bridgesWatchedTitle": "My network is watched",
+  "@bridgesWatchedTitle": {
+    "description": "bridges screen: switch, the network here is watched or blocks tor (the first-run answer)"
+  },
+  "bridgesWatchedLine": "Kryfo never tries Tor without a bridge.",
+  "@bridgesWatchedLine": {
+    "description": "bridges screen: under the watched-network switch"
+  },
+  "bridgesWatchedFastCost": "Your network can see you use Kryfo.",
+  "@bridgesWatchedFastCost": {
+    "description": "speed and privacy: under fast while the network is marked watched"
+  },
+  "bridgesWatchedDirectCost": "Your network can see you use Tor.",
+  "@bridgesWatchedDirectCost": {
+    "description": "bridges screen: on the direct card while the network is marked watched"
+  },
+  "bridgesWatchedNowAuto": "Now on Automatic, so Tor always starts on a bridge",
+  "@bridgesWatchedNowAuto": {
+    "description": "bridges screen: toast when the watched switch moved the pick from direct to automatic"
   },
   "bridgesAskTorProject": "Ask the Tor Project",
   "bridgesTooLongForTor": "Too long for Tor to use",

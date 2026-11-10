@@ -7231,7 +7231,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALineDesk =>
-      'किसी भरोसेमंद व्यक्ति की दी लाइन पेस्ट करें।';
+      'Tor Project से या किसी भरोसेमंद व्यक्ति से मिली लाइन पेस्ट करें।';
 
   @override
   String get bridgesDetails => 'विवरण';
@@ -7295,7 +7295,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'उनकी भेजी लाइन पेस्ट करें, या उसका कोड स्कैन करें। ब्रिज लाइनें जान-पहचान वालों से ही लें।';
+      'ब्रिज लाइन पेस्ट करें, या उसका कोड स्कैन करें। लाइनें Tor Project से या जान-पहचान वालों से ही लें।';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7303,7 +7303,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'किसी भरोसेमंद व्यक्ति की दी लाइन पेस्ट या स्कैन करें।';
+      'Tor Project से या किसी भरोसेमंद व्यक्ति से मिली लाइन पेस्ट या स्कैन करें।';
 
   @override
   String get bridgesNothingYet => 'अभी कुछ नहीं';
@@ -7398,7 +7398,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'उनकी भेजी लाइन पेस्ट करें। ब्रिज लाइनें जान-पहचान वालों से ही लें।';
+      'ब्रिज लाइन पेस्ट करें। लाइनें Tor Project से या जान-पहचान वालों से ही लें।';
 
   @override
   String get bridgesFromAFriendLower => 'किसी दोस्त से';
@@ -7454,7 +7454,53 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo अपने आप ब्रिज चुनता है। Snowflake और WebTunnel ज़्यादातर जगहों पर काम करते हैं। अगर कोई कनेक्ट न हो, तो दूसरा आज़माएँ या किसी दोस्त से ब्रिज लाइन माँगें।';
+      'Kryfo अपने आप ब्रिज चुनता है। Snowflake और WebTunnel ज़्यादातर जगहों पर काम करते हैं। अगर कोई कनेक्ट न हो, तो दूसरा आज़माएँ, Tor Project से एक निजी ब्रिज लें, या किसी दोस्त से ब्रिज लाइन माँगें।';
+
+  @override
+  String get bridgesPrivateHint =>
+      'अपने आप कनेक्ट नहीं हो रहा? Tor Project से एक निजी ब्रिज लें, फिर उसे नीचे पेस्ट करें।';
+
+  @override
+  String get bridgesPrivateWebsite => 'वेबसाइट';
+
+  @override
+  String get bridgesPrivateEmail => 'ईमेल';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Gmail या Riseup से भेजें';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return '$what कॉपी करें';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return '$what कॉपी हुआ';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return '$what खोलें';
+  }
+
+  @override
+  String get bridgesWatchedTitle => 'मेरे नेटवर्क पर नज़र रखी जाती है';
+
+  @override
+  String get bridgesWatchedLine => 'Kryfo कभी बिना ब्रिज के Tor नहीं आज़माता।';
+
+  @override
+  String get bridgesWatchedFastCost =>
+      'आपका नेटवर्क देख सकता है कि आप Kryfo इस्तेमाल करते हैं।';
+
+  @override
+  String get bridgesWatchedDirectCost =>
+      'आपका नेटवर्क देख सकता है कि आप Tor इस्तेमाल करते हैं।';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'अब अपने-आप पर है, इसलिए Tor हमेशा ब्रिज से शुरू होता है';
 
   @override
   String get bridgesAskTorProject => 'Tor Project से पूछें';

@@ -158,6 +158,21 @@ class _BridgesScreenState extends State<BridgesScreen> {
                           selected: chosen == BridgeChoice.direct,
                           tag: tag(BridgeChoice.direct),
                           onTap: () => _pick(BridgeChoice.direct),
+                          // what tor alone costs on a watched network
+                          extra: b.skipDirect
+                              ? Padding(
+                                  key: const ValueKey('directSeen'),
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Text(
+                                    l10n.bridgesWatchedDirectCost,
+                                    style: HaloType.sans(
+                                      size: 12.5,
+                                      color: HaloColors.amberText,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                )
+                              : null,
                         ),
                         const SizedBox(height: 10),
                         _ChoiceCard(
@@ -177,6 +192,22 @@ class _BridgesScreenState extends State<BridgesScreen> {
                     ],
                   ),
                 ),
+                // the first-run answer, to change later: automatic never
+                // tries tor without a bridge
+                if (!decoy) ...[
+                  const SizedBox(height: 12),
+                  _Box(
+                    children: [
+                      _SwitchRow(
+                        key: const ValueKey('watchedSwitch'),
+                        title: l10n.bridgesWatchedTitle,
+                        body: l10n.bridgesWatchedLine,
+                        value: b.skipDirect,
+                        onChanged: _watched,
+                      ),
+                    ],
+                  ),
+                ],
                 // a way picked under "more" shows here, so no card stands
                 // unexplained with none selected
                 if (!decoy)
@@ -219,6 +250,11 @@ class _BridgesScreenState extends State<BridgesScreen> {
         );
       },
     );
+  }
+
+  Future<void> _watched(bool on) async {
+    final moved = await appState.setNetworkWatched(on);
+    if (moved && mounted) showHaloToast(context, l10n.bridgesWatchedNowAuto);
   }
 
   String? _usingLine(BridgeChoice c) => switch (c) {
@@ -1036,6 +1072,7 @@ class _RowChoice extends StatelessWidget {
 
 class _SwitchRow extends StatelessWidget {
   const _SwitchRow({
+    super.key,
     required this.title,
     required this.body,
     required this.value,

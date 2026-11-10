@@ -7376,7 +7376,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bridgesBuiltIn => 'wbudowany';
 
   @override
-  String get bridgesPasteOrScanALineDesk => 'Wklej linię od kogoś, komu ufasz.';
+  String get bridgesPasteOrScanALineDesk =>
+      'Wklej linię od Tor Project albo od kogoś, komu ufasz.';
 
   @override
   String get bridgesDetails => 'Szczegóły';
@@ -7439,7 +7440,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineThey =>
-      'Wklej linię, którą ci wysłano, albo zeskanuj jej kod. Bierz linie mostków od osób, które znasz.';
+      'Wklej linię mostka albo zeskanuj jej kod. Bierz linie od Tor Project albo od osób, które znasz.';
 
   @override
   String get bridgesYouReOnAMode =>
@@ -7447,7 +7448,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesPasteOrScanALine =>
-      'Wklej albo zeskanuj linię od kogoś, komu ufasz.';
+      'Wklej lub zeskanuj linię od Tor Project albo od kogoś, komu ufasz.';
 
   @override
   String get bridgesNothingYet => 'Jeszcze nic';
@@ -7545,7 +7546,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesPasteTheLineTheyDesk =>
-      'Wklej linię, którą ci wysłano. Bierz linie mostków od osób, które znasz.';
+      'Wklej linię mostka. Bierz linie od Tor Project albo od osób, które znasz.';
 
   @override
   String get bridgesFromAFriendLower => 'od znajomego';
@@ -7602,7 +7603,51 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bridgesPlainAdvice =>
-      'Kryfo wybiera mostki automatycznie. Snowflake i WebTunnel działają w większości miejsc. Jeśli jeden się nie łączy, spróbuj innego albo poproś znajomego o linię mostka.';
+      'Kryfo wybiera mostki automatycznie. Snowflake i WebTunnel działają w większości miejsc. Jeśli jeden się nie łączy, spróbuj innego, weź prywatny mostek od Tor Project albo poproś znajomego o linię mostka.';
+
+  @override
+  String get bridgesPrivateHint =>
+      'Nie łączy się automatycznie? Weź prywatny mostek od Tor Project i wklej go poniżej.';
+
+  @override
+  String get bridgesPrivateWebsite => 'Strona';
+
+  @override
+  String get bridgesPrivateEmail => 'E-mail';
+
+  @override
+  String get bridgesPrivateEmailFrom => 'Wyślij z Gmaila albo Riseup';
+
+  @override
+  String bridgesPrivateCopy(Object what) {
+    return 'Kopiuj $what';
+  }
+
+  @override
+  String bridgesPrivateCopied(Object what) {
+    return 'Skopiowano $what';
+  }
+
+  @override
+  String bridgesPrivateOpen(Object what) {
+    return 'Otwórz $what';
+  }
+
+  @override
+  String get bridgesWatchedTitle => 'Moja sieć jest obserwowana';
+
+  @override
+  String get bridgesWatchedLine => 'Kryfo nigdy nie próbuje Tora bez mostka.';
+
+  @override
+  String get bridgesWatchedFastCost => 'Twoja sieć widzi, że używasz Kryfo.';
+
+  @override
+  String get bridgesWatchedDirectCost => 'Twoja sieć widzi, że używasz Tora.';
+
+  @override
+  String get bridgesWatchedNowAuto =>
+      'Teraz Automatycznie, więc Tor zawsze startuje przez mostek';
 
   @override
   String get bridgesAskTorProject => 'Zapytaj Tor Project';

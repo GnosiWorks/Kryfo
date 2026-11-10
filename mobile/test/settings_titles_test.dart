@@ -93,6 +93,8 @@ const _notSettings = {
   'desk_link_screen',
   // one bridge as a code, or into a chat: a sheet with no sections
   'bridge_share_sheet',
+  // the tor project's ways to a private bridge, a block in the friend sheet
+  'bridge_private_hint',
 };
 
 // what a title looks like and the gaps around it, as on every page
