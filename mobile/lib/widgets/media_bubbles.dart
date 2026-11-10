@@ -240,7 +240,23 @@ class VoiceBubbleState extends State<VoiceBubble> {
   // what the player reads of a sealed note: memory, gone with the hold
   PlainView? _view;
 
+  // a loaded note, played or paused: the lock takes its plain view
+  VoidCallback? _viewUnguard;
+
+  void _closeForLock() {
+    _viewUnguard = null;
+    _unguard?.call();
+    _unguard = null;
+    VoiceTurn.letGo(this);
+    // the next tap loads it again and carries on from here
+    _ready = false;
+    _player.stop();
+    _letFileGo();
+  }
+
   void _letFileGo() {
+    _viewUnguard?.call();
+    _viewUnguard = null;
     final o = _open;
     _open = null;
     _view?.close();
@@ -350,6 +366,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
         _letFileGo();
         _view = v;
         holdVoiceFile(_open = path);
+        _viewUnguard = lockGuard.closeOnLock(_closeForLock);
         // the length read from the head stays: the number does not jump
         _dur = _durCache[path] ?? d ?? Duration.zero;
         if (mounted) setState(() => _ready = true);

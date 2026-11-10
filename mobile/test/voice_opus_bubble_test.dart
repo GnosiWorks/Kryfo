@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_guard.dart' show lockGuard;
 import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/voice_opus.dart';
 import 'package:kryfo/widgets/media_bubbles.dart';
@@ -220,6 +221,30 @@ void main() {
       asked.firstWhere((a) => a.startsWith('load ')),
       'load ${Uri.file(ogg.path)}',
     );
+    await close(t);
+  });
+
+  testWidgets('a paused note lets its file go at the lock, and plays on '
+      'from where it was after', (t) async {
+    final f = File('${tmp.path}/f_2_voice.ogg')..writeAsBytesSync(_note);
+    await t.pumpWidget(app(f.path));
+    await until(t, () => find.text('0:03').evaluate().isNotEmpty);
+    await t.tap(find.byType(VoiceBubble));
+    await until(t, () => asked.contains('play'));
+    await t.tap(find.byType(VoiceBubble));
+    await until(t, () => asked.contains('pause'));
+    var free = false;
+    unawaited(voiceFileFree(f.path).then((_) => free = true));
+    await t.pump();
+    expect(free, isFalse, reason: 'paused, the player still holds it');
+    asked.clear();
+    lockGuard.locking();
+    await until(t, () => free);
+    expect(free, isTrue);
+    asked.clear();
+    await t.tap(find.byType(VoiceBubble));
+    await until(t, () => asked.contains('play'));
+    expect(asked.where((a) => a.startsWith('load ')), hasLength(1));
     await close(t);
   });
 }
