@@ -60,4 +60,36 @@ void main() {
     await t.tap(cancel);
     expect(cancels, 1);
   });
+
+  testWidgets('at 1.5x text the strip still keeps Cancel in place', (t) async {
+    t.view.physicalSize = const Size(260, 400);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
+    await t.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(
+            size: Size(260, 400),
+            textScaler: TextScaler.linear(1.5),
+          ),
+          child: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: IncomingMediaBanner(chatKey: 'c', onCancel: (_) {}),
+            ),
+          ),
+        ),
+      ),
+    );
+    mediaProgressStart('u1', chatKey: 'c', bytes: 33869000);
+    mediaProgressUpdate('u1', 0.27);
+    mediaPreparingSet('u1', true);
+    await t.pumpAndSettle();
+    final cancel = find.text(l10n.commonCancel);
+    final short = t.getRect(cancel);
+    mediaPreparingSet('u1', false);
+    mediaProgressUpdate('u1', 0.28);
+    await t.pumpAndSettle();
+    expect(t.getRect(cancel), short);
+  });
 }

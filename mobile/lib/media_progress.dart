@@ -256,6 +256,8 @@ class IncomingMediaBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final still = motionStill(context);
+    // two lines of the strip's words fit at any text size
+    final tap = stripTapOf(MediaQuery.textScalerOf(context));
     return ValueListenableBuilder<int>(
       valueListenable: mediaProgressTick,
       builder: (_, _, _) {
@@ -277,6 +279,7 @@ class IncomingMediaBanner extends StatelessWidget {
         Widget strip = const SizedBox(width: double.infinity);
         if (v != null) {
           strip = _strip(
+            tap: tap,
             v: v,
             outUid: outUid,
             sending: outV != null,
@@ -300,6 +303,7 @@ class IncomingMediaBanner extends StatelessWidget {
   }
 
   Widget _strip({
+    required double tap,
     required double v,
     required String? outUid,
     required bool sending,
@@ -336,7 +340,7 @@ class IncomingMediaBanner extends StatelessWidget {
         // one line or two, the strip keeps its height and its buttons stay
         // where the finger is going
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: _kStripTap),
+          constraints: BoxConstraints(minHeight: tap),
           child: Row(
             children: [
               SizedBox(
@@ -374,12 +378,14 @@ class IncomingMediaBanner extends StatelessWidget {
                   label: l10n.transferPause,
                   hint: l10n.transferPauseDownload,
                   onTap: () => pause(pauseUid),
+                  tap: tap,
                 ),
               if (sending && cancelUid != null && cancel != null)
                 _StripAction(
                   label: l10n.commonCancel,
                   hint: l10n.mediaProgressCancelSending,
                   onTap: () => cancel(cancelUid),
+                  tap: tap,
                 ),
             ],
           ),
@@ -392,14 +398,19 @@ class IncomingMediaBanner extends StatelessWidget {
 // the strip's buttons, and its height with them
 const _kStripTap = 32.0;
 
+/// the strip's height and its buttons', grown with the text
+double stripTapOf(TextScaler t) => t.scale(_kStripTap);
+
 class _StripAction extends StatelessWidget {
   final String label;
   final String hint;
   final VoidCallback onTap;
+  final double tap;
   const _StripAction({
     required this.label,
     required this.hint,
     required this.onTap,
+    required this.tap,
   });
 
   @override
@@ -414,10 +425,7 @@ class _StripAction extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
-            constraints: const BoxConstraints(
-              minWidth: 48,
-              minHeight: _kStripTap,
-            ),
+            constraints: BoxConstraints(minWidth: 48, minHeight: tap),
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Text(
