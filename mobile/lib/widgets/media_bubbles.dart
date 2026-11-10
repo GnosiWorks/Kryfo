@@ -250,11 +250,29 @@ class VoiceBubbleState extends State<VoiceBubble> {
   PlainView? _view;
 
   void _letFileGo() {
+    _unguard?.call();
+    _unguard = null;
     final o = _open;
     _open = null;
     _view?.close();
     _view = null;
     if (o != null) letVoiceFileGo(o);
+  }
+
+  // the lock closes a held note, paused or playing: its plain view goes
+  // and the next tap after unlock loads it again where it was
+  void _guardHeld() {
+    _unguard ??= lockGuard.closeOnLock(() {
+      _unguard = null;
+      VoiceTurn.letGo(this);
+      // stop, not pause: a note a call paused would start again by itself
+      // when the call ends
+      _player.stop();
+      _ready = false;
+      _playing = false;
+      _letFileGo();
+      if (mounted) setState(() {});
+    });
   }
 
   // the note moved to another file (its opus copy) while this one played:
@@ -359,6 +377,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
         _letFileGo();
         _view = v;
         holdVoiceFile(_open = path);
+        _guardHeld();
         // the length read from the head stays: the number does not jump
         _dur = _durCache[path] ?? d ?? Duration.zero;
         if (mounted) setState(() => _ready = true);
@@ -369,7 +388,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
     }
   }
 
-  // the lock pauses a note that is playing
+  // the lock lets go of a note held open
   VoidCallback? _unguard;
 
   @override
@@ -405,21 +424,13 @@ class VoiceBubbleState extends State<VoiceBubble> {
       if (lockGuard.isLocked()) return;
       // another note playing stops where it is; its next tap carries on
       VoiceTurn.take(this, _pause);
-      _unguard ??= lockGuard.closeOnLock(() {
-        _unguard = null;
-        VoiceTurn.letGo(this);
-        // stop, not pause: a note a call paused would start again by
-        // itself when the call ends. the next tap carries on from here
-        _player.stop();
-      });
+      _guardHeld();
       widget.onPlay?.call();
       _player.play();
     }
   }
 
   void _pause() {
-    _unguard?.call();
-    _unguard = null;
     _player.pause();
     _playing = false;
     _swapIfMoved();
