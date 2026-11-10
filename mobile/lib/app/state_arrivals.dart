@@ -816,10 +816,12 @@ extension AppStateArrivals on AppState {
           env.unsend!,
         );
       }
+      // another's row under that uid keeps its notification
+      final theirs = await db.isTheirs(env.unsend!, senderHaloId);
       await db.deleteMessage(env.unsend!, from: senderHaloId);
       changed();
       // the delete took its unread mark; its notification goes too
-      unawaited(_io.unnotifyMessage(env.unsend!));
+      if (theirs) unawaited(_io.unnotifyMessage(env.unsend!));
       // a recall mid-transfer would otherwise leave a half-filled buffer and
       // a progress bar that never completes. drop both: the slices its
       // sender sent, never another sender's
