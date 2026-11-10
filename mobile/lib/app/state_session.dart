@@ -689,23 +689,30 @@ extension AppStateSession on AppState {
     // a file opened with another app, or shared from a hidden chat or the
     // decoy, goes with the session that handed it
     _lockedIn = (_session.vault ?? _session.primary).container;
-    unawaited(dropOpenCopies());
+    // each in its own step: one that throws leaves the rest to run
+    lockStep('open copies', () => unawaited(dropOpenCopies()));
     // in hidden chats or the decoy whatever is on the clipboard goes, a
     // field's own copy too; an everyday copy stays for another app
-    unawaited(
-      clipGoesWithLock()
-          ? dropOurClip(all: true)
-          : dropOurClip(quietOnly: true),
+    lockStep(
+      'clipboard',
+      () => unawaited(
+        clipGoesWithLock()
+            ? dropOurClip(all: true)
+            : dropOurClip(quietOnly: true),
+      ),
     );
-    unawaited(dropNotesExports());
+    lockStep('notes exports', () => unawaited(dropNotesExports()));
     // the chat left open goes first no more until the lock lifts
-    unawaited(_tellFirst());
-    unawaited(
-      vaultSetupDone().catchError((Object e) {
-        dlog('vault: setup key (${e.runtimeType})');
-      }),
+    lockStep('first chat', () => unawaited(_tellFirst()));
+    lockStep(
+      'vault setup',
+      () => unawaited(
+        vaultSetupDone().catchError((Object e) {
+          dlog('vault: setup key (${e.runtimeType})');
+        }),
+      ),
     );
-    _shutVault();
+    lockStep('vault', _shutVault);
   }
 
   // the session the vault extends is back before anything reads again. the

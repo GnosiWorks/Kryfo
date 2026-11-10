@@ -29,7 +29,7 @@ import 'devices/linked_lock.dart';
 import 'devices/own_devices.dart'
     show DecoyDevices, DeviceKind, LinkHistory, OwnDevices, kMaxLinkedDevices;
 import 'photo_blur.dart' show makeBlurSoon;
-import 'picture_lock.dart' show capPictureCache;
+import 'picture_lock.dart' show capPictureCache, lockStep;
 import 'secure_store.dart';
 import 'desktop/desk_frames.dart' show deskRunApp;
 import 'desktop/desktop_trace.dart' as desk_trace;
