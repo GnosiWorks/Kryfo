@@ -493,6 +493,8 @@ extension AppStateRoute on AppState {
   // tor and counts; elsewhere it is about the direct route, so tor's own
   // word, and not held asleep, is what there is
   bool get servicesReady => _torCarries && (_sendMode != 'private' || _routeOK);
+  // tor itself is connected and not held asleep, whatever the direct route
+  bool get torCarries => _torCarries;
   int get bootstrapPct => _bootstrapPct;
 
   // what every screen means by connected: a network, and the route the send

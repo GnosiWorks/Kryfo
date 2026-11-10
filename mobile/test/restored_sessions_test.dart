@@ -53,7 +53,8 @@ import 'package:kryfo/heal.dart'
         makeHeal;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/router.dart';
-import 'package:kryfo/restore_undo.dart' show restoreLandedAt;
+import 'package:kryfo/restore_undo.dart'
+    show kTakenEdit, kTakenUnsend, noteTaken, restoreLandedAt;
 import 'package:kryfo/relay_poll.dart' show Reached;
 import 'package:kryfo/session.dart';
 import 'package:kryfo/signal_session.dart';
@@ -2277,8 +2278,8 @@ void main() {
       );
     });
 
-    test('kept no longer once deleted for me, the chat cleared or deleted, '
-        'or our timed message burned', () async {
+    test('edits kept no longer once deleted for me, the chat cleared or '
+        'deleted, or our timed message burned; take-backs kept', () async {
       final p = await _peer();
       final q = await _peer();
       final r = await _peer();
@@ -2311,9 +2312,22 @@ void main() {
       expect(kept(), isNot(contains('burns')));
       await rows.clearConversation(q.name);
       expect(kept(), isNot(contains('cleared')));
-      expect(kept(), isNot(contains('taken back')));
+      // a take-back holds no words and outlives the clear: else a restore
+      // there brings back what we took back
+      expect(kept(), contains('taken back'));
       await rows.deleteAllOf(r.name);
-      expect(kept(), isEmpty);
+      expect(kept(), {'taken back'});
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await noteTaken(
+        mem,
+        'group take-back',
+        kTakenUnsend,
+        group: 'g',
+        at: now,
+      );
+      await noteTaken(mem, 'group edit', kTakenEdit, group: 'g', at: now);
+      await rows.clearGroupConversation('g');
+      expect(kept(), {'taken back', 'group take-back'});
     });
   });
 

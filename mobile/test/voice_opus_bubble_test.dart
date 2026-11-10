@@ -189,39 +189,6 @@ void main() {
     await close(t);
   });
 
-  testWidgets('a paused note lets go of what it holds when the lock goes '
-      'up, and plays again after', (t) async {
-    final f = File('${tmp.path}/f_2_voice.ogg')..writeAsBytesSync(_note);
-    await t.pumpWidget(app(f.path));
-    await until(t, () => find.text('0:03').evaluate().isNotEmpty);
-    await t.tap(find.byType(VoiceBubble));
-    await until(t, () => asked.contains('play'));
-    // paused: the note is still held open
-    await t.tap(find.byType(VoiceBubble));
-    await until(t, () => asked.contains('pause'));
-    var free = false;
-    unawaited(voiceFileFree(f.path).then((_) => free = true));
-    await t.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 50)),
-    );
-    await t.pump();
-    expect(free, isFalse);
-    lockState.openForTest(enabled: true);
-    lockState.lock();
-    lockGuard.locking();
-    await until(t, () => free);
-    expect(free, isTrue);
-    lockState.openForTest();
-    asked.clear();
-    await t.tap(find.byType(VoiceBubble));
-    await until(t, () => asked.contains('play'));
-    expect(
-      asked.firstWhere((a) => a.startsWith('load ')),
-      'load ${Uri.file(f.path)}',
-    );
-    await close(t);
-  });
-
   testWidgets('a sent note that becomes opus keeps its bubble, and the wav '
       'goes once its player lets it go', (t) async {
     final wav = File('${tmp.path}/vn_u1.wav')..writeAsBytesSync(_wav(54400));
@@ -254,6 +221,30 @@ void main() {
       asked.firstWhere((a) => a.startsWith('load ')),
       'load ${Uri.file(ogg.path)}',
     );
+    await close(t);
+  });
+
+  testWidgets('a paused note lets its file go at the lock, and plays on '
+      'from where it was after', (t) async {
+    final f = File('${tmp.path}/f_2_voice.ogg')..writeAsBytesSync(_note);
+    await t.pumpWidget(app(f.path));
+    await until(t, () => find.text('0:03').evaluate().isNotEmpty);
+    await t.tap(find.byType(VoiceBubble));
+    await until(t, () => asked.contains('play'));
+    await t.tap(find.byType(VoiceBubble));
+    await until(t, () => asked.contains('pause'));
+    var free = false;
+    unawaited(voiceFileFree(f.path).then((_) => free = true));
+    await t.pump();
+    expect(free, isFalse, reason: 'paused, the player still holds it');
+    asked.clear();
+    lockGuard.locking();
+    await until(t, () => free);
+    expect(free, isTrue);
+    asked.clear();
+    await t.tap(find.byType(VoiceBubble));
+    await until(t, () => asked.contains('play'));
+    expect(asked.where((a) => a.startsWith('load ')), hasLength(1));
     await close(t);
   });
 }

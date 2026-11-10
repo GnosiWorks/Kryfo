@@ -85,15 +85,24 @@ Future<int> pruneTaken(DatabaseExecutor db, {int? nowMs}) => db.delete(
 );
 
 /// gone with what they were of: an edit with its message ([uid]), all of a
-/// chat with it ([peer] or [group])
+/// chat with it ([peer] or [group]). a chat cleared keeps its take-backs
+/// ([editsOnly]): they hold no words, and a restore there would bring
+/// back what we took back
 Future<void> dropTaken(
   DatabaseExecutor db, {
   String? uid,
   String? peer,
   String? group,
+  bool editsOnly = false,
 }) async {
   try {
-    await _dropTaken(db, uid: uid, peer: peer, group: group);
+    await _dropTaken(
+      db,
+      uid: uid,
+      peer: peer,
+      group: group,
+      editsOnly: editsOnly,
+    );
   } catch (e) {
     // a store with no such table (the developer chat's) keeps none
     dlog('restore: taken rows not dropped (${e.runtimeType})');
@@ -105,7 +114,9 @@ Future<void> _dropTaken(
   String? uid,
   String? peer,
   String? group,
+  bool editsOnly = false,
 }) async {
+  final kind = editsOnly ? ' AND kind = ?' : '';
   if (uid != null) {
     await db.delete(
       'taken_out',
@@ -114,10 +125,18 @@ Future<void> _dropTaken(
     );
   }
   if (peer != null) {
-    await db.delete('taken_out', where: 'peer_id = ?', whereArgs: [peer]);
+    await db.delete(
+      'taken_out',
+      where: 'peer_id = ?$kind',
+      whereArgs: [peer, if (editsOnly) kTakenEdit],
+    );
   }
   if (group != null) {
-    await db.delete('taken_out', where: 'group_id = ?', whereArgs: [group]);
+    await db.delete(
+      'taken_out',
+      where: 'group_id = ?$kind',
+      whereArgs: [group, if (editsOnly) kTakenEdit],
+    );
   }
 }
 

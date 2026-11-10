@@ -249,30 +249,28 @@ class VoiceBubbleState extends State<VoiceBubble> {
   // what the player reads of a sealed note: memory, gone with the hold
   PlainView? _view;
 
-  void _letFileGo() {
+  // a loaded note, played or paused: the lock takes its plain view
+  VoidCallback? _viewUnguard;
+
+  void _closeForLock() {
+    _viewUnguard = null;
     _unguard?.call();
     _unguard = null;
+    VoiceTurn.letGo(this);
+    // the next tap loads it again and carries on from here
+    _ready = false;
+    _player.stop();
+    _letFileGo();
+  }
+
+  void _letFileGo() {
+    _viewUnguard?.call();
+    _viewUnguard = null;
     final o = _open;
     _open = null;
     _view?.close();
     _view = null;
     if (o != null) letVoiceFileGo(o);
-  }
-
-  // the lock closes a held note, paused or playing: its plain view goes
-  // and the next tap after unlock loads it again where it was
-  void _guardHeld() {
-    _unguard ??= lockGuard.closeOnLock(() {
-      _unguard = null;
-      VoiceTurn.letGo(this);
-      // stop, not pause: a note a call paused would start again by itself
-      // when the call ends
-      _player.stop();
-      _ready = false;
-      _playing = false;
-      _letFileGo();
-      if (mounted) setState(() {});
-    });
   }
 
   // the note moved to another file (its opus copy) while this one played:
@@ -377,7 +375,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
         _letFileGo();
         _view = v;
         holdVoiceFile(_open = path);
-        _guardHeld();
+        _viewUnguard = lockGuard.closeOnLock(_closeForLock);
         // the length read from the head stays: the number does not jump
         _dur = _durCache[path] ?? d ?? Duration.zero;
         if (mounted) setState(() => _ready = true);
@@ -388,7 +386,7 @@ class VoiceBubbleState extends State<VoiceBubble> {
     }
   }
 
-  // the lock lets go of a note held open
+  // the lock pauses a note that is playing
   VoidCallback? _unguard;
 
   @override
@@ -424,13 +422,21 @@ class VoiceBubbleState extends State<VoiceBubble> {
       if (lockGuard.isLocked()) return;
       // another note playing stops where it is; its next tap carries on
       VoiceTurn.take(this, _pause);
-      _guardHeld();
+      _unguard ??= lockGuard.closeOnLock(() {
+        _unguard = null;
+        VoiceTurn.letGo(this);
+        // stop, not pause: a note a call paused would start again by
+        // itself when the call ends. the next tap carries on from here
+        _player.stop();
+      });
       widget.onPlay?.call();
       _player.play();
     }
   }
 
   void _pause() {
+    _unguard?.call();
+    _unguard = null;
     _player.pause();
     _playing = false;
     _swapIfMoved();

@@ -583,12 +583,15 @@ extension AppStateBoot on AppState {
       final from = after != null && after > 0 ? after : null;
       // before any store or drain can send: what of ours the file still
       // had waiting waits for a tap
+      var held = true;
       if (after != null) {
-        await holdOutboxAfterRestore(
-          database,
-          landed: restoreLandedAt,
-          made: from,
-        );
+        held =
+            await holdOutboxAfterRestore(
+              database,
+              landed: restoreLandedAt,
+              made: from,
+            ) !=
+            null;
       }
       // linked devices go before anything can seal to them, and every other
       // identity's sessions are marked before the store is ready
@@ -607,7 +610,7 @@ extension AppStateBoot on AppState {
       _zeroBytes(xpb); // priv bytes consumed by bootstrap, wipe from ram
       // cleared only once every identity was done: a failure runs it all
       // again on the next start
-      if (after != null && await afterRestore(database) && marked) {
+      if (after != null && await afterRestore(database) && marked && held) {
         await prefs.remove(kRestoreAfterPref);
       }
       // linked devices, before any message opens (switch off: nothing)

@@ -141,6 +141,10 @@ void main() {
       await dropTaken(db, uid: 'e1');
       await dropTaken(db, uid: 'u1');
       expect(left(), {'u1', 'q1', 'g1', 'h1'});
+      // a cleared chat keeps its take-backs, its edits go
+      await dropTaken(db, peer: 'p', editsOnly: true);
+      await dropTaken(db, group: 'h', editsOnly: true);
+      expect(left(), {'u1', 'q1', 'g1', 'h1'});
       await dropTaken(db, peer: 'q');
       await dropTaken(db, group: 'g');
       expect(left(), {'u1', 'h1'});
@@ -195,6 +199,15 @@ void main() {
       // a copy that leaves the phone: all of ours still waiting
       expect(await holdRestoredOutbox(db), 1);
       expect(sent()['since'], kNotSent);
+      // one that fails says so, and the restore's mark stays for the next
+      await db.update(
+        'messages',
+        {'sent': 0},
+        where: 'msg_uid = ?',
+        whereArgs: ['waiting'],
+      );
+      db.failOn = 'update:messages';
+      expect(await holdOutboxAfterRestore(db, nowMs: now), isNull);
     });
   });
 }
