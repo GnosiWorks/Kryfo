@@ -199,6 +199,15 @@ void main() {
       // a copy that leaves the phone: all of ours still waiting
       expect(await holdRestoredOutbox(db), 1);
       expect(sent()['since'], kNotSent);
+      // one that fails says so, and the restore's mark stays for the next
+      await db.update(
+        'messages',
+        {'sent': 0},
+        where: 'msg_uid = ?',
+        whereArgs: ['waiting'],
+      );
+      db.failOn = 'update:messages';
+      expect(await holdOutboxAfterRestore(db, nowMs: now), isNull);
     });
   });
 }
