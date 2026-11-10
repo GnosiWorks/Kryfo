@@ -114,7 +114,8 @@ func Why(err error) string {
 func permanent(err error) bool {
 	var se StatusError
 	if errors.As(err, &se) {
-		return se.Code >= 400 && se.Code < 500 && se.Code != 408 && se.Code != 425 && se.Code != 429
+		// a redirect is never followed: the mirror serves its own files
+		return se.Code >= 300 && se.Code < 500 && se.Code != 408 && se.Code != 425 && se.Code != 429
 	}
 	return errors.Is(err, errNoRange) || errors.Is(err, ErrStatus) ||
 		errors.Is(err, ErrHash) || errors.Is(err, ErrSize)
@@ -212,7 +213,7 @@ func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath stri
 		st.mu.Lock()
 		defer st.mu.Unlock()
 		st.in[off] = true
-		st.count += Chunk
+		st.count += min(int64(Chunk), wire-off)
 		st.lastNew = time.Now()
 		for st.in[st.prefix] {
 			delete(st.in, st.prefix)
@@ -224,7 +225,7 @@ func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath stri
 			return err
 		}
 		if prog != nil {
-			prog(st.count, wire)
+			prog(min(st.count, wire), wire)
 		}
 		return nil
 	}
@@ -242,12 +243,17 @@ func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath stri
 			}()
 			buf := make([]byte, Chunk)
 			for {
+				if ctx.Err() != nil {
+					return
+				}
 				off, ok := take()
 				if !ok {
 					return
 				}
+				// whole chunks, but for the end of a file not padded to one
+				want := buf[:min(int64(Chunk), wire-off)]
 				for miss := 0; ; {
-					err := f.one(ctx, get, url, off, buf)
+					err := f.one(ctx, get, url, off, want)
 					if err == nil {
 						break
 					}
@@ -312,7 +318,7 @@ func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath stri
 	return nil
 }
 
-// one whole chunk at off into buf
+// one whole chunk at off into buf, which is a chunk long but at a file's end
 func (f Fetcher) one(ctx context.Context, get Getter, url string, off int64, buf []byte) error {
 	rctx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
@@ -331,7 +337,7 @@ func (f Fetcher) one(ctx context.Context, get Getter, url string, off int64, buf
 		}
 		return err
 	}
-	body, start, err := get(rctx, url, off, Chunk)
+	body, start, err := get(rctx, url, off, int64(len(buf)))
 	if err != nil {
 		return why(err)
 	}
@@ -342,14 +348,14 @@ func (f Fetcher) one(ctx context.Context, get Getter, url string, off int64, buf
 		return fmt.Errorf("%w: %w", ErrStatus, errNoRange)
 	}
 	n := 0
-	for n < Chunk {
+	for n < len(buf) {
 		k, err := body.Read(buf[n:])
 		n += k
 		if k > 0 && stall != nil {
 			stall.Reset(f.Stall)
 		}
 		if err != nil {
-			if n == Chunk {
+			if n == len(buf) {
 				break
 			}
 			if err == io.EOF {
@@ -383,4 +389,24 @@ func sleepCtx(ctx context.Context, d time.Duration) bool {
 	case <-ctx.Done():
 		return false
 	}
+}
+
+// FetchPlain fetches size bytes of url into part as a bundle comes: chunk
+// by chunk over f's lanes, with its waits and fresh circuits, and resumed
+// from what part and the got file beside it hold. the caller checks the
+// bytes.
+func (f Fetcher) FetchPlain(ctx context.Context, url string, size int64, part, gotPath string, prog Progress) error {
+	fh, err := os.OpenFile(part, os.O_RDWR|os.O_CREATE, 0o600)
+	if err != nil {
+		return err
+	}
+	defer fh.Close()
+	got, have := resumeAt(fh, gotPath, size, size)
+	if prog != nil {
+		prog(min(got+int64(len(have))*Chunk, size), size)
+	}
+	if err := f.fill(ctx, url, fh, gotPath, got, have, size, size, prog); err != nil {
+		return err
+	}
+	return fh.Sync()
 }

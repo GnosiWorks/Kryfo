@@ -54,6 +54,10 @@ func newVoiceRig(t *testing.T, h http.Handler) *voiceRig {
 	pool := x509.NewCertPool()
 	pool.AddCert(r.srv.Certificate())
 	oldPinned, oldDial, oldTLS := voicePinned, voiceDial, voiceTLS
+	oldWait, oldGive, oldReady := voiceWait, voiceGiveUp, voiceNetReady
+	voiceWait = func(int) time.Duration { return 5 * time.Millisecond }
+	voiceGiveUp = 300 * time.Millisecond
+	voiceNetReady = func() bool { return true }
 	oldDecoy := decoyState.Load()
 	decoyState.Store(decoyOff)
 	voicePinned = func() (*voice.Manifest, error) { return man, nil }
@@ -70,6 +74,7 @@ func newVoiceRig(t *testing.T, h http.Handler) *voiceRig {
 		voiceJobs.Forget("base")
 		r.srv.Close()
 		voicePinned, voiceDial, voiceTLS = oldPinned, oldDial, oldTLS
+		voiceWait, voiceGiveUp, voiceNetReady = oldWait, oldGive, oldReady
 		decoyState.Store(oldDecoy)
 	})
 	return r
@@ -129,11 +134,15 @@ func TestVoiceFetchOverItsOwnCircuit(t *testing.T) {
 	if voiceCheck("base", dir) != "yes" {
 		t.Fatal("fetched model fails its check")
 	}
-	// a second download dials under a name of its own
+	// every lane of it, and a second download, dial under names of their own
 	voiceRemove("base", dir)
 	voiceFetch("base", dir)
 	waitVoice(t, "base")
-	if len(r.names) != 2 || r.names[0] == r.names[1] {
+	seen := map[string]bool{}
+	for _, n := range r.names {
+		seen[n] = true
+	}
+	if len(r.names) != 2*voiceLanes || len(seen) != len(r.names) {
 		t.Fatalf("socks names %q", r.names)
 	}
 	hex32 := regexp.MustCompile(`^[0-9a-f]{32}$`)
@@ -289,13 +298,24 @@ func TestVoiceCancelKeepsPart(t *testing.T) {
 	dir := t.TempDir()
 	voiceFetch("base", dir)
 	<-started
+	// the other lanes stall; the first chunk lands and is written down
+	got := filepath.Join(dir, "m.bin.got")
+	for i := 0; i < 400; i++ {
+		if b, _ := os.ReadFile(got); string(b) == fmt.Sprint(voice.Chunk) {
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
 	voiceJobs.Cancel("base")
 	if st := voiceJobs.Status("base"); st.State != voice.StateCancelled || st.Done != voice.Chunk {
 		t.Fatalf("status %+v", st)
 	}
 	st, err := os.Stat(filepath.Join(dir, "m.bin.part"))
-	if err != nil || st.Size() != voice.Chunk {
+	if err != nil || st.Size() < voice.Chunk {
 		t.Fatalf("part %v %v", st, err)
+	}
+	if b, _ := os.ReadFile(got); string(b) != fmt.Sprint(voice.Chunk) {
+		t.Fatalf("got file %q", b)
 	}
 }
 
@@ -344,6 +364,8 @@ func TestVoiceDecoyStopsADownload(t *testing.T) {
 	if st := waitVoice(t, "base"); st.State != voice.StateCancelled {
 		t.Fatalf("download ran on in the decoy: %+v", st)
 	}
+	// its lanes let go of what they were asking for
+	voiceJobs.Wait("base")
 	hits := r.hits.Load()
 	time.Sleep(100 * time.Millisecond)
 	if r.hits.Load() != hits {
@@ -428,5 +450,95 @@ func TestVoiceFetchAfterDecoyStartsFresh(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join(dir, "m.bin"))
 	if err != nil || !bytes.Equal(b, r.data) {
 		t.Fatalf("model not landed whole: %v", err)
+	}
+}
+
+// a cut chunk is waited out and asked again from where it stopped, on a
+// fresh circuit after two misses, and a slow one is no longer cut by a cap
+// on the whole request
+func TestVoiceFetchResumesAfterCuts(t *testing.T) {
+	var r *voiceRig
+	var n atomic.Int32
+	r = newVoiceRig(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		r.hits.Add(1)
+		k := n.Add(1)
+		if k == 2 || k == 3 {
+			// half a chunk, then the circuit goes
+			hj, _ := w.(http.Hijacker)
+			conn, buf, _ := hj.Hijack()
+			buf.WriteString("HTTP/1.1 206 Partial Content\r\nContent-Length: 1048576\r\n")
+			buf.WriteString("Content-Range: " + strings.Replace(req.Header.Get("Range"), "=", " ", 1) + "/" + fmt.Sprint(len(r.data)) + "\r\n\r\n")
+			buf.Write(r.data[:1000])
+			buf.Flush()
+			conn.Close()
+			return
+		}
+		http.ServeContent(w, req, "m.bin", time.Time{}, bytes.NewReader(r.data))
+	}))
+	dir := t.TempDir()
+	if got := voiceFetch("base", dir); got != "ok" {
+		t.Fatal(got)
+	}
+	st := waitVoice(t, "base")
+	if st.State != voice.StateDone || st.Done != int64(len(r.data)) {
+		t.Fatalf("status %+v", st)
+	}
+	if voiceCheck("base", dir) != "yes" {
+		t.Fatal("model fails its check after the cuts")
+	}
+	for _, left := range []string{"m.bin.part", "m.bin.got", "m.bin.got.new"} {
+		if _, err := os.Stat(filepath.Join(dir, left)); err == nil {
+			t.Fatalf("%s left behind", left)
+		}
+	}
+	if n.Load() < 5 {
+		t.Fatalf("only %d requests for 3 chunks and 2 cuts", n.Load())
+	}
+}
+
+// a stop keeps the chunks in, and the next start asks only for the rest
+func TestVoiceFetchGoesOnFromItsChunks(t *testing.T) {
+	var r *voiceRig
+	var asked sync.Map
+	block := make(chan struct{})
+	r = newVoiceRig(t, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		rg := req.Header.Get("Range")
+		if strings.HasPrefix(rg, "bytes=2097152-") {
+			select {
+			case <-block:
+			case <-req.Context().Done():
+				return
+			}
+		}
+		asked.Store(rg, true)
+		http.ServeContent(w, req, "m.bin", time.Time{}, bytes.NewReader(r.data))
+	}))
+	voiceGiveUp = time.Minute
+	dir := t.TempDir()
+	voiceFetch("base", dir)
+	for i := 0; i < 400; i++ {
+		if b, _ := os.ReadFile(filepath.Join(dir, "m.bin.got")); strings.HasPrefix(string(b), "2097152") {
+			break
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if b, _ := os.ReadFile(filepath.Join(dir, "m.bin.got")); !strings.HasPrefix(string(b), "2097152") {
+		t.Fatalf("got file %q", b)
+	}
+	voiceJobs.Cancel("base")
+	asked.Clear()
+	close(block)
+	voiceFetch("base", dir)
+	if st := waitVoice(t, "base"); st.State != voice.StateDone {
+		t.Fatalf("status %+v", st)
+	}
+	asked.Range(func(k, _ any) bool {
+		if !strings.HasPrefix(k.(string), "bytes=2097152-") {
+			t.Fatalf("asked again for %s", k)
+		}
+		return true
+	})
+	if voiceCheck("base", dir) != "yes" {
+		t.Fatal("model fails its check")
 	}
 }
