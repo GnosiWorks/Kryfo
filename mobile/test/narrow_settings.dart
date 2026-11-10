@@ -191,11 +191,10 @@ void narrowSettings({
     expect(runs, isEmpty, reason: runs.toSet().join('\n'));
   }
 
-  // the switch whole on screen, and each text button a finger high
+  // each switch whole on screen, and each text button a finger high
   void bridgesReachable(WidgetTester t) {
-    final sw = find.byType(HaloSwitch);
-    if (sw.evaluate().isNotEmpty) {
-      final r = t.getRect(sw);
+    for (final e in find.byType(HaloSwitch).evaluate()) {
+      final r = t.getRect(find.byWidget(e.widget));
       expect(r.left, greaterThanOrEqualTo(0));
       expect(r.right, lessThanOrEqualTo(360));
     }
