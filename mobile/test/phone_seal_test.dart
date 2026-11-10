@@ -190,37 +190,47 @@ void main() {
       ]),
     };
 
-    test('real photos, a video, a voice note and a large file: sealed, the '
-        'same bytes back, nothing plain left', () async {
-      final files = realFiles();
-      final dir = p.join(docs, 'media_k3');
-      rawFileAccess(() {
+    test(
+      'real photos, a video, a voice note and a large file: sealed, the '
+      'same bytes back, nothing plain left',
+      () async {
+        final files = realFiles();
+        final dir = p.join(docs, 'media_k3');
+        rawFileAccess(() {
+          for (final e in files.entries) {
+            File(p.join(dir, e.key)).writeAsBytesSync(e.value);
+          }
+        });
+        // plain ones read as they are until the sweep
+        openVault();
+        expect(
+          _sum(File(p.join(dir, 'f_photo1.jpg')).readAsBytesSync()),
+          _sum(files['f_photo1.jpg']!),
+        );
+        final s = await sweepContainer(HaloContainer.vault);
+        expect(s!.sealed, files.length);
         for (final e in files.entries) {
-          File(p.join(dir, e.key)).writeAsBytesSync(e.value);
+          final at = p.join(dir, e.key);
+          final disk = _raw(at);
+          expect(isSealedHead(disk), isTrue, reason: e.key);
+          expect(_leaks(disk, e.value), isFalse, reason: e.key);
+          expect(
+            _sum(File(at).readAsBytesSync()),
+            _sum(e.value),
+            reason: e.key,
+          );
         }
-      });
-      // plain ones read as they are until the sweep
-      openVault();
-      expect(
-        _sum(File(p.join(dir, 'f_photo1.jpg')).readAsBytesSync()),
-        _sum(files['f_photo1.jpg']!),
-      );
-      final s = await sweepContainer(HaloContainer.vault);
-      expect(s!.sealed, files.length);
-      for (final e in files.entries) {
-        final at = p.join(dir, e.key);
-        final disk = _raw(at);
-        expect(isSealedHead(disk), isTrue, reason: e.key);
-        expect(_leaks(disk, e.value), isFalse, reason: e.key);
-        expect(_sum(File(at).readAsBytesSync()), _sum(e.value), reason: e.key);
-      }
-      expect(
-        rawFileAccess(() => Directory(dir).listSync().length),
-        files.length,
-      );
-      // a second sweep finds nothing to do
-      expect((await sweepContainer(HaloContainer.vault))!.sealed, 0);
-    });
+        expect(
+          rawFileAccess(() => Directory(dir).listSync().length),
+          files.length,
+        );
+        // a second sweep finds nothing to do
+        expect((await sweepContainer(HaloContainer.vault))!.sealed, 0);
+      },
+      skip: engine
+          ? null
+          : 'no host engine: 50 MB through the toy crypto outlasts the timeout',
+    );
 
     test('a stop at every step of a file\'s sealing loses nothing', () async {
       final photo = File(
@@ -475,9 +485,9 @@ void main() {
       expect(isSealedHead(_raw(at)), isTrue);
       final fake = FakePdf();
       pdfBackendForTest = fake;
-      pdfMarksDirForTest = (Directory(p.join(root.path, 'marks'))
-            ..createSync())
-          .path;
+      pdfMarksDirForTest = (Directory(
+        p.join(root.path, 'marks'),
+      )..createSync()).path;
       addTearDown(() {
         pdfBackendForTest = null;
         pdfMarksDirForTest = null;
