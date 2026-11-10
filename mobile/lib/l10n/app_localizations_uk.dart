@@ -11588,6 +11588,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'Не вдалося розібрати слова';
 
   @override
+  String get voiceNoSpeech => 'У цьому повідомленні немає мовлення';
+
+  @override
   String get voiceTranscriptLabel => 'Текст повідомлення';
 
   @override

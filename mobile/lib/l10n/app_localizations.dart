@@ -18295,6 +18295,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t make out the words'**
   String get voiceCouldNotTranscribe;
 
+  /// under a voice message that holds no speech, after its transcription ran
+  ///
+  /// In en, this message translates to:
+  /// **'No speech in this message'**
+  String get voiceNoSpeech;
+
   /// what a screen reader says before the words of a voice message
   ///
   /// In en, this message translates to:

@@ -11393,6 +11393,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'Không nghe rõ lời';
 
   @override
+  String get voiceNoSpeech => 'Không có lời nói trong tin nhắn này';
+
+  @override
   String get voiceTranscriptLabel => 'Bản chép lời';
 
   @override

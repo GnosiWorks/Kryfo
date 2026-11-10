@@ -64,6 +64,7 @@ import '../translate/foreign.dart' show Offer;
 import '../translate/translate_menu.dart' show neverOffer;
 import '../translate/lang_names.dart' show langName;
 import '../voice/chat_transcripts.dart';
+import '../voice/voice_text.dart' show theirWordsLang;
 import '../voice/ui/transcript_line.dart';
 import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
 import '../widgets/desk_select.dart';
@@ -663,7 +664,14 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   late final String _memo;
   // the group's voice notes as words, made on the phone
   late final ChatTranscripts? _transcripts = switch (voiceTranscriptsIfOn()) {
-    final hub? => ChatTranscripts(hub, widget.groupId),
+    final hub? => ChatTranscripts(
+      hub,
+      widget.groupId,
+      theirLang: () => theirWordsLang([
+        for (final m in _messages.reversed)
+          if (m.direction == 'in' && m.text.isNotEmpty) m.text,
+      ]),
+    ),
     null => null,
   };
 

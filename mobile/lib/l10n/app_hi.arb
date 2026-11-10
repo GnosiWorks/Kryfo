@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "छिपाएँ",
   "voiceShowOriginalOnly": "सिर्फ़ मूल दिखाएँ",
   "voiceCouldNotTranscribe": "शब्द समझ नहीं आए",
+  "voiceNoSpeech": "इस संदेश में कोई बोल नहीं रहा",
   "voiceTranscriptLabel": "लिखित रूप",
   "voiceSettingsTitle": "आवाज़ से लिखित",
   "voiceOnRow": "वॉइस मैसेज को लिखित में बदलें",

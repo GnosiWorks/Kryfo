@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "Masquer",
   "voiceShowOriginalOnly": "Voir l’original seul",
   "voiceCouldNotTranscribe": "Impossible de distinguer les mots",
+  "voiceNoSpeech": "Personne ne parle dans ce message",
   "voiceTranscriptLabel": "Transcription",
   "voiceSettingsTitle": "Transcription vocale",
   "voiceOnRow": "Transcrire les messages vocaux",

@@ -2,9 +2,12 @@
 // segment text across segments: a character whisper cut between two
 // segments comes out whole in the second, never as replacement marks
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:kryfo/voice/voice_ffi.dart';
+import 'package:kryfo/voice/voice_text.dart';
 
 void main() {
   test('a three-byte character cut between segments', () {
@@ -37,5 +40,84 @@ void main() {
     expect(t.add(utf8.encode(' And so my fellow')), ' And so my fellow');
     expect(t.add(utf8.encode(' Americans')), ' Americans');
     expect(t.add(const []), '');
+  });
+
+  group('what whisper says, made fit to show', () {
+    test('notes on sounds are no words', () {
+      for (final n in [
+        ' [BLANK_AUDIO]',
+        '[ Silence ]',
+        ' (silence)',
+        ' [MUSIC PLAYING]',
+        ' *coughs*',
+        ' ♪',
+        ' [BLANK_AUDIO] (music)',
+      ]) {
+        expect(cleanSegment(n), '', reason: n);
+      }
+      expect(cleanSegment(' Hello [BLANK_AUDIO] there.'), ' Hello there.');
+      // words in round brackets amid speech stay
+      expect(cleanSegment(' see you (maybe) at 9'), ' see you (maybe) at 9');
+    });
+
+    test('chinese in simplified characters, whatever the model wrote', () {
+      final gz = File('assets/opencc/STCharacters.txt.gz').readAsBytesSync();
+      final h = HansChars.parse(utf8.decode(gzip.decode(gz)));
+      // what the samsung run heard for simplified speech
+      expect(cleanSegment('我剛到公司,地鐵說', hans: h), '我刚到公司,地铁说');
+      // a character that is a simplified one itself stays
+      expect(h.convert('著名的乾杯'), '著名的干杯');
+      expect(h.convert('hello 你好'), 'hello 你好');
+    });
+
+    test('no detection: the language is named', () {
+      expect(whisperLang('zh_Hant'), 'zh');
+      expect(whisperLang('pt-BR'), 'pt');
+      expect(whisperLang('nb'), 'no');
+      expect(whisperLang('fa'), 'fa');
+      expect(whisperLang('xx'), isNull);
+      expect(whisperLang(null), isNull);
+      for (final l in [
+        'en', 'ar', 'de', 'es', 'fa', 'fr', 'hi', 'id', 'it', 'pl', 'pt', //
+        'ru', 'tr', 'uk', 'vi', 'zh', 'zh_Hant',
+      ]) {
+        expect(whisperLang(l), isNotNull, reason: l);
+      }
+      expect(noteLang(mine: false, theirs: 'de', app: 'en'), 'de');
+      expect(noteLang(mine: true, theirs: 'de', app: 'ru'), 'ru');
+      expect(noteLang(mine: false, theirs: null, app: 'zh_Hant'), 'zh');
+      expect(noteLang(mine: false, theirs: 'xx', app: 'xx'), 'en');
+    });
+
+    test('their language from their words, only when clear', () {
+      expect(
+        theirWordsLang([
+          'Wir sehen uns morgen am Bahnhof',
+          'Ich bringe die Bücher mit, und du?',
+        ]),
+        'de',
+      );
+      expect(theirWordsLang(['ok', '👍']), isNull);
+      expect(theirWordsLang(const []), isNull);
+    });
+
+    test('threads: the fast cores, 2 to 8', () {
+      // eight a53s at 2.3 and 1.8 ghz: all eight
+      expect(
+        voiceThreads(cores: 8, maxFreq: (i) => i < 4 ? 1800000 : 2300000),
+        8,
+      );
+      // one prime, three big, four little: the four fast ones
+      expect(
+        voiceThreads(
+          cores: 8,
+          maxFreq: (i) => i < 4 ? 1800000 : (i < 7 ? 2500000 : 3000000),
+        ),
+        4,
+      );
+      // unreadable: four at most
+      expect(voiceThreads(cores: 8, maxFreq: (_) => null), 4);
+      expect(voiceThreads(cores: 1, maxFreq: (_) => 1000), 2);
+    });
   });
 }

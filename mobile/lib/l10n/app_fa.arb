@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "پنهان کردن",
   "voiceShowOriginalOnly": "فقط متن اصلی",
   "voiceCouldNotTranscribe": "کلمه‌ها تشخیص داده نشد",
+  "voiceNoSpeech": "در این پیام صحبتی نیست",
   "voiceTranscriptLabel": "متن پیام",
   "voiceSettingsTitle": "تبدیل صدا به متن",
   "voiceOnRow": "تبدیل پیام‌های صوتی به متن",

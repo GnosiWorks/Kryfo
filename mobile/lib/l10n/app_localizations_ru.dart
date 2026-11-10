@@ -11591,6 +11591,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'Не удалось разобрать слова';
 
   @override
+  String get voiceNoSpeech => 'В этом сообщении нет речи';
+
+  @override
   String get voiceTranscriptLabel => 'Текст сообщения';
 
   @override

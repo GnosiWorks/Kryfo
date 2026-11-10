@@ -11540,6 +11540,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'Keine Worte erkannt';
 
   @override
+  String get voiceNoSpeech => 'In dieser Nachricht spricht niemand';
+
+  @override
   String get voiceTranscriptLabel => 'Transkript';
 
   @override

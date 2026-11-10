@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "Ukryj",
   "voiceShowOriginalOnly": "Pokaż tylko oryginał",
   "voiceCouldNotTranscribe": "Nie udało się rozpoznać słów",
+  "voiceNoSpeech": "W tej wiadomości nikt nie mówi",
   "voiceTranscriptLabel": "Transkrypcja",
   "voiceSettingsTitle": "Transkrypcja głosu",
   "voiceOnRow": "Transkrybuj wiadomości głosowe",

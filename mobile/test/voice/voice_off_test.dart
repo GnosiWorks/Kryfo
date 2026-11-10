@@ -58,9 +58,11 @@ void main() {
       'lib/screens/chat_screen.dart: chat_transcripts.dart',
       'lib/screens/chat_screen.dart: ui/transcript_line.dart',
       'lib/screens/chat_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
+      'lib/screens/chat_screen.dart: voice_text.dart show theirWordsLang',
       'lib/screens/group_chat_screen.dart: chat_transcripts.dart',
       'lib/screens/group_chat_screen.dart: ui/transcript_line.dart',
       'lib/screens/group_chat_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
+      'lib/screens/group_chat_screen.dart: voice_text.dart show theirWordsLang',
       'lib/screens/licences_screen.dart: voice_transcripts.dart show kVoiceTranscripts',
       'lib/screens/settings_screen.dart: ui/voice_tx_screen.dart',
       'lib/screens/settings_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
@@ -82,7 +84,15 @@ void main() {
         reason: f.path,
       );
       expect(s, isNot(contains('AppLocalizations')), reason: f.path);
-      expect(s, isNot(contains('l10n')), reason: f.path);
+      // the app's language tag is no string of its own
+      expect(
+        s.replaceAll(
+          "import '../l10n/app_locale.dart' show currentLanguage;",
+          '',
+        ),
+        isNot(contains('l10n')),
+        reason: f.path,
+      );
     }
   });
 

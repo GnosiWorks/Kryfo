@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "Ausblenden",
   "voiceShowOriginalOnly": "Nur Original zeigen",
   "voiceCouldNotTranscribe": "Keine Worte erkannt",
+  "voiceNoSpeech": "In dieser Nachricht spricht niemand",
   "voiceTranscriptLabel": "Transkript",
   "voiceSettingsTitle": "Sprache zu Text",
   "voiceOnRow": "Sprachnachrichten transkribieren",

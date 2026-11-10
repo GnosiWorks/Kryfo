@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "Сховати",
   "voiceShowOriginalOnly": "Лише оригінал",
   "voiceCouldNotTranscribe": "Не вдалося розібрати слова",
+  "voiceNoSpeech": "У цьому повідомленні немає мовлення",
   "voiceTranscriptLabel": "Текст повідомлення",
   "voiceSettingsTitle": "Голос у текст",
   "voiceOnRow": "Розпізнавати голосові",

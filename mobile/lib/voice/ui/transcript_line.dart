@@ -29,13 +29,16 @@ Future<void> openTranscript(
   BuildContext context,
   ChatTranscripts chat,
   String uid,
-  String path,
-) async {
-  final need = await chat.open(uid, path);
+  String path, {
+  bool mine = false,
+}) async {
+  final need = await chat.open(uid, path, mine: mine);
   if (need != TxNeed.model || !context.mounted) return;
   await showVoiceModelSheet(context, chat.hub);
   // the model came while the sheet was up: the note the tap was for
-  if (context.mounted && chat.hub.modelReady) await chat.open(uid, path);
+  if (context.mounted && chat.hub.modelReady) {
+    await chat.open(uid, path, mine: mine);
+  }
 }
 
 class VoiceTranscript extends StatefulWidget {
@@ -81,7 +84,15 @@ class _VoiceTranscriptState extends State<VoiceTranscript> {
             action: l10n.voiceSeeTranscription,
             onTap: () {
               HapticFeedback.selectionClick();
-              unawaited(openTranscript(context, chat, uid, widget.path));
+              unawaited(
+                openTranscript(
+                  context,
+                  chat,
+                  uid,
+                  widget.path,
+                  mine: widget.isOut,
+                ),
+              );
             },
           ),
           TxPhase.failed => _Line(
@@ -91,7 +102,18 @@ class _VoiceTranscriptState extends State<VoiceTranscript> {
             action: l10n.commonTryAgain,
             onTap: () {
               HapticFeedback.selectionClick();
-              unawaited(chat.retry(uid, widget.path));
+              unawaited(chat.retry(uid, widget.path, mine: widget.isOut));
+            },
+          ),
+          // nothing to hear: said plainly, never the model's own note
+          TxPhase.shown when n.silent => _Line(
+            key: const ValueKey('vt-silent'),
+            out: widget.isOut,
+            lead: l10n.voiceNoSpeech,
+            action: l10n.voiceHideTranscription,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              chat.hide(uid);
             },
           ),
           TxPhase.working || TxPhase.shown => _Open(
@@ -217,7 +239,12 @@ class _Open extends StatelessWidget {
             child: Semantics(
               container: true,
               label: l10n.voiceTranscriptLabel,
-              child: Text(text, key: const ValueKey('vt-words'), style: words),
+              child: _Words(
+                key: const ValueKey('vt-words'),
+                text: text,
+                style: words,
+                coming: working && !still,
+              ),
             ),
           ),
         if (translated)
@@ -238,6 +265,84 @@ class _Open extends StatelessWidget {
             child: foot,
           ),
       ],
+    );
+  }
+}
+
+// the words so far. while they come, each new piece fades in after the
+// ones before it, which stay put; with reduced motion they just appear
+class _Words extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final bool coming;
+  const _Words({
+    super.key,
+    required this.text,
+    required this.style,
+    required this.coming,
+  });
+
+  @override
+  State<_Words> createState() => _WordsState();
+}
+
+class _WordsState extends State<_Words> with SingleTickerProviderStateMixin {
+  late final AnimationController _in;
+
+  @override
+  void initState() {
+    super.initState();
+    _in = AnimationController(vsync: this, duration: kTxTime, value: 1);
+  }
+
+  // where the newest piece starts
+  int _from = 0;
+
+  @override
+  void didUpdateWidget(_Words old) {
+    super.didUpdateWidget(old);
+    final grew =
+        widget.text.length > old.text.length &&
+        widget.text.startsWith(old.text);
+    if (widget.coming && grew) {
+      _from = old.text.length;
+      _in.forward(from: 0);
+    } else if (!grew) {
+      _from = widget.text.length;
+      _in.value = 1;
+    }
+  }
+
+  @override
+  void dispose() {
+    _in.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.text;
+    if (!widget.coming || _from >= t.length) {
+      return Text(t, style: widget.style);
+    }
+    return AnimatedBuilder(
+      animation: _in,
+      builder: (context, _) {
+        final c = widget.style.color ?? HaloColors.text;
+        final a = kHouseCurve.transform(_in.value);
+        return Text.rich(
+          TextSpan(
+            style: widget.style,
+            children: [
+              TextSpan(text: t.substring(0, _from)),
+              TextSpan(
+                text: t.substring(_from),
+                style: TextStyle(color: c.withValues(alpha: c.a * a)),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

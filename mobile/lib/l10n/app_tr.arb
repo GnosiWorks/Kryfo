@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "Gizle",
   "voiceShowOriginalOnly": "Yalnızca orijinali göster",
   "voiceCouldNotTranscribe": "Sözcükler anlaşılamadı",
+  "voiceNoSpeech": "Bu mesajda konuşma yok",
   "voiceTranscriptLabel": "Mesajın metni",
   "voiceSettingsTitle": "Sesten metne",
   "voiceOnRow": "Sesli mesajları metne çevir",

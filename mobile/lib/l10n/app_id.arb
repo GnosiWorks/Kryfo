@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "Sembunyikan",
   "voiceShowOriginalOnly": "Lihat aslinya saja",
   "voiceCouldNotTranscribe": "Kata-katanya tidak terdengar jelas",
+  "voiceNoSpeech": "Tidak ada suara bicara di pesan ini",
   "voiceTranscriptLabel": "Transkrip",
   "voiceSettingsTitle": "Transkrip suara",
   "voiceOnRow": "Transkrip pesan suara",

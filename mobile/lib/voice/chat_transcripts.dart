@@ -15,6 +15,7 @@ enum TxPhase {
   closed,
   // the model runs: the words come as it hears them
   working,
+  // the words, or none when the note holds no speech
   shown,
   // nothing to make out, or the run broke
   failed,
@@ -29,6 +30,9 @@ class NoteTx {
   const NoteTx(this.phase, {this.pieces = const [], this.lang = ''});
 
   String get text => pieces.map((p) => p.text).join().trim();
+
+  /// done, and the note held no speech: said so instead of words
+  bool get silent => phase == TxPhase.shown && text.isEmpty;
 }
 
 /// what an open needs first
@@ -44,7 +48,12 @@ String txTranslateKey(String uid) => '~vt:$uid';
 class ChatTranscripts extends ChangeNotifier {
   final VoiceTranscripts hub;
   final String chatId;
-  ChatTranscripts(this.hub, this.chatId) : _seenWipes = hub.wipes {
+
+  /// the language the chat's own words are in, when they say: notes of
+  /// theirs are heard in it
+  final String? Function()? theirLang;
+  ChatTranscripts(this.hub, this.chatId, {this.theirLang})
+    : _seenWipes = hub.wipes {
     hub.addListener(_hubChanged);
     unawaited(_load());
   }
@@ -126,8 +135,9 @@ class ChatTranscripts extends ChangeNotifier {
   }
 
   /// the link's tap: words made before open at once, model or not; new
-  /// ones need the model, and say so
-  Future<TxNeed?> open(String uid, String path) async {
+  /// ones need the model, and say so. [mine]: a note the person sent, heard
+  /// in the app's language
+  Future<TxNeed?> open(String uid, String path, {bool mine = false}) async {
     if (!offered(uid) || _went.contains(uid)) return null;
     final now = of(uid);
     if (now.phase == TxPhase.working || now.phase == TxPhase.shown) {
@@ -141,7 +151,7 @@ class ChatTranscripts extends ChangeNotifier {
       return null;
     }
     if (!hub.modelReady) return TxNeed.model;
-    _run(uid, path);
+    _run(uid, path, mine);
     return null;
   }
 
@@ -160,18 +170,24 @@ class ChatTranscripts extends ChangeNotifier {
   }
 
   /// after a failed run
-  Future<TxNeed?> retry(String uid, String path) async {
+  Future<TxNeed?> retry(String uid, String path, {bool mine = false}) async {
     if (_live[uid]?.phase == TxPhase.failed) _live.remove(uid);
-    return open(uid, path);
+    return open(uid, path, mine: mine);
   }
 
-  void _run(String uid, String path) {
+  void _run(String uid, String path, bool mine) {
     final w = hub.wipes;
     bool still() =>
         !_gone && hub.wipes == w && !hub.locked && !_went.contains(uid);
     _live[uid] = const NoteTx(TxPhase.working);
     notifyListeners();
-    final job = hub.transcribe(path);
+    String? theirs;
+    if (!mine) {
+      try {
+        theirs = theirLang?.call();
+      } catch (_) {}
+    }
+    final job = hub.transcribe(path, hub.langFor(mine: mine, theirs: theirs));
     _jobs[uid] = job;
     final got = <TxPiece>[];
     job.segments.listen((s) {
@@ -194,12 +210,9 @@ class ChatTranscripts extends ChangeNotifier {
           pieces: pieces,
         );
         _live.remove(uid);
-        if (t.text.isEmpty) {
-          _live[uid] = const NoteTx(TxPhase.failed);
-        } else {
-          _kept[uid] = t;
-          unawaited(hub.keep(chatId, uid, t));
-        }
+        // no words is an answer too: kept, so the note says it at once
+        _kept[uid] = t;
+        unawaited(hub.keep(chatId, uid, t));
         notifyListeners();
       },
       onError: (Object e) {

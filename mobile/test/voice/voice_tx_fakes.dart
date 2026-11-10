@@ -66,8 +66,11 @@ class FakeRunner {
   final Map<String, (String, String)> words = {};
   bool auto = false;
   int? throwCode;
+  // the language each run was asked to hear, in order
+  final List<String> langs = [];
 
-  Future<TxJob> call(String path) async {
+  Future<TxJob> call(String path, String lang) async {
+    langs.add(lang);
     if (throwCode != null) throw VoiceError(throwCode!);
     final j = FakeJob(path);
     jobs.add(j);
@@ -135,6 +138,7 @@ VoiceFakes fakeVoiceHub({
   bool quiet = false,
   VoiceTxStore? store,
   String Function()? scope,
+  String Function()? appLang,
 }) {
   final runner = FakeRunner();
   final backend = FakeModelBackend(have: installed);
@@ -157,6 +161,7 @@ VoiceFakes fakeVoiceHub({
     ),
     runner: runner.call,
     scope: scope,
+    appLang: appLang ?? () => 'en',
   );
   return VoiceFakes(hub, runner, backend, store);
 }
