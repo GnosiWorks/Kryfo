@@ -101,6 +101,16 @@ class ShareFiles {
   Future<void> take(BuildContext context, bool Function() alive) async {
     if (_busy) return;
     _busy = true;
+    // a lock that went up and came down while a sheet was up is gone by the
+    // time the sheet answers: seen here, it takes the sheet and the share
+    var lockedSince = false;
+    void onLock() {
+      if (!lockState.locked) return;
+      lockedSince = true;
+      _popSheet();
+    }
+
+    lockState.addListener(onLock);
     try {
       while (alive()) {
         final s = await _peek();
@@ -123,12 +133,14 @@ class ShareFiles {
         if (now?.id != s.id) continue;
         final where = _whereNow();
         final container = session.container.id;
+        lockedSince = lockState.locked;
         await _bridge.sawSharedFiles(s.id, where);
         if (!context.mounted) return;
         // a lock, or an unlock into another session, while a sheet was up
         // ends it there
         bool still() =>
             context.mounted &&
+            !lockedSince &&
             !lockState.locked &&
             _whereNow() == where &&
             session.container.id == container;
@@ -196,6 +208,7 @@ class ShareFiles {
         await landFiles(context, id, container, copies);
       }
     } finally {
+      lockState.removeListener(onLock);
       _busy = false;
     }
   }

@@ -617,6 +617,26 @@ void main() {
     await devClose(t);
   });
 
+  testWidgets('a lock while the chat picker is up drops the share', (t) async {
+    lockState.openForTest(enabled: true);
+    await home(t);
+    await android.share(t, 'f29', [_pdf()]);
+    await settle(t);
+    expect(find.text(l10n.shareChooseChat), findsOneWidget);
+    lockState.lock();
+    await settle(t);
+    lockState.openForTest(enabled: true);
+    lockGuard.lifted();
+    await settle(t);
+    // nothing of the share is waiting behind the pin
+    expect(find.text(l10n.shareChooseChat), findsNothing);
+    expect(offered(_amber), findsNothing);
+    expect(android.dropped, ['f29']);
+    expect(android.copied, isEmpty);
+    nothingSent();
+    await devClose(t);
+  });
+
   testWidgets('one over the limit is said and never copied', (t) async {
     final most = await appState.fileLimitFor(_amber);
     await home(t);
