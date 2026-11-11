@@ -11614,6 +11614,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get connCheckSend => '发给 Marios';
+
+  @override
+  String get storyRow => '分享你的故事';
+
+  @override
+  String get storyHint => '用你自己的话说说为什么使用 Kryfo。故事只会在你同意后分享。';
+
+  @override
+  String get storyHintAnon => '用你自己的话说说为什么使用 Kryfo。你可以匿名写，故事只会在你同意后分享。';
+
+  @override
+  String get storyTemplate => '我为什么使用 Kryfo：\n\n我所在的地方有哪些被封锁：\n\n地区（可选）：\n';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -23106,4 +23118,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get connCheckSend => '傳給 Marios';
+
+  @override
+  String get storyRow => '分享你的故事';
+
+  @override
+  String get storyHint => '用你自己的話說說為什麼使用 Kryfo。故事只會在你同意後分享。';
+
+  @override
+  String get storyHintAnon => '用你自己的話說說為什麼使用 Kryfo。你可以匿名寫，故事只會在你同意後分享。';
+
+  @override
+  String get storyTemplate => '我為什麼使用 Kryfo：\n\n我所在的地方有哪些被封鎖：\n\n地區（可選）：\n';
 }

@@ -3229,5 +3229,9 @@
   "connCheckLine": "To wszystko, co zostałoby udostępnione: jak Tor wychodzi stąd, ile to trwało i co nie przeszło. Bez adresu IP, bez lokalizacji, bez linii mostków, bez identyfikatorów urządzenia. Nic nie wychodzi, dopóki tego nie skopiujesz lub nie wyślesz.",
   "connCheckEnglish": "Raport jest po angielsku, żeby wszędzie czytał się tak samo.",
   "connCheckAgain": "Sprawdź ponownie",
-  "connCheckSend": "Wyślij do Mariosa"
+  "connCheckSend": "Wyślij do Mariosa",
+  "storyRow": "Opowiedz swoją historię",
+  "storyHint": "Dlaczego używasz Kryfo, własnymi słowami. Historie są udostępniane tylko za twoją zgodą.",
+  "storyHintAnon": "Dlaczego używasz Kryfo, własnymi słowami. Możesz pisać anonimowo, a historie są udostępniane tylko za twoją zgodą.",
+  "storyTemplate": "Dlaczego używam Kryfo:\n\nCo jest zablokowane tam, gdzie mieszkam:\n\nRegion (opcjonalnie):\n"
 }

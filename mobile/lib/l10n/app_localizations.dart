@@ -19674,6 +19674,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send to Marios'**
   String get connCheckSend;
+
+  /// settings, about: opens the chat with the developer with a short template to tell why the person uses Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'Share your story'**
+  String get storyRow;
+
+  /// settings, about: the line under storyRow once the chat with the developer has started
+  ///
+  /// In en, this message translates to:
+  /// **'Why you use Kryfo, in your own words. Stories are shared only with your consent.'**
+  String get storyHint;
+
+  /// settings, about: the line under storyRow before the first message to the developer, while the chat can still be started anonymously
+  ///
+  /// In en, this message translates to:
+  /// **'Why you use Kryfo, in your own words. You can write anonymously, and stories are shared only with your consent.'**
+  String get storyHintAnon;
+
+  /// the words put in the developer chat's composer by storyRow, for the person to fill in, change or drop before sending. three prompts, each followed by an empty line to write on; keep the line breaks
+  ///
+  /// In en, this message translates to:
+  /// **'Why I use Kryfo:\n\nWhat is blocked where I live:\n\nRegion (optional):\n'**
+  String get storyTemplate;
 }
 
 class _AppLocalizationsDelegate

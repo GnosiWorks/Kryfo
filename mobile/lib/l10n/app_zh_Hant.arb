@@ -3229,5 +3229,9 @@
   "connCheckLine": "這就是會分享的全部內容：Tor 在這裡如何連出去、花了多久、哪些方式沒有成功。不含 IP 位址、位置、橋接行或裝置 ID。在你複製或傳送之前，什麼都不會離開。",
   "connCheckEnglish": "檢查結果是英文的，這樣在哪裡讀都一樣。",
   "connCheckAgain": "再檢查一次",
-  "connCheckSend": "傳給 Marios"
+  "connCheckSend": "傳給 Marios",
+  "storyRow": "分享你的故事",
+  "storyHint": "用你自己的話說說為什麼使用 Kryfo。故事只會在你同意後分享。",
+  "storyHintAnon": "用你自己的話說說為什麼使用 Kryfo。你可以匿名寫，故事只會在你同意後分享。",
+  "storyTemplate": "我為什麼使用 Kryfo：\n\n我所在的地方有哪些被封鎖：\n\n地區（可選）：\n"
 }

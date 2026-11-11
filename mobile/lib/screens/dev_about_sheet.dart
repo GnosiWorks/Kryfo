@@ -172,6 +172,16 @@ Future<void> writeToMarios(BuildContext context, {String? text}) async {
   await openDevChat(context, id, initialText: text);
 }
 
+// "share your story": the chat with the template in its composer, every
+// word of it the person's to change or drop. nothing goes until they send
+Future<void> shareYourStory(BuildContext context) {
+  HapticFeedback.selectionClick();
+  return writeToMarios(context, text: l10n.storyTemplate);
+}
+
+// the row's line. before a first send the chat can still be anonymous
+String storyHint(bool started) => started ? l10n.storyHint : l10n.storyHintAnon;
+
 // a forward lands only in a chat that has started, so it never skips what
 // the chat says before the first send. a retired key takes nothing, and
 // nor does a chat that only reads. one rule for every picker: an open vault

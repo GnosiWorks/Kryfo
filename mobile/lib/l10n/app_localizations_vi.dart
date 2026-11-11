@@ -12284,4 +12284,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get connCheckSend => 'Gửi cho Marios';
+
+  @override
+  String get storyRow => 'Chia sẻ câu chuyện của bạn';
+
+  @override
+  String get storyHint =>
+      'Vì sao bạn dùng Kryfo, bằng lời của chính bạn. Câu chuyện chỉ được chia sẻ khi bạn đồng ý.';
+
+  @override
+  String get storyHintAnon =>
+      'Vì sao bạn dùng Kryfo, bằng lời của chính bạn. Bạn có thể viết ẩn danh, và câu chuyện chỉ được chia sẻ khi bạn đồng ý.';
+
+  @override
+  String get storyTemplate =>
+      'Vì sao tôi dùng Kryfo:\n\nNhững gì bị chặn ở nơi tôi sống:\n\nKhu vực (không bắt buộc):\n';
 }

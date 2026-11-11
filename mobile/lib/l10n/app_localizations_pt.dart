@@ -12387,4 +12387,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get connCheckSend => 'Enviar para o Marios';
+
+  @override
+  String get storyRow => 'Conte sua história';
+
+  @override
+  String get storyHint =>
+      'Por que você usa o Kryfo, com suas palavras. As histórias só são compartilhadas com o seu consentimento.';
+
+  @override
+  String get storyHintAnon =>
+      'Por que você usa o Kryfo, com suas palavras. Você pode escrever anonimamente, e as histórias só são compartilhadas com o seu consentimento.';
+
+  @override
+  String get storyTemplate =>
+      'Por que uso o Kryfo:\n\nO que é bloqueado onde eu moro:\n\nRegião (opcional):\n';
 }

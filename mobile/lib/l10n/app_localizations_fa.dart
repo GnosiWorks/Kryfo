@@ -12309,4 +12309,19 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get connCheckSend => 'ارسال برای Marios';
+
+  @override
+  String get storyRow => 'داستانت را بگو';
+
+  @override
+  String get storyHint =>
+      'چرا از Kryfo استفاده می‌کنید، با کلمات خودتان. داستان‌ها فقط با رضایت شما به اشتراک گذاشته می‌شوند.';
+
+  @override
+  String get storyHintAnon =>
+      'چرا از Kryfo استفاده می‌کنید، با کلمات خودتان. می‌توانید ناشناس بنویسید و داستان‌ها فقط با رضایت شما به اشتراک گذاشته می‌شوند.';
+
+  @override
+  String get storyTemplate =>
+      'چرا از Kryfo استفاده می‌کنم:\n\nچه چیزهایی جایی که زندگی می‌کنم مسدود است:\n\nمنطقه (اختیاری):\n';
 }

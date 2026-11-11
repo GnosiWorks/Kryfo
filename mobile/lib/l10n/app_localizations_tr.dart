@@ -12317,4 +12317,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get connCheckSend => 'Marios’a gönder';
+
+  @override
+  String get storyRow => 'Hikâyeni paylaş';
+
+  @override
+  String get storyHint =>
+      'Kryfo’yu neden kullandığını kendi sözlerinle anlat. Hikâyeler yalnızca senin onayınla paylaşılır.';
+
+  @override
+  String get storyHintAnon =>
+      'Kryfo’yu neden kullandığını kendi sözlerinle anlat. Anonim yazabilirsin, hikâyeler yalnızca senin onayınla paylaşılır.';
+
+  @override
+  String get storyTemplate =>
+      'Kryfo’yu neden kullanıyorum:\n\nYaşadığım yerde neler engelli:\n\nBölge (isteğe bağlı):\n';
 }

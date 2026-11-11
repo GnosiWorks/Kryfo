@@ -3229,5 +3229,9 @@
   "connCheckLine": "Inilah semua yang akan dibagikan: cara Tor keluar dari sini, berapa lama waktunya, dan apa yang tidak tembus. Tanpa alamat IP, tanpa lokasi, tanpa baris jembatan, tanpa ID perangkat. Tidak ada yang keluar sampai kamu menyalin atau mengirimnya.",
   "connCheckEnglish": "Pemeriksaan ini dalam bahasa Inggris, agar terbaca sama di mana saja.",
   "connCheckAgain": "Periksa lagi",
-  "connCheckSend": "Kirim ke Marios"
+  "connCheckSend": "Kirim ke Marios",
+  "storyRow": "Bagikan ceritamu",
+  "storyHint": "Kenapa kamu memakai Kryfo, dengan kata-katamu sendiri. Cerita hanya dibagikan dengan persetujuanmu.",
+  "storyHintAnon": "Kenapa kamu memakai Kryfo, dengan kata-katamu sendiri. Kamu bisa menulis secara anonim, dan cerita hanya dibagikan dengan persetujuanmu.",
+  "storyTemplate": "Kenapa aku memakai Kryfo:\n\nApa yang diblokir di tempatku:\n\nWilayah (opsional):\n"
 }

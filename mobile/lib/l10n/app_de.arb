@@ -3229,5 +3229,9 @@
   "connCheckLine": "Das ist alles, was geteilt würde: wie Tor hier rauskommt, wie lange es gedauert hat und was nicht durchkam. Keine IP-Adresse, kein Standort, keine Brückenzeilen, keine Gerätekennungen. Nichts verlässt das Gerät, bis du es kopierst oder sendest.",
   "connCheckEnglish": "Der Bericht ist auf Englisch, damit er überall gleich lesbar ist.",
   "connCheckAgain": "Erneut prüfen",
-  "connCheckSend": "An Marios senden"
+  "connCheckSend": "An Marios senden",
+  "storyRow": "Erzähl deine Geschichte",
+  "storyHint": "Warum du Kryfo nutzt, in deinen eigenen Worten. Geschichten werden nur mit deiner Zustimmung geteilt.",
+  "storyHintAnon": "Warum du Kryfo nutzt, in deinen eigenen Worten. Du kannst anonym schreiben, und Geschichten werden nur mit deiner Zustimmung geteilt.",
+  "storyTemplate": "Warum ich Kryfo nutze:\n\nWas bei mir gesperrt ist:\n\nRegion (optional):\n"
 }

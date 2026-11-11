@@ -15484,5 +15484,21 @@
   "connCheckSend": "Send to Marios",
   "@connCheckSend": {
     "description": "screens/conn_check_sheet.dart: opens the chat with the developer with the report in the composer, for the person to send. Marios stays in Latin letters"
+  },
+  "storyRow": "Share your story",
+  "@storyRow": {
+    "description": "settings, about: opens the chat with the developer with a short template to tell why the person uses Kryfo"
+  },
+  "storyHint": "Why you use Kryfo, in your own words. Stories are shared only with your consent.",
+  "@storyHint": {
+    "description": "settings, about: the line under storyRow once the chat with the developer has started"
+  },
+  "storyHintAnon": "Why you use Kryfo, in your own words. You can write anonymously, and stories are shared only with your consent.",
+  "@storyHintAnon": {
+    "description": "settings, about: the line under storyRow before the first message to the developer, while the chat can still be started anonymously"
+  },
+  "storyTemplate": "Why I use Kryfo:\n\nWhat is blocked where I live:\n\nRegion (optional):\n",
+  "@storyTemplate": {
+    "description": "the words put in the developer chat's composer by storyRow, for the person to fill in, change or drop before sending. three prompts, each followed by an empty line to write on; keep the line breaks"
   }
 }
