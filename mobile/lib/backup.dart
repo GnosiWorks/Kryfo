@@ -499,9 +499,8 @@ Future<void> _landV1InDecoy(
     files.add({'name': name, 'size': bytes.length});
   }
 
+  // its onion key stays out: the decoy keeps its own in its database
   await stage('halo.db', payload['db'] as String);
-  final onion = payload['onionKey'];
-  if (onion is String) await stage('onion.key', onion);
   await _landing(() async {
     // the decoy's hidden chats go with the account they belonged to
     await landHidden(
@@ -1699,9 +1698,9 @@ Future<void> landHidden(
   }
 }
 
-// a restore in a decoy session lands on the decoy's names. the onion key
-// waits in onion_k2.key for the next start. no engine call: the engine
-// carries the everyday identity. [own] is the decoy's database, whichever
+// a restore in a decoy session lands on the decoy's names. its onion key
+// stays out: nothing reads one for the decoy, which keeps its own in its
+// database. no engine call: the engine carries the everyday identity. [own] is the decoy's database, whichever
 // session is open by now
 Future<void> _landInDecoy(
   HaloDb own,
@@ -1728,12 +1727,11 @@ Future<void> _landInDecoy(
     final name = (f as Map<String, dynamic>)['name'] as String;
     // hidden chats landed in the decoy's vault already
     if (hiddenPart(name) != null || !restorableName(name)) continue;
+    if (name == 'onion.key') continue;
     final src = File(p.join(from, name));
     final String dest;
     if (name == 'halo.db') {
       dest = dbPath;
-    } else if (name == 'onion.key') {
-      dest = p.join(docs, 'onion${c.folderSuffix}.key');
     } else {
       final slash = name.indexOf('/');
       dest = p.join(

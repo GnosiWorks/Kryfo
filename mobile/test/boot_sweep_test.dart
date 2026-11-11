@@ -194,6 +194,42 @@ void main() {
     });
   });
 
+  group('the places held', () {
+    test('three starts with no decoy and no hidden chats change none of '
+        'them', () async {
+      put('halo.db', 'everyday');
+      FlutterSecureStorage.setMockInitialValues({});
+      await sweepContainers({}, pinTable: true);
+      Map<String, (List<int>, DateTime)> held() => {
+        for (final n in ['k2.db', 'k3.db', 'k4.db'])
+          n: (File(at(n)).readAsBytesSync(), File(at(n)).lastModifiedSync()),
+      };
+      final before = held();
+      final key = await const FlutterSecureStorage().read(key: kDecoyKeyName);
+      expect(key, isNotNull);
+      for (final pinTable in [true, false]) {
+        // a filesystem's times are coarse: a remade file would show
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        await sweepContainers({}, pinTable: pinTable);
+      }
+      final after = held();
+      for (final n in before.keys) {
+        expect(after[n]!.$1, before[n]!.$1, reason: n);
+        expect(after[n]!.$2, before[n]!.$2, reason: n);
+      }
+      expect(await const FlutterSecureStorage().read(key: kDecoyKeyName), key);
+    });
+
+    test('no key holds the decoy\'s place while one from before waits to '
+        'move', () async {
+      FlutterSecureStorage.setMockInitialValues({kOldDecoyKeyName: decoyKey});
+      await makeContainerPlaceholders(root.path);
+      final kept = await const FlutterSecureStorage().readAll();
+      expect(kept.containsKey(kDecoyKeyName), isFalse);
+      expect(kept[kOldDecoyKeyName], decoyKey);
+    });
+  });
+
   group('the names before the numbers', () {
     // what a phone before 0.6.1 held: the decoy and both vaults by role
     void older() {
@@ -211,6 +247,9 @@ void main() {
     test('move to their numbers, the decoy\'s key too, and a second start '
         'changes nothing', () async {
       older();
+      // a decoy restore before this left its onion key beside it
+      put('onion_d.key', 'decoy onion');
+      put('onion_k2.key', 'decoy onion');
       FlutterSecureStorage.setMockInitialValues({
         kOldDecoyKeyName: decoyKey,
         kListedContainers: HaloContainer.decoy.id,

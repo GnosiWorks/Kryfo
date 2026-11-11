@@ -6,6 +6,7 @@ import 'desktop/desktop_mode.dart' show containersSwept, onDesktop, rawFiles;
 import 'dart:io';
 import 'secure_store.dart';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -192,6 +193,21 @@ class HaloContainer {
     ],
   ];
 
+  /// more of it than every install keeps: a sidecar of its database or a
+  /// file in its folders. a lone database file and its key may be the place
+  /// every phone holds, and stay as they are
+  Future<bool> beyondItsPlace() async {
+    final path = await dbPath();
+    for (final f in ['$path-wal', '$path-shm', '$path-journal']) {
+      if (await File(f).exists()) return true;
+    }
+    final docs = (await getApplicationDocumentsDirectory()).path;
+    for (final name in folderNames) {
+      if (await _holdsFiles(Directory(p.join(docs, name)))) return true;
+    }
+    return false;
+  }
+
   // every install has the numbered folders: an empty one says nothing
   static Future<bool> _holdsFiles(Directory d) async {
     if (!await d.exists()) return false;
@@ -302,7 +318,9 @@ Future<void> sweepContainers(
                   listed.contains(c.extendsId))
         : listed.contains(c.id);
     if (mayOpen) continue;
-    if (await c.onDisk()) await c.wipeFiles();
+    // a database file alone may be the place every phone holds: wiped and
+    // made again each start, its times would say there is nothing there
+    if (await c.beyondItsPlace()) await c.wipeFiles();
   }
   await refillContainerPlaceholders();
 }
@@ -336,6 +354,13 @@ Future<void> moveToNumberedNames(String docs) async {
       }
     });
   }
+  // a decoy restore before this left its onion key beside it, unread
+  for (final n in const ['onion_d.key', 'onion_k2.key']) {
+    final f = p.join(docs, n);
+    if (rawFiles(() => File(f).existsSync())) {
+      await rawFiles(() => shredFile(f));
+    }
+  }
   final key = await _registry.read(key: kOldDecoyKeyName);
   if (key != null) {
     await _registry.write(key: kDecoyKeyName, value: key);
@@ -361,28 +386,41 @@ Future<void> makeContainerPlaceholders(String docs, {Random? random}) async {
       if (c == HaloContainer.everyday) continue;
       final f = File(p.join(docs, c.dbFile));
       if (f.existsSync()) continue;
-      // the size of a database that holds a few chats
-      final pages = 40 + rnd.nextInt(80);
-      final r = f.openSync(mode: FileMode.write);
-      try {
-        for (var i = 0; i < pages; i++) {
-          r.writeFromSync(List.generate(4096, (_) => rnd.nextInt(256)));
-        }
-        r.flushSync();
-      } finally {
-        r.closeSync();
-      }
+      // the size of a database that holds a few chats, in one write
+      f.writeAsBytesSync(randomBytes((40 + rnd.nextInt(80)) * 4096, rnd));
     }
   });
   if (await _registry.read(key: kListedContainers) == null) {
     await _registry.write(key: kListedContainers, value: _listValue(const []));
   }
-  if (await _registry.read(key: kDecoyKeyName) == null) {
+  // a key under the name from before is the decoy's own until it moves
+  if (await _registry.read(key: kDecoyKeyName) == null &&
+      await _registry.read(key: kOldDecoyKeyName) == null) {
     await _registry.write(
       key: kDecoyKeyName,
       value: HaloContainer.decoy.newKey(),
     );
   }
+}
+
+/// [n] random bytes: from the kernel in one read where it has them, else
+/// four at a time from [rnd]
+Uint8List randomBytes(int n, Random rnd) {
+  try {
+    final r = File('/dev/urandom').openSync();
+    try {
+      final b = r.readSync(n);
+      if (b.length == n) return b;
+    } finally {
+      r.closeSync();
+    }
+  } catch (_) {}
+  final out = Uint8List(n + 3);
+  final words = Uint32List.view(out.buffer, 0, out.length ~/ 4);
+  for (var i = 0; i < words.length; i++) {
+    words[i] = rnd.nextInt(1 << 32);
+  }
+  return Uint8List.sublistView(out, 0, n);
 }
 
 // an identity's own settings: a decoy starts without them and keeps its own.
