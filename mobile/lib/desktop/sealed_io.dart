@@ -97,7 +97,9 @@ class SealedAreas {
   // file on its way in, and the plain file it opens them into, which the
   // app then moves into place through here
   static const _engineOwn = {'fetch', 'held'};
-  static final _waitingOnion = RegExp(r'^onion(_k[234])?\.key(\.new)?$');
+  static final _waitingOnion = RegExp(
+    r'^onion(_k[234])?\.key(\.new)?(\.carry)?$',
+  );
 
   // a restore's staging folders in docs: the files key, as support's
   static const _staging = {'restore_stage', 'restore_hidden'};

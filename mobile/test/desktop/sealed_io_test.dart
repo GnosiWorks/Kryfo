@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/desktop/sealed_file.dart' show SealedDamaged;
 import 'package:kryfo/desktop/sealed_format.dart';
 import 'package:kryfo/desktop/sealed_io.dart';
+import 'package:kryfo/desktop/sealed_setup.dart' show dropCarryLeft;
 import 'package:path/path.dart' as p;
 
 import '../host_engine.dart';
@@ -119,6 +120,37 @@ void main() {
       expect(io.rawFile('$b$kCarryLeaf').existsSync(), isFalse);
       expect(File(a).existsSync(), isTrue);
     });
+  });
+
+  test('the onion key\'s half carried copy is sealed like the key', () {
+    final a = io.areas;
+    expect(a.areaOf(p.join(docs, 'onion.key$kCarryLeaf')), '*');
+    expect(a.areaOf(p.join(docs, 'onion_k2.key.new$kCarryLeaf')), '*');
+  });
+
+  test('a move cut short in a run before leaves no copy behind', () async {
+    final old = DateTime.now().subtract(const Duration(hours: 1));
+    String leave(String path, {bool young = false}) {
+      final f = io.rawFile(path)
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync('half');
+      if (!young) f.setLastModifiedSync(old);
+      return path;
+    }
+
+    final deep = leave(p.join(support, 'stickers', 'a.json$kCarryLeaf'));
+    final young = leave(p.join(support, 'b$kCarryLeaf'), young: true);
+    final key = leave(p.join(docs, 'onion.key$kCarryLeaf'));
+    final media = leave(p.join(docs, 'media', 'c$kCarryLeaf'));
+    final keep = leave(p.join(support, 'kept.json'));
+    final now = DateTime.now().subtract(const Duration(minutes: 1));
+    await dropCarryLeft(support, now);
+    await dropCarryLeft(docs, now, deep: false);
+    expect(io.rawFile(deep).existsSync(), isFalse);
+    expect(io.rawFile(key).existsSync(), isFalse);
+    expect(io.rawFile(young).existsSync(), isTrue);
+    expect(io.rawFile(media).existsSync(), isTrue);
+    expect(io.rawFile(keep).existsSync(), isTrue);
   });
 
   test('a file brought in from outside is sealed, and its plain copy goes', () {
