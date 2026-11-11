@@ -56,7 +56,10 @@ only. a relay is ours by its name alone, and one that is not ours is never
 dialled in the clear on the fast route. the private route lists both stores
 too, each through its own onion (the first also through its clearnet name over
 tor), with its own anchor per store, writes every wrap to both and to the
-public relays, and queues nothing.
+public relays, and queues nothing. a build with
+`--dart-define=KRYFO_PRIVATE_OWN=1` keeps private on our two stores and
+lists two of the public relays as backups, read and written through tor
+only while the first store is down, as on fast.
 
 ## `dmrelay/`: next, not deployable yet
 
