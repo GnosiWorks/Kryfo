@@ -110,10 +110,10 @@ class _VoiceTranscriptState extends State<VoiceTranscript> {
             key: const ValueKey('vt-silent'),
             out: widget.isOut,
             lead: l10n.voiceNoSpeech,
-            action: l10n.voiceHideTranscription,
+            action: l10n.commonTryAgain,
             onTap: () {
               HapticFeedback.selectionClick();
-              chat.hide(uid);
+              unawaited(chat.retry(uid, widget.path, mine: widget.isOut));
             },
           ),
           TxPhase.working || TxPhase.shown => _Open(

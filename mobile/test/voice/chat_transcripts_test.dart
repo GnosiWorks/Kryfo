@@ -161,6 +161,17 @@ void main() {
     expect((await f.store.kept('heron'))['u1']!.pieces, isEmpty);
     // nothing to copy
     expect(c.shownText('u1'), isNull);
+    // tried again: the empty answer goes and the note is heard again
+    await c.retry('u1', '/n/u1.ogg');
+    await _beats();
+    expect(f.runner.jobs, hasLength(2));
+    expect(c.of('u1').phase, TxPhase.working);
+    expect(await f.store.kept('heron'), isEmpty);
+    f.runner.jobs.last
+      ..say(' at last')
+      ..end();
+    await _beats();
+    expect(c.of('u1').text, 'at last');
   });
 
   test('notes on sounds go from the words as they come', () async {

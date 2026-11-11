@@ -260,10 +260,10 @@ void main() {
     expect(find.text(_heard), findsOneWidget);
   });
 
-  testWidgets('no speech: said so, never [BLANK_AUDIO], and folds away', (
+  testWidgets('no speech: said so, never [BLANK_AUDIO], with try again', (
     t,
   ) async {
-    final (f, _) = await open(t);
+    final (f, c) = await open(t);
     await t.tap(_link());
     await step(t);
     f.runner.jobs.single
@@ -272,14 +272,37 @@ void main() {
     await t.pumpAndSettle();
     expect(_rich(l10n.voiceNoSpeech), findsOneWidget);
     expect(find.textContaining('BLANK'), findsNothing);
-    expect(_rich(l10n.commonTryAgain), findsNothing);
+    expect(_rich(l10n.commonTryAgain), findsOneWidget);
     expect(
       t.getSize(find.byKey(const ValueKey('vt-silent'))).height,
       greaterThanOrEqualTo(kTxTapHeight),
     );
+    // heard again: the answer goes, the words come this time
     await t.tap(find.byKey(const ValueKey('vt-silent')));
+    await step(t);
+    expect(f.runner.jobs, hasLength(2));
+    await hear(t, f, _heard);
+    expect(find.text(_heard), findsOneWidget);
+    expect(_rich(l10n.voiceNoSpeech), findsNothing);
+    expect(c.of('u1').text, _heard);
+  });
+
+  testWidgets('no speech, right to left: the line starts on the right', (
+    t,
+  ) async {
+    setL10nLocale(const Locale('ar'));
+    addTearDown(() => setL10nLocale(const Locale('en')));
+    final (f, _) = await open(t, locale: const Locale('ar'));
+    await t.tap(_link());
+    await step(t);
+    f.runner.jobs.single
+      ..say(' [BLANK_AUDIO]')
+      ..end();
     await t.pumpAndSettle();
-    expect(_link(), findsOneWidget);
+    final bubble = t.getRect(find.byKey(const ValueKey('bubble')));
+    final line = t.getRect(_rich(l10n.voiceNoSpeech));
+    expect(bubble.right - line.right, lessThan(20));
+    expect(line.left, greaterThanOrEqualTo(bubble.left));
   });
 
   testWidgets('words as they come: each new piece fades in, the earlier '

@@ -169,9 +169,15 @@ class ChatTranscripts extends ChangeNotifier {
     unawaited(hub.setOpen(chatId, uid, false));
   }
 
-  /// after a failed run
+  /// after a failed run, or one that heard no speech: that answer goes and
+  /// the note is heard again
   Future<TxNeed?> retry(String uid, String path, {bool mine = false}) async {
     if (_live[uid]?.phase == TxPhase.failed) _live.remove(uid);
+    final k = _kept[uid];
+    if (k != null && k.text.isEmpty) {
+      _kept.remove(uid);
+      await hub.unkeep(chatId, uid);
+    }
     return open(uid, path, mine: mine);
   }
 
