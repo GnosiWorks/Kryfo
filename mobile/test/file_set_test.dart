@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart';
 import 'package:kryfo/message_envelope.dart';
+import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/transfers.dart';
+import 'package:kryfo/widgets/file_bubble.dart';
 import 'package:kryfo/widgets/file_stack.dart';
 import 'package:kryfo/widgets/file_wait.dart';
 
@@ -250,6 +252,41 @@ void main() {
         expect(find.byIcon(Icons.refresh_rounded), findsOneWidget);
         await t.tap(find.byIcon(Icons.refresh_rounded));
         expect(tries, 1);
+      });
+    }
+  });
+
+  group('the ring', () {
+    for (final still in [false, true]) {
+      testWidgets('a send that fills turns into a tick for a moment '
+          '(still: $still)', (t) async {
+        Widget card(String? uid) => MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: still),
+            child: Scaffold(
+              body: FileCard(
+                path: null,
+                name: 'route.pdf',
+                isOut: true,
+                sendingUid: uid,
+              ),
+            ),
+          ),
+        );
+        mediaSendProgress['s1'] = 1.0;
+        addTearDown(() => mediaSendProgress.remove('s1'));
+        await t.pumpWidget(card('s1'));
+        await t.pump();
+        mediaSendProgress.remove('s1');
+        await t.pumpWidget(card(null));
+        await t.pump(const Duration(milliseconds: 300));
+        expect(
+          find.byIcon(Icons.check_rounded),
+          still ? findsNothing : findsOneWidget,
+        );
+        await t.pump(const Duration(milliseconds: 900));
+        await t.pump(const Duration(milliseconds: 300));
+        expect(find.byIcon(Icons.check_rounded), findsNothing);
       });
     }
   });

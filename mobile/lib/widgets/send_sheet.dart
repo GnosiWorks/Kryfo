@@ -262,14 +262,22 @@ class SendSheetState extends State<SendSheet> {
     setState(() => _chosen.contains(p) ? _chosen.remove(p) : _chosen.add(p));
   }
 
-  void _send() {
-    if (_chosen.isEmpty) return;
+  // the cards lift off toward the chat before the sheet goes
+  bool _leaving = false;
+
+  Future<void> _send() async {
+    if (_chosen.isEmpty || _leaving) return;
     HapticFeedback.mediumImpact();
     // what was picked and not chosen goes now; the chosen go after the send
     for (final p in [..._gallery, ..._files]) {
       if (!_chosen.contains(p)) unawaited(p.release?.call());
     }
     _sent = true;
+    if (!motionStill(context)) {
+      setState(() => _leaving = true);
+      await Future<void>.delayed(SendTray.liftTime);
+      if (!mounted) return;
+    }
     Navigator.of(context).pop(
       SendSheetResult(
         [for (final p in _chosen) _names[p] == null ? p : p.named(_names[p]!)],
@@ -430,6 +438,7 @@ class SendSheetState extends State<SendSheet> {
               tray: _chosen.isEmpty
                   ? null
                   : SendTray(
+                      lifting: _leaving,
                       cards: _cards,
                       most: widget.most,
                       onRemove: _remove,

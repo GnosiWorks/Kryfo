@@ -185,6 +185,33 @@ void main() {
   });
 
   group('the tray', () {
+    testWidgets('sent, the cards lift off and fade toward the chat', (t) async {
+      Widget tray(bool lifting) => MaterialApp(
+        home: Scaffold(
+          body: SendTray(
+            lifting: lifting,
+            most: 50 << 20,
+            onRemove: (_) {},
+            onRename: (_) {},
+            onSpoiler: (_) {},
+            cards: const [
+              TrayCard(key: 'a', name: 'a.pdf', size: 10, path: '/x/a.pdf'),
+            ],
+          ),
+        ),
+      );
+      await t.pumpWidget(tray(false));
+      await t.pumpAndSettle();
+      await t.pumpWidget(tray(true));
+      await t.pump(SendTray.liftTime);
+      final fade = t.widget<AnimatedOpacity>(
+        find.byType(AnimatedOpacity).first,
+      );
+      expect(fade.opacity, 0);
+      final slide = t.widget<AnimatedSlide>(find.byType(AnimatedSlide));
+      expect(slide.offset.dy, lessThan(0));
+    });
+
     testWidgets('a card per pick, the total and an honest time over Tor', (
       t,
     ) async {
@@ -203,11 +230,11 @@ void main() {
       expect(find.textContaining(l10n.trayToSend(2, '2')), findsOneWidget);
       expect(find.text(l10n.trayHint), findsOneWidget);
       // 41 MB at a careful pace is about three minutes
+      expect(find.textContaining(l10n.trayTimeMinutes('3')), findsOneWidget);
       expect(
-        find.textContaining(l10n.trayTimeMinutes('3')),
+        find.textContaining(l10n.trayMost(humanFileSize(50 * 1024 * 1024))),
         findsOneWidget,
       );
-      expect(find.textContaining(l10n.trayMost(humanFileSize(50 * 1024 * 1024))), findsOneWidget);
     });
 
     testWidgets('the cross takes a pick out', (t) async {
