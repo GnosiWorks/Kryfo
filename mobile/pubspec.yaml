@@ -38,6 +38,8 @@ dependencies:
   connectivity_plus: ^7.1.1
   app_links: ^7.0.0
   crypto: ^3.0.7
+  # mit, pure dart: a computer draws pictures again with it (desk_draw.dart)
+  image: ^4.10.1
   ed25519_edwards: ^0.3.1
   local_auth: ^3.0.1
   share_plus: ^13.3.0
