@@ -192,6 +192,7 @@ import '../gifs/gif_picture.dart';
 import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../widgets/motion.dart';
+import '../widgets/bubble_meta.dart';
 import '../widgets/burn_fade.dart';
 import '../seen_timers.dart';
 import '../read_burn.dart';
@@ -602,7 +603,7 @@ void _openAlbumAt(BuildContext context, List<_Msg?> shown, int at) {
 
 // the time and tick on a photo or a video with no caption: a small dark pill
 // in the corner, since there is no bubble under it to carry them
-Widget _mediaStamp(_Msg msg) {
+Widget _mediaStamp(_Msg msg, {bool word = true}) {
   final mono = TextStyle(
     fontFamily: HaloType.monoFamily,
     fontFamilyFallback: HaloType.monoFallbackNow,
@@ -631,6 +632,7 @@ Widget _mediaStamp(_Msg msg) {
               msg,
               unconfirmed: !msg.delivered,
               color: Colors.white,
+              word: word,
             ),
           ),
         ],
@@ -648,6 +650,7 @@ Widget _outMark(
   required bool unconfirmed,
   required Color color,
   bool waits = false,
+  bool word = true,
 }) => AnimatedSwitcher(
   duration: motionStill(context)
       ? Duration.zero
@@ -673,6 +676,7 @@ Widget _outMark(
           key: const ValueKey('sent'),
           delivered: msg.delivered,
           deliveredLabel: l10n.chatDelivered,
+          word: word,
           color: color,
           labelStyle: TextStyle(
             fontFamily: HaloType.monoFamily,
@@ -692,10 +696,14 @@ Widget _mediaCorner(
   required bool showMeta,
   required bool failedShown,
   required bool parked,
+  bool word = true,
 }) {
   final Widget child;
   if (showMeta) {
-    child = KeyedSubtree(key: const ValueKey('stamp'), child: _mediaStamp(msg));
+    child = KeyedSubtree(
+      key: const ValueKey('stamp'),
+      child: _mediaStamp(msg, word: word),
+    );
   } else if (failedShown || parked) {
     child = Container(
       key: ValueKey(failedShown ? 'failed' : 'parked'),
@@ -2812,6 +2820,15 @@ class _ChatScreenState extends State<ChatScreen>
                           type: MaterialType.transparency,
                           child: _Bubble(
                             msg: target,
+                            newestOut: switch (_newestOut()) {
+                              final n? =>
+                                identical(target, n) ||
+                                    (album?.present.any(
+                                          (x) => identical(x, n),
+                                        ) ??
+                                        false),
+                              null => false,
+                            },
                             album: album,
                             translation: _translation,
                             transcripts: _transcripts,
@@ -5740,6 +5757,16 @@ class _ChatScreenState extends State<ChatScreen>
     return run.anchor;
   }
 
+  // the newest of ours still in the thread: the one bubble that spells
+  // Delivered. found from the end, so it is near
+  _Msg? _newestOut() {
+    for (var j = _messages.length - 1; j >= 0; j--) {
+      final x = _messages[j];
+      if (x.direction == 'out' && !x.removing && !x.welcome) return x;
+    }
+    return null;
+  }
+
   Widget _buildRow(BuildContext c, int i, bool searchActive) {
     final ix = _messages.length - 1 - i;
     final row = _messages[ix];
@@ -5854,6 +5881,10 @@ class _ChatScreenState extends State<ChatScreen>
         child: _Bubble(
           key: isMatch ? _matchKeys[hitAt] : null,
           msg: m,
+          newestOut: switch (_newestOut()) {
+            final n? => members.any((x) => identical(x, n)),
+            null => false,
+          },
           translation: _translation,
           transcripts: _transcripts,
           album: run,
@@ -8893,9 +8924,12 @@ class _Bubble extends StatelessWidget {
   final ChatTranslation? translation;
   // the chat's voice note transcripts
   final ChatTranscripts? transcripts;
+  // the newest of ours: the only one that spells Delivered
+  final bool newestOut;
   const _Bubble({
     super.key,
     required this.msg,
+    this.newestOut = false,
     this.translation,
     this.transcripts,
     this.album,
@@ -9000,7 +9034,17 @@ class _Bubble extends StatelessWidget {
     final showMeta = isOut && !pending && !failedShown && !parked;
     // a photo, a video, a file or a voice note that came in says when, as
     // ours do: there is no text of it to place it by
-    final showTime = showMeta || (!isOut && isMedia);
+    // a text of theirs says when on the last bubble of a run, as ours do
+    final showTime = showMeta || (!isOut && (isMedia || lastInGroup));
+    // the time is drawn on a run's last bubble; the ones above it keep
+    // their tick. a file, a timer or an edit keeps its own
+    final timeHere =
+        lastInGroup ||
+        isMedia ||
+        msg.burnAt != null ||
+        msg.edited ||
+        parked ||
+        unconfirmed;
     // ours kept until it can go says so in its bubble: its time and a clock
     final showStamp = (showTime || (isOut && parked)) && !frameless;
     final showPill = isOut && pending;
@@ -9277,6 +9321,7 @@ class _Bubble extends StatelessWidget {
                                             showMeta: showTime,
                                             failedShown: failedShown,
                                             parked: parked,
+                                            word: newestOut,
                                           ),
                                           corner: corner,
                                         )
@@ -9346,6 +9391,7 @@ class _Bubble extends StatelessWidget {
                                             showMeta: showTime,
                                             failedShown: failedShown,
                                             parked: parked,
+                                            word: newestOut,
                                           ),
                                         )
                                       else if (msg.fileName != null)
@@ -9524,6 +9570,7 @@ class _Bubble extends StatelessWidget {
                                                       showMeta: showTime,
                                                       failedShown: failedShown,
                                                       parked: parked,
+                                                      word: newestOut,
                                                     ),
                                                   ),
                                                 ],
@@ -9559,189 +9606,233 @@ class _Bubble extends StatelessWidget {
                                                 : CrossAxisAlignment.end,
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              if (msg.text.isNotEmpty)
-                                                DeskSelectable(
-                                                  // a click on these words is the bubble's while it retries
-                                                  enabled:
-                                                      !((failedShown ||
-                                                              parked) &&
-                                                          onRetry != null),
-                                                  onMenu: onLongPress == null
-                                                      ? null
-                                                      : () => onLongPress!(
-                                                          context,
-                                                        ),
-                                                  onTap: onReveal,
-                                                  child: writtenStart(
-                                                    msg.text,
-                                                    TranslatedBody(
-                                                      chat: translation,
-                                                      msgKey: trKeyOf(
-                                                        msg.msgUid,
-                                                        msg.came,
-                                                      ),
-                                                      came: msg.came,
-                                                      text: msg.text,
-                                                      enabled:
-                                                          !isOut &&
-                                                          query.isEmpty &&
-                                                          msg.sticker == null &&
-                                                          !msg.welcome,
-                                                      original: _body(
-                                                        isOut,
-                                                        image:
-                                                            msg.mediaPath !=
-                                                            null,
-                                                      ),
-                                                      translated: (t) => _body(
-                                                        isOut,
-                                                        image:
-                                                            msg.mediaPath !=
-                                                            null,
-                                                        words: t,
-                                                      ),
-                                                    ),
-                                                  ),
+                                              // the time and tick sit at the end of the
+                                              // last line when they fit, else under it.
+                                              // they grow in as the sending pill folds
+                                              MetaFlow(
+                                                textDirection: writtenDir(
+                                                  msg.text,
                                                 ),
-                                              if (msg.url case final u?
-                                                  when !plainLinks) ...[
-                                                const SizedBox(height: 6),
-                                                LinkStub(
-                                                  url: u,
-                                                  isOut: isOut,
-                                                  title: linkTitle,
-                                                  bySender: linkBySender,
-                                                ),
-                                              ],
-                                              if (msg.place case final p?
-                                                  when !plainLinks) ...[
-                                                const SizedBox(height: 6),
-                                                PlaceStub(
-                                                  place: p,
-                                                  isOut: isOut,
-                                                ),
-                                              ],
-                                              // the time and tick grow in as the
-                                              // sending pill under the bubble folds
-                                              GrowSwap(
-                                                child: !showStamp
-                                                    ? const SizedBox.shrink(
-                                                        key: ValueKey(
-                                                          'no-meta',
-                                                        ),
-                                                      )
-                                                    : Padding(
-                                                        key: const ValueKey(
-                                                          'meta',
-                                                        ),
-                                                        padding:
-                                                            const EdgeInsets.only(
-                                                              top: 4,
+                                                body: Column(
+                                                  crossAxisAlignment:
+                                                      msg.mediaPath != null
+                                                      ? CrossAxisAlignment.start
+                                                      : CrossAxisAlignment.end,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    if (msg.text.isNotEmpty)
+                                                      MetaAnchor(
+                                                        child: DeskSelectable(
+                                                          // a click on these words is the bubble's while it retries
+                                                          enabled:
+                                                              !((failedShown ||
+                                                                      parked) &&
+                                                                  onRetry !=
+                                                                      null),
+                                                          onMenu:
+                                                              onLongPress ==
+                                                                  null
+                                                              ? null
+                                                              : () =>
+                                                                    onLongPress!(
+                                                                      context,
+                                                                    ),
+                                                          onTap: onReveal,
+                                                          child: writtenStart(
+                                                            msg.text,
+                                                            TranslatedBody(
+                                                              chat: translation,
+                                                              msgKey: trKeyOf(
+                                                                msg.msgUid,
+                                                                msg.came,
+                                                              ),
+                                                              came: msg.came,
+                                                              text: msg.text,
+                                                              enabled:
+                                                                  !isOut &&
+                                                                  query
+                                                                      .isEmpty &&
+                                                                  msg.sticker ==
+                                                                      null &&
+                                                                  !msg.welcome,
+                                                              original: _body(
+                                                                isOut,
+                                                                image:
+                                                                    msg.mediaPath !=
+                                                                    null,
+                                                              ),
+                                                              translated: (t) =>
+                                                                  _body(
+                                                                    isOut,
+                                                                    image:
+                                                                        msg.mediaPath !=
+                                                                        null,
+                                                                    words: t,
+                                                                  ),
                                                             ),
-                                                        child: Row(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children: [
-                                                            if (msg.secure) ...[
-                                                              Icon(
-                                                                Icons
-                                                                    .shield_rounded,
-                                                                size: 10,
-                                                                color:
-                                                                    metaColor,
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 4,
-                                                              ),
-                                                            ],
-                                                            Text(
-                                                              _fmtTime(
-                                                                msg.when,
-                                                              ),
-                                                              style: TextStyle(
-                                                                fontFamily: HaloType
-                                                                    .monoFamily,
-                                                                fontFamilyFallback:
-                                                                    HaloType
-                                                                        .monoFallbackNow,
-                                                                fontSize: 9,
-                                                                color:
-                                                                    metaColor,
-                                                                letterSpacing:
-                                                                    track(0.4),
-                                                              ),
-                                                            ),
-                                                            if (msg.edited) ...[
-                                                              const SizedBox(
-                                                                width: 5,
-                                                              ),
-                                                              Text(
-                                                                l10n.chatEdited,
-                                                                style: TextStyle(
-                                                                  fontFamily:
-                                                                      HaloType
-                                                                          .monoFamily,
-                                                                  fontFamilyFallback:
-                                                                      HaloType
-                                                                          .monoFallbackNow,
-                                                                  fontSize: 9,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    if (msg.url case final u?
+                                                        when !plainLinks) ...[
+                                                      const SizedBox(height: 6),
+                                                      LinkStub(
+                                                        url: u,
+                                                        isOut: isOut,
+                                                        title: linkTitle,
+                                                        bySender: linkBySender,
+                                                      ),
+                                                    ],
+                                                    if (msg.place case final p?
+                                                        when !plainLinks) ...[
+                                                      const SizedBox(height: 6),
+                                                      PlaceStub(
+                                                        place: p,
+                                                        isOut: isOut,
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                                meta: GrowSwap(
+                                                  child: !showStamp
+                                                      ? const SizedBox.shrink(
+                                                          key: ValueKey(
+                                                            'no-meta',
+                                                          ),
+                                                        )
+                                                      : KeyedSubtree(
+                                                          key: const ValueKey(
+                                                            'meta',
+                                                          ),
+                                                          child: Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: [
+                                                              if (msg
+                                                                  .secure) ...[
+                                                                Icon(
+                                                                  Icons
+                                                                      .shield_rounded,
+                                                                  size: 10,
                                                                   color:
                                                                       metaColor,
-                                                                  fontStyle:
-                                                                      slant(),
-                                                                  letterSpacing:
-                                                                      track(
-                                                                        0.4,
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 4,
+                                                                ),
+                                                              ],
+                                                              if (!timeHere)
+                                                                // read out on every bubble, drawn on a run's last
+                                                                Semantics(
+                                                                  label:
+                                                                      _fmtTime(
+                                                                        msg.when,
                                                                       ),
+                                                                  child:
+                                                                      const SizedBox.shrink(),
+                                                                )
+                                                              else
+                                                                Text(
+                                                                  _fmtTime(
+                                                                    msg.when,
+                                                                  ),
+                                                                  style: TextStyle(
+                                                                    fontFamily:
+                                                                        HaloType
+                                                                            .monoFamily,
+                                                                    fontFamilyFallback:
+                                                                        HaloType
+                                                                            .monoFallbackNow,
+                                                                    fontSize: 9,
+                                                                    color:
+                                                                        metaColor,
+                                                                    letterSpacing:
+                                                                        track(
+                                                                          0.4,
+                                                                        ),
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                            ],
-                                                            const SizedBox(
-                                                              width: 3,
-                                                            ),
-                                                            if (isOut)
-                                                              _outMark(
-                                                                context,
-                                                                msg,
-                                                                unconfirmed:
-                                                                    unconfirmed ||
-                                                                    waitsAck,
-                                                                waits: parked,
-                                                                color:
-                                                                    metaColor,
-                                                              ),
-                                                            if (msg.burnAt !=
-                                                                null) ...[
-                                                              const SizedBox(
-                                                                width: 6,
-                                                              ),
-                                                              Icon(
-                                                                Icons
-                                                                    .local_fire_department_outlined,
-                                                                size: 11,
-                                                                color:
-                                                                    metaColor,
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 2,
-                                                              ),
-                                                              Text(
-                                                                _fmtBurn(
-                                                                  msg.burnAt!,
+                                                              if (isOut &&
+                                                                  msg.edited) ...[
+                                                                const SizedBox(
+                                                                  width: 5,
                                                                 ),
-                                                                style: HaloType.mono(
-                                                                  size: 9.5,
+                                                                Text(
+                                                                  l10n.chatEdited,
+                                                                  style: TextStyle(
+                                                                    fontFamily:
+                                                                        HaloType
+                                                                            .monoFamily,
+                                                                    fontFamilyFallback:
+                                                                        HaloType
+                                                                            .monoFallbackNow,
+                                                                    fontSize: 9,
+                                                                    color:
+                                                                        metaColor,
+                                                                    fontStyle:
+                                                                        slant(),
+                                                                    letterSpacing:
+                                                                        track(
+                                                                          0.4,
+                                                                        ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                              if (isOut) ...[
+                                                                if (timeHere ||
+                                                                    msg.edited ||
+                                                                    msg.secure)
+                                                                  const SizedBox(
+                                                                    width: 3,
+                                                                  ),
+                                                                _outMark(
+                                                                  context,
+                                                                  msg,
+                                                                  unconfirmed:
+                                                                      unconfirmed ||
+                                                                      waitsAck,
+                                                                  waits: parked,
                                                                   color:
                                                                       metaColor,
-                                                                  weight:
-                                                                      FontWeight
-                                                                          .w600,
+                                                                  word:
+                                                                      newestOut,
                                                                 ),
-                                                              ),
+                                                              ],
+                                                              if (msg.burnAt !=
+                                                                  null) ...[
+                                                                const SizedBox(
+                                                                  width: 6,
+                                                                ),
+                                                                Icon(
+                                                                  Icons
+                                                                      .local_fire_department_outlined,
+                                                                  size: 11,
+                                                                  color:
+                                                                      metaColor,
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 2,
+                                                                ),
+                                                                Text(
+                                                                  _fmtBurn(
+                                                                    msg.burnAt!,
+                                                                  ),
+                                                                  style: HaloType.mono(
+                                                                    size: 9.5,
+                                                                    color:
+                                                                        metaColor,
+                                                                    weight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ],
-                                                          ],
+                                                          ),
                                                         ),
-                                                      ),
+                                                ),
                                               ),
                                               if (!isOut && msg.viaDev) ...[
                                                 const SizedBox(height: 3),
@@ -10077,6 +10168,7 @@ class _Bubble extends StatelessWidget {
                                       delivered: showMeta && msg.delivered
                                           ? l10n.chatDelivered
                                           : null,
+                                      word: newestOut,
                                       burn: burn,
                                       burnWaits: msg.burnWaits,
                                       alert: failedShown

@@ -400,6 +400,7 @@ class StickerStamp extends StatelessWidget {
     required this.time,
     this.sent = false,
     this.delivered,
+    this.word = true,
     this.burn,
     this.burnWaits = false,
     this.alert,
@@ -410,6 +411,8 @@ class StickerStamp extends StatelessWidget {
   final bool sent;
   // the delivered word, once it is
   final String? delivered;
+  // spelled only on the newest of ours
+  final bool word;
   // what is left of a timed message
   final String? burn;
   // its clock waits for the message to be read
@@ -466,6 +469,7 @@ class StickerStamp extends StatelessWidget {
               SentTick(
                 delivered: delivered != null,
                 deliveredLabel: delivered ?? '',
+                word: word,
                 color: HaloColors.text,
                 labelStyle: style.copyWith(
                   fontSize: 9,
