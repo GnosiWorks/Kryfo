@@ -12376,4 +12376,21 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Le tue chat restano fuori dal menu di condivisione finché Kryfo usa un\'altra icona.';
+
+  @override
+  String get connCheckTitle => 'Controlla la mia connessione';
+
+  @override
+  String get connCheckLine =>
+      'Questo è tutto ciò che verrebbe condiviso: come Tor esce da qui, quanto ci ha messo e cosa non è passato. Nessun indirizzo IP, nessuna posizione, nessuna riga di bridge, nessun ID del dispositivo. Non esce nulla finché non lo copi o lo invii.';
+
+  @override
+  String get connCheckEnglish =>
+      'Il controllo è in inglese, così si legge allo stesso modo ovunque.';
+
+  @override
+  String get connCheckAgain => 'Controlla di nuovo';
+
+  @override
+  String get connCheckSend => 'Invia a Marios';
 }

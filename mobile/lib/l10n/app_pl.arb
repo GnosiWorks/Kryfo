@@ -3224,5 +3224,10 @@
   "settingsShareMenu": "Pokazuj czaty w menu udostępniania",
   "settingsShareMenuHint": "Twoje najnowsze czaty pojawiają się z nazwy, gdy udostępniasz z innej aplikacji.",
   "settingsShareMenuHintLocked": "Twoje najnowsze czaty pojawiają się z nazwy w menu udostępniania innych aplikacji tylko wtedy, gdy Kryfo jest odblokowane.",
-  "settingsShareMenuDisguised": "Twoje czaty zostają poza menu udostępniania, dopóki Kryfo ma inną ikonę."
+  "settingsShareMenuDisguised": "Twoje czaty zostają poza menu udostępniania, dopóki Kryfo ma inną ikonę.",
+  "connCheckTitle": "Sprawdź moje połączenie",
+  "connCheckLine": "To wszystko, co zostałoby udostępnione: jak Tor wychodzi stąd, ile to trwało i co nie przeszło. Bez adresu IP, bez lokalizacji, bez linii mostków, bez identyfikatorów urządzenia. Nic nie wychodzi, dopóki tego nie skopiujesz lub nie wyślesz.",
+  "connCheckEnglish": "Raport jest po angielsku, żeby wszędzie czytał się tak samo.",
+  "connCheckAgain": "Sprawdź ponownie",
+  "connCheckSend": "Wyślij do Mariosa"
 }

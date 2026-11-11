@@ -3224,5 +3224,10 @@
   "settingsShareMenu": "Chats im Teilen-Menü zeigen",
   "settingsShareMenuHint": "Deine neuesten Chats erscheinen mit Namen, wenn du aus einer anderen App teilst.",
   "settingsShareMenuHintLocked": "Deine neuesten Chats erscheinen nur mit Namen im Teilen-Menü anderer Apps, solange Kryfo entsperrt ist.",
-  "settingsShareMenuDisguised": "Deine Chats bleiben aus dem Teilen-Menü, solange Kryfo ein anderes Symbol trägt."
+  "settingsShareMenuDisguised": "Deine Chats bleiben aus dem Teilen-Menü, solange Kryfo ein anderes Symbol trägt.",
+  "connCheckTitle": "Meine Verbindung prüfen",
+  "connCheckLine": "Das ist alles, was geteilt würde: wie Tor hier rauskommt, wie lange es gedauert hat und was nicht durchkam. Keine IP-Adresse, kein Standort, keine Brückenzeilen, keine Gerätekennungen. Nichts verlässt das Gerät, bis du es kopierst oder sendest.",
+  "connCheckEnglish": "Der Bericht ist auf Englisch, damit er überall gleich lesbar ist.",
+  "connCheckAgain": "Erneut prüfen",
+  "connCheckSend": "An Marios senden"
 }

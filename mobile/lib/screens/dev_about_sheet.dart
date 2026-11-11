@@ -162,14 +162,14 @@ Future<String?> startNewDevChat(BuildContext context, String chatId) async {
 }
 
 // the settings row: the chat as it is, or after a delete a fresh one, made
-// on this tap only
-Future<void> writeToMarios(BuildContext context) async {
+// on this tap only. [text] waits in the composer for the person to send
+Future<void> writeToMarios(BuildContext context, {String? text}) async {
   // a delete still wiping the everyday chat ends first
   if (!sessionQuiet) await appState.devGoing;
   final id = await session.devChat.writeToMarios();
   await appState.refreshContacts();
   if (id == null || !context.mounted) return;
-  await openDevChat(context, id);
+  await openDevChat(context, id, initialText: text);
 }
 
 // a forward lands only in a chat that has started, so it never skips what

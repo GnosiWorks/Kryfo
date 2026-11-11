@@ -12414,4 +12414,21 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'تبقى محادثاتك خارج قائمة المشاركة ما دام Kryfo يحمل أيقونة أخرى.';
+
+  @override
+  String get connCheckTitle => 'فحص اتصالي';
+
+  @override
+  String get connCheckLine =>
+      'هذا كل ما ستتم مشاركته: كيف يخرج Tor من هنا، وكم استغرق، وما الذي لم ينجح. لا عنوان IP، ولا موقع، ولا أسطر جسور، ولا معرّفات أجهزة. لا يخرج شيء حتى تنسخه أو ترسله بنفسك.';
+
+  @override
+  String get connCheckEnglish =>
+      'الفحص باللغة الإنجليزية، ليُقرأ بالطريقة نفسها في كل مكان.';
+
+  @override
+  String get connCheckAgain => 'افحص مجددًا';
+
+  @override
+  String get connCheckSend => 'أرسل إلى Marios';
 }

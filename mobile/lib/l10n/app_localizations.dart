@@ -19644,6 +19644,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your chats stay out of the share menu while Kryfo wears another icon.'**
   String get settingsShareMenuDisguised;
+
+  /// screens/conn_check_sheet.dart and the transport page's button: a report on how Tor gets out on this network, which the person can copy or send to the developer themselves
+  ///
+  /// In en, this message translates to:
+  /// **'Check my connection'**
+  String get connCheckTitle;
+
+  /// screens/conn_check_sheet.dart: above the report. says the report shown below is everything that would be shared, and what it never holds
+  ///
+  /// In en, this message translates to:
+  /// **'This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, no device IDs. Nothing leaves until you copy or send it.'**
+  String get connCheckLine;
+
+  /// screens/conn_check_sheet.dart: under the report, which is always in English
+  ///
+  /// In en, this message translates to:
+  /// **'The check is in English, so it reads the same everywhere.'**
+  String get connCheckEnglish;
+
+  /// screens/conn_check_sheet.dart: builds the report again from what the app sees now
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get connCheckAgain;
+
+  /// screens/conn_check_sheet.dart: opens the chat with the developer with the report in the composer, for the person to send. Marios stays in Latin letters
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Marios'**
+  String get connCheckSend;
 }
 
 class _AppLocalizationsDelegate

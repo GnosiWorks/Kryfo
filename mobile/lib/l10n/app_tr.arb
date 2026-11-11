@@ -3224,5 +3224,10 @@
   "settingsShareMenu": "Sohbetleri paylaşım menüsünde göster",
   "settingsShareMenuHint": "Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür.",
   "settingsShareMenuHintLocked": "Son sohbetlerin, diğer uygulamaların paylaşım menüsünde yalnızca Kryfo'nun kilidi açıkken adlarıyla görünür.",
-  "settingsShareMenuDisguised": "Kryfo başka bir simge taşırken sohbetlerin paylaşım menüsünün dışında kalır."
+  "settingsShareMenuDisguised": "Kryfo başka bir simge taşırken sohbetlerin paylaşım menüsünün dışında kalır.",
+  "connCheckTitle": "Bağlantımı kontrol et",
+  "connCheckLine": "Paylaşılacak olan yalnızca bu: Tor buradan nasıl çıkıyor, ne kadar sürdü ve neyin geçemediği. IP adresi yok, konum yok, köprü satırı yok, cihaz kimliği yok. Sen kopyalayana ya da gönderene kadar hiçbir şey çıkmaz.",
+  "connCheckEnglish": "Kontrol İngilizce, böylece her yerde aynı okunur.",
+  "connCheckAgain": "Tekrar kontrol et",
+  "connCheckSend": "Marios’a gönder"
 }

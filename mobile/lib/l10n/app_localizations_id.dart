@@ -12278,4 +12278,21 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Chatmu tetap di luar menu bagikan selama Kryfo memakai ikon lain.';
+
+  @override
+  String get connCheckTitle => 'Periksa koneksiku';
+
+  @override
+  String get connCheckLine =>
+      'Inilah semua yang akan dibagikan: cara Tor keluar dari sini, berapa lama waktunya, dan apa yang tidak tembus. Tanpa alamat IP, tanpa lokasi, tanpa baris jembatan, tanpa ID perangkat. Tidak ada yang keluar sampai kamu menyalin atau mengirimnya.';
+
+  @override
+  String get connCheckEnglish =>
+      'Pemeriksaan ini dalam bahasa Inggris, agar terbaca sama di mana saja.';
+
+  @override
+  String get connCheckAgain => 'Periksa lagi';
+
+  @override
+  String get connCheckSend => 'Kirim ke Marios';
 }

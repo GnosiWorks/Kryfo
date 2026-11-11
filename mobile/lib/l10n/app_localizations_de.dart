@@ -12421,4 +12421,21 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Deine Chats bleiben aus dem Teilen-Menü, solange Kryfo ein anderes Symbol trägt.';
+
+  @override
+  String get connCheckTitle => 'Meine Verbindung prüfen';
+
+  @override
+  String get connCheckLine =>
+      'Das ist alles, was geteilt würde: wie Tor hier rauskommt, wie lange es gedauert hat und was nicht durchkam. Keine IP-Adresse, kein Standort, keine Brückenzeilen, keine Gerätekennungen. Nichts verlässt das Gerät, bis du es kopierst oder sendest.';
+
+  @override
+  String get connCheckEnglish =>
+      'Der Bericht ist auf Englisch, damit er überall gleich lesbar ist.';
+
+  @override
+  String get connCheckAgain => 'Erneut prüfen';
+
+  @override
+  String get connCheckSend => 'An Marios senden';
 }

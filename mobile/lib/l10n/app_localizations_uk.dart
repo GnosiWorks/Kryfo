@@ -12467,4 +12467,21 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Ваші чати залишаються поза меню «Поділитися», поки Kryfo має інший значок.';
+
+  @override
+  String get connCheckTitle => 'Перевірити зʼєднання';
+
+  @override
+  String get connCheckLine =>
+      'Це все, чим можна поділитися: як Tor виходить звідси, скільки це зайняло і що не пройшло. Без IP-адреси, без місцезнаходження, без рядків мостів, без ідентифікаторів пристрою. Нічого не піде, доки ви самі не скопіюєте чи не надішлете.';
+
+  @override
+  String get connCheckEnglish =>
+      'Звіт англійською, щоб усюди читався однаково.';
+
+  @override
+  String get connCheckAgain => 'Перевірити ще раз';
+
+  @override
+  String get connCheckSend => 'Надіслати Marios';
 }

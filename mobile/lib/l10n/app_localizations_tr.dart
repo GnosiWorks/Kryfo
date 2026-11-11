@@ -12300,4 +12300,21 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Kryfo başka bir simge taşırken sohbetlerin paylaşım menüsünün dışında kalır.';
+
+  @override
+  String get connCheckTitle => 'Bağlantımı kontrol et';
+
+  @override
+  String get connCheckLine =>
+      'Paylaşılacak olan yalnızca bu: Tor buradan nasıl çıkıyor, ne kadar sürdü ve neyin geçemediği. IP adresi yok, konum yok, köprü satırı yok, cihaz kimliği yok. Sen kopyalayana ya da gönderene kadar hiçbir şey çıkmaz.';
+
+  @override
+  String get connCheckEnglish =>
+      'Kontrol İngilizce, böylece her yerde aynı okunur.';
+
+  @override
+  String get connCheckAgain => 'Tekrar kontrol et';
+
+  @override
+  String get connCheckSend => 'Marios’a gönder';
 }

@@ -3224,5 +3224,10 @@
   "settingsShareMenu": "在分享菜单中显示聊天",
   "settingsShareMenuHint": "从其他应用分享时，你最近的聊天会以名称显示。",
   "settingsShareMenuHintLocked": "仅在 Kryfo 解锁时，你最近的聊天才会以名称显示在其他应用的分享菜单中。",
-  "settingsShareMenuDisguised": "Kryfo 使用其他图标时，你的聊天不会出现在分享菜单中。"
+  "settingsShareMenuDisguised": "Kryfo 使用其他图标时，你的聊天不会出现在分享菜单中。",
+  "connCheckTitle": "检查我的连接",
+  "connCheckLine": "这就是会分享的全部内容：Tor 在这里如何连出去、用了多久、哪些方式没有成功。不含 IP 地址、位置、网桥行或设备 ID。在你复制或发送之前，什么都不会离开。",
+  "connCheckEnglish": "检查结果是英文的，这样在哪里读都一样。",
+  "connCheckAgain": "再检查一次",
+  "connCheckSend": "发给 Marios"
 }

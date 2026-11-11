@@ -12274,4 +12274,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Your chats stay out of the share menu while Kryfo wears another icon.';
+
+  @override
+  String get connCheckTitle => 'Check my connection';
+
+  @override
+  String get connCheckLine =>
+      'This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, no device IDs. Nothing leaves until you copy or send it.';
+
+  @override
+  String get connCheckEnglish =>
+      'The check is in English, so it reads the same everywhere.';
+
+  @override
+  String get connCheckAgain => 'Check again';
+
+  @override
+  String get connCheckSend => 'Send to Marios';
 }

@@ -3224,5 +3224,10 @@
   "settingsShareMenu": "Mostrar chats en el menú de compartir",
   "settingsShareMenuHint": "Tus chats más recientes aparecen con su nombre cuando compartes desde otra app.",
   "settingsShareMenuHintLocked": "Tus chats más recientes aparecen con su nombre en el menú de compartir de otras apps solo mientras Kryfo está desbloqueado.",
-  "settingsShareMenuDisguised": "Tus chats quedan fuera del menú de compartir mientras Kryfo lleva otro icono."
+  "settingsShareMenuDisguised": "Tus chats quedan fuera del menú de compartir mientras Kryfo lleva otro icono.",
+  "connCheckTitle": "Revisar mi conexión",
+  "connCheckLine": "Esto es todo lo que se compartiría: cómo sale Tor desde aquí, cuánto tardó y qué no pasó. Sin dirección IP, sin ubicación, sin líneas de puente, sin identificadores del dispositivo. Nada sale hasta que lo copies o lo envíes.",
+  "connCheckEnglish": "La revisión está en inglés, para que se lea igual en todas partes.",
+  "connCheckAgain": "Revisar de nuevo",
+  "connCheckSend": "Enviar a Marios"
 }
