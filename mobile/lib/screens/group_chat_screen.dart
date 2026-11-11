@@ -200,6 +200,7 @@ import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../voice_speed.dart' show VoiceSpeed;
+import '../widgets/react_taps.dart';
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
 import '../desktop/attach_tray.dart';
@@ -2053,6 +2054,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               final added = react.reactions[''] != e;
                               _toggleReaction(react, e);
                               if (added) _flashReaction(react);
+                            },
+                      onDoubleReact: m.msgUid == null || making || _end != null
+                          ? null
+                          : () {
+                              if (lockGuard.isLocked()) return false;
+                              final e = kDoubleTapReaction;
+                              final added = react.reactions[''] != e;
+                              _toggleReaction(react, e);
+                              if (added) _flashReaction(react);
+                              return added;
                             },
                       ripple: members.any(
                         (x) => x.msgUid != null && x.msgUid == _rippleUid,
@@ -6230,6 +6241,8 @@ class _GroupBubble extends StatelessWidget {
   final List<SoundItem> Function()? soundsAfter;
   // a voice note: the key of the one after it, which plays on
   final String? Function()? voiceAfter;
+  // a double tap: the first quick reaction on or off, true when it went on
+  final bool Function()? onDoubleReact;
   // a tap on a chip puts the same emoji on from here, or takes it off
   final void Function(String emoji)? onReact;
   final bool ripple;
@@ -6290,6 +6303,7 @@ class _GroupBubble extends StatelessWidget {
     this.soundsAfter,
     this.voiceAfter,
     this.onReact,
+    this.onDoubleReact,
     this.ripple = false,
     this.query = '',
     this.isCurrentMatch = false,
@@ -6448,7 +6462,11 @@ class _GroupBubble extends StatelessWidget {
                                 child: Builder(
                                   builder: (ctx) {
                                     if (m.sticker case final st?) {
-                                      return GestureDetector(
+                                      return ReactTaps(
+                                        behavior: HitTestBehavior.deferToChild,
+                                        onReact: m.failed
+                                            ? null
+                                            : onDoubleReact,
                                         onLongPress: onLongPress == null
                                             ? null
                                             : () => onLongPress!(ctx),
@@ -6473,8 +6491,11 @@ class _GroupBubble extends StatelessWidget {
                                         child: _pollCard(),
                                       );
                                     }
-                                    return GestureDetector(
+                                    return ReactTaps(
+                                      behavior: HitTestBehavior.deferToChild,
                                       onTap: m.failed ? onRetry : null,
+                                      // a failed bubble's retry is at once
+                                      onReact: m.failed ? null : onDoubleReact,
                                       onLongPress: onLongPress == null
                                           ? null
                                           : () => onLongPress!(ctx),

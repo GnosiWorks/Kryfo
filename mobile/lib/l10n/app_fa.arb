@@ -3200,5 +3200,6 @@
   "sharedOpensLink": "پیوند را در برنامه‌ای دیگر باز می‌کند",
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "سرعت پخش {speed}",
-  "voiceSeekValue": "{at} از {total}"
+  "voiceSeekValue": "{at} از {total}",
+  "chatReactHeart": "واکنش با قلب"
 }

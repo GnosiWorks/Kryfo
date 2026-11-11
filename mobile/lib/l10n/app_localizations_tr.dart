@@ -12198,4 +12198,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String voiceSeekValue(String at, String total) {
     return '$total içinde $at';
   }
+
+  @override
+  String get chatReactHeart => 'Kalple tepki ver';
 }

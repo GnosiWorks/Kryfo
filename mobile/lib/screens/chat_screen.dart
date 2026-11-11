@@ -258,6 +258,7 @@ import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../voice_speed.dart' show VoiceSpeed;
+import '../widgets/react_taps.dart';
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
@@ -5909,6 +5910,16 @@ class _ChatScreenState extends State<ChatScreen>
                   _toggleReaction(react, e);
                   if (added) _flashReaction(react);
                 },
+          onDoubleReact: m.welcome || !_canReact || making
+              ? null
+              : () {
+                  if (lockGuard.isLocked()) return false;
+                  final e = kDoubleTapReaction;
+                  final added = react.reactions[''] != e;
+                  _toggleReaction(react, e);
+                  if (added) _flashReaction(react);
+                  return added;
+                },
           secure: m.secure,
           kept: _keeps(m),
           // the db's answer can come after the first frame: until then
@@ -8873,6 +8884,8 @@ class _Bubble extends StatelessWidget {
   final VoidCallback? onAct;
   // a tap on a reaction chip: the same emoji from this phone, on or off
   final void Function(String emoji)? onReact;
+  // a double tap: the first quick reaction on or off, true when it went on
+  final bool Function()? onDoubleReact;
   final bool secure;
   final String? quotedText;
   final String? quotedAuthor;
@@ -8933,6 +8946,7 @@ class _Bubble extends StatelessWidget {
     this.onLongPress,
     this.onAct,
     this.onReact,
+    this.onDoubleReact,
     this.secure = false,
     this.quotedText,
     this.quotedAuthor,
@@ -9085,11 +9099,15 @@ class _Bubble extends StatelessWidget {
         duration: Duration(milliseconds: isExpiring ? 440 : 250),
         curve: Curves.easeOut,
         opacity: dimmed ? 0.4 : 1.0,
-        child: GestureDetector(
+        child: ReactTaps(
           behavior: HitTestBehavior.opaque,
           onTap: (failedShown || parked) && onRetry != null
               ? () => onRetry!(msg)
               : onReveal,
+          // a failed bubble's retry is at once, and takes no reaction
+          onReact: (failedShown || parked) && onRetry != null
+              ? null
+              : onDoubleReact,
           onLongPress: onLongPress == null ? null : () => onLongPress!(context),
           // a right click on a computer opens the same menu
           onSecondaryTap: !onDesktop || onLongPress == null
@@ -10042,8 +10060,9 @@ class _Bubble extends StatelessWidget {
         duration: Duration(milliseconds: isExpiring ? 440 : 250),
         curve: Curves.easeOut,
         opacity: dimmed ? 0.4 : 1.0,
-        child: GestureDetector(
+        child: ReactTaps(
           behavior: HitTestBehavior.opaque,
+          onReact: retry != null ? null : onDoubleReact,
           onLongPress: onLongPress == null ? null : () => onLongPress!(context),
           // a right click on a computer opens the same menu
           onSecondaryTap: !onDesktop || onLongPress == null

@@ -3200,5 +3200,6 @@
   "sharedOpensLink": "Membuka tautan di aplikasi lain",
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Kecepatan putar {speed}",
-  "voiceSeekValue": "{at} dari {total}"
+  "voiceSeekValue": "{at} dari {total}",
+  "chatReactHeart": "Beri reaksi hati"
 }

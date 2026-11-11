@@ -12364,4 +12364,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String voiceSeekValue(String at, String total) {
     return '$at из $total';
   }
+
+  @override
+  String get chatReactHeart => 'Отреагировать сердцем';
 }

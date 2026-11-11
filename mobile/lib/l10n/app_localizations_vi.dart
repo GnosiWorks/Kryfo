@@ -12165,4 +12165,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String voiceSeekValue(String at, String total) {
     return '$at trên $total';
   }
+
+  @override
+  String get chatReactHeart => 'Thả tim';
 }

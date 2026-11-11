@@ -11506,6 +11506,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String voiceSeekValue(String at, String total) {
     return '$at / $total';
   }
+
+  @override
+  String get chatReactHeart => '用爱心回应';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22890,4 +22893,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String voiceSeekValue(String at, String total) {
     return '$at / $total';
   }
+
+  @override
+  String get chatReactHeart => '用愛心回應';
 }

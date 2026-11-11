@@ -12267,4 +12267,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String voiceSeekValue(String at, String total) {
     return '$at de $total';
   }
+
+  @override
+  String get chatReactHeart => 'Reagir com um coração';
 }

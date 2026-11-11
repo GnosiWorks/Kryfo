@@ -3200,5 +3200,6 @@
   "sharedOpensLink": "Открывает ссылку в другом приложении",
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Скорость воспроизведения {speed}",
-  "voiceSeekValue": "{at} из {total}"
+  "voiceSeekValue": "{at} из {total}",
+  "chatReactHeart": "Отреагировать сердцем"
 }

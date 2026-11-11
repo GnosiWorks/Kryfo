@@ -3200,5 +3200,6 @@
   "sharedOpensLink": "在其他應用程式中開啟連結",
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "播放速度 {speed}",
-  "voiceSeekValue": "{at} / {total}"
+  "voiceSeekValue": "{at} / {total}",
+  "chatReactHeart": "用愛心回應"
 }

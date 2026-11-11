@@ -19500,6 +19500,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{at} of {total}'**
   String voiceSeekValue(String at, String total);
+
+  /// widgets/react_taps.dart: screen reader action on a message, the same as a double tap: puts a heart reaction on it, or takes it off
+  ///
+  /// In en, this message translates to:
+  /// **'React with a heart'**
+  String get chatReactHeart;
 }
 
 class _AppLocalizationsDelegate

@@ -12189,4 +12189,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String voiceSeekValue(String at, String total) {
     return '$at از $total';
   }
+
+  @override
+  String get chatReactHeart => 'واکنش با قلب';
 }

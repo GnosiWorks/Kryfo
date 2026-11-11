@@ -3200,5 +3200,6 @@
   "sharedOpensLink": "Bağlantıyı başka bir uygulamada açar",
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Oynatma hızı {speed}",
-  "voiceSeekValue": "{total} içinde {at}"
+  "voiceSeekValue": "{total} içinde {at}",
+  "chatReactHeart": "Kalple tepki ver"
 }

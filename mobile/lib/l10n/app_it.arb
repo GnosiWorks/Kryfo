@@ -3200,5 +3200,6 @@
   "sharedOpensLink": "Apre il link in un'altra app",
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Velocità di riproduzione {speed}",
-  "voiceSeekValue": "{at} di {total}"
+  "voiceSeekValue": "{at} di {total}",
+  "chatReactHeart": "Reagisci con un cuore"
 }

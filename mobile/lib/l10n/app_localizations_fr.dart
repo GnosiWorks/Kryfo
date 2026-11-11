@@ -12310,4 +12310,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String voiceSeekValue(String at, String total) {
     return '$at sur $total';
   }
+
+  @override
+  String get chatReactHeart => 'Réagir avec un cœur';
 }

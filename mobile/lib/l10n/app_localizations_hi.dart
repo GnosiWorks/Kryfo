@@ -12178,4 +12178,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String voiceSeekValue(String at, String total) {
     return '$total में से $at';
   }
+
+  @override
+  String get chatReactHeart => 'दिल से प्रतिक्रिया दें';
 }
