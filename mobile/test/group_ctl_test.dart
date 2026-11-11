@@ -25,10 +25,13 @@ import 'package:kryfo/main.dart'
         AppStateGroupLanes,
         AppStateRoute,
         AppStateGroups,
-        AppStateReceive;
+        AppStateReceive,
+        AppStateRooms;
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/outbox.dart';
 import 'package:kryfo/polls.dart' show PollSpec;
+import 'package:kryfo/restore_undo.dart'
+    show kTakenEdit, kTakenUnsend, noteTaken;
 import 'package:kryfo/router.dart';
 import 'package:kryfo/session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -88,8 +91,16 @@ class _Io extends ArrivalIo {
 }
 
 class _Engine implements HaloEngine {
+  // what went to a room member's key: (to, frame)
+  final roomSent = <(String, String)>[];
   @override
   String myXPubkey() => 'x-me';
+  @override
+  Future<String> roomSend(String priv, String peerPub, String msg) async {
+    roomSent.add((peerPub, msg));
+    return 'ok';
+  }
+
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
@@ -129,6 +140,7 @@ void main() {
   late _Rows db;
   late _Io io;
   late AppState app;
+  late _Engine engine;
 
   Future<AppState> start() async {
     final d = _Rows(mem);
@@ -180,7 +192,7 @@ void main() {
         );
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
-    useEngineForTest(_Engine());
+    useEngineForTest(engine = _Engine());
     mem = MemDb();
     io = _Io();
     for (final p in ['bob', 'carol', 'dave']) {
@@ -722,6 +734,78 @@ void main() {
       await db.queueGroupUnsend('room00000001', ['k-bob'], 'r1', now: 1);
       await db.deleteGroup('room00000001');
       expect(mem.rows('group_ctl_out'), isEmpty);
+    });
+
+    test('a room\'s go to every member again once a day while it lives and '
+        'they are younger than the relays keep them', () async {
+      const room = 'room00000001';
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await mem.insert('groups', {
+        'group_id': room,
+        'name': 'Room',
+        'created_at': 1,
+        'is_admin': 0,
+        'admin_id': 'k-admin',
+        'room_pub': 'k-me',
+        'room_priv': 'p-me',
+        'expires_at': now + const Duration(days: 3).inMilliseconds,
+      });
+      for (final m in ['k-me', 'k-bob', 'k-carol']) {
+        await mem.insert('group_members', {
+          'group_id': room,
+          'halo_id': m,
+          'joined_at': 0,
+        });
+      }
+      final d = await db.open();
+      await noteTaken(d, 'r1', kTakenUnsend, group: room, at: now - 1000);
+      await noteTaken(d, 'r-old', kTakenUnsend, group: room, at: now - 1000);
+      await d.update(
+        'taken_out',
+        {'at': now - const Duration(days: 17).inMilliseconds},
+        where: 'msg_uid = ?',
+        whereArgs: ['r-old'],
+      );
+      // an edit and a plain group's unsend have a heal of their own
+      await noteTaken(d, 'r2', kTakenEdit, group: room, at: now - 1000);
+      await noteTaken(d, 'g1', kTakenUnsend, group: g, at: now - 1000);
+
+      expect(await app.roomUnsendsAgain(nowMs: now), 1);
+      await app.ctlPassForTest;
+      List<String> sent() => [
+        for (final (to, f) in engine.roomSent)
+          if (f.contains('r1')) to,
+      ]..sort();
+      expect(sent(), ['k-bob', 'k-carol']);
+      expect(engine.roomSent.where((e) => e.$2.contains('r-old')), isEmpty);
+      expect(engine.roomSent.where((e) => e.$2.contains('r2')), isEmpty);
+      expect(io.got('bob'), isEmpty);
+      // not again the same day, again the next
+      expect(await app.roomUnsendsAgain(nowMs: now + 60000), 0);
+      expect(
+        await app.roomUnsendsAgain(
+          nowMs: now + const Duration(days: 1).inMilliseconds,
+        ),
+        1,
+      );
+      // the test's clock ran a day ahead of the rows' waits
+      await due();
+      await app.ctlPassForTest;
+      await tick(app);
+      expect(sent(), ['k-bob', 'k-bob', 'k-carol', 'k-carol']);
+      // an ended room sends none
+      await mem.update(
+        'groups',
+        {'expires_at': now},
+        where: 'group_id = ?',
+        whereArgs: [room],
+      );
+      expect(
+        await app.roomUnsendsAgain(
+          nowMs: now + const Duration(days: 2).inMilliseconds,
+        ),
+        0,
+      );
     });
 
     test('past its tries it is kept, not tried on its own schedule, and goes '

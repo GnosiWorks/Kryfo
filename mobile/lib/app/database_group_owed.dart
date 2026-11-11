@@ -433,6 +433,34 @@ mixin _GroupOwedRows implements GroupOwedStore {
     });
   }
 
+  /// a burner room has no heal to ask for what a restore brought back: our
+  /// unsends in [groupId] younger than the relays keep them go to each of
+  /// [members] again. one still waiting for a member gets no second. how
+  /// many
+  Future<int> requeueRoomUnsends(
+    String groupId,
+    Iterable<String> members, {
+    required int now,
+  }) async {
+    final db = await open();
+    final rows = await db.query(
+      'taken_out',
+      columns: ['msg_uid'],
+      where: 'group_id = ? AND kind = ? AND at >= ?',
+      whereArgs: [groupId, kTakenUnsend, now - kTakenKeep.inMilliseconds],
+    );
+    for (final r in rows) {
+      await queueGroupUnsend(
+        groupId,
+        members,
+        r['msg_uid'] as String,
+        now: now,
+        note: false,
+      );
+    }
+    return rows.length;
+  }
+
   /// [member] restored a backup: our group unsends and last edits since
   /// [since], in the groups they are still in and made since they joined,
   /// go to them again. an edit only of a row still ours, sent since they

@@ -499,4 +499,6 @@ const deviceKeys = {
   // phone's, so what goes with it is too
   'notif_plain',
   'icon_changed',
+  // when our burner room unsends last went again (state_rooms.dart)
+  'room_unsends_again',
 };
