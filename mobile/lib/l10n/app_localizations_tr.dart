@@ -12214,4 +12214,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle boşta, bunu kullan';
   }
+
+  @override
+  String get notifRequestsChannel => 'Mesaj istekleri';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Henüz eklemediğin kişilerden gelen ilk mesajlar';
+
+  @override
+  String get notifRequestPopups => 'Mesaj istekleri için açılır bildirim';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler.';
 }

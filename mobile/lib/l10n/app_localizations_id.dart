@@ -12192,4 +12192,18 @@ class AppLocalizationsId extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle tersedia, pakai ini';
   }
+
+  @override
+  String get notifRequestsChannel => 'Permintaan pesan';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Pesan pertama dari orang yang belum kamu tambahkan';
+
+  @override
+  String get notifRequestPopups => 'Pop-up untuk permintaan pesan';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Aktif, permintaan baru muncul dengan suara. Nonaktif, permintaan menunggu tanpa suara di notifikasimu.';
 }

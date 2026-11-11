@@ -3204,5 +3204,9 @@
   "chatReactHeart": "Kalple tepki ver",
   "homeDraftLabel": "Taslak:",
   "homeDraftA11y": "Taslak: {text}",
-  "handleSuggestFree": "@{handle} boşta, bunu kullan"
+  "handleSuggestFree": "@{handle} boşta, bunu kullan",
+  "notifRequestsChannel": "Mesaj istekleri",
+  "notifRequestsChannelLine": "Henüz eklemediğin kişilerden gelen ilk mesajlar",
+  "notifRequestPopups": "Mesaj istekleri için açılır bildirim",
+  "notifRequestPopupsHint": "Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler."
 }

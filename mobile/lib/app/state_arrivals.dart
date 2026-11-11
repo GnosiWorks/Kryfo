@@ -1494,6 +1494,7 @@ extension AppStateArrivals on AppState {
     final String notifBody;
     final String notifPayload;
     final bool suppress;
+    var request = false;
     final shownText = edited ?? env.message;
     // the name given to them here. android keeps titles in its history, so
     // with none given it says someone, never their id
@@ -1535,6 +1536,7 @@ extension AppStateArrivals on AppState {
       notifTitle = l10n.appNewRequest;
       notifBody = l10n.appSomeoneYouHaveNot;
       notifPayload = senderHaloId;
+      request = true;
       suppress = reading || await db.isMuted(senderHaloId);
     } else if (await _shotsBlock(db, senderHaloId)) {
       // a chat that blocks screenshots puts none of itself in the shade
@@ -1600,6 +1602,7 @@ extension AppStateArrivals on AppState {
         on: db,
         msgUid: env.msgUid,
         burnAt: burnFromArrival,
+        request: request,
       );
     }
     return to;

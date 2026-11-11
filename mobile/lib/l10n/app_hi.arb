@@ -3204,5 +3204,9 @@
   "chatReactHeart": "दिल से प्रतिक्रिया दें",
   "homeDraftLabel": "ड्राफ़्ट:",
   "homeDraftA11y": "ड्राफ़्ट: {text}",
-  "handleSuggestFree": "@{handle} उपलब्ध है, इसे चुनें"
+  "handleSuggestFree": "@{handle} उपलब्ध है, इसे चुनें",
+  "notifRequestsChannel": "संदेश अनुरोध",
+  "notifRequestsChannelLine": "उन लोगों के पहले संदेश जिन्हें आपने अभी नहीं जोड़ा",
+  "notifRequestPopups": "संदेश अनुरोधों के लिए पॉप-अप",
+  "notifRequestPopupsHint": "चालू होने पर नया अनुरोध आवाज़ के साथ दिखता है। बंद होने पर वह चुपचाप आपकी सूचनाओं में रहता है।"
 }

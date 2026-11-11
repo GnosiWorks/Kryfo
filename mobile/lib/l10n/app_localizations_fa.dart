@@ -12205,4 +12205,18 @@ class AppLocalizationsFa extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle آزاد است، از آن استفاده کن';
   }
+
+  @override
+  String get notifRequestsChannel => 'درخواست‌های پیام';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'نخستین پیام‌ها از کسانی که هنوز اضافه نکرده‌ای';
+
+  @override
+  String get notifRequestPopups => 'پاپ‌آپ برای درخواست‌های پیام';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'روشن: درخواست تازه با صدا نمایش داده می‌شود. خاموش: بی‌صدا در اعلان‌هایت می‌ماند.';
 }

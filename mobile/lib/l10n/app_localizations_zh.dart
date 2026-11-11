@@ -11522,6 +11522,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle 可用，点此使用';
   }
+
+  @override
+  String get notifRequestsChannel => '消息请求';
+
+  @override
+  String get notifRequestsChannelLine => '尚未添加的人发来的第一条消息';
+
+  @override
+  String get notifRequestPopups => '消息请求弹出通知';
+
+  @override
+  String get notifRequestPopupsHint => '开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22922,4 +22934,16 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String handleSuggestFree(String handle) {
     return '@$handle 可用，點此使用';
   }
+
+  @override
+  String get notifRequestsChannel => '訊息請求';
+
+  @override
+  String get notifRequestsChannelLine => '尚未加入的人傳來的第一則訊息';
+
+  @override
+  String get notifRequestPopups => '訊息請求彈出通知';
+
+  @override
+  String get notifRequestPopupsHint => '開啟時，新請求會彈出並響鈴。關閉時，它會安靜地留在通知中。';
 }

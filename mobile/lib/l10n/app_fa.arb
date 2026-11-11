@@ -3204,5 +3204,9 @@
   "chatReactHeart": "واکنش با قلب",
   "homeDraftLabel": "پیش‌نویس:",
   "homeDraftA11y": "پیش‌نویس: {text}",
-  "handleSuggestFree": "@{handle} آزاد است، از آن استفاده کن"
+  "handleSuggestFree": "@{handle} آزاد است، از آن استفاده کن",
+  "notifRequestsChannel": "درخواست‌های پیام",
+  "notifRequestsChannelLine": "نخستین پیام‌ها از کسانی که هنوز اضافه نکرده‌ای",
+  "notifRequestPopups": "پاپ‌آپ برای درخواست‌های پیام",
+  "notifRequestPopupsHint": "روشن: درخواست تازه با صدا نمایش داده می‌شود. خاموش: بی‌صدا در اعلان‌هایت می‌ماند."
 }

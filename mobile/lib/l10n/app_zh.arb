@@ -3204,5 +3204,9 @@
   "chatReactHeart": "用爱心回应",
   "homeDraftLabel": "草稿：",
   "homeDraftA11y": "草稿：{text}",
-  "handleSuggestFree": "@{handle} 可用，点此使用"
+  "handleSuggestFree": "@{handle} 可用，点此使用",
+  "notifRequestsChannel": "消息请求",
+  "notifRequestsChannelLine": "尚未添加的人发来的第一条消息",
+  "notifRequestPopups": "消息请求弹出通知",
+  "notifRequestPopupsHint": "开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。"
 }

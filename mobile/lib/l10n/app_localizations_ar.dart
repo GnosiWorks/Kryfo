@@ -12327,4 +12327,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle متاح، استخدمه';
   }
+
+  @override
+  String get notifRequestsChannel => 'طلبات المراسلة';
+
+  @override
+  String get notifRequestsChannelLine => 'أولى الرسائل من أشخاص لم تضفهم بعد';
+
+  @override
+  String get notifRequestPopups => 'نوافذ منبثقة لطلبات المراسلة';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك.';
 }

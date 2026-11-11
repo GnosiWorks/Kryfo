@@ -327,6 +327,8 @@ const containerKeys = {
   'kryfo.get.video',
   'kryfo.get.file',
   'notif_hide_content',
+  // a message request pops up and sounds (notifications.dart)
+  'kryfo.requests.popups',
   'sticker_recents',
   'notes_hold_told',
   // how fast received voice notes play (voice_speed.dart)

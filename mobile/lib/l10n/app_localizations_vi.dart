@@ -12181,4 +12181,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle còn trống, dùng tên này';
   }
+
+  @override
+  String get notifRequestsChannel => 'Yêu cầu nhắn tin';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Tin nhắn đầu tiên từ những người bạn chưa thêm';
+
+  @override
+  String get notifRequestPopups => 'Thông báo nổi cho yêu cầu nhắn tin';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Bật: yêu cầu mới hiện lên kèm âm thanh. Tắt: yêu cầu nằm yên trong thông báo của bạn.';
 }

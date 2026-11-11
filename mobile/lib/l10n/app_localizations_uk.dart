@@ -12378,4 +12378,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle вільне, обрати';
   }
+
+  @override
+  String get notifRequestsChannel => 'Запити на листування';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Перші повідомлення від людей, яких ти ще не додав';
+
+  @override
+  String get notifRequestPopups => 'Спливні сповіщення про запити';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Увімкнено: новий запит спливає зі звуком. Вимкнено: він тихо чекає в сповіщеннях.';
 }

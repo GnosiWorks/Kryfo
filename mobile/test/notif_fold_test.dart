@@ -71,11 +71,13 @@ class _Shade extends AndroidFlutterLocalNotificationsPlugin {
   }
 }
 
-_Shade _start({bool hide = false}) {
+_Shade _start({bool hide = false, bool? popups}) {
   debugDefaultTargetPlatformOverride = TargetPlatform.android;
   addTearDown(() => debugDefaultTargetPlatformOverride = null);
   SharedPreferences.setMockInitialValues({
     HaloContainer.everyday.key('notif_hide_content'): hide,
+    if (popups != null)
+      HaloContainer.everyday.key('kryfo.requests.popups'): popups,
   });
   FlutterSecureStorage.setMockInitialValues({});
   forgetNotifPlain();
@@ -97,6 +99,7 @@ Future<int?> _ring(
   String? uid,
   int? burnAt,
   bool hidden = false,
+  bool request = false,
 }) => showMessageNotification(
   title: title,
   body: body,
@@ -105,6 +108,7 @@ Future<int?> _ring(
   msgUid: uid,
   burnAt: burnAt,
   hidden: hidden,
+  request: request,
 );
 
 List<String> _lines(AndroidNotificationDetails d) {
@@ -169,6 +173,54 @@ void main() {
     // the newest lines, oldest first, and every post alerts
     expect(_lines(last.d), ['m24', 'm25', 'm26', 'm27', 'm28', 'm29']);
     expect(shade.shown.every((s) => !s.d.silent && !s.d.onlyAlertOnce), isTrue);
+  });
+
+  group('message requests', () {
+    test('off by default: on their own channel, no sound, no pop-up', () async {
+      final shade = _start();
+      expect(await loadRequestPopups(), isFalse);
+      await _ring('stranger', 'New request', uid: 'r1', request: true);
+      final s = _lastOf(shade, 'stranger');
+      expect(s.d.channelId, 'kryfo_requests');
+      expect(s.d.silent, isTrue);
+      // a chat's message still rings as before
+      await _ring('bob', 'hi', uid: 'm1');
+      final m = _lastOf(shade, 'bob');
+      expect(m.d.channelId, 'halo_messages_v2');
+      expect(m.d.silent, isFalse);
+    });
+
+    test('with the switch on a request pops up and sounds', () async {
+      final shade = _start(popups: true);
+      await _ring('stranger', 'New request', uid: 'r1', request: true);
+      final s = _lastOf(shade, 'stranger');
+      expect(s.d.channelId, 'kryfo_requests');
+      expect(s.d.silent, isFalse);
+      expect(s.d.importance, Importance.high);
+    });
+
+    test('the switch is kept', () async {
+      _start();
+      await saveRequestPopups(true);
+      expect(await loadRequestPopups(), isTrue);
+      await saveRequestPopups(false);
+      expect(await loadRequestPopups(), isFalse);
+    });
+
+    test('previews off: the shared one takes it in quietly', () async {
+      final shade = _start(hide: true);
+      await _ring('stranger', 'New request', uid: 'r1', request: true);
+      expect(shade.shown.last.d.silent, isTrue);
+      expect(shade.shown.last.title, 'Kryfo');
+    });
+
+    test('accepted, the chat starts over on the messages channel', () async {
+      final shade = _start();
+      await _ring('stranger', 'New request', uid: 'r1', request: true);
+      await _ring('stranger', 'hello', uid: 'r2');
+      expect(_lastOf(shade, 'stranger').d.channelId, 'halo_messages_v2');
+      expect(shade.posted.where((p) => p.$2 == 't-stranger'), hasLength(1));
+    });
   });
 
   test('one message alone shows as it always did', () async {

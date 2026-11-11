@@ -12380,4 +12380,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle свободно, выбрать';
   }
+
+  @override
+  String get notifRequestsChannel => 'Запросы на переписку';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Первые сообщения от тех, кого ты ещё не добавил';
+
+  @override
+  String get notifRequestPopups => 'Всплывающие уведомления о запросах';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Включено: новый запрос всплывает со звуком. Выключено: он тихо ждёт в уведомлениях.';
 }

@@ -15365,5 +15365,21 @@
         "type": "String"
       }
     }
+  },
+  "notifRequestsChannel": "Message requests",
+  "@notifRequestsChannel": {
+    "description": "notifications.dart: android notification channel name for message requests, people not added yet"
+  },
+  "notifRequestsChannelLine": "First messages from people you have not added yet",
+  "@notifRequestsChannelLine": {
+    "description": "notifications.dart: android notification channel description for message requests"
+  },
+  "notifRequestPopups": "Pop-ups for message requests",
+  "@notifRequestPopups": {
+    "description": "screens/notifications_screen.dart: switch: whether a new message request pops up on screen with a sound"
+  },
+  "notifRequestPopupsHint": "On, a new request pops up with a sound. Off, it waits quietly in your notifications.",
+  "@notifRequestPopupsHint": {
+    "description": "screens/notifications_screen.dart: under the request pop-ups switch"
   }
 }

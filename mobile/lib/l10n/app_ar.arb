@@ -3204,5 +3204,9 @@
   "chatReactHeart": "تفاعل بقلب",
   "homeDraftLabel": "مسودة:",
   "homeDraftA11y": "مسودة: {text}",
-  "handleSuggestFree": "@{handle} متاح، استخدمه"
+  "handleSuggestFree": "@{handle} متاح، استخدمه",
+  "notifRequestsChannel": "طلبات المراسلة",
+  "notifRequestsChannelLine": "أولى الرسائل من أشخاص لم تضفهم بعد",
+  "notifRequestPopups": "نوافذ منبثقة لطلبات المراسلة",
+  "notifRequestPopupsHint": "عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك."
 }

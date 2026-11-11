@@ -12194,4 +12194,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle उपलब्ध है, इसे चुनें';
   }
+
+  @override
+  String get notifRequestsChannel => 'संदेश अनुरोध';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'उन लोगों के पहले संदेश जिन्हें आपने अभी नहीं जोड़ा';
+
+  @override
+  String get notifRequestPopups => 'संदेश अनुरोधों के लिए पॉप-अप';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'चालू होने पर नया अनुरोध आवाज़ के साथ दिखता है। बंद होने पर वह चुपचाप आपकी सूचनाओं में रहता है।';
 }

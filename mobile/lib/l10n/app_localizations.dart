@@ -19524,6 +19524,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'@{handle} is free, use it'**
   String handleSuggestFree(String handle);
+
+  /// notifications.dart: android notification channel name for message requests, people not added yet
+  ///
+  /// In en, this message translates to:
+  /// **'Message requests'**
+  String get notifRequestsChannel;
+
+  /// notifications.dart: android notification channel description for message requests
+  ///
+  /// In en, this message translates to:
+  /// **'First messages from people you have not added yet'**
+  String get notifRequestsChannelLine;
+
+  /// screens/notifications_screen.dart: switch: whether a new message request pops up on screen with a sound
+  ///
+  /// In en, this message translates to:
+  /// **'Pop-ups for message requests'**
+  String get notifRequestPopups;
+
+  /// screens/notifications_screen.dart: under the request pop-ups switch
+  ///
+  /// In en, this message translates to:
+  /// **'On, a new request pops up with a sound. Off, it waits quietly in your notifications.'**
+  String get notifRequestPopupsHint;
 }
 
 class _AppLocalizationsDelegate

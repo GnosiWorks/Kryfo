@@ -12283,4 +12283,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle está libre, úsalo';
   }
+
+  @override
+  String get notifRequestsChannel => 'Solicitudes de mensajes';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Primeros mensajes de personas que aún no has añadido';
+
+  @override
+  String get notifRequestPopups => 'Avisos emergentes de solicitudes';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Activado, una solicitud nueva aparece con sonido. Desactivado, espera en silencio en tus notificaciones.';
 }

@@ -12283,4 +12283,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String handleSuggestFree(String handle) {
     return '@$handle está livre, usar';
   }
+
+  @override
+  String get notifRequestsChannel => 'Pedidos de mensagem';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Primeiras mensagens de pessoas que você ainda não adicionou';
+
+  @override
+  String get notifRequestPopups => 'Pop-ups para pedidos de mensagem';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Ligado, um pedido novo aparece com som. Desligado, ele espera em silêncio nas suas notificações.';
 }

@@ -3204,5 +3204,9 @@
   "chatReactHeart": "Reaccionar con un corazón",
   "homeDraftLabel": "Borrador:",
   "homeDraftA11y": "Borrador: {text}",
-  "handleSuggestFree": "@{handle} está libre, úsalo"
+  "handleSuggestFree": "@{handle} está libre, úsalo",
+  "notifRequestsChannel": "Solicitudes de mensajes",
+  "notifRequestsChannelLine": "Primeros mensajes de personas que aún no has añadido",
+  "notifRequestPopups": "Avisos emergentes de solicitudes",
+  "notifRequestPopupsHint": "Activado, una solicitud nueva aparece con sonido. Desactivado, espera en silencio en tus notificaciones."
 }
