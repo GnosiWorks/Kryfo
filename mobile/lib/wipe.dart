@@ -28,6 +28,7 @@ import 'desktop/desktop_mode.dart'
     show desktopLetGo, desktopWipeKeys, onDesktop, rawFiles;
 import 'dlog.dart';
 import 'drafts.dart' show forgetAllDrafts;
+import 'home_drafts.dart' show HomeDrafts;
 import 'shred.dart' show shredFile;
 import 'theme.dart' show dropOurClip;
 
@@ -102,6 +103,8 @@ Future<void> wipeHalo({
   wipeForget();
   // a draft waiting to be written would land in a file being erased
   forgetAllDrafts();
+  // and none is shown
+  HomeDrafts.clear();
   // a repoint armed before this must not claim the handle back after the
   // release below
   try {
@@ -162,11 +165,9 @@ Future<void> wipeFinish({bool link = false}) async {
   var native = false;
   try {
     native = await Future.any([
-      const MethodChannel(
-        'halo/platform',
-      ).invokeMethod<bool>('wipe', link ? {'link': true} : null).then(
-        (v) => v ?? false,
-      ),
+      const MethodChannel('halo/platform')
+          .invokeMethod<bool>('wipe', link ? {'link': true} : null)
+          .then((v) => v ?? false),
       Future.delayed(const Duration(seconds: 5), () => false),
     ]);
   } catch (e) {

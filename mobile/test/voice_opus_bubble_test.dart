@@ -210,12 +210,13 @@ void main() {
     await t.pumpWidget(app(ogg.path, out: true));
     await t.pump();
     expect(t.state(find.byType(VoiceBubble)), same(state));
-    // a tap pauses it: the wav is let go, the next tap plays the ogg
-    await t.tap(find.byType(VoiceBubble));
+    // a tap on its button pauses it (one on the wave seeks): the wav is let
+    // go, the next tap plays the ogg
+    await t.tap(find.byIcon(Icons.pause_rounded));
     await until(t, () => free);
     expect(free, isTrue);
     asked.clear();
-    await t.tap(find.byType(VoiceBubble));
+    await t.tap(find.byIcon(Icons.play_arrow_rounded));
     await until(t, () => asked.contains('play'));
     expect(
       asked.firstWhere((a) => a.startsWith('load ')),
@@ -231,7 +232,7 @@ void main() {
     await until(t, () => find.text('0:03').evaluate().isNotEmpty);
     await t.tap(find.byType(VoiceBubble));
     await until(t, () => asked.contains('play'));
-    await t.tap(find.byType(VoiceBubble));
+    await t.tap(find.byIcon(Icons.pause_rounded));
     await until(t, () => asked.contains('pause'));
     var free = false;
     unawaited(voiceFileFree(f.path).then((_) => free = true));

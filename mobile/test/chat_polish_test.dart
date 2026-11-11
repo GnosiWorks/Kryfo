@@ -7,6 +7,7 @@ import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/widgets/react_taps.dart' show kReactTapWindow;
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart' show lockState;
@@ -440,6 +441,8 @@ void main() {
   testWidgets('the full date grows in under a tapped bubble', (t) async {
     await devOpen(t, chat());
     await t.tap(bubble('are you there'));
+    // a single tap waits out the double tap window
+    await t.pump(kReactTapWindow);
     await t.pump(const Duration(milliseconds: 16));
     final date = find.byKey(const ValueKey('full-date'));
     expect(date, findsOneWidget);

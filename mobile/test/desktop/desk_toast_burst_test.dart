@@ -61,6 +61,7 @@ class _ToastIo extends ArrivalIo {
     Object? on,
     String? msgUid,
     int? burnAt,
+    bool request = false,
   }) async {
     await toastBoundary(() async {
       // the plugin's call is synchronous: nothing may run inside it

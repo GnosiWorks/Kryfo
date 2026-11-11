@@ -73,6 +73,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   bool? _exempt;
   BrandGuide? _guide;
   late final ReadyEdge _torUp;
+  // a message request pops up and sounds. null until read
+  bool? _requestPopups;
 
   // no .then() without a catch: a throw here must not break the page
   void _readShow() {
@@ -108,6 +110,13 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     WidgetsBinding.instance.addObserver(this);
     _readShow();
     _readBattery();
+    loadRequestPopups()
+        .then((v) {
+          if (mounted) setState(() => _requestPopups = v);
+        })
+        .catchError((Object e) {
+          dlog('notifications: requests (${e.runtimeType})');
+        });
     appState.addListener(_changed);
     // the helper app is offered once our relay says it can knock. tor is
     // often still coming up as the page opens, so it is asked again each
@@ -527,6 +536,24 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                           label: l10n.notificationsChannelName,
                           hint: l10n.notificationsSoundHint,
                           onTap: _openSound,
+                        ),
+                        // a request from someone not added yet waits quietly
+                        // unless this is on
+                        HaloRow(
+                          key: const ValueKey('requestPopupsRow'),
+                          icon: Icons.person_add_alt_outlined,
+                          label: l10n.notifRequestPopups,
+                          hint: l10n.notifRequestPopupsHint,
+                          toggled: _requestPopups ?? false,
+                          pending: _requestPopups == null,
+                          onTap: _requestPopups == null
+                              ? null
+                              : () async {
+                                  HapticFeedback.selectionClick();
+                                  final on = !_requestPopups!;
+                                  setState(() => _requestPopups = on);
+                                  await saveRequestPopups(on);
+                                },
                         ),
                       ],
                     ),

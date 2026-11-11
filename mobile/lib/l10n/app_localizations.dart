@@ -4168,48 +4168,6 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'30 seconds'**
-  String get groupChat30Seconds;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'1 minute'**
-  String get groupChat1Minute;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'5 minutes'**
-  String get groupChat5Minutes;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'1 hour'**
-  String get groupChat1Hour;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'24 hours'**
-  String get groupChat24Hours;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Timed messages'**
-  String get groupChatBurnTimer;
-
-  /// screens/group_chat_screen.dart: the line under the group timer sheet's title. each copy's clock starts when it is read, yours when it is sent
-  ///
-  /// In en, this message translates to:
-  /// **'New messages disappear this long after they\'re read. Yours count from when you send them.'**
-  String get groupChatNewMessagesDisappearOnceRead;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Today'**
   String get groupChatToday;
 
@@ -19488,6 +19446,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Opens the link in another app'**
   String get sharedOpensLink;
+
+  /// widgets/media_bubbles.dart: the speed pill on a received voice note, e.g. 1.5x; speed is a number already written in the reader's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{speed}x'**
+  String voiceSpeedLabel(String speed);
+
+  /// widgets/media_bubbles.dart: screen reader action on a received voice note that changes how fast it plays; speed is e.g. 1.5x
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed {speed}'**
+  String voiceSpeedA11y(String speed);
+
+  /// widgets/media_bubbles.dart: screen reader, where a voice note would be after seeking, e.g. 0:12 of 0:40
+  ///
+  /// In en, this message translates to:
+  /// **'{at} of {total}'**
+  String voiceSeekValue(String at, String total);
+
+  /// widgets/react_taps.dart: screen reader action on a message, the same as a double tap: puts a heart reaction on it, or takes it off
+  ///
+  /// In en, this message translates to:
+  /// **'React with a heart'**
+  String get chatReactHeart;
+
+  /// screens/home_screen.dart: chat list, before the words of a message typed in a chat but not sent yet; keep it short, the words follow on the same line
+  ///
+  /// In en, this message translates to:
+  /// **'Draft:'**
+  String get homeDraftLabel;
+
+  /// screens/home_screen.dart: what a screen reader says of a chat row's draft, the words typed but not sent yet
+  ///
+  /// In en, this message translates to:
+  /// **'Draft: {text}'**
+  String homeDraftA11y(String text);
+
+  /// screens/handle_screen.dart: under 'Already taken' when picking a handle: a similar handle the registry said is free; a tap puts it in the field. keep the @ right before the name
+  ///
+  /// In en, this message translates to:
+  /// **'@{handle} is free, use it'**
+  String handleSuggestFree(String handle);
+
+  /// notifications.dart: android notification channel name for message requests, people not added yet
+  ///
+  /// In en, this message translates to:
+  /// **'Message requests'**
+  String get notifRequestsChannel;
+
+  /// notifications.dart: android notification channel description for message requests
+  ///
+  /// In en, this message translates to:
+  /// **'First messages from people you have not added yet'**
+  String get notifRequestsChannelLine;
+
+  /// screens/notifications_screen.dart: switch: whether a new message request pops up on screen with a sound
+  ///
+  /// In en, this message translates to:
+  /// **'Pop-ups for message requests'**
+  String get notifRequestPopups;
+
+  /// screens/notifications_screen.dart: under the request pop-ups switch
+  ///
+  /// In en, this message translates to:
+  /// **'On, a new request pops up with a sound. Off, it waits quietly in your notifications.'**
+  String get notifRequestPopupsHint;
 }
 
 class _AppLocalizationsDelegate
