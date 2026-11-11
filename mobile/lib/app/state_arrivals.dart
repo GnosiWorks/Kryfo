@@ -1611,6 +1611,7 @@ extension AppStateArrivals on AppState {
           group: isGroup,
         ),
         hidden: to == RouteTo.vault,
+        request: !isGroup && !senderAccepted,
       );
       await _io.notify(
         title: notifTitle,

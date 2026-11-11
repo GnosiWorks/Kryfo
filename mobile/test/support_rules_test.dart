@@ -372,7 +372,11 @@ class _Io implements AppIo {
   }
 
   @override
-  Future<bool> banner(BannerNote note, {required bool hidden}) async => false;
+  Future<bool> banner(
+    BannerNote note, {
+    required bool hidden,
+    bool request = false,
+  }) async => false;
 
   @override
   Future<void> notify({

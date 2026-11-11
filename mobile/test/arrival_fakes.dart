@@ -354,7 +354,11 @@ class ArrivalIo implements AppIo {
   final banners = <BannerNote>[];
   bool bannerShows = false;
   @override
-  Future<bool> banner(BannerNote note, {required bool hidden}) async {
+  Future<bool> banner(
+    BannerNote note, {
+    required bool hidden,
+    bool request = false,
+  }) async {
     if (!bannerShows) return false;
     banners.add(note);
     return true;

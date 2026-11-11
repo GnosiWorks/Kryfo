@@ -203,7 +203,11 @@ class _Io implements AppIo {
   }
 
   @override
-  Future<bool> banner(BannerNote note, {required bool hidden}) async => false;
+  Future<bool> banner(
+    BannerNote note, {
+    required bool hidden,
+    bool request = false,
+  }) async => false;
 
   @override
   Future<void> notify({
@@ -1042,6 +1046,15 @@ class _World {
 Future<void> _settle() =>
     Future<void>.delayed(const Duration(milliseconds: 20));
 
+// waits for [done] a few seconds at most: a busy machine takes longer than
+// [_settle] to get a send out
+Future<void> _until(bool Function() done) async {
+  final end = DateTime.now().add(const Duration(seconds: 5));
+  while (!done() && DateTime.now().isBefore(end)) {
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+}
+
 const _cards = {'upsertContact', 'upsertContactStub', 'addVouch'};
 
 void main() {
@@ -1223,7 +1236,7 @@ void main() {
       expect(w.io.sent, isEmpty);
       // anyone else's bundle swap still goes
       await w.app.sendAcceptAck('vouched-new-one');
-      await _settle();
+      await _until(() => w.io.sent.isNotEmpty);
       expect(w.io.sent.single.$1, 'relay x-vouched');
       expect(w.io.sent.single.$2, contains('"halo_ctl":"bundle"'));
     });
