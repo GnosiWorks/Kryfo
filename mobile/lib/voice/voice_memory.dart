@@ -22,8 +22,9 @@ class MemRoom {
 /// what a run takes while it holds the model, in bytes
 const kVoiceRunBytes = 160 << 20;
 
-/// the room a run leaves to the system: below it android kills apps, ours too
-int memReserve(int total) => max(256 << 20, total ~/ 10);
+/// the room a run leaves to the system: below it android kills apps, ours
+/// too. a tenth of the phone, 256 to 768 MB: a 12 GB phone does not need 1.2
+int memReserve(int total) => (total ~/ 10).clamp(256 << 20, 768 << 20);
 
 /// whether a run fits in [room] and still leaves the reserve. null room:
 /// nothing to go by, it runs

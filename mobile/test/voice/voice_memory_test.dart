@@ -22,9 +22,12 @@ void main() {
     expect(readMemRoom(path: '/no/such/meminfo'), isNull);
   });
 
-  test('reserve: a tenth of the phone, 256 mb at least', () {
+  test('reserve: a tenth of the phone, 256 to 768 mb', () {
     expect(memReserve(2048 * _mb), 256 * _mb);
     expect(memReserve(3841192 * 1024), 3841192 * 1024 ~/ 10);
+    expect(memReserve(12 << 30), 768 * _mb);
+    // a 12 gb phone with 1 gb free still runs
+    expect(voiceRunFits(MemRoom(1024 * _mb, 12 << 30)), isTrue);
   });
 
   test('a run fits on the a12 (3.7 gb, 375 mb reserve) from 535 mb', () {
