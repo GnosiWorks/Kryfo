@@ -2076,6 +2076,8 @@
   "handleRegistryFailed": "Le registre n’a pas répondu.\nRéessayez dans une minute.",
   "handleStillReaching": "Le registre n’a pas encore répondu.\nVia Tor, cela peut prendre un moment.",
   "handleSearchNeedsTor": "La recherche de pseudo a besoin de Tor. En attendant, ajoutez par QR ou par lien.",
+  "handleNeedsTor": "Les pseudos passent par Tor.\nIls marchent dès que Tor est connecté.",
+  "handleRegistryBusy": "Le registre est occupé.\nRéessayez dans une minute.",
   "handleCheckClock": "Vérifiez la date et l’heure du téléphone, puis réessayez.",
   "handleCheckClockDesk": "Vérifiez la date et l’heure de l’ordinateur, puis réessayez.",
   "searchPeople": "Personnes",

@@ -2076,6 +2076,8 @@
   "handleRegistryFailed": "No se pudo contactar con el registro.\nInténtalo de nuevo en un minuto.",
   "handleStillReaching": "Todavía contactando con el registro.\nPor Tor puede tardar un rato.",
   "handleSearchNeedsTor": "La búsqueda por nombre de usuario necesita Tor. Mientras tanto, añade por QR o enlace.",
+  "handleNeedsTor": "Los nombres de usuario van por Tor.\nFuncionan en cuanto Tor se conecte.",
+  "handleRegistryBusy": "El registro está ocupado.\nInténtalo de nuevo en un minuto.",
   "handleCheckClock": "Revisa la fecha y la hora del teléfono y vuelve a intentarlo.",
   "handleCheckClockDesk": "Revisa la fecha y la hora del ordenador y vuelve a intentarlo.",
   "searchPeople": "Personas",

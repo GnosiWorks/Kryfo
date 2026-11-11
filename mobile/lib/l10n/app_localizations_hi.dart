@@ -7841,6 +7841,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'यूज़रनेम खोजने के लिए Tor चाहिए। तब तक QR या लिंक से जोड़ें।';
 
   @override
+  String get handleNeedsTor =>
+      'यूज़रनेम Tor से होकर जाते हैं।\nTor जुड़ते ही ये काम करेंगे।';
+
+  @override
+  String get handleRegistryBusy =>
+      'रजिस्ट्री अभी व्यस्त है।\nएक मिनट में फिर कोशिश करें।';
+
+  @override
   String get handleCheckClock =>
       'फ़ोन की तारीख़ और समय जाँचें, फिर दोबारा कोशिश करें।';
 

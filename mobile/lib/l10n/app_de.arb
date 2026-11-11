@@ -2076,6 +2076,8 @@
   "handleRegistryFailed": "Das Verzeichnis war nicht erreichbar.\nVersuch es in einer Minute noch mal.",
   "handleStillReaching": "Das Verzeichnis wird noch erreicht.\nÜber Tor kann das eine Weile dauern.",
   "handleSearchNeedsTor": "Die Suche nach Benutzernamen braucht Tor. Bis dahin klappt das Hinzufügen per QR oder Link.",
+  "handleNeedsTor": "Benutzernamen laufen über Tor.\nSie klappen, sobald Tor verbunden ist.",
+  "handleRegistryBusy": "Das Verzeichnis ist gerade ausgelastet.\nVersuch es in einer Minute noch mal.",
   "handleCheckClock": "Prüf Datum und Uhrzeit des Handys und versuch es dann noch mal.",
   "handleCheckClockDesk": "Prüf Datum und Uhrzeit des Computers und versuch es dann noch mal.",
   "searchPeople": "Personen",

@@ -7914,6 +7914,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'La recherche de pseudo a besoin de Tor. En attendant, ajoutez par QR ou par lien.';
 
   @override
+  String get handleNeedsTor =>
+      'Les pseudos passent par Tor.\nIls marchent dès que Tor est connecté.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Le registre est occupé.\nRéessayez dans une minute.';
+
+  @override
   String get handleCheckClock =>
       'Vérifiez la date et l’heure du téléphone, puis réessayez.';
 

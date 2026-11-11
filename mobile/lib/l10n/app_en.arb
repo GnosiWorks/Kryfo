@@ -9858,6 +9858,14 @@
   "@handleSearchNeedsTor": {
     "description": "screens/search_screen.dart and adding by handle: tor cannot connect, so the registry is not asked. handle search never goes without tor"
   },
+  "handleNeedsTor": "Handles go over Tor.\nThey work once Tor connects.",
+  "@handleNeedsTor": {
+    "description": "handle page: tor does not carry yet, so the registry is not asked. handles go over tor on every route"
+  },
+  "handleRegistryBusy": "The registry is busy.\nTry again in a minute.",
+  "@handleRegistryBusy": {
+    "description": "handle page and adding by handle: the registry answered that it is at its limit for everyone"
+  },
   "handleCheckClock": "Check the phone's date and time, then try again.",
   "@handleCheckClock": {
     "description": "screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off"

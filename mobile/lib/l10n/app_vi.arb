@@ -2076,6 +2076,8 @@
   "handleRegistryFailed": "Không liên lạc được với nơi đăng ký.\nHãy thử lại sau một phút.",
   "handleStillReaching": "Vẫn đang liên lạc với nơi đăng ký.\nQua Tor việc này có thể mất một lúc.",
   "handleSearchNeedsTor": "Tìm theo tên người dùng cần Tor. Trong lúc chờ, hãy thêm bằng QR hoặc liên kết.",
+  "handleNeedsTor": "Tên người dùng đi qua Tor.\nSẽ dùng được ngay khi Tor kết nối.",
+  "handleRegistryBusy": "Nơi đăng ký đang bận.\nHãy thử lại sau một phút.",
   "handleCheckClock": "Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.",
   "handleCheckClockDesk": "Hãy kiểm tra ngày giờ trên máy tính rồi thử lại.",
   "searchPeople": "Mọi người",

@@ -27,6 +27,8 @@ String handleRefusalLine(String r, String h) => switch (r) {
   'error: taken' => l10n.handleThatHandleIsTaken,
   'error: not yours' => l10n.handleIsNotYoursOnShown(h),
   'error: clock' => l10n.handleCheckClockShown,
+  'error: busy' => l10n.handleRegistryBusy,
+  'error: no tor' => l10n.handleNeedsTor,
   _ => l10n.handleRegistryFailed,
 };
 

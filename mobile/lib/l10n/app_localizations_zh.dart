@@ -7471,6 +7471,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleSearchNeedsTor => '按用户名搜索需要 Tor。在此之前，可以用 QR 码或链接添加。';
 
   @override
+  String get handleNeedsTor => '用户名经由 Tor 处理。\nTor 连上后就能用。';
+
+  @override
+  String get handleRegistryBusy => '登记处现在很忙。\n请一分钟后再试。';
+
+  @override
   String get handleCheckClock => '请检查手机的日期和时间，然后再试一次。';
 
   @override
@@ -19020,6 +19026,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleSearchNeedsTor => '以使用者名稱搜尋需要 Tor。在此之前，可以用 QR 碼或連結新增。';
+
+  @override
+  String get handleNeedsTor => '使用者名稱經由 Tor 處理。\nTor 連上後就能用。';
+
+  @override
+  String get handleRegistryBusy => '註冊處現在很忙。\n請一分鐘後再試。';
 
   @override
   String get handleCheckClock => '請檢查手機的日期和時間，然後再試一次。';

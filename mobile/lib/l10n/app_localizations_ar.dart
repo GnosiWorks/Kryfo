@@ -7968,6 +7968,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'يحتاج البحث باسم المستخدم إلى Tor. إلى ذلك الحين، أضِف عبر رمز QR أو رابط.';
 
   @override
+  String get handleNeedsTor =>
+      'تمر أسماء المستخدمين عبر Tor.\nستعمل حين يتصل Tor.';
+
+  @override
+  String get handleRegistryBusy => 'السجل مشغول الآن.\nحاول مجددًا بعد دقيقة.';
+
+  @override
   String get handleCheckClock => 'تحقّق من تاريخ الهاتف ووقته، ثم حاول مجددًا.';
 
   @override

@@ -7996,6 +7996,14 @@ class AppLocalizationsPl extends AppLocalizations {
       'Wyszukiwanie nazw wymaga Tor. W międzyczasie dodawaj przez QR albo link.';
 
   @override
+  String get handleNeedsTor =>
+      'Nazwy idą przez Tor.\nZadziałają, gdy Tor się połączy.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Rejestr jest teraz zajęty.\nSpróbuj za minutę.';
+
+  @override
   String get handleCheckClock =>
       'Sprawdź datę i godzinę w telefonie i spróbuj ponownie.';
 

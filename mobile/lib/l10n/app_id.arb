@@ -2076,6 +2076,8 @@
   "handleRegistryFailed": "Tidak bisa menghubungi registri.\nCoba lagi semenit lagi.",
   "handleStillReaching": "Masih menghubungi registri.\nLewat Tor ini bisa makan waktu.",
   "handleSearchNeedsTor": "Pencarian nama pengguna memerlukan Tor. Sementara itu, tambahkan lewat QR atau tautan.",
+  "handleNeedsTor": "Nama pengguna lewat Tor.\nAkan berfungsi begitu Tor terhubung.",
+  "handleRegistryBusy": "Registri sedang sibuk.\nCoba lagi semenit lagi.",
   "handleCheckClock": "Periksa tanggal dan jam di ponsel, lalu coba lagi.",
   "handleCheckClockDesk": "Periksa tanggal dan jam di komputer, lalu coba lagi.",
   "searchPeople": "Orang",

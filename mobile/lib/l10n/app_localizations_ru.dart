@@ -7981,6 +7981,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Поиску по имени пользователя нужен Tor. Пока добавляй по QR или ссылке.';
 
   @override
+  String get handleNeedsTor =>
+      'Имена пользователей идут через Tor.\nВсё заработает, как только Tor подключится.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Реестр сейчас занят.\nПопробуй через минуту.';
+
+  @override
   String get handleCheckClock =>
       'Проверь дату и время на телефоне и попробуй ещё раз.';
 

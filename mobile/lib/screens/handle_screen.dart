@@ -261,7 +261,7 @@ class _ListingCardState extends State<_ListingCard> {
         on ? l10n.handleSearchOn(widget.handle) : l10n.handleSearchOff,
       );
     } else {
-      showHaloToast(context, l10n.handleRegistryFailed);
+      showHaloToast(context, handleRefusalLine(r, widget.handle));
     }
   }
 
@@ -542,8 +542,9 @@ class HandleAvailability extends StatelessWidget {
       txt = l10n.handleNameRule;
       c = HaloColors.amberText;
     } else {
-      // a fixed line, whatever the engine or the registry said
-      txt = l10n.handleRegistryFailed;
+      // a fixed line, whatever the engine or the registry said: busy and
+      // no tor are said as such, anything else as out of reach
+      txt = handleRefusalLine(state, '');
       c = HaloColors.amberText;
     }
     // each answer rises in over the last as the name is typed; a longer

@@ -7841,6 +7841,14 @@ class AppLocalizationsFa extends AppLocalizations {
       'جست‌وجوی نام کاربری به Tor نیاز دارد. تا آن موقع، با QR یا پیوند اضافه کنید.';
 
   @override
+  String get handleNeedsTor =>
+      'نام‌های کاربری از راه Tor می‌روند.\nوقتی Tor وصل شود کار می‌کنند.';
+
+  @override
+  String get handleRegistryBusy =>
+      'دفتر ثبت الان شلوغ است.\nیک دقیقهٔ دیگر دوباره امتحان کنید.';
+
+  @override
   String get handleCheckClock =>
       'تاریخ و ساعت گوشی را بررسی کنید و دوباره امتحان کنید.';
 

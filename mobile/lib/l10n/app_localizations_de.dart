@@ -7928,6 +7928,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Suche nach Benutzernamen braucht Tor. Bis dahin klappt das Hinzufügen per QR oder Link.';
 
   @override
+  String get handleNeedsTor =>
+      'Benutzernamen laufen über Tor.\nSie klappen, sobald Tor verbunden ist.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Das Verzeichnis ist gerade ausgelastet.\nVersuch es in einer Minute noch mal.';
+
+  @override
   String get handleCheckClock =>
       'Prüf Datum und Uhrzeit des Handys und versuch es dann noch mal.';
 

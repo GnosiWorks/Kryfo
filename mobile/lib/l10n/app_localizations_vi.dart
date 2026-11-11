@@ -7821,6 +7821,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tìm theo tên người dùng cần Tor. Trong lúc chờ, hãy thêm bằng QR hoặc liên kết.';
 
   @override
+  String get handleNeedsTor =>
+      'Tên người dùng đi qua Tor.\nSẽ dùng được ngay khi Tor kết nối.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Nơi đăng ký đang bận.\nHãy thử lại sau một phút.';
+
+  @override
   String get handleCheckClock =>
       'Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.';
 

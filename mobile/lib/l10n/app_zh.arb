@@ -2076,6 +2076,8 @@
   "handleRegistryFailed": "联系不上登记处。\n请一分钟后再试。",
   "handleStillReaching": "仍在联系登记处。\n通过 Tor 可能需要一些时间。",
   "handleSearchNeedsTor": "按用户名搜索需要 Tor。在此之前，可以用 QR 码或链接添加。",
+  "handleNeedsTor": "用户名经由 Tor 处理。\nTor 连上后就能用。",
+  "handleRegistryBusy": "登记处现在很忙。\n请一分钟后再试。",
   "handleCheckClock": "请检查手机的日期和时间，然后再试一次。",
   "handleCheckClockDesk": "请检查电脑的日期和时间，然后再试一次。",
   "searchPeople": "人",

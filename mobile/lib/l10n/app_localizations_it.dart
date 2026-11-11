@@ -7905,6 +7905,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'La ricerca per nome utente richiede Tor. Nel frattempo, aggiungi tramite QR o link.';
 
   @override
+  String get handleNeedsTor =>
+      'I nomi utente passano da Tor.\nFunzionano appena Tor si collega.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Il registro è occupato.\nRiprova tra un minuto.';
+
+  @override
   String get handleCheckClock =>
       'Controlla data e ora del telefono, poi riprova.';
 

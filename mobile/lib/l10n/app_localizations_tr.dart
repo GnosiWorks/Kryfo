@@ -7860,6 +7860,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kullanıcı adı araması Tor gerektirir. Bu arada QR ya da bağlantıyla ekle.';
 
   @override
+  String get handleNeedsTor =>
+      'Kullanıcı adları Tor üzerinden gider.\nTor bağlanınca çalışır.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Kayıt defteri şu an meşgul.\nBir dakika sonra yeniden dene.';
+
+  @override
   String get handleCheckClock =>
       'Telefonun tarih ve saatini kontrol et, sonra yeniden dene.';
 

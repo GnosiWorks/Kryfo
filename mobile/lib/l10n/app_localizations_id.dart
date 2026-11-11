@@ -7835,6 +7835,14 @@ class AppLocalizationsId extends AppLocalizations {
       'Pencarian nama pengguna memerlukan Tor. Sementara itu, tambahkan lewat QR atau tautan.';
 
   @override
+  String get handleNeedsTor =>
+      'Nama pengguna lewat Tor.\nAkan berfungsi begitu Tor terhubung.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Registri sedang sibuk.\nCoba lagi semenit lagi.';
+
+  @override
   String get handleCheckClock =>
       'Periksa tanggal dan jam di ponsel, lalu coba lagi.';
 

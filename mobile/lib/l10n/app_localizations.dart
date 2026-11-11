@@ -12583,6 +12583,18 @@ abstract class AppLocalizations {
   /// **'Handle search needs Tor. Add by QR or link meanwhile.'**
   String get handleSearchNeedsTor;
 
+  /// handle page: tor does not carry yet, so the registry is not asked. handles go over tor on every route
+  ///
+  /// In en, this message translates to:
+  /// **'Handles go over Tor.\nThey work once Tor connects.'**
+  String get handleNeedsTor;
+
+  /// handle page and adding by handle: the registry answered that it is at its limit for everyone
+  ///
+  /// In en, this message translates to:
+  /// **'The registry is busy.\nTry again in a minute.'**
+  String get handleRegistryBusy;
+
   /// screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off
   ///
   /// In en, this message translates to:
