@@ -364,8 +364,10 @@ func TestVoiceDecoyStopsADownload(t *testing.T) {
 	if st := waitVoice(t, "base"); st.State != voice.StateCancelled {
 		t.Fatalf("download ran on in the decoy: %+v", st)
 	}
-	// its lanes let go of what they were asking for
+	// its lanes let go of what they were asking for; a request already on
+	// the wire may still reach the host
 	voiceJobs.Wait("base")
+	time.Sleep(50 * time.Millisecond)
 	hits := r.hits.Load()
 	time.Sleep(100 * time.Millisecond)
 	if r.hits.Load() != hits {
