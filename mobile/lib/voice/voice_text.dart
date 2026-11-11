@@ -5,6 +5,7 @@
 // is one it knows. no language detection: the app says which one it is
 import 'dart:convert' show utf8;
 import 'dart:io' show File, Platform, gzip;
+import 'dart:math' show max, min;
 
 import 'package:flutter/services.dart';
 
@@ -142,16 +143,22 @@ bool _isPrompt(String t) {
 }
 
 /// how many threads a run takes: the phone's fast cores (those within a
-/// quarter of the fastest one's top speed), 2 to 8. [maxFreq] reads one
-/// core's top speed in khz, null when it cannot be read
+/// quarter of the fastest one's top speed), at most 8, and never every core:
+/// two stay free on six cores or more, one below, for the ui, its raster
+/// thread and the kernel's memory work. whisper's threads wait for each
+/// other at every step, so one that loses its core stalls them all: on the
+/// a12 8 threads ran a 60 s note 3.4x slower in the app than alone, and 6
+/// alone are as fast as 8 (17.8 s vs 16.9 s). [maxFreq] reads one core's
+/// top speed in khz, null when it cannot be read
 int voiceThreads({int? cores, int? Function(int core)? maxFreq}) {
   final n = cores ?? Platform.numberOfProcessors;
   final read = maxFreq ?? _maxFreq;
   final f = [for (var i = 0; i < n; i++) read(i)];
-  if (f.any((x) => x == null || x <= 0)) return n.clamp(2, 4);
+  final free = n >= 6 ? 2 : 1;
+  int fit(int t) => t.clamp(2, 8).clamp(1, max(1, n - free));
+  if (f.any((x) => x == null || x <= 0)) return fit(min(n, 4));
   final top = f.fold<int>(0, (a, b) => b! > a ? b : a);
-  final fast = f.where((x) => x! * 4 >= top * 3).length;
-  return fast.clamp(2, 8);
+  return fit(f.where((x) => x! * 4 >= top * 3).length);
 }
 
 int? _maxFreq(int core) {
