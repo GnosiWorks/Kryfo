@@ -634,10 +634,18 @@ class VoiceBubbleState extends State<VoiceBubble> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        LayoutBuilder(
-                          builder: (_, box) {
-                            double at(Offset p) =>
-                                waveFraction(p.dx, box.maxWidth, rtl: rtl);
+                        // no LayoutBuilder: bubbles are measured by their
+                        // intrinsic width
+                        Builder(
+                          builder: (waveCtx) {
+                            double at(Offset p) => waveFraction(
+                              p.dx,
+                              (waveCtx.findRenderObject() as RenderBox?)
+                                      ?.size
+                                      .width ??
+                                  0,
+                              rtl: rtl,
+                            );
                             return GestureDetector(
                               key: const ValueKey('voice_wave'),
                               behavior: HitTestBehavior.opaque,
