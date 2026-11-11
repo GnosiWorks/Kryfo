@@ -357,14 +357,10 @@ class VoiceTranscripts extends ChangeNotifier {
     final tmp = (await getTemporaryDirectory()).path;
     final scratch = p.join(tmp, 'vn_tx_${_hex(8)}.wav');
     // the model's pin check reads all of it: the note is read meanwhile
-    final (model, audio) = await (
+    final (model, audio) = await modelAndNote(
       models.pathOf(kVoiceModelId),
       voiceAudioOfFile(path, scratch),
-    ).wait;
-    if (model == null) throw const VoiceError(VoiceError.model);
-    if (audio == null || audio.frames == 0) {
-      throw const VoiceError(VoiceError.audio);
-    }
+    );
     return _RunJob(
       lib.transcribe(model: model, audio: audio, lang: lang, threads: threads),
     );
@@ -377,6 +373,34 @@ class VoiceTranscripts extends ChangeNotifier {
     super.dispose();
   }
 }
+
+/// the model's path and the note's samples, both or a [VoiceError]. a note
+/// already read when the model turns out missing is zeroed before it goes
+@visibleForTesting
+Future<(String, VoiceAudio)> modelAndNote(
+  Future<String?> model,
+  Future<VoiceAudio?> note,
+) async {
+  final (String?, VoiceAudio?) got;
+  try {
+    got = await (model, note).wait;
+  } on ParallelWaitError<
+    (String?, VoiceAudio?),
+    (AsyncError?, AsyncError?)
+  > catch (e) {
+    _zero(e.values.$2);
+    throw (e.errors.$1 ?? e.errors.$2)!.error;
+  }
+  final (m, a) = got;
+  if (m == null) {
+    _zero(a);
+    throw const VoiceError(VoiceError.model);
+  }
+  if (a == null || a.frames == 0) throw const VoiceError(VoiceError.audio);
+  return (m, a);
+}
+
+void _zero(VoiceAudio? a) => a?.pcm.fillRange(0, a.pcm.length, 0);
 
 String _hex(int n) {
   final r = Random.secure();
