@@ -11515,6 +11515,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notifRequestPopupsHint => '开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name：$preview';
+  }
+
+  @override
+  String get bannerOpen => '打开聊天';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '打开与 $name 的聊天';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条新消息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => '静音发送';
+
+  @override
+  String get composerSendHoldHint => '长按查看更多选项';
+
+  @override
+  String get homeGroupShotsLine => '消息';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22908,4 +22944,40 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notifRequestPopupsHint => '開啟時，新請求會彈出並響鈴。關閉時，它會安靜地留在通知中。';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name：$preview';
+  }
+
+  @override
+  String get bannerOpen => '開啟聊天';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '開啟與 $name 的聊天';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則新訊息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => '靜音傳送';
+
+  @override
+  String get composerSendHoldHint => '長按查看更多選項';
+
+  @override
+  String get homeGroupShotsLine => '訊息';
 }

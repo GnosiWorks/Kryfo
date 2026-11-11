@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "Yêu cầu nhắn tin",
   "notifRequestsChannelLine": "Tin nhắn đầu tiên từ những người bạn chưa thêm",
   "notifRequestPopups": "Thông báo nổi cho yêu cầu nhắn tin",
-  "notifRequestPopupsHint": "Bật: yêu cầu mới hiện lên kèm âm thanh. Tắt: yêu cầu nằm yên trong thông báo của bạn."
+  "notifRequestPopupsHint": "Bật: yêu cầu mới hiện lên kèm âm thanh. Tắt: yêu cầu nằm yên trong thông báo của bạn.",
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Mở cuộc trò chuyện",
+  "bannerOpenWith": "Mở cuộc trò chuyện với {name}",
+  "bannerNewMessages": "{count, plural, other{{count} tin nhắn mới}}",
+  "composerSendSilent": "Gửi không âm thanh",
+  "composerSendHoldHint": "Nhấn giữ để xem thêm tùy chọn",
+  "homeGroupShotsLine": "Tin nhắn"
 }

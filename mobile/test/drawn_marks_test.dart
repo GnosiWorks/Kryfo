@@ -32,7 +32,7 @@ void main() {
     );
     expect(find.byType(TickMark), findsOneWidget);
     expect(find.text('✓'), findsNothing);
-    expect(find.bySemanticsLabel('Sent'), findsOneWidget);
+    expect(find.bySemanticsLabel('Delivered'), findsOneWidget);
     // the line box of the 11 px glyph it replaces
     expect(t.getSize(find.byType(TickMark)).height, 11);
     sem.dispose();

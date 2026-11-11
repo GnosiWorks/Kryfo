@@ -32,7 +32,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute,
         AppStateBridges,
-        AppStateDelivery;
+        AppStateDelivery,
+        AppStateRefresh;
 import 'package:kryfo/rooms.dart' show kRoomJoinWait;
 import 'package:kryfo/screens/archived_screen.dart';
 import 'package:kryfo/screens/chat_door.dart';
@@ -82,6 +83,12 @@ class _Db implements HaloDb {
   Future<List<Map<String, Object?>>> savedMessages() async => [...saved];
   @override
   Future<List<Map<String, Object?>>> loadGroups() async => [...groups];
+  Map<String, Map<String, Object?>> groupLasts = {};
+  @override
+  Future<Map<String, Map<String, Object?>>> lastGroupMessages() async =>
+      groupLasts;
+  @override
+  Future<List<String>> getGroupMembers(String groupId) async => ['a', 'b'];
   @override
   Future<bool> groupExists(String groupId) async =>
       groups.any((g) => g['group_id'] == groupId);
@@ -218,6 +225,38 @@ double opened(WidgetTester t, String text) => t
     .value;
 
 void main() {
+  group('group row line', () {
+    test('ours, theirs by name, a room key by its tag, nothing', () {
+      expect(
+        groupRowLine(body: 'hi', out: true, from: null, nicks: const {}),
+        l10n.appYou('hi'),
+      );
+      expect(
+        groupRowLine(
+          body: 'hi',
+          out: false,
+          from: 'a-b-c',
+          nicks: const {'a-b-c': 'Lena'},
+        ),
+        l10n.homeGroupLine('\u2068Lena\u2069', 'hi'),
+      );
+      // no name of ours: the three words they go by
+      expect(
+        groupRowLine(body: 'hi', out: false, from: 'a-b-c', nicks: const {}),
+        contains('a-b-c'),
+      );
+      // a group that blocks: the words alone
+      expect(
+        groupRowLine(body: 'New', out: false, from: null, nicks: const {}),
+        'New',
+      );
+      expect(
+        groupRowLine(body: null, out: false, from: 'x', nicks: const {}),
+        isNull,
+      );
+    });
+  });
+
   late _Db db;
   late _Engine engine;
 
@@ -918,6 +957,175 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       expect(find.byType(RoomCountdown), findsOneWidget);
       expect(find.text(l10n.roomJoinNotAnswering), findsNothing);
+      await drain(t);
+    });
+
+    test('a group\'s last line keeps a timed message and a blocking group '
+        'to themselves', () async {
+      db.groups = [
+        {'group_id': 'g1', 'name': 'Hikers', 'is_admin': 0, 'created_at': 1},
+        {
+          'group_id': 'g2',
+          'name': 'Quiet',
+          'is_admin': 0,
+          'created_at': 1,
+          'room_pub': 'pub',
+          'room_priv': 'priv',
+          'unread': 2,
+        },
+        {'group_id': 'g3', 'name': 'Ours', 'is_admin': 1, 'created_at': 1},
+        {
+          'group_id': 'g4',
+          'name': 'Read',
+          'is_admin': 0,
+          'created_at': 1,
+          'room_pub': 'pub4',
+        },
+      ];
+      Map<String, Object?> row(String g, String dir, {int? burn}) => {
+        'group_id': g,
+        'peer_id': 'wren-oak-lamp',
+        'direction': dir,
+        'plaintext': 'the secret',
+        'sent_at': 1000,
+        'burn_secs': burn,
+        'burn_unseen': burn == null ? 0 : 1,
+      };
+      db.groupLasts = {
+        'g1': row('g1', 'in', burn: 60),
+        'g2': row('g2', 'in'),
+        'g3': row('g3', 'out'),
+        'g4': row('g4', 'in'),
+      };
+      await appState.refreshGroups();
+      final g = {for (final x in appState.groups) x.groupId: x};
+      expect(g['g1']!.lastBody, l10n.timedMessageLabel);
+      expect(g['g1']!.lastFrom, 'wren-oak-lamp');
+      expect(g['g1']!.lastAt, DateTime.fromMillisecondsSinceEpoch(1000));
+      // a room always blocks
+      expect(g['g2']!.shotsBlocking, isTrue);
+      expect(g['g2']!.lastBody, l10n.notificationsNewMessage);
+      expect(g['g2']!.lastFrom, isNull);
+      // read: only that there was a message
+      expect(g['g4']!.lastBody, l10n.homeGroupShotsLine);
+      expect(g['g4']!.lastFrom, isNull);
+      expect(g['g3']!.lastOut, isTrue);
+      expect(g['g3']!.lastBody, 'the secret');
+    });
+
+    testWidgets('a group row says who wrote last, when, and an @ for a '
+        'mention', (t) async {
+      phone(t);
+      final at = DateTime.now().subtract(const Duration(minutes: 5));
+      Widget home({bool mentioned = false}) => framed(
+        _home(
+          groups: [
+            GroupSummary(
+              groupId: 'g1',
+              name: 'Hikers',
+              memberCount: 3,
+              unread: 2,
+              mentioned: mentioned,
+              preview: groupRowLine(
+                body: 'See you at nine',
+                out: false,
+                from: 'wren-oak-lamp',
+                nicks: const {'wren-oak-lamp': 'Lena'},
+              ),
+              when: at,
+            ),
+            const GroupSummary(groupId: 'g2', name: 'New one', memberCount: 2),
+          ],
+        ),
+      );
+      await t.pumpWidget(home());
+      await t.pump(const Duration(seconds: 1));
+      expect(
+        find.text(l10n.homeGroupLine('\u2068Lena\u2069', 'See you at nine')),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.homeM('5')), findsOneWidget);
+      // no messages yet: still its members
+      expect(find.text(l10n.homeMembers(2)), findsOneWidget);
+      // the old words are gone, the @ stands by the count
+      expect(find.text(l10n.homeMentionedYou), findsNothing);
+      expect(find.byKey(const ValueKey('at')), findsNothing);
+      await t.pumpWidget(home(mentioned: true));
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byKey(const ValueKey('at')), findsOneWidget);
+      expect(find.text(l10n.homeMentionedYou), findsNothing);
+      final sem = t.ensureSemantics();
+      await t.pump();
+      expect(
+        find.bySemanticsLabel(RegExp(RegExp.escape(l10n.homeMentionedYou))),
+        findsOneWidget,
+      );
+      sem.dispose();
+      await drain(t);
+    });
+
+    testWidgets('a room keeps its countdown and gets the time', (t) async {
+      phone(t);
+      final now = DateTime.now();
+      await t.pumpWidget(
+        framed(
+          _home(
+            groups: [
+              GroupSummary(
+                groupId: 'r1',
+                name: 'Friday',
+                memberCount: 2,
+                expiresAt: now.millisecondsSinceEpoch + 3600000,
+                preview: 'You: hi',
+                when: now.subtract(const Duration(hours: 2)),
+              ),
+            ],
+          ),
+        ),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(find.byType(RoomCountdown), findsOneWidget);
+      expect(find.text('You: hi'), findsNothing);
+      expect(find.text(l10n.homeH('2')), findsOneWidget);
+      await drain(t);
+    });
+
+    testWidgets('right to left: the line and the @ mirror, at a large text '
+        'size nothing overflows', (t) async {
+      phone(t, size: const Size(360, 740));
+      t.platformDispatcher.textScaleFactorTestValue = 1.5;
+      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+      await t.pumpWidget(
+        Builder(
+          builder: (_) => framed(
+            locale: const Locale('ar'),
+            _home(
+              groups: [
+                GroupSummary(
+                  groupId: 'g1',
+                  name: 'رحلة الجبل مع الأصدقاء القدامى',
+                  memberCount: 3,
+                  unread: 120,
+                  mentioned: true,
+                  preview: groupRowLine(
+                    body: 'Meet at the station at nine sharp please',
+                    out: false,
+                    from: 'wren-oak-lamp',
+                    nicks: const {'wren-oak-lamp': 'ليلى'},
+                  ),
+                  when: DateTime.now().subtract(const Duration(days: 3)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await t.pump(const Duration(seconds: 1));
+      expect(t.takeException(), isNull);
+      final at = t.getRect(find.byKey(const ValueKey('at')));
+      final name = t.getRect(find.text('رحلة الجبل مع الأصدقاء القدامى'));
+      // the badges sit at the left end in right to left
+      expect(at.right, lessThan(name.left));
       await drain(t);
     });
 

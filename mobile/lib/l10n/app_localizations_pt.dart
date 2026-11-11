@@ -12278,4 +12278,41 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Ligado, um pedido novo aparece com som. Desligado, ele espera em silêncio nas suas notificações.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Abrir a conversa';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Abrir a conversa com $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString novas mensagens',
+      one: '$countString nova mensagem',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Enviar sem som';
+
+  @override
+  String get composerSendHoldHint => 'Mantenha pressionado para mais opções';
+
+  @override
+  String get homeGroupShotsLine => 'Mensagem';
 }

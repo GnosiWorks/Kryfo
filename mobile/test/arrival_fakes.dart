@@ -9,6 +9,7 @@ import 'dart:typed_data';
 
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/chat_shots.dart' show ChatShots;
+import 'package:kryfo/widgets/in_app_banner.dart' show BannerNote;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/group_media_send.dart' show groupOwedGap;
 import 'package:kryfo/group_shots.dart';
@@ -341,12 +342,30 @@ class ArrivalIo implements AppIo {
     Object? on,
     String? msgUid,
     int? burnAt,
+    bool silent = false,
     bool request = false,
   }) async {
     requests.add(request);
     rang.add(payload ?? title);
     shown.add((title, body));
     burns.add(burnAt);
+    silents.add(silent);
+  }
+
+  // each ring, whether it went without sound
+  final silents = <bool>[];
+  // the banners asked for, and whether one shows (the app in front)
+  final banners = <BannerNote>[];
+  bool bannerShows = false;
+  @override
+  Future<bool> banner(
+    BannerNote note, {
+    required bool hidden,
+    bool request = false,
+  }) async {
+    if (!bannerShows) return false;
+    banners.add(note);
+    return true;
   }
 
   // when each notification is to burn, null for one that does not

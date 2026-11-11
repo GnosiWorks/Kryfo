@@ -12375,4 +12375,43 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Включено: новый запрос всплывает со звуком. Выключено: он тихо ждёт в уведомлениях.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Открыть чат';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Открыть чат: $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString нового сообщения',
+      many: '$countString новых сообщений',
+      few: '$countString новых сообщения',
+      one: '$countString новое сообщение',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Отправить без звука';
+
+  @override
+  String get composerSendHoldHint => 'Удерживайте для других вариантов';
+
+  @override
+  String get homeGroupShotsLine => 'Сообщение';
 }

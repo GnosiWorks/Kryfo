@@ -129,6 +129,7 @@ class PqIo extends AppIo {
     Object? on,
     String? msgUid,
     int? burnAt,
+    bool silent = false,
     bool request = false,
   }) async {}
   @override

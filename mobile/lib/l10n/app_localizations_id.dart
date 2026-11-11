@@ -12187,4 +12187,40 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Aktif, permintaan baru muncul dengan suara. Nonaktif, permintaan menunggu tanpa suara di notifikasimu.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Buka obrolan';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Buka obrolan dengan $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString pesan baru',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Kirim tanpa suara';
+
+  @override
+  String get composerSendHoldHint => 'Tahan untuk opsi lainnya';
+
+  @override
+  String get homeGroupShotsLine => 'Pesan';
 }

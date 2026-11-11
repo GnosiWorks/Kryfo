@@ -12209,4 +12209,40 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Sohbeti aç';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '$name ile sohbeti aç';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString yeni mesaj',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Sessiz gönder';
+
+  @override
+  String get composerSendHoldHint => 'Daha fazla seçenek için basılı tutun';
+
+  @override
+  String get homeGroupShotsLine => 'Mesaj';
 }

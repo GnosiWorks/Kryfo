@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "संदेश अनुरोध",
   "notifRequestsChannelLine": "उन लोगों के पहले संदेश जिन्हें आपने अभी नहीं जोड़ा",
   "notifRequestPopups": "संदेश अनुरोधों के लिए पॉप-अप",
-  "notifRequestPopupsHint": "चालू होने पर नया अनुरोध आवाज़ के साथ दिखता है। बंद होने पर वह चुपचाप आपकी सूचनाओं में रहता है।"
+  "notifRequestPopupsHint": "चालू होने पर नया अनुरोध आवाज़ के साथ दिखता है। बंद होने पर वह चुपचाप आपकी सूचनाओं में रहता है।",
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "चैट खोलें",
+  "bannerOpenWith": "{name} के साथ चैट खोलें",
+  "bannerNewMessages": "{count, plural, one{{count} नया संदेश} other{{count} नए संदेश}}",
+  "composerSendSilent": "बिना आवाज़ के भेजें",
+  "composerSendHoldHint": "और विकल्पों के लिए दबाकर रखें",
+  "homeGroupShotsLine": "संदेश"
 }

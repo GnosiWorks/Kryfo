@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "درخواست‌های پیام",
   "notifRequestsChannelLine": "نخستین پیام‌ها از کسانی که هنوز اضافه نکرده‌ای",
   "notifRequestPopups": "پاپ‌آپ برای درخواست‌های پیام",
-  "notifRequestPopupsHint": "روشن: درخواست تازه با صدا نمایش داده می‌شود. خاموش: بی‌صدا در اعلان‌هایت می‌ماند."
+  "notifRequestPopupsHint": "روشن: درخواست تازه با صدا نمایش داده می‌شود. خاموش: بی‌صدا در اعلان‌هایت می‌ماند.",
+  "homeGroupLine": "{name}: ⁨{preview}⁩",
+  "bannerOpen": "باز کردن گفتگو",
+  "bannerOpenWith": "باز کردن گفتگو با {name}",
+  "bannerNewMessages": "{count, plural, other{{count} پیام تازه}}",
+  "composerSendSilent": "ارسال بی‌صدا",
+  "composerSendHoldHint": "برای گزینه‌های بیشتر نگه دارید",
+  "homeGroupShotsLine": "پیام"
 }

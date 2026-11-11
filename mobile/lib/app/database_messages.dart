@@ -779,6 +779,28 @@ mixin _MessageRows {
     return {for (final r in rows) r['peer_id'] as String: r};
   }
 
+  // the newest row per group, for its row on home: who wrote it and what.
+  // the same columns as a chat's, with the poll
+  Future<Map<String, Map<String, Object?>>> lastGroupMessages() async {
+    final db = await open();
+    final rows = await db.rawQuery('''
+      SELECT m.group_id, m.peer_id, m.direction, m.plaintext, m.media_path,
+             m.file_name, m.sent_at, m.written_at, m.sticker, m.burn_secs,
+             m.burn_at, m.burn_unseen, m.poll
+      FROM messages m
+      WHERE m.id IN (
+        SELECT (
+          SELECT y.id FROM messages y
+          WHERE y.group_id = g.group_id
+          ORDER BY y.written_at DESC, y.id DESC LIMIT 1
+        )
+        FROM (SELECT DISTINCT group_id FROM messages
+              WHERE group_id IS NOT NULL) g
+      )
+    ''');
+    return {for (final r in rows) r['group_id'] as String: r};
+  }
+
   // what a 1:1 chat shared, newest first: its photos, files, voice notes and
   // messages with a link, with only what the shared lists draw. three narrow
   // queries rather than one pass over every message. a timed one not read

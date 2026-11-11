@@ -12328,4 +12328,41 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'An: Eine neue Anfrage erscheint mit Ton. Aus: Sie wartet leise in deinen Benachrichtigungen.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Chat öffnen';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Chat mit $name öffnen';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString neue Nachrichten',
+      one: '$countString neue Nachricht',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Ohne Ton senden';
+
+  @override
+  String get composerSendHoldHint => 'Gedrückt halten für mehr Optionen';
+
+  @override
+  String get homeGroupShotsLine => 'Nachricht';
 }

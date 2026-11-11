@@ -19512,6 +19512,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On, a new request pops up with a sound. Off, it waits quietly in your notifications.'**
   String get notifRequestPopupsHint;
+
+  /// home group row: who wrote last and what
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {preview}'**
+  String homeGroupLine(String name, String preview);
+
+  /// in-app banner, screen reader: a tap opens the chat it is about (no name shown)
+  ///
+  /// In en, this message translates to:
+  /// **'Open the chat'**
+  String get bannerOpen;
+
+  /// in-app banner, screen reader: a tap opens the chat with this person or group
+  ///
+  /// In en, this message translates to:
+  /// **'Open the chat with {name}'**
+  String bannerOpenWith(String name);
+
+  /// in-app banner: several messages from the same chat in a row
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} new message} other{{count} new messages}}'**
+  String bannerNewMessages(int count);
+
+  /// held send button: the menu row that sends the message without sound or vibration on the receiver's phone
+  ///
+  /// In en, this message translates to:
+  /// **'Send without sound'**
+  String get composerSendSilent;
+
+  /// screen reader hint on the send button: holding it opens more ways to send
+  ///
+  /// In en, this message translates to:
+  /// **'Hold for more options'**
+  String get composerSendHoldHint;
+
+  /// home group row of a group that blocks screenshots, once read: says only that the last thing was a message, never whose or what
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get homeGroupShotsLine;
 }
 
 class _AppLocalizationsDelegate

@@ -25,6 +25,10 @@ const kEnvelopePrefix = 'halo/1:';
 /// the envelope's word for a pq restart's KDB1 (pq_restart.dart), and the
 /// most base64 it may hold: a KDB1 is about 2,300 bytes
 const kPqRestartWire = 'rq';
+
+// a message sent without sound (hold send): no sound, no buzz, no heads-up
+// on the far side
+const kSilentWire = 'sl';
 const kPqRestartMost = 4096;
 
 class UnwrappedMessage {
@@ -109,9 +113,12 @@ class UnwrappedMessage {
   // 'm' as it was sent, before the direction controls came out: the
   // proof of work was done over these characters
   final String? powText;
+  // 'sl': sent without sound. an older app reads past it and rings
+  final bool silent;
   UnwrappedMessage(
     this.message, {
     this.powText,
+    this.silent = false,
     this.secure = false,
     this.senderHaloId,
     this.senderEdPub,
@@ -431,6 +438,8 @@ Future<String> wrapMessage(
   int? writtenAt,
   // the file's place on the files service, in place of its bytes
   DropFrame? drop,
+  // sent without sound: the far side posts it quietly
+  bool silent = false,
 }) async {
   final body = <String, dynamic>{'m': plain};
   body['w'] = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -493,6 +502,8 @@ Future<String> wrapMessage(
   if (secure) body['sc'] = 1;
   if (album != null) body['al'] = album.toWire();
   if (gif) body['gf'] = 1;
+  // kSilentWire
+  if (silent) body['sl'] = 1;
 
   if (sender != null) {
     body['h'] = sender.haloId;
@@ -652,6 +663,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       shotsNudge: json[kGroupNudgeWire] == 1,
       album: AlbumTag.fromWire(json['al']),
       gif: json['gf'] == 1,
+      silent: json[kSilentWire] == 1,
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),
         _ => null,

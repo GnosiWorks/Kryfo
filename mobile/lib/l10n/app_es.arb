@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "Solicitudes de mensajes",
   "notifRequestsChannelLine": "Primeros mensajes de personas que aún no has añadido",
   "notifRequestPopups": "Avisos emergentes de solicitudes",
-  "notifRequestPopupsHint": "Activado, una solicitud nueva aparece con sonido. Desactivado, espera en silencio en tus notificaciones."
+  "notifRequestPopupsHint": "Activado, una solicitud nueva aparece con sonido. Desactivado, espera en silencio en tus notificaciones.",
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Abrir el chat",
+  "bannerOpenWith": "Abrir el chat con {name}",
+  "bannerNewMessages": "{count, plural, one{{count} mensaje nuevo} other{{count} mensajes nuevos}}",
+  "composerSendSilent": "Enviar sin sonido",
+  "composerSendHoldHint": "Mantén pulsado para más opciones",
+  "homeGroupShotsLine": "Mensaje"
 }

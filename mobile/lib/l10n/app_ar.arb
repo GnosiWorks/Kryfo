@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "طلبات المراسلة",
   "notifRequestsChannelLine": "أولى الرسائل من أشخاص لم تضفهم بعد",
   "notifRequestPopups": "نوافذ منبثقة لطلبات المراسلة",
-  "notifRequestPopupsHint": "عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك."
+  "notifRequestPopupsHint": "عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك.",
+  "homeGroupLine": "{name}: ⁨{preview}⁩",
+  "bannerOpen": "افتح المحادثة",
+  "bannerOpenWith": "افتح المحادثة مع {name}",
+  "bannerNewMessages": "{count, plural, zero{لا رسائل جديدة} one{رسالة جديدة واحدة} two{رسالتان جديدتان} few{{count} رسائل جديدة} many{{count} رسالة جديدة} other{{count} رسالة جديدة}}",
+  "composerSendSilent": "إرسال بدون صوت",
+  "composerSendHoldHint": "اضغط مطولًا لمزيد من الخيارات",
+  "homeGroupShotsLine": "رسالة"
 }

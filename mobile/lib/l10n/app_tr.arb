@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "Mesaj istekleri",
   "notifRequestsChannelLine": "Henüz eklemediğin kişilerden gelen ilk mesajlar",
   "notifRequestPopups": "Mesaj istekleri için açılır bildirim",
-  "notifRequestPopupsHint": "Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler."
+  "notifRequestPopupsHint": "Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler.",
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Sohbeti aç",
+  "bannerOpenWith": "{name} ile sohbeti aç",
+  "bannerNewMessages": "{count, plural, other{{count} yeni mesaj}}",
+  "composerSendSilent": "Sessiz gönder",
+  "composerSendHoldHint": "Daha fazla seçenek için basılı tutun",
+  "homeGroupShotsLine": "Mesaj"
 }

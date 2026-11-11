@@ -353,6 +353,29 @@ mixin _ContactRows {
     return (rows.first['pow_nonce'] as num?)?.toInt();
   }
 
+  // one of ours sent without sound: its retries go quietly too
+  Future<void> markSilent(String msgUid) async {
+    final db = await open();
+    await db.update(
+      'messages',
+      {'silent': 1},
+      where: "msg_uid = ? AND direction = 'out'",
+      whereArgs: [msgUid],
+    );
+  }
+
+  Future<bool> sentSilent(String msgUid) async {
+    final db = await open();
+    final r = await db.query(
+      'messages',
+      columns: ['silent'],
+      where: 'msg_uid = ?',
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    return (r.firstOrNull?['silent'] as num?)?.toInt() == 1;
+  }
+
   Future<void> setPowNonce(String msgUid, int nonce) async {
     final db = await open();
     await db.update(

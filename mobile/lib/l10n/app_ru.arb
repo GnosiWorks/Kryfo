@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "Запросы на переписку",
   "notifRequestsChannelLine": "Первые сообщения от тех, кого ты ещё не добавил",
   "notifRequestPopups": "Всплывающие уведомления о запросах",
-  "notifRequestPopupsHint": "Включено: новый запрос всплывает со звуком. Выключено: он тихо ждёт в уведомлениях."
+  "notifRequestPopupsHint": "Включено: новый запрос всплывает со звуком. Выключено: он тихо ждёт в уведомлениях.",
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Открыть чат",
+  "bannerOpenWith": "Открыть чат: {name}",
+  "bannerNewMessages": "{count, plural, one{{count} новое сообщение} few{{count} новых сообщения} many{{count} новых сообщений} other{{count} нового сообщения}}",
+  "composerSendSilent": "Отправить без звука",
+  "composerSendHoldHint": "Удерживайте для других вариантов",
+  "homeGroupShotsLine": "Сообщение"
 }

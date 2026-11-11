@@ -12373,4 +12373,43 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Увімкнено: новий запит спливає зі звуком. Вимкнено: він тихо чекає в сповіщеннях.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Відкрити чат';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Відкрити чат: $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString нового повідомлення',
+      many: '$countString нових повідомлень',
+      few: '$countString нові повідомлення',
+      one: '$countString нове повідомлення',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Надіслати без звуку';
+
+  @override
+  String get composerSendHoldHint => 'Утримуйте, щоб побачити інші варіанти';
+
+  @override
+  String get homeGroupShotsLine => 'Повідомлення';
 }

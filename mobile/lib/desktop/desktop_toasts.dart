@@ -128,7 +128,8 @@ class ToastLock {
 /// a toast's details: silent when the notifications page's sound switch
 /// is off, windows' own sound otherwise
 @visibleForTesting
-WindowsNotificationDetails? toastDetails() => deskSound.value
+WindowsNotificationDetails? toastDetails({bool quiet = false}) =>
+    deskSound.value && !quiet
     ? null
     : WindowsNotificationDetails(audio: WindowsNotificationAudio.silent());
 
@@ -207,7 +208,11 @@ class QuietWindowsNotifications extends FlutterLocalNotificationsWindows {
         id: id,
         title: t,
         body: b,
-        notificationDetails: toastDetails(),
+        // one sent without sound, or said by the banner already, stays
+        // quiet whatever the sound setting
+        notificationDetails: toastDetails(
+          quiet: notificationDetails?.audio != null,
+        ),
         payload: _payloads.hide(payload),
       ),
     );

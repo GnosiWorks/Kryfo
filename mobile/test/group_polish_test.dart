@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/widgets/send_hold.dart' show SendHold;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/drafts.dart'
     show Draft, endProcessForTest, heldDraft, kDraftWait;
@@ -1042,7 +1043,8 @@ void main() {
       t,
     ) async {
       double sendScale() {
-        final send = find.bySemanticsLabel(l10n.commonSend);
+        // the send button, held for its quiet way too
+        final send = find.byType(SendHold);
         final s = find.ancestor(
           of: send,
           matching: find.byType(ScaleTransition),

@@ -939,14 +939,14 @@ void main() {
   Finder line(int n) =>
       find.text(l10n.chatEarlierMessagesArrived(n)).hitTestable();
 
-  testWidgets('an honest reply that came late, half an hour up, shows the '
+  testWidgets('an honest reply that came late, an hour up, shows the '
       'line, and a tap lands on it', (t) async {
     await seed(40);
     await devOpen(t, chat());
     await settle(t);
     expect(line(1), findsNothing);
-    // written while this phone was away, half an hour above the bottom
-    await cameLate('late5', 'late five', note(24) + 60000);
+    // written while this phone was away, an hour above the bottom (bubbles are one line high now)
+    await cameLate('late5', 'late five', note(12) + 60000);
     appState.chatChanged(_peer);
     await settle(t);
     expect(seen('late five'), isFalse);
@@ -966,7 +966,7 @@ void main() {
     await devOpen(t, chat());
     await settle(t);
     await devClose(t);
-    await cameLate('late6', 'late six', note(24) + 60000);
+    await cameLate('late6', 'late six', note(12) + 60000);
     await devOpen(t, chat());
     await settle(t);
     expect(line(1), findsOneWidget);
@@ -997,7 +997,7 @@ void main() {
       'for', (t) async {
     lockState.openForTest();
     await seed(40);
-    await cameLate('late7', 'late seven', note(24) + 60000);
+    await cameLate('late7', 'late seven', note(12) + 60000);
     t.view.physicalSize = const Size(1000, 1800);
     t.view.devicePixelRatio = 2;
     addTearDown(t.view.reset);
@@ -1045,7 +1045,7 @@ void main() {
             )
             .first;
         final before = t.getRect(newest);
-        await cameLate('late10', 'late ten', note(24) + 60000);
+        await cameLate('late10', 'late ten', note(12) + 60000);
         appState.chatChanged(_peer);
         await settle(t, 10);
         final chip = find.byKey(const ValueKey('earlier-chip'));
@@ -1087,7 +1087,7 @@ void main() {
     await seed(40);
     await devOpen(t, chat());
     await settle(t);
-    await cameLate('late8', 'late eight', note(24) + 60000);
+    await cameLate('late8', 'late eight', note(12) + 60000);
     appState.chatChanged(_peer);
     await settle(t);
     expect(line(1), findsOneWidget);
@@ -1105,7 +1105,7 @@ void main() {
       await seed(40);
       await devOpen(t, chat(), still: still);
       await settle(t);
-      await cameLate('late9', 'late nine', note(24) + 60000);
+      await cameLate('late9', 'late nine', note(12) + 60000);
       appState.chatChanged(_peer);
       await settle(t);
       expect(line(1), findsOneWidget);

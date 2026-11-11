@@ -764,18 +764,21 @@ class _CountRollState extends State<CountRoll> {
 
 // the sent tick, and the word delivered once a receipt lands. the word
 // grows out of the tick, which gives one small nod, when the receipt comes
-// while the chat is open; a bubble built with it already there draws still
+// while the chat is open; a bubble built with it already there draws still.
+// [word]: only the newest of ours spells it, older ones fold back to the tick
 class SentTick extends StatefulWidget {
   final bool delivered;
   final String deliveredLabel;
   final Color color;
   final TextStyle labelStyle;
+  final bool word;
   const SentTick({
     super.key,
     required this.delivered,
     required this.deliveredLabel,
     required this.color,
     required this.labelStyle,
+    this.word = true,
   });
 
   @override
@@ -823,14 +826,17 @@ class _SentTickState extends State<SentTick>
                 child: child,
               ),
       ),
-      child: widget.delivered
+      child: widget.delivered && widget.word
           ? Padding(
               key: const ValueKey('delivered'),
               padding: const EdgeInsetsDirectional.only(start: 4),
-              child: Text(
-                widget.deliveredLabel,
-                maxLines: 1,
-                style: widget.labelStyle,
+              // the tick says it to a screen reader, on every bubble
+              child: ExcludeSemantics(
+                child: Text(
+                  widget.deliveredLabel,
+                  maxLines: 1,
+                  style: widget.labelStyle,
+                ),
               ),
             )
           : const SizedBox.shrink(key: ValueKey('sent')),
@@ -844,7 +850,10 @@ class _SentTickState extends State<SentTick>
             scale: 1.35 - 0.35 * kHouseCurve.transform(_nod.value),
             child: child,
           ),
-          child: TickMark(color: widget.color),
+          child: TickMark(
+            color: widget.color,
+            semanticLabel: widget.delivered ? widget.deliveredLabel : null,
+          ),
         ),
         // an AnimatedSize given no time trips over its own layout: still, it
         // is left out

@@ -12176,4 +12176,40 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Bật: yêu cầu mới hiện lên kèm âm thanh. Tắt: yêu cầu nằm yên trong thông báo của bạn.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Mở cuộc trò chuyện';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Mở cuộc trò chuyện với $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString tin nhắn mới',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Gửi không âm thanh';
+
+  @override
+  String get composerSendHoldHint => 'Nhấn giữ để xem thêm tùy chọn';
+
+  @override
+  String get homeGroupShotsLine => 'Tin nhắn';
 }

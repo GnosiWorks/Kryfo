@@ -12321,4 +12321,41 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Activé, une nouvelle demande s\'affiche avec un son. Désactivé, elle attend en silence dans tes notifications.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name : $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Ouvrir la discussion';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Ouvrir la discussion avec $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString nouveaux messages',
+      one: '$countString nouveau message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Envoyer sans son';
+
+  @override
+  String get composerSendHoldHint => 'Maintenir pour plus d\'options';
+
+  @override
+  String get homeGroupShotsLine => 'Message';
 }

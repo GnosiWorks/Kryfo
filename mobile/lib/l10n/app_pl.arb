@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "Prośby o wiadomość",
   "notifRequestsChannelLine": "Pierwsze wiadomości od osób, których jeszcze nie dodano",
   "notifRequestPopups": "Wyskakujące powiadomienia o prośbach",
-  "notifRequestPopupsHint": "Włączone: nowa prośba pojawia się z dźwiękiem. Wyłączone: czeka cicho w powiadomieniach."
+  "notifRequestPopupsHint": "Włączone: nowa prośba pojawia się z dźwiękiem. Wyłączone: czeka cicho w powiadomieniach.",
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Otwórz czat",
+  "bannerOpenWith": "Otwórz czat z {name}",
+  "bannerNewMessages": "{count, plural, one{{count} nowa wiadomość} few{{count} nowe wiadomości} many{{count} nowych wiadomości} other{{count} nowej wiadomości}}",
+  "composerSendSilent": "Wyślij bez dźwięku",
+  "composerSendHoldHint": "Przytrzymaj, aby zobaczyć więcej opcji",
+  "homeGroupShotsLine": "Wiadomość"
 }

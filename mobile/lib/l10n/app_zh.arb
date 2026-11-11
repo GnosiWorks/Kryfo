@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "消息请求",
   "notifRequestsChannelLine": "尚未添加的人发来的第一条消息",
   "notifRequestPopups": "消息请求弹出通知",
-  "notifRequestPopupsHint": "开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。"
+  "notifRequestPopupsHint": "开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。",
+  "homeGroupLine": "{name}：{preview}",
+  "bannerOpen": "打开聊天",
+  "bannerOpenWith": "打开与 {name} 的聊天",
+  "bannerNewMessages": "{count, plural, other{{count} 条新消息}}",
+  "composerSendSilent": "静音发送",
+  "composerSendHoldHint": "长按查看更多选项",
+  "homeGroupShotsLine": "消息"
 }

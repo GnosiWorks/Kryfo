@@ -15357,5 +15357,52 @@
   "notifRequestPopupsHint": "On, a new request pops up with a sound. Off, it waits quietly in your notifications.",
   "@notifRequestPopupsHint": {
     "description": "screens/notifications_screen.dart: under the request pop-ups switch"
+  },
+  "homeGroupLine": "{name}: {preview}",
+  "@homeGroupLine": {
+    "description": "home group row: who wrote last and what",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "preview": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerOpen": "Open the chat",
+  "@bannerOpen": {
+    "description": "in-app banner, screen reader: a tap opens the chat it is about (no name shown)"
+  },
+  "bannerOpenWith": "Open the chat with {name}",
+  "@bannerOpenWith": {
+    "description": "in-app banner, screen reader: a tap opens the chat with this person or group",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerNewMessages": "{count, plural, one{{count} new message} other{{count} new messages}}",
+  "@bannerNewMessages": {
+    "description": "in-app banner: several messages from the same chat in a row",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "composerSendSilent": "Send without sound",
+  "@composerSendSilent": {
+    "description": "held send button: the menu row that sends the message without sound or vibration on the receiver's phone"
+  },
+  "composerSendHoldHint": "Hold for more options",
+  "@composerSendHoldHint": {
+    "description": "screen reader hint on the send button: holding it opens more ways to send"
+  },
+  "homeGroupShotsLine": "Message",
+  "@homeGroupShotsLine": {
+    "description": "home group row of a group that blocks screenshots, once read: says only that the last thing was a message, never whose or what"
   }
 }

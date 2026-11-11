@@ -3202,5 +3202,12 @@
   "notifRequestsChannel": "Nachrichtenanfragen",
   "notifRequestsChannelLine": "Erste Nachrichten von Menschen, die du noch nicht hinzugefügt hast",
   "notifRequestPopups": "Pop-ups für Nachrichtenanfragen",
-  "notifRequestPopupsHint": "An: Eine neue Anfrage erscheint mit Ton. Aus: Sie wartet leise in deinen Benachrichtigungen."
+  "notifRequestPopupsHint": "An: Eine neue Anfrage erscheint mit Ton. Aus: Sie wartet leise in deinen Benachrichtigungen.",
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Chat öffnen",
+  "bannerOpenWith": "Chat mit {name} öffnen",
+  "bannerNewMessages": "{count, plural, one{{count} neue Nachricht} other{{count} neue Nachrichten}}",
+  "composerSendSilent": "Ohne Ton senden",
+  "composerSendHoldHint": "Gedrückt halten für mehr Optionen",
+  "homeGroupShotsLine": "Nachricht"
 }

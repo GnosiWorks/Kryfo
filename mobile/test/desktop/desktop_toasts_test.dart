@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/notifications.dart' show notifDetails;
 import 'package:kryfo/desktop/desktop_mode.dart' show deskSound;
 import 'package:kryfo/desktop/desktop_toasts.dart';
 import 'package:kryfo/l10n/l10n.dart';
@@ -46,6 +47,19 @@ void main() {
     expect(toastDetails(), isNull);
     deskSound.value = false;
     expect(toastDetails()!.audio!.isSilent, isTrue);
+  });
+
+  test('a quiet post tells the computer\'s toast so', () {
+    const a = AndroidNotificationDetails('c', 'n');
+    expect(notifDetails(a, alert: true).windows, isNull);
+    expect(notifDetails(a, alert: false).windows!.audio!.isSilent, isTrue);
+    expect(notifDetails(a, alert: false).linux!.suppressSound, isTrue);
+  });
+
+  test('one asked to be quiet stays quiet with the sound on', () {
+    addTearDown(() => deskSound.value = true);
+    deskSound.value = true;
+    expect(toastDetails(quiet: true)!.audio!.isSilent, isTrue);
   });
 
   test('a toast holds a token, the click gets the payload back', () {
