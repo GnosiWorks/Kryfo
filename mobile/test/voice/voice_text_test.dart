@@ -68,6 +68,21 @@ void main() {
       // a character that is a simplified one itself stays
       expect(h.convert('著名的乾杯'), '著名的干杯');
       expect(h.convert('hello 你好'), 'hello 你好');
+      // the model saying back its own lead line is no words
+      for (final echo in [' 以下是普通话的句子。', '以下是普通话的句子', ' 以下是普通話的句子。']) {
+        expect(cleanSegment(echo, hans: h), '', reason: echo);
+      }
+      expect(cleanSegment('以下是普通话的句子。我到了', hans: h), isNotEmpty);
+      // the dart line is the one the library gives the model
+      final c = File('../engine/voice/native/kryfo_voice.c').readAsStringSync();
+      final esc = RegExp(
+        r'#define KV_ZH_PROMPT\s+"([^"]+)"',
+      ).firstMatch(c)![1]!;
+      final bytes = [
+        for (final m in RegExp(r'\\x([0-9a-f]{2})').allMatches(esc))
+          int.parse(m[1]!, radix: 16),
+      ];
+      expect(utf8.decode(bytes), kZhPrompt);
     });
 
     test('no detection: the language is named', () {

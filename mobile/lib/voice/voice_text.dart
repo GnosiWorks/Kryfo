@@ -127,7 +127,18 @@ String cleanSegment(String text, {HansChars? hans}) {
   var t = text.contains('[') ? text.replaceAll(_noteIn, '') : text;
   if (t.trim().isEmpty) return '';
   if (hans != null) t = hans.convert(t);
+  // the model said back the line that leads it to simplified characters
+  if (_isPrompt(t)) return '';
   return t;
+}
+
+/// the line kryfo_voice.c gives the model before mandarin (KV_ZH_PROMPT)
+const kZhPrompt = '以下是普通话的句子。';
+
+final _notWords = RegExp(r'[\s。，,.!?！？、：:；;]', unicode: true);
+bool _isPrompt(String t) {
+  final bare = t.replaceAll(_notWords, '');
+  return bare.isNotEmpty && bare == kZhPrompt.replaceAll(_notWords, '');
 }
 
 /// how many threads a run takes: the phone's fast cores (those within a
