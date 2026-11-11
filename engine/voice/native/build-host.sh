@@ -3,7 +3,9 @@
 # the voice library for this machine, for the go and dart tests:
 # build/host/libkryfo_voice.so. --test also builds and runs the c tests on
 # whisper.cpp's own test model and sample; KV_REAL_MODEL=<a ggml model>
-# adds the checks on real words.
+# adds the checks on real words, and KV_CLIPS=<dir> with it the silence
+# gate's checks on real recordings (quiet10.wav, noise8.wav, noise8-loud.wav,
+# hush8.wav and the voice samples).
 set -euo pipefail
 cd "$(dirname "$0")"
 HERE="$(pwd)"

@@ -42,9 +42,16 @@ struct kv_run_state {
 // and the smallest window (10.24 s); a full one is 1500 steps
 #define KV_CTX_PAD 64
 #define KV_CTX_STEP 512
-// a piece whose loudest 20 ms stays under this is not run: whisper only
-// makes up words for silence
-#define KV_SILENT 0.004f
+// a piece is run only when its loudest 20 ms is over both of these: the
+// note's own floor (its quiet tenth, room noise or hiss) times KV_OVER, and
+// KV_SILENT. whisper only makes up words for silence and steady noise, but a
+// quiet or far-off voice (loudest 20 ms at 0.0023) can be under a room's
+// noise (0.003), so the level alone cannot tell them apart. noise from a
+// real phone room stays under 2x its floor, speech goes 40x and more
+#define KV_SILENT 0.0003f
+#define KV_OVER 3.0f
+// under one step of 16-bit pcm: zeros the recorder pads with, not the room
+#define KV_ZERO (1.0f / 32768.0f)
 // whisper writes mandarin in traditional characters unless led to
 // simplified, which this line in simplified does
 #define KV_ZH_PROMPT "\xe4\xbb\xa5\xe4\xb8\x8b\xe6\x98\xaf\xe6\x99\xae\xe9\x80\x9a\xe8\xaf\x9d\xe7\x9a\x84\xe5\x8f\xa5\xe5\xad\x90\xe3\x80\x82"
@@ -226,9 +233,36 @@ static int64_t kv_cut(const float *a, int64_t n, int64_t start, int64_t lo, int6
   return best;
 }
 
-static int kv_silent(const float *a, int64_t n) {
+static int kv_cmp(const void *x, const void *y) {
+  float a = *(const float *)x, b = *(const float *)y;
+  return (a > b) - (a < b);
+}
+
+// the level the note's quietest tenth stays under, from the whole note so
+// a piece of room noise alone is measured against itself. 0 when nothing
+// but zeros, or no memory: then only KV_SILENT holds a piece back
+static float kv_floor(const float *a, int64_t n) {
+  int64_t frames = (n + KV_FRAME - 1) / KV_FRAME;
+  float *lv = malloc((size_t)frames * sizeof(float));
+  if (lv == NULL) return 0;
+  int64_t k = 0;
+  for (int64_t i = 0; i < n; i += KV_FRAME) {
+    float l = kv_level(a, n, i);
+    if (l >= KV_ZERO) lv[k++] = l;
+  }
+  float low = 0;
+  if (k > 0) {
+    qsort(lv, (size_t)k, sizeof(float), kv_cmp);
+    low = lv[k / 10];
+  }
+  kv_wipe(lv, (size_t)frames * sizeof(float));
+  free(lv);
+  return low;
+}
+
+static int kv_silent(const float *a, int64_t n, float gate) {
   for (int64_t i = 0; i < n; i += KV_FRAME)
-    if (kv_level(a, n, i) >= KV_SILENT) return 0;
+    if (kv_level(a, n, i) >= gate) return 0;
   return 1;
 }
 
@@ -270,6 +304,8 @@ int32_t kv_run(kv_model *m, const int16_t *pcm, int64_t frames, int32_t rate,
   p.abort_callback = kv_abort;
   p.abort_callback_user_data = &rs;
 
+  float gate = KV_OVER * kv_floor(audio, n);
+  if (gate < KV_SILENT) gate = KV_SILENT;
   int rc = 0;
   int ran = 0;
   for (int64_t start = 0; start < n && rc == 0;) {
@@ -277,7 +313,7 @@ int32_t kv_run(kv_model *m, const int16_t *pcm, int64_t frames, int32_t rate,
     int64_t end = ran ? kv_cut(audio, n, start, KV_NEXT_MIN, KV_NEXT_MAX)
                       : kv_cut(audio, n, start, KV_FIRST_MIN, KV_FIRST_MAX);
     int64_t len = end - start;
-    if (!kv_silent(audio + start, len)) {
+    if (!kv_silent(audio + start, len, gate)) {
       // the encoder's window in a few fixed sizes: fitted to each piece
       // exactly, the model drops or repeats words
       int64_t need = (len * 50 + KV_RATE - 1) / KV_RATE + KV_CTX_PAD;

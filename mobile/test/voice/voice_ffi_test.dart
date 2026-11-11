@@ -180,7 +180,11 @@ void main() {
       expect(parts.length, r.segments.length);
       expect(r.lang, 'en');
       expect(parts.join(), contains('fellow Americans'));
-      expect(r.text, contains('ask not what your country can do for you'));
+      // a piece starts a sentence, so its first word can come capitalised
+      expect(
+        r.text.toLowerCase(),
+        contains('ask not what your country can do for you'),
+      );
     },
     skip: _needs != false
         ? _needs
