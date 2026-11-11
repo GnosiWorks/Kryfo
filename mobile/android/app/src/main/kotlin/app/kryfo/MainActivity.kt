@@ -645,7 +645,19 @@ open class MainActivity : FlutterFragmentActivity() {
                         val am = applicationContext
                             .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                         val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
-                        result.success(ok)
+                        if (ok) {
+                            result.success(true)
+                        } else {
+                            // refused: the keystore and the data folder by
+                            // hand, off the main thread
+                            Thread {
+                                try {
+                                    WipeFallback.run(applicationContext)
+                                } catch (e: Exception) {
+                                }
+                                runOnUiThread { result.success(false) }
+                            }.start()
+                        }
                     }
                     // the home screen's icon and name. android leaves the
                     // open screen up (DONT_KILL_APP), so kryfo closes and
