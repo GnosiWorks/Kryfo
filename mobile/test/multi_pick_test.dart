@@ -200,8 +200,8 @@ void main() {
       ('lib/screens/group_chat_screen.dart', 'Future<void> _sendFromSheet('),
     ]) {
       final body = bodyOf(sourceOf(file), sig);
-      expect(body, contains('lockState.hold(pickGallery)'), reason: file);
-      expect(body, contains('await sendGalleryPicks('), reason: file);
+      // the sheet picked them held; here they are read whole and shrunk
+      expect(body, contains('await readGalleryPicks('), reason: file);
     }
   });
 }

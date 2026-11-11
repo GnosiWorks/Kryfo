@@ -217,4 +217,32 @@ void main() {
     expect(covers.where((c) => c.on).map((c) => c.uid), ['u2']);
     expect(find.byType(ImageFiltered), findsOneWidget);
   });
+
+  testWidgets('the shared section holds its place while it is read', (t) async {
+    Future<double> height(bool loaded) async {
+      await t.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: SharedMediaSection(
+                key: ValueKey(loaded),
+                paths: loaded ? ['/m/a.jpg'] : const [],
+                count: loaded ? 1 : 0,
+                loaded: loaded,
+                files: 2,
+                voice: 1,
+                links: 3,
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.pump(const Duration(milliseconds: 500));
+      return t.getSize(find.byType(SharedMediaSection)).height;
+    }
+
+    final reading = await height(false);
+    final read = await height(true);
+    expect((reading - read).abs(), lessThan(8));
+  });
 }

@@ -68,8 +68,8 @@ void main() {
   });
 
   test('the part done reads in the bubbles\' sizes', () {
-    expect(doneOfText(0.5, 40 * 1024 * 1024), '20.0 mb of 40.0 mb');
-    expect(doneOfText(2, 1024), '1 kb of 1 kb');
+    expect(doneOfText(0.5, 40 * 1024 * 1024), '20.0 MB of 40.0 MB');
+    expect(doneOfText(2, 1024), '1 KB of 1 KB');
   });
 
   group('automatic download', () {
@@ -138,15 +138,15 @@ void main() {
         state: WaitState.asks,
         rule: AutoGet.wifi,
       );
-      expect(fileWaitLine(w, unmetered: false), '4.0 mb · Downloads on Wi-Fi');
+      expect(fileWaitLine(w, unmetered: false), '4.0 MB · Downloads on Wi-Fi');
       // on wi-fi it is about to come; a tap is still the way
-      expect(fileWaitLine(w, unmetered: true), '4.0 mb · Tap to get it');
+      expect(fileWaitLine(w, unmetered: true), '4.0 MB · Tap to get it');
       const n = FileWait(
         size: 4 * mb,
         state: WaitState.asks,
         rule: AutoGet.never,
       );
-      expect(fileWaitLine(n, unmetered: false), '4.0 mb · Tap to get it');
+      expect(fileWaitLine(n, unmetered: false), '4.0 MB · Tap to get it');
     });
 
     test('how far it is', () {
@@ -156,14 +156,14 @@ void main() {
         rule: AutoGet.never,
         share: 0.25,
       );
-      expect(fileWaitLine(w, unmetered: false), 'Receiving · 1.0 mb of 4.0 mb');
+      expect(fileWaitLine(w, unmetered: false), 'Receiving · 1.0 MB of 4.0 MB');
       expect(
         fileWaitLine(w, unmetered: false, left: 130),
-        'Receiving · 1.0 mb of 4.0 mb · about 3 min left',
+        'Receiving · 1.0 MB of 4.0 MB · about 3 min left',
       );
       expect(
         fileWaitLine(w.copyWith(state: WaitState.paused), unmetered: false),
-        'Paused · 1.0 mb of 4.0 mb',
+        'Paused · 1.0 MB of 4.0 MB',
       );
     });
 
@@ -190,7 +190,7 @@ void main() {
         total: 4 * 1024 * 1024,
       ), hidden: false)!;
       expect(n.title, 'File transfer');
-      expect(n.text, 'Sending · 1.0 mb of 4.0 mb');
+      expect(n.text, 'Sending · 1.0 MB of 4.0 MB');
       expect(n.done, 1024);
       expect(n.total, 4096);
       final both = transferNoteOf((
@@ -283,7 +283,7 @@ void main() {
   test('the strip says how far and how long', () {
     mediaProgressStart('s2', chatKey: 'c2', bytes: 4 * 1024 * 1024);
     mediaProgressUpdate('s2', 0.25);
-    expect(transferDetail('s2', 0.25), '1.0 mb of 4.0 mb');
+    expect(transferDetail('s2', 0.25), '1.0 MB of 4.0 MB');
     mediaProgressEnd('s2');
     expect(transferDetail('s2', 0.25), isNull);
   });

@@ -62,7 +62,7 @@ void main() {
       );
       expect(find.text('plan'), findsOneWidget);
       expect(find.text('.pdf'), findsOneWidget);
-      expect(find.text('2 kb · Downloads on Wi-Fi'), findsOneWidget);
+      expect(find.text('2 KB · Downloads on Wi-Fi'), findsOneWidget);
       expect(find.byIcon(Icons.download_rounded), findsOneWidget);
       await t.tap(find.byType(WaitingFileCard));
       expect(gets, ['u1']);
@@ -82,13 +82,13 @@ void main() {
         ),
       );
       expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
-      expect(find.text('Receiving · 1 kb of 2 kb'), findsOneWidget);
+      expect(find.text('Receiving · 1 KB of 2 KB'), findsOneWidget);
       await t.tap(find.byType(WaitingFileCard));
       expect(pauses, ['u1']);
       setFileWait('u1', fileWaitOf('u1')!.copyWith(state: WaitState.paused));
       await t.pumpAndSettle();
       expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
-      expect(find.text('Paused · 1 kb of 2 kb'), findsOneWidget);
+      expect(find.text('Paused · 1 KB of 2 KB'), findsOneWidget);
       await t.tap(find.byType(WaitingFileCard));
       expect(gets, ['u1']);
     });
@@ -118,7 +118,7 @@ void main() {
       expect(
         t.getSemantics(find.byType(WaitingFileCard)),
         matchesSemantics(
-          label: 'plan.pdf, 2 kb · Tap to get it',
+          label: 'plan.pdf, 2 KB · Tap to get it',
           hint: 'Download',
           isButton: true,
           hasTapAction: true,
@@ -163,7 +163,7 @@ void main() {
         _frame(IncomingMediaBanner(chatKey: 'chat', onPause: paused.add)),
       );
       await t.pumpAndSettle();
-      expect(find.text('Receiving · 1 kb of 4 kb'), findsOneWidget);
+      expect(find.text('Receiving · 1 KB of 4 KB'), findsOneWidget);
       await t.tap(find.text(l10n.transferPause));
       expect(paused, ['f1']);
       await settle(t);
@@ -183,7 +183,7 @@ void main() {
         ),
       );
       await t.pumpAndSettle();
-      expect(find.text('Sending · 2 kb of 4 kb'), findsOneWidget);
+      expect(find.text('Sending · 2 KB of 4 KB'), findsOneWidget);
       expect(find.text(l10n.transferPause), findsNothing);
       await t.tap(find.text(l10n.commonCancel));
       expect(cancelled, ['s1']);
@@ -257,7 +257,7 @@ void main() {
       });
       await t.pumpAndSettle();
       expect(find.text('plan.pdf'), findsOneWidget);
-      expect(find.text('PDF · 3 kb'), findsOneWidget);
+      expect(find.text('PDF · 3 KB'), findsOneWidget);
       expect(find.text(l10n.fileOpenWith), findsOneWidget);
       expect(find.text(l10n.fileOpenWithNote), findsOneWidget);
       await t.tap(find.text(l10n.fileSaveToDevice));

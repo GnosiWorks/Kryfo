@@ -225,7 +225,20 @@ class PdfViewerState extends State<PdfViewer>
     }
     _tops = tops;
     _heights = hs;
-    _total = math.max(y, view.height);
+    // room under the last page for the zoom bar, so it never covers what
+    // the page says at its foot
+    _total = math.max(y + kPdfBarRoom, view.height);
+  }
+
+  /// a sideways swipe at full width turns the page: next to the left, back
+  /// to the right, as a right to left language reads it the other way
+  void pageBySwipe(double vx, double vy, {required bool rtl}) {
+    if (scale > 1.05 || vx.abs() < 500 || vx.abs() < vy.abs() * 1.5) return;
+    final forward = rtl ? vx > 0 : vx < 0;
+    final to = _page + (forward ? 1 : -1);
+    if (to < 0 || to >= _tops.length) return;
+    HapticFeedback.selectionClick();
+    jumpTo(to);
   }
 
   int _pageAt(double y) {
@@ -587,7 +600,15 @@ class PdfViewerState extends State<PdfViewer>
                 minScale: 1,
                 maxScale: _most,
                 boundaryMargin: EdgeInsets.zero,
-                onInteractionEnd: (_) => setState(() {}),
+                onInteractionEnd: (e) {
+                  final v = e.velocity.pixelsPerSecond;
+                  pageBySwipe(
+                    v.dx,
+                    v.dy,
+                    rtl: Directionality.of(context) == TextDirection.rtl,
+                  );
+                  setState(() {});
+                },
                 builder: (context, q) {
                   final top = math.min(
                     math.min(q.point0.y, q.point1.y),
@@ -756,6 +777,9 @@ class PdfViewerState extends State<PdfViewer>
     return RawImage(image: img, fit: BoxFit.cover);
   }
 }
+
+/// the space kept under the last page for the zoom bar
+const kPdfBarRoom = 64.0;
 
 class _PageTile extends StatelessWidget {
   final int index;

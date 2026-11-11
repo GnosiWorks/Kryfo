@@ -483,6 +483,7 @@ class SendSheetState extends State<SendSheet> {
                 ),
               ),
               _Foot(
+                lifting: _leaving,
                 tray: _chosen.isEmpty
                     ? null
                     : SendTray(
@@ -878,6 +879,8 @@ class _Order extends StatelessWidget {
 
 class _Foot extends StatelessWidget {
   final Widget? tray;
+  // the cards lift off above it: nothing clips them on their way
+  final bool lifting;
   final int count;
   final bool showAsFiles;
   final bool asFiles;
@@ -886,6 +889,7 @@ class _Foot extends StatelessWidget {
   final VoidCallback onSend;
   const _Foot({
     required this.tray,
+    this.lifting = false,
     required this.count,
     required this.showAsFiles,
     required this.asFiles,
@@ -922,6 +926,7 @@ class _Foot extends StatelessWidget {
                               : 0.3),
                     ),
                     child: SingleChildScrollView(
+                      clipBehavior: lifting ? Clip.none : Clip.hardEdge,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [

@@ -73,27 +73,27 @@ void main() {
   test('the limit reads as a person would say it', () {
     expect(
       fileTooBigLine(60 * 1024 * 1024),
-      'This file is 60.0 mb. Files can be up to 50.0 mb.',
+      'This file is 60.0 MB. Files can be up to 50.0 MB.',
     );
     // just over reads in whole kb, so the two numbers never match
     expect(
       fileTooBigLine(50 * 1024 * 1024 + 1),
-      'This file is 51,201 kb. Files can be up to 51,200 kb.',
+      'This file is 51,201 KB. Files can be up to 51,200 KB.',
     );
     expect(
       fileTooBigLine(50 * 1024 * 1024 + 60 * 1024),
-      'This file is 50.1 mb. Files can be up to 50.0 mb.',
+      'This file is 50.1 MB. Files can be up to 50.0 MB.',
     );
     // a chat with a phone not yet updated says what it waits on
     const old = 15 * 1024 * 1024;
     expect(
       fileTooBigLine(20 * 1024 * 1024, old),
-      'This file is 20.0 mb. This chat takes files up to 15.0 mb until '
+      'This file is 20.0 MB. This chat takes files up to 15.0 MB until '
       'everyone in it updates Kryfo.',
     );
     expect(
       fileTooBigLine(old + 40 * 1024, old),
-      'This file is 15,400 kb. This chat takes files up to 15,360 kb until '
+      'This file is 15,400 KB. This chat takes files up to 15,360 KB until '
       'everyone in it updates Kryfo.',
     );
   });

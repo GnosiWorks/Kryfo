@@ -602,8 +602,9 @@ Future<void> _attach(WidgetTester t, String tile, bool Function() done) async {
     await t.tap(find.text(tile));
   }
   await _beat(t, 300);
-  // a gallery or video pick waits in the send preview until it is sent
-  if (tile == l10n.chatGallery || tile == l10n.chatVideo) {
+  // a video pick waits in the send preview until it is sent; the sheet's
+  // gallery picks go from the sheet itself
+  if (tile == l10n.chatVideo) {
     final preview = find.byType(MediaSendScreen);
     await _io(t, () => preview.evaluate().isNotEmpty, why: 'no preview');
     await t.tap(

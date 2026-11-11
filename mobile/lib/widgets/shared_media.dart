@@ -283,6 +283,19 @@ class SharedMediaSection extends StatelessWidget {
           children: [
             PageSection(l10n.groupInfoSharedMedia),
             _row((_, _) => const _BlankTile()),
+            // the rows that most often follow, held quiet, so the page does
+            // not jump down under a finger when they are read
+            const SizedBox(height: 12),
+            HaloGroup(
+              children: [
+                for (final (label, icon) in [
+                  (l10n.sharedTabFiles, Icons.description_outlined),
+                  (l10n.sharedTabVoice, Icons.mic_none_rounded),
+                  (l10n.sharedTabLinks, Icons.link_rounded),
+                ])
+                  HaloRow(icon: icon, label: label, pending: true),
+              ],
+            ),
           ],
         ),
       );

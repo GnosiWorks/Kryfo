@@ -434,7 +434,10 @@ void main() {
         await t.tap(find.text(l10n.filesOnPhone));
         await t.pumpAndSettle();
         expect(
-          t.state<SharedFilesPageState>(find.byType(SharedFilesPage)).filters.here,
+          t
+              .state<SharedFilesPageState>(find.byType(SharedFilesPage))
+              .filters
+              .here,
           isTrue,
         );
         expect(find.text('later'), findsNothing);
@@ -467,6 +470,24 @@ void main() {
         await t.tap(find.text(l10n.filesRemoveDownloadYes));
         await t.pumpAndSettle();
         expect(gone, ['u1']);
+      });
+
+      testWidgets('two of one name say which is ours and which came', (
+        t,
+      ) async {
+        await openFiles(t, [
+          SharedItem(
+            path: '/f/1',
+            name: 'plan.pdf',
+            uid: 'a',
+            mine: true,
+            when: when,
+          ),
+          SharedItem(path: '/f/2', name: 'plan.pdf', uid: 'b', when: when),
+          SharedItem(path: '/f/3', name: 'other.pdf', uid: 'c', when: when),
+        ]);
+        expect(find.textContaining(l10n.chatYou), findsOneWidget);
+        expect(find.textContaining('Hiking club'), findsWidgets);
       });
 
       testWidgets('ours, and one still to come, have no remove download', (

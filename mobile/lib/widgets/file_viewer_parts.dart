@@ -43,34 +43,25 @@ Future<void> openFileViewer(
   try {
     if (!context.mounted) return;
     final nav = Navigator.of(context);
+    // where it opens from: the bubble the tap was in, when it is on screen
+    final box = context.findRenderObject();
+    final from = box is RenderBox && box.attached && box.hasSize
+        ? box.localToGlobal(Offset.zero) & box.size
+        : null;
     _opening = false;
     await nav.push(
       PageRouteBuilder<void>(
         opaque: false,
         barrierColor: Colors.transparent,
-        transitionDuration: Duration(milliseconds: still ? 0 : 300),
-        reverseTransitionDuration: Duration(milliseconds: still ? 0 : 240),
-        pageBuilder: (ctx, _, _) => TextGround(child: page(ctx)),
-        transitionsBuilder: (_, a, _, child) {
-          final c = CurvedAnimation(
-            parent: a,
-            curve: kHouseCurve,
-            reverseCurve: Curves.easeInCubic,
-          );
-          return FadeTransition(
-            opacity: CurvedAnimation(parent: a, curve: Curves.easeOut),
-            child: SlideTransition(
-              position: Tween(
-                begin: const Offset(0, 0.04),
-                end: Offset.zero,
-              ).animate(c),
-              child: ScaleTransition(
-                scale: Tween(begin: 0.97, end: 1.0).animate(c),
-                child: child,
-              ),
-            ),
-          );
-        },
+        transitionDuration: Duration(milliseconds: still ? 0 : 320),
+        reverseTransitionDuration: Duration(milliseconds: still ? 0 : 260),
+        // the page grows out of the bubble: its own tile need not fly too
+        pageBuilder: (ctx, _, _) => TextGround(
+          child: HeroMode(enabled: from == null, child: page(ctx)),
+        ),
+        transitionsBuilder: (ctx, a, _, child) => from == null
+            ? _riseIn(a, child)
+            : GrowFromRect(animation: a, from: from, child: child),
       ),
     );
   } finally {
@@ -78,6 +69,94 @@ Future<void> openFileViewer(
     if (secure) await appState.forceSecure(false);
   }
   FocusManager.instance.primaryFocus?.unfocus();
+}
+
+Widget _riseIn(Animation<double> a, Widget child) {
+  final c = CurvedAnimation(
+    parent: a,
+    curve: kHouseCurve,
+    reverseCurve: Curves.easeInCubic,
+  );
+  return FadeTransition(
+    opacity: CurvedAnimation(parent: a, curve: Curves.easeOut),
+    child: SlideTransition(
+      position: Tween(
+        begin: const Offset(0, 0.04),
+        end: Offset.zero,
+      ).animate(c),
+      child: ScaleTransition(
+        scale: Tween(begin: 0.97, end: 1.0).animate(c),
+        child: child,
+      ),
+    ),
+  );
+}
+
+/// a page that grows out of [from] (a bubble on screen) to fill the screen,
+/// and shrinks back into it on the way out. the page is laid out at its
+/// full size the whole time and only clipped, so nothing in it stretches;
+/// it fades up early on the way in and out late on the way back
+class GrowFromRect extends StatelessWidget {
+  final Animation<double> animation;
+  final Rect from;
+  final Widget child;
+  const GrowFromRect({
+    super.key,
+    required this.animation,
+    required this.from,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final grow = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
+    final show = CurvedAnimation(
+      parent: animation,
+      curve: const Interval(0, 0.45, curve: Curves.easeOut),
+      reverseCurve: const Interval(0, 0.5, curve: Curves.easeIn),
+    );
+    return LayoutBuilder(
+      builder: (context, box) {
+        final full = Offset.zero & box.biggest;
+        return AnimatedBuilder(
+          animation: animation,
+          child: child,
+          builder: (context, page) {
+            final t = grow.value;
+            final r = Rect.lerp(from, full, t)!;
+            return Stack(
+              children: [
+                Positioned.fromRect(
+                  rect: r,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14 * (1 - t)),
+                    child: ColoredBox(
+                      color: HaloColors.ink,
+                      child: OverflowBox(
+                        alignment: Alignment.topLeft,
+                        minWidth: full.width,
+                        maxWidth: full.width,
+                        minHeight: full.height,
+                        maxHeight: full.height,
+                        child: Transform.translate(
+                          offset: -r.topLeft,
+                          child: Opacity(opacity: show.value, child: page),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
 /// the viewer's head: close, the file's tile and name, who sent it and how

@@ -269,6 +269,9 @@ class SharedFilesPageState extends State<SharedFilesPage> {
       e.mine ? l10n.chatYou : (widget.nameOf(e.peer) ?? l10n.filesSomeone);
 
   Future<void> _pickKind() async {
+    // the search field lets go first: closing the sheet does not bring
+    // the keyboard back
+    FocusManager.instance.primaryFocus?.unfocus();
     final k = await showChoiceSheet<FileKindFilter>(
       context,
       title: l10n.filesTypeTitle,
@@ -283,6 +286,9 @@ class SharedFilesPageState extends State<SharedFilesPage> {
   }
 
   Future<void> _pickFrom() async {
+    // the search field lets go first: closing the sheet does not bring
+    // the keyboard back
+    FocusManager.instance.primaryFocus?.unfocus();
     final peers = <String>{
       for (final e in widget.files)
         if (!e.mine && e.peer != null) e.peer!,
@@ -306,6 +312,9 @@ class SharedFilesPageState extends State<SharedFilesPage> {
   }
 
   Future<void> _pickOrder() async {
+    // the search field lets go first: closing the sheet does not bring
+    // the keyboard back
+    FocusManager.instance.primaryFocus?.unfocus();
     final o = await showChoiceSheet<FileOrder>(
       context,
       title: l10n.filesOrderTitle,
@@ -777,6 +786,8 @@ Future<void> showFileRowMenu(
 }) async {
   final box = rowContext.findRenderObject() as RenderBox?;
   if (box == null || !box.attached) return;
+  // nothing comes back up when the menu goes: the keyboard stays down
+  FocusManager.instance.primaryFocus?.unfocus();
   final rect = box.localToGlobal(Offset.zero) & box.size;
   HapticFeedback.mediumImpact();
   await showGeneralDialog<void>(

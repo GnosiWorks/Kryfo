@@ -73,7 +73,7 @@ class TrayCard {
 
 class SendTray extends StatefulWidget {
   /// how long the cards take to lift off when they are sent
-  static const liftTime = Duration(milliseconds: 180);
+  static const liftTime = Duration(milliseconds: 260);
 
   final List<TrayCard> cards;
   // sent: the cards rise and fade toward the chat as the sheet goes
@@ -169,43 +169,48 @@ class _SendTrayState extends State<SendTray> {
         SizedBox(
           height: 112,
           child: AnimatedSlide(
-            offset: widget.lifting ? const Offset(0, -0.35) : Offset.zero,
+            offset: widget.lifting ? const Offset(0, -1.6) : Offset.zero,
             duration: SendTray.liftTime,
             curve: Curves.easeInCubic,
-            child: AnimatedOpacity(
-              opacity: widget.lifting ? 0 : 1,
+            child: AnimatedScale(
+              scale: widget.lifting ? 0.92 : 1,
               duration: SendTray.liftTime,
-              curve: Curves.easeIn,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                clipBehavior: Clip.none,
-                children: [
-                  for (final (c, leaving) in drawn)
-                    _Slot(
-                      key: ValueKey(c.key),
-                      leaving: leaving,
-                      onGone: () => _gone(c.key),
-                      child: _Card(
-                        card: c,
-                        onRemove: leaving
-                            ? null
-                            : () {
-                                HapticFeedback.lightImpact();
-                                widget.onRemove(c.key);
-                              },
-                        onRename: leaving || c.photo || c.video
-                            ? null
-                            : () => widget.onRename(c.key),
-                        onSpoiler:
-                            leaving || !c.photo || widget.onSpoiler == null
-                            ? null
-                            : () {
-                                HapticFeedback.selectionClick();
-                                widget.onSpoiler!(c.key);
-                              },
+              curve: Curves.easeInCubic,
+              child: AnimatedOpacity(
+                opacity: widget.lifting ? 0 : 1,
+                duration: SendTray.liftTime,
+                curve: const Interval(0.45, 1, curve: Curves.easeIn),
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  children: [
+                    for (final (c, leaving) in drawn)
+                      _Slot(
+                        key: ValueKey(c.key),
+                        leaving: leaving,
+                        onGone: () => _gone(c.key),
+                        child: _Card(
+                          card: c,
+                          onRemove: leaving
+                              ? null
+                              : () {
+                                  HapticFeedback.lightImpact();
+                                  widget.onRemove(c.key);
+                                },
+                          onRename: leaving || c.photo || c.video
+                              ? null
+                              : () => widget.onRename(c.key),
+                          onSpoiler:
+                              leaving || !c.photo || widget.onSpoiler == null
+                              ? null
+                              : () {
+                                  HapticFeedback.selectionClick();
+                                  widget.onSpoiler!(c.key);
+                                },
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

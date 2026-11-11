@@ -28,6 +28,7 @@ import 'package:kryfo/widgets/file_actions.dart';
 import 'package:kryfo/widgets/file_badge.dart';
 import 'package:kryfo/widgets/file_bubble.dart';
 import 'package:kryfo/widgets/file_sheet.dart';
+import 'package:kryfo/widgets/file_viewer_parts.dart';
 import 'package:kryfo/widgets/message_menu.dart';
 import 'package:kryfo/widgets/pdf_viewer.dart';
 import 'package:kryfo/widgets/text_viewer.dart';
@@ -794,6 +795,75 @@ void main() {
       v.jumpTo(5);
       await settle(t);
       expect(v.page, 5);
+    });
+
+    testWidgets('a viewer grows out of the bubble it was opened from and '
+        'shrinks back into it', (t) async {
+      t.view.physicalSize = const Size(390, 844);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomLeft,
+              child: Builder(
+                builder: (c) => GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => openFileViewer(c, (_) => const Text('the page')),
+                  child: const SizedBox(width: 200, height: 80),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await t.tapAt(const Offset(100, 800));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 60));
+      final grow = find.byType(GrowFromRect);
+      expect(grow, findsOneWidget);
+      Rect window() => t.getRect(
+        find.descendant(of: grow, matching: find.byType(ClipRRect)).first,
+      );
+      // part way: a window between the bubble and the screen, low on it
+      expect(window().width, inExclusiveRange(200, 390));
+      expect(window().bottom, closeTo(844, 1));
+      await t.pumpAndSettle();
+      expect(window(), const Rect.fromLTWH(0, 0, 390, 844));
+      Navigator.of(t.element(find.text('the page'))).pop();
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 120));
+      expect(window().width, lessThan(390));
+      await t.pumpAndSettle();
+      expect(find.text('the page'), findsNothing);
+    });
+
+    testWidgets('a sideways swipe turns the page; the last page clears the '
+        'zoom bar', (t) async {
+      final fake = FakePdf();
+      final v = await openPdf(t, fake);
+      expect(v.page, 0);
+      await t.fling(
+        find.byType(InteractiveViewer),
+        const Offset(-300, 0),
+        1500,
+      );
+      await settle(t);
+      expect(v.page, 1);
+      await t.fling(find.byType(InteractiveViewer), const Offset(300, 0), 1500);
+      await settle(t);
+      expect(v.page, 0);
+      // a slow sideways drag, or one mostly up and down, turns nothing
+      v.pageBySwipe(-200, 0, rtl: false);
+      v.pageBySwipe(-800, 1600, rtl: false);
+      await settle(t);
+      expect(v.page, 0);
+      // right to left: a swipe to the right goes on
+      v.pageBySwipe(900, 0, rtl: true);
+      await settle(t);
+      expect(v.page, 1);
+      expect(kPdfBarRoom, greaterThanOrEqualTo(56));
     });
 
     testWidgets('the lock closes the document and drops every page', (t) async {

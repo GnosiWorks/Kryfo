@@ -322,7 +322,7 @@ void main() {
     }
   });
 
-  test('both chats pick the gallery held, through the preview', () {
+  test('both chats pick the gallery held, the sheet as the preview', () {
     for (final (file, sig, send, video) in [
       (
         'lib/screens/chat_screen.dart',
@@ -339,7 +339,8 @@ void main() {
     ]) {
       final src = sourceOf(file);
       final body = bodyOf(src, sig);
-      // the sending sheet picks, held; the chat sends through the preview
+      // the sending sheet picks, held; the sheet is the preview: one send
+      // with no second screen
       expect(
         bodyOf(
           sourceOf('lib/recent_files.dart'),
@@ -347,9 +348,9 @@ void main() {
         ),
         contains('await lockState.hold(pickGallery)'),
       );
-      expect(body, contains('await sendGalleryPicks('), reason: file);
-      expect(body, contains('preview: _preview,'), reason: file);
-      expect(body, contains('pickMore: () => lockState.hold(pickGallery)'));
+      expect(body, contains('await readGalleryPicks('), reason: file);
+      expect(body, isNot(contains('_preview')), reason: file);
+      expect(body, contains('shredPickedImages('), reason: file);
       expect(body, isNot(contains('ImagePicker()')), reason: file);
       expect(bodyOf(src, send), contains(video), reason: file);
     }

@@ -211,7 +211,10 @@ void main() {
       );
       expect(fade.opacity, 0);
       final slide = t.widget<AnimatedSlide>(find.byType(AnimatedSlide));
-      expect(slide.offset.dy, lessThan(0));
+      // a real rise toward the chat, a little smaller as it goes
+      expect(slide.offset.dy, lessThan(-1));
+      final scale = t.widget<AnimatedScale>(find.byType(AnimatedScale).first);
+      expect(scale.scale, lessThan(1));
     });
 
     testWidgets('a card per pick, the total and an honest time over Tor', (
