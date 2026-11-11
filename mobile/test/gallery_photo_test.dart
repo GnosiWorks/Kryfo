@@ -191,7 +191,7 @@ void main() {
     ]) {
       final src = sourceOf(file);
       final body = bodyOf(src, picker);
-      expect(body, contains('send: (s) => _sendPicked('));
+      expect(body, contains('await _sendPicked(MediaSendResult('));
       final sends = bodyOf(src, send);
       expect(sends, contains(ready));
       for (final b in [body, sends]) {

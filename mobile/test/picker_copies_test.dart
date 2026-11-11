@@ -149,13 +149,14 @@ void main() {
       expect(body, contains('shredPickedImages'), reason: fn);
       expect(body, isNot(contains('shredFile(')), reason: fn);
     }
-    // several at a time go through sendGalleryPicks, and its photos
-    // through readGalleryPicks and readPickedPhotos
+    // the sheet's picks are read through readGalleryPicks, and its photos
+    // through readPickedPhotos; their video copies go once sent
     for (final (src, fn) in [
       (chat, 'Future<void> _sendFromSheet('),
       (group, 'Future<void> _sendFromSheet('),
     ]) {
-      expect(bodyOf(src, fn), contains('await sendGalleryPicks('), reason: fn);
+      expect(bodyOf(src, fn), contains('await readGalleryPicks('), reason: fn);
+      expect(bodyOf(src, fn), contains('shredPickedImages('), reason: fn);
     }
     expect(
       bodyOf(picked, 'Future<void> sendGalleryPicks('),

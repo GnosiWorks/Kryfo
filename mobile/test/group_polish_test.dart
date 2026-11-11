@@ -1678,6 +1678,13 @@ void main() {
       appState.contacts = [_contact(_anna, nick: 'Anna')];
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
+      // the shared section holds its place while it is read: the members
+      // sit lower until it is
+      await t.scrollUntilVisible(
+        find.text('Anna'),
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Anna'), findsOneWidget);
       db.history!.complete();
       await _close(t);
@@ -1769,6 +1776,13 @@ void main() {
       appState.contacts = [_contact(_anna, nick: 'Anna', face: 3)];
       await t.pumpWidget(app(const GroupInfoScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
+      // the shared section holds its place while it is read: the members
+      // sit lower until it is
+      await t.scrollUntilVisible(
+        find.text('Anna'),
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Anna'), findsOneWidget);
       expect(find.text(_anna), findsOneWidget);
       await t.ensureVisible(find.text('Anna'));
@@ -2245,9 +2259,16 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       await t.pump(const Duration(seconds: 1));
       // running: the members and their count are there
+      expect(find.text(l10n.groupInfo1Member(2)), findsOneWidget);
+      // the shared section holds its place while it is read: the members
+      // sit lower until it is
+      await t.scrollUntilVisible(
+        find.text('Anna'),
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text(l10n.groupInfoMembers2), findsOneWidget);
       expect(find.text('Anna'), findsOneWidget);
-      expect(find.text(l10n.groupInfo1Member(2)), findsOneWidget);
       // ended: opened again, the line and a delete alone
       db.endedBy = _anna;
       await t.pumpWidget(const SizedBox());

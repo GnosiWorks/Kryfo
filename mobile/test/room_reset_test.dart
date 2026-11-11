@@ -1050,6 +1050,11 @@ void main() {
       await close(t);
 
       await open(t, screenRows(maker: false), maker: false);
+      await t.scrollUntilVisible(
+        find.text(l10n.groupInfoInvite),
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text(l10n.groupInfoInvite), findsOneWidget);
       expect(find.text(l10n.groupInfoResetLink), findsNothing);
       await close(t);

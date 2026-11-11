@@ -117,7 +117,7 @@ void main() {
           file('big.mov', 2048).path,
         ], most: () async => 1024);
         expect([for (final x in tray.items) x.name], ['small.pdf']);
-        expect(tray.line, contains('kb'));
+        expect(tray.line, contains('KB'));
         expect(tray.warns, isTrue);
       },
     );
@@ -372,7 +372,7 @@ void main() {
       expect(find.byKey(const ValueKey('attach-tray')), findsOneWidget);
       expect(find.text('report.pdf'), findsOneWidget);
       expect(find.text('cat.jpg'), findsOneWidget);
-      expect(find.text('2 kb'), findsOneWidget);
+      expect(find.text('2 KB'), findsOneWidget);
       expect(sent, isEmpty);
       // and a second drop adds to it
       await _drop(t, [file('more.txt').path]);
@@ -409,7 +409,7 @@ void main() {
       await _drop(t, [file('a.pdf', 1024).path, file('b.jpg').path]);
       await t.pumpAndSettle();
       expect(find.bySemanticsLabel('Ready to send: 2'), findsOneWidget);
-      expect(find.bySemanticsLabel('a.pdf, 1 kb'), findsOneWidget);
+      expect(find.bySemanticsLabel('a.pdf, 1 KB'), findsOneWidget);
       expect(find.bySemanticsLabel('Remove a.pdf'), findsOneWidget);
       sem.dispose();
     });
@@ -463,7 +463,7 @@ void main() {
       await ctrlV(t);
       expect(find.byKey(const ValueKey('attach-tray')), findsOneWidget);
       expect(find.text('Pasted picture'), findsOneWidget);
-      expect(find.text('2 kb'), findsOneWidget);
+      expect(find.text('2 KB'), findsOneWidget);
       final x = tray.items.single;
       expect(x.kind, TrayKind.photo);
       expect(identical(x.bytes, png), isTrue);
@@ -601,7 +601,7 @@ void main() {
       await tray.addPicture(Uint8List(4096), most: () async => 1024);
       await t.pumpAndSettle();
       expect(tray.isEmpty, isTrue);
-      expect(find.textContaining('kb'), findsOneWidget);
+      expect(find.textContaining('KB'), findsOneWidget);
       for (var i = 0; i < kDragInMost; i++) {
         await tray.addPicture(Uint8List.fromList([i + 1]), most: _fifty);
       }
@@ -639,7 +639,7 @@ void main() {
       await t.pumpAndSettle();
       expect(tray.isEmpty, isTrue);
       expect(find.byKey(const ValueKey('attach-tray-line')), findsOneWidget);
-      expect(find.textContaining('kb'), findsOneWidget);
+      expect(find.textContaining('KB'), findsOneWidget);
     });
 
     testWidgets('a stranger\'s row says photos and files wait', (t) async {

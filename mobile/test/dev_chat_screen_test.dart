@@ -2186,7 +2186,7 @@ void main() {
   // with android's photo picker the gallery hands back photos and videos
   // together; without it, photos alone, as a mixed pick there is the file
   // browser
-  group('a pick sent from the preview', () {
+  group('a pick sent from the sheet', () {
     testWidgets('shows its bubbles at once, before anything is saved', (
       t,
     ) async {
@@ -2195,15 +2195,9 @@ void main() {
       await t.tap(find.byIcon(Icons.add_photo_alternate_outlined));
       await _beat(t, 500);
       await _galleryInSheet(t);
-      await _beat(t, 300);
+      // the sheet is the preview: no second screen
       final preview = find.byType(MediaSendScreen);
-      await _io(t, () => preview.evaluate().isNotEmpty, why: 'no preview');
-      await t.tap(
-        find.descendant(of: preview, matching: find.byIcon(Icons.arrow_upward)),
-      );
-      // a frame or two: the photos are still being cleaned
-      await t.pump();
-      await t.pump(const Duration(milliseconds: 400));
+      await _io(t, () => find.byType(AlbumGrid).evaluate().isNotEmpty);
       expect(preview, findsNothing);
       // before they accept each goes on its own: a waiting tile each
       expect(find.byType(AlbumGrid), findsNWidgets(2));
