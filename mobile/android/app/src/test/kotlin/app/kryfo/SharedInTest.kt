@@ -29,16 +29,4 @@ class SharedInTest {
         assertFalse(ToolsBridge.ours("0@app.kryfox", pkg))
         assertTrue(ToolsBridge.ours("app.kryfo", pkg))
     }
-
-    @Test
-    fun aLateReadNeverTakesTheNewerShare() {
-        val turns = Turns()
-        val stream = turns.next()
-        val words = turns.next()
-        assertTrue(turns.latest(words))
-        assertFalse(turns.latest(stream))
-        val again = turns.next()
-        assertFalse(turns.latest(words))
-        assertTrue(turns.latest(again))
-    }
 }

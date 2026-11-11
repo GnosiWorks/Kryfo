@@ -483,108 +483,188 @@ extension AppStateFiles on AppState {
     bool shut() => !identical(d, live) && !identical(d, _openVault);
     for (var f in await dueFetches(db, DateTime.now().millisecondsSinceEpoch)) {
       if (halt() || shut()) return;
-      final env = unwrapMessage(f.wire);
-      final frame = env.drop;
-      final chat = d.container.chatKey(f.groupId ?? f.sender);
-      final now = DateTime.now().millisecondsSinceEpoch;
-      if (frame == null) {
-        await dropFetchRow(db, f.uid);
-        continue;
-      }
-      if (f.state == kFetchFiled) {
-        await _sayGot(db, f, frame);
-        continue;
-      }
-      if (fetchFiledFirst(f.state)) {
-        await _fetchFiled(d, db, f, env, frame, chat);
-        continue;
-      }
-      if (f.state == kFetchWaiting) {
-        if (await d.isBlocked(f.sender)) {
-          await _letFetchGo(db, f, frame, chat);
+      // the open's seal of left files has it this moment
+      final uid = f.uid;
+      if (!_fetchRowsBusy.add(uid)) continue;
+      try {
+        final env = unwrapMessage(f.wire);
+        final frame = env.drop;
+        final chat = d.container.chatKey(f.groupId ?? f.sender);
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (frame == null) {
+          await dropFetchRow(db, f.uid);
           continue;
         }
-        if (now - f.at > kFetchKeptFor.inMilliseconds) {
-          await fetchState(db, f.uid, kFetchGone);
-        } else {
-          // a blind fetch may have finished since the frame was kept
-          await takeHeld(await d.container.mediaDir(), frame.token!, f.path);
-          final r = await _fetchOne(
-            d,
-            f,
-            frame,
-            chat,
-            quiet: env.gif || env.voice,
-          );
-          // the chat was cleared or put away while it came: nothing of it
-          // is filed, and the service hears this phone is done with it
-          final after = await fetchOf(db, f.uid);
-          if (after == null) {
+        if (f.state == kFetchFiled) {
+          await _sayGot(db, f, frame);
+          continue;
+        }
+        if (fetchFiledFirst(f.state)) {
+          await _fetchFiled(d, db, f, env, frame, chat);
+          continue;
+        }
+        if (f.state == kFetchWaiting) {
+          if (await d.isBlocked(f.sender)) {
             await _letFetchGo(db, f, frame, chat);
             continue;
           }
-          // paused part way: its message is filed now and waits for a tap.
-          // one whose last byte was in before the pause is simply in
-          if (r != 'ok' && after.state == kFetchPaused) {
-            incomingMediaDone(chat);
-            await _fileNow(d, f, env);
-            continue;
-          }
-          if (r == 'ok') {
-            await fetchState(db, f.uid, kFetchHave);
-          } else if (r == 'error: gone' ||
-              r == 'error: bad' ||
-              r == 'error: denied') {
-            dlog('files: a file did not come ($r)');
+          if (now - f.at > kFetchKeptFor.inMilliseconds) {
             await fetchState(db, f.uid, kFetchGone);
           } else {
-            dlog('files: fetch to try again ($r)');
-            await fetchTried(db, f.uid, f.tries + 1, now);
-            continue;
+            // a blind fetch may have finished since the frame was kept
+            await takeHeld(await d.container.mediaDir(), frame.token!, f.path);
+            final r = await _fetchOne(
+              d,
+              f,
+              frame,
+              chat,
+              quiet: env.gif || env.voice,
+            );
+            // the chat was cleared or put away while it came: nothing of it
+            // is filed, and the service hears this phone is done with it
+            final after = await fetchOf(db, f.uid);
+            if (after == null) {
+              await _letFetchGo(db, f, frame, chat);
+              continue;
+            }
+            // paused part way: its message is filed now and waits for a tap.
+            // one whose last byte was in before the pause is simply in
+            if (r != 'ok' && after.state == kFetchPaused) {
+              incomingMediaDone(chat);
+              await _fileNow(d, f, env);
+              continue;
+            }
+            if (r == 'ok') {
+              await fetchState(db, f.uid, kFetchHave);
+            } else if (r == 'error: gone' ||
+                r == 'error: bad' ||
+                r == 'error: denied') {
+              dlog('files: a file did not come ($r)');
+              await fetchState(db, f.uid, kFetchGone);
+            } else {
+              dlog('files: fetch to try again ($r)');
+              await fetchTried(db, f.uid, f.tries + 1, now);
+              continue;
+            }
           }
         }
-      }
-      // what came is sealed now, before a shut vault leaves it for later
-      if ((await fetchOf(db, f.uid))?.state == kFetchHave) {
-        final sealed = await _sealFetched(db, f);
-        if (sealed == null) continue;
-        f = sealed;
-      }
-      incomingMediaDone(chat);
-      if (shut()) return;
-      if (await fetchOf(db, f.uid) == null) {
+        // what came is sealed now, before a shut vault leaves it for later
+        if ((await fetchOf(db, f.uid))?.state == kFetchHave) {
+          final sealed = await _sealFetched(db, f);
+          if (sealed == null) continue;
+          f = sealed;
+        }
+        incomingMediaDone(chat);
+        if (shut()) return;
+        if (await fetchOf(db, f.uid) == null) {
+          await _letFetchGo(db, f, frame, chat);
+          continue;
+        }
+        // filed as if it had just come, the file with it
+        await _fileNow(d, f, env);
+        if (shut()) return;
         await _letFetchGo(db, f, frame, chat);
-        continue;
+      } finally {
+        _fetchRowsBusy.remove(uid);
       }
-      // filed as if it had just come, the file with it
-      await _fileNow(d, f, env);
-      if (shut()) return;
-      await _letFetchGo(db, f, frame, chat);
     }
   }
 
   // a fetched file a stop (or 0.5.3) left plain in the fetch folder, sealed
   // as its container opens instead of at the next pass with the link up.
-  // one whose message is filed already has its place shut to it: it goes
-  // and comes again. only files from before [before], so no live fetch
+  // one whose message is filed already goes into the place it names. only
+  // files from before [before], and no row a pass is on
   Future<void> sealLeftFetches(HaloDb d, DateTime before) async {
     if (restoreRunning || backupRunning) return;
     try {
       final db = await d.open();
       for (final r in await db.query('file_fetches')) {
-        final f = DropFetch.fromRow(r);
-        if (!inFetchFolder(f.path)) continue;
-        final file = File(f.path);
-        if (!await file.exists()) continue;
-        if (!(await file.lastModified()).isBefore(before)) continue;
-        if (f.state == kFetchHave) {
-          await _sealFetched(db, f);
-        } else if (fetchFiledFirst(f.state)) {
-          await shredFile(f.path);
+        final uid = DropFetch.fromRow(r).uid;
+        if (!_fetchRowsBusy.add(uid)) continue;
+        try {
+          await _sealLeft(d, db, uid, before);
+        } finally {
+          _fetchRowsBusy.remove(uid);
         }
       }
     } catch (e) {
       dlog('files: left fetches not sealed (${e.runtimeType})');
+    }
+  }
+
+  Future<void> _sealLeft(
+    HaloDb d,
+    Database db,
+    String uid,
+    DateTime before,
+  ) async {
+    // the row as it is now, not as the listing had it
+    final f = await fetchOf(db, uid);
+    if (f == null || !inFetchFolder(f.path)) return;
+    final file = File(f.path);
+    if (!await file.exists()) {
+      // sealed into got/ or moved into its place, a stop before the row
+      // followed: the row is put right, so nothing sweeps the file
+      if (f.state == kFetchHave) {
+        await _sealFetched(db, f);
+      } else if (fetchFiledFirst(f.state)) {
+        final target = await d.incomingFilePath(uid);
+        if (target != null && await _whole(target, f.size)) {
+          await fetchState(db, uid, kFetchFiled);
+          setFileWait(uid, null);
+        }
+      }
+      return;
+    }
+    if (!(await file.lastModified()).isBefore(before)) return;
+    if (f.state == kFetchWaiting) {
+      // the engine's ok came and the row's change did not: it is in
+      if (!await _isTheFile(f)) return;
+      await fetchState(db, uid, kFetchHave);
+      await _sealFetched(db, f);
+    } else if (f.state == kFetchHave) {
+      await _sealFetched(db, f);
+    } else if (fetchFiledFirst(f.state)) {
+      await _placeLeft(d, db, f);
+    }
+  }
+
+  // a filed message's file a stop left whole here goes into the place the
+  // message names; the next pass tells the service. one moved already
+  // leaves only its leftovers, anything else goes and comes again
+  Future<void> _placeLeft(HaloDb d, Database db, DropFetch f) async {
+    final target = await d.incomingFilePath(f.uid);
+    if (target == null || !await _whole(target, f.size)) {
+      if (target == null || !await _isTheFile(f)) {
+        await shredFile(f.path);
+        return;
+      }
+      try {
+        await File(f.path).rename(target);
+      } catch (e) {
+        dlog('files: a left file not moved (${e.runtimeType})');
+        await shredFile(f.path);
+        return;
+      }
+      makeBlurSoon(target);
+    }
+    for (final s in const ['', '.part', '.open']) {
+      await shredFile('${f.path}$s');
+    }
+    await fetchState(db, f.uid, kFetchFiled);
+    setFileWait(f.uid, null);
+    chatChanged(f.groupId == null ? f.sender : 'group:${f.groupId}');
+  }
+
+  // the plain file is the one the sender sent: its length and its hash
+  Future<bool> _isTheFile(DropFetch f) async {
+    final frame = unwrapMessage(f.wire).drop;
+    if (frame == null || !await _whole(f.path, frame.size)) return false;
+    try {
+      final h = await sha256.bind(File(f.path).openRead()).first;
+      return h.toString() == frame.sum.toLowerCase();
+    } catch (_) {
+      return false;
     }
   }
 
@@ -612,8 +692,14 @@ extension AppStateFiles on AppState {
     }
     final to = gotPathFor(f.path);
     try {
-      await Directory(p.dirname(to)).create(recursive: true);
-      await File(f.path).rename(to);
+      // sealed whole already: what is left here is a stop's, maybe zeroed,
+      // and never goes over it
+      if (await _whole(to, f.size)) {
+        await shredFile(f.path);
+      } else {
+        await Directory(p.dirname(to)).create(recursive: true);
+        await File(f.path).rename(to);
+      }
     } catch (e) {
       dlog('files: a fetched file not sealed (${e.runtimeType})');
       desk_trace.trace('media seal failed: ${e.runtimeType}');
@@ -637,6 +723,17 @@ extension AppStateFiles on AppState {
     }
     desk_trace.trace('media seal ok');
     return f.withPath(to);
+  }
+
+  // [path] holds all [size] bytes, as a rename across keys leaves only
+  // a whole file
+  static Future<bool> _whole(String path, int size) async {
+    try {
+      final f = File(path);
+      return await f.exists() && await f.length() == size;
+    } catch (_) {
+      return false;
+    }
   }
 
   // the kept envelope filed as if it had just come
@@ -689,6 +786,14 @@ extension AppStateFiles on AppState {
     if (target == null) {
       setFileWait(f.uid, null);
       await _letFetchGo(db, f, frame, chat);
+      return;
+    }
+    // in its place already, a stop before the row said so: only the got
+    if (!await File(f.path).exists() && await _whole(target, f.size)) {
+      await fetchState(db, f.uid, kFetchFiled);
+      setFileWait(f.uid, null);
+      await _letFetchGo(db, f, frame, chat);
+      chatChanged(f.groupId == null ? f.sender : 'group:${f.groupId}');
       return;
     }
     // a week on the service and it is gone from there
@@ -744,6 +849,8 @@ extension AppStateFiles on AppState {
         await _neverCame(d, db, f, frame);
         return;
       }
+      // in its place: a stop from here on only owes the got
+      await fetchState(db, f.uid, kFetchFiled);
       makeBlurSoon(target);
       setFileWait(f.uid, null);
       await _letFetchGo(db, f, frame, chat);

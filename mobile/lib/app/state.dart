@@ -154,6 +154,8 @@ class AppState extends ChangeNotifier {
   // uids being processed right now, to dedup near-simultaneous arrivals
   // (preview re-send racing a manual retry) before the db write lands.
   final Set<String> _inflightUids = <String>{};
+  // fetch rows a pass or an open's seal of left files is on: one at a time
+  final Set<String> _fetchRowsBusy = <String>{};
   // messages their sender took back, by sender and uid, with when. a
   // catch-up hands frames over in any order, and one that lands after its
   // unsend stays out

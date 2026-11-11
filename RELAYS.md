@@ -59,7 +59,8 @@ tor), with its own anchor per store, writes every wrap to both and to the
 public relays, and queues nothing. a build with
 `--dart-define=KRYFO_PRIVATE_OWN=1` keeps private on our two stores and
 lists two of the public relays as backups, read and written through tor
-only while the first store is down, as on fast.
+only while the first store is down, as on fast, and a send the first store
+missed goes to them at once.
 
 ## `dmrelay/`: next, not deployable yet
 

@@ -115,6 +115,9 @@ extension AppStateBoot on AppState {
     }
   }
 
+  @visibleForTesting
+  Future<List<File>> strayFetchesForTest(HaloDb d) => _strayFetches(d, false);
+
   Future<List<File>> _strayFetches(HaloDb d, bool vaultOpen) async {
     if (restoreRunning || backupRunning) return const [];
     if (d.container == HaloContainer.decoy &&
@@ -123,10 +126,13 @@ extension AppStateBoot on AppState {
       return const [];
     }
     final db = await d.open();
-    final named = {
-      for (final r in await db.query('file_fetches', columns: const ['path']))
-        r['path'] as String,
-    };
+    final named = <String>{};
+    for (final r in await db.query('file_fetches', columns: const ['path'])) {
+      final path = r['path'] as String;
+      named.add(path);
+      // its sealed copy may be in got/ before the row says so
+      if (inFetchFolder(path)) named.add(gotPathFor(path));
+    }
     final media = await d.container.mediaDir();
     return [
       ...await strayFetchFiles(media, named),

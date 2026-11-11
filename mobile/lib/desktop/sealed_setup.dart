@@ -96,6 +96,31 @@ class ContainerKeys {
 @visibleForTesting
 void Function(String dir) folderSync = syncFolder;
 
+/// what a move across keys left half way in [dir] before [before]: its
+/// source never left, so the copy only goes. [deep]: the folders under it
+/// too. the media's leftovers go with the media's sweep
+Future<void> dropCarryLeft(
+  String dir,
+  DateTime before, {
+  bool deep = true,
+}) async {
+  final d = rawFileAccess(() => Directory(dir));
+  try {
+    if (!await d.exists()) return;
+    await for (final e in d.list(recursive: deep, followLinks: false)) {
+      if (e is! File || !e.path.endsWith(kCarryLeaf)) continue;
+      try {
+        if (!(await e.lastModified()).isBefore(before)) continue;
+        await rawFileAccess(() => File(e.path)).delete();
+      } on FileSystemException {
+        // gone meanwhile
+      }
+    }
+  } on FileSystemException {
+    // the next start looks again
+  }
+}
+
 /// what the sweep did, for its tests
 class SealSweep {
   int sealed = 0;

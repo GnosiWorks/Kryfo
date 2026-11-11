@@ -142,14 +142,19 @@ var (
 	privateFailSpan  = 40 * time.Second
 )
 
-// an attempt on an entry of store st failed. only where the app listed
-// backups, and only while tor can carry them
-func storeFailed(st string) {
+// an attempt on an entry of store st, begun at began, failed. only where
+// the app listed backups, and only while tor can carry them
+func storeFailed(st string, began time.Time) {
 	if st != storeFirst || len(backupsNow()) == 0 {
 		return
 	}
 	torWorks := torCarriesNow() && !netAway()
 	private := modeNeedsTor()
+	// on private a wake fails ours with every circuit tor is rebuilding:
+	// the backups stay shut while ours are fine. asked before liveMu
+	if private && wakeExcuses(began) {
+		return
+	}
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	now := ownClock()

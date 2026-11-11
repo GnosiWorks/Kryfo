@@ -179,3 +179,34 @@ func TestABackupsAnswerProvesThePrivateRoute(t *testing.T) {
 		t.Fatal("a backup's answer through tor did not prove the route")
 	}
 }
+
+// a wake on private fails our first store with every circuit tor rebuilds:
+// the backups stay shut while ours are fine. a failure with no wake to
+// excuse it counts as before
+func TestAWakeOpensNoBackupsOnPrivate(t *testing.T) {
+	usePrivateOwn(t)
+	privateTorUp(t)
+	sleep := fakeSleep(t)
+	storeAnswered(storeFirst)
+	sleep(2 * time.Hour)
+	if !wakeCheck() {
+		t.Fatal("no wake")
+	}
+	// a socket from before the sleep dies at the wake, a redial fails
+	began := time.Now().Add(-time.Minute)
+	for i := 0; i < 3; i++ {
+		storeFailed(storeFirst, began)
+		sleep(2 * time.Second)
+	}
+	if firstStoreDown() {
+		t.Fatal("a wake opened the backups")
+	}
+	wakeReset()
+	for i := 0; i < 3; i++ {
+		storeFailed(storeFirst, time.Now())
+		sleep(2 * time.Second)
+	}
+	if !firstStoreDown() {
+		t.Fatal("our first failing with no wake did not open the backups")
+	}
+}
