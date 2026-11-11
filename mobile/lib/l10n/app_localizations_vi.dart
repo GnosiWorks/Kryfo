@@ -12382,13 +12382,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get filesShowInChat => 'Xem trong cuộc trò chuyện';
 
   @override
-  String get filesDeleteHere => 'Xóa khỏi điện thoại này';
-
-  @override
-  String get filesDeleteHereLine =>
-      'Chỉ bị xóa khỏi điện thoại này. Người khác vẫn giữ bản của họ.';
-
-  @override
   String get spoilerLabel => 'Ảnh bị ẩn';
 
   @override
@@ -12411,12 +12404,15 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String selectDeleteTitle(int count, String n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Xóa $n tin nhắn khỏi điện thoại này?',
-    );
-    return '$_temp0';
-  }
+  String get filesRemoveDownload => 'Gỡ bản tải về';
+
+  @override
+  String get filesRemoveDownloadLine =>
+      'Thao tác này giải phóng dung lượng trên điện thoại này. Tin nhắn vẫn còn. Không thể tải lại tệp: hãy nhờ gửi lại nếu bạn cần.';
+
+  @override
+  String get filesRemoveDownloadYes => 'Gỡ';
+
+  @override
+  String get fileNotHere => 'Đã gỡ khỏi điện thoại này';
 }

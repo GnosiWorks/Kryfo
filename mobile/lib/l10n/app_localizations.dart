@@ -19825,18 +19825,6 @@ abstract class AppLocalizations {
   /// **'Show in chat'**
   String get filesShowInChat;
 
-  /// files tab hold menu: delete the file and its message from this device only
-  ///
-  /// In en, this message translates to:
-  /// **'Delete from this phone'**
-  String get filesDeleteHere;
-
-  /// confirm sheet: what deleting a file or messages from this phone does
-  ///
-  /// In en, this message translates to:
-  /// **'It goes from this phone only. Everyone else keeps theirs.'**
-  String get filesDeleteHereLine;
-
   /// screen reader: a photo sent as a spoiler, still blurred
   ///
   /// In en, this message translates to:
@@ -19867,11 +19855,29 @@ abstract class AppLocalizations {
   /// **'{count, plural, other{{n} selected}}'**
   String selectCount(int count, String n);
 
-  /// confirm sheet title: delete the picked messages from this device (n in the language's digits)
+  /// files tab hold menu: remove the downloaded copy of a received file to free space; the message stays
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{Delete this message from this phone?} other{Delete {n} messages from this phone?}}'**
-  String selectDeleteTitle(int count, String n);
+  /// **'Remove download'**
+  String get filesRemoveDownload;
+
+  /// confirm sheet: what removing a download does. honest: the file was dropped from the files service once it came, so it cannot come again
+  ///
+  /// In en, this message translates to:
+  /// **'This frees its space on this phone. The message stays. The file can\'t be downloaded again: ask for it to be sent again if you need it.'**
+  String get filesRemoveDownloadLine;
+
+  /// confirm button: remove the downloaded file
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get filesRemoveDownloadYes;
+
+  /// file bubble line: a received file whose download was removed from this phone
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from this phone'**
+  String get fileNotHere;
 }
 
 class _AppLocalizationsDelegate

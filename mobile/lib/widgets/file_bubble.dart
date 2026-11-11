@@ -176,9 +176,13 @@ class _FileCardState extends State<FileCard> {
         ? l10n.mediaBubblesFile
         : facts.ext.toUpperCase();
     final size = _size;
-    final meta = going == null
-        ? fileMetaLine(facts, size)
-        : _goingLine(going.$1, going.$2);
+    // theirs whose download was removed: the message stays, the file not
+    final gone = widget.path == null && !isOut && widget.name != null;
+    final meta = going != null
+        ? _goingLine(going.$1, going.$2)
+        : gone
+        ? l10n.fileNotHere
+        : fileMetaLine(facts, size);
     final still = motionStill(context);
     final nameStyle = HaloType.sans(
       size: 14,

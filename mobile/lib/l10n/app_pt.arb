@@ -3255,12 +3255,13 @@
   "filesNoMatch": "Tente outro nome ou filtro.",
   "filesOpen": "Abrir",
   "filesShowInChat": "Mostrar na conversa",
-  "filesDeleteHere": "Apagar deste telefone",
-  "filesDeleteHereLine": "Sai só deste telefone. Os outros mantêm o deles.",
   "spoilerLabel": "Foto com spoiler",
   "spoilerTapToSee": "Toque para ver",
   "selectStart": "Selecionar",
   "selectDone": "Parar de selecionar",
   "selectCount": "{count, plural, =1{{n} selecionado} other{{n} selecionados}}",
-  "selectDeleteTitle": "{count, plural, =1{Apagar esta mensagem deste telefone?} other{Apagar {n} mensagens deste telefone?}}"
+  "filesRemoveDownload": "Remover download",
+  "filesRemoveDownloadLine": "Isso libera o espaço dele neste telefone. A mensagem fica. O arquivo não pode ser baixado de novo: peça para enviarem de novo se precisar.",
+  "filesRemoveDownloadYes": "Remover",
+  "fileNotHere": "Removido deste telefone"
 }

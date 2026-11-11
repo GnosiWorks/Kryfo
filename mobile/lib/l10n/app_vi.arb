@@ -3255,12 +3255,13 @@
   "filesNoMatch": "Thử tên hoặc bộ lọc khác.",
   "filesOpen": "Mở",
   "filesShowInChat": "Xem trong cuộc trò chuyện",
-  "filesDeleteHere": "Xóa khỏi điện thoại này",
-  "filesDeleteHereLine": "Chỉ bị xóa khỏi điện thoại này. Người khác vẫn giữ bản của họ.",
   "spoilerLabel": "Ảnh bị ẩn",
   "spoilerTapToSee": "Chạm để xem",
   "selectStart": "Chọn",
   "selectDone": "Dừng chọn",
   "selectCount": "{count, plural, other{Đã chọn {n}}}",
-  "selectDeleteTitle": "{count, plural, other{Xóa {n} tin nhắn khỏi điện thoại này?}}"
+  "filesRemoveDownload": "Gỡ bản tải về",
+  "filesRemoveDownloadLine": "Thao tác này giải phóng dung lượng trên điện thoại này. Tin nhắn vẫn còn. Không thể tải lại tệp: hãy nhờ gửi lại nếu bạn cần.",
+  "filesRemoveDownloadYes": "Gỡ",
+  "fileNotHere": "Đã gỡ khỏi điện thoại này"
 }

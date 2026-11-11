@@ -2419,8 +2419,10 @@ class _ChatScreenState extends State<ChatScreen>
     }
     // his first line is the app's own: it is copied and nothing else
     final welcome = target.welcome;
+    // theirs, in a chat that blocks: not even saved in here
+    final theirsKept = _keeps(target);
     // in a chat that blocks screenshots nothing leaves, ours included
-    final kept = _keeps(target) || _shots.blocking;
+    final kept = theirsKept || _shots.blocking;
     // a row without a uid gets a local one. the peer doesn't know it, so the
     // reaction stays local.
     if (target.msgUid == null && !welcome) {
@@ -2562,7 +2564,7 @@ class _ChatScreenState extends State<ChatScreen>
           label: saveOn?.saved ?? false ? l10n.chatUnsave : l10n.commonSave,
           tint: saveOn?.saved ?? false ? HaloColors.amber : null,
           // one saved before stays, and can be let go
-          onTap: saveOn == null || (kept && !saveOn.saved)
+          onTap: saveOn == null || (theirsKept && !saveOn.saved)
               ? null
               : () => dismiss(then: () => _toggleSaved(saveOn)),
         ),
@@ -2746,7 +2748,7 @@ class _ChatScreenState extends State<ChatScreen>
       await showDeskMenu<void>(
         bubbleContext,
         label: l10n.a11yMessageActions,
-        note: kept ? l10n.chatShotsMenuNote : null,
+        note: theirsKept ? l10n.chatShotsMenuNote : null,
         reactions: !reacts
             ? null
             : DeskReactions(
@@ -2918,7 +2920,7 @@ class _ChatScreenState extends State<ChatScreen>
                     fromRight: alignRight,
                     closing: closing,
                     child: MessageMenuCard(
-                      note: kept ? l10n.chatShotsMenuNote : null,
+                      note: theirsKept ? l10n.chatShotsMenuNote : null,
                       actions: actionsWith(dismiss),
                     ),
                   ),
@@ -3721,9 +3723,6 @@ class _ChatScreenState extends State<ChatScreen>
       onClose: () => setState(_picked.clear),
       onCopy: words ? () => _copyPicked(rows) : null,
       onForward: words || files ? () => _forwardPicked(rows, words) : null,
-      onDelete: rows.any((x) => x.msgUid != null && !x.sending)
-          ? () => _deletePicked(rows)
-          : null,
     );
   }
 
@@ -3761,31 +3760,6 @@ class _ChatScreenState extends State<ChatScreen>
     ]);
   }
 
-  // gone from this phone and its computers; the other side keeps theirs
-  Future<void> _deletePicked(List<_Msg> rows) async {
-    final yes = await showConfirmSheet(
-      context,
-      title: l10n.selectDeleteTitle(rows.length, whole(rows.length)),
-      line: l10n.filesDeleteHereLine,
-      yes: l10n.commonDelete,
-    );
-    if (!yes || !mounted) return;
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _picked.clear();
-      for (final x in rows) {
-        x.removing = true;
-      }
-    });
-    await Future.delayed(kLeaveGone);
-    for (final x in rows) {
-      if (x.msgUid != null && !x.sending) {
-        await session.deleteMessage(x.msgUid!);
-      }
-    }
-    if (!mounted) return;
-    setState(() => _messages.removeWhere(rows.contains));
-  }
 
   // the shared page asked for a message of this chat: what is above the
   // chat goes, and the chat goes to it. an album's row stands for its own

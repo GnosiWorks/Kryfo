@@ -3255,12 +3255,13 @@
   "filesNoMatch": "कोई और नाम या फ़िल्टर आज़माओ।",
   "filesOpen": "खोलो",
   "filesShowInChat": "चैट में दिखाओ",
-  "filesDeleteHere": "इस फ़ोन से मिटाओ",
-  "filesDeleteHereLine": "यह सिर्फ़ इस फ़ोन से हटेगा। बाकी सबके पास उनका रहेगा।",
   "spoilerLabel": "स्पॉइलर फ़ोटो",
   "spoilerTapToSee": "देखने के लिए टैप करो",
   "selectStart": "चुनो",
   "selectDone": "चुनना बंद करो",
   "selectCount": "{count, plural, other{{n} चुने गए}}",
-  "selectDeleteTitle": "{count, plural, =1{यह संदेश इस फ़ोन से मिटाएँ?} other{{n} संदेश इस फ़ोन से मिटाएँ?}}"
+  "filesRemoveDownload": "डाउनलोड हटाओ",
+  "filesRemoveDownloadLine": "इससे इस फ़ोन पर उसकी जगह खाली होगी। संदेश रहेगा। फ़ाइल फिर से डाउनलोड नहीं होगी: ज़रूरत हो तो दोबारा भेजने को कहो।",
+  "filesRemoveDownloadYes": "हटाओ",
+  "fileNotHere": "इस फ़ोन से हटाई गई"
 }

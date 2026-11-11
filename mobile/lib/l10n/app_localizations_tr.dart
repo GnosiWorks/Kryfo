@@ -12415,13 +12415,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get filesShowInChat => 'Sohbette göster';
 
   @override
-  String get filesDeleteHere => 'Bu telefondan sil';
-
-  @override
-  String get filesDeleteHereLine =>
-      'Yalnızca bu telefondan gider. Diğerleri kendi kopyasını tutar.';
-
-  @override
   String get spoilerLabel => 'Spoiler fotoğraf';
 
   @override
@@ -12444,13 +12437,15 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String selectDeleteTitle(int count, String n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$n mesaj bu telefondan silinsin mi?',
-      one: 'Bu mesaj bu telefondan silinsin mi?',
-    );
-    return '$_temp0';
-  }
+  String get filesRemoveDownload => 'İndirmeyi kaldır';
+
+  @override
+  String get filesRemoveDownloadLine =>
+      'Bu, bu telefondaki yerini boşaltır. Mesaj kalır. Dosya yeniden indirilemez: gerekirse yeniden göndermesini iste.';
+
+  @override
+  String get filesRemoveDownloadYes => 'Kaldır';
+
+  @override
+  String get fileNotHere => 'Bu telefondan kaldırıldı';
 }

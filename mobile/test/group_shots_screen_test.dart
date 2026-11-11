@@ -730,7 +730,9 @@ void main() {
 
     for (final out in [false, true]) {
       testWidgets('the menu keeps ${out ? 'its own' : 'others\''} messages '
-          '${out ? 'free' : 'from copy, forward and save'}', (t) async {
+          '${out ? 'in, save aside' : 'from copy, forward and save'}', (
+        t,
+      ) async {
         _use(
           t,
           _theirs(
@@ -746,11 +748,10 @@ void main() {
         Finder inCard(String s) =>
             find.descendant(of: card, matching: find.text(s));
         final kept = !out;
-        expect(inCard(l10n.commonCopy), kept ? findsNothing : findsOneWidget);
-        expect(
-          inCard(l10n.groupChatForward),
-          kept ? findsNothing : findsOneWidget,
-        );
+        // nothing leaves a group that blocks, ours included; ours may still
+        // be saved in here
+        expect(inCard(l10n.commonCopy), findsNothing);
+        expect(inCard(l10n.groupChatForward), findsNothing);
         expect(inCard(l10n.commonSave), kept ? findsNothing : findsOneWidget);
         expect(
           inCard(l10n.groupShotsMenuNote),

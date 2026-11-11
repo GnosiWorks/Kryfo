@@ -15634,14 +15634,6 @@
   "@filesShowInChat": {
     "description": "files tab hold menu: go to the message in the chat"
   },
-  "filesDeleteHere": "Delete from this phone",
-  "@filesDeleteHere": {
-    "description": "files tab hold menu: delete the file and its message from this device only"
-  },
-  "filesDeleteHereLine": "It goes from this phone only. Everyone else keeps theirs.",
-  "@filesDeleteHereLine": {
-    "description": "confirm sheet: what deleting a file or messages from this phone does"
-  },
   "spoilerLabel": "Spoiler photo",
   "@spoilerLabel": {
     "description": "screen reader: a photo sent as a spoiler, still blurred"
@@ -15670,16 +15662,20 @@
       }
     }
   },
-  "selectDeleteTitle": "{count, plural, =1{Delete this message from this phone?} other{Delete {n} messages from this phone?}}",
-  "@selectDeleteTitle": {
-    "description": "confirm sheet title: delete the picked messages from this device (n in the language's digits)",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "n": {
-        "type": "String"
-      }
-    }
+  "filesRemoveDownload": "Remove download",
+  "@filesRemoveDownload": {
+    "description": "files tab hold menu: remove the downloaded copy of a received file to free space; the message stays"
+  },
+  "filesRemoveDownloadLine": "This frees its space on this phone. The message stays. The file can't be downloaded again: ask for it to be sent again if you need it.",
+  "@filesRemoveDownloadLine": {
+    "description": "confirm sheet: what removing a download does. honest: the file was dropped from the files service once it came, so it cannot come again"
+  },
+  "filesRemoveDownloadYes": "Remove",
+  "@filesRemoveDownloadYes": {
+    "description": "confirm button: remove the downloaded file"
+  },
+  "fileNotHere": "Removed from this phone",
+  "@fileNotHere": {
+    "description": "file bubble line: a received file whose download was removed from this phone"
   }
 }

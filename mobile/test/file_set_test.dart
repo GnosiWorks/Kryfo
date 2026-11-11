@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/album.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/message_envelope.dart';
 import 'package:kryfo/media_progress.dart';
 import 'package:kryfo/transfers.dart';
@@ -256,6 +257,18 @@ void main() {
         expect(tries, 1);
       });
     }
+  });
+
+  testWidgets('theirs with its download removed says so', (t) async {
+    await t.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: FileCard(path: null, name: 'route.pdf', isOut: false),
+        ),
+      ),
+    );
+    await t.pump();
+    expect(find.text(l10n.fileNotHere), findsOneWidget);
   });
 
   group('the ring', () {

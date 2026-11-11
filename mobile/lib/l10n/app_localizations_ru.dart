@@ -12587,13 +12587,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get filesShowInChat => 'Показать в чате';
 
   @override
-  String get filesDeleteHere => 'Удалить с этого телефона';
-
-  @override
-  String get filesDeleteHereLine =>
-      'Исчезнет только с этого телефона. У остальных всё останется.';
-
-  @override
   String get spoilerLabel => 'Фото под спойлером';
 
   @override
@@ -12616,13 +12609,15 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String selectDeleteTitle(int count, String n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Удалить сообщения ($n) с этого телефона?',
-      one: 'Удалить это сообщение с этого телефона?',
-    );
-    return '$_temp0';
-  }
+  String get filesRemoveDownload => 'Удалить загрузку';
+
+  @override
+  String get filesRemoveDownloadLine =>
+      'Так освободится место на этом телефоне. Сообщение останется. Скачать файл снова не получится: попросите отправить его ещё раз, если он нужен.';
+
+  @override
+  String get filesRemoveDownloadYes => 'Удалить';
+
+  @override
+  String get fileNotHere => 'Удалено с этого телефона';
 }

@@ -3255,12 +3255,13 @@
   "filesNoMatch": "جرّب اسمًا أو مرشحًا آخر.",
   "filesOpen": "فتح",
   "filesShowInChat": "إظهار في الدردشة",
-  "filesDeleteHere": "حذف من هذا الهاتف",
-  "filesDeleteHereLine": "يُحذف من هذا الهاتف فقط. يحتفظ الآخرون بنسخهم.",
   "spoilerLabel": "صورة مخفية",
   "spoilerTapToSee": "انقر للعرض",
   "selectStart": "تحديد",
   "selectDone": "إنهاء التحديد",
   "selectCount": "{count, plural, other{تم تحديد {n}}}",
-  "selectDeleteTitle": "{count, plural, =1{حذف هذه الرسالة من هذا الهاتف؟} other{حذف {n} رسائل من هذا الهاتف؟}}"
+  "filesRemoveDownload": "إزالة التنزيل",
+  "filesRemoveDownloadLine": "يحرّر هذا مساحته على هذا الهاتف. تبقى الرسالة. لا يمكن تنزيل الملف مرة أخرى: اطلب إرساله من جديد إن احتجت إليه.",
+  "filesRemoveDownloadYes": "إزالة",
+  "fileNotHere": "أُزيل من هذا الهاتف"
 }

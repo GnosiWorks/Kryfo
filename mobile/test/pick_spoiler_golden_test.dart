@@ -74,7 +74,6 @@ void main() {
                   onClose: () {},
                   onCopy: () {},
                   onForward: () {},
-                  onDelete: () {},
                 ),
                 SelectRow(
                   on: true,

@@ -3974,8 +3974,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     AlbumRun<_GMsg>? album,
     _GMsg? held,
   }) {
+    // theirs, in a group that blocks: not even saved in here
+    final theirsKept = _keeps(target);
     // in a group that blocks or a room nothing leaves, ours included
-    final kept = _keeps(target) || _isRoom || _shots.blocking;
+    final kept = theirsKept || _isRoom || _shots.blocking;
     final words = target.text.isNotEmpty && target.sticker == null && !kept;
     final anchor = album?.anchor ?? target;
     final saveOn = held ?? anchor;
@@ -4030,7 +4032,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         label: saveOn.saved ? l10n.groupChatUnsave : l10n.commonSave,
         tint: saveOn.saved ? HaloColors.amber : null,
         // one saved before stays, and can be let go
-        onTap: kept && !saveOn.saved
+        onTap: theirsKept && !saveOn.saved
             ? null
             : () {
                 dismiss();
@@ -4409,9 +4411,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       onClose: () => setState(_picked.clear),
       onCopy: words ? () => _copyPicked(rows) : null,
       onForward: words || files ? () => _forwardPicked(rows, words) : null,
-      onDelete: rows.any((x) => x.msgUid != null && !x.sending)
-          ? () => _deletePicked(rows)
-          : null,
     );
   }
 
@@ -4448,31 +4447,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     ]);
   }
 
-  // gone from this phone and its computers; the others keep theirs
-  Future<void> _deletePicked(List<_GMsg> rows) async {
-    final yes = await showConfirmSheet(
-      context,
-      title: l10n.selectDeleteTitle(rows.length, whole(rows.length)),
-      line: l10n.filesDeleteHereLine,
-      yes: l10n.commonDelete,
-    );
-    if (!yes || !mounted) return;
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _picked.clear();
-      for (final x in rows) {
-        x.removing = true;
-      }
-    });
-    await Future.delayed(kLeaveGone);
-    for (final x in rows) {
-      if (x.msgUid != null && !x.sending) {
-        await session.deleteMessage(x.msgUid!);
-      }
-    }
-    if (!mounted) return;
-    setState(() => _messages.removeWhere(rows.contains));
-  }
 
   // a photo or video of the group is one item, the oldest first: those the
   // viewer can swipe through. a timed one, a spoiler and one still to come

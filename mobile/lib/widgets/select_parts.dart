@@ -2,8 +2,8 @@
 // several messages picked at once: "Select" in a message's menu starts it,
 // then a tap on a row picks it or lets it go. the head becomes a bar with
 // how many are picked and what can be done with all of them: copy and
-// forward only when every one may leave the chat (viewer_rules.dart), and
-// delete from this phone. back or the cross ends it
+// forward only when every one may leave the chat (viewer_rules.dart). back
+// or the cross ends it
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -94,14 +94,12 @@ class SelectBar extends StatelessWidget {
   // null leaves the action out: not every picked one may do it
   final VoidCallback? onCopy;
   final VoidCallback? onForward;
-  final VoidCallback? onDelete;
   const SelectBar({
     super.key,
     required this.count,
     required this.onClose,
     this.onCopy,
     this.onForward,
-    this.onDelete,
   });
 
   @override
@@ -195,12 +193,6 @@ class SelectBar extends StatelessWidget {
           ),
           act(Icons.copy_rounded, l10n.commonCopy, onCopy),
           act(Icons.forward_rounded, l10n.chatForward, onForward),
-          act(
-            Icons.delete_outline_rounded,
-            l10n.filesDeleteHere,
-            onDelete,
-            rose: true,
-          ),
         ],
       ),
     );

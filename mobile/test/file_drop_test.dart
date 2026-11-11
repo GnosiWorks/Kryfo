@@ -436,9 +436,10 @@ void main() {
       final seal = src.substring(src.indexOf('Future<void> _sealArrival('));
       expect(seal, contains('unawaited(_holdDrop(drop));'));
       // one the automatic download leaves waits for a tap there
+      expect(seal, contains('if (drop != null &&'));
       expect(
         seal,
-        contains('drop != null && await _getsNow(getKindOf(env.fileName))'),
+        contains('getKindOf(env.fileName, inSet: env.album?.files ?? false)'),
       );
     });
   });

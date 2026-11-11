@@ -3255,12 +3255,13 @@
   "filesNoMatch": "Coba nama atau filter lain.",
   "filesOpen": "Buka",
   "filesShowInChat": "Tampilkan di chat",
-  "filesDeleteHere": "Hapus dari ponsel ini",
-  "filesDeleteHereLine": "Hanya hilang dari ponsel ini. Orang lain tetap menyimpan milik mereka.",
   "spoilerLabel": "Foto spoiler",
   "spoilerTapToSee": "Ketuk untuk melihat",
   "selectStart": "Pilih",
   "selectDone": "Selesai memilih",
   "selectCount": "{count, plural, other{{n} dipilih}}",
-  "selectDeleteTitle": "{count, plural, other{Hapus {n} pesan dari ponsel ini?}}"
+  "filesRemoveDownload": "Hapus unduhan",
+  "filesRemoveDownloadLine": "Ini mengosongkan ruangnya di ponsel ini. Pesannya tetap ada. File tidak bisa diunduh lagi: minta dikirim ulang jika kamu memerlukannya.",
+  "filesRemoveDownloadYes": "Hapus",
+  "fileNotHere": "Dihapus dari ponsel ini"
 }

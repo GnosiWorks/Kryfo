@@ -3255,12 +3255,13 @@
   "filesNoMatch": "Попробуйте другое имя или фильтр.",
   "filesOpen": "Открыть",
   "filesShowInChat": "Показать в чате",
-  "filesDeleteHere": "Удалить с этого телефона",
-  "filesDeleteHereLine": "Исчезнет только с этого телефона. У остальных всё останется.",
   "spoilerLabel": "Фото под спойлером",
   "spoilerTapToSee": "Нажмите, чтобы увидеть",
   "selectStart": "Выбрать",
   "selectDone": "Завершить выбор",
   "selectCount": "{count, plural, other{Выбрано: {n}}}",
-  "selectDeleteTitle": "{count, plural, =1{Удалить это сообщение с этого телефона?} other{Удалить сообщения ({n}) с этого телефона?}}"
+  "filesRemoveDownload": "Удалить загрузку",
+  "filesRemoveDownloadLine": "Так освободится место на этом телефоне. Сообщение останется. Скачать файл снова не получится: попросите отправить его ещё раз, если он нужен.",
+  "filesRemoveDownloadYes": "Удалить",
+  "fileNotHere": "Удалено с этого телефона"
 }

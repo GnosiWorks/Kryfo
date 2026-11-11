@@ -23,6 +23,7 @@ import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
 import 'scam_prefs.dart' show loadScamShieldOn;
 import 'search.dart' show SearchKind;
+import 'shred.dart' show shredFile;
 import 'translate/hub.dart' show TranslationHub;
 import 'translate/settings.dart' show forgetChatTranslate;
 
@@ -743,6 +744,13 @@ class Session {
     uid,
     group: groupId,
   )).closePollRow(uid, spec, finals, groupId);
+  /// a file that came in, its downloaded copy shredded to free the space:
+  /// the message stays, with no file
+  Future<void> removeDownload(String msgUid) async {
+    final path = await (await _ofUid(msgUid)).dropDownload(msgUid);
+    if (path != null) await shredFile(path);
+  }
+
   // a send still reading its file stops before the file is scrubbed
   Future<void> deleteMessage(String msgUid) async {
     if (mediaInflight.contains(msgUid)) cancelMediaSend(msgUid);

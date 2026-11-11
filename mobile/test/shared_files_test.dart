@@ -347,7 +347,7 @@ void main() {
         List<SharedItem> files, {
         bool group = false,
         bool blocking = false,
-        Future<void> Function(String uid)? deleteHere,
+        Future<void> Function(String uid)? removeHere,
       }) async {
         t.view.physicalSize = const Size(390, 844);
         t.view.devicePixelRatio = 1;
@@ -363,7 +363,7 @@ void main() {
               nameOf: (p) => p == 'j' ? 'Jonas' : null,
               start: SharedTab.files,
               load: () async => SharedLists(files: files),
-              deleteHere: deleteHere,
+              removeHere: removeHere,
             ),
           ),
         );
@@ -441,7 +441,7 @@ void main() {
         expect(find.text('here'), findsOneWidget);
       });
 
-      testWidgets('a hold opens the menu; delete asks and takes it from here', (
+      testWidgets('a hold opens the menu; remove download asks and frees it', (
         t,
       ) async {
         final gone = <String>[];
@@ -449,7 +449,7 @@ void main() {
         addTearDown(() => chatGone('p'));
         await openFiles(t, [
           file('route.pdf', when, path: '/f/1', uid: 'u1'),
-        ], deleteHere: (u) async => gone.add(u));
+        ], removeHere: (u) async => gone.add(u));
         await t.longPress(find.text('route'));
         await t.pumpAndSettle();
         for (final w in [
@@ -457,16 +457,33 @@ void main() {
           l10n.chatForward,
           l10n.fileSaveToDevice,
           l10n.filesShowInChat,
-          l10n.filesDeleteHere,
+          l10n.filesRemoveDownload,
         ]) {
           expect(find.text(w), findsOneWidget, reason: w);
         }
-        await t.tap(find.text(l10n.filesDeleteHere));
+        await t.tap(find.text(l10n.filesRemoveDownload));
         await t.pumpAndSettle();
-        expect(find.text(l10n.filesDeleteHereLine), findsOneWidget);
-        await t.tap(find.text(l10n.commonDelete));
+        expect(find.text(l10n.filesRemoveDownloadLine), findsOneWidget);
+        await t.tap(find.text(l10n.filesRemoveDownloadYes));
         await t.pumpAndSettle();
         expect(gone, ['u1']);
+      });
+
+      testWidgets('ours, and one still to come, have no remove download', (
+        t,
+      ) async {
+        await openFiles(t, [
+          SharedItem(
+            path: '/f/1',
+            name: 'mine.pdf',
+            uid: 'u1',
+            mine: true,
+            when: when,
+          ),
+        ]);
+        await t.longPress(find.text('mine'));
+        await t.pumpAndSettle();
+        expect(find.text(l10n.filesRemoveDownload), findsNothing);
       });
 
       testWidgets('show in chat asks the chat under it', (t) async {

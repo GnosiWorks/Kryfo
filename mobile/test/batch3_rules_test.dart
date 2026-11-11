@@ -44,11 +44,11 @@ void main() {
   test('menus keep ours in a chat that blocks, and in a room', () {
     expect(
       sourceOf('lib/screens/chat_screen.dart'),
-      contains('final kept = _keeps(target) || _shots.blocking;'),
+      contains('final kept = theirsKept || _shots.blocking;'),
     );
     expect(
       sourceOf('lib/screens/group_chat_screen.dart'),
-      contains('final kept = _keeps(target) || _isRoom || _shots.blocking;'),
+      contains('final kept = theirsKept || _isRoom || _shots.blocking;'),
     );
   });
 

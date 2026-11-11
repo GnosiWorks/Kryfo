@@ -3255,12 +3255,13 @@
   "filesNoMatch": "Probier einen anderen Namen oder Filter.",
   "filesOpen": "Öffnen",
   "filesShowInChat": "Im Chat zeigen",
-  "filesDeleteHere": "Von diesem Gerät löschen",
-  "filesDeleteHereLine": "Es verschwindet nur von diesem Gerät. Alle anderen behalten ihres.",
   "spoilerLabel": "Spoiler-Foto",
   "spoilerTapToSee": "Zum Ansehen tippen",
   "selectStart": "Auswählen",
   "selectDone": "Auswahl beenden",
   "selectCount": "{count, plural, other{{n} ausgewählt}}",
-  "selectDeleteTitle": "{count, plural, =1{Diese Nachricht von diesem Gerät löschen?} other{{n} Nachrichten von diesem Gerät löschen?}}"
+  "filesRemoveDownload": "Download entfernen",
+  "filesRemoveDownloadLine": "Das gibt den Platz auf diesem Gerät frei. Die Nachricht bleibt. Die Datei lässt sich nicht erneut laden: Bitte darum, sie noch einmal zu senden, wenn du sie brauchst.",
+  "filesRemoveDownloadYes": "Entfernen",
+  "fileNotHere": "Von diesem Gerät entfernt"
 }

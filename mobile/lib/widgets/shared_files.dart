@@ -4,7 +4,7 @@
 // is on this phone. each row says who sent it in a group, how big it is and
 // when, or until when one still waiting can be got. a hold opens a small
 // menu that grows out of the row: open, forward, save, show in chat, and
-// delete from this phone. nothing ever comes without a tap
+// remove download. nothing ever comes without a tap
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -181,13 +181,13 @@ class FileRowActions {
   final VoidCallback? forward;
   final VoidCallback? save;
   final VoidCallback? showInChat;
-  final VoidCallback? delete;
+  final VoidCallback? remove;
   const FileRowActions({
     this.open,
     this.forward,
     this.save,
     this.showInChat,
-    this.delete,
+    this.remove,
   });
 }
 
@@ -840,8 +840,8 @@ class _RowMenu extends StatelessWidget {
         (Icons.download_rounded, l10n.fileSaveToDevice, f, false),
       if (actions.showInChat case final f?)
         (Icons.chat_bubble_outline_rounded, l10n.filesShowInChat, f, false),
-      if (actions.delete case final f?)
-        (Icons.delete_outline_rounded, l10n.filesDeleteHere, f, true),
+      if (actions.remove case final f?)
+        (Icons.delete_outline_rounded, l10n.filesRemoveDownload, f, true),
     ];
     // under the row when it fits, else over it
     const rowH = 46.0;

@@ -310,17 +310,24 @@ void main() {
     await devClose(t);
   });
 
-  // theirs in a chat that blocks is kept in it; mine never is; nothing is
-  // kept once it is off, or while their phone does not know the block
+  // theirs in a chat that blocks is kept in it; mine is not copied or
+  // forwarded out of it either, only saved in here; nothing is kept once it
+  // is off, or while their phone does not know the block
   for (final (on, can, dir, kept, what) in [
     (true, 10, 'in', true, 'their message in a chat that blocks'),
     (true, 10, 'out', false, 'my own message in a chat that blocks'),
     (false, 10, 'in', false, 'their message once it is turned off'),
     (true, 0, 'in', false, 'their message while their phone does not know'),
   ]) {
+    // mine in a chat that blocks: kept in, saved in here as ever
+    final mineIn = on && can > 0 && dir == 'out';
     testWidgets(
-      '$what: ${kept ? 'not copied, forwarded or saved, and '
-                'opened in no other app' : 'copied, forwarded and saved as ever'}',
+      '$what: ${kept
+          ? 'not copied, forwarded or saved, and '
+                'opened in no other app'
+          : mineIn
+          ? 'saved, never copied or forwarded'
+          : 'copied, forwarded and saved as ever'}',
       (t) async {
         await person(on: on, can: can);
         await mem.insert('messages', {
@@ -340,8 +347,9 @@ void main() {
         final card = find.byType(MessageMenuCard);
         Finder inCard(String s) =>
             find.descendant(of: card, matching: find.text(s));
-        expect(inCard(l10n.commonCopy), kept ? findsNothing : findsOneWidget);
-        expect(inCard(l10n.chatForward), kept ? findsNothing : findsOneWidget);
+        final out = kept || mineIn;
+        expect(inCard(l10n.commonCopy), out ? findsNothing : findsOneWidget);
+        expect(inCard(l10n.chatForward), out ? findsNothing : findsOneWidget);
         expect(inCard(l10n.commonSave), kept ? findsNothing : findsOneWidget);
         expect(
           inCard(l10n.chatShotsMenuNote),

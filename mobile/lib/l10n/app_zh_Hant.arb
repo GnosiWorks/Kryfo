@@ -3255,12 +3255,13 @@
   "filesNoMatch": "試試別的名稱或篩選條件。",
   "filesOpen": "開啟",
   "filesShowInChat": "在聊天中顯示",
-  "filesDeleteHere": "從本機刪除",
-  "filesDeleteHereLine": "只會從本機刪除。其他人仍保留自己的副本。",
   "spoilerLabel": "劇透照片",
   "spoilerTapToSee": "點按查看",
   "selectStart": "選取",
   "selectDone": "結束選取",
   "selectCount": "{count, plural, other{已選取 {n} 則}}",
-  "selectDeleteTitle": "{count, plural, other{從本機刪除 {n} 則訊息？}}"
+  "filesRemoveDownload": "移除下載",
+  "filesRemoveDownloadLine": "這會釋放它在本機上佔用的空間。訊息會保留。檔案無法再次下載：如有需要，請對方重新傳送。",
+  "filesRemoveDownloadYes": "移除",
+  "fileNotHere": "已從本機移除"
 }

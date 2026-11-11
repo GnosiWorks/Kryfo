@@ -530,6 +530,29 @@ mixin _MessageRows {
     }
   }
 
+  // the downloaded copy of a file that came in, taken off this phone: the
+  // message stays, with no file. the path to shred, or null
+  Future<String?> dropDownload(String msgUid) async {
+    final db = await open();
+    const where = "msg_uid = ? AND direction = 'in'";
+    final r = await db.query(
+      'messages',
+      columns: ['file_path'],
+      where: where,
+      whereArgs: [msgUid],
+      limit: 1,
+    );
+    final path = r.isEmpty ? null : r.first['file_path'] as String?;
+    if (path == null) return null;
+    await db.update(
+      'messages',
+      {'file_path': null},
+      where: where,
+      whereArgs: [msgUid],
+    );
+    return path;
+  }
+
   // what is here of [sender]'s album [albumId]: its count, the places
   // taken, when its first row was written and when its first row came.
   // null while none is

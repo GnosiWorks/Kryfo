@@ -1078,16 +1078,16 @@ void main() {
       await _close(t);
     });
 
-    // a room always blocks: someone else's message is kept in it, this
-    // phone's own is not, and a plain group keeps nothing
+    // a room always blocks: nothing leaves it, this phone's own included,
+    // though its own may still be saved in here; a plain group keeps nothing
     for (final (room, out, kept) in [
       (true, false, true),
-      (true, true, false),
+      (true, true, true),
       (false, false, false),
     ]) {
       testWidgets('${room ? 'a room' : 'a group'}: '
           '${out ? 'my own' : 'their'} message '
-          '${kept ? 'is not copied, forwarded or saved' : 'can be copied'}', (
+          '${kept ? 'is not copied or forwarded' : 'can be copied'}', (
         t,
       ) async {
         _use(
@@ -1112,10 +1112,13 @@ void main() {
           inCard(l10n.groupChatForward),
           kept ? findsNothing : findsOneWidget,
         );
-        expect(inCard(l10n.commonSave), kept ? findsNothing : findsOneWidget);
+        expect(
+          inCard(l10n.commonSave),
+          kept && !out ? findsNothing : findsOneWidget,
+        );
         expect(
           inCard(l10n.roomShotsMenuNote),
-          kept ? findsOneWidget : findsNothing,
+          kept && !out ? findsOneWidget : findsNothing,
         );
         await _close(t);
       });

@@ -3255,12 +3255,13 @@
   "filesNoMatch": "Prova un altro nome o filtro.",
   "filesOpen": "Apri",
   "filesShowInChat": "Mostra nella chat",
-  "filesDeleteHere": "Elimina da questo telefono",
-  "filesDeleteHereLine": "Sparisce solo da questo telefono. Gli altri tengono la loro copia.",
   "spoilerLabel": "Foto spoiler",
   "spoilerTapToSee": "Tocca per vedere",
   "selectStart": "Seleziona",
   "selectDone": "Termina selezione",
   "selectCount": "{count, plural, =1{{n} selezionato} other{{n} selezionati}}",
-  "selectDeleteTitle": "{count, plural, =1{Eliminare questo messaggio da questo telefono?} other{Eliminare {n} messaggi da questo telefono?}}"
+  "filesRemoveDownload": "Rimuovi download",
+  "filesRemoveDownloadLine": "Libera il suo spazio su questo telefono. Il messaggio resta. Il file non si può riscaricare: chiedi di rinviarlo se ti serve.",
+  "filesRemoveDownloadYes": "Rimuovi",
+  "fileNotHere": "Rimosso da questo telefono"
 }

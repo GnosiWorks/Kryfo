@@ -12398,13 +12398,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filesShowInChat => 'चैट में दिखाओ';
 
   @override
-  String get filesDeleteHere => 'इस फ़ोन से मिटाओ';
-
-  @override
-  String get filesDeleteHereLine =>
-      'यह सिर्फ़ इस फ़ोन से हटेगा। बाकी सबके पास उनका रहेगा।';
-
-  @override
   String get spoilerLabel => 'स्पॉइलर फ़ोटो';
 
   @override
@@ -12427,13 +12420,15 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String selectDeleteTitle(int count, String n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$n संदेश इस फ़ोन से मिटाएँ?',
-      one: 'यह संदेश इस फ़ोन से मिटाएँ?',
-    );
-    return '$_temp0';
-  }
+  String get filesRemoveDownload => 'डाउनलोड हटाओ';
+
+  @override
+  String get filesRemoveDownloadLine =>
+      'इससे इस फ़ोन पर उसकी जगह खाली होगी। संदेश रहेगा। फ़ाइल फिर से डाउनलोड नहीं होगी: ज़रूरत हो तो दोबारा भेजने को कहो।';
+
+  @override
+  String get filesRemoveDownloadYes => 'हटाओ';
+
+  @override
+  String get fileNotHere => 'इस फ़ोन से हटाई गई';
 }

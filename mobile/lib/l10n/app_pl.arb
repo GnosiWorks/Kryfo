@@ -3255,12 +3255,13 @@
   "filesNoMatch": "Spróbuj innej nazwy lub filtra.",
   "filesOpen": "Otwórz",
   "filesShowInChat": "Pokaż w czacie",
-  "filesDeleteHere": "Usuń z tego telefonu",
-  "filesDeleteHereLine": "Zniknie tylko z tego telefonu. Inni zachowają swoje.",
   "spoilerLabel": "Zdjęcie ze spoilerem",
   "spoilerTapToSee": "Stuknij, aby zobaczyć",
   "selectStart": "Zaznacz",
   "selectDone": "Zakończ zaznaczanie",
   "selectCount": "{count, plural, other{Zaznaczono: {n}}}",
-  "selectDeleteTitle": "{count, plural, =1{Usunąć tę wiadomość z tego telefonu?} other{Usunąć wiadomości ({n}) z tego telefonu?}}"
+  "filesRemoveDownload": "Usuń pobrany plik",
+  "filesRemoveDownloadLine": "Zwalnia to miejsce na tym telefonie. Wiadomość zostaje. Pliku nie da się pobrać ponownie: poproś o ponowne wysłanie, jeśli go potrzebujesz.",
+  "filesRemoveDownloadYes": "Usuń",
+  "fileNotHere": "Usunięto z tego telefonu"
 }

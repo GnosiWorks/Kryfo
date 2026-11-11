@@ -11715,12 +11715,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filesShowInChat => '在聊天中显示';
 
   @override
-  String get filesDeleteHere => '从本机删除';
-
-  @override
-  String get filesDeleteHereLine => '只会从本机删除。其他人仍保留自己的副本。';
-
-  @override
   String get spoilerLabel => '剧透照片';
 
   @override
@@ -11743,14 +11737,17 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String selectDeleteTitle(int count, String n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '从本机删除 $n 条消息？',
-    );
-    return '$_temp0';
-  }
+  String get filesRemoveDownload => '移除下载';
+
+  @override
+  String get filesRemoveDownloadLine =>
+      '这会释放它在本机上占用的空间。消息会保留。文件无法再次下载：如有需要，请对方重新发送。';
+
+  @override
+  String get filesRemoveDownloadYes => '移除';
+
+  @override
+  String get fileNotHere => '已从本机移除';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -23344,12 +23341,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get filesShowInChat => '在聊天中顯示';
 
   @override
-  String get filesDeleteHere => '從本機刪除';
-
-  @override
-  String get filesDeleteHereLine => '只會從本機刪除。其他人仍保留自己的副本。';
-
-  @override
   String get spoilerLabel => '劇透照片';
 
   @override
@@ -23372,12 +23363,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String selectDeleteTitle(int count, String n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '從本機刪除 $n 則訊息？',
-    );
-    return '$_temp0';
-  }
+  String get filesRemoveDownload => '移除下載';
+
+  @override
+  String get filesRemoveDownloadLine =>
+      '這會釋放它在本機上佔用的空間。訊息會保留。檔案無法再次下載：如有需要，請對方重新傳送。';
+
+  @override
+  String get filesRemoveDownloadYes => '移除';
+
+  @override
+  String get fileNotHere => '已從本機移除';
 }

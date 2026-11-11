@@ -49,14 +49,13 @@ void main() {
   testWidgets('the bar shows the count and only what all of it allows', (
     t,
   ) async {
-    var closed = 0, copied = 0, gone = 0;
+    var closed = 0, copied = 0;
     await t.pumpWidget(
       host(
         SelectBar(
           count: 3,
           onClose: () => closed++,
           onCopy: () => copied++,
-          onDelete: () => gone++,
         ),
       ),
     );
@@ -64,9 +63,10 @@ void main() {
     expect(find.text(l10n.selectCount(3, '3')), findsOneWidget);
     final sem = t.ensureSemantics();
     await t.tap(find.bySemanticsLabel(l10n.commonCopy));
-    await t.tap(find.bySemanticsLabel(l10n.filesDeleteHere));
     await t.tap(find.bySemanticsLabel(l10n.selectDone));
-    expect((copied, gone, closed), (1, 1, 1));
+    expect((copied, closed), (1, 1));
+    // nothing is deleted from here
+    expect(find.byIcon(Icons.delete_outline_rounded), findsNothing);
     // forward is not for all of it: it is not there to tap
     final fwd = t.widget<IgnorePointer>(
       find

@@ -3255,12 +3255,13 @@
   "filesNoMatch": "Başka bir ad ya da filtre dene.",
   "filesOpen": "Aç",
   "filesShowInChat": "Sohbette göster",
-  "filesDeleteHere": "Bu telefondan sil",
-  "filesDeleteHereLine": "Yalnızca bu telefondan gider. Diğerleri kendi kopyasını tutar.",
   "spoilerLabel": "Spoiler fotoğraf",
   "spoilerTapToSee": "Görmek için dokun",
   "selectStart": "Seç",
   "selectDone": "Seçimi bitir",
   "selectCount": "{count, plural, other{{n} seçildi}}",
-  "selectDeleteTitle": "{count, plural, =1{Bu mesaj bu telefondan silinsin mi?} other{{n} mesaj bu telefondan silinsin mi?}}"
+  "filesRemoveDownload": "İndirmeyi kaldır",
+  "filesRemoveDownloadLine": "Bu, bu telefondaki yerini boşaltır. Mesaj kalır. Dosya yeniden indirilemez: gerekirse yeniden göndermesini iste.",
+  "filesRemoveDownloadYes": "Kaldır",
+  "fileNotHere": "Bu telefondan kaldırıldı"
 }

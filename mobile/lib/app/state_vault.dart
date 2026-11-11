@@ -91,7 +91,10 @@ extension AppStateVault on AppState {
     // the service's week runs out on nothing this phone was sent. one the
     // automatic download leaves waits for a tap there
     final drop = env.drop;
-    if (drop != null && await _getsNow(getKindOf(env.fileName, inSet: env.album?.files ?? false))) {
+    if (drop != null &&
+        await _getsNow(
+          getKindOf(env.fileName, inSet: env.album?.files ?? false),
+        )) {
       unawaited(_holdDrop(drop));
     }
     if (ticks && await whole()) unawaited(_sendDeliveryReceipt(sender, uid));

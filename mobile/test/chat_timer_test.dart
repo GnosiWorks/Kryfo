@@ -66,6 +66,43 @@ void main() {
       await db.close();
     });
 
+    test(
+      'remove download takes theirs off, keeps the message, never ours',
+      () async {
+        if (sql == null) return markTestSkipped('no sqlite on this host');
+        final db = HaloDb();
+        final raw = await db.open();
+        await db.saveMessage(
+          _lena,
+          'in',
+          'map',
+          msgUid: 'i1',
+          filePath: '/m/a.zip',
+          fileName: 'a.zip',
+        );
+        await db.saveMessage(
+          _lena,
+          'out',
+          'mine',
+          msgUid: 'o1',
+          filePath: '/m/b.zip',
+          fileName: 'b.zip',
+        );
+        expect(await db.dropDownload('i1'), '/m/a.zip');
+        expect(await db.dropDownload('o1'), isNull);
+        final rows = await raw.query(
+          'messages',
+          columns: ['msg_uid', 'file_path', 'file_name'],
+          orderBy: 'id',
+        );
+        expect(rows, [
+          {'msg_uid': 'i1', 'file_path': null, 'file_name': 'a.zip'},
+          {'msg_uid': 'o1', 'file_path': '/m/b.zip', 'file_name': 'b.zip'},
+        ]);
+        await db.close();
+      },
+    );
+
     test('the step to 98 adds a timer to chats and groups', () async {
       if (sql == null) return markTestSkipped('no sqlite on this host');
       final db = HaloDb();

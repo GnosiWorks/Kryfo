@@ -504,7 +504,7 @@ class SharedScreen extends StatefulWidget {
   // tests hand the lists in
   final Future<SharedLists> Function()? load;
   // tests take a file from this phone here
-  final Future<void> Function(String uid)? deleteHere;
+  final Future<void> Function(String uid)? removeHere;
   // a hidden chat's: read from the session unless a test says
   final bool? hidden;
   const SharedScreen({
@@ -517,7 +517,7 @@ class SharedScreen extends StatefulWidget {
     this.room = false,
     this.nameOf,
     this.load,
-    this.deleteHere,
+    this.removeHere,
     this.hidden,
   });
 
@@ -791,22 +791,26 @@ class SharedScreenState extends State<SharedScreen> {
       showInChat: uid == null || !chatOpenUnder(widget.chatId)
           ? null
           : () => askShowInChat(widget.chatId, uid),
-      delete: uid == null ? null : () => _deleteHere(it),
+      // a downloaded copy of theirs goes to free the space; the message
+      // stays
+      remove: uid == null || it.mine || path == null
+          ? null
+          : () => _removeDownload(it),
     );
   }
 
-  Future<void> _deleteHere(SharedItem it) async {
+  Future<void> _removeDownload(SharedItem it) async {
     final uid = it.uid;
     if (uid == null) return;
     final yes = await showConfirmSheet(
       context,
-      title: l10n.filesDeleteHere,
-      line: l10n.filesDeleteHereLine,
-      yes: l10n.commonDelete,
+      title: l10n.filesRemoveDownload,
+      line: l10n.filesRemoveDownloadLine,
+      yes: l10n.filesRemoveDownloadYes,
     );
     if (!yes || !mounted) return;
     HapticFeedback.mediumImpact();
-    await (widget.deleteHere?.call(uid) ?? session.deleteMessage(uid));
+    await (widget.removeHere?.call(uid) ?? session.removeDownload(uid));
     if (mounted) await _load();
   }
 

@@ -12393,13 +12393,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get filesShowInChat => 'Tampilkan di chat';
 
   @override
-  String get filesDeleteHere => 'Hapus dari ponsel ini';
-
-  @override
-  String get filesDeleteHereLine =>
-      'Hanya hilang dari ponsel ini. Orang lain tetap menyimpan milik mereka.';
-
-  @override
   String get spoilerLabel => 'Foto spoiler';
 
   @override
@@ -12422,12 +12415,15 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String selectDeleteTitle(int count, String n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Hapus $n pesan dari ponsel ini?',
-    );
-    return '$_temp0';
-  }
+  String get filesRemoveDownload => 'Hapus unduhan';
+
+  @override
+  String get filesRemoveDownloadLine =>
+      'Ini mengosongkan ruangnya di ponsel ini. Pesannya tetap ada. File tidak bisa diunduh lagi: minta dikirim ulang jika kamu memerlukannya.';
+
+  @override
+  String get filesRemoveDownloadYes => 'Hapus';
+
+  @override
+  String get fileNotHere => 'Dihapus dari ponsel ini';
 }

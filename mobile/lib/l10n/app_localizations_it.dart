@@ -12492,13 +12492,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get filesShowInChat => 'Mostra nella chat';
 
   @override
-  String get filesDeleteHere => 'Elimina da questo telefono';
-
-  @override
-  String get filesDeleteHereLine =>
-      'Sparisce solo da questo telefono. Gli altri tengono la loro copia.';
-
-  @override
   String get spoilerLabel => 'Foto spoiler';
 
   @override
@@ -12522,13 +12515,15 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String selectDeleteTitle(int count, String n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Eliminare $n messaggi da questo telefono?',
-      one: 'Eliminare questo messaggio da questo telefono?',
-    );
-    return '$_temp0';
-  }
+  String get filesRemoveDownload => 'Rimuovi download';
+
+  @override
+  String get filesRemoveDownloadLine =>
+      'Libera il suo spazio su questo telefono. Il messaggio resta. Il file non si può riscaricare: chiedi di rinviarlo se ti serve.';
+
+  @override
+  String get filesRemoveDownloadYes => 'Rimuovi';
+
+  @override
+  String get fileNotHere => 'Rimosso da questo telefono';
 }

@@ -453,7 +453,10 @@ extension AppStateFiles on AppState {
           seen.add(f.uid);
           if (fileWaitOf(f.uid) != null) continue;
           final env = unwrapMessage(f.wire);
-          final kind = getKindOf(env.fileName, inSet: env.album?.files ?? false);
+          final kind = getKindOf(
+            env.fileName,
+            inSet: env.album?.files ?? false,
+          );
           final state = _waitStateOf(f.state);
           setFileWait(
             f.uid,
