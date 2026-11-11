@@ -12557,7 +12557,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Zniknie z tego telefonu i połączonych komputerów. Inni zachowają swoją.';
+      'Zniknie tylko z tego telefonu. Inni zachowają swoje.';
 
   @override
   String get spoilerLabel => 'Zdjęcie ze spoilerem';

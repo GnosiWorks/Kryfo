@@ -3239,7 +3239,7 @@
   "filesOpen": "खोलो",
   "filesShowInChat": "चैट में दिखाओ",
   "filesDeleteHere": "इस फ़ोन से मिटाओ",
-  "filesDeleteHereLine": "यह इस फ़ोन और इससे जुड़े कंप्यूटरों से हट जाएगी। बाकी सबके पास उनकी रहेगी।",
+  "filesDeleteHereLine": "यह सिर्फ़ इस फ़ोन से हटेगा। बाकी सबके पास उनका रहेगा।",
   "spoilerLabel": "स्पॉइलर फ़ोटो",
   "spoilerTapToSee": "देखने के लिए टैप करो",
   "selectStart": "चुनो",

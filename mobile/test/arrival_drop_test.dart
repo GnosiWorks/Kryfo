@@ -131,10 +131,16 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
 
-  Future<String> drop(String uid, {String id = 'ab'}) => wrapMessage(
+  // a video: a file never comes on its own (mario 2026-11-11), a video
+  // still does on wi-fi, so the fetch path is read through one
+  Future<String> drop(
+    String uid, {
+    String id = 'ab',
+    String name = 'plan.mp4',
+  }) => wrapMessage(
     'the plan',
     msgUid: uid,
-    fileName: 'plan.pdf',
+    fileName: name,
     drop: _frame(id),
     sender: asSender(_x),
   );
@@ -181,7 +187,7 @@ void main() {
       // under a name of the chat's own, out of the fetch folder
       expect(path, isNot(contains('/fetch/')));
       // its type only: the name lives in the row
-      expect(p.basename(path), matches(RegExp(r'^in_[0-9a-f]{32}\.pdf$')));
+      expect(p.basename(path), matches(RegExp(r'^in_[0-9a-f]{32}\.mp4$')));
       expect(eng.gots, [('ab' * 16, _tok)]);
       expect(await fetchOf(live.mem, 'f1'), isNull);
     },
@@ -411,13 +417,13 @@ void main() {
     });
 
     test('a file it leaves is filed at once and waits for a tap', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('w1'));
       final row = live.msg('w1')!;
       expect('${row['plaintext']}', contains('the plan'));
       final path = row['file_path'] as String;
       // its type only: the name lives in the row
-      expect(p.basename(path), matches(RegExp(r'^in_[0-9a-f]{32}\.pdf$')));
+      expect(p.basename(path), matches(RegExp(r'^in_[0-9a-f]{32}\.mp4$')));
       expect(File(path).existsSync(), isFalse);
       expect((await fetchOf(live.mem, 'w1'))!.state, kFetchAsks);
       expect(fileWaitOf('w1')!.state, WaitState.asks);
@@ -428,7 +434,7 @@ void main() {
     });
 
     test('a tap brings it to the place its message names', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('w2'));
       final path = live.msg('w2')!['file_path'] as String;
       await app.downloadNow('w2');
@@ -444,7 +450,7 @@ void main() {
     });
 
     test('one set to wi-fi comes once the phone is on wi-fi', () async {
-      await rule(GetKind.file, AutoGet.wifi);
+      await rule(GetKind.video, AutoGet.wifi);
       await from(_x, await drop('w3'));
       expect(fileWaitOf('w3')!.rule, AutoGet.wifi);
       await app.fetchDropsInForTest(live);
@@ -462,6 +468,21 @@ void main() {
       expect((await fetchOf(live.mem, 'w4'))!.state, kFetchWaiting);
       expect(fileWaitOf('w4'), isNull);
     });
+
+    test(
+      'a file never comes on its own, on wi-fi and whatever was kept',
+      () async {
+        unmeteredNow = () async => true;
+        await rule(GetKind.file, AutoGet.always);
+        await from(_x, await drop('wf', name: 'plan.pdf'));
+        expect(fileWaitOf('wf')!.state, WaitState.asks);
+        await app.fetchDropsInForTest(live);
+        expect(eng.fetched, isEmpty);
+        await app.downloadNow('wf');
+        await app.fetchDropsInForTest(live);
+        expect(eng.fetched, hasLength(1));
+      },
+    );
 
     test('photos come on mobile data unless set otherwise', () async {
       Future<String> photo(String uid, String id) =>
@@ -502,7 +523,7 @@ void main() {
     });
 
     test('a waiting file gone from the service says so', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('w7'));
       await app.downloadNow('w7');
       eng.answer = 'error: gone';
@@ -516,7 +537,7 @@ void main() {
     });
 
     test('a retry leaves it waiting, moving nothing', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('r1'));
       await app.downloadNow('r1');
       eng.answer = 'error: tor';
@@ -541,7 +562,7 @@ void main() {
     });
 
     test('one read on its way with no fetch running waits', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('r2'));
       await app.downloadNow('r2');
       // a restart: the row says coming, nothing fetches it yet
@@ -552,7 +573,7 @@ void main() {
     });
 
     test('a wait whose row went leaves the registry', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('r3'));
       expect(fileWaitOf('r3'), isNotNull);
       // a chat cleared, a take back, a vault closed
@@ -562,7 +583,7 @@ void main() {
     });
 
     test('closed hidden chats stop their own fetch, no other', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('r4'));
       await app.downloadNow('r4');
       eng.answer = 'error: cancelled';
@@ -576,7 +597,7 @@ void main() {
     });
 
     test('a pause after the last byte keeps the file', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('l1'));
       final path = live.msg('l1')!['file_path'] as String;
       await app.downloadNow('l1');
@@ -623,7 +644,7 @@ void main() {
     });
 
     test('a waiting file whose message was deleted is let go', () async {
-      await rule(GetKind.file, AutoGet.never);
+      await rule(GetKind.video, AutoGet.never);
       await from(_x, await drop('w8'));
       live.msgs.removeWhere((m) => m['msg_uid'] == 'w8');
       await app.fetchDropsInForTest(live);

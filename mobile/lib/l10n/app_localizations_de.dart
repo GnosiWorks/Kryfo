@@ -12468,7 +12468,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Sie verschwindet von diesem Gerät und seinen verknüpften Computern. Alle anderen behalten ihre.';
+      'Es verschwindet nur von diesem Gerät. Alle anderen behalten ihres.';
 
   @override
   String get spoilerLabel => 'Spoiler-Foto';

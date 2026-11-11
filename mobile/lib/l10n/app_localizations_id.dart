@@ -12325,7 +12325,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'File hilang dari ponsel ini dan komputer yang tertaut. Orang lain tetap menyimpan milik mereka.';
+      'Hanya hilang dari ponsel ini. Orang lain tetap menyimpan milik mereka.';
 
   @override
   String get spoilerLabel => 'Foto spoiler';

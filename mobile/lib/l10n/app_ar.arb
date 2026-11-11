@@ -3239,7 +3239,7 @@
   "filesOpen": "فتح",
   "filesShowInChat": "إظهار في الدردشة",
   "filesDeleteHere": "حذف من هذا الهاتف",
-  "filesDeleteHereLine": "يُحذف من هذا الهاتف وحواسيبه المرتبطة. يحتفظ الآخرون بنسخهم.",
+  "filesDeleteHereLine": "يُحذف من هذا الهاتف فقط. يحتفظ الآخرون بنسخهم.",
   "spoilerLabel": "صورة مخفية",
   "spoilerTapToSee": "انقر للعرض",
   "selectStart": "تحديد",

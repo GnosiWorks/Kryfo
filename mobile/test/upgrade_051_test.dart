@@ -22,7 +22,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'sqlite_channel.dart';
 
 const _fixtures = 'test/fixtures/upgrade_051';
-const _version = 96;
+const _version = 98;
 
 // the keys each file opens with, under the names the app keeps them by
 final _keyFile =
@@ -70,6 +70,8 @@ final _steps = <int, (Future<void> Function(Database), String)>{
     (db) => pqRestartTables(db, upgrade: true),
     'CREATE TABLE IF NOT EXISTS pq_restarts',
   ),
+  97: (spoilerColumn, 'ALTER TABLE messages ADD COLUMN spoiler'),
+  98: (chatBurnColumns, 'ALTER TABLE contacts ADD COLUMN chat_burn'),
   // photos' runs on every upgrade, after every other step
   93: (photoTables, 'CREATE TABLE IF NOT EXISTS my_photo'),
 };

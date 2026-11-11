@@ -3239,7 +3239,7 @@
   "filesOpen": "開啟",
   "filesShowInChat": "在聊天中顯示",
   "filesDeleteHere": "從本機刪除",
-  "filesDeleteHereLine": "它會從本機和已連結的電腦上刪除。其他人仍保留自己的副本。",
+  "filesDeleteHereLine": "只會從本機刪除。其他人仍保留自己的副本。",
   "spoilerLabel": "劇透照片",
   "spoilerTapToSee": "點按查看",
   "selectStart": "選取",

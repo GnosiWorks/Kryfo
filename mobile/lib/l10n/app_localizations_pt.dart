@@ -12418,7 +12418,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Sai deste telefone e dos computadores vinculados. Os outros mantêm o deles.';
+      'Sai só deste telefone. Os outros mantêm o deles.';
 
   @override
   String get spoilerLabel => 'Foto com spoiler';

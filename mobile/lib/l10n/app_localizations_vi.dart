@@ -12314,7 +12314,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Tệp sẽ bị xóa khỏi điện thoại này và các máy tính đã liên kết. Người khác vẫn giữ bản của họ.';
+      'Chỉ bị xóa khỏi điện thoại này. Người khác vẫn giữ bản của họ.';
 
   @override
   String get spoilerLabel => 'Ảnh bị ẩn';

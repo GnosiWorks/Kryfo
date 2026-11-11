@@ -12321,7 +12321,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'It goes from this phone and its linked computers. Everyone else keeps theirs.';
+      'It goes from this phone only. Everyone else keeps theirs.';
 
   @override
   String get spoilerLabel => 'Spoiler photo';

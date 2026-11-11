@@ -3239,7 +3239,7 @@
   "filesOpen": "Öffnen",
   "filesShowInChat": "Im Chat zeigen",
   "filesDeleteHere": "Von diesem Gerät löschen",
-  "filesDeleteHereLine": "Sie verschwindet von diesem Gerät und seinen verknüpften Computern. Alle anderen behalten ihre.",
+  "filesDeleteHereLine": "Es verschwindet nur von diesem Gerät. Alle anderen behalten ihres.",
   "spoilerLabel": "Spoiler-Foto",
   "spoilerTapToSee": "Zum Ansehen tippen",
   "selectStart": "Auswählen",

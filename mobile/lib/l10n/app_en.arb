@@ -15551,9 +15551,9 @@
   "@filesDeleteHere": {
     "description": "files tab hold menu: delete the file and its message from this device only"
   },
-  "filesDeleteHereLine": "It goes from this phone and its linked computers. Everyone else keeps theirs.",
+  "filesDeleteHereLine": "It goes from this phone only. Everyone else keeps theirs.",
   "@filesDeleteHereLine": {
-    "description": "confirm sheet: what deleting a file from this phone does"
+    "description": "confirm sheet: what deleting a file or messages from this phone does"
   },
   "spoilerLabel": "Spoiler photo",
   "@spoilerLabel": {

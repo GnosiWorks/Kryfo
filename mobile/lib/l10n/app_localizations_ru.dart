@@ -12516,7 +12516,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Файл исчезнет с этого телефона и связанных компьютеров. У остальных он останется.';
+      'Исчезнет только с этого телефона. У остальных всё останется.';
 
   @override
   String get spoilerLabel => 'Фото под спойлером';

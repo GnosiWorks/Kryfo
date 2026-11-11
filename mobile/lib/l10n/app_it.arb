@@ -3239,7 +3239,7 @@
   "filesOpen": "Apri",
   "filesShowInChat": "Mostra nella chat",
   "filesDeleteHere": "Elimina da questo telefono",
-  "filesDeleteHereLine": "Sparisce da questo telefono e dai computer collegati. Gli altri tengono la loro copia.",
+  "filesDeleteHereLine": "Sparisce solo da questo telefono. Gli altri tengono la loro copia.",
   "spoilerLabel": "Foto spoiler",
   "spoilerTapToSee": "Tocca per vedere",
   "selectStart": "Seleziona",

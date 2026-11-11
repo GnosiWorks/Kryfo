@@ -12338,7 +12338,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'از این گوشی و رایانه‌های پیوندشده‌اش پاک می‌شود. بقیه نسخهٔ خودشان را نگه می‌دارند.';
+      'فقط از این گوشی پاک می‌شود. بقیه نسخهٔ خودشان را نگه می‌دارند.';
 
   @override
   String get spoilerLabel => 'عکس پنهان';

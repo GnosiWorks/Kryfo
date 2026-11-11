@@ -3239,7 +3239,7 @@
   "filesOpen": "Aç",
   "filesShowInChat": "Sohbette göster",
   "filesDeleteHere": "Bu telefondan sil",
-  "filesDeleteHereLine": "Bu telefondan ve bağlı bilgisayarlarından gider. Diğerleri kendi kopyasını tutar.",
+  "filesDeleteHereLine": "Yalnızca bu telefondan gider. Diğerleri kendi kopyasını tutar.",
   "spoilerLabel": "Spoiler fotoğraf",
   "spoilerTapToSee": "Görmek için dokun",
   "selectStart": "Seç",

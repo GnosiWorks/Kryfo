@@ -12461,7 +12461,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Il disparaît de ce téléphone et de ses ordinateurs liés. Les autres gardent le leur.';
+      'Cela disparaît de ce téléphone seulement. Les autres gardent le leur.';
 
   @override
   String get spoilerLabel => 'Photo spoiler';

@@ -19729,10 +19729,10 @@ abstract class AppLocalizations {
   /// **'Delete from this phone'**
   String get filesDeleteHere;
 
-  /// confirm sheet: what deleting a file from this phone does
+  /// confirm sheet: what deleting a file or messages from this phone does
   ///
   /// In en, this message translates to:
-  /// **'It goes from this phone and its linked computers. Everyone else keeps theirs.'**
+  /// **'It goes from this phone only. Everyone else keeps theirs.'**
   String get filesDeleteHereLine;
 
   /// screen reader: a photo sent as a spoiler, still blurred

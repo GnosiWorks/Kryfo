@@ -12422,7 +12422,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Sparisce da questo telefono e dai computer collegati. Gli altri tengono la loro copia.';
+      'Sparisce solo da questo telefono. Gli altri tengono la loro copia.';
 
   @override
   String get spoilerLabel => 'Foto spoiler';

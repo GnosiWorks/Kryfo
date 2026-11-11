@@ -3239,7 +3239,7 @@
   "filesOpen": "باز کردن",
   "filesShowInChat": "نمایش در گفت‌وگو",
   "filesDeleteHere": "حذف از این گوشی",
-  "filesDeleteHereLine": "از این گوشی و رایانه‌های پیوندشده‌اش پاک می‌شود. بقیه نسخهٔ خودشان را نگه می‌دارند.",
+  "filesDeleteHereLine": "فقط از این گوشی پاک می‌شود. بقیه نسخهٔ خودشان را نگه می‌دارند.",
   "spoilerLabel": "عکس پنهان",
   "spoilerTapToSee": "برای دیدن بزن",
   "selectStart": "انتخاب",

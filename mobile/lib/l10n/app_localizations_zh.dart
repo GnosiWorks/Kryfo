@@ -11651,7 +11651,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filesDeleteHere => '从本机删除';
 
   @override
-  String get filesDeleteHereLine => '它会从本机和已关联的电脑上删除。其他人仍保留自己的副本。';
+  String get filesDeleteHereLine => '只会从本机删除。其他人仍保留自己的副本。';
 
   @override
   String get spoilerLabel => '剧透照片';
@@ -23213,7 +23213,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get filesDeleteHere => '從本機刪除';
 
   @override
-  String get filesDeleteHereLine => '它會從本機和已連結的電腦上刪除。其他人仍保留自己的副本。';
+  String get filesDeleteHereLine => '只會從本機刪除。其他人仍保留自己的副本。';
 
   @override
   String get spoilerLabel => '劇透照片';

@@ -212,7 +212,8 @@ class HaloDb
             caps_at INTEGER NOT NULL DEFAULT 0,
             ident INTEGER NOT NULL DEFAULT 0,
             ikey TEXT,
-            heal_last INTEGER
+            heal_last INTEGER,
+            chat_burn INTEGER
           )
         ''');
         await db.execute('''
@@ -248,6 +249,7 @@ class HaloDb
             album_id TEXT,
             album_n INTEGER,
             album_i INTEGER,
+            spoiler INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -292,6 +294,7 @@ class HaloDb
             door_pub TEXT,
             door_was TEXT,
             voice_disguise INTEGER,
+            chat_burn INTEGER,
             ended_at INTEGER,
             ended_by TEXT,
             shots_on INTEGER NOT NULL DEFAULT 0,
@@ -370,8 +373,6 @@ class HaloDb
         await healTables(db);
         await takenTables(db);
         await deviceTables(db, addColumn);
-        await spoilerColumn(db);
-        await chatBurnColumns(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -789,6 +790,7 @@ class HaloDb
               door_pub TEXT,
               door_was TEXT,
               voice_disguise INTEGER,
+              chat_burn INTEGER,
               ended_at INTEGER,
               ended_by TEXT
             )

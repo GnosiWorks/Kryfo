@@ -12462,7 +12462,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'يُحذف من هذا الهاتف وحواسيبه المرتبطة. يحتفظ الآخرون بنسخهم.';
+      'يُحذف من هذا الهاتف فقط. يحتفظ الآخرون بنسخهم.';
 
   @override
   String get spoilerLabel => 'صورة مخفية';

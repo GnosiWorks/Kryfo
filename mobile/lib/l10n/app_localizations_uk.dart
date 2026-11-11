@@ -12513,7 +12513,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Файл зникне з цього телефона та пов\'язаних комп\'ютерів. В інших він залишиться.';
+      'Зникне лише з цього телефона. В інших усе залишиться.';
 
   @override
   String get spoilerLabel => 'Фото під спойлером';

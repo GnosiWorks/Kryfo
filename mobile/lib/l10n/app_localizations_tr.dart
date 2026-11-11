@@ -12347,7 +12347,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'Bu telefondan ve bağlı bilgisayarlarından gider. Diğerleri kendi kopyasını tutar.';
+      'Yalnızca bu telefondan gider. Diğerleri kendi kopyasını tutar.';
 
   @override
   String get spoilerLabel => 'Spoiler fotoğraf';

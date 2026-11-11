@@ -12329,7 +12329,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine =>
-      'यह इस फ़ोन और इससे जुड़े कंप्यूटरों से हट जाएगी। बाकी सबके पास उनकी रहेगी।';
+      'यह सिर्फ़ इस फ़ोन से हटेगा। बाकी सबके पास उनका रहेगा।';
 
   @override
   String get spoilerLabel => 'स्पॉइलर फ़ोटो';

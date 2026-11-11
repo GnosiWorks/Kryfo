@@ -421,7 +421,7 @@ class AlbumViewerState extends State<AlbumViewer>
                     style: HaloType.sans(
                       size: 12,
                       weight: FontWeight.w600,
-                      color: rose ? HaloColors.rose : Colors.white,
+                      color: rose ? HaloColors.roseText : Colors.white,
                     ),
                   ),
                 ],
