@@ -25,13 +25,31 @@ class AlbumTag {
   final String id;
   final int n;
   final int i;
-  const AlbumTag(this.id, this.n, this.i);
+  // files sent together: one bubble with a row each. they travel under
+  // 'fs', which a phone before them reads past, and are kept with an 'f:'
+  // before their id so a photo album never takes one in
+  final bool files;
+  const AlbumTag(this.id, this.n, this.i, {this.files = false});
+
+  /// the id as a row keeps it
+  String get rowId => files ? '$kFileSetRow$id' : id;
+
+  /// the frame's field the tag goes under
+  String get wireKey => files ? kFileSetWire : 'al';
 
   Map<String, Object> toWire() => {'id': id, 'n': n, 'i': i};
 
-  Map<String, Object?> toRow() => {'album_id': id, 'album_n': n, 'album_i': i};
+  Map<String, Object?> toRow() => {
+    'album_id': rowId,
+    'album_n': n,
+    'album_i': i,
+  };
 
-  static AlbumTag? _of(Object? id, Object? n, Object? i) {
+  static AlbumTag? _of(Object? id, Object? n, Object? i, {bool files = false}) {
+    if (id is String && id.startsWith(kFileSetRow)) {
+      id = id.substring(kFileSetRow.length);
+      files = true;
+    }
     if (id is! String || !_albumId.hasMatch(id)) return null;
     if (n is! num || i is! num) return null;
     if (n != n.truncate() || i != i.truncate()) return null;
@@ -40,26 +58,45 @@ class AlbumTag {
     if (count < 2 || count > kAlbumMaxIn || at < 0 || at >= count) {
       return null;
     }
-    return AlbumTag(id, count, at);
+    return AlbumTag(id, count, at, files: files);
   }
 
-  /// null for anything that is not a whole, sane album place
-  static AlbumTag? fromWire(Object? raw) =>
-      raw is Map ? _of(raw['id'], raw['n'], raw['i']) : null;
+  /// null for anything that is not a whole, sane album place. [files]: it
+  /// came under 'fs'
+  static AlbumTag? fromWire(Object? raw, {bool files = false}) => raw is Map
+      ? _of(
+          raw['id'] is String && (raw['id'] as String).startsWith(kFileSetRow)
+              ? null
+              : raw['id'],
+          raw['n'],
+          raw['i'],
+          files: files,
+        )
+      : null;
 
   static AlbumTag? ofRow(Map<String, Object?> r) =>
       _of(r['album_id'], r['album_n'], r['album_i']);
 
   @override
   bool operator ==(Object other) =>
-      other is AlbumTag && other.id == id && other.n == n && other.i == i;
+      other is AlbumTag &&
+      other.id == id &&
+      other.n == n &&
+      other.i == i &&
+      other.files == files;
 
   @override
-  int get hashCode => Object.hash(id, n, i);
+  int get hashCode => Object.hash(id, n, i, files);
 
   @override
-  String toString() => 'AlbumTag($id, $i of $n)';
+  String toString() => 'AlbumTag($id, $i of $n${files ? ', files' : ''})';
 }
+
+/// the frame's field for a place among files sent together
+const kFileSetWire = 'fs';
+
+/// what a file set's id is kept under, apart from photo albums
+const kFileSetRow = 'f:';
 
 /// [items] cut into albums of at most [max], as even as they go: eleven are
 /// six and five, never ten and one left on its own
@@ -87,6 +124,7 @@ List<({T item, String caption, AlbumTag? album})> albumPlan<T>(
   String caption, {
   bool alone = false,
   int max = kAlbumMax,
+  bool files = false,
 }) {
   final out = <({T item, String caption, AlbumTag? album})>[];
   final batches = alone
@@ -100,7 +138,7 @@ List<({T item, String caption, AlbumTag? album})> albumPlan<T>(
       out.add((
         item: x,
         caption: out.isEmpty ? caption : '',
-        album: id == null ? null : AlbumTag(id, b.length, i),
+        album: id == null ? null : AlbumTag(id, b.length, i, files: files),
       ));
     }
   }
@@ -226,11 +264,17 @@ class AlbumIndex<T> {
     required String Function(T) owner,
     required bool Function(T) media,
     required int Function(T) written,
+    // a row a set of files may hold: a file, not a voice note or words
+    bool Function(T)? file,
   }) {
     for (final r in rows) {
       final t = tag(r);
-      if (t == null || !media(r)) continue;
-      final key = '${owner(r)}\u0000${t.id}';
+      // a set of files takes any row that says so; an album only photos
+      // and videos
+      if (t == null || !(t.files ? (file?.call(r) ?? true) : media(r))) {
+        continue;
+      }
+      final key = '${owner(r)}\u0000${t.files ? kFileSetRow : ''}${t.id}';
       final run = _runs.putIfAbsent(
         key,
         () => AlbumRun<T>(key, t, r, written(r)),

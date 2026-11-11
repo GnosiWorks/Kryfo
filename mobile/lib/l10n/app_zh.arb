@@ -3202,5 +3202,8 @@
   "notifRequestsChannelLine": "尚未添加的人发来的第一条消息",
   "notifRequestPopups": "消息请求弹出通知",
   "notifRequestPopupsHint": "开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。",
-  "autoGetFilesWait": "文件在你点按后才会下载。"
+  "autoGetFilesWait": "文件在你点按后才会下载。",
+  "fileSetGetAll": "全部获取 · {size}",
+  "fileSetGetting": "已获取 {done}/{total}",
+  "fileUntil": "保留至 {date}"
 }

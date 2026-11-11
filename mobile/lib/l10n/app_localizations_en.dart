@@ -12182,4 +12182,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoGetFilesWait => 'Files download when you tap them.';
+
+  @override
+  String fileSetGetAll(String size) {
+    return 'Get all · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return 'Getting $done of $total';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return 'until $date';
+  }
 }

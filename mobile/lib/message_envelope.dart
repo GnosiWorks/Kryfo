@@ -5,7 +5,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'album.dart' show AlbumTag;
+import 'album.dart' show AlbumTag, kFileSetWire;
 import 'bidi_safe.dart';
 import 'chat_shots.dart' show ShotsWord, kShotsWire;
 import 'dlog.dart';
@@ -491,7 +491,7 @@ Future<String> wrapMessage(
   if (powBitsUsed != null) body['pb'] = powBitsUsed;
   if (supporterBadge != null) body['bg'] = supporterBadge;
   if (secure) body['sc'] = 1;
-  if (album != null) body['al'] = album.toWire();
+  if (album != null) body[album.wireKey] = album.toWire();
   if (gif) body['gf'] = 1;
 
   if (sender != null) {
@@ -650,7 +650,9 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       shots: ShotsWord.fromWire(json[kShotsWire]),
       groupShots: GroupShotsWord.fromWire(json[kGroupShotsWire]),
       shotsNudge: json[kGroupNudgeWire] == 1,
-      album: AlbumTag.fromWire(json['al']),
+      album:
+          AlbumTag.fromWire(json['al']) ??
+          AlbumTag.fromWire(json[kFileSetWire], files: true),
       gif: json['gf'] == 1,
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),

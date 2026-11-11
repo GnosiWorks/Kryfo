@@ -3202,5 +3202,8 @@
   "notifRequestsChannelLine": "Pesan pertama dari orang yang belum kamu tambahkan",
   "notifRequestPopups": "Pop-up untuk permintaan pesan",
   "notifRequestPopupsHint": "Aktif, permintaan baru muncul dengan suara. Nonaktif, permintaan menunggu tanpa suara di notifikasimu.",
-  "autoGetFilesWait": "File diunduh saat kamu mengetuknya."
+  "autoGetFilesWait": "File diunduh saat kamu mengetuknya.",
+  "fileSetGetAll": "Ambil semua · {size}",
+  "fileSetGetting": "Mengambil {done} dari {total}",
+  "fileUntil": "sampai {date}"
 }

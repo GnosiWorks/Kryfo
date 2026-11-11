@@ -12176,4 +12176,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get autoGetFilesWait => 'Tệp được tải về khi bạn chạm vào.';
+
+  @override
+  String fileSetGetAll(String size) {
+    return 'Tải tất cả · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return 'Đang tải $done/$total';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return 'đến $date';
+  }
 }

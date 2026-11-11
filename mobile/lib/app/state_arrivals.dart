@@ -1362,11 +1362,11 @@ extension AppStateArrivals on AppState {
     var albumSeen = false;
     var albumGone = false;
     if (album != null) {
-      final held = await db.albumHeld(album.id, senderHaloId, env.groupId);
+      final held = await db.albumHeld(album.rowId, senderHaloId, env.groupId);
       if (held == null &&
           await db.goneFrom(
             goneKey(senderHaloId, group: env.groupId),
-            albumGoneUid(album.id),
+            albumGoneUid(album.rowId),
           )) {
         albumGone = true;
         album = null;

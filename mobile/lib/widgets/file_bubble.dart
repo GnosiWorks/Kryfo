@@ -5,6 +5,7 @@
 // fills where the tile was, with a cross that stops it. the kind is read
 // from the bytes, so a renamed app installer still shows as one, with a
 // line about it; its tap saves instead of opening
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -88,6 +89,10 @@ class FileCard extends StatefulWidget {
 class _FileCardState extends State<FileCard> {
   FileFacts? _facts;
   int? _size;
+  // the last share its ring showed, and a tick for a moment once it is up
+  double _lastShare = 0;
+  bool _ticked = false;
+  Timer? _tickTimer;
 
   @override
   void initState() {
@@ -99,6 +104,24 @@ class _FileCardState extends State<FileCard> {
   void didUpdateWidget(FileCard old) {
     super.didUpdateWidget(old);
     if (old.path != widget.path || old.name != widget.name) _start();
+    // the ring filled and the send is done: a tick, then the tile
+    if (old.sendingUid != null &&
+        widget.sendingUid == null &&
+        _lastShare >= 0.99) {
+      _lastShare = 0;
+      HapticFeedback.lightImpact();
+      _ticked = true;
+      _tickTimer?.cancel();
+      _tickTimer = Timer(const Duration(milliseconds: 800), () {
+        if (mounted) setState(() => _ticked = false);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _tickTimer?.cancel();
+    super.dispose();
   }
 
   void _start() {
@@ -131,6 +154,7 @@ class _FileCardState extends State<FileCard> {
       valueListenable: mediaProgressTick,
       builder: (context, _, _) {
         final v = mediaSendProgress[uid];
+        if (v != null) _lastShare = v;
         return _card(context, v == null || mediaQuiet(uid) ? null : (uid, v));
       },
     );
@@ -180,6 +204,23 @@ class _FileCardState extends State<FileCard> {
                     strokeWidth: 2,
                     color: isOut ? HaloColors.onAmber : HaloColors.amber,
                   ),
+                ),
+              )
+            : _ticked && going == null && !still
+            ? Container(
+                key: const ValueKey('tick'),
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: (isOut ? HaloColors.onAmber : HaloColors.amber)
+                      .withValues(alpha: 0.14),
+                ),
+                child: Icon(
+                  Icons.check_rounded,
+                  size: 20,
+                  color: isOut ? HaloColors.onAmber : HaloColors.amber,
                 ),
               )
             : going != null
@@ -519,36 +560,51 @@ class _FileTextPreviewState extends State<FileTextPreview> {
       size: 10.5,
       color: HaloColors.text,
     ).copyWith(height: 1.45);
+    // the room four lines take is kept while they are read, so the bubble
+    // does not jump when they fade in
+    final kept = scaler.scale(10.5) * 1.45 * 4 + 18;
     return EaseSize(
       duration: const Duration(milliseconds: 220),
       alignment: AlignmentDirectional.topStart,
       child: lines == null
-          ? const SizedBox(width: kFilePreviewWidth)
-          : Container(
+          ? Container(
               width: kFilePreviewWidth,
-              padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
+              height: kept,
               decoration: BoxDecoration(
-                color: HaloColors.ink,
+                color: HaloColors.ink.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                // code starts at the left whatever the app's language
-                textDirection: TextDirection.ltr,
-                children: [
-                  for (final l in lines)
-                    Text(
-                      l.isEmpty ? ' ' : l,
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.fade,
-                      // code reads left to right whatever the app's language
-                      textDirection: TextDirection.ltr,
-                      textScaler: scaler,
-                      style: style,
-                    ),
-                ],
+            )
+          : TweenAnimationBuilder<double>(
+              tween: Tween(begin: motionStill(context) ? 1 : 0, end: 1),
+              duration: const Duration(milliseconds: 220),
+              builder: (_, v, c) => Opacity(opacity: v, child: c),
+              child: Container(
+                width: kFilePreviewWidth,
+                padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
+                decoration: BoxDecoration(
+                  color: HaloColors.ink,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  // code starts at the left whatever the app's language
+                  textDirection: TextDirection.ltr,
+                  children: [
+                    for (final l in lines)
+                      Text(
+                        l.isEmpty ? ' ' : l,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
+                        // code reads left to right whatever the app's language
+                        textDirection: TextDirection.ltr,
+                        textScaler: scaler,
+                        style: style,
+                      ),
+                  ],
+                ),
               ),
             ),
     );

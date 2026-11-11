@@ -12209,4 +12209,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get autoGetFilesWait => 'Dosyalar, onlara dokunduğunda iner.';
+
+  @override
+  String fileSetGetAll(String size) {
+    return 'Tümünü al · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return '$total dosyadan $done alındı';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return '$date tarihine kadar';
+  }
 }

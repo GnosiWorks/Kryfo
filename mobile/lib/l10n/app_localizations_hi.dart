@@ -12190,4 +12190,19 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get autoGetFilesWait =>
       'फ़ाइलें तब डाउनलोड होती हैं जब तुम उन पर टैप करते हो।';
+
+  @override
+  String fileSetGetAll(String size) {
+    return 'सब लें · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return '$total में से $done आ गईं';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return '$date तक';
+  }
 }

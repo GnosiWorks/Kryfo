@@ -21,6 +21,8 @@ import '../widgets/photo_shape.dart';
 import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
+import '../widgets/file_stack.dart';
+import '../widgets/file_bubble.dart' show kFilePreviewWidth;
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
 import '../widgets/album_viewer.dart';
@@ -1780,6 +1782,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                     !isVoiceName(m.fileName) &&
                     fileShapeNow(m.filePath, m.fileName) == FileShape.video) ||
                 (m.direction == 'in' && m.filePath == null)),
+        file: (m) =>
+            m.sticker == null &&
+            m.poll == null &&
+            m.fileName != null &&
+            !isVoiceName(m.fileName),
       );
 
   // one row standing for a whole album: the caption of its first item, the
@@ -1803,7 +1810,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       msgUid: a.msgUid,
       replyTo: replyTo,
       sending: ms.any((x) => x.sending),
-      mediaPath: a.mediaPath ?? a.filePath ?? '',
+      // a set of files is no picture: its rows draw each file
+      mediaPath: run.tag.files ? null : a.mediaPath ?? a.filePath ?? '',
+      filePath: run.tag.files ? a.filePath : null,
+      fileName: run.tag.files ? a.fileName : null,
       pinned: ms.any((x) => x.pinned),
       saved: ms.any((x) => x.saved),
       album: a.album,
@@ -2037,6 +2047,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                               quotedSticker: quotedSticker,
                             ),
                       onStop: () => _stopGroupSending(m),
+                      onStopRow: _stopGroupSending,
+                      onRetryRow: (x) {
+                        x.autoRetries = 0;
+                        x.gaveUp = false;
+                        _retryGroup(x);
+                      },
                       soundsAfter: () => _soundsAfter(m),
                       voiceAfter: () => _voiceAfter(m),
                       onRetry: m.looksFailed
@@ -2565,13 +2581,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           ),
         );
       }
-      var caption = media.isEmpty ? r.caption : '';
-      for (final f in files) {
-        if (!mounted || lockState.locked) break;
-        if (await _sendGroupFileFrom(f.path, f.name, caption: caption)) {
-          caption = '';
-        }
-      }
+      await _sendGroupFileSet([
+        for (final f in files) (f.path, f.name),
+      ], media.isEmpty ? r.caption : '');
     } finally {
       await r.release();
       await shredPicked(const []);
@@ -3123,6 +3135,39 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (sent != null) await _sendPicked(sent);
     } finally {
       await shredCapture(path);
+    }
+  }
+
+  // files picked together go as one bubble (file_stack.dart): each made
+  // ready first, so a set never names a place nothing fills, then sent in
+  // sets of up to kAlbumMax with the caption on the first
+  Future<void> _sendGroupFileSet(
+    List<(String, String)> files,
+    String caption,
+  ) async {
+    if (files.isEmpty) return;
+    if (files.length == 1) {
+      await _sendGroupFileFrom(
+        files.first.$1,
+        files.first.$2,
+        caption: caption,
+      );
+      return;
+    }
+    final ready = <_GReady>[];
+    for (final (path, name) in files) {
+      if (!mounted || lockState.locked) break;
+      if (await _readyGroupFile(path, name) case final r?) ready.add(r);
+    }
+    if (!mounted || lockState.locked) {
+      for (final r in ready) {
+        await shredFile(r.path);
+      }
+      return;
+    }
+    for (final x in albumPlan(ready, caption, files: true)) {
+      if (!mounted) break;
+      await _sendGroupReady(x.item, x.caption, album: x.album);
     }
   }
 
@@ -3859,14 +3904,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final trKey = trKeyOf(target.msgUid, target.came);
     // a file of its own, not a voice note: looked at, sent on and handed
     // out from here
+    // in a set of files, the one held
+    final fileAt = album == null
+        ? target
+        : album.tag.files
+        ? held
+        : null;
     final fileOn =
-        album == null &&
-        canForwardFile(target.filePath, target.fileName, kept: kept);
+        fileAt != null &&
+        canForwardFile(fileAt.filePath, fileAt.fileName, kept: kept);
     final fileView =
-        album == null &&
-        target.filePath != null &&
-        !isVoiceName(target.fileName) &&
-        fileViewOf(fileFactsOrName(target.filePath!, target.fileName)) != null;
+        fileAt != null &&
+        fileAt.filePath != null &&
+        !isVoiceName(fileAt.fileName) &&
+        fileViewOf(fileFactsOrName(fileAt.filePath!, fileAt.fileName)) != null;
     return [
       // a file kryfo can show opens here first, before any way out
       if (fileView)
@@ -3878,10 +3929,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             dismiss();
             viewInKryfo(
               context,
-              target.filePath!,
-              target.fileName,
+              fileAt.filePath!,
+              fileAt.fileName,
               kept: kept,
-              from: isOut ? null : target.senderName,
+              from: isOut ? null : fileAt.senderName,
             );
           },
         ),
@@ -3963,7 +4014,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             ? (fileOn
                   ? () {
                       dismiss();
-                      forwardFile(context, target.filePath!, target.fileName);
+                      forwardFile(context, fileAt.filePath!, fileAt.fileName);
                     }
                   : null)
             : () {
@@ -4875,11 +4926,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (picks.isNotEmpty) {
       await _sendPicked(MediaSendResult(items: picks, caption: caption));
     }
-    for (final (f, words) in plan.files) {
-      if (!mounted || lockState.locked) break;
-      final ready = await _readyGroupFile(f.path, f.name);
-      if (ready != null) await _sendGroupReady(ready, words);
-    }
+    await _sendGroupFileSet([
+      for (final (f, _) in plan.files) (f.path, f.name),
+    ], plan.files.isEmpty ? '' : plan.files.first.$2);
   }
 
   // esc on a computer lets go of the staged files, then the quote, then
@@ -6194,6 +6243,9 @@ class _GroupBubble extends StatelessWidget {
   final StickerWire? quotedSticker;
   // an album: [m] stands for all of it, and its grid is drawn
   final AlbumRun<_GMsg>? album;
+  // a row of a set of files: sent again, or stopped on its way
+  final void Function(_GMsg)? onRetryRow;
+  final void Function(_GMsg)? onStopRow;
   // a tile of the album held: the bubble's context and the tile
   final void Function(BuildContext, int)? onLongPressTile;
   // the group's voice note transcripts
@@ -6205,6 +6257,8 @@ class _GroupBubble extends StatelessWidget {
     this.transcripts,
     this.translation,
     this.album,
+    this.onRetryRow,
+    this.onStopRow,
     this.onLongPressTile,
     required this.showSender,
     this.stickers,
@@ -6268,6 +6322,7 @@ class _GroupBubble extends StatelessWidget {
     // a video with no caption sits on the chat like a photo: no bubble around
     // it, its time in its corner
     final isVideo =
+        album == null &&
         m.filePath != null &&
         m.text.isEmpty &&
         !isVoiceName(m.fileName) &&
@@ -6602,7 +6657,9 @@ class _GroupBubble extends StatelessWidget {
                                                         ? 6
                                                         : 0,
                                                   ),
-                                                  child: _grid(context, run),
+                                                  child: run.tag.files
+                                                      ? _fileStack(context, run)
+                                                      : _grid(context, run),
                                                 )
                                               else if (m.making != null)
                                                 Padding(
@@ -7231,6 +7288,93 @@ class _GroupBubble extends StatelessWidget {
     color: isOut ? HaloColors.onAmber : HaloColors.text,
     height: 1.3,
   );
+
+  // files sent together: a row each, as each would draw alone
+  Widget _fileStack(BuildContext context, AlbumRun<_GMsg> run) {
+    final isOut = m.direction == 'out';
+    final hold = onLongPressTile;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: FileStack(
+        isOut: isOut,
+        onGet: appState.downloadNow,
+        onPause: appState.pauseDownload,
+        rows: [
+          for (final (i, x) in run.drawn.indexed)
+            if (x != null)
+              _stackRow(
+                context,
+                x,
+                hold == null ? null : () => hold(context, i),
+              ),
+        ],
+      ),
+    );
+  }
+
+  FileStackRow _stackRow(BuildContext context, _GMsg x, VoidCallback? hold) {
+    final isOut = x.direction == 'out';
+    final path = x.filePath;
+    final shape = fileShapeNow(path, x.fileName);
+    final from = isOut ? null : x.senderName;
+    return FileStackRow(
+      id: x.msgUid ?? 'r${x.rowid}',
+      name: x.fileName,
+      waitUid: isOut ? null : x.msgUid,
+      until: x.when.add(kFileKeptFor),
+      failed: isOut && x.looksFailed,
+      onRetry: onRetryRow == null ? null : () => onRetryRow!(x),
+      onLongPress: hold,
+      ready: () => path != null && shape == FileShape.video && !x.sending
+          ? VideoBubble(
+              key: ValueKey('vid_$path'),
+              path: path,
+              fileName: x.fileName!,
+              width: kFilePreviewWidth,
+              onOpen: () {
+                onAct?.call();
+                openVideo(
+                  context,
+                  path: path,
+                  fileName: x.fileName,
+                  kept: kept,
+                  where: keptIn,
+                );
+              },
+            )
+          : PressScale(
+              scale: 0.97,
+              haptic: false,
+              onTap: () {
+                onAct?.call();
+                if (path != null) {
+                  openReceivedFile(
+                    context,
+                    path,
+                    x.fileName,
+                    kept: kept,
+                    where: keptIn,
+                    from: from,
+                    heroTag: fileHeroTag(path, 'group'),
+                  );
+                }
+              },
+              child: fileCard(
+                path,
+                x.fileName,
+                isOut,
+                shape: shape,
+                sendingUid: isOut && x.sending ? x.msgUid : null,
+                onCancel: onStopRow == null ? null : () => onStopRow!(x),
+                heroTag: path == null ? null : fileHeroTag(path, 'group'),
+                from: from,
+                when: x.when,
+                kept: kept,
+                glance: known,
+              ),
+            ),
+    );
+  }
 
   // no bubble: the sticker alone, its time in a pill
   // the album's grid: a tile a place, each opening the viewer at itself.

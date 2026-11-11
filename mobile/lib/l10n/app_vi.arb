@@ -3202,5 +3202,8 @@
   "notifRequestsChannelLine": "Tin nhắn đầu tiên từ những người bạn chưa thêm",
   "notifRequestPopups": "Thông báo nổi cho yêu cầu nhắn tin",
   "notifRequestPopupsHint": "Bật: yêu cầu mới hiện lên kèm âm thanh. Tắt: yêu cầu nằm yên trong thông báo của bạn.",
-  "autoGetFilesWait": "Tệp được tải về khi bạn chạm vào."
+  "autoGetFilesWait": "Tệp được tải về khi bạn chạm vào.",
+  "fileSetGetAll": "Tải tất cả · {size}",
+  "fileSetGetting": "Đang tải {done}/{total}",
+  "fileUntil": "đến {date}"
 }

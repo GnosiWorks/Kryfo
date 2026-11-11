@@ -15357,5 +15357,35 @@
   "autoGetFilesWait": "Files download when you tap them.",
   "@autoGetFilesWait": {
     "description": "automatic download screen: after the voice line. files never download by themselves"
+  },
+  "fileSetGetAll": "Get all · {size}",
+  "@fileSetGetAll": {
+    "description": "several files in one bubble: button that downloads every file still waiting, with how much is left (e.g. 38.4 MB)",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSetGetting": "Getting {done} of {total}",
+  "@fileSetGetting": {
+    "description": "several files in one bubble: while they download, how many are here of all (numbers in the language's digits)",
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "fileUntil": "until {date}",
+  "@fileUntil": {
+    "description": "a received file not downloaded yet: the day until which it can still be downloaded (e.g. until 9 Dec)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

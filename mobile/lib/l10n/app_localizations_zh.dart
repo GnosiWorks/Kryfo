@@ -11515,6 +11515,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get autoGetFilesWait => '文件在你点按后才会下载。';
+
+  @override
+  String fileSetGetAll(String size) {
+    return '全部获取 · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return '已获取 $done/$total';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return '保留至 $date';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22908,4 +22923,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get autoGetFilesWait => '檔案在你點按後才會下載。';
+
+  @override
+  String fileSetGetAll(String size) {
+    return '全部取得 · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return '已取得 $done/$total';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return '保留至 $date';
+  }
 }

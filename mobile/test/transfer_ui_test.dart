@@ -63,7 +63,7 @@ void main() {
       expect(find.text('plan'), findsOneWidget);
       expect(find.text('.pdf'), findsOneWidget);
       expect(find.text('2 kb · Downloads on Wi-Fi'), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_downward_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.download_rounded), findsOneWidget);
       await t.tap(find.byType(WaitingFileCard));
       expect(gets, ['u1']);
       expect(pauses, isEmpty);
@@ -278,8 +278,13 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text(l10n.autoGetPhotos), findsOneWidget);
       expect(find.text(l10n.autoGetAlways), findsOneWidget);
-      expect(find.text(l10n.autoGetWifi), findsNWidgets(2));
-      expect(find.text(l10n.autoGetVoice), findsOneWidget);
+      expect(find.text(l10n.autoGetWifi), findsOneWidget);
+      // a file is no choice: it always waits for a tap
+      expect(find.text(l10n.autoGetFiles), findsNothing);
+      expect(
+        find.text('${l10n.autoGetVoice} ${l10n.autoGetFilesWait}'),
+        findsOneWidget,
+      );
       await t.tap(find.text(l10n.autoGetVideos));
       await t.pumpAndSettle();
       await t.tap(find.text(l10n.autoGetNever).last);

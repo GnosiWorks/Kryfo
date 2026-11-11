@@ -3202,5 +3202,8 @@
   "notifRequestsChannelLine": "Henüz eklemediğin kişilerden gelen ilk mesajlar",
   "notifRequestPopups": "Mesaj istekleri için açılır bildirim",
   "notifRequestPopupsHint": "Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler.",
-  "autoGetFilesWait": "Dosyalar, onlara dokunduğunda iner."
+  "autoGetFilesWait": "Dosyalar, onlara dokunduğunda iner.",
+  "fileSetGetAll": "Tümünü al · {size}",
+  "fileSetGetting": "{total} dosyadan {done} alındı",
+  "fileUntil": "{date} tarihine kadar"
 }

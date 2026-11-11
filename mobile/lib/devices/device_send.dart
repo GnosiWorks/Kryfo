@@ -2247,7 +2247,7 @@ bool ownCopyFits(Map<String, dynamic> body) {
 const kOwnPassOnKeys = {
   'm', 'w', 'op', 'bl', 'st', 'pl', 'vt', 'pc', 'u', 'r', 'pn', 'ed', 'q', //
   'i', 'un', 'cr', 'f', 'fn', 'vo', 'vd', 'pv', 'mid', 'ci', 'ct', 'b', 'g',
-  'sc', 'al', 'gf',
+  'sc', 'al', 'gf', 'fs',
 };
 
 Uint8List _bytes(String hex) => Uint8List.fromList([

@@ -12187,4 +12187,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get autoGetFilesWait => 'File diunduh saat kamu mengetuknya.';
+
+  @override
+  String fileSetGetAll(String size) {
+    return 'Ambil semua · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return 'Mengambil $done dari $total';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return 'sampai $date';
+  }
 }

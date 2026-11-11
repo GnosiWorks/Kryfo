@@ -12329,4 +12329,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get autoGetFilesWait =>
       'Dateien werden geladen, wenn du sie antippst.';
+
+  @override
+  String fileSetGetAll(String size) {
+    return 'Alle laden · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return '$done von $total geladen';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return 'bis $date';
+  }
 }

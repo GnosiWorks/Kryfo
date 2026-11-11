@@ -3202,5 +3202,8 @@
   "notifRequestsChannelLine": "أولى الرسائل من أشخاص لم تضفهم بعد",
   "notifRequestPopups": "نوافذ منبثقة لطلبات المراسلة",
   "notifRequestPopupsHint": "عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك.",
-  "autoGetFilesWait": "تُنزَّل الملفات عندما تنقر عليها."
+  "autoGetFilesWait": "تُنزَّل الملفات عندما تنقر عليها.",
+  "fileSetGetAll": "تنزيل الكل · {size}",
+  "fileSetGetting": "جارٍ التنزيل: {done} من {total}",
+  "fileUntil": "حتى {date}"
 }

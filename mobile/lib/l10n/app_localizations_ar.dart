@@ -12321,4 +12321,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get autoGetFilesWait => 'تُنزَّل الملفات عندما تنقر عليها.';
+
+  @override
+  String fileSetGetAll(String size) {
+    return 'تنزيل الكل · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return 'جارٍ التنزيل: $done من $total';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return 'حتى $date';
+  }
 }

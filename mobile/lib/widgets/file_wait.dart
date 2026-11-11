@@ -188,58 +188,54 @@ class _WaitingFileCardState extends State<WaitingFileCard> {
   }
 }
 
-/// the round mark of a file still to come: an arrow that brings it, a ring
-/// that fills as it comes with a pause in it, a play mark that goes on
+/// the mark of a file still to come: a rounded square with an arrow that
+/// brings it, which rounds into a ring that fills as it comes, with a pause
+/// in it, and a play mark that goes on
 class FileWaitMark extends StatelessWidget {
   final FileWait wait;
   const FileWaitMark({super.key, required this.wait});
+
+  static const size = 42.0;
 
   @override
   Widget build(BuildContext context) {
     final w = wait;
     final still = motionStill(context);
-    final coming = w.state == WaitState.coming;
-    final Widget mark = coming
-        ? Icon(
-            Icons.pause_rounded,
-            key: const ValueKey('pause'),
-            size: 20,
-            color: HaloColors.amber,
-          )
-        : Icon(
-            w.state == WaitState.paused
-                ? Icons.play_arrow_rounded
-                : Icons.arrow_downward_rounded,
-            key: ValueKey(w.state),
-            size: 20,
-            color: HaloColors.amber,
-          );
+    final asks = w.state == WaitState.asks;
+    final Widget mark = Icon(
+      switch (w.state) {
+        WaitState.coming => Icons.pause_rounded,
+        WaitState.paused => Icons.play_arrow_rounded,
+        WaitState.asks => Icons.download_rounded,
+      },
+      key: ValueKey(w.state),
+      size: asks ? 19 : 20,
+      color: HaloColors.amber,
+    );
+    final morph = still ? Duration.zero : const Duration(milliseconds: 240);
     return SizedBox(
-      width: 42,
-      height: 42,
+      width: size,
+      height: size,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // one that asks is an open ring with an arrow; the soft fill
-          // comes in once it moves
+          // the tile that asks rounds into the ring's soft disc on a tap
           AnimatedContainer(
-            duration: still ? Duration.zero : const Duration(milliseconds: 200),
+            key: const ValueKey('tile'),
+            duration: morph,
+            curve: kHouseCurve,
             decoration: BoxDecoration(
-              color: w.state == WaitState.asks
-                  ? Colors.transparent
-                  : HaloColors.amberSoft,
-              shape: BoxShape.circle,
+              color: asks ? Colors.transparent : HaloColors.amberSoft,
+              borderRadius: BorderRadius.circular(asks ? 11 : size / 2),
               border: Border.all(
-                color: w.state == WaitState.asks
-                    ? HaloColors.amber
-                    : Colors.transparent,
+                color: asks ? HaloColors.amber : Colors.transparent,
                 width: 2,
               ),
             ),
           ),
           // the ring eases in and fills as the file comes
           AnimatedOpacity(
-            opacity: w.state == WaitState.asks ? 0 : 1,
+            opacity: asks ? 0 : 1,
             duration: still ? Duration.zero : const Duration(milliseconds: 200),
             child: TweenAnimationBuilder<double>(
               tween: Tween(end: w.share.clamp(0.03, 1.0)),
@@ -248,11 +244,12 @@ class FileWaitMark extends StatelessWidget {
                   : const Duration(milliseconds: 450),
               curve: Curves.easeOutCubic,
               builder: (_, v, _) => SizedBox(
-                width: 40,
-                height: 40,
+                width: size - 2,
+                height: size - 2,
                 child: CircularProgressIndicator(
                   value: v,
-                  strokeWidth: 2.2,
+                  strokeWidth: 2.4,
+                  strokeCap: StrokeCap.round,
                   color: HaloColors.amber,
                   backgroundColor: HaloColors.line,
                 ),

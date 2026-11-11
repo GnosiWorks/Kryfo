@@ -26,6 +26,8 @@ import '../picked.dart';
 import '../share_files.dart';
 import 'share_files_sheet.dart' show askSendSharedFiles;
 import '../album.dart';
+import '../widgets/file_stack.dart';
+import '../widgets/file_bubble.dart' show kFilePreviewWidth;
 import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
 import '../widgets/say.dart' show sayArrivals;
@@ -2483,14 +2485,20 @@ class _ChatScreenState extends State<ChatScreen>
     }
     // a file of its own, not a voice note: it is looked at, sent on and
     // handed out from here
+    // in a set of files, the one held
+    final fileAt = album == null
+        ? target
+        : album.tag.files
+        ? held
+        : null;
     final fileOn =
-        album == null &&
-        canForwardFile(target.filePath, target.fileName, kept: kept);
+        fileAt != null &&
+        canForwardFile(fileAt.filePath, fileAt.fileName, kept: kept);
     final fileView =
-        album == null &&
-        target.filePath != null &&
-        !isVoiceName(target.fileName) &&
-        fileViewOf(fileFactsOrName(target.filePath!, target.fileName)) != null;
+        fileAt != null &&
+        fileAt.filePath != null &&
+        !isVoiceName(fileAt.fileName) &&
+        fileViewOf(fileFactsOrName(fileAt.filePath!, fileAt.fileName)) != null;
     // pin the bar to the message's side so it never runs off the edge
     final alignRight = target.direction == 'out';
     final still = motionStill(context);
@@ -2510,10 +2518,10 @@ class _ChatScreenState extends State<ChatScreen>
             dismiss(now: true);
             viewInKryfo(
               context,
-              target.filePath!,
-              target.fileName,
+              fileAt.filePath!,
+              fileAt.fileName,
               kept: kept,
-              from: _fileFrom(target),
+              from: _fileFrom(fileAt),
             );
           },
         ),
@@ -2601,7 +2609,11 @@ class _ChatScreenState extends State<ChatScreen>
               ? (fileOn
                     ? () {
                         dismiss(now: true);
-                        forwardFile(context, target.filePath!, target.fileName);
+                        forwardFile(
+                          context,
+                          fileAt.filePath!,
+                          fileAt.fileName,
+                        );
                       }
                     : null)
               : () {
@@ -4188,13 +4200,9 @@ class _ChatScreenState extends State<ChatScreen>
           ),
         );
       }
-      var caption = media.isEmpty ? r.caption : '';
-      for (final f in files) {
-        if (!mounted || lockState.locked) break;
-        if (await _sendFileFrom(f.path, f.name, caption: caption)) {
-          caption = '';
-        }
-      }
+      await _sendFileSet([
+        for (final f in files) (f.path, f.name),
+      ], media.isEmpty ? r.caption : '');
     } finally {
       await r.release();
       await shredPicked(const []);
@@ -4519,6 +4527,43 @@ class _ChatScreenState extends State<ChatScreen>
     if (ready == null) return false;
     await _sendReady(ready, caption);
     return true;
+  }
+
+  // files picked together go as one bubble (file_stack.dart): each made
+  // ready first, so a set never names a place nothing fills, then sent in
+  // sets of up to kAlbumMax with the caption on the first. to someone who
+  // has not accepted yet each goes alone
+  Future<void> _sendFileSet(
+    List<(String, String)> files,
+    String caption,
+  ) async {
+    if (files.isEmpty || _requestLocked || _sayMediaLater()) return;
+    // one alone goes as a file always went
+    if (files.length == 1) {
+      await _sendFileFrom(files.first.$1, files.first.$2, caption: caption);
+      return;
+    }
+    final ready = <_Ready>[];
+    for (final (path, name) in files) {
+      if (!mounted || lockState.locked) break;
+      if (await _readyFile(path, name) case final r?) ready.add(r);
+    }
+    // the lock came while they were made ready: none of it goes
+    if (!mounted || lockState.locked) {
+      for (final r in ready) {
+        await shredFile(r.path);
+      }
+      return;
+    }
+    for (final x in albumPlan(
+      ready,
+      caption,
+      alone: _requestPending,
+      files: true,
+    )) {
+      if (!mounted) break;
+      await _sendReady(x.item, x.caption, album: x.album);
+    }
   }
 
   // a file made ready to go: checked, copied into the media folder under
@@ -5686,7 +5731,13 @@ class _ChatScreenState extends State<ChatScreen>
                 !isVoiceName(m.fileName) &&
                 fileShapeNow(m.filePath, m.fileName) == FileShape.video) ||
             (m.direction == 'in' && m.filePath == null)),
+    file: _inFileSet,
   );
+
+  // a row a set of files holds: a file, never a voice note, a sticker or
+  // words alone
+  static bool _inFileSet(_Msg m) =>
+      m.sticker == null && m.fileName != null && !isVoiceName(m.fileName);
 
   // one row standing for a whole album: the caption of its first item, the
   // send state of all of it, its reactions, and the earliest clock
@@ -5698,6 +5749,8 @@ class _ChatScreenState extends State<ChatScreen>
     for (final x in ms) {
       replyTo ??= x.replyTo;
     }
+    // a set of files is no picture: its rows draw each file
+    final files = run.tag.files;
     final face = _Msg(
       a.direction,
       run.caption((x) => x.text),
@@ -5707,7 +5760,9 @@ class _ChatScreenState extends State<ChatScreen>
       secure: ms.any((x) => x.secure),
       sending: ms.any((x) => x.sending),
       pinned: ms.any((x) => x.pinned),
-      mediaPath: media,
+      mediaPath: files ? null : media,
+      filePath: files ? a.filePath : null,
+      fileName: files ? a.fileName : null,
       saved: ms.any((x) => x.saved),
       delivered: ms.every((x) => x.delivered),
       viaDev: a.viaDev,
@@ -7211,11 +7266,9 @@ class _ChatScreenState extends State<ChatScreen>
           MediaSendResult(items: picks, caption: caption, secure: _secureNext),
         );
       }
-      for (final (f, words) in plan.files) {
-        if (!mounted || lockState.locked) break;
-        final ready = await _readyFile(f.path, f.name);
-        if (ready != null) await _sendReady(ready, words);
-      }
+      await _sendFileSet([
+        for (final (f, _) in plan.files) (f.path, f.name),
+      ], plan.files.isEmpty ? '' : plan.files.first.$2);
     } finally {
       AttachTray.sent(sent);
     }
@@ -9002,13 +9055,15 @@ class _Bubble extends StatelessWidget {
     final isImage = msg.mediaPath != null;
     // a photo or an album with a caption is one card: flatter corners, the
     // picture's top ones the same so the edges meet
-    final corner = (isImage || album != null) && msg.text.isNotEmpty
+    final corner =
+        (isImage || (album != null && !album!.tag.files)) && msg.text.isNotEmpty
         ? kCaptionCorner
         : 14.0;
     final shape = fileShapeNow(msg.filePath, msg.fileName);
     // a video with no caption sits on the chat like a photo: no bubble
     // around it, its time and tick in its corner
     final isVideo =
+        album == null &&
         msg.filePath != null &&
         msg.text.isEmpty &&
         !isVoiceName(msg.fileName) &&
@@ -9298,6 +9353,9 @@ class _Bubble extends StatelessWidget {
                                                 const SizedBox.shrink(),
                                           ),
                                         )
+                                      else if (album case final run?
+                                          when run.tag.files)
+                                        _fileStack(context, run)
                                       else if (album case final run?)
                                         _grid(
                                           context,
@@ -9978,6 +10036,91 @@ class _Bubble extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  // files sent together: a row each, as each would draw alone
+  Widget _fileStack(BuildContext context, AlbumRun<_Msg> run) {
+    final isOut = msg.direction == 'out';
+    final hold = onLongPressTile;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: FileStack(
+        isOut: isOut,
+        onGet: appState.downloadNow,
+        onPause: appState.pauseDownload,
+        rows: [
+          for (final (i, x) in run.drawn.indexed)
+            if (x != null)
+              _stackRow(
+                context,
+                x,
+                hold == null ? null : () => hold(context, i),
+              ),
+        ],
+      ),
+    );
+  }
+
+  FileStackRow _stackRow(BuildContext context, _Msg x, VoidCallback? hold) {
+    final isOut = x.direction == 'out';
+    final path = x.filePath;
+    final shape = fileShapeNow(path, x.fileName);
+    return FileStackRow(
+      id: x.msgUid ?? 'r${x.rowid}',
+      name: x.fileName,
+      waitUid: isOut ? null : x.msgUid,
+      until: x.when.add(kFileKeptFor),
+      failed: isOut && _sendLooksFailed(x),
+      onRetry: onRetry == null ? null : () => onRetry!(x),
+      onLongPress: hold,
+      ready: () => path != null && shape == FileShape.video && !x.sending
+          ? VideoBubble(
+              key: ValueKey('vid_$path'),
+              path: path,
+              fileName: x.fileName!,
+              width: kFilePreviewWidth,
+              onOpen: () {
+                onAct?.call();
+                openVideo(
+                  context,
+                  path: path,
+                  fileName: x.fileName,
+                  kept: kept,
+                );
+              },
+            )
+          : PressScale(
+              scale: 0.97,
+              haptic: false,
+              onTap: () {
+                onAct?.call();
+                if (path != null) {
+                  openReceivedFile(
+                    context,
+                    path,
+                    x.fileName,
+                    kept: kept,
+                    from: fromName,
+                    heroTag: fileHeroTag(path, 'chat'),
+                  );
+                }
+              },
+              child: fileCard(
+                path,
+                x.fileName,
+                isOut,
+                shape: shape,
+                sendingUid: isOut && x.sending ? x.msgUid : null,
+                heroTag: path == null ? null : fileHeroTag(path, 'chat'),
+                from: fromName,
+                kept: kept,
+                glance: known,
+                when: x.when,
+                upNext: soundsAfter == null ? null : () => soundsAfter!(x),
+                onCancel: onStop == null ? null : () => onStop!(x),
+              ),
+            ),
     );
   }
 

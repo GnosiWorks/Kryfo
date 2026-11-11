@@ -12376,4 +12376,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get autoGetFilesWait =>
       'Файлы скачиваются, когда вы на них нажимаете.';
+
+  @override
+  String fileSetGetAll(String size) {
+    return 'Скачать все · $size';
+  }
+
+  @override
+  String fileSetGetting(String done, String total) {
+    return 'Скачано $done из $total';
+  }
+
+  @override
+  String fileUntil(String date) {
+    return 'до $date';
+  }
 }

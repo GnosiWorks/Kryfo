@@ -19512,6 +19512,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files download when you tap them.'**
   String get autoGetFilesWait;
+
+  /// several files in one bubble: button that downloads every file still waiting, with how much is left (e.g. 38.4 MB)
+  ///
+  /// In en, this message translates to:
+  /// **'Get all · {size}'**
+  String fileSetGetAll(String size);
+
+  /// several files in one bubble: while they download, how many are here of all (numbers in the language's digits)
+  ///
+  /// In en, this message translates to:
+  /// **'Getting {done} of {total}'**
+  String fileSetGetting(String done, String total);
+
+  /// a received file not downloaded yet: the day until which it can still be downloaded (e.g. until 9 Dec)
+  ///
+  /// In en, this message translates to:
+  /// **'until {date}'**
+  String fileUntil(String date);
 }
 
 class _AppLocalizationsDelegate

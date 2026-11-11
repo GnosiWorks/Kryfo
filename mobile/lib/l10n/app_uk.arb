@@ -3202,5 +3202,8 @@
   "notifRequestsChannelLine": "Перші повідомлення від людей, яких ти ще не додав",
   "notifRequestPopups": "Спливні сповіщення про запити",
   "notifRequestPopupsHint": "Увімкнено: новий запит спливає зі звуком. Вимкнено: він тихо чекає в сповіщеннях.",
-  "autoGetFilesWait": "Файли завантажуються, коли ви їх торкаєтесь."
+  "autoGetFilesWait": "Файли завантажуються, коли ви їх торкаєтесь.",
+  "fileSetGetAll": "Завантажити все · {size}",
+  "fileSetGetting": "Завантажено {done} з {total}",
+  "fileUntil": "до {date}"
 }
