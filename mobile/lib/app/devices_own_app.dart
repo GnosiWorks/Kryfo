@@ -792,6 +792,7 @@ extension AppStateOwn on AppState {
       'out',
       shown,
       album: env.album,
+      spoiler: env.spoiler,
       burnSecs: secs,
       // a timed one of mine counts from when it went, as on the device
       // that sent it

@@ -45,7 +45,7 @@ class HaloDb
 
   // the schema open() upgrades every file to
   // moves with version: below
-  static const schema = 96;
+  static const schema = 98;
 
   Database? _db;
   String? _given;
@@ -163,7 +163,7 @@ class HaloDb
       path,
       password: pw,
       // the upgrade tests read this line: it stays the number, = schema
-      version: 96,
+      version: 98,
       onConfigure: eraseFreedPages,
       onCreate: (db, _) async {
         await db.execute('''
@@ -370,6 +370,8 @@ class HaloDb
         await healTables(db);
         await takenTables(db);
         await deviceTables(db, addColumn);
+        await spoilerColumn(db);
+        await chatBurnColumns(db);
       },
       onUpgrade: (db, oldV, newV) async {
         // 62 runs after every older step, below: its index names columns
@@ -941,6 +943,14 @@ class HaloDb
         if (oldV < 96) {
           await pqRestartTables(db, upgrade: true);
         }
+        // a photo sent as a spoiler (batch 3)
+        if (oldV < 97) {
+          await spoilerColumn(db);
+        }
+        // each chat's own flame timer (batch 3)
+        if (oldV < 98) {
+          await chatBurnColumns(db);
+        }
         // profile photos (profile_photo.dart), first made at 93. every
         // step is safe twice and runs on any upgrade, last, so a file that
         // took a later number without them still gets them
@@ -1327,6 +1337,19 @@ Future<void> albumColumns(DatabaseExecutor db) async {
   await addColumn(db, 'ALTER TABLE messages ADD COLUMN album_n INTEGER');
   await addColumn(db, 'ALTER TABLE messages ADD COLUMN album_i INTEGER');
   await albumIndex(db);
+}
+
+// a photo sent as a spoiler: blurred on both ends until it is tapped
+Future<void> spoilerColumn(DatabaseExecutor db) => addColumn(
+  db,
+  'ALTER TABLE messages ADD COLUMN spoiler INTEGER NOT NULL DEFAULT 0',
+);
+
+// a chat's own flame timer: null until one is set there, 0 off, else how
+// many seconds its messages live
+Future<void> chatBurnColumns(DatabaseExecutor db) async {
+  await addColumn(db, 'ALTER TABLE contacts ADD COLUMN chat_burn INTEGER');
+  await addColumn(db, 'ALTER TABLE groups ADD COLUMN chat_burn INTEGER');
 }
 
 Future<void> albumIndex(DatabaseExecutor db) => db.execute(

@@ -12,6 +12,36 @@ extension AppStatePrefs on AppState {
     await s.write(key: c.key('ghost_secs'), value: '$secs');
   }
 
+  /// a chat's flame: its own setting, or for a chat with none yet what the
+  /// one switch for every chat was before each chat had its own
+  Future<(bool, int)> loadChatBurn(String chatId, {bool group = false}) async {
+    int? own;
+    try {
+      own = await session.chatBurnOf(chatId, group: group);
+    } catch (e) {
+      dlog('chat timer: not read (${e.runtimeType})');
+    }
+    final before = await loadGhostPref();
+    if (own == null) return before;
+    // off keeps the last length picked, so the picker opens on it
+    return own == 0 ? (false, before.$2) : (true, own);
+  }
+
+  /// this chat's flame, kept with the chat and nowhere else
+  Future<void> saveChatBurn(
+    String chatId,
+    bool on,
+    int secs, {
+    bool group = false,
+  }) async {
+    try {
+      await session.setChatBurn(chatId, on ? secs : 0, group: group);
+    } catch (e) {
+      // not kept: the chat keeps it for as long as it is open
+      dlog('chat timer: not kept (${e.runtimeType})');
+    }
+  }
+
   Future<(bool, int)> loadGhostPref() async {
     const s = secureStore;
     final c = session.container;

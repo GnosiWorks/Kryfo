@@ -573,6 +573,8 @@ extension AppStateGroups on AppState {
     Map<String, Set<int>>? owed,
     // its place in an album, on every slice
     AlbumTag? album,
+    // a spoiler photo, on every slice
+    bool spoiler = false,
   }) async {
     final written = writtenAt ?? DateTime.now().millisecondsSinceEpoch;
     // a gif or a voice note shows no share on either side: it just appears
@@ -741,6 +743,7 @@ extension AppStateGroups on AppState {
           burnSeconds: burnSeconds,
           replyTo: replyTo,
           album: album,
+          spoiler: spoiler,
           gif: gif,
           groupId: groupId,
           roster: ids,

@@ -3239,5 +3239,11 @@
   "filesOpen": "فتح",
   "filesShowInChat": "إظهار في الدردشة",
   "filesDeleteHere": "حذف من هذا الهاتف",
-  "filesDeleteHereLine": "يُحذف من هذا الهاتف وحواسيبه المرتبطة. يحتفظ الآخرون بنسخهم."
+  "filesDeleteHereLine": "يُحذف من هذا الهاتف وحواسيبه المرتبطة. يحتفظ الآخرون بنسخهم.",
+  "spoilerLabel": "صورة مخفية",
+  "spoilerTapToSee": "انقر للعرض",
+  "selectStart": "تحديد",
+  "selectDone": "إنهاء التحديد",
+  "selectCount": "{count, plural, other{تم تحديد {n}}}",
+  "selectDeleteTitle": "{count, plural, =1{حذف هذه الرسالة من هذا الهاتف؟} other{حذف {n} رسائل من هذا الهاتف؟}}"
 }

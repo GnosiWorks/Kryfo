@@ -12322,4 +12322,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'It goes from this phone and its linked computers. Everyone else keeps theirs.';
+
+  @override
+  String get spoilerLabel => 'Spoiler photo';
+
+  @override
+  String get spoilerTapToSee => 'Tap to see';
+
+  @override
+  String get selectStart => 'Select';
+
+  @override
+  String get selectDone => 'Stop selecting';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $n messages from this phone?',
+      one: 'Delete this message from this phone?',
+    );
+    return '$_temp0';
+  }
 }

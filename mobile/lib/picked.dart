@@ -194,9 +194,16 @@ bool isVideoPick(XFile x) =>
 class PickedMedia {
   final Uint8List? photo;
   final XFile? video;
-  const PickedMedia.photo(Uint8List this.photo) : video = null;
-  const PickedMedia.video(XFile this.video) : photo = null;
+  // a photo sent as a spoiler: blurred on both ends until it is tapped
+  final bool spoiler;
+  const PickedMedia.photo(Uint8List this.photo, {this.spoiler = false})
+    : video = null;
+  const PickedMedia.video(XFile this.video) : photo = null, spoiler = false;
   bool get isVideo => video != null;
+
+  /// a photo marked a spoiler, or not; a video stays as it is
+  PickedMedia withSpoiler(bool on) =>
+      isVideo || on == spoiler ? this : PickedMedia.photo(photo!, spoiler: on);
 }
 
 /// the gallery's picks for the preview, in the order chosen. photos are
@@ -206,6 +213,8 @@ Future<List<PickedMedia>> readGalleryPicks(
   List<XFile> picked, {
   Future<Uint8List> Function(Uint8List b)? shrink,
   Future<void> Function(List<XFile> x)? drop,
+  // the picks marked spoilers in the sending sheet, by path
+  Set<String> spoilers = const {},
 }) async {
   final picks = {for (final x in picked) x.path: x}.values.toList();
   final photos = await readPickedPhotos(
@@ -219,7 +228,9 @@ Future<List<PickedMedia>> readGalleryPicks(
   var i = 0;
   return [
     for (final x in picks)
-      isVideoPick(x) ? PickedMedia.video(x) : PickedMedia.photo(photos[i++]),
+      isVideoPick(x)
+          ? PickedMedia.video(x)
+          : PickedMedia.photo(photos[i++], spoiler: spoilers.contains(x.path)),
   ];
 }
 
@@ -254,12 +265,19 @@ Future<void> sendGalleryPicks(
   Future<List<XFile>> Function()? pickMore,
   Future<Uint8List> Function(Uint8List b)? shrink,
   Future<void> Function(List<XFile> x)? drop,
+  // the picks marked spoilers in the sending sheet, by path
+  Set<String> spoilers = const {},
 }) async {
   final shred = drop ?? shredPickedImages;
   final copies = <XFile>[];
   Future<List<PickedMedia>> read(List<XFile> x) async {
     if (x.isEmpty) return const [];
-    final got = await readGalleryPicks(x, shrink: shrink, drop: drop);
+    final got = await readGalleryPicks(
+      x,
+      shrink: shrink,
+      drop: drop,
+      spoilers: spoilers,
+    );
     copies.addAll([for (final m in got) ?m.video]);
     return got;
   }

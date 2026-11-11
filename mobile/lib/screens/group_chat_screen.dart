@@ -22,8 +22,12 @@ import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
 import '../widgets/file_stack.dart';
+import '../widgets/spoiler_cover.dart';
 import '../show_in_chat.dart';
 import '../viewer_rules.dart';
+import '../widgets/select_parts.dart';
+import '../share_files.dart' show SharedCopy;
+import 'share_files_sheet.dart' show landFiles;
 import '../widgets/file_bubble.dart' show kFilePreviewWidth;
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
@@ -786,7 +790,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _loadDisguise();
     // received notes play at this identity's speed
     unawaited(VoiceSpeed.use(session.container));
-    appState.loadGhostPref().then((p) {
+    appState.loadChatBurn(widget.groupId, group: true).then((p) {
       if (mounted) {
         setState(() {
           _ghost = p.$1;
@@ -1077,6 +1081,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           saved: ((r['saved'] as int?) ?? 0) == 1,
           edited: ((r['edited'] as int?) ?? 0) == 1,
           album: AlbumTag.ofRow(r),
+          spoiler: r['spoiler'] == 1,
           reactions: rxMap,
         );
         m.preview = _decodePv(r['preview'] as String?);
@@ -1270,6 +1275,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 saved: ((r['saved'] as int?) ?? 0) == 1,
                 edited: ((r['edited'] as int?) ?? 0) == 1,
                 album: AlbumTag.ofRow(r),
+                spoiler: r['spoiler'] == 1,
                 sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
                 reactions: rxMap,
               );
@@ -1575,6 +1581,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         saved: ((r['saved'] as int?) ?? 0) == 1,
         edited: ((r['edited'] as int?) ?? 0) == 1,
         album: AlbumTag.ofRow(r),
+        spoiler: r['spoiler'] == 1,
         sending: dir == 'out' && (r['sent'] as int? ?? 1) == 0,
         reactions: rxMap,
       );
@@ -1977,132 +1984,138 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 // the row is the width of the list: a glow would light all
                 // of it
                 glow: false,
-                child: SwipeToReply(
-                  onReply: () {
-                    for (final x in members) {
-                      _touched(x);
-                    }
-                    _hiddenQuote = null;
-                    setState(() => _replyTo = answer);
-                    _keepDraft();
-                  },
-                  // the lifted copy in the overlay is the one that animates;
-                  // the row underneath just steps aside
-                  child: Opacity(
-                    opacity: lifted ? 0.0 : 1.0,
-                    child: _GroupBubble(
-                      m: m,
-                      transcripts: _transcripts,
-                      translation: _translation,
-                      album: run,
-                      openMedia: _openGroupMedia,
-                      showSender: showSender,
-                      kept: _keeps(m),
-                      keptIn: _isRoom ? KeptIn.room : KeptIn.group,
-                      known: _knownSender(m.sender),
-                      stickers: _stickers,
-                      stickerOrder: _messages.length - 1 - i,
-                      landing: landing,
-                      arriving: animateIn && landing == null,
-                      quotedSticker: quotedSticker,
-                      me: _me,
-                      nameOf: _nameOf,
-                      faceOf: _faceOf,
-                      onVote: m.poll == null || m.msgUid == null
-                          ? null
-                          : (c) {
-                              _touched(m);
-                              appState.votePoll(widget.groupId, m.msgUid!, c);
-                            },
-                      onAct: () {
-                        for (final x in members) {
-                          _touched(x);
-                        }
-                      },
-                      onClosePoll: m.poll == null || m.msgUid == null
-                          ? null
-                          : () => appState.closePoll(widget.groupId, m.msgUid!),
-                      senderBadge: _badgeFor(m.sender),
-                      linkTitle: _linkPreview(m)?['title'],
-                      linkBySender: _linkPreview(m)?['by'] == 'sender',
-                      quotedText: quoted,
-                      quotedAuthor: quotedAuthor,
-                      // nothing to act on while it is still made ready
-                      onLongPress: making
-                          ? null
-                          : (ctx) => _showEmojiPickerAt(
-                              ctx,
-                              m,
-                              album: run,
-                              showSender: showSender,
-                              quotedText: quoted,
-                              quotedAuthor: quotedAuthor,
-                              quotedSticker: quotedSticker,
-                            ),
-                      onLongPressTile: run == null || making
-                          ? null
-                          : (ctx, tile) => _showEmojiPickerAt(
-                              ctx,
-                              m,
-                              album: run,
-                              tile: tile,
-                              showSender: showSender,
-                              quotedText: quoted,
-                              quotedAuthor: quotedAuthor,
-                              quotedSticker: quotedSticker,
-                            ),
-                      onStop: () => _stopGroupSending(m),
-                      onStopRow: _stopGroupSending,
-                      onRetryRow: (x) {
-                        x.autoRetries = 0;
-                        x.gaveUp = false;
-                        _retryGroup(x);
-                      },
-                      soundsAfter: () => _soundsAfter(m),
-                      voiceAfter: () => _voiceAfter(m),
-                      onRetry: m.looksFailed
-                          ? () {
-                              for (final x in members) {
-                                if (!x.failed) continue;
-                                x.autoRetries = 0;
-                                x.gaveUp = false;
-                                _retryGroup(x);
-                              }
-                            }
-                          : null,
-                      onReact: m.msgUid == null
-                          ? null
-                          : (e) {
-                              final added = react.reactions[''] != e;
-                              _toggleReaction(react, e);
-                              if (added) _flashReaction(react);
-                            },
-                      onDoubleReact: m.msgUid == null || making || _end != null
-                          ? null
-                          : () {
-                              if (lockGuard.isLocked()) return false;
-                              final e = kDoubleTapReaction;
-                              final added = react.reactions[''] != e;
-                              _toggleReaction(react, e);
-                              if (added) _flashReaction(react);
-                              return added;
-                            },
-                      ripple: members.any(
-                        (x) => x.msgUid != null && x.msgUid == _rippleUid,
-                      ),
-                      query: searchActive ? _query : '',
-                      isCurrentMatch: isCurrent,
-                      dimmed: searchActive && !isMatch,
-                      onReplyTap: m.replyTo == null
-                          ? null
-                          : () {
-                              for (final x in _messages) {
-                                if (x.msgUid != null && x.msgUid == m.replyTo) {
-                                  _scrollToGroupMessage(x);
-                                  break;
+                child: _pickable(
+                  row,
+                  SwipeToReply(
+                    onReply: () {
+                      for (final x in members) {
+                        _touched(x);
+                      }
+                      _hiddenQuote = null;
+                      setState(() => _replyTo = answer);
+                      _keepDraft();
+                    },
+                    // the lifted copy in the overlay is the one that animates;
+                    // the row underneath just steps aside
+                    child: Opacity(
+                      opacity: lifted ? 0.0 : 1.0,
+                      child: _GroupBubble(
+                        m: m,
+                        transcripts: _transcripts,
+                        translation: _translation,
+                        album: run,
+                        openMedia: _openGroupMedia,
+                        showSender: showSender,
+                        kept: _keeps(m),
+                        keptIn: _isRoom ? KeptIn.room : KeptIn.group,
+                        known: _knownSender(m.sender),
+                        stickers: _stickers,
+                        stickerOrder: _messages.length - 1 - i,
+                        landing: landing,
+                        arriving: animateIn && landing == null,
+                        quotedSticker: quotedSticker,
+                        me: _me,
+                        nameOf: _nameOf,
+                        faceOf: _faceOf,
+                        onVote: m.poll == null || m.msgUid == null
+                            ? null
+                            : (c) {
+                                _touched(m);
+                                appState.votePoll(widget.groupId, m.msgUid!, c);
+                              },
+                        onAct: () {
+                          for (final x in members) {
+                            _touched(x);
+                          }
+                        },
+                        onClosePoll: m.poll == null || m.msgUid == null
+                            ? null
+                            : () =>
+                                  appState.closePoll(widget.groupId, m.msgUid!),
+                        senderBadge: _badgeFor(m.sender),
+                        linkTitle: _linkPreview(m)?['title'],
+                        linkBySender: _linkPreview(m)?['by'] == 'sender',
+                        quotedText: quoted,
+                        quotedAuthor: quotedAuthor,
+                        // nothing to act on while it is still made ready
+                        onLongPress: making
+                            ? null
+                            : (ctx) => _showEmojiPickerAt(
+                                ctx,
+                                m,
+                                album: run,
+                                showSender: showSender,
+                                quotedText: quoted,
+                                quotedAuthor: quotedAuthor,
+                                quotedSticker: quotedSticker,
+                              ),
+                        onLongPressTile: run == null || making
+                            ? null
+                            : (ctx, tile) => _showEmojiPickerAt(
+                                ctx,
+                                m,
+                                album: run,
+                                tile: tile,
+                                showSender: showSender,
+                                quotedText: quoted,
+                                quotedAuthor: quotedAuthor,
+                                quotedSticker: quotedSticker,
+                              ),
+                        onStop: () => _stopGroupSending(m),
+                        onStopRow: _stopGroupSending,
+                        onRetryRow: (x) {
+                          x.autoRetries = 0;
+                          x.gaveUp = false;
+                          _retryGroup(x);
+                        },
+                        soundsAfter: () => _soundsAfter(m),
+                        voiceAfter: () => _voiceAfter(m),
+                        onRetry: m.looksFailed
+                            ? () {
+                                for (final x in members) {
+                                  if (!x.failed) continue;
+                                  x.autoRetries = 0;
+                                  x.gaveUp = false;
+                                  _retryGroup(x);
                                 }
                               }
-                            },
+                            : null,
+                        onReact: m.msgUid == null
+                            ? null
+                            : (e) {
+                                final added = react.reactions[''] != e;
+                                _toggleReaction(react, e);
+                                if (added) _flashReaction(react);
+                              },
+                        onDoubleReact:
+                            m.msgUid == null || making || _end != null
+                            ? null
+                            : () {
+                                if (lockGuard.isLocked()) return false;
+                                final e = kDoubleTapReaction;
+                                final added = react.reactions[''] != e;
+                                _toggleReaction(react, e);
+                                if (added) _flashReaction(react);
+                                return added;
+                              },
+                        ripple: members.any(
+                          (x) => x.msgUid != null && x.msgUid == _rippleUid,
+                        ),
+                        query: searchActive ? _query : '',
+                        isCurrentMatch: isCurrent,
+                        dimmed: searchActive && !isMatch,
+                        onReplyTap: m.replyTo == null
+                            ? null
+                            : () {
+                                for (final x in _messages) {
+                                  if (x.msgUid != null &&
+                                      x.msgUid == m.replyTo) {
+                                    _scrollToGroupMessage(x);
+                                    break;
+                                  }
+                                }
+                              },
+                      ),
                     ),
                   ),
                 ),
@@ -2331,6 +2344,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           // when it was written, not now
           writtenAt: m.when.millisecondsSinceEpoch,
           album: m.album,
+          spoiler: m.spoiler,
         ),
       );
       return;
@@ -2576,6 +2590,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (media.isNotEmpty) {
         await sendGalleryPicks(
           [for (final m in media) m.source as XFile? ?? XFile(m.path)],
+          spoilers: r.spoilers,
           pickMore: () => lockState.hold(pickGallery),
           preview: _preview,
           send: (s) => _sendPicked(
@@ -2716,6 +2731,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             sending: true,
             burnSecs: burn,
             album: go.album,
+            spoiler: go.item.spoiler,
           )
           ..preparing = true
           ..fresh = true,
@@ -2886,6 +2902,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         fileName: m.fileName,
         burnSecs: burn,
         album: album,
+        spoiler: m.spoiler,
         // the time its bubble shows, kept by a resend after a restart
         writtenAt: m.when.millisecondsSinceEpoch,
       ),
@@ -2903,6 +2920,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           fileName: ready.fileName,
           burnSeconds: burn,
           album: album,
+          spoiler: m.spoiler,
         ),
       ),
     );
@@ -3519,7 +3537,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       if (on) _burnSeconds = picked;
       _ghost = on;
     });
-    appState.saveGhostPref(on, _burnSeconds);
+    // kept with this group alone
+    unawaited(
+      appState.saveChatBurn(widget.groupId, on, _burnSeconds, group: true),
+    );
     // the draft takes the group's new clock
     _keepDraft(clock: true);
   }
@@ -3608,8 +3629,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final screenH = mq.size.height;
     // the card's height from how many rows it has
     final words = target.text.isNotEmpty && target.sticker == null;
+    // pin, save and select, and copy and forward for words
     final rows =
-        2 +
+        3 +
         (words ? 2 : 0) +
         (_trOffer(target) != null ? 3 : 0) +
         (target.filePath != null && !isVoiceName(target.fileName) ? 5 : 0) +
@@ -3976,6 +3998,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                 showHaloToast(context, l10n.commonCopied);
               },
       ),
+      // more than this one: a tap on each row picks it
+      MenuAction(
+        icon: Icons.check_circle_outline_rounded,
+        label: l10n.selectStart,
+        onTap: () {
+          dismiss();
+          _pick(target);
+        },
+      ),
       if (translation != null && trOffer != null) ...[
         MenuAction(
           icon: Icons.translate_rounded,
@@ -4262,6 +4293,136 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
+  // ---- several messages picked at once (select_parts.dart) ----
+
+  // the rows picked, by the key of the row that draws each
+  final Set<String> _picked = {};
+  bool get _selecting => _picked.isNotEmpty;
+
+  static String _keyOf(_GMsg x) => x.msgUid ?? 'r${x.rowid}';
+
+  String _leadKey(_GMsg x) => _keyOf(_albums.runOf(x)?.lead ?? x);
+
+  // a row picked or let go: an album or a set of files goes whole
+  void _pick(_GMsg m) {
+    final k = _leadKey(m);
+    setState(() => _picked.contains(k) ? _picked.remove(k) : _picked.add(k));
+  }
+
+  // the row as the list draws it, picked by a tap while picking
+  Widget _pickable(_GMsg row, Widget child) => _selecting
+      ? SelectRow(
+          on: _picked.contains(_leadKey(row)),
+          onTap: () => _pick(row),
+          child: child,
+        )
+      : child;
+
+  List<_GMsg> get _pickedRows => [
+    for (final x in _messages)
+      if (_picked.contains(_leadKey(x))) x,
+  ];
+
+  bool _leaves(_GMsg x) => mayLeave(
+    blocking: _shots.blocking,
+    room: _isRoom,
+    timed: x.burnSecs != null,
+    spoiler: x.spoiler,
+    hidden: session.isHidden(widget.groupId),
+  );
+
+  Widget _selectBar() {
+    final rows = _pickedRows;
+    final all = rows.isNotEmpty && rows.every(_leaves);
+    final words =
+        all &&
+        rows.every(
+          (x) =>
+              x.sticker == null &&
+              x.poll == null &&
+              x.mediaPath == null &&
+              x.filePath == null &&
+              x.text.trim().isNotEmpty,
+        );
+    final files =
+        all &&
+        rows.every(
+          (x) =>
+              (x.mediaPath != null ||
+                  canForwardFile(x.filePath, x.fileName, kept: false)) &&
+              fileWaitOf(x.msgUid) == null,
+        );
+    return SelectBar(
+      key: const ValueKey('select'),
+      count: _picked.length,
+      onClose: () => setState(_picked.clear),
+      onCopy: words ? () => _copyPicked(rows) : null,
+      onForward: words || files ? () => _forwardPicked(rows, words) : null,
+      onDelete: rows.any((x) => x.msgUid != null && !x.sending)
+          ? () => _deletePicked(rows)
+          : null,
+    );
+  }
+
+  void _copyPicked(List<_GMsg> rows) {
+    copySensitive(rows.map((x) => x.text.trim()).join('\n\n'), kept: true);
+    showHaloToast(context, l10n.commonCopied);
+    setState(_picked.clear);
+  }
+
+  Future<void> _forwardPicked(List<_GMsg> rows, bool words) async {
+    final id = await pickWordsChat(
+      context,
+      title: l10n.chatForwardTo,
+      empty: l10n.chatNoContactsToForward,
+      dev: devForwardTarget,
+    );
+    if (id == null || !mounted) return;
+    setState(_picked.clear);
+    if (words) {
+      final route = await wordsRoute(
+        id,
+        rows.map((x) => x.text.trim()).join('\n\n'),
+      );
+      if (route == null || !mounted) return;
+      await Navigator.of(context).push(route);
+      return;
+    }
+    await landFiles(context, id, session.container.id, [
+      for (final x in rows)
+        SharedCopy(
+          x.mediaPath ?? x.filePath!,
+          name: x.fileName ?? savedPhotoName(x.mediaPath!, x.when),
+        ),
+    ]);
+  }
+
+  // gone from this phone and its computers; the others keep theirs
+  Future<void> _deletePicked(List<_GMsg> rows) async {
+    final yes = await showConfirmSheet(
+      context,
+      title: l10n.selectDeleteTitle(rows.length, whole(rows.length)),
+      line: l10n.filesDeleteHereLine,
+      yes: l10n.commonDelete,
+    );
+    if (!yes || !mounted) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _picked.clear();
+      for (final x in rows) {
+        x.removing = true;
+      }
+    });
+    await Future.delayed(kLeaveGone);
+    for (final x in rows) {
+      if (x.msgUid != null && !x.sending) {
+        await session.deleteMessage(x.msgUid!);
+      }
+    }
+    if (!mounted) return;
+    setState(() => _messages.removeWhere(rows.contains));
+  }
+
   // a photo or video of the group is one item, the oldest first: those the
   // viewer can swipe through. a timed one, a spoiler and one still to come
   // stay out and open on their own
@@ -4322,7 +4483,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         forward: (i) {
           final x = rows[i];
           if (!leaves(x)) return null;
-          return () => _forwardGroupMessage(x);
+          // a photo or video goes on as itself, read and never moved
+          final path = x.mediaPath ?? x.filePath!;
+          return () => forwardFile(
+            context,
+            path,
+            x.fileName ?? savedPhotoName(path, x.when),
+          );
         },
         unsend: (i) {
           final x = rows[i];
@@ -4948,9 +5115,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   @override
   Widget build(BuildContext context) => menuBack(
     child: PopScope(
-      canPop: !_escHolds,
+      canPop: !_escHolds && !_selecting,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _escOne();
+        if (didPop) return;
+        // back first lets go of what is picked
+        if (_selecting) {
+          setState(_picked.clear);
+          return;
+        }
+        _escOne();
       },
       child: DragInZone(
         enabled: _end == null && !_waiting,
@@ -5064,7 +5237,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           children: [
             // search and the head cross over both ways, as in a 1:1 chat
             FadeSwap(
-              child: _searching
+              child: _selecting
+                  ? _selectBar()
+                  : _searching
                   ? SearchHead(
                       key: const ValueKey('search'),
                       controller: _searchCtrl,
@@ -5536,7 +5711,7 @@ class _GMsg with WordLinks {
   // not saved, not sent yet
   bool preparing = false;
   // a photo sent as a spoiler: blurred until it is tapped
-  bool spoiler = false;
+  bool spoiler;
   _GMsg({
     required this.sender,
     String? senderName,
@@ -5558,6 +5733,7 @@ class _GMsg with WordLinks {
     this.saved = false,
     this.edited = false,
     this.album,
+    this.spoiler = false,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? {},
        senderName = senderName ?? sender;
@@ -5963,7 +6139,9 @@ class _Composer extends StatelessWidget {
           Row(
             children: [
               PressScale(
-                label: l10n.groupChatTimedMessages,
+                label: ghost
+                    ? '${l10n.groupChatTimedMessages}, ${burnShort(burnSeconds)}'
+                    : l10n.groupChatTimedMessages,
                 onTap: onToggleGhost,
                 onLongPress: onLongPressGhost,
                 scale: 0.88,
@@ -6000,6 +6178,8 @@ class _Composer extends StatelessWidget {
                   ),
                 ),
               ),
+              // how long, beside the flame while it is on
+              FlameTime(on: ghost, secs: burnSeconds),
               const SizedBox(width: 4),
               // the camera that keeps its photos inside kryfo
               if (!onDesktop)
@@ -6767,7 +6947,21 @@ class _GroupBubble extends StatelessWidget {
                                                   ),
                                                   child: run.tag.files
                                                       ? _fileStack(context, run)
-                                                      : _grid(context, run),
+                                                      : SpoilerCover(
+                                                          uid:
+                                                              run.anchor.msgUid,
+                                                          on: run.present.any(
+                                                            (x) => x.spoiler,
+                                                          ),
+                                                          radius:
+                                                              BorderRadius.circular(
+                                                                10,
+                                                              ),
+                                                          child: _grid(
+                                                            context,
+                                                            run,
+                                                          ),
+                                                        ),
                                                 )
                                               else if (m.making != null)
                                                 Padding(
@@ -6907,116 +7101,129 @@ class _GroupBubble extends StatelessWidget {
                                                         ? 6
                                                         : 0,
                                                   ),
-                                                  child: PressScale(
-                                                    scale: 0.97,
-                                                    haptic: false,
-                                                    onTap: m.failed
-                                                        ? onRetry
-                                                        : () {
-                                                            onAct?.call();
-                                                            final tag =
-                                                                photoHeroTag(
+                                                  child: SpoilerCover(
+                                                    uid: m.msgUid,
+                                                    on: m.spoiler,
+                                                    radius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                    child: PressScale(
+                                                      scale: 0.97,
+                                                      haptic: false,
+                                                      onTap: m.failed
+                                                          ? onRetry
+                                                          : () {
+                                                              onAct?.call();
+                                                              final tag =
+                                                                  photoHeroTag(
+                                                                    m.mediaPath!,
+                                                                    'chat',
+                                                                  );
+                                                              if (openMedia
+                                                                      ?.call(
+                                                                        context,
+                                                                        m,
+                                                                        tag,
+                                                                      ) ??
+                                                                  false) {
+                                                                return;
+                                                              }
+                                                              openFullImage(
+                                                                context,
+                                                                m.mediaPath!,
+                                                                tag: tag,
+                                                                radius: 10,
+                                                              );
+                                                            },
+                                                      child: ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
+                                                        child: Stack(
+                                                          children: [
+                                                            // the photo's own shape, its blur
+                                                            // the same, before the file decodes
+                                                            PhotoShape(
+                                                              path:
+                                                                  m.mediaPath!,
+                                                              image: mediaImage(
+                                                                m.mediaPath!,
+                                                                decodePx(
+                                                                  context,
+                                                                  240,
+                                                                ),
+                                                              ),
+                                                              maxWidth: 240,
+                                                              maxHeight: 280,
+                                                              child: HaloHero(
+                                                                tag: photoHeroTag(
                                                                   m.mediaPath!,
                                                                   'chat',
-                                                                );
-                                                            if (openMedia?.call(
-                                                                  context,
-                                                                  m,
-                                                                  tag,
-                                                                ) ??
-                                                                false) {
-                                                              return;
-                                                            }
-                                                            openFullImage(
-                                                              context,
-                                                              m.mediaPath!,
-                                                              tag: tag,
-                                                              radius: 10,
-                                                            );
-                                                          },
-                                                    child: ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            10,
-                                                          ),
-                                                      child: Stack(
-                                                        children: [
-                                                          // the photo's own shape, its blur
-                                                          // the same, before the file decodes
-                                                          PhotoShape(
-                                                            path: m.mediaPath!,
-                                                            image: mediaImage(
-                                                              m.mediaPath!,
-                                                              decodePx(
-                                                                context,
-                                                                240,
-                                                              ),
-                                                            ),
-                                                            maxWidth: 240,
-                                                            maxHeight: 280,
-                                                            child: HaloHero(
-                                                              tag: photoHeroTag(
-                                                                m.mediaPath!,
-                                                                'chat',
-                                                              ),
-                                                              child: ChatPicture(
-                                                                path: m
-                                                                    .mediaPath!,
-                                                                child: SealedPicture(
+                                                                ),
+                                                                child: ChatPicture(
                                                                   path: m
                                                                       .mediaPath!,
-                                                                  shaped: false,
-                                                                  decodeWidth:
+                                                                  child: SealedPicture(
+                                                                    path: m
+                                                                        .mediaPath!,
+                                                                    shaped:
+                                                                        false,
+                                                                    decodeWidth:
+                                                                        decodePx(
+                                                                          context,
+                                                                          240,
+                                                                        ),
+                                                                    image: mediaImage(
+                                                                      m.mediaPath!,
                                                                       decodePx(
                                                                         context,
                                                                         240,
                                                                       ),
-                                                                  image: mediaImage(
-                                                                    m.mediaPath!,
-                                                                    decodePx(
-                                                                      context,
-                                                                      240,
                                                                     ),
+                                                                    semanticLabel:
+                                                                        l10n.appPhoto,
+                                                                    // the file is gone:
+                                                                    // say so, not a gap
+                                                                    errorBuilder:
+                                                                        (
+                                                                          _,
+                                                                          _,
+                                                                          _,
+                                                                        ) =>
+                                                                            const _MissingPhoto(),
                                                                   ),
-                                                                  semanticLabel:
-                                                                      l10n.appPhoto,
-                                                                  // the file is gone:
-                                                                  // say so, not a gap
-                                                                  errorBuilder:
-                                                                      (
-                                                                        _,
-                                                                        _,
-                                                                        _,
-                                                                      ) =>
-                                                                          const _MissingPhoto(),
                                                                 ),
                                                               ),
                                                             ),
-                                                          ),
-                                                          // caption-less photo: float the
-                                                          // time in a pill on the corner,
-                                                          // same as 1:1. captioned photos
-                                                          // keep the time in the row below.
-                                                          if (m.text.isEmpty &&
-                                                              !m.failed)
-                                                            PositionedDirectional(
-                                                              // the reaction chip hangs
-                                                              // at the end on out, the
-                                                              // start on in; the time
-                                                              // takes the free corner
-                                                              end: isOut
-                                                                  ? null
-                                                                  : 8,
-                                                              start: isOut
-                                                                  ? 8
-                                                                  : null,
-                                                              bottom: 8,
-                                                              child:
-                                                                  _groupStamp(
-                                                                    m,
-                                                                  ),
-                                                            ),
-                                                        ],
+                                                            // caption-less photo: float the
+                                                            // time in a pill on the corner,
+                                                            // same as 1:1. captioned photos
+                                                            // keep the time in the row below.
+                                                            if (m
+                                                                    .text
+                                                                    .isEmpty &&
+                                                                !m.failed)
+                                                              PositionedDirectional(
+                                                                // the reaction chip hangs
+                                                                // at the end on out, the
+                                                                // start on in; the time
+                                                                // takes the free corner
+                                                                end: isOut
+                                                                    ? null
+                                                                    : 8,
+                                                                start: isOut
+                                                                    ? 8
+                                                                    : null,
+                                                                bottom: 8,
+                                                                child:
+                                                                    _groupStamp(
+                                                                      m,
+                                                                    ),
+                                                              ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),

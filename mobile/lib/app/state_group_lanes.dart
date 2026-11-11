@@ -29,6 +29,7 @@ extension AppStateGroupLanes on AppState {
         burnSeconds: (r['burn_secs'] as num?)?.toInt(),
         writtenAt: (r['sent_at'] as num?)?.toInt(),
         album: AlbumTag.ofRow(r),
+        spoiler: r['spoiler'] == 1,
       );
     } catch (e) {
       res = 'error: $e';
@@ -120,6 +121,7 @@ extension AppStateGroupLanes on AppState {
       writtenAt: (r['sent_at'] as num?)?.toInt(),
       owed: {for (final m in to) m: fresh ? <int>{} : have[m]!},
       album: AlbumTag.ofRow(r),
+      spoiler: r['spoiler'] == 1,
     );
   }
 

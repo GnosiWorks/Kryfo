@@ -39,7 +39,10 @@ String _body(String from, String to) {
 void main() {
   test('ghost mode is read when the screen opens', () {
     final init = _body('void initState()', 'void dispose()');
-    expect(init, contains('appState.loadGhostPref()'));
+    expect(
+      init,
+      contains('appState.loadChatBurn(widget.groupId, group: true)'),
+    );
     expect(init, contains('_ghost = p.\$1'));
     expect(init, contains('_burnSeconds = p.\$2'));
   });
@@ -49,7 +52,7 @@ void main() {
     // a time turns timed messages on, "Off" turns them off; either is kept
     final pick = _body('Future<void> _showBurnPicker() async {', '_keepDraft');
     expect(pick, contains('_ghost = on;'));
-    expect(pick, contains('appState.saveGhostPref(on, _burnSeconds)'));
+    expect(pick, contains('appState.saveChatBurn(widget.groupId, on, _burnSeconds'));
   });
 
   group('a group gone from here', () {

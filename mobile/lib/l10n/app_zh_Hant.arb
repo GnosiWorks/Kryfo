@@ -3239,5 +3239,11 @@
   "filesOpen": "開啟",
   "filesShowInChat": "在聊天中顯示",
   "filesDeleteHere": "從本機刪除",
-  "filesDeleteHereLine": "它會從本機和已連結的電腦上刪除。其他人仍保留自己的副本。"
+  "filesDeleteHereLine": "它會從本機和已連結的電腦上刪除。其他人仍保留自己的副本。",
+  "spoilerLabel": "劇透照片",
+  "spoilerTapToSee": "點按查看",
+  "selectStart": "選取",
+  "selectDone": "結束選取",
+  "selectCount": "{count, plural, other{已選取 {n} 則}}",
+  "selectDeleteTitle": "{count, plural, other{從本機刪除 {n} 則訊息？}}"
 }

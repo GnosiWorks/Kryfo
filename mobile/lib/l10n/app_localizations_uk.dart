@@ -12514,4 +12514,37 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'Файл зникне з цього телефона та пов\'язаних комп\'ютерів. В інших він залишиться.';
+
+  @override
+  String get spoilerLabel => 'Фото під спойлером';
+
+  @override
+  String get spoilerTapToSee => 'Торкніться, щоб побачити';
+
+  @override
+  String get selectStart => 'Вибрати';
+
+  @override
+  String get selectDone => 'Завершити вибір';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Вибрано: $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Видалити повідомлення ($n) з цього телефона?',
+      one: 'Видалити це повідомлення з цього телефона?',
+    );
+    return '$_temp0';
+  }
 }

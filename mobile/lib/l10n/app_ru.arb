@@ -3239,5 +3239,11 @@
   "filesOpen": "Открыть",
   "filesShowInChat": "Показать в чате",
   "filesDeleteHere": "Удалить с этого телефона",
-  "filesDeleteHereLine": "Файл исчезнет с этого телефона и связанных компьютеров. У остальных он останется."
+  "filesDeleteHereLine": "Файл исчезнет с этого телефона и связанных компьютеров. У остальных он останется.",
+  "spoilerLabel": "Фото под спойлером",
+  "spoilerTapToSee": "Нажмите, чтобы увидеть",
+  "selectStart": "Выбрать",
+  "selectDone": "Завершить выбор",
+  "selectCount": "{count, plural, other{Выбрано: {n}}}",
+  "selectDeleteTitle": "{count, plural, =1{Удалить это сообщение с этого телефона?} other{Удалить сообщения ({n}) с этого телефона?}}"
 }

@@ -99,6 +99,7 @@ class _Rows extends HaloDb {
     int? writtenAt,
     bool viaDev = false,
     AlbumTag? album,
+    bool spoiler = false,
   }) {
     if (full) throw StateError('the disk is full');
     return super.saveMessage(

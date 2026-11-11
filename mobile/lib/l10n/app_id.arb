@@ -3239,5 +3239,11 @@
   "filesOpen": "Buka",
   "filesShowInChat": "Tampilkan di chat",
   "filesDeleteHere": "Hapus dari ponsel ini",
-  "filesDeleteHereLine": "File hilang dari ponsel ini dan komputer yang tertaut. Orang lain tetap menyimpan milik mereka."
+  "filesDeleteHereLine": "File hilang dari ponsel ini dan komputer yang tertaut. Orang lain tetap menyimpan milik mereka.",
+  "spoilerLabel": "Foto spoiler",
+  "spoilerTapToSee": "Ketuk untuk melihat",
+  "selectStart": "Pilih",
+  "selectDone": "Selesai memilih",
+  "selectCount": "{count, plural, other{{n} dipilih}}",
+  "selectDeleteTitle": "{count, plural, other{Hapus {n} pesan dari ponsel ini?}}"
 }

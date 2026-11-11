@@ -3239,5 +3239,11 @@
   "filesOpen": "باز کردن",
   "filesShowInChat": "نمایش در گفت‌وگو",
   "filesDeleteHere": "حذف از این گوشی",
-  "filesDeleteHereLine": "از این گوشی و رایانه‌های پیوندشده‌اش پاک می‌شود. بقیه نسخهٔ خودشان را نگه می‌دارند."
+  "filesDeleteHereLine": "از این گوشی و رایانه‌های پیوندشده‌اش پاک می‌شود. بقیه نسخهٔ خودشان را نگه می‌دارند.",
+  "spoilerLabel": "عکس پنهان",
+  "spoilerTapToSee": "برای دیدن بزن",
+  "selectStart": "انتخاب",
+  "selectDone": "پایان انتخاب",
+  "selectCount": "{count, plural, other{{n} انتخاب شد}}",
+  "selectDeleteTitle": "{count, plural, =1{این پیام از این گوشی حذف شود؟} other{{n} پیام از این گوشی حذف شود؟}}"
 }

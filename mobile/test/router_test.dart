@@ -690,6 +690,7 @@ class _Mem implements HaloDb {
     int? writtenAt,
     bool viaDev = false,
     AlbumTag? album,
+    bool spoiler = false,
   }) async {
     _hit('saveMessage', msgUid ?? peerId, null);
     msgs.add({

@@ -117,6 +117,7 @@ class _GroupDb implements HaloDb {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    bool spoiler = false,
     int? writtenAt,
   }) async {
     if (refuse) return false;

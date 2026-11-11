@@ -1389,6 +1389,7 @@ extension AppStateArrivals on AppState {
       'in',
       text,
       album: album,
+      spoiler: env.spoiler,
       burnSecs: albumGone || !waits ? null : burnSecs,
       burnAt: albumGone ? DateTime.now().millisecondsSinceEpoch : burnAt,
       msgUid: env.msgUid,

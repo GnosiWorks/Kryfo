@@ -3,6 +3,7 @@
 // to switch, drop, add to or reorder, and a caption that rides on the
 // first. nothing leaves until send is tapped; back sends nothing.
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
@@ -63,7 +64,9 @@ class _Entry {
   final Key key = UniqueKey();
   bool leaving = false;
   bool fresh;
-  _Entry(this.media, {this.fresh = false});
+  // a photo blurred until it is tapped, on both ends
+  bool spoiler;
+  _Entry(this.media, {this.fresh = false}) : spoiler = media.spoiler;
 }
 
 class MediaSendScreenState extends State<MediaSendScreen> {
@@ -85,7 +88,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
   /// what is in it now, in order
   List<PickedMedia> get items => [
     for (final e in _items)
-      if (!e.leaving) e.media,
+      if (!e.leaving) e.media.withSpoiler(e.spoiler),
   ];
 
   List<_Entry> get _live => [
@@ -205,6 +208,16 @@ class MediaSendScreenState extends State<MediaSendScreen> {
     if (_pages.hasClients) _pages.jumpToPage(_at);
   }
 
+  // the photo in view as a spoiler, or not
+  void _toggleSpoiler() {
+    final live = _live;
+    if (live.isEmpty) return;
+    final e = live[_at.clamp(0, live.length - 1)];
+    if (e.media.isVideo) return;
+    HapticFeedback.selectionClick();
+    setState(() => e.spoiler = !e.spoiler);
+  }
+
   void _toggleSecure() {
     HapticFeedback.selectionClick();
     setState(() => _secure = !_secure);
@@ -261,7 +274,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              _bar(title),
+              _bar(title, n == 0 ? null : live[_at.clamp(0, n - 1)]),
               Expanded(
                 child: PageView.builder(
                   controller: _pages,
@@ -272,7 +285,10 @@ class MediaSendScreenState extends State<MediaSendScreen> {
                   itemBuilder: (_, i) => Padding(
                     key: ValueKey((live[i].key, n)),
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                    child: _Large(media: live[i].media),
+                    child: _SpoilerVeil(
+                      on: live[i].spoiler,
+                      child: _Large(media: live[i].media),
+                    ),
                   ),
                 ),
               ),
@@ -285,7 +301,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
     );
   }
 
-  Widget _bar(String title) => Padding(
+  Widget _bar(String title, _Entry? shown) => Padding(
     padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 8, 4),
     child: Row(
       children: [
@@ -309,6 +325,19 @@ class MediaSendScreenState extends State<MediaSendScreen> {
             ),
           ),
         ),
+        if (shown != null && !shown.media.isVideo)
+          IconButton(
+            tooltip: l10n.traySpoiler,
+            isSelected: shown.spoiler,
+            icon: Icon(
+              shown.spoiler
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_outlined,
+              size: 22,
+              color: shown.spoiler ? HaloColors.amber : HaloColors.text2,
+            ),
+            onPressed: _toggleSpoiler,
+          ),
         if (widget.secure != null)
           IconButton(
             tooltip: l10n.mediaSendProtect,
@@ -705,5 +734,33 @@ class _AddTile extends StatelessWidget {
         color: HaloColors.amber,
       ),
     ),
+  );
+}
+
+// a spoiler in the preview: blurred as it will be in the chat, fading in
+// and out as it is marked
+class _SpoilerVeil extends StatelessWidget {
+  final bool on;
+  final Widget child;
+  const _SpoilerVeil({required this.on, required this.child});
+
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(end: on ? 1 : 0),
+    duration: motionStill(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 220),
+    curve: Curves.easeOutCubic,
+    builder: (_, v, c) => v == 0
+        ? c!
+        : ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(
+              sigmaX: 22 * v,
+              sigmaY: 22 * v,
+              tileMode: TileMode.decal,
+            ),
+            child: c,
+          ),
+    child: child,
   );
 }

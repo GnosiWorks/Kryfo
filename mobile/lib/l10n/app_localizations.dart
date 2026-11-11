@@ -19734,6 +19734,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'It goes from this phone and its linked computers. Everyone else keeps theirs.'**
   String get filesDeleteHereLine;
+
+  /// screen reader: a photo sent as a spoiler, still blurred
+  ///
+  /// In en, this message translates to:
+  /// **'Spoiler photo'**
+  String get spoilerLabel;
+
+  /// on a blurred spoiler photo: tapping shows it
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see'**
+  String get spoilerTapToSee;
+
+  /// message menu: start picking several messages
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get selectStart;
+
+  /// screen reader: the cross that ends picking messages
+  ///
+  /// In en, this message translates to:
+  /// **'Stop selecting'**
+  String get selectDone;
+
+  /// head while picking messages: how many are picked (n in the language's digits)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{n} selected}}'**
+  String selectCount(int count, String n);
+
+  /// confirm sheet title: delete the picked messages from this device (n in the language's digits)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Delete this message from this phone?} other{Delete {n} messages from this phone?}}'**
+  String selectDeleteTitle(int count, String n);
 }
 
 class _AppLocalizationsDelegate

@@ -12348,4 +12348,37 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'Bu telefondan ve bağlı bilgisayarlarından gider. Diğerleri kendi kopyasını tutar.';
+
+  @override
+  String get spoilerLabel => 'Spoiler fotoğraf';
+
+  @override
+  String get spoilerTapToSee => 'Görmek için dokun';
+
+  @override
+  String get selectStart => 'Seç';
+
+  @override
+  String get selectDone => 'Seçimi bitir';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n seçildi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n mesaj bu telefondan silinsin mi?',
+      one: 'Bu mesaj bu telefondan silinsin mi?',
+    );
+    return '$_temp0';
+  }
 }

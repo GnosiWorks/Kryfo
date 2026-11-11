@@ -195,6 +195,7 @@ class _Db extends DevTestDb {
     int? writtenAt,
     bool viaDev = false,
     AlbumTag? album,
+    bool spoiler = false,
   }) async {
     await mem.insert('messages', {
       'peer_id': peerId,

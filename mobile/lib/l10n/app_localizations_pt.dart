@@ -12419,4 +12419,38 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'Sai deste telefone e dos computadores vinculados. Os outros mantêm o deles.';
+
+  @override
+  String get spoilerLabel => 'Foto com spoiler';
+
+  @override
+  String get spoilerTapToSee => 'Toque para ver';
+
+  @override
+  String get selectStart => 'Selecionar';
+
+  @override
+  String get selectDone => 'Parar de selecionar';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n selecionados',
+      one: '$n selecionado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Apagar $n mensagens deste telefone?',
+      one: 'Apagar esta mensagem deste telefone?',
+    );
+    return '$_temp0';
+  }
 }

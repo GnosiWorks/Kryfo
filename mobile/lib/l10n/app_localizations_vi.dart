@@ -12315,4 +12315,36 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'Tệp sẽ bị xóa khỏi điện thoại này và các máy tính đã liên kết. Người khác vẫn giữ bản của họ.';
+
+  @override
+  String get spoilerLabel => 'Ảnh bị ẩn';
+
+  @override
+  String get spoilerTapToSee => 'Chạm để xem';
+
+  @override
+  String get selectStart => 'Chọn';
+
+  @override
+  String get selectDone => 'Dừng chọn';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã chọn $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Xóa $n tin nhắn khỏi điện thoại này?',
+    );
+    return '$_temp0';
+  }
 }

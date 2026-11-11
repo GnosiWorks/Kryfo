@@ -5,6 +5,7 @@
 // over tor. cards slide in as they are picked and the rest close up when
 // one goes; with reduced motion they simply appear and go
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -320,16 +321,32 @@ class _Card extends StatelessWidget {
       face = Stack(
         fit: StackFit.expand,
         children: [
-          Image.file(
-            File(c.path),
-            cacheWidth: 200,
-            fit: BoxFit.cover,
-            gaplessPlayback: true,
-            errorBuilder: (_, _, _) => ColoredBox(color: HaloColors.surface3),
+          // a spoiler is blurred here as it will be in the chat
+          TweenAnimationBuilder<double>(
+            tween: Tween(end: c.spoiler ? 1 : 0),
+            duration: motionStill(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 220),
+            builder: (_, v, img) => v == 0
+                ? img!
+                : ImageFiltered(
+                    imageFilter: ui.ImageFilter.blur(
+                      sigmaX: 12 * v,
+                      sigmaY: 12 * v,
+                      tileMode: TileMode.decal,
+                    ),
+                    child: img,
+                  ),
+            child: Image.file(
+              File(c.path),
+              cacheWidth: 200,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              errorBuilder: (_, _, _) => ColoredBox(color: HaloColors.surface3),
+            ),
           ),
-          // a spoiler is blurred on the card too, as it will be in the chat
           if (c.spoiler)
-            ColoredBox(color: HaloColors.ink.withValues(alpha: 0.55)),
+            ColoredBox(color: HaloColors.ink.withValues(alpha: 0.3)),
           PositionedDirectional(
             start: 8,
             bottom: 8,

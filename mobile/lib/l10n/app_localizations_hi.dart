@@ -12330,4 +12330,37 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'यह इस फ़ोन और इससे जुड़े कंप्यूटरों से हट जाएगी। बाकी सबके पास उनकी रहेगी।';
+
+  @override
+  String get spoilerLabel => 'स्पॉइलर फ़ोटो';
+
+  @override
+  String get spoilerTapToSee => 'देखने के लिए टैप करो';
+
+  @override
+  String get selectStart => 'चुनो';
+
+  @override
+  String get selectDone => 'चुनना बंद करो';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n चुने गए',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n संदेश इस फ़ोन से मिटाएँ?',
+      one: 'यह संदेश इस फ़ोन से मिटाएँ?',
+    );
+    return '$_temp0';
+  }
 }

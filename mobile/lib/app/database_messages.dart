@@ -35,6 +35,8 @@ mixin _MessageRows {
     bool viaDev = false,
     // its place in an album
     AlbumTag? album,
+    // a photo blurred until it is tapped
+    bool spoiler = false,
   }) async {
     final db = await open();
     final came = sentAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -66,6 +68,7 @@ mixin _MessageRows {
       'poll': ?poll,
       'sticker': ?sticker,
       if (viaDev) 'via_dev': 1,
+      if (spoiler) 'spoiler': 1,
       ...?album?.toRow(),
     });
     try {
@@ -180,6 +183,7 @@ mixin _MessageRows {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    bool spoiler = false,
     // when it was begun, if not now: a bubble shown before it was saved
     int? writtenAt,
   }) async {
@@ -214,6 +218,7 @@ mixin _MessageRows {
         'secure': 0,
         'poll': ?poll,
         'sticker': ?sticker,
+        if (spoiler) 'spoiler': 1,
         ...?album?.toRow(),
       });
     });

@@ -3239,5 +3239,11 @@
   "filesOpen": "Abrir",
   "filesShowInChat": "Mostrar na conversa",
   "filesDeleteHere": "Apagar deste telefone",
-  "filesDeleteHereLine": "Sai deste telefone e dos computadores vinculados. Os outros mantêm o deles."
+  "filesDeleteHereLine": "Sai deste telefone e dos computadores vinculados. Os outros mantêm o deles.",
+  "spoilerLabel": "Foto com spoiler",
+  "spoilerTapToSee": "Toque para ver",
+  "selectStart": "Selecionar",
+  "selectDone": "Parar de selecionar",
+  "selectCount": "{count, plural, =1{{n} selecionado} other{{n} selecionados}}",
+  "selectDeleteTitle": "{count, plural, =1{Apagar esta mensagem deste telefone?} other{Apagar {n} mensagens deste telefone?}}"
 }

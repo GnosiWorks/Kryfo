@@ -24,11 +24,13 @@ import 'package:file_picker/file_picker.dart';
 import '../photo_blur.dart' show makeBlurSoon;
 import '../picked.dart';
 import '../share_files.dart';
-import 'share_files_sheet.dart' show askSendSharedFiles;
+import 'share_files_sheet.dart' show askSendSharedFiles, landFiles;
 import '../album.dart';
 import '../widgets/file_stack.dart';
+import '../widgets/spoiler_cover.dart';
 import '../show_in_chat.dart';
 import '../viewer_rules.dart';
+import '../widgets/select_parts.dart';
 import '../widgets/file_bubble.dart' show kFilePreviewWidth;
 import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
@@ -534,7 +536,7 @@ class _Msg with WordLinks {
   // not saved, not sent yet
   bool preparing = false;
   // a photo sent as a spoiler: blurred until it is tapped
-  bool spoiler = false;
+  bool spoiler;
   _Msg(
     this.direction,
     this.text,
@@ -558,6 +560,7 @@ class _Msg with WordLinks {
     this.delivered = false,
     this.viaDev = false,
     this.album,
+    this.spoiler = false,
     Map<String, String>? reactions,
   }) : reactions = reactions ?? <String, String>{};
 
@@ -794,9 +797,6 @@ int _grindPowTask(String seed) => grindPow(seed, powBits);
 @visibleForTesting
 int Function(String seed)? grindPowForTest;
 
-int _lastBurnSeconds = 300;
-bool _lastGhost = false;
-
 class _ChatScreenState extends State<ChatScreen>
     with WidgetsBindingObserver, BackOnTop<ChatScreen>, HeldMenu<ChatScreen> {
   final _msgCtrl = TextEditingController();
@@ -809,7 +809,8 @@ class _ChatScreenState extends State<ChatScreen>
   // would slip as older pages come in above it
   String? _firstUnreadKey;
   bool _unreadResolved = false;
-  bool _ghost = _lastGhost; // restored from last use this session.
+  // this chat's own flame (loadChatBurn), off until it is read
+  bool _ghost = false;
   // the timed setting read: until then new words keep the draft's timer
   bool _ghostKnown = false;
   // marks the next message so the other phone blocks screenshots of it. off
@@ -823,7 +824,7 @@ class _ChatScreenState extends State<ChatScreen>
   int? _pqAt;
   // this screen's one hold on the window's flag while the chat blocks
   late final _shotsHold = ShotsPacer(appState.forceSecure);
-  int _burnSeconds = _lastBurnSeconds; // restored from last use this session.
+  int _burnSeconds = 300;
   // the burn, the inbox poll and the auto retry run only while the chat is
   // in view, and catch up the moment it is back
   final _timers = SeenTimers();
@@ -876,6 +877,7 @@ class _ChatScreenState extends State<ChatScreen>
           saved: (r['saved'] as int? ?? 0) == 1,
           viaDev: r['via_dev'] == 1,
           album: AlbumTag.ofRow(r),
+          spoiler: r['spoiler'] == 1,
           delivered: (r['delivered'] as int? ?? 0) == 1,
           sending:
               (r['direction'] as String) == 'out' &&
@@ -1537,15 +1539,13 @@ class _ChatScreenState extends State<ChatScreen>
     _reconcileSending();
     // received notes play at this identity's speed
     unawaited(VoiceSpeed.use(session.container));
-    appState.loadGhostPref().then((p) {
+    appState.loadChatBurn(widget.peerHaloId).then((p) {
       if (mounted) {
         setState(() {
           _ghost = p.$1;
           _burnSeconds = _viaPhone && !kAnswerBurns.contains(p.$2)
               ? kAnswerBurns.first
               : p.$2;
-          _lastGhost = p.$1;
-          _lastBurnSeconds = p.$2;
           _ghostKnown = true;
         });
       }
@@ -2216,6 +2216,7 @@ class _ChatScreenState extends State<ChatScreen>
         saved: (r['saved'] as int? ?? 0) == 1,
         viaDev: r['via_dev'] == 1,
         album: AlbumTag.ofRow(r),
+        spoiler: r['spoiler'] == 1,
         delivered: (r['delivered'] as int? ?? 0) == 1,
         sending:
             (r['direction'] as String) == 'out' &&
@@ -2449,7 +2450,8 @@ class _ChatScreenState extends State<ChatScreen>
     final media = target.mediaPath != null || target.filePath != null;
     final rows = welcome
         ? 1
-        : (canTranslate ? 6 : 3) +
+        // the rows, Select among them
+        : (canTranslate ? 7 : 4) +
               (target.text.isNotEmpty && target.sticker == null ? 1 : 0) +
               (target.sticker == null ? 1 : 0) +
               (target.filePath != null && !isVoiceName(target.fileName)
@@ -2565,6 +2567,16 @@ class _ChatScreenState extends State<ChatScreen>
                 showHaloToast(context, l10n.commonCopied);
               },
       ),
+      // more than this one: a tap on each row picks it
+      if (!welcome)
+        MenuAction(
+          icon: Icons.check_circle_outline_rounded,
+          label: l10n.selectStart,
+          onTap: () {
+            dismiss(now: true);
+            _pick(target);
+          },
+        ),
       if (canTranslate)
         MenuAction(
           icon: Icons.translate_rounded,
@@ -3362,6 +3374,7 @@ class _ChatScreenState extends State<ChatScreen>
           saved: (r['saved'] as int? ?? 0) == 1,
           viaDev: r['via_dev'] == 1,
           album: AlbumTag.ofRow(r),
+          spoiler: r['spoiler'] == 1,
           delivered: (r['delivered'] as int? ?? 0) == 1,
           sending:
               (r['direction'] as String) == 'out' &&
@@ -3636,6 +3649,125 @@ class _ChatScreenState extends State<ChatScreen>
   bool _jumpActive = false;
 
   // scroll a specific message into view and pulse it, for jump-from-saved.
+  // ---- several messages picked at once (select_parts.dart) ----
+
+  // the rows picked, by the key of the row that draws each
+  final Set<String> _picked = {};
+  bool get _selecting => _picked.isNotEmpty;
+
+  // a row picked or let go: an album or a set of files goes whole
+  void _pick(_Msg m) {
+    final lead = _albums.runOf(m)?.lead ?? m;
+    final k = _rowKey(lead);
+    setState(() => _picked.contains(k) ? _picked.remove(k) : _picked.add(k));
+  }
+
+  // what is picked, in the chat's order, every member of an album with it
+  List<_Msg> get _pickedRows => [
+    for (final x in _messages)
+      if (_picked.contains(_rowKey(_albums.runOf(x)?.lead ?? x))) x,
+  ];
+
+  bool _leaves(_Msg x) => mayLeave(
+    blocking: _shots.blocking,
+    timed: x.burnSecs != null,
+    marked: x.secure,
+    spoiler: x.spoiler,
+    hidden: session.isHidden(widget.peerHaloId),
+  );
+
+  Widget _selectBar() {
+    final rows = _pickedRows;
+    final all = rows.isNotEmpty && rows.every(_leaves) && !_isDev;
+    final words =
+        all &&
+        rows.every(
+          (x) =>
+              x.sticker == null &&
+              x.mediaPath == null &&
+              x.filePath == null &&
+              x.text.trim().isNotEmpty,
+        );
+    final files =
+        all &&
+        rows.every(
+          (x) =>
+              (x.mediaPath != null ||
+                  canForwardFile(x.filePath, x.fileName, kept: false)) &&
+              fileWaitOf(x.msgUid) == null,
+        );
+    return SelectBar(
+      key: const ValueKey('select'),
+      count: _picked.length,
+      onClose: () => setState(_picked.clear),
+      onCopy: words ? () => _copyPicked(rows) : null,
+      onForward: words || files ? () => _forwardPicked(rows, words) : null,
+      onDelete: rows.any((x) => x.msgUid != null && !x.sending)
+          ? () => _deletePicked(rows)
+          : null,
+    );
+  }
+
+  void _copyPicked(List<_Msg> rows) {
+    copySensitive(rows.map((x) => x.text.trim()).join('\n\n'), kept: true);
+    showHaloToast(context, l10n.commonCopied);
+    setState(_picked.clear);
+  }
+
+  // words go to one chat's composer as one; photos and files go to it as
+  // files, each read and never moved
+  Future<void> _forwardPicked(List<_Msg> rows, bool words) async {
+    final id = await pickWordsChat(
+      context,
+      title: l10n.chatForwardTo,
+      empty: l10n.chatNoContactsToForward,
+      dev: devForwardTarget,
+    );
+    if (id == null || !mounted) return;
+    setState(_picked.clear);
+    if (words) {
+      final text = rows.map((x) => x.text.trim()).join('\n\n');
+      if (id == widget.peerHaloId) return _takeWords(text);
+      final route = await wordsRoute(id, text);
+      if (route == null || !mounted) return;
+      await Navigator.of(context).push(route);
+      return;
+    }
+    await landFiles(context, id, session.container.id, [
+      for (final x in rows)
+        SharedCopy(
+          x.mediaPath ?? x.filePath!,
+          name: x.fileName ?? savedPhotoName(x.mediaPath!, x.when),
+        ),
+    ]);
+  }
+
+  // gone from this phone and its computers; the other side keeps theirs
+  Future<void> _deletePicked(List<_Msg> rows) async {
+    final yes = await showConfirmSheet(
+      context,
+      title: l10n.selectDeleteTitle(rows.length, whole(rows.length)),
+      line: l10n.filesDeleteHereLine,
+      yes: l10n.commonDelete,
+    );
+    if (!yes || !mounted) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _picked.clear();
+      for (final x in rows) {
+        x.removing = true;
+      }
+    });
+    await Future.delayed(kLeaveGone);
+    for (final x in rows) {
+      if (x.msgUid != null && !x.sending) {
+        await session.deleteMessage(x.msgUid!);
+      }
+    }
+    if (!mounted) return;
+    setState(() => _messages.removeWhere(rows.contains));
+  }
+
   // the shared page asked for a message of this chat: what is above the
   // chat goes, and the chat goes to it. an album's row stands for its own
   void _showAsked() {
@@ -3709,7 +3841,13 @@ class _ChatScreenState extends State<ChatScreen>
         forward: (i) {
           final x = rows[i];
           if (!leaves(x) || _isDev) return null;
-          return () => _forwardMessage(x);
+          // a photo or video goes on as itself, read and never moved
+          final path = x.mediaPath ?? x.filePath!;
+          return () => forwardFile(
+            context,
+            path,
+            x.fileName ?? savedPhotoName(path, x.when),
+          );
         },
         unsend: (i) {
           final x = rows[i];
@@ -4016,10 +4154,9 @@ class _ChatScreenState extends State<ChatScreen>
     setState(() {
       if (on) _burnSeconds = picked;
       _ghost = on;
-      _lastBurnSeconds = _burnSeconds;
-      _lastGhost = on;
-      appState.saveGhostPref(on, _burnSeconds);
     });
+    // kept with this chat alone
+    unawaited(appState.saveChatBurn(widget.peerHaloId, on, _burnSeconds));
     // the draft takes the chat's new clock
     _keepDraft(clock: true);
   }
@@ -4090,6 +4227,7 @@ class _ChatScreenState extends State<ChatScreen>
       secure: msg.secure,
       replyTo: msg.replyTo,
       album: msg.album,
+      spoiler: msg.spoiler,
       writtenAt: msg.when.millisecondsSinceEpoch,
     ).then((result) => _finishMediaSend(msg, result));
   }
@@ -4122,6 +4260,7 @@ class _ChatScreenState extends State<ChatScreen>
       secure: msg.secure,
       replyTo: msg.replyTo,
       album: msg.album,
+      spoiler: msg.spoiler,
       writtenAt: msg.when.millisecondsSinceEpoch,
     ).then((result) => _finishMediaSend(msg, result));
   }
@@ -4283,6 +4422,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (media.isNotEmpty) {
         await sendGalleryPicks(
           [for (final m in media) m.source as XFile? ?? XFile(m.path)],
+          spoilers: r.spoilers,
           pickMore: () => lockState.hold(pickGallery),
           preview: _preview,
           send: (s) => _sendPicked(
@@ -4827,6 +4967,7 @@ class _ChatScreenState extends State<ChatScreen>
       sent: 0,
       secure: wantSecure,
       album: msg.album,
+      spoiler: msg.spoiler,
       // the time its bubble shows, kept by a resend after a restart
       writtenAt: msg.when.millisecondsSinceEpoch,
     );
@@ -4842,6 +4983,7 @@ class _ChatScreenState extends State<ChatScreen>
         secure: wantSecure,
         replyTo: replyToUid,
         album: msg.album,
+        spoiler: msg.spoiler,
         writtenAt: msg.when.millisecondsSinceEpoch,
       ).then((r) => _finishMediaSend(msg, r)),
     );
@@ -4875,6 +5017,7 @@ class _ChatScreenState extends State<ChatScreen>
           burnSecs: _ghost ? _burnSeconds : null,
           secure: r.secure,
           album: go.album,
+          spoiler: go.item.spoiler,
         )..preparing = true,
     ];
     setState(() {
@@ -5009,6 +5152,7 @@ class _ChatScreenState extends State<ChatScreen>
     bool secure = false,
     String? replyTo,
     AlbumTag? album,
+    bool spoiler = false,
     // when its row was written
     required int writtenAt,
   }) async {
@@ -5035,6 +5179,7 @@ class _ChatScreenState extends State<ChatScreen>
         secure: secure,
         replyTo: replyTo,
         album: album,
+        spoiler: spoiler,
         writtenAt: writtenAt,
         sender: SenderInfo(
           haloId: appState.sessionId,
@@ -6121,6 +6266,14 @@ class _ChatScreenState extends State<ChatScreen>
     }
 
     final answer = run == null ? row : run.anchor;
+    // picking: a tap picks the row, its own taps wait
+    final shown = _selecting && !m.welcome
+        ? SelectRow(
+            on: _picked.contains(_rowKey(row)),
+            onTap: () => _pick(row),
+            child: bubble,
+          )
+        : null;
     return RepaintBoundary(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -6143,15 +6296,17 @@ class _ChatScreenState extends State<ChatScreen>
                   // a timed bubble has burned already; any other burns now
                   after: m.burnedAway ? Duration.zero : kBurnDissolve,
                   // his first line takes no reply
-                  child: m.welcome
-                      ? bubble
-                      : SwipeToReply(
-                          onReply: () {
-                            HapticFeedback.selectionClick();
-                            _replyWith(answer);
-                          },
-                          child: bubble,
-                        ),
+                  child:
+                      shown ??
+                      (m.welcome
+                          ? bubble
+                          : SwipeToReply(
+                              onReply: () {
+                                HapticFeedback.selectionClick();
+                                _replyWith(answer);
+                              },
+                              child: bubble,
+                            )),
                 ),
               ),
             ),
@@ -7156,9 +7311,15 @@ class _ChatScreenState extends State<ChatScreen>
   @override
   Widget build(BuildContext context) => menuBack(
     child: PopScope(
-      canPop: !_escHolds,
+      canPop: !_escHolds && !_selecting,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _escOne();
+        if (didPop) return;
+        // back first lets go of what is picked
+        if (_selecting) {
+          setState(_picked.clear);
+          return;
+        }
+        _escOne();
       },
       child: DragInZone(
         enabled: _composerShown,
@@ -7421,7 +7582,9 @@ class _ChatScreenState extends State<ChatScreen>
           children: [
             // search and the head cross over both ways
             FadeSwap(
-              child: _searching
+              child: _selecting
+                  ? _selectBar()
+                  : _searching
                   ? SearchHead(
                       key: const ValueKey('search'),
                       controller: _searchCtrl,
@@ -9460,16 +9623,21 @@ class _Bubble extends StatelessWidget {
                                           when run.tag.files)
                                         _fileStack(context, run)
                                       else if (album case final run?)
-                                        _grid(
-                                          context,
-                                          run,
-                                          stamp: _mediaCorner(
-                                            msg,
-                                            showMeta: showTime,
-                                            failedShown: failedShown,
-                                            parked: parked,
+                                        SpoilerCover(
+                                          uid: run.anchor.msgUid,
+                                          on: run.present.any((x) => x.spoiler),
+                                          radius: BorderRadius.circular(corner),
+                                          child: _grid(
+                                            context,
+                                            run,
+                                            stamp: _mediaCorner(
+                                              msg,
+                                              showMeta: showTime,
+                                              failedShown: failedShown,
+                                              parked: parked,
+                                            ),
+                                            corner: corner,
                                           ),
-                                          corner: corner,
                                         )
                                       else if (msg.making != null)
                                         Padding(
@@ -9596,139 +9764,149 @@ class _Bubble extends StatelessWidget {
                                           msg.mediaPath != null &&
                                           (isOut ||
                                               fileWaitOf(msg.msgUid) == null))
-                                        PressScale(
-                                          scale: 0.97,
-                                          haptic: false,
-                                          onTap: () {
-                                            onAct?.call();
-                                            final tag = photoHeroTag(
-                                              msg.mediaPath!,
-                                              'chat',
-                                            );
-                                            if (openMedia?.call(
-                                                  context,
-                                                  msg,
-                                                  tag,
-                                                ) ??
-                                                false) {
-                                              return;
-                                            }
-                                            _openFullImage(
-                                              context,
-                                              msg.mediaPath!,
-                                              secure: msg.secure,
-                                              tag: tag,
-                                              radius: corner,
-                                            );
-                                          },
-                                          // said as a photo from the start,
-                                          // before the picture has faded up
-                                          child: Semantics(
-                                            image: true,
-                                            label: l10n.appPhoto,
-                                            child: ClipRRect(
-                                              borderRadius: msg.text.isNotEmpty
-                                                  ? BorderRadius.vertical(
-                                                      top: Radius.circular(
-                                                        corner,
-                                                      ),
-                                                    )
-                                                  : BorderRadius.circular(14),
-                                              child: Stack(
-                                                clipBehavior: Clip.none,
-                                                children: [
-                                                  // the photo's own shape, its blur
-                                                  // the same, before the file decodes
-                                                  PhotoShape(
-                                                    path: msg.mediaPath!,
-                                                    image: mediaImage(
-                                                      msg.mediaPath!,
-                                                      screenPx(
-                                                        context,
-                                                        times: 0.78,
-                                                      ),
-                                                    ),
-                                                    maxWidth: photoMaxWidth(
-                                                      context,
-                                                    ),
-                                                    child: HaloHero(
-                                                      tag: photoHeroTag(
+                                        SpoilerCover(
+                                          uid: msg.msgUid,
+                                          on: msg.spoiler,
+                                          radius: BorderRadius.circular(corner),
+                                          child: PressScale(
+                                            scale: 0.97,
+                                            haptic: false,
+                                            onTap: () {
+                                              onAct?.call();
+                                              final tag = photoHeroTag(
+                                                msg.mediaPath!,
+                                                'chat',
+                                              );
+                                              if (openMedia?.call(
+                                                    context,
+                                                    msg,
+                                                    tag,
+                                                  ) ??
+                                                  false) {
+                                                return;
+                                              }
+                                              _openFullImage(
+                                                context,
+                                                msg.mediaPath!,
+                                                secure: msg.secure,
+                                                tag: tag,
+                                                radius: corner,
+                                              );
+                                            },
+                                            // said as a photo from the start,
+                                            // before the picture has faded up
+                                            child: Semantics(
+                                              image: true,
+                                              label: l10n.appPhoto,
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    msg.text.isNotEmpty
+                                                    ? BorderRadius.vertical(
+                                                        top: Radius.circular(
+                                                          corner,
+                                                        ),
+                                                      )
+                                                    : BorderRadius.circular(14),
+                                                child: Stack(
+                                                  clipBehavior: Clip.none,
+                                                  children: [
+                                                    // the photo's own shape, its blur
+                                                    // the same, before the file decodes
+                                                    PhotoShape(
+                                                      path: msg.mediaPath!,
+                                                      image: mediaImage(
                                                         msg.mediaPath!,
-                                                        'chat',
+                                                        screenPx(
+                                                          context,
+                                                          times: 0.78,
+                                                        ),
                                                       ),
-                                                      child: ChatPicture(
-                                                        path: msg.mediaPath!,
-                                                        // its blur at once,
-                                                        // the photo fading up
-                                                        // over it once decoded
-                                                        child: SealedPicture(
+                                                      maxWidth: photoMaxWidth(
+                                                        context,
+                                                      ),
+                                                      child: HaloHero(
+                                                        tag: photoHeroTag(
+                                                          msg.mediaPath!,
+                                                          'chat',
+                                                        ),
+                                                        child: ChatPicture(
                                                           path: msg.mediaPath!,
-                                                          shaped: false,
-                                                          decodeWidth: screenPx(
-                                                            context,
-                                                            times: 0.78,
-                                                          ),
-                                                          image: mediaImage(
-                                                            msg.mediaPath!,
-                                                            screenPx(
-                                                              context,
-                                                              times: 0.78,
+                                                          // its blur at once,
+                                                          // the photo fading up
+                                                          // over it once decoded
+                                                          child: SealedPicture(
+                                                            path:
+                                                                msg.mediaPath!,
+                                                            shaped: false,
+                                                            decodeWidth:
+                                                                screenPx(
+                                                                  context,
+                                                                  times: 0.78,
+                                                                ),
+                                                            image: mediaImage(
+                                                              msg.mediaPath!,
+                                                              screenPx(
+                                                                context,
+                                                                times: 0.78,
+                                                              ),
                                                             ),
-                                                          ),
-                                                          errorBuilder: (_, e, _) {
-                                                            dlog(
-                                                              'image failed: '
-                                                              '${msg.mediaPath} / $e',
-                                                            );
-                                                            return Container(
-                                                              height: 120,
-                                                              alignment:
-                                                                  Alignment
-                                                                      .center,
-                                                              color: HaloColors
-                                                                  .surface2,
-                                                              child: Column(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
-                                                                children: [
-                                                                  Icon(
-                                                                    Icons
-                                                                        .image_not_supported_outlined,
-                                                                    size: 22,
-                                                                    color: HaloColors
-                                                                        .text2,
-                                                                  ),
-                                                                  const SizedBox(
-                                                                    height: 6,
-                                                                  ),
-                                                                  Text(
-                                                                    l10n.chatPhotoUnavailable,
-                                                                    style: HaloType.mono(
-                                                                      size: 11,
+                                                            errorBuilder: (_, e, _) {
+                                                              dlog(
+                                                                'image failed: '
+                                                                '${msg.mediaPath} / $e',
+                                                              );
+                                                              return Container(
+                                                                height: 120,
+                                                                alignment:
+                                                                    Alignment
+                                                                        .center,
+                                                                color: HaloColors
+                                                                    .surface2,
+                                                                child: Column(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    Icon(
+                                                                      Icons
+                                                                          .image_not_supported_outlined,
+                                                                      size: 22,
                                                                       color: HaloColors
                                                                           .text2,
                                                                     ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            );
-                                                          },
+                                                                    const SizedBox(
+                                                                      height: 6,
+                                                                    ),
+                                                                    Text(
+                                                                      l10n.chatPhotoUnavailable,
+                                                                      style: HaloType.mono(
+                                                                        size:
+                                                                            11,
+                                                                        color: HaloColors
+                                                                            .text2,
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              );
+                                                            },
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
-                                                  ),
-                                                  PositionedDirectional(
-                                                    end: 8,
-                                                    bottom: 8,
-                                                    child: _mediaCorner(
-                                                      msg,
-                                                      showMeta: showTime,
-                                                      failedShown: failedShown,
-                                                      parked: parked,
+                                                    PositionedDirectional(
+                                                      end: 8,
+                                                      bottom: 8,
+                                                      child: _mediaCorner(
+                                                        msg,
+                                                        showMeta: showTime,
+                                                        failedShown:
+                                                            failedShown,
+                                                        parked: parked,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -10827,7 +11005,9 @@ class _Composer extends StatelessWidget {
           Row(
             children: [
               PressScale(
-                label: l10n.chatTimedMessages,
+                label: ghost
+                    ? '${l10n.chatTimedMessages}, ${burnShort(burnSeconds)}'
+                    : l10n.chatTimedMessages,
                 onTap: onToggleGhost,
                 onLongPress: onPickBurn,
                 scale: 0.88,
@@ -10856,6 +11036,8 @@ class _Composer extends StatelessWidget {
                   ),
                 ),
               ),
+              // how long, beside the flame while it is on
+              FlameTime(on: ghost, secs: burnSeconds),
               // the shield toggle stays hidden until it is verified end to
               // end. the flag, the wire and the viewer are all in place.
               const SizedBox(width: 1),

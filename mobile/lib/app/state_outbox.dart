@@ -1001,6 +1001,7 @@ extension AppStateOutbox on AppState {
       secure: ((r['secure'] as int?) ?? 0) == 1,
       replyTo: r['reply_to'] as String?,
       album: AlbumTag.ofRow(r),
+      spoiler: r['spoiler'] == 1,
       writtenAt: (r['sent_at'] as num?)?.toInt(),
       sender: _mySender(),
       only: only,

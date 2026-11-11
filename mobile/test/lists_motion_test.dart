@@ -114,6 +114,7 @@ class _Db implements HaloDb {
     int? writtenAt,
     bool viaDev = false,
     AlbumTag? album,
+    bool spoiler = false,
   }) async {
     notes.add({
       'rowid': notes.length + 1,

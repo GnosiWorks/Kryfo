@@ -3239,5 +3239,11 @@
   "filesOpen": "Öffnen",
   "filesShowInChat": "Im Chat zeigen",
   "filesDeleteHere": "Von diesem Gerät löschen",
-  "filesDeleteHereLine": "Sie verschwindet von diesem Gerät und seinen verknüpften Computern. Alle anderen behalten ihre."
+  "filesDeleteHereLine": "Sie verschwindet von diesem Gerät und seinen verknüpften Computern. Alle anderen behalten ihre.",
+  "spoilerLabel": "Spoiler-Foto",
+  "spoilerTapToSee": "Zum Ansehen tippen",
+  "selectStart": "Auswählen",
+  "selectDone": "Auswahl beenden",
+  "selectCount": "{count, plural, other{{n} ausgewählt}}",
+  "selectDeleteTitle": "{count, plural, =1{Diese Nachricht von diesem Gerät löschen?} other{{n} Nachrichten von diesem Gerät löschen?}}"
 }

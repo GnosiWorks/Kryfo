@@ -12339,4 +12339,37 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'از این گوشی و رایانه‌های پیوندشده‌اش پاک می‌شود. بقیه نسخهٔ خودشان را نگه می‌دارند.';
+
+  @override
+  String get spoilerLabel => 'عکس پنهان';
+
+  @override
+  String get spoilerTapToSee => 'برای دیدن بزن';
+
+  @override
+  String get selectStart => 'انتخاب';
+
+  @override
+  String get selectDone => 'پایان انتخاب';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n انتخاب شد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n پیام از این گوشی حذف شود؟',
+      one: 'این پیام از این گوشی حذف شود؟',
+    );
+    return '$_temp0';
+  }
 }

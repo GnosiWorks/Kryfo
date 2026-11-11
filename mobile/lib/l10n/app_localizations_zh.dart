@@ -11652,6 +11652,38 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filesDeleteHereLine => '它会从本机和已关联的电脑上删除。其他人仍保留自己的副本。';
+
+  @override
+  String get spoilerLabel => '剧透照片';
+
+  @override
+  String get spoilerTapToSee => '点按查看';
+
+  @override
+  String get selectStart => '选择';
+
+  @override
+  String get selectDone => '结束选择';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已选择 $n 条',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '从本机删除 $n 条消息？',
+    );
+    return '$_temp0';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -23182,4 +23214,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get filesDeleteHereLine => '它會從本機和已連結的電腦上刪除。其他人仍保留自己的副本。';
+
+  @override
+  String get spoilerLabel => '劇透照片';
+
+  @override
+  String get spoilerTapToSee => '點按查看';
+
+  @override
+  String get selectStart => '選取';
+
+  @override
+  String get selectDone => '結束選取';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已選取 $n 則',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '從本機刪除 $n 則訊息？',
+    );
+    return '$_temp0';
+  }
 }

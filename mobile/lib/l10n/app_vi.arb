@@ -3239,5 +3239,11 @@
   "filesOpen": "Mở",
   "filesShowInChat": "Xem trong cuộc trò chuyện",
   "filesDeleteHere": "Xóa khỏi điện thoại này",
-  "filesDeleteHereLine": "Tệp sẽ bị xóa khỏi điện thoại này và các máy tính đã liên kết. Người khác vẫn giữ bản của họ."
+  "filesDeleteHereLine": "Tệp sẽ bị xóa khỏi điện thoại này và các máy tính đã liên kết. Người khác vẫn giữ bản của họ.",
+  "spoilerLabel": "Ảnh bị ẩn",
+  "spoilerTapToSee": "Chạm để xem",
+  "selectStart": "Chọn",
+  "selectDone": "Dừng chọn",
+  "selectCount": "{count, plural, other{Đã chọn {n}}}",
+  "selectDeleteTitle": "{count, plural, other{Xóa {n} tin nhắn khỏi điện thoại này?}}"
 }

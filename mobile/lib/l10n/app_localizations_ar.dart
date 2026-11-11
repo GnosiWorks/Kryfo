@@ -12463,4 +12463,37 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'يُحذف من هذا الهاتف وحواسيبه المرتبطة. يحتفظ الآخرون بنسخهم.';
+
+  @override
+  String get spoilerLabel => 'صورة مخفية';
+
+  @override
+  String get spoilerTapToSee => 'انقر للعرض';
+
+  @override
+  String get selectStart => 'تحديد';
+
+  @override
+  String get selectDone => 'إنهاء التحديد';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم تحديد $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'حذف $n رسائل من هذا الهاتف؟',
+      one: 'حذف هذه الرسالة من هذا الهاتف؟',
+    );
+    return '$_temp0';
+  }
 }

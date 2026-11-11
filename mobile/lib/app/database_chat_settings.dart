@@ -215,6 +215,36 @@ mixin _ChatSettingRows {
     );
   }
 
+  // a chat's own flame timer: null until one is set here, 0 for off, else
+  // how many seconds its messages live
+  Future<int?> chatBurnOf(String chatId, {bool group = false}) async {
+    final db = await open();
+    final rows = await db.query(
+      group ? 'groups' : 'contacts',
+      columns: ['chat_burn'],
+      where: group ? 'group_id = ?' : 'halo_id = ?',
+      whereArgs: [chatId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    final v = rows.first['chat_burn'];
+    return v is int && v >= 0 ? v : null;
+  }
+
+  Future<void> setChatBurn(
+    String chatId,
+    int secs, {
+    bool group = false,
+  }) async {
+    final db = await open();
+    await db.update(
+      group ? 'groups' : 'contacts',
+      {'chat_burn': secs < 0 ? 0 : secs},
+      where: group ? 'group_id = ?' : 'halo_id = ?',
+      whereArgs: [chatId],
+    );
+  }
+
   // a chat's screenshot block (chat_shots.dart)
   Future<ChatShots> shotsOf(String peer) async {
     final db = await open();

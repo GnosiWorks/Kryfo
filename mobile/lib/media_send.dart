@@ -139,6 +139,8 @@ Future<String> sendChunkedMediaTo({
   String? replyTo,
   // its place in an album, on every slice too
   AlbumTag? album,
+  // a spoiler photo, on every slice too
+  bool spoiler = false,
   // when its row was written, on every slice too. now when not given
   int? writtenAt,
   required SenderInfo sender,
@@ -171,6 +173,7 @@ Future<String> sendChunkedMediaTo({
       secure: secure,
       replyTo: replyTo,
       album: album,
+      spoiler: spoiler,
       writtenAt: writtenAt,
       sender: sender,
       only: only,
@@ -202,6 +205,7 @@ Future<String> _sendChunkedMediaInner({
   bool secure = false,
   String? replyTo,
   AlbumTag? album,
+  bool spoiler = false,
   int? writtenAt,
   required SenderInfo sender,
   Set<int>? only,
@@ -401,6 +405,7 @@ Future<String> _sendChunkedMediaInner({
           secure: secure,
           replyTo: replyTo,
           album: album,
+          spoiler: spoiler,
           gif: gif,
           powNonce: pow,
           powBitsUsed: pow == null ? null : powBits,

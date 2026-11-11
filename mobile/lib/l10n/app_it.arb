@@ -3239,5 +3239,11 @@
   "filesOpen": "Apri",
   "filesShowInChat": "Mostra nella chat",
   "filesDeleteHere": "Elimina da questo telefono",
-  "filesDeleteHereLine": "Sparisce da questo telefono e dai computer collegati. Gli altri tengono la loro copia."
+  "filesDeleteHereLine": "Sparisce da questo telefono e dai computer collegati. Gli altri tengono la loro copia.",
+  "spoilerLabel": "Foto spoiler",
+  "spoilerTapToSee": "Tocca per vedere",
+  "selectStart": "Seleziona",
+  "selectDone": "Termina selezione",
+  "selectCount": "{count, plural, =1{{n} selezionato} other{{n} selezionati}}",
+  "selectDeleteTitle": "{count, plural, =1{Eliminare questo messaggio da questo telefono?} other{Eliminare {n} messaggi da questo telefono?}}"
 }

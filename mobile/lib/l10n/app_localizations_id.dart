@@ -12326,4 +12326,36 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'File hilang dari ponsel ini dan komputer yang tertaut. Orang lain tetap menyimpan milik mereka.';
+
+  @override
+  String get spoilerLabel => 'Foto spoiler';
+
+  @override
+  String get spoilerTapToSee => 'Ketuk untuk melihat';
+
+  @override
+  String get selectStart => 'Pilih';
+
+  @override
+  String get selectDone => 'Selesai memilih';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n dipilih',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hapus $n pesan dari ponsel ini?',
+    );
+    return '$_temp0';
+  }
 }

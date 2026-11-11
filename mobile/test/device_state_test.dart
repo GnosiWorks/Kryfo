@@ -237,7 +237,7 @@ void main() {
           await raw.close();
           expect(was, lessThan(95), reason: f);
           final db = await open(c);
-          expect(await db.getVersion(), 96, reason: f);
+          expect(await db.getVersion(), 98, reason: f);
           await tablesThere(db, reason: f);
           final after = await _counts(db);
           for (final t in before.keys) {
@@ -265,7 +265,7 @@ void main() {
       expect(await _cols(db, 'identities'), isNot(contains('dev_id')));
       await closeAll();
       db = await open();
-      expect(await db.getVersion(), 96);
+      expect(await db.getVersion(), 98);
       await tablesThere(db, reason: 'from 94');
       expect(await _counts(db), before);
       // and once more changes nothing
@@ -317,7 +317,7 @@ void main() {
     test('a new file has them', () async {
       if (skip()) return;
       final db = await open();
-      expect(await db.getVersion(), 96);
+      expect(await db.getVersion(), 98);
       await tablesThere(db, reason: 'new');
     });
   });

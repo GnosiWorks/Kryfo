@@ -109,7 +109,9 @@
   "videoViewerPause",
   "bridgesPrivateWebsite",
   "voiceSpeedLabel",
-  "traySpoiler"
+  "traySpoiler",
+  "filesTypeAudio",
+  "filesTypeVideo"
  ],
  "es": [
   "a11yVideoOn",
@@ -208,7 +210,8 @@
   "videoBubbleMb",
   "videoBubbleVideo",
   "voiceSpeedLabel",
-  "traySpoiler"
+  "traySpoiler",
+  "filesTypeAudio"
  ],
  "fa": [
   "appTor",
@@ -305,7 +308,10 @@
   "videoViewerPause",
   "voiceTranscriptLabel",
   "voiceSpeedLabel",
-  "traySpoiler"
+  "traySpoiler",
+  "filesTypeDocs",
+  "filesTypeAudio",
+  "filesTypeArchives"
  ],
  "hi": [
   "appTor",
@@ -419,7 +425,9 @@
   "videoBubbleMb",
   "videoBubbleVideo",
   "voiceSpeedLabel",
-  "traySpoiler"
+  "traySpoiler",
+  "filesTypeAudio",
+  "filesTypeVideo"
  ],
  "it": [
   "sharedTabMedia",
@@ -517,7 +525,9 @@
   "videoBubbleMb",
   "videoBubbleVideo",
   "voiceSpeedLabel",
-  "traySpoiler"
+  "traySpoiler",
+  "filesTypeAudio",
+  "filesTypeVideo"
  ],
  "pl": [
   "albumQuoted",

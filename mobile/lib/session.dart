@@ -349,6 +349,19 @@ class Session {
         chatId,
         group: group,
       );
+  Future<int?> chatBurnOf(String chatId, {bool group = false}) =>
+      (group ? _ofGroup(chatId) : _ofPeer(chatId)).chatBurnOf(
+        chatId,
+        group: group,
+      );
+
+  Future<void> setChatBurn(String chatId, int secs, {bool group = false}) =>
+      (group ? _ofGroup(chatId) : _ofPeer(chatId)).setChatBurn(
+        chatId,
+        secs,
+        group: group,
+      );
+
   Future<void> setVoiceDisguise(String chatId, bool on, {bool group = false}) =>
       (group ? _ofGroup(chatId) : _ofPeer(chatId)).setVoiceDisguise(
         chatId,
@@ -573,6 +586,7 @@ class Session {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    bool spoiler = false,
     // when it was written, if not now: a bubble shown before it was saved
     int? writtenAt,
   }) => _ofEither(peerId, groupId).saveMessage(
@@ -595,6 +609,7 @@ class Session {
     poll: poll,
     sticker: sticker,
     album: album,
+    spoiler: spoiler,
     writtenAt: writtenAt,
   );
   // [home], when given, is the chatKey the group had when the send began:
@@ -615,6 +630,7 @@ class Session {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    bool spoiler = false,
     int? writtenAt,
     String? home,
   }) async {
@@ -635,6 +651,7 @@ class Session {
       poll: poll,
       sticker: sticker,
       album: album,
+      spoiler: spoiler,
       writtenAt: writtenAt,
     );
   }

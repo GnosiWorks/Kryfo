@@ -15554,5 +15554,45 @@
   "filesDeleteHereLine": "It goes from this phone and its linked computers. Everyone else keeps theirs.",
   "@filesDeleteHereLine": {
     "description": "confirm sheet: what deleting a file from this phone does"
+  },
+  "spoilerLabel": "Spoiler photo",
+  "@spoilerLabel": {
+    "description": "screen reader: a photo sent as a spoiler, still blurred"
+  },
+  "spoilerTapToSee": "Tap to see",
+  "@spoilerTapToSee": {
+    "description": "on a blurred spoiler photo: tapping shows it"
+  },
+  "selectStart": "Select",
+  "@selectStart": {
+    "description": "message menu: start picking several messages"
+  },
+  "selectDone": "Stop selecting",
+  "@selectDone": {
+    "description": "screen reader: the cross that ends picking messages"
+  },
+  "selectCount": "{count, plural, other{{n} selected}}",
+  "@selectCount": {
+    "description": "head while picking messages: how many are picked (n in the language's digits)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "selectDeleteTitle": "{count, plural, =1{Delete this message from this phone?} other{Delete {n} messages from this phone?}}",
+  "@selectDeleteTitle": {
+    "description": "confirm sheet title: delete the picked messages from this device (n in the language's digits)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
   }
 }

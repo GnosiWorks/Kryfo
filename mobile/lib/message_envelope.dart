@@ -101,6 +101,7 @@ class UnwrappedMessage {
   // (profile_photo.dart). nothing else in the frame counts
   final PhotoFrame? photo;
   final AlbumTag? album; // 'al': its place in an album, on every slice
+  final bool spoiler; // 'sl': a photo blurred until it is tapped
   final bool gif; // 'gf': the picture is a gif, which comes with no share
   // 'w': when the sender wrote it, ms by their clock. set once and kept on
   // every retry, so a copy wrapped again still says when it was written.
@@ -155,6 +156,7 @@ class UnwrappedMessage {
     this.groupShots,
     this.shotsNudge = false,
     this.album,
+    this.spoiler = false,
     this.gif = false,
     this.writtenAt,
     this.endNotice = false,
@@ -424,6 +426,8 @@ Future<String> wrapMessage(
   GroupShotsWord? groupShots,
   bool shotsNudge = false,
   AlbumTag? album,
+  // a spoiler photo, on every slice too
+  bool spoiler = false,
   // a gif's picture, on every slice too: it shows no share
   bool gif = false,
   // when it was written: a retry, a resend or a slice passes the time the
@@ -492,6 +496,7 @@ Future<String> wrapMessage(
   if (supporterBadge != null) body['bg'] = supporterBadge;
   if (secure) body['sc'] = 1;
   if (album != null) body[album.wireKey] = album.toWire();
+  if (spoiler) body['sl'] = 1;
   if (gif) body['gf'] = 1;
 
   if (sender != null) {
@@ -653,6 +658,7 @@ UnwrappedMessage unwrapMessage(String wrapped) {
       album:
           AlbumTag.fromWire(json['al']) ??
           AlbumTag.fromWire(json[kFileSetWire], files: true),
+      spoiler: json['sl'] == 1,
       gif: json['gf'] == 1,
       writtenAt: switch (json['w']) {
         final num n when n.isFinite && n > 0 => n.toInt(),

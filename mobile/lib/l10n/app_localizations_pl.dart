@@ -12558,4 +12558,37 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get filesDeleteHereLine =>
       'Zniknie z tego telefonu i połączonych komputerów. Inni zachowają swoją.';
+
+  @override
+  String get spoilerLabel => 'Zdjęcie ze spoilerem';
+
+  @override
+  String get spoilerTapToSee => 'Stuknij, aby zobaczyć';
+
+  @override
+  String get selectStart => 'Zaznacz';
+
+  @override
+  String get selectDone => 'Zakończ zaznaczanie';
+
+  @override
+  String selectCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Zaznaczono: $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String selectDeleteTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Usunąć wiadomości ($n) z tego telefonu?',
+      one: 'Usunąć tę wiadomość z tego telefonu?',
+    );
+    return '$_temp0';
+  }
 }

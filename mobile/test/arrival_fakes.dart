@@ -1268,6 +1268,7 @@ class ArrivalRows implements HaloDb {
     int? writtenAt,
     bool viaDev = false,
     AlbumTag? album,
+    bool spoiler = false,
   }) async {
     beforeSave?.call();
     final gate = saveGate;
@@ -1339,6 +1340,7 @@ class ArrivalRows implements HaloDb {
     String? poll,
     String? sticker,
     AlbumTag? album,
+    bool spoiler = false,
     int? writtenAt,
   }) async {
     if (!groupRows.containsKey(groupId)) return false;
