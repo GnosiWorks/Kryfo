@@ -502,7 +502,8 @@ Future<String> wrapMessage(
   if (secure) body['sc'] = 1;
   if (album != null) body['al'] = album.toWire();
   if (gif) body['gf'] = 1;
-  if (silent) body[kSilentWire] = 1;
+  // kSilentWire
+  if (silent) body['sl'] = 1;
 
   if (sender != null) {
     body['h'] = sender.haloId;

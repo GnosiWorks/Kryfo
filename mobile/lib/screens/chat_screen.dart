@@ -9822,8 +9822,10 @@ class _Bubble extends StatelessWidget {
                                                                       newestOut,
                                                                 ),
                                                               ],
-                                                              if (msg.burnAt !=
-                                                                  null) ...[
+                                                              // theirs keep the countdown on its own line
+                                                              if (isOut &&
+                                                                  msg.burnAt !=
+                                                                      null) ...[
                                                                 const SizedBox(
                                                                   width: 6,
                                                                 ),

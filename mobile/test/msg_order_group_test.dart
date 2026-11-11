@@ -274,7 +274,19 @@ void main() {
     db.add('late three', note(reading.first - 3) + 60000);
     appState.chatChanged('group:$_group');
     await frames(t, 6);
-    expect(shown(), reading);
+    // the line for what came above floats over the thread: a row under it
+    // is still where it was, only covered
+    final chip = find.byKey(const ValueKey('earlier-chip'));
+    final over = chip.evaluate().isEmpty ? Rect.zero : t.getRect(chip);
+    expect(
+      [
+        ...shown(),
+        for (final i in reading)
+          if (!seen('note $i') && over.contains(t.getCenter(text('note $i'))))
+            i,
+      ]..sort(),
+      reading,
+    );
     expect(y(t, 'note ${reading.first}'), moreOrLessEquals(top, epsilon: 1));
     expect(t.widget<JumpDownButton>(find.byType(JumpDownButton)).count, 0);
     await close(t);

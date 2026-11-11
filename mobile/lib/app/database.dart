@@ -248,6 +248,7 @@ class HaloDb
             album_id TEXT,
             album_n INTEGER,
             album_i INTEGER,
+            silent INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
