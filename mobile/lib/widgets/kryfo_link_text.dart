@@ -6,6 +6,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../cjk_locale.dart' show cjkLocaleFor;
 
 import '../bidi_safe.dart';
 import '../lock_guard.dart';
@@ -311,8 +312,13 @@ class _KryfoLinkTextState extends State<KryfoLinkText> {
   Widget build(BuildContext context) {
     final text = widget.text;
     final dir = writtenDir(text);
+    // han in an english ui: the glyphs its own characters ask for
+    final cjk = cjkLocaleFor(text, fallback: widget.style.locale);
+    final style = cjk == null || cjk == widget.style.locale
+        ? widget.style
+        : widget.style.copyWith(locale: cjk);
     if (!text.contains('kryfo://')) {
-      return Text(text, style: widget.style, textDirection: dir);
+      return Text(text, style: style, textDirection: dir);
     }
     final only = text.trim();
     final room = RoomLink.parse(only);
@@ -344,7 +350,7 @@ class _KryfoLinkTextState extends State<KryfoLinkText> {
     }
     if (at < text.length) spans.add(TextSpan(text: text.substring(at)));
     return Text.rich(
-      TextSpan(style: widget.style, children: spans),
+      TextSpan(style: style, children: spans),
       textDirection: dir,
     );
   }
