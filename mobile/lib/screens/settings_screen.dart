@@ -1233,12 +1233,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: () => writeToMarios(context),
                   ),
                 // a story for the people who fund Kryfo, in the person's words
+                // its line follows the chat's first send
                 if (devChatOffered && !linkedRole)
-                  HaloRow(
-                    icon: Icons.auto_stories_outlined,
-                    label: l10n.storyRow,
-                    hint: storyHint(appState.devRow?.started ?? false),
-                    onTap: () => shareYourStory(context),
+                  ListenableBuilder(
+                    listenable: appState,
+                    builder: (context, _) => HaloRow(
+                      icon: Icons.auto_stories_outlined,
+                      label: l10n.storyRow,
+                      hint: storyHint(appState.devRow?.started ?? false),
+                      onTap: () => shareYourStory(context),
+                    ),
                   ),
                 HaloRow(
                   icon: Icons.flag_outlined,

@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/devchat/dev_chat.dart';
 import 'package:kryfo/devchat/dev_key.dart';
 import 'package:kryfo/l10n/l10n.dart';
-import 'package:kryfo/main.dart' show appState, AppStateRoute, AppStateDevchat;
+import 'package:kryfo/main.dart' show appState, AppStateRoute, AppStateRefresh;
 import 'package:kryfo/screens/dev_about_sheet.dart';
 import 'package:kryfo/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -76,6 +76,20 @@ void main() {
     final row2 = (await devTestChat.load())!;
     expect(row2.state, DevState.fresh);
     expect(appState.devRow!.started, isFalse);
+    await devClose(t);
+  });
+
+  testWidgets('the row\'s line follows the chat as it starts', (t) async {
+    await devWorld();
+    await devOpen(t, const SettingsScreen());
+    await _row(t);
+    expect(find.text(l10n.storyHintAnon), findsOneWidget);
+    await devMem.update('devchat', {'state': 'everyday'});
+    await appState.refreshContacts();
+    await t.pump(const Duration(milliseconds: 500));
+    expect(appState.devRow!.started, isTrue);
+    expect(find.text(l10n.storyHint), findsOneWidget);
+    expect(find.text(l10n.storyHintAnon), findsNothing);
     await devClose(t);
   });
 
