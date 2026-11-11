@@ -26,7 +26,7 @@ class AlbumTag {
   final int n;
   final int i;
   // files sent together: one bubble with a row each. they travel under
-  // 'fs', which a phone before them reads past, and are kept with an 'f:'
+  // 'fa', which a phone before them reads past, and are kept with an 'f:'
   // before their id so a photo album never takes one in
   final bool files;
   const AlbumTag(this.id, this.n, this.i, {this.files = false});
@@ -62,7 +62,7 @@ class AlbumTag {
   }
 
   /// null for anything that is not a whole, sane album place. [files]: it
-  /// came under 'fs'
+  /// came under 'fa'
   static AlbumTag? fromWire(Object? raw, {bool files = false}) => raw is Map
       ? _of(
           raw['id'] is String && (raw['id'] as String).startsWith(kFileSetRow)
@@ -93,7 +93,7 @@ class AlbumTag {
 }
 
 /// the frame's field for a place among files sent together
-const kFileSetWire = 'fs';
+const kFileSetWire = 'fa';
 
 /// what a file set's id is kept under, apart from photo albums
 const kFileSetRow = 'f:';

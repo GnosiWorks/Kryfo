@@ -24,12 +24,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('the wire', () {
-    test('a spoiler goes as sl and comes back; one alone has none', () async {
+    test('a spoiler goes as sv and comes back; one alone has none', () async {
       final w = await wrapMessage('', msgUid: 'u1', spoiler: true);
-      expect(w, contains('"sl":1'));
+      expect(w, contains('"sv":1'));
       expect(unwrapMessage(w).spoiler, isTrue);
       final plain = await wrapMessage('', msgUid: 'u2');
-      expect(plain, isNot(contains('"sl"')));
+      expect(plain, isNot(contains('"sv"')));
       expect(unwrapMessage(plain).spoiler, isFalse);
       // a phone before spoilers reads it as the photo it is
       expect(v051.unwrapMessage(w).msgUid, 'u1');

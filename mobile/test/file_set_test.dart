@@ -30,7 +30,7 @@ class Item {
 
 void main() {
   group('the wire and the row', () {
-    test('a set goes under fs, an album under al', () {
+    test('a set goes under fa, an album under al', () {
       const set = AlbumTag('0123456789abcdef', 3, 1, files: true);
       const album = AlbumTag('0123456789abcdef', 3, 1);
       expect(set.wireKey, kFileSetWire);
@@ -57,12 +57,14 @@ void main() {
       );
     });
 
-    test('the envelope carries fs and reads it back as a set', () async {
+    test('the envelope carries fa and reads it back as a set', () async {
       const set = AlbumTag('aaaaaaaaaaaaaaaa', 2, 1, files: true);
       final w = await wrapMessage('', msgUid: 'u1', album: set);
       final body = jsonDecode(w.substring('halo/1:'.length)) as Map;
-      expect(body['fs'], {'id': 'aaaaaaaaaaaaaaaa', 'n': 2, 'i': 1});
+      expect(body['fa'], {'id': 'aaaaaaaaaaaaaaaa', 'n': 2, 'i': 1});
       expect(body.containsKey('al'), isFalse);
+      // 'fs' is the face signature's: a set never takes it
+      expect(body.containsKey('fs'), isFalse);
       expect(unwrapMessage(w).album, set);
       // a phone before sets reads past it: the file stands alone there
       expect(v051.unwrapMessage(w).toString().contains("files"), isFalse);
