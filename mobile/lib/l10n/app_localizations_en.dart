@@ -12274,4 +12274,64 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Your chats stay out of the share menu while Kryfo wears another icon.';
+
+  @override
+  String get chatFindingMessage => 'Finding the message';
+
+  @override
+  String get chatMessageGone => 'That message is gone.';
+
+  @override
+  String get gifFavTab => 'Favourites';
+
+  @override
+  String get gifFavAdd => 'Add to favourites';
+
+  @override
+  String get gifFavAdded => 'Added to favourites';
+
+  @override
+  String get gifFavCouldNotAdd => 'Couldn\'t add it to favourites. Try again.';
+
+  @override
+  String get gifFavRemove => 'Remove from favourites';
+
+  @override
+  String get gifFavRemoved => 'Removed from favourites';
+
+  @override
+  String get gifFavEdit => 'Edit favourites';
+
+  @override
+  String get gifFavEditTitle => 'Your favourites';
+
+  @override
+  String get gifFavEditHint =>
+      'Hold and drag to reorder. Tap the cross to remove.';
+
+  @override
+  String get gifFavKept =>
+      'Kept on this phone, encrypted. Works without GIF search.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Kept on this computer, encrypted. Works without GIF search.';
+
+  @override
+  String get gifFavEmptyTitle => 'No favourites yet';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Hold a GIF in a chat or in GIFs to add it here.';
+
+  @override
+  String get gifFavMoveEarlier => 'Move earlier';
+
+  @override
+  String get gifFavMoveLater => 'Move later';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'Favourite GIF $number';
+  }
 }

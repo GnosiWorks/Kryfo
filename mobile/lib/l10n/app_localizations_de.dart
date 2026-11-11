@@ -12421,4 +12421,65 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Deine Chats bleiben aus dem Teilen-Menü, solange Kryfo ein anderes Symbol trägt.';
+
+  @override
+  String get chatFindingMessage => 'Nachricht wird gesucht';
+
+  @override
+  String get chatMessageGone => 'Diese Nachricht ist weg.';
+
+  @override
+  String get gifFavTab => 'Favoriten';
+
+  @override
+  String get gifFavAdd => 'Zu Favoriten hinzufügen';
+
+  @override
+  String get gifFavAdded => 'Zu Favoriten hinzugefügt';
+
+  @override
+  String get gifFavCouldNotAdd =>
+      'Konnte nicht zu Favoriten hinzugefügt werden. Versuch es noch mal.';
+
+  @override
+  String get gifFavRemove => 'Aus Favoriten entfernen';
+
+  @override
+  String get gifFavRemoved => 'Aus Favoriten entfernt';
+
+  @override
+  String get gifFavEdit => 'Favoriten bearbeiten';
+
+  @override
+  String get gifFavEditTitle => 'Deine Favoriten';
+
+  @override
+  String get gifFavEditHint =>
+      'Halten und ziehen zum Sortieren. Tippe auf das Kreuz zum Entfernen.';
+
+  @override
+  String get gifFavKept =>
+      'Auf diesem Telefon gespeichert, verschlüsselt. Geht auch ohne GIF-Suche.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Auf diesem Computer gespeichert, verschlüsselt. Geht auch ohne GIF-Suche.';
+
+  @override
+  String get gifFavEmptyTitle => 'Noch keine Favoriten';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Halte ein GIF in einem Chat oder unter GIFs, um es hier hinzuzufügen.';
+
+  @override
+  String get gifFavMoveEarlier => 'Nach vorne';
+
+  @override
+  String get gifFavMoveLater => 'Nach hinten';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'Lieblings-GIF $number';
+  }
 }

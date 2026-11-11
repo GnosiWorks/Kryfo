@@ -19644,6 +19644,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your chats stay out of the share menu while Kryfo wears another icon.'**
   String get settingsShareMenuDisguised;
+
+  /// screens/chat_screen.dart: under the in-chat search, while a hit far up the chat is loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Finding the message'**
+  String get chatFindingMessage;
+
+  /// screens/chat_screen.dart: toast when a search hit, a quote or a pin points at a message that was unsent or burned
+  ///
+  /// In en, this message translates to:
+  /// **'That message is gone.'**
+  String get chatMessageGone;
+
+  /// stickers/sticker_sheet.dart: the picker tab of favourite gifs
+  ///
+  /// In en, this message translates to:
+  /// **'Favourites'**
+  String get gifFavTab;
+
+  /// message menu and gif picker: keep this gif in the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favourites'**
+  String get gifFavAdd;
+
+  /// toast after a gif was kept in the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Added to favourites'**
+  String get gifFavAdded;
+
+  /// toast when a gif could not be kept in the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add it to favourites. Try again.'**
+  String get gifFavCouldNotAdd;
+
+  /// gifs/gif_fav_panel.dart: screen reader action that removes a favourite
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favourites'**
+  String get gifFavRemove;
+
+  /// gifs/gif_fav_panel.dart: said by the screen reader after a favourite was removed
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from favourites'**
+  String get gifFavRemoved;
+
+  /// gifs/gif_fav_panel.dart: screen reader action that starts editing the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Edit favourites'**
+  String get gifFavEdit;
+
+  /// gifs/gif_fav_panel.dart: heading while editing the favourites
+  ///
+  /// In en, this message translates to:
+  /// **'Your favourites'**
+  String get gifFavEditTitle;
+
+  /// gifs/gif_fav_panel.dart: line under the grid while editing
+  ///
+  /// In en, this message translates to:
+  /// **'Hold and drag to reorder. Tap the cross to remove.'**
+  String get gifFavEditHint;
+
+  /// gifs/gif_fav_panel.dart: line under the favourites grid
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on this phone, encrypted. Works without GIF search.'**
+  String get gifFavKept;
+
+  /// gifs/gif_fav_panel.dart: line under the favourites grid on a computer
+  ///
+  /// In en, this message translates to:
+  /// **'Kept on this computer, encrypted. Works without GIF search.'**
+  String get gifFavKeptDesk;
+
+  /// gifs/gif_fav_panel.dart: empty favourites tab, title
+  ///
+  /// In en, this message translates to:
+  /// **'No favourites yet'**
+  String get gifFavEmptyTitle;
+
+  /// gifs/gif_fav_panel.dart: empty favourites tab, how to add one
+  ///
+  /// In en, this message translates to:
+  /// **'Hold a GIF in a chat or in GIFs to add it here.'**
+  String get gifFavEmptyLine;
+
+  /// gifs/gif_fav_panel.dart: screen reader action, move a favourite one place earlier
+  ///
+  /// In en, this message translates to:
+  /// **'Move earlier'**
+  String get gifFavMoveEarlier;
+
+  /// gifs/gif_fav_panel.dart: screen reader action, move a favourite one place later
+  ///
+  /// In en, this message translates to:
+  /// **'Move later'**
+  String get gifFavMoveLater;
+
+  /// gifs/gif_fav_panel.dart: screen reader label of a favourite in the grid. number is its place, already formatted
+  ///
+  /// In en, this message translates to:
+  /// **'Favourite GIF {number}'**
+  String gifFavTileA11y(String number);
 }
 
 class _AppLocalizationsDelegate

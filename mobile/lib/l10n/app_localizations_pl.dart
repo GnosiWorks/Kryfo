@@ -12511,4 +12511,65 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Twoje czaty zostają poza menu udostępniania, dopóki Kryfo ma inną ikonę.';
+
+  @override
+  String get chatFindingMessage => 'Szukamy wiadomości';
+
+  @override
+  String get chatMessageGone => 'Tej wiadomości już nie ma.';
+
+  @override
+  String get gifFavTab => 'Ulubione';
+
+  @override
+  String get gifFavAdd => 'Dodaj do ulubionych';
+
+  @override
+  String get gifFavAdded => 'Dodano do ulubionych';
+
+  @override
+  String get gifFavCouldNotAdd =>
+      'Nie udało się dodać do ulubionych. Spróbuj ponownie.';
+
+  @override
+  String get gifFavRemove => 'Usuń z ulubionych';
+
+  @override
+  String get gifFavRemoved => 'Usunięto z ulubionych';
+
+  @override
+  String get gifFavEdit => 'Edytuj ulubione';
+
+  @override
+  String get gifFavEditTitle => 'Twoje ulubione';
+
+  @override
+  String get gifFavEditHint =>
+      'Przytrzymaj i przeciągnij, aby zmienić kolejność. Dotknij krzyżyka, aby usunąć.';
+
+  @override
+  String get gifFavKept =>
+      'Trzymane na tym telefonie, zaszyfrowane. Działa bez wyszukiwania GIF.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Trzymane na tym komputerze, zaszyfrowane. Działa bez wyszukiwania GIF.';
+
+  @override
+  String get gifFavEmptyTitle => 'Brak ulubionych';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Przytrzymaj GIF w czacie lub w GIF-ach, aby dodać go tutaj.';
+
+  @override
+  String get gifFavMoveEarlier => 'Przesuń wcześniej';
+
+  @override
+  String get gifFavMoveLater => 'Przesuń później';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'Ulubiony GIF $number';
+  }
 }

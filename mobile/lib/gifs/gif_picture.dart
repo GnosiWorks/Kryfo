@@ -163,6 +163,10 @@ class GifPlayMark extends StatelessWidget {
 // files already looked at: a bubble rebuilds often and reads once
 final _gifFiles = <String, bool>{};
 
+/// whether the picture at [path] is a gif, as far as already read: null
+/// when it was never looked at
+bool? knownGifFile(String path) => _gifFiles[path];
+
 /// whether the picture at [path] is a gif, by its first bytes
 Future<bool> isGifFile(String path) async {
   final known = _gifFiles[path];

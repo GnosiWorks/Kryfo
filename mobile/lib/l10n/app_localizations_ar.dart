@@ -12414,4 +12414,63 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'تبقى محادثاتك خارج قائمة المشاركة ما دام Kryfo يحمل أيقونة أخرى.';
+
+  @override
+  String get chatFindingMessage => 'جارٍ البحث عن الرسالة';
+
+  @override
+  String get chatMessageGone => 'لم تعد تلك الرسالة موجودة.';
+
+  @override
+  String get gifFavTab => 'المفضلة';
+
+  @override
+  String get gifFavAdd => 'إضافة إلى المفضلة';
+
+  @override
+  String get gifFavAdded => 'أُضيفت إلى المفضلة';
+
+  @override
+  String get gifFavCouldNotAdd => 'تعذّرت الإضافة إلى المفضلة. حاول مرة أخرى.';
+
+  @override
+  String get gifFavRemove => 'إزالة من المفضلة';
+
+  @override
+  String get gifFavRemoved => 'أُزيلت من المفضلة';
+
+  @override
+  String get gifFavEdit => 'تعديل المفضلة';
+
+  @override
+  String get gifFavEditTitle => 'مفضلتك';
+
+  @override
+  String get gifFavEditHint =>
+      'اضغط مطولًا واسحب لتغيير الترتيب. انقر على علامة الإغلاق للإزالة.';
+
+  @override
+  String get gifFavKept => 'محفوظة على هذا الهاتف ومشفّرة. تعمل دون بحث GIF.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'محفوظة على هذا الحاسوب ومشفّرة. تعمل دون بحث GIF.';
+
+  @override
+  String get gifFavEmptyTitle => 'لا توجد مفضلة بعد';
+
+  @override
+  String get gifFavEmptyLine =>
+      'اضغط مطولًا على صورة GIF في محادثة أو في صور GIF لإضافتها هنا.';
+
+  @override
+  String get gifFavMoveEarlier => 'نقل إلى الأمام';
+
+  @override
+  String get gifFavMoveLater => 'نقل إلى الخلف';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'صورة GIF مفضلة $number';
+  }
 }

@@ -12415,4 +12415,65 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Vos discussions restent hors du menu de partage tant que Kryfo porte une autre icône.';
+
+  @override
+  String get chatFindingMessage => 'Recherche du message';
+
+  @override
+  String get chatMessageGone => 'Ce message n’existe plus.';
+
+  @override
+  String get gifFavTab => 'Favoris';
+
+  @override
+  String get gifFavAdd => 'Ajouter aux favoris';
+
+  @override
+  String get gifFavAdded => 'Ajouté aux favoris';
+
+  @override
+  String get gifFavCouldNotAdd =>
+      'Impossible de l’ajouter aux favoris. Réessayez.';
+
+  @override
+  String get gifFavRemove => 'Retirer des favoris';
+
+  @override
+  String get gifFavRemoved => 'Retiré des favoris';
+
+  @override
+  String get gifFavEdit => 'Modifier les favoris';
+
+  @override
+  String get gifFavEditTitle => 'Vos favoris';
+
+  @override
+  String get gifFavEditHint =>
+      'Maintenez et faites glisser pour réordonner. Touchez la croix pour retirer.';
+
+  @override
+  String get gifFavKept =>
+      'Gardés sur ce téléphone, chiffrés. Marche sans la recherche de GIF.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Gardés sur cet ordinateur, chiffrés. Marche sans la recherche de GIF.';
+
+  @override
+  String get gifFavEmptyTitle => 'Pas encore de favoris';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Maintenez un GIF dans une discussion ou dans GIF pour l’ajouter ici.';
+
+  @override
+  String get gifFavMoveEarlier => 'Avancer';
+
+  @override
+  String get gifFavMoveLater => 'Reculer';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'GIF favori $number';
+  }
 }

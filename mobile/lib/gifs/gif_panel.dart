@@ -15,6 +15,7 @@ import '../theme.dart';
 import '../widgets/motion.dart' show motionStill;
 import '../widgets/press_scale.dart';
 import '../widgets/stroke_icon.dart';
+import 'gif_fav_panel.dart' show StarPop;
 import 'gif_picture.dart';
 import 'gif_source.dart';
 import '../widgets/shift_tap_guard.dart';
@@ -43,6 +44,7 @@ class GifPanel extends StatefulWidget {
     required this.route,
     required this.onPick,
     this.onSearchFocus,
+    this.onFavourite,
   });
 
   final GifSource source;
@@ -52,6 +54,9 @@ class GifPanel extends StatefulWidget {
   // the full gif's bytes, checked to be a gif
   final ValueChanged<Uint8List> onPick;
   final VoidCallback? onSearchFocus;
+  // a gif held is kept in the favourites: its full bytes, checked to be a
+  // gif. null where there are none
+  final Future<bool> Function(Uint8List gif)? onFavourite;
 
   @override
   State<GifPanel> createState() => GifPanelState();
@@ -74,6 +79,9 @@ class GifPanelState extends State<GifPanel> {
   GifError _error = GifError.none;
   String? _selected;
   String? _sending;
+  // the one just kept, for its star; a count so a second hold pops again
+  String? _starred;
+  int _stars = 0;
 
   @visibleForTesting
   String? get selected => _selected;
@@ -209,6 +217,34 @@ class GifPanelState extends State<GifPanel> {
       return;
     }
     widget.onPick(b);
+  }
+
+  // held: kept in the favourites, the whole gif, as a send takes it
+  Future<void> _favourite(GifItem g) async {
+    final keep = widget.onFavourite;
+    if (keep == null) return;
+    HapticFeedback.mediumImpact();
+    final b = await widget.source.bytes(g.full.url);
+    if (!mounted) return;
+    var ok = false;
+    if (b != null && pictureKind(b) == PictureKind.gif) {
+      try {
+        ok = await keep(b);
+      } catch (_) {
+        ok = false;
+      }
+    }
+    if (!mounted) return;
+    if (!ok) {
+      showHaloToast(context, l10n.gifCouldNotGet);
+      return;
+    }
+    HapticFeedback.lightImpact();
+    setState(() {
+      _starred = g.id;
+      _stars++;
+    });
+    showHaloToast(context, l10n.gifFavAdded);
   }
 
   @override
@@ -452,6 +488,8 @@ class GifPanelState extends State<GifPanel> {
       sending: _sending == g.id,
       onTap: () => _tap(g),
       onSend: () => _send(g),
+      onHold: widget.onFavourite == null ? null : () => _favourite(g),
+      star: _starred == g.id ? _stars : 0,
     );
   }
 
@@ -715,6 +753,8 @@ class _GifTile extends StatefulWidget {
     required this.sending,
     required this.onTap,
     required this.onSend,
+    this.onHold,
+    this.star = 0,
   });
 
   final GifItem item;
@@ -724,6 +764,10 @@ class _GifTile extends StatefulWidget {
   final bool sending;
   final VoidCallback onTap;
   final VoidCallback onSend;
+  // held: kept in the favourites
+  final VoidCallback? onHold;
+  // above 0 while its star shows; a new number pops it again
+  final int star;
 
   @override
   State<_GifTile> createState() => _GifTileState();
@@ -779,9 +823,15 @@ class _GifTileState extends State<_GifTile> {
       selected: widget.selected,
       label: l10n.gifTileA11y(whole(widget.index + 1)),
       onTap: widget.onTap,
+      customSemanticsActions: {
+        if (widget.onHold != null)
+          CustomSemanticsAction(label: l10n.gifFavAdd): widget.onHold!,
+      },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
+        onLongPress: widget.onHold,
+        onSecondaryTap: widget.onHold,
         child: AnimatedScale(
           scale: widget.selected && !still ? 0.97 : 1,
           duration: time,
@@ -827,7 +877,7 @@ class _GifTileState extends State<_GifTile> {
                     ),
                   ),
                   child: widget.selected
-                      ? _SendChip(
+                      ? GifSendChip(
                           key: const ValueKey('send'),
                           sending: widget.sending,
                           onTap: widget.onSend,
@@ -835,6 +885,8 @@ class _GifTileState extends State<_GifTile> {
                       : const SizedBox.shrink(key: ValueKey('none')),
                 ),
               ),
+              if (widget.star > 0)
+                Center(child: StarPop(key: ValueKey(widget.star))),
             ],
           ),
         ),
@@ -851,8 +903,9 @@ class _GifTileState extends State<_GifTile> {
   );
 }
 
-class _SendChip extends StatelessWidget {
-  const _SendChip({super.key, required this.sending, required this.onTap});
+/// the send chip on a picked tile
+class GifSendChip extends StatelessWidget {
+  const GifSendChip({super.key, required this.sending, required this.onTap});
   final bool sending;
   final VoidCallback onTap;
 
