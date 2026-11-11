@@ -10,6 +10,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/desktop/sealed_file.dart' show SealedDamaged;
 import 'package:kryfo/desktop/sealed_format.dart';
 import 'package:kryfo/desktop/sealed_io.dart';
 import 'package:path/path.dart' as p;
@@ -98,6 +99,25 @@ void main() {
       expect(File(b).existsSync(), isFalse);
       expect(rawBytes(c), isNot(before));
       expect(File(c).readAsBytesSync(), List.generate(100000, (i) => i & 255));
+    });
+  });
+
+  test('a move across keys cut short leaves the file in its place as it '
+      'was, and no half copy', () {
+    sealed(() {
+      final a = p.join(docs, 'media_k2', 'a');
+      final big = List.generate(3 * chunkPlain, (i) => i & 255);
+      File(a).writeAsBytesSync(big);
+      // its second chunk damaged: the carry stops there
+      final raw = rawBytes(a);
+      raw[sealedHead + chunkStored + 40] ^= 1;
+      io.rawFile(a).writeAsBytesSync(raw);
+      final b = p.join(docs, 'media', 'b');
+      File(b).writeAsStringSync('the good copy');
+      expect(() => File(a).renameSync(b), throwsA(isA<SealedDamaged>()));
+      expect(File(b).readAsStringSync(), 'the good copy');
+      expect(io.rawFile('$b$kCarryLeaf').existsSync(), isFalse);
+      expect(File(a).existsSync(), isTrue);
     });
   });
 

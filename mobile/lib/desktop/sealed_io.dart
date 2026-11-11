@@ -49,6 +49,9 @@ R plainOutAllowed<R>(R Function() f) =>
 /// the engine's folder inside the memory folder, or inside windows' tmp
 const kEngineFolder = 'engine';
 
+/// a move across keys writes here beside its place, then renames over it
+const kCarryLeaf = '.carry';
+
 /// where things are sealed and under which key. sendable, so an isolate
 /// gets the same
 class SealedAreas {
@@ -560,9 +563,26 @@ class SealedFile implements File {
       _raw.copySync(newPath);
       return File(newPath);
     }
-    final to = File(newPath);
-    _carry(to);
-    return to;
+    _carryWhole(newPath);
+    return File(newPath);
+  }
+
+  // into a sealed place under a name of its own until whole: a stop part
+  // way never leaves half a copy where a whole one was, or is looked for
+  void _carryWhole(String newPath) {
+    if (!_io.areas.sealedPlace(newPath)) return _carry(File(newPath));
+    final part = File('$newPath$kCarryLeaf');
+    try {
+      _carry(part);
+      rawFileAccess(() => File(part.path).renameSync(newPath));
+    } catch (_) {
+      rawFileAccess(() {
+        try {
+          File(part.path).deleteSync();
+        } catch (_) {}
+      });
+      rethrow;
+    }
   }
 
   @override
@@ -587,10 +607,9 @@ class SealedFile implements File {
       _raw.renameSync(newPath);
       return File(newPath);
     }
-    final to = File(newPath);
-    _carry(to);
+    _carryWhole(newPath);
     _drop();
-    return to;
+    return File(newPath);
   }
 
   @override
