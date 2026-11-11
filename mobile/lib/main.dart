@@ -209,6 +209,7 @@ import 'stranger_gate.dart';
 import 'first_contact.dart';
 import 'text_send.dart' show kSendBlocked;
 import 'route_merge.dart';
+import 'relay_lists.dart' show relayListFor;
 import 'mentions.dart';
 import 'gifs/gif_source.dart' show sweepGifParts;
 import 'notes_export.dart' show dropNotesExports, sweepNotesExports;
