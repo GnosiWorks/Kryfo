@@ -12212,4 +12212,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Tin nhắn';
+
+  @override
+  String get settingsShareMenu => 'Hiện cuộc trò chuyện trong menu chia sẻ';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Các cuộc trò chuyện gần đây hiện theo tên khi bạn chia sẻ từ ứng dụng khác, và tạm lui khi Kryfo đang khóa.';
 }

@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, other{{count} tin nhắn mới}}",
   "composerSendSilent": "Gửi không âm thanh",
   "composerSendHoldHint": "Nhấn giữ để xem thêm tùy chọn",
-  "homeGroupShotsLine": "Tin nhắn"
+  "homeGroupShotsLine": "Tin nhắn",
+  "settingsShareMenu": "Hiện cuộc trò chuyện trong menu chia sẻ",
+  "settingsShareMenuHint": "Các cuộc trò chuyện gần đây hiện theo tên khi bạn chia sẻ từ ứng dụng khác, và tạm lui khi Kryfo đang khóa."
 }

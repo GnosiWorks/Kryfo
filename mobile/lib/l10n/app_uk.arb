@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, one{{count} нове повідомлення} few{{count} нові повідомлення} many{{count} нових повідомлень} other{{count} нового повідомлення}}",
   "composerSendSilent": "Надіслати без звуку",
   "composerSendHoldHint": "Утримуйте, щоб побачити інші варіанти",
-  "homeGroupShotsLine": "Повідомлення"
+  "homeGroupShotsLine": "Повідомлення",
+  "settingsShareMenu": "Показувати чати в меню «Поділитися»",
+  "settingsShareMenuHint": "Ваші останні чати з’являються за назвою, коли ви ділитеся з іншого застосунку, і відходять, поки Kryfo заблоковано."
 }

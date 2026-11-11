@@ -12412,4 +12412,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Повідомлення';
+
+  @override
+  String get settingsShareMenu => 'Показувати чати в меню «Поділитися»';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Ваші останні чати з’являються за назвою, коли ви ділитеся з іншого застосунку, і відходять, поки Kryfo заблоковано.';
 }

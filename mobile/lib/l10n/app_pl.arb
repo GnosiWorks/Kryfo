@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, one{{count} nowa wiadomość} few{{count} nowe wiadomości} many{{count} nowych wiadomości} other{{count} nowej wiadomości}}",
   "composerSendSilent": "Wyślij bez dźwięku",
   "composerSendHoldHint": "Przytrzymaj, aby zobaczyć więcej opcji",
-  "homeGroupShotsLine": "Wiadomość"
+  "homeGroupShotsLine": "Wiadomość",
+  "settingsShareMenu": "Pokazuj czaty w menu udostępniania",
+  "settingsShareMenuHint": "Twoje najnowsze czaty pojawiają się z nazwy, gdy udostępniasz z innej aplikacji, i usuwają się, gdy Kryfo jest zablokowane."
 }

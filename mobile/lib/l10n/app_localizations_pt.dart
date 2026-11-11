@@ -12315,4 +12315,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Mensagem';
+
+  @override
+  String get settingsShareMenu => 'Mostrar conversas no menu de compartilhar';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Suas conversas mais recentes aparecem pelo nome quando você compartilha de outro app, e saem de cena enquanto o Kryfo está bloqueado.';
 }

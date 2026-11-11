@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, one{{count} nova mensagem} other{{count} novas mensagens}}",
   "composerSendSilent": "Enviar sem som",
   "composerSendHoldHint": "Mantenha pressionado para mais opções",
-  "homeGroupShotsLine": "Mensagem"
+  "homeGroupShotsLine": "Mensagem",
+  "settingsShareMenu": "Mostrar conversas no menu de compartilhar",
+  "settingsShareMenuHint": "Suas conversas mais recentes aparecem pelo nome quando você compartilha de outro app, e saem de cena enquanto o Kryfo está bloqueado."
 }

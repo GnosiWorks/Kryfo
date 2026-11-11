@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, other{{count} 条新消息}}",
   "composerSendSilent": "静音发送",
   "composerSendHoldHint": "长按查看更多选项",
-  "homeGroupShotsLine": "消息"
+  "homeGroupShotsLine": "消息",
+  "settingsShareMenu": "在分享菜单中显示聊天",
+  "settingsShareMenuHint": "从其他应用分享时，你最近的聊天会以名称显示；Kryfo 锁定期间它们会先退出。"
 }

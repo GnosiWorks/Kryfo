@@ -50,7 +50,9 @@ class SharedFiles {
   final String id;
   final List<PickedFile> items;
   final String? seenIn;
-  const SharedFiles(this.id, this.items, {this.seenIn});
+  // the chat picked in the share menu (share_targets.dart), if one was
+  final String? chat;
+  const SharedFiles(this.id, this.items, {this.seenIn, this.chat});
 
   static SharedFiles? from(Object? raw) {
     if (raw is! Map) return null;
@@ -59,7 +61,12 @@ class SharedFiles {
     if (id is! String || id.isEmpty || list is! List) return null;
     final items = [for (final i in list) ?PickedFile.from(i)];
     if (items.isEmpty) return null;
-    return SharedFiles(id, items, seenIn: raw['seen'] as String?);
+    return SharedFiles(
+      id,
+      items,
+      seenIn: raw['seen'] as String?,
+      chat: raw['chat'] as String?,
+    );
   }
 }
 

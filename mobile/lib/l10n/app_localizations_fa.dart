@@ -12236,4 +12236,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'پیام';
+
+  @override
+  String get settingsShareMenu => 'نمایش گفتگوها در منوی اشتراک‌گذاری';
+
+  @override
+  String get settingsShareMenuHint =>
+      'هنگام اشتراک‌گذاری از برنامه‌ای دیگر، گفتگوهای اخیرتان با نامشان نمایش داده می‌شوند و تا وقتی Kryfo قفل است کنار می‌روند.';
 }

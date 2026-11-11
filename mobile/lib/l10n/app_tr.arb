@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, other{{count} yeni mesaj}}",
   "composerSendSilent": "Sessiz gönder",
   "composerSendHoldHint": "Daha fazla seçenek için basılı tutun",
-  "homeGroupShotsLine": "Mesaj"
+  "homeGroupShotsLine": "Mesaj",
+  "settingsShareMenu": "Sohbetleri paylaşım menüsünde göster",
+  "settingsShareMenuHint": "Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür ve Kryfo kilitliyken kenara çekilir."
 }

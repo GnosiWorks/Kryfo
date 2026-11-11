@@ -320,6 +320,8 @@ const containerKeys = {
   'kryfo.typing.on',
   'kryfo.gif.on',
   'kryfo.gif.asked',
+  // chats in android's share menu: only the everyday one's puts any there
+  'kryfo.share_menu.on',
   'kryfo.update.on',
   // each identity hides the card for itself
   'kryfo.update.dismissed',
@@ -367,6 +369,8 @@ const deviceKeys = {
   'theme_light',
   'theme_accent',
   'wide_list_width',
+  // what the share menu's chat ids are made with (share_targets.dart)
+  'kryfo.share_menu.salt',
   // the computer's notification sound, one for every identity on it
   'desk_sound',
   'bridge_lines',

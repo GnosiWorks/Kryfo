@@ -12226,4 +12226,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'संदेश';
+
+  @override
+  String get settingsShareMenu => 'शेयर मेन्यू में चैट दिखाएँ';
+
+  @override
+  String get settingsShareMenuHint =>
+      'किसी दूसरे ऐप से शेयर करते समय आपकी हाल की चैट नाम से दिखती हैं, और Kryfo लॉक रहने तक हट जाती हैं।';
 }

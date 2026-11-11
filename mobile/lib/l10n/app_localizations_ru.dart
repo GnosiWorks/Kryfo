@@ -12414,4 +12414,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Сообщение';
+
+  @override
+  String get settingsShareMenu => 'Показывать чаты в меню «Поделиться»';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Ваши последние чаты появляются по имени, когда вы делитесь из другого приложения, и уходят, пока Kryfo заблокирован.';
 }

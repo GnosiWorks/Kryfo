@@ -12362,4 +12362,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'رسالة';
+
+  @override
+  String get settingsShareMenu => 'إظهار المحادثات في قائمة المشاركة';
+
+  @override
+  String get settingsShareMenuHint =>
+      'تظهر محادثاتك الأخيرة بأسمائها عند المشاركة من تطبيق آخر، وتتنحّى ما دام Kryfo مقفلًا.';
 }

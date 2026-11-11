@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, other{{count} pesan baru}}",
   "composerSendSilent": "Kirim tanpa suara",
   "composerSendHoldHint": "Tahan untuk opsi lainnya",
-  "homeGroupShotsLine": "Pesan"
+  "homeGroupShotsLine": "Pesan",
+  "settingsShareMenu": "Tampilkan chat di menu bagikan",
+  "settingsShareMenuHint": "Chat terbarumu muncul dengan namanya saat kamu berbagi dari aplikasi lain, dan menyingkir selama Kryfo terkunci."
 }

@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, other{{count} پیام تازه}}",
   "composerSendSilent": "ارسال بی‌صدا",
   "composerSendHoldHint": "برای گزینه‌های بیشتر نگه دارید",
-  "homeGroupShotsLine": "پیام"
+  "homeGroupShotsLine": "پیام",
+  "settingsShareMenu": "نمایش گفتگوها در منوی اشتراک‌گذاری",
+  "settingsShareMenuHint": "هنگام اشتراک‌گذاری از برنامه‌ای دیگر، گفتگوهای اخیرتان با نامشان نمایش داده می‌شوند و تا وقتی Kryfo قفل است کنار می‌روند."
 }

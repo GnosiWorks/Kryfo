@@ -63,6 +63,10 @@ open class HaloApplication : Application() {
                     else -> result.notImplemented()
                 }
             }
+        // chats in the share menu: here, so the lock clears them in a process
+        // with no screen too
+        MethodChannel(engine.dartExecutor.binaryMessenger, ShareTargets.CHANNEL)
+            .setMethodCallHandler { call, result -> ShareTargets.handle(this, call, result) }
         // the helper app mode, here so a process with no screen answers too
         MethodChannel(engine.dartExecutor.binaryMessenger, HelperPush.CHANNEL)
             .setMethodCallHandler { call, result ->

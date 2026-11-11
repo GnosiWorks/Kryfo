@@ -12245,4 +12245,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Mesaj';
+
+  @override
+  String get settingsShareMenu => 'Sohbetleri paylaşım menüsünde göster';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür ve Kryfo kilitliyken kenara çekilir.';
 }

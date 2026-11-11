@@ -12456,4 +12456,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Wiadomość';
+
+  @override
+  String get settingsShareMenu => 'Pokazuj czaty w menu udostępniania';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Twoje najnowsze czaty pojawiają się z nazwy, gdy udostępniasz z innej aplikacji, i usuwają się, gdy Kryfo jest zablokowane.';
 }

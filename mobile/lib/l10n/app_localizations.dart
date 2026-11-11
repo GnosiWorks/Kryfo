@@ -19554,6 +19554,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message'**
   String get homeGroupShotsLine;
+
+  /// settings, privacy: the switch that puts the latest everyday chats in android's share menu (android 13 and later)
+  ///
+  /// In en, this message translates to:
+  /// **'Show chats in the share menu'**
+  String get settingsShareMenu;
+
+  /// settings, privacy: the line under settingsShareMenu
+  ///
+  /// In en, this message translates to:
+  /// **'Your latest chats appear by name when you share from another app, and step away while Kryfo is locked.'**
+  String get settingsShareMenuHint;
 }
 
 class _AppLocalizationsDelegate

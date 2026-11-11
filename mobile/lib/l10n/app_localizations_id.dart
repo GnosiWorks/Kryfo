@@ -12223,4 +12223,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Pesan';
+
+  @override
+  String get settingsShareMenu => 'Tampilkan chat di menu bagikan';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Chat terbarumu muncul dengan namanya saat kamu berbagi dari aplikasi lain, dan menyingkir selama Kryfo terkunci.';
 }

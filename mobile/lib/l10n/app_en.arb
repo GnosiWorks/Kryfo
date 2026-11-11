@@ -15404,5 +15404,13 @@
   "homeGroupShotsLine": "Message",
   "@homeGroupShotsLine": {
     "description": "home group row of a group that blocks screenshots, once read: says only that the last thing was a message, never whose or what"
+  },
+  "settingsShareMenu": "Show chats in the share menu",
+  "settingsShareMenuHint": "Your latest chats appear by name when you share from another app, and step away while Kryfo is locked.",
+  "@settingsShareMenu": {
+    "description": "settings, privacy: the switch that puts the latest everyday chats in android's share menu (android 13 and later)"
+  },
+  "@settingsShareMenuHint": {
+    "description": "settings, privacy: the line under settingsShareMenu"
   }
 }

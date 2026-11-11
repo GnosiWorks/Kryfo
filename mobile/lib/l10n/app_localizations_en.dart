@@ -12219,4 +12219,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Message';
+
+  @override
+  String get settingsShareMenu => 'Show chats in the share menu';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Your latest chats appear by name when you share from another app, and step away while Kryfo is locked.';
 }

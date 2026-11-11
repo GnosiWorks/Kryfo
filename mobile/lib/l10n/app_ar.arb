@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, zero{لا رسائل جديدة} one{رسالة جديدة واحدة} two{رسالتان جديدتان} few{{count} رسائل جديدة} many{{count} رسالة جديدة} other{{count} رسالة جديدة}}",
   "composerSendSilent": "إرسال بدون صوت",
   "composerSendHoldHint": "اضغط مطولًا لمزيد من الخيارات",
-  "homeGroupShotsLine": "رسالة"
+  "homeGroupShotsLine": "رسالة",
+  "settingsShareMenu": "إظهار المحادثات في قائمة المشاركة",
+  "settingsShareMenuHint": "تظهر محادثاتك الأخيرة بأسمائها عند المشاركة من تطبيق آخر، وتتنحّى ما دام Kryfo مقفلًا."
 }

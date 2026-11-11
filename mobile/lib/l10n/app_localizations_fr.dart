@@ -12358,4 +12358,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Message';
+
+  @override
+  String get settingsShareMenu =>
+      'Afficher les discussions dans le menu de partage';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Vos discussions récentes apparaissent par leur nom quand vous partagez depuis une autre app, et se retirent tant que Kryfo est verrouillé.';
 }

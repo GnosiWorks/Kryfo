@@ -11551,6 +11551,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => '消息';
+
+  @override
+  String get settingsShareMenu => '在分享菜单中显示聊天';
+
+  @override
+  String get settingsShareMenuHint => '从其他应用分享时，你最近的聊天会以名称显示；Kryfo 锁定期间它们会先退出。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22980,4 +22986,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeGroupShotsLine => '訊息';
+
+  @override
+  String get settingsShareMenu => '在分享選單中顯示聊天';
+
+  @override
+  String get settingsShareMenuHint =>
+      '從其他應用程式分享時，你最近的聊天會以名稱顯示；Kryfo 鎖定期間它們會先退出。';
 }

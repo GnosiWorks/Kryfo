@@ -3209,5 +3209,7 @@
   "bannerNewMessages": "{count, plural, one{{count} новое сообщение} few{{count} новых сообщения} many{{count} новых сообщений} other{{count} нового сообщения}}",
   "composerSendSilent": "Отправить без звука",
   "composerSendHoldHint": "Удерживайте для других вариантов",
-  "homeGroupShotsLine": "Сообщение"
+  "homeGroupShotsLine": "Сообщение",
+  "settingsShareMenu": "Показывать чаты в меню «Поделиться»",
+  "settingsShareMenuHint": "Ваши последние чаты появляются по имени, когда вы делитесь из другого приложения, и уходят, пока Kryfo заблокирован."
 }
