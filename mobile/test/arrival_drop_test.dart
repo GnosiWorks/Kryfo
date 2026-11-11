@@ -21,6 +21,7 @@ import 'package:kryfo/file_drop.dart';
 import 'package:kryfo/main.dart'
     show
         AppState,
+        AppStateBoot,
         AppStateFiles,
         AppStateReceive,
         HaloEngine,
@@ -74,8 +75,12 @@ class _Engine implements HaloEngine {
     return answer;
   }
 
+  // runs while a got is on its way: a stop there, say
+  Future<void> Function()? duringGot;
+
   @override
   Future<String> fileGot(String host, String id, String token) async {
+    await duringGot?.call();
     gots.add((id, token));
     return gotAnswer;
   }
@@ -394,6 +399,68 @@ void main() {
         expect((await fetchOf(live.mem, 'r2'))!.state, kFetchFiled);
       });
 
+      test('a stop after the move into its place: the open says it is in, '
+          'and the service\'s gone takes nothing', () async {
+        containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+        await from(_x, await drop('k1', sum: _sum7));
+        final target = live.msg('k1')!['file_path'] as String;
+        await fetchState(live.mem, 'k1', kFetchComing);
+        await File(target).writeAsBytes([7, 7, 7]);
+        await app.sealLeftFetches(live, DateTime.now());
+        expect((await fetchOf(live.mem, 'k1'))!.state, kFetchFiled);
+        eng.answer = 'error: gone';
+        await app.fetchDropsInForTest(live);
+        expect(eng.fetched, isEmpty);
+        expect(await fetchOf(live.mem, 'k1'), isNull);
+        expect(live.msg('k1')!['file_path'], target);
+        expect(File(target).readAsBytesSync(), [7, 7, 7]);
+      });
+
+      test('a pass with no open before it keeps a file already in its '
+          'place', () async {
+        containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+        await from(_x, await drop('k2', sum: _sum7));
+        final target = live.msg('k2')!['file_path'] as String;
+        await fetchState(live.mem, 'k2', kFetchComing);
+        await File(target).writeAsBytes([7, 7, 7]);
+        eng.answer = 'error: gone';
+        await app.fetchDropsInForTest(live);
+        expect(eng.fetched, isEmpty);
+        expect(live.msg('k2')!['file_path'], target);
+        expect(File(target).readAsBytesSync(), [7, 7, 7]);
+      });
+
+      test('the row says the file is in before the got goes out', () async {
+        containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+        await from(_x, await drop('k3', sum: _sum7));
+        await fetchState(live.mem, 'k3', kFetchComing);
+        int? state;
+        eng.duringGot = () async {
+          state = (await fetchOf(live.mem, 'k3'))?.state;
+        };
+        await app.fetchDropsInForTest(live);
+        expect(state, kFetchFiled);
+        expect(File(live.msg('k3')!['file_path'] as String).readAsBytesSync(), [
+          7,
+          7,
+          7,
+        ]);
+      });
+
+      test('a leftover of the right length but not its bytes is shredded, '
+          'never moved', () async {
+        containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+        await from(_x, await drop('k4', sum: _sum7));
+        final target = live.msg('k4')!['file_path'] as String;
+        final f = (await fetchOf(live.mem, 'k4'))!;
+        await fetchState(live.mem, 'k4', kFetchComing);
+        leave(f.path, [0, 0, 0]);
+        await app.sealLeftFetches(live, DateTime.now());
+        expect(fetchFolder(), isEmpty);
+        expect(File(target).existsSync(), isFalse);
+        expect((await fetchOf(live.mem, 'k4'))!.state, kFetchComing);
+      });
+
       test('the open\'s seal leaves alone a file a pass is bringing', () async {
         containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
         await from(_x, await drop('r5', sum: _sum7));
@@ -414,6 +481,24 @@ void main() {
         expect(File(target).readAsBytesSync(), [7, 7, 7]);
         expect(fetchFolder(), isEmpty);
       });
+    });
+
+    test('a stop between the seal into got/ and the row: the open points '
+        'the row at it, and the sweep leaves it', () async {
+      containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+      await from(_x, await drop('h1'));
+      final f = (await fetchOf(live.mem, 'h1'))!;
+      final got = gotPathFor(f.path);
+      await Directory(p.dirname(got)).create(recursive: true);
+      await File(got).writeAsBytes([7, 7, 7]);
+      await fetchState(live.mem, 'h1', kFetchHave);
+      expect(
+        (await app.strayFetchesForTest(live)).map((e) => e.path),
+        isNot(contains(got)),
+      );
+      await app.sealLeftFetches(live, DateTime.now());
+      expect((await fetchOf(live.mem, 'h1'))!.path, got);
+      expect(File(got).readAsBytesSync(), [7, 7, 7]);
     });
 
     test('a waiting one whose file was whole before the stop is sealed as '

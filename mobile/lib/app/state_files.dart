@@ -602,7 +602,20 @@ extension AppStateFiles on AppState {
     final f = await fetchOf(db, uid);
     if (f == null || !inFetchFolder(f.path)) return;
     final file = File(f.path);
-    if (!await file.exists()) return;
+    if (!await file.exists()) {
+      // sealed into got/ or moved into its place, a stop before the row
+      // followed: the row is put right, so nothing sweeps the file
+      if (f.state == kFetchHave) {
+        await _sealFetched(db, f);
+      } else if (fetchFiledFirst(f.state)) {
+        final target = await d.incomingFilePath(uid);
+        if (target != null && await _whole(target, f.size)) {
+          await fetchState(db, uid, kFetchFiled);
+          setFileWait(uid, null);
+        }
+      }
+      return;
+    }
     if (!(await file.lastModified()).isBefore(before)) return;
     if (f.state == kFetchWaiting) {
       // the engine's ok came and the row's change did not: it is in
@@ -775,6 +788,14 @@ extension AppStateFiles on AppState {
       await _letFetchGo(db, f, frame, chat);
       return;
     }
+    // in its place already, a stop before the row said so: only the got
+    if (!await File(f.path).exists() && await _whole(target, f.size)) {
+      await fetchState(db, f.uid, kFetchFiled);
+      setFileWait(f.uid, null);
+      await _letFetchGo(db, f, frame, chat);
+      chatChanged(f.groupId == null ? f.sender : 'group:${f.groupId}');
+      return;
+    }
     // a week on the service and it is gone from there
     if (now - f.at > kFetchKeptFor.inMilliseconds ||
         await d.isBlocked(f.sender)) {
@@ -828,6 +849,8 @@ extension AppStateFiles on AppState {
         await _neverCame(d, db, f, frame);
         return;
       }
+      // in its place: a stop from here on only owes the got
+      await fetchState(db, f.uid, kFetchFiled);
       makeBlurSoon(target);
       setFileWait(f.uid, null);
       await _letFetchGo(db, f, frame, chat);
