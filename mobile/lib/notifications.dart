@@ -392,7 +392,7 @@ Future<int?> _postPlain({
   await notifPlugin.show(
     id: id,
     body: l10n.notifPlainLine,
-    notificationDetails: NotificationDetails(android: details),
+    notificationDetails: notifDetails(details, alert: !silent),
     // the tap opens the chat list: no chat is named anywhere in it
     payload: kListPayload,
   );
@@ -934,7 +934,7 @@ Future<void> _postShared({required bool alert}) async {
     id: _sharedId,
     title: title,
     body: body,
-    notificationDetails: NotificationDetails(android: details),
+    notificationDetails: notifDetails(details, alert: alert),
     payload: kListPayload,
   );
 }
@@ -1153,7 +1153,7 @@ Future<bool> _postFold(
     id: fold.id,
     title: title,
     body: body,
-    notificationDetails: NotificationDetails(android: details),
+    notificationDetails: notifDetails(details, alert: alert),
     payload: fold.tag,
   );
   return true;
@@ -1196,6 +1196,20 @@ Future<void> cancelWithRetry(
     }
   }
 }
+
+// one that must not sound says so to a computer's toast too: android's own
+// silent flag sits in [android]
+@visibleForTesting
+NotificationDetails notifDetails(
+  AndroidNotificationDetails android, {
+  required bool alert,
+}) => NotificationDetails(
+  android: android,
+  windows: alert
+      ? null
+      : WindowsNotificationDetails(audio: WindowsNotificationAudio.silent()),
+  linux: alert ? null : const LinuxNotificationDetails(suppressSound: true),
+);
 
 // [chat] is what this process knows it by; android sees only [tag]. the
 // notification's id, null when none was shown
