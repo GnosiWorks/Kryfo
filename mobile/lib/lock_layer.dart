@@ -2,6 +2,7 @@
 // the app lock, drawn above the navigator from the app's builder, so every
 // screen, sheet, dialog, menu and toast is under it. while it is up the app
 // is not painted, touched, focused, read out or animated.
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -386,7 +387,20 @@ class LockBack with WidgetsBindingObserver {
   void _tell() {
     final life = SchedulerBinding.instance.lifecycleState;
     if (life == null || life == AppLifecycleState.detached) return;
-    SystemNavigator.setFrameworkHandlesBack(_locked || _rootCanPop);
+    final wants = _locked || _rootCanPop;
+    SystemNavigator.setFrameworkHandlesBack(wants);
+    // android's back swipe goes through MainActivity's own callback, which
+    // is on only while this is
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      _backChannel.invokeMethod<void>('wants', wants).catchError((Object _) {});
+    }
+  }
+
+  // a screen made again (the activity, not the app) starts with its back
+  // callback off: it hears again what dart wants
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _tell();
   }
 
   // MaterialApp.onNavigationNotification: what the app's navigator says
@@ -403,5 +417,7 @@ class LockBack with WidgetsBindingObserver {
   @override
   bool handleStartBackGesture(PredictiveBackEvent backEvent) => _locked;
 }
+
+const _backChannel = MethodChannel('kryfo/back');
 
 final lockBack = LockBack();

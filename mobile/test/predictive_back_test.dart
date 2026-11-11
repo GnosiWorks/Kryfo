@@ -157,6 +157,34 @@ void main() {
     expect(find.byType(_Counter), findsNothing);
   });
 
+  testWidgets('android hears when dart wants back, so its swipe reaches '
+      'dart', (t) async {
+    final told = <Object?>[];
+    const back = MethodChannel('kryfo/back');
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(back, (c) async {
+      if (c.method == 'wants') told.add(c.arguments);
+      return null;
+    });
+    addTearDown(
+      () =>
+          t.binding.defaultBinaryMessenger.setMockMethodCallHandler(back, null),
+    );
+    t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    // locked: dart takes back, so the swipe comes to it and goes nowhere
+    lockBack.locked = true;
+    await t.pump();
+    expect(told.last, isTrue);
+    // open, at the root: nothing to go back to, android has it
+    lockBack.locked = false;
+    await t.pump();
+    expect(told.last, isFalse);
+    // a page pushed: dart wants it again
+    lockBack.navigation(const NavigationNotification(canHandlePop: true));
+    await t.pump();
+    expect(told.last, isTrue);
+    lockBack.navigation(const NavigationNotification(canHandlePop: false));
+  });
+
   testWidgets('a push and a pop keep the rise and fade', (t) async {
     await t.pumpWidget(_app());
     _nav.currentState!.push(haloRoute<void>(_page));
