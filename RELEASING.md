@@ -160,7 +160,7 @@ agree with the release:
   fdroid scanner 2.4.5), and in `build:` before the apk
   `KT_JNI_LIBS_DIR=$(pwd)/android/app/src/main/jniLibs bash ../engine/translate/native/build.sh`.
   offline translation is on, so the apk carries it
-- the voice library, only once voice transcripts ship (off in 0.6.0, so not in its recipe), in
+- the voice library, from 0.6.1 on (voice transcripts are on; 0.6.0's recipe has none), in
   every block: the srclib `whisper.cpp@d1be6fde11ac6e0407606b4e42fe72d34add8037`
   (whisper.lock's commit, v1.9.5; fdroiddata's `srclibs/whisper.cpp.yml` is `RepoType: git`,
   `Repo: https://github.com/ggml-org/whisper.cpp.git`), in `prebuild:`
@@ -171,7 +171,7 @@ agree with the release:
   without a lock: fdroid scanner 2.4.5 flags nothing else, and the library builds the same
   bytes without them), and in `build:` before the apk
   `KV_JNI_LIBS_DIR=$(pwd)/android/app/src/main/jniLibs bash ../engine/voice/native/build.sh`.
-  gradle leaves it out of the apk until voice transcripts are switched on
+  voice transcripts are on, so the apk carries it
 
 then check the tag is up: `git ls-remote --tags origin | grep vX.Y.Z`
 

@@ -175,6 +175,23 @@ void main() {
     // its offline build keeps the tarball fetch-whisper.sh checks
     final release = File('../repro/release.sh').readAsStringSync();
     expect(release, contains('KV_DL=engine/voice/native/.third_party/dl'));
+    // a universal apk without the library is not released
+    final needs = RegExp(
+      r'for l in ([\w ]+); do',
+    ).allMatches(release).map((m) => m[1]!.split(' ')).expand((l) => l);
+    expect(needs, contains('libkryfo_voice'));
+    // nothing still says it is left out
+    for (final f in ['../RELEASING.md', '../repro/build-repro.sh']) {
+      expect(
+        File(f).readAsStringSync(),
+        isNot(
+          matches(
+            RegExp(r'(gradle leaves it out|only once voice transcripts)'),
+          ),
+        ),
+        reason: f,
+      );
+    }
     expect(release, contains('cp -a cache/whisper/. "\$WORK/src/\$KV_DL/"'));
     // the f-droid recipe takes the srclib at the pinned commit
     final lock = File('../engine/voice/native/whisper.lock').readAsStringSync();
