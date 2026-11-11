@@ -1700,7 +1700,7 @@ Future<void> landHidden(
 }
 
 // a restore in a decoy session lands on the decoy's names. the onion key
-// waits in onion_d.key for the next start. no engine call: the engine
+// waits in onion_k2.key for the next start. no engine call: the engine
 // carries the everyday identity. [own] is the decoy's database, whichever
 // session is open by now
 Future<void> _landInDecoy(
@@ -1733,7 +1733,7 @@ Future<void> _landInDecoy(
     if (name == 'halo.db') {
       dest = dbPath;
     } else if (name == 'onion.key') {
-      dest = p.join(docs, 'onion${c.suffix}.key');
+      dest = p.join(docs, 'onion${c.folderSuffix}.key');
     } else {
       final slash = name.indexOf('/');
       dest = p.join(

@@ -90,7 +90,7 @@ void main() {
   SqliteChannel? sql;
   final opened = <Database>[];
 
-  setUp(() {
+  setUp(() async {
     sql = SqliteChannel.install();
     docs = Directory.systemTemp.createTempSync('upgrade_053');
     for (final f in _files) {
@@ -103,6 +103,8 @@ void main() {
     });
     SharedPreferences.setMockInitialValues({});
     useDevKeysForTest(null);
+    // as the app's start finds them: the names before the numbers move
+    await moveToNumberedNames(docs.path);
   });
 
   tearDown(() async {

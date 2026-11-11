@@ -12,6 +12,7 @@ import 'package:kryfo/container.dart';
 const _apart = {
   'halo.db.passphrase',
   'halo.d.key',
+  'halo.k2.key',
   'halo.containers',
   'halo.lock.enabled',
   'halo.lock.table',

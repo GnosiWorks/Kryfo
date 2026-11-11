@@ -845,8 +845,76 @@ void main() {
       '${PinSlot.wipe}',
       '${PinSlot.vault}',
     });
-    expect(store.m.containsKey('halo.lock.d.wipe'), isFalse);
-    expect(store.m.containsKey('halo.lock.d.decoy'), isFalse);
+    // the decoy's own pins are gone from the flags too
+    expect(store.m['halo.lock.flags']!.substring(1, 3), '00');
+  });
+
+  group('which pins exist', () {
+    const old = [
+      'halo.lock.panic_enabled',
+      'halo.lock.d.wipe',
+      'halo.lock.d.decoy',
+      'halo.lock.d.card.done',
+      'halo.lock.set.wipe',
+    ];
+
+    test('the names from before move into one value, then go', () async {
+      for (final k in old) {
+        store.m[k] = 'true';
+      }
+      final lock = await make();
+      expect(store.m['halo.lock.flags'], '11111');
+      for (final k in old) {
+        expect(store.m.containsKey(k), isFalse, reason: k);
+      }
+      expect(lock.panicEnabled, isTrue);
+      lock.inDecoy = true;
+      expect(lock.panicEnabled, isTrue);
+      // a second start reads the one value, and writes nothing
+      final before = Map.of(store.m);
+      await make();
+      expect(store.m, before);
+    });
+
+    test('a stop after the value was written, before the old names went, '
+        'loses nothing', () async {
+      store.m['halo.lock.flags'] = '10000';
+      store.m['halo.lock.panic_enabled'] = 'true';
+      final lock = await make();
+      expect(lock.panicEnabled, isTrue);
+      expect(store.m.containsKey('halo.lock.panic_enabled'), isFalse);
+      expect(store.m['halo.lock.flags'], '10000');
+    });
+
+    test('every lock keeps the same names, whatever pins it has', () async {
+      // the tries' counters come with any use of a lock
+      Set<String> names() => store.m.keys.toSet()..remove('halo.lock.state');
+      final lock = await make();
+      await lock.disablePanicPin();
+      final none = names();
+      expect(store.m['halo.lock.flags'], '00000');
+      await lock.setupPanicPin('9999');
+      lock.inDecoy = true;
+      await lock.setupPanicPin('8888');
+      await lock.setupDecoyPin('7777');
+      await lock.cardFinished();
+      expect(names(), none);
+      expect(store.m['halo.lock.flags']!.length, 5);
+    });
+
+    test('no lock, no value; turned off, it goes', () async {
+      store = FakeStore();
+      for (final k in old) {
+        store.m[k] = 'true';
+      }
+      await make();
+      expect(store.m, isEmpty);
+      seed();
+      final lock = await make();
+      expect(store.m.containsKey('halo.lock.flags'), isTrue);
+      await lock.disable();
+      expect(store.m.containsKey('halo.lock.flags'), isFalse);
+    });
   });
 
   test('the quiet flag is read every time', () async {
@@ -1092,9 +1160,13 @@ void main() {
       store.log.clear();
       engine.calls.clear();
       lock = await make();
-      // and the update card is due: the table is from before the pin key
+      // and the update card is due: the table is from before the pin key.
+      // the old wipe switch moved into the flags after the table
       expect(store.log.where((l) => !l.startsWith('r ')), [
         'w halo.lock.table',
+        'w halo.lock.flags',
+        'w halo.lock.biometric',
+        'd halo.lock.panic_enabled',
         'w halo.lock.card',
       ]);
       expect(engine.calls.where((c) => c == 'upgrade'), hasLength(1));

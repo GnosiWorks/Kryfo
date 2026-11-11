@@ -14,8 +14,11 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 void main() {
   tearDown(() => onDesktop = false);
 
-  test('the phone keeps its database names, its folders go by number', () {
-    expect(HaloContainer.decoy.dbFile, 'halo_d.db');
+  test('the phone names its databases and folders by number too', () {
+    expect(HaloContainer.decoy.dbFile, 'k2.db');
+    expect(HaloContainer.vault.dbFile, 'k3.db');
+    expect(HaloContainer.decoyVault.dbFile, 'k4.db');
+    expect(HaloContainer.decoy.oldDbFile, 'halo_d.db');
     expect(HaloContainer.vault.suffix, '_v');
     expect(HaloContainer.vault.folderSuffix, '_k3');
     expect(HaloContainer.decoy.folderSuffix, '_k2');

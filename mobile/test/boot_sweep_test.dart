@@ -14,6 +14,9 @@ import 'package:kryfo/main.dart' show sweepVoiceLeftovers;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
+const decoyKey =
+    "x'2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e'";
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory root;
@@ -27,7 +30,7 @@ void main() {
   Map<String, String> all() => {
     for (final e in root.listSync(recursive: true))
       p.relative(e.path, from: root.path): e is File
-          ? e.readAsStringSync()
+          ? String.fromCharCodes(e.readAsBytesSync())
           : '/',
   };
 
@@ -39,9 +42,7 @@ void main() {
           (_) async => root.path,
         );
     SharedPreferences.setMockInitialValues({});
-    FlutterSecureStorage.setMockInitialValues({
-      'halo.d.key': "x'${'2e' * 32}'",
-    });
+    FlutterSecureStorage.setMockInitialValues({kDecoyKeyName: decoyKey});
     forgetLeftoverSweep();
   });
 
@@ -54,14 +55,22 @@ void main() {
     put('onion.key', 'onion');
     put('media/a.jpg', 'a photo');
     put('wallpapers/w.jpg', 'a wallpaper');
-    put('halo_d.db', 'decoy');
-    put('media_d/d.jpg', 'a decoy photo');
-    put('halo_v.db', 'hidden');
-    put('halo_v.db-wal', 'hidden log');
-    put('media_v/h.jpg', 'a hidden photo');
-    put('wallpapers_v/hw.jpg', 'a hidden wallpaper');
-    put('halo_dv.db', 'decoy hidden');
-    put('media_dv/dh.jpg', 'a decoy hidden photo');
+    put('k2.db', 'decoy');
+    put('media_k2/d.jpg', 'a decoy photo');
+    put('k3.db', 'hidden');
+    put('k3.db-wal', 'hidden log');
+    put('media_k3/h.jpg', 'a hidden photo');
+    put('wallpapers_k3/hw.jpg', 'a hidden wallpaper');
+    put('k4.db', 'decoy hidden');
+    put('media_k4/dh.jpg', 'a decoy hidden photo');
+  }
+
+  // a database gone and a file of random bytes holding its place
+  void heldPlace(String name, String was) {
+    final b = File(at(name)).readAsBytesSync();
+    expect(String.fromCharCodes(b), isNot(was), reason: name);
+    expect(b.length % 4096, 0, reason: name);
+    expect(b.length, inInclusiveRange(40 * 4096, 120 * 4096), reason: name);
   }
 
   group('backup and restore leftovers', () {
@@ -107,8 +116,8 @@ void main() {
       await sweepContainers({HaloContainer.decoy.id}, pinTable: true);
       expect(all(), before);
       expect(
-        await const FlutterSecureStorage().read(key: 'halo.d.key'),
-        isNotNull,
+        await const FlutterSecureStorage().read(key: kDecoyKeyName),
+        decoyKey,
       );
     });
 
@@ -117,23 +126,23 @@ void main() {
       phone();
       await sweepContainers({HaloContainer.decoy.id}, pinTable: false);
       for (final gone in [
-        'halo_v.db',
-        'halo_v.db-wal',
-        'media_v',
-        'wallpapers_v',
-        'halo_dv.db',
-        'media_dv',
+        'k3.db-wal',
+        'media_k3/h.jpg',
+        'wallpapers_k3/hw.jpg',
+        'media_k4/dh.jpg',
       ]) {
         expect(there(gone), isFalse, reason: gone);
       }
+      heldPlace('k3.db', 'hidden');
+      heldPlace('k4.db', 'decoy hidden');
       for (final kept in [
         'halo.db',
         'halo.db-wal',
         'onion.key',
         'media/a.jpg',
         'wallpapers/w.jpg',
-        'halo_d.db',
-        'media_d/d.jpg',
+        'k2.db',
+        'media_k2/d.jpg',
       ]) {
         expect(there(kept), isTrue, reason: kept);
       }
@@ -142,23 +151,24 @@ void main() {
     test('a decoy no list names goes whole, with its vault, even when only '
         'a folder of it is left', () async {
       phone();
-      File(at('halo_d.db')).deleteSync();
+      File(at('k2.db')).deleteSync();
       await sweepContainers({}, pinTable: true);
-      for (final gone in ['media_d', 'halo_dv.db', 'media_dv']) {
+      for (final gone in ['media_k2/d.jpg', 'media_k4/dh.jpg']) {
         expect(there(gone), isFalse, reason: gone);
       }
-      expect(
-        await const FlutterSecureStorage().read(key: 'halo.d.key'),
-        isNull,
-      );
+      heldPlace('k2.db', 'decoy');
+      heldPlace('k4.db', 'decoy hidden');
+      // its key went, and another holds its place
+      final key = await const FlutterSecureStorage().read(key: kDecoyKeyName);
+      expect(key, allOf(isNot(decoyKey), startsWith("x'")));
       // the everyday side's vault may still open: left as it is
       for (final kept in [
         'halo.db',
         'media/a.jpg',
-        'halo_v.db',
-        'halo_v.db-wal',
-        'media_v/h.jpg',
-        'wallpapers_v/hw.jpg',
+        'k3.db',
+        'k3.db-wal',
+        'media_k3/h.jpg',
+        'wallpapers_k3/hw.jpg',
       ]) {
         expect(there(kept), isTrue, reason: kept);
       }
@@ -169,11 +179,111 @@ void main() {
       put('media/a.jpg', 'a photo');
       final before = all();
       await sweepContainers({}, pinTable: false);
-      expect(all(), before);
+      // but the places every install holds
       expect(
-        await const FlutterSecureStorage().read(key: 'halo.d.key'),
-        isNotNull,
+        all()..removeWhere((k, _) => ['k2.db', 'k3.db', 'k4.db'].contains(k)),
+        before,
       );
+      for (final n in ['k2.db', 'k3.db', 'k4.db']) {
+        heldPlace(n, '');
+      }
+      expect(
+        await const FlutterSecureStorage().read(key: kDecoyKeyName),
+        decoyKey,
+      );
+    });
+  });
+
+  group('the names before the numbers', () {
+    // what a phone before 0.6.1 held: the decoy and both vaults by role
+    void older() {
+      put('halo.db', 'everyday');
+      put('halo_d.db', 'decoy');
+      put('halo_d.db-wal', 'decoy log');
+      put('halo_v.db', 'hidden');
+      put('halo_v.db-journal', 'hidden journal');
+      put('halo_dv.db', 'decoy hidden');
+    }
+
+    Future<Map<String, String>> store() =>
+        const FlutterSecureStorage().readAll();
+
+    test('move to their numbers, the decoy\'s key too, and a second start '
+        'changes nothing', () async {
+      older();
+      FlutterSecureStorage.setMockInitialValues({
+        kOldDecoyKeyName: decoyKey,
+        kListedContainers: HaloContainer.decoy.id,
+      });
+      await moveToNumberedNames(root.path);
+      final files = all();
+      expect(files, {
+        'halo.db': 'everyday',
+        'k2.db': 'decoy',
+        'k2.db-wal': 'decoy log',
+        'k3.db': 'hidden',
+        'k3.db-journal': 'hidden journal',
+        'k4.db': 'decoy hidden',
+      });
+      final kept = await store();
+      expect(kept[kDecoyKeyName], decoyKey);
+      expect(kept.containsKey(kOldDecoyKeyName), isFalse);
+      expect(await listedContainers(), {HaloContainer.decoy.id});
+      // one length, listed or not
+      expect(kept[kListedContainers]!.length, 66);
+      await moveToNumberedNames(root.path);
+      expect(all(), files);
+      expect(await store(), kept);
+    });
+
+    test('a move cut short goes on, the database last over what holds its '
+        'place', () async {
+      older();
+      // the log moved, the database not yet, and a place held already
+      File(at('halo_d.db-wal')).renameSync(at('k2.db-wal'));
+      put('k2.db', 'a place held');
+      FlutterSecureStorage.setMockInitialValues({
+        kOldDecoyKeyName: decoyKey,
+        kDecoyKeyName: decoyKey,
+      });
+      await moveToNumberedNames(root.path);
+      expect(all()['k2.db'], 'decoy');
+      expect(all()['k2.db-wal'], 'decoy log');
+      expect(there('halo_d.db'), isFalse);
+      expect((await store())[kDecoyKeyName], decoyKey);
+      expect((await store()).containsKey(kOldDecoyKeyName), isFalse);
+    });
+
+    test('every install holds the same names, a decoy or not', () async {
+      Future<Set<String>> names() async {
+        await sweepContainers(await listedContainers(), pinTable: true);
+        // a database open now has its log beside it, as anywhere
+        return {
+          ...all().keys.where(
+            (n) => !n.endsWith('-wal') && !n.endsWith('-journal'),
+          ),
+          ...(await store()).keys,
+        };
+      }
+
+      put('halo.db', 'everyday');
+      FlutterSecureStorage.setMockInitialValues({});
+      final plain = await names();
+      expect(plain, containsAll(['k2.db', 'k3.db', 'k4.db']));
+      expect(plain, containsAll([kDecoyKeyName, kListedContainers]));
+      final listLength = (await store())[kListedContainers]!.length;
+
+      root.deleteSync(recursive: true);
+      root.createSync();
+      older();
+      FlutterSecureStorage.setMockInitialValues({
+        kOldDecoyKeyName: decoyKey,
+        kListedContainers: HaloContainer.decoy.id,
+      });
+      await moveToNumberedNames(root.path);
+      expect(await names(), plain);
+      expect((await store())[kListedContainers]!.length, listLength);
+      expect(all()['k2.db'], 'decoy');
     });
   });
 
