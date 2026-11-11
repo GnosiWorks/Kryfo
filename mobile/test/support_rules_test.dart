@@ -378,6 +378,7 @@ class _Io implements AppIo {
     Object? on,
     String? msgUid,
     int? burnAt,
+    bool request = false,
   }) async => rang.add('$title|$body|$payload');
 
   @override

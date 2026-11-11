@@ -3207,34 +3207,6 @@
   "@groupChatCouldNotCleanThatVideo": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChat30Seconds": "30 seconds",
-  "@groupChat30Seconds": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChat1Minute": "1 minute",
-  "@groupChat1Minute": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChat5Minutes": "5 minutes",
-  "@groupChat5Minutes": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChat1Hour": "1 hour",
-  "@groupChat1Hour": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChat24Hours": "24 hours",
-  "@groupChat24Hours": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatBurnTimer": "Timed messages",
-  "@groupChatBurnTimer": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatNewMessagesDisappearOnceRead": "New messages disappear this long after they're read. Yours count from when you send them.",
-  "@groupChatNewMessagesDisappearOnceRead": {
-    "description": "screens/group_chat_screen.dart: the line under the group timer sheet's title. each copy's clock starts when it is read, yours when it is sent"
-  },
   "groupChatToday": "Today",
   "@groupChatToday": {
     "description": "screens/group_chat_screen.dart"
@@ -15309,5 +15281,77 @@
   "sharedOpensLink": "Opens the link in another app",
   "@sharedOpensLink": {
     "description": "shared page, for screen readers: what a tap on a link does"
+  },
+  "voiceSpeedLabel": "{speed}x",
+  "@voiceSpeedLabel": {
+    "description": "widgets/media_bubbles.dart: the speed pill on a received voice note, e.g. 1.5x; speed is a number already written in the reader's digits",
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceSpeedA11y": "Playback speed {speed}",
+  "@voiceSpeedA11y": {
+    "description": "widgets/media_bubbles.dart: screen reader action on a received voice note that changes how fast it plays; speed is e.g. 1.5x",
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceSeekValue": "{at} of {total}",
+  "@voiceSeekValue": {
+    "description": "widgets/media_bubbles.dart: screen reader, where a voice note would be after seeking, e.g. 0:12 of 0:40",
+    "placeholders": {
+      "at": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "chatReactHeart": "React with a heart",
+  "@chatReactHeart": {
+    "description": "widgets/react_taps.dart: screen reader action on a message, the same as a double tap: puts a heart reaction on it, or takes it off"
+  },
+  "homeDraftLabel": "Draft:",
+  "@homeDraftLabel": {
+    "description": "screens/home_screen.dart: chat list, before the words of a message typed in a chat but not sent yet; keep it short, the words follow on the same line"
+  },
+  "homeDraftA11y": "Draft: {text}",
+  "@homeDraftA11y": {
+    "description": "screens/home_screen.dart: what a screen reader says of a chat row's draft, the words typed but not sent yet",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "handleSuggestFree": "@{handle} is free, use it",
+  "@handleSuggestFree": {
+    "description": "screens/handle_screen.dart: under 'Already taken' when picking a handle: a similar handle the registry said is free; a tap puts it in the field. keep the @ right before the name",
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
+  },
+  "notifRequestsChannel": "Message requests",
+  "@notifRequestsChannel": {
+    "description": "notifications.dart: android notification channel name for message requests, people not added yet"
+  },
+  "notifRequestsChannelLine": "First messages from people you have not added yet",
+  "@notifRequestsChannelLine": {
+    "description": "notifications.dart: android notification channel description for message requests"
+  },
+  "notifRequestPopups": "Pop-ups for message requests",
+  "@notifRequestPopups": {
+    "description": "screens/notifications_screen.dart: switch: whether a new message request pops up on screen with a sound"
+  },
+  "notifRequestPopupsHint": "On, a new request pops up with a sound. Off, it waits quietly in your notifications.",
+  "@notifRequestPopupsHint": {
+    "description": "screens/notifications_screen.dart: under the request pop-ups switch"
   }
 }

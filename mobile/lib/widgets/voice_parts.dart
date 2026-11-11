@@ -266,6 +266,8 @@ class VoiceWave extends StatefulWidget {
   final Color played;
   final Color rest;
   final double height;
+  // a finger or the mouse drags along it: a thin playhead shows where
+  final bool scrubbing;
   const VoiceWave({
     super.key,
     required this.peaks,
@@ -273,6 +275,7 @@ class VoiceWave extends StatefulWidget {
     required this.played,
     required this.rest,
     this.height = 22,
+    this.scrubbing = false,
   });
 
   @override
@@ -321,6 +324,7 @@ class _VoiceWaveState extends State<VoiceWave>
             played: widget.played,
             rest: widget.rest,
             rtl: rtl,
+            head: widget.scrubbing,
           ),
         ),
       ),
@@ -338,6 +342,7 @@ class _WavePainter extends CustomPainter {
   final Color played;
   final Color rest;
   final bool rtl;
+  final bool head;
   _WavePainter({
     required this.peaks,
     required this.rise,
@@ -345,6 +350,7 @@ class _WavePainter extends CustomPainter {
     required this.played,
     required this.rest,
     required this.rtl,
+    this.head = false,
   });
 
   @override
@@ -371,8 +377,22 @@ class _WavePainter extends CustomPainter {
       );
     }
     canvas.drawPath(bars, Paint()..color = rest);
-    if (progress <= 0) return;
     final cut = size.width * progress;
+    if (head) {
+      final x = rtl ? size.width - cut : cut;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(x.clamp(1.0, size.width - 1), size.height / 2),
+            width: 2,
+            height: size.height * 1.3,
+          ),
+          const Radius.circular(1),
+        ),
+        Paint()..color = played,
+      );
+    }
+    if (progress <= 0) return;
     canvas.save();
     canvas.clipRect(
       rtl
@@ -390,7 +410,16 @@ class _WavePainter extends CustomPainter {
       o.progress != progress ||
       o.played != played ||
       o.rest != rest ||
-      o.rtl != rtl;
+      o.rtl != rtl ||
+      o.head != head;
+}
+
+/// where along a wave [width] wide a point [dx] from its left edge falls,
+/// 0 at the start side and 1 at the end side
+double waveFraction(double dx, double width, {required bool rtl}) {
+  if (width <= 0) return 0;
+  final f = (dx / width).clamp(0.0, 1.0);
+  return rtl ? 1 - f : f;
 }
 
 /// the mic's level while a note is recorded, newest at the end side

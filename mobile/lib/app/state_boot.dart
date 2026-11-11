@@ -251,6 +251,12 @@ extension AppStateBoot on AppState {
         'true';
     _movedAway =
         (await SharedPreferences.getInstance()).getInt('moved.at') != null;
+    // request pop-ups: kept on for a phone updating, off for a new one
+    try {
+      await settleRequestPopups(existing: onboardingComplete);
+    } catch (e) {
+      dlog('request pop-ups: not settled (${e.runtimeType})');
+    }
     // let the onion linger a beat before the home appears
     if (onboardingComplete) {
       await Future.delayed(const Duration(milliseconds: 300));

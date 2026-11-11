@@ -2615,28 +2615,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'No se pudo limpiar ese video';
 
   @override
-  String get groupChat30Seconds => '30 segundos';
-
-  @override
-  String get groupChat1Minute => '1 minuto';
-
-  @override
-  String get groupChat5Minutes => '5 minutos';
-
-  @override
-  String get groupChat1Hour => '1 hora';
-
-  @override
-  String get groupChat24Hours => '24 horas';
-
-  @override
-  String get groupChatBurnTimer => 'Mensajes temporales';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'Los mensajes nuevos desaparecen pasado este tiempo desde que se leen. Los tuyos cuentan desde que los envías.';
-
-  @override
   String get groupChatToday => 'Hoy';
 
   @override
@@ -12252,4 +12230,49 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Abre el enlace en otra app';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Velocidad de reproducción $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at de $total';
+  }
+
+  @override
+  String get chatReactHeart => 'Reaccionar con un corazón';
+
+  @override
+  String get homeDraftLabel => 'Borrador:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Borrador: $text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle está libre, úsalo';
+  }
+
+  @override
+  String get notifRequestsChannel => 'Solicitudes de mensajes';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Primeros mensajes de personas que aún no has añadido';
+
+  @override
+  String get notifRequestPopups => 'Avisos emergentes de solicitudes';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Activado, una solicitud nueva aparece con sonido. Desactivado, espera en silencio en tus notificaciones.';
 }

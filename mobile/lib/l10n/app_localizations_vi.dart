@@ -2581,28 +2581,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'Không làm sạch được video đó';
 
   @override
-  String get groupChat30Seconds => '30 giây';
-
-  @override
-  String get groupChat1Minute => '1 phút';
-
-  @override
-  String get groupChat5Minutes => '5 phút';
-
-  @override
-  String get groupChat1Hour => '1 giờ';
-
-  @override
-  String get groupChat24Hours => '24 giờ';
-
-  @override
-  String get groupChatBurnTimer => 'Tin nhắn tự hủy';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'Tin nhắn mới sẽ biến mất sau khoảng thời gian này kể từ khi được đọc. Tin của bạn tính từ lúc bạn gửi.';
-
-  @override
   String get groupChatToday => 'Hôm nay';
 
   @override
@@ -12150,4 +12128,49 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Mở liên kết trong ứng dụng khác';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Tốc độ phát $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at trên $total';
+  }
+
+  @override
+  String get chatReactHeart => 'Thả tim';
+
+  @override
+  String get homeDraftLabel => 'Bản nháp:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Bản nháp: $text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle còn trống, dùng tên này';
+  }
+
+  @override
+  String get notifRequestsChannel => 'Yêu cầu nhắn tin';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Tin nhắn đầu tiên từ những người bạn chưa thêm';
+
+  @override
+  String get notifRequestPopups => 'Thông báo nổi cho yêu cầu nhắn tin';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Bật: yêu cầu mới hiện lên kèm âm thanh. Tắt: yêu cầu nằm yên trong thông báo của bạn.';
 }

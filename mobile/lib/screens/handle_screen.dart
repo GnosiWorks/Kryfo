@@ -195,7 +195,12 @@ class _HandleScreenState extends State<HandleScreen> {
         max: 20,
       ),
       const SizedBox(height: 8),
-      HandleAvailability(state: _state, slow: _slow),
+      HandleAvailability(
+        state: _state,
+        slow: _slow,
+        suggestion: _c.suggestion,
+        onSuggestion: _c.useSuggestion,
+      ),
       const SizedBox(height: 18),
       HandleField(
         ctrl: _bio,
@@ -508,7 +513,16 @@ class HandleAvailability extends StatelessWidget {
   final String state;
   // the check is taking its time
   final bool slow;
-  const HandleAvailability({super.key, required this.state, this.slow = false});
+  // a free name like a taken one, and what a tap on it does
+  final String? suggestion;
+  final VoidCallback? onSuggestion;
+  const HandleAvailability({
+    super.key,
+    required this.state,
+    this.slow = false,
+    this.suggestion,
+    this.onSuggestion,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -548,6 +562,17 @@ class HandleAvailability extends StatelessWidget {
                   Text(txt, style: HaloType.mono(size: 11, color: c)),
                 ],
               )
+            : state == 'taken' && suggestion != null
+            ? Column(
+                key: ValueKey('$txt/$suggestion'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(txt, style: HaloType.mono(size: 11, color: c)),
+                  const SizedBox(height: 6),
+                  _Suggestion(name: suggestion!, onTap: onSuggestion),
+                ],
+              )
             : Text(
                 txt,
                 key: ValueKey(txt),
@@ -562,6 +587,42 @@ class HandleAvailability extends StatelessWidget {
       curve: Curves.easeOutCubic,
       alignment: AlignmentDirectional.topStart,
       child: line,
+    );
+  }
+}
+
+/// a free name offered under a taken one: a tap puts it in the field
+class _Suggestion extends StatelessWidget {
+  const _Suggestion({required this.name, this.onTap});
+  final String name;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: PressScale(
+        scale: 0.97,
+        onTap: onTap == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                onTap!();
+              },
+        child: Container(
+          key: const ValueKey('handle-suggestion'),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: HaloColors.green.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: HaloColors.green.withValues(alpha: 0.4)),
+          ),
+          child: Text(
+            l10n.handleSuggestFree(name),
+            style: HaloType.mono(size: 11, color: HaloColors.greenText),
+          ),
+        ),
+      ),
     );
   }
 }

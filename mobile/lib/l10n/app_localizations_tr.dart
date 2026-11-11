@@ -2591,28 +2591,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'Bu video temizlenemedi';
 
   @override
-  String get groupChat30Seconds => '30 saniye';
-
-  @override
-  String get groupChat1Minute => '1 dakika';
-
-  @override
-  String get groupChat5Minutes => '5 dakika';
-
-  @override
-  String get groupChat1Hour => '1 saat';
-
-  @override
-  String get groupChat24Hours => '24 saat';
-
-  @override
-  String get groupChatBurnTimer => 'Süreli mesajlar';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'Yeni mesajlar okunduktan bu süre sonra kaybolur. Seninkiler gönderdiğin andan itibaren sayılır.';
-
-  @override
   String get groupChatToday => 'Bugün';
 
   @override
@@ -12183,4 +12161,49 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Bağlantıyı başka bir uygulamada açar';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Oynatma hızı $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$total içinde $at';
+  }
+
+  @override
+  String get chatReactHeart => 'Kalple tepki ver';
+
+  @override
+  String get homeDraftLabel => 'Taslak:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Taslak: $text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle boşta, bunu kullan';
+  }
+
+  @override
+  String get notifRequestsChannel => 'Mesaj istekleri';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Henüz eklemediğin kişilerden gelen ilk mesajlar';
+
+  @override
+  String get notifRequestPopups => 'Mesaj istekleri için açılır bildirim';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler.';
 }

@@ -145,9 +145,11 @@ class AppIo {
     required HaloDb on,
     String? msgUid,
     int? burnAt,
+    bool request = false,
   }) async {
     if (await quietNow()) return;
     final id = await showMessageNotification(
+      request: request,
       title: title,
       body: body,
       chat: payload,

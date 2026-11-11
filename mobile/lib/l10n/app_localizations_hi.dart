@@ -2593,28 +2593,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'उस वीडियो को साफ़ नहीं कर पाए';
 
   @override
-  String get groupChat30Seconds => '30 सेकंड';
-
-  @override
-  String get groupChat1Minute => '1 मिनट';
-
-  @override
-  String get groupChat5Minutes => '5 मिनट';
-
-  @override
-  String get groupChat1Hour => '1 घंटा';
-
-  @override
-  String get groupChat24Hours => '24 घंटे';
-
-  @override
-  String get groupChatBurnTimer => 'मिटने वाले मैसेज';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'नए मैसेज पढ़े जाने के इतनी देर बाद मिट जाते हैं। आपके अपने मैसेज भेजने के समय से गिने जाते हैं।';
-
-  @override
   String get groupChatToday => 'आज';
 
   @override
@@ -12163,4 +12141,49 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'लिंक को दूसरे ऐप में खोलता है';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'चलाने की गति $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$total में से $at';
+  }
+
+  @override
+  String get chatReactHeart => 'दिल से प्रतिक्रिया दें';
+
+  @override
+  String get homeDraftLabel => 'ड्राफ़्ट:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'ड्राफ़्ट: $text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle उपलब्ध है, इसे चुनें';
+  }
+
+  @override
+  String get notifRequestsChannel => 'संदेश अनुरोध';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'उन लोगों के पहले संदेश जिन्हें आपने अभी नहीं जोड़ा';
+
+  @override
+  String get notifRequestPopups => 'संदेश अनुरोधों के लिए पॉप-अप';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'चालू होने पर नया अनुरोध आवाज़ के साथ दिखता है। बंद होने पर वह चुपचाप आपकी सूचनाओं में रहता है।';
 }

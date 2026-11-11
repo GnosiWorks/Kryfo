@@ -44,13 +44,12 @@ void main() {
     expect(init, contains('_burnSeconds = p.\$2'));
   });
 
-  test('a toggle and a picked burn time are kept', () {
-    final toggle = _body('onToggleGhost: () {', '},');
-    expect(toggle, contains('appState.saveGhostPref(_ghost, _burnSeconds)'));
-    // a picked time turns timed messages on, and is kept so
-    final pick = _body('_burnSeconds = opt.\$1;', 'Navigator');
-    expect(pick, contains('_ghost = true;'));
-    expect(pick, contains('appState.saveGhostPref(true, opt.\$1)'));
+  test('a tap on the flame picks, and the pick is kept', () {
+    expect(_src, contains('onToggleGhost: _showBurnPicker,'));
+    // a time turns timed messages on, "Off" turns them off; either is kept
+    final pick = _body('Future<void> _showBurnPicker() async {', '_keepDraft');
+    expect(pick, contains('_ghost = on;'));
+    expect(pick, contains('appState.saveGhostPref(on, _burnSeconds)'));
   });
 
   group('a group gone from here', () {

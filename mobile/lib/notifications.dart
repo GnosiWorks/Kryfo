@@ -11,6 +11,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'l10n/l10n.dart';
 import 'app_icon.dart' show AppFace, AppFaceWords, readAppFace;
 import 'container.dart';
+import 'desktop/desktop_mode.dart' show onDesktop;
 import 'desktop/desktop_toasts.dart' show windowsToastSettings;
 import 'devchat/support.dart' show kSupportPayload, supportSummaryLine;
 import 'lock_guard.dart' show lockGuard;
@@ -85,9 +86,61 @@ Future<void> nameNotificationChannel() async {
     ),
   );
   if (_plainKnown ?? await loadNotifPlain()) await _makePlainChannel();
+  await _makeRequestsChannel();
 }
 
 const _messagesChannel = 'halo_messages_v2';
+
+// a message request from someone not added yet: a channel of its own. it
+// pops up only when "Pop-ups for message requests" is on, else it waits in
+// the shade without a sound
+const _requestsChannel = 'kryfo_requests';
+
+// the chats' own notifications: messages and requests
+bool _named(String? channel) =>
+    channel == _messagesChannel || channel == _requestsChannel;
+
+const _requestPopupsKey = 'kryfo.requests.popups';
+
+/// whether a message request pops up and sounds. a new install starts with
+/// it off, a phone updating keeps them ringing as before
+/// (settleRequestPopups); a computer has no switch for it and shows
+/// requests as it always did
+Future<bool> loadRequestPopups() async {
+  if (onDesktop) return true;
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool(HaloContainer.everyday.key(_requestPopupsKey)) ?? true;
+}
+
+/// the switch's start, once per install: on for a phone that had an
+/// identity before this version, off for a new one
+Future<void> settleRequestPopups({required bool existing}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final k = HaloContainer.everyday.key(_requestPopupsKey);
+  if (prefs.containsKey(k)) return;
+  await prefs.setBool(k, existing);
+}
+
+Future<void> saveRequestPopups(bool on) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(HaloContainer.everyday.key(_requestPopupsKey), on);
+}
+
+Future<void> _makeRequestsChannel() async {
+  final android = notifPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
+  await android?.createNotificationChannel(
+    AndroidNotificationChannel(
+      _requestsChannel,
+      l10n.notifRequestsChannel,
+      description: l10n.notifRequestsChannelLine,
+      importance: Importance.high,
+      playSound: true,
+    ),
+  );
+}
 
 /// the channel new messages come on now: plain notifications have their own
 Future<String> messageChannelId() async =>
@@ -409,7 +462,7 @@ Future<void> _plainOverNamed() async {
   final chatOf = {for (final e in _folds.entries) e.value.tag: e.key};
   // named folds go whatever the shade says: nothing reposts their words
   for (final e in [..._folds.entries]) {
-    if (e.value.channel == _messagesChannel) _dropFold(e.key);
+    if (_named(e.value.channel)) _dropFold(e.key);
   }
   // the shared one goes with them, below, by its channel
   _sharedReset();
@@ -417,7 +470,7 @@ Future<void> _plainOverNamed() async {
   final named = <ActiveNotification>[];
   try {
     for (final a in await notifPlugin.getActiveNotifications()) {
-      if (a.id != null && a.channelId == _messagesChannel) named.add(a);
+      if (a.id != null && _named(a.channelId)) named.add(a);
     }
   } catch (e) {
     dlog('plain: shade not read (${e.runtimeType})');
@@ -543,7 +596,7 @@ Future<void> clearUntaggedShade() async {
       if (id == null || a.tag != null) continue;
       if (id == _supportSummaryId || id == _kServiceNotifId) continue;
       final ch = a.channelId;
-      if (ch != null && ch != _messagesChannel && ch != _supportChannel) {
+      if (ch != null && !_named(ch) && ch != _supportChannel) {
         continue;
       }
       await cancelWithRetry(() => notifPlugin.cancel(id: id), 'old shade');
@@ -790,34 +843,38 @@ void _sharedTimes(int? burnAt) {
   }
 }
 
-Future<int?> _ringShared({required String chat, String? msgUid, int? burnAt}) =>
-    _foldTurnOf<int?>(() async {
-      if (await quietNow()) return null;
-      final gen = _clearGen;
-      final chatGen = _chatGen[chat];
-      bool stale() => gen != _clearGen || chatGen != _chatGen[chat];
-      // per chat ones still up go into it first
-      await _sharedOverNamed(post: false);
-      // swiped away or tapped: it starts over
-      if (!await _isUp(_sharedId, _sharedTag)) {
-        _sharedReset();
-      }
-      if (stale()) return null;
-      _sharedChats[chat] = (_sharedChats[chat] ?? 0) + 1;
-      _sharedTimes(burnAt);
-      if (msgUid != null) {
-        _sharedUids[msgUid] = chat;
-        if (_sharedUids.length > 500) {
-          _sharedUids.remove(_sharedUids.keys.first);
-        }
-      }
-      if (await quietNow() || stale()) {
-        _sharedChats.remove(chat);
-        return null;
-      }
-      await _postShared(alert: true);
-      return _sharedId;
-    });
+Future<int?> _ringShared({
+  required String chat,
+  String? msgUid,
+  int? burnAt,
+  bool alert = true,
+}) => _foldTurnOf<int?>(() async {
+  if (await quietNow()) return null;
+  final gen = _clearGen;
+  final chatGen = _chatGen[chat];
+  bool stale() => gen != _clearGen || chatGen != _chatGen[chat];
+  // per chat ones still up go into it first
+  await _sharedOverNamed(post: false);
+  // swiped away or tapped: it starts over
+  if (!await _isUp(_sharedId, _sharedTag)) {
+    _sharedReset();
+  }
+  if (stale()) return null;
+  _sharedChats[chat] = (_sharedChats[chat] ?? 0) + 1;
+  _sharedTimes(burnAt);
+  if (msgUid != null) {
+    _sharedUids[msgUid] = chat;
+    if (_sharedUids.length > 500) {
+      _sharedUids.remove(_sharedUids.keys.first);
+    }
+  }
+  if (await quietNow() || stale()) {
+    _sharedChats.remove(chat);
+    return null;
+  }
+  await _postShared(alert: alert);
+  return _sharedId;
+});
 
 // previews just went off, or a shared one is about to post: every chat's
 // own notification goes, and the shared one stands for them, quietly
@@ -828,7 +885,7 @@ Future<void> _sharedOverNamed({bool post = true}) async {
       if (a.id != null &&
           a.tag != null &&
           a.tag != _sharedTag &&
-          a.channelId == _messagesChannel) {
+          _named(a.channelId)) {
         named.add(a);
       }
     }
@@ -838,7 +895,7 @@ Future<void> _sharedOverNamed({bool post = true}) async {
   final chatOf = <String, String>{};
   final burns = <String, List<int?>>{};
   for (final e in [..._folds.entries]) {
-    if (e.value.channel != _messagesChannel) continue;
+    if (!_named(e.value.channel)) continue;
     chatOf[e.value.tag] = e.key;
     burns[e.value.tag] = [for (final l in e.value.lines) l.burnAt];
     _dropFold(e.key);
@@ -940,10 +997,17 @@ Future<int?> _ringFold({
   required String tag,
   required _Line line,
   bool support = false,
+  bool request = false,
 }) => _foldTurnOf<int?>(() async {
   // a decoy may have opened while this waited its turn
   if (await quietNow()) return null;
-  return _ringFoldNow(chat: chat, tag: tag, line: line, support: support);
+  return _ringFoldNow(
+    chat: chat,
+    tag: tag,
+    line: line,
+    support: support,
+    request: request,
+  );
 });
 
 Future<int?> _ringFoldNow({
@@ -951,13 +1015,20 @@ Future<int?> _ringFoldNow({
   required String tag,
   required _Line line,
   required bool support,
+  bool request = false,
 }) async {
   final gen = _clearGen;
   final chatGen = _chatGen[chat];
   bool stale() => gen != _clearGen || chatGen != _chatGen[chat];
   var fold = _folds[chat];
-  // a chat whose tag changed starts over
-  if (fold != null && fold.tag != tag) {
+  // a chat whose tag changed starts over, and one that was a request and is
+  // a chat now
+  final channel = support
+      ? _supportChannel
+      : request
+      ? _requestsChannel
+      : _messagesChannel;
+  if (fold != null && (fold.tag != tag || fold.channel != channel)) {
     _dropFold(chat);
     await cancelWithRetry(
       () => notifPlugin.cancel(id: fold!.id, tag: fold.tag),
@@ -973,7 +1044,8 @@ Future<int?> _ringFoldNow({
   }
   if (fold == null) {
     await _makeRoom();
-    fold = _Fold(tag, support ? _supportChannel : _messagesChannel);
+    if (request) await _makeRequestsChannel();
+    fold = _Fold(tag, channel);
   }
   if (stale()) return null;
   // the one rung last at the end
@@ -1001,7 +1073,7 @@ Future<void> _makeRoom() async {
       for (final a in await notifPlugin.getActiveNotifications())
         if (a.id != null &&
             a.tag != null &&
-            (a.channelId == _messagesChannel || a.channelId == _supportChannel))
+            (_named(a.channelId) || a.channelId == _supportChannel))
           a,
     ];
   } catch (e) {
@@ -1098,13 +1170,17 @@ Future<bool> _postFold(
     // a timed one newest takes the whole fold down with it, the untimed
     // lines above it too: they wait in the chat, unread
     final left = last.burnAt == null ? null : max(1, last.burnAt! - now);
+    final request = fold.channel == _requestsChannel;
+    // a request sounds and pops up only with its switch on
+    if (request && alert && !await loadRequestPopups()) alert = false;
     details = AndroidNotificationDetails(
-      _messagesChannel,
-      l10n.notificationsChannelName,
+      request ? _requestsChannel : _messagesChannel,
+      request ? l10n.notifRequestsChannel : l10n.notificationsChannelName,
       tag: fold.tag,
-      channelDescription:
-          l10n.notificationsNewEncryptedMessagesFromYourContacts,
-      importance: Importance.max,
+      channelDescription: request
+          ? l10n.notifRequestsChannelLine
+          : l10n.notificationsNewEncryptedMessagesFromYourContacts,
+      importance: request ? Importance.high : Importance.max,
       priority: Priority.high,
       fullScreenIntent: false,
       category: AndroidNotificationCategory.message,
@@ -1195,17 +1271,20 @@ Future<int?> showMessageNotification({
   String? msgUid,
   int? burnAt,
   bool hidden = false,
+  // from someone not added yet: rings only with its switch on
+  bool request = false,
 }) async {
   // a decoy session is open: no notification at all
   if (await quietNow()) return null;
+  final ring = !request || await loadRequestPopups();
   // plain wins over the preview setting: nothing of the message, or of
   // kryfo, in any field
   if (await loadNotifPlain()) {
-    return _showPlain(chat: chat, tag: tag, msgUid: msgUid);
+    return _showPlain(chat: chat, tag: tag, msgUid: msgUid, silent: !ring);
   }
   // previews off: the one shared notification, for every chat
   if (await loadHideNotifContent()) {
-    return _ringShared(chat: chat, msgUid: msgUid, burnAt: burnAt);
+    return _ringShared(chat: chat, msgUid: msgUid, burnAt: burnAt, alert: ring);
   }
   // a hidden chat's never says whose or what, whatever the preview setting:
   // android's history and watches keep what a notification said
@@ -1223,5 +1302,6 @@ Future<int?> showMessageNotification({
       hidden: hidden,
       burnAt: burnAt,
     ),
+    request: request,
   );
 }

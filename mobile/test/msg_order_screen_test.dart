@@ -12,6 +12,7 @@ import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/widgets/react_taps.dart' show kReactTapWindow;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
 import 'package:kryfo/drafts.dart'
@@ -793,6 +794,8 @@ void main() {
     expect(y(t, 'late one'), lessThan(y(t, 'note 21')));
     // a tap shows its own time, not the time it came
     await t.tap(text('late one'));
+    // a single tap waits out the double tap window
+    await t.pump(kReactTapWindow);
     await settle(t, 2);
     final full = find.byKey(const ValueKey('full-date'));
     expect(full, findsOneWidget);
