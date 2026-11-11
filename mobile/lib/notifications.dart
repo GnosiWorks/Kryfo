@@ -102,12 +102,23 @@ bool _named(String? channel) =>
 
 const _requestPopupsKey = 'kryfo.requests.popups';
 
-/// whether a message request pops up and sounds. off unless turned on; a
-/// computer has no switch for it and shows requests as it always did
+/// whether a message request pops up and sounds. a new install starts with
+/// it off, a phone updating keeps them ringing as before
+/// (settleRequestPopups); a computer has no switch for it and shows
+/// requests as it always did
 Future<bool> loadRequestPopups() async {
   if (onDesktop) return true;
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(HaloContainer.everyday.key(_requestPopupsKey)) ?? false;
+  return prefs.getBool(HaloContainer.everyday.key(_requestPopupsKey)) ?? true;
+}
+
+/// the switch's start, once per install: on for a phone that had an
+/// identity before this version, off for a new one
+Future<void> settleRequestPopups({required bool existing}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final k = HaloContainer.everyday.key(_requestPopupsKey);
+  if (prefs.containsKey(k)) return;
+  await prefs.setBool(k, existing);
 }
 
 Future<void> saveRequestPopups(bool on) async {

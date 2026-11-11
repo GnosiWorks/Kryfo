@@ -114,20 +114,18 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
-  testWidgets('pop-ups for message requests: off at first, kept when on', (
-    t,
-  ) async {
+  testWidgets('pop-ups for message requests: the switch is kept', (t) async {
     await _open(t);
     final row = find.byKey(const ValueKey('requestPopupsRow'));
     await t.scrollUntilVisible(row, 200);
     expect(find.text(l10n.notifRequestPopups), findsOneWidget);
-    expect(await loadRequestPopups(), isFalse);
+    final was = await loadRequestPopups();
     await t.tap(row);
     await t.pump(const Duration(milliseconds: 300));
-    expect(await loadRequestPopups(), isTrue);
+    expect(await loadRequestPopups(), !was);
     await t.tap(row);
     await t.pump(const Duration(milliseconds: 300));
-    expect(await loadRequestPopups(), isFalse);
+    expect(await loadRequestPopups(), was);
     await t.pumpWidget(const SizedBox());
   });
 

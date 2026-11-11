@@ -176,8 +176,8 @@ void main() {
   });
 
   group('message requests', () {
-    test('off by default: on their own channel, no sound, no pop-up', () async {
-      final shade = _start();
+    test('off: on their own channel, no sound, no pop-up', () async {
+      final shade = _start(popups: false);
       expect(await loadRequestPopups(), isFalse);
       await _ring('stranger', 'New request', uid: 'r1', request: true);
       final s = _lastOf(shade, 'stranger');
@@ -199,6 +199,23 @@ void main() {
       expect(s.d.importance, Importance.high);
     });
 
+    test(
+      'a new install starts off, a phone updating keeps them ringing',
+      () async {
+        _start();
+        // not settled yet: as before
+        expect(await loadRequestPopups(), isTrue);
+        await settleRequestPopups(existing: false);
+        expect(await loadRequestPopups(), isFalse);
+        // once settled, a later start leaves it
+        await settleRequestPopups(existing: true);
+        expect(await loadRequestPopups(), isFalse);
+        _start();
+        await settleRequestPopups(existing: true);
+        expect(await loadRequestPopups(), isTrue);
+      },
+    );
+
     test('the switch is kept', () async {
       _start();
       await saveRequestPopups(true);
@@ -208,14 +225,14 @@ void main() {
     });
 
     test('previews off: the shared one takes it in quietly', () async {
-      final shade = _start(hide: true);
+      final shade = _start(hide: true, popups: false);
       await _ring('stranger', 'New request', uid: 'r1', request: true);
       expect(shade.shown.last.d.silent, isTrue);
       expect(shade.shown.last.title, 'Kryfo');
     });
 
     test('accepted, the chat starts over on the messages channel', () async {
-      final shade = _start();
+      final shade = _start(popups: false);
       await _ring('stranger', 'New request', uid: 'r1', request: true);
       await _ring('stranger', 'hello', uid: 'r2');
       expect(_lastOf(shade, 'stranger').d.channelId, 'halo_messages_v2');
