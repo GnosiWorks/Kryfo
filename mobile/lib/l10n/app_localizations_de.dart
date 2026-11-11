@@ -12325,4 +12325,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'An: Eine neue Anfrage erscheint mit Ton. Aus: Sie wartet leise in deinen Benachrichtigungen.';
+
+  @override
+  String get autoGetFilesWait =>
+      'Dateien werden geladen, wenn du sie antippst.';
 }

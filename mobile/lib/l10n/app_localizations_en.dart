@@ -12179,4 +12179,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'On, a new request pops up with a sound. Off, it waits quietly in your notifications.';
+
+  @override
+  String get autoGetFilesWait => 'Files download when you tap them.';
 }

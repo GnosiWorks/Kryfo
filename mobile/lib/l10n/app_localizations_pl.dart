@@ -12414,4 +12414,7 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Włączone: nowa prośba pojawia się z dźwiękiem. Wyłączone: czeka cicho w powiadomieniach.';
+
+  @override
+  String get autoGetFilesWait => 'Pliki pobierają się, gdy je stukniesz.';
 }

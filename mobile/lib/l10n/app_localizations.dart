@@ -19506,6 +19506,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On, a new request pops up with a sound. Off, it waits quietly in your notifications.'**
   String get notifRequestPopupsHint;
+
+  /// automatic download screen: after the voice line. files never download by themselves
+  ///
+  /// In en, this message translates to:
+  /// **'Files download when you tap them.'**
+  String get autoGetFilesWait;
 }
 
 class _AppLocalizationsDelegate

@@ -12318,4 +12318,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك.';
+
+  @override
+  String get autoGetFilesWait => 'تُنزَّل الملفات عندما تنقر عليها.';
 }

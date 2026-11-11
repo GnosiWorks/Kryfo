@@ -11512,6 +11512,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notifRequestPopupsHint => '开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。';
+
+  @override
+  String get autoGetFilesWait => '文件在你点按后才会下载。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22902,4 +22905,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notifRequestPopupsHint => '開啟時，新請求會彈出並響鈴。關閉時，它會安靜地留在通知中。';
+
+  @override
+  String get autoGetFilesWait => '檔案在你點按後才會下載。';
 }

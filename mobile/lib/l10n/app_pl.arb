@@ -3201,5 +3201,6 @@
   "notifRequestsChannel": "Prośby o wiadomość",
   "notifRequestsChannelLine": "Pierwsze wiadomości od osób, których jeszcze nie dodano",
   "notifRequestPopups": "Wyskakujące powiadomienia o prośbach",
-  "notifRequestPopupsHint": "Włączone: nowa prośba pojawia się z dźwiękiem. Wyłączone: czeka cicho w powiadomieniach."
+  "notifRequestPopupsHint": "Włączone: nowa prośba pojawia się z dźwiękiem. Wyłączone: czeka cicho w powiadomieniach.",
+  "autoGetFilesWait": "Pliki pobierają się, gdy je stukniesz."
 }

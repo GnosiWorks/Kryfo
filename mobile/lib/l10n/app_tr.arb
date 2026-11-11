@@ -3201,5 +3201,6 @@
   "notifRequestsChannel": "Mesaj istekleri",
   "notifRequestsChannelLine": "Henüz eklemediğin kişilerden gelen ilk mesajlar",
   "notifRequestPopups": "Mesaj istekleri için açılır bildirim",
-  "notifRequestPopupsHint": "Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler."
+  "notifRequestPopupsHint": "Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler.",
+  "autoGetFilesWait": "Dosyalar, onlara dokunduğunda iner."
 }

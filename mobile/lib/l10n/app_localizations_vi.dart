@@ -12173,4 +12173,7 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Bật: yêu cầu mới hiện lên kèm âm thanh. Tắt: yêu cầu nằm yên trong thông báo của bạn.';
+
+  @override
+  String get autoGetFilesWait => 'Tệp được tải về khi bạn chạm vào.';
 }

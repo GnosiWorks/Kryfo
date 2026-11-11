@@ -3201,5 +3201,6 @@
   "notifRequestsChannel": "Demandes de message",
   "notifRequestsChannelLine": "Premiers messages de personnes que tu n'as pas encore ajoutées",
   "notifRequestPopups": "Pop-ups pour les demandes de message",
-  "notifRequestPopupsHint": "Activé, une nouvelle demande s'affiche avec un son. Désactivé, elle attend en silence dans tes notifications."
+  "notifRequestPopupsHint": "Activé, une nouvelle demande s'affiche avec un son. Désactivé, elle attend en silence dans tes notifications.",
+  "autoGetFilesWait": "Les fichiers se téléchargent quand tu les touches."
 }

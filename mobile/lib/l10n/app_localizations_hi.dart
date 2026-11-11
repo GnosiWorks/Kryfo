@@ -12186,4 +12186,8 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'चालू होने पर नया अनुरोध आवाज़ के साथ दिखता है। बंद होने पर वह चुपचाप आपकी सूचनाओं में रहता है।';
+
+  @override
+  String get autoGetFilesWait =>
+      'फ़ाइलें तब डाउनलोड होती हैं जब तुम उन पर टैप करते हो।';
 }

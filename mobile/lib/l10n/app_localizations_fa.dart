@@ -12197,4 +12197,7 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'روشن: درخواست تازه با صدا نمایش داده می‌شود. خاموش: بی‌صدا در اعلان‌هایت می‌ماند.';
+
+  @override
+  String get autoGetFilesWait => 'فایل‌ها وقتی رویشان بزنی دانلود می‌شوند.';
 }

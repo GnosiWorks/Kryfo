@@ -12280,4 +12280,7 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Attivo, una nuova richiesta compare con un suono. Disattivo, aspetta in silenzio tra le notifiche.';
+
+  @override
+  String get autoGetFilesWait => 'I file si scaricano quando li tocchi.';
 }

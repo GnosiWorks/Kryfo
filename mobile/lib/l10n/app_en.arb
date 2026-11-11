@@ -15353,5 +15353,9 @@
   "notifRequestPopupsHint": "On, a new request pops up with a sound. Off, it waits quietly in your notifications.",
   "@notifRequestPopupsHint": {
     "description": "screens/notifications_screen.dart: under the request pop-ups switch"
+  },
+  "autoGetFilesWait": "Files download when you tap them.",
+  "@autoGetFilesWait": {
+    "description": "automatic download screen: after the voice line. files never download by themselves"
   }
 }

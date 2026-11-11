@@ -12184,4 +12184,7 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Aktif, permintaan baru muncul dengan suara. Nonaktif, permintaan menunggu tanpa suara di notifikasimu.';
+
+  @override
+  String get autoGetFilesWait => 'File diunduh saat kamu mengetuknya.';
 }

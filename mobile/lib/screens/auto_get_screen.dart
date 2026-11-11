@@ -97,7 +97,7 @@ class _AutoGetScreenState extends State<AutoGetScreen> {
             ),
             HaloGroup(
               children: [
-                for (final k in GetKind.values)
+                for (final k in kAutoGetChoices)
                   HaloRow(
                     icon: _glyph(k),
                     label: getKindName(k),
@@ -110,7 +110,7 @@ class _AutoGetScreenState extends State<AutoGetScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
               child: Text(
-                l10n.autoGetVoice,
+                '${l10n.autoGetVoice} ${l10n.autoGetFilesWait}',
                 style: HaloType.sans(size: 12.5, color: HaloColors.text),
               ),
             ),

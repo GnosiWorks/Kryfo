@@ -12318,4 +12318,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Activé, une nouvelle demande s\'affiche avec un son. Désactivé, elle attend en silence dans tes notifications.';
+
+  @override
+  String get autoGetFilesWait =>
+      'Les fichiers se téléchargent quand tu les touches.';
 }

@@ -12370,4 +12370,7 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Увімкнено: новий запит спливає зі звуком. Вимкнено: він тихо чекає в сповіщеннях.';
+
+  @override
+  String get autoGetFilesWait => 'Файли завантажуються, коли ви їх торкаєтесь.';
 }

@@ -3201,5 +3201,6 @@
   "notifRequestsChannel": "Pedidos de mensagem",
   "notifRequestsChannelLine": "Primeiras mensagens de pessoas que você ainda não adicionou",
   "notifRequestPopups": "Pop-ups para pedidos de mensagem",
-  "notifRequestPopupsHint": "Ligado, um pedido novo aparece com som. Desligado, ele espera em silêncio nas suas notificações."
+  "notifRequestPopupsHint": "Ligado, um pedido novo aparece com som. Desligado, ele espera em silêncio nas suas notificações.",
+  "autoGetFilesWait": "Os arquivos são baixados quando você toca neles."
 }

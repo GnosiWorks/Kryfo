@@ -12372,4 +12372,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Включено: новый запрос всплывает со звуком. Выключено: он тихо ждёт в уведомлениях.';
+
+  @override
+  String get autoGetFilesWait =>
+      'Файлы скачиваются, когда вы на них нажимаете.';
 }

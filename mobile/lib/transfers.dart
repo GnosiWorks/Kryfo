@@ -89,14 +89,16 @@ GetKind? getKindOf(String? fileName) {
   return GetKind.file;
 }
 
-/// photos come on any network, videos and files on wi-fi: a file waiting
-/// on the service is a file kept there longer, so most come on their own,
-/// and mobile data is not spent on the big ones unasked
+/// photos come on any network, videos on wi-fi, and a file never comes on
+/// its own: it always waits for a tap, whatever was set before
 const kAutoGetDefaults = {
   GetKind.photo: AutoGet.always,
   GetKind.video: AutoGet.wifi,
-  GetKind.file: AutoGet.wifi,
+  GetKind.file: AutoGet.never,
 };
+
+/// the kinds a person may set: a file is not one of them
+const kAutoGetChoices = [GetKind.photo, GetKind.video];
 
 const kAutoGetKeys = {
   GetKind.photo: 'kryfo.get.photo',
@@ -104,9 +106,10 @@ const kAutoGetKeys = {
   GetKind.file: 'kryfo.get.file',
 };
 
-AutoGet _autoGetOf(String? s, GetKind k) =>
-    AutoGet.values.where((v) => v.name == s).firstOrNull ??
-    kAutoGetDefaults[k]!;
+AutoGet _autoGetOf(String? s, GetKind k) => k == GetKind.file
+    ? AutoGet.never
+    : AutoGet.values.where((v) => v.name == s).firstOrNull ??
+          kAutoGetDefaults[k]!;
 
 /// each kind's setting, as kept for [c]
 Future<Map<GetKind, AutoGet>> loadAutoGet([
@@ -131,6 +134,8 @@ Future<void> saveAutoGet(
 /// a file of [kind] comes on its own now. [unmetered]: wi-fi or a cable
 bool autoGets(Map<GetKind, AutoGet> set, GetKind? kind, bool unmetered) {
   if (kind == null) return true;
+  // a file waits for a tap, always
+  if (kind == GetKind.file) return false;
   return switch (set[kind] ?? kAutoGetDefaults[kind]!) {
     AutoGet.always => true,
     AutoGet.wifi => unmetered,

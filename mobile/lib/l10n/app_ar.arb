@@ -3201,5 +3201,6 @@
   "notifRequestsChannel": "طلبات المراسلة",
   "notifRequestsChannelLine": "أولى الرسائل من أشخاص لم تضفهم بعد",
   "notifRequestPopups": "نوافذ منبثقة لطلبات المراسلة",
-  "notifRequestPopupsHint": "عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك."
+  "notifRequestPopupsHint": "عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك.",
+  "autoGetFilesWait": "تُنزَّل الملفات عندما تنقر عليها."
 }

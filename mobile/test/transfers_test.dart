@@ -93,8 +93,19 @@ void main() {
     });
 
     test('never is never, on wi-fi too', () {
-      final set = {GetKind.file: AutoGet.never};
-      expect(autoGets(set, GetKind.file, true), isFalse);
+      final set = {GetKind.video: AutoGet.never};
+      expect(autoGets(set, GetKind.video, true), isFalse);
+    });
+
+    test('a file always waits for a tap, whatever was kept', () async {
+      expect(autoGets({GetKind.file: AutoGet.always}, GetKind.file, true), isFalse);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        HaloContainer.everyday.key(kAutoGetKeys[GetKind.file]!),
+        'always',
+      );
+      expect((await loadAutoGet())[GetKind.file], AutoGet.never);
+      expect(kAutoGetChoices, isNot(contains(GetKind.file)));
     });
 
     test('each identity keeps its own', () async {

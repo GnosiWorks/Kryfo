@@ -12275,4 +12275,7 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Activado, una solicitud nueva aparece con sonido. Desactivado, espera en silencio en tus notificaciones.';
+
+  @override
+  String get autoGetFilesWait => 'Los archivos se descargan cuando los tocas.';
 }

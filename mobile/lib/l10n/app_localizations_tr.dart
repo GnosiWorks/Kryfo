@@ -12206,4 +12206,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler.';
+
+  @override
+  String get autoGetFilesWait => 'Dosyalar, onlara dokunduğunda iner.';
 }
