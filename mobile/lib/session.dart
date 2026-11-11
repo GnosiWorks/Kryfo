@@ -18,7 +18,7 @@ import 'devchat/support.dart' show SupportChats;
 import 'devices/own_sync.dart' show OwnChat, kOwnNotes, ownNoted;
 import 'dlog.dart';
 import 'drafts.dart' show KeptDraft;
-import 'main.dart' show HaloDb, kFrameReaction, kFrameUnsend, wallKey;
+import 'main.dart' show ChatHit, HaloDb, kFrameReaction, kFrameUnsend, wallKey;
 import 'media_send.dart' show cancelMediaSend, mediaInflight;
 import 'polls.dart' show PollSpec, PollVote;
 import 'scam_prefs.dart' show loadScamShieldOn;
@@ -522,6 +522,22 @@ class Session {
   );
   Future<List<Map<String, Object?>>> loadGroupMessages(String groupId) =>
       _ofGroup(groupId).loadGroupMessages(groupId);
+  // find in one chat (chat_find.dart): the chat's own database alone, so
+  // a hidden chat is searched only in the vault and the decoy in itself
+  Future<List<ChatHit>> chatHits(
+    String match, {
+    String? peerId,
+    String? groupId,
+    bool wordsOnly = false,
+  }) => (groupId != null ? _ofGroup(groupId) : _ofPeer(peerId ?? '')).chatHits(
+    match,
+    peerId: peerId,
+    groupId: groupId,
+    wordsOnly: wordsOnly,
+  );
+  Future<ChatHit?> chatStartAbove(int id, {String? peerId, String? groupId}) =>
+      (groupId != null ? _ofGroup(groupId) : _ofPeer(peerId ?? ''))
+          .chatStartAbove(id, peerId: peerId, groupId: groupId);
   Future<void> markRoomSeen(String groupId) =>
       _ofGroup(groupId).markRoomSeen(groupId);
   Future<void> setRoomJoining(String groupId, int? at) =>

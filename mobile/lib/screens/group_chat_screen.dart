@@ -8,6 +8,7 @@ import '../widgets/send_hold.dart';
 import '../widgets/tick_mark.dart';
 import '../lock_state.dart';
 import '../capture_watch.dart';
+import '../chat_find.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -88,12 +89,13 @@ import '../stickers/sticker_flight.dart';
 import '../stickers/sticker_pack.dart' show Sticker, StickerLibrary;
 import '../stickers/sticker_sheet.dart'
     show GifPick, PhoneGifPick, StickerButton, StickerPick, showStickerSheet;
-import '../gifs/gif_engine.dart' show appGifTabs;
+import '../gifs/gif_engine.dart' show appGifTabs, keepGifOf;
 import '../gifs/gif_picture.dart';
 import '../stickers/sticker_view.dart' show StickerBudget;
 import '../stickers/sticker_wire.dart' show StickerWire;
 import '../main.dart'
     show
+        ChatHit,
         typeLeaf,
         linkedRole,
         appState,
@@ -550,6 +552,52 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     unawaited(appState.leaveRoom(id));
   }
 
+  // quoted messages above the rows held, read once by uid: what their
+  // quote shows until they are brought in. null while asked
+  final Map<String, _GMsg?> _farQuotes = {};
+  // quoted uids the database no longer has
+  final Set<String> _farGone = {};
+
+  _GMsg? _farQuote(String uid) {
+    if (_farGone.contains(uid)) return null;
+    if (_farQuotes.containsKey(uid)) return _farQuotes[uid];
+    _farQuotes[uid] = null;
+    // after this frame: it is asked from a build
+    Future.microtask(() async {
+      Map<String, Object?>? r;
+      try {
+        r = await session.groupMessageIn(widget.groupId, uid);
+      } catch (_) {
+        r = null;
+      }
+      if (!mounted) return;
+      setState(() {
+        if (r == null) {
+          _farQuotes.remove(uid);
+          _farGone.add(uid);
+          return;
+        }
+        final from = r['peer_id'] as String;
+        _farQuotes[uid] = _GMsg(
+          sender: from,
+          senderName: _nameOf(from),
+          direction: r['direction'] as String,
+          text: (r['plaintext'] as String?) ?? '',
+          when: DateTime.fromMillisecondsSinceEpoch(rowWrittenAt(r)),
+          sticker: StickerWire.parse(r['sticker']),
+          burnAt: r['burn_at'] as int?,
+          burnSecs: (r['burn_secs'] as num?)?.toInt(),
+          burnUnseen: r['burn_unseen'] == 1,
+          msgUid: uid,
+          mediaPath: r['media_path'] as String?,
+          filePath: r['file_path'] as String?,
+          fileName: r['file_name'] as String?,
+        );
+      });
+    });
+    return null;
+  }
+
   String _nameOf(String id) {
     for (final c in appState.contacts) {
       final n = c.nickname;
@@ -654,11 +702,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // ctrl+f on the desktop's pane
   final _find = PaneFind();
   final _searchCtrl = TextEditingController();
-  List<int> _matches = [];
-  // what was looked for, and the same hits as _matches for a row's test
+  // what was looked for; the hits over the whole group (chat_find.dart),
+  // their row ids, and the one in view
   String _query = '';
+  final _hits = ChatFind();
   Set<int> _matchSet = {};
-  int _matchPos = 0;
+  int _matchAt = -1;
+  bool _finding = false;
+  late final _slow = SlowLine((on) {
+    if (mounted) setState(() => _finding = on);
+  });
   // what this group shows behind it (wallpaper.dart)
   ChatWall _wall = ChatWall.none;
   static const _pageSize = 60;
@@ -1028,7 +1081,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   }
 
   Future<void> _loadOlder() async {
-    if (_loadingOlder || !_hasMore || _searching) return;
+    if (_loadingOlder || !_hasMore) return;
     _loadingOlder = true;
     try {
       final oldest = _oldestHeld();
@@ -1178,7 +1231,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
       _me = await appState.meIn(widget.groupId);
       // keep whatever window the user has expanded to, so a mid-scroll
       // reaction does not collapse the list back to one page
-      final wantAll = _searching || _pagedOut || _messages.length > _pageSize;
+      final wantAll = _pagedOut || _messages.length > _pageSize;
       // opened on a message: the newest page, and the whole thread only
       // when it is further up than that
       final jumpTo = _didJump ? null : widget.jumpToUid;
@@ -1913,11 +1966,16 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     String? quotedAuthor;
     StickerWire? quotedSticker;
     if (m.replyTo != null) {
-      final orig = _messages.firstWhere(
-        (x) => x.msgUid == m.replyTo,
-        orElse: () =>
-            _GMsg(sender: '', direction: '', text: '', when: DateTime.now()),
-      );
+      final orig =
+          _messages.where((x) => x.msgUid == m.replyTo).firstOrNull ??
+          _farQuote(m.replyTo!) ??
+          _GMsg(
+            sender: '',
+            direction: '',
+            // one still being read shows no words yet, not a wrong "gone"
+            text: _farGone.contains(m.replyTo) ? '' : '…',
+            when: DateTime.now(),
+          );
       if (orig.direction.isNotEmpty) {
         quotedAuthor = orig.direction == 'out'
             ? l10n.groupChatYou
@@ -1950,14 +2008,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     // an in-chat search marks its hits and dims the rest, as the 1:1 does.
     // an album is a hit when its caption is
     final searchActive = _searching && _query.isNotEmpty;
-    final rowsAt = run == null
-        ? [i]
-        : [for (final x in members) _messages.indexOf(x)];
+    final rowsAt = [
+      for (final x in run == null ? [m] : members) x.rowid,
+    ];
     final isMatch = searchActive && rowsAt.any(_matchSet.contains);
-    final isCurrent =
-        searchActive &&
-        _matches.isNotEmpty &&
-        rowsAt.contains(_matches[_matchPos]);
+    final isCurrent = searchActive && rowsAt.contains(_matchAt);
     final animateIn = members.any((x) => x.fresh);
     for (final x in members) {
       x.fresh = false;
@@ -2118,14 +2173,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       dimmed: searchActive && !isMatch,
                       onReplyTap: m.replyTo == null
                           ? null
-                          : () {
-                              for (final x in _messages) {
-                                if (x.msgUid != null && x.msgUid == m.replyTo) {
-                                  _scrollToGroupMessage(x);
-                                  break;
-                                }
-                              }
-                            },
+                          : () => _toQuoted(m.replyTo!),
                     ),
                   ),
                 ),
@@ -2425,7 +2473,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final pick = await showStickerSheet(
       context,
       container: session.container,
-      gifs: appGifTabs(),
+      gifs: appGifTabs(chat: widget.groupId),
     );
     // the sheet hands focus back to the composer; the keyboard stays down
     FocusManager.instance.primaryFocus?.unfocus();
@@ -3913,7 +3961,21 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         target.filePath != null &&
         !isVoiceName(target.fileName) &&
         fileViewOf(fileFactsOrName(target.filePath!, target.fileName)) != null;
+    // a gif, anyone's, can be kept in the favourites, never one under the
+    // group's rules
+    final gifPath = shareOn?.mediaPath;
+    final gifOn = !kept && gifPath != null && knownGifFile(gifPath) == true;
     return [
+      if (gifOn)
+        MenuAction(
+          icon: Icons.star_outline_rounded,
+          label: l10n.gifFavAdd,
+          tint: HaloColors.amber,
+          onTap: () {
+            dismiss();
+            keepGifOf(context, gifPath, widget.groupId);
+          },
+        ),
       // a file kryfo can show opens here first, before any way out
       if (fileView)
         MenuAction(
@@ -4168,52 +4230,120 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     );
   }
 
-  void _openSearch() {
-    setState(() => _searching = true);
-    // matches should cover the whole chat, not just the loaded window.
-    if (_hasMore) _load();
-  }
+  void _openSearch() => setState(() => _searching = true);
 
   void _closeSearch() {
     setState(() {
       _searching = false;
       _searchCtrl.clear();
-      _matches = [];
+      _hits.clear();
       _query = '';
       _matchSet = {};
-      _matchPos = 0;
+      _matchAt = -1;
     });
   }
 
-  void _onQueryChanged(String q) {
-    final query = q.trim();
-    final matches = <int>[];
-    if (query.isNotEmpty) {
-      final lower = query.toLowerCase();
-      for (var i = 0; i < _messages.length; i++) {
+  // the whole group is looked in through its index; the newest hit first
+  Future<void> _onQueryChanged(String q) async {
+    final fresh = await _hits.look(
+      q,
+      (match) => session.chatHits(match, groupId: widget.groupId),
+      [
         // a sticker has no words; its emoji is not what was said
-        if (_messages[i].sticker == null &&
-            _messages[i].text.toLowerCase().contains(lower)) {
-          matches.add(i);
-        }
-      }
-    }
+        for (final m in _messages)
+          if (m.sticker == null)
+            (id: m.rowid, at: m.when.millisecondsSinceEpoch, text: m.text),
+      ],
+    );
+    if (!fresh || !mounted || !_searching) return;
     setState(() {
-      _query = query;
-      _matches = matches;
-      _matchSet = matches.toSet();
-      _matchPos = matches.isEmpty ? 0 : matches.length - 1;
+      _query = _hits.query;
+      _relight();
     });
-    if (matches.isNotEmpty) _scrollToIndex(matches[_matchPos]);
+    unawaited(_toHit());
+  }
+
+  // the hits' row ids for the rows' test, after the hits changed
+  void _relight() {
+    _matchSet = _hits.ids;
+    _matchAt = _hits.current ?? -1;
   }
 
   void _gotoMatch(int delta) {
-    if (_matches.isEmpty) return;
-    setState(() {
-      _matchPos = (_matchPos + delta) % _matches.length;
-      if (_matchPos < 0) _matchPos += _matches.length;
+    if (_hits.count == 0) return;
+    HapticFeedback.selectionClick();
+    _hits.step(delta);
+    setState(_relight);
+    unawaited(_toHit());
+  }
+
+  // to the hit in view: brought in first when it is above the rows held
+  Future<void> _toHit() async {
+    final id = _hits.current;
+    if (id == null) return;
+    final here = await _bringIn(id);
+    if (here == null) return;
+    if (!here) {
+      if (!mounted) return;
+      showHaloToast(context, l10n.chatMessageGone);
+      setState(() {
+        _hits.drop(id);
+        _relight();
+      });
+      return;
+    }
+    if (!mounted || _hits.current != id) return;
+    setState(_relight);
+    final at = _messages.lastIndexWhere((m) => m.rowid == id);
+    if (at >= 0) _scrollToIndex(at);
+  }
+
+  // row [id] among the rows held: the group's thread comes in whole once
+  // it is paged past the first page, so a far one brings it all. false
+  // when it is gone, null when it could not be brought in now
+  Future<bool?> _bringIn(int id) async {
+    if (_messages.any((m) => m.rowid == id)) return true;
+    if (!_loaded) return null;
+    return _slow.over(() async {
+      ChatHit? there;
+      try {
+        there = await session.chatStartAbove(id, groupId: widget.groupId);
+      } catch (e) {
+        dlog('find: start not read (${e.runtimeType})');
+        return null;
+      }
+      if (!mounted) return null;
+      if (there == null) return false;
+      _pagedOut = true;
+      await _load();
+      if (!mounted) return null;
+      return _messages.any((m) => m.rowid == id) ? true : null;
     });
-    _scrollToIndex(_matches[_matchPos]);
+  }
+
+  // a quote's message, wherever it is in the group
+  Future<void> _toQuoted(String uid) async {
+    var held = _messages.where((x) => x.msgUid == uid).firstOrNull;
+    if (held == null) {
+      Map<String, Object?>? r;
+      try {
+        r = await session.groupMessageIn(widget.groupId, uid);
+      } catch (e) {
+        dlog('quote: not read (${e.runtimeType})');
+        return;
+      }
+      final id = (r?['rowid'] as num?)?.toInt();
+      if (!mounted) return;
+      final here = id == null ? false : await _bringIn(id);
+      if (!mounted || here == null) return;
+      if (!here) {
+        showHaloToast(context, l10n.chatMessageGone);
+        return;
+      }
+      held = _messages.where((x) => x.msgUid == uid).firstOrNull;
+      if (held == null) return;
+    }
+    _scrollToGroupMessage(held);
   }
 
   // after the rough jump, rows above the target keep resizing as images and
@@ -4365,10 +4495,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await showPinsSheet(
       context,
       load: _loadPins,
-      onJump: (e) {
-        final at = _messages.indexWhere((m) => m.msgUid == e.uid);
-        if (at >= 0) _scrollToIndex(at);
-      },
+      // one far up the thread is brought in first
+      onJump: (e) => _toQuoted(e.uid),
       onUnpin: (e) => _setPinnedGroup(e.uid, false),
     );
   }
@@ -4789,6 +4917,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    _slow.dispose();
     // a sound of this group stops with it
     final playing = SoundPlayer.instance.item?.path;
     if (playing != null && _messages.any((m) => m.filePath == playing)) {
@@ -4963,8 +5092,9 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                   ? SearchHead(
                       key: const ValueKey('search'),
                       controller: _searchCtrl,
-                      matchCount: _matches.length,
-                      matchPos: _matches.isEmpty ? 0 : _matchPos + 1,
+                      matchCount: _hits.count,
+                      matchPos: _hits.shown,
+                      finding: _finding,
                       onChanged: _onQueryChanged,
                       onPrev: () => _gotoMatch(-1),
                       onNext: () => _gotoMatch(1),
@@ -7208,7 +7338,9 @@ class _GroupBubble extends StatelessWidget {
                               duration: const Duration(milliseconds: 820),
                               curve: Curves.easeOut,
                               builder: (context, t, child) => Opacity(
-                                opacity: (1 - t) * 0.92,
+                                opacity: motionStill(context)
+                                    ? 0.92
+                                    : (1 - t) * 0.92,
                                 child: Transform.scale(
                                   scale: motionStill(context)
                                       ? 1
