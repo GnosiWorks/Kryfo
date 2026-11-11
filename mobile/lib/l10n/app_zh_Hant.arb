@@ -3201,5 +3201,7 @@
   "homeGroupLine": "{name}：{preview}",
   "bannerOpen": "開啟聊天",
   "bannerOpenWith": "開啟與 {name} 的聊天",
-  "bannerNewMessages": "{count, plural, other{{count} 則新訊息}}"
+  "bannerNewMessages": "{count, plural, other{{count} 則新訊息}}",
+  "composerSendSilent": "靜音傳送",
+  "composerSendHoldHint": "長按查看更多選項"
 }

@@ -11518,6 +11518,12 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => '静音发送';
+
+  @override
+  String get composerSendHoldHint => '长按查看更多选项';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22914,4 +22920,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => '靜音傳送';
+
+  @override
+  String get composerSendHoldHint => '長按查看更多選項';
 }

@@ -12379,4 +12379,10 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'Отправить без звука';
+
+  @override
+  String get composerSendHoldHint => 'Удерживайте для других вариантов';
 }

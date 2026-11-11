@@ -819,6 +819,10 @@ class Session {
 
   Future<void> setPinned(String msgUid, bool pinned) async =>
       (await _ofUid(msgUid)).setPinned(msgUid, pinned);
+  Future<void> markSilent(String msgUid) async =>
+      (await _ofUid(msgUid)).markSilent(msgUid);
+  Future<bool> sentSilent(String msgUid) async =>
+      (await _ofUid(msgUid)).sentSilent(msgUid);
   Future<void> setPowNonce(String msgUid, int nonce) async =>
       (await _ofUid(msgUid)).setPowNonce(msgUid, nonce);
   Future<void> keepOpenerWire(String msgUid, String wire) async =>

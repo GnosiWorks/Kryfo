@@ -19506,6 +19506,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} new message} other{{count} new messages}}'**
   String bannerNewMessages(int count);
+
+  /// held send button: the menu row that sends the message without sound or vibration on the receiver's phone
+  ///
+  /// In en, this message translates to:
+  /// **'Send without sound'**
+  String get composerSendSilent;
+
+  /// screen reader hint on the send button: holding it opens more ways to send
+  ///
+  /// In en, this message translates to:
+  /// **'Hold for more options'**
+  String get composerSendHoldHint;
 }
 
 class _AppLocalizationsDelegate

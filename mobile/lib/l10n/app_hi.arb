@@ -3201,5 +3201,7 @@
   "homeGroupLine": "{name}: {preview}",
   "bannerOpen": "चैट खोलें",
   "bannerOpenWith": "{name} के साथ चैट खोलें",
-  "bannerNewMessages": "{count, plural, one{{count} नया संदेश} other{{count} नए संदेश}}"
+  "bannerNewMessages": "{count, plural, one{{count} नया संदेश} other{{count} नए संदेश}}",
+  "composerSendSilent": "बिना आवाज़ के भेजें",
+  "composerSendHoldHint": "और विकल्पों के लिए दबाकर रखें"
 }

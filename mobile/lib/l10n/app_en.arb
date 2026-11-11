@@ -15344,5 +15344,13 @@
         "format": "decimalPattern"
       }
     }
+  },
+  "composerSendSilent": "Send without sound",
+  "@composerSendSilent": {
+    "description": "held send button: the menu row that sends the message without sound or vibration on the receiver's phone"
+  },
+  "composerSendHoldHint": "Hold for more options",
+  "@composerSendHoldHint": {
+    "description": "screen reader hint on the send button: holding it opens more ways to send"
   }
 }

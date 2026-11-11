@@ -12323,4 +12323,10 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'Envoyer sans son';
+
+  @override
+  String get composerSendHoldHint => 'Maintenir pour plus d\'options';
 }

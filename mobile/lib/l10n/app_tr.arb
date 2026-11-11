@@ -3201,5 +3201,7 @@
   "homeGroupLine": "{name}: {preview}",
   "bannerOpen": "Sohbeti aç",
   "bannerOpenWith": "{name} ile sohbeti aç",
-  "bannerNewMessages": "{count, plural, other{{count} yeni mesaj}}"
+  "bannerNewMessages": "{count, plural, other{{count} yeni mesaj}}",
+  "composerSendSilent": "Sessiz gönder",
+  "composerSendHoldHint": "Daha fazla seçenek için basılı tutun"
 }

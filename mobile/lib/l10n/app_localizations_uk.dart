@@ -12377,4 +12377,10 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'Надіслати без звуку';
+
+  @override
+  String get composerSendHoldHint => 'Утримуйте, щоб побачити інші варіанти';
 }

@@ -1619,8 +1619,8 @@ extension AppStateArrivals on AppState {
         on: db,
         msgUid: env.msgUid,
         burnAt: burnFromArrival,
-        // said already by the banner
-        silent: shown,
+        // sent without sound, or said already by the banner
+        silent: env.silent || shown,
       );
     }
     return to;

@@ -12191,4 +12191,10 @@ class AppLocalizationsHi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'बिना आवाज़ के भेजें';
+
+  @override
+  String get composerSendHoldHint => 'और विकल्पों के लिए दबाकर रखें';
 }

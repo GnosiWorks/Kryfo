@@ -3201,5 +3201,7 @@
   "homeGroupLine": "{name}: ⁨{preview}⁩",
   "bannerOpen": "باز کردن گفتگو",
   "bannerOpenWith": "باز کردن گفتگو با {name}",
-  "bannerNewMessages": "{count, plural, other{{count} پیام تازه}}"
+  "bannerNewMessages": "{count, plural, other{{count} پیام تازه}}",
+  "composerSendSilent": "ارسال بی‌صدا",
+  "composerSendHoldHint": "برای گزینه‌های بیشتر نگه دارید"
 }

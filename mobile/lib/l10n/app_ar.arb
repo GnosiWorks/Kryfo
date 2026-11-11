@@ -3201,5 +3201,7 @@
   "homeGroupLine": "{name}: ⁨{preview}⁩",
   "bannerOpen": "افتح المحادثة",
   "bannerOpenWith": "افتح المحادثة مع {name}",
-  "bannerNewMessages": "{count, plural, zero{لا رسائل جديدة} one{رسالة جديدة واحدة} two{رسالتان جديدتان} few{{count} رسائل جديدة} many{{count} رسالة جديدة} other{{count} رسالة جديدة}}"
+  "bannerNewMessages": "{count, plural, zero{لا رسائل جديدة} one{رسالة جديدة واحدة} two{رسالتان جديدتان} few{{count} رسائل جديدة} many{{count} رسالة جديدة} other{{count} رسالة جديدة}}",
+  "composerSendSilent": "إرسال بدون صوت",
+  "composerSendHoldHint": "اضغط مطولًا لمزيد من الخيارات"
 }

@@ -3201,5 +3201,7 @@
   "homeGroupLine": "{name}: {preview}",
   "bannerOpen": "Mở cuộc trò chuyện",
   "bannerOpenWith": "Mở cuộc trò chuyện với {name}",
-  "bannerNewMessages": "{count, plural, other{{count} tin nhắn mới}}"
+  "bannerNewMessages": "{count, plural, other{{count} tin nhắn mới}}",
+  "composerSendSilent": "Gửi không âm thanh",
+  "composerSendHoldHint": "Nhấn giữ để xem thêm tùy chọn"
 }

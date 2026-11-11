@@ -12328,4 +12328,10 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'إرسال بدون صوت';
+
+  @override
+  String get composerSendHoldHint => 'اضغط مطولًا لمزيد من الخيارات';
 }

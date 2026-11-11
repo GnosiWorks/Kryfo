@@ -12177,4 +12177,10 @@ class AppLocalizationsVi extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'Gửi không âm thanh';
+
+  @override
+  String get composerSendHoldHint => 'Nhấn giữ để xem thêm tùy chọn';
 }

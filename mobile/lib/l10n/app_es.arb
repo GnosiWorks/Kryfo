@@ -3201,5 +3201,7 @@
   "homeGroupLine": "{name}: {preview}",
   "bannerOpen": "Abrir el chat",
   "bannerOpenWith": "Abrir el chat con {name}",
-  "bannerNewMessages": "{count, plural, one{{count} mensaje nuevo} other{{count} mensajes nuevos}}"
+  "bannerNewMessages": "{count, plural, one{{count} mensaje nuevo} other{{count} mensajes nuevos}}",
+  "composerSendSilent": "Enviar sin sonido",
+  "composerSendHoldHint": "Mantén pulsado para más opciones"
 }

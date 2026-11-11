@@ -12201,4 +12201,10 @@ class AppLocalizationsFa extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'ارسال بی‌صدا';
+
+  @override
+  String get composerSendHoldHint => 'برای گزینه‌های بیشتر نگه دارید';
 }

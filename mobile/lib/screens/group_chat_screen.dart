@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'dart:math' as math;
+import '../widgets/send_hold.dart';
 import '../widgets/tick_mark.dart';
 import '../lock_state.dart';
 import '../capture_watch.dart';
@@ -2195,7 +2196,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     }
   }
 
-  Future<void> _send() async {
+  // [silent]: held send, the members' phones post it without sound
+  Future<void> _send({bool silent = false}) async {
     if (onDesktop && !_tray.isEmpty) {
       _composerFocus.requestFocus();
       return _sendTray();
@@ -2245,6 +2247,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         replyTo: replyToUid,
         burnSeconds: burnSeconds,
         preview: preview,
+        silent: silent,
       ),
     );
     try {
@@ -5305,6 +5308,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                 },
                                 onLongPressGhost: _showBurnPicker,
                                 onSend: _send,
+                                onSendSilent: () => _send(silent: true),
                                 onAttach: _showAttachSheet,
                                 onStickers: _showStickers,
                                 onCamera: _openGroupCamera,
@@ -5803,6 +5807,8 @@ class _Composer extends StatelessWidget {
   final VoidCallback onToggleGhost;
   final VoidCallback onLongPressGhost;
   final VoidCallback onSend;
+  // held send: posted without sound on the members' phones
+  final VoidCallback? onSendSilent;
   final VoidCallback onAttach;
   final VoidCallback onStickers;
   final VoidCallback onCamera;
@@ -5824,6 +5830,7 @@ class _Composer extends StatelessWidget {
     required this.onToggleGhost,
     required this.onLongPressGhost,
     required this.onSend,
+    this.onSendSilent,
     required this.onAttach,
     required this.onStickers,
     required this.onCamera,
@@ -6070,33 +6077,37 @@ class _Composer extends StatelessWidget {
   }
 
   Widget _sendPill(bool canSend) {
-    return PressScale(
-      label: l10n.commonSend,
-      onTap: canSend ? onSend : null,
-      scale: 0.86,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: canSend ? HaloColors.amber : HaloColors.surface3,
-          shape: BoxShape.circle,
-          boxShadow: canSend
-              ? [
-                  BoxShadow(
-                    color: HaloColors.amber.withValues(alpha: 0.35),
-                    blurRadius: 12,
-                    spreadRadius: -1,
-                  ),
-                ]
-              : null,
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          Icons.arrow_upward_rounded,
-          color: canSend ? HaloColors.onAmber : HaloColors.text3,
-          size: 20,
+    // held: "Send without sound"
+    return SendHold(
+      onSilent: canSend ? onSendSilent : null,
+      child: PressScale(
+        label: l10n.commonSend,
+        onTap: canSend ? onSend : null,
+        scale: 0.86,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: canSend ? HaloColors.amber : HaloColors.surface3,
+            shape: BoxShape.circle,
+            boxShadow: canSend
+                ? [
+                    BoxShadow(
+                      color: HaloColors.amber.withValues(alpha: 0.35),
+                      blurRadius: 12,
+                      spreadRadius: -1,
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.arrow_upward_rounded,
+            color: canSend ? HaloColors.onAmber : HaloColors.text3,
+            size: 20,
+          ),
         ),
       ),
     );

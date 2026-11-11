@@ -12280,4 +12280,10 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'Enviar sem som';
+
+  @override
+  String get composerSendHoldHint => 'Mantenha pressionado para mais opções';
 }

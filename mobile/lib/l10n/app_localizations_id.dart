@@ -12188,4 +12188,10 @@ class AppLocalizationsId extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'Kirim tanpa suara';
+
+  @override
+  String get composerSendHoldHint => 'Tahan untuk opsi lainnya';
 }

@@ -67,6 +67,7 @@ import '../widgets/row_anchor.dart';
 import '../widgets/video_bubble.dart';
 import '../sound_player.dart' show SoundItem, SoundPlayer;
 import '../recent_files.dart';
+import '../widgets/send_hold.dart';
 import '../widgets/send_sheet.dart';
 import '../widgets/file_actions.dart'
     show
@@ -3850,12 +3851,23 @@ class _ChatScreenState extends State<ChatScreen>
         await session.setPowNonce(msg.msgUid!, nonce);
         if (!mounted) return;
       }
+      // it goes again as quietly as it first went; a row that will not
+      // say rings, as an older app does
+      var silent = false;
+      if (msg.msgUid case final u?) {
+        try {
+          silent = await session.sentSilent(u);
+        } catch (e) {
+          dlog('retry: silent not read (${e.runtimeType})');
+        }
+      }
       final String cipher;
       final int sealedOn;
       try {
         final wrapped = await wrapMessage(
           msg.text,
           msgUid: msg.msgUid,
+          silent: silent,
           powNonce: nonce,
           powBitsUsed: nonce == null ? null : powBits,
           replyTo: msg.replyTo,
@@ -5156,7 +5168,8 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  Future<void> _send() async {
+  // [silent]: held send, the far side posts it without sound
+  Future<void> _send({bool silent = false}) async {
     if (onDesktop && !_tray.isEmpty && !(_devOpening?.busy ?? false)) {
       _composerFocus.requestFocus();
       return _sendTray();
@@ -5166,7 +5179,7 @@ class _ChatScreenState extends State<ChatScreen>
     // a computer: the next words go straight on, the send button's click
     // took the field's focus
     if (onDesktop) _composerFocus.requestFocus();
-    await _sendBody(text);
+    await _sendBody(text, silent: silent);
   }
 
   // the one way out for words: a sticker rides it with its emoji as the
@@ -5178,6 +5191,7 @@ class _ChatScreenState extends State<ChatScreen>
     StickerWire? sticker,
     void Function(_Msg)? onRow,
     bool fromComposer = true,
+    bool silent = false,
   }) async {
     // a stranger gets 2 messages, then the chat locks until they accept. the
     // input bar shows it; this guards the send itself.
@@ -5257,6 +5271,8 @@ class _ChatScreenState extends State<ChatScreen>
           preview: preview == null ? null : jsonEncode(preview),
           sticker: sticker?.value,
         );
+        // its retries go as quietly
+        if (silent) await session.markSilent(msgUid);
       } catch (e) {
         // a throw must not leave it counted: that holds the auto retry
         // until the chat is reopened
@@ -5318,6 +5334,7 @@ class _ChatScreenState extends State<ChatScreen>
           ),
           sticker: sticker?.value,
           writtenAt: msg.when.millisecondsSinceEpoch,
+          silent: silent,
         );
         // an opener goes again as these very words (sendOpenersAgain)
         if (!_backPaired) {
@@ -7864,6 +7881,11 @@ class _ChatScreenState extends State<ChatScreen>
                                 controller: _msgCtrl,
                                 focusNode: _composerFocus,
                                 onSend: _send,
+                                // a request waits for their accept: nothing
+                                // to make quiet yet
+                                onSendSilent: _requestLocked
+                                    ? null
+                                    : () => _send(silent: true),
                                 disguise: _voiceDisguise,
                                 disguiseLocked: _devAnon,
                                 onVoice: _sendVoice,
@@ -10502,6 +10524,8 @@ class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
   final VoidCallback onSend;
+  // held send: the same words, posted without sound on their side
+  final VoidCallback? onSendSilent;
   final bool ghost;
   final VoidCallback onToggleGhost;
   final bool secure;
@@ -10529,6 +10553,7 @@ class _Composer extends StatelessWidget {
     required this.controller,
     this.focusNode,
     required this.onSend,
+    this.onSendSilent,
     required this.ghost,
     required this.onToggleGhost,
     required this.secure,
@@ -10771,46 +10796,50 @@ class _Composer extends StatelessWidget {
                         )
                       : KeyedSubtree(
                           key: const ValueKey('send'),
-                          child: PressScale(
-                            label: l10n.commonSend,
-                            onTap: canSend ? onSend : null,
-                            scale: 0.86,
-                            haptic: false, // _send already fires its own impact
-                            child: AnimatedScale(
-                              duration: still
-                                  ? Duration.zero
-                                  : const Duration(milliseconds: 200),
-                              curve: Curves.easeOut,
-                              scale: canSend ? 1.0 : 0.88,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
+                          // held: "Send without sound"
+                          child: SendHold(
+                            onSilent: canSend ? onSendSilent : null,
+                            child: PressScale(
+                              label: l10n.commonSend,
+                              onTap: canSend ? onSend : null,
+                              scale: 0.86,
+                              haptic:
+                                  false, // _send already fires its own impact
+                              child: AnimatedScale(
+                                duration: still
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 200),
                                 curve: Curves.easeOut,
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: canSend
-                                      ? HaloColors.amber
-                                      : HaloColors.surface3,
-                                  boxShadow: canSend
-                                      ? [
-                                          BoxShadow(
-                                            color: HaloColors.amber.withValues(
-                                              alpha: 0.35,
+                                scale: canSend ? 1.0 : 0.88,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeOut,
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: canSend
+                                        ? HaloColors.amber
+                                        : HaloColors.surface3,
+                                    boxShadow: canSend
+                                        ? [
+                                            BoxShadow(
+                                              color: HaloColors.amber
+                                                  .withValues(alpha: 0.35),
+                                              blurRadius: 12,
+                                              spreadRadius: -1,
                                             ),
-                                            blurRadius: 12,
-                                            spreadRadius: -1,
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.arrow_upward,
-                                  size: 18,
-                                  color: canSend
-                                      ? HaloColors.onAmber
-                                      : HaloColors.text3,
+                                          ]
+                                        : null,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    Icons.arrow_upward,
+                                    size: 18,
+                                    color: canSend
+                                        ? HaloColors.onAmber
+                                        : HaloColors.text3,
+                                  ),
                                 ),
                               ),
                             ),

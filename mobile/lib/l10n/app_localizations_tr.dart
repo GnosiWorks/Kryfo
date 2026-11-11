@@ -12210,4 +12210,10 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get composerSendSilent => 'Sessiz gönder';
+
+  @override
+  String get composerSendHoldHint => 'Daha fazla seçenek için basılı tutun';
 }
