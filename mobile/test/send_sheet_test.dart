@@ -59,6 +59,7 @@ void main() {
     List<SendPick> recent = const [],
     TextDirection dir = TextDirection.ltr,
     double scale = 1,
+    bool spoilers = true,
   }) async {
     result = null;
     t.view.physicalSize = const Size(390, 844);
@@ -84,6 +85,7 @@ void main() {
                     pickGallery: () async => gallery,
                     pickFiles: () async => files,
                     recent: () async => recent,
+                    spoilers: spoilers,
                   );
                 },
                 child: const Text('open'),
@@ -270,6 +272,18 @@ void main() {
       await t.pumpAndSettle();
       expect(result!.picks.single.name, 'lease draft.pdf');
       expect(result!.picks.single.path, b.path);
+    });
+
+    testWidgets('no spoiler chip where a phone on the other end would show '
+        'it plain', (t) async {
+      final a = pick('a.jpg', SendTab.gallery, media: true);
+      await open(t, gallery: [a], spoilers: false);
+      await t.tap(find.text(l10n.sendSheetChoosePhotos));
+      await t.pumpAndSettle();
+      expect(find.text(l10n.traySpoiler), findsNothing);
+      await t.tap(find.text(l10n.sendSheetSend(1, '1')));
+      await t.pumpAndSettle();
+      expect(result!.spoilers, isEmpty);
     });
 
     testWidgets('a photo can be a spoiler, and as a file it is none', (

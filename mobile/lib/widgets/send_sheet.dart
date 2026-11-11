@@ -140,6 +140,8 @@ Future<SendSheetResult?> showSendSheet(
   String? galleryLabel,
   // the most one file may be, for the tray's line
   int most = kFreeFileBytes,
+  // photos may be marked spoilers: every phone on the other end blurs one
+  bool spoilers = false,
 }) {
   HapticFeedback.selectionClick();
   return showHaloSheet<SendSheetResult>(
@@ -154,6 +156,7 @@ Future<SendSheetResult?> showSendSheet(
       start: start,
       galleryLabel: galleryLabel,
       most: most,
+      spoilers: spoilers,
     ),
   );
 }
@@ -167,6 +170,7 @@ class SendSheet extends StatefulWidget {
   final SendTab start;
   final String? galleryLabel;
   final int most;
+  final bool spoilers;
   const SendSheet({
     super.key,
     required this.to,
@@ -177,6 +181,7 @@ class SendSheet extends StatefulWidget {
     this.start = SendTab.gallery,
     this.galleryLabel,
     this.most = kFreeFileBytes,
+    this.spoilers = false,
   });
 
   @override
@@ -284,7 +289,7 @@ class SendSheetState extends State<SendSheet> {
         asFiles: _asFiles,
         caption: _caption.text.trim(),
         // a photo that goes as a file is no spoiler
-        spoilers: _asFiles
+        spoilers: _asFiles || !widget.spoilers
             ? const {}
             : {
                 for (final p in _spoilers)
@@ -443,7 +448,7 @@ class SendSheetState extends State<SendSheet> {
                       most: widget.most,
                       onRemove: _remove,
                       onRename: _rename,
-                      onSpoiler: _spoiler,
+                      onSpoiler: widget.spoilers ? _spoiler : null,
                     ),
               count: _chosen.length,
               showAsFiles: anyMedia,

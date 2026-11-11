@@ -805,6 +805,7 @@ mixin _MessageRows {
       'burn_secs',
       'burn_at',
       'burn_unseen',
+      'spoiler',
     ];
     const chat = 'peer_id = ? AND group_id IS NULL';
     final parts = await Future.wait([

@@ -9,6 +9,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,11 +42,13 @@ import 'press_scale.dart';
 import 'sealed_picture.dart';
 import 'shots_line.dart' show KeptIn;
 import 'shared_files.dart';
+import 'spoiler_cover.dart';
 import '../voice_length.dart' show voiceClock, voiceFileMs;
 import 'confirm_sheet.dart' show showConfirmSheet;
 import 'file_actions.dart' show canForwardFile, forwardFile;
 import '../file_save.dart' show saveReceivedFile;
 import '../show_in_chat.dart' show askShowInChat, chatOpenUnder;
+import '../viewer_rules.dart' show mayLeave, maySaveOut;
 import 'sound_views.dart' show openSoundPlayer, soundsKept;
 import 'swap.dart';
 import 'video_bubble.dart' show openReceivedFile;
@@ -77,6 +80,9 @@ class SharedItem {
   final String? title;
   // a video among the media, drawn and opened as one
   final bool video;
+  // timed (read or ours) and marked a spoiler: neither leaves the chat
+  final bool timed;
+  final bool spoiler;
   const SharedItem({
     this.path,
     this.name,
@@ -88,6 +94,8 @@ class SharedItem {
     this.url,
     this.title,
     this.video = false,
+    this.timed = false,
+    this.spoiler = false,
   });
 }
 
@@ -112,6 +120,12 @@ class SharedLists {
 
   bool get isEmpty =>
       media.isEmpty && files.isEmpty && voice.isEmpty && links.isEmpty;
+
+  /// the photos sent as spoilers
+  Set<String> get spoilers => {
+    for (final m in media)
+      if (m.spoiler) m.path!,
+  };
 
   /// the media that are videos
   Set<String> get videos => {
@@ -157,6 +171,8 @@ SharedLists sortShared(
       when: when,
       peer: peer,
       video: video,
+      timed: r['burn_secs'] != null || r['burn_at'] != null,
+      spoiler: r['spoiler'] == 1,
     );
     if (mediaPath != null) {
       if (!coming) media.add(item(mediaPath));
@@ -226,6 +242,8 @@ class SharedMediaSection extends StatelessWidget {
   final List<String> paths;
   // which of [paths] are videos
   final Set<String> videos;
+  // which of [paths] are spoilers: blurred here, as in the chat
+  final Set<String> spoilers;
   final int count;
   // false while the rows are still being read
   final bool loaded;
@@ -239,6 +257,7 @@ class SharedMediaSection extends StatelessWidget {
     super.key,
     required this.paths,
     this.videos = const {},
+    this.spoilers = const {},
     required this.count,
     this.loaded = true,
     this.onOpen,
@@ -304,6 +323,7 @@ class SharedMediaSection extends StatelessWidget {
                         path: shown[i],
                         side: side,
                         video: videos.contains(shown[i]),
+                        spoiler: spoilers.contains(shown[i]),
                         more: i == 3 && count > 4 ? more : 0,
                       ),
               ),
@@ -362,12 +382,14 @@ class _Tile extends StatelessWidget {
   final String path;
   final double side;
   final bool video;
+  final bool spoiler;
   // shown over the last tile: how many more there are
   final int more;
   const _Tile({
     required this.path,
     required this.side,
     this.video = false,
+    this.spoiler = false,
     this.more = 0,
   });
 
@@ -382,16 +404,25 @@ class _Tile extends StatelessWidget {
             VideoFace(path: path, width: side),
             if (more == 0) VideoMarks(path: path),
           ] else
-            // its blur, the photo fading up over it as it decodes
-            SealedPicture(
-              path: path,
-              image: mediaImage(
-                path,
-                (side * MediaQuery.devicePixelRatioOf(context)).round(),
+            // a spoiler stays blurred here: it is seen in the chat
+            ImageFiltered(
+              enabled: spoiler,
+              imageFilter: ui.ImageFilter.blur(
+                sigmaX: 14,
+                sigmaY: 14,
+                tileMode: TileMode.decal,
               ),
-              // a black square would read as a broken app, not a photo
-              // whose file is gone
-              errorBuilder: (_, _, _) => MissingTile(size: side),
+              // its blur, the photo fading up over it as it decodes
+              child: SealedPicture(
+                path: path,
+                image: mediaImage(
+                  path,
+                  (side * MediaQuery.devicePixelRatioOf(context)).round(),
+                ),
+                // a black square would read as a broken app, not a photo
+                // whose file is gone
+                errorBuilder: (_, _, _) => MissingTile(size: side),
+              ),
             ),
           if (more > 0)
             ColoredBox(
@@ -445,6 +476,8 @@ Future<void> openShared(
   bool group = false,
   SharedTab start = SharedTab.media,
   bool blocking = false,
+  // a burner room: nothing of it leaves
+  bool room = false,
   String? Function(String? peer)? nameOf,
 }) => Navigator.of(context).push(
   haloRoute(
@@ -454,6 +487,7 @@ Future<void> openShared(
       group: group,
       start: start,
       blocking: blocking,
+      room: room,
       nameOf: nameOf,
     ),
   ),
@@ -465,6 +499,7 @@ class SharedScreen extends StatefulWidget {
   final bool group;
   final SharedTab start;
   final bool blocking;
+  final bool room;
   final String? Function(String? peer)? nameOf;
   // tests hand the lists in
   final Future<SharedLists> Function()? load;
@@ -479,6 +514,7 @@ class SharedScreen extends StatefulWidget {
     this.group = false,
     this.start = SharedTab.media,
     this.blocking = false,
+    this.room = false,
     this.nameOf,
     this.load,
     this.deleteHere,
@@ -620,6 +656,10 @@ class SharedScreenState extends State<SharedScreen> {
     }
     return SharedPhotoGrid(
       paths: [for (final m in media) m.path!],
+      spoilers: {
+        for (final m in media)
+          if (m.spoiler) m.path!: m.uid,
+      },
       securePaths: {
         for (final m in media)
           if (m.secure) m.path!,
@@ -719,15 +759,33 @@ class SharedScreenState extends State<SharedScreen> {
   // it, and a hidden chat's file is never saved out or forwarded
   FileRowActions _actionsFor(SharedItem it) {
     final path = it.path;
-    final kept = _keeps(it);
     final hidden = widget.hidden ?? session.isHidden(widget.chatId);
     final uid = it.uid;
+    // the viewer's rules: in a chat that blocks or a room nothing leaves,
+    // ours included; nothing timed, marked or a spoiler; a hidden chat's
+    // never goes out
+    final leaves = mayLeave(
+      blocking: widget.blocking,
+      room: widget.room,
+      timed: it.timed,
+      marked: it.secure,
+      spoiler: it.spoiler,
+      hidden: hidden,
+    );
+    final saves = maySaveOut(
+      blocking: widget.blocking,
+      room: widget.room,
+      timed: it.timed,
+      marked: it.secure,
+      spoiler: it.spoiler,
+      hidden: hidden,
+    );
     return FileRowActions(
       open: path == null ? null : () => _openFile(it),
-      forward: hidden || !canForwardFile(path, it.name, kept: kept)
+      forward: !leaves || !canForwardFile(path, it.name, kept: false)
           ? null
           : () => forwardFile(context, path!, it.name),
-      save: hidden || kept || path == null
+      save: !saves || path == null
           ? null
           : () => saveReceivedFile(context, path, it.name),
       showInChat: uid == null || !chatOpenUnder(widget.chatId)
@@ -1123,9 +1181,13 @@ class SharedPhotoGrid extends StatelessWidget {
   // which of [paths] are videos, opened in the player by [onVideo]
   final Set<String> videos;
   final ValueChanged<String>? onVideo;
+  // photos sent as spoilers, path to their message: blurred until tapped,
+  // as in the chat
+  final Map<String, String?> spoilers;
   const SharedPhotoGrid({
     super.key,
     required this.paths,
+    this.spoilers = const {},
     this.securePaths = const {},
     this.videos = const {},
     this.onVideo,
@@ -1157,30 +1219,34 @@ class SharedPhotoGrid extends StatelessWidget {
         final path = paths[i];
         if (videos.contains(path)) return _videoTile(context, path);
         final tag = photoHeroTag(path, 'gallery');
-        return PressScale(
-          scale: 0.96,
-          haptic: false,
-          onTap: () => openPhoto(
-            context,
-            path,
-            secure: securePaths.contains(path),
-            tag: tag,
-          ),
-          child: HaloHero(
-            tag: tag,
-            // each tile shows its blur, its photo fading up over it
-            child: SealedPicture(
-              path: path,
-              image: mediaImage(path, 360),
-              filterQuality: FilterQuality.low,
-              // a photo whose file is gone says so, not a black square
-              errorBuilder: (_, _, _) => Container(
-                color: HaloColors.surface2,
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.image_not_supported_outlined,
-                  size: 22,
-                  color: HaloColors.text3,
+        return SpoilerCover(
+          uid: spoilers[path],
+          on: spoilers.containsKey(path),
+          child: PressScale(
+            scale: 0.96,
+            haptic: false,
+            onTap: () => openPhoto(
+              context,
+              path,
+              secure: securePaths.contains(path),
+              tag: tag,
+            ),
+            child: HaloHero(
+              tag: tag,
+              // each tile shows its blur, its photo fading up over it
+              child: SealedPicture(
+                path: path,
+                image: mediaImage(path, 360),
+                filterQuality: FilterQuality.low,
+                // a photo whose file is gone says so, not a black square
+                errorBuilder: (_, _, _) => Container(
+                  color: HaloColors.surface2,
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 22,
+                    color: HaloColors.text3,
+                  ),
                 ),
               ),
             ),

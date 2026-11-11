@@ -131,12 +131,12 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
 
-  // a video: a file never comes on its own (mario 2026-11-11), a video
-  // still does on wi-fi, so the fetch path is read through one
+  // a gallery video: a file never comes on its own (mario 2026-11-11), a
+  // gallery video still does on wi-fi, so the fetch path is read through one
   Future<String> drop(
     String uid, {
     String id = 'ab',
-    String name = 'plan.mp4',
+    String name = 'video_ab12cd34.mp4',
   }) => wrapMessage(
     'the plan',
     msgUid: uid,
@@ -483,6 +483,14 @@ void main() {
         expect(eng.fetched, hasLength(1));
       },
     );
+
+    test('a video sent as a file waits for a tap, on wi-fi too', () async {
+      unmeteredNow = () async => true;
+      await from(_x, await drop('wv', name: 'trip.mp4'));
+      expect(fileWaitOf('wv')!.state, WaitState.asks);
+      await app.fetchDropsInForTest(live);
+      expect(eng.fetched, isEmpty);
+    });
 
     test('photos come on mobile data unless set otherwise', () async {
       Future<String> photo(String uid, String id) =>

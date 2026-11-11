@@ -243,7 +243,11 @@ String dropDayAdd(({String day, int bytes, int files}) d, int size) =>
 // group shots code (takeMemberCaps), on the member's row whether it is a
 // contact or a member's card
 
-Future<bool> _fetches(DatabaseExecutor db, String peer) async {
+Future<bool> _fetches(DatabaseExecutor db, String peer) =>
+    peerHasCap(db, peer, kCapDrops);
+
+/// [peer]'s newest word says its phone does [cap]
+Future<bool> peerHasCap(DatabaseExecutor db, String peer, String cap) async {
   final r = await db.query(
     'contacts',
     columns: const ['caps'],
@@ -251,8 +255,31 @@ Future<bool> _fetches(DatabaseExecutor db, String peer) async {
     whereArgs: [peer],
     limit: 1,
   );
-  return r.isNotEmpty &&
-      capsOfText(r.first['caps'] as String?).contains(kCapDrops);
+  return r.isNotEmpty && capsOfText(r.first['caps'] as String?).contains(cap);
+}
+
+/// every member of [groupId] but [me] does [cap]. none known is no
+Future<bool> groupHasCap(
+  Database db,
+  String groupId,
+  String me,
+  String cap,
+) async {
+  final r = await db.query(
+    'group_members',
+    columns: const ['halo_id'],
+    where: 'group_id = ?',
+    whereArgs: [groupId],
+  );
+  final others = [
+    for (final m in r)
+      if (m['halo_id'] != me) m['halo_id'] as String,
+  ];
+  if (others.isEmpty) return false;
+  for (final m in others) {
+    if (!await peerHasCap(db, m, cap)) return false;
+  }
+  return true;
 }
 
 /// [peer]'s phone fetches from the files service, as its newest word says

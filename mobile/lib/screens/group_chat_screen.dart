@@ -2536,10 +2536,12 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     if (_nobodyToRead()) return;
     FocusManager.instance.primaryFocus?.unfocus();
     final most = await appState.fileLimitForGroup(widget.groupId);
+    final spoilers = await appState.spoilersForGroup(widget.groupId);
     if (!mounted) return;
     final r = await showSendSheet(
       context,
       most: most,
+      spoilers: spoilers,
       to: _groupName,
       pickGallery: galleryPicksForSheet,
       pickFiles: filePicksForSheet,
@@ -2697,11 +2699,15 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     Future<List<PickedMedia>> Function()? more,
   ]) async {
     if (!mounted) return null;
+    // a phone before spoilers would show one plain: no choice then
+    final spoilers = await appState.spoilersForGroup(widget.groupId);
+    if (!mounted) return null;
     return Navigator.of(context).push<MediaSendResult?>(
       haloRoute<MediaSendResult?>(
         MediaSendScreen(
           items: items,
           addMore: more,
+          spoilers: spoilers,
           onGone: (videos) => unawaited(shredPickedImages(videos)),
         ),
       ),
@@ -3924,7 +3930,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     AlbumRun<_GMsg>? album,
     _GMsg? held,
   }) {
-    final kept = _keeps(target);
+    // in a group that blocks or a room nothing leaves, ours included
+    final kept = _keeps(target) || _isRoom || _shots.blocking;
     final words = target.text.isNotEmpty && target.sticker == null && !kept;
     final anchor = album?.anchor ?? target;
     final saveOn = held ?? anchor;

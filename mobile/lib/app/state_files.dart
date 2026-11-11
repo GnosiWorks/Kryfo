@@ -32,6 +32,33 @@ extension AppStateFiles on AppState {
     }
   }
 
+  /// a photo to [peer] may go as a spoiler: their phone blurs it. a phone
+  /// before spoilers would show it plain, so the choice is not offered
+  Future<bool> spoilersFor(String peer) async {
+    if (isDevId(peer)) return false;
+    try {
+      return await peerHasCap(await session.chatDb(peer), peer, kCapSpoilers);
+    } catch (e) {
+      dlog('spoilers: word not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
+  /// every other member of [groupId] blurs a spoiler
+  Future<bool> spoilersForGroup(String groupId) async {
+    try {
+      return await groupHasCap(
+        await session.chatDb(groupId),
+        groupId,
+        sessionId,
+        kCapSpoilers,
+      );
+    } catch (e) {
+      dlog('spoilers: group word not read (${e.runtimeType})');
+      return false;
+    }
+  }
+
   /// a file to group [groupId] may go through the files service: every
   /// other member's phone fetches from it
   Future<bool> dropsForGroup(String groupId) async {
@@ -217,7 +244,7 @@ extension AppStateFiles on AppState {
       // goes on from them
       final held = await takeHeld(media, frame.token!, path);
       // what comes on its own comes now; the rest is filed and waits
-      final kind = getKindOf(env.fileName);
+      final kind = getKindOf(env.fileName, inSet: env.album?.files ?? false);
       final gets = held || await _getsNow(kind);
       await noteSeen(d, frame.id, now);
       await noteFetch(
@@ -282,7 +309,7 @@ extension AppStateFiles on AppState {
     int state,
   ) async {
     final rules = await loadAutoGet(session.container);
-    final kind = getKindOf(env.fileName);
+    final kind = getKindOf(env.fileName, inSet: env.album?.files ?? false);
     setFileWait(
       uid,
       FileWait(
@@ -426,7 +453,7 @@ extension AppStateFiles on AppState {
           seen.add(f.uid);
           if (fileWaitOf(f.uid) != null) continue;
           final env = unwrapMessage(f.wire);
-          final kind = getKindOf(env.fileName);
+          final kind = getKindOf(env.fileName, inSet: env.album?.files ?? false);
           final state = _waitStateOf(f.state);
           setFileWait(
             f.uid,
@@ -699,7 +726,7 @@ extension AppStateFiles on AppState {
     }
     var state = f.state;
     final rules = await loadAutoGet(session.container);
-    final kind = getKindOf(env.fileName);
+    final kind = getKindOf(env.fileName, inSet: env.album?.files ?? false);
     // one that waits for wi-fi comes once it is on wi-fi
     if (state == kFetchAsks && autoGets(rules, kind, await unmeteredNow())) {
       state = kFetchComing;

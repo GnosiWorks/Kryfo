@@ -533,6 +533,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     // blocks, before this page has read its row too
     blocking:
         _isRoom || _shots.blocking || appState.shotsBlocksGroup(widget.groupId),
+    room: _isRoom,
     nameOf: (id) =>
         id == null ? null : _contactOf(id)?.nickname ?? memberLabel(id),
   );
@@ -776,6 +777,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                   SharedMediaSection(
                     paths: [for (final m in _shared.media) m.path!],
                     videos: _shared.videos,
+                    spoilers: _shared.spoilers,
                     count: _shared.media.length,
                     loaded: _mediaLoaded,
                     files: _shared.files.length,

@@ -34,6 +34,8 @@ class MediaSendScreen extends StatefulWidget {
   final Future<List<PickedMedia>> Function()? addMore;
   // the protect switch and how it starts. null where the chat has none
   final bool? secure;
+  // photos may be marked spoilers: every phone on the other end blurs one
+  final bool spoilers;
   // the chat blocks screenshots, so this screen does too
   final bool holdSecure;
   // the most that go in this send: the slots the dev chat has left
@@ -50,6 +52,7 @@ class MediaSendScreen extends StatefulWidget {
     required this.items,
     this.addMore,
     this.secure,
+    this.spoilers = false,
     this.holdSecure = false,
     this.max = kPickMax,
     this.beforeSend,
@@ -88,7 +91,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
   /// what is in it now, in order
   List<PickedMedia> get items => [
     for (final e in _items)
-      if (!e.leaving) e.media.withSpoiler(e.spoiler),
+      if (!e.leaving) e.media.withSpoiler(widget.spoilers && e.spoiler),
   ];
 
   List<_Entry> get _live => [
@@ -325,7 +328,7 @@ class MediaSendScreenState extends State<MediaSendScreen> {
             ),
           ),
         ),
-        if (shown != null && !shown.media.isVideo)
+        if (widget.spoilers && shown != null && !shown.media.isVideo)
           IconButton(
             tooltip: l10n.traySpoiler,
             isSelected: shown.spoiler,

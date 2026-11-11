@@ -29,6 +29,8 @@ const kCapGroupShots = 'gs';
 const kCapDrops = 'fb';
 const kCapPhotos = 'pp';
 const kCapPqRestart = 'pq';
+// 'sv': it blurs a photo sent as a spoiler (spoiler_cover.dart)
+const kCapSpoilers = 'sv';
 
 /// the word of a phone that reads device lists and per-device copies
 /// (linked devices). never in [kMyCaps]: [myCaps] adds it with the switch on
@@ -39,6 +41,7 @@ const kKnownCaps = {
   kCapDrops,
   kCapPhotos,
   kCapPqRestart,
+  kCapSpoilers,
 };
 const kMyCaps = [
   kCapGroupShots,
@@ -46,6 +49,7 @@ const kMyCaps = [
   kCapDrops,
   kCapPhotos,
   kCapPqRestart,
+  kCapSpoilers,
 ];
 
 // a list longer than this is no phone's, and is read as none

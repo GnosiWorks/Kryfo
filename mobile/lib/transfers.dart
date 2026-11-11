@@ -81,13 +81,20 @@ enum AutoGet { always, wifi, never }
 /// and one that waits for a tap is a message unheard
 enum GetKind { photo, video, file }
 
-/// a file's kind as the frame's message tells it. null for a voice note
-GetKind? getKindOf(String? fileName) {
+/// a file's kind as the frame's message tells it. null for a voice note.
+/// a video counts as one only under the name the gallery and the camera
+/// give it (madeVideoName): one sent as a file, or among files sent
+/// together ([inSet]), is a file, and a file never comes on its own
+GetKind? getKindOf(String? fileName, {bool inSet = false}) {
   if (fileName == null) return GetKind.photo;
   if (isVoiceName(fileName)) return null;
-  if (nameSaysVideo(fileName)) return GetKind.video;
+  if (!inSet && nameSaysVideo(fileName) && _madeVideo.hasMatch(fileName)) {
+    return GetKind.video;
+  }
   return GetKind.file;
 }
+
+final _madeVideo = RegExp(r'^video_[0-9a-f]{8}\.[A-Za-z0-9]{2,5}$');
 
 /// photos come on any network, videos on wi-fi, and a file never comes on
 /// its own: it always waits for a tap, whatever was set before

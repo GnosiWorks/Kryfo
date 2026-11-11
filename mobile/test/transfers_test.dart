@@ -77,7 +77,10 @@ void main() {
 
     test('kinds by the message: a voice note is never held', () {
       expect(getKindOf(null), GetKind.photo);
-      expect(getKindOf('trip.mp4'), GetKind.video);
+      expect(getKindOf('video_ab12cd34.mp4'), GetKind.video);
+      // a video sent as a file, or among files sent together, is a file
+      expect(getKindOf('trip.mp4'), GetKind.file);
+      expect(getKindOf('video_ab12cd34.mp4', inSet: true), GetKind.file);
       expect(getKindOf('plan.pdf'), GetKind.file);
       expect(getKindOf('voice.wav'), isNull);
       expect(autoGets({GetKind.photo: AutoGet.never}, null, false), isTrue);
@@ -98,7 +101,10 @@ void main() {
     });
 
     test('a file always waits for a tap, whatever was kept', () async {
-      expect(autoGets({GetKind.file: AutoGet.always}, GetKind.file, true), isFalse);
+      expect(
+        autoGets({GetKind.file: AutoGet.always}, GetKind.file, true),
+        isFalse,
+      );
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         HaloContainer.everyday.key(kAutoGetKeys[GetKind.file]!),

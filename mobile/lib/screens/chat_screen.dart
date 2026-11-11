@@ -2410,7 +2410,8 @@ class _ChatScreenState extends State<ChatScreen>
     }
     // his first line is the app's own: it is copied and nothing else
     final welcome = target.welcome;
-    final kept = _keeps(target);
+    // in a chat that blocks screenshots nothing leaves, ours included
+    final kept = _keeps(target) || _shots.blocking;
     // a row without a uid gets a local one. the peer doesn't know it, so the
     // reaction stays local.
     if (target.msgUid == null && !welcome) {
@@ -4372,10 +4373,12 @@ class _ChatScreenState extends State<ChatScreen>
   // files, and files already in this container's chats
   Future<void> _showAttachSheet() async {
     final most = await appState.fileLimitFor(widget.peerHaloId);
+    final spoilers = await appState.spoilersFor(widget.peerHaloId);
     if (!mounted) return;
     final r = await showSendSheet(
       context,
       most: most,
+      spoilers: spoilers,
       to: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
       pickGallery: galleryPicksForSheet,
       pickFiles: filePicksForSheet,
@@ -5121,6 +5124,9 @@ class _ChatScreenState extends State<ChatScreen>
       );
       return null;
     }
+    // a phone before spoilers would show one plain: no choice then
+    final spoilers = await appState.spoilersFor(widget.peerHaloId);
+    if (!mounted) return null;
     return Navigator.of(context).push<MediaSendResult?>(
       haloRoute<MediaSendResult?>(
         // holdSecure stays false here: the chat's own screenshot block
@@ -5129,6 +5135,7 @@ class _ChatScreenState extends State<ChatScreen>
         MediaSendScreen(
           items: items,
           addMore: more,
+          spoilers: spoilers,
           secure: _secureNext,
           max: room,
           beforeSend: _askBig,
@@ -6174,7 +6181,8 @@ class _ChatScreenState extends State<ChatScreen>
           fromName: _fileFrom(m),
           soundsAfter: _soundsAfter,
           voiceAfter: _voiceAfter,
-          onRetry: run == null
+          // a set of files retries the row tapped; an album all of it
+          onRetry: run == null || run.tag.files
               ? _tapRetry
               : (_) {
                   for (final x in members) {

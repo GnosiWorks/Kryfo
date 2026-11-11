@@ -5,6 +5,7 @@
 // over tor. cards slide in as they are picked and the rest close up when
 // one goes; with reduced motion they simply appear and go
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ import '../theme.dart';
 import 'file_badge.dart';
 import 'file_bubble.dart' show fileNameDir;
 import 'media_bubbles.dart' show humanFileSize;
-import 'motion.dart' show kHouseCurve, motionStill;
+import 'motion.dart' show motionStill;
 import 'press_scale.dart';
 
 /// a careful pace for a file going up over tor: slower than most circuits
@@ -30,6 +31,21 @@ String trayTimeLine(int bytes) {
   if (secs < 60) return l10n.trayTimeSoon;
   return l10n.trayTimeMinutes(whole((secs / 60).ceil()));
 }
+
+/// the house spring with its damping at critical: it settles as fast as
+/// the house one, with no swing past the end a card could show
+class CalmSpring extends Curve {
+  const CalmSpring();
+  // how far along the critically damped spring the curve ends
+  static const _a = 6.8;
+  static final _end = 1 - (1 + _a) * math.exp(-_a);
+
+  @override
+  double transformInternal(double t) =>
+      (1 - (1 + _a * t) * math.exp(-_a * t)) / _end;
+}
+
+const kCalmSpring = CalmSpring();
 
 /// one card of the tray
 class TrayCard {
@@ -66,7 +82,8 @@ class SendTray extends StatefulWidget {
   final int most;
   final void Function(Object key) onRemove;
   final void Function(Object key) onRename;
-  final void Function(Object key) onSpoiler;
+  // null: no phone on the other end blurs a spoiler, so none is offered
+  final void Function(Object key)? onSpoiler;
   const SendTray({
     super.key,
     required this.cards,
@@ -179,11 +196,12 @@ class _SendTrayState extends State<SendTray> {
                         onRename: leaving || c.photo || c.video
                             ? null
                             : () => widget.onRename(c.key),
-                        onSpoiler: leaving || !c.photo
+                        onSpoiler:
+                            leaving || !c.photo || widget.onSpoiler == null
                             ? null
                             : () {
                                 HapticFeedback.selectionClick();
-                                widget.onSpoiler(c.key);
+                                widget.onSpoiler!(c.key);
                               },
                       ),
                     ),
@@ -274,7 +292,7 @@ class _SlotState extends State<_Slot> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final curve = CurvedAnimation(
       parent: _c,
-      curve: kHouseCurve,
+      curve: kCalmSpring,
       reverseCurve: Curves.easeInCubic,
     );
     return SizeTransition(
@@ -347,11 +365,12 @@ class _Card extends StatelessWidget {
           ),
           if (c.spoiler)
             ColoredBox(color: HaloColors.ink.withValues(alpha: 0.3)),
-          PositionedDirectional(
-            start: 8,
-            bottom: 8,
-            child: _SpoilerChip(on: c.spoiler, onTap: onSpoiler),
-          ),
+          if (onSpoiler != null)
+            PositionedDirectional(
+              start: 8,
+              bottom: 8,
+              child: _SpoilerChip(on: c.spoiler, onTap: onSpoiler),
+            ),
         ],
       );
     } else {

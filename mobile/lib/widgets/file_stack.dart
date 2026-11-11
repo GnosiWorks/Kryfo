@@ -141,7 +141,7 @@ class _RowState extends State<_Row> with SingleTickerProviderStateMixin {
   // a gentle shake, once, when the row turns failed
   late final AnimationController _shake = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 360),
+    duration: const Duration(milliseconds: 280),
   );
 
   @override

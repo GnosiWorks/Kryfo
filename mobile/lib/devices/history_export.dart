@@ -82,6 +82,8 @@ const kHistoryContactCols = [
   // v4: my identity for the contact, and theirs
   'ident',
   'ikey',
+  // the chat's own flame timer
+  'chat_burn',
 ];
 const kHistoryGroupCols = [
   'group_id',
@@ -96,6 +98,7 @@ const kHistoryGroupCols = [
   'ended_at',
   'ended_by',
   'shots_on',
+  'chat_burn',
 ];
 const kHistoryMessageCols = [
   'peer_id',
@@ -123,6 +126,7 @@ const kHistoryMessageCols = [
   'album_id',
   'album_n',
   'album_i',
+  'spoiler',
 ];
 
 /// a history stream only ever comes from the everyday container, alone
