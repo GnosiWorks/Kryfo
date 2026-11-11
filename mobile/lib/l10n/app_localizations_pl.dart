@@ -12661,4 +12661,25 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get fileNotHere => 'Usunięto z tego telefonu';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Odrzucić $n plików?',
+      few: 'Odrzucić $n pliki?',
+      one: 'Odrzucić 1 plik?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => 'Nic jeszcze nie wysłano.';
+
+  @override
+  String get sendSheetDiscard => 'Odrzuć';
+
+  @override
+  String get sendSheetKeep => 'Zostaw';
 }

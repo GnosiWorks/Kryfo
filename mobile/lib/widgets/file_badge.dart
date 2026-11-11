@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import '../file_kind.dart';
 import '../theme.dart';
 
-enum FileTone { pdf, code, audio, sheet, video, doc, zip, other }
+enum FileTone { pdf, code, audio, sheet, video, picture, doc, zip, other }
 
 const _codeExts = {
   'txt',
@@ -91,7 +91,7 @@ FileTone fileToneOf(FileFacts facts) {
     FileKind.document => FileTone.doc,
     FileKind.text => FileTone.code,
     // a picture that is not drawn as one: a camera's raw file, a tiff
-    FileKind.picture => FileTone.video,
+    FileKind.picture => FileTone.picture,
     FileKind.installer || FileKind.other => FileTone.other,
   };
 }
@@ -108,15 +108,15 @@ Color _toneBase(FileTone t) => switch (t) {
   FileTone.code => HaloColors.sky,
   FileTone.audio => HaloColors.violet,
   FileTone.sheet => HaloColors.green,
-  FileTone.video => HaloColors.fileBlue,
+  FileTone.video || FileTone.picture => HaloColors.fileBlue,
   FileTone.doc => HaloColors.warm,
   FileTone.zip => HaloColors.yellow,
   FileTone.other => HaloColors.line2,
 };
 
-/// what is written on a kind's tile
+/// what is written on a kind's tile: the kind's own colour, as its outline
 Color onFileTone(FileTone t) =>
-    t == FileTone.other ? HaloColors.text : HaloColors.onFileBadge;
+    t == FileTone.other ? HaloColors.text : fileToneColor(t);
 
 /// up to four letters of the extension, or none for a kind drawn as a glyph
 String fileBadgeLabel(FileFacts facts) {
@@ -130,6 +130,7 @@ IconData? _glyphOf(FileTone t, FileFacts facts) {
   return switch (t) {
     FileTone.audio => Icons.music_note_rounded,
     FileTone.video => Icons.play_arrow_rounded,
+    FileTone.picture => Icons.image_outlined,
     _ => facts.ext.isEmpty ? Icons.insert_drive_file_outlined : null,
   };
 }
@@ -150,8 +151,9 @@ class FileBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = fileToneOf(facts);
-    final fill = fileToneColor(tone);
-    final ink = onFileTone(tone);
+    // a thin outline and the label in the kind's colour, nothing filled. on
+    // our own amber bubble both take the bubble's ink, a hairline
+    final ink = onAccent ? HaloColors.onAmber : onFileTone(tone);
     final glyph = _glyphOf(tone, facts);
     final label = fileBadgeLabel(facts);
     return ExcludeSemantics(
@@ -160,11 +162,11 @@ class FileBadge extends StatelessWidget {
         height: size,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: fill,
           borderRadius: BorderRadius.circular(size * 0.27),
-          border: onAccent
-              ? Border.all(color: HaloColors.onAmber.withValues(alpha: 0.25))
-              : null,
+          border: Border.all(
+            color: onAccent ? ink.withValues(alpha: 0.45) : ink,
+            width: onAccent ? 1 : 1.4,
+          ),
         ),
         child: glyph != null
             ? Icon(glyph, size: size * 0.5, color: ink)

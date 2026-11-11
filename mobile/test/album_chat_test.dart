@@ -10,6 +10,7 @@ import 'package:flutter/material.dart' hide Curve;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/widgets/file_stack.dart' show FileStack;
 import 'package:kryfo/album.dart' show AlbumTag;
 import 'package:kryfo/chat_shots.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devChatTables;
@@ -311,6 +312,47 @@ void main() {
     of: find.byType(AlbumGrid),
     matching: find.byKey(ValueKey(slot)),
   );
+
+  // files sent together, [i] of [n]: one bubble, the caption under it
+  Future<void> fileItem(
+    int i,
+    int n, {
+    String dir = 'in',
+    String caption = '',
+  }) async {
+    final f = File('${docs.path}/f_$i.zip')
+      ..writeAsBytesSync([0x50, 0x4B, 3, 4]);
+    await mem.insert('messages', {
+      'peer_id': _peer,
+      'direction': dir,
+      'plaintext': caption,
+      'sent_at': base + 60000 + i * 1000,
+      'written_at': base + 60000 + i * 1000,
+      'msg_uid': '$dir-fs-$i',
+      'file_path': f.path,
+      'file_name': 'maps-$i.zip',
+      'sent': 1,
+      'delivered': 1,
+      ...AlbumTag(_id, n, i, files: true).toRow(),
+    });
+  }
+
+  for (final dir in ['in', 'out']) {
+    testWidgets('files sent together show their caption once ($dir)', (
+      t,
+    ) async {
+      await fileItem(0, 3, dir: dir, caption: 'route and maps');
+      await fileItem(1, 3, dir: dir);
+      await fileItem(2, 3, dir: dir);
+      await devOpen(t, chat());
+      await settle(t);
+      expect(find.byType(FileStack), findsOneWidget);
+      expect(
+        find.textContaining('route and maps', findRichText: true),
+        findsOneWidget,
+      );
+    });
+  }
 
   testWidgets('rows that came out of order are one album in its order', (
     t,

@@ -1845,9 +1845,9 @@
   "kryfoLinkTextYouJoinUnderA": "Entras con una clave creada para esta sala. Nadie dentro ve tus tres palabras.",
   "linkStubFetchedOverTorBy": "Vía Tor · lo obtuvo tu dispositivo",
   "linkStubFetchedOverTorByTheirDevice": "Vía Tor · lo obtuvo su dispositivo",
-  "mediaBubblesB": "{bytes} b",
-  "mediaBubblesKb": "{bytes} kb",
-  "mediaBubblesMb": "{bytes} mb",
+  "mediaBubblesB": "{bytes} B",
+  "mediaBubblesKb": "{bytes} KB",
+  "mediaBubblesMb": "{bytes} MB",
   "mediaBubblesFile": "ARCHIVO",
   "mediaBubblesAudioUnavailable": "Audio no disponible",
   "mediaBubblesHidden": "Oculto",
@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "Quitar descarga",
   "filesRemoveDownloadLine": "Libera su espacio en este teléfono. El mensaje se queda. El archivo no se puede volver a descargar: pide que te lo envíen de nuevo si lo necesitas.",
   "filesRemoveDownloadYes": "Quitar",
-  "fileNotHere": "Quitado de este teléfono"
+  "fileNotHere": "Quitado de este teléfono",
+  "sendSheetDiscardTitle": "{count, plural, =1{¿Descartar 1 archivo?} other{¿Descartar {n} archivos?}}",
+  "sendSheetDiscardLine": "Todavía no se ha enviado nada.",
+  "sendSheetDiscard": "Descartar",
+  "sendSheetKeep": "Conservarlos"
 }

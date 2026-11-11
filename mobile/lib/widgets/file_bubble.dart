@@ -71,6 +71,8 @@ class FileCard extends StatefulWidget {
   // a contact's) or one the person opened by hand: a stranger's pdf that
   // came on its own is not handed to the phone's renderer unasked
   final bool glance;
+  // one of several going one after the other: an empty ring while it waits
+  final bool queued;
   const FileCard({
     super.key,
     required this.path,
@@ -80,6 +82,7 @@ class FileCard extends StatefulWidget {
     this.onCancel,
     this.heroTag,
     this.glance = false,
+    this.queued = false,
   });
 
   @override
@@ -155,7 +158,15 @@ class _FileCardState extends State<FileCard> {
       builder: (context, _, _) {
         final v = mediaSendProgress[uid];
         if (v != null) _lastShare = v;
-        return _card(context, v == null || mediaQuiet(uid) ? null : (uid, v));
+        if (mediaQuiet(uid)) return _card(context, null);
+        // one of a set waiting its turn: its ring is there, empty, so the
+        // row does not change shape when it starts
+        if (v == null) {
+          return widget.queued
+              ? _card(context, (uid, -1))
+              : _card(context, null);
+        }
+        return _card(context, (uid, v));
       },
     );
   }
@@ -190,7 +201,8 @@ class _FileCardState extends State<FileCard> {
       weight: FontWeight.w600,
     );
     final path = widget.path;
-    final preview = path != null && !installer && going == null
+    // drawn while it goes too: the page or the lines never pop in after
+    final preview = path != null && !installer
         ? _previewFor(path, facts)
         : null;
     return ValueListenableBuilder<Set<String>>(
@@ -416,7 +428,11 @@ class _FileCardState extends State<FileCard> {
   }
 
   String _goingLine(String uid, double v) {
-    if (mediaPreparing.contains(uid)) return l10n.mediaProgressPreparing;
+    if (v < 0) return l10n.chatWaitsToSend;
+    // preparing until a byte goes, then sending: never "0 b" first
+    if (mediaPreparing.contains(uid) || v == 0) {
+      return l10n.mediaProgressPreparing;
+    }
     final d = transferDetail(uid, v);
     return d == null ? percent(v) : '$d · ${percent(v)}';
   }

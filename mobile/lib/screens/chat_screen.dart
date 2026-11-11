@@ -3760,7 +3760,6 @@ class _ChatScreenState extends State<ChatScreen>
     ]);
   }
 
-
   // the shared page asked for a message of this chat: what is above the
   // chat goes, and the chat goes to it. an album's row stands for its own
   void _showAsked() {
@@ -4423,28 +4422,37 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _sendFromSheet(SendSheetResult r) async {
     try {
       if (!mounted || _requestLocked || _sayMediaLater()) return;
-      final media = r.media;
-      final files = r.files;
-      if (media.isNotEmpty) {
-        await sendGalleryPicks(
-          [for (final m in media) m.source as XFile? ?? XFile(m.path)],
-          spoilers: r.spoilers,
-          pickMore: () => lockState.hold(pickGallery),
-          preview: _preview,
-          send: (s) => _sendPicked(
-            s.caption.isEmpty && files.isEmpty && r.caption.isNotEmpty
-                ? MediaSendResult(
-                    items: s.items,
-                    caption: r.caption,
-                    secure: s.secure,
-                  )
-                : s,
-          ),
-        );
+      // the sheet is the preview: one send, one caption, in the order
+      // picked, with no second screen
+      var caption = r.caption;
+      for (final run in r.runs) {
+        if (!mounted || lockState.locked) break;
+        if (run.media) {
+          if (_mediaWaits || _roomLeft <= 0) {
+            showHaloToast(
+              context,
+              _mediaWaits
+                  ? l10n.requestSenderMediaLater
+                  : l10n.chatWaitingForThemTo,
+            );
+            break;
+          }
+          final items = await readGalleryPicks([
+            for (final m in run.picks) m.source as XFile? ?? XFile(m.path),
+          ], spoilers: r.spoilers);
+          try {
+            if (items.isEmpty || !mounted || !await _askBig(items)) break;
+            await _sendPicked(MediaSendResult(items: items, caption: caption));
+          } finally {
+            await shredPickedImages([for (final m in items) ?m.video]);
+          }
+        } else {
+          await _sendFileSet([
+            for (final f in run.picks) (f.path, f.name),
+          ], caption);
+        }
+        caption = '';
       }
-      await _sendFileSet([
-        for (final f in files) (f.path, f.name),
-      ], media.isEmpty ? r.caption : '');
     } finally {
       await r.release();
       await shredPicked(const []);
@@ -9398,7 +9406,8 @@ class _Bubble extends StatelessWidget {
         unconfirmed;
     // ours kept until it can go says so in its bubble: its time and a clock
     final showStamp = (showTime || (isOut && parked)) && !frameless;
-    final showPill = isOut && pending;
+    // a set of files shows each row's own ring: no pill under it
+    final showPill = isOut && pending && !(album?.tag.files ?? false);
     final reacted = msg.reactions.isNotEmpty;
     final roomTime = motionStill(context) ? Duration.zero : kHouseTime;
     // full ink for 4.5:1 on every accent: the small mono size keeps it
@@ -10503,6 +10512,7 @@ class _Bubble extends StatelessWidget {
                 from: fromName,
                 kept: kept,
                 glance: known,
+                queued: true,
                 when: x.when,
                 upNext: soundsAfter == null ? null : () => soundsAfter!(x),
                 onCancel: onStop == null ? null : () => onStop!(x),

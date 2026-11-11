@@ -6699,17 +6699,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String mediaBubblesB(Object bytes) {
-    return '$bytes b';
+    return '$bytes B';
   }
 
   @override
   String mediaBubblesKb(Object bytes) {
-    return '$bytes kb';
+    return '$bytes KB';
   }
 
   @override
   String mediaBubblesMb(Object bytes) {
-    return '$bytes mb';
+    return '$bytes MB';
   }
 
   @override
@@ -12526,4 +12526,24 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get fileNotHere => 'Rimosso da questo telefono';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Scartare $n file?',
+      one: 'Scartare 1 file?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => 'Non è stato ancora inviato nulla.';
+
+  @override
+  String get sendSheetDiscard => 'Scarta';
+
+  @override
+  String get sendSheetKeep => 'Tienili';
 }

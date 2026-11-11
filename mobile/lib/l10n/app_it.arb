@@ -1845,9 +1845,9 @@
   "kryfoLinkTextYouJoinUnderA": "Entri con una chiave creata per questa stanza. Nessuno lì dentro vede le tue tre parole.",
   "linkStubFetchedOverTorBy": "Scaricata via Tor · dal tuo dispositivo",
   "linkStubFetchedOverTorByTheirDevice": "Scaricata via Tor · dal suo dispositivo",
-  "mediaBubblesB": "{bytes} b",
-  "mediaBubblesKb": "{bytes} kb",
-  "mediaBubblesMb": "{bytes} mb",
+  "mediaBubblesB": "{bytes} B",
+  "mediaBubblesKb": "{bytes} KB",
+  "mediaBubblesMb": "{bytes} MB",
   "mediaBubblesFile": "FILE",
   "mediaBubblesAudioUnavailable": "Audio non disponibile",
   "mediaBubblesHidden": "Nascosto",
@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "Rimuovi download",
   "filesRemoveDownloadLine": "Libera il suo spazio su questo telefono. Il messaggio resta. Il file non si può riscaricare: chiedi di rinviarlo se ti serve.",
   "filesRemoveDownloadYes": "Rimuovi",
-  "fileNotHere": "Rimosso da questo telefono"
+  "fileNotHere": "Rimosso da questo telefono",
+  "sendSheetDiscardTitle": "{count, plural, =1{Scartare 1 file?} other{Scartare {n} file?}}",
+  "sendSheetDiscardLine": "Non è stato ancora inviato nulla.",
+  "sendSheetDiscard": "Scarta",
+  "sendSheetKeep": "Tienili"
 }

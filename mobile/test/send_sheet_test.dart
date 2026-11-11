@@ -309,6 +309,16 @@ void main() {
     await t.pumpAndSettle();
     await t.tapAt(const Offset(195, 20));
     await t.pumpAndSettle();
+    // picks in the tray: it asks first, and keeping them keeps the sheet
+    expect(find.text(l10n.sendSheetDiscardTitle(1, '1')), findsOneWidget);
+    await t.tap(find.text(l10n.sendSheetKeep));
+    await t.pumpAndSettle();
+    expect(find.byType(SendSheet), findsOneWidget);
+    expect(released, isEmpty);
+    await t.tapAt(const Offset(195, 20));
+    await t.pumpAndSettle();
+    await t.tap(find.text(l10n.sendSheetDiscard));
+    await t.pumpAndSettle();
     expect(find.byType(SendSheet), findsNothing);
     expect(released, ['a.jpg']);
   });

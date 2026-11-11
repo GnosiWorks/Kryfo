@@ -1845,9 +1845,9 @@
   "kryfoLinkTextYouJoinUnderA": "Kamu bergabung dengan kunci yang dibuat khusus untuk ruang ini. Tidak ada seorang pun di dalamnya yang melihat tiga katamu.",
   "linkStubFetchedOverTorBy": "Diambil lewat Tor · oleh perangkatmu",
   "linkStubFetchedOverTorByTheirDevice": "Diambil lewat Tor · oleh perangkatnya",
-  "mediaBubblesB": "{bytes} b",
-  "mediaBubblesKb": "{bytes} kb",
-  "mediaBubblesMb": "{bytes} mb",
+  "mediaBubblesB": "{bytes} B",
+  "mediaBubblesKb": "{bytes} KB",
+  "mediaBubblesMb": "{bytes} MB",
   "mediaBubblesFile": "FILE",
   "mediaBubblesAudioUnavailable": "Audio tidak tersedia",
   "mediaBubblesHidden": "Disamarkan",
@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "Hapus unduhan",
   "filesRemoveDownloadLine": "Ini mengosongkan ruangnya di ponsel ini. Pesannya tetap ada. File tidak bisa diunduh lagi: minta dikirim ulang jika kamu memerlukannya.",
   "filesRemoveDownloadYes": "Hapus",
-  "fileNotHere": "Dihapus dari ponsel ini"
+  "fileNotHere": "Dihapus dari ponsel ini",
+  "sendSheetDiscardTitle": "{count, plural, other{Buang {n} file?}}",
+  "sendSheetDiscardLine": "Belum ada yang terkirim.",
+  "sendSheetDiscard": "Buang",
+  "sendSheetKeep": "Simpan"
 }

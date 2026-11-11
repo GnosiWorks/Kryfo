@@ -7,6 +7,8 @@
 // the pickers' copies are let go with the sheet, sent or not, and the lock
 // closes it
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,7 +31,7 @@ import 'pill_tabs.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
 import 'send_tray.dart';
-import 'confirm_sheet.dart' show showInputSheet;
+import 'confirm_sheet.dart' show showConfirmSheet, showInputSheet;
 import '../file_drop.dart' show kFreeFileBytes;
 
 enum SendTab { gallery, files, recent }
@@ -102,6 +104,22 @@ class SendSheetResult {
     for (final p in picks)
       if (asFiles || !p.media) p,
   ];
+
+  /// what goes, in the order picked: photos and videos next to each other
+  /// as one album, files next to each other as one set. the caption goes
+  /// with the first of them all
+  List<({bool media, List<SendPick> picks})> get runs {
+    final out = <({bool media, List<SendPick> picks})>[];
+    for (final p in picks) {
+      final media = !asFiles && p.media;
+      if (out.isNotEmpty && out.last.media == media) {
+        out.last.picks.add(p);
+      } else {
+        out.add((media: media, picks: [p]));
+      }
+    }
+    return out;
+  }
 
   /// the copies let go, once the chat is done with them
   Future<void> release() async {
@@ -212,7 +230,8 @@ class SendSheetState extends State<SendSheet> {
     super.initState();
     _unguard = sendSheetGuard.closeOnLock(() {
       _unguard = null;
-      if (mounted) Navigator.of(context).maybePop();
+      // the lock takes it down whatever was picked: no question first
+      if (mounted) Navigator.of(context).pop();
     });
     widget.recent().then(
       (r) {
@@ -352,115 +371,163 @@ class SendSheetState extends State<SendSheet> {
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final still = motionStill(context);
-    final height = mq.size.height * 0.86;
+    final full = mq.size.height * 0.86;
+    // nothing picked and nothing listed on this tab: a short sheet with its
+    // one way in, not a tall empty one
+    final listed = switch (_tab) {
+      SendTab.gallery => _gallery,
+      SendTab.files => _files,
+      SendTab.recent => _recent ?? const <SendPick>[],
+    };
+    final compact = _chosen.isEmpty && listed.isEmpty && _tab != SendTab.recent;
+    final short =
+        (_tab == SendTab.gallery && widget.shortcuts.isNotEmpty
+                ? 330.0
+                : 250.0) *
+            mq.textScaler.scale(10) /
+            10 +
+        mq.padding.bottom;
+    final height = compact ? math.min(full, short) : full;
     final anyMedia = _chosen.any((p) => p.media);
-    return Padding(
-      padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
-      child: SizedBox(
-        height: height,
-        child: Column(
-          children: [
-            const SheetHandle(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(text: l10n.sendSheetTo),
-                              const TextSpan(text: ' '),
-                              TextSpan(
-                                text: widget.to,
-                                style: const TextStyle(
-                                  fontStyle: FontStyle.italic,
+    // back with picks in the tray asks before they go
+    return PopScope(
+      canPop: _chosen.isEmpty || _sent,
+      onPopInvokedWithResult: (popped, _) {
+        if (!popped) _askDiscard();
+      },
+      child: Padding(
+        padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
+        child: AnimatedContainer(
+          duration: still ? Duration.zero : const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          height: height,
+          child: Column(
+            children: [
+              const SheetHandle(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(text: l10n.sendSheetTo),
+                                const TextSpan(text: ' '),
+                                TextSpan(
+                                  text: widget.to,
+                                  style: const TextStyle(
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: HaloType.serif(
+                              size: 22,
+                              color: HaloColors.text,
+                            ),
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: HaloType.serif(
-                            size: 22,
-                            color: HaloColors.text,
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.sendSheetCleaned,
+                            style: HaloType.mono(
+                              size: 10,
+                              color: HaloColors.greenText,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.sendSheetCleaned,
-                          style: HaloType.mono(
-                            size: 10,
-                            color: HaloColors.greenText,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: PillTabs(
-                labels: [
-                  widget.galleryLabel ?? l10n.chatGalleryShown,
-                  l10n.sendSheetFiles,
-                  l10n.sendSheetRecent,
-                ],
-                at: _tab.index,
-                onTap: (i) {
-                  HapticFeedback.selectionClick();
-                  setState(() => _tab = SendTab.values[i]);
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: still
-                    ? Duration.zero
-                    : const Duration(milliseconds: 220),
-                switchInCurve: kHouseCurve,
-                transitionBuilder: (c, a) => FadeTransition(
-                  opacity: a,
-                  child: SlideTransition(
-                    position: Tween(
-                      begin: const Offset(0, 0.03),
-                      end: Offset.zero,
-                    ).animate(a),
-                    child: c,
-                  ),
+                  ],
                 ),
-                child: KeyedSubtree(key: ValueKey(_tab), child: _body()),
               ),
-            ),
-            _Foot(
-              tray: _chosen.isEmpty
-                  ? null
-                  : SendTray(
-                      lifting: _leaving,
-                      cards: _cards,
-                      most: widget.most,
-                      onRemove: _remove,
-                      onRename: _rename,
-                      onSpoiler: widget.spoilers ? _spoiler : null,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: PillTabs(
+                  labels: [
+                    widget.galleryLabel ?? l10n.chatGalleryShown,
+                    l10n.sendSheetFiles,
+                    l10n.sendSheetRecent,
+                  ],
+                  at: _tab.index,
+                  onTap: (i) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _tab = SendTab.values[i]);
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: still
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  switchInCurve: kHouseCurve,
+                  transitionBuilder: (c, a) => FadeTransition(
+                    opacity: a,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0, 0.03),
+                        end: Offset.zero,
+                      ).animate(a),
+                      child: c,
                     ),
-              count: _chosen.length,
-              showAsFiles: anyMedia,
-              asFiles: _asFiles,
-              onAsFiles: (v) => setState(() => _asFiles = v),
-              caption: _caption,
-              onSend: _send,
-            ),
-          ],
+                  ),
+                  child: KeyedSubtree(key: ValueKey(_tab), child: _body()),
+                ),
+              ),
+              _Foot(
+                tray: _chosen.isEmpty
+                    ? null
+                    : SendTray(
+                        lifting: _leaving,
+                        cards: _cards,
+                        most: widget.most,
+                        onRemove: _remove,
+                        onRename: _rename,
+                        onSpoiler: widget.spoilers ? _spoiler : null,
+                      ),
+                count: _chosen.length,
+                showAsFiles: anyMedia,
+                asFiles: _asFiles,
+                onAsFiles: (v) => setState(() => _asFiles = v),
+                caption: _caption,
+                onSend: _send,
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  bool _asking = false;
+
+  Future<void> _askDiscard() async {
+    if (_asking || _chosen.isEmpty) return;
+    _asking = true;
+    try {
+      final n = _chosen.length;
+      final yes = await showConfirmSheet(
+        context,
+        title: l10n.sendSheetDiscardTitle(n, whole(n)),
+        line: l10n.sendSheetDiscardLine,
+        yes: l10n.sendSheetDiscard,
+        keep: l10n.sendSheetKeep,
+      );
+      if (yes && mounted) {
+        setState(_chosen.clear);
+        Navigator.of(context).pop();
+      }
+    } finally {
+      _asking = false;
+    }
   }
 
   Widget _body() {
@@ -661,10 +728,17 @@ class _PickRow extends StatelessWidget {
       kindOfName(pick.name),
       extOf(safeFileName(pick.name)),
     );
-    final shown = safeFileName(pick.name, facts: facts);
-    final (stem, ext) = splitFileName(shown);
+    final named = safeFileName(pick.name, facts: facts);
+    // a gallery pick is named by the phone's own number for it: it reads
+    // as the photo or video it is, its kind beside its size
+    final media = pick.media && RegExp(r'^\d+\.\w+$').hasMatch(named);
+    final shown = media
+        ? (pick.video ? l10n.videoBubbleVideo : l10n.appPhoto)
+        : named;
+    final (stem, ext) = media ? (shown, '') : splitFileName(shown);
     final on = order >= 0;
     final sub = [
+      if (media && facts.ext.isNotEmpty) facts.ext.toUpperCase(),
       humanFileSize(pick.size),
       if (pick.when != null) _whenLine(pick.when!),
     ].join(' · ');
@@ -700,7 +774,20 @@ class _PickRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              FileBadge(facts: facts, size: 40),
+              pick.media && !pick.video
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(pick.path),
+                        width: 40,
+                        height: 40,
+                        cacheWidth: 120,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) =>
+                            FileBadge(facts: facts, size: 40),
+                      ),
+                    )
+                  : FileBadge(facts: facts, size: 40),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

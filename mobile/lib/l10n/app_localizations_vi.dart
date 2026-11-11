@@ -6618,17 +6618,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String mediaBubblesB(Object bytes) {
-    return '$bytes b';
+    return '$bytes B';
   }
 
   @override
   String mediaBubblesKb(Object bytes) {
-    return '$bytes kb';
+    return '$bytes KB';
   }
 
   @override
   String mediaBubblesMb(Object bytes) {
-    return '$bytes mb';
+    return '$bytes MB';
   }
 
   @override
@@ -12415,4 +12415,23 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get fileNotHere => 'Đã gỡ khỏi điện thoại này';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bỏ $n tệp?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => 'Chưa có gì được gửi.';
+
+  @override
+  String get sendSheetDiscard => 'Bỏ';
+
+  @override
+  String get sendSheetKeep => 'Giữ lại';
 }

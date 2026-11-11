@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "移除下载",
   "filesRemoveDownloadLine": "这会释放它在本机上占用的空间。消息会保留。文件无法再次下载：如有需要，请对方重新发送。",
   "filesRemoveDownloadYes": "移除",
-  "fileNotHere": "已从本机移除"
+  "fileNotHere": "已从本机移除",
+  "sendSheetDiscardTitle": "{count, plural, other{放弃 {n} 个文件？}}",
+  "sendSheetDiscardLine": "还没有发送任何内容。",
+  "sendSheetDiscard": "放弃",
+  "sendSheetKeep": "保留"
 }

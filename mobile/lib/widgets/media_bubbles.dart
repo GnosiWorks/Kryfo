@@ -89,6 +89,8 @@ Widget fileCard(
   bool kept = false,
   // from someone known: a pdf's first page may be drawn (FileCard.glance)
   bool glance = false,
+  // one of several sent one after the other: an empty ring while it waits
+  bool queued = false,
 }) {
   // a sound kryfo plays is a player of its own, once it is all here
   if (filePath != null && sendingUid == null) {
@@ -157,6 +159,7 @@ Widget fileCard(
     onCancel: onCancel,
     heroTag: heroTag,
     glance: glance || isOut,
+    queued: queued,
   );
 }
 

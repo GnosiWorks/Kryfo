@@ -11748,6 +11748,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fileNotHere => '已从本机移除';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '放弃 $n 个文件？',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => '还没有发送任何内容。';
+
+  @override
+  String get sendSheetDiscard => '放弃';
+
+  @override
+  String get sendSheetKeep => '保留';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18071,17 +18090,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String mediaBubblesB(Object bytes) {
-    return '$bytes b';
+    return '$bytes B';
   }
 
   @override
   String mediaBubblesKb(Object bytes) {
-    return '$bytes kb';
+    return '$bytes KB';
   }
 
   @override
   String mediaBubblesMb(Object bytes) {
-    return '$bytes mb';
+    return '$bytes MB';
   }
 
   @override
@@ -23374,4 +23393,23 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get fileNotHere => '已從本機移除';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '放棄 $n 個檔案？',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => '還沒有傳送任何內容。';
+
+  @override
+  String get sendSheetDiscard => '放棄';
+
+  @override
+  String get sendSheetKeep => '保留';
 }

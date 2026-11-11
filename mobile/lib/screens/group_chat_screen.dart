@@ -2631,28 +2631,28 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _sendFromSheet(SendSheetResult r) async {
     try {
       if (!mounted || _nobodyToRead()) return;
-      final media = r.media;
-      final files = r.files;
-      if (media.isNotEmpty) {
-        await sendGalleryPicks(
-          [for (final m in media) m.source as XFile? ?? XFile(m.path)],
-          spoilers: r.spoilers,
-          pickMore: () => lockState.hold(pickGallery),
-          preview: _preview,
-          send: (s) => _sendPicked(
-            s.caption.isEmpty && files.isEmpty && r.caption.isNotEmpty
-                ? MediaSendResult(
-                    items: s.items,
-                    caption: r.caption,
-                    secure: s.secure,
-                  )
-                : s,
-          ),
-        );
+      // the sheet is the preview: one send, one caption, in the order
+      // picked, with no second screen
+      var caption = r.caption;
+      for (final run in r.runs) {
+        if (!mounted || lockState.locked) break;
+        if (run.media) {
+          final items = await readGalleryPicks([
+            for (final m in run.picks) m.source as XFile? ?? XFile(m.path),
+          ], spoilers: r.spoilers);
+          try {
+            if (items.isEmpty || !mounted) break;
+            await _sendPicked(MediaSendResult(items: items, caption: caption));
+          } finally {
+            await shredPickedImages([for (final m in items) ?m.video]);
+          }
+        } else {
+          await _sendGroupFileSet([
+            for (final f in run.picks) (f.path, f.name),
+          ], caption);
+        }
+        caption = '';
       }
-      await _sendGroupFileSet([
-        for (final f in files) (f.path, f.name),
-      ], media.isEmpty ? r.caption : '');
     } finally {
       await r.release();
       await shredPicked(const []);
@@ -4446,7 +4446,6 @@ class _GroupChatScreenState extends State<GroupChatScreen>
         ),
     ]);
   }
-
 
   // a photo or video of the group is one item, the oldest first: those the
   // viewer can swipe through. a timed one, a spoiler and one still to come
@@ -7603,7 +7602,8 @@ class _GroupBubble extends StatelessWidget {
                   // only those past their tries are left
                   if (isOut)
                     GrowSwap(
-                      child: !m.pending
+                      // a set of files shows each row's own ring: no pill
+                      child: !m.pending || (album?.tag.files ?? false)
                           ? switch (m.reach) {
                               final r? => Padding(
                                 // one key while it counts: the pill rolls
@@ -7791,6 +7791,7 @@ class _GroupBubble extends StatelessWidget {
                 when: x.when,
                 kept: kept,
                 glance: known,
+                queued: true,
               ),
             ),
     );

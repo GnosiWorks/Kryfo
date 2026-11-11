@@ -111,7 +111,10 @@
   "voiceSpeedLabel",
   "traySpoiler",
   "filesTypeAudio",
-  "filesTypeVideo"
+  "filesTypeVideo",
+  "mediaBubblesB",
+  "mediaBubblesKb",
+  "mediaBubblesMb"
  ],
  "es": [
   "a11yVideoOn",
@@ -549,7 +552,9 @@
   "transportOnline",
   "transportTransport",
   "voiceSpeedLabel",
-  "traySpoiler"
+  "traySpoiler",
+  "mediaBubblesB",
+  "mediaBubblesMb"
  ],
  "pt": [
   "sharedTabLinks",
@@ -818,7 +823,10 @@
   "toolPartsMb",
   "videoBubbleKb",
   "videoBubbleMb",
-  "voiceSpeedLabel"
+  "voiceSpeedLabel",
+  "mediaBubblesB",
+  "mediaBubblesKb",
+  "mediaBubblesMb"
  ],
  "zh_Hant": [
   "appTor",

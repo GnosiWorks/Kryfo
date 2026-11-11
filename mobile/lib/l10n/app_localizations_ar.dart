@@ -12565,4 +12565,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fileNotHere => 'أُزيل من هذا الهاتف';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تجاهل $n ملفات؟',
+      one: 'تجاهل ملف واحد؟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => 'لم يُرسَل شيء بعد.';
+
+  @override
+  String get sendSheetDiscard => 'تجاهل';
+
+  @override
+  String get sendSheetKeep => 'الاحتفاظ بها';
 }

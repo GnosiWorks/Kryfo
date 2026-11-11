@@ -1845,9 +1845,9 @@
   "kryfoLinkTextYouJoinUnderA": "Bạn tham gia bằng một khóa tạo riêng cho phòng này. Không ai trong phòng thấy ba từ của bạn.",
   "linkStubFetchedOverTorBy": "Tải qua Tor · bởi thiết bị của bạn",
   "linkStubFetchedOverTorByTheirDevice": "Tải qua Tor · bởi thiết bị của họ",
-  "mediaBubblesB": "{bytes} b",
-  "mediaBubblesKb": "{bytes} kb",
-  "mediaBubblesMb": "{bytes} mb",
+  "mediaBubblesB": "{bytes} B",
+  "mediaBubblesKb": "{bytes} KB",
+  "mediaBubblesMb": "{bytes} MB",
   "mediaBubblesFile": "TỆP",
   "mediaBubblesAudioUnavailable": "Âm thanh không khả dụng",
   "mediaBubblesHidden": "Đã ẩn",
@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "Gỡ bản tải về",
   "filesRemoveDownloadLine": "Thao tác này giải phóng dung lượng trên điện thoại này. Tin nhắn vẫn còn. Không thể tải lại tệp: hãy nhờ gửi lại nếu bạn cần.",
   "filesRemoveDownloadYes": "Gỡ",
-  "fileNotHere": "Đã gỡ khỏi điện thoại này"
+  "fileNotHere": "Đã gỡ khỏi điện thoại này",
+  "sendSheetDiscardTitle": "{count, plural, other{Bỏ {n} tệp?}}",
+  "sendSheetDiscardLine": "Chưa có gì được gửi.",
+  "sendSheetDiscard": "Bỏ",
+  "sendSheetKeep": "Giữ lại"
 }

@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "Видалити завантаження",
   "filesRemoveDownloadLine": "Так звільниться місце на цьому телефоні. Повідомлення залишиться. Завантажити файл знову не вийде: попросіть надіслати його ще раз, якщо він потрібен.",
   "filesRemoveDownloadYes": "Видалити",
-  "fileNotHere": "Видалено з цього телефона"
+  "fileNotHere": "Видалено з цього телефона",
+  "sendSheetDiscardTitle": "{count, plural, one{Скасувати {n} файл?} few{Скасувати {n} файли?} other{Скасувати {n} файлів?}}",
+  "sendSheetDiscardLine": "Ще нічого не надіслано.",
+  "sendSheetDiscard": "Скасувати",
+  "sendSheetKeep": "Залишити"
 }

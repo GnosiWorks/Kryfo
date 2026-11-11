@@ -5,6 +5,7 @@
 // it means. the text and pdf viewers read through the seal into memory
 // only, and the lock takes everything they drew
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -188,8 +189,65 @@ void main() {
       HaloColors.setLight(true);
       expect(fileToneColor(FileTone.pdf), HaloColors.roseText);
       expect(fileToneColor(FileTone.sheet), HaloColors.greenText);
-      expect(onFileTone(FileTone.pdf), const Color(0xFFFFFFFF));
+      // the label is the outline's colour: the tile is never filled
+      expect(onFileTone(FileTone.pdf), HaloColors.roseText);
     });
+
+    for (final light in [false, true]) {
+      testWidgets('a thin outline, its label in the kind\'s colour, readable '
+          '(${light ? 'light' : 'dark'})', (t) async {
+        HaloColors.setLight(light);
+        addTearDown(() => HaloColors.setLight(false));
+        double lum(Color c) {
+          double ch(double v) => v <= 0.03928
+              ? v / 12.92
+              : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+          return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
+        }
+
+        double contrast(Color a, Color b) {
+          final x = lum(a), y = lum(b);
+          return (math.max(x, y) + 0.05) / (math.min(x, y) + 0.05);
+        }
+
+        for (final tone in FileTone.values) {
+          if (tone == FileTone.other) continue;
+          for (final ground in [HaloColors.surface, HaloColors.bubbleIn]) {
+            expect(
+              contrast(onFileTone(tone), ground),
+              greaterThanOrEqualTo(3),
+              reason: '$tone',
+            );
+          }
+        }
+        await t.pumpWidget(
+          const MaterialApp(
+            home: Column(
+              children: [
+                FileBadge(facts: FileFacts(FileKind.pdf, 'pdf')),
+                FileBadge(
+                  facts: FileFacts(FileKind.pdf, 'pdf'),
+                  onAccent: true,
+                ),
+              ],
+            ),
+          ),
+        );
+        final boxes = t
+            .widgetList<Container>(
+              find.descendant(
+                of: find.byType(FileBadge),
+                matching: find.byType(Container),
+              ),
+            )
+            .map((c) => c.decoration! as BoxDecoration)
+            .toList();
+        expect(boxes[0].color, isNull);
+        expect((boxes[0].border! as Border).top.width, 1.4);
+        // ours on the amber bubble: a hairline
+        expect((boxes[1].border! as Border).top.width, 1);
+      });
+    }
 
     test('the label never grows past four letters', () {
       expect(

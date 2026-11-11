@@ -12620,4 +12620,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get fileNotHere => 'Удалено с этого телефона';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Отменить $n файлов?',
+      few: 'Отменить $n файла?',
+      one: 'Отменить $n файл?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => 'Пока ничего не отправлено.';
+
+  @override
+  String get sendSheetDiscard => 'Отменить';
+
+  @override
+  String get sendSheetKeep => 'Оставить';
 }

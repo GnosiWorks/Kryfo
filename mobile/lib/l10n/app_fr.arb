@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "Retirer le téléchargement",
   "filesRemoveDownloadLine": "Cela libère sa place sur ce téléphone. Le message reste. Le fichier ne peut pas être téléchargé à nouveau : demande qu'on te le renvoie si tu en as besoin.",
   "filesRemoveDownloadYes": "Retirer",
-  "fileNotHere": "Retiré de ce téléphone"
+  "fileNotHere": "Retiré de ce téléphone",
+  "sendSheetDiscardTitle": "{count, plural, =1{Abandonner 1 fichier ?} other{Abandonner {n} fichiers ?}}",
+  "sendSheetDiscardLine": "Rien n'a encore été envoyé.",
+  "sendSheetDiscard": "Abandonner",
+  "sendSheetKeep": "Les garder"
 }

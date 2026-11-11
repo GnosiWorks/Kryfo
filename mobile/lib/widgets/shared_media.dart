@@ -1032,7 +1032,8 @@ class _VoiceRow extends StatelessWidget {
       hourMinute(item.when),
     ].join(' · ');
     final tone = fileToneColor(FileTone.audio);
-    final ink = onFileTone(FileTone.audio);
+    // the disc is filled: its mark takes the ink a filled tile's would
+    final ink = HaloColors.onFileBadge;
     final p = SoundPlayer.instance;
     return _Row(
       lead: HaloHero(

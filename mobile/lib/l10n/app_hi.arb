@@ -1731,9 +1731,9 @@
   "kryfoLinkTextYouJoinUnderA": "आप इस रूम के लिए बनी कुंजी से जुड़ते हैं। इसमें कोई भी आपके तीन शब्द नहीं देखता।",
   "linkStubFetchedOverTorBy": "Tor से लाया गया · आपके डिवाइस ने",
   "linkStubFetchedOverTorByTheirDevice": "Tor से लाया गया · उनके डिवाइस ने",
-  "mediaBubblesB": "{bytes} b",
-  "mediaBubblesKb": "{bytes} kb",
-  "mediaBubblesMb": "{bytes} mb",
+  "mediaBubblesB": "{bytes} B",
+  "mediaBubblesKb": "{bytes} KB",
+  "mediaBubblesMb": "{bytes} MB",
   "mediaBubblesFile": "फ़ाइल",
   "mediaBubblesAudioUnavailable": "ऑडियो उपलब्ध नहीं",
   "mediaBubblesHidden": "छिपा",
@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "डाउनलोड हटाओ",
   "filesRemoveDownloadLine": "इससे इस फ़ोन पर उसकी जगह खाली होगी। संदेश रहेगा। फ़ाइल फिर से डाउनलोड नहीं होगी: ज़रूरत हो तो दोबारा भेजने को कहो।",
   "filesRemoveDownloadYes": "हटाओ",
-  "fileNotHere": "इस फ़ोन से हटाई गई"
+  "fileNotHere": "इस फ़ोन से हटाई गई",
+  "sendSheetDiscardTitle": "{count, plural, =1{1 फ़ाइल छोड़ दें?} other{{n} फ़ाइलें छोड़ दें?}}",
+  "sendSheetDiscardLine": "अभी तक कुछ नहीं भेजा गया।",
+  "sendSheetDiscard": "छोड़ दो",
+  "sendSheetKeep": "रखो"
 }

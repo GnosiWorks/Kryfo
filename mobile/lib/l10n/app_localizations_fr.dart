@@ -12565,4 +12565,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get fileNotHere => 'Retiré de ce téléphone';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Abandonner $n fichiers ?',
+      one: 'Abandonner 1 fichier ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => 'Rien n\'a encore été envoyé.';
+
+  @override
+  String get sendSheetDiscard => 'Abandonner';
+
+  @override
+  String get sendSheetKeep => 'Les garder';
 }

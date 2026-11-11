@@ -317,7 +317,8 @@ class IncomingMediaBanner extends StatelessWidget {
     final stalled = !sending && incomingMediaStalled.contains(chatKey);
     final count = _incomingCount[chatKey];
     final detail = transferDetail(sending ? cancelUid! : chatKey, v);
-    final line = sending && mediaPreparing.contains(cancelUid)
+    // one honest order: preparing until a byte goes, then sending
+    final line = sending && (mediaPreparing.contains(cancelUid) || v <= 0)
         ? l10n.mediaProgressPreparing
         : sending
         ? detail == null

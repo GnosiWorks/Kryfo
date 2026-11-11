@@ -11,6 +11,7 @@ import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/picture_lock.dart';
 import 'package:kryfo/show_in_chat.dart';
 import 'package:kryfo/typing.dart';
+import 'package:kryfo/widgets/send_sheet.dart';
 import 'package:kryfo/widgets/send_tray.dart';
 import 'package:kryfo/widgets/shared_media.dart';
 import 'package:kryfo/widgets/spoiler_cover.dart';
@@ -38,6 +39,40 @@ void main() {
         bodyOf(src, 'Future<MediaSendResult?> _preview('),
         contains('spoilers: spoilers,'),
       );
+    }
+  });
+
+  test('a sheet send is one send: no second preview, one caption, in the '
+      'order picked', () {
+    SendPick p(String n, {bool media = false}) => SendPick(
+      path: '/x/$n',
+      name: n,
+      size: 1,
+      from: SendTab.files,
+      media: media,
+    );
+    final r = SendSheetResult([
+      p('a.jpg', media: true),
+      p('b.pdf'),
+      p('c.zip'),
+      p('d.jpg', media: true),
+    ], caption: 'trip');
+    expect(r.runs.map((x) => (x.media, x.picks.length)), [
+      (true, 1),
+      (false, 2),
+      (true, 1),
+    ]);
+    final asFiles = SendSheetResult(r.picks, asFiles: true);
+    expect(asFiles.runs.map((x) => (x.media, x.picks.length)), [(false, 4)]);
+    for (final file in [
+      'lib/screens/chat_screen.dart',
+      'lib/screens/group_chat_screen.dart',
+    ]) {
+      final body = bodyOf(sourceOf(file), 'Future<void> _sendFromSheet(');
+      expect(body, isNot(contains('_preview')), reason: file);
+      expect(body, isNot(contains('sendGalleryPicks')), reason: file);
+      expect(body, contains('for (final run in r.runs)'), reason: file);
+      expect(body, contains("caption = '';"), reason: file);
     }
   });
 

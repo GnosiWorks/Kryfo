@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "حذف فایل دانلودشده",
   "filesRemoveDownloadLine": "این کار فضای آن را روی این گوشی آزاد می‌کند. پیام می‌ماند. فایل دوباره دانلود نمی‌شود: اگر لازمش داری، بخواه دوباره بفرستند.",
   "filesRemoveDownloadYes": "حذف",
-  "fileNotHere": "از این گوشی حذف شد"
+  "fileNotHere": "از این گوشی حذف شد",
+  "sendSheetDiscardTitle": "{count, plural, other{{n} فایل کنار گذاشته شود؟}}",
+  "sendSheetDiscardLine": "هنوز چیزی فرستاده نشده.",
+  "sendSheetDiscard": "کنار گذاشتن",
+  "sendSheetKeep": "نگه دار"
 }

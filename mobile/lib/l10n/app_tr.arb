@@ -1845,9 +1845,9 @@
   "kryfoLinkTextYouJoinUnderA": "Bu oda için üretilmiş bir anahtarla katılırsın. İçerideki hiç kimse üç kelimeni görmez.",
   "linkStubFetchedOverTorBy": "Tor üzerinden alındı · senin cihazın tarafından",
   "linkStubFetchedOverTorByTheirDevice": "Tor üzerinden alındı · onun cihazı tarafından",
-  "mediaBubblesB": "{bytes} b",
-  "mediaBubblesKb": "{bytes} kb",
-  "mediaBubblesMb": "{bytes} mb",
+  "mediaBubblesB": "{bytes} B",
+  "mediaBubblesKb": "{bytes} KB",
+  "mediaBubblesMb": "{bytes} MB",
   "mediaBubblesFile": "DOSYA",
   "mediaBubblesAudioUnavailable": "Ses kullanılamıyor",
   "mediaBubblesHidden": "Gizli",
@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "İndirmeyi kaldır",
   "filesRemoveDownloadLine": "Bu, bu telefondaki yerini boşaltır. Mesaj kalır. Dosya yeniden indirilemez: gerekirse yeniden göndermesini iste.",
   "filesRemoveDownloadYes": "Kaldır",
-  "fileNotHere": "Bu telefondan kaldırıldı"
+  "fileNotHere": "Bu telefondan kaldırıldı",
+  "sendSheetDiscardTitle": "{count, plural, other{{n} dosya atılsın mı?}}",
+  "sendSheetDiscardLine": "Henüz hiçbir şey gönderilmedi.",
+  "sendSheetDiscard": "At",
+  "sendSheetKeep": "Tut"
 }

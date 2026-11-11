@@ -57,7 +57,7 @@ FileKindFilter fileKindFilterOf(String? name) {
     FileTone.audio => FileKindFilter.audio,
     FileTone.video => FileKindFilter.video,
     FileTone.zip => FileKindFilter.archives,
-    FileTone.other => FileKindFilter.other,
+    FileTone.picture || FileTone.other => FileKindFilter.other,
   };
 }
 
@@ -329,6 +329,11 @@ class SharedFilesPageState extends State<SharedFilesPage> {
           sizeOf: _sizeOf,
           waits: _waits,
         );
+        final seen = <String?>{};
+        final twice = <String?>{
+          for (final e in widget.files)
+            if (!seen.add(e.name)) e.name,
+        };
         final fromName = _f.from == null
             ? null
             : _f.from == ''
@@ -415,7 +420,11 @@ class SharedFilesPageState extends State<SharedFilesPage> {
                           key: ValueKey((e as FileEntry).uid ?? e.path),
                           entry: e,
                           query: _f.query,
-                          who: widget.group ? _who(e) : null,
+                          // in a group always; in a chat when two share a
+                          // name, so ours and theirs read apart
+                          who: widget.group || twice.contains(e.name)
+                              ? _who(e)
+                              : null,
                           size: _sizeOf(e),
                           onTap: () => widget.onTap(e),
                           actions: () => widget.actions(e),

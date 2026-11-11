@@ -1845,9 +1845,9 @@
   "kryfoLinkTextYouJoinUnderA": "你會用專為這個聊天室產生的金鑰加入。裡面沒有人看得到你的三個詞。",
   "linkStubFetchedOverTorBy": "經由 Tor 擷取 · 由你的裝置",
   "linkStubFetchedOverTorByTheirDevice": "經由 Tor 擷取 · 由對方的裝置",
-  "mediaBubblesB": "{bytes} b",
-  "mediaBubblesKb": "{bytes} kb",
-  "mediaBubblesMb": "{bytes} mb",
+  "mediaBubblesB": "{bytes} B",
+  "mediaBubblesKb": "{bytes} KB",
+  "mediaBubblesMb": "{bytes} MB",
   "mediaBubblesFile": "檔案",
   "mediaBubblesAudioUnavailable": "音訊無法播放",
   "mediaBubblesHidden": "已隱藏",
@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "移除下載",
   "filesRemoveDownloadLine": "這會釋放它在本機上佔用的空間。訊息會保留。檔案無法再次下載：如有需要，請對方重新傳送。",
   "filesRemoveDownloadYes": "移除",
-  "fileNotHere": "已從本機移除"
+  "fileNotHere": "已從本機移除",
+  "sendSheetDiscardTitle": "{count, plural, other{放棄 {n} 個檔案？}}",
+  "sendSheetDiscardLine": "還沒有傳送任何內容。",
+  "sendSheetDiscard": "放棄",
+  "sendSheetKeep": "保留"
 }

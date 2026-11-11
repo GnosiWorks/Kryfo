@@ -10552,19 +10552,19 @@ abstract class AppLocalizations {
   /// widgets/media_bubbles.dart
   ///
   /// In en, this message translates to:
-  /// **'{bytes} b'**
+  /// **'{bytes} B'**
   String mediaBubblesB(Object bytes);
 
   /// widgets/media_bubbles.dart
   ///
   /// In en, this message translates to:
-  /// **'{bytes} kb'**
+  /// **'{bytes} KB'**
   String mediaBubblesKb(Object bytes);
 
   /// widgets/media_bubbles.dart
   ///
   /// In en, this message translates to:
-  /// **'{bytes} mb'**
+  /// **'{bytes} MB'**
   String mediaBubblesMb(Object bytes);
 
   /// widgets/media_bubbles.dart
@@ -19878,6 +19878,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Removed from this phone'**
   String get fileNotHere;
+
+  /// sending sheet: closed with picks in the tray. n is count in the language's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Discard 1 file?} other{Discard {n} files?}}'**
+  String sendSheetDiscardTitle(int count, String n);
+
+  /// sending sheet discard question: line under the title
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been sent yet.'**
+  String get sendSheetDiscardLine;
+
+  /// sending sheet discard question: let the picks go
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get sendSheetDiscard;
+
+  /// sending sheet discard question: keep picking
+  ///
+  /// In en, this message translates to:
+  /// **'Keep them'**
+  String get sendSheetKeep;
 }
 
 class _AppLocalizationsDelegate

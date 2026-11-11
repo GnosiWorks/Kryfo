@@ -8297,7 +8297,7 @@
   "@linkStubFetchedOverTorByTheirDevice": {
     "description": "widgets/link_stub.dart"
   },
-  "mediaBubblesB": "{bytes} b",
+  "mediaBubblesB": "{bytes} B",
   "@mediaBubblesB": {
     "description": "widgets/media_bubbles.dart",
     "placeholders": {
@@ -8306,7 +8306,7 @@
       }
     }
   },
-  "mediaBubblesKb": "{bytes} kb",
+  "mediaBubblesKb": "{bytes} KB",
   "@mediaBubblesKb": {
     "description": "widgets/media_bubbles.dart",
     "placeholders": {
@@ -8315,7 +8315,7 @@
       }
     }
   },
-  "mediaBubblesMb": "{bytes} mb",
+  "mediaBubblesMb": "{bytes} MB",
   "@mediaBubblesMb": {
     "description": "widgets/media_bubbles.dart",
     "placeholders": {
@@ -15677,5 +15677,29 @@
   "fileNotHere": "Removed from this phone",
   "@fileNotHere": {
     "description": "file bubble line: a received file whose download was removed from this phone"
+  },
+  "sendSheetDiscardTitle": "{count, plural, =1{Discard 1 file?} other{Discard {n} files?}}",
+  "@sendSheetDiscardTitle": {
+    "description": "sending sheet: closed with picks in the tray. n is count in the language's digits",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "sendSheetDiscardLine": "Nothing has been sent yet.",
+  "@sendSheetDiscardLine": {
+    "description": "sending sheet discard question: line under the title"
+  },
+  "sendSheetDiscard": "Discard",
+  "@sendSheetDiscard": {
+    "description": "sending sheet discard question: let the picks go"
+  },
+  "sendSheetKeep": "Keep them",
+  "@sendSheetKeep": {
+    "description": "sending sheet discard question: keep picking"
   }
 }

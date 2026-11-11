@@ -12439,4 +12439,23 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get fileNotHere => 'از این گوشی حذف شد';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n فایل کنار گذاشته شود؟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => 'هنوز چیزی فرستاده نشده.';
+
+  @override
+  String get sendSheetDiscard => 'کنار گذاشتن';
+
+  @override
+  String get sendSheetKeep => 'نگه دار';
 }

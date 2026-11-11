@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "Download entfernen",
   "filesRemoveDownloadLine": "Das gibt den Platz auf diesem Gerät frei. Die Nachricht bleibt. Die Datei lässt sich nicht erneut laden: Bitte darum, sie noch einmal zu senden, wenn du sie brauchst.",
   "filesRemoveDownloadYes": "Entfernen",
-  "fileNotHere": "Von diesem Gerät entfernt"
+  "fileNotHere": "Von diesem Gerät entfernt",
+  "sendSheetDiscardTitle": "{count, plural, =1{1 Datei verwerfen?} other{{n} Dateien verwerfen?}}",
+  "sendSheetDiscardLine": "Noch wurde nichts gesendet.",
+  "sendSheetDiscard": "Verwerfen",
+  "sendSheetKeep": "Behalten"
 }

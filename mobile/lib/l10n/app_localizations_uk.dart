@@ -12617,4 +12617,25 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get fileNotHere => 'Видалено з цього телефона';
+
+  @override
+  String sendSheetDiscardTitle(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Скасувати $n файлів?',
+      few: 'Скасувати $n файли?',
+      one: 'Скасувати $n файл?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendSheetDiscardLine => 'Ще нічого не надіслано.';
+
+  @override
+  String get sendSheetDiscard => 'Скасувати';
+
+  @override
+  String get sendSheetKeep => 'Залишити';
 }

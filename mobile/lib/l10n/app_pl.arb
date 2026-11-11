@@ -3263,5 +3263,9 @@
   "filesRemoveDownload": "Usuń pobrany plik",
   "filesRemoveDownloadLine": "Zwalnia to miejsce na tym telefonie. Wiadomość zostaje. Pliku nie da się pobrać ponownie: poproś o ponowne wysłanie, jeśli go potrzebujesz.",
   "filesRemoveDownloadYes": "Usuń",
-  "fileNotHere": "Usunięto z tego telefonu"
+  "fileNotHere": "Usunięto z tego telefonu",
+  "sendSheetDiscardTitle": "{count, plural, =1{Odrzucić 1 plik?} few{Odrzucić {n} pliki?} other{Odrzucić {n} plików?}}",
+  "sendSheetDiscardLine": "Nic jeszcze nie wysłano.",
+  "sendSheetDiscard": "Odrzuć",
+  "sendSheetKeep": "Zostaw"
 }
