@@ -285,6 +285,48 @@ static void test_words(const char *path, const struct wav *w) {
   kv_close(m);
 }
 
+// one clip from dir through the real model: its words, or "" when nothing ran
+static void run_clip(kv_model *m, const char *dir, const char *name, struct seen *s) {
+  char path[1024];
+  snprintf(path, sizeof(path), "%s/%s", dir, name);
+  struct wav c = {0};
+  seen_init(s);
+  if (read_wav(path, &c) != 0) {
+    fprintf(stderr, "cannot read %s\n", path);
+    failed++;
+    return;
+  }
+  char lang[8];
+  CHECK(kv_run(m, c.pcm, c.frames, c.rate, c.channels, "en", 4, NULL, on_segment, s, lang) == KV_OK);
+  printf("%s: %d segments: %s\n", name, s->count, s->text);
+  free(c.pcm);
+}
+
+// real recordings (KV_CLIPS, kept out of the repo): a quiet voice under
+// the level of a room's noise is still heard, while the room's noise, the
+// same noise 4x louder and the hiss of a pause run nothing
+static void test_clips(const char *path, const char *dir) {
+  kv_model *m = NULL;
+  CHECK(kv_open(path, &m) == KV_OK);
+  if (m == NULL) return;
+  struct seen s;
+  run_clip(m, dir, "quiet10.wav", &s);
+  CHECK(strstr(s.text, "cabbage") != NULL && strstr(s.text, "dinosaurs") != NULL);
+  run_clip(m, dir, "noise8.wav", &s);
+  CHECK(s.count == 0);
+  run_clip(m, dir, "noise8-loud.wav", &s);
+  CHECK(s.count == 0);
+  run_clip(m, dir, "hush8.wav", &s);
+  CHECK(s.count == 0);
+  run_clip(m, dir, "4-quiet-phone-man-original.wav", &s);
+  CHECK(strstr(s.text, "another being") != NULL);
+  run_clip(m, dir, "2-man-original.wav", &s);
+  CHECK(strstr(s.text, "rose princess") != NULL);
+  run_clip(m, dir, "3-woman-original.wav", &s);
+  CHECK(strstr(s.text, "watchful Miss Woodley") != NULL);
+  kv_close(m);
+}
+
 int main(int argc, char **argv) {
   if (argc < 3) {
     fprintf(stderr, "usage: kv_test <test model> <wav> [real model]\n");
@@ -305,6 +347,7 @@ int main(int argc, char **argv) {
     kv_close(m);
   }
   if (argc > 3) test_words(argv[3], &w);
+  if (argc > 3 && getenv("KV_CLIPS") != NULL) test_clips(argv[3], getenv("KV_CLIPS"));
   free(w.pcm);
   if (failed) {
     fprintf(stderr, "%d checks failed\n", failed);
