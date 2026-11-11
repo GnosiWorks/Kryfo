@@ -234,7 +234,12 @@ void main() {
     final name = hidden ? 'hidden.backup' : 'everyday.backup';
     test('$name comes back whole', () async {
       if (skip()) return;
+      var replaced = 0;
+      identityReplaced = () => replaced++;
+      addTearDown(() => identityReplaced = () {});
       await restoreBackupFile(backup(name), _pass, own: own, lock: lock);
+      // the old identity's keys the app held went as the new one landed
+      expect(replaced, 1);
 
       // the app closes after a restore and starts again on what landed
       final restart = HaloDb();

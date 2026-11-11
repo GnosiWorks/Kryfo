@@ -432,9 +432,14 @@ Future<void> landV1Payload(
 
     // restoring the identity in the engine also rehydrates myId
     engine.restoreIdentity(edPriv, xPriv);
+    identityReplaced();
   });
   dlog('backup: restored identity');
 }
+
+/// told once a restore put another identity in the engine: what the app
+/// held of the old one goes, so nothing backs it up before the restart
+void Function() identityReplaced = () {};
 
 // this device is where the identity lives now, whatever it was before. the
 // file's signal sessions are older than the far side's view of them: the
@@ -1979,6 +1984,7 @@ Future<void> _restoreFile(
       manifest['edPriv'] as String,
       manifest['xPriv'] as String,
     );
+    identityReplaced();
   });
   if (quiet) return;
   dlog('backup: restored identity from a v2 file');

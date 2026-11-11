@@ -78,7 +78,8 @@ import 'image_strip.dart' show cleanSavedPhoto, photoToSendOffUi;
 import 'package:path_provider/path_provider.dart';
 import 'notifications.dart';
 import 'orientation.dart' show appOrientations;
-import 'backup.dart' show backupRunning, restoreRunning, sweepBackupLeftovers;
+import 'backup.dart'
+    show backupRunning, identityReplaced, restoreRunning, sweepBackupLeftovers;
 import 'picked.dart'
     show dropPickerCopies, sweepFilePickerCopies, sweepPickerLeftovers;
 import 'package:qr_flutter/qr_flutter.dart';
@@ -328,6 +329,7 @@ void main() async {
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;
   lockState.picksDropped = dropPickerCopies;
+  identityReplaced = appState.mainKeysReplaced;
   // what a hidden chat or the decoy shares goes with the next lock
   shareGoesWithLock = () => sessionQuiet || session.vault != null;
   clipGoesWithLock = () => sessionQuiet || session.vault != null;
