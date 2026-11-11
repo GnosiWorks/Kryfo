@@ -61,7 +61,7 @@ img.Image? _decode(Uint8List b) {
     final preview = largestJpeg(b, least: kRawPreviewLeast);
     if (preview != null) {
       final p = img.decodeJpg(preview);
-      if (p != null) return _upright(p, rawOrientation(b));
+      if (p != null) return _upright(p, _previewTurn(rawOrientation(b), p));
     }
     // a plain tiff, or a raw with no jpeg big enough
     if (!tiffLike) return null;
@@ -73,6 +73,11 @@ img.Image? _decode(Uint8List b) {
   if (p == null) return null;
   return _upright(p, null);
 }
+
+// a sensor lies wide, so a preview standing tall is turned already, as an
+// iphone's dng keeps it: a quarter turn the raw asks for is not done twice
+int? _previewTurn(int? o, img.Image p) =>
+    o != null && o >= 5 && o <= 8 && p.height > p.width ? 1 : o;
 
 // turned as [orientation] says (1 to 8), else as the picture's own exif
 img.Image _upright(img.Image p, int? orientation) {

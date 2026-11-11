@@ -107,6 +107,17 @@ void main() {
       expect(String.fromCharCodes(out), isNot(contains('Wren')));
     });
 
+    test('a preview that stands already is not turned again', () {
+      final jpg = img.encodeJpg(img.Image(width: 1200, height: 1600));
+      final b = Uint8List.fromList([
+        ...'II*'.codeUnits, 0, 8, 0, 0, 0, //
+        1, 0, 0x12, 0x01, 3, 0, 1, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0,
+        ...jpg,
+      ]);
+      final d = img.decodeJpg(deskDrawJpeg(b)!)!;
+      expect((d.width, d.height), (1200, 1600));
+    });
+
     test('a tiff is decoded whole and turned', () {
       final t = img.Image(width: 300, height: 100);
       img.fill(t, color: img.ColorRgb8(10, 120, 200));
