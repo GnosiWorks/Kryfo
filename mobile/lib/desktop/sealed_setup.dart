@@ -373,11 +373,29 @@ class EngineFiles {
     clearMemory();
     rawFileAccess(() {
       Directory(dir).createSync(recursive: true);
+      // in memory from here: what a run before kept plain in the folder is
+      // in its sealed copy already, and goes
+      if (memory != null) _plainLeftInFolder();
       Directory(p.join(docs, 'tor')).createSync(recursive: true);
       _linkTor();
     });
     await _fromOlderLayout(vault);
     _restoreMarks(vault);
+  }
+
+  // the key and every nostr_ file in the folder, zeroed and gone. under
+  // rawFileAccess
+  void _plainLeftInFolder() {
+    for (final f in Directory(dir).listSync().whereType<File>()) {
+      final n = p.basename(f.path);
+      if (n != 'onion.key' && !n.startsWith('nostr_')) continue;
+      try {
+        _zero(f.path);
+        f.deleteSync();
+      } catch (e) {
+        dlog('engine folder: a plain file stayed (${e.runtimeType})');
+      }
+    }
   }
 
   // engine/tor is a link to docs/tor and nothing else: a real folder in

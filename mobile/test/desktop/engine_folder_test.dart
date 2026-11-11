@@ -378,6 +378,39 @@ void main() {
         expect(isSealedHead(raw(p.join(docs, 'onion.key'))), isTrue);
       });
 
+      test('what 0.6.0 left plain in the folder is zeroed and goes at the '
+          'start', () async {
+        final ef = files();
+        final plain = {
+          'nostr_seen_$id': 'e9\n',
+          'nostr_topup': 'q9\n',
+          'onion.key': 'plain key',
+        };
+        for (final e in plain.entries) {
+          io.rawFile(p.join(ef.dir, e.key))
+            ..createSync(recursive: true)
+            ..writeAsStringSync(e.value);
+        }
+        // a hard link sees the bytes the plain file held
+        final seen = p.join(root.path, 'seen');
+        expect(
+          Process.runSync('ln', [p.join(ef.dir, 'nostr_topup'), seen]).exitCode,
+          0,
+        );
+        io.rawFile(p.join(ef.dir, 'tor', 'state'))
+          ..createSync(recursive: true)
+          ..writeAsStringSync('guards');
+        await sealed(() => ef.prepare(vault));
+        expect(onDisk(ef.dir), isEmpty);
+        expect(io.rawFile(seen).readAsBytesSync(), Uint8List(3));
+        expect(
+          io.rawFile(p.join(ef.dir, 'tor', 'state')).readAsStringSync(),
+          'guards',
+        );
+        // the sealed copy's marks came in instead
+        expect(utf8.decode(mem.files['nostr_seen_$id']!), 'e1\ne2\n');
+      });
+
       test('a new key the engine made is sealed, its copy dropped', () async {
         io.rawFile(p.join(docs, 'onion.key')).deleteSync();
         final ef = files();
