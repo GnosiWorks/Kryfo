@@ -320,12 +320,14 @@ class VoiceTranscripts extends ChangeNotifier {
           job.cancel();
           return;
         }
-        // and while it runs: free memory under the reserve stops it. not
-        // known (windows): nothing to watch
+        // and while it runs: free memory under the floor for a few readings
+        // in a row stops it. not known (windows): nothing to watch
+        var low = 0;
         final watch = room() == null
             ? null
             : Timer.periodic(watchEvery, (_) {
-                if (memRunOut(room())) q.outOfRoom();
+                low = memRunOut(room()) ? low + 1 : 0;
+                if (low >= kLowReadings) q.outOfRoom();
               });
         try {
           await q.follow(job);

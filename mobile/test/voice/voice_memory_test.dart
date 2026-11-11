@@ -37,11 +37,16 @@ void main() {
     expect(voiceRunFits(null), isTrue);
   });
 
-  test('a run stops under the reserve', () {
+  test('a run stops under a floor below the start rule', () {
     const total = 3841192 * 1024;
-    // 312 mb free 25 s before android killed the app
-    expect(memRunOut(const MemRoom(312 * _mb, total)), isTrue);
+    // a12: starts from 535 mb, stops under 281 mb
+    expect(memFloor(total), memReserve(total) * 3 ~/ 4);
+    expect(memRunOut(const MemRoom(270 * _mb, total)), isTrue);
+    // a run started with just enough room uses its 160 mb and goes on
+    expect(memRunOut(const MemRoom(375 * _mb, total)), isFalse);
     expect(memRunOut(const MemRoom(700 * _mb, total)), isFalse);
     expect(memRunOut(null), isFalse);
+    // a small phone: never under 192 mb
+    expect(memFloor(1024 * _mb), 192 * _mb);
   });
 }

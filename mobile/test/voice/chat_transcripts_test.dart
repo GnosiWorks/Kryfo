@@ -198,8 +198,8 @@ void main() {
       await _beats();
       final j = f.runner.jobs.single..say(' half of');
       await _beats();
-      now = const MemRoom(300 * mb, 4 * gb);
-      await Future<void>.delayed(const Duration(milliseconds: 60));
+      now = const MemRoom(200 * mb, 4 * gb);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
       await _beats();
       expect(j.cancelled, isTrue);
       expect(c.of('u1').phase, TxPhase.failed);
@@ -210,6 +210,62 @@ void main() {
       await c.open('u2', '/n/u2.ogg');
       await _beats();
       expect(f.runner.jobs, hasLength(2));
+    });
+
+    test('one low reading is no stop; the room a run started in is not '
+        'taken as running out', () async {
+      now = const MemRoom(580 * mb, 4 * gb);
+      await make(room: () => now);
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      final j = f.runner.jobs.single;
+      // the run took its 160 mb: under the start rule, over the floor
+      now = const MemRoom(420 * mb, 4 * gb);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      // one dip under the floor between good readings
+      now = const MemRoom(200 * mb, 4 * gb);
+      await Future<void>.delayed(const Duration(milliseconds: 15));
+      now = const MemRoom(420 * mb, 4 * gb);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(j.cancelled, isFalse);
+      j
+        ..say(' all of it')
+        ..end();
+      await _beats();
+      expect(c.of('u1').text, 'all of it');
+    });
+
+    test('the watch stops after a run and at the lock', () async {
+      var reads = 0;
+      now = const MemRoom(2 * gb, 4 * gb);
+      await make(
+        room: () {
+          reads++;
+          return now;
+        },
+      );
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(reads, greaterThan(2));
+      f.runner.jobs.single
+        ..say(' done')
+        ..end();
+      await _beats(20);
+      var was = reads;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(reads, was);
+      // a second run, stopped by the lock
+      await c.open('u2', '/n/u2.ogg');
+      await _beats();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(reads, greaterThan(was));
+      f.hub.lockedOut();
+      await _beats(20);
+      expect(f.runner.jobs.last.cancelled, isTrue);
+      was = reads;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(reads, was);
     });
 
     test('not known (windows): runs as before', () async {

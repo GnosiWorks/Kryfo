@@ -30,9 +30,16 @@ int memReserve(int total) => max(256 << 20, total ~/ 10);
 bool voiceRunFits(MemRoom? room) =>
     room == null || room.free - kVoiceRunBytes >= memReserve(room.total);
 
-/// a run under way stops when free memory is under the reserve
+/// a run under way stops below this: lower than the start rule leaves, so
+/// a run that started with just enough room is not stopped for using it
+int memFloor(int total) => max(192 << 20, memReserve(total) * 3 ~/ 4);
+
+/// this many low readings in a row stop a run: one dip is not running out
+const kLowReadings = 3;
+
+/// free memory is under the floor
 bool memRunOut(MemRoom? room) =>
-    room != null && room.free < memReserve(room.total);
+    room != null && room.free < memFloor(room.total);
 
 /// the room now, null when it cannot be read
 MemRoom? readMemRoom({String path = '/proc/meminfo'}) {
