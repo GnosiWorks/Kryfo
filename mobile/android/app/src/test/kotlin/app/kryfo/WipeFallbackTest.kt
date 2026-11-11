@@ -46,11 +46,32 @@ class WipeFallbackTest {
             put(data, "code_cache/x")
             put(data, "lib/libapp.so")
             val ks = keys("FlutterSecureStoragePluginKey", "kryfo_pin", "kryfo_bio")
+            put(data, "wipe_held/x")
             WipeFallback.erase(data, ks)
             assertEquals(0, ks.size())
-            assertEquals(listOf("lib"), data.list()!!.sorted())
+            // dart's own folders it is still shredding stay to it
+            assertEquals(listOf("app_flutter", "lib", "wipe_held"), data.list()!!.sorted())
             assertTrue(File(data, "lib/libapp.so").exists())
             assertFalse(File(data, "shared_prefs").exists())
+        } finally {
+            data.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun nothingIsZeroedOnTheWayOut() {
+        val data = Files.createTempDirectory("wipe").toFile()
+        try {
+            put(data, "databases/plugin.db", "rows")
+            val f = File(data, "databases/plugin.db")
+            // a link to it from outside reads what the file held at the unlink
+            val keep = Files.createTempDirectory("held").toFile()
+            val link = File(keep, "same")
+            Files.createLink(link.toPath(), f.toPath())
+            WipeFallback.erase(data, null)
+            assertFalse(f.exists())
+            assertEquals("rows", link.readText())
+            keep.deleteRecursively()
         } finally {
             data.deleteRecursively()
         }
@@ -61,6 +82,7 @@ class WipeFallbackTest {
         val data = Files.createTempDirectory("wipe").toFile()
         try {
             put(data, "shared_prefs/FlutterSecureStorage.xml")
+            put(data, "databases/plugin.db")
             WipeFallback.erase(data, null)
             assertEquals(emptyList<String>(), data.list()!!.toList())
         } finally {

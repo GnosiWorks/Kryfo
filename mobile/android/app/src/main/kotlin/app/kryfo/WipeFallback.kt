@@ -19,11 +19,28 @@ object WipeFallback {
         erase(File(ctx.applicationInfo.dataDir), ks)
     }
 
-    // the keys first: a stop part way leaves only files nothing opens.
-    // the native libraries' link stays, it is the system's
+    // dart's own folder and the one it shreds behind: dart is still on them
+    val DARTS = setOf("app_flutter", "wipe_held")
+    // what dart never reaches, first: dart exits a few seconds from now
+    val FIRST = listOf("databases", "shared_prefs", "no_backup")
+
+    // the keys first: with them gone nothing here opens, so the files are
+    // unlinked, not zeroed, and all go before dart exits. the native
+    // libraries' link stays, it is the system's
     fun erase(data: File, ks: KeyStore?) {
         if (ks != null) dropKeys(ks)
-        data.listFiles()?.forEach { if (it.name != "lib") Shred.tree(it) }
+        val all = data.listFiles()?.toList() ?: return
+        val order = all.sortedBy { f -> FIRST.indexOf(f.name).let { if (it < 0) FIRST.size else it } }
+        for (f in order) {
+            if (f.name == "lib" || f.name in DARTS) continue
+            unlink(f)
+        }
+    }
+
+    // children before their folder. a link is unlinked, never followed
+    private fun unlink(f: File) {
+        if (!Shred.isLink(f) && f.isDirectory) f.listFiles()?.forEach { unlink(it) }
+        f.delete()
     }
 
     fun dropKeys(ks: KeyStore) {
