@@ -69,7 +69,9 @@ func TestHexSecret(t *testing.T) {
 	}
 }
 
-// a dropped identity leaves no key and no seed behind
+// a dropped identity leaves no key and no seed behind. the zeros identDrop
+// lays over the map slots first cannot be seen from a test: only that
+// nothing is held any more
 func TestIdentDropClears(t *testing.T) {
 	const ident = 41
 	putIdentity(ident, xid{priv: [32]byte{9}, pub: [32]byte{8}})

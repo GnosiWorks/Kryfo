@@ -686,9 +686,13 @@ void main() {
     await live.upsertContact(p.words, '', p.x);
     live.people[p.words]!['ikey'] = p.keyHex;
     final old = await p.helloTo(main.id, nowMs: now - 3 * hour);
+    final sent = engine.hellos.length;
     await app.receiveRelay([(peer: 'f0:${main.id}', cipher: old.line)]);
     await _settle();
     expect(await hellosOf('in', p.keyHex), isEmpty);
+    // dropped, not answered as an accept: nothing goes back to them
+    expect(engine.hellos, hasLength(sent));
+    expect(await hellosOf('open', p.keyHex), isEmpty);
     final q = await _Phone.make('new-before-one', 63);
     final h = await q.helloTo(main.id, nowMs: now - 3 * hour);
     await app.receiveRelay([(peer: 'f0:${main.id}', cipher: h.line)]);
