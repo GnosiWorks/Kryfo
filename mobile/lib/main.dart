@@ -330,7 +330,8 @@ void main() async {
   // a banner for another chat drops there too, and opens it as its
   // notification would; it goes with the toasts when the lock comes up
   bannerOverlay = () => rootNavKey.currentState?.overlay;
-  bannerOpens = (chat) => openNotifChat(chat, null);
+  bannerOpens = (chat) =>
+      lockGuard.afterUnlock(() => openNotifChat(chat, null), key: 'chat:$chat');
   haloClearBanner = clearInAppBanner;
   // an unlock opens its session under the lock screen, before it lifts
   lockState.onOutcome = appState.sessionFor;
