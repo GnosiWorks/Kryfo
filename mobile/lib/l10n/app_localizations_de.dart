@@ -7928,6 +7928,40 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Suche nach Benutzernamen braucht Tor. Bis dahin klappt das Hinzufügen per QR oder Link.';
 
   @override
+  String get handleNeedsTor =>
+      'Benutzernamen laufen über Tor.\nSie klappen, sobald Tor verbunden ist.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Das Verzeichnis ist gerade ausgelastet.\nVersuch es in einer Minute noch mal.';
+
+  @override
+  String get handleRefusedFull =>
+      'Das Verzeichnis sagt nein: Es ist gerade voll.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Das Verzeichnis sagt nein: Es hat schon eine neuere Änderung.\nPrüf die Uhrzeit und versuch es noch mal.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Das Verzeichnis sagt nein: Es konnte deine Einladung nicht lesen.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Das Verzeichnis sagt nein: Die Einladung stammt nicht von deinem Schlüssel.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Das Verzeichnis sagt nein: Diese Kryfo-Version ist zu alt.\nAktualisiere Kryfo, um Benutzernamen zu nutzen.';
+
+  @override
+  String get handleRefused => 'Das Verzeichnis sagt nein.';
+
+  @override
+  String get handleGetABridge => 'Brücke holen';
+
+  @override
   String get handleCheckClock =>
       'Prüf Datum und Uhrzeit des Handys und versuch es dann noch mal.';
 

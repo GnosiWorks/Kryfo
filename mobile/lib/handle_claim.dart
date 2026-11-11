@@ -7,9 +7,16 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 
+import 'handle_repoint.dart' show claimSeen;
 import 'invite_share.dart' show readyInvite;
 import 'main.dart'
-    show appState, engine, linkedRole, sessionQuiet, AppStateProfile;
+    show
+        appState,
+        engine,
+        linkedRole,
+        sessionQuiet,
+        AppStateProfile,
+        AppStateRoute;
 import 'quiet_wait.dart';
 
 final handleShape = RegExp(r'^[a-z0-9_]{3,20}$');
@@ -19,6 +26,9 @@ final handleShape = RegExp(r'^[a-z0-9_]{3,20}$');
 Future<String?> Function() claimInvite = readyInvite;
 
 const _unreached = 'error: bad answer from the registry';
+
+/// what a check says while tor does not carry: the registry was not asked
+const kNoTor = 'error: no tor';
 
 /// names to offer for [h] when it is taken: the name with a few random
 /// digits, cut so the whole still fits the rule. nothing of the person in it
@@ -128,7 +138,28 @@ class HandleClaimer extends ChangeNotifier {
       state = r;
       _changed();
       if (r == 'taken') unawaited(_suggest(h));
+      _waitForTor(r == kNoTor);
     });
+  }
+
+  // a check that found no tor is asked again once tor comes up: on the
+  // move from down to up, never on every change while it is up
+  bool _torWatch = false;
+  bool _torWas = false;
+  void _waitForTor(bool on) {
+    if (on == _torWatch || _gone) return;
+    _torWatch = on;
+    _torWas = appState.servicesReady;
+    on ? appState.addListener(_torMoved) : appState.removeListener(_torMoved);
+  }
+
+  void _torMoved() {
+    final up = appState.servicesReady;
+    final cameUp = up && !_torWas;
+    _torWas = up;
+    if (!cameUp || state != kNoTor) return;
+    _waitForTor(false);
+    onTyped(ctrl.text);
   }
 
   // a quiet session checks on a lane of its own (kDecoyLooksUp), as its
@@ -136,6 +167,9 @@ class HandleClaimer extends ChangeNotifier {
   Future<String> _check(String h) async {
     final test = handleCheckForTest;
     if (test != null) return test(h);
+    // the registry is reached over tor on every route: without it nothing
+    // goes, and the line says tor rather than the registry
+    if (!appState.servicesReady) return kNoTor;
     return !sessionQuiet
         ? await engine.handleCheck(h)
         : kDecoyLooksUp
@@ -194,7 +228,13 @@ class HandleClaimer extends ChangeNotifier {
           ? await unreachedLater(_unreached)
           : uri == null
           ? _unreached
-          : await engine.handleClaim(h, uri, bio);
+          : await claimSeen(
+              h,
+              uri,
+              await engine.handleClaim(h, uri, bio),
+              lookup: engine.ownHandleGetJson,
+              myKey: engine.myEdPubkey,
+            );
       // kept even when the page is gone: the registry already holds it
       if (r == 'ok') await appState.setMyHandle(h, bio: bio, invite: uri);
       return r;
@@ -211,6 +251,7 @@ class HandleClaimer extends ChangeNotifier {
 
   @override
   void dispose() {
+    _waitForTor(false);
     _gone = true;
     _debounce?.cancel();
     _slowTimer?.cancel();

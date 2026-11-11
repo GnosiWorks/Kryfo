@@ -7821,6 +7821,39 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tìm theo tên người dùng cần Tor. Trong lúc chờ, hãy thêm bằng QR hoặc liên kết.';
 
   @override
+  String get handleNeedsTor =>
+      'Tên người dùng đi qua Tor.\nSẽ dùng được ngay khi Tor kết nối.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Nơi đăng ký đang bận.\nHãy thử lại sau một phút.';
+
+  @override
+  String get handleRefusedFull => 'Nơi đăng ký từ chối: hiện đã đầy.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Nơi đăng ký từ chối: đã có thay đổi mới hơn.\nHãy kiểm tra giờ rồi thử lại.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Nơi đăng ký từ chối: không đọc được lời mời của bạn.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Nơi đăng ký từ chối: lời mời không đến từ khóa của bạn.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Nơi đăng ký từ chối: phiên bản Kryfo này quá cũ.\nHãy cập nhật Kryfo để dùng tên người dùng.';
+
+  @override
+  String get handleRefused => 'Nơi đăng ký từ chối.';
+
+  @override
+  String get handleGetABridge => 'Lấy cầu nối';
+
+  @override
   String get handleCheckClock =>
       'Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.';
 

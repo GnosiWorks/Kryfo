@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/container.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/bridge_mode.dart';
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/main.dart'
     show
         HaloDb,
@@ -122,6 +123,13 @@ void main() {
       useDatabasesForTest(db, Session(db));
       quietWait = () => Duration.zero;
       useEngineForTest(_DecoyEngine());
+      // the registry is reached over tor: tor carries
+      appState.setTorStatusForTest(TorStatus.reachable);
+      appState.setRouteOKForTest(true);
+      addTearDown(() {
+        appState.setTorStatusForTest(TorStatus.off);
+        appState.setRouteOKForTest(false);
+      });
     });
 
     testWidgets('a decoy\'s check that finds the registry out of reach '

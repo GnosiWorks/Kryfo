@@ -202,8 +202,9 @@ void main() {
           handleRefusalLine('error: clock', 'wren'),
           l10n.handleCheckClock,
         );
+        // a no is said as the registry's no
+        expect(handleRefusalLine('error: refused', 'wren'), l10n.handleRefused);
         for (final other in [
-          'error: refused',
           'error: bad answer from the registry',
           'error: Update now at https://example.com',
           'error: dial tcp: i/o timeout',
@@ -270,5 +271,52 @@ void main() {
       g.putBack();
       expect(g.want(torUp: true), isTrue);
     });
+  });
+
+  group('a claim that got no answer', () {
+    const mine = '{"names":{"wren":"AB12"},"invite":"$_inv"}';
+    test('is looked up once, and taken when the registry shows it', () async {
+      final p = _Phone(answer: 'error: no answer: EOF', lookupBody: mine);
+      expect(await p.repoint.repoint('wren', force: true), 'ok');
+      expect(p.looked, hasLength(1));
+      expect(p.store[kHandleClaimedKey], claimMark('wren', _inv));
+    });
+
+    test('stays unanswered when it shows something else', () async {
+      final p = _Phone(
+        answer: 'error: no answer: EOF',
+        lookupBody: '{"names":{"wren":"ffff"},"invite":"$_inv"}',
+      );
+      expect(
+        await p.repoint.repoint('wren', force: true),
+        'error: no answer: EOF',
+      );
+      expect(p.store[kHandleClaimedKey], isNull);
+    });
+
+    test('an answer is never looked up', () async {
+      for (final r in ['ok', 'error: taken', 'error: busy', 'error: no tor']) {
+        final p = _Phone(answer: r, lookupBody: mine);
+        await p.repoint.repoint('wren', force: true);
+        expect(p.looked, isEmpty, reason: r);
+      }
+    });
+  });
+
+  test('each no of the registry has its own line', () {
+    setL10nLocale(const Locale('en'));
+    final lines = {
+      'error: full': l10n.handleRefusedFull,
+      'error: older': l10n.handleRefusedOlder,
+      'error: bad invite': l10n.handleRefusedBadInvite,
+      'error: invite not yours': l10n.handleRefusedNotYourInvite,
+      'error: update': l10n.handleRefusedUpdate,
+      'error: refused': l10n.handleRefused,
+    };
+    for (final e in lines.entries) {
+      expect(handleRefusalLine(e.key, 'wren'), e.value, reason: e.key);
+      expect(e.value, isNot(l10n.handleRegistryFailed));
+    }
+    expect(l10n.handleRefusedUpdate, contains('Update'));
   });
 }

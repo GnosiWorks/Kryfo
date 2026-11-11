@@ -13,6 +13,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/handle_repoint.dart' show kHandleClaimedKey;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/widgets/motion.dart' show TorStatus;
 import 'package:kryfo/main.dart'
     show
         HaloEngine,
@@ -106,6 +107,13 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
     appState.sendModeForTest = 'balanced';
+    // the registry is reached over tor: tor carries
+    appState.setTorStatusForTest(TorStatus.reachable);
+    appState.setRouteOKForTest(true);
+    addTearDown(() {
+      appState.setTorStatusForTest(TorStatus.off);
+      appState.setRouteOKForTest(false);
+    });
     // a claim waits for the onion: the registry takes no invite without one
     final was = appState.myOnion;
     appState.myOnion = 'abc.onion';

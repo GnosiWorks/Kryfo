@@ -7996,6 +7996,39 @@ class AppLocalizationsPl extends AppLocalizations {
       'Wyszukiwanie nazw wymaga Tor. W międzyczasie dodawaj przez QR albo link.';
 
   @override
+  String get handleNeedsTor =>
+      'Nazwy idą przez Tor.\nZadziałają, gdy Tor się połączy.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Rejestr jest teraz zajęty.\nSpróbuj za minutę.';
+
+  @override
+  String get handleRefusedFull => 'Rejestr odmówił: jest teraz pełny.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Rejestr odmówił: ma już nowszą zmianę.\nSprawdź zegar i spróbuj ponownie.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Rejestr odmówił: nie mógł odczytać twojego zaproszenia.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Rejestr odmówił: zaproszenie nie pochodzi od twojego klucza.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Rejestr odmówił: ta wersja Kryfo jest za stara.\nZaktualizuj Kryfo, żeby używać nazw.';
+
+  @override
+  String get handleRefused => 'Rejestr odmówił.';
+
+  @override
+  String get handleGetABridge => 'Zdobądź mostek';
+
+  @override
   String get handleCheckClock =>
       'Sprawdź datę i godzinę w telefonie i spróbuj ponownie.';
 

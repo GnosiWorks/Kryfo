@@ -9858,6 +9858,42 @@
   "@handleSearchNeedsTor": {
     "description": "screens/search_screen.dart and adding by handle: tor cannot connect, so the registry is not asked. handle search never goes without tor"
   },
+  "handleNeedsTor": "Handles go over Tor.\nThey work once Tor connects.",
+  "@handleNeedsTor": {
+    "description": "handle page: tor does not carry yet, so the registry is not asked. handles go over tor on every route"
+  },
+  "handleRegistryBusy": "The registry is busy.\nTry again in a minute.",
+  "@handleRegistryBusy": {
+    "description": "handle page and adding by handle: the registry answered that it is at its limit for everyone"
+  },
+  "handleRefusedFull": "The registry said no: it's full right now.",
+  "@handleRefusedFull": {
+    "description": "the registry refused a claim: it holds as many handles as it takes"
+  },
+  "handleRefusedOlder": "The registry said no: it already has a newer change.\nCheck the clock and try again.",
+  "@handleRefusedOlder": {
+    "description": "the registry refused a change signed before one it already has (a clock behind, or two devices)"
+  },
+  "handleRefusedBadInvite": "The registry said no: it couldn't read your invite.",
+  "@handleRefusedBadInvite": {
+    "description": "the registry refused a claim: it could not read the invite"
+  },
+  "handleRefusedNotYourInvite": "The registry said no: the invite isn't from your key.",
+  "@handleRefusedNotYourInvite": {
+    "description": "the registry refused a claim: the invite is not signed by this identity's key"
+  },
+  "handleRefusedUpdate": "The registry said no: this version of Kryfo is too old.\nUpdate Kryfo to use handles.",
+  "@handleRefusedUpdate": {
+    "description": "the registry refused a claim from an app version it no longer takes"
+  },
+  "handleRefused": "The registry said no.",
+  "@handleRefused": {
+    "description": "the registry refused for a reason the app has no line for"
+  },
+  "handleGetABridge": "Get a bridge",
+  "@handleGetABridge": {
+    "description": "handle page, under the line that tor is not up: opens the paste sheet with the ways to a private bridge"
+  },
   "handleCheckClock": "Check the phone's date and time, then try again.",
   "@handleCheckClock": {
     "description": "screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off"

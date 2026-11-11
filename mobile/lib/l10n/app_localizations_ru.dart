@@ -7981,6 +7981,39 @@ class AppLocalizationsRu extends AppLocalizations {
       'Поиску по имени пользователя нужен Tor. Пока добавляй по QR или ссылке.';
 
   @override
+  String get handleNeedsTor =>
+      'Имена пользователей идут через Tor.\nВсё заработает, как только Tor подключится.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Реестр сейчас занят.\nПопробуй через минуту.';
+
+  @override
+  String get handleRefusedFull => 'Реестр отказал: сейчас он заполнен.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Реестр отказал: у него уже есть более новое изменение.\nПроверь часы и попробуй снова.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Реестр отказал: не смог прочитать твоё приглашение.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Реестр отказал: приглашение не от твоего ключа.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Реестр отказал: эта версия Kryfo слишком старая.\nОбнови Kryfo, чтобы пользоваться именами.';
+
+  @override
+  String get handleRefused => 'Реестр отказал.';
+
+  @override
+  String get handleGetABridge => 'Получить мост';
+
+  @override
   String get handleCheckClock =>
       'Проверь дату и время на телефоне и попробуй ещё раз.';
 

@@ -38,6 +38,7 @@ import 'scan_screen.dart';
 import 'handle_screen.dart'
     show HandleField, HandleAvailability, HandleSlowLine;
 import '../handle_claim.dart';
+import 'bridge_sheets.dart' show showFriendLinesSheet;
 import '../handle_repoint.dart' show handleRefusalLine;
 import '../invite_share.dart' show shareInvite;
 import '../miui_autostart.dart' show maybeShowBackgroundPrompt;
@@ -2002,6 +2003,7 @@ class _NameScreenState extends State<_NameScreen> {
             slow: _c.slow,
             suggestion: _c.suggestion,
             onSuggestion: _c.useSuggestion,
+            onBridges: () => showFriendLinesSheet(context, hint: true),
           ),
           HandleSlowLine(show: busy && _c.slow),
         ], from: 1),

@@ -7835,6 +7835,39 @@ class AppLocalizationsId extends AppLocalizations {
       'Pencarian nama pengguna memerlukan Tor. Sementara itu, tambahkan lewat QR atau tautan.';
 
   @override
+  String get handleNeedsTor =>
+      'Nama pengguna lewat Tor.\nAkan berfungsi begitu Tor terhubung.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Registri sedang sibuk.\nCoba lagi semenit lagi.';
+
+  @override
+  String get handleRefusedFull => 'Registri menolak: saat ini sudah penuh.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Registri menolak: sudah ada perubahan yang lebih baru.\nPeriksa jam lalu coba lagi.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Registri menolak: undanganmu tidak bisa dibaca.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Registri menolak: undangan ini bukan dari kuncimu.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Registri menolak: versi Kryfo ini terlalu lama.\nPerbarui Kryfo untuk memakai nama pengguna.';
+
+  @override
+  String get handleRefused => 'Registri menolak.';
+
+  @override
+  String get handleGetABridge => 'Dapatkan jembatan';
+
+  @override
   String get handleCheckClock =>
       'Periksa tanggal dan jam di ponsel, lalu coba lagi.';
 

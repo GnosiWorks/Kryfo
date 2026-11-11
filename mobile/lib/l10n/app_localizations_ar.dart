@@ -7968,6 +7968,36 @@ class AppLocalizationsAr extends AppLocalizations {
       'يحتاج البحث باسم المستخدم إلى Tor. إلى ذلك الحين، أضِف عبر رمز QR أو رابط.';
 
   @override
+  String get handleNeedsTor =>
+      'تمر أسماء المستخدمين عبر Tor.\nستعمل حين يتصل Tor.';
+
+  @override
+  String get handleRegistryBusy => 'السجل مشغول الآن.\nحاول مجددًا بعد دقيقة.';
+
+  @override
+  String get handleRefusedFull => 'رفض السجل: إنه ممتلئ الآن.';
+
+  @override
+  String get handleRefusedOlder =>
+      'رفض السجل: لديه تغيير أحدث.\nتحقق من الساعة وحاول مجددًا.';
+
+  @override
+  String get handleRefusedBadInvite => 'رفض السجل: تعذّرت عليه قراءة دعوتك.';
+
+  @override
+  String get handleRefusedNotYourInvite => 'رفض السجل: الدعوة ليست من مفتاحك.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'رفض السجل: هذا الإصدار من Kryfo قديم جدًا.\nحدّث Kryfo لاستخدام أسماء المستخدمين.';
+
+  @override
+  String get handleRefused => 'رفض السجل.';
+
+  @override
+  String get handleGetABridge => 'احصل على جسر';
+
+  @override
   String get handleCheckClock => 'تحقّق من تاريخ الهاتف ووقته، ثم حاول مجددًا.';
 
   @override

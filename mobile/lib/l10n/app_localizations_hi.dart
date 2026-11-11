@@ -7841,6 +7841,39 @@ class AppLocalizationsHi extends AppLocalizations {
       'यूज़रनेम खोजने के लिए Tor चाहिए। तब तक QR या लिंक से जोड़ें।';
 
   @override
+  String get handleNeedsTor =>
+      'यूज़रनेम Tor से होकर जाते हैं।\nTor जुड़ते ही ये काम करेंगे।';
+
+  @override
+  String get handleRegistryBusy =>
+      'रजिस्ट्री अभी व्यस्त है।\nएक मिनट में फिर कोशिश करें।';
+
+  @override
+  String get handleRefusedFull => 'रजिस्ट्री ने मना किया: अभी यह भरी हुई है।';
+
+  @override
+  String get handleRefusedOlder =>
+      'रजिस्ट्री ने मना किया: इसके पास नया बदलाव पहले से है।\nघड़ी जाँचें और फिर कोशिश करें।';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'रजिस्ट्री ने मना किया: यह आपका आमंत्रण नहीं पढ़ पाई।';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'रजिस्ट्री ने मना किया: यह आमंत्रण आपकी कुंजी का नहीं है।';
+
+  @override
+  String get handleRefusedUpdate =>
+      'रजिस्ट्री ने मना किया: Kryfo का यह संस्करण बहुत पुराना है।\nयूज़रनेम के लिए Kryfo अपडेट करें।';
+
+  @override
+  String get handleRefused => 'रजिस्ट्री ने मना किया।';
+
+  @override
+  String get handleGetABridge => 'ब्रिज पाएँ';
+
+  @override
   String get handleCheckClock =>
       'फ़ोन की तारीख़ और समय जाँचें, फिर दोबारा कोशिश करें।';
 

@@ -7905,6 +7905,40 @@ class AppLocalizationsIt extends AppLocalizations {
       'La ricerca per nome utente richiede Tor. Nel frattempo, aggiungi tramite QR o link.';
 
   @override
+  String get handleNeedsTor =>
+      'I nomi utente passano da Tor.\nFunzionano appena Tor si collega.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Il registro è occupato.\nRiprova tra un minuto.';
+
+  @override
+  String get handleRefusedFull =>
+      'Il registro ha detto no: al momento è pieno.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Il registro ha detto no: ha già una modifica più recente.\nControlla l’ora e riprova.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Il registro ha detto no: non è riuscito a leggere il tuo invito.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Il registro ha detto no: l’invito non viene dalla tua chiave.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Il registro ha detto no: questa versione di Kryfo è troppo vecchia.\nAggiorna Kryfo per usare i nomi utente.';
+
+  @override
+  String get handleRefused => 'Il registro ha detto no.';
+
+  @override
+  String get handleGetABridge => 'Ottieni un bridge';
+
+  @override
   String get handleCheckClock =>
       'Controlla data e ora del telefono, poi riprova.';
 

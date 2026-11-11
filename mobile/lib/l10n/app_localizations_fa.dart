@@ -7841,6 +7841,39 @@ class AppLocalizationsFa extends AppLocalizations {
       'جست‌وجوی نام کاربری به Tor نیاز دارد. تا آن موقع، با QR یا پیوند اضافه کنید.';
 
   @override
+  String get handleNeedsTor =>
+      'نام‌های کاربری از راه Tor می‌روند.\nوقتی Tor وصل شود کار می‌کنند.';
+
+  @override
+  String get handleRegistryBusy =>
+      'دفتر ثبت الان شلوغ است.\nیک دقیقهٔ دیگر دوباره امتحان کنید.';
+
+  @override
+  String get handleRefusedFull => 'دفتر ثبت نپذیرفت: الان پر است.';
+
+  @override
+  String get handleRefusedOlder =>
+      'دفتر ثبت نپذیرفت: تغییر تازه‌تری دارد.\nساعت را بررسی کنید و دوباره امتحان کنید.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'دفتر ثبت نپذیرفت: دعوت شما را نتوانست بخواند.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'دفتر ثبت نپذیرفت: این دعوت از کلید شما نیست.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'دفتر ثبت نپذیرفت: این نسخهٔ Kryfo خیلی قدیمی است.\nبرای نام کاربری، Kryfo را به‌روز کنید.';
+
+  @override
+  String get handleRefused => 'دفتر ثبت نپذیرفت.';
+
+  @override
+  String get handleGetABridge => 'گرفتن پل';
+
+  @override
   String get handleCheckClock =>
       'تاریخ و ساعت گوشی را بررسی کنید و دوباره امتحان کنید.';
 

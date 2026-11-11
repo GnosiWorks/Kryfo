@@ -82,6 +82,8 @@ Future<String> resolveHandle(
   if (body.startsWith('error:')) {
     return body.contains('status 404')
         ? 'error: nobody has claimed @$h'
+        : body.contains('status 429')
+        ? 'error: the registry is busy'
         : "error: couldn't reach the registry";
   }
   final inv = inviteFromRegistryJson(body, h, idOf: idOf, v4FaceOf: v4FaceOf);

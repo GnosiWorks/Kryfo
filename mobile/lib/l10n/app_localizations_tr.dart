@@ -7860,6 +7860,39 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kullanıcı adı araması Tor gerektirir. Bu arada QR ya da bağlantıyla ekle.';
 
   @override
+  String get handleNeedsTor =>
+      'Kullanıcı adları Tor üzerinden gider.\nTor bağlanınca çalışır.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Kayıt defteri şu an meşgul.\nBir dakika sonra yeniden dene.';
+
+  @override
+  String get handleRefusedFull => 'Kayıt defteri reddetti: şu an dolu.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Kayıt defteri reddetti: zaten daha yeni bir değişikliği var.\nSaati kontrol edip yeniden dene.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Kayıt defteri reddetti: davetini okuyamadı.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Kayıt defteri reddetti: davet senin anahtarından değil.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Kayıt defteri reddetti: bu Kryfo sürümü çok eski.\nKullanıcı adları için Kryfo\'yu güncelle.';
+
+  @override
+  String get handleRefused => 'Kayıt defteri reddetti.';
+
+  @override
+  String get handleGetABridge => 'Köprü al';
+
+  @override
   String get handleCheckClock =>
       'Telefonun tarih ve saatini kontrol et, sonra yeniden dene.';
 
