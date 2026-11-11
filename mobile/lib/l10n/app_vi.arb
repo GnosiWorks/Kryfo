@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo tự tìm cách dùng được ở nơi bạn đang ở.",
   "bridgesTorVpnLine": "Bên trong VPN Tor như Orbot, Kryfo bắt đầu bằng cầu nối.",
   "bridgesNothingGotThrough": "Không cách nào kết nối được",
-  "bridgesBridgeFromAFriend": "Cầu nối từ bạn bè",
+  "bridgesPasteABridge": "Dán cầu nối",
   "bridgesKryfoCanAskThe": "Kryfo có thể xin Dự án Tor một cầu nối để vượt qua việc chặn.",
   "bridgesNotNeededRightNow": "Hiện chưa cần",
   "bridgesThisBridgeIsnTGetting": "Cầu nối này không kết nối được",
@@ -362,7 +362,7 @@
   "bridgesUndo": "Hoàn tác",
   "bridgesRemoveBridgeN": "Gỡ cầu nối {n}",
   "bridgesMore": "Thêm",
-  "bridgesFromAFriendLower": "từ bạn bè",
+  "bridgesPastedLower": "đã dán",
   "bridgesAlmostThere": "Sắp xong rồi",
   "bridgesTryingAnotherWayOf": "Đang thử cách khác… ({attempt}/{attempts})",
   "bridgesLookingForAVolunteer": "Đang tìm tình nguyện viên",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, other{{count} tin nhắn mới}}",
   "composerSendSilent": "Gửi không âm thanh",
   "composerSendHoldHint": "Nhấn giữ để xem thêm tùy chọn",
-  "homeGroupShotsLine": "Tin nhắn"
+  "homeGroupShotsLine": "Tin nhắn",
+  "settingsShareMenu": "Hiện cuộc trò chuyện trong menu chia sẻ",
+  "settingsShareMenuHint": "Các cuộc trò chuyện gần đây hiện theo tên khi bạn chia sẻ từ ứng dụng khác.",
+  "settingsShareMenuHintLocked": "Các cuộc trò chuyện gần đây chỉ hiện theo tên trong menu chia sẻ của ứng dụng khác khi Kryfo đang mở khóa.",
+  "settingsShareMenuDisguised": "Các cuộc trò chuyện của bạn ở ngoài menu chia sẻ khi Kryfo dùng biểu tượng khác."
 }

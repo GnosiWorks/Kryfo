@@ -7118,7 +7118,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Không cách nào kết nối được';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Cầu nối từ bạn bè';
+  String get bridgesPasteABridge => 'Dán cầu nối';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7360,7 +7360,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dán một dòng cầu nối. Hãy lấy dòng từ Dự án Tor hoặc từ người bạn quen.';
 
   @override
-  String get bridgesFromAFriendLower => 'từ bạn bè';
+  String get bridgesPastedLower => 'đã dán';
 
   @override
   String get bridgesAlmostThere => 'Sắp xong rồi';
@@ -12245,4 +12245,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Tin nhắn';
+
+  @override
+  String get settingsShareMenu => 'Hiện cuộc trò chuyện trong menu chia sẻ';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Các cuộc trò chuyện gần đây hiện theo tên khi bạn chia sẻ từ ứng dụng khác.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Các cuộc trò chuyện gần đây chỉ hiện theo tên trong menu chia sẻ của ứng dụng khác khi Kryfo đang mở khóa.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Các cuộc trò chuyện của bạn ở ngoài menu chia sẻ khi Kryfo dùng biểu tượng khác.';
 }

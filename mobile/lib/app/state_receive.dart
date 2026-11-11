@@ -267,7 +267,10 @@ extension AppStateReceive on AppState {
       if (!sessionQuiet) {
         await loadIdents();
         await pushPairSeeds();
-        await _firstChats(await live.contacts());
+        // only a start in front: a push can start a killed process, and
+        // a batch going first there would name the top chats to whoever
+        // sent it. no push starts a computer's process
+        if (_inFront || onDesktop) await _firstChats(await live.contacts());
       }
     } catch (e) {
       dlog('listen: first chats not read (${e.runtimeType})');

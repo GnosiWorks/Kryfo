@@ -116,7 +116,7 @@ void main() {
     await t.pump(const Duration(seconds: 1));
     _seen(t, l10n.bridgesAutomatic);
     _seen(t, l10n.bridgesDirect);
-    _seen(t, l10n.bridgesBridgeFromAFriend);
+    _seen(t, l10n.bridgesPasteABridge);
     _seen(t, l10n.bridgesPasteOrScanALineShown);
     expect(find.text(l10n.bridgesPasteOrScanALine), findsNothing);
 

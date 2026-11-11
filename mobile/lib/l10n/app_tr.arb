@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo bulunduğun yerde işe yarayan bir yol bulur.",
   "bridgesTorVpnLine": "Orbot gibi bir Tor VPN’inin içinde Kryfo bir köprüyle başlar.",
   "bridgesNothingGotThrough": "Hiçbiri geçemedi",
-  "bridgesBridgeFromAFriend": "Arkadaştan köprü",
+  "bridgesPasteABridge": "Köprü yapıştır",
   "bridgesKryfoCanAskThe": "Kryfo bunu aşmak için Tor Projesinden bir köprü isteyebilir.",
   "bridgesNotNeededRightNow": "Şu an gerekmiyor",
   "bridgesThisBridgeIsnTGetting": "Bu köprü geçemiyor",
@@ -362,7 +362,7 @@
   "bridgesUndo": "Geri al",
   "bridgesRemoveBridgeN": "{n}. köprüyü kaldır",
   "bridgesMore": "Daha fazla",
-  "bridgesFromAFriendLower": "bir arkadaştan",
+  "bridgesPastedLower": "yapıştırılan",
   "bridgesAlmostThere": "Az kaldı",
   "bridgesTryingAnotherWayOf": "Başka bir yol deneniyor… ({attempt}/{attempts})",
   "bridgesLookingForAVolunteer": "Gönüllü aranıyor",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, other{{count} yeni mesaj}}",
   "composerSendSilent": "Sessiz gönder",
   "composerSendHoldHint": "Daha fazla seçenek için basılı tutun",
-  "homeGroupShotsLine": "Mesaj"
+  "homeGroupShotsLine": "Mesaj",
+  "settingsShareMenu": "Sohbetleri paylaşım menüsünde göster",
+  "settingsShareMenuHint": "Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür.",
+  "settingsShareMenuHintLocked": "Son sohbetlerin, diğer uygulamaların paylaşım menüsünde yalnızca Kryfo'nun kilidi açıkken adlarıyla görünür.",
+  "settingsShareMenuDisguised": "Kryfo başka bir simge taşırken sohbetlerin paylaşım menüsünün dışında kalır."
 }

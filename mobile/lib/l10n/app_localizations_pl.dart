@@ -7284,7 +7284,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Nic się nie przebiło';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Mostek od znajomego';
+  String get bridgesPasteABridge => 'Wklej mostek';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7527,7 +7527,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Wklej linię mostka. Bierz linie od Tor Project albo od osób, które znasz.';
 
   @override
-  String get bridgesFromAFriendLower => 'od znajomego';
+  String get bridgesPastedLower => 'wklejony';
 
   @override
   String get bridgesAlmostThere => 'Prawie gotowe';
@@ -12489,4 +12489,19 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Wiadomość';
+
+  @override
+  String get settingsShareMenu => 'Pokazuj czaty w menu udostępniania';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Twoje najnowsze czaty pojawiają się z nazwy, gdy udostępniasz z innej aplikacji.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Twoje najnowsze czaty pojawiają się z nazwy w menu udostępniania innych aplikacji tylko wtedy, gdy Kryfo jest odblokowane.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Twoje czaty zostają poza menu udostępniania, dopóki Kryfo ma inną ikonę.';
 }

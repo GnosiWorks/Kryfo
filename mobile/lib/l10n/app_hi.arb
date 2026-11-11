@@ -1876,7 +1876,7 @@
   "torBootSplashConnect": "जोड़ें",
   "bridgesOffline": "ऑफ़लाइन",
   "bridgesNothingGotThrough": "कुछ भी नहीं पहुँचा",
-  "bridgesBridgeFromAFriend": "किसी दोस्त से मिला ब्रिज",
+  "bridgesPasteABridge": "ब्रिज पेस्ट करें",
   "bridgesKryfoCanAskThe": "इससे बचने के लिए Kryfo, Tor Project से ब्रिज माँग सकता है।",
   "bridgesNotNeededRightNow": "अभी ज़रूरत नहीं",
   "bridgesBuiltInBridges": "पहले से मौजूद ब्रिज",
@@ -1944,7 +1944,7 @@
   "bridgesYourNetworkMayBe": "हो सकता है आपका नेटवर्क सीमित हो",
   "bridgesCheckingForMessages": "मैसेज देख रहे हैं…",
   "bridgesSavedLines": "सेव की गई लाइनें",
-  "bridgesFromAFriendLower": "किसी दोस्त से",
+  "bridgesPastedLower": "पेस्ट किया गया",
   "bridgesAlmostThere": "बस पहुँचने वाले हैं",
   "bridgesUseThisBridge": "यह ब्रिज इस्तेमाल करें",
   "bridgesUseTheseBridges": "{count, plural, other{ये {count} ब्रिज इस्तेमाल करें}}",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, one{{count} नया संदेश} other{{count} नए संदेश}}",
   "composerSendSilent": "बिना आवाज़ के भेजें",
   "composerSendHoldHint": "और विकल्पों के लिए दबाकर रखें",
-  "homeGroupShotsLine": "संदेश"
+  "homeGroupShotsLine": "संदेश",
+  "settingsShareMenu": "शेयर मेन्यू में चैट दिखाएँ",
+  "settingsShareMenuHint": "किसी दूसरे ऐप से शेयर करते समय आपकी हाल की चैट नाम से दिखती हैं।",
+  "settingsShareMenuHintLocked": "आपकी हाल की चैट दूसरे ऐप के शेयर मेन्यू में नाम से तभी दिखती हैं जब Kryfo अनलॉक हो।",
+  "settingsShareMenuDisguised": "जब तक Kryfo दूसरा आइकन पहने है, आपकी चैट शेयर मेन्यू से बाहर रहती हैं।"
 }

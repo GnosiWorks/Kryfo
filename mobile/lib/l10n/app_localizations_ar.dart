@@ -7256,7 +7256,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesNothingGotThrough => 'لم تنجح أي طريقة';
 
   @override
-  String get bridgesBridgeFromAFriend => 'جسر من صديق';
+  String get bridgesPasteABridge => 'الصق جسرًا';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7496,7 +7496,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'الصق سطر جسر. خذ الأسطر من مشروع Tor أو من أشخاص تعرفهم.';
 
   @override
-  String get bridgesFromAFriendLower => 'من صديق';
+  String get bridgesPastedLower => 'ملصوق';
 
   @override
   String get bridgesAlmostThere => 'اقتربنا';
@@ -12392,4 +12392,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'رسالة';
+
+  @override
+  String get settingsShareMenu => 'إظهار المحادثات في قائمة المشاركة';
+
+  @override
+  String get settingsShareMenuHint =>
+      'تظهر محادثاتك الأخيرة بأسمائها عند المشاركة من تطبيق آخر.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'تظهر محادثاتك الأخيرة بأسمائها في قوائم المشاركة في التطبيقات الأخرى فقط ما دام Kryfo غير مقفل.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'تبقى محادثاتك خارج قائمة المشاركة ما دام Kryfo يحمل أيقونة أخرى.';
 }

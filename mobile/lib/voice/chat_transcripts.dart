@@ -25,7 +25,8 @@ enum TxPhase {
 class NoteTx {
   final TxPhase phase;
   final List<TxPiece> pieces;
-  // the language the model heard, once it is done
+  // the language the model was asked to hear while it runs, the one it
+  // heard once it is done
   final String lang;
   // failed for want of free memory, not for the note: worth a try later
   final bool noRoom;
@@ -200,13 +201,18 @@ class ChatTranscripts extends ChangeNotifier {
         theirs = theirLang?.call();
       } catch (_) {}
     }
-    final job = hub.transcribe(path, hub.langFor(mine: mine, theirs: theirs));
+    final asked = hub.langFor(mine: mine, theirs: theirs);
+    final job = hub.transcribe(path, asked);
     _jobs[uid] = job;
     final got = <TxPiece>[];
     job.segments.listen((s) {
       if (!still() || _jobs[uid] != job) return;
       got.add(TxPiece(s.start.inMilliseconds, s.end.inMilliseconds, s.text));
-      _live[uid] = NoteTx(TxPhase.working, pieces: List.unmodifiable(got));
+      _live[uid] = NoteTx(
+        TxPhase.working,
+        pieces: List.unmodifiable(got),
+        lang: asked,
+      );
       notifyListeners();
     });
     job.done.then(

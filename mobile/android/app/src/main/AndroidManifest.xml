@@ -112,6 +112,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <activity-alias
             android:name=".IconNotes"
@@ -153,6 +157,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <activity-alias
             android:name=".IconWeather"
@@ -194,6 +202,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <activity-alias
             android:name=".IconTasks"
@@ -235,6 +247,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <activity-alias
             android:name=".IconNews"
@@ -276,6 +292,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- chats in the share menu, when turned on (ShareTargets.kt) -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/share_targets" />
         </activity-alias>
         <service
             android:name=".HaloListenerService"

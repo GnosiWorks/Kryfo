@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo сам находит способ, который работает там, где ты.",
   "bridgesTorVpnLine": "Внутри Tor-VPN вроде Orbot Kryfo начинает с моста.",
   "bridgesNothingGotThrough": "Пробиться не удалось",
-  "bridgesBridgeFromAFriend": "Мост от друга",
+  "bridgesPasteABridge": "Вставить мост",
   "bridgesKryfoCanAskThe": "Kryfo может попросить у проекта Tor мост, чтобы обойти блокировку.",
   "bridgesNotNeededRightNow": "Сейчас не нужно",
   "bridgesThisBridgeIsnTGetting": "Через этот мост не пробиться",
@@ -362,7 +362,7 @@
   "bridgesUndo": "Отменить",
   "bridgesRemoveBridgeN": "Удалить мост {n}",
   "bridgesMore": "Ещё",
-  "bridgesFromAFriendLower": "от друга",
+  "bridgesPastedLower": "вставленный",
   "bridgesAlmostThere": "Почти готово",
   "bridgesTryingAnotherWayOf": "Пробуем другой способ… ({attempt} из {attempts})",
   "bridgesLookingForAVolunteer": "Ищем волонтёра",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, one{{count} новое сообщение} few{{count} новых сообщения} many{{count} новых сообщений} other{{count} нового сообщения}}",
   "composerSendSilent": "Отправить без звука",
   "composerSendHoldHint": "Удерживайте для других вариантов",
-  "homeGroupShotsLine": "Сообщение"
+  "homeGroupShotsLine": "Сообщение",
+  "settingsShareMenu": "Показывать чаты в меню «Поделиться»",
+  "settingsShareMenuHint": "Ваши последние чаты появляются по имени, когда вы делитесь из другого приложения.",
+  "settingsShareMenuHintLocked": "Ваши последние чаты появляются по имени в меню «Поделиться» других приложений, только пока Kryfo разблокирован.",
+  "settingsShareMenuDisguised": "Ваши чаты остаются вне меню «Поделиться», пока у Kryfo другой значок."
 }

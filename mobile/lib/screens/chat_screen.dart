@@ -100,6 +100,7 @@ import '../signal_session.dart';
 import '../message_envelope.dart'
     show wrapMessage, SenderInfo, grindPow, powBits;
 import '../outbox.dart' show powFits;
+import '../cjk_locale.dart' show withHan;
 import '../theme.dart';
 import '../tor_valve.dart' show valveWaitFrom;
 import '../link_view.dart' show sendReadsBlocked;
@@ -9022,7 +9023,7 @@ class _Bubble extends StatelessWidget {
     final base = HaloType.message(onAmber: isOut && !image);
     if (query.isEmpty && plainLinks) {
       final t = words ?? msg.text;
-      return Text(t, style: base, textDirection: writtenDir(t));
+      return Text(t, style: withHan(base, t), textDirection: writtenDir(t));
     }
     if (query.isEmpty) {
       return KryfoLinkText(
@@ -9035,7 +9036,7 @@ class _Bubble extends StatelessWidget {
     final text = msg.text;
     return Text.rich(
       TextSpan(
-        style: base,
+        style: withHan(base, text),
         children: searchLit(text, query, onAmber: isOut && !image),
       ),
       textDirection: writtenDir(text),
@@ -10771,7 +10772,9 @@ class _Composer extends StatelessWidget {
                         textDirection: dir,
                         inputFormatters: const [UnmarkedInput()],
                         cursorColor: HaloColors.amber,
-                        style: HaloType.sans(size: 14),
+                        style: HaloType.sans(
+                          size: 14,
+                        ).copyWith(locale: hanLocaleOf(controller.text)),
                         minLines: 1,
                         maxLines: 4,
                         decoration: InputDecoration(

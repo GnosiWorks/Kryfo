@@ -243,7 +243,7 @@ class _Open extends StatelessWidget {
               label: l10n.voiceTranscriptLabel,
               child: _Words(
                 key: const ValueKey('vt-words'),
-                text: text,
+                text: chat.hub.shown(text, note.lang),
                 style: words,
                 coming: working && !still,
               ),

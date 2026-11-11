@@ -7186,7 +7186,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Nada conseguiu passar';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Ponte de um amigo';
+  String get bridgesPasteABridge => 'Colar uma ponte';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7430,7 +7430,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Cole uma linha de ponte. Use linhas do Projeto Tor ou de pessoas que você conhece.';
 
   @override
-  String get bridgesFromAFriendLower => 'de um amigo';
+  String get bridgesPastedLower => 'colada';
 
   @override
   String get bridgesAlmostThere => 'Quase lá';
@@ -12348,4 +12348,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Mensagem';
+
+  @override
+  String get settingsShareMenu => 'Mostrar conversas no menu de compartilhar';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Suas conversas mais recentes aparecem pelo nome quando você compartilha de outro app.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Suas conversas mais recentes aparecem pelo nome no menu de compartilhar de outros apps só enquanto o Kryfo está desbloqueado.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Suas conversas ficam fora do menu de compartilhar enquanto o Kryfo usa outro ícone.';
 }

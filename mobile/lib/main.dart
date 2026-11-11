@@ -31,6 +31,7 @@ import 'devices/own_devices.dart'
 import 'photo_blur.dart' show makeBlurSoon;
 import 'picture_lock.dart' show capPictureCache, lockStep;
 import 'secure_store.dart';
+import 'share_targets.dart' show shareTargets;
 import 'desktop/desk_frames.dart' show deskRunApp;
 import 'desktop/desktop_trace.dart' as desk_trace;
 import 'desktop/desktop_mode.dart'

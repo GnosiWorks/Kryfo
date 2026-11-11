@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo сам знаходить спосіб, що працює там, де ти є.",
   "bridgesTorVpnLine": "Усередині Tor-VPN на кшталт Orbot Kryfo починає з мосту.",
   "bridgesNothingGotThrough": "Пробитися не вдалося",
-  "bridgesBridgeFromAFriend": "Міст від друга",
+  "bridgesPasteABridge": "Вставити міст",
   "bridgesKryfoCanAskThe": "Kryfo може попросити в проєкту Tor міст, щоб обійти блокування.",
   "bridgesNotNeededRightNow": "Зараз не потрібно",
   "bridgesThisBridgeIsnTGetting": "Через цей міст не пробитися",
@@ -362,7 +362,7 @@
   "bridgesUndo": "Скасувати",
   "bridgesRemoveBridgeN": "Прибрати міст {n}",
   "bridgesMore": "Більше",
-  "bridgesFromAFriendLower": "від друга",
+  "bridgesPastedLower": "вставлений",
   "bridgesAlmostThere": "Майже готово",
   "bridgesTryingAnotherWayOf": "Пробуємо інший спосіб… ({attempt} з {attempts})",
   "bridgesLookingForAVolunteer": "Шукаємо волонтера",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, one{{count} нове повідомлення} few{{count} нові повідомлення} many{{count} нових повідомлень} other{{count} нового повідомлення}}",
   "composerSendSilent": "Надіслати без звуку",
   "composerSendHoldHint": "Утримуйте, щоб побачити інші варіанти",
-  "homeGroupShotsLine": "Повідомлення"
+  "homeGroupShotsLine": "Повідомлення",
+  "settingsShareMenu": "Показувати чати в меню «Поділитися»",
+  "settingsShareMenuHint": "Ваші останні чати з’являються за назвою, коли ви ділитеся з іншого застосунку.",
+  "settingsShareMenuHintLocked": "Ваші останні чати з’являються за назвою в меню «Поділитися» інших застосунків, лише поки Kryfo розблоковано.",
+  "settingsShareMenuDisguised": "Ваші чати залишаються поза меню «Поділитися», поки Kryfo має інший значок."
 }

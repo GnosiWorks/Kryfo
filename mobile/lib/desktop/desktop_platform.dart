@@ -40,6 +40,8 @@ const androidChannels = [
   'kryfo/transfers',
   // android's back swipe; a computer has none
   'kryfo/back',
+  // chats in android's share menu; a computer has no such menu
+  'kryfo/share_targets',
 ];
 
 /// methods with a desktop answer on halo/platform. the rest say not here:

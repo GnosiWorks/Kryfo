@@ -176,7 +176,7 @@ class _BridgesScreenState extends State<BridgesScreen> {
                         ),
                         const SizedBox(height: 10),
                         _ChoiceCard(
-                          title: l10n.bridgesBridgeFromAFriend,
+                          title: l10n.bridgesPasteABridge,
                           body: l10n.bridgesPasteOrScanALineShown,
                           selected: chosen == BridgeChoice.friend,
                           tag: tag(BridgeChoice.friend),
@@ -893,7 +893,7 @@ class _MoreSection extends StatelessWidget {
                 _LineRow(
                   line: friend[i],
                   number: i + 1,
-                  from: l10n.bridgesFromAFriendLower,
+                  from: l10n.bridgesPastedLower,
                   check: _check(BridgeChoice.friend, i),
                   onRemove: () => _remove(context, BridgeChoice.friend, i),
                 ),

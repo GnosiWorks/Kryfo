@@ -29,6 +29,8 @@ import '../scam_prefs.dart';
 import '../typing.dart' show loadTypingOn;
 import '../gifs/gif_opt_in.dart' show showGifOptInSheet;
 import '../gifs/gif_source.dart' show loadGifSearchOn, saveGifSearchOn;
+import '../share_targets.dart'
+    show loadShareMenuOn, saveShareMenuOn, shareTargets;
 import '../widgets/press_scale.dart';
 import '../widgets/motion.dart' show haloRoute, houseSpring;
 import 'licences_screen.dart';
@@ -380,6 +382,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool? _shieldOn;
   bool? _typingOn;
   bool? _gifOn;
+  // android's share menu: null until read, and the row only where the
+  // menu can take chats
+  bool? _shareMenuOn;
+  bool _shareMenuShown = false;
   // only for copies from the site or github
   bool _updateOffered = false;
   bool? _updateOn;
@@ -431,6 +437,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     loadGifSearchOn(session.container).then((v) {
       if (mounted) setState(() => _gifOn = v);
+    });
+    shareTargets.supported().then((ok) async {
+      if (!ok) return;
+      final v = await loadShareMenuOn(session.container);
+      if (mounted) {
+        setState(() {
+          _shareMenuShown = true;
+          _shareMenuOn = v;
+        });
+      }
     });
     _readUpdateOn();
     if (kLinkedDevicesOn) _readDevices();
@@ -857,6 +873,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     await saveGifSearchOn(true, session.container);
                   },
                 ),
+                // off by default. a decoy shows no such row: it could put
+                // nothing in the menu. under another icon nothing goes, and
+                // the row says so
+                if (_shareMenuShown && !appState.inDecoyView)
+                  HaloRow(
+                    icon: Icons.ios_share_rounded,
+                    label: l10n.settingsShareMenu,
+                    hint: lockState.enabled
+                        ? l10n.settingsShareMenuHintLocked
+                        : l10n.settingsShareMenuHint,
+                    note: appFaceNow.value == AppFace.kryfo
+                        ? null
+                        : l10n.settingsShareMenuDisguised,
+                    toggled: _shareMenuOn ?? false,
+                    pending: _shareMenuOn == null,
+                    onTap: () async {
+                      final v = !(_shareMenuOn ?? false);
+                      setState(() => _shareMenuOn = v);
+                      await saveShareMenuOn(v, session.container);
+                    },
+                  ),
               ],
             ),
             HaloSection(l10n.settingsSecurity),

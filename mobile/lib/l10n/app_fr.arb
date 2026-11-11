@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo trouve un moyen qui marche là où vous êtes.",
   "bridgesTorVpnLine": "Dans un VPN Tor comme Orbot, Kryfo démarre par un pont.",
   "bridgesNothingGotThrough": "Rien n’est passé",
-  "bridgesBridgeFromAFriend": "Pont d’un proche",
+  "bridgesPasteABridge": "Coller un pont",
   "bridgesKryfoCanAskThe": "Kryfo peut demander un pont au Projet Tor pour contourner le blocage.",
   "bridgesNotNeededRightNow": "Pas nécessaire pour l’instant",
   "bridgesThisBridgeIsnTGetting": "Ce pont ne passe pas",
@@ -362,7 +362,7 @@
   "bridgesUndo": "Annuler",
   "bridgesRemoveBridgeN": "Retirer le pont {n}",
   "bridgesMore": "Plus",
-  "bridgesFromAFriendLower": "d’un proche",
+  "bridgesPastedLower": "collé",
   "bridgesAlmostThere": "On y est presque",
   "bridgesTryingAnotherWayOf": "Essai d’un autre moyen… ({attempt} sur {attempts})",
   "bridgesLookingForAVolunteer": "Recherche d’un bénévole",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, one{{count} nouveau message} other{{count} nouveaux messages}}",
   "composerSendSilent": "Envoyer sans son",
   "composerSendHoldHint": "Maintenir pour plus d'options",
-  "homeGroupShotsLine": "Message"
+  "homeGroupShotsLine": "Message",
+  "settingsShareMenu": "Afficher les discussions dans le menu de partage",
+  "settingsShareMenuHint": "Vos discussions récentes apparaissent par leur nom quand vous partagez depuis une autre app.",
+  "settingsShareMenuHintLocked": "Vos discussions récentes apparaissent par leur nom dans le menu de partage des autres apps uniquement quand Kryfo est déverrouillé.",
+  "settingsShareMenuDisguised": "Vos discussions restent hors du menu de partage tant que Kryfo porte une autre icône."
 }

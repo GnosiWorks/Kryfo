@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo راهی پیدا می‌کند که جایی که هستید جواب بدهد.",
   "bridgesTorVpnLine": "درون یک VPN مربوط به Tor مثل Orbot، Kryfo با یک پل شروع می‌کند.",
   "bridgesNothingGotThrough": "هیچ راهی جواب نداد",
-  "bridgesBridgeFromAFriend": "پل از یک دوست",
+  "bridgesPasteABridge": "چسباندن پل",
   "bridgesKryfoCanAskThe": "Kryfo می‌تواند از پروژه‌ی Tor پلی بخواهد تا این سد را دور بزند.",
   "bridgesNotNeededRightNow": "فعلاً لازم نیست",
   "bridgesThisBridgeIsnTGetting": "این پل راه پیدا نمی‌کند",
@@ -362,7 +362,7 @@
   "bridgesUndo": "واگرد",
   "bridgesRemoveBridgeN": "حذف پل ⁨{n}⁩",
   "bridgesMore": "بیشتر",
-  "bridgesFromAFriendLower": "از یک دوست",
+  "bridgesPastedLower": "چسبانده‌شده",
   "bridgesAlmostThere": "چیزی نمانده",
   "bridgesTryingAnotherWayOf": "در حال امتحان راهی دیگر… (⁨{attempt}⁩ از ⁨{attempts}⁩)",
   "bridgesLookingForAVolunteer": "در جست‌وجوی یک داوطلب",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, other{{count} پیام تازه}}",
   "composerSendSilent": "ارسال بی‌صدا",
   "composerSendHoldHint": "برای گزینه‌های بیشتر نگه دارید",
-  "homeGroupShotsLine": "پیام"
+  "homeGroupShotsLine": "پیام",
+  "settingsShareMenu": "نمایش گفتگوها در منوی اشتراک‌گذاری",
+  "settingsShareMenuHint": "هنگام اشتراک‌گذاری از برنامه‌ای دیگر، گفتگوهای اخیرتان با نامشان نمایش داده می‌شوند.",
+  "settingsShareMenuHintLocked": "گفتگوهای اخیرتان فقط وقتی Kryfo باز است با نامشان در منوی اشتراک‌گذاری برنامه‌های دیگر نمایش داده می‌شوند.",
+  "settingsShareMenuDisguised": "تا وقتی Kryfo نماد دیگری دارد، گفتگوهایتان بیرون از منوی اشتراک‌گذاری می‌مانند."
 }

@@ -7137,7 +7137,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesNothingGotThrough => 'कुछ भी नहीं पहुँचा';
 
   @override
-  String get bridgesBridgeFromAFriend => 'किसी दोस्त से मिला ब्रिज';
+  String get bridgesPasteABridge => 'ब्रिज पेस्ट करें';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7379,7 +7379,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'ब्रिज लाइन पेस्ट करें। लाइनें Tor Project से या जान-पहचान वालों से ही लें।';
 
   @override
-  String get bridgesFromAFriendLower => 'किसी दोस्त से';
+  String get bridgesPastedLower => 'पेस्ट किया गया';
 
   @override
   String get bridgesAlmostThere => 'बस पहुँचने वाले हैं';
@@ -12259,4 +12259,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'संदेश';
+
+  @override
+  String get settingsShareMenu => 'शेयर मेन्यू में चैट दिखाएँ';
+
+  @override
+  String get settingsShareMenuHint =>
+      'किसी दूसरे ऐप से शेयर करते समय आपकी हाल की चैट नाम से दिखती हैं।';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'आपकी हाल की चैट दूसरे ऐप के शेयर मेन्यू में नाम से तभी दिखती हैं जब Kryfo अनलॉक हो।';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'जब तक Kryfo दूसरा आइकन पहने है, आपकी चैट शेयर मेन्यू से बाहर रहती हैं।';
 }

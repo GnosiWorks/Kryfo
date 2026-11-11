@@ -312,8 +312,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
                 const SizedBox(height: 24),
                 // the play build's way is a tip through google play, and its
-                // words never name another
-                if (kPlayBuild) ...[
+                // words never name another. a linked computer asks for none:
+                // its tier would be the phone's again at the next sync
+                if (linkedRole)
+                  const SizedBox.shrink()
+                else if (kPlayBuild) ...[
                   _reveal(4, _Section(l10n.tipsTitle)),
                   _reveal(
                     4,

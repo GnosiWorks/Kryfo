@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo findet einen Weg, der dort funktioniert, wo du bist.",
   "bridgesTorVpnLine": "In einem Tor-VPN wie Orbot startet Kryfo über eine Brücke.",
   "bridgesNothingGotThrough": "Nichts kam durch",
-  "bridgesBridgeFromAFriend": "Brücke von Freunden",
+  "bridgesPasteABridge": "Brücke einfügen",
   "bridgesKryfoCanAskThe": "Kryfo kann das Tor-Projekt nach einer Brücke fragen, um die Sperre zu umgehen.",
   "bridgesNotNeededRightNow": "Gerade nicht nötig",
   "bridgesThisBridgeIsnTGetting": "Diese Brücke kommt nicht durch",
@@ -362,7 +362,7 @@
   "bridgesUndo": "Rückgängig",
   "bridgesRemoveBridgeN": "Brücke {n} entfernen",
   "bridgesMore": "Mehr",
-  "bridgesFromAFriendLower": "von Freunden",
+  "bridgesPastedLower": "eingefügt",
   "bridgesAlmostThere": "Gleich geschafft",
   "bridgesTryingAnotherWayOf": "Versuche einen anderen Weg… ({attempt} von {attempts})",
   "bridgesLookingForAVolunteer": "Suche einen Freiwilligen",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, one{{count} neue Nachricht} other{{count} neue Nachrichten}}",
   "composerSendSilent": "Ohne Ton senden",
   "composerSendHoldHint": "Gedrückt halten für mehr Optionen",
-  "homeGroupShotsLine": "Nachricht"
+  "homeGroupShotsLine": "Nachricht",
+  "settingsShareMenu": "Chats im Teilen-Menü zeigen",
+  "settingsShareMenuHint": "Deine neuesten Chats erscheinen mit Namen, wenn du aus einer anderen App teilst.",
+  "settingsShareMenuHintLocked": "Deine neuesten Chats erscheinen nur mit Namen im Teilen-Menü anderer Apps, solange Kryfo entsperrt ist.",
+  "settingsShareMenuDisguised": "Deine Chats bleiben aus dem Teilen-Menü, solange Kryfo ein anderes Symbol trägt."
 }

@@ -14,6 +14,7 @@ import '../lock_guard.dart';
 import '../lock_state.dart';
 import '../main.dart' show AppStateFiles, appState, session;
 import '../share_files.dart';
+import '../share_targets.dart';
 import '../share_text.dart';
 import '../theme.dart';
 import '../tools/tools_bridge.dart';
@@ -144,11 +145,15 @@ class ShareFiles {
             !lockState.locked &&
             _whereNow() == where &&
             session.container.id == container;
+        // a chat picked in the share menu goes straight there, when it
+        // still may: no check offered, no picker
+        final menu = await shareTargets.chatFor(s.chat);
+        if (!context.mounted) return;
         // one photo or video may be checked instead; files only go
         final one = s.items.length == 1 ? s.items.single : null;
         final kind = one == null ? null : kindOfPicked(one);
         var way = ShareWay.chat;
-        if (one != null && kind != SharedKind.file) {
+        if (menu == null && one != null && kind != SharedKind.file) {
           final w = await _whileHere(
             askShareWay(
               context,
@@ -172,19 +177,21 @@ class ShareFiles {
           continue;
         }
         if (!context.mounted) return;
-        final id = await _whileHere(
-          pickWordsChat(
-            context,
-            title: l10n.shareChooseChat,
-            empty: appState.contacts.isEmpty
-                ? l10n.shareNoChats
-                : l10n.shareNoOne,
-            // a screenshot for a bug report goes to him
-            dev: devForwardTarget,
-            onSheet: _onSheet,
-          ),
-          null,
-        );
+        final id =
+            menu ??
+            await _whileHere(
+              pickWordsChat(
+                context,
+                title: l10n.shareChooseChat,
+                empty: appState.contacts.isEmpty
+                    ? l10n.shareNoChats
+                    : l10n.shareNoOne,
+                // a screenshot for a bug report goes to him
+                dev: devForwardTarget,
+                onSheet: _onSheet,
+              ),
+              null,
+            );
         _sheet = null;
         if (!alive()) return;
         if (_newer) continue;

@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo 会找出在你那里能用的方式。",
   "bridgesTorVpnLine": "在 Orbot 这类 Tor VPN 里，Kryfo 会从网桥开始连接。",
   "bridgesNothingGotThrough": "都没能连上",
-  "bridgesBridgeFromAFriend": "朋友给的网桥",
+  "bridgesPasteABridge": "粘贴网桥",
   "bridgesKryfoCanAskThe": "Kryfo 可以向 Tor 项目索取网桥，绕过封锁。",
   "bridgesNotNeededRightNow": "现在用不到",
   "bridgesThisBridgeIsnTGetting": "这个网桥连不出去",
@@ -362,7 +362,7 @@
   "bridgesUndo": "撤销",
   "bridgesRemoveBridgeN": "移除网桥 {n}",
   "bridgesMore": "更多",
-  "bridgesFromAFriendLower": "来自朋友",
+  "bridgesPastedLower": "已粘贴",
   "bridgesAlmostThere": "快好了",
   "bridgesTryingAnotherWayOf": "正在尝试其他方式…（{attempt}/{attempts}）",
   "bridgesLookingForAVolunteer": "正在寻找志愿者",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, other{{count} 条新消息}}",
   "composerSendSilent": "静音发送",
   "composerSendHoldHint": "长按查看更多选项",
-  "homeGroupShotsLine": "消息"
+  "homeGroupShotsLine": "消息",
+  "settingsShareMenu": "在分享菜单中显示聊天",
+  "settingsShareMenuHint": "从其他应用分享时，你最近的聊天会以名称显示。",
+  "settingsShareMenuHintLocked": "仅在 Kryfo 解锁时，你最近的聊天才会以名称显示在其他应用的分享菜单中。",
+  "settingsShareMenuDisguised": "Kryfo 使用其他图标时，你的聊天不会出现在分享菜单中。"
 }

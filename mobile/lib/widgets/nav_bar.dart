@@ -6,13 +6,18 @@ import '../theme.dart';
 import 'press_scale.dart';
 import 'stroke_icon.dart';
 import '../l10n/l10n.dart';
+import '../main.dart' show linkedRole;
 
 enum HaloTab { chats, tools, support, me }
 
 // the tabs on the bar, the same on a computer: its tools pick, take drops
 // and save through the computer's own dialogs (tools/desk_tools.dart). the
-// play build's support tab is its tip jar
-List<HaloTab> get shownTabs => HaloTab.values;
+// play build's support tab is its tip jar. a linked computer shows no
+// support tab: a tier bought there is the phone's to keep
+List<HaloTab> get shownTabs => [
+  for (final t in HaloTab.values)
+    if (t != HaloTab.support || !linkedRole) t,
+];
 
 Map<HaloTab, String> get _labels => {
   HaloTab.chats: l10n.navBarChats,

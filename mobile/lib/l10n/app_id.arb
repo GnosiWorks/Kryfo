@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "Kryfo mencari cara yang berhasil di tempatmu.",
   "bridgesTorVpnLine": "Di dalam VPN Tor seperti Orbot, Kryfo mulai lewat jembatan.",
   "bridgesNothingGotThrough": "Tidak ada yang tembus",
-  "bridgesBridgeFromAFriend": "Jembatan dari teman",
+  "bridgesPasteABridge": "Tempel jembatan",
   "bridgesKryfoCanAskThe": "Kryfo bisa meminta jembatan ke Tor Project untuk menembus blokir itu.",
   "bridgesNotNeededRightNow": "Tidak perlu sekarang",
   "bridgesThisBridgeIsnTGetting": "Jembatan ini tidak tembus",
@@ -362,7 +362,7 @@
   "bridgesUndo": "Urungkan",
   "bridgesRemoveBridgeN": "Hapus jembatan {n}",
   "bridgesMore": "Selengkapnya",
-  "bridgesFromAFriendLower": "dari teman",
+  "bridgesPastedLower": "ditempel",
   "bridgesAlmostThere": "Sebentar lagi",
   "bridgesTryingAnotherWayOf": "Mencoba cara lain… ({attempt} dari {attempts})",
   "bridgesLookingForAVolunteer": "Mencari relawan",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, other{{count} pesan baru}}",
   "composerSendSilent": "Kirim tanpa suara",
   "composerSendHoldHint": "Tahan untuk opsi lainnya",
-  "homeGroupShotsLine": "Pesan"
+  "homeGroupShotsLine": "Pesan",
+  "settingsShareMenu": "Tampilkan chat di menu bagikan",
+  "settingsShareMenuHint": "Chat terbarumu muncul dengan namanya saat kamu berbagi dari aplikasi lain.",
+  "settingsShareMenuHintLocked": "Chat terbarumu muncul dengan namanya di menu bagikan aplikasi lain hanya selama Kryfo tidak terkunci.",
+  "settingsShareMenuDisguised": "Chatmu tetap di luar menu bagikan selama Kryfo memakai ikon lain."
 }

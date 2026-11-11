@@ -7200,7 +7200,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Non è passato niente';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Bridge da un amico';
+  String get bridgesPasteABridge => 'Incolla un bridge';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7444,7 +7444,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Incolla una riga bridge. Prendi righe dal Progetto Tor o da persone che conosci.';
 
   @override
-  String get bridgesFromAFriendLower => 'da un amico';
+  String get bridgesPastedLower => 'incollato';
 
   @override
   String get bridgesAlmostThere => 'Ci siamo quasi';
@@ -12354,4 +12354,19 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Messaggio';
+
+  @override
+  String get settingsShareMenu => 'Mostra le chat nel menu di condivisione';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Le tue chat più recenti compaiono per nome quando condividi da un\'altra app.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Le tue chat più recenti compaiono per nome nel menu di condivisione delle altre app solo mentre Kryfo è sbloccato.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Le tue chat restano fuori dal menu di condivisione finché Kryfo usa un\'altra icona.';
 }

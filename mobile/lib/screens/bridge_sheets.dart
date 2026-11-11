@@ -333,7 +333,7 @@ class _FriendSheetState extends State<_FriendSheet> {
             const SheetHandle(),
             const SizedBox(height: 6),
             Text(
-              l10n.bridgesBridgeFromAFriend,
+              l10n.bridgesPasteABridge,
               style: HaloType.serif(size: 22, color: HaloColors.text),
             ),
             const SizedBox(height: 6),

@@ -327,7 +327,7 @@
   "bridgesKryfoFindsAWay": "يجد Kryfo طريقة تعمل حيث أنت.",
   "bridgesTorVpnLine": "داخل شبكة VPN خاصة بـ Tor مثل Orbot، يبدأ Kryfo عبر جسر.",
   "bridgesNothingGotThrough": "لم تنجح أي طريقة",
-  "bridgesBridgeFromAFriend": "جسر من صديق",
+  "bridgesPasteABridge": "الصق جسرًا",
   "bridgesKryfoCanAskThe": "يستطيع Kryfo أن يطلب من مشروع Tor جسرًا لتجاوز الحجب.",
   "bridgesNotNeededRightNow": "غير مطلوب الآن",
   "bridgesThisBridgeIsnTGetting": "لا يستطيع هذا الجسر العبور",
@@ -362,7 +362,7 @@
   "bridgesUndo": "تراجع",
   "bridgesRemoveBridgeN": "إزالة الجسر ⁨{n}⁩",
   "bridgesMore": "المزيد",
-  "bridgesFromAFriendLower": "من صديق",
+  "bridgesPastedLower": "ملصوق",
   "bridgesAlmostThere": "اقتربنا",
   "bridgesTryingAnotherWayOf": "جارٍ تجربة طريقة أخرى… (⁨{attempt}⁩ من ⁨{attempts}⁩)",
   "bridgesLookingForAVolunteer": "جارٍ البحث عن متطوع",
@@ -3218,5 +3218,9 @@
   "bannerNewMessages": "{count, plural, zero{لا رسائل جديدة} one{رسالة جديدة واحدة} two{رسالتان جديدتان} few{{count} رسائل جديدة} many{{count} رسالة جديدة} other{{count} رسالة جديدة}}",
   "composerSendSilent": "إرسال بدون صوت",
   "composerSendHoldHint": "اضغط مطولًا لمزيد من الخيارات",
-  "homeGroupShotsLine": "رسالة"
+  "homeGroupShotsLine": "رسالة",
+  "settingsShareMenu": "إظهار المحادثات في قائمة المشاركة",
+  "settingsShareMenuHint": "تظهر محادثاتك الأخيرة بأسمائها عند المشاركة من تطبيق آخر.",
+  "settingsShareMenuHintLocked": "تظهر محادثاتك الأخيرة بأسمائها في قوائم المشاركة في التطبيقات الأخرى فقط ما دام Kryfo غير مقفل.",
+  "settingsShareMenuDisguised": "تبقى محادثاتك خارج قائمة المشاركة ما دام Kryfo يحمل أيقونة أخرى."
 }

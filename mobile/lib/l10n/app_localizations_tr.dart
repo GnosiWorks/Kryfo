@@ -7155,7 +7155,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Hiçbiri geçemedi';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Arkadaştan köprü';
+  String get bridgesPasteABridge => 'Köprü yapıştır';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7397,7 +7397,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bir köprü satırı yapıştır. Satırları Tor Projesinden ya da tanıdığın kişilerden al.';
 
   @override
-  String get bridgesFromAFriendLower => 'bir arkadaştan';
+  String get bridgesPastedLower => 'yapıştırılan';
 
   @override
   String get bridgesAlmostThere => 'Az kaldı';
@@ -12278,4 +12278,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Mesaj';
+
+  @override
+  String get settingsShareMenu => 'Sohbetleri paylaşım menüsünde göster';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Son sohbetlerin, diğer uygulamaların paylaşım menüsünde yalnızca Kryfo\'nun kilidi açıkken adlarıyla görünür.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Kryfo başka bir simge taşırken sohbetlerin paylaşım menüsünün dışında kalır.';
 }

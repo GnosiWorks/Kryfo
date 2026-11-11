@@ -7261,7 +7261,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Пробитися не вдалося';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Міст від друга';
+  String get bridgesPasteABridge => 'Вставити міст';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7505,7 +7505,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Встав рядок моста. Бери рядки від проєкту Tor або від тих, кого знаєш.';
 
   @override
-  String get bridgesFromAFriendLower => 'від друга';
+  String get bridgesPastedLower => 'вставлений';
 
   @override
   String get bridgesAlmostThere => 'Майже готово';
@@ -12445,4 +12445,19 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Повідомлення';
+
+  @override
+  String get settingsShareMenu => 'Показувати чати в меню «Поділитися»';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Ваші останні чати з’являються за назвою, коли ви ділитеся з іншого застосунку.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Ваші останні чати з’являються за назвою в меню «Поділитися» інших застосунків, лише поки Kryfo розблоковано.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Ваші чати залишаються поза меню «Поділитися», поки Kryfo має інший значок.';
 }

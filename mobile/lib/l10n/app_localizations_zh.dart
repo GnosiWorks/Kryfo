@@ -6804,7 +6804,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNothingGotThrough => '都没能连上';
 
   @override
-  String get bridgesBridgeFromAFriend => '朋友给的网桥';
+  String get bridgesPasteABridge => '粘贴网桥';
 
   @override
   String get bridgesKryfoCanAskThe => 'Kryfo 可以向 Tor 项目索取网桥，绕过封锁。';
@@ -7029,7 +7029,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '粘贴一条网桥配置。网桥配置可以从 Tor 项目获取，或者找你认识的人拿。';
 
   @override
-  String get bridgesFromAFriendLower => '来自朋友';
+  String get bridgesPastedLower => '已粘贴';
 
   @override
   String get bridgesAlmostThere => '快好了';
@@ -11579,6 +11579,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => '消息';
+
+  @override
+  String get settingsShareMenu => '在分享菜单中显示聊天';
+
+  @override
+  String get settingsShareMenuHint => '从其他应用分享时，你最近的聊天会以名称显示。';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      '仅在 Kryfo 解锁时，你最近的聊天才会以名称显示在其他应用的分享菜单中。';
+
+  @override
+  String get settingsShareMenuDisguised => 'Kryfo 使用其他图标时，你的聊天不会出现在分享菜单中。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -18383,7 +18396,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNothingGotThrough => '都沒能連上';
 
   @override
-  String get bridgesBridgeFromAFriend => '朋友給的橋接';
+  String get bridgesPasteABridge => '貼上橋接';
 
   @override
   String get bridgesKryfoCanAskThe => 'Kryfo 可以向 Tor 專案索取橋接，繞過封鎖。';
@@ -18608,7 +18621,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '貼上一條橋接設定。橋接設定可以從 Tor 專案取得，或者找你認識的人拿。';
 
   @override
-  String get bridgesFromAFriendLower => '來自朋友';
+  String get bridgesPastedLower => '已貼上';
 
   @override
   String get bridgesAlmostThere => '快好了';
@@ -23036,4 +23049,17 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get homeGroupShotsLine => '訊息';
+
+  @override
+  String get settingsShareMenu => '在分享選單中顯示聊天';
+
+  @override
+  String get settingsShareMenuHint => '從其他應用程式分享時，你最近的聊天會以名稱顯示。';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      '僅在 Kryfo 解鎖時，你最近的聊天才會以名稱顯示在其他應用程式的分享選單中。';
+
+  @override
+  String get settingsShareMenuDisguised => 'Kryfo 使用其他圖示時，你的聊天不會出現在分享選單中。';
 }

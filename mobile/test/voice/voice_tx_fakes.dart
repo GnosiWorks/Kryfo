@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:kryfo/translate/downloads.dart';
 import 'package:kryfo/translate/engine_bridge.dart' show FetchStatus;
+import 'package:kryfo/translate/hant.dart' show HantConverter, HantForm;
 import 'package:kryfo/voice/transcript_store.dart';
 import 'package:kryfo/voice/voice_ffi.dart';
 import 'package:kryfo/voice/voice_memory.dart';
@@ -146,6 +147,8 @@ VoiceFakes fakeVoiceHub({
   MemRoom? Function()? room,
   int threads = 6,
   void Function()? beforeRun,
+  Future<HantConverter> Function()? hant,
+  HantForm Function()? reader,
 }) {
   final runner = FakeRunner();
   final backend = FakeModelBackend(have: installed);
@@ -173,6 +176,8 @@ VoiceFakes fakeVoiceHub({
     threads: () => threads,
     beforeRun: beforeRun,
     watchEvery: const Duration(milliseconds: 20),
+    hant: hant,
+    reader: reader ?? () => HantForm.none,
   );
   return VoiceFakes(hub, runner, backend, store);
 }

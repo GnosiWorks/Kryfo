@@ -7133,7 +7133,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Tidak ada yang tembus';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Jembatan dari teman';
+  String get bridgesPasteABridge => 'Tempel jembatan';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7374,7 +7374,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Tempel baris jembatan. Ambil baris dari Tor Project atau dari orang yang kamu kenal.';
 
   @override
-  String get bridgesFromAFriendLower => 'dari teman';
+  String get bridgesPastedLower => 'ditempel';
 
   @override
   String get bridgesAlmostThere => 'Sebentar lagi';
@@ -12256,4 +12256,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'Pesan';
+
+  @override
+  String get settingsShareMenu => 'Tampilkan chat di menu bagikan';
+
+  @override
+  String get settingsShareMenuHint =>
+      'Chat terbarumu muncul dengan namanya saat kamu berbagi dari aplikasi lain.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Chat terbarumu muncul dengan namanya di menu bagikan aplikasi lain hanya selama Kryfo tidak terkunci.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Chatmu tetap di luar menu bagikan selama Kryfo memakai ikon lain.';
 }

@@ -7135,7 +7135,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesNothingGotThrough => 'هیچ راهی جواب نداد';
 
   @override
-  String get bridgesBridgeFromAFriend => 'پل از یک دوست';
+  String get bridgesPasteABridge => 'چسباندن پل';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7377,7 +7377,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'یک خط پل جای‌گذاری کنید. خط‌ها را از پروژه‌ی Tor یا از کسانی بگیرید که می‌شناسید.';
 
   @override
-  String get bridgesFromAFriendLower => 'از یک دوست';
+  String get bridgesPastedLower => 'چسبانده‌شده';
 
   @override
   String get bridgesAlmostThere => 'چیزی نمانده';
@@ -12269,4 +12269,19 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get homeGroupShotsLine => 'پیام';
+
+  @override
+  String get settingsShareMenu => 'نمایش گفتگوها در منوی اشتراک‌گذاری';
+
+  @override
+  String get settingsShareMenuHint =>
+      'هنگام اشتراک‌گذاری از برنامه‌ای دیگر، گفتگوهای اخیرتان با نامشان نمایش داده می‌شوند.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'گفتگوهای اخیرتان فقط وقتی Kryfo باز است با نامشان در منوی اشتراک‌گذاری برنامه‌های دیگر نمایش داده می‌شوند.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'تا وقتی Kryfo نماد دیگری دارد، گفتگوهایتان بیرون از منوی اشتراک‌گذاری می‌مانند.';
 }
