@@ -12284,7 +12284,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get connCheckLine =>
-      'Inilah semua yang akan dibagikan: cara Tor keluar dari sini, berapa lama waktunya, dan apa yang tidak tembus. Tanpa alamat IP, tanpa lokasi, tanpa baris jembatan, tanpa ID perangkat. Tidak ada yang keluar sampai kamu menyalin atau mengirimnya.';
+      'Inilah semua yang akan dibagikan: cara Tor keluar dari sini, berapa lama waktunya, dan apa yang tidak tembus. Tanpa alamat IP, tanpa lokasi, tanpa baris jembatan, tanpa penanda perangkat. Tidak ada yang keluar sampai kamu menyalin atau mengirimnya.';
 
   @override
   String get connCheckEnglish =>

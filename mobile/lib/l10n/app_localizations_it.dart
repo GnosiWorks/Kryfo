@@ -12382,7 +12382,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get connCheckLine =>
-      'Questo è tutto ciò che verrebbe condiviso: come Tor esce da qui, quanto ci ha messo e cosa non è passato. Nessun indirizzo IP, nessuna posizione, nessuna riga di bridge, nessun ID del dispositivo. Non esce nulla finché non lo copi o lo invii.';
+      'Questo è tutto ciò che verrebbe condiviso: come Tor esce da qui, quanto ci ha messo e cosa non è passato. Nessun indirizzo IP, nessuna posizione, nessuna riga di bridge, nessun identificativo del dispositivo. Non esce nulla finché non lo copi o lo invii.';
 
   @override
   String get connCheckEnglish =>

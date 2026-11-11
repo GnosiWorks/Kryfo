@@ -19654,7 +19654,7 @@ abstract class AppLocalizations {
   /// screens/conn_check_sheet.dart: above the report. says the report shown below is everything that would be shared, and what it never holds
   ///
   /// In en, this message translates to:
-  /// **'This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, no device IDs. Nothing leaves until you copy or send it.'**
+  /// **'This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, nothing that names your device. Nothing leaves until you copy or send it.'**
   String get connCheckLine;
 
   /// screens/conn_check_sheet.dart: under the report, which is always in English

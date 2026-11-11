@@ -12280,7 +12280,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connCheckLine =>
-      'This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, no device IDs. Nothing leaves until you copy or send it.';
+      'This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, nothing that names your device. Nothing leaves until you copy or send it.';
 
   @override
   String get connCheckEnglish =>

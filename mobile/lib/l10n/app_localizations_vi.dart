@@ -12273,7 +12273,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get connCheckLine =>
-      'Đây là tất cả những gì sẽ được chia sẻ: Tor ra ngoài từ đây bằng cách nào, mất bao lâu và cách nào không qua được. Không có địa chỉ IP, không có vị trí, không có dòng cầu nối, không có ID thiết bị. Không có gì rời đi cho đến khi bạn sao chép hoặc gửi.';
+      'Đây là tất cả những gì sẽ được chia sẻ: Tor ra ngoài từ đây bằng cách nào, mất bao lâu và cách nào không qua được. Không có địa chỉ IP, không có vị trí, không có dòng cầu nối, không có mã nhận dạng thiết bị. Không có gì rời đi cho đến khi bạn sao chép hoặc gửi.';
 
   @override
   String get connCheckEnglish =>

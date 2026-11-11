@@ -154,7 +154,7 @@ class _ConnCheckSheetState extends State<ConnCheckSheet> {
                   l10n.connCheckEnglish,
                   style: HaloType.sans(
                     size: 12,
-                    color: HaloColors.text2,
+                    color: HaloColors.text,
                     height: 1.4,
                   ),
                 ),

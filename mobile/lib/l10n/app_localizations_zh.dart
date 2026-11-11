@@ -11604,7 +11604,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get connCheckLine =>
-      '这就是会分享的全部内容：Tor 在这里如何连出去、用了多久、哪些方式没有成功。不含 IP 地址、位置、网桥行或设备 ID。在你复制或发送之前，什么都不会离开。';
+      '这就是会分享的全部内容：Tor 在这里如何连出去、用了多久、哪些方式没有成功。不含 IP 地址、位置、网桥行或设备标识。在你复制或发送之前，什么都不会离开。';
 
   @override
   String get connCheckEnglish => '检查结果是英文的，这样在哪里读都一样。';
@@ -23108,7 +23108,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get connCheckLine =>
-      '這就是會分享的全部內容：Tor 在這裡如何連出去、花了多久、哪些方式沒有成功。不含 IP 位址、位置、橋接行或裝置 ID。在你複製或傳送之前，什麼都不會離開。';
+      '這就是會分享的全部內容：Tor 在這裡如何連出去、花了多久、哪些方式沒有成功。不含 IP 位址、位置、橋接行或裝置識別碼。在你複製或傳送之前，什麼都不會離開。';
 
   @override
   String get connCheckEnglish => '檢查結果是英文的，這樣在哪裡讀都一樣。';

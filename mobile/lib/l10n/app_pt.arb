@@ -3226,7 +3226,7 @@
   "settingsShareMenuHintLocked": "Suas conversas mais recentes aparecem pelo nome no menu de compartilhar de outros apps só enquanto o Kryfo está desbloqueado.",
   "settingsShareMenuDisguised": "Suas conversas ficam fora do menu de compartilhar enquanto o Kryfo usa outro ícone.",
   "connCheckTitle": "Verificar minha conexão",
-  "connCheckLine": "Isto é tudo o que seria compartilhado: como o Tor sai daqui, quanto tempo levou e o que não passou. Sem endereço IP, sem localização, sem linhas de ponte, sem IDs do aparelho. Nada sai até você copiar ou enviar.",
+  "connCheckLine": "Isto é tudo o que seria compartilhado: como o Tor sai daqui, quanto tempo levou e o que não passou. Sem endereço IP, sem localização, sem linhas de ponte, sem identificadores do aparelho. Nada sai até você copiar ou enviar.",
   "connCheckEnglish": "A verificação está em inglês, para ser lida da mesma forma em qualquer lugar.",
   "connCheckAgain": "Verificar de novo",
   "connCheckSend": "Enviar para o Marios",

@@ -12376,7 +12376,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get connCheckLine =>
-      'Isto é tudo o que seria compartilhado: como o Tor sai daqui, quanto tempo levou e o que não passou. Sem endereço IP, sem localização, sem linhas de ponte, sem IDs do aparelho. Nada sai até você copiar ou enviar.';
+      'Isto é tudo o que seria compartilhado: como o Tor sai daqui, quanto tempo levou e o que não passou. Sem endereço IP, sem localização, sem linhas de ponte, sem identificadores do aparelho. Nada sai até você copiar ou enviar.';
 
   @override
   String get connCheckEnglish =>

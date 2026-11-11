@@ -15469,7 +15469,7 @@
   "@connCheckTitle": {
     "description": "screens/conn_check_sheet.dart and the transport page's button: a report on how Tor gets out on this network, which the person can copy or send to the developer themselves"
   },
-  "connCheckLine": "This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, no device IDs. Nothing leaves until you copy or send it.",
+  "connCheckLine": "This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, nothing that names your device. Nothing leaves until you copy or send it.",
   "@connCheckLine": {
     "description": "screens/conn_check_sheet.dart: above the report. says the report shown below is everything that would be shared, and what it never holds"
   },
