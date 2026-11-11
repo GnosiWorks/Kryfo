@@ -8,6 +8,7 @@
 // with reduced motion; a chat's draft shows in its row. the database is a
 // stand-in in memory.
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +21,8 @@ import 'package:kryfo/drafts.dart' show Draft, KeptDraft, draftsRevision;
 import 'package:kryfo/home_drafts.dart';
 import 'package:kryfo/miui_autostart.dart' show maybeShowBackgroundPrompt;
 import 'package:kryfo/l10n/l10n.dart';
+import 'package:kryfo/lock_guard.dart' show lockGuard;
+import 'package:kryfo/lock_state.dart' show lockState;
 import 'package:kryfo/main.dart'
     show
         HaloDb,
@@ -235,6 +238,7 @@ void main() {
   tearDown(() => chatPageForTest = null);
 
   group('drafts', () {
+    setUp(() => lockState.openForTest(enabled: true));
     KeptDraft d(String chat, String text, {bool group = false}) =>
         (chat: chat, group: group, draft: Draft(text, at: 1));
 
@@ -350,6 +354,63 @@ void main() {
       expect(HomeDrafts.shown.value.keys, ['g:b']);
       HomeDrafts.clear();
       expect(HomeDrafts.shown.value, isEmpty);
+    });
+
+    test('a lock or a wipe lets the drafts go; another session is told '
+        'apart by itself, not by a number', () async {
+      final one = Object();
+      await HomeDrafts.reload(one, () async => [d('a', 'x')]);
+      expect(HomeDrafts.shown.value, isNotEmpty);
+      expect(HomeDrafts.unread, isFalse);
+      lockGuard.locking();
+      await Future<void>.delayed(Duration.zero);
+      expect(HomeDrafts.shown.value, isEmpty);
+      expect(HomeDrafts.unread, isTrue);
+      lockState.openForTest(enabled: true);
+      await HomeDrafts.reload(one, () async => [d('a', 'x')]);
+      // a new session object empties the list before its own read
+      final slow = Completer<List<KeptDraft>>();
+      final read = HomeDrafts.reload(Object(), () => slow.future);
+      expect(HomeDrafts.shown.value, isEmpty);
+      slow.complete([]);
+      await read;
+      final wipe = File('lib/wipe.dart').readAsStringSync();
+      expect(
+        wipe.indexOf('HomeDrafts.clear()'),
+        greaterThan(wipe.indexOf('forgetAllDrafts()')),
+      );
+    });
+
+    test('a chat with a draft moves up by its time; pinned stay', () {
+      final t0 = DateTime(2026, 11, 1, 12);
+      ContactPreview at(String id, int min, {bool pinned = false}) =>
+          ContactPreview(
+            haloId: id,
+            avatarSeed: id,
+            when: t0.add(Duration(minutes: min)),
+            pinned: pinned,
+          );
+      final list = [
+        at('pin', 0, pinned: true),
+        at('b', 50),
+        at('c', 40),
+        at('d', 30),
+      ];
+      ms(int min) => t0.add(Duration(minutes: min)).millisecondsSinceEpoch;
+      List<String> ids(Map<String, int> drafts) => [
+        for (final c in draftOrder(list, drafts)) c.haloId,
+      ];
+      expect(ids({}), ['pin', 'b', 'c', 'd']);
+      // typed in d after b's last message: d goes to the top under the pin
+      expect(ids({'p:d': ms(60)}), ['pin', 'd', 'b', 'c']);
+      // between b and c
+      expect(ids({'p:d': ms(45)}), ['pin', 'b', 'd', 'c']);
+      // older than its own last message: stays
+      expect(ids({'p:c': ms(10)}), ['pin', 'b', 'c', 'd']);
+      // two drafts, newest first
+      expect(ids({'p:d': ms(70), 'p:c': ms(80)}), ['pin', 'c', 'd', 'b']);
+      // a pinned chat's draft does not move it
+      expect(ids({'p:pin': ms(99)}), ['pin', 'b', 'c', 'd']);
     });
 
     test('a draft is one line, with no direction controls', () {

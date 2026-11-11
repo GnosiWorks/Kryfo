@@ -2363,13 +2363,12 @@ class _ContactListState extends State<_ContactList> {
 
   // the session the drafts were read for: a vault opening or shutting
   // makes a new one, so a hidden chat's draft shows only while it is open
-  Object get _draftsFor => identityHashCode(session);
   Object? _draftsRead;
 
   void _reloadDrafts() {
     final s = session;
-    _draftsRead = _draftsFor;
-    unawaited(HomeDrafts.reload(_draftsRead!, s.drafts));
+    _draftsRead = s;
+    unawaited(HomeDrafts.reload(s, s.drafts));
   }
 
   List<_Item> _topItems() => [
@@ -2377,18 +2376,26 @@ class _ContactListState extends State<_ContactList> {
   ];
 
   List<_Item> _chatItems() {
-    final items = [for (final c in widget.contacts) _Item.chat(c)];
+    final chats = draftOrder(widget.contacts, HomeDrafts.times);
+    final items = [for (final c in chats) _Item.chat(c)];
     final d = widget.dev;
     if (d != null && !d.pinned) {
-      items.insert(devSlot(d, widget.contacts), _Item.dev(d, top: false));
+      items.insert(devSlot(d, chats), _Item.dev(d, top: false));
     }
     return items;
+  }
+
+  // a draft typed or let go: its row moves to its place
+  void _draftsMoved() {
+    if (!mounted) return;
+    _chats.update(_chatItems(), quiet: lockGuard.isLocked());
   }
 
   @override
   void initState() {
     super.initState();
     draftsRevision.addListener(_reloadDrafts);
+    HomeDrafts.shown.addListener(_draftsMoved);
     _reloadDrafts();
     _top.start(_topItems());
     _groups.start([for (final g in widget.groups) _Item.group(g)]);
@@ -2398,7 +2405,9 @@ class _ContactListState extends State<_ContactList> {
   @override
   void didUpdateWidget(_ContactList old) {
     super.didUpdateWidget(old);
-    if (_draftsFor != _draftsRead) _reloadDrafts();
+    if (!identical(session, _draftsRead) || HomeDrafts.unread) {
+      _reloadDrafts();
+    }
     final quiet = lockGuard.isLocked();
     _top.update(_topItems(), quiet: quiet);
     _groups.update([
@@ -2410,6 +2419,7 @@ class _ContactListState extends State<_ContactList> {
   @override
   void dispose() {
     draftsRevision.removeListener(_reloadDrafts);
+    HomeDrafts.shown.removeListener(_draftsMoved);
     _top.dispose();
     _groups.dispose();
     _chats.dispose();
@@ -3589,6 +3599,46 @@ class _Row extends StatelessWidget {
       ),
     );
   }
+}
+
+/// the chats in list order once drafts count: a chat whose draft is newer
+/// than its last message moves up to where that time falls among the
+/// others. pinned rows stay where they are, the rest keep their order
+@visibleForTesting
+List<ContactPreview> draftOrder(
+  List<ContactPreview> chats,
+  Map<String, int> drafts,
+) {
+  int? draftAt(ContactPreview c) {
+    if (c.pinned || c.blocked) return null;
+    final at = drafts[HomeDrafts.rowKey(c.haloId, group: false)];
+    if (at == null) return null;
+    final last = c.when?.millisecondsSinceEpoch ?? 0;
+    return at > last ? at : null;
+  }
+
+  final moving = [
+    for (final c in chats)
+      if (draftAt(c) != null) c,
+  ]..sort((a, b) => draftAt(b)!.compareTo(draftAt(a)!));
+  if (moving.isEmpty) return chats;
+  final out = [
+    for (final c in chats)
+      if (!moving.contains(c)) c,
+  ];
+  for (final m in moving.reversed) {
+    final at = draftAt(m)!;
+    var i = 0;
+    // under the pinned rows and anything newer
+    while (i < out.length &&
+        (out[i].pinned ||
+            (out[i].when?.millisecondsSinceEpoch ?? 0) >= at ||
+            (draftAt(out[i]) ?? 0) >= at)) {
+      i++;
+    }
+    out.insert(i, m);
+  }
+  return out;
 }
 
 /// a chat row's draft: the label in the accent, then the words in their own

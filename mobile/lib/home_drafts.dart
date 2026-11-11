@@ -8,14 +8,22 @@ import 'package:flutter/foundation.dart';
 import 'bidi_safe.dart' show unmarked;
 import 'dlog.dart';
 import 'drafts.dart' show KeptDraft;
+import 'lock_guard.dart' show lockGuard;
 
 class HomeDrafts {
   HomeDrafts._();
 
   /// a row's draft by [rowKey], as one line
   static final shown = ValueNotifier<Map<String, String>>(const {});
+
+  /// when each of [shown] was last typed, in ms: the list moves its row up
+  static Map<String, int> times = const {};
   static Object? _of;
   static int _turn = 0;
+  static VoidCallback? _lockOff;
+
+  /// nothing is held: a lock or a wipe let them go, read them again
+  static bool get unread => _of == null;
 
   static String rowKey(String chat, {required bool group}) =>
       '${group ? 'g' : 'p'}:$chat';
@@ -26,10 +34,14 @@ class HomeDrafts {
     Object who,
     Future<List<KeptDraft>> Function() read,
   ) async {
-    if (who != _of) {
+    if (!identical(who, _of)) {
       _of = who;
+      times = const {};
       shown.value = const {};
     }
+    // the lock takes them from memory; the list reads them again after
+    _lockOff?.call();
+    _lockOff = lockGuard.closeOnLock(clear);
     final turn = ++_turn;
     List<KeptDraft> all;
     try {
@@ -38,18 +50,23 @@ class HomeDrafts {
       dlog('home drafts: not read (${e.runtimeType})');
       return;
     }
-    if (turn != _turn || who != _of) return;
-    shown.value = {
+    if (turn != _turn || !identical(who, _of)) return;
+    final kept = [
       for (final d in all)
         if (oneLine(d.draft.text) case final t when t.isNotEmpty)
-          rowKey(d.chat, group: d.group): t,
-    };
+          (rowKey(d.chat, group: d.group), t, d.draft.at),
+    ];
+    times = {for (final (k, _, at) in kept) k: at};
+    shown.value = {for (final (k, t, _) in kept) k: t};
   }
 
   /// nothing shown, as at a lock or a wipe
   static void clear() {
+    _lockOff?.call();
+    _lockOff = null;
     _of = null;
     _turn++;
+    times = const {};
     shown.value = const {};
   }
 
