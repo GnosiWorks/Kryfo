@@ -146,6 +146,8 @@ class VoiceTranscripts extends ChangeNotifier {
         notifyListeners();
       },
       onError: (Object e) {
+        // asked again at the next draw
+        _hantLoading = null;
         dlog('voice: traditional tables not read (${e.runtimeType})');
       },
     );

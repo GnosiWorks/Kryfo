@@ -147,6 +147,24 @@ void main() {
       },
     );
 
+    test('tables that could not be read are asked for again', () async {
+      var reads = 0;
+      final f = fakeVoiceHub(
+        hant: () {
+          reads++;
+          if (reads == 1) return Future.error(StateError('no asset'));
+          return _tables();
+        },
+        reader: () => HantForm.tw,
+      );
+      expect(f.hub.shown('头发', 'zh'), '头发');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(f.hub.shown('头发', 'zh'), '头发');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(f.hub.shown('头发', 'zh'), '頭髮');
+      expect(reads, 2);
+    });
+
     test('the lock lets the tables go; they are read again after', () async {
       var reads = 0;
       final f = fakeVoiceHub(
