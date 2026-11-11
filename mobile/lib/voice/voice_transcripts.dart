@@ -19,6 +19,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../desktop/desktop_mode.dart' show onDesktop;
+import '../dlog.dart' show dlog;
 import '../engine_strings.dart';
 import '../l10n/app_locale.dart' show currentLanguage;
 import '../lock_state.dart' show lockState;
@@ -26,8 +27,10 @@ import '../main.dart' show appState, session, sessionQuiet;
 import '../native_libs.dart';
 import '../translate/downloads.dart';
 import '../translate/engine_bridge.dart' show FetchStatus;
+import '../translate/hant.dart' show HantConverter, HantForm;
 import '../transfers.dart' show unmeteredNow;
 import '../translate/hub_live.dart' show translationHubIfOn;
+import 'hant_reader.dart';
 import 'transcript_store.dart';
 import 'voice_audio.dart';
 import 'voice_ffi.dart';
@@ -67,6 +70,8 @@ class VoiceTranscripts extends ChangeNotifier {
     String Function()? scope,
     String Function()? appLang,
     Future<HansChars> Function()? hans,
+    Future<HantConverter> Function()? hant,
+    HantForm Function()? reader,
     MemRoom? Function()? room,
     int Function()? threads,
     VoidCallback? beforeRun,
@@ -77,7 +82,9 @@ class VoiceTranscripts extends ChangeNotifier {
        beforeRun = beforeRun ?? (() {}),
        scope = scope ?? (() => ''),
        appLang = appLang ?? (() => currentLanguage),
-       _hans = hans ?? HansChars.load {
+       _hans = hans ?? HansChars.load,
+       _hantLoad = hant ?? HantConverter.load,
+       reader = reader ?? readerHant {
     this.downloads =
         downloads ??
         ModelDownloads(
@@ -111,6 +118,39 @@ class VoiceTranscripts extends ChangeNotifier {
 
   // chinese words into simplified characters
   final Future<HansChars> Function() _hans;
+
+  // and back into traditional ones, for a reader of those
+  final Future<HantConverter> Function() _hantLoad;
+
+  /// the traditional forms the person reads, none for simplified
+  final HantForm Function() reader;
+  HantConverter? _hant;
+  Future<void>? _hantLoading;
+
+  /// a transcript as it is shown: chinese in traditional characters for a
+  /// reader of them, once the tables are read (a redraw follows). what is
+  /// kept stays as the model wrote it
+  String shown(String text, String lang) {
+    if (lang != 'zh' || text.isEmpty) return text;
+    final form = reader();
+    if (form == HantForm.none) return text;
+    final h = _hant;
+    if (h != null) return h.convert(text, form);
+    _hantLoading ??= _hantLoad().then(
+      (h) {
+        if (_locked) {
+          _hantLoading = null;
+          return;
+        }
+        _hant = h;
+        notifyListeners();
+      },
+      onError: (Object e) {
+        dlog('voice: traditional tables not read (${e.runtimeType})');
+      },
+    );
+    return text;
+  }
 
   /// the phone's free memory now (voice_memory.dart), null: not known
   final MemRoom? Function() room;
@@ -209,6 +249,9 @@ class VoiceTranscripts extends ChangeNotifier {
   void lockedOut() {
     _locked = true;
     _wipes++;
+    // the tables are read again when next wanted
+    _hant = null;
+    _hantLoading = null;
     _stopAll();
     notifyListeners();
   }
