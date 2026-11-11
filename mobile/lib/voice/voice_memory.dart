@@ -3,9 +3,12 @@
 // buffers: +145 MB rss on the a12) and keeps the cores busy for a while.
 // on a phone already short of memory android then kills apps to make room,
 // and the app in front goes last but does go (the a12 killed kryfo with a
-// 60 s note on 2026-11-11). so a run starts only with room to spare, takes
-// half the threads when room is tight, and stops itself before the phone
-// runs out. where there is no /proc/meminfo (windows) nothing is checked.
+// 60 s note on 2026-11-11). so a run starts only with room to spare and
+// stops itself before the phone runs out. fewer threads would not help: the
+// memory is the model's whatever the threads, and with half the cores free
+// the kernel has the cpu to reclaim (2 threads at 574 MB free took 17 s for
+// a 10 s note, with no memory pressure at all). where there is no
+// /proc/meminfo (windows) nothing is checked.
 import 'dart:io' show File;
 import 'dart:math' show max;
 
@@ -22,16 +25,10 @@ const kVoiceRunBytes = 160 << 20;
 /// the room a run leaves to the system: below it android kills apps, ours too
 int memReserve(int total) => max(256 << 20, total ~/ 10);
 
-/// threads for a run with [room]: all of [threads] with room to spare,
-/// half (2 at least) when it is tight, 0 when a run would not fit now.
-/// null room: nothing to go by, all of them
-int voiceRunThreads(int threads, MemRoom? room) {
-  if (room == null) return threads;
-  final spare = room.free - memReserve(room.total) - kVoiceRunBytes;
-  if (spare < 0) return 0;
-  if (spare < kVoiceRunBytes) return max(2, threads ~/ 2);
-  return threads;
-}
+/// whether a run fits in [room] and still leaves the reserve. null room:
+/// nothing to go by, it runs
+bool voiceRunFits(MemRoom? room) =>
+    room == null || room.free - kVoiceRunBytes >= memReserve(room.total);
 
 /// a run under way stops when free memory is under the reserve
 bool memRunOut(MemRoom? room) =>

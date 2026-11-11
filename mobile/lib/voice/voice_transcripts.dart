@@ -115,7 +115,7 @@ class VoiceTranscripts extends ChangeNotifier {
   /// the phone's free memory now (voice_memory.dart), null: not known
   final MemRoom? Function() room;
 
-  /// the threads a run takes with room to spare
+  /// the threads a run takes
   final int Function() threads;
 
   /// lets go of what can be made again (decoded pictures) before a run
@@ -305,14 +305,13 @@ class VoiceTranscripts extends ChangeNotifier {
         // room first: a run that would not fit says so instead of getting
         // the app killed
         beforeRun();
-        final n = voiceRunThreads(threads(), room());
-        if (n == 0) {
+        if (!voiceRunFits(room())) {
           q.fail(const VoiceError(VoiceError.memory));
           return;
         }
         final TxJob job;
         try {
-          job = await _runner(path, lang, n);
+          job = await _runner(path, lang, threads());
         } catch (e) {
           q.fail(e is VoiceError ? e : const VoiceError(VoiceError.run));
           return;

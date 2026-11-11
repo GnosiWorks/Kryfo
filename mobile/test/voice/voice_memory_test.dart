@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // room for a transcription: /proc/meminfo read, a run started only with
-// room to spare, half the threads when tight, stopped under the reserve
+// room to spare, stopped under the reserve
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/voice/voice_memory.dart';
 
@@ -27,15 +27,14 @@ void main() {
     expect(memReserve(3841192 * 1024), 3841192 * 1024 ~/ 10);
   });
 
-  test('threads by room on the a12 (3.7 gb, 375 mb reserve)', () {
+  test('a run fits on the a12 (3.7 gb, 375 mb reserve) from 535 mb', () {
     const total = 3841192 * 1024;
     MemRoom at(int mb) => MemRoom(mb * _mb, total);
-    // 880 mb free when it was killed with 8: all six now
-    expect(voiceRunThreads(6, at(880)), 6);
-    expect(voiceRunThreads(6, at(600)), 3);
-    expect(voiceRunThreads(3, at(600)), 2);
-    expect(voiceRunThreads(6, at(500)), 0);
-    expect(voiceRunThreads(6, null), 6);
+    expect(voiceRunFits(at(880)), isTrue);
+    expect(voiceRunFits(at(540)), isTrue);
+    expect(voiceRunFits(at(530)), isFalse);
+    expect(voiceRunFits(at(300)), isFalse);
+    expect(voiceRunFits(null), isTrue);
   });
 
   test('a run stops under the reserve', () {

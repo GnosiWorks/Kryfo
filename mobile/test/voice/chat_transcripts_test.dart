@@ -183,12 +183,12 @@ void main() {
       expect(c.of('u1').noRoom, isFalse);
     });
 
-    test('tight: half the threads, two at least', () async {
-      now = const MemRoom(700 * mb, 4 * gb);
+    test('just enough: all the threads', () async {
+      now = const MemRoom(580 * mb, 4 * gb);
       await make(room: () => now);
       await c.open('u1', '/n/u1.ogg');
       await _beats();
-      expect(f.runner.threads, [3]);
+      expect(f.runner.threads, [6]);
     });
 
     test('running out mid-run: it stops, keeps nothing, says why', () async {
