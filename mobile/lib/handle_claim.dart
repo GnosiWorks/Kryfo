@@ -3,6 +3,7 @@
 // the onboarding's name step share these checks, so both say the same
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 
@@ -19,6 +20,29 @@ Future<String?> Function() claimInvite = readyInvite;
 
 const _unreached = 'error: bad answer from the registry';
 
+/// names to offer for [h] when it is taken: the name with a few random
+/// digits, cut so the whole still fits the rule. nothing of the person in it
+List<String> handleCandidates(String h, Random r, {int n = 3}) {
+  final out = <String>[];
+  var guard = 0;
+  while (out.length < n && guard++ < 20) {
+    final digits = 2 + r.nextInt(2);
+    final tail =
+        '${r.nextInt(9) + 1}'
+        '${List.generate(digits - 1, (_) => r.nextInt(10)).join()}';
+    final sep = r.nextBool() ? '_' : '';
+    final room = 20 - sep.length - tail.length;
+    final base = h.length > room ? h.substring(0, room) : h;
+    final c = '$base$sep$tail';
+    if (handleShape.hasMatch(c) && c != h && !out.contains(c)) out.add(c);
+  }
+  return out;
+}
+
+/// the registry's answer for a name: a test hands in its own
+@visibleForTesting
+Future<String> Function(String handle)? handleCheckForTest;
+
 /// claims on their way to the registry. while one runs the key must stay:
 /// the registry may already hold this key's invite under the name
 final claimsInFlight = ValueNotifier<int>(0);
@@ -30,6 +54,11 @@ class HandleClaimer extends ChangeNotifier {
 
   /// '', 'shape', 'checking', 'free', 'taken', or the registry's error
   String state = '';
+
+  /// a name the registry said is free, offered while the typed one is
+  /// taken. null until one is found
+  String? suggestion;
+  final _random = Random.secure();
   bool busy = false;
 
   /// a registry call past [slowAfter]: over a cold circuit it can take most
@@ -63,12 +92,14 @@ class HandleClaimer extends ChangeNotifier {
     _debounce?.cancel();
     asking(false);
     state = '';
+    suggestion = null;
     _changed();
   }
 
   void onTyped(String v) {
     _debounce?.cancel();
     asking(false);
+    suggestion = null;
     final h = v.trim().toLowerCase();
     if (h.isEmpty) {
       state = '';
@@ -89,18 +120,60 @@ class HandleClaimer extends ChangeNotifier {
       // its lookups do, or answers as an unreachable registry would. its
       // claim never goes
       asking(true);
-      final r = !sessionQuiet
-          ? await engine.handleCheck(h)
-          : kDecoyLooksUp
-          ? await engine.decoyHandleCheck(h)
-          : await unreachedLater(_unreached);
+      final r = await _check(h);
       if (_gone) return;
       // typed on since: the answer is for a name no longer in the field
       if (typed != h) return;
       asking(false);
       state = r;
       _changed();
+      if (r == 'taken') unawaited(_suggest(h));
     });
+  }
+
+  // a quiet session checks on a lane of its own (kDecoyLooksUp), as its
+  // lookups do, or answers as an unreachable registry would
+  Future<String> _check(String h) async {
+    final test = handleCheckForTest;
+    if (test != null) return test(h);
+    return !sessionQuiet
+        ? await engine.handleCheck(h)
+        : kDecoyLooksUp
+        ? await engine.decoyHandleCheck(h)
+        : await unreachedLater(_unreached);
+  }
+
+  // one free name like [h], asked of the registry before it is shown. the
+  // first that is free; none when none of a few is
+  Future<void> _suggest(String h) async {
+    if (handleCheckForTest == null && sessionQuiet && !kDecoyLooksUp) return;
+    for (final c in handleCandidates(h, _random)) {
+      final String r;
+      try {
+        r = await _check(c);
+      } catch (_) {
+        return;
+      }
+      if (_gone || typed != h || state != 'taken') return;
+      if (r == 'free') {
+        suggestion = c;
+        _changed();
+        return;
+      }
+      // the registry out of reach: no more asking
+      if (r != 'taken') return;
+    }
+  }
+
+  /// the offered name goes into the field, and is checked as typed
+  void useSuggestion() {
+    final c = suggestion;
+    if (c == null) return;
+    ctrl.value = TextEditingValue(
+      text: c,
+      selection: TextSelection.collapsed(offset: c.length),
+    );
+    onTyped(c);
   }
 
   /// 'ok' once the registry holds it, or what it said. null: nothing to claim

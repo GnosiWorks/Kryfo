@@ -12321,4 +12321,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'Brouillon : $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle est libre, l\'utiliser';
+  }
 }

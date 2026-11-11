@@ -12189,4 +12189,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'ड्राफ़्ट: $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle उपलब्ध है, इसे चुनें';
+  }
 }

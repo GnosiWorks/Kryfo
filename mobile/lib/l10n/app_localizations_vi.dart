@@ -12176,4 +12176,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'Bản nháp: $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle còn trống, dùng tên này';
+  }
 }

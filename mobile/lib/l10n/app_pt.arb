@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} de {total}",
   "chatReactHeart": "Reagir com um coração",
   "homeDraftLabel": "Rascunho:",
-  "homeDraftA11y": "Rascunho: {text}"
+  "homeDraftA11y": "Rascunho: {text}",
+  "handleSuggestFree": "@{handle} está livre, usar"
 }

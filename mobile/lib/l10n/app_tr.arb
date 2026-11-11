@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{total} içinde {at}",
   "chatReactHeart": "Kalple tepki ver",
   "homeDraftLabel": "Taslak:",
-  "homeDraftA11y": "Taslak: {text}"
+  "homeDraftA11y": "Taslak: {text}",
+  "handleSuggestFree": "@{handle} boşta, bunu kullan"
 }

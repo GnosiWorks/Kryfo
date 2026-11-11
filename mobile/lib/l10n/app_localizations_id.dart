@@ -12187,4 +12187,9 @@ class AppLocalizationsId extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'Draf: $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle tersedia, pakai ini';
+  }
 }

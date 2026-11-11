@@ -12182,4 +12182,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'Draft: $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle is free, use it';
+  }
 }

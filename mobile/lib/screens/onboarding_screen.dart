@@ -1997,7 +1997,12 @@ class _NameScreenState extends State<_NameScreen> {
           // no hint: the @ and the headline already say what goes here
           HandleField(ctrl: _ctrl, prefix: '@', onChanged: _c.onTyped, max: 20),
           const SizedBox(height: 8),
-          HandleAvailability(state: _c.state, slow: _c.slow),
+          HandleAvailability(
+            state: _c.state,
+            slow: _c.slow,
+            suggestion: _c.suggestion,
+            onSuggestion: _c.useSuggestion,
+          ),
           HandleSlowLine(show: busy && _c.slow),
         ], from: 1),
       ],

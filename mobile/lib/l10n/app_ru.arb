@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} из {total}",
   "chatReactHeart": "Отреагировать сердцем",
   "homeDraftLabel": "Черновик:",
-  "homeDraftA11y": "Черновик: {text}"
+  "homeDraftA11y": "Черновик: {text}",
+  "handleSuggestFree": "@{handle} свободно, выбрать"
 }

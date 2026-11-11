@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} از {total}",
   "chatReactHeart": "واکنش با قلب",
   "homeDraftLabel": "پیش‌نویس:",
-  "homeDraftA11y": "پیش‌نویس: {text}"
+  "homeDraftA11y": "پیش‌نویس: {text}",
+  "handleSuggestFree": "@{handle} آزاد است، از آن استفاده کن"
 }

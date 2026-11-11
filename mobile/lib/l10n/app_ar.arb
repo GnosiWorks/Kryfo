@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} من {total}",
   "chatReactHeart": "تفاعل بقلب",
   "homeDraftLabel": "مسودة:",
-  "homeDraftA11y": "مسودة: {text}"
+  "homeDraftA11y": "مسودة: {text}",
+  "handleSuggestFree": "@{handle} متاح، استخدمه"
 }

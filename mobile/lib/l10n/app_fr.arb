@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} sur {total}",
   "chatReactHeart": "Réagir avec un cœur",
   "homeDraftLabel": "Brouillon :",
-  "homeDraftA11y": "Brouillon : {text}"
+  "homeDraftA11y": "Brouillon : {text}",
+  "handleSuggestFree": "@{handle} est libre, l'utiliser"
 }

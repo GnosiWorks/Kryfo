@@ -12322,4 +12322,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'مسودة: $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle متاح، استخدمه';
+  }
 }

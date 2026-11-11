@@ -11517,6 +11517,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String homeDraftA11y(String text) {
     return '草稿：$text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle 可用，点此使用';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22911,5 +22916,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String homeDraftA11y(String text) {
     return '草稿：$text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle 可用，點此使用';
   }
 }

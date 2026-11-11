@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{total} में से {at}",
   "chatReactHeart": "दिल से प्रतिक्रिया दें",
   "homeDraftLabel": "ड्राफ़्ट:",
-  "homeDraftA11y": "ड्राफ़्ट: {text}"
+  "homeDraftA11y": "ड्राफ़्ट: {text}",
+  "handleSuggestFree": "@{handle} उपलब्ध है, इसे चुनें"
 }

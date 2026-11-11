@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} dari {total}",
   "chatReactHeart": "Beri reaksi hati",
   "homeDraftLabel": "Draf:",
-  "homeDraftA11y": "Draf: {text}"
+  "homeDraftA11y": "Draf: {text}",
+  "handleSuggestFree": "@{handle} tersedia, pakai ini"
 }

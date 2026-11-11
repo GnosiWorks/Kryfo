@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} trên {total}",
   "chatReactHeart": "Thả tim",
   "homeDraftLabel": "Bản nháp:",
-  "homeDraftA11y": "Bản nháp: {text}"
+  "homeDraftA11y": "Bản nháp: {text}",
+  "handleSuggestFree": "@{handle} còn trống, dùng tên này"
 }

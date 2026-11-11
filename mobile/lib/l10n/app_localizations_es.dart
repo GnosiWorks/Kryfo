@@ -12278,4 +12278,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'Borrador: $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle está libre, úsalo';
+  }
 }

@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} з {total}",
   "chatReactHeart": "Відреагувати сердечком",
   "homeDraftLabel": "Чернетка:",
-  "homeDraftA11y": "Чернетка: {text}"
+  "homeDraftA11y": "Чернетка: {text}",
+  "handleSuggestFree": "@{handle} вільне, обрати"
 }

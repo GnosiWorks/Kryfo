@@ -19518,6 +19518,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Draft: {text}'**
   String homeDraftA11y(String text);
+
+  /// screens/handle_screen.dart: under 'Already taken' when picking a handle: a similar handle the registry said is free; a tap puts it in the field. keep the @ right before the name
+  ///
+  /// In en, this message translates to:
+  /// **'@{handle} is free, use it'**
+  String handleSuggestFree(String handle);
 }
 
 class _AppLocalizationsDelegate

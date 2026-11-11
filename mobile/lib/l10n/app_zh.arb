@@ -3203,5 +3203,6 @@
   "voiceSeekValue": "{at} / {total}",
   "chatReactHeart": "用爱心回应",
   "homeDraftLabel": "草稿：",
-  "homeDraftA11y": "草稿：{text}"
+  "homeDraftA11y": "草稿：{text}",
+  "handleSuggestFree": "@{handle} 可用，点此使用"
 }

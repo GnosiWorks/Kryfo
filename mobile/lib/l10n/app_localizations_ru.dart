@@ -12375,4 +12375,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'Черновик: $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle свободно, выбрать';
+  }
 }

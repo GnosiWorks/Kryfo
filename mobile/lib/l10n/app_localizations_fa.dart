@@ -12200,4 +12200,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String homeDraftA11y(String text) {
     return 'پیش‌نویس: $text';
   }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle آزاد است، از آن استفاده کن';
+  }
 }

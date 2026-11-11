@@ -15356,5 +15356,14 @@
         "type": "String"
       }
     }
+  },
+  "handleSuggestFree": "@{handle} is free, use it",
+  "@handleSuggestFree": {
+    "description": "screens/handle_screen.dart: under 'Already taken' when picking a handle: a similar handle the registry said is free; a tap puts it in the field. keep the @ right before the name",
+    "placeholders": {
+      "handle": {
+        "type": "String"
+      }
+    }
   }
 }
