@@ -7,6 +7,7 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 
+import 'handle_repoint.dart' show claimSeen;
 import 'invite_share.dart' show readyInvite;
 import 'main.dart'
     show
@@ -141,16 +142,22 @@ class HandleClaimer extends ChangeNotifier {
     });
   }
 
-  // a check that found no tor is asked again once tor carries
+  // a check that found no tor is asked again once tor comes up: on the
+  // move from down to up, never on every change while it is up
   bool _torWatch = false;
+  bool _torWas = false;
   void _waitForTor(bool on) {
     if (on == _torWatch || _gone) return;
     _torWatch = on;
+    _torWas = appState.servicesReady;
     on ? appState.addListener(_torMoved) : appState.removeListener(_torMoved);
   }
 
   void _torMoved() {
-    if (!appState.servicesReady || state != kNoTor) return;
+    final up = appState.servicesReady;
+    final cameUp = up && !_torWas;
+    _torWas = up;
+    if (!cameUp || state != kNoTor) return;
     _waitForTor(false);
     onTyped(ctrl.text);
   }
@@ -221,7 +228,13 @@ class HandleClaimer extends ChangeNotifier {
           ? await unreachedLater(_unreached)
           : uri == null
           ? _unreached
-          : await engine.handleClaim(h, uri, bio);
+          : await claimSeen(
+              h,
+              uri,
+              await engine.handleClaim(h, uri, bio),
+              lookup: engine.ownHandleGetJson,
+              myKey: engine.myEdPubkey,
+            );
       // kept even when the page is gone: the registry already holds it
       if (r == 'ok') await appState.setMyHandle(h, bio: bio, invite: uri);
       return r;

@@ -7901,6 +7901,31 @@ class AppLocalizationsPt extends AppLocalizations {
       'O registro está ocupado.\nTente de novo em um minuto.';
 
   @override
+  String get handleRefusedFull => 'O registro recusou: está cheio agora.';
+
+  @override
+  String get handleRefusedOlder =>
+      'O registro recusou: já tem uma mudança mais recente.\nConfira o relógio e tente de novo.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'O registro recusou: não conseguiu ler o seu convite.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'O registro recusou: o convite não é da sua chave.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'O registro recusou: esta versão do Kryfo é antiga demais.\nAtualize o Kryfo para usar nomes de usuário.';
+
+  @override
+  String get handleRefused => 'O registro recusou.';
+
+  @override
+  String get handleGetABridge => 'Obter uma ponte';
+
+  @override
   String get handleCheckClock =>
       'Confira a data e a hora do celular e tente de novo.';
 

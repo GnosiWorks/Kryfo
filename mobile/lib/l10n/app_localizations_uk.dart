@@ -7984,6 +7984,31 @@ class AppLocalizationsUk extends AppLocalizations {
       'Реєстр зараз зайнятий.\nСпробуй за хвилину.';
 
   @override
+  String get handleRefusedFull => 'Реєстр відмовив: зараз він заповнений.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Реєстр відмовив: у нього вже є новіша зміна.\nПеревір годинник і спробуй знову.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Реєстр відмовив: не зміг прочитати твоє запрошення.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Реєстр відмовив: запрошення не від твого ключа.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Реєстр відмовив: ця версія Kryfo застара.\nОнови Kryfo, щоб користуватися іменами.';
+
+  @override
+  String get handleRefused => 'Реєстр відмовив.';
+
+  @override
+  String get handleGetABridge => 'Отримати міст';
+
+  @override
   String get handleCheckClock =>
       'Перевір дату й час на телефоні та спробуй ще раз.';
 

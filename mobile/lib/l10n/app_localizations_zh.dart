@@ -7477,6 +7477,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleRegistryBusy => '登记处现在很忙。\n请一分钟后再试。';
 
   @override
+  String get handleRefusedFull => '登记处拒绝了：现在已满。';
+
+  @override
+  String get handleRefusedOlder => '登记处拒绝了：它已有更新的更改。\n请检查时钟后再试。';
+
+  @override
+  String get handleRefusedBadInvite => '登记处拒绝了：无法读取你的邀请。';
+
+  @override
+  String get handleRefusedNotYourInvite => '登记处拒绝了：这个邀请不是你的密钥发出的。';
+
+  @override
+  String get handleRefusedUpdate =>
+      '登记处拒绝了：这个版本的 Kryfo 太旧了。\n请更新 Kryfo 来使用用户名。';
+
+  @override
+  String get handleRefused => '登记处拒绝了。';
+
+  @override
+  String get handleGetABridge => '获取网桥';
+
+  @override
   String get handleCheckClock => '请检查手机的日期和时间，然后再试一次。';
 
   @override
@@ -19032,6 +19054,28 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get handleRegistryBusy => '註冊處現在很忙。\n請一分鐘後再試。';
+
+  @override
+  String get handleRefusedFull => '註冊處拒絕了：現在已滿。';
+
+  @override
+  String get handleRefusedOlder => '註冊處拒絕了：它已有更新的變更。\n請檢查時鐘後再試。';
+
+  @override
+  String get handleRefusedBadInvite => '註冊處拒絕了：無法讀取你的邀請。';
+
+  @override
+  String get handleRefusedNotYourInvite => '註冊處拒絕了：這個邀請不是你的金鑰發出的。';
+
+  @override
+  String get handleRefusedUpdate =>
+      '註冊處拒絕了：這個版本的 Kryfo 太舊了。\n請更新 Kryfo 來使用使用者名稱。';
+
+  @override
+  String get handleRefused => '註冊處拒絕了。';
+
+  @override
+  String get handleGetABridge => '取得橋接';
 
   @override
   String get handleCheckClock => '請檢查手機的日期和時間，然後再試一次。';

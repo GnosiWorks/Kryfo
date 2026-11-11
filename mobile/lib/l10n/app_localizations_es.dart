@@ -7907,6 +7907,31 @@ class AppLocalizationsEs extends AppLocalizations {
       'El registro está ocupado.\nInténtalo de nuevo en un minuto.';
 
   @override
+  String get handleRefusedFull => 'El registro dijo que no: ahora está lleno.';
+
+  @override
+  String get handleRefusedOlder =>
+      'El registro dijo que no: ya tiene un cambio más reciente.\nRevisa la hora e inténtalo de nuevo.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'El registro dijo que no: no pudo leer tu invitación.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'El registro dijo que no: la invitación no es de tu clave.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'El registro dijo que no: esta versión de Kryfo es demasiado antigua.\nActualiza Kryfo para usar nombres de usuario.';
+
+  @override
+  String get handleRefused => 'El registro dijo que no.';
+
+  @override
+  String get handleGetABridge => 'Conseguir un puente';
+
+  @override
   String get handleCheckClock =>
       'Revisa la fecha y la hora del teléfono y vuelve a intentarlo.';
 

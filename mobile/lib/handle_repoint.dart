@@ -29,8 +29,42 @@ String handleRefusalLine(String r, String h) => switch (r) {
   'error: clock' => l10n.handleCheckClockShown,
   'error: busy' => l10n.handleRegistryBusy,
   'error: no tor' => l10n.handleNeedsTor,
+  // the registry answered no: said as its no, never as out of reach
+  'error: full' => l10n.handleRefusedFull,
+  'error: older' => l10n.handleRefusedOlder,
+  'error: bad invite' => l10n.handleRefusedBadInvite,
+  'error: invite not yours' => l10n.handleRefusedNotYourInvite,
+  'error: update' => l10n.handleRefusedUpdate,
+  'error: refused' => l10n.handleRefused,
   _ => l10n.handleRegistryFailed,
 };
+
+/// a claim that got no answer, or one that could not be read: it may have
+/// landed all the same
+bool claimUnanswered(String r) =>
+    r.startsWith('error: no answer') ||
+    r == 'error: bad answer from the registry';
+
+/// [r], the engine's answer to a claim of [h] at [invite]. one that got no
+/// answer is looked up once: a handle the registry shows at [myKey] and
+/// [invite] was taken, and is 'ok'
+Future<String> claimSeen(
+  String h,
+  String invite,
+  String r, {
+  required Future<String> Function(String url) lookup,
+  required String Function() myKey,
+}) async {
+  if (!claimUnanswered(r)) return r;
+  final String body;
+  try {
+    body = await lookup('$kHandleRegistry/.well-known/kryfo.json?name=$h');
+  } catch (_) {
+    return r;
+  }
+  final seen = judgeHandle(body, h, myKey: myKey(), myInvite: invite);
+  return seen == HandleAtRegistry.mine ? 'ok' : r;
+}
 
 /// between two claims: the registry orders them by their second, and takes
 /// no two in one
@@ -150,7 +184,13 @@ class HandleRepoint {
     if (!force && await read(kHandleClaimedKey) == mark) return null;
     final bio = await read('my_handle_bio') ?? '';
     if (still != null && !still()) return null;
-    final r = await claim(h, inv, bio);
+    final r = await claimSeen(
+      h,
+      inv,
+      await claim(h, inv, bio),
+      lookup: lookup,
+      myKey: myKey,
+    );
     if (r == 'ok') await write(kHandleClaimedKey, mark);
     return r;
   }

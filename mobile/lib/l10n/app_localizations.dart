@@ -12595,6 +12595,48 @@ abstract class AppLocalizations {
   /// **'The registry is busy.\nTry again in a minute.'**
   String get handleRegistryBusy;
 
+  /// the registry refused a claim: it holds as many handles as it takes
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: it\'s full right now.'**
+  String get handleRefusedFull;
+
+  /// the registry refused a change signed before one it already has (a clock behind, or two devices)
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: it already has a newer change.\nCheck the clock and try again.'**
+  String get handleRefusedOlder;
+
+  /// the registry refused a claim: it could not read the invite
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: it couldn\'t read your invite.'**
+  String get handleRefusedBadInvite;
+
+  /// the registry refused a claim: the invite is not signed by this identity's key
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: the invite isn\'t from your key.'**
+  String get handleRefusedNotYourInvite;
+
+  /// the registry refused a claim from an app version it no longer takes
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: this version of Kryfo is too old.\nUpdate Kryfo to use handles.'**
+  String get handleRefusedUpdate;
+
+  /// the registry refused for a reason the app has no line for
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no.'**
+  String get handleRefused;
+
+  /// handle page, under the line that tor is not up: opens the paste sheet with the ways to a private bridge
+  ///
+  /// In en, this message translates to:
+  /// **'Get a bridge'**
+  String get handleGetABridge;
+
   /// screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off
   ///
   /// In en, this message translates to:
