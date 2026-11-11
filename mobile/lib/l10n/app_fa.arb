@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "سرعت پخش {speed}",
   "voiceSeekValue": "{at} از {total}",
-  "chatReactHeart": "واکنش با قلب"
+  "chatReactHeart": "واکنش با قلب",
+  "homeDraftLabel": "پیش‌نویس:",
+  "homeDraftA11y": "پیش‌نویس: {text}"
 }

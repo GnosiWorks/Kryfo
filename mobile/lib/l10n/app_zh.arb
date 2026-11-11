@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "播放速度 {speed}",
   "voiceSeekValue": "{at} / {total}",
-  "chatReactHeart": "用爱心回应"
+  "chatReactHeart": "用爱心回应",
+  "homeDraftLabel": "草稿：",
+  "homeDraftA11y": "草稿：{text}"
 }

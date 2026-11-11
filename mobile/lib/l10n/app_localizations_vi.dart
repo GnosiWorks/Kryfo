@@ -12168,4 +12168,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'Thả tim';
+
+  @override
+  String get homeDraftLabel => 'Bản nháp:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Bản nháp: $text';
+  }
 }

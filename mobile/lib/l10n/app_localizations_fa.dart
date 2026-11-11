@@ -12192,4 +12192,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'واکنش با قلب';
+
+  @override
+  String get homeDraftLabel => 'پیش‌نویس:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'پیش‌نویس: $text';
+  }
 }

@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "سرعة التشغيل {speed}",
   "voiceSeekValue": "{at} من {total}",
-  "chatReactHeart": "تفاعل بقلب"
+  "chatReactHeart": "تفاعل بقلب",
+  "homeDraftLabel": "مسودة:",
+  "homeDraftA11y": "مسودة: {text}"
 }

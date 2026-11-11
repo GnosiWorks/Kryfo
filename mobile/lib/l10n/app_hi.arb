@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "चलाने की गति {speed}",
   "voiceSeekValue": "{total} में से {at}",
-  "chatReactHeart": "दिल से प्रतिक्रिया दें"
+  "chatReactHeart": "दिल से प्रतिक्रिया दें",
+  "homeDraftLabel": "ड्राफ़्ट:",
+  "homeDraftA11y": "ड्राफ़्ट: {text}"
 }

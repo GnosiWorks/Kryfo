@@ -19506,6 +19506,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'React with a heart'**
   String get chatReactHeart;
+
+  /// screens/home_screen.dart: chat list, before the words of a message typed in a chat but not sent yet; keep it short, the words follow on the same line
+  ///
+  /// In en, this message translates to:
+  /// **'Draft:'**
+  String get homeDraftLabel;
+
+  /// screens/home_screen.dart: what a screen reader says of a chat row's draft, the words typed but not sent yet
+  ///
+  /// In en, this message translates to:
+  /// **'Draft: {text}'**
+  String homeDraftA11y(String text);
 }
 
 class _AppLocalizationsDelegate

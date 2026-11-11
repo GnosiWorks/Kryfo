@@ -5,7 +5,10 @@
 // in a long language on a small phone; notes wait for their first load and
 // a held note can be copied or deleted; a held group or chat opens the
 // house menu; a card over the list opens its height and folds away, at once
-// with reduced motion. the database is a stand-in in memory.
+// with reduced motion; a chat's draft shows in its row. the database is a
+// stand-in in memory.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -13,6 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/bridge_mode.dart' show BridgeStatus;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/delivery_mode.dart' show DeliveryMode;
+import 'package:kryfo/drafts.dart' show Draft, KeptDraft, draftsRevision;
+import 'package:kryfo/home_drafts.dart';
 import 'package:kryfo/miui_autostart.dart' show maybeShowBackgroundPrompt;
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/main.dart'
@@ -48,7 +53,11 @@ class _Db implements HaloDb {
   List<Map<String, Object?>> saved = [];
   List<Map<String, Object?>> notes = [];
   List<Map<String, Object?>> groups = [];
+  List<KeptDraft> kept = [];
   final deleted = <String>[];
+
+  @override
+  Future<List<KeptDraft>> drafts() async => [...kept];
 
   @override
   HaloContainer get container => HaloContainer.everyday;
@@ -224,6 +233,131 @@ void main() {
   });
 
   tearDown(() => chatPageForTest = null);
+
+  group('drafts', () {
+    KeptDraft d(String chat, String text, {bool group = false}) =>
+        (chat: chat, group: group, draft: Draft(text, at: 1));
+
+    Future<void> shown(WidgetTester t) async {
+      draftsRevision.value++;
+      for (var i = 0; i < 4; i++) {
+        await t.runAsync(() => Future<void>.delayed(Duration.zero));
+        await t.pump(const Duration(milliseconds: 300));
+      }
+    }
+
+    testWidgets('a chat with a draft shows it in place of its last message', (
+      t,
+    ) async {
+      phone(t);
+      db.kept = [
+        d('wren-oak-lamp', '  \non my way\nsecond line'),
+        d('g1', 'see you all', group: true),
+        d('blocked-one', 'never shown'),
+      ];
+      await t.pumpWidget(
+        framed(
+          _home(
+            contacts: [
+              ContactPreview(
+                haloId: 'wren-oak-lamp',
+                avatarSeed: 'w',
+                preview: 'last one',
+              ),
+              ContactPreview(
+                haloId: 'mist-fox-pine',
+                avatarSeed: 'm',
+                preview: 'nothing typed here',
+              ),
+              ContactPreview(
+                haloId: 'blocked-one',
+                avatarSeed: 'b',
+                blocked: true,
+                preview: 'blocked words',
+              ),
+            ],
+            groups: [
+              GroupSummary(groupId: 'g1', name: 'Hikers', memberCount: 3),
+            ],
+          ),
+        ),
+      );
+      await shown(t);
+      expect(find.text(l10n.homeDraftLabel), findsNWidgets(2));
+      expect(find.text('on my way'), findsOneWidget);
+      expect(find.text('last one'), findsNothing);
+      expect(find.text('see you all'), findsOneWidget);
+      expect(find.text(l10n.homeMembers(3)), findsNothing);
+      expect(find.text('nothing typed here'), findsOneWidget);
+      // a blocked chat keeps its line
+      expect(find.text('never shown'), findsNothing);
+      expect(find.text('blocked words'), findsOneWidget);
+      // sent or cleared: the last message is back
+      db.kept = [];
+      await shown(t);
+      expect(find.text(l10n.homeDraftLabel), findsNothing);
+      expect(find.text('last one'), findsOneWidget);
+      expect(find.text(l10n.homeMembers(3)), findsOneWidget);
+      await drain(t);
+    });
+
+    testWidgets('a draft says what it is to a screen reader, keeps its own '
+        'direction, and fits at 1.5x text', (t) async {
+      phone(t, size: const Size(320, 700));
+      final sem = t.ensureSemantics();
+      db.kept = [
+        d('wren-oak-lamp', 'سأصل بعد قليل إن شاء الله يا صديقي العزيز'),
+      ];
+      await t.pumpWidget(
+        framed(
+          MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 700),
+              textScaler: TextScaler.linear(1.5),
+            ),
+            child: _home(
+              contacts: [
+                ContactPreview(haloId: 'wren-oak-lamp', avatarSeed: 'w'),
+              ],
+            ),
+          ),
+        ),
+      );
+      await shown(t);
+      final words = 'سأصل بعد قليل إن شاء الله يا صديقي العزيز';
+      expect(t.widget<Text>(find.text(words)).textDirection, TextDirection.rtl);
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Semantics && w.properties.label == l10n.homeDraftA11y(words),
+        ),
+        findsOneWidget,
+      );
+      expect(t.takeException(), isNull);
+      sem.dispose();
+      await drain(t);
+    });
+
+    test('another session lets the old drafts go before it reads', () async {
+      await HomeDrafts.reload(1, () async => [d('a', 'x')]);
+      expect(HomeDrafts.shown.value.keys, ['p:a']);
+      final slow = Completer<List<KeptDraft>>();
+      final read = HomeDrafts.reload(2, () => slow.future);
+      // the vault shut: nothing of the old session shows meanwhile
+      expect(HomeDrafts.shown.value, isEmpty);
+      slow.complete([d('b', 'y', group: true)]);
+      await read;
+      expect(HomeDrafts.shown.value.keys, ['g:b']);
+      HomeDrafts.clear();
+      expect(HomeDrafts.shown.value, isEmpty);
+    });
+
+    test('a draft is one line, with no direction controls', () {
+      expect(HomeDrafts.oneLine('\n  \n hi there \nmore'), 'hi there');
+      expect(HomeDrafts.oneLine('a\u202eb'), 'ab');
+      expect(HomeDrafts.oneLine('   '), '');
+    });
+  });
 
   group('archived', () {
     Widget list(List<String> opened, List<String> back) => framed(

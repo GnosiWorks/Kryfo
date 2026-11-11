@@ -12313,4 +12313,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'Réagir avec un cœur';
+
+  @override
+  String get homeDraftLabel => 'Brouillon :';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Brouillon : $text';
+  }
 }

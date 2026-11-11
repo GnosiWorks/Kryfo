@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Скорость воспроизведения {speed}",
   "voiceSeekValue": "{at} из {total}",
-  "chatReactHeart": "Отреагировать сердцем"
+  "chatReactHeart": "Отреагировать сердцем",
+  "homeDraftLabel": "Черновик:",
+  "homeDraftA11y": "Черновик: {text}"
 }

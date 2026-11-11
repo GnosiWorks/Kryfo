@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Wiedergabetempo {speed}",
   "voiceSeekValue": "{at} von {total}",
-  "chatReactHeart": "Mit einem Herz reagieren"
+  "chatReactHeart": "Mit einem Herz reagieren",
+  "homeDraftLabel": "Entwurf:",
+  "homeDraftA11y": "Entwurf: {text}"
 }

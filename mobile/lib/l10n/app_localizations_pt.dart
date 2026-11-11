@@ -12270,4 +12270,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'Reagir com um coração';
+
+  @override
+  String get homeDraftLabel => 'Rascunho:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Rascunho: $text';
+  }
 }

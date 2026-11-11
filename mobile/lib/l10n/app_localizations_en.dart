@@ -12174,4 +12174,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'React with a heart';
+
+  @override
+  String get homeDraftLabel => 'Draft:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Draft: $text';
+  }
 }

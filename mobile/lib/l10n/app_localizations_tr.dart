@@ -12201,4 +12201,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'Kalple tepki ver';
+
+  @override
+  String get homeDraftLabel => 'Taslak:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Taslak: $text';
+  }
 }

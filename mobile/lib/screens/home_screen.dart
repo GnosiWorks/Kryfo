@@ -62,6 +62,8 @@ import '../widgets/row_motion.dart';
 import '../widgets/count_badge.dart';
 import '../widgets/chat_parts.dart' show GrowSwap;
 import '../widgets/swap.dart';
+import '../drafts.dart' show draftsRevision;
+import '../home_drafts.dart';
 import '../widgets/typing_mark.dart';
 import '../widgets/card_action.dart';
 import '../widgets/message_menu.dart' show MenuSheetRow;
@@ -2359,6 +2361,17 @@ class _ContactListState extends State<_ContactList> {
     if (mounted) setState(() {});
   }
 
+  // the session and its vault the drafts were read for: a hidden chat's
+  // draft shows only in the session whose vault is open
+  Object get _draftsFor => (identityHashCode(session), session.vault?.isOpen);
+  Object? _draftsRead;
+
+  void _reloadDrafts() {
+    final s = session;
+    _draftsRead = _draftsFor;
+    unawaited(HomeDrafts.reload(_draftsRead!, s.drafts));
+  }
+
   List<_Item> _topItems() => [
     if (widget.dev case final d? when d.pinned) _Item.dev(d, top: true),
   ];
@@ -2375,6 +2388,8 @@ class _ContactListState extends State<_ContactList> {
   @override
   void initState() {
     super.initState();
+    draftsRevision.addListener(_reloadDrafts);
+    _reloadDrafts();
     _top.start(_topItems());
     _groups.start([for (final g in widget.groups) _Item.group(g)]);
     _chats.start(_chatItems());
@@ -2383,6 +2398,7 @@ class _ContactListState extends State<_ContactList> {
   @override
   void didUpdateWidget(_ContactList old) {
     super.didUpdateWidget(old);
+    if (_draftsFor != _draftsRead) _reloadDrafts();
     final quiet = lockGuard.isLocked();
     _top.update(_topItems(), quiet: quiet);
     _groups.update([
@@ -2393,6 +2409,7 @@ class _ContactListState extends State<_ContactList> {
 
   @override
   void dispose() {
+    draftsRevision.removeListener(_reloadDrafts);
     _top.dispose();
     _groups.dispose();
     _chats.dispose();
@@ -2832,55 +2849,71 @@ class _GroupRow extends StatelessWidget {
                         const SizedBox(height: 2),
                         // not let in yet: no clock, no count, until it is.
                         // a new state rises in over the last one
-                        RiseSwap(
-                          child: g.ended
-                              // its admin ended it: the line, in place of all else
-                              ? Text(
-                                  endedLine((at: 0, by: g.endedBy!)),
-                                  key: const ValueKey('ended'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: HaloType.sans(
-                                    size: 12,
-                                    color: HaloColors.text,
-                                  ).copyWith(fontStyle: slant()),
-                                )
-                              : g.isRoom && g.joiningAt != null
-                              ? RoomJoinLine(
-                                  key: const ValueKey('joining'),
-                                  joiningAt: g.joiningAt!,
-                                  full: appState.roomFull(g.groupId),
-                                )
-                              : g.isRoom
-                              ? RoomCountdown(
-                                  key: const ValueKey('room'),
-                                  expiresAt: g.expiresAt!,
-                                  size: 10,
-                                )
-                              : g.mentioned
-                              // your three words came up in there
-                              ? Text(
-                                  l10n.homeMentionedYou,
-                                  key: const ValueKey('mentioned'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: HaloType.mono(
-                                    size: 10,
-                                    color: HaloColors.amberText,
-                                    weight: FontWeight.w600,
-                                    letter: 0.06,
-                                  ),
-                                )
-                              : Text(
-                                  l10n.homeMembers(g.memberCount),
-                                  key: const ValueKey('members'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: HaloType.mono(
-                                    size: 10,
-                                    color: HaloColors.text,
-                                  ),
-                                ),
+                        ValueListenableBuilder(
+                          valueListenable: HomeDrafts.shown,
+                          builder: (_, drafts, _) {
+                            final draft =
+                                drafts[HomeDrafts.rowKey(
+                                  g.groupId,
+                                  group: true,
+                                )];
+                            return RiseSwap(
+                              child: g.ended
+                                  // its admin ended it: the line, in place of all else
+                                  ? Text(
+                                      endedLine((at: 0, by: g.endedBy!)),
+                                      key: const ValueKey('ended'),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HaloType.sans(
+                                        size: 12,
+                                        color: HaloColors.text,
+                                      ).copyWith(fontStyle: slant()),
+                                    )
+                                  : g.isRoom && g.joiningAt != null
+                                  ? RoomJoinLine(
+                                      key: const ValueKey('joining'),
+                                      joiningAt: g.joiningAt!,
+                                      full: appState.roomFull(g.groupId),
+                                    )
+                                  : g.isRoom
+                                  ? RoomCountdown(
+                                      key: const ValueKey('room'),
+                                      expiresAt: g.expiresAt!,
+                                      size: 10,
+                                    )
+                                  // a draft takes the count's place
+                                  : draft != null
+                                  ? DraftLine(
+                                      key: const ValueKey('draft'),
+                                      text: draft,
+                                    )
+                                  : g.mentioned
+                                  // your three words came up in there
+                                  ? Text(
+                                      l10n.homeMentionedYou,
+                                      key: const ValueKey('mentioned'),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HaloType.mono(
+                                        size: 10,
+                                        color: HaloColors.amberText,
+                                        weight: FontWeight.w600,
+                                        letter: 0.06,
+                                      ),
+                                    )
+                                  : Text(
+                                      l10n.homeMembers(g.memberCount),
+                                      key: const ValueKey('members'),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HaloType.mono(
+                                        size: 10,
+                                        color: HaloColors.text,
+                                      ),
+                                    ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -3501,21 +3534,45 @@ class _Row extends StatelessWidget {
                                       appState.typingKey(c.haloId),
                                     ),
                               style: typingStyle(size: 12),
-                              child: Text(
-                                // a room link is an invitation, not a line of
-                                // two hundred characters
-                                (c.preview ?? '').contains('kryfo://room?')
-                                    ? l10n.homeRoomInvite
-                                    : (c.preview ?? ''),
-                                // unread reads in full colour until it is read
-                                style: HaloType.sans(
-                                  size: 12,
-                                  color: c.unread > 0
-                                      ? HaloColors.text
-                                      : HaloColors.text2,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              // a draft takes the last message's place
+                              child: ValueListenableBuilder(
+                                valueListenable: HomeDrafts.shown,
+                                builder: (_, drafts, _) {
+                                  final draft = c.blocked
+                                      ? null
+                                      : drafts[HomeDrafts.rowKey(
+                                          c.haloId,
+                                          group: false,
+                                        )];
+                                  return RiseSwap(
+                                    child: draft != null
+                                        ? DraftLine(
+                                            key: const ValueKey('draft'),
+                                            text: draft,
+                                          )
+                                        : Text(
+                                            // a room link is an invitation,
+                                            // not a line of two hundred
+                                            // characters
+                                            (c.preview ?? '').contains(
+                                                  'kryfo://room?',
+                                                )
+                                                ? l10n.homeRoomInvite
+                                                : (c.preview ?? ''),
+                                            key: const ValueKey('preview'),
+                                            // unread reads in full colour
+                                            // until it is read
+                                            style: HaloType.sans(
+                                              size: 12,
+                                              color: c.unread > 0
+                                                  ? HaloColors.text
+                                                  : HaloColors.text2,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -3529,6 +3586,44 @@ class _Row extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// a chat row's draft: the label in the accent, then the words in their own
+/// direction, one line
+class DraftLine extends StatelessWidget {
+  const DraftLine({super.key, required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: l10n.homeDraftA11y(text),
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          Text(
+            l10n.homeDraftLabel,
+            maxLines: 1,
+            style: HaloType.sans(
+              size: 12,
+              weight: FontWeight.w600,
+              color: HaloColors.amberText,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textDirection: writtenDir(text),
+              style: HaloType.sans(size: 12, color: HaloColors.text2),
+            ),
+          ),
+        ],
       ),
     );
   }

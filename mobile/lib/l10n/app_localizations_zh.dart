@@ -11509,6 +11509,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatReactHeart => '用爱心回应';
+
+  @override
+  String get homeDraftLabel => '草稿：';
+
+  @override
+  String homeDraftA11y(String text) {
+    return '草稿：$text';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22896,4 +22904,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get chatReactHeart => '用愛心回應';
+
+  @override
+  String get homeDraftLabel => '草稿：';
+
+  @override
+  String homeDraftA11y(String text) {
+    return '草稿：$text';
+  }
 }

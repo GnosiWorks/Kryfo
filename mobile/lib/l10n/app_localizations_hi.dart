@@ -12181,4 +12181,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'दिल से प्रतिक्रिया दें';
+
+  @override
+  String get homeDraftLabel => 'ड्राफ़्ट:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'ड्राफ़्ट: $text';
+  }
 }

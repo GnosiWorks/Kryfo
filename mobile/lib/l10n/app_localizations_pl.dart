@@ -12409,4 +12409,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'Zareaguj sercem';
+
+  @override
+  String get homeDraftLabel => 'Szkic:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Szkic: $text';
+  }
 }

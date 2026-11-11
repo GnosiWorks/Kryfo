@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Kecepatan putar {speed}",
   "voiceSeekValue": "{at} dari {total}",
-  "chatReactHeart": "Beri reaksi hati"
+  "chatReactHeart": "Beri reaksi hati",
+  "homeDraftLabel": "Draf:",
+  "homeDraftA11y": "Draf: {text}"
 }

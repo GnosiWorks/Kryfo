@@ -12367,4 +12367,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'Отреагировать сердцем';
+
+  @override
+  String get homeDraftLabel => 'Черновик:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Черновик: $text';
+  }
 }

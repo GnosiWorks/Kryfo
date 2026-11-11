@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Tốc độ phát {speed}",
   "voiceSeekValue": "{at} trên {total}",
-  "chatReactHeart": "Thả tim"
+  "chatReactHeart": "Thả tim",
+  "homeDraftLabel": "Bản nháp:",
+  "homeDraftA11y": "Bản nháp: {text}"
 }

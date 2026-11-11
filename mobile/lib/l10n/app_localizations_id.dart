@@ -12179,4 +12179,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get chatReactHeart => 'Beri reaksi hati';
+
+  @override
+  String get homeDraftLabel => 'Draf:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Draf: $text';
+  }
 }

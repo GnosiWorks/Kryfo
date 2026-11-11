@@ -15343,5 +15343,18 @@
   "chatReactHeart": "React with a heart",
   "@chatReactHeart": {
     "description": "widgets/react_taps.dart: screen reader action on a message, the same as a double tap: puts a heart reaction on it, or takes it off"
+  },
+  "homeDraftLabel": "Draft:",
+  "@homeDraftLabel": {
+    "description": "screens/home_screen.dart: chat list, before the words of a message typed in a chat but not sent yet; keep it short, the words follow on the same line"
+  },
+  "homeDraftA11y": "Draft: {text}",
+  "@homeDraftA11y": {
+    "description": "screens/home_screen.dart: what a screen reader says of a chat row's draft, the words typed but not sent yet",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
   }
 }

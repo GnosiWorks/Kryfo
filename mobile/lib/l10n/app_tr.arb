@@ -3201,5 +3201,7 @@
   "voiceSpeedLabel": "{speed}x",
   "voiceSpeedA11y": "Oynatma hızı {speed}",
   "voiceSeekValue": "{total} içinde {at}",
-  "chatReactHeart": "Kalple tepki ver"
+  "chatReactHeart": "Kalple tepki ver",
+  "homeDraftLabel": "Taslak:",
+  "homeDraftA11y": "Taslak: {text}"
 }
