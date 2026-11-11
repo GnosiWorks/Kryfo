@@ -11,6 +11,7 @@ import '../atmosphere.dart';
 import '../theme.dart';
 import '../wallpaper.dart';
 import 'motion.dart' show motionStill;
+import 'pictures_gate.dart' show HeldPicture;
 import 'wall_images.dart';
 
 class ChatBackdrop extends StatelessWidget {
@@ -103,17 +104,22 @@ class _PhotoState extends State<_Photo> {
     return Stack(
       fit: StackFit.expand,
       children: [
+        // under the lock only its blur: the decoded copy lets go
         if (size != null)
-          Image(
-            image: WallImages.of(
-              widget.chat,
-              widget.bytes,
-              size,
-              mq.size * mq.devicePixelRatio,
+          HeldPicture(
+            bytes: widget.bytes,
+            image: (fade) => Image(
+              image: WallImages.of(
+                widget.chat,
+                widget.bytes,
+                size,
+                mq.size * mq.devicePixelRatio,
+              ),
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              excludeFromSemantics: true,
+              frameBuilder: fade,
             ),
-            fit: BoxFit.cover,
-            gaplessPlayback: true,
-            excludeFromSemantics: true,
           ),
         // a held slider moves the veil with the finger
         AnimatedContainer(

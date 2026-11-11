@@ -28,6 +28,7 @@ import 'file_actions.dart' show openFileOutside;
 import 'video_frame.dart';
 import '../lock_guard.dart' show LockGuard, lockGuard;
 import '../video_playback.dart';
+import 'pictures_gate.dart' show PicturesGate;
 
 // the lock nothing plays under. tests stand in for it
 @visibleForTesting
@@ -88,7 +89,14 @@ Widget videoFlight(
     builder: (_, _) => ClipRRect(
       borderRadius: BorderRadius.circular(lerpDouble(14, 0, anim.value)!),
       child: jpeg != null
-          ? Image.memory(jpeg, fit: BoxFit.cover, gaplessPlayback: true)
+          ? PicturesGate(
+              shut: const ColoredBox(color: Colors.black),
+              child: Image.memory(
+                jpeg,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+              ),
+            )
           : const ColoredBox(color: Colors.black),
     ),
   );
