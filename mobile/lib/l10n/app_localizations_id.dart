@@ -12241,4 +12241,89 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get traySpoiler => 'Spoiler';
+
+  @override
+  String get filesSearchHint => 'Cari file berdasarkan nama';
+
+  @override
+  String get filesClearSearch => 'Hapus pencarian';
+
+  @override
+  String get filesAllTypes => 'Semua jenis';
+
+  @override
+  String get filesTypeTitle => 'Tampilkan file jenis';
+
+  @override
+  String get filesTypeDocs => 'Dokumen';
+
+  @override
+  String get filesTypeCode => 'Kode dan teks';
+
+  @override
+  String get filesTypeAudio => 'Audio';
+
+  @override
+  String get filesTypeVideo => 'Video';
+
+  @override
+  String get filesTypeArchives => 'Arsip';
+
+  @override
+  String get filesTypeOther => 'File lain';
+
+  @override
+  String get filesFromAnyone => 'Dari siapa saja';
+
+  @override
+  String filesFrom(String name) {
+    return 'Dari: $name';
+  }
+
+  @override
+  String get filesFromTitle => 'Tampilkan file dari';
+
+  @override
+  String get filesSomeone => 'Seorang anggota';
+
+  @override
+  String get filesNewest => 'Terbaru';
+
+  @override
+  String get filesOldest => 'Terlama';
+
+  @override
+  String get filesLargest => 'Terbesar';
+
+  @override
+  String get filesOrderTitle => 'Urutkan file menurut';
+
+  @override
+  String get filesOnPhone => 'Di ponsel ini';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'Coba nama atau filter lain.';
+
+  @override
+  String get filesOpen => 'Buka';
+
+  @override
+  String get filesShowInChat => 'Tampilkan di chat';
+
+  @override
+  String get filesDeleteHere => 'Hapus dari ponsel ini';
+
+  @override
+  String get filesDeleteHereLine =>
+      'File hilang dari ponsel ini dan komputer yang tertaut. Orang lain tetap menyimpan milik mereka.';
 }

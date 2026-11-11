@@ -19584,6 +19584,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Spoiler'**
   String get traySpoiler;
+
+  /// files tab: search field hint
+  ///
+  /// In en, this message translates to:
+  /// **'Search files by name'**
+  String get filesSearchHint;
+
+  /// files tab: screen reader label of the cross that clears the search
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get filesClearSearch;
+
+  /// files tab: type filter, every kind
+  ///
+  /// In en, this message translates to:
+  /// **'All types'**
+  String get filesAllTypes;
+
+  /// files tab: sheet title for the type filter
+  ///
+  /// In en, this message translates to:
+  /// **'Show files of type'**
+  String get filesTypeTitle;
+
+  /// files tab: type filter, pdfs, documents and sheets
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get filesTypeDocs;
+
+  /// files tab: type filter, code and plain text
+  ///
+  /// In en, this message translates to:
+  /// **'Code and text'**
+  String get filesTypeCode;
+
+  /// files tab: type filter, sound files
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get filesTypeAudio;
+
+  /// files tab: type filter, videos
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get filesTypeVideo;
+
+  /// files tab: type filter, zip and other archives
+  ///
+  /// In en, this message translates to:
+  /// **'Archives'**
+  String get filesTypeArchives;
+
+  /// files tab: type filter, anything else
+  ///
+  /// In en, this message translates to:
+  /// **'Other files'**
+  String get filesTypeOther;
+
+  /// files tab in a group: who-sent-it filter, everyone
+  ///
+  /// In en, this message translates to:
+  /// **'From anyone'**
+  String get filesFromAnyone;
+
+  /// files tab in a group: the chosen sender filter (From: Jonas)
+  ///
+  /// In en, this message translates to:
+  /// **'From: {name}'**
+  String filesFrom(String name);
+
+  /// files tab in a group: sheet title to pick whose files show
+  ///
+  /// In en, this message translates to:
+  /// **'Show files from'**
+  String get filesFromTitle;
+
+  /// files tab: a group member this phone has no name for
+  ///
+  /// In en, this message translates to:
+  /// **'A member'**
+  String get filesSomeone;
+
+  /// files tab: order, newest first
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get filesNewest;
+
+  /// files tab: order, oldest first
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest'**
+  String get filesOldest;
+
+  /// files tab: order, biggest first
+  ///
+  /// In en, this message translates to:
+  /// **'Largest'**
+  String get filesLargest;
+
+  /// files tab: sheet title for the order
+  ///
+  /// In en, this message translates to:
+  /// **'Order files by'**
+  String get filesOrderTitle;
+
+  /// files tab: filter chip, only files already downloaded to this device
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone'**
+  String get filesOnPhone;
+
+  /// files tab: heading with how many files match (n in the language's digits)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{n} file} other{{n} files}}'**
+  String filesCount(int count, String n);
+
+  /// files tab: nothing matches the search or filters
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name or filter.'**
+  String get filesNoMatch;
+
+  /// files tab hold menu: open the file in Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get filesOpen;
+
+  /// files tab hold menu: go to the message in the chat
+  ///
+  /// In en, this message translates to:
+  /// **'Show in chat'**
+  String get filesShowInChat;
+
+  /// files tab hold menu: delete the file and its message from this device only
+  ///
+  /// In en, this message translates to:
+  /// **'Delete from this phone'**
+  String get filesDeleteHere;
+
+  /// confirm sheet: what deleting a file from this phone does
+  ///
+  /// In en, this message translates to:
+  /// **'It goes from this phone and its linked computers. Everyone else keeps theirs.'**
+  String get filesDeleteHereLine;
 }
 
 class _AppLocalizationsDelegate

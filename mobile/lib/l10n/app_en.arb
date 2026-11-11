@@ -15441,5 +15441,118 @@
   "traySpoiler": "Spoiler",
   "@traySpoiler": {
     "description": "tray card chip and photo mark: the photo stays blurred until tapped"
+  },
+  "filesSearchHint": "Search files by name",
+  "@filesSearchHint": {
+    "description": "files tab: search field hint"
+  },
+  "filesClearSearch": "Clear search",
+  "@filesClearSearch": {
+    "description": "files tab: screen reader label of the cross that clears the search"
+  },
+  "filesAllTypes": "All types",
+  "@filesAllTypes": {
+    "description": "files tab: type filter, every kind"
+  },
+  "filesTypeTitle": "Show files of type",
+  "@filesTypeTitle": {
+    "description": "files tab: sheet title for the type filter"
+  },
+  "filesTypeDocs": "Documents",
+  "@filesTypeDocs": {
+    "description": "files tab: type filter, pdfs, documents and sheets"
+  },
+  "filesTypeCode": "Code and text",
+  "@filesTypeCode": {
+    "description": "files tab: type filter, code and plain text"
+  },
+  "filesTypeAudio": "Audio",
+  "@filesTypeAudio": {
+    "description": "files tab: type filter, sound files"
+  },
+  "filesTypeVideo": "Videos",
+  "@filesTypeVideo": {
+    "description": "files tab: type filter, videos"
+  },
+  "filesTypeArchives": "Archives",
+  "@filesTypeArchives": {
+    "description": "files tab: type filter, zip and other archives"
+  },
+  "filesTypeOther": "Other files",
+  "@filesTypeOther": {
+    "description": "files tab: type filter, anything else"
+  },
+  "filesFromAnyone": "From anyone",
+  "@filesFromAnyone": {
+    "description": "files tab in a group: who-sent-it filter, everyone"
+  },
+  "filesFrom": "From: {name}",
+  "@filesFrom": {
+    "description": "files tab in a group: the chosen sender filter (From: Jonas)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesFromTitle": "Show files from",
+  "@filesFromTitle": {
+    "description": "files tab in a group: sheet title to pick whose files show"
+  },
+  "filesSomeone": "A member",
+  "@filesSomeone": {
+    "description": "files tab: a group member this phone has no name for"
+  },
+  "filesNewest": "Newest",
+  "@filesNewest": {
+    "description": "files tab: order, newest first"
+  },
+  "filesOldest": "Oldest",
+  "@filesOldest": {
+    "description": "files tab: order, oldest first"
+  },
+  "filesLargest": "Largest",
+  "@filesLargest": {
+    "description": "files tab: order, biggest first"
+  },
+  "filesOrderTitle": "Order files by",
+  "@filesOrderTitle": {
+    "description": "files tab: sheet title for the order"
+  },
+  "filesOnPhone": "On this phone",
+  "@filesOnPhone": {
+    "description": "files tab: filter chip, only files already downloaded to this device"
+  },
+  "filesCount": "{count, plural, =1{{n} file} other{{n} files}}",
+  "@filesCount": {
+    "description": "files tab: heading with how many files match (n in the language's digits)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "filesNoMatch": "Try another name or filter.",
+  "@filesNoMatch": {
+    "description": "files tab: nothing matches the search or filters"
+  },
+  "filesOpen": "Open",
+  "@filesOpen": {
+    "description": "files tab hold menu: open the file in Kryfo"
+  },
+  "filesShowInChat": "Show in chat",
+  "@filesShowInChat": {
+    "description": "files tab hold menu: go to the message in the chat"
+  },
+  "filesDeleteHere": "Delete from this phone",
+  "@filesDeleteHere": {
+    "description": "files tab hold menu: delete the file and its message from this device only"
+  },
+  "filesDeleteHereLine": "It goes from this phone and its linked computers. Everyone else keeps theirs.",
+  "@filesDeleteHereLine": {
+    "description": "confirm sheet: what deleting a file from this phone does"
   }
 }

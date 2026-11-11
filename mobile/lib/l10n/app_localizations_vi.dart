@@ -12230,4 +12230,89 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get traySpoiler => 'Ẩn';
+
+  @override
+  String get filesSearchHint => 'Tìm tệp theo tên';
+
+  @override
+  String get filesClearSearch => 'Xóa tìm kiếm';
+
+  @override
+  String get filesAllTypes => 'Mọi loại';
+
+  @override
+  String get filesTypeTitle => 'Hiện tệp loại';
+
+  @override
+  String get filesTypeDocs => 'Tài liệu';
+
+  @override
+  String get filesTypeCode => 'Mã và văn bản';
+
+  @override
+  String get filesTypeAudio => 'Âm thanh';
+
+  @override
+  String get filesTypeVideo => 'Video';
+
+  @override
+  String get filesTypeArchives => 'Tệp nén';
+
+  @override
+  String get filesTypeOther => 'Tệp khác';
+
+  @override
+  String get filesFromAnyone => 'Từ mọi người';
+
+  @override
+  String filesFrom(String name) {
+    return 'Từ: $name';
+  }
+
+  @override
+  String get filesFromTitle => 'Hiện tệp từ';
+
+  @override
+  String get filesSomeone => 'Một thành viên';
+
+  @override
+  String get filesNewest => 'Mới nhất';
+
+  @override
+  String get filesOldest => 'Cũ nhất';
+
+  @override
+  String get filesLargest => 'Lớn nhất';
+
+  @override
+  String get filesOrderTitle => 'Sắp xếp tệp theo';
+
+  @override
+  String get filesOnPhone => 'Trên điện thoại này';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n tệp',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'Thử tên hoặc bộ lọc khác.';
+
+  @override
+  String get filesOpen => 'Mở';
+
+  @override
+  String get filesShowInChat => 'Xem trong cuộc trò chuyện';
+
+  @override
+  String get filesDeleteHere => 'Xóa khỏi điện thoại này';
+
+  @override
+  String get filesDeleteHereLine =>
+      'Tệp sẽ bị xóa khỏi điện thoại này và các máy tính đã liên kết. Người khác vẫn giữ bản của họ.';
 }

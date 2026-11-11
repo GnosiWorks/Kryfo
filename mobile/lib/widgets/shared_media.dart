@@ -9,13 +9,11 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../desktop/desktop_mode.dart' show onDesktop;
-import '../file_kind.dart';
 import '../l10n/dates.dart';
 import '../l10n/l10n.dart';
 import '../l10n/numbers.dart';
@@ -32,12 +30,9 @@ import '../wide/read_width.dart' show kDeskTile;
 import 'album_grid.dart' show VideoFace, VideoMarks;
 import 'ease_size.dart';
 import 'file_badge.dart';
-import 'file_bubble.dart' show fileNameDir;
 import 'file_viewer_parts.dart' show fileHeroTag;
-import 'file_wait.dart' show FileWaitMark, fileWaitLine;
 import 'halo_hero.dart';
 import 'halo_rows.dart';
-import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show haloRoute, kHouseCurve, motionStill;
 import 'page_head.dart';
 import 'photo_viewer.dart' show openPhoto, photoHeroTag;
@@ -45,6 +40,12 @@ import 'pill_tabs.dart';
 import 'press_scale.dart';
 import 'sealed_picture.dart';
 import 'shots_line.dart' show KeptIn;
+import 'shared_files.dart';
+import '../voice_length.dart' show voiceClock, voiceFileMs;
+import 'confirm_sheet.dart' show showConfirmSheet;
+import 'file_actions.dart' show canForwardFile, forwardFile;
+import '../file_save.dart' show saveReceivedFile;
+import '../show_in_chat.dart' show askShowInChat, chatOpenUnder;
 import 'sound_views.dart' show openSoundPlayer, soundsKept;
 import 'swap.dart';
 import 'video_bubble.dart' show openReceivedFile;
@@ -467,6 +468,10 @@ class SharedScreen extends StatefulWidget {
   final String? Function(String? peer)? nameOf;
   // tests hand the lists in
   final Future<SharedLists> Function()? load;
+  // tests take a file from this phone here
+  final Future<void> Function(String uid)? deleteHere;
+  // a hidden chat's: read from the session unless a test says
+  final bool? hidden;
   const SharedScreen({
     super.key,
     required this.chatId,
@@ -476,6 +481,8 @@ class SharedScreen extends StatefulWidget {
     this.blocking = false,
     this.nameOf,
     this.load,
+    this.deleteHere,
+    this.hidden,
   });
 
   @override
@@ -635,6 +642,7 @@ class SharedScreenState extends State<SharedScreen> {
   }
 
   Widget _listPage(SharedTab tab, List<SharedItem> items) {
+    if (tab == SharedTab.files) return _filesPage(items);
     if (items.isEmpty) {
       return _Empty(
         icon: switch (tab) {
@@ -678,10 +686,70 @@ class SharedScreenState extends State<SharedScreen> {
             onTap: () => _playVoice(it, items),
           ),
           SharedTab.links => _LinkRow(item: it),
-          _ => _FileRow(item: it, onTap: () => _openFile(it)),
+          _ => const SizedBox.shrink(),
         };
       },
     );
+  }
+
+  // the files: search, filters, and a menu on a hold
+  Widget _filesPage(List<SharedItem> items) {
+    final byEntry = <FileEntry, SharedItem>{
+      for (final it in items)
+        FileEntry(
+          path: it.path,
+          name: it.name,
+          uid: it.uid,
+          mine: it.mine,
+          peer: it.peer,
+          when: it.when,
+        ): it,
+    };
+    return SharedFilesPage(
+      files: byEntry.keys.toList(),
+      group: widget.group,
+      nameOf: (p) =>
+          widget.nameOf?.call(p) ?? (widget.group ? null : widget.title),
+      onTap: (e) => _openFile(byEntry[e]!),
+      actions: (e) => _actionsFor(byEntry[e]!),
+    );
+  }
+
+  // what a hold on a file offers. nothing kept to a chat that blocks leaves
+  // it, and a hidden chat's file is never saved out or forwarded
+  FileRowActions _actionsFor(SharedItem it) {
+    final path = it.path;
+    final kept = _keeps(it);
+    final hidden = widget.hidden ?? session.isHidden(widget.chatId);
+    final uid = it.uid;
+    return FileRowActions(
+      open: path == null ? null : () => _openFile(it),
+      forward: hidden || !canForwardFile(path, it.name, kept: kept)
+          ? null
+          : () => forwardFile(context, path!, it.name),
+      save: hidden || kept || path == null
+          ? null
+          : () => saveReceivedFile(context, path, it.name),
+      showInChat: uid == null || !chatOpenUnder(widget.chatId)
+          ? null
+          : () => askShowInChat(widget.chatId, uid),
+      delete: uid == null ? null : () => _deleteHere(it),
+    );
+  }
+
+  Future<void> _deleteHere(SharedItem it) async {
+    final uid = it.uid;
+    if (uid == null) return;
+    final yes = await showConfirmSheet(
+      context,
+      title: l10n.filesDeleteHere,
+      line: l10n.filesDeleteHereLine,
+      yes: l10n.commonDelete,
+    );
+    if (!yes || !mounted) return;
+    HapticFeedback.mediumImpact();
+    await (widget.deleteHere?.call(uid) ?? session.deleteMessage(uid));
+    if (mounted) await _load();
   }
 
   Future<void> _openFile(SharedItem it) async {
@@ -874,114 +942,6 @@ class _Row extends StatelessWidget {
   );
 }
 
-class _FileRow extends StatefulWidget {
-  final SharedItem item;
-  final VoidCallback onTap;
-  const _FileRow({required this.item, required this.onTap});
-
-  @override
-  State<_FileRow> createState() => _FileRowState();
-}
-
-class _FileRowState extends State<_FileRow> {
-  // read once the row is built, not for the whole list up front
-  int? _size;
-
-  @override
-  void initState() {
-    super.initState();
-    _readSize();
-  }
-
-  @override
-  void didUpdateWidget(_FileRow old) {
-    super.didUpdateWidget(old);
-    if (old.item.path != widget.item.path) _readSize();
-  }
-
-  Future<void> _readSize() async {
-    final p = widget.item.path;
-    if (p == null) return;
-    try {
-      final n = await File(p).length();
-      if (mounted) setState(() => _size = n);
-    } catch (_) {
-      // gone: the row says nothing of its size
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final it = widget.item;
-    final facts = FileFacts(kindOfName(it.name), extOf(safeFileName(it.name)));
-    final shown = safeFileName(it.name, facts: facts);
-    final (stem, ext) = splitFileName(shown);
-    // a left to right name still sits at the start of a right to left row
-    final title = Row(
-      mainAxisSize: MainAxisSize.min,
-      textDirection: fileNameDir(stem),
-      children: [
-        Flexible(
-          child: Text(
-            stem,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textDirection: fileNameDir(stem),
-            style: _nameStyle,
-          ),
-        ),
-        if (ext.isNotEmpty)
-          Text(
-            ext,
-            maxLines: 1,
-            textDirection: TextDirection.ltr,
-            style: _nameStyle,
-          ),
-      ],
-    );
-    final path = it.path;
-    if (path == null) {
-      // still to come: its ring follows it, a tap brings or pauses it
-      return ValueListenableBuilder<Map<String, FileWait>>(
-        valueListenable: fileWaits,
-        builder: (context, waits, _) {
-          final w = waits[it.uid];
-          if (w == null) return const SizedBox.shrink();
-          final line = fileWaitLine(
-            w,
-            unmetered: true,
-            left: it.uid == null ? null : fileWaitLeft(it.uid!),
-          );
-          return _Row(
-            lead: FileWaitMark(wait: w),
-            text: _RowText(title: title, sub: line),
-            label: '$shown, $line',
-            hint: switch (w.state) {
-              WaitState.coming => l10n.transferPauseDownload,
-              WaitState.paused => l10n.transferResume,
-              WaitState.asks => l10n.transferDownload,
-            },
-            onTap: widget.onTap,
-          );
-        },
-      );
-    }
-    final sub = [
-      if (_size != null) humanFileSize(_size!),
-      dayMonthMaybeYear(it.when),
-    ].join(' · ');
-    return _Row(
-      lead: HaloHero(
-        tag: fileHeroTag(path, 'shared'),
-        child: FileBadge(facts: facts, size: 42),
-      ),
-      text: _RowText(title: title, sub: sub),
-      label: '$shown, $sub',
-      onTap: widget.onTap,
-    );
-  }
-}
-
 class _VoiceRow extends StatelessWidget {
   final SharedItem item;
   final String? from;
@@ -992,10 +952,23 @@ class _VoiceRow extends StatelessWidget {
     required this.onTap,
   });
 
+  // each note's length, read once per path
+  static final Map<String, Future<int?>> _lengths = {};
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => FutureBuilder<int?>(
+    future: (_lengths.length > 300 ? (_lengths..clear()) : _lengths)
+        .putIfAbsent(item.path!, () => voiceFileMs(item.path!)),
+    builder: (context, snap) => _row(context, snap.data),
+  );
+
+  Widget _row(BuildContext context, int? ms) {
     final who = item.mine ? l10n.chatYou : (from ?? l10n.sharedTabVoice);
-    final sub = '${dayMonthMaybeYear(item.when)} · ${hourMinute(item.when)}';
+    final sub = [
+      if (ms != null) voiceClock(ms),
+      dayMonthMaybeYear(item.when),
+      hourMinute(item.when),
+    ].join(' · ');
     final tone = fileToneColor(FileTone.audio);
     final ink = onFileTone(FileTone.audio);
     final p = SoundPlayer.instance;

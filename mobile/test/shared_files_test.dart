@@ -15,6 +15,8 @@ import 'package:kryfo/picture_lock.dart';
 import 'package:kryfo/transfers.dart';
 import 'package:kryfo/widgets/file_wait.dart' show FileWaitMark;
 import 'package:kryfo/widgets/shared_media.dart';
+import 'package:kryfo/widgets/shared_files.dart';
+import 'package:kryfo/show_in_chat.dart';
 import 'package:kryfo/widgets/text_viewer.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart' show Database;
 
@@ -337,6 +339,183 @@ void main() {
       setFileWait('w1', null);
       await t.pump();
       expect(find.byType(FileWaitMark), findsNothing);
+    });
+
+    group('search, filters and the menu', () {
+      Future<void> openFiles(
+        WidgetTester t,
+        List<SharedItem> files, {
+        bool group = false,
+        bool blocking = false,
+        Future<void> Function(String uid)? deleteHere,
+      }) async {
+        t.view.physicalSize = const Size(390, 844);
+        t.view.devicePixelRatio = 1;
+        addTearDown(t.view.reset);
+        await t.pumpWidget(
+          MaterialApp(
+            home: SharedScreen(
+              chatId: 'p',
+              title: 'Hiking club',
+              group: group,
+              blocking: blocking,
+              hidden: false,
+              nameOf: (p) => p == 'j' ? 'Jonas' : null,
+              start: SharedTab.files,
+              load: () async => SharedLists(files: files),
+              deleteHere: deleteHere,
+            ),
+          ),
+        );
+        await settle(t);
+      }
+
+      final when = DateTime(2025, 11, 9);
+
+      testWidgets('a search lists what matches, counted, the match lit', (
+        t,
+      ) async {
+        await openFiles(t, [
+          file('offline-maps.zip', when, path: '/f/1'),
+          file('trail-map.pdf', when, path: '/f/2'),
+          file('gear-list.xlsx', when, path: '/f/3'),
+        ]);
+        await t.enterText(find.byType(TextField), 'map');
+        await t.pump();
+        expect(
+          find.text(l10n.filesCount(2, '2').toUpperCase()),
+          findsOneWidget,
+        );
+        expect(find.text('gear-list'), findsNothing);
+        final lit = t.widget<Text>(find.text('trail-map'));
+        final spans = (lit.textSpan! as TextSpan).children!.cast<TextSpan>();
+        expect(spans.map((x) => x.text), ['trail-', 'map']);
+        expect(spans[1].style!.color, isNot(spans[0].style!.color));
+        await t.enterText(find.byType(TextField), 'nothing like it');
+        await t.pump();
+        expect(find.text(l10n.filesNoMatch), findsOneWidget);
+      });
+
+      testWidgets('in a group, rows say who sent them and the filter keeps '
+          'one sender', (t) async {
+        await openFiles(t, [
+          SharedItem(path: '/f/1', name: 'route.pdf', when: when, peer: 'j'),
+          SharedItem(path: '/f/2', name: 'mine.pdf', when: when, mine: true),
+        ], group: true);
+        expect(find.textContaining('Jonas'), findsOneWidget);
+        await t.ensureVisible(find.text(l10n.filesFromAnyone));
+        await t.pumpAndSettle();
+        await t.tap(find.text(l10n.filesFromAnyone));
+        await t.pumpAndSettle();
+        await t.tap(find.text('Jonas').last);
+        await t.pumpAndSettle();
+        expect(find.text(l10n.filesFrom('Jonas')), findsOneWidget);
+        expect(find.text('mine'), findsNothing);
+        expect(find.text('route'), findsOneWidget);
+      });
+
+      testWidgets('on this phone leaves out one still to come', (t) async {
+        setFileWait(
+          'w1',
+          const FileWait(
+            size: 4000,
+            state: WaitState.asks,
+            rule: AutoGet.never,
+          ),
+        );
+        await openFiles(t, [
+          file('here.pdf', when, path: '/f/1'),
+          file('later.pdf', when, uid: 'w1'),
+        ]);
+        expect(find.text('later'), findsOneWidget);
+        expect(find.textContaining('until'), findsOneWidget);
+        await t.ensureVisible(find.text(l10n.filesOnPhone));
+        await t.pumpAndSettle();
+        await t.tap(find.text(l10n.filesOnPhone));
+        await t.pumpAndSettle();
+        expect(
+          t.state<SharedFilesPageState>(find.byType(SharedFilesPage)).filters.here,
+          isTrue,
+        );
+        expect(find.text('later'), findsNothing);
+        expect(find.text('here'), findsOneWidget);
+      });
+
+      testWidgets('a hold opens the menu; delete asks and takes it from here', (
+        t,
+      ) async {
+        final gone = <String>[];
+        chatShown('p');
+        addTearDown(() => chatGone('p'));
+        await openFiles(t, [
+          file('route.pdf', when, path: '/f/1', uid: 'u1'),
+        ], deleteHere: (u) async => gone.add(u));
+        await t.longPress(find.text('route'));
+        await t.pumpAndSettle();
+        for (final w in [
+          l10n.filesOpen,
+          l10n.chatForward,
+          l10n.fileSaveToDevice,
+          l10n.filesShowInChat,
+          l10n.filesDeleteHere,
+        ]) {
+          expect(find.text(w), findsOneWidget, reason: w);
+        }
+        await t.tap(find.text(l10n.filesDeleteHere));
+        await t.pumpAndSettle();
+        expect(find.text(l10n.filesDeleteHereLine), findsOneWidget);
+        await t.tap(find.text(l10n.commonDelete));
+        await t.pumpAndSettle();
+        expect(gone, ['u1']);
+      });
+
+      testWidgets('show in chat asks the chat under it', (t) async {
+        chatShown('p');
+        addTearDown(() => chatGone('p'));
+        addTearDown(() => showInChat.value = null);
+        await openFiles(t, [file('route.pdf', when, path: '/f/1', uid: 'u1')]);
+        await t.longPress(find.text('route'));
+        await t.pumpAndSettle();
+        await t.tap(find.text(l10n.filesShowInChat));
+        await t.pumpAndSettle();
+        expect(showInChat.value, (chat: 'p', uid: 'u1'));
+      });
+
+      testWidgets('with no chat under it, no show in chat; a blocking chat '
+          'keeps their file in', (t) async {
+        await openFiles(t, [
+          file('route.pdf', when, path: '/f/1', uid: 'u1'),
+        ], blocking: true);
+        await t.longPress(find.text('route'));
+        await t.pumpAndSettle();
+        expect(find.text(l10n.filesOpen), findsOneWidget);
+        expect(find.text(l10n.filesShowInChat), findsNothing);
+        expect(find.text(l10n.chatForward), findsNothing);
+        expect(find.text(l10n.fileSaveToDevice), findsNothing);
+      });
+    });
+
+    test('the order by size puts the biggest first, unknown last', () {
+      final w = DateTime(2025, 1, 1);
+      FileEntry e(String n) => FileEntry(
+        path: '/f/$n',
+        name: n,
+        uid: n,
+        mine: false,
+        peer: null,
+        when: w,
+      );
+      final sizes = {'a.zip': 10, 'b.zip': 900, 'c.zip': null};
+      final out = filterFiles(
+        [e('a.zip'), e('b.zip'), e('c.zip')],
+        const FileFilters(order: FileOrder.largest),
+        sizeOf: (x) => sizes[x.name],
+        waits: (_) => false,
+      );
+      expect(out.map((x) => x.name), ['b.zip', 'a.zip', 'c.zip']);
+      expect(fileKindFilterOf('x.pdf'), FileKindFilter.docs);
+      expect(fileKindFilterOf('x.py'), FileKindFilter.code);
+      expect(fileKindFilterOf('x.zip'), FileKindFilter.archives);
     });
 
     testWidgets('a tap on a text file opens kryfo\'s viewer', (t) async {

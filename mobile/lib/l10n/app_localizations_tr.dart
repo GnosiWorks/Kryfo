@@ -12263,4 +12263,89 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get traySpoiler => 'Spoiler';
+
+  @override
+  String get filesSearchHint => 'Dosyaları ada göre ara';
+
+  @override
+  String get filesClearSearch => 'Aramayı temizle';
+
+  @override
+  String get filesAllTypes => 'Tüm türler';
+
+  @override
+  String get filesTypeTitle => 'Bu türdeki dosyaları göster';
+
+  @override
+  String get filesTypeDocs => 'Belgeler';
+
+  @override
+  String get filesTypeCode => 'Kod ve metin';
+
+  @override
+  String get filesTypeAudio => 'Ses';
+
+  @override
+  String get filesTypeVideo => 'Videolar';
+
+  @override
+  String get filesTypeArchives => 'Arşivler';
+
+  @override
+  String get filesTypeOther => 'Diğer dosyalar';
+
+  @override
+  String get filesFromAnyone => 'Herkesten';
+
+  @override
+  String filesFrom(String name) {
+    return 'Gönderen: $name';
+  }
+
+  @override
+  String get filesFromTitle => 'Şu kişiden dosyaları göster';
+
+  @override
+  String get filesSomeone => 'Bir üye';
+
+  @override
+  String get filesNewest => 'En yeni';
+
+  @override
+  String get filesOldest => 'En eski';
+
+  @override
+  String get filesLargest => 'En büyük';
+
+  @override
+  String get filesOrderTitle => 'Dosyaları sırala';
+
+  @override
+  String get filesOnPhone => 'Bu telefonda';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n dosya',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'Başka bir ad ya da filtre dene.';
+
+  @override
+  String get filesOpen => 'Aç';
+
+  @override
+  String get filesShowInChat => 'Sohbette göster';
+
+  @override
+  String get filesDeleteHere => 'Bu telefondan sil';
+
+  @override
+  String get filesDeleteHereLine =>
+      'Bu telefondan ve bağlı bilgisayarlarından gider. Diğerleri kendi kopyasını tutar.';
 }

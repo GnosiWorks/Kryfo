@@ -11568,6 +11568,90 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get traySpoiler => '剧透';
+
+  @override
+  String get filesSearchHint => '按名称搜索文件';
+
+  @override
+  String get filesClearSearch => '清除搜索';
+
+  @override
+  String get filesAllTypes => '所有类型';
+
+  @override
+  String get filesTypeTitle => '显示此类型的文件';
+
+  @override
+  String get filesTypeDocs => '文档';
+
+  @override
+  String get filesTypeCode => '代码和文本';
+
+  @override
+  String get filesTypeAudio => '音频';
+
+  @override
+  String get filesTypeVideo => '视频';
+
+  @override
+  String get filesTypeArchives => '压缩包';
+
+  @override
+  String get filesTypeOther => '其他文件';
+
+  @override
+  String get filesFromAnyone => '来自任何人';
+
+  @override
+  String filesFrom(String name) {
+    return '来自：$name';
+  }
+
+  @override
+  String get filesFromTitle => '显示谁发的文件';
+
+  @override
+  String get filesSomeone => '一位成员';
+
+  @override
+  String get filesNewest => '最新';
+
+  @override
+  String get filesOldest => '最早';
+
+  @override
+  String get filesLargest => '最大';
+
+  @override
+  String get filesOrderTitle => '文件排序';
+
+  @override
+  String get filesOnPhone => '在本机上';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n 个文件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => '试试别的名称或筛选条件。';
+
+  @override
+  String get filesOpen => '打开';
+
+  @override
+  String get filesShowInChat => '在聊天中显示';
+
+  @override
+  String get filesDeleteHere => '从本机删除';
+
+  @override
+  String get filesDeleteHereLine => '它会从本机和已关联的电脑上删除。其他人仍保留自己的副本。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -23014,4 +23098,88 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get traySpoiler => '劇透';
+
+  @override
+  String get filesSearchHint => '按名稱搜尋檔案';
+
+  @override
+  String get filesClearSearch => '清除搜尋';
+
+  @override
+  String get filesAllTypes => '所有類型';
+
+  @override
+  String get filesTypeTitle => '顯示此類型的檔案';
+
+  @override
+  String get filesTypeDocs => '文件';
+
+  @override
+  String get filesTypeCode => '程式碼和文字';
+
+  @override
+  String get filesTypeAudio => '音訊';
+
+  @override
+  String get filesTypeVideo => '影片';
+
+  @override
+  String get filesTypeArchives => '壓縮檔';
+
+  @override
+  String get filesTypeOther => '其他檔案';
+
+  @override
+  String get filesFromAnyone => '來自任何人';
+
+  @override
+  String filesFrom(String name) {
+    return '來自：$name';
+  }
+
+  @override
+  String get filesFromTitle => '顯示誰傳的檔案';
+
+  @override
+  String get filesSomeone => '一位成員';
+
+  @override
+  String get filesNewest => '最新';
+
+  @override
+  String get filesOldest => '最早';
+
+  @override
+  String get filesLargest => '最大';
+
+  @override
+  String get filesOrderTitle => '檔案排序';
+
+  @override
+  String get filesOnPhone => '在本機上';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n 個檔案',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => '試試別的名稱或篩選條件。';
+
+  @override
+  String get filesOpen => '開啟';
+
+  @override
+  String get filesShowInChat => '在聊天中顯示';
+
+  @override
+  String get filesDeleteHere => '從本機刪除';
+
+  @override
+  String get filesDeleteHereLine => '它會從本機和已連結的電腦上刪除。其他人仍保留自己的副本。';
 }

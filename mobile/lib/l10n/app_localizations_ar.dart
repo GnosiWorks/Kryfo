@@ -12375,4 +12375,92 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get traySpoiler => 'مخفي';
+
+  @override
+  String get filesSearchHint => 'ابحث عن الملفات بالاسم';
+
+  @override
+  String get filesClearSearch => 'مسح البحث';
+
+  @override
+  String get filesAllTypes => 'كل الأنواع';
+
+  @override
+  String get filesTypeTitle => 'إظهار ملفات من نوع';
+
+  @override
+  String get filesTypeDocs => 'مستندات';
+
+  @override
+  String get filesTypeCode => 'شيفرة ونصوص';
+
+  @override
+  String get filesTypeAudio => 'صوت';
+
+  @override
+  String get filesTypeVideo => 'فيديوهات';
+
+  @override
+  String get filesTypeArchives => 'أرشيفات';
+
+  @override
+  String get filesTypeOther => 'ملفات أخرى';
+
+  @override
+  String get filesFromAnyone => 'من أي شخص';
+
+  @override
+  String filesFrom(String name) {
+    return 'من: $name';
+  }
+
+  @override
+  String get filesFromTitle => 'إظهار الملفات من';
+
+  @override
+  String get filesSomeone => 'عضو';
+
+  @override
+  String get filesNewest => 'الأحدث';
+
+  @override
+  String get filesOldest => 'الأقدم';
+
+  @override
+  String get filesLargest => 'الأكبر';
+
+  @override
+  String get filesOrderTitle => 'ترتيب الملفات حسب';
+
+  @override
+  String get filesOnPhone => 'على هذا الهاتف';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n ملف',
+      few: '$n ملفات',
+      two: 'ملفان',
+      one: 'ملف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'جرّب اسمًا أو مرشحًا آخر.';
+
+  @override
+  String get filesOpen => 'فتح';
+
+  @override
+  String get filesShowInChat => 'إظهار في الدردشة';
+
+  @override
+  String get filesDeleteHere => 'حذف من هذا الهاتف';
+
+  @override
+  String get filesDeleteHereLine =>
+      'يُحذف من هذا الهاتف وحواسيبه المرتبطة. يحتفظ الآخرون بنسخهم.';
 }

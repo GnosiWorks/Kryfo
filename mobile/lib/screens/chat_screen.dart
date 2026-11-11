@@ -27,6 +27,7 @@ import '../share_files.dart';
 import 'share_files_sheet.dart' show askSendSharedFiles;
 import '../album.dart';
 import '../widgets/file_stack.dart';
+import '../show_in_chat.dart';
 import '../widgets/file_bubble.dart' show kFilePreviewWidth;
 import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
@@ -1496,6 +1497,8 @@ class _ChatScreenState extends State<ChatScreen>
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.peerHaloId);
     _tray.addListener(_trayMoved);
+    chatShown(widget.peerHaloId);
+    showInChat.addListener(_showAsked);
     if (onDesktop) DeskTrays.handedIn.addListener(_takeHandedIn);
     // a computer: the chat opens ready to type. the field takes it as soon
     // as it is built
@@ -3634,6 +3637,19 @@ class _ChatScreenState extends State<ChatScreen>
   bool _jumpActive = false;
 
   // scroll a specific message into view and pulse it, for jump-from-saved.
+  // the shared page asked for a message of this chat: what is above the
+  // chat goes, and the chat goes to it. an album's row stands for its own
+  void _showAsked() {
+    final v = showInChat.value;
+    if (v == null || v.chat != widget.peerHaloId || !mounted) return;
+    showInChat.value = null;
+    final me = ModalRoute.of(context);
+    Navigator.of(context).popUntil((r) => r == me || r.isFirst);
+    final row = _messages.where((m) => m.msgUid == v.uid).firstOrNull;
+    final lead = row == null ? null : _albums.runOf(row)?.lead;
+    unawaited(_jumpToPin(lead?.msgUid ?? v.uid));
+  }
+
   void _jumpToUid(String uid) {
     final idx = _messages.indexWhere((m) => m.msgUid == uid);
     if (idx < 0) {
@@ -6105,6 +6121,8 @@ class _ChatScreenState extends State<ChatScreen>
     _unwatchCaptures?.call();
     // the row stays with the chat for its next opening
     _tray.removeListener(_trayMoved);
+    chatGone(widget.peerHaloId);
+    showInChat.removeListener(_showAsked);
     DeskTrays.handedIn.removeListener(_takeHandedIn);
     for (final land in List.of(_flights)) {
       land();

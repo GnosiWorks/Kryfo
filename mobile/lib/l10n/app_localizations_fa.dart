@@ -12254,4 +12254,89 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get traySpoiler => 'پنهان';
+
+  @override
+  String get filesSearchHint => 'جست‌وجوی فایل با نام';
+
+  @override
+  String get filesClearSearch => 'پاک کردن جست‌وجو';
+
+  @override
+  String get filesAllTypes => 'همه نوع‌ها';
+
+  @override
+  String get filesTypeTitle => 'نمایش فایل‌های از نوع';
+
+  @override
+  String get filesTypeDocs => 'اسناد';
+
+  @override
+  String get filesTypeCode => 'کد و متن';
+
+  @override
+  String get filesTypeAudio => 'صدا';
+
+  @override
+  String get filesTypeVideo => 'ویدیوها';
+
+  @override
+  String get filesTypeArchives => 'فایل‌های فشرده';
+
+  @override
+  String get filesTypeOther => 'فایل‌های دیگر';
+
+  @override
+  String get filesFromAnyone => 'از همه';
+
+  @override
+  String filesFrom(String name) {
+    return 'از: $name';
+  }
+
+  @override
+  String get filesFromTitle => 'نمایش فایل‌های';
+
+  @override
+  String get filesSomeone => 'یک عضو';
+
+  @override
+  String get filesNewest => 'جدیدترین';
+
+  @override
+  String get filesOldest => 'قدیمی‌ترین';
+
+  @override
+  String get filesLargest => 'بزرگ‌ترین';
+
+  @override
+  String get filesOrderTitle => 'مرتب‌سازی فایل‌ها بر اساس';
+
+  @override
+  String get filesOnPhone => 'روی این گوشی';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n فایل',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'نام یا فیلتر دیگری را امتحان کن.';
+
+  @override
+  String get filesOpen => 'باز کردن';
+
+  @override
+  String get filesShowInChat => 'نمایش در گفت‌وگو';
+
+  @override
+  String get filesDeleteHere => 'حذف از این گوشی';
+
+  @override
+  String get filesDeleteHereLine =>
+      'از این گوشی و رایانه‌های پیوندشده‌اش پاک می‌شود. بقیه نسخهٔ خودشان را نگه می‌دارند.';
 }

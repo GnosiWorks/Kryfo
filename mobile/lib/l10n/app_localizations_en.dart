@@ -12236,4 +12236,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get traySpoiler => 'Spoiler';
+
+  @override
+  String get filesSearchHint => 'Search files by name';
+
+  @override
+  String get filesClearSearch => 'Clear search';
+
+  @override
+  String get filesAllTypes => 'All types';
+
+  @override
+  String get filesTypeTitle => 'Show files of type';
+
+  @override
+  String get filesTypeDocs => 'Documents';
+
+  @override
+  String get filesTypeCode => 'Code and text';
+
+  @override
+  String get filesTypeAudio => 'Audio';
+
+  @override
+  String get filesTypeVideo => 'Videos';
+
+  @override
+  String get filesTypeArchives => 'Archives';
+
+  @override
+  String get filesTypeOther => 'Other files';
+
+  @override
+  String get filesFromAnyone => 'From anyone';
+
+  @override
+  String filesFrom(String name) {
+    return 'From: $name';
+  }
+
+  @override
+  String get filesFromTitle => 'Show files from';
+
+  @override
+  String get filesSomeone => 'A member';
+
+  @override
+  String get filesNewest => 'Newest';
+
+  @override
+  String get filesOldest => 'Oldest';
+
+  @override
+  String get filesLargest => 'Largest';
+
+  @override
+  String get filesOrderTitle => 'Order files by';
+
+  @override
+  String get filesOnPhone => 'On this phone';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n files',
+      one: '$n file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'Try another name or filter.';
+
+  @override
+  String get filesOpen => 'Open';
+
+  @override
+  String get filesShowInChat => 'Show in chat';
+
+  @override
+  String get filesDeleteHere => 'Delete from this phone';
+
+  @override
+  String get filesDeleteHereLine =>
+      'It goes from this phone and its linked computers. Everyone else keeps theirs.';
 }

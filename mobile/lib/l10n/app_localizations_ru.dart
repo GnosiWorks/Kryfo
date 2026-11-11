@@ -12430,4 +12430,91 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get traySpoiler => 'Спойлер';
+
+  @override
+  String get filesSearchHint => 'Поиск файлов по имени';
+
+  @override
+  String get filesClearSearch => 'Очистить поиск';
+
+  @override
+  String get filesAllTypes => 'Все типы';
+
+  @override
+  String get filesTypeTitle => 'Показать файлы типа';
+
+  @override
+  String get filesTypeDocs => 'Документы';
+
+  @override
+  String get filesTypeCode => 'Код и текст';
+
+  @override
+  String get filesTypeAudio => 'Аудио';
+
+  @override
+  String get filesTypeVideo => 'Видео';
+
+  @override
+  String get filesTypeArchives => 'Архивы';
+
+  @override
+  String get filesTypeOther => 'Другие файлы';
+
+  @override
+  String get filesFromAnyone => 'От всех';
+
+  @override
+  String filesFrom(String name) {
+    return 'От: $name';
+  }
+
+  @override
+  String get filesFromTitle => 'Показать файлы от';
+
+  @override
+  String get filesSomeone => 'Участник';
+
+  @override
+  String get filesNewest => 'Сначала новые';
+
+  @override
+  String get filesOldest => 'Сначала старые';
+
+  @override
+  String get filesLargest => 'Сначала большие';
+
+  @override
+  String get filesOrderTitle => 'Сортировать файлы';
+
+  @override
+  String get filesOnPhone => 'На этом телефоне';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n файлов',
+      few: '$n файла',
+      one: '$n файл',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'Попробуйте другое имя или фильтр.';
+
+  @override
+  String get filesOpen => 'Открыть';
+
+  @override
+  String get filesShowInChat => 'Показать в чате';
+
+  @override
+  String get filesDeleteHere => 'Удалить с этого телефона';
+
+  @override
+  String get filesDeleteHereLine =>
+      'Файл исчезнет с этого телефона и связанных компьютеров. У остальных он останется.';
 }

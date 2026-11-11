@@ -12244,4 +12244,90 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get traySpoiler => 'स्पॉइलर';
+
+  @override
+  String get filesSearchHint => 'नाम से फ़ाइलें खोजो';
+
+  @override
+  String get filesClearSearch => 'खोज साफ़ करो';
+
+  @override
+  String get filesAllTypes => 'सभी प्रकार';
+
+  @override
+  String get filesTypeTitle => 'इस प्रकार की फ़ाइलें दिखाओ';
+
+  @override
+  String get filesTypeDocs => 'दस्तावेज़';
+
+  @override
+  String get filesTypeCode => 'कोड और टेक्स्ट';
+
+  @override
+  String get filesTypeAudio => 'ऑडियो';
+
+  @override
+  String get filesTypeVideo => 'वीडियो';
+
+  @override
+  String get filesTypeArchives => 'आर्काइव';
+
+  @override
+  String get filesTypeOther => 'अन्य फ़ाइलें';
+
+  @override
+  String get filesFromAnyone => 'किसी से भी';
+
+  @override
+  String filesFrom(String name) {
+    return 'भेजने वाला: $name';
+  }
+
+  @override
+  String get filesFromTitle => 'किसकी फ़ाइलें दिखाएँ';
+
+  @override
+  String get filesSomeone => 'एक सदस्य';
+
+  @override
+  String get filesNewest => 'सबसे नई';
+
+  @override
+  String get filesOldest => 'सबसे पुरानी';
+
+  @override
+  String get filesLargest => 'सबसे बड़ी';
+
+  @override
+  String get filesOrderTitle => 'फ़ाइलों का क्रम';
+
+  @override
+  String get filesOnPhone => 'इस फ़ोन पर';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n फ़ाइलें',
+      one: '$n फ़ाइल',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'कोई और नाम या फ़िल्टर आज़माओ।';
+
+  @override
+  String get filesOpen => 'खोलो';
+
+  @override
+  String get filesShowInChat => 'चैट में दिखाओ';
+
+  @override
+  String get filesDeleteHere => 'इस फ़ोन से मिटाओ';
+
+  @override
+  String get filesDeleteHereLine =>
+      'यह इस फ़ोन और इससे जुड़े कंप्यूटरों से हट जाएगी। बाकी सबके पास उनकी रहेगी।';
 }

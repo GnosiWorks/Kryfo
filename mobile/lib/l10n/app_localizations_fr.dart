@@ -12376,4 +12376,90 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get traySpoiler => 'Spoiler';
+
+  @override
+  String get filesSearchHint => 'Chercher un fichier par nom';
+
+  @override
+  String get filesClearSearch => 'Effacer la recherche';
+
+  @override
+  String get filesAllTypes => 'Tous les types';
+
+  @override
+  String get filesTypeTitle => 'Afficher les fichiers de type';
+
+  @override
+  String get filesTypeDocs => 'Documents';
+
+  @override
+  String get filesTypeCode => 'Code et texte';
+
+  @override
+  String get filesTypeAudio => 'Audio';
+
+  @override
+  String get filesTypeVideo => 'Vidéos';
+
+  @override
+  String get filesTypeArchives => 'Archives';
+
+  @override
+  String get filesTypeOther => 'Autres fichiers';
+
+  @override
+  String get filesFromAnyone => 'De tout le monde';
+
+  @override
+  String filesFrom(String name) {
+    return 'De : $name';
+  }
+
+  @override
+  String get filesFromTitle => 'Afficher les fichiers de';
+
+  @override
+  String get filesSomeone => 'Un membre';
+
+  @override
+  String get filesNewest => 'Plus récents';
+
+  @override
+  String get filesOldest => 'Plus anciens';
+
+  @override
+  String get filesLargest => 'Plus lourds';
+
+  @override
+  String get filesOrderTitle => 'Trier les fichiers par';
+
+  @override
+  String get filesOnPhone => 'Sur ce téléphone';
+
+  @override
+  String filesCount(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n fichiers',
+      one: '$n fichier',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoMatch => 'Essaie un autre nom ou un autre filtre.';
+
+  @override
+  String get filesOpen => 'Ouvrir';
+
+  @override
+  String get filesShowInChat => 'Voir dans la discussion';
+
+  @override
+  String get filesDeleteHere => 'Supprimer de ce téléphone';
+
+  @override
+  String get filesDeleteHereLine =>
+      'Il disparaît de ce téléphone et de ses ordinateurs liés. Les autres gardent le leur.';
 }

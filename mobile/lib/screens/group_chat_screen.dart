@@ -22,6 +22,7 @@ import 'forward_sheet.dart';
 import '../picked.dart';
 import '../album.dart';
 import '../widgets/file_stack.dart';
+import '../show_in_chat.dart';
 import '../widgets/file_bubble.dart' show kFilePreviewWidth;
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
@@ -712,6 +713,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     _unwatchCaptures = captureWatch.watch(_captured);
     _memo = session.chatKey(widget.groupId);
     _tray.addListener(_trayMoved);
+    chatShown(widget.groupId);
+    showInChat.addListener(_showAsked);
     // a computer: the chat opens ready to type
     if (onDesktop) _composerFocus.requestFocus();
     _loadWall();
@@ -4257,6 +4260,20 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
+  // the shared page asked for a message of this group: what is above the
+  // chat goes, and the chat goes to it. an album's row stands for its own
+  void _showAsked() {
+    final v = showInChat.value;
+    if (v == null || v.chat != widget.groupId || !mounted) return;
+    showInChat.value = null;
+    final me = ModalRoute.of(context);
+    Navigator.of(context).popUntil((r) => r == me || r.isFirst);
+    final row = _messages.where((m) => m.msgUid == v.uid).firstOrNull;
+    if (row == null) return;
+    final lead = _albums.runOf(row)?.lead ?? row;
+    _scrollToIndex(_messages.indexOf(lead));
+  }
+
   // rough-jump so the target gets built, then ensureVisible lands it. this
   // list is not reversed, unlike 1:1: older sits near offset 0.
   void _scrollToIndex(int idx) {
@@ -4797,6 +4814,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   @override
   void dispose() {
+    chatGone(widget.groupId);
+    showInChat.removeListener(_showAsked);
     // a sound of this group stops with it
     final playing = SoundPlayer.instance.item?.path;
     if (playing != null && _messages.any((m) => m.filePath == playing)) {
