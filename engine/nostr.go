@@ -23,7 +23,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"runtime"
 	"slices"
 	"strconv"
@@ -1642,7 +1641,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			a := anchors[st]
 			a.path = storeLastPath(lastPath, st)
 			goneFiles.Delete(a.path)
-			if b, err := os.ReadFile(a.path); err == nil {
+			if b, err := vRead(a.path); err == nil {
 				if v, perr := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); perr == nil {
 					a.onDisk = v
 					a.saved = anchorNow(v, time.Now())
@@ -1752,7 +1751,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 		if fileGone(a.path) {
 			return
 		}
-		if os.WriteFile(a.path, []byte(strconv.FormatInt(disk, 10)), 0600) == nil {
+		if vWrite(a.path, []byte(strconv.FormatInt(disk, 10))) == nil {
 			a.onDisk = disk
 		}
 	}
@@ -3015,7 +3014,7 @@ func heldOnFile(path string) int {
 	if path == "" {
 		return 0
 	}
-	b, err := os.ReadFile(path)
+	b, err := vRead(path)
 	if err != nil || !(strings.HasPrefix(string(b), seenHeldMark) || strings.Contains(string(b), "\n"+seenHeldMark)) {
 		return 0
 	}

@@ -25,7 +25,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -149,7 +148,7 @@ func topupEnsureLoaded() {
 	var items []topupItem
 	lines := 0
 	if p, key := topupFile(), topupKey(); p != "" && key != nil {
-		if b, err := os.ReadFile(p); err == nil {
+		if b, err := vRead(p); err == nil {
 			items, lines = topupReplay(key, b)
 		}
 	} else if p != "" {
@@ -318,9 +317,9 @@ func topupWrite() {
 		}
 		tmp := p + ".tmp"
 		if len(live) == 0 {
-			os.Remove(p)
-		} else if os.WriteFile(tmp, buf.Bytes(), 0600) == nil {
-			os.Rename(tmp, p)
+			vRemove(p)
+		} else if vWrite(tmp, buf.Bytes()) == nil {
+			vRename(tmp, p)
 		}
 		topupMu.Lock()
 		topupLines = len(live)
@@ -330,17 +329,16 @@ func topupWrite() {
 	if len(recs) == 0 {
 		return
 	}
-	f, err := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	if err != nil {
-		return
-	}
-	defer f.Close()
+	var buf bytes.Buffer
 	n := 0
 	for _, r := range recs {
 		if l := line(r); l != "" {
-			f.WriteString(l + "\n")
+			buf.WriteString(l + "\n")
 			n++
 		}
+	}
+	if n == 0 || vAppend(p, buf.Bytes(), true) != nil {
+		return
 	}
 	topupMu.Lock()
 	topupLines += n

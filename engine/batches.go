@@ -89,7 +89,7 @@ func batchBookNow() *batchBook {
 			os.Remove(f)
 		}
 		if key != nil {
-			if raw, err := os.ReadFile(filepath.Join(dir, bookName)); err == nil {
+			if raw, err := vRead(filepath.Join(dir, bookName)); err == nil {
 				b.read(raw)
 			}
 		}
@@ -205,8 +205,8 @@ func (b *batchBook) write() {
 	}
 	path := filepath.Join(b.dir, bookName)
 	tmp := path + ".tmp"
-	if os.WriteFile(tmp, []byte(base64.RawStdEncoding.EncodeToString(sealed)+"\n"), 0600) == nil {
-		os.Rename(tmp, path)
+	if vWrite(tmp, []byte(base64.RawStdEncoding.EncodeToString(sealed)+"\n")) == nil {
+		vRename(tmp, path)
 	}
 }
 

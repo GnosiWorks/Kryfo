@@ -54,7 +54,9 @@ import 'desktop/desktop_mode.dart'
     show
         containerClosed,
         containerOpened,
+        EngineMemory,
         engineDir,
+        engineMemory,
         filesSealed,
         onDesktop,
         rawFiles,
@@ -1996,6 +1998,16 @@ Future<void> _restoreFile(
 @visibleForTesting
 Future<Map<String, int>> catchUpAnchors(String docs) async {
   final out = <String, int>{};
+  final mem = engineMemory;
+  if (mem != null) {
+    for (final name in mem.names()) {
+      if (!_kAnchorName.hasMatch(name)) continue;
+      final b = mem.get(name);
+      final v = b == null ? null : int.tryParse(utf8.decode(b).trim());
+      if (v != null && v > 0) out[name] = v;
+    }
+    return out;
+  }
   try {
     await for (final e in Directory(docs).list()) {
       final name = p.basename(e.path);
@@ -2011,6 +2023,28 @@ Future<Map<String, int>> catchUpAnchors(String docs) async {
 
 final _kAnchorName = RegExp(r'^nostr_last_[0-9a-f]{1,16}$');
 
+// the same as landCatchUpAnchors, into the engine's memory folder
+void _landInMemory(EngineMemory mem, Object? carried, Object? book) {
+  for (final name in mem.names()) {
+    if (name.startsWith('nostr_last_') ||
+        name.startsWith('nostr_seen_') ||
+        name.startsWith('nostr_topup') ||
+        name.startsWith('nostr_batch_') ||
+        name.startsWith(kBatchBookName)) {
+      mem.drop(name);
+    }
+  }
+  if (book is String && _kBookLine.hasMatch(book)) {
+    mem.put(kBatchBookName, utf8.encode('$book\n'));
+  }
+  if (carried is! Map) return;
+  for (final MapEntry(:key, :value) in carried.entries) {
+    if (key is! String || !_kAnchorName.hasMatch(key)) continue;
+    if (value is! int || value <= 0) continue;
+    mem.put(key, utf8.encode('$value'));
+  }
+}
+
 /// the engine's batch book (engine/batches.go)
 const kBatchBookName = 'nostr_book';
 final _kBookLine = RegExp(r'^[A-Za-z0-9+/]+$');
@@ -2019,6 +2053,12 @@ final _kBookLine = RegExp(r'^[A-Za-z0-9+/]+$');
 /// the identity. null with none
 @visibleForTesting
 Future<String?> batchBook(String docs) async {
+  final mem = engineMemory;
+  if (mem != null) {
+    final b = mem.get(kBatchBookName);
+    final line = b == null ? '' : utf8.decode(b).trim();
+    return _kBookLine.hasMatch(line) ? line : null;
+  }
   try {
     final f = File(p.join(docs, kBatchBookName));
     if (!await f.exists()) return null;
@@ -2053,6 +2093,8 @@ Future<void> landCatchUpAnchors(
   Object? carried, {
   Object? book,
 }) async {
+  final mem = engineMemory;
+  if (mem != null) return _landInMemory(mem, carried, book);
   try {
     await for (final e in Directory(docs).list()) {
       final name = p.basename(e.path);

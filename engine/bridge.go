@@ -498,7 +498,7 @@ func onionIn(t *tor.Tor, dataDir string, first bool) string {
 	keyPath := dataDir + "/onion.key"
 	var key ed25519.PrivateKey
 	var err error
-	if data, rerr := os.ReadFile(keyPath); rerr == nil && len(data) == ed25519.PrivateKeySize {
+	if data, rerr := vRead(keyPath); rerr == nil && len(data) == ed25519.PrivateKeySize {
 		key = ed25519.PrivateKey(data)
 		log.Println("halo: loaded onion key from disk")
 	} else {
@@ -509,7 +509,7 @@ func onionIn(t *tor.Tor, dataDir string, first bool) string {
 		if torClientOnly() {
 			return clientStartEnds(t, first)
 		}
-		if werr := os.WriteFile(keyPath, key, 0600); werr != nil {
+		if werr := vWrite(keyPath, key); werr != nil {
 			log.Printf("halo: onion key save failed: %v", werr)
 		} else {
 			log.Println("halo: generated and saved new onion key")

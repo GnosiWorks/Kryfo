@@ -11,7 +11,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -152,7 +151,7 @@ func dropAddressFiles(rcvPk string) {
 	defer seenFileMu.Unlock()
 	for _, p := range []string{seenPath, seenPath + ".tmp", lastPath, storeLastPath(lastPath, storeSecond), heardFile(rcvPk), heardFile(rcvPk) + ".tmp"} {
 		goneFiles.Store(p, struct{}{})
-		os.Remove(p)
+		vRemove(p)
 	}
 }
 
@@ -209,7 +208,7 @@ func loadSeen(path string) *seenIDs {
 	}
 	seenFileMu.Lock()
 	defer seenFileMu.Unlock()
-	b, err := os.ReadFile(path)
+	b, err := vRead(path)
 	if err != nil {
 		return s
 	}
@@ -524,13 +523,7 @@ func (s *seenIDs) writeLocked(lines []string) {
 	if s.path == "" || len(lines) == 0 || engineHeld.Load() || fileGone(s.path) {
 		return
 	}
-	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	if err != nil {
-		return
-	}
-	_, err = f.WriteString(strings.Join(lines, "\n") + "\n")
-	f.Close()
-	if err != nil {
+	if vAppend(s.path, []byte(strings.Join(lines, "\n")+"\n"), true) != nil {
 		return
 	}
 	s.lines += len(lines)
@@ -547,7 +540,7 @@ func (s *seenIDs) compactLocked() {
 	if engineHeld.Load() || fileGone(s.path) {
 		return
 	}
-	b, err := os.ReadFile(s.path)
+	b, err := vRead(s.path)
 	if err != nil {
 		return
 	}
@@ -624,12 +617,12 @@ func (s *seenIDs) compactLocked() {
 	}
 	keep = append(keep, still...)
 	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, []byte(strings.Join(keep, "\n")+"\n"), 0600); err != nil {
-		os.Remove(tmp)
+	if err := vWrite(tmp, []byte(strings.Join(keep, "\n")+"\n")); err != nil {
+		vRemove(tmp)
 		return
 	}
-	if err := os.Rename(tmp, s.path); err != nil {
-		os.Remove(tmp)
+	if err := vRename(tmp, s.path); err != nil {
+		vRemove(tmp)
 		return
 	}
 	s.lines = len(keep)
@@ -684,15 +677,7 @@ func markHeldFile(path, mark string) {
 	if fileGone(path) {
 		return
 	}
-	if _, err := os.Stat(path); err != nil {
-		return
-	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		return
-	}
-	f.WriteString(mark + "\n")
-	f.Close()
+	vAppend(path, []byte(mark+"\n"), false)
 }
 
 func markHeldRunning(path, mark string) {

@@ -11,7 +11,6 @@ package main
 
 import (
 	"context"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -63,7 +62,7 @@ func loadHeard(rcvPk string) {
 	if p == "" {
 		return
 	}
-	b, err := os.ReadFile(p)
+	b, err := vRead(p)
 	if err != nil {
 		return
 	}
@@ -140,11 +139,11 @@ func noteHeard(ctx context.Context, u, rcvPk string, at time.Time, now bool) {
 		return
 	}
 	tmp := p + ".tmp"
-	if os.WriteFile(tmp, []byte(strings.Join(lines, "\n")+"\n"), 0600) != nil {
+	if vWrite(tmp, []byte(strings.Join(lines, "\n")+"\n")) != nil {
 		return
 	}
-	if os.Rename(tmp, p) != nil {
-		os.Remove(tmp)
+	if vRename(tmp, p) != nil {
+		vRemove(tmp)
 	}
 }
 

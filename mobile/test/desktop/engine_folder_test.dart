@@ -8,6 +8,8 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/backup.dart'
+    show batchBook, catchUpAnchors, landCatchUpAnchors;
 import 'package:kryfo/desktop/desktop_mode.dart';
 import 'package:kryfo/desktop/desktop_posix.dart' as posix;
 import 'package:kryfo/desktop/desktop_vault.dart';
@@ -312,6 +314,137 @@ void main() {
       }
     });
 
+    test('the wrap queue is kept between runs', () async {
+      await startOnce([]);
+      final ef = EngineFiles(docs: docs, support: support, runtime: run);
+      io.rawDirectory(ef.dir).deleteSync(recursive: true);
+      await sealed(() => ef.prepare(vault));
+      io.rawFile(p.join(ef.dir, 'nostr_topup')).writeAsStringSync('w1\nw2\n');
+      sealed(ef.keepMarks);
+      expect(rawText(p.join(support, 'engine.state')).contains('w1'), isFalse);
+      // the runtime folder is gone after a restart
+      io.rawDirectory(ef.dir).deleteSync(recursive: true);
+      await sealed(() => ef.prepare(vault));
+      expect(rawText(p.join(ef.dir, 'nostr_topup')), 'w1\nw2\n');
+    });
+
+    group('in the engine\'s memory (windows)', () {
+      late _Memory mem;
+      setUp(() => mem = _Memory());
+      tearDown(() => engineMemory = null);
+
+      EngineFiles files([_Memory? m]) => EngineFiles(
+        docs: docs,
+        support: support,
+        runtime: run,
+        memory: m ?? mem,
+        windows: false,
+      );
+
+      // the engine as bridge.go reads its key, from memory
+      Future<String> Function(String) engineInMemory(List<Uint8List> used) =>
+          (dir) async {
+            var k = mem.files['onion.key'] ?? Uint8List(0);
+            if (k.length != 64) {
+              final r = Random();
+              k = Uint8List.fromList(List.generate(64, (_) => r.nextInt(256)));
+              mem.files['onion.key'] = k;
+            }
+            used.add(Uint8List.fromList(k));
+            return 'abc.onion';
+          };
+
+      List<String> onDisk(String dir) => [
+        for (final e in io.rawDirectory(dir).listSync(recursive: true))
+          if (e is File &&
+              (p.basename(e.path) == 'onion.key' ||
+                  p.basename(e.path).startsWith('nostr_')))
+            p.basename(e.path),
+      ];
+
+      test('the key, the marks and the queue never reach the disk', () async {
+        final ef = files();
+        final used = <Uint8List>[];
+        await sealed(() async {
+          await ef.prepare(vault);
+          await ef.start(engineInMemory(used));
+        });
+        expect(used, [onion]);
+        expect(mem.files.containsKey('onion.key'), isFalse);
+        expect(onDisk(ef.dir), isEmpty);
+        expect(utf8.decode(mem.files['nostr_seen_$id']!), 'e1\ne2\n');
+        expect(utf8.decode(mem.files['nostr_last_$id.2']!), '1700000001');
+        expect(mem.files['nostr_topup'], [1, 2, 3, 4]);
+        expect(isSealedHead(raw(p.join(docs, 'onion.key'))), isTrue);
+      });
+
+      test('a new key the engine made is sealed, its copy dropped', () async {
+        io.rawFile(p.join(docs, 'onion.key')).deleteSync();
+        final ef = files();
+        final used = <Uint8List>[];
+        await sealed(() async {
+          await ef.prepare(vault);
+          await ef.start(engineInMemory(used));
+        });
+        expect(mem.files.containsKey('onion.key'), isFalse);
+        sealed(
+          () => expect(
+            File(p.join(docs, 'onion.key')).readAsBytesSync(),
+            used.single,
+          ),
+        );
+      });
+
+      test('what the engine wrote comes back at the next start, the queue '
+          'too', () async {
+        final ef = files();
+        await sealed(() async {
+          await ef.prepare(vault);
+          await ef.start(engineInMemory([]));
+        });
+        mem.files['nostr_topup'] = Uint8List.fromList(utf8.encode('q1\n'));
+        mem.files['nostr_seen_$id'] = Uint8List.fromList(utf8.encode('e3\n'));
+        mem.files['nostr_book'] = Uint8List.fromList(utf8.encode('Ym9vaw\n'));
+        await sealed(() => ef.keepMarksOff(vault));
+        sealed(ef.detach);
+        expect(mem.files, isEmpty);
+        expect(
+          rawText(p.join(support, 'engine.state')).contains('q1'),
+          isFalse,
+        );
+        // the next process
+        final next = _Memory();
+        await sealed(() => files(next).prepare(vault));
+        expect(utf8.decode(next.files['nostr_topup']!), 'q1\n');
+        expect(utf8.decode(next.files['nostr_seen_$id']!), 'e3\n');
+        expect(utf8.decode(next.files['nostr_book']!), 'Ym9vaw\n');
+        expect(onDisk(root.path).where((n) => n != 'onion.key'), isEmpty);
+      });
+
+      test('a backup reads and a restore lands its anchors there', () async {
+        engineMemory = mem;
+        mem.files['nostr_last_$id'] = Uint8List.fromList(utf8.encode('17'));
+        mem.files['nostr_seen_$id'] = Uint8List.fromList(utf8.encode('e\n'));
+        mem.files['nostr_topup'] = Uint8List.fromList(utf8.encode('q\n'));
+        mem.files['nostr_book'] = Uint8List.fromList(utf8.encode('Ym9vaw\n'));
+        final dir = p.join(run, 'engine');
+        expect(await catchUpAnchors(dir), {'nostr_last_$id': 17});
+        expect(await batchBook(dir), 'Ym9vaw');
+        await landCatchUpAnchors(dir, {
+          'nostr_last_fedcba9876543210': 21,
+        }, book: 'bmV3');
+        expect(mem.files.keys.toSet(), {
+          'nostr_last_fedcba9876543210',
+          'nostr_book',
+        });
+        expect(utf8.decode(mem.files['nostr_book']!), 'bmV3\n');
+        expect(
+          io.rawDirectory(run).listSync(recursive: true).whereType<File>(),
+          isEmpty,
+        );
+      });
+    });
+
     test('the sweep syncs the folder before it zeroes', () {
       final a = p.join(docs, 'media', 'old.jpg');
       io.rawFile(a).writeAsStringSync('an old photo');
@@ -435,4 +568,29 @@ void main() {
       sealed(() => expect(File(key).readAsBytesSync(), key64(3)));
     });
   });
+}
+
+class _Memory implements EngineMemory {
+  final files = <String, Uint8List>{};
+
+  @override
+  void put(String name, Uint8List b) => files[name] = Uint8List.fromList(b);
+
+  @override
+  Uint8List? get(String name) {
+    final b = files[name];
+    return b == null ? null : Uint8List.fromList(b);
+  }
+
+  @override
+  List<String> names() => files.keys.toList();
+
+  @override
+  void drop([String name = '']) {
+    for (final n in files.keys.toList()) {
+      if (name != '' && n != name) continue;
+      final b = files.remove(n)!;
+      b.fillRange(0, b.length, 0);
+    }
+  }
 }
