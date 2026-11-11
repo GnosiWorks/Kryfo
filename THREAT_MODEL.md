@@ -148,8 +148,10 @@ put you in danger, read all of it.
   too, without any pin. from 0.6 they are encrypted, the hidden chats'
   under a key that only their pin opens, and their names on disk say
   nothing. files from before are encrypted when their chats first open
-  after the update: until the hidden chats pin is used once, theirs stay
-  as they were, and the decoy's own until the decoy pin is used. older
+  after the update, as space allows: one that needs more free space than
+  the phone has stays as it was until there is room, and is tried again
+  each time its chats open. until the hidden chats pin is used once, theirs
+  stay as they were, and the decoy's own until the decoy pin is used. older
   plain copies can also linger in the phone's storage after that. if a
   forensic copy is the fear, the wipe pin is the tool, and not having the
   data on the phone at all is better still.
