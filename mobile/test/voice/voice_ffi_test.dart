@@ -5,9 +5,11 @@
 // engine/voice/native/build-host.sh and the model is whisper.cpp's own
 // small test model from the pinned source; without them every test skips
 // and says so. KRYFO_VOICE_REAL_MODEL=<a ggml model> adds the words.
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/voice/voice_audio.dart';
 import 'package:kryfo/voice/voice_ffi.dart';
@@ -184,4 +186,13 @@ void main() {
         ? _needs
         : (_real == null ? 'KRYFO_VOICE_REAL_MODEL not set' : false),
   );
+
+  test('the voice goes from native memory before it is handed back', () {
+    final p = calloc<Int16>(4000);
+    addTearDown(() => calloc.free(p));
+    p.asTypedList(4000).setAll(0, List.generate(4000, (i) => i - 2000));
+    wipePcm(p, 4000);
+    expect(p.asTypedList(4000).every((v) => v == 0), isTrue);
+    wipePcm(p, 0);
+  });
 }

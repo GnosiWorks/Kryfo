@@ -112,6 +112,13 @@ void kv_close(kv_model *m) {
   free(m);
 }
 
+// the voice, gone from memory before the buffer goes back. through a
+// volatile pointer, so the compiler cannot drop it as a store nobody reads
+static void *(*const volatile kv_memset)(void *, int, size_t) = memset;
+static void kv_wipe(void *p, size_t n) {
+  if (p != NULL) kv_memset(p, 0, n);
+}
+
 // mono floats at 16 khz, which is all whisper reads. a box average when
 // going down keeps higher notes from folding back as noise.
 static float *kv_resample(const int16_t *pcm, int64_t frames, int32_t rate,
@@ -131,6 +138,7 @@ static float *kv_resample(const int16_t *pcm, int64_t frames, int32_t rate,
   if (n < 1) n = 1;
   float *res = malloc((size_t)n * sizeof(float));
   if (res == NULL) {
+    kv_wipe(mono, (size_t)frames * sizeof(float));
     free(mono);
     return NULL;
   }
@@ -152,6 +160,7 @@ static float *kv_resample(const int16_t *pcm, int64_t frames, int32_t rate,
       res[i] = mono[a] * (1.0f - f) + mono[b] * f;
     }
   }
+  kv_wipe(mono, (size_t)frames * sizeof(float));
   free(mono);
   *n_out = n;
   return res;
@@ -281,6 +290,7 @@ int32_t kv_run(kv_model *m, const int16_t *pcm, int64_t frames, int32_t rate,
     if (kv_stopped(cancel)) break;
     start = end;
   }
+  kv_wipe(audio, (size_t)n * sizeof(float));
   free(audio);
   if (kv_stopped(cancel)) return KV_CANCELLED;
   if (rc != 0) return KV_ERR_RUN;
