@@ -36,18 +36,25 @@ func faceSign(msg []byte) ([]byte, error) {
 		msg[len(faceText)] != 0x05 {
 		return nil, errors.New("not a face text")
 	}
+	// the x key checked and the ed key that signs from one identity: a new
+	// one made between them would sign another's face
+	mu.Lock()
 	me, err := identityOf(mainIdent)
+	var priv ed25519.PrivateKey
+	if err == nil && myEdPriv != nil {
+		priv = bytes.Clone(myEdPriv)
+	}
+	mu.Unlock()
 	if err != nil {
 		return nil, err
 	}
-	if !bytes.Equal(msg[len(faceText)+1:len(faceText)+33], me.pub[:]) {
-		return nil, errors.New("not the main identity's key")
-	}
-	priv := edKeyCopy()
 	if priv == nil {
 		return nil, errNoIdentity
 	}
 	defer clear(priv)
+	if !bytes.Equal(msg[len(faceText)+1:len(faceText)+33], me.pub[:]) {
+		return nil, errors.New("not the main identity's key")
+	}
 	return ed25519.Sign(priv, msg), nil
 }
 

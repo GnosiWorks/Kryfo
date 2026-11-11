@@ -2,6 +2,8 @@
 // what a restore must not undo: a timed copy from before it counts from
 // then, our unsends and edits are kept to go again, and what of ours the
 // file still had waiting waits for a tap
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/main.dart'
     show holdOutboxAfterRestore, holdRestoredOutbox, kNotSent;
@@ -84,6 +86,17 @@ void main() {
       expect(restoreLandedOf(prefs, nowMs: now + 15 * day), now);
       expect(restoreLandedOf(prefs, nowMs: now + 17 * day), isNull);
       expect(prefs.getInt(kRestoreLandedPref), now);
+      // the outbox hold, retried late, still counts from the landing
+      expect(restoreHoldLanding(prefs), now);
+    });
+
+    test('a hold retried at a later start counts from the landing, not '
+        'from that start', () {
+      final boot = File('lib/app/state_boot.dart').readAsStringSync();
+      final hold = boot.indexOf('await holdOutboxAfterRestore(');
+      expect(hold, greaterThan(0));
+      final call = boot.substring(hold, boot.indexOf('!=', hold));
+      expect(call, contains('landed: restoreHoldLanding(prefs)'));
     });
   });
 

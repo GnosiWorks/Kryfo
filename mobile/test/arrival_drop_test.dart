@@ -261,6 +261,51 @@ void main() {
       expect(eng.gots, [('ab' * 16, _tok)]);
       expect(fetchFolder(), isEmpty);
     });
+
+    test('a fetched file a stop left plain is sealed as its container '
+        'opens, with no link and no pass', () async {
+      containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+      await from(_x, await drop('s4'));
+      final f = (await fetchOf(live.mem, 's4'))!;
+      final old = DateTime.now().subtract(const Duration(hours: 1));
+      rawFileAccess(() {
+        File(f.path)
+          ..writeAsBytesSync([7, 7, 7])
+          ..setLastModifiedSync(old);
+      });
+      await fetchState(live.mem, 's4', kFetchHave);
+      // one still coming is left to its fetch
+      await from(_x, await drop('s5', id: '12'));
+      final g = (await fetchOf(live.mem, 's5'))!;
+      rawFileAccess(() => File(g.path).writeAsBytesSync([1]));
+      await app.sealLeftFetches(live, DateTime.now());
+      expect(fetchFolder(), [p.basename(g.path)]);
+      final got = (await fetchOf(live.mem, 's4'))!.path;
+      expect(got, gotPathFor(f.path));
+      expect(
+        isSealedHead(rawFileAccess(() => File(got).readAsBytesSync())),
+        isTrue,
+      );
+      expect(File(got).readAsBytesSync(), [7, 7, 7]);
+    });
+
+    test('a filed one\'s plain file left in the fetch folder goes, to come '
+        'again', () async {
+      containerOpened!(HaloContainer.everyday.id, '', 'k' * 64);
+      await from(_x, await drop('s6'));
+      final f = (await fetchOf(live.mem, 's6'))!;
+      rawFileAccess(() {
+        File(f.path)
+          ..writeAsBytesSync([7, 7, 7])
+          ..setLastModifiedSync(
+            DateTime.now().subtract(const Duration(hours: 1)),
+          );
+      });
+      await fetchState(live.mem, 's6', kFetchComing);
+      await app.sealLeftFetches(live, DateTime.now());
+      expect(fetchFolder(), isEmpty);
+      expect((await fetchOf(live.mem, 's6'))!.state, kFetchComing);
+    });
   });
 
   test('a second copy of the frame fetches nothing twice', () async {

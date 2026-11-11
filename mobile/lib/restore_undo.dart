@@ -28,6 +28,11 @@ int? restoreLandedOf(SharedPreferences prefs, {int? nowMs}) {
   return now - at > kRestoreLandedKeep.inMilliseconds ? null : at;
 }
 
+/// the landing the outbox hold counts from, however old: while the
+/// restore's mark is set a late retry holds only what the file brought
+int? restoreHoldLanding(SharedPreferences prefs) =>
+    prefs.getInt(kRestoreLandedPref);
+
 /// our unsends and last edits are kept this long: a heal's since reaches
 /// back 15 days, and a day more. no words are kept: an edit goes again with
 /// the words our row holds then, and only while it is there

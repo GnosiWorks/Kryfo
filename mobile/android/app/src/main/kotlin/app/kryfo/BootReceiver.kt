@@ -3,7 +3,6 @@ package app.kryfo
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
@@ -22,7 +21,7 @@ class BootReceiver : BroadcastReceiver() {
             HaloListenerService.debugLog(context, "boot: ${action.substringAfterLast('.')}")
             HaloListenerService.start(context, plainFirst = true)
         } catch (e: Exception) {
-            Log.i("halo-engine", "boot: listener not started: ${e.javaClass.simpleName}")
+            DebugLog.i("halo-engine", "boot: listener not started: ${e.javaClass.simpleName}")
         }
     }
 }

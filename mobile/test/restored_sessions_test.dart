@@ -1987,6 +1987,9 @@ void main() {
       final later = AppState(io: io, router: router)
         ..myId = 'me'
         ..sendModeForTest = 'fast';
+      // they are held here on the later start too, so the heal reaches the
+      // row's check and is not dropped as from no one
+      await later.subscribeKnown();
       await later.takeHealForTest(p.xpub, older);
       expect(mem.rows('heal_lines'), hasLength(1));
       expect(mem.rows('heal_nonces'), isEmpty);

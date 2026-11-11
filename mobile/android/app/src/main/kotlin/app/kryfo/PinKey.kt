@@ -9,7 +9,6 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.security.keystore.UserNotAuthenticatedException
-import android.util.Log
 import java.security.KeyStore
 import java.security.SecureRandom
 import java.util.concurrent.atomic.AtomicReference
@@ -518,7 +517,7 @@ object PinKey {
                 c = c.cause
             }
             val name = e?.javaClass?.simpleName?.let { " $it" } ?: ""
-            Log.i("kryfo", "pin key $what$name$code")
+            DebugLog.i("kryfo", "pin key $what$name$code")
         } catch (_: Throwable) {
         }
     }

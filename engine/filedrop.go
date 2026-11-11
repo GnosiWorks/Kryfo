@@ -244,6 +244,7 @@ func dropValuesFor(path, uid string) (dropValues, []byte, int64, error) {
 	if err != nil {
 		return dropValues{}, nil, 0, err
 	}
+	defer clear(secret)
 	sum, size, err := fileSum(path)
 	if err != nil {
 		return dropValues{}, nil, 0, err

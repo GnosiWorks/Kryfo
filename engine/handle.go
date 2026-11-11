@@ -185,8 +185,10 @@ func handleClaim(raw, invite, bio string) string {
 	if priv == nil {
 		return "error: no identity yet"
 	}
-	defer clear(priv)
-	return handlePost("/handle/claim", handleClaimBody(priv, h, invite, bio, time.Now().Unix()))
+	body := handleClaimBody(priv, h, invite, bio, time.Now().Unix())
+	// the key goes before the network wait, not after it
+	clear(priv)
+	return handlePost("/handle/claim", body)
 }
 
 // give it back, signed with the same key over the handle and the time.
@@ -202,8 +204,9 @@ func handleRelease(raw string) string {
 	if priv == nil {
 		return "error: no identity yet"
 	}
-	defer clear(priv)
-	return handlePost("/handle/release", handleReleaseBody(priv, h, time.Now().Unix()))
+	body := handleReleaseBody(priv, h, time.Now().Unix())
+	clear(priv)
+	return handlePost("/handle/release", body)
 }
 
 // the registry's words never go further than here: the app gets one of a
@@ -287,8 +290,8 @@ func HaloHandleListing(cHandle *C.char, cListed *C.char, cName *C.char) *C.char 
 	if priv == nil {
 		return C.CString("error: no identity yet")
 	}
-	defer clear(priv)
 	body := handleListingBody(priv, h, listed, name, time.Now().Unix())
+	clear(priv)
 	return C.CString(handlePost("/handle/listing", body))
 }
 

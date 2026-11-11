@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClient.BillingResponseCode
@@ -95,7 +94,7 @@ object PlayTips : PurchasesUpdatedListener {
         val made = try {
             build(c)
         } catch (e: Exception) {
-            Log.i("halo-engine", "tips: no billing client: ${e.javaClass.simpleName}")
+            DebugLog.i("halo-engine", "tips: no billing client: ${e.javaClass.simpleName}")
             null
         }
         if (made == null) return flush(null)
@@ -230,7 +229,7 @@ object PlayTips : PurchasesUpdatedListener {
             try {
                 MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL).invokeMethod("updated", args)
             } catch (e: Exception) {
-                Log.i("halo-engine", "tips: dart not reachable: ${e.javaClass.simpleName}")
+                DebugLog.i("halo-engine", "tips: dart not reachable: ${e.javaClass.simpleName}")
             }
         }
     }

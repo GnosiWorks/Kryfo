@@ -851,6 +851,48 @@ void main() {
     skip: skip,
   );
 
+  test('a discard puts back a key-only contact the copy filled, but not '
+      'what changed on it since', () async {
+    final ph = await _phone(ana: 2);
+    final l = _Link();
+    final out = await _export(ph, l);
+    final d = await _device();
+    await d.db.insert('contacts', {
+      'halo_id': _ana,
+      'onion': 'o-before',
+      'xpub': 'x-before',
+      'first_seen': 1,
+      'last_seen': 1,
+      'accepted': 0,
+    });
+    final imp = await _open(d, l, out);
+    await _pump(out, imp);
+    final filled = (await d.db.query(
+      'contacts',
+      where: 'halo_id = ?',
+      whereArgs: [_ana],
+    )).single;
+    expect(filled['accepted'], 1);
+    expect(filled['onion'], isNot('o-before'));
+    // a live update on the row while the copy is still to be kept
+    await d.db.update(
+      'contacts',
+      {'xpub': 'x-live'},
+      where: 'halo_id = ?',
+      whereArgs: [_ana],
+    );
+    await imp.discard();
+    final back = (await d.db.query(
+      'contacts',
+      where: 'halo_id = ?',
+      whereArgs: [_ana],
+    )).single;
+    expect(back['accepted'], 0);
+    expect(back['onion'], 'o-before');
+    expect(back['xpub'], 'x-live');
+    out.close();
+  }, skip: skip);
+
   test(
     'one sender per link, and a device restart takes the copy up again',
     () async {

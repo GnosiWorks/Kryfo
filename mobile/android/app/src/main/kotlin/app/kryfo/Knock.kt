@@ -2,7 +2,6 @@
 package app.kryfo
 
 import android.content.Context
-import android.util.Log
 
 // a knock, from the helper app or from google push: its bytes are never
 // read, and it asks for the same check-in the fifteen-minute job runs. a
@@ -14,14 +13,14 @@ object Knock {
         val v = KnockGate.allow(c)
         when {
             v.go -> {
-                Log.i("halo-engine", "$from: knock")
+                DebugLog.i("halo-engine", "$from: knock")
                 JobSetup.scheduleKnock(c)
             }
             v.waitMs > 0 -> {
-                Log.i("halo-engine", "$from: knock waits for the floor")
+                DebugLog.i("halo-engine", "$from: knock waits for the floor")
                 JobSetup.scheduleKnockLater(c, v.waitMs)
             }
-            else -> Log.i("halo-engine", "$from: knock dropped, too many this hour")
+            else -> DebugLog.i("halo-engine", "$from: knock dropped, too many this hour")
         }
     }
 }

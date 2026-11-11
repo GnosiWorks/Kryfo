@@ -120,6 +120,39 @@ var ErrNotOpus = errors.New("ogg: not opus")
 // the most a packet may grow to across pages, far past any opus packet
 const maxPacketRead = 64 * 1024
 
+// zeros over a buffered reader's buffer: refilled from a source of them
+func wipeReader(r *bufio.Reader) {
+	r.Reset(zeros{})
+	r.Peek(r.Size())
+}
+
+// zeros over a buffered writer's buffer: filled with them, written nowhere
+func wipeWriter(w *bufio.Writer) {
+	w.Reset(io.Discard)
+	w.Write(make([]byte, w.Available()))
+	w.Flush()
+}
+
+type zeros struct{}
+
+func (zeros) Read(p []byte) (int, error) {
+	clear(p)
+	return len(p), nil
+}
+
+// zeros over what the pages held
+func (o *oggWriter) wipe() {
+	clear(o.segs[:cap(o.segs)])
+	clear(o.body[:cap(o.body)])
+}
+
+func (o *oggReader) wipe() {
+	clear(o.packet[:cap(o.packet)])
+	clear(o.segs[:cap(o.segs)])
+	clear(o.body[:cap(o.body)])
+	wipeReader(o.r)
+}
+
 type oggReader struct {
 	r       *bufio.Reader
 	serial  uint32

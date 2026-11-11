@@ -254,7 +254,8 @@ func dropRig(t *testing.T) (*fakeFiles, *[]string) {
 	}
 	secret := make([]byte, 32)
 	rand.Read(secret)
-	dropSecret = func() ([]byte, error) { return secret, nil }
+	// a fresh copy each time, as the real one: its caller clears it
+	dropSecret = func() ([]byte, error) { return bytes.Clone(secret), nil }
 	dropPause = 10 * time.Millisecond
 	t.Cleanup(func() {
 		dropHosts, dropDial, dropSecret, dropPause = oldHosts, oldDial, oldSecret, oldPause
@@ -889,5 +890,23 @@ func TestDropAgainstTheService(t *testing.T) {
 	}
 	if r := dropFetch(fetchJob(s, out+"2")); r != "error: gone" {
 		t.Fatalf("after every got: %s", r)
+	}
+}
+
+// the secret a drop's values come from is zeroed once they are made
+func TestDropValuesClearTheirSecret(t *testing.T) {
+	old := dropSecret
+	t.Cleanup(func() { dropSecret = old })
+	var handed []byte
+	dropSecret = func() ([]byte, error) {
+		handed = bytes.Repeat([]byte{7}, 32)
+		return handed, nil
+	}
+	p, _ := writeRandom(t, 100)
+	if _, _, _, err := dropValuesFor(p, "u1"); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(handed, make([]byte, 32)) {
+		t.Fatal("the drop secret stayed in memory")
 	}
 }

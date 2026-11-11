@@ -6,7 +6,6 @@ import android.app.job.JobService
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.util.Log
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
 
@@ -25,11 +24,11 @@ class HaloPeriodicJobService : JobService() {
         // wiped: this job outlived the data it was for. end it for good
         // instead of booting a fresh identity nobody asked for.
         if (!KryfoState.hasData(this)) {
-            Log.i("halo-engine", "periodic job: no data, cancelling")
+            DebugLog.i("halo-engine", "periodic job: no data, cancelling")
             getSystemService(JobScheduler::class.java)?.cancelAll()
             return false
         }
-        Log.i("halo-engine", "periodic job: start")
+        DebugLog.i("halo-engine", "periodic job: start")
         // a check-in's budget runs from here, not from when dart answers.
         // the boot clock, which a change of the wall clock does not move
         val startedAt = SystemClock.elapsedRealtime()
@@ -43,12 +42,12 @@ class HaloPeriodicJobService : JobService() {
             try {
                 HaloListenerService.start(this)
             } catch (e: Exception) {
-                Log.i("halo-engine", "periodic job: listener not restarted: ${e.javaClass.simpleName}")
+                DebugLog.i("halo-engine", "periodic job: listener not restarted: ${e.javaClass.simpleName}")
             }
         }
         val engine = FlutterEngineCache.getInstance().get(HaloApplication.ENGINE_ID)
         if (engine == null) {
-            Log.i("halo-engine", "periodic job: no engine")
+            DebugLog.i("halo-engine", "periodic job: no engine")
             return false
         }
         val run = runs.start(params?.jobId ?: 0) {
@@ -87,12 +86,12 @@ class HaloPeriodicJobService : JobService() {
             MethodChannel(engine.dartExecutor.binaryMessenger, "halo/job")
                 .invokeMethod("drain", mapOf("up" to up, "ago" to SystemClock.elapsedRealtime() - startedAt, "why" to why), object : MethodChannel.Result {
                     override fun success(result: Any?) {
-                        Log.i("halo-engine", "periodic job: drained $result")
+                        DebugLog.i("halo-engine", "periodic job: drained $result")
                         main.removeCallbacks(finish)
                         finish.run()
                     }
                     override fun error(code: String, msg: String?, details: Any?) {
-                        Log.i("halo-engine", "periodic job: drain error $code")
+                        DebugLog.i("halo-engine", "periodic job: drain error $code")
                         main.removeCallbacks(finish)
                         finish.run()
                     }
@@ -103,13 +102,13 @@ class HaloPeriodicJobService : JobService() {
                             main.postDelayed(again, 2_000)
                             return
                         }
-                        Log.i("halo-engine", "periodic job: dart not listening yet")
+                        DebugLog.i("halo-engine", "periodic job: dart not listening yet")
                         main.removeCallbacks(finish)
                         finish.run()
                     }
                 })
         } catch (e: Exception) {
-            Log.i("halo-engine", "periodic job: ${e.javaClass.simpleName}")
+            DebugLog.i("halo-engine", "periodic job: ${e.javaClass.simpleName}")
             main.removeCallbacks(finish)
             finish.run()
         }

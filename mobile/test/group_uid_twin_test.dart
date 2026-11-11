@@ -206,4 +206,12 @@ void main() {
     await comes('bob', await said('gm-eu'));
     expect(await held('gm-eu'), [('carol', 'see you there')]);
   }, skip: skip);
+
+  test('a take-back of another\'s uid leaves their notification', () async {
+    await comes('carol', await said('gm-n', by: 'carol'));
+    await comes('bob', await unsend('gm-n', 'bob'));
+    expect(io.unrangMessages, isNot(contains('gm-n')));
+    await comes('carol', await unsend('gm-n', 'carol'));
+    expect(io.unrangMessages, contains('gm-n'));
+  }, skip: skip);
 }

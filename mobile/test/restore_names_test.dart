@@ -252,6 +252,10 @@ void main() {
     final e = _Engine();
     useEngineForTest(e);
     Directory(p.join(root.path, 'docs')).createSync(recursive: true);
+    // the old identity's keys the app held go as the new one lands
+    var replaced = 0;
+    identityReplaced = () => replaced++;
+    addTearDown(() => identityReplaced = () {});
     await landV1Payload({
       'v': 1,
       'db': base64Encode(utf8.encode('old file')),
@@ -259,6 +263,7 @@ void main() {
       'edPriv': 'ed',
       'xPriv': 'x',
     });
+    expect(replaced, 1);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.containsKey('moved.at'), isFalse);
     // and the next start marks the sessions the file brought back, and

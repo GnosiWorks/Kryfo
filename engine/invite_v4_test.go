@@ -152,3 +152,67 @@ func TestHelloLineOnTheV3Address(t *testing.T) {
 		}
 	}
 }
+
+// a face text is signed by the ed key of the identity it names, even while
+// a new identity comes in beside it
+func TestFaceSignBesideANewIdentity(t *testing.T) {
+	type pair struct {
+		x  [32]byte
+		ed ed25519.PrivateKey
+	}
+	var pairs [3]pair
+	for i := range pairs {
+		_, pairs[i].ed, _ = ed25519.GenerateKey(nil)
+		pairs[i].x[0], pairs[i].x[1] = byte(i+1), 0x55
+	}
+	mu.Lock()
+	was := myEdPriv
+	mu.Unlock()
+	identsMu.Lock()
+	wasMain, hadMain := idents[mainIdent]
+	identsMu.Unlock()
+	t.Cleanup(func() {
+		mu.Lock()
+		myEdPriv = was
+		mu.Unlock()
+		identsMu.Lock()
+		if hadMain {
+			idents[mainIdent] = wasMain
+		} else {
+			delete(idents, mainIdent)
+		}
+		identsMu.Unlock()
+	})
+	use := func(p pair) {
+		mu.Lock()
+		myEdPriv = bytes.Clone(p.ed)
+		putIdentity(mainIdent, xid{priv: [32]byte{1}, pub: p.x})
+		mu.Unlock()
+	}
+	use(pairs[0])
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for i := range 20000 {
+			use(pairs[i%len(pairs)])
+		}
+	}()
+	id := bytes.Repeat([]byte{9}, 16)
+	for n := 0; ; n++ {
+		select {
+		case <-done:
+			return
+		default:
+		}
+		p := pairs[n%len(pairs)]
+		msg := append(append(append([]byte{}, faceText...), 5), p.x[:]...)
+		msg = append(msg, id...)
+		sig, err := faceSign(msg)
+		if err != nil {
+			continue
+		}
+		if !ed25519.Verify(p.ed.Public().(ed25519.PublicKey), msg, sig) {
+			t.Fatal("a face text signed by another identity's key")
+		}
+	}
+}

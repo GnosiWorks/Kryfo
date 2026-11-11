@@ -8,6 +8,10 @@ extension AppStateIdentity on AppState {
   ({String ed, String x}) get mainKeysForBackup =>
       _mainKeys ?? (throw StateError('no identity yet'));
 
+  /// a restore replaced the identity: its keys are known again only after
+  /// the restart
+  void mainKeysReplaced() => _mainKeys = null;
+
   Future<void> regenerateIdentity() => _regenerating ??= _regenerateIdentity()
       .whenComplete(() => _regenerating = null);
 

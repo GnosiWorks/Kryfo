@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
 import java.security.SecureRandom
@@ -212,7 +211,7 @@ object HelperPush {
         try {
             MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL).invokeMethod(method, args)
         } catch (e: Exception) {
-            Log.i("halo-engine", "helper: dart not reachable: ${e.javaClass.simpleName}")
+            DebugLog.i("halo-engine", "helper: dart not reachable: ${e.javaClass.simpleName}")
         }
     }
 }

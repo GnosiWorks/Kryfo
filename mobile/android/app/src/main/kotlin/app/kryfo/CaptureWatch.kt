@@ -24,7 +24,7 @@ class CaptureWatch(private val activity: Activity) {
                 activity.registerScreenCaptureCallback(activity.mainExecutor, cb)
                 shot = cb
             } catch (e: Exception) {
-                android.util.Log.i("kryfo", "capture watch: no screenshot callback")
+                DebugLog.i("kryfo", "capture watch: no screenshot callback")
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && rec == null) {
@@ -34,7 +34,7 @@ class CaptureWatch(private val activity: Activity) {
                 rec = cb
                 recorded(now)
             } catch (e: Exception) {
-                android.util.Log.i("kryfo", "capture watch: no recording callback")
+                DebugLog.i("kryfo", "capture watch: no recording callback")
             }
         }
     }

@@ -90,6 +90,8 @@ extension AppStateBoot on AppState {
     HaloDb? d,
     bool vaultOpen = false,
   ]) async {
+    // what came in plain and was never sealed is sealed before the sweep
+    await sealLeftFetches(d ?? live, before);
     try {
       final gone = [
         ...await sweepableMedia(
@@ -588,7 +590,7 @@ extension AppStateBoot on AppState {
         held =
             await holdOutboxAfterRestore(
               database,
-              landed: restoreLandedAt,
+              landed: restoreHoldLanding(prefs),
               made: from,
             ) !=
             null;

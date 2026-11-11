@@ -139,6 +139,9 @@ void main() {
     expect(e.pulls, 2);
     expect(app.mainKeysForBackup.x, _hex(e.pair.privateKey.serialize()));
     expect(e.pulls, 2);
+    // a restore that lands after this leaves no key of the old one to back up
+    app.mainKeysReplaced();
+    expect(() => app.mainKeysForBackup, throwsStateError);
     // openers kept for the old key open no more
     expect(live.keptGone, 1);
     final now = _bundle(await makePreKeyBundleB64());

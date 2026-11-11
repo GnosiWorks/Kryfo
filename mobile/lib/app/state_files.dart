@@ -563,6 +563,31 @@ extension AppStateFiles on AppState {
     }
   }
 
+  // a fetched file a stop (or 0.5.3) left plain in the fetch folder, sealed
+  // as its container opens instead of at the next pass with the link up.
+  // one whose message is filed already has its place shut to it: it goes
+  // and comes again. only files from before [before], so no live fetch
+  Future<void> sealLeftFetches(HaloDb d, DateTime before) async {
+    if (restoreRunning || backupRunning) return;
+    try {
+      final db = await d.open();
+      for (final r in await db.query('file_fetches')) {
+        final f = DropFetch.fromRow(r);
+        if (!inFetchFolder(f.path)) continue;
+        final file = File(f.path);
+        if (!await file.exists()) continue;
+        if (!(await file.lastModified()).isBefore(before)) continue;
+        if (f.state == kFetchHave) {
+          await _sealFetched(db, f);
+        } else if (fetchFiledFirst(f.state)) {
+          await shredFile(f.path);
+        }
+      }
+    } catch (e) {
+      dlog('files: left fetches not sealed (${e.runtimeType})');
+    }
+  }
+
   // the engine's plain file in the fetch folder moved through the seal
   // into got/, its row after. a stop between leaves the row on the fetch
   // path: the next pass finds the sealed copy and points the row at it.

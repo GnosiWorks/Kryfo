@@ -12,6 +12,11 @@ package opus
 #cgo CFLAGS: -I${SRCDIR}/libopus/silk -I${SRCDIR}/libopus/silk/fixed
 #cgo LDFLAGS: -lm
 #include <opus.h>
+#include <string.h>
+
+// the state holds the last frames' audio: zeros over it before it is freed
+static void enc_wipe(OpusEncoder *e) { memset(e, 0, opus_encoder_get_size(1)); }
+static void dec_wipe(OpusDecoder *d) { memset(d, 0, opus_decoder_get_size(1)); }
 
 // cgo cannot call the variadic ctl, so each one used has its own call
 static int enc_set(OpusEncoder *e, int bitrate, int complexity) {
@@ -88,9 +93,11 @@ func (enc *Encoder) Encode(pcm []int16) ([]byte, error) {
 	return enc.out[:n], nil
 }
 
-// Close frees the encoder
+// Close zeroes and frees the encoder, and the last packet with it
 func (enc *Encoder) Close() {
+	clear(enc.out)
 	if enc.e != nil {
+		C.enc_wipe(enc.e)
 		C.opus_encoder_destroy(enc.e)
 		enc.e = nil
 	}
@@ -132,9 +139,11 @@ func (dec *Decoder) Decode(packet []byte) ([]int16, error) {
 	return dec.pcm[:n], nil
 }
 
-// Close frees the decoder
+// Close zeroes and frees the decoder, and the last samples with it
 func (dec *Decoder) Close() {
+	clear(dec.pcm)
 	if dec.d != nil {
+		C.dec_wipe(dec.d)
 		C.opus_decoder_destroy(dec.d)
 		dec.d = nil
 	}

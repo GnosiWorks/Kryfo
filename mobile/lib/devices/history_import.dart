@@ -9,6 +9,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:path/path.dart' as p;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -165,6 +166,34 @@ String _rowJson(Map<String, Object?> r) => jsonEncode({
         ? {'b': base64Encode(e.value! as List<int>)}
         : e.value,
 });
+
+// what a discard puts back on a key-only row the copy filled: only the
+// columns still holding what the copy wrote. a live change since stays.
+// a record from before the copy's values were kept puts back all
+Future<Map<String, Object?>> _filledBack(
+  DatabaseExecutor t,
+  String id,
+  String rec,
+) async {
+  final m = jsonDecode(rec);
+  if (m is! Map || m['w'] is! String || m['p'] is! String) return _rowOf(rec);
+  final old = _rowOf(m['w'] as String);
+  final put = _rowOf(m['p'] as String);
+  final now = await t.query(
+    'contacts',
+    columns: old.keys.toList(),
+    where: 'halo_id = ?',
+    whereArgs: [id],
+    limit: 1,
+  );
+  if (now.isEmpty) return const {};
+  bool same(Object? x, Object? y) =>
+      x is List<int> && y is List<int> ? listEquals(x, y) : x == y;
+  return {
+    for (final e in old.entries)
+      if (same(now.first[e.key], put[e.key])) e.key: e.value,
+  };
+}
 
 Map<String, Object?> _rowOf(String j) => {
   for (final e in (jsonDecode(j) as Map).entries)
@@ -815,7 +844,13 @@ class HistoryImport {
           where: 'halo_id = ?',
           whereArgs: [id],
         );
-        await _made(t, _madeFilled, id, '', _rowJson(old.first));
+        await _made(
+          t,
+          _madeFilled,
+          id,
+          '',
+          jsonEncode({'w': _rowJson(old.first), 'p': _rowJson(c)}),
+        );
         await t.update('contacts', c, where: 'halo_id = ?', whereArgs: [id]);
       }
     }
@@ -1417,12 +1452,15 @@ class HistoryImport {
           case _madeFilled:
             final was = r['was'];
             if (was is String) {
-              await t.update(
-                'contacts',
-                _rowOf(was),
-                where: 'halo_id = ?',
-                whereArgs: [a],
-              );
+              final back = await _filledBack(t, a, was);
+              if (back.isNotEmpty) {
+                await t.update(
+                  'contacts',
+                  back,
+                  where: 'halo_id = ?',
+                  whereArgs: [a],
+                );
+              }
             }
           case _madeGroup:
             await t.delete('groups', where: 'group_id = ?', whereArgs: [a]);

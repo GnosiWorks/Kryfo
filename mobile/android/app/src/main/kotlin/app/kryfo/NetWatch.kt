@@ -8,7 +8,6 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
@@ -119,7 +118,7 @@ object NetWatch {
             })
         } catch (e: Exception) {
             // a phone that refuses the callback keeps the old signal only
-            Log.i("halo-engine", "net watch: ${e.javaClass.simpleName}")
+            DebugLog.i("halo-engine", "net watch: ${e.javaClass.simpleName}")
         }
     }
 
@@ -130,7 +129,7 @@ object NetWatch {
             try {
                 channel?.invokeMethod("net", state)
             } catch (e: Exception) {
-                Log.i("halo-engine", "net watch: ${e.javaClass.simpleName}")
+                DebugLog.i("halo-engine", "net watch: ${e.javaClass.simpleName}")
             }
         }
     }

@@ -149,8 +149,6 @@ func dialLinkDoor(ctx context.Context, onion, line string) error {
 	if t == nil {
 		return errLinkUnreached
 	}
-	// a stream of its own, held for the phone's keep on the last line
-	lctx, cancel := context.WithTimeout(ctx, linkKeptWait+30*time.Second)
-	defer cancel()
-	return sendOneLineBy(lctx, t, onion+".onion", line)
+	// the run bounds the stream by its own keep wait
+	return sendOneLineBy(ctx, t, onion+".onion", line)
 }

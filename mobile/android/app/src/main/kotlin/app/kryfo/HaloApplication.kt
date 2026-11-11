@@ -1,6 +1,7 @@
 package app.kryfo
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
@@ -17,6 +18,7 @@ open class HaloApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        DebugLog.on = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         // the reopen screen's process runs nothing of the app
         if (ReopenActivity.inOwnProcess()) return
         val engine = FlutterEngine(this)
