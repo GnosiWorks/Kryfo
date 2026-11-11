@@ -12161,4 +12161,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Membuka tautan di aplikasi lain';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Kecepatan putar $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at dari $total';
+  }
 }

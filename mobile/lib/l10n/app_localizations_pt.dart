@@ -12252,4 +12252,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Abre o link em outro app';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Velocidade de reprodução $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at de $total';
+  }
 }

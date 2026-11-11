@@ -12163,4 +12163,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'लिंक को दूसरे ऐप में खोलता है';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'चलाने की गति $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$total में से $at';
+  }
 }

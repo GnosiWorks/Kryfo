@@ -3197,5 +3197,8 @@
   "sharedNoVoice": "Tu pojawiają się wiadomości głosowe z tego czatu.",
   "sharedNoLinks": "Tu pojawiają się linki wysłane w tym czacie.",
   "sharedYourVoice": "Twoja wiadomość głosowa",
-  "sharedOpensLink": "Otwiera link w innej aplikacji"
+  "sharedOpensLink": "Otwiera link w innej aplikacji",
+  "voiceSpeedLabel": "{speed}x",
+  "voiceSpeedA11y": "Prędkość odtwarzania {speed}",
+  "voiceSeekValue": "{at} z {total}"
 }

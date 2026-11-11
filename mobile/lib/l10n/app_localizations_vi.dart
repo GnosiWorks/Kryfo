@@ -12150,4 +12150,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Mở liên kết trong ứng dụng khác';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Tốc độ phát $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at trên $total';
+  }
 }

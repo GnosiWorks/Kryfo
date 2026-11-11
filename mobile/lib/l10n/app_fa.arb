@@ -3197,5 +3197,8 @@
   "sharedNoVoice": "پیام‌های صوتی این گفتگو اینجا نشان داده می‌شوند.",
   "sharedNoLinks": "پیوندهایی که در این گفتگو فرستاده می‌شوند اینجا نشان داده می‌شوند.",
   "sharedYourVoice": "پیام صوتی شما",
-  "sharedOpensLink": "پیوند را در برنامه‌ای دیگر باز می‌کند"
+  "sharedOpensLink": "پیوند را در برنامه‌ای دیگر باز می‌کند",
+  "voiceSpeedLabel": "{speed}x",
+  "voiceSpeedA11y": "سرعت پخش {speed}",
+  "voiceSeekValue": "{at} از {total}"
 }

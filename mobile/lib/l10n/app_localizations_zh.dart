@@ -11491,6 +11491,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sharedOpensLink => '在其他应用中打开链接';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return '播放速度 $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at / $total';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22860,4 +22875,19 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sharedOpensLink => '在其他應用程式中開啟連結';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return '播放速度 $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at / $total';
+  }
 }

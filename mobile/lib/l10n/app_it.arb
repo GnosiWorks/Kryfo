@@ -3197,5 +3197,8 @@
   "sharedNoVoice": "Qui compaiono i messaggi vocali di questa chat.",
   "sharedNoLinks": "Qui compaiono i link inviati in questa chat.",
   "sharedYourVoice": "Il tuo messaggio vocale",
-  "sharedOpensLink": "Apre il link in un'altra app"
+  "sharedOpensLink": "Apre il link in un'altra app",
+  "voiceSpeedLabel": "{speed}x",
+  "voiceSpeedA11y": "Velocità di riproduzione {speed}",
+  "voiceSeekValue": "{at} di {total}"
 }

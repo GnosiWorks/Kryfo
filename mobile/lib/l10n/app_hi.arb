@@ -3197,5 +3197,8 @@
   "sharedNoVoice": "इस चैट के वॉइस मैसेज यहाँ दिखते हैं.",
   "sharedNoLinks": "इस चैट में भेजे गए लिंक यहाँ दिखते हैं.",
   "sharedYourVoice": "आपका वॉइस मैसेज",
-  "sharedOpensLink": "लिंक को दूसरे ऐप में खोलता है"
+  "sharedOpensLink": "लिंक को दूसरे ऐप में खोलता है",
+  "voiceSpeedLabel": "{speed}x",
+  "voiceSpeedA11y": "चलाने की गति {speed}",
+  "voiceSeekValue": "{total} में से {at}"
 }

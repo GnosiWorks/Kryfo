@@ -3197,5 +3197,8 @@
   "sharedNoVoice": "Tin nhắn thoại trong cuộc trò chuyện này sẽ hiện ở đây.",
   "sharedNoLinks": "Liên kết gửi trong cuộc trò chuyện này sẽ hiện ở đây.",
   "sharedYourVoice": "Tin nhắn thoại của bạn",
-  "sharedOpensLink": "Mở liên kết trong ứng dụng khác"
+  "sharedOpensLink": "Mở liên kết trong ứng dụng khác",
+  "voiceSpeedLabel": "{speed}x",
+  "voiceSpeedA11y": "Tốc độ phát {speed}",
+  "voiceSeekValue": "{at} trên {total}"
 }

@@ -15309,5 +15309,35 @@
   "sharedOpensLink": "Opens the link in another app",
   "@sharedOpensLink": {
     "description": "shared page, for screen readers: what a tap on a link does"
+  },
+  "voiceSpeedLabel": "{speed}x",
+  "@voiceSpeedLabel": {
+    "description": "widgets/media_bubbles.dart: the speed pill on a received voice note, e.g. 1.5x; speed is a number already written in the reader's digits",
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceSpeedA11y": "Playback speed {speed}",
+  "@voiceSpeedA11y": {
+    "description": "widgets/media_bubbles.dart: screen reader action on a received voice note that changes how fast it plays; speed is e.g. 1.5x",
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceSeekValue": "{at} of {total}",
+  "@voiceSeekValue": {
+    "description": "widgets/media_bubbles.dart: screen reader, where a voice note would be after seeking, e.g. 0:12 of 0:40",
+    "placeholders": {
+      "at": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
   }
 }

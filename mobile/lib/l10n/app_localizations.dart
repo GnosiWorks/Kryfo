@@ -19482,6 +19482,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Opens the link in another app'**
   String get sharedOpensLink;
+
+  /// widgets/media_bubbles.dart: the speed pill on a received voice note, e.g. 1.5x; speed is a number already written in the reader's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{speed}x'**
+  String voiceSpeedLabel(String speed);
+
+  /// widgets/media_bubbles.dart: screen reader action on a received voice note that changes how fast it plays; speed is e.g. 1.5x
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed {speed}'**
+  String voiceSpeedA11y(String speed);
+
+  /// widgets/media_bubbles.dart: screen reader, where a voice note would be after seeking, e.g. 0:12 of 0:40
+  ///
+  /// In en, this message translates to:
+  /// **'{at} of {total}'**
+  String voiceSeekValue(String at, String total);
 }
 
 class _AppLocalizationsDelegate

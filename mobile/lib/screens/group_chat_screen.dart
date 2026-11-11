@@ -199,6 +199,7 @@ import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
+import '../voice_speed.dart' show VoiceSpeed;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
 import '../desktop/attach_tray.dart';
@@ -775,6 +776,8 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
     _load();
     _loadDisguise();
+    // received notes play at this identity's speed
+    unawaited(VoiceSpeed.use(session.container));
     appState.loadGhostPref().then((p) {
       if (mounted) {
         setState(() {
@@ -2033,6 +2036,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                             ),
                       onStop: () => _stopGroupSending(m),
                       soundsAfter: () => _soundsAfter(m),
+                      voiceAfter: () => _voiceAfter(m),
                       onRetry: m.looksFailed
                           ? () {
                               for (final x in members) {
@@ -3230,6 +3234,18 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // goes here, and the group is told to drop what it has.
   // the sounds and voice notes under [m], in the order they came: what
   // the player plays after it
+  // the voice note after [m] in the group, by its bubble's key: it plays on
+  String? _voiceAfter(_GMsg m) {
+    final at = _messages.indexOf(m);
+    if (at < 0) return null;
+    for (final x in _messages.skip(at + 1)) {
+      if (x.making == null && isVoiceName(x.fileName) && x.filePath != null) {
+        return 'gvb_${x.msgUid ?? x.filePath}';
+      }
+    }
+    return null;
+  }
+
   List<SoundItem> _soundsAfter(_GMsg m) {
     final at = _messages.indexOf(m);
     if (at < 0) return const [];
@@ -6212,6 +6228,8 @@ class _GroupBubble extends StatelessWidget {
   final VoidCallback? onStop;
   // a sound file: the sounds below it, which play after it
   final List<SoundItem> Function()? soundsAfter;
+  // a voice note: the key of the one after it, which plays on
+  final String? Function()? voiceAfter;
   // a tap on a chip puts the same emoji on from here, or takes it off
   final void Function(String emoji)? onReact;
   final bool ripple;
@@ -6270,6 +6288,7 @@ class _GroupBubble extends StatelessWidget {
     this.onRetry,
     this.onStop,
     this.soundsAfter,
+    this.voiceAfter,
     this.onReact,
     this.ripple = false,
     this.query = '',
@@ -6676,6 +6695,9 @@ class _GroupBubble extends StatelessWidget {
                                                         disguised:
                                                             m.voiceDisguised,
                                                         onPlay: onAct,
+                                                        playKey:
+                                                            'gvb_${m.msgUid ?? m.filePath}',
+                                                        next: voiceAfter,
                                                       ),
                                                       VoiceTranscript(
                                                         chat: transcripts,

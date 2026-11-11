@@ -257,6 +257,7 @@ import '../translate/translate_menu.dart' show neverOffer;
 import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
+import '../voice_speed.dart' show VoiceSpeed;
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
@@ -1524,6 +1525,8 @@ class _ChatScreenState extends State<ChatScreen>
           });
     }
     _reconcileSending();
+    // received notes play at this identity's speed
+    unawaited(VoiceSpeed.use(session.container));
     appState.loadGhostPref().then((p) {
       if (mounted) {
         setState(() {
@@ -5877,6 +5880,7 @@ class _ChatScreenState extends State<ChatScreen>
           onStop: _stopSending,
           fromName: _fileFrom(m),
           soundsAfter: _soundsAfter,
+          voiceAfter: _voiceAfter,
           onRetry: run == null
               ? _tapRetry
               : (_) {
@@ -6640,6 +6644,18 @@ class _ChatScreenState extends State<ChatScreen>
             kept: _keeps(x),
           ),
     ];
+  }
+
+  // the voice note after [m] in the chat, by its bubble's key: it plays on
+  String? _voiceAfter(_Msg m) {
+    final at = _messages.indexOf(m);
+    if (at < 0) return null;
+    for (final x in _messages.skip(at + 1)) {
+      if (x.making == null && isVoiceName(x.fileName) && x.filePath != null) {
+        return _voiceKeyOf(x);
+      }
+    }
+    return null;
   }
 
   // who sent a file, for its viewer's head: theirs only
@@ -8835,6 +8851,9 @@ class _NavBtn extends StatelessWidget {
   }
 }
 
+// a voice note's bubble, by its message: the key play-on finds it by
+String _voiceKeyOf(_Msg m) => 'vb_${m.msgUid ?? m.filePath}';
+
 class _Bubble extends StatelessWidget {
   // uids whose entrance animation already played, so a list rebuild doesn't
   // replay it
@@ -8847,6 +8866,8 @@ class _Bubble extends StatelessWidget {
   final String? fromName;
   // a sound file: the sounds below it, which play after it
   final List<SoundItem> Function(_Msg)? soundsAfter;
+  // a voice note: the key of the one after it, which plays on
+  final String? Function(_Msg)? voiceAfter;
   final void Function(BuildContext)? onLongPress;
   // its photo, video or file opened, or its voice note played
   final VoidCallback? onAct;
@@ -8908,6 +8929,7 @@ class _Bubble extends StatelessWidget {
     this.onStop,
     this.fromName,
     this.soundsAfter,
+    this.voiceAfter,
     this.onLongPress,
     this.onAct,
     this.onReact,
@@ -9302,13 +9324,15 @@ class _Bubble extends StatelessWidget {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               VoiceBubble(
-                                                key: ValueKey(
-                                                  'vb_${msg.msgUid ?? msg.filePath}',
-                                                ),
+                                                key: ValueKey(_voiceKeyOf(msg)),
                                                 path: msg.filePath!,
                                                 isOut: isOut,
                                                 disguised: msg.voiceDisguised,
                                                 onPlay: onAct,
+                                                playKey: _voiceKeyOf(msg),
+                                                next: voiceAfter == null
+                                                    ? null
+                                                    : () => voiceAfter!(msg),
                                               ),
                                               VoiceTranscript(
                                                 chat: transcripts,

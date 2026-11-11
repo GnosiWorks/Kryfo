@@ -12349,4 +12349,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Открывает ссылку в другом приложении';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Скорость воспроизведения $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at из $total';
+  }
 }

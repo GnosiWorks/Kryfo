@@ -3197,5 +3197,8 @@
   "sharedNoVoice": "Pesan suara di chat ini muncul di sini.",
   "sharedNoLinks": "Tautan yang dikirim di chat ini muncul di sini.",
   "sharedYourVoice": "Pesan suaramu",
-  "sharedOpensLink": "Membuka tautan di aplikasi lain"
+  "sharedOpensLink": "Membuka tautan di aplikasi lain",
+  "voiceSpeedLabel": "{speed}x",
+  "voiceSpeedA11y": "Kecepatan putar {speed}",
+  "voiceSeekValue": "{at} dari {total}"
 }

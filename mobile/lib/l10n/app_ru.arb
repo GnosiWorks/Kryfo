@@ -3197,5 +3197,8 @@
   "sharedNoVoice": "Здесь появятся голосовые из этого чата.",
   "sharedNoLinks": "Здесь появятся ссылки из этого чата.",
   "sharedYourVoice": "Твоё голосовое",
-  "sharedOpensLink": "Открывает ссылку в другом приложении"
+  "sharedOpensLink": "Открывает ссылку в другом приложении",
+  "voiceSpeedLabel": "{speed}x",
+  "voiceSpeedA11y": "Скорость воспроизведения {speed}",
+  "voiceSeekValue": "{at} из {total}"
 }

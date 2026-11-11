@@ -12347,4 +12347,19 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Відкриває посилання в іншому застосунку';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Швидкість відтворення $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at з $total';
+  }
 }
