@@ -116,6 +116,15 @@ void main() {
       expect(theirWordsLang(const []), isNull);
     });
 
+    test('cpu lists: every core named, offline ones too', () {
+      expect(cpuListCount('0-7\n'), 8);
+      expect(cpuListCount('0-3,6,7'), 6);
+      expect(cpuListCount('0'), 1);
+      expect(cpuListCount(''), isNull);
+      expect(cpuListCount('7-0'), isNull);
+      expect(cpuListCount('a-b'), isNull);
+    });
+
     test('threads: the fast cores, at most half of all', () {
       // eight a53s at 2.3 and 1.8 ghz: four, four left for the rest
       expect(

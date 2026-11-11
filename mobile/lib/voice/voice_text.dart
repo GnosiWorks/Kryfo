@@ -152,13 +152,40 @@ bool _isPrompt(String t) {
 /// 60 s note 44 s vs 41 s) and the phone stays calm. [maxFreq] reads one
 /// core's top speed in khz, null when it cannot be read
 int voiceThreads({int? cores, int? Function(int core)? maxFreq}) {
-  final n = cores ?? Platform.numberOfProcessors;
+  final n = cores ?? _cores();
   final read = maxFreq ?? _maxFreq;
   final f = [for (var i = 0; i < n; i++) read(i)];
   int fit(int t) => t.clamp(1, max(1, min(8, n ~/ 2)));
   if (f.any((x) => x == null || x <= 0)) return fit(4);
   final top = f.fold<int>(0, (a, b) => b! > a ? b : a);
   return fit(f.where((x) => x! * 4 >= top * 3).length);
+}
+
+// every core the phone has, online now or not: an idle phone takes cores
+// offline, and numberOfProcessors counts only the online ones
+int _cores() {
+  try {
+    final n = cpuListCount(
+      File('/sys/devices/system/cpu/present').readAsStringSync(),
+    );
+    if (n != null) return n;
+  } catch (_) {}
+  return Platform.numberOfProcessors;
+}
+
+/// how many cpus a kernel cpu list names ("0-7", "0-3,6,7"); null for one
+/// it cannot read
+int? cpuListCount(String list) {
+  var n = 0;
+  for (final part in list.trim().split(',')) {
+    final m = RegExp(r'^(\d+)(?:-(\d+))?$').firstMatch(part.trim());
+    if (m == null) return null;
+    final a = int.parse(m.group(1)!);
+    final b = m.group(2) == null ? a : int.parse(m.group(2)!);
+    if (b < a) return null;
+    n += b - a + 1;
+  }
+  return n == 0 ? null : n;
 }
 
 int? _maxFreq(int core) {
