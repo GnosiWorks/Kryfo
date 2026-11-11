@@ -27,7 +27,14 @@ class NoteTx {
   final List<TxPiece> pieces;
   // the language the model heard, once it is done
   final String lang;
-  const NoteTx(this.phase, {this.pieces = const [], this.lang = ''});
+  // failed for want of free memory, not for the note: worth a try later
+  final bool noRoom;
+  const NoteTx(
+    this.phase, {
+    this.pieces = const [],
+    this.lang = '',
+    this.noRoom = false,
+  });
 
   String get text => pieces.map((p) => p.text).join().trim();
 
@@ -227,6 +234,8 @@ class ChatTranscripts extends ChangeNotifier {
         // a stop is no failure: back to the link
         if (e is VoiceError && e.code == VoiceError.cancelled) {
           _live.remove(uid);
+        } else if (e is VoiceError && e.code == VoiceError.memory) {
+          _live[uid] = const NoteTx(TxPhase.failed, noRoom: true);
         } else {
           _live[uid] = const NoteTx(TxPhase.failed);
         }

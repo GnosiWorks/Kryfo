@@ -3001,6 +3001,7 @@
   "voiceShowOriginalOnly": "Yalnızca orijinali göster",
   "voiceCouldNotTranscribe": "Sözcükler anlaşılamadı",
   "voiceNoSpeech": "Bu mesajda konuşma yok",
+  "voiceTxNoMemory": "Şu anda yeterli boş bellek yok",
   "voiceTranscriptLabel": "Mesajın metni",
   "voiceSettingsTitle": "Sesten metne",
   "voiceOnRow": "Sesli mesajları metne çevir",

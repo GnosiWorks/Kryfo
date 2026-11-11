@@ -98,7 +98,9 @@ class _VoiceTranscriptState extends State<VoiceTranscript> {
           TxPhase.failed => _Line(
             key: const ValueKey('vt-failed'),
             out: widget.isOut,
-            lead: l10n.voiceCouldNotTranscribe,
+            lead: n.noRoom
+                ? l10n.voiceTxNoMemory
+                : l10n.voiceCouldNotTranscribe,
             action: l10n.commonTryAgain,
             onTap: () {
               HapticFeedback.selectionClick();

@@ -3001,6 +3001,7 @@
   "voiceShowOriginalOnly": "Только оригинал",
   "voiceCouldNotTranscribe": "Не удалось разобрать слова",
   "voiceNoSpeech": "В этом сообщении нет речи",
+  "voiceTxNoMemory": "Сейчас не хватает свободной памяти",
   "voiceTranscriptLabel": "Текст сообщения",
   "voiceSettingsTitle": "Голос в текст",
   "voiceOnRow": "Распознавать голосовые",

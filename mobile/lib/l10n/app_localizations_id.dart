@@ -11413,6 +11413,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceNoSpeech => 'Tidak ada suara bicara di pesan ini';
 
   @override
+  String get voiceTxNoMemory => 'Memori kosong tidak cukup saat ini';
+
+  @override
   String get voiceTranscriptLabel => 'Transkrip';
 
   @override

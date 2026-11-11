@@ -15,6 +15,7 @@ import 'package:kryfo/translate/chat_translation.dart';
 import 'package:kryfo/translate/lang_names.dart';
 import 'package:kryfo/voice/chat_transcripts.dart';
 import 'package:kryfo/voice/ui/transcript_line.dart';
+import 'package:kryfo/voice/voice_memory.dart';
 
 import '../translate_fakes.dart';
 import 'voice_tx_fakes.dart';
@@ -82,8 +83,9 @@ void main() {
     bool out = false,
     double scale = 1,
     Locale? locale,
+    MemRoom? Function()? room,
   }) async {
-    final f = fakeVoiceHub(installed: installed);
+    final f = fakeVoiceHub(installed: installed, room: room);
     await f.hub.ready();
     final c = ChatTranscripts(f.hub, 'heron');
     addTearDown(c.dispose);
@@ -256,6 +258,22 @@ void main() {
     await t.tap(find.byKey(const ValueKey('vt-failed')));
     await step(t);
     expect(f.runner.jobs, hasLength(2));
+    await hear(t, f, _heard);
+    expect(find.text(_heard), findsOneWidget);
+  });
+
+  testWidgets('short of memory: said so, with try again', (t) async {
+    var room = const MemRoom(100 << 20, 4 << 30);
+    final (f, _) = await open(t, room: () => room);
+    await t.tap(_link());
+    await t.pumpAndSettle();
+    expect(f.runner.jobs, isEmpty);
+    expect(_rich(l10n.voiceTxNoMemory), findsOneWidget);
+    expect(_rich(l10n.commonTryAgain), findsOneWidget);
+    room = const MemRoom(3 << 30, 4 << 30);
+    await t.tap(find.byKey(const ValueKey('vt-failed')));
+    await step(t);
+    expect(f.runner.jobs, hasLength(1));
     await hear(t, f, _heard);
     expect(find.text(_heard), findsOneWidget);
   });

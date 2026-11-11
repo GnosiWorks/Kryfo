@@ -11546,6 +11546,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceNoSpeech => 'لا كلام في هذه الرسالة';
 
   @override
+  String get voiceTxNoMemory => 'لا توجد ذاكرة متاحة كافية الآن';
+
+  @override
   String get voiceTranscriptLabel => 'النص المكتوب';
 
   @override

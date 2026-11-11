@@ -11532,6 +11532,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get voiceNoSpeech => 'Personne ne parle dans ce message';
 
   @override
+  String get voiceTxNoMemory => 'Pas assez de mémoire libre pour l\'instant';
+
+  @override
   String get voiceTranscriptLabel => 'Transcription';
 
   @override

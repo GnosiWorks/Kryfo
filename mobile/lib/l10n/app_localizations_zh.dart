@@ -10801,6 +10801,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceNoSpeech => '这条消息里没有说话声';
 
   @override
+  String get voiceTxNoMemory => '当前可用内存不足';
+
+  @override
   String get voiceTranscriptLabel => '文字内容';
 
   @override
@@ -22166,6 +22169,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get voiceNoSpeech => '這則訊息裡沒有說話聲';
+
+  @override
+  String get voiceTxNoMemory => '目前可用記憶體不足';
 
   @override
   String get voiceTranscriptLabel => '文字內容';

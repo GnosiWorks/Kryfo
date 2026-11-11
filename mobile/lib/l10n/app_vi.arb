@@ -3001,6 +3001,7 @@
   "voiceShowOriginalOnly": "Chỉ xem bản gốc",
   "voiceCouldNotTranscribe": "Không nghe rõ lời",
   "voiceNoSpeech": "Không có lời nói trong tin nhắn này",
+  "voiceTxNoMemory": "Hiện không đủ bộ nhớ trống",
   "voiceTranscriptLabel": "Bản chép lời",
   "voiceSettingsTitle": "Chép lời giọng nói",
   "voiceOnRow": "Chép lời tin nhắn thoại",

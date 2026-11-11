@@ -11594,6 +11594,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceNoSpeech => 'В этом сообщении нет речи';
 
   @override
+  String get voiceTxNoMemory => 'Сейчас не хватает свободной памяти';
+
+  @override
   String get voiceTranscriptLabel => 'Текст сообщения';
 
   @override

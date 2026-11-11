@@ -14,6 +14,7 @@ import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show PaintingBinding;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -30,6 +31,7 @@ import '../translate/hub_live.dart' show translationHubIfOn;
 import 'transcript_store.dart';
 import 'voice_audio.dart';
 import 'voice_ffi.dart';
+import 'voice_memory.dart';
 import 'voice_models.dart';
 import 'voice_text.dart';
 
@@ -49,10 +51,11 @@ abstract class TxJob {
   void cancel();
 }
 
-/// makes a job for the note at [path], heard in [lang] (a whisper code):
-/// throws a [VoiceError] when the library, the model or the audio is not
-/// there
-typedef TxRunner = Future<TxJob> Function(String path, String lang);
+/// makes a job for the note at [path], heard in [lang] (a whisper code) on
+/// [threads] threads: throws a [VoiceError] when the library, the model or
+/// the audio is not there
+typedef TxRunner =
+    Future<TxJob> Function(String path, String lang, int threads);
 
 class VoiceTranscripts extends ChangeNotifier {
   VoiceTranscripts({
@@ -64,7 +67,14 @@ class VoiceTranscripts extends ChangeNotifier {
     String Function()? scope,
     String Function()? appLang,
     Future<HansChars> Function()? hans,
+    MemRoom? Function()? room,
+    int Function()? threads,
+    VoidCallback? beforeRun,
+    this.watchEvery = const Duration(seconds: 1),
   }) : store = store ?? MemoryVoiceTxStore(),
+       room = room ?? (() => null),
+       threads = threads ?? voiceThreads,
+       beforeRun = beforeRun ?? (() {}),
        scope = scope ?? (() => ''),
        appLang = appLang ?? (() => currentLanguage),
        _hans = hans ?? HansChars.load {
@@ -101,6 +111,18 @@ class VoiceTranscripts extends ChangeNotifier {
 
   // chinese words into simplified characters
   final Future<HansChars> Function() _hans;
+
+  /// the phone's free memory now (voice_memory.dart), null: not known
+  final MemRoom? Function() room;
+
+  /// the threads a run takes with room to spare
+  final int Function() threads;
+
+  /// lets go of what can be made again (decoded pictures) before a run
+  final VoidCallback beforeRun;
+
+  /// how often a run looks at free memory
+  final Duration watchEvery;
 
   /// the language a note is heard in: no detection, which costs a whole
   /// pass of the model. a note of theirs in the language the chat's words
@@ -280,9 +302,17 @@ class VoiceTranscripts extends ChangeNotifier {
           } catch (_) {}
           if (q.stopped) return;
         }
+        // room first: a run that would not fit says so instead of getting
+        // the app killed
+        beforeRun();
+        final n = voiceRunThreads(threads(), room());
+        if (n == 0) {
+          q.fail(const VoiceError(VoiceError.memory));
+          return;
+        }
         final TxJob job;
         try {
-          job = await _runner(path, lang);
+          job = await _runner(path, lang, n);
         } catch (e) {
           q.fail(e is VoiceError ? e : const VoiceError(VoiceError.run));
           return;
@@ -291,7 +321,18 @@ class VoiceTranscripts extends ChangeNotifier {
           job.cancel();
           return;
         }
-        await q.follow(job);
+        // and while it runs: free memory under the reserve stops it. not
+        // known (windows): nothing to watch
+        final watch = room() == null
+            ? null
+            : Timer.periodic(watchEvery, (_) {
+                if (memRunOut(room())) q.outOfRoom();
+              });
+        try {
+          await q.follow(job);
+        } finally {
+          watch?.cancel();
+        }
         // the cpu is free once the run's isolate is gone
         if (job is _RunJob) await job.run.finished;
       } finally {
@@ -308,7 +349,7 @@ class VoiceTranscripts extends ChangeNotifier {
     }
   }
 
-  Future<TxJob> _liveRunner(String path, String lang) async {
+  Future<TxJob> _liveRunner(String path, String lang, int threads) async {
     final lib = library();
     if (lib == null) throw const VoiceError(VoiceError.library);
     final model = await models.pathOf(kVoiceModelId);
@@ -321,12 +362,7 @@ class VoiceTranscripts extends ChangeNotifier {
       throw const VoiceError(VoiceError.audio);
     }
     return _RunJob(
-      lib.transcribe(
-        model: model,
-        audio: audio,
-        lang: lang,
-        threads: voiceThreads(),
-      ),
+      lib.transcribe(model: model, audio: audio, lang: lang, threads: threads),
     );
   }
 
@@ -387,6 +423,14 @@ class _Queued implements TxJob {
     stopped = true;
     _job?.cancel();
     fail(const VoiceError(VoiceError.cancelled));
+  }
+
+  /// the phone ran short of memory: the run stops and says why
+  void outOfRoom() {
+    if (stopped) return;
+    stopped = true;
+    _job?.cancel();
+    fail(const VoiceError(VoiceError.memory));
   }
 
   void fail(VoiceError e) {
@@ -526,6 +570,9 @@ VoiceTranscripts _live() {
       quiet: () => sessionQuiet,
     ),
     scope: () => session.container.id,
+    room: readMemRoom,
+    // decoded pictures not on screen: drawn again from their files
+    beforeRun: () => PaintingBinding.instance.imageCache.clear(),
   );
   t.followSessions(appState, () => appState.sessionRev);
   t.followLock(lockState, () => lockState.locked);

@@ -11494,6 +11494,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get voiceNoSpeech => 'No se habla en este mensaje';
 
   @override
+  String get voiceTxNoMemory => 'Ahora no hay suficiente memoria libre';
+
+  @override
   String get voiceTranscriptLabel => 'Transcripción';
 
   @override

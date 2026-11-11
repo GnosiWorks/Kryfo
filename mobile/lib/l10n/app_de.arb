@@ -3001,6 +3001,7 @@
   "voiceShowOriginalOnly": "Nur Original zeigen",
   "voiceCouldNotTranscribe": "Keine Worte erkannt",
   "voiceNoSpeech": "In dieser Nachricht spricht niemand",
+  "voiceTxNoMemory": "Gerade nicht genug freier Arbeitsspeicher",
   "voiceTranscriptLabel": "Transkript",
   "voiceSettingsTitle": "Sprache zu Text",
   "voiceOnRow": "Sprachnachrichten transkribieren",

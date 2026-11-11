@@ -11423,6 +11423,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceNoSpeech => 'در این پیام صحبتی نیست';
 
   @override
+  String get voiceTxNoMemory => 'الان حافظهٔ آزاد کافی نیست';
+
+  @override
   String get voiceTranscriptLabel => 'متن پیام';
 
   @override
