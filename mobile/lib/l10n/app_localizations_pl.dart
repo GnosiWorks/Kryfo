@@ -11610,6 +11610,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceNoSpeech => 'W tej wiadomości nikt nie mówi';
 
   @override
+  String get voiceTxNoMemory => 'Za mało wolnej pamięci w tej chwili';
+
+  @override
   String get voiceTranscriptLabel => 'Transkrypcja';
 
   @override

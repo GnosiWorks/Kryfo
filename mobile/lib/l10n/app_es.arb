@@ -2994,6 +2994,7 @@
   "voiceShowOriginalOnly": "Ver solo el original",
   "voiceCouldNotTranscribe": "No se entienden las palabras",
   "voiceNoSpeech": "No se habla en este mensaje",
+  "voiceTxNoMemory": "Ahora no hay suficiente memoria libre",
   "voiceTranscriptLabel": "Transcripción",
   "voiceSettingsTitle": "Transcripción de voz",
   "voiceOnRow": "Transcribir mensajes de voz",

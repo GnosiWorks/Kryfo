@@ -14300,6 +14300,10 @@
   "@voiceNoSpeech": {
     "description": "under a voice message that holds no speech, after its transcription ran"
   },
+  "voiceTxNoMemory": "Not enough free memory right now",
+  "@voiceTxNoMemory": {
+    "description": "under a voice message whose transcription could not start or stopped, because the phone is short of free memory; Try again follows"
+  },
   "voiceTranscriptLabel": "Transcription",
   "@voiceTranscriptLabel": {
     "description": "what a screen reader says before the words of a voice message"

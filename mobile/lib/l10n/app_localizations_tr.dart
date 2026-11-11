@@ -11412,6 +11412,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceNoSpeech => 'Bu mesajda konuşma yok';
 
   @override
+  String get voiceTxNoMemory => 'Şu anda yeterli boş bellek yok';
+
+  @override
   String get voiceTranscriptLabel => 'Mesajın metni';
 
   @override

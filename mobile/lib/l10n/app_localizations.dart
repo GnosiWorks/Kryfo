@@ -18259,6 +18259,12 @@ abstract class AppLocalizations {
   /// **'No speech in this message'**
   String get voiceNoSpeech;
 
+  /// under a voice message whose transcription could not start or stopped, because the phone is short of free memory; Try again follows
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough free memory right now'**
+  String get voiceTxNoMemory;
+
   /// what a screen reader says before the words of a voice message
   ///
   /// In en, this message translates to:

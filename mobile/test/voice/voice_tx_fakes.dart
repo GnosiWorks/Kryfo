@@ -8,6 +8,7 @@ import 'package:kryfo/translate/downloads.dart';
 import 'package:kryfo/translate/engine_bridge.dart' show FetchStatus;
 import 'package:kryfo/voice/transcript_store.dart';
 import 'package:kryfo/voice/voice_ffi.dart';
+import 'package:kryfo/voice/voice_memory.dart';
 import 'package:kryfo/voice/voice_models.dart';
 import 'package:kryfo/voice/voice_transcripts.dart';
 
@@ -68,9 +69,12 @@ class FakeRunner {
   int? throwCode;
   // the language each run was asked to hear, in order
   final List<String> langs = [];
+  // the threads each run was given, in order
+  final List<int> threads = [];
 
-  Future<TxJob> call(String path, String lang) async {
+  Future<TxJob> call(String path, String lang, int threads) async {
     langs.add(lang);
+    this.threads.add(threads);
     if (throwCode != null) throw VoiceError(throwCode!);
     final j = FakeJob(path);
     jobs.add(j);
@@ -139,6 +143,9 @@ VoiceFakes fakeVoiceHub({
   VoiceTxStore? store,
   String Function()? scope,
   String Function()? appLang,
+  MemRoom? Function()? room,
+  int threads = 6,
+  void Function()? beforeRun,
 }) {
   final runner = FakeRunner();
   final backend = FakeModelBackend(have: installed);
@@ -162,6 +169,10 @@ VoiceFakes fakeVoiceHub({
     runner: runner.call,
     scope: scope,
     appLang: appLang ?? () => 'en',
+    room: room,
+    threads: () => threads,
+    beforeRun: beforeRun,
+    watchEvery: const Duration(milliseconds: 20),
   );
   return VoiceFakes(hub, runner, backend, store);
 }

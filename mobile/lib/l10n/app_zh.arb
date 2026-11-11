@@ -2994,6 +2994,7 @@
   "voiceShowOriginalOnly": "只看原文",
   "voiceCouldNotTranscribe": "没能听出内容",
   "voiceNoSpeech": "这条消息里没有说话声",
+  "voiceTxNoMemory": "当前可用内存不足",
   "voiceTranscriptLabel": "文字内容",
   "voiceSettingsTitle": "语音转文字",
   "voiceOnRow": "把语音消息转成文字",

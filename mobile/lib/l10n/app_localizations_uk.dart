@@ -11569,6 +11569,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voiceNoSpeech => 'У цьому повідомленні немає мовлення';
 
   @override
+  String get voiceTxNoMemory => 'Зараз бракує вільної пам\'яті';
+
+  @override
   String get voiceTranscriptLabel => 'Текст повідомлення';
 
   @override

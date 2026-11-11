@@ -2994,6 +2994,7 @@
   "voiceShowOriginalOnly": "Pokaż tylko oryginał",
   "voiceCouldNotTranscribe": "Nie udało się rozpoznać słów",
   "voiceNoSpeech": "W tej wiadomości nikt nie mówi",
+  "voiceTxNoMemory": "Za mało wolnej pamięci w tej chwili",
   "voiceTranscriptLabel": "Transkrypcja",
   "voiceSettingsTitle": "Transkrypcja głosu",
   "voiceOnRow": "Transkrybuj wiadomości głosowe",

@@ -2994,6 +2994,7 @@
   "voiceShowOriginalOnly": "Lihat aslinya saja",
   "voiceCouldNotTranscribe": "Kata-katanya tidak terdengar jelas",
   "voiceNoSpeech": "Tidak ada suara bicara di pesan ini",
+  "voiceTxNoMemory": "Memori yang tersedia tidak cukup saat ini",
   "voiceTranscriptLabel": "Transkrip",
   "voiceSettingsTitle": "Transkrip suara",
   "voiceOnRow": "Transkrip pesan suara",

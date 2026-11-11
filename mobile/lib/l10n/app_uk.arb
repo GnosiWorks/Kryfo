@@ -2994,6 +2994,7 @@
   "voiceShowOriginalOnly": "Лише оригінал",
   "voiceCouldNotTranscribe": "Не вдалося розібрати слова",
   "voiceNoSpeech": "У цьому повідомленні немає мовлення",
+  "voiceTxNoMemory": "Зараз бракує вільної пам'яті",
   "voiceTranscriptLabel": "Текст повідомлення",
   "voiceSettingsTitle": "Голос у текст",
   "voiceOnRow": "Розпізнавати голосові",

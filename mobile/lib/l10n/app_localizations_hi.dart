@@ -11394,6 +11394,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get voiceNoSpeech => 'इस संदेश में कोई बोल नहीं रहा';
 
   @override
+  String get voiceTxNoMemory => 'अभी पर्याप्त खाली मेमोरी नहीं है';
+
+  @override
   String get voiceTranscriptLabel => 'लिखित रूप';
 
   @override
