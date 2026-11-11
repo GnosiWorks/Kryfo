@@ -10771,7 +10771,9 @@ class _Composer extends StatelessWidget {
                         textDirection: dir,
                         inputFormatters: const [UnmarkedInput()],
                         cursorColor: HaloColors.amber,
-                        style: HaloType.sans(size: 14),
+                        style: HaloType.sans(
+                          size: 14,
+                        ).copyWith(locale: hanLocaleOf(controller.text)),
                         minLines: 1,
                         maxLines: 4,
                         decoration: InputDecoration(

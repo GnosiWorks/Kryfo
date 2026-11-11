@@ -13,6 +13,7 @@ import 'package:kryfo/cjk_locale.dart';
 import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/kryfo_link_text.dart';
+import 'package:kryfo/widgets/written_field.dart';
 
 const _en = Locale('en', 'US');
 
@@ -116,15 +117,51 @@ void main() {
     expect(rich('en').text.style!.locale, isNull);
   });
 
-  testWidgets('a phone with simplified chinese among its languages: every '
-      'style carries it', (t) async {
-    t.platformDispatcher.localesTestValue = const [_en, Locale('zh', 'CN')];
-    addTearDown(t.platformDispatcher.clearLocalesTestValue);
-    expect(HaloType.sans().locale, kHans);
-    expect(HaloType.serif().locale, kHans);
+  testWidgets('a phone with simplified chinese among its languages: han '
+      'text takes it, latin text and our styles stay as they are', (t) async {
     t.platformDispatcher.localesTestValue = const [_en, Locale('zh', 'TW')];
-    expect(HaloType.sans().locale, kHantTw);
-    t.platformDispatcher.localesTestValue = const [_en];
+    addTearDown(t.platformDispatcher.clearLocalesTestValue);
+    // a locale on latin text would send its quotes and dashes to a cjk font
     expect(HaloType.sans().locale, isNull);
+    expect(hanLocaleOf('see you tomorrow'), isNull);
+    expect(hanLocaleOf('日本。韓國。'), kHantTw);
+    t.platformDispatcher.localesTestValue = const [_en, Locale('zh', 'CN')];
+    expect(hanLocaleOf('日本。韩国。'), kHans);
+  });
+
+  testWidgets('the composer lays out 日本。韩国。 as simplified chinese', (t) async {
+    t.platformDispatcher.localesTestValue = const [_en];
+    addTearDown(t.platformDispatcher.clearLocalesTestValue);
+    final c = TextEditingController();
+    addTearDown(c.dispose);
+    await t.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        theme: buildHaloTheme(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: WrittenDir(
+            controller: c,
+            builder: (dir) => TextField(
+              controller: c,
+              textDirection: dir,
+              style: HaloType.sans(
+                size: 14,
+              ).copyWith(locale: hanLocaleOf(c.text)),
+            ),
+          ),
+        ),
+      ),
+    );
+    Locale? laid() =>
+        t.widget<EditableText>(find.byType(EditableText)).style.locale;
+    expect(laid(), isNull);
+    await t.enterText(find.byType(TextField), '日本。韩国。');
+    await t.pump();
+    expect(laid(), kHans);
+    await t.enterText(find.byType(TextField), 'Japan.');
+    await t.pump();
+    expect(laid(), isNull);
   });
 }

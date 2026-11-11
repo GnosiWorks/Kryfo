@@ -5958,10 +5958,13 @@ class _Composer extends StatelessWidget {
                                 controller: controller,
                                 focusNode: focusNode,
                                 enableIMEPersonalizedLearning: false,
-                                style: HaloType.sans(
-                                  size: 14,
-                                  color: HaloColors.text,
-                                ),
+                                style:
+                                    HaloType.sans(
+                                      size: 14,
+                                      color: HaloColors.text,
+                                    ).copyWith(
+                                      locale: hanLocaleOf(controller.text),
+                                    ),
                                 cursorColor: HaloColors.amber,
                                 decoration: InputDecoration(
                                   hint: ComposerHint(l10n.groupChatMessage),

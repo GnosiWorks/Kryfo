@@ -5,7 +5,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'cjk_locale.dart' show cjkTextLocaleNow;
 import 'dlog.dart';
 import 'l10n/l10n.dart';
 
@@ -384,8 +383,6 @@ class HaloType {
   }) => TextStyle(
     fontFamily: serifFamily,
     fontFamilyFallback: serifFallbackNow,
-    // han characters in the glyphs the app's or phone's chinese wants
-    locale: cjkTextLocaleNow,
     fontSize: size,
     fontWeight: weight,
     fontStyle: italic ? slant() : FontStyle.normal,
@@ -407,7 +404,6 @@ class HaloType {
   }) => TextStyle(
     fontFamily: sansFamily,
     fontFamilyFallback: sansFallbackNow,
-    locale: cjkTextLocaleNow,
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text,
@@ -432,7 +428,6 @@ class HaloType {
   }) => TextStyle(
     fontFamily: monoFamily,
     fontFamilyFallback: monoFallbackNow,
-    locale: cjkTextLocaleNow,
     fontSize: size,
     fontWeight: weight,
     color: color ?? HaloColors.text,
