@@ -6,7 +6,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../cjk_locale.dart' show cjkLocaleFor, cjkTextLocaleNow;
+import '../cjk_locale.dart' show withHan;
 
 import '../bidi_safe.dart';
 import '../lock_guard.dart';
@@ -315,13 +315,7 @@ class _KryfoLinkTextState extends State<KryfoLinkText> {
     // han text in the glyphs the app's or phone's chinese wants, else what
     // its own characters ask for. only text with han in it: a locale on
     // latin text would send its quotes and dashes to a cjk font
-    final cjk = cjkLocaleFor(
-      text,
-      fallback: widget.style.locale ?? cjkTextLocaleNow,
-    );
-    final style = cjk == null || cjk == widget.style.locale
-        ? widget.style
-        : widget.style.copyWith(locale: cjk);
+    final style = withHan(widget.style, text);
     if (!text.contains('kryfo://')) {
       return Text(text, style: style, textDirection: dir);
     }

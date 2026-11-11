@@ -123,6 +123,7 @@ import '../main.dart'
         AppStateRefresh,
         AppStateRooms;
 import '../widgets/reconnect_valve.dart';
+import '../cjk_locale.dart' show withHan;
 import '../theme.dart';
 import '../link_view.dart' show sendReadsBlocked;
 import '../media_progress.dart';
@@ -7311,7 +7312,7 @@ class _GroupBubble extends StatelessWidget {
       child: query.isNotEmpty
           ? Text.rich(
               TextSpan(
-                style: _bodyStyle(isOut),
+                style: withHan(_bodyStyle(isOut), text),
                 children: searchLit(text, query, onAmber: onAmberText),
               ),
               textDirection: writtenDir(text),
@@ -7328,7 +7329,7 @@ class _GroupBubble extends StatelessWidget {
           : Text.rich(
               mentionRich(
                 text,
-                _bodyStyle(isOut),
+                withHan(_bodyStyle(isOut), text),
                 accent: (isOut && m.mediaPath == null)
                     ? HaloColors.onAmber
                     : null,

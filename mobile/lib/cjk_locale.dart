@@ -7,7 +7,7 @@
 // characters say (kana is japanese, other han simplified chinese).
 import 'dart:ui' show Locale, PlatformDispatcher;
 
-import 'package:flutter/widgets.dart' show WidgetsBinding;
+import 'package:flutter/widgets.dart' show TextStyle, WidgetsBinding;
 
 import 'l10n/app_locale.dart' show currentLanguage;
 
@@ -91,13 +91,44 @@ bool _kana(int c) =>
 
 /// what a message's own characters say: japanese with kana in it, simplified
 /// chinese for other han, null for none. [fallback] (the app's or the
-/// phone's chinese) wins over a guess
-Locale? cjkLocaleFor(String text, {Locale? fallback}) {
+/// phone's chinese) wins over a guess; [keepOwn] (a phone that reads
+/// japanese or korean before any chinese) leaves han without kana to it
+Locale? cjkLocaleFor(String text, {Locale? fallback, bool keepOwn = false}) {
   var han = false;
   for (final c in text.runes) {
     if (_kana(c)) return kJapanese;
     if (!han && _han(c)) han = true;
   }
   if (!han) return null;
-  return fallback ?? kHans;
+  return fallback ?? (keepOwn ? null : kHans);
+}
+
+/// whether the phone reads japanese or korean before any chinese: its own
+/// han glyphs stay
+bool phoneHanOwn(List<Locale> phone) {
+  for (final l in phone) {
+    if (l.languageCode == 'zh') return false;
+    if (l.languageCode == 'ja' || l.languageCode == 'ko') return true;
+  }
+  return false;
+}
+
+/// [style] for [text]: with the locale its han wants, the style itself for
+/// text with none
+TextStyle withHan(TextStyle style, String text) {
+  final l = style.locale != null
+      ? cjkLocaleFor(text, fallback: style.locale)
+      : hanLocaleFor(text);
+  return l == null || l == style.locale ? style : style.copyWith(locale: l);
+}
+
+/// the locale [text] is drawn in as things are now: null leaves it to the
+/// screen's
+Locale? hanLocaleFor(String text) {
+  final pref = cjkTextLocaleNow;
+  return cjkLocaleFor(
+    text,
+    fallback: pref,
+    keepOwn: pref == null && phoneHanOwn(_phoneLocales),
+  );
 }

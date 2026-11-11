@@ -129,6 +129,35 @@ void main() {
     expect(hanLocaleOf('日本。韩国。'), kHans);
   });
 
+  testWidgets('a phone that reads japanese or korean first keeps its own '
+      'han glyphs; kana is still japanese', (t) async {
+    t.platformDispatcher.localesTestValue = const [_en, Locale('ja', 'JP')];
+    addTearDown(t.platformDispatcher.clearLocalesTestValue);
+    expect(hanLocaleOf('日本。韩国。'), isNull);
+    expect(hanLocaleOf('ありがとう。'), kJapanese);
+    t.platformDispatcher.localesTestValue = const [
+      Locale('ko', 'KR'),
+      Locale('zh', 'CN'),
+    ];
+    expect(hanLocaleOf('大韓民國'), isNull);
+    // chinese before japanese: the chinese glyphs
+    t.platformDispatcher.localesTestValue = const [
+      Locale('zh', 'CN'),
+      Locale('ja', 'JP'),
+    ];
+    expect(hanLocaleOf('日本。韩国。'), kHans);
+  });
+
+  testWidgets('every bubble path takes it: a style for han text, the style '
+      'itself for latin', (t) async {
+    t.platformDispatcher.localesTestValue = const [_en];
+    addTearDown(t.platformDispatcher.clearLocalesTestValue);
+    final base = HaloType.sans(size: 15);
+    expect(withHan(base, '日本。韩国。').locale, kHans);
+    expect(identical(withHan(base, 'Japan.'), base), isTrue);
+    expect(withHan(base.copyWith(locale: kHantTw), '日本。韓國。').locale, kHantTw);
+  });
+
   testWidgets('the composer lays out 日本。韩国。 as simplified chinese', (t) async {
     t.platformDispatcher.localesTestValue = const [_en];
     addTearDown(t.platformDispatcher.clearLocalesTestValue);

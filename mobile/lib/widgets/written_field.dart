@@ -9,8 +9,7 @@ import '../cjk_locale.dart';
 import '../l10n/l10n.dart';
 
 /// the locale a field's style takes for [text]: null for text with no han
-Locale? hanLocaleOf(String text) =>
-    cjkLocaleFor(text, fallback: cjkTextLocaleNow);
+Locale? hanLocaleOf(String text) => hanLocaleFor(text);
 
 class WrittenDir extends StatefulWidget {
   final TextEditingController controller;
