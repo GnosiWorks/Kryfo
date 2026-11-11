@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "پیوندهایی که در این گفتگو فرستاده می‌شوند اینجا نشان داده می‌شوند.",
   "sharedYourVoice": "پیام صوتی شما",
   "sharedOpensLink": "پیوند را در برنامه‌ای دیگر باز می‌کند",
-  "homeGroupLine": "{name}: ⁨{preview}⁩"
+  "homeGroupLine": "{name}: ⁨{preview}⁩",
+  "bannerOpen": "باز کردن گفتگو",
+  "bannerOpenWith": "باز کردن گفتگو با {name}",
+  "bannerNewMessages": "{count, plural, other{{count} پیام تازه}}"
 }

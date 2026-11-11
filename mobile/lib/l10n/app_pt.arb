@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "Os links enviados nesta conversa aparecem aqui.",
   "sharedYourVoice": "Sua mensagem de voz",
   "sharedOpensLink": "Abre o link em outro app",
-  "homeGroupLine": "{name}: {preview}"
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Abrir a conversa",
+  "bannerOpenWith": "Abrir a conversa com {name}",
+  "bannerNewMessages": "{count, plural, one{{count} nova mensagem} other{{count} novas mensagens}}"
 }

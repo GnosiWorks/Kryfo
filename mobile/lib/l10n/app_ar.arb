@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "تظهر هنا الروابط المرسلة في هذه المحادثة.",
   "sharedYourVoice": "رسالتك الصوتية",
   "sharedOpensLink": "يفتح الرابط في تطبيق آخر",
-  "homeGroupLine": "{name}: ⁨{preview}⁩"
+  "homeGroupLine": "{name}: ⁨{preview}⁩",
+  "bannerOpen": "افتح المحادثة",
+  "bannerOpenWith": "افتح المحادثة مع {name}",
+  "bannerNewMessages": "{count, plural, zero{لا رسائل جديدة} one{رسالة جديدة واحدة} two{رسالتان جديدتان} few{{count} رسائل جديدة} many{{count} رسالة جديدة} other{{count} رسالة جديدة}}"
 }

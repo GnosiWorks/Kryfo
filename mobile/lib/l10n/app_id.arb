@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "Tautan yang dikirim di chat ini muncul di sini.",
   "sharedYourVoice": "Pesan suaramu",
   "sharedOpensLink": "Membuka tautan di aplikasi lain",
-  "homeGroupLine": "{name}: {preview}"
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Buka obrolan",
+  "bannerOpenWith": "Buka obrolan dengan {name}",
+  "bannerNewMessages": "{count, plural, other{{count} pesan baru}}"
 }

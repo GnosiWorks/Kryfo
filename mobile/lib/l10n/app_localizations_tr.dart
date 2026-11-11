@@ -12188,4 +12188,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String homeGroupLine(String name, String preview) {
     return '$name: $preview';
   }
+
+  @override
+  String get bannerOpen => 'Sohbeti aç';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '$name ile sohbeti aç';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString yeni mesaj',
+    );
+    return '$_temp0';
+  }
 }

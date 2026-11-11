@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "Les liens envoyés dans cette discussion apparaissent ici.",
   "sharedYourVoice": "Ton message vocal",
   "sharedOpensLink": "Ouvre le lien dans une autre app",
-  "homeGroupLine": "{name} : {preview}"
+  "homeGroupLine": "{name} : {preview}",
+  "bannerOpen": "Ouvrir la discussion",
+  "bannerOpenWith": "Ouvrir la discussion avec {name}",
+  "bannerNewMessages": "{count, plural, one{{count} nouveau message} other{{count} nouveaux messages}}"
 }

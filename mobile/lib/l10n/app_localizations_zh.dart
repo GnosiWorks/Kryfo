@@ -11496,6 +11496,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String homeGroupLine(String name, String preview) {
     return '$name：$preview';
   }
+
+  @override
+  String get bannerOpen => '打开聊天';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '打开与 $name 的聊天';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条新消息',
+    );
+    return '$_temp0';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22869,5 +22891,27 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String homeGroupLine(String name, String preview) {
     return '$name：$preview';
+  }
+
+  @override
+  String get bannerOpen => '開啟聊天';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '開啟與 $name 的聊天';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則新訊息',
+    );
+    return '$_temp0';
   }
 }

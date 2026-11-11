@@ -12354,4 +12354,29 @@ class AppLocalizationsRu extends AppLocalizations {
   String homeGroupLine(String name, String preview) {
     return '$name: $preview';
   }
+
+  @override
+  String get bannerOpen => 'Открыть чат';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Открыть чат: $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString нового сообщения',
+      many: '$countString новых сообщений',
+      few: '$countString новых сообщения',
+      one: '$countString новое сообщение',
+    );
+    return '$_temp0';
+  }
 }

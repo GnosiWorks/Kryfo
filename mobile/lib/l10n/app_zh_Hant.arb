@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "這個聊天裡傳送的連結會顯示在這裡。",
   "sharedYourVoice": "你的語音訊息",
   "sharedOpensLink": "在其他應用程式中開啟連結",
-  "homeGroupLine": "{name}：{preview}"
+  "homeGroupLine": "{name}：{preview}",
+  "bannerOpen": "開啟聊天",
+  "bannerOpenWith": "開啟與 {name} 的聊天",
+  "bannerNewMessages": "{count, plural, other{{count} 則新訊息}}"
 }

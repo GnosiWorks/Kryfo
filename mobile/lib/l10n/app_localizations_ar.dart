@@ -12301,4 +12301,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String homeGroupLine(String name, String preview) {
     return '$name: ⁨$preview⁩';
   }
+
+  @override
+  String get bannerOpen => 'افتح المحادثة';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'افتح المحادثة مع $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString رسالة جديدة',
+      many: '$countString رسالة جديدة',
+      few: '$countString رسائل جديدة',
+      two: 'رسالتان جديدتان',
+      one: 'رسالة جديدة واحدة',
+      zero: 'لا رسائل جديدة',
+    );
+    return '$_temp0';
+  }
 }

@@ -1496,11 +1496,13 @@ extension AppStateArrivals on AppState {
     final String notifBody;
     final String notifPayload;
     final bool suppress;
+    // the face a banner in the app may show: none for a line naming no one
+    String? face;
     final shownText = edited ?? env.message;
     // the name given to them here. android keeps titles in its history, so
     // with none given it says someone, never their id
-    final nickname =
-        (await db.getContact(senderHaloId))?['nickname'] as String?;
+    final them = await db.getContact(senderHaloId);
+    final nickname = them?['nickname'] as String?;
     final named = nickname == null || nickname.isEmpty
         ? l10n.notificationsSomeone
         : nickname;
@@ -1530,6 +1532,7 @@ extension AppStateArrivals on AppState {
       // none of it in the shade either
       notifBody = hush ? l10n.notificationsNewMessage : '$who: $gBody';
       notifPayload = 'group:${env.groupId}';
+      face = hush ? null : env.groupId;
       suppress = reading;
     } else if (!senderAccepted) {
       // a stranger chose these words; they do not go on a lock screen
@@ -1556,6 +1559,7 @@ extension AppStateArrivals on AppState {
           : notifMediaLine(fileName, mediaPath);
       notifPayload = senderHaloId;
       suppress = reading || await db.isMuted(senderHaloId);
+      face = senderHaloId;
     }
     if (desk_trace.tracing) {
       desk_trace.trace(
@@ -1595,6 +1599,19 @@ extension AppStateArrivals on AppState {
         if (!identical(_openVault, db)) return to;
         _vaultShade.add(notifPayload);
       }
+      // in the app, on another chat: a banner says it, the shade keeps it
+      // quietly
+      final shown = await _io.banner(
+        BannerNote(
+          chat: notifPayload,
+          title: notifTitle,
+          body: notifBody,
+          avatarSeed: face,
+          avatarChoice: isGroup ? null : (them?['avatar'] as num?)?.toInt(),
+          group: isGroup,
+        ),
+        hidden: to == RouteTo.vault,
+      );
       await _io.notify(
         title: notifTitle,
         body: notifBody,
@@ -1602,6 +1619,8 @@ extension AppStateArrivals on AppState {
         on: db,
         msgUid: env.msgUid,
         burnAt: burnFromArrival,
+        // said already by the banner
+        silent: shown,
       );
     }
     return to;

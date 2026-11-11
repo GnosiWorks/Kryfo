@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "Liên kết gửi trong cuộc trò chuyện này sẽ hiện ở đây.",
   "sharedYourVoice": "Tin nhắn thoại của bạn",
   "sharedOpensLink": "Mở liên kết trong ứng dụng khác",
-  "homeGroupLine": "{name}: {preview}"
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Mở cuộc trò chuyện",
+  "bannerOpenWith": "Mở cuộc trò chuyện với {name}",
+  "bannerNewMessages": "{count, plural, other{{count} tin nhắn mới}}"
 }

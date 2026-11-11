@@ -19488,6 +19488,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name}: {preview}'**
   String homeGroupLine(String name, String preview);
+
+  /// in-app banner, screen reader: a tap opens the chat it is about (no name shown)
+  ///
+  /// In en, this message translates to:
+  /// **'Open the chat'**
+  String get bannerOpen;
+
+  /// in-app banner, screen reader: a tap opens the chat with this person or group
+  ///
+  /// In en, this message translates to:
+  /// **'Open the chat with {name}'**
+  String bannerOpenWith(String name);
+
+  /// in-app banner: several messages from the same chat in a row
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} new message} other{{count} new messages}}'**
+  String bannerNewMessages(int count);
 }
 
 class _AppLocalizationsDelegate

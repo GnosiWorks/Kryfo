@@ -145,6 +145,8 @@ class AppIo {
     required HaloDb on,
     String? msgUid,
     int? burnAt,
+    // no sound, no buzz, no heads-up: still in the shade
+    bool silent = false,
   }) async {
     if (await quietNow()) return;
     final id = await showMessageNotification(
@@ -155,6 +157,7 @@ class AppIo {
       msgUid: msgUid,
       burnAt: burnAt,
       hidden: on.container.wrapped,
+      silent: silent,
     );
     // a folded one keeps the ring of the first message it holds
     // the shared one opens the chat list, on no message
@@ -166,6 +169,36 @@ class AppIo {
     } catch (e) {
       dlog('ring: not kept (${e.runtimeType})');
     }
+  }
+
+  // a banner in the app for a message to another chat, when one fits
+  // (bannerFits). true when it showed: the shade's copy then goes quietly.
+  // with previews off it names no one and says nothing of the message
+  Future<bool> banner(BannerNote note, {required bool hidden}) async {
+    final fits = bannerFits(
+      inFront:
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,
+      locked: lockState.locked,
+      quiet: await quietNow(),
+      reading: false,
+      muted: false,
+      inVault: lockState.inVault,
+      hiddenChat: hidden,
+    );
+    if (!fits) return false;
+    final plain = await loadNotifPlain() || await loadHideNotifContent();
+    // the lock or a decoy may have come up while that was read
+    if (lockState.locked || await quietNow()) return false;
+    showInAppBanner(
+      plain
+          ? BannerNote(
+              chat: note.chat,
+              title: l10n.notificationsNewMessage,
+              body: '',
+            )
+          : note,
+    );
+    return true;
   }
 
   // what this process showed for a chat leaves the shade

@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "Bu sohbette gönderilen bağlantılar burada görünür.",
   "sharedYourVoice": "Sesli mesajın",
   "sharedOpensLink": "Bağlantıyı başka bir uygulamada açar",
-  "homeGroupLine": "{name}: {preview}"
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Sohbeti aç",
+  "bannerOpenWith": "{name} ile sohbeti aç",
+  "bannerNewMessages": "{count, plural, other{{count} yeni mesaj}}"
 }

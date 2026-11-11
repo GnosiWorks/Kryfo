@@ -12161,4 +12161,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String homeGroupLine(String name, String preview) {
     return '$name: $preview';
   }
+
+  @override
+  String get bannerOpen => 'Open the chat';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Open the chat with $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString new messages',
+      one: '$countString new message',
+    );
+    return '$_temp0';
+  }
 }

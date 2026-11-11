@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "Тут з’являться посилання з цього чату.",
   "sharedYourVoice": "Твоє голосове",
   "sharedOpensLink": "Відкриває посилання в іншому застосунку",
-  "homeGroupLine": "{name}: {preview}"
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Відкрити чат",
+  "bannerOpenWith": "Відкрити чат: {name}",
+  "bannerNewMessages": "{count, plural, one{{count} нове повідомлення} few{{count} нові повідомлення} many{{count} нових повідомлень} other{{count} нового повідомлення}}"
 }

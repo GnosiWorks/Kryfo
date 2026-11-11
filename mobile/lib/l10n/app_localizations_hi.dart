@@ -12168,4 +12168,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String homeGroupLine(String name, String preview) {
     return '$name: $preview';
   }
+
+  @override
+  String get bannerOpen => 'चैट खोलें';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '$name के साथ चैट खोलें';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString नए संदेश',
+      one: '$countString नया संदेश',
+    );
+    return '$_temp0';
+  }
 }

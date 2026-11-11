@@ -15321,5 +15321,28 @@
         "type": "String"
       }
     }
+  },
+  "bannerOpen": "Open the chat",
+  "@bannerOpen": {
+    "description": "in-app banner, screen reader: a tap opens the chat it is about (no name shown)"
+  },
+  "bannerOpenWith": "Open the chat with {name}",
+  "@bannerOpenWith": {
+    "description": "in-app banner, screen reader: a tap opens the chat with this person or group",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerNewMessages": "{count, plural, one{{count} new message} other{{count} new messages}}",
+  "@bannerNewMessages": {
+    "description": "in-app banner: several messages from the same chat in a row",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
   }
 }

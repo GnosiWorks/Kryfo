@@ -129,6 +129,7 @@ class PqIo extends AppIo {
     Object? on,
     String? msgUid,
     int? burnAt,
+    bool silent = false,
   }) async {}
   @override
   Future<void> unnotify(String payload) async {}

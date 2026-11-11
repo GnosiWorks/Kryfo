@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "Links aus diesem Chat erscheinen hier.",
   "sharedYourVoice": "Deine Sprachnachricht",
   "sharedOpensLink": "Öffnet den Link in einer anderen App",
-  "homeGroupLine": "{name}: {preview}"
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Chat öffnen",
+  "bannerOpenWith": "Chat mit {name} öffnen",
+  "bannerNewMessages": "{count, plural, one{{count} neue Nachricht} other{{count} neue Nachrichten}}"
 }

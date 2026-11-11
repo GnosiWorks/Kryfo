@@ -9,6 +9,7 @@ import 'package:flutter/material.dart' show Locale;
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/widgets/in_app_banner.dart' show BannerNote;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devchat/dev_chat.dart' show devModeOf;
 import 'package:kryfo/devchat/dev_frame.dart' show kDevSupport;
@@ -371,6 +372,9 @@ class _Io implements AppIo {
   }
 
   @override
+  Future<bool> banner(BannerNote note, {required bool hidden}) async => false;
+
+  @override
   Future<void> notify({
     required String title,
     required String body,
@@ -378,6 +382,7 @@ class _Io implements AppIo {
     Object? on,
     String? msgUid,
     int? burnAt,
+    bool silent = false,
   }) async => rang.add('$title|$body|$payload');
 
   @override

@@ -3198,5 +3198,8 @@
   "sharedNoLinks": "Tu pojawiają się linki wysłane w tym czacie.",
   "sharedYourVoice": "Twoja wiadomość głosowa",
   "sharedOpensLink": "Otwiera link w innej aplikacji",
-  "homeGroupLine": "{name}: {preview}"
+  "homeGroupLine": "{name}: {preview}",
+  "bannerOpen": "Otwórz czat",
+  "bannerOpenWith": "Otwórz czat z {name}",
+  "bannerNewMessages": "{count, plural, one{{count} nowa wiadomość} few{{count} nowe wiadomości} many{{count} nowych wiadomości} other{{count} nowej wiadomości}}"
 }

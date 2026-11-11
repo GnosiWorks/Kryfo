@@ -12166,4 +12166,26 @@ class AppLocalizationsId extends AppLocalizations {
   String homeGroupLine(String name, String preview) {
     return '$name: $preview';
   }
+
+  @override
+  String get bannerOpen => 'Buka obrolan';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Buka obrolan dengan $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString pesan baru',
+    );
+    return '$_temp0';
+  }
 }
