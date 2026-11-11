@@ -3,7 +3,6 @@
 // which a debuggable build alone opens, and dart's uncaught errors are
 // dropped
 import 'dart:io';
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
