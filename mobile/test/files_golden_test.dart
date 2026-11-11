@@ -14,6 +14,7 @@ import 'package:kryfo/theme.dart';
 import 'package:kryfo/transfers.dart';
 import 'package:kryfo/widgets/file_actions.dart';
 import 'package:kryfo/widgets/file_bubble.dart';
+import 'package:kryfo/widgets/file_stack.dart';
 import 'package:kryfo/widgets/file_wait.dart';
 import 'package:kryfo/widgets/sound_views.dart';
 
@@ -211,6 +212,159 @@ void main() {
       await expectLater(
         find.byType(Scaffold),
         matchesGoldenFile('goldens/files_bubbles_$name.png'),
+      );
+    });
+  }
+
+  // several files in one bubble: a pdf with its first page, one coming,
+  // one still to get with "Get all"; ours with a code file and one that
+  // did not go
+  for (final (name, light, locale, scale) in [
+    ('dark', false, const Locale('en'), 1.0),
+    ('light', true, const Locale('en'), 1.0),
+    ('rtl', false, const Locale('ar'), 1.0),
+    ('large', false, const Locale('en'), 2.0),
+  ]) {
+    testWidgets('several files in one bubble, $name', (t) async {
+      t.view.physicalSize = Size(390, scale > 1 ? 1700 : 900);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      HaloColors.setLight(light);
+      setL10nLocale(locale);
+      addTearDown(() => setL10nLocale(const Locale('en')));
+      addTearDown(() => HaloColors.setLight(false));
+      pdfBackendForTest = _Paper();
+      pdfViewHereForTest = true;
+      final pdf = File('${tmp.path}/in_a.pdf')
+        ..writeAsBytesSync(
+          List.filled(2400 * 1024, 1)..setAll(0, '%PDF-1.7\n'.codeUnits),
+        );
+      final py = File('${tmp.path}/out_d.py')
+        ..writeAsStringSync(
+          'def rent_share(total, people):\n    return round(total / people, 2)\n',
+        );
+      fileWaits.value = {
+        'maps': const FileWait(
+          size: 36 << 20,
+          state: WaitState.coming,
+          rule: AutoGet.never,
+          share: 0.64,
+        ),
+        'gear': const FileWait(
+          size: 48 * 1024,
+          state: WaitState.asks,
+          rule: AutoGet.never,
+        ),
+      };
+      Widget bubble(bool out, Widget child) => Align(
+        alignment: out
+            ? AlignmentDirectional.centerEnd
+            : AlignmentDirectional.centerStart,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 12),
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+          decoration: BoxDecoration(
+            color: out ? HaloColors.amber : HaloColors.bubbleIn,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: IntrinsicWidth(child: child),
+        ),
+      );
+      await t.runAsync(() => pdfGlance(pdf.path, 236));
+      await t.pumpWidget(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: buildHaloTheme(),
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (ctx, child) => MediaQuery(
+            data: MediaQuery.of(ctx).copyWith(
+              disableAnimations: true,
+              textScaler: TextScaler.linear(scale),
+            ),
+            child: child!,
+          ),
+          home: Scaffold(
+            backgroundColor: HaloColors.ink,
+            body: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              children: [
+                bubble(
+                  false,
+                  FileStack(
+                    isOut: false,
+                    onGet: (_) {},
+                    onPause: (_) {},
+                    rows: [
+                      FileStackRow(
+                        id: 'a',
+                        name: 'route-sat.pdf',
+                        ready: () => FileCard(
+                          path: pdf.path,
+                          name: 'route-sat.pdf',
+                          isOut: false,
+                          glance: true,
+                        ),
+                      ),
+                      FileStackRow(
+                        id: 'maps',
+                        name: 'offline-maps.zip',
+                        waitUid: 'maps',
+                        ready: () => const SizedBox.shrink(),
+                      ),
+                      FileStackRow(
+                        id: 'gear',
+                        name: 'gear-list.xlsx',
+                        waitUid: 'gear',
+                        until: DateTime(2026, 12, 9),
+                        ready: () => const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
+                bubble(
+                  true,
+                  FileStack(
+                    isOut: true,
+                    onGet: (_) {},
+                    onPause: (_) {},
+                    rows: [
+                      FileStackRow(
+                        id: 'py',
+                        name: 'rent.py',
+                        ready: () => FileCard(
+                          path: py.path,
+                          name: 'rent.py',
+                          isOut: true,
+                        ),
+                      ),
+                      FileStackRow(
+                        id: 'scan',
+                        name: 'permit-scan.pdf',
+                        failed: true,
+                        onRetry: () {},
+                        ready: () => const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      for (var i = 0; i < 120; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+        await t.pump();
+      }
+      await t.pump(const Duration(milliseconds: 500));
+      expect(t.takeException(), isNull);
+      await expectLater(
+        find.byType(Scaffold),
+        matchesGoldenFile('goldens/files_stack_$name.png'),
       );
     });
   }

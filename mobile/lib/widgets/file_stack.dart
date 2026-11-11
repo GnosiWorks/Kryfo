@@ -442,7 +442,8 @@ class _GetAll extends StatelessWidget {
     }
     final busy = asks.isEmpty;
     final label = busy ? null : l10n.fileSetGetAll(humanFileSize(left));
-    return Padding(
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.only(top: 10),
       child: DecoratedBox(
         decoration: BoxDecoration(
