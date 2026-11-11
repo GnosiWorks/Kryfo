@@ -1669,18 +1669,15 @@ class LockState extends ChangeNotifier {
 
   Future<void> _writeFlags() => _store.write(_kFlags, _flagsValue);
 
-  // the flags as kept, and any the names before them still say: a stop
-  // before they went, or a version before this one that ran since. a pin
-  // either says is there is taken as there
+  // the flags as kept, or, with none kept yet, what the names before them
+  // say. once written they are the one answer: a name from before left
+  // beside them (a stop before it went) says nothing more
   String? _flagsKept;
   Future<void> _readFlags() async {
     final v = _flagsKept = await _store.read(_kFlags);
-    final kept = [
-      for (var i = 0; i < _oldFlags.length; i++)
-        v != null && v.length == 5 && v[i] == '1',
-    ];
+    final kept = v != null && v.length == 5;
     Future<bool> at(int i) async =>
-        kept[i] || await _store.read(_oldFlags[i]) == 'true';
+        kept ? v[i] == '1' : await _store.read(_oldFlags[i]) == 'true';
     _panicEnabled = await at(0);
     _dWipe = await at(1);
     _dDecoy = await at(2);

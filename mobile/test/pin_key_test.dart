@@ -628,7 +628,8 @@ void main() {
       await s.disablePanicPin();
       store.m['halo.lock.panic_salt'] = 'Yg==';
       store.m['halo.lock.panic_hash'] = KeyEngine.legacyHash('7531', 'Yg==');
-      // an old version's wipe pin that showed on
+      // an old version's wipe pin that showed on, as it kept it
+      store.m.remove('halo.lock.flags');
       store.m['halo.lock.panic_enabled'] = 'true';
       final s2 = await make(cardPad: Duration.zero);
       expect(s2.legacyWipe, isTrue);

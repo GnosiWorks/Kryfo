@@ -99,6 +99,7 @@ void main() {
       PinSlot.decoy: (decoyPin, PinKind.decoy),
       PinSlot.decoyWipe: (_decoyWipePin, PinKind.wipe),
     });
+    lock.store.m.remove('halo.lock.flags');
     lock.store.m['halo.lock.d.wipe'] = 'true';
     await lock.state.load();
     lock.state.inDecoy = true;
@@ -134,6 +135,7 @@ void main() {
       PinSlot.decoy: (decoyPin, PinKind.decoy),
       PinSlot.decoyWipe: (_decoyWipePin, PinKind.wipe),
     });
+    lock.store.m.remove('halo.lock.flags');
     lock.store.m['halo.lock.d.wipe'] = 'true';
     await lock.state.load();
     lock.state.inDecoy = true;

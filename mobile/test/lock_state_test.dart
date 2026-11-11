@@ -884,6 +884,15 @@ void main() {
       expect(lock.panicEnabled, isTrue);
       expect(store.m.containsKey('halo.lock.panic_enabled'), isFalse);
       expect(store.m['halo.lock.flags'], '10000');
+      // once written they are the one answer: a name left beside them
+      // says nothing more, and goes
+      store.m['halo.lock.flags'] = '00000';
+      store.m['halo.lock.d.wipe'] = 'true';
+      final again = await make();
+      expect(again.panicEnabled, isFalse);
+      again.inDecoy = true;
+      expect(again.panicEnabled, isFalse);
+      expect(store.m.containsKey('halo.lock.d.wipe'), isFalse);
     });
 
     test('every lock keeps the same names, whatever pins it has', () async {
