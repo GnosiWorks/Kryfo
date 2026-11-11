@@ -173,7 +173,7 @@ func HaloDecoyLaneNew() *C.char {
 
 //export HaloDecoyHandleCheck
 func HaloDecoyHandleCheck(cHandle *C.char) *C.char {
-	return C.CString(handleCheckOn(goStr(cHandle), decoyClient))
+	return C.CString(handleCheckOn(goStr(cHandle), decoyClient, decoyLaneNew))
 }
 
 //export HaloDecoyTorGetJSON

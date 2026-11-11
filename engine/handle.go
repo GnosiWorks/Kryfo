@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptrace"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -118,6 +120,86 @@ func handleClient(ctx context.Context) (*http.Client, error) {
 	}
 }
 
+// the waits before a call that got no answer goes again: three tries in
+// all, each on a new circuit, all inside handleWait. a var for the tests
+var handleBackoff = []time.Duration{2 * time.Second, 5 * time.Second}
+
+// tor carries, on any route: the registry is reached over it on every one.
+// a call that got no answer while it does not says so. a var for the tests
+var handleTorUp = torCarriesNow
+
+// the own handle's lane takes a new socks name, so its next streams take a
+// new circuit and a new exit. a var for the tests
+var handleNewCircuit = func() {
+	dropLane(laneOwnHandle)
+	cachedNostrClientMu.Lock()
+	if c := cachedNostrClients["tor:"+laneOwnHandle]; c != nil {
+		c.CloseIdleConnections()
+	}
+	delete(cachedNostrClients, "tor:"+laneOwnHandle)
+	cachedNostrClientMu.Unlock()
+}
+
+// the answer the app gets for a call that got none: tor not carrying is
+// named, since the registry was never asked
+func handleNoAnswer(err error) string {
+	if !handleTorUp() {
+		return "error: no tor"
+	}
+	return "error: " + err.Error()
+}
+
+// one registry call inside ctx, on the client [clientOf] gives. a try that
+// got no answer goes again after its wait on a new circuit ([renew]), and
+// so does a gateway's 502 or 504. a post only when none of it went out: the
+// registry may have taken one whose answer was lost. a busy registry is
+// never asked again at once
+func handleDo(ctx context.Context, clientOf func(context.Context) (*http.Client, error),
+	renew func(), mk func() (*http.Request, error), post bool) (*http.Response, error) {
+	for i := 0; ; i++ {
+		client, err := clientOf(ctx)
+		if err != nil {
+			return nil, err
+		}
+		req, err := mk()
+		if err != nil {
+			return nil, err
+		}
+		var sent atomic.Bool
+		trace := &httptrace.ClientTrace{WroteRequest: func(w httptrace.WroteRequestInfo) {
+			if w.Err == nil {
+				sent.Store(true)
+			}
+		}}
+		resp, err := client.Do(req.WithContext(httptrace.WithClientTrace(ctx, trace)))
+		again := false
+		if err != nil {
+			again = !post || !sent.Load()
+		} else if resp.StatusCode == http.StatusBadGateway || resp.StatusCode == http.StatusGatewayTimeout {
+			again = !post
+		}
+		if !again || i >= len(handleBackoff) || ctx.Err() != nil {
+			return resp, err
+		}
+		if resp != nil {
+			resp.Body.Close()
+		}
+		t := time.NewTimer(handleBackoff[i])
+		select {
+		case <-ctx.Done():
+			t.Stop()
+			if err == nil {
+				err = fmt.Errorf("status %d", resp.StatusCode)
+			}
+			return nil, err
+		case <-t.C:
+		}
+		if renew != nil {
+			renew()
+		}
+	}
+}
+
 // is this handle free? returns "free", "taken", or an error string.
 //
 //export HaloHandleCheck
@@ -125,35 +207,44 @@ func HaloHandleCheck(cHandle *C.char) *C.char {
 	return C.CString(handleCheck(goStr(cHandle)))
 }
 
-func handleCheck(raw string) string { return handleCheckOn(raw, handleClient) }
+func handleCheck(raw string) string {
+	return handleCheckOn(raw, handleClient, func() { handleNewCircuit() })
+}
 
-// the check on the client [clientOf] gives: the registry's lane, or the
-// decoy's own (quiet.go)
-func handleCheckOn(raw string, clientOf func(context.Context) (*http.Client, error)) string {
+// the check on the client [clientOf] gives, [renew] making it a new circuit:
+// the registry's lane, or the decoy's own (quiet.go)
+func handleCheckOn(raw string, clientOf func(context.Context) (*http.Client, error), renew func()) string {
 	h := strings.ToLower(strings.TrimSpace(raw))
 	if !handleOK.MatchString(h) {
 		return "error: 3-20 characters, letters numbers underscore"
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
 	defer cancel()
-	client, err := clientOf(ctx)
-	if err != nil {
-		return "error: " + err.Error()
-	}
 	body, _ := json.Marshal(map[string]string{"h": h})
-	req, _ := http.NewRequest("POST", handleBase+"/handle/check", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "")
-	resp, err := client.Do(req.WithContext(ctx))
+	// a read: asked again whether or not it went out
+	resp, err := handleDo(ctx, clientOf, renew, func() (*http.Request, error) {
+		req, err := http.NewRequest("POST", handleBase+"/handle/check", bytes.NewReader(body))
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("User-Agent", "")
+		return req, nil
+	}, false)
 	if err != nil {
-		return "error: " + err.Error()
+		return handleNoAnswer(err)
 	}
 	defer resp.Body.Close()
+	// the registry's limits are for everyone together, and it says so in
+	// plain text
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return "error: busy"
+	}
 	b, _ := io.ReadAll(io.LimitReader(resp.Body, handleReplyMax))
 	var out struct {
 		Free bool `json:"free"`
 	}
-	if json.Unmarshal(b, &out) != nil {
+	if resp.StatusCode != http.StatusOK || json.Unmarshal(b, &out) != nil {
 		return "error: bad answer from the registry"
 	}
 	if out.Free {
@@ -219,6 +310,8 @@ func handleRefusal(msg string) string {
 		return "not yours"
 	case "check the phone's clock":
 		return "clock"
+	case "slow down":
+		return "busy"
 	}
 	return "refused"
 }
@@ -226,21 +319,19 @@ func handleRefusal(msg string) string {
 func handlePost(path string, body []byte) string {
 	ctx, cancel := context.WithTimeout(context.Background(), handleWait)
 	defer cancel()
-	client, err := handleClient(ctx)
+	resp, err := handleDo(ctx, handleClient, func() { handleNewCircuit() }, func() (*http.Request, error) {
+		req, err := http.NewRequest("POST", handleBase+path, bytes.NewReader(body))
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Content-Type", "application/json")
+		// nothing identifying in the headers: the body already says who we
+		// are, and only because it has to.
+		req.Header.Set("User-Agent", "")
+		return req, nil
+	}, true)
 	if err != nil {
-		return "error: " + err.Error()
-	}
-	req, err := http.NewRequest("POST", handleBase+path, bytes.NewReader(body))
-	if err != nil {
-		return "error: " + err.Error()
-	}
-	req.Header.Set("Content-Type", "application/json")
-	// nothing identifying in the headers: the body already says who we are,
-	// and only because it has to.
-	req.Header.Set("User-Agent", "")
-	resp, err := client.Do(req.WithContext(ctx))
-	if err != nil {
-		return "error: " + err.Error()
+		return handleNoAnswer(err)
 	}
 	defer resp.Body.Close()
 	b, _ := io.ReadAll(io.LimitReader(resp.Body, handleReplyMax))
@@ -249,6 +340,9 @@ func handlePost(path string, body []byte) string {
 		Err string `json:"error"`
 	}
 	if json.Unmarshal(b, &out) != nil {
+		if resp.StatusCode == http.StatusTooManyRequests {
+			return "error: busy"
+		}
 		return "error: bad answer from the registry"
 	}
 	if !out.OK {
