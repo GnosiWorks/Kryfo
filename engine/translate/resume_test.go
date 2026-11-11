@@ -487,3 +487,47 @@ func TestGotFileIsReplacedWhole(t *testing.T) {
 		t.Fatalf("got %q, %v", b, err)
 	}
 }
+
+// a file not padded to whole chunks: all of it in is written down as its
+// size, so a stop between the last chunk and the caller's rename asks for
+// nothing again
+func TestPlainFileAllInIsNotFetchedAgain(t *testing.T) {
+	data := make([]byte, 2*Chunk+12345)
+	for i := range data {
+		data[i] = byte(i * 7)
+	}
+	var mu sync.Mutex
+	asked := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		asked++
+		mu.Unlock()
+		http.ServeContent(w, r, "m.bin", time.Time{}, strings.NewReader(string(data)))
+	}))
+	defer srv.Close()
+	f := Fetcher{Lanes: 3, Lane: func() (Getter, func()) { return HTTPGetter(srv.Client()), nil }}
+	dir := t.TempDir()
+	part, got := filepath.Join(dir, "m.part"), filepath.Join(dir, "m.got")
+	if err := f.FetchPlain(context.Background(), srv.URL+"/m", int64(len(data)), part, got, nil); err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := os.ReadFile(got); string(b) != fmt.Sprint(len(data)) {
+		t.Fatalf("got file %q", b)
+	}
+	if b, _ := os.ReadFile(part); string(b) != string(data) {
+		t.Fatal("bytes differ")
+	}
+	mu.Lock()
+	asked = 0
+	mu.Unlock()
+	var last int64
+	if err := f.FetchPlain(context.Background(), srv.URL+"/m", int64(len(data)), part, got, func(d, _ int64) { last = d }); err != nil {
+		t.Fatal(err)
+	}
+	if asked != 0 || last != int64(len(data)) {
+		t.Fatalf("asked %d more times, progress %d", asked, last)
+	}
+	if b, _ := os.ReadFile(part); string(b) != string(data) {
+		t.Fatal("part changed on the second call")
+	}
+}

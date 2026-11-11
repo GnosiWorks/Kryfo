@@ -191,7 +191,10 @@ func resumeAt(fh *os.File, gotPath string, gz, wire int64) (int64, map[int64]boo
 	if size < min(got, gz) {
 		got = size
 	}
-	got -= got % Chunk
+	// all of it in is the one mark not on a chunk's edge
+	if got != wire {
+		got -= got % Chunk
+	}
 	have := map[int64]bool{}
 	keep := min(got, gz)
 	if above != "" {

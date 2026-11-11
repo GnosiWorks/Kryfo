@@ -221,7 +221,9 @@ func (f Fetcher) fill(ctx context.Context, url string, fh *os.File, gotPath stri
 		}
 		// every chunk in is written down, not only the prefix: with lanes
 		// a stop leaves chunks above a hole, and a resume keeps them
-		if err := writeGot(gotPath, gotText(st.prefix, st.in)); err != nil {
+		// a file not padded to whole chunks ends inside the last one: the
+		// mark stops at its end, which a resume reads as all of it
+		if err := writeGot(gotPath, gotText(min(st.prefix, wire), st.in)); err != nil {
 			return err
 		}
 		if prog != nil {
