@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // a computer's way to draw a picture again as a jpeg, as the phone's platform
-// call does: pure dart (the image package, mit), so nothing native is added.
+// call does: pure dart (the image package: mit, with apache-2.0 parts), so
+// nothing native is added.
 // a camera's raw file goes as the largest finished jpeg it carries (most
 // cameras keep one full size beside the sensor data), turned as the file
 // says; a tiff and anything else the image package reads is decoded whole.
 // heic and avif need a native decoder and are not drawn here
+import 'dart:io' show ZLibDecoder;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -13,6 +15,12 @@ import 'package:image/image.dart' as img;
 /// a raw file's own jpeg must be at least this on its long edge to stand
 /// in for the picture: a small thumbnail is no picture to send
 const kRawPreviewLeast = 1200;
+
+/// the most pixels a picture may say it has to be decoded here: a file
+/// from anyone, so its header is read and held to this before any pixel
+const kDrawMostPixels = 100000000;
+
+bool _fits(int w, int h) => w > 0 && h > 0 && w * h <= kDrawMostPixels;
 
 /// [b] drawn again as a jpeg, upright, [maxEdge] on the long edge at most,
 /// with no metadata of any kind. null when it cannot be drawn here
@@ -64,14 +72,156 @@ img.Image? _decode(Uint8List b) {
       if (p != null) return _upright(p, _previewTurn(rawOrientation(b), p));
     }
     // a plain tiff, or a raw with no jpeg big enough
-    if (!tiffLike) return null;
-    final t = img.decodeTiff(b);
+    if (!tiffLike || !tiffFits(b)) return null;
+    final t = img.decodeTiff(b, frame: 0);
     if (t == null) return null;
     return _upright(t, rawOrientation(b));
   }
-  final p = img.decodeImage(b);
-  if (p == null) return null;
-  return _upright(p, null);
+  if (b.length > 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) {
+    final j = _jpegAt(b, 0, _Work(b.length));
+    if (j == null || !_fits(j.w, j.h)) return null;
+    final p = img.decodeJpg(b);
+    return p == null ? null : _upright(p, null);
+  }
+  if (_ascii(b, 1, 'PNG')) {
+    if (!pngFits(b)) return null;
+    final d = img.PngDecoder();
+    if (d.startDecode(b) == null) return null;
+    final p = d.decodeFrame(0);
+    return p == null ? null : _upright(p, null);
+  }
+  if (_ascii(b, 0, 'GIF8')) {
+    final d = img.GifDecoder();
+    final info = d.startDecode(b);
+    if (info == null || info.frames.isEmpty) return null;
+    final f = info.frames.first;
+    if (!_fits(info.width, info.height) || !_fits(f.width, f.height)) {
+      return null;
+    }
+    return d.decodeFrame(0);
+  }
+  if (_ascii(b, 0, 'RIFF') && _ascii(b, 8, 'WEBP')) {
+    final d = img.WebPDecoder();
+    final info = d.startDecode(b);
+    if (info == null || !_fits(info.width, info.height)) return null;
+    return d.decodeFrame(0);
+  }
+  // nothing else is drawn from a stranger's file here
+  return null;
+}
+
+// tiff squeezes the image package inflates whole, or decodes the size a
+// tile says: only those held to the picture's own size are let through
+const _tiffKinds = {
+  img.TiffCompression.none,
+  img.TiffCompression.lzw,
+  img.TiffCompression.packBits,
+  img.TiffCompression.zip,
+  img.TiffCompression.deflate,
+};
+
+/// whether the tiff [b]'s first picture may be decoded: a size that fits,
+/// a squeeze that cannot grow past its tiles, and every deflated tile
+/// held to its own size before the decoder sees it
+bool tiffFits(Uint8List b) {
+  try {
+    final info = img.TiffDecoder().startDecode(b);
+    if (info == null || info.images.isEmpty) return false;
+    final t = info.images.first;
+    if (!_fits(t.width, t.height)) return false;
+    if (!_tiffKinds.contains(t.compression)) return false;
+    if (t.samplesPerPixel < 1 || t.samplesPerPixel > 4) return false;
+    if (t.bitsPerSample < 1 || t.bitsPerSample > 32) return false;
+    if (t.tileWidth < 1 || t.tileHeight < 1) return false;
+    if (t.tileWidth * t.tileHeight > kDrawMostPixels) return false;
+    final offsets = t.tileOffsets ?? const <int>[];
+    final counts = t.tileByteCounts ?? const <int>[];
+    final tilesX = (t.width + t.tileWidth - 1) ~/ t.tileWidth;
+    final tilesY = (t.height + t.tileHeight - 1) ~/ t.tileHeight;
+    if (offsets.length < tilesX * tilesY || counts.length < offsets.length) {
+      return false;
+    }
+    if (t.compression != img.TiffCompression.zip &&
+        t.compression != img.TiffCompression.deflate) {
+      return true;
+    }
+    final tile =
+        t.tileWidth *
+        t.tileHeight *
+        t.samplesPerPixel *
+        ((t.bitsPerSample + 7) >> 3);
+    for (var i = 0; i < offsets.length; i++) {
+      final at = offsets[i], n = counts[i];
+      if (at < 0 || n < 0 || at + n > b.length) return false;
+      if (!_inflatesWithin(Uint8List.sublistView(b, at, at + n), tile + 1024)) {
+        return false;
+      }
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// whether the png [b] may be decoded: its size fits and its image data
+/// inflates to no more than that size's rows
+bool pngFits(Uint8List b) {
+  try {
+    if (b.length < 33 || !_ascii(b, 12, 'IHDR')) return false;
+    final d = ByteData.sublistView(b);
+    final w = d.getUint32(16), h = d.getUint32(20);
+    if (!_fits(w, h)) return false;
+    final data = BytesBuilder(copy: false);
+    var at = 8;
+    while (at + 12 <= b.length) {
+      final n = d.getUint32(at);
+      if (at + 12 + n > b.length) return false;
+      if (_ascii(b, at + 4, 'IDAT')) {
+        data.add(Uint8List.sublistView(b, at + 8, at + 8 + n));
+      }
+      if (_ascii(b, at + 4, 'IEND')) break;
+      at += 12 + n;
+    }
+    // eight bytes a pixel at most, a filter byte a row, seven passes
+    return _inflatesWithin(data.takeBytes(), (w * 8 + 8) * h + 4096);
+  } catch (_) {
+    return false;
+  }
+}
+
+// whether the zlib stream [z] inflates to at most [most] bytes; stopped as
+// soon as it passes them
+bool _inflatesWithin(Uint8List z, int most) {
+  final count = _Count(most);
+  try {
+    final sink = ZLibDecoder().startChunkedConversion(count);
+    for (var i = 0; i < z.length; i += 1 << 16) {
+      sink.add(Uint8List.sublistView(z, i, math.min(z.length, i + (1 << 16))));
+    }
+    sink.close();
+    return true;
+  } on _Over {
+    return false;
+  } catch (_) {
+    // a broken stream: the decoder will say so itself
+    return true;
+  }
+}
+
+class _Over implements Exception {}
+
+class _Count implements Sink<List<int>> {
+  _Count(this.most);
+  final int most;
+  var n = 0;
+  @override
+  void add(List<int> chunk) {
+    n += chunk.length;
+    if (n > most) throw _Over();
+  }
+
+  @override
+  void close() {}
 }
 
 // a sensor lies wide, so a preview standing tall is turned already, as an
@@ -162,18 +312,21 @@ int _find(Uint8List b, String s, int from, int to) {
 /// their sensor data in is no picture and is passed over
 Uint8List? largestJpeg(Uint8List b, {int least = 0}) {
   ({int start, int end, int area})? best;
+  // every byte looked at counts: a file of nested starts walks no further
+  final work = _Work(b.length);
   var i = 0;
-  while (i + 4 < b.length) {
+  while (i + 4 < b.length && work.left > 0) {
     if (b[i] != 0xFF || b[i + 1] != 0xD8 || b[i + 2] != 0xFF) {
       i++;
       continue;
     }
-    final j = _jpegAt(b, i);
+    final j = _jpegAt(b, i, work);
     if (j == null) {
       i++;
       continue;
     }
-    if (math.max(j.w, j.h) >= least &&
+    if (_fits(j.w, j.h) &&
+        math.max(j.w, j.h) >= least &&
         (best == null || j.w * j.h > best.area)) {
       best = (start: i, end: j.end, area: j.w * j.h);
     }
@@ -186,11 +339,12 @@ Uint8List? largestJpeg(Uint8List b, {int least = 0}) {
 
 // the jpeg starting at [s]: where it ends and its size, or null when it is
 // none that can be drawn
-({int end, int w, int h})? _jpegAt(Uint8List b, int s) {
+({int end, int w, int h})? _jpegAt(Uint8List b, int s, _Work work) {
   final n = b.length;
   var p = s + 2;
   int? w, h;
   while (p + 2 <= n) {
+    if (--work.left < 0) return null;
     if (b[p] != 0xFF) return null;
     while (p < n && b[p] == 0xFF) {
       p++;
@@ -218,6 +372,7 @@ Uint8List? largestJpeg(Uint8List b, {int least = 0}) {
       // the entropy coded data runs to the next marker that is not a
       // stuffed byte or a restart
       while (p + 1 < n) {
+        if (--work.left < 0) return null;
         if (b[p] == 0xFF) {
           final x = b[p + 1];
           if (x == 0 || (x >= 0xD0 && x <= 0xD7) || x == 0xFF) {
@@ -231,4 +386,11 @@ Uint8List? largestJpeg(Uint8List b, {int least = 0}) {
     }
   }
   return null;
+}
+
+// how many more bytes a walk may look at: a few times the file, so nested
+// or broken starts cannot make it look at every byte again for each
+class _Work {
+  _Work(int n) : left = 4 * n + (1 << 20);
+  int left;
 }

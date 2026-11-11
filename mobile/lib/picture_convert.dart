@@ -4,12 +4,16 @@
 // read again. the one way every lane turns a heic, an avif or a picture
 // the cleaner cannot clean into a clean one: the gallery's shrink, a file
 // sent or kept, the tools cleaner. a computer draws it in dart
+import 'dart:async';
+import 'dart:isolate';
 import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:flutter/services.dart' show MethodChannel;
 
 import 'desktop/desk_draw.dart' show deskDrawJpeg;
-import 'desktop/desktop_mode.dart' show onDesktop, runIsolated;
+import 'desktop/desktop_mode.dart' show onDesktop;
 import 'dlog.dart';
 import 'image_strip.dart' show PictureKind, photoToSendOffUi, pictureKind;
 
@@ -71,13 +75,70 @@ Future<Uint8List?> deskJpeg(
   int quality = 90,
 }) async {
   if (b.isEmpty || b.length > kDeskConvertMost) return null;
+  final r = await deskDrawKilled(b, maxEdge: maxEdge, quality: quality);
+  if (r != null && pictureKind(r) == PictureKind.jpeg) return r;
+  return null;
+}
+
+/// how long a computer may draw one picture before its isolate is killed
+@visibleForTesting
+Duration deskDrawLimit = const Duration(seconds: 30);
+
+/// [deskDrawJpeg] in an isolate of its own, killed once [deskDrawLimit]
+/// passes: a stranger's file cannot hold the app. null when it is
+Future<Uint8List?> deskDrawKilled(
+  Uint8List b, {
+  int maxEdge = kConvertEdge,
+  int quality = 90,
+  @visibleForTesting Uint8List? Function(Uint8List)? draw,
+}) async {
+  final back = ReceivePort();
+  final done = Completer<Uint8List?>();
+  Isolate? iso;
+  final timer = Timer(deskDrawLimit, () {
+    iso?.kill(priority: Isolate.immediate);
+    dlog('convert: stopped after ${deskDrawLimit.inSeconds} s');
+    if (!done.isCompleted) done.complete(null);
+  });
+  back.listen((m) {
+    if (!done.isCompleted) {
+      done.complete(
+        m is TransferableTypedData ? m.materialize().asUint8List() : null,
+      );
+    }
+  });
   try {
-    final r = await runIsolated(
-      () => deskDrawJpeg(b, maxEdge: maxEdge, quality: quality),
+    iso = await Isolate.spawn(
+      _drawThere,
+      (
+        back.sendPort,
+        TransferableTypedData.fromList([b]),
+        maxEdge,
+        quality,
+        draw,
+      ),
+      onExit: back.sendPort,
+      onError: back.sendPort,
     );
-    if (r != null && pictureKind(r) == PictureKind.jpeg) return r;
+    if (done.isCompleted) iso.kill(priority: Isolate.immediate);
+    return await done.future;
   } catch (e) {
     dlog('convert: ${e.runtimeType}');
+    return null;
+  } finally {
+    timer.cancel();
+    back.close();
   }
-  return null;
+}
+
+void _drawThere(
+  (SendPort, TransferableTypedData, int, int, Uint8List? Function(Uint8List)?)
+  m,
+) {
+  final (to, bytes, maxEdge, quality, draw) = m;
+  final b = bytes.materialize().asUint8List();
+  final r = draw != null
+      ? draw(b)
+      : deskDrawJpeg(b, maxEdge: maxEdge, quality: quality);
+  to.send(r == null ? null : TransferableTypedData.fromList([r]));
 }

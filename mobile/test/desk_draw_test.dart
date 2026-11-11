@@ -5,6 +5,7 @@
 // raw.pixls.us); heic and avif need a native decoder and stay as they are
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +17,7 @@ import 'package:kryfo/image_strip.dart';
 import 'package:kryfo/jpeg_strip.dart' show jpegHasExif;
 import 'package:kryfo/meta/byte_source.dart' show MemorySource;
 import 'package:kryfo/meta/meta_reader.dart';
+import 'package:kryfo/picture_convert.dart' show deskDrawKilled, deskDrawLimit;
 import 'package:kryfo/tools/cleaner.dart' show readFile;
 import 'package:path/path.dart' as p;
 
@@ -36,7 +38,140 @@ void _clean(Uint8List out) {
 Uint8List _smallJpeg(int w, int h) =>
     img.encodeJpg(img.Image(width: w, height: h), quality: 50);
 
+// a tiff of one 16 x 16 grey strip, deflated: [z] is its strip
+Uint8List _deflateTiff(List<int> z) {
+  final ifd = <List<int>>[
+    [256, 3, 1, 16],
+    [257, 3, 1, 16],
+    [258, 3, 1, 8],
+    [259, 3, 1, 8],
+    [262, 3, 1, 1],
+    [273, 4, 1, 8 + 2 + 10 * 12 + 4],
+    [277, 3, 1, 1],
+    [278, 3, 1, 16],
+    [279, 4, 1, z.length],
+    [284, 3, 1, 1],
+  ];
+  final d = ByteData(8 + 2 + ifd.length * 12 + 4);
+  d.setUint8(0, 0x49);
+  d.setUint8(1, 0x49);
+  d.setUint16(2, 42, Endian.little);
+  d.setUint32(4, 8, Endian.little);
+  d.setUint16(8, ifd.length, Endian.little);
+  for (var i = 0; i < ifd.length; i++) {
+    final e = ifd[i], at = 10 + i * 12;
+    d.setUint16(at, e[0], Endian.little);
+    d.setUint16(at + 2, e[1], Endian.little);
+    d.setUint32(at + 4, e[2], Endian.little);
+    if (e[1] == 3) {
+      d.setUint16(at + 8, e[3], Endian.little);
+    } else {
+      d.setUint32(at + 8, e[3], Endian.little);
+    }
+  }
+  return Uint8List.fromList([...d.buffer.asUint8List(), ...z]);
+}
+
+// a png of [w] x [h] grey whose image data is [z]
+Uint8List _png(int w, int h, List<int> z) {
+  List<int> chunk(String t, List<int> body) {
+    final d = ByteData(4)..setUint32(0, body.length);
+    return [...d.buffer.asUint8List(), ...t.codeUnits, ...body, 0, 0, 0, 0];
+  }
+
+  final ihdr = ByteData(13)
+    ..setUint32(0, w)
+    ..setUint32(4, h)
+    ..setUint8(8, 8)
+    ..setUint8(9, 0);
+  return Uint8List.fromList([
+    0x89, ...'PNG'.codeUnits, 13, 10, 26, 10, //
+    ...chunk('IHDR', ihdr.buffer.asUint8List()),
+    ...chunk('IDAT', z),
+    ...chunk('IEND', const []),
+  ]);
+}
+
+// a drawing that never ends, for the kill
+Uint8List? _forever(Uint8List b) {
+  var x = 0;
+  while (true) {
+    x = (x + b.length) & 0xFFFF;
+  }
+}
+
+Uint8List? _quick(Uint8List b) => Uint8List.fromList([0xFF, 0xD8, 0xFF, 1]);
+
 void main() {
+  group('a stranger\'s file', () {
+    test('a header that says too many pixels is never decoded', () {
+      // sof0 saying 20000 x 20000, and hardly anything behind it
+      final huge = Uint8List.fromList([
+        0xFF, 0xD8, 0xFF, 0xC0, 0, 11, 8, 0x4E, 0x20, 0x4E, 0x20, 1, 1, 0x11, 0,
+        0xFF, 0xDA, 0, 8, 1, 1, 0, 0, 0x3F, 0, 1, 2, 3, 0xFF, 0xD9, //
+      ]);
+      final sw = Stopwatch()..start();
+      expect(deskDrawJpeg(huge), isNull);
+      expect(largestJpeg(huge), isNull);
+      expect(pngFits(_png(20000, 20000, const [])), isFalse);
+      expect(sw.elapsed, lessThan(const Duration(seconds: 2)));
+      // a raw whose biggest jpeg lies about its size gives the honest one
+      final small = img.encodeJpg(img.Image(width: 1300, height: 1000));
+      final raw = Uint8List.fromList([
+        ...'II*'.codeUnits, 0, 8, 0, 0, 0, 0, 0, ...huge, ...small, //
+      ]);
+      expect(largestJpeg(raw, least: 1200), small);
+    });
+
+    test('a deflate bomb in a png or a tiff is stopped before decoding', () {
+      final bomb = ZLibEncoder().convert(Uint8List(64 << 20));
+      expect(bomb.length, lessThan(1 << 20));
+      final sw = Stopwatch()..start();
+      expect(pngFits(_png(64, 64, bomb)), isFalse);
+      expect(deskDrawJpeg(_png(64, 64, bomb)), isNull);
+      expect(tiffFits(_deflateTiff(bomb)), isFalse);
+      expect(deskDrawJpeg(_deflateTiff(bomb)), isNull);
+      expect(sw.elapsed, lessThan(const Duration(seconds: 5)));
+      // the same, honest, goes through
+      final rows = Uint8List(16 * 16);
+      expect(tiffFits(_deflateTiff(ZLibEncoder().convert(rows))), isTrue);
+      expect(
+        deskDrawJpeg(_deflateTiff(ZLibEncoder().convert(rows))),
+        isNotNull,
+      );
+      final png = img.encodePng(img.Image(width: 64, height: 64));
+      expect(pngFits(png), isTrue);
+      expect(deskDrawJpeg(png), isNotNull);
+    });
+
+    test('starts and markers over and over end in time', () {
+      final unit = [0xFF, 0xD8, 0xFF, 0xDA, 0, 2, 0xFF, 0, 0xFF, 0xD0];
+      final b = Uint8List.fromList([
+        ...'II*'.codeUnits, 0, 8, 0, 0, 0, //
+        for (var i = 0; i < 400000; i++) ...unit,
+      ]);
+      final sw = Stopwatch()..start();
+      expect(largestJpeg(b), isNull);
+      expect(deskDrawJpeg(b), isNull);
+      expect(sw.elapsed, lessThan(const Duration(seconds: 10)));
+    });
+
+    test('a drawing that does not end is killed', () async {
+      final was = deskDrawLimit;
+      deskDrawLimit = const Duration(seconds: 1);
+      addTearDown(() => deskDrawLimit = was);
+      final sw = Stopwatch()..start();
+      expect(await deskDrawKilled(Uint8List(8), draw: _forever), isNull);
+      expect(sw.elapsed, lessThan(const Duration(seconds: 5)));
+      expect(await deskDrawKilled(Uint8List(8), draw: _quick), [
+        0xFF,
+        0xD8,
+        0xFF,
+        1,
+      ]);
+    });
+  });
+
   group('jpegs inside a file', () {
     test('the largest drawable one, past a lossless one', () {
       final small = _smallJpeg(40, 30);
