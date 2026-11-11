@@ -131,22 +131,25 @@ var handleTorUp = torCarriesNow
 // the own handle's lane takes a new socks name, so its next streams take a
 // new circuit and a new exit. a var for the tests
 var handleNewCircuit = func() {
-	dropLane(laneOwnHandle)
+	// taken before dropLane, which forgets the client without closing it;
+	// its sockets close once no lock is held
 	cachedNostrClientMu.Lock()
-	if c := cachedNostrClients["tor:"+laneOwnHandle]; c != nil {
-		c.CloseIdleConnections()
-	}
-	delete(cachedNostrClients, "tor:"+laneOwnHandle)
+	old := cachedNostrClients["tor:"+laneOwnHandle]
 	cachedNostrClientMu.Unlock()
+	dropLane(laneOwnHandle)
+	if old != nil {
+		old.CloseIdleConnections()
+	}
 }
 
 // the answer the app gets for a call that got none: tor not carrying is
-// named, since the registry was never asked
+// named, since the registry was never asked. "no answer" tells the app a
+// claim may have landed all the same
 func handleNoAnswer(err error) string {
 	if !handleTorUp() {
 		return "error: no tor"
 	}
-	return "error: " + err.Error()
+	return "error: no answer: " + err.Error()
 }
 
 // one registry call inside ctx, on the client [clientOf] gives. a try that
@@ -312,6 +315,16 @@ func handleRefusal(msg string) string {
 		return "clock"
 	case "slow down":
 		return "busy"
+	case "the registry is full":
+		return "full"
+	case "an older change":
+		return "older"
+	case "bad invite":
+		return "bad invite"
+	case "the invite is not yours":
+		return "invite not yours"
+	case "update the app":
+		return "update"
 	}
 	return "refused"
 }

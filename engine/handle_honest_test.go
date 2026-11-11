@@ -139,7 +139,8 @@ func TestHandleClaimSentOnce(t *testing.T) {
 		r.Body.Read(buf)
 		cut(w)
 	})
-	if r := handleClaim("wren", "kryfo://x", ""); !strings.HasPrefix(r, "error: ") {
+	// said as no answer: the app looks to see whether it landed
+	if r := handleClaim("wren", "kryfo://x", ""); !strings.HasPrefix(r, "error: no answer: ") {
 		t.Fatal(r)
 	}
 	if n := hits.Load(); n != 1 {
@@ -197,5 +198,60 @@ func TestHandleSaysNoTor(t *testing.T) {
 	}
 	if took := time.Since(start); took > 2*time.Second {
 		t.Fatalf("took %s", took)
+	}
+}
+
+// sockets that take their time to close
+type slowClose struct {
+	http.RoundTripper
+	closing, closed chan struct{}
+}
+
+func (s *slowClose) CloseIdleConnections() {
+	close(s.closing)
+	<-s.closed
+}
+
+// a new circuit closes the old client's sockets, and after every lock is
+// let go: no other lane waits on them meanwhile
+func TestHandleNewCircuitLetsGoFirst(t *testing.T) {
+	key := "tor:" + laneOwnHandle
+	tr := &slowClose{http.DefaultTransport, make(chan struct{}), make(chan struct{})}
+	cachedNostrClientMu.Lock()
+	was := cachedNostrClients[key]
+	cachedNostrClients[key] = &http.Client{Transport: tr}
+	cachedNostrClientMu.Unlock()
+	t.Cleanup(func() {
+		cachedNostrClientMu.Lock()
+		if was != nil {
+			cachedNostrClients[key] = was
+		}
+		cachedNostrClientMu.Unlock()
+	})
+	name := laneName(laneOwnHandle)
+	done := make(chan struct{})
+	go func() {
+		handleNewCircuit()
+		close(done)
+	}()
+	select {
+	case <-tr.closing:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the old client's sockets were never closed")
+	}
+	// the old sockets are still closing: the clients stay free to take
+	if !cachedNostrClientMu.TryLock() {
+		close(tr.closed)
+		t.Fatal("the clients were held while the old sockets closed")
+	}
+	_, kept := cachedNostrClients[key]
+	cachedNostrClientMu.Unlock()
+	close(tr.closed)
+	<-done
+	if kept {
+		t.Fatal("the old client was kept")
+	}
+	if laneName(laneOwnHandle) == name {
+		t.Fatal("the lane kept its socks name")
 	}
 }
