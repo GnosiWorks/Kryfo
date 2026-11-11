@@ -4168,48 +4168,6 @@ abstract class AppLocalizations {
   /// screens/group_chat_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'30 seconds'**
-  String get groupChat30Seconds;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'1 minute'**
-  String get groupChat1Minute;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'5 minutes'**
-  String get groupChat5Minutes;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'1 hour'**
-  String get groupChat1Hour;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'24 hours'**
-  String get groupChat24Hours;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
-  /// **'Timed messages'**
-  String get groupChatBurnTimer;
-
-  /// screens/group_chat_screen.dart: the line under the group timer sheet's title. each copy's clock starts when it is read, yours when it is sent
-  ///
-  /// In en, this message translates to:
-  /// **'New messages disappear this long after they\'re read. Yours count from when you send them.'**
-  String get groupChatNewMessagesDisappearOnceRead;
-
-  /// screens/group_chat_screen.dart
-  ///
-  /// In en, this message translates to:
   /// **'Today'**
   String get groupChatToday;
 

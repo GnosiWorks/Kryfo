@@ -116,7 +116,10 @@ void _popHeart(BuildContext context, Offset at) {
   if (overlay == null) return;
   late final OverlayEntry entry;
   entry = OverlayEntry(
-    builder: (_) => _HeartPop(at: at, done: () => entry.remove()),
+    builder: (_) => Material(
+      type: MaterialType.transparency,
+      child: _HeartPop(at: at, done: () => entry.remove()),
+    ),
   );
   overlay.insert(entry);
 }

@@ -2586,28 +2586,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'تمیز کردن آن ویدیو ممکن نشد';
 
   @override
-  String get groupChat30Seconds => '۳۰ ثانیه';
-
-  @override
-  String get groupChat1Minute => '۱ دقیقه';
-
-  @override
-  String get groupChat5Minutes => '۵ دقیقه';
-
-  @override
-  String get groupChat1Hour => '۱ ساعت';
-
-  @override
-  String get groupChat24Hours => '۲۴ ساعت';
-
-  @override
-  String get groupChatBurnTimer => 'پیام‌های زمان‌دار';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'پیام‌های جدید این مدت پس از خوانده شدن محو می‌شوند. پیام‌های شما از لحظه‌ی فرستادن حساب می‌شوند.';
-
-  @override
   String get groupChatToday => 'امروز';
 
   @override

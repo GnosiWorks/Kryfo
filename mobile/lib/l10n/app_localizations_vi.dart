@@ -2581,28 +2581,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'Không làm sạch được video đó';
 
   @override
-  String get groupChat30Seconds => '30 giây';
-
-  @override
-  String get groupChat1Minute => '1 phút';
-
-  @override
-  String get groupChat5Minutes => '5 phút';
-
-  @override
-  String get groupChat1Hour => '1 giờ';
-
-  @override
-  String get groupChat24Hours => '24 giờ';
-
-  @override
-  String get groupChatBurnTimer => 'Tin nhắn tự hủy';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'Tin nhắn mới sẽ biến mất sau khoảng thời gian này kể từ khi được đọc. Tin của bạn tính từ lúc bạn gửi.';
-
-  @override
   String get groupChatToday => 'Hôm nay';
 
   @override

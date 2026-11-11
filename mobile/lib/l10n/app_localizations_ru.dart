@@ -2643,28 +2643,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'Не удалось очистить видео';
 
   @override
-  String get groupChat30Seconds => '30 секунд';
-
-  @override
-  String get groupChat1Minute => '1 минута';
-
-  @override
-  String get groupChat5Minutes => '5 минут';
-
-  @override
-  String get groupChat1Hour => '1 час';
-
-  @override
-  String get groupChat24Hours => '24 часа';
-
-  @override
-  String get groupChatBurnTimer => 'Исчезающие сообщения';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'Новые сообщения исчезнут через это время после прочтения. Твои считаются с момента отправки.';
-
-  @override
   String get groupChatToday => 'Сегодня';
 
   @override

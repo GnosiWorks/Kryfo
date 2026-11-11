@@ -2361,9 +2361,9 @@ class _ContactListState extends State<_ContactList> {
     if (mounted) setState(() {});
   }
 
-  // the session and its vault the drafts were read for: a hidden chat's
-  // draft shows only in the session whose vault is open
-  Object get _draftsFor => (identityHashCode(session), session.vault?.isOpen);
+  // the session the drafts were read for: a vault opening or shutting
+  // makes a new one, so a hidden chat's draft shows only while it is open
+  Object get _draftsFor => identityHashCode(session);
   Object? _draftsRead;
 
   void _reloadDrafts() {
@@ -3620,7 +3620,7 @@ class DraftLine extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textDirection: writtenDir(text),
-              style: HaloType.sans(size: 12, color: HaloColors.text2),
+              style: HaloType.sans(size: 12, color: HaloColors.text),
             ),
           ),
         ],

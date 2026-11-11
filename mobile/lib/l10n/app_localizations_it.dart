@@ -2615,28 +2615,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'Impossibile ripulire il video';
 
   @override
-  String get groupChat30Seconds => '30 secondi';
-
-  @override
-  String get groupChat1Minute => '1 minuto';
-
-  @override
-  String get groupChat5Minutes => '5 minuti';
-
-  @override
-  String get groupChat1Hour => '1 ora';
-
-  @override
-  String get groupChat24Hours => '24 ore';
-
-  @override
-  String get groupChatBurnTimer => 'Messaggi a tempo';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'I nuovi messaggi spariscono dopo questo tempo dalla lettura. I tuoi contano da quando li invii.';
-
-  @override
   String get groupChatToday => 'Oggi';
 
   @override

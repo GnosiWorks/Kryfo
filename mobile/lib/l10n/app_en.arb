@@ -3207,34 +3207,6 @@
   "@groupChatCouldNotCleanThatVideo": {
     "description": "screens/group_chat_screen.dart"
   },
-  "groupChat30Seconds": "30 seconds",
-  "@groupChat30Seconds": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChat1Minute": "1 minute",
-  "@groupChat1Minute": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChat5Minutes": "5 minutes",
-  "@groupChat5Minutes": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChat1Hour": "1 hour",
-  "@groupChat1Hour": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChat24Hours": "24 hours",
-  "@groupChat24Hours": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatBurnTimer": "Timed messages",
-  "@groupChatBurnTimer": {
-    "description": "screens/group_chat_screen.dart"
-  },
-  "groupChatNewMessagesDisappearOnceRead": "New messages disappear this long after they're read. Yours count from when you send them.",
-  "@groupChatNewMessagesDisappearOnceRead": {
-    "description": "screens/group_chat_screen.dart: the line under the group timer sheet's title. each copy's clock starts when it is read, yours when it is sent"
-  },
   "groupChatToday": "Today",
   "@groupChatToday": {
     "description": "screens/group_chat_screen.dart"

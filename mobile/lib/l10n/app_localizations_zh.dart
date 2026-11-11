@@ -2454,28 +2454,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => '无法清理这个视频';
 
   @override
-  String get groupChat30Seconds => '30 秒';
-
-  @override
-  String get groupChat1Minute => '1 分钟';
-
-  @override
-  String get groupChat5Minutes => '5 分钟';
-
-  @override
-  String get groupChat1Hour => '1 小时';
-
-  @override
-  String get groupChat24Hours => '24 小时';
-
-  @override
-  String get groupChatBurnTimer => '限时消息';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      '新消息在被读后经过这段时间消失。你发出的从发送时开始计时。';
-
-  @override
   String get groupChatToday => '今天';
 
   @override
@@ -13984,28 +13962,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatCouldNotCleanThatVideo => '無法清理那段影片';
-
-  @override
-  String get groupChat30Seconds => '30 秒';
-
-  @override
-  String get groupChat1Minute => '1 分鐘';
-
-  @override
-  String get groupChat5Minutes => '5 分鐘';
-
-  @override
-  String get groupChat1Hour => '1 小時';
-
-  @override
-  String get groupChat24Hours => '24 小時';
-
-  @override
-  String get groupChatBurnTimer => '限時訊息';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      '新訊息在被讀取後經過這段時間消失。你傳送的從傳送時開始計時。';
 
   @override
   String get groupChatToday => '今天';
