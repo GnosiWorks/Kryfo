@@ -12156,4 +12156,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Opens the link in another app';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
 }

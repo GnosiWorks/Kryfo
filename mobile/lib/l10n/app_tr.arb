@@ -3197,5 +3197,6 @@
   "sharedNoVoice": "Bu sohbetteki sesli mesajlar burada görünür.",
   "sharedNoLinks": "Bu sohbette gönderilen bağlantılar burada görünür.",
   "sharedYourVoice": "Sesli mesajın",
-  "sharedOpensLink": "Bağlantıyı başka bir uygulamada açar"
+  "sharedOpensLink": "Bağlantıyı başka bir uygulamada açar",
+  "homeGroupLine": "{name}: {preview}"
 }

@@ -12174,4 +12174,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'پیوند را در برنامه‌ای دیگر باز می‌کند';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: ⁨$preview⁩';
+  }
 }

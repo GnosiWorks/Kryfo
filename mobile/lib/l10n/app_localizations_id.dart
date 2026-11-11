@@ -12161,4 +12161,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Membuka tautan di aplikasi lain';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
 }

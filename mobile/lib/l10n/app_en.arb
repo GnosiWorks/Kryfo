@@ -15309,5 +15309,17 @@
   "sharedOpensLink": "Opens the link in another app",
   "@sharedOpensLink": {
     "description": "shared page, for screen readers: what a tap on a link does"
+  },
+  "homeGroupLine": "{name}: {preview}",
+  "@homeGroupLine": {
+    "description": "home group row: who wrote last and what",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "preview": {
+        "type": "String"
+      }
+    }
   }
 }

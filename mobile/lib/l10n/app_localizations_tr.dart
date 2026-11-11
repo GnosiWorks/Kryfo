@@ -12183,4 +12183,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Bağlantıyı başka bir uygulamada açar';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
 }

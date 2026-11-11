@@ -3197,5 +3197,6 @@
   "sharedNoVoice": "這個聊天裡的語音訊息會顯示在這裡。",
   "sharedNoLinks": "這個聊天裡傳送的連結會顯示在這裡。",
   "sharedYourVoice": "你的語音訊息",
-  "sharedOpensLink": "在其他應用程式中開啟連結"
+  "sharedOpensLink": "在其他應用程式中開啟連結",
+  "homeGroupLine": "{name}：{preview}"
 }

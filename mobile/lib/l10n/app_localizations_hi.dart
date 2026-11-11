@@ -12163,4 +12163,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'लिंक को दूसरे ऐप में खोलता है';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
 }

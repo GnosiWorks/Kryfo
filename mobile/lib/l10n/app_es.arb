@@ -3197,5 +3197,6 @@
   "sharedNoVoice": "Aquí aparecen los mensajes de voz de este chat.",
   "sharedNoLinks": "Aquí aparecen los enlaces enviados en este chat.",
   "sharedYourVoice": "Tu mensaje de voz",
-  "sharedOpensLink": "Abre el enlace en otra app"
+  "sharedOpensLink": "Abre el enlace en otra app",
+  "homeGroupLine": "{name}: {preview}"
 }

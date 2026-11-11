@@ -3197,5 +3197,6 @@
   "sharedNoVoice": "تظهر هنا الرسائل الصوتية في هذه المحادثة.",
   "sharedNoLinks": "تظهر هنا الروابط المرسلة في هذه المحادثة.",
   "sharedYourVoice": "رسالتك الصوتية",
-  "sharedOpensLink": "يفتح الرابط في تطبيق آخر"
+  "sharedOpensLink": "يفتح الرابط في تطبيق آخر",
+  "homeGroupLine": "{name}: ⁨{preview}⁩"
 }

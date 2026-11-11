@@ -891,6 +891,17 @@ class Session {
     };
   }
 
+  // the newest row per group, from the container that holds the group
+  Future<Map<String, Map<String, Object?>>> lastGroupMessages() async {
+    final v = vault;
+    if (v == null) return primary.lastGroupMessages();
+    return {
+      for (final d in [primary, v])
+        for (final e in (await d.lastGroupMessages()).entries)
+          if (identical(_ofGroup(e.key), d)) e.key: e.value,
+    };
+  }
+
   Future<List<Map<String, Object?>>> loadGroups() async {
     final v = vault;
     if (v == null) return primary.loadGroups();

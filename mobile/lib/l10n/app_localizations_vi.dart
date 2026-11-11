@@ -12150,4 +12150,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Mở liên kết trong ứng dụng khác';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
 }

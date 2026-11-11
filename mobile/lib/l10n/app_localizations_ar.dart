@@ -12296,4 +12296,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'يفتح الرابط في تطبيق آخر';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: ⁨$preview⁩';
+  }
 }

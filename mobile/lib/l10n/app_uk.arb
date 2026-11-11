@@ -3197,5 +3197,6 @@
   "sharedNoVoice": "Тут з’являться голосові з цього чату.",
   "sharedNoLinks": "Тут з’являться посилання з цього чату.",
   "sharedYourVoice": "Твоє голосове",
-  "sharedOpensLink": "Відкриває посилання в іншому застосунку"
+  "sharedOpensLink": "Відкриває посилання в іншому застосунку",
+  "homeGroupLine": "{name}: {preview}"
 }

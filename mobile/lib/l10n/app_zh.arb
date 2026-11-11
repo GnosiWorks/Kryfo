@@ -3197,5 +3197,6 @@
   "sharedNoVoice": "这个聊天里的语音消息会显示在这里。",
   "sharedNoLinks": "这个聊天里发送的链接会显示在这里。",
   "sharedYourVoice": "你的语音消息",
-  "sharedOpensLink": "在其他应用中打开链接"
+  "sharedOpensLink": "在其他应用中打开链接",
+  "homeGroupLine": "{name}：{preview}"
 }

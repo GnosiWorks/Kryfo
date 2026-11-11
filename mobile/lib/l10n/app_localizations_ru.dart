@@ -12349,4 +12349,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Открывает ссылку в другом приложении';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
 }

@@ -19482,6 +19482,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Opens the link in another app'**
   String get sharedOpensLink;
+
+  /// home group row: who wrote last and what
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {preview}'**
+  String homeGroupLine(String name, String preview);
 }
 
 class _AppLocalizationsDelegate

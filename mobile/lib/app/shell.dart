@@ -49,6 +49,11 @@ class _RootShellState extends State<RootShell> {
         ),
       );
     }
+    // our names for the people who wrote last in a group
+    final nicks = <String, String>{
+      for (final c in appState.contacts)
+        if (c.nickname?.isNotEmpty ?? false) c.haloId: c.nickname!,
+    };
     return HomeScreen(
       key: ValueKey(appState.sessionRev),
       // a linked computer shows its phone's name, never its own: until
@@ -72,6 +77,13 @@ class _RootShellState extends State<RootShell> {
               joiningAt: g.joiningAt,
               hidden: g.hidden,
               endedBy: g.endedBy,
+              preview: groupRowLine(
+                body: g.lastBody,
+                out: g.lastOut,
+                from: g.lastFrom,
+                nicks: nicks,
+              ),
+              when: g.lastAt,
             ),
           )
           .toList(),

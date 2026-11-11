@@ -11491,6 +11491,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sharedOpensLink => '在其他应用中打开链接';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name：$preview';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22860,4 +22865,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sharedOpensLink => '在其他應用程式中開啟連結';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name：$preview';
+  }
 }
