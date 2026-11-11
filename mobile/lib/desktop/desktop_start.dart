@@ -30,7 +30,7 @@ import '../l10n/app_locale.dart' show loadAppLocale;
 import '../l10n/l10n.dart';
 import 'desk_frames.dart';
 import 'desktop_audio.dart';
-import '../container.dart' show HaloContainer;
+import '../container.dart' show HaloContainer, kOldDecoyKeyName;
 import 'desktop_channels.dart';
 import 'desktop_db.dart';
 import 'desktop_lock_screen.dart';
@@ -593,7 +593,10 @@ Future<void> openSeal({
   areas.lateKey = (suffix) {
     for (final c in [HaloContainer.everyday, HaloContainer.decoy]) {
       if (c.suffix != suffix) continue;
-      final k = vault.read(c.keyName!);
+      // the decoy's key under its name from before, until the start moves it
+      final k =
+          vault.read(c.keyName!) ??
+          (c == HaloContainer.decoy ? vault.read(kOldDecoyKeyName) : null);
       return k == null ? null : mediaKeyOf(k, c.id);
     }
     return null;

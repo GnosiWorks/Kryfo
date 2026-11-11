@@ -250,7 +250,8 @@ class HaloContainer {
     final prefs = await SharedPreferences.getInstance();
     for (final k in containerKeys) {
       await _registry.delete(key: key(k));
-      await prefs.remove(key(k));
+      // read from memory: a sweep of a place held alone writes nothing here
+      if (prefs.containsKey(key(k))) await prefs.remove(key(k));
     }
   }
 }
