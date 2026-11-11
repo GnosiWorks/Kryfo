@@ -107,10 +107,10 @@ var (
 	ownAnsweredAt time.Duration
 	ownFailedAt   time.Duration
 	pubAnsweredAt time.Duration
-	// on fast, the first store on its own: down as ours above, on the fast
-	// route's times. while it is, the backups are read and written through
-	// tor, as a private sender writes the public relays, so private readers
-	// and versions before the second store still get every message
+	// with backups listed, the first store on its own: down as ours above,
+	// on the route's own times. while it is, the backups are read and
+	// written through tor, so versions before the second store still get
+	// every message
 	firstDown       bool
 	firstKnown      bool
 	firstAnsweredAt time.Duration
@@ -133,13 +133,23 @@ func storeAnswered(st string) {
 	}
 }
 
-// an attempt on an entry of store st failed. only on fast, where the
-// backups are, and only while tor can carry them
+// fastDownAfter and fastFailSpan on private. the route watch takes new
+// circuits after a minute of every relay failing and bounces tor a minute
+// later: with only our servers listed, the backups have to answer before
+// that, or both of ours down reads as tor dead. vars for the tests
+var (
+	privateDownAfter = time.Minute
+	privateFailSpan  = 40 * time.Second
+)
+
+// an attempt on an entry of store st failed. only where the app listed
+// backups, and only while tor can carry them
 func storeFailed(st string) {
 	if st != storeFirst || len(backupsNow()) == 0 {
 		return
 	}
 	torWorks := torCarriesNow() && !netAway()
+	private := modeNeedsTor()
 	liveMu.Lock()
 	defer liveMu.Unlock()
 	now := ownClock()
@@ -153,7 +163,11 @@ func storeFailed(st string) {
 	if firstFailedAt == 0 {
 		firstFailedAt = now
 	}
-	if !firstDown && now-firstAnsweredAt >= fastDownAfter && now-firstFailedAt >= fastFailSpan {
+	after, span := fastDownAfter, fastFailSpan
+	if private {
+		after, span = privateDownAfter, privateFailSpan
+	}
+	if !firstDown && now-firstAnsweredAt >= after && now-firstFailedAt >= span {
 		firstDown = true
 		log.Println("nostr: our first relay is down, the backups are read through tor")
 		liveWakeLocked()

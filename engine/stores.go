@@ -306,9 +306,10 @@ func quickerStore(urls []string) string {
 	return best
 }
 
-// the public relays fast falls back on, and only while neither of our
-// stores answers. they are reached through tor, never directly: on fast
-// only our servers see the phone's address. empty on the other routes
+// the public relays a route falls back on while our first store is down:
+// fast's, and private's when the app lists them after a |. they are
+// reached through tor, never directly: on fast only our servers see the
+// phone's address
 var nostrBackups []string
 
 func setBackups(urls []string) {
@@ -438,10 +439,10 @@ func relaysInUse(ctx context.Context) []string {
 	return urls
 }
 
-// ev to every backup through tor, on the fast route, while tor carries: a
-// send our first store missed
+// ev to every backup through tor, while tor carries: a send our first store
+// missed
 func publishToBackups(lane string, ev nostr.Event, routeC <-chan struct{}) {
-	if currentMode() != modeBalanced || !torCarriesNow() || torIsPaused() {
+	if !torCarriesNow() || torIsPaused() {
 		return
 	}
 	for _, u := range backupsNow() {
