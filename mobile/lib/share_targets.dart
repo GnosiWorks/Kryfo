@@ -169,6 +169,8 @@ class ShareTargets {
   String? _salt;
   // what android holds, null until told once in this process
   List<ShareTarget>? _held;
+  // the last list handed to the chain, told or not yet
+  List<ShareTarget>? _asked;
   Timer? _soon;
   // one call to android at a time, in order
   Future<void> _chain = Future.value();
@@ -235,17 +237,19 @@ class ShareTargets {
   }
 
   /// the lock, the session or the chats changed: an empty list goes at
-  /// once, anything else after [settle]
+  /// once, anything else at most once a [settle], with the list as it is
+  /// then (the app's state changes many times a second)
   void changed() {
     if (!_android || !_started) return;
     final f = _facts(_on);
     if (!f.on || f.locked || !f.everyday) {
       _soon?.cancel();
       _soon = null;
+      if (_asked?.isEmpty ?? false) return;
       _send(const []);
       return;
     }
-    _soon?.cancel();
+    if (_soon != null) return;
     _soon = Timer(settle, () {
       _soon = null;
       unawaited(_publishNow());
@@ -259,6 +263,7 @@ class ShareTargets {
   }
 
   void _send(List<ShareTarget> want) {
+    _asked = want;
     _chain = _chain.then((_) async {
       if (_held != null && listEquals(_held, want)) return;
       try {
@@ -272,6 +277,7 @@ class ShareTargets {
       } catch (_) {
         // told again at the next change
         _held = null;
+        if (identical(_asked, want)) _asked = null;
       }
     });
   }

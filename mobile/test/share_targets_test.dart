@@ -174,6 +174,23 @@ void main() {
     expect(w.io.calls, hasLength(1));
   });
 
+  test('an app that changes all the time still gets its list', () async {
+    final w = _World()
+      ..on = true
+      ..contacts = [_c('a-a-a', nick: 'Anna', at: 1)];
+    await w.targets.startForTest();
+    for (var i = 0; i < 20; i++) {
+      w.targets.changed();
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+    expect(w.names, ['Anna']);
+    // and the lock right after a list went out still takes it
+    w.locked = true;
+    w.targets.changed();
+    await w.settle();
+    expect(w.io.calls.last, isEmpty);
+  });
+
   test('a pick in the menu lands only where it still may', () async {
     final w = _World()
       ..on = true
