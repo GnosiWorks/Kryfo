@@ -12329,4 +12329,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Maintenir pour plus d\'options';
+
+  @override
+  String get homeGroupShotsLine => 'Message';
 }

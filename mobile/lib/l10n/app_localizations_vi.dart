@@ -12183,4 +12183,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Nhấn giữ để xem thêm tùy chọn';
+
+  @override
+  String get homeGroupShotsLine => 'Tin nhắn';
 }

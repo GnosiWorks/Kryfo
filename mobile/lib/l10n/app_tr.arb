@@ -3203,5 +3203,6 @@
   "bannerOpenWith": "{name} ile sohbeti aç",
   "bannerNewMessages": "{count, plural, other{{count} yeni mesaj}}",
   "composerSendSilent": "Sessiz gönder",
-  "composerSendHoldHint": "Daha fazla seçenek için basılı tutun"
+  "composerSendHoldHint": "Daha fazla seçenek için basılı tutun",
+  "homeGroupShotsLine": "Mesaj"
 }

@@ -184,8 +184,13 @@ extension AppStateRefresh on AppState {
       final shots = GroupShots.ofRow(r, quiet: s.container.quiet);
       final last = lasts[gid];
       var (body, at) = last == null ? (null, null) : _lastBody(last);
-      // a group that blocks screenshots shows none of itself in the list
-      if (shots.blocking && body != null) body = l10n.notificationsNewMessage;
+      // a group that blocks screenshots shows none of itself in the list:
+      // a new message while unread, then only that there was one
+      if (shots.blocking && body != null) {
+        body = (r['unread'] as int? ?? 0) > 0
+            ? l10n.notificationsNewMessage
+            : l10n.homeGroupShotsLine;
+      }
       final from = last == null || last['direction'] == 'out'
           ? null
           : last['peer_id'] as String?;

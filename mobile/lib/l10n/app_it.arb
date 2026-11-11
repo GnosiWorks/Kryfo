@@ -3203,5 +3203,6 @@
   "bannerOpenWith": "Apri la chat con {name}",
   "bannerNewMessages": "{count, plural, one{{count} nuovo messaggio} other{{count} nuovi messaggi}}",
   "composerSendSilent": "Invia senza suono",
-  "composerSendHoldHint": "Tieni premuto per altre opzioni"
+  "composerSendHoldHint": "Tieni premuto per altre opzioni",
+  "homeGroupShotsLine": "Messaggio"
 }

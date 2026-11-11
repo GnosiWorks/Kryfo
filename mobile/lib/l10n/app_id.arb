@@ -3203,5 +3203,6 @@
   "bannerOpenWith": "Buka obrolan dengan {name}",
   "bannerNewMessages": "{count, plural, other{{count} pesan baru}}",
   "composerSendSilent": "Kirim tanpa suara",
-  "composerSendHoldHint": "Tahan untuk opsi lainnya"
+  "composerSendHoldHint": "Tahan untuk opsi lainnya",
+  "homeGroupShotsLine": "Pesan"
 }

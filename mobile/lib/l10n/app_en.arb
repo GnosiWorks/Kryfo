@@ -15352,5 +15352,9 @@
   "composerSendHoldHint": "Hold for more options",
   "@composerSendHoldHint": {
     "description": "screen reader hint on the send button: holding it opens more ways to send"
+  },
+  "homeGroupShotsLine": "Message",
+  "@homeGroupShotsLine": {
+    "description": "home group row of a group that blocks screenshots, once read: says only that the last thing was a message, never whose or what"
   }
 }

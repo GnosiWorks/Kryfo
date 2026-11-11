@@ -12385,4 +12385,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Удерживайте для других вариантов';
+
+  @override
+  String get homeGroupShotsLine => 'Сообщение';
 }

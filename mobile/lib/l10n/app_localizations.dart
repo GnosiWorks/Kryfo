@@ -19518,6 +19518,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hold for more options'**
   String get composerSendHoldHint;
+
+  /// home group row of a group that blocks screenshots, once read: says only that the last thing was a message, never whose or what
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get homeGroupShotsLine;
 }
 
 class _AppLocalizationsDelegate

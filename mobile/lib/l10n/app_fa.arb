@@ -3203,5 +3203,6 @@
   "bannerOpenWith": "باز کردن گفتگو با {name}",
   "bannerNewMessages": "{count, plural, other{{count} پیام تازه}}",
   "composerSendSilent": "ارسال بی‌صدا",
-  "composerSendHoldHint": "برای گزینه‌های بیشتر نگه دارید"
+  "composerSendHoldHint": "برای گزینه‌های بیشتر نگه دارید",
+  "homeGroupShotsLine": "پیام"
 }

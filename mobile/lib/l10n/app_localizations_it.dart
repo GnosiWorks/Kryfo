@@ -12291,4 +12291,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Tieni premuto per altre opzioni';
+
+  @override
+  String get homeGroupShotsLine => 'Messaggio';
 }

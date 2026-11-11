@@ -3203,5 +3203,6 @@
   "bannerOpenWith": "Otwórz czat z {name}",
   "bannerNewMessages": "{count, plural, one{{count} nowa wiadomość} few{{count} nowe wiadomości} many{{count} nowych wiadomości} other{{count} nowej wiadomości}}",
   "composerSendSilent": "Wyślij bez dźwięku",
-  "composerSendHoldHint": "Przytrzymaj, aby zobaczyć więcej opcji"
+  "composerSendHoldHint": "Przytrzymaj, aby zobaczyć więcej opcji",
+  "homeGroupShotsLine": "Wiadomość"
 }

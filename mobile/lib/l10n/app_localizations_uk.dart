@@ -12383,4 +12383,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Утримуйте, щоб побачити інші варіанти';
+
+  @override
+  String get homeGroupShotsLine => 'Повідомлення';
 }

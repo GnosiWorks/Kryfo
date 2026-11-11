@@ -12216,4 +12216,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Daha fazla seçenek için basılı tutun';
+
+  @override
+  String get homeGroupShotsLine => 'Mesaj';
 }

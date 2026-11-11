@@ -12197,4 +12197,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'और विकल्पों के लिए दबाकर रखें';
+
+  @override
+  String get homeGroupShotsLine => 'संदेश';
 }

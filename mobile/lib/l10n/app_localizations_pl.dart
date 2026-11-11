@@ -12427,4 +12427,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Przytrzymaj, aby zobaczyć więcej opcji';
+
+  @override
+  String get homeGroupShotsLine => 'Wiadomość';
 }

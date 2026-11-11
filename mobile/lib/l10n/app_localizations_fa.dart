@@ -12207,4 +12207,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'برای گزینه‌های بیشتر نگه دارید';
+
+  @override
+  String get homeGroupShotsLine => 'پیام';
 }

@@ -776,8 +776,16 @@ void main() {
           'created_at': 1,
           'room_pub': 'pub',
           'room_priv': 'priv',
+          'unread': 2,
         },
         {'group_id': 'g3', 'name': 'Ours', 'is_admin': 1, 'created_at': 1},
+        {
+          'group_id': 'g4',
+          'name': 'Read',
+          'is_admin': 0,
+          'created_at': 1,
+          'room_pub': 'pub4',
+        },
       ];
       Map<String, Object?> row(String g, String dir, {int? burn}) => {
         'group_id': g,
@@ -792,6 +800,7 @@ void main() {
         'g1': row('g1', 'in', burn: 60),
         'g2': row('g2', 'in'),
         'g3': row('g3', 'out'),
+        'g4': row('g4', 'in'),
       };
       await appState.refreshGroups();
       final g = {for (final x in appState.groups) x.groupId: x};
@@ -802,6 +811,9 @@ void main() {
       expect(g['g2']!.shotsBlocking, isTrue);
       expect(g['g2']!.lastBody, l10n.notificationsNewMessage);
       expect(g['g2']!.lastFrom, isNull);
+      // read: only that there was a message
+      expect(g['g4']!.lastBody, l10n.homeGroupShotsLine);
+      expect(g['g4']!.lastFrom, isNull);
       expect(g['g3']!.lastOut, isTrue);
       expect(g['g3']!.lastBody, 'the secret');
     });

@@ -12336,4 +12336,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Gedrückt halten für mehr Optionen';
+
+  @override
+  String get homeGroupShotsLine => 'Nachricht';
 }

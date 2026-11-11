@@ -3203,5 +3203,6 @@
   "bannerOpenWith": "Відкрити чат: {name}",
   "bannerNewMessages": "{count, plural, one{{count} нове повідомлення} few{{count} нові повідомлення} many{{count} нових повідомлень} other{{count} нового повідомлення}}",
   "composerSendSilent": "Надіслати без звуку",
-  "composerSendHoldHint": "Утримуйте, щоб побачити інші варіанти"
+  "composerSendHoldHint": "Утримуйте, щоб побачити інші варіанти",
+  "homeGroupShotsLine": "Повідомлення"
 }

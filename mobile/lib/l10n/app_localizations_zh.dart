@@ -11524,6 +11524,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => '长按查看更多选项';
+
+  @override
+  String get homeGroupShotsLine => '消息';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22926,4 +22929,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get composerSendHoldHint => '長按查看更多選項';
+
+  @override
+  String get homeGroupShotsLine => '訊息';
 }

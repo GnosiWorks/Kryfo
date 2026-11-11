@@ -12334,4 +12334,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'اضغط مطولًا لمزيد من الخيارات';
+
+  @override
+  String get homeGroupShotsLine => 'رسالة';
 }

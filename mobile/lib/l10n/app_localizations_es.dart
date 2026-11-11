@@ -12286,4 +12286,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Mantén pulsado para más opciones';
+
+  @override
+  String get homeGroupShotsLine => 'Mensaje';
 }

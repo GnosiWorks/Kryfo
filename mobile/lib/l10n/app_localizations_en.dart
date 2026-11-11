@@ -12190,4 +12190,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Hold for more options';
+
+  @override
+  String get homeGroupShotsLine => 'Message';
 }

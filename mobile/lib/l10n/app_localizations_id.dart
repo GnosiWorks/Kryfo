@@ -12194,4 +12194,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get composerSendHoldHint => 'Tahan untuk opsi lainnya';
+
+  @override
+  String get homeGroupShotsLine => 'Pesan';
 }

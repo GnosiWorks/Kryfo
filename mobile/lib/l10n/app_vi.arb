@@ -3203,5 +3203,6 @@
   "bannerOpenWith": "Mở cuộc trò chuyện với {name}",
   "bannerNewMessages": "{count, plural, other{{count} tin nhắn mới}}",
   "composerSendSilent": "Gửi không âm thanh",
-  "composerSendHoldHint": "Nhấn giữ để xem thêm tùy chọn"
+  "composerSendHoldHint": "Nhấn giữ để xem thêm tùy chọn",
+  "homeGroupShotsLine": "Tin nhắn"
 }

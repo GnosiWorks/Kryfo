@@ -3203,5 +3203,6 @@
   "bannerOpenWith": "Abrir a conversa com {name}",
   "bannerNewMessages": "{count, plural, one{{count} nova mensagem} other{{count} novas mensagens}}",
   "composerSendSilent": "Enviar sem som",
-  "composerSendHoldHint": "Mantenha pressionado para mais opções"
+  "composerSendHoldHint": "Mantenha pressionado para mais opções",
+  "homeGroupShotsLine": "Mensagem"
 }
