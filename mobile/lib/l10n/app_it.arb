@@ -3211,5 +3211,7 @@
   "composerSendHoldHint": "Tieni premuto per altre opzioni",
   "homeGroupShotsLine": "Messaggio",
   "settingsShareMenu": "Mostra le chat nel menu di condivisione",
-  "settingsShareMenuHint": "Le tue chat più recenti compaiono per nome quando condividi da un'altra app, e si ritirano mentre Kryfo è bloccato."
+  "settingsShareMenuHint": "Le tue chat più recenti compaiono per nome quando condividi da un'altra app.",
+  "settingsShareMenuHintLocked": "Le tue chat più recenti compaiono per nome nel menu di condivisione delle altre app solo mentre Kryfo è sbloccato.",
+  "settingsShareMenuDisguised": "Le tue chat restano fuori dal menu di condivisione finché Kryfo usa un'altra icona."
 }

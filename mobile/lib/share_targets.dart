@@ -18,6 +18,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'app_icon.dart' show AppFace, appFaceNow;
 import 'container.dart';
 import 'desktop/desktop_mode.dart' show onDesktop;
 import 'lock_state.dart' show lockState;
@@ -83,7 +84,8 @@ String initialOf(String name) {
 /// android's side: whether the menu can take them, and the list
 abstract class ShareTargetsIo {
   Future<bool> supported();
-  Future<void> publish(List<ShareTarget> list);
+  // false: android took none (its rate limit)
+  Future<bool> publish(List<ShareTarget> list);
   Future<void> clear();
 }
 
@@ -93,11 +95,13 @@ class _ChannelIo implements ShareTargetsIo {
   Future<bool> supported() async =>
       await _ch.invokeMethod<bool>('supported') ?? false;
   @override
-  Future<void> publish(List<ShareTarget> list) => _ch.invokeMethod('publish', {
-    'targets': [for (final t in list) t.toMap()],
-    'bg': HaloColors.ink.toARGB32(),
-    'fg': HaloColors.yellow.toARGB32(),
-  });
+  Future<bool> publish(List<ShareTarget> list) async =>
+      await _ch.invokeMethod<bool>('publish', {
+        'targets': [for (final t in list) t.toMap()],
+        'bg': HaloColors.ink.toARGB32(),
+        'fg': HaloColors.yellow.toARGB32(),
+      }) ??
+      false;
   @override
   Future<void> clear() => _ch.invokeMethod('clear');
 }
@@ -107,32 +111,38 @@ class ShareFacts {
   final bool on;
   final bool locked;
   final bool everyday;
+  // kryfo's own icon is on: under a disguise the menu names nobody
+  final bool ownIcon;
   final List<ContactPreview> contacts;
   const ShareFacts({
     required this.on,
     required this.locked,
     required this.everyday,
     required this.contacts,
+    this.ownIcon = true,
   });
+
+  bool get may => on && !locked && everyday && ownIcon;
 }
 
 /// the chats the menu should hold now, the latest first, none when it may
 /// hold none
 List<ShareTarget> shareTargetsFor(ShareFacts f, String salt) {
-  if (!f.on || f.locked || !f.everyday) return const [];
+  if (!f.may) return const [];
+  // a chat with no name of the person's own would show its whole kryfo id
   final chats = [
     for (final c in f.contacts)
-      if (!c.hidden && !c.blocked && !c.archived) c,
+      if (!c.hidden &&
+          !c.blocked &&
+          !c.archived &&
+          (c.nickname?.trim().isNotEmpty ?? false))
+        c,
   ];
   int at(ContactPreview c) => c.when?.millisecondsSinceEpoch ?? 0;
   chats.sort((a, b) => at(b).compareTo(at(a)));
   return [
     for (final c in chats.take(kShareTargetsMost))
-      ShareTarget(
-        shareTargetId(salt, c.haloId),
-        c.haloId,
-        c.nickname ?? c.haloId,
-      ),
+      ShareTarget(shareTargetId(salt, c.haloId), c.haloId, c.nickname!.trim()),
   ];
 }
 
@@ -177,7 +187,10 @@ class ShareTargets {
 
   static ShareFacts _liveFacts(bool on) => ShareFacts(
     on: on,
-    locked: lockState.locked,
+    // a lock not read yet counts as up (lock_guard.dart): a push or job
+    // start with the lock on publishes nothing
+    locked: !lockState.loaded || lockState.locked,
+    ownIcon: appFaceNow.value == AppFace.kryfo,
     everyday:
         !lockState.inDecoy &&
         !appState.inDecoyView &&
@@ -220,6 +233,7 @@ class ShareTargets {
     }
     lockState.addListener(changed);
     appState.addListener(changed);
+    appFaceNow.addListener(changed);
     changed();
   }
 
@@ -228,6 +242,20 @@ class ShareTargets {
     _started = true;
     _on = await _loadOn();
     changed();
+  }
+
+  /// a wipe is starting: the menu's chats go before anything else, since
+  /// the system keeps them apart from the app's files
+  Future<void> wiped() async {
+    _soon?.cancel();
+    _soon = null;
+    _on = false;
+    _asked = const [];
+    if (!_android) return;
+    try {
+      await _io.clear().timeout(const Duration(seconds: 2));
+    } catch (_) {}
+    _held = const [];
   }
 
   /// the everyday switch moved
@@ -242,7 +270,7 @@ class ShareTargets {
   void changed() {
     if (!_android || !_started) return;
     final f = _facts(_on);
-    if (!f.on || f.locked || !f.everyday) {
+    if (!f.may) {
       _soon?.cancel();
       _soon = null;
       if (_asked?.isEmpty ?? false) return;
@@ -271,7 +299,12 @@ class ShareTargets {
           await _io.clear();
         } else {
           if (!await supported()) return;
-          await _io.publish(want);
+          if (!await _io.publish(want)) {
+            // told again at the next change
+            _held = null;
+            if (identical(_asked, want)) _asked = null;
+            return;
+          }
         }
         _held = want;
       } catch (_) {
@@ -294,18 +327,25 @@ class ShareTargets {
   }
 
   /// the chat a share picked in the menu went to, when it may go there
-  /// now: an everyday chat in the list as it stands, the lock down, no
-  /// decoy. null sends the share through the picker
+  /// now: one from the list last given to the menu, still a chat the menu
+  /// may hold, the lock down, no decoy. null sends the share through the
+  /// picker
   Future<String?> chatFor(String? shortcutId) async {
     if (shortcutId == null || shortcutId.isEmpty || !_android) return null;
     final f = _facts(_on);
-    final salt = _salt ??= await _saltOf();
-    if (!f.on || f.locked || !f.everyday) return null;
-    for (final c in f.contacts) {
-      if (c.hidden || c.blocked) continue;
-      if (shareTargetId(salt, c.haloId) == shortcutId) return c.haloId;
-    }
-    return null;
+    if (!f.may) return null;
+    final held = _held ?? const <ShareTarget>[];
+    final t = held.where((t) => t.id == shortcutId).firstOrNull;
+    if (t == null) return null;
+    final still = f.contacts.any(
+      (c) =>
+          c.haloId == t.chat &&
+          !c.hidden &&
+          !c.blocked &&
+          !c.archived &&
+          (c.nickname?.trim().isNotEmpty ?? false),
+    );
+    return still ? t.chat : null;
   }
 }
 

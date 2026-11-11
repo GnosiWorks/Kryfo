@@ -3211,5 +3211,7 @@
   "composerSendHoldHint": "और विकल्पों के लिए दबाकर रखें",
   "homeGroupShotsLine": "संदेश",
   "settingsShareMenu": "शेयर मेन्यू में चैट दिखाएँ",
-  "settingsShareMenuHint": "किसी दूसरे ऐप से शेयर करते समय आपकी हाल की चैट नाम से दिखती हैं, और Kryfo लॉक रहने तक हट जाती हैं।"
+  "settingsShareMenuHint": "किसी दूसरे ऐप से शेयर करते समय आपकी हाल की चैट नाम से दिखती हैं।",
+  "settingsShareMenuHintLocked": "आपकी हाल की चैट दूसरे ऐप के शेयर मेन्यू में नाम से तभी दिखती हैं जब Kryfo अनलॉक हो।",
+  "settingsShareMenuDisguised": "जब तक Kryfo दूसरा आइकन पहने है, आपकी चैट शेयर मेन्यू से बाहर रहती हैं।"
 }

@@ -12251,5 +12251,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür ve Kryfo kilitliyken kenara çekilir.';
+      'Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Son sohbetlerin, diğer uygulamaların paylaşım menüsünde yalnızca Kryfo\'nun kilidi açıkken adlarıyla görünür.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Kryfo başka bir simge taşırken sohbetlerin paylaşım menüsünün dışında kalır.';
 }

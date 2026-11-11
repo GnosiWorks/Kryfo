@@ -12420,5 +12420,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Ваши последние чаты появляются по имени, когда вы делитесь из другого приложения, и уходят, пока Kryfo заблокирован.';
+      'Ваши последние чаты появляются по имени, когда вы делитесь из другого приложения.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Ваши последние чаты появляются по имени в меню «Поделиться» других приложений, только пока Kryfo разблокирован.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Ваши чаты остаются вне меню «Поделиться», пока у Kryfo другой значок.';
 }

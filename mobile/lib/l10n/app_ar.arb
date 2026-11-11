@@ -3211,5 +3211,7 @@
   "composerSendHoldHint": "اضغط مطولًا لمزيد من الخيارات",
   "homeGroupShotsLine": "رسالة",
   "settingsShareMenu": "إظهار المحادثات في قائمة المشاركة",
-  "settingsShareMenuHint": "تظهر محادثاتك الأخيرة بأسمائها عند المشاركة من تطبيق آخر، وتتنحّى ما دام Kryfo مقفلًا."
+  "settingsShareMenuHint": "تظهر محادثاتك الأخيرة بأسمائها عند المشاركة من تطبيق آخر.",
+  "settingsShareMenuHintLocked": "تظهر محادثاتك الأخيرة بأسمائها في قوائم المشاركة في التطبيقات الأخرى فقط ما دام Kryfo غير مقفل.",
+  "settingsShareMenuDisguised": "تبقى محادثاتك خارج قائمة المشاركة ما دام Kryfo يحمل أيقونة أخرى."
 }

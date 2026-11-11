@@ -140,6 +140,8 @@ object AppIcon {
     // false for a name it does not know, and when android refused
     fun set(context: Context, name: String?, s: Switches = Pm(context)): Boolean {
         val f = byName(name) ?: return false
+        // chats in the share menu name nothing under another icon
+        if (s is Pm) ShareTargets.clear(context)
         return try {
             s.apply(steps(context, f))
             true

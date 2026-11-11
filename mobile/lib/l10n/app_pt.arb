@@ -3211,5 +3211,7 @@
   "composerSendHoldHint": "Mantenha pressionado para mais opções",
   "homeGroupShotsLine": "Mensagem",
   "settingsShareMenu": "Mostrar conversas no menu de compartilhar",
-  "settingsShareMenuHint": "Suas conversas mais recentes aparecem pelo nome quando você compartilha de outro app, e saem de cena enquanto o Kryfo está bloqueado."
+  "settingsShareMenuHint": "Suas conversas mais recentes aparecem pelo nome quando você compartilha de outro app.",
+  "settingsShareMenuHintLocked": "Suas conversas mais recentes aparecem pelo nome no menu de compartilhar de outros apps só enquanto o Kryfo está desbloqueado.",
+  "settingsShareMenuDisguised": "Suas conversas ficam fora do menu de compartilhar enquanto o Kryfo usa outro ícone."
 }

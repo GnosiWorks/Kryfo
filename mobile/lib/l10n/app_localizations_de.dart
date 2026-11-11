@@ -12371,5 +12371,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Deine neuesten Chats erscheinen mit Namen, wenn du aus einer anderen App teilst, und treten zurück, solange Kryfo gesperrt ist.';
+      'Deine neuesten Chats erscheinen mit Namen, wenn du aus einer anderen App teilst.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Deine neuesten Chats erscheinen nur mit Namen im Teilen-Menü anderer Apps, solange Kryfo entsperrt ist.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Deine Chats bleiben aus dem Teilen-Menü, solange Kryfo ein anderes Symbol trägt.';
 }

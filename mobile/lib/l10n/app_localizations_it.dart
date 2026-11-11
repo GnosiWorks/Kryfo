@@ -12326,5 +12326,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Le tue chat più recenti compaiono per nome quando condividi da un\'altra app, e si ritirano mentre Kryfo è bloccato.';
+      'Le tue chat più recenti compaiono per nome quando condividi da un\'altra app.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Le tue chat più recenti compaiono per nome nel menu di condivisione delle altre app solo mentre Kryfo è sbloccato.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Le tue chat restano fuori dal menu di condivisione finché Kryfo usa un\'altra icona.';
 }

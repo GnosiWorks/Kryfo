@@ -1,22 +1,37 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // android's share menu: off by default; on, the latest everyday 1:1 chats
-// by the names the chats show; never a hidden, blocked or archived chat or
-// the decoy's; gone at once when turned off and the moment the app locks,
-// back at the unlock; a hidden chat leaves with the next list; a pick
-// lands only where it still may; a computer and an older android get none
+// by the names the person gave them; never a hidden, blocked, archived or
+// unnamed chat or the decoy's; none under a disguise icon; gone at once
+// when turned off, at the lock (and a lock not read yet counts as up) and
+// at a wipe, back at the unlock; a hidden chat leaves with the next list; a
+// pick lands only in a chat the menu was given that still may; a computer
+// and an older android get none
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/app_icon.dart' show AppFace, appFaceNow;
+import 'package:kryfo/lock_state.dart' show lockState;
+import 'package:kryfo/main.dart' show appState;
 import 'package:kryfo/screens/home_screen.dart' show ContactPreview;
 import 'package:kryfo/share_targets.dart';
 import 'package:kryfo/share_text.dart';
 import 'package:kryfo/tools/tools_bridge.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'source_body.dart';
 
 class _Io implements ShareTargetsIo {
   bool ok = true;
+  // android's answer to a publish: false is its rate limit
+  bool takes = true;
   final calls = <List<ShareTarget>>[];
   @override
   Future<bool> supported() async => ok;
   @override
-  Future<void> publish(List<ShareTarget> list) async => calls.add(list);
+  Future<bool> publish(List<ShareTarget> list) async {
+    calls.add(list);
+    return takes;
+  }
+
   @override
   Future<void> clear() async => calls.add(const []);
 }
@@ -42,6 +57,7 @@ class _World {
   var on = false;
   var locked = false;
   var everyday = true;
+  var ownIcon = true;
   var contacts = <ContactPreview>[];
   final io = _Io();
   late final targets = ShareTargets(
@@ -50,6 +66,7 @@ class _World {
       on: o,
       locked: locked,
       everyday: everyday,
+      ownIcon: ownIcon,
       contacts: contacts,
     ),
     loadOn: () async => on,
@@ -64,38 +81,42 @@ class _World {
       Future<void>.delayed(const Duration(milliseconds: 60));
 }
 
+Future<void> _tick() => Future<void>.delayed(Duration.zero);
+
 void main() {
   test(
     'off by default: what an earlier run left goes, nothing comes',
     () async {
-      final w = _World()..contacts = [_c('anna-blue-fox', at: 5)];
+      final w = _World()..contacts = [_c('anna-blue-fox', nick: 'A', at: 5)];
       await w.targets.startForTest();
       await w.settle();
       expect(w.io.calls, [const <ShareTarget>[]]);
     },
   );
 
-  test('on: the latest everyday chats by their names, four at most, never '
-      'a hidden, blocked or archived one', () async {
+  test('on: the latest named everyday chats, four at most, never a hidden, '
+      'blocked, archived or unnamed one', () async {
     final w = _World()
       ..on = true
       ..contacts = [
         _c('a-a-a', nick: 'Anna', at: 1),
         _c('b-b-b', nick: 'Ben', at: 6),
+        // no name of the person's own: its whole kryfo id would show
         _c('c-c-c', at: 5),
+        _c('s-s-s', nick: '  ', at: 5),
         _c('h-h-h', nick: 'Hidden', at: 9, hidden: true),
         _c('x-x-x', nick: 'Blocked', at: 8, blocked: true),
         _c('r-r-r', nick: 'Archived', at: 7, archived: true),
         _c('d-d-d', nick: 'Dora', at: 4),
         _c('e-e-e', nick: 'Emil', at: 3),
+        _c('f-f-f', nick: 'Fay', at: 0),
       ];
     await w.targets.startForTest();
     await w.settle();
-    // the name the chat shows: the nickname, else the kryfo id
-    expect(w.names, ['Ben', 'c-c-c', 'Dora', 'Emil']);
-    // no id in the menu names a kryfo id
+    expect(w.names, ['Ben', 'Dora', 'Emil', 'Anna']);
     for (final t in w.io.calls.last) {
       expect(t.id, isNot(contains(t.chat)));
+      expect(t.name, isNot(contains(t.chat)));
       expect(t.id, shareTargetId('salt', t.chat));
     }
     expect(w.io.calls.last.first.toMap()['initial'], 'B');
@@ -111,7 +132,7 @@ void main() {
     w.locked = true;
     w.targets.changed();
     // no wait for the settle: gone before the next turn of the loop
-    await Future<void>.delayed(Duration.zero);
+    await _tick();
     expect(w.io.calls.last, isEmpty);
     w.locked = false;
     w.targets.changed();
@@ -126,15 +147,44 @@ void main() {
     await w.targets.startForTest();
     await w.settle();
     w.targets.everydayOn(false);
-    await Future<void>.delayed(Duration.zero);
+    await _tick();
     expect(w.io.calls.last, isEmpty);
     w.targets.everydayOn(true);
     await w.settle();
     expect(w.names, ['Anna']);
     w.everyday = false;
     w.targets.changed();
-    await Future<void>.delayed(Duration.zero);
+    await _tick();
     expect(w.io.calls.last, isEmpty);
+    await w.settle();
+    expect(w.io.calls.last, isEmpty);
+  });
+
+  test('under a disguise icon the menu names nobody', () async {
+    final w = _World()
+      ..on = true
+      ..contacts = [_c('a-a-a', nick: 'Anna', at: 1)];
+    await w.targets.startForTest();
+    await w.settle();
+    expect(w.names, ['Anna']);
+    w.ownIcon = false;
+    w.targets.changed();
+    await _tick();
+    expect(w.io.calls.last, isEmpty);
+    await w.settle();
+    expect(w.io.calls.last, isEmpty);
+    expect(await w.targets.chatFor(shareTargetId('salt', 'a-a-a')), isNull);
+  });
+
+  test('a wipe clears them first, and nothing comes back', () async {
+    final w = _World()
+      ..on = true
+      ..contacts = [_c('a-a-a', nick: 'Anna', at: 1)];
+    await w.targets.startForTest();
+    await w.settle();
+    await w.targets.wiped();
+    expect(w.io.calls.last, isEmpty);
+    w.targets.changed();
     await w.settle();
     expect(w.io.calls.last, isEmpty);
   });
@@ -151,7 +201,7 @@ void main() {
     expect(w.names, ['Ben', 'Anna']);
     w.contacts = [
       _c('a-a-a', nick: 'Anna', at: 1),
-      _c('b-b-b', at: 2, hidden: true),
+      _c('b-b-b', nick: 'Ben', at: 2, hidden: true),
     ];
     w.targets.changed();
     await w.settle();
@@ -162,17 +212,26 @@ void main() {
     expect(w.io.calls.last, isEmpty);
   });
 
-  test('the same list is told once', () async {
-    final w = _World()
-      ..on = true
-      ..contacts = [_c('a-a-a', nick: 'Anna', at: 1)];
-    await w.targets.startForTest();
-    await w.settle();
-    w.targets.changed();
-    w.targets.changed();
-    await w.settle();
-    expect(w.io.calls, hasLength(1));
-  });
+  test(
+    'the same list is told once; one android refused is told again',
+    () async {
+      final w = _World()
+        ..on = true
+        ..contacts = [_c('a-a-a', nick: 'Anna', at: 1)];
+      w.io.takes = false;
+      await w.targets.startForTest();
+      await w.settle();
+      expect(w.io.calls, hasLength(1));
+      w.io.takes = true;
+      w.targets.changed();
+      await w.settle();
+      expect(w.io.calls, hasLength(2));
+      w.targets.changed();
+      w.targets.changed();
+      await w.settle();
+      expect(w.io.calls, hasLength(2));
+    },
+  );
 
   test('an app that changes all the time still gets its list', () async {
     final w = _World()
@@ -183,6 +242,7 @@ void main() {
       w.targets.changed();
       await Future<void>.delayed(const Duration(milliseconds: 5));
     }
+    await w.settle();
     expect(w.names, ['Anna']);
     // and the lock right after a list went out still takes it
     w.locked = true;
@@ -191,27 +251,38 @@ void main() {
     expect(w.io.calls.last, isEmpty);
   });
 
-  test('a pick in the menu lands only where it still may', () async {
-    final w = _World()
-      ..on = true
-      ..contacts = [_c('a-a-a', nick: 'Anna', at: 1)];
-    await w.targets.startForTest();
-    final id = shareTargetId('salt', 'a-a-a');
-    expect(await w.targets.chatFor(id), 'a-a-a');
-    expect(await w.targets.chatFor('cnothing'), isNull);
-    expect(await w.targets.chatFor(null), isNull);
-    w.locked = true;
-    expect(await w.targets.chatFor(id), isNull);
-    w.locked = false;
-    w.everyday = false;
-    expect(await w.targets.chatFor(id), isNull);
-    w.everyday = true;
-    w.contacts = [_c('a-a-a', at: 1, hidden: true)];
-    expect(await w.targets.chatFor(id), isNull);
-    w.contacts = [_c('a-a-a', at: 1)];
-    w.targets.everydayOn(false);
-    expect(await w.targets.chatFor(id), isNull);
-  });
+  test(
+    'a pick lands only in a chat the menu was given that still may',
+    () async {
+      final w = _World()
+        ..on = true
+        ..contacts = [
+          _c('a-a-a', nick: 'Anna', at: 1),
+          _c('r-r-r', nick: 'Archived', at: 2, archived: true),
+        ];
+      await w.targets.startForTest();
+      await w.settle();
+      final id = shareTargetId('salt', 'a-a-a');
+      expect(await w.targets.chatFor(id), 'a-a-a');
+      // never in the menu: an archived chat
+      expect(await w.targets.chatFor(shareTargetId('salt', 'r-r-r')), isNull);
+      expect(await w.targets.chatFor('cnothing'), isNull);
+      expect(await w.targets.chatFor(null), isNull);
+      w.locked = true;
+      expect(await w.targets.chatFor(id), isNull);
+      w.locked = false;
+      w.everyday = false;
+      expect(await w.targets.chatFor(id), isNull);
+      w.everyday = true;
+      w.contacts = [_c('a-a-a', nick: 'Anna', at: 1, hidden: true)];
+      expect(await w.targets.chatFor(id), isNull);
+      w.contacts = [_c('a-a-a', nick: 'Anna', at: 1, archived: true)];
+      expect(await w.targets.chatFor(id), isNull);
+      w.contacts = [_c('a-a-a', nick: 'Anna', at: 1)];
+      w.targets.everydayOn(false);
+      expect(await w.targets.chatFor(id), isNull);
+    },
+  );
 
   test('an older android publishes nothing; a computer asks nothing', () async {
     final w = _World()
@@ -230,7 +301,7 @@ void main() {
         on: true,
         locked: false,
         everyday: true,
-        contacts: [_c('a-a-a', at: 1)],
+        contacts: [_c('a-a-a', nick: 'Anna', at: 1)],
       ),
       loadOn: () async => true,
       salt: () async => 'salt',
@@ -242,6 +313,85 @@ void main() {
     expect(io.calls, isEmpty);
     expect(await desk.supported(), isFalse);
     expect(await desk.chatFor(shareTargetId('salt', 'a-a-a')), isNull);
+  });
+
+  group('as the app is', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
+      appFaceNow.value = AppFace.kryfo;
+      appState.contacts = [_c('a-a-a', nick: 'Anna', at: 1)];
+    });
+    tearDown(() {
+      appFaceNow.value = null;
+      appState.contacts = [];
+      lockState.openForTest();
+    });
+
+    ShareTargets live(_Io io) => ShareTargets(
+      io: io,
+      loadOn: () async => true,
+      salt: () async => 'salt',
+      settle: const Duration(milliseconds: 20),
+      android: true,
+    );
+
+    test('a lock not read yet counts as up: a push or job start publishes '
+        'nothing', () async {
+      lockState.unloadForTest();
+      final io = _Io();
+      final t = live(io);
+      await t.startForTest();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(io.calls, [const <ShareTarget>[]]);
+      // read, with no lock on: the list goes
+      lockState.openForTest();
+      t.changed();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect([for (final x in io.calls.last) x.name], ['Anna']);
+    });
+
+    test('an icon not known yet, or another one, publishes nothing', () async {
+      lockState.openForTest();
+      appFaceNow.value = AppFace.notes;
+      final io = _Io();
+      final t = live(io);
+      await t.startForTest();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(io.calls, [const <ShareTarget>[]]);
+      appFaceNow.value = null;
+      t.changed();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(io.calls, [const <ShareTarget>[]]);
+    });
+  });
+
+  test('a wipe and an icon change clear the menu before anything else', () {
+    final wipe = bodyOf(sourceOf('lib/wipe.dart'), 'Future<void> wipeHalo(');
+    final first = wipe.indexOf('await shareTargets.wiped();');
+    expect(first, greaterThan(0));
+    expect(first, lessThan(wipe.indexOf('haloWiping = true')));
+    const kt = 'android/app/src/main/kotlin/app/kryfo';
+    final main = sourceOf('$kt/MainActivity.kt');
+    final at = main.indexOf('"wipe" -> {');
+    expect(main.indexOf('ShareTargets.clear(this)', at), greaterThan(at));
+    expect(
+      main.indexOf('ShareTargets.clear(this)', at),
+      lessThan(main.indexOf('PinKey.dropWithin', at)),
+    );
+    final icon = bodyOf(sourceOf('$kt/AppIcon.kt'), 'fun set(');
+    expect(
+      icon.indexOf('ShareTargets.clear(context)'),
+      lessThan(icon.indexOf('s.apply(')),
+    );
+    expect(icon, contains('ShareTargets.clear(context)'));
+    // android's own answer, so a refused list is told again
+    final pub = bodyOf(sourceOf('$kt/ShareTargets.kt'), 'private fun publish(');
+    expect(pub, contains('sm.setDynamicShortcuts(infos)'));
+    expect(
+      RegExp(r'setDynamicShortcuts\(infos\)\s*true').hasMatch(pub),
+      isFalse,
+    );
   });
 
   test('the picked chat rides along with what was shared', () {

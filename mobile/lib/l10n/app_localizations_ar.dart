@@ -12368,5 +12368,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'تظهر محادثاتك الأخيرة بأسمائها عند المشاركة من تطبيق آخر، وتتنحّى ما دام Kryfo مقفلًا.';
+      'تظهر محادثاتك الأخيرة بأسمائها عند المشاركة من تطبيق آخر.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'تظهر محادثاتك الأخيرة بأسمائها في قوائم المشاركة في التطبيقات الأخرى فقط ما دام Kryfo غير مقفل.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'تبقى محادثاتك خارج قائمة المشاركة ما دام Kryfo يحمل أيقونة أخرى.';
 }

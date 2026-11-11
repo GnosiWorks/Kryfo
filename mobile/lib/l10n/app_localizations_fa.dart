@@ -12242,5 +12242,13 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'هنگام اشتراک‌گذاری از برنامه‌ای دیگر، گفتگوهای اخیرتان با نامشان نمایش داده می‌شوند و تا وقتی Kryfo قفل است کنار می‌روند.';
+      'هنگام اشتراک‌گذاری از برنامه‌ای دیگر، گفتگوهای اخیرتان با نامشان نمایش داده می‌شوند.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'گفتگوهای اخیرتان فقط وقتی Kryfo باز است با نامشان در منوی اشتراک‌گذاری برنامه‌های دیگر نمایش داده می‌شوند.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'تا وقتی Kryfo نماد دیگری دارد، گفتگوهایتان بیرون از منوی اشتراک‌گذاری می‌مانند.';
 }

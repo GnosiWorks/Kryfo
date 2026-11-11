@@ -12418,5 +12418,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Ваші останні чати з’являються за назвою, коли ви ділитеся з іншого застосунку, і відходять, поки Kryfo заблоковано.';
+      'Ваші останні чати з’являються за назвою, коли ви ділитеся з іншого застосунку.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Ваші останні чати з’являються за назвою в меню «Поділитися» інших застосунків, лише поки Kryfo розблоковано.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Ваші чати залишаються поза меню «Поділитися», поки Kryfo має інший значок.';
 }

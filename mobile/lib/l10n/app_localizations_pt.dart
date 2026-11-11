@@ -12321,5 +12321,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Suas conversas mais recentes aparecem pelo nome quando você compartilha de outro app, e saem de cena enquanto o Kryfo está bloqueado.';
+      'Suas conversas mais recentes aparecem pelo nome quando você compartilha de outro app.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Suas conversas mais recentes aparecem pelo nome no menu de compartilhar de outros apps só enquanto o Kryfo está desbloqueado.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Suas conversas ficam fora do menu de compartilhar enquanto o Kryfo usa outro ícone.';
 }

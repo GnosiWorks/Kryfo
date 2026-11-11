@@ -3211,5 +3211,7 @@
   "composerSendHoldHint": "Maintenir pour plus d'options",
   "homeGroupShotsLine": "Message",
   "settingsShareMenu": "Afficher les discussions dans le menu de partage",
-  "settingsShareMenuHint": "Vos discussions récentes apparaissent par leur nom quand vous partagez depuis une autre app, et se retirent tant que Kryfo est verrouillé."
+  "settingsShareMenuHint": "Vos discussions récentes apparaissent par leur nom quand vous partagez depuis une autre app.",
+  "settingsShareMenuHintLocked": "Vos discussions récentes apparaissent par leur nom dans le menu de partage des autres apps uniquement quand Kryfo est déverrouillé.",
+  "settingsShareMenuDisguised": "Vos discussions restent hors du menu de partage tant que Kryfo porte une autre icône."
 }

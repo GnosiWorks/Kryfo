@@ -12462,5 +12462,13 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Twoje najnowsze czaty pojawiają się z nazwy, gdy udostępniasz z innej aplikacji, i usuwają się, gdy Kryfo jest zablokowane.';
+      'Twoje najnowsze czaty pojawiają się z nazwy, gdy udostępniasz z innej aplikacji.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Twoje najnowsze czaty pojawiają się z nazwy w menu udostępniania innych aplikacji tylko wtedy, gdy Kryfo jest odblokowane.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Twoje czaty zostają poza menu udostępniania, dopóki Kryfo ma inną ikonę.';
 }

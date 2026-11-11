@@ -12218,5 +12218,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Các cuộc trò chuyện gần đây hiện theo tên khi bạn chia sẻ từ ứng dụng khác, và tạm lui khi Kryfo đang khóa.';
+      'Các cuộc trò chuyện gần đây hiện theo tên khi bạn chia sẻ từ ứng dụng khác.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Các cuộc trò chuyện gần đây chỉ hiện theo tên trong menu chia sẻ của ứng dụng khác khi Kryfo đang mở khóa.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Các cuộc trò chuyện của bạn ở ngoài menu chia sẻ khi Kryfo dùng biểu tượng khác.';
 }

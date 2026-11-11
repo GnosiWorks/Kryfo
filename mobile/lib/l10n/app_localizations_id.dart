@@ -12229,5 +12229,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Chat terbarumu muncul dengan namanya saat kamu berbagi dari aplikasi lain, dan menyingkir selama Kryfo terkunci.';
+      'Chat terbarumu muncul dengan namanya saat kamu berbagi dari aplikasi lain.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Chat terbarumu muncul dengan namanya di menu bagikan aplikasi lain hanya selama Kryfo tidak terkunci.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Chatmu tetap di luar menu bagikan selama Kryfo memakai ikon lain.';
 }

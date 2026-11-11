@@ -3211,5 +3211,7 @@
   "composerSendHoldHint": "Gedrückt halten für mehr Optionen",
   "homeGroupShotsLine": "Nachricht",
   "settingsShareMenu": "Chats im Teilen-Menü zeigen",
-  "settingsShareMenuHint": "Deine neuesten Chats erscheinen mit Namen, wenn du aus einer anderen App teilst, und treten zurück, solange Kryfo gesperrt ist."
+  "settingsShareMenuHint": "Deine neuesten Chats erscheinen mit Namen, wenn du aus einer anderen App teilst.",
+  "settingsShareMenuHintLocked": "Deine neuesten Chats erscheinen nur mit Namen im Teilen-Menü anderer Apps, solange Kryfo entsperrt ist.",
+  "settingsShareMenuDisguised": "Deine Chats bleiben aus dem Teilen-Menü, solange Kryfo ein anderes Symbol trägt."
 }

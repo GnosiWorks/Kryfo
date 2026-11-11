@@ -12225,5 +12225,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Your latest chats appear by name when you share from another app, and step away while Kryfo is locked.';
+      'Your latest chats appear by name when you share from another app.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Your latest chats appear by name in other apps\' share menus only while Kryfo is unlocked.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Your chats stay out of the share menu while Kryfo wears another icon.';
 }

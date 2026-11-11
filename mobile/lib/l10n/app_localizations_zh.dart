@@ -11556,7 +11556,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsShareMenu => '在分享菜单中显示聊天';
 
   @override
-  String get settingsShareMenuHint => '从其他应用分享时，你最近的聊天会以名称显示；Kryfo 锁定期间它们会先退出。';
+  String get settingsShareMenuHint => '从其他应用分享时，你最近的聊天会以名称显示。';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      '仅在 Kryfo 解锁时，你最近的聊天才会以名称显示在其他应用的分享菜单中。';
+
+  @override
+  String get settingsShareMenuDisguised => 'Kryfo 使用其他图标时，你的聊天不会出现在分享菜单中。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22991,6 +22998,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get settingsShareMenu => '在分享選單中顯示聊天';
 
   @override
-  String get settingsShareMenuHint =>
-      '從其他應用程式分享時，你最近的聊天會以名稱顯示；Kryfo 鎖定期間它們會先退出。';
+  String get settingsShareMenuHint => '從其他應用程式分享時，你最近的聊天會以名稱顯示。';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      '僅在 Kryfo 解鎖時，你最近的聊天才會以名稱顯示在其他應用程式的分享選單中。';
+
+  @override
+  String get settingsShareMenuDisguised => 'Kryfo 使用其他圖示時，你的聊天不會出現在分享選單中。';
 }

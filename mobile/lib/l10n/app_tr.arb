@@ -3211,5 +3211,7 @@
   "composerSendHoldHint": "Daha fazla seçenek için basılı tutun",
   "homeGroupShotsLine": "Mesaj",
   "settingsShareMenu": "Sohbetleri paylaşım menüsünde göster",
-  "settingsShareMenuHint": "Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür ve Kryfo kilitliyken kenara çekilir."
+  "settingsShareMenuHint": "Başka bir uygulamadan paylaşırken son sohbetlerin adlarıyla görünür.",
+  "settingsShareMenuHintLocked": "Son sohbetlerin, diğer uygulamaların paylaşım menüsünde yalnızca Kryfo'nun kilidi açıkken adlarıyla görünür.",
+  "settingsShareMenuDisguised": "Kryfo başka bir simge taşırken sohbetlerin paylaşım menüsünün dışında kalır."
 }

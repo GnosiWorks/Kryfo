@@ -73,8 +73,8 @@ object ShareTargets {
                     .build()
             }
             if (infos.isEmpty()) return clear(context)
+            // false: the system's rate limit took none
             sm.setDynamicShortcuts(infos)
-            true
         } catch (e: Exception) {
             DebugLog.i("share", "targets not published (${e.javaClass.simpleName})")
             clear(context)

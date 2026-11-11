@@ -29,6 +29,7 @@ import 'desktop/desktop_mode.dart'
 import 'dlog.dart';
 import 'drafts.dart' show forgetAllDrafts;
 import 'home_drafts.dart' show HomeDrafts;
+import 'share_targets.dart' show shareTargets;
 import 'shred.dart' show shredFile;
 import 'theme.dart' show dropOurClip;
 
@@ -86,6 +87,8 @@ Future<void> wipeHalo({
 }) async {
   // read before anything goes: a quiet session has no handle and reaches
   // nobody on the everyday identity's behalf
+  // the share menu's chats first: android keeps them outside the app
+  await shareTargets.wiped();
   final release = releaseHandle && !sessionQuiet;
   final handleKey = session.container.key('my_handle');
   haloWiping = true;

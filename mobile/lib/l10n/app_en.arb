@@ -15406,11 +15406,19 @@
     "description": "home group row of a group that blocks screenshots, once read: says only that the last thing was a message, never whose or what"
   },
   "settingsShareMenu": "Show chats in the share menu",
-  "settingsShareMenuHint": "Your latest chats appear by name when you share from another app, and step away while Kryfo is locked.",
+  "settingsShareMenuHint": "Your latest chats appear by name when you share from another app.",
+  "settingsShareMenuHintLocked": "Your latest chats appear by name in other apps' share menus only while Kryfo is unlocked.",
+  "settingsShareMenuDisguised": "Your chats stay out of the share menu while Kryfo wears another icon.",
   "@settingsShareMenu": {
     "description": "settings, privacy: the switch that puts the latest everyday chats in android's share menu (android 13 and later)"
   },
   "@settingsShareMenuHint": {
-    "description": "settings, privacy: the line under settingsShareMenu"
+    "description": "settings, privacy: the line under settingsShareMenu, app lock off"
+  },
+  "@settingsShareMenuHintLocked": {
+    "description": "settings, privacy: the line under settingsShareMenu while the app lock is on: the chats leave the menu while kryfo is locked"
+  },
+  "@settingsShareMenuDisguised": {
+    "description": "settings, privacy: a note under settingsShareMenu while a disguise icon (Notes, Weather...) is on: nothing is published then"
   }
 }

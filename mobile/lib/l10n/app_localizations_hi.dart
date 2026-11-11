@@ -12232,5 +12232,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'किसी दूसरे ऐप से शेयर करते समय आपकी हाल की चैट नाम से दिखती हैं, और Kryfo लॉक रहने तक हट जाती हैं।';
+      'किसी दूसरे ऐप से शेयर करते समय आपकी हाल की चैट नाम से दिखती हैं।';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'आपकी हाल की चैट दूसरे ऐप के शेयर मेन्यू में नाम से तभी दिखती हैं जब Kryfo अनलॉक हो।';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'जब तक Kryfo दूसरा आइकन पहने है, आपकी चैट शेयर मेन्यू से बाहर रहती हैं।';
 }

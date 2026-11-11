@@ -3211,5 +3211,7 @@
   "composerSendHoldHint": "Nhấn giữ để xem thêm tùy chọn",
   "homeGroupShotsLine": "Tin nhắn",
   "settingsShareMenu": "Hiện cuộc trò chuyện trong menu chia sẻ",
-  "settingsShareMenuHint": "Các cuộc trò chuyện gần đây hiện theo tên khi bạn chia sẻ từ ứng dụng khác, và tạm lui khi Kryfo đang khóa."
+  "settingsShareMenuHint": "Các cuộc trò chuyện gần đây hiện theo tên khi bạn chia sẻ từ ứng dụng khác.",
+  "settingsShareMenuHintLocked": "Các cuộc trò chuyện gần đây chỉ hiện theo tên trong menu chia sẻ của ứng dụng khác khi Kryfo đang mở khóa.",
+  "settingsShareMenuDisguised": "Các cuộc trò chuyện của bạn ở ngoài menu chia sẻ khi Kryfo dùng biểu tượng khác."
 }

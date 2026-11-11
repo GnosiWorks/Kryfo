@@ -12365,5 +12365,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsShareMenuHint =>
-      'Vos discussions récentes apparaissent par leur nom quand vous partagez depuis une autre app, et se retirent tant que Kryfo est verrouillé.';
+      'Vos discussions récentes apparaissent par leur nom quand vous partagez depuis une autre app.';
+
+  @override
+  String get settingsShareMenuHintLocked =>
+      'Vos discussions récentes apparaissent par leur nom dans le menu de partage des autres apps uniquement quand Kryfo est déverrouillé.';
+
+  @override
+  String get settingsShareMenuDisguised =>
+      'Vos discussions restent hors du menu de partage tant que Kryfo porte une autre icône.';
 }

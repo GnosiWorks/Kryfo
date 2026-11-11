@@ -873,13 +873,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     await saveGifSearchOn(true, session.container);
                   },
                 ),
-                // off by default. a decoy's flips like this one and puts
-                // nothing in the menu
-                if (_shareMenuShown)
+                // off by default. a decoy shows no such row: it could put
+                // nothing in the menu. under another icon nothing goes, and
+                // the row says so
+                if (_shareMenuShown && !appState.inDecoyView)
                   HaloRow(
                     icon: Icons.ios_share_rounded,
                     label: l10n.settingsShareMenu,
-                    hint: l10n.settingsShareMenuHint,
+                    hint: lockState.enabled
+                        ? l10n.settingsShareMenuHintLocked
+                        : l10n.settingsShareMenuHint,
+                    note: appFaceNow.value == AppFace.kryfo
+                        ? null
+                        : l10n.settingsShareMenuDisguised,
                     toggled: _shareMenuOn ?? false,
                     pending: _shareMenuOn == null,
                     onTap: () async {
