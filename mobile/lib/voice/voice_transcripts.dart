@@ -352,12 +352,15 @@ class VoiceTranscripts extends ChangeNotifier {
   Future<TxJob> _liveRunner(String path, String lang, int threads) async {
     final lib = library();
     if (lib == null) throw const VoiceError(VoiceError.library);
-    final model = await models.pathOf(kVoiceModelId);
-    if (model == null) throw const VoiceError(VoiceError.model);
     // a name the start-up sweep shreds if the app dies in between
     final tmp = (await getTemporaryDirectory()).path;
     final scratch = p.join(tmp, 'vn_tx_${_hex(8)}.wav');
-    final audio = await voiceAudioOfFile(path, scratch);
+    // the model's pin check reads all of it: the note is read meanwhile
+    final (model, audio) = await (
+      models.pathOf(kVoiceModelId),
+      voiceAudioOfFile(path, scratch),
+    ).wait;
+    if (model == null) throw const VoiceError(VoiceError.model);
     if (audio == null || audio.frames == 0) {
       throw const VoiceError(VoiceError.audio);
     }

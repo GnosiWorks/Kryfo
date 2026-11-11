@@ -116,12 +116,11 @@ void main() {
       expect(theirWordsLang(const []), isNull);
     });
 
-    test('threads: the fast cores, never every core', () {
-      // eight a53s at 2.3 and 1.8 ghz: six, two left for the ui and the
-      // kernel
+    test('threads: the fast cores, at most half of all', () {
+      // eight a53s at 2.3 and 1.8 ghz: four, four left for the rest
       expect(
         voiceThreads(cores: 8, maxFreq: (i) => i < 4 ? 1800000 : 2300000),
-        6,
+        4,
       );
       // one prime, three big, four little: the four fast ones
       expect(
@@ -131,12 +130,19 @@ void main() {
         ),
         4,
       );
-      // six alike: four; four alike: three
-      expect(voiceThreads(cores: 6, maxFreq: (_) => 2000000), 4);
-      expect(voiceThreads(cores: 4, maxFreq: (_) => 2000000), 3);
+      // two big, six little: the two big ones
+      expect(
+        voiceThreads(cores: 8, maxFreq: (i) => i < 6 ? 2000000 : 2700000),
+        2,
+      );
+      // sixteen alike: eight at most
+      expect(voiceThreads(cores: 16, maxFreq: (_) => 3000000), 8);
+      // six alike: three; four alike: two
+      expect(voiceThreads(cores: 6, maxFreq: (_) => 2000000), 3);
+      expect(voiceThreads(cores: 4, maxFreq: (_) => 2000000), 2);
       // unreadable: four at most
       expect(voiceThreads(cores: 8, maxFreq: (_) => null), 4);
-      expect(voiceThreads(cores: 4, maxFreq: (_) => null), 3);
+      expect(voiceThreads(cores: 4, maxFreq: (_) => null), 2);
       // one or two cores: one thread
       expect(voiceThreads(cores: 2, maxFreq: (_) => 1000), 1);
       expect(voiceThreads(cores: 1, maxFreq: (_) => 1000), 1);
