@@ -191,16 +191,18 @@ void main() {
     await t.pumpWidget(_app(VoiceBubble(path: path, isOut: false)));
     await known(t);
     final pill = find.byKey(const ValueKey('voice_speed'));
-    // there, but hidden and deaf until the note plays
-    expect(
-      t.widget<GestureDetector>(pill).onTap,
-      isNull,
-      reason: 'not tappable before it plays',
-    );
+    // no target until the note plays
+    expect(pill, findsNothing);
     await t.tap(find.byIcon(Icons.play_arrow_rounded));
     await until(t, () => pipes.isNotEmpty && pipes.single.playing);
     expect(pipes.single.playing, isTrue);
     expect(find.text('1x'), findsOneWidget);
+    // a target as big as a finger over a small pill
+    expect(t.getSize(pill).width, kMinInteractiveDimension);
+    expect(
+      t.getSize(find.text('1x')).height,
+      lessThan(kMinInteractiveDimension / 2),
+    );
     await t.tap(pill);
     await settle(t);
     expect(VoiceSpeed.now.value, 1.5);
@@ -257,6 +259,27 @@ void main() {
       await gone(t);
     });
   }
+
+  testWidgets('before it plays, a sideways drag is the chat\'s swipe to '
+      'reply, not a seek', (t) async {
+    final path = note('swipe');
+    var swiped = 0;
+    await t.pumpWidget(
+      _app(
+        GestureDetector(
+          onHorizontalDragEnd: (_) => swiped++,
+          child: VoiceBubble(path: path, isOut: false),
+        ),
+      ),
+    );
+    await known(t);
+    final box = t.getRect(find.byKey(const ValueKey('voice_wave')));
+    await t.dragFrom(box.centerLeft + const Offset(10, 0), const Offset(80, 0));
+    await settle(t);
+    expect(swiped, 1);
+    expect(pipes, isEmpty, reason: 'nothing loaded, nothing sought');
+    await gone(t);
+  });
 
   testWidgets('a tap on the wave of a note not yet played plays it', (t) async {
     final path = note('tap');

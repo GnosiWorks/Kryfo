@@ -6652,14 +6652,19 @@ class _ChatScreenState extends State<ChatScreen>
     ];
   }
 
-  // the voice note after [m] in the chat, by its bubble's key: it plays on
+  // the voice note after [m] in the chat, by its bubble's key: it plays on.
+  // a timed one or one still on its way is passed over: a timer starts only
+  // with a tap
   String? _voiceAfter(_Msg m) {
     final at = _messages.indexOf(m);
     if (at < 0) return null;
     for (final x in _messages.skip(at + 1)) {
-      if (x.making == null && isVoiceName(x.fileName) && x.filePath != null) {
-        return _voiceKeyOf(x);
+      if (x.making != null || !isVoiceName(x.fileName) || x.filePath == null) {
+        continue;
       }
+      if (x.burnAt != null || x.burnSecs != null) continue;
+      if (fileWaitOf(x.msgUid) != null) continue;
+      return _voiceKeyOf(x);
     }
     return null;
   }

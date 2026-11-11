@@ -3244,20 +3244,25 @@ class _GroupChatScreenState extends State<GroupChatScreen>
 
   // stop a photo or file mid-send. the workers end between slices, the row
   // goes here, and the group is told to drop what it has.
-  // the sounds and voice notes under [m], in the order they came: what
-  // the player plays after it
-  // the voice note after [m] in the group, by its bubble's key: it plays on
+  // the voice note after [m] in the group, by its bubble's key: it plays on.
+  // a timed one or one still on its way is passed over: a timer starts only
+  // with a tap
   String? _voiceAfter(_GMsg m) {
     final at = _messages.indexOf(m);
     if (at < 0) return null;
     for (final x in _messages.skip(at + 1)) {
-      if (x.making == null && isVoiceName(x.fileName) && x.filePath != null) {
-        return 'gvb_${x.msgUid ?? x.filePath}';
+      if (x.making != null || !isVoiceName(x.fileName) || x.filePath == null) {
+        continue;
       }
+      if (x.burnAt != null || x.burnSecs != null) continue;
+      if (fileWaitOf(x.msgUid) != null) continue;
+      return 'gvb_${x.msgUid ?? x.filePath}';
     }
     return null;
   }
 
+  // the sounds and voice notes under [m], in the order they came: what
+  // the player plays after it
   List<SoundItem> _soundsAfter(_GMsg m) {
     final at = _messages.indexOf(m);
     if (at < 0) return const [];

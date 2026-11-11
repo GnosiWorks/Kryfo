@@ -241,14 +241,23 @@ class VoiceBubbleState extends State<VoiceBubble> {
     VoiceSpeed.set(nextVoiceSpeed(VoiceSpeed.now.value));
   }
 
-  // the next note in the chat, if it is up, plays from where it is
+  // the next note in the chat, if it is up, plays from where it is. one
+  // gone or still coming is passed over for the one after it
   void _playOn() {
-    final k = widget.next?.call();
-    if (k == null) return;
-    final s = _live[k];
-    if (s == null || identical(s, this) || !s.mounted) return;
-    if (s._missing || s._coming || s._playing) return;
-    s._toggle();
+    var from = this;
+    for (var hops = 0; hops < 50; hops++) {
+      final k = from.widget.next?.call();
+      if (k == null) return;
+      final s = _live[k];
+      if (s == null || identical(s, this) || !s.mounted) return;
+      if (s._missing || s._coming) {
+        from = s;
+        continue;
+      }
+      if (s._playing || s._starting) return;
+      s._toggle();
+      return;
+    }
   }
 
   // the note jumps to [f] of its length. one not loaded keeps the place,
@@ -300,7 +309,9 @@ class VoiceBubbleState extends State<VoiceBubble> {
         _playing = false;
         _swapIfMoved();
         if (mounted) setState(() => _pos = Duration.zero);
-        _playOn();
+        // just_audio says completed again once paused: only the end of a
+        // play hands on
+        if (st.playing) _playOn();
       }
     });
     // rebuild on position ticks only while playing: idle bubbles rebuilding
@@ -482,15 +493,24 @@ class VoiceBubbleState extends State<VoiceBubble> {
     super.dispose();
   }
 
+  // a load for a play is on its way: a second ask waits for it
+  bool _starting = false;
+
   void _toggle() async {
+    if (_starting) return;
     if (!_ready) {
       // where it was before the player lost its source, so a reload
       // carries on instead of starting over
       final was = _pos;
-      await _load();
-      if (!_ready) return;
-      if (was > Duration.zero && was < _dur) {
-        await _player.seek(was);
+      _starting = true;
+      try {
+        await _load();
+        if (!_ready) return;
+        if (was > Duration.zero && was < _dur) {
+          await _player.seek(was);
+        }
+      } finally {
+        _starting = false;
       }
     }
     if (_playing) {
@@ -555,184 +575,208 @@ class VoiceBubbleState extends State<VoiceBubble> {
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 184,
-        child: _coming
-            ? Row(
-                children: [
-                  SizedBox(
-                    width: 34,
-                    height: 34,
-                    child: Padding(
-                      padding: const EdgeInsets.all(7),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        value: still ? 0.3 : null,
-                        color: fg,
-                        backgroundColor: rest,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      l10n.albumOnItsWay,
-                      style: HaloType.mono(size: 11, color: sub),
-                    ),
-                  ),
-                ],
-              )
-            : _missing
-            ? Row(
-                children: [
-                  Icon(Icons.music_off_rounded, size: 20, color: sub),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      l10n.mediaBubblesAudioUnavailable,
-                      style: HaloType.mono(size: 11, color: sub),
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  // a round play mark, the glyph turning over between play
-                  // and pause
-                  Container(
-                    width: 34,
-                    height: 34,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: out ? HaloColors.onAmber : HaloColors.amber,
-                    ),
-                    child: AnimatedSwitcher(
-                      duration: Duration(milliseconds: still ? 120 : 220),
-                      switchInCurve: kHouseCurve,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (c, a) => FadeTransition(
-                        opacity: a,
-                        child: still
-                            ? c
-                            : ScaleTransition(
-                                scale: Tween(begin: 0.4, end: 1.0).animate(a),
-                                child: c,
-                              ),
-                      ),
-                      child: Icon(
-                        _playing
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
-                        key: ValueKey(_playing),
-                        size: 22,
-                        color: out ? HaloColors.amber : HaloColors.onAmber,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // no LayoutBuilder: bubbles are measured by their
-                        // intrinsic width
-                        Builder(
-                          builder: (waveCtx) {
-                            double at(Offset p) => waveFraction(
-                              p.dx,
-                              (waveCtx.findRenderObject() as RenderBox?)
-                                      ?.size
-                                      .width ??
-                                  0,
-                              rtl: rtl,
-                            );
-                            return GestureDetector(
-                              key: const ValueKey('voice_wave'),
-                              behavior: HitTestBehavior.opaque,
-                              // before the first play a tap anywhere plays
-                              onTapUp: _heard && _dur > Duration.zero
-                                  ? (d) => _seekTo(at(d.localPosition))
-                                  : null,
-                              onHorizontalDragStart: _dur > Duration.zero
-                                  ? (d) {
-                                      HapticFeedback.lightImpact();
-                                      setState(
-                                        () => _dragAt = at(d.localPosition),
-                                      );
-                                    }
-                                  : null,
-                              onHorizontalDragUpdate: _dur > Duration.zero
-                                  ? (d) => setState(
-                                      () => _dragAt = at(d.localPosition),
-                                    )
-                                  : null,
-                              onHorizontalDragEnd: _dur > Duration.zero
-                                  ? (_) => _seekTo(_dragAt ?? progress)
-                                  : null,
-                              onHorizontalDragCancel: () =>
-                                  setState(() => _dragAt = null),
-                              child: VoiceWave(
-                                peaks: _peaks,
-                                progress: progress,
-                                played: fg,
-                                rest: rest,
-                                scrubbing: _dragAt != null,
-                              ),
-                            );
-                          },
+        child: Stack(
+          children: [
+            _coming
+                ? Row(
+                    children: [
+                      SizedBox(
+                        width: 34,
+                        height: 34,
+                        child: Padding(
+                          padding: const EdgeInsets.all(7),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            value: still ? 0.3 : null,
+                            color: fg,
+                            backgroundColor: rest,
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          l10n.albumOnItsWay,
+                          style: HaloType.mono(size: 11, color: sub),
+                        ),
+                      ),
+                    ],
+                  )
+                : _missing
+                ? Row(
+                    children: [
+                      Icon(Icons.music_off_rounded, size: 20, color: sub),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          l10n.mediaBubblesAudioUnavailable,
+                          style: HaloType.mono(size: 11, color: sub),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      // a round play mark, the glyph turning over between play
+                      // and pause
+                      Container(
+                        width: 34,
+                        height: 34,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: out ? HaloColors.onAmber : HaloColors.amber,
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: Duration(milliseconds: still ? 120 : 220),
+                          switchInCurve: kHouseCurve,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (c, a) => FadeTransition(
+                            opacity: a,
+                            child: still
+                                ? c
+                                : ScaleTransition(
+                                    scale: Tween(
+                                      begin: 0.4,
+                                      end: 1.0,
+                                    ).animate(a),
+                                    child: c,
+                                  ),
+                          ),
+                          child: Icon(
+                            _playing
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            key: ValueKey(_playing),
+                            size: 22,
+                            color: out ? HaloColors.amber : HaloColors.onAmber,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              _fmt(shown),
-                              style: HaloType.mono(
-                                size: 10,
-                                color: out
-                                    ? HaloColors.onAmber
-                                    : HaloColors.text,
-                              ),
+                            // no LayoutBuilder: bubbles are measured by their
+                            // intrinsic width
+                            Builder(
+                              builder: (waveCtx) {
+                                // a note not played yet leaves a sideways drag
+                                // to the chat's swipe to reply
+                                final canScrub = _heard && _dur > Duration.zero;
+                                double at(Offset p) => waveFraction(
+                                  p.dx,
+                                  (waveCtx.findRenderObject() as RenderBox?)
+                                          ?.size
+                                          .width ??
+                                      0,
+                                  rtl: rtl,
+                                );
+                                return GestureDetector(
+                                  key: const ValueKey('voice_wave'),
+                                  behavior: HitTestBehavior.opaque,
+                                  // before the first play a tap anywhere plays
+                                  onTapUp: _heard && _dur > Duration.zero
+                                      ? (d) => _seekTo(at(d.localPosition))
+                                      : null,
+                                  onHorizontalDragStart: canScrub
+                                      ? (d) {
+                                          HapticFeedback.lightImpact();
+                                          setState(
+                                            () => _dragAt = at(d.localPosition),
+                                          );
+                                        }
+                                      : null,
+                                  onHorizontalDragUpdate: canScrub
+                                      ? (d) => setState(
+                                          () => _dragAt = at(d.localPosition),
+                                        )
+                                      : null,
+                                  onHorizontalDragEnd: canScrub
+                                      ? (_) => _seekTo(_dragAt ?? progress)
+                                      : null,
+                                  onHorizontalDragCancel: canScrub
+                                      ? () => setState(() => _dragAt = null)
+                                      : null,
+                                  child: VoiceWave(
+                                    peaks: _peaks,
+                                    progress: progress,
+                                    played: fg,
+                                    rest: rest,
+                                    scrubbing: _dragAt != null,
+                                  ),
+                                );
+                              },
                             ),
-                            if (widget.disguised) ...[
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.theater_comedy_outlined,
-                                size: 11,
-                                color: out
-                                    ? HaloColors.onAmber
-                                    : HaloColors.amber,
-                              ),
-                              const SizedBox(width: 3),
-                              Flexible(
-                                child: Text(
-                                  l10n.mediaBubblesHidden,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  _fmt(shown),
                                   style: HaloType.mono(
-                                    size: 9,
+                                    size: 10,
                                     color: out
                                         ? HaloColors.onAmber
-                                        : HaloColors.amberText,
+                                        : HaloColors.text,
                                   ),
                                 ),
-                              ),
-                            ],
-                            if (!out && voiceSpeedWorks) ...[
-                              const Spacer(),
-                              _SpeedPill(
-                                shown: _speedShown,
-                                speed: speed,
-                                still: still,
-                                onTap: _stepSpeed,
-                              ),
-                            ],
+                                if (widget.disguised) ...[
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.theater_comedy_outlined,
+                                    size: 11,
+                                    color: out
+                                        ? HaloColors.onAmber
+                                        : HaloColors.amber,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Flexible(
+                                    child: Text(
+                                      l10n.mediaBubblesHidden,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HaloType.mono(
+                                        size: 9,
+                                        color: out
+                                            ? HaloColors.onAmber
+                                            : HaloColors.amberText,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                if (!out && voiceSpeedWorks) ...[
+                                  const Spacer(),
+                                  _SpeedPill(
+                                    shown: _speedShown,
+                                    speed: speed,
+                                    still: still,
+                                  ),
+                                ],
+                              ],
+                            ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+            // the speed's target, as big as a finger, over the pill at the
+            // end. drags still reach the wave under it
+            if (_speedShown && !_coming && !_missing)
+              PositionedDirectional(
+                end: 0,
+                top: 0,
+                bottom: 0,
+                width: kMinInteractiveDimension,
+                child: GestureDetector(
+                  key: const ValueKey('voice_speed'),
+                  behavior: HitTestBehavior.translucent,
+                  onTap: _stepSpeed,
+                ),
               ),
+          ],
+        ),
       ),
     );
     if (_missing) return bubble;
@@ -814,36 +858,29 @@ class _SpeedPill extends StatelessWidget {
     required this.shown,
     required this.speed,
     required this.still,
-    required this.onTap,
   });
   final bool shown;
   final double speed;
   final bool still;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final pill = GestureDetector(
-      key: const ValueKey('voice_speed'),
-      behavior: HitTestBehavior.opaque,
-      onTap: shown ? onTap : null,
-      child: Padding(
-        // a bigger target than the pill
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-          decoration: BoxDecoration(
-            color: HaloColors.amber.withValues(alpha: 0.16),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: AnimatedSwitcher(
-            duration: Duration(milliseconds: still ? 0 : 150),
-            child: Text(
-              _speedWord(speed),
-              key: ValueKey(speed),
-              maxLines: 1,
-              style: HaloType.mono(size: 9, color: HaloColors.amberText),
-            ),
+    // its tap is the bubble's: a target as big as a finger over it
+    final pill = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          color: HaloColors.amber.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: AnimatedSwitcher(
+          duration: Duration(milliseconds: still ? 0 : 150),
+          child: Text(
+            _speedWord(speed),
+            key: ValueKey(speed),
+            maxLines: 1,
+            style: HaloType.mono(size: 9, color: HaloColors.amberText),
           ),
         ),
       ),
@@ -856,7 +893,7 @@ class _SpeedPill extends StatelessWidget {
       child: AnimatedOpacity(
         opacity: shown ? 1 : 0,
         duration: const Duration(milliseconds: 180),
-        child: IgnorePointer(ignoring: !shown, child: pill),
+        child: pill,
       ),
     );
   }
