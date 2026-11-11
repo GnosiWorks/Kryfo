@@ -435,8 +435,8 @@ mixin _GroupOwedRows implements GroupOwedStore {
 
   /// a burner room has no heal to ask for what a restore brought back: our
   /// unsends in [groupId] younger than the relays keep them go to each of
-  /// [members] again. one still waiting for a member gets no second. how
-  /// many
+  /// [members] again, to a member only those made since they joined. one
+  /// still waiting for a member gets no second. how many rows
   Future<int> requeueRoomUnsends(
     String groupId,
     Iterable<String> members, {
@@ -445,14 +445,33 @@ mixin _GroupOwedRows implements GroupOwedStore {
     final db = await open();
     final rows = await db.query(
       'taken_out',
-      columns: ['msg_uid'],
+      columns: ['msg_uid', 'at'],
       where: 'group_id = ? AND kind = ? AND at >= ?',
       whereArgs: [groupId, kTakenUnsend, now - kTakenKeep.inMilliseconds],
     );
+    if (rows.isEmpty) return 0;
+    final joined = <String, int>{};
+    for (final m in members) {
+      final r = await db.query(
+        'group_members',
+        columns: ['joined_at'],
+        where: 'group_id = ? AND halo_id = ?',
+        whereArgs: [groupId, m],
+        limit: 1,
+      );
+      if (r.isEmpty) continue;
+      joined[m] = (r.first['joined_at'] as num?)?.toInt() ?? 0;
+    }
     for (final r in rows) {
+      final at = r['at'] as int;
+      final to = [
+        for (final e in joined.entries)
+          if (at >= e.value) e.key,
+      ];
+      if (to.isEmpty) continue;
       await queueGroupUnsend(
         groupId,
-        members,
+        to,
         r['msg_uid'] as String,
         now: now,
         note: false,

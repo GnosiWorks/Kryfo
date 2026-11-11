@@ -757,6 +757,12 @@ void main() {
           'joined_at': 0,
         });
       }
+      // one who joined after it never saw what it took back
+      await mem.insert('group_members', {
+        'group_id': room,
+        'halo_id': 'k-dave',
+        'joined_at': now - 500,
+      });
       final d = await db.open();
       await noteTaken(d, 'r1', kTakenUnsend, group: room, at: now - 1000);
       await noteTaken(d, 'r-old', kTakenUnsend, group: room, at: now - 1000);
