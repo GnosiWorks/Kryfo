@@ -69,6 +69,7 @@ import '../sound_player.dart' show SoundItem, SoundPlayer;
 import '../recent_files.dart';
 import '../widgets/send_hold.dart';
 import '../widgets/send_sheet.dart';
+import '../widgets/file_viewer_parts.dart' show openWithAside;
 import '../widgets/file_actions.dart'
     show
         FileView,
@@ -2663,7 +2664,7 @@ class _ChatScreenState extends State<ChatScreen>
         icon: Icons.open_in_new_rounded,
         label: l10n.fileOpenWith,
         apart: true,
-        aside: l10n.fileOpenWithNote,
+        aside: openWithAside,
         onTap:
             kept ||
                 !canShare ||

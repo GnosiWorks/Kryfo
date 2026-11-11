@@ -322,10 +322,9 @@ extension AppStateSession on AppState {
     try {
       final q = engine.quietIdentity();
       if (q == null) throw StateError('no quiet identity');
-      // on desktop a file with no key in storage holds its place: it goes
-      // before the decoy's own is made
-      if (onDesktop &&
-          await secureStore.read(key: HaloContainer.decoy.keyName!) == null) {
+      // a decoy no list names has a file and a key only holding its place:
+      // they go before its own are made
+      if (!(await listedContainers()).contains(HaloContainer.decoy.id)) {
         await HaloContainer.decoy.wipeFiles();
       }
       final raw = await d.open();
@@ -384,6 +383,7 @@ extension AppStateSession on AppState {
     await HaloContainer.decoy.wipeFiles();
     // its vault goes with it: its entry went with the decoy's pins
     await _host.wipeVault(HaloContainer.decoyVault);
+    await refillContainerPlaceholders();
   }
 
   // the decoy's identity as a start reads it, for the tests

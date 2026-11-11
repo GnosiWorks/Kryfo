@@ -5040,6 +5040,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Czaty usunięte po zrobieniu tej kopii wrócą razem z nią, a te kontakty mogą zobaczyć, że Kryfo zostało u ciebie skonfigurowane od nowa.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Pokoje jednorazowe mogą przez kilka dni pokazywać usunięte wiadomości.';
+
+  @override
   String get restoreMoveItHere => 'Przenieś tutaj';
 
   @override
@@ -12221,6 +12225,9 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get fileOpenWithNote =>
       'Inna aplikacja zobaczy ten plik. Do tego czasu Kryfo trzyma go zaszyfrowany.';
+
+  @override
+  String get fileOtherAppKeepsCopy => 'Inna aplikacja zachowa jego kopię.';
 
   @override
   String fileFrom(String name) {

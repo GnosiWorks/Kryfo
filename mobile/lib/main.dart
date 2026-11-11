@@ -314,6 +314,14 @@ part 'app/state_vault.dart';
 part 'app/state_voice.dart';
 part 'app/state_files.dart';
 
+Future<void> _numberedNames() async {
+  try {
+    await moveToNumberedNames((await getApplicationDocumentsDirectory()).path);
+  } catch (e) {
+    dlog('names: not moved (${e.runtimeType})');
+  }
+}
+
 void main() async {
   dlog('launch main');
   WidgetsFlutterBinding.ensureInitialized();
@@ -321,6 +329,8 @@ void main() async {
   capPictureCache();
   // the media folders sealed before anything reads or writes them
   await openPhoneSeal();
+  // the names from before the numbers, before anything opens a database
+  await _numberedNames();
   // a key saved for someone that is not the one held before: open pages that
   // show it read again
   onPeerKeyChanged = appState.keyChanged;

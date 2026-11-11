@@ -2329,9 +2329,12 @@ void main() {
       expect(session.vault, isNull);
       expect(lockState.inVault, isFalse);
       expect(w.homeIds, {_d1, _dg});
+      // what holds its place is no vault: random bytes
+      final held = File(await HaloContainer.decoyVault.dbPath());
       expect(
-        File(await HaloContainer.decoyVault.dbPath()).existsSync(),
-        isFalse,
+        !held.existsSync() ||
+            !String.fromCharCodes(held.readAsBytesSync()).startsWith('made'),
+        isTrue,
       );
       await w.lockUpAll();
       expect(await w.type('112233'), PinResult.invalid);
@@ -2353,7 +2356,7 @@ void main() {
       await lock.load();
       w.wire(lock);
       final dir = p.join(docs.path, 'docs');
-      File(p.join(dir, 'halo_v.db'))
+      File(p.join(dir, 'k3.db'))
         ..createSync(recursive: true)
         ..writeAsStringSync('the everyday vault');
       File(p.join(dir, 'media_v', 'c.jpg'))
@@ -2370,7 +2373,7 @@ void main() {
       // its entry, file, folder, list, key, sealed rows and chats as they were
       expect(jsonEncode(entries(store)['${PinSlot.vault}']), entry);
       expect(
-        File(p.join(dir, 'halo_v.db')).readAsStringSync(),
+        File(p.join(dir, 'k3.db')).readAsStringSync(),
         'the everyday vault',
       );
       expect(File(p.join(dir, 'media_v', 'c.jpg')).existsSync(), isTrue);
@@ -2385,7 +2388,7 @@ void main() {
       );
       // the decoy's own was replaced
       expect(
-        File(p.join(dir, 'halo_dv.db')).readAsStringSync(),
+        File(p.join(dir, 'k4.db')).readAsStringSync(),
         isNot('made $_dvKey'),
       );
       expect(await w.type(_dvPin), PinResult.invalid);

@@ -70,7 +70,7 @@ void main() {
   SqliteChannel? sql;
   final opened = <Database>[];
 
-  setUp(() {
+  setUp(() async {
     sql = SqliteChannel.install();
     docs = Directory.systemTemp.createTempSync('upgrade_053_phone');
     // phone a as the everyday file, phone b as the decoy: two files with
@@ -84,6 +84,8 @@ void main() {
     });
     SharedPreferences.setMockInitialValues({});
     useDevKeysForTest(null);
+    // as the app's start finds them: the names before the numbers move
+    await moveToNumberedNames(docs.path);
   });
 
   tearDown(() async {

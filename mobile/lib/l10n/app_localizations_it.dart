@@ -4978,6 +4978,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Le chat che hai eliminato dopo questo backup tornano con esso, e quei contatti potrebbero vedere che hai configurato di nuovo Kryfo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Le stanze effimere possono mostrare messaggi rimossi, per qualche giorno.';
+
+  @override
   String get restoreMoveItHere => 'Trasferiscilo qui';
 
   @override
@@ -12094,6 +12098,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get fileOpenWithNote =>
       'L’altra app può vedere questo file. Fino ad allora Kryfo lo tiene cifrato.';
+
+  @override
+  String get fileOtherAppKeepsCopy => 'L’altra app ne tiene una copia.';
 
   @override
   String fileFrom(String name) {

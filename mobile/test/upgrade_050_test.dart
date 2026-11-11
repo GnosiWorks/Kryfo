@@ -23,6 +23,7 @@ import 'package:kryfo/secure_store.dart';
 import 'package:kryfo/signal_session.dart';
 import 'signal_kit.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
@@ -210,6 +211,12 @@ Future<SignalSession> _store(Database db, String xPubHex) async {
   return s;
 }
 
+// the app's start: the names from before the numbers move first (main.dart)
+Future<HaloDb> _start(String f) async {
+  await moveToNumberedNames((await getApplicationDocumentsDirectory()).path);
+  return _files[f]!();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final m = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -229,7 +236,7 @@ void main() {
       final d = Directory.systemTemp.createTempSync('upgrade_fresh');
       m.setMockMethodCallHandler(paths, (_) async => d.path);
       FlutterSecureStorage.setMockInitialValues({});
-      final db = _files[f]!();
+      final db = await _start(f);
       fresh[f] = await _schema(await db.open());
       await db.close();
       d.deleteSync(recursive: true);
@@ -287,7 +294,7 @@ void main() {
   for (final f in _files.keys) {
     test('$f opens at 90 with the schema of a new install', () async {
       if (skip()) return;
-      final db = _files[f]!();
+      final db = await _start(f);
       final raw = await db.open();
       expect(await raw.getVersion(), 96);
       final got = await _schema(raw);
@@ -333,7 +340,7 @@ void main() {
 
     test('$f loses no row', () async {
       if (skip()) return;
-      final db = _files[f]!();
+      final db = await _start(f);
       final after = await _rows(await db.open(), only: beforeCols[f]);
       // a contact verified under no key known here loses the mark, and
       // that is all that moves
@@ -355,7 +362,7 @@ void main() {
 
     test('$f: every message keeps its place, at the time it came', () async {
       if (skip()) return;
-      final db = _files[f]!();
+      final db = await _start(f);
       final raw = await db.open();
       final rows = await raw.query('messages');
       expect(rows.length, before[f]!['messages']!.length);
@@ -367,13 +374,13 @@ void main() {
 
     test('$f: a second open changes nothing', () async {
       if (skip()) return;
-      final db = _files[f]!();
+      final db = await _start(f);
       final first = await db.open();
       final schema = await _schema(first);
       final rows = await _rows(first);
       await db.close();
       final from = sql!.said.length;
-      final again = _files[f]!();
+      final again = await _start(f);
       final raw = await again.open();
       final said = sql!.said.sublist(from);
       expect(await raw.getVersion(), 96);
@@ -412,7 +419,7 @@ void main() {
 
   test('the hidden chats keep their verified mark, tied to the card', () async {
     if (skip()) return;
-    final db = _files['halo_v.db']!();
+    final db = await _start('halo_v.db');
     await db.open();
     final hush = (await db.getContact(_hush))!;
     expect(hush['verified'], 1);
@@ -582,6 +589,7 @@ void main() {
 
   test('the signal sessions go on, both ways', () async {
     if (skip()) return;
+    await moveToNumberedNames(docs.path);
     final db = HaloDb();
     final raw = await db.open();
     final other = HaloDb(HaloContainer.decoy);

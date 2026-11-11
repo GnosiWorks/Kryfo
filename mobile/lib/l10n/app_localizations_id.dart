@@ -4932,6 +4932,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolan yang kamu hapus setelah cadangan ini dibuat kembali bersamanya, dan kontak itu mungkin melihat bahwa kamu memasang Kryfo lagi.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Ruang sekali pakai mungkin menampilkan pesan yang sudah dihapus, selama beberapa hari.';
+
+  @override
   String get restoreMoveItHere => 'Pindahkan ke sini';
 
   @override
@@ -11999,6 +12003,9 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get fileOpenWithNote =>
       'Aplikasi lain bisa melihat file ini. Sampai saat itu Kryfo menyimpannya terenkripsi.';
+
+  @override
+  String get fileOtherAppKeepsCopy => 'Aplikasi lain menyimpan salinannya.';
 
   @override
   String fileFrom(String name) {

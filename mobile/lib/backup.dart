@@ -54,7 +54,9 @@ import 'desktop/desktop_mode.dart'
     show
         containerClosed,
         containerOpened,
+        EngineMemory,
         engineDir,
+        engineMemory,
         filesSealed,
         onDesktop,
         rawFiles,
@@ -497,9 +499,8 @@ Future<void> _landV1InDecoy(
     files.add({'name': name, 'size': bytes.length});
   }
 
+  // its onion key stays out: the decoy keeps its own in its database
   await stage('halo.db', payload['db'] as String);
-  final onion = payload['onionKey'];
-  if (onion is String) await stage('onion.key', onion);
   await _landing(() async {
     // the decoy's hidden chats go with the account they belonged to
     await landHidden(
@@ -1697,9 +1698,9 @@ Future<void> landHidden(
   }
 }
 
-// a restore in a decoy session lands on the decoy's names. the onion key
-// waits in onion_d.key for the next start. no engine call: the engine
-// carries the everyday identity. [own] is the decoy's database, whichever
+// a restore in a decoy session lands on the decoy's names. its onion key
+// stays out: nothing reads one for the decoy, which keeps its own in its
+// database. no engine call: the engine carries the everyday identity. [own] is the decoy's database, whichever
 // session is open by now
 Future<void> _landInDecoy(
   HaloDb own,
@@ -1726,12 +1727,11 @@ Future<void> _landInDecoy(
     final name = (f as Map<String, dynamic>)['name'] as String;
     // hidden chats landed in the decoy's vault already
     if (hiddenPart(name) != null || !restorableName(name)) continue;
+    if (name == 'onion.key') continue;
     final src = File(p.join(from, name));
     final String dest;
     if (name == 'halo.db') {
       dest = dbPath;
-    } else if (name == 'onion.key') {
-      dest = p.join(docs, 'onion${c.suffix}.key');
     } else {
       final slash = name.indexOf('/');
       dest = p.join(
@@ -1996,6 +1996,16 @@ Future<void> _restoreFile(
 @visibleForTesting
 Future<Map<String, int>> catchUpAnchors(String docs) async {
   final out = <String, int>{};
+  final mem = engineMemory;
+  if (mem != null) {
+    for (final name in mem.names()) {
+      if (!_kAnchorName.hasMatch(name)) continue;
+      final b = mem.get(name);
+      final v = b == null ? null : int.tryParse(utf8.decode(b).trim());
+      if (v != null && v > 0) out[name] = v;
+    }
+    return out;
+  }
   try {
     await for (final e in Directory(docs).list()) {
       final name = p.basename(e.path);
@@ -2011,6 +2021,28 @@ Future<Map<String, int>> catchUpAnchors(String docs) async {
 
 final _kAnchorName = RegExp(r'^nostr_last_[0-9a-f]{1,16}$');
 
+// the same as landCatchUpAnchors, into the engine's memory folder
+void _landInMemory(EngineMemory mem, Object? carried, Object? book) {
+  for (final name in mem.names()) {
+    if (name.startsWith('nostr_last_') ||
+        name.startsWith('nostr_seen_') ||
+        name.startsWith('nostr_topup') ||
+        name.startsWith('nostr_batch_') ||
+        name.startsWith(kBatchBookName)) {
+      mem.drop(name);
+    }
+  }
+  if (book is String && _kBookLine.hasMatch(book)) {
+    mem.put(kBatchBookName, utf8.encode('$book\n'));
+  }
+  if (carried is! Map) return;
+  for (final MapEntry(:key, :value) in carried.entries) {
+    if (key is! String || !_kAnchorName.hasMatch(key)) continue;
+    if (value is! int || value <= 0) continue;
+    mem.put(key, utf8.encode('$value'));
+  }
+}
+
 /// the engine's batch book (engine/batches.go)
 const kBatchBookName = 'nostr_book';
 final _kBookLine = RegExp(r'^[A-Za-z0-9+/]+$');
@@ -2019,6 +2051,12 @@ final _kBookLine = RegExp(r'^[A-Za-z0-9+/]+$');
 /// the identity. null with none
 @visibleForTesting
 Future<String?> batchBook(String docs) async {
+  final mem = engineMemory;
+  if (mem != null) {
+    final b = mem.get(kBatchBookName);
+    final line = b == null ? '' : utf8.decode(b).trim();
+    return _kBookLine.hasMatch(line) ? line : null;
+  }
   try {
     final f = File(p.join(docs, kBatchBookName));
     if (!await f.exists()) return null;
@@ -2053,6 +2091,8 @@ Future<void> landCatchUpAnchors(
   Object? carried, {
   Object? book,
 }) async {
+  final mem = engineMemory;
+  if (mem != null) return _landInMemory(mem, carried, book);
   try {
     await for (final e in Directory(docs).list()) {
       final name = p.basename(e.path);

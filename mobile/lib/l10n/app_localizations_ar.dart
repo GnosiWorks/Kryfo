@@ -5018,6 +5018,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'المحادثات التي حذفتها بعد إنشاء هذه النسخة الاحتياطية تعود معها، وقد يرى أصحابها أنك أعدت إعداد Kryfo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'قد تُظهر الغرف المؤقتة رسائل أُزيلت، لبضعة أيام.';
+
+  @override
   String get restoreMoveItHere => 'نقله إلى هنا';
 
   @override
@@ -12120,6 +12124,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get fileOpenWithNote =>
       'يمكن للتطبيق الآخر رؤية هذا الملف. يبقيه Kryfo مشفّرًا حتى ذلك الحين.';
+
+  @override
+  String get fileOtherAppKeepsCopy => 'يحتفظ التطبيق الآخر بنسخة منه.';
 
   @override
   String fileFrom(String name) {

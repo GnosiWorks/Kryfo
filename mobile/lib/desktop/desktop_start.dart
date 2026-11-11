@@ -30,7 +30,7 @@ import '../l10n/app_locale.dart' show loadAppLocale;
 import '../l10n/l10n.dart';
 import 'desk_frames.dart';
 import 'desktop_audio.dart';
-import '../container.dart' show HaloContainer;
+import '../container.dart' show HaloContainer, kOldDecoyKeyName;
 import 'desktop_channels.dart';
 import 'desktop_db.dart';
 import 'desktop_lock_screen.dart';
@@ -46,6 +46,7 @@ import 'desktop_prefs.dart';
 import 'desktop_toasts.dart';
 import 'desktop_vault.dart';
 import 'desktop_wipe.dart';
+import 'engine_memory.dart';
 import 'keyring_linux.dart';
 import 'sealed_format.dart' show EngineChunkCrypto;
 import 'sealed_io.dart';
@@ -592,7 +593,10 @@ Future<void> openSeal({
   areas.lateKey = (suffix) {
     for (final c in [HaloContainer.everyday, HaloContainer.decoy]) {
       if (c.suffix != suffix) continue;
-      final k = vault.read(c.keyName!);
+      // the decoy's key under its name from before, until the start moves it
+      final k =
+          vault.read(c.keyName!) ??
+          (c == HaloContainer.decoy ? vault.read(kOldDecoyKeyName) : null);
       return k == null ? null : mediaKeyOf(k, c.id);
     }
     return null;
@@ -623,11 +627,16 @@ Future<void> openSeal({
   EngineFiles? engineFiles;
   {
     // the engine is never handed docs: on windows its folder is on the disk
-    // under <root>/tmp, its marks still sealed between runs
+    // under <root>/tmp, so its key, marks and wrap queue stay in its memory,
+    // sealed between runs
+    final mem = engineMemory = Platform.isWindows
+        ? EngineMemoryCalls.on()
+        : null;
     final ef = engineFiles = EngineFiles(
       docs: docs,
       support: support,
       runtime: runtime ?? p.join(root, 'tmp'),
+      memory: mem,
     );
     await ef.prepare(vault);
     ef.watch(vault);

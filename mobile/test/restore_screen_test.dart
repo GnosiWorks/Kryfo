@@ -327,6 +327,8 @@ void main() {
       expect(shown(), isTrue);
       // what was deleted after the file comes back with it, and says so
       expect(find.text(l10n.restoreDeletedComeBack), findsOneWidget);
+      // and a burner room may show what was removed, for a while
+      expect(find.text(l10n.restoreRoomsMayShow), findsOneWidget);
       await t.tap(go);
       await t.pumpAndSettle();
       expect(find.text(l10n.restoreRestoring), findsOneWidget);

@@ -4928,6 +4928,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Burner rooms may show messages that were removed, for a few days.';
+
+  @override
   String get restoreMoveItHere => 'Move it here';
 
   @override
@@ -11991,6 +11995,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fileOpenWithNote =>
       'The other app can see this file. Kryfo keeps it encrypted until then.';
+
+  @override
+  String get fileOtherAppKeepsCopy => 'The other app keeps a copy.';
 
   @override
   String fileFrom(String name) {

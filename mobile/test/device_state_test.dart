@@ -187,10 +187,12 @@ void main() {
     opened.clear();
   }
 
-  void copyFixtures() {
+  // the files 0.5.3 left, as the app's start finds them
+  Future<void> copyFixtures() async {
     for (final f in _files) {
       File('$_fixtures/$f').copySync(p.join(docs.path, f));
     }
+    await moveToNumberedNames(docs.path);
   }
 
   Future<void> tablesThere(Database db, {String? reason}) async {
@@ -222,7 +224,7 @@ void main() {
       "a 0.5.3 phone's files open at 96, the tables empty, every row kept",
       () async {
         if (skip()) return;
-        copyFixtures();
+        await copyFixtures();
         for (final (f, c) in [
           ('halo.db', HaloContainer.everyday),
           ('halo_d.db', HaloContainer.decoy),
@@ -252,7 +254,7 @@ void main() {
 
     test('a file at 94 takes the step to 95 and keeps every row', () async {
       if (skip()) return;
-      copyFixtures();
+      await copyFixtures();
       var db = await open();
       final before = await _counts(db);
       // back to how 94 left it
@@ -280,7 +282,7 @@ void main() {
     for (final at in [95, 96]) {
       test('a file at $at without them gets them at open', () async {
         if (skip()) return;
-        copyFixtures();
+        await copyFixtures();
         var db = await open();
         final before = await _counts(db);
         for (final t in _devTables) {
@@ -297,7 +299,7 @@ void main() {
 
     test('an open of a whole file writes nothing for them', () async {
       if (skip()) return;
-      copyFixtures();
+      await copyFixtures();
       await open();
       await closeAll();
       final from = sql!.said.length;

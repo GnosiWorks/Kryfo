@@ -4947,6 +4947,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu yedek oluşturulduktan sonra sildiğin sohbetler onunla geri gelir ve o kişiler Kryfo’yu yeniden kurduğunu görebilir.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Geçici odalar birkaç gün boyunca kaldırılan mesajları gösterebilir.';
+
+  @override
   String get restoreMoveItHere => 'Buraya taşı';
 
   @override
@@ -12019,6 +12023,9 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get fileOpenWithNote =>
       'Diğer uygulama bu dosyayı görebilir. O ana kadar Kryfo onu şifreli tutar.';
+
+  @override
+  String get fileOtherAppKeepsCopy => 'Diğer uygulama bir kopyasını saklar.';
 
   @override
   String fileFrom(String name) {

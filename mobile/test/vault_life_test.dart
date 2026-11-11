@@ -349,7 +349,7 @@ class _Host implements VaultHost {
     w.step('make');
     made++;
     w.vault = _Tables()..meta['priv'] = 'priv-$made';
-    File(p.join(w.docs.path, 'halo_v.db')).writeAsStringSync('vault $made');
+    File(p.join(w.docs.path, c.dbFile)).writeAsStringSync('vault $made');
     log.add('make');
     return 'pub-$made';
   }
@@ -1049,6 +1049,15 @@ void _whole(_World w, {String why = ''}) {
   }
 }
 
+// no vault's file is left: at most the random bytes that hold its place
+bool _noVaultFile(String docs) {
+  final f = File(p.join(docs, 'k3.db'));
+  if (!f.existsSync()) return true;
+  final b = f.readAsBytesSync();
+  return b.length % 4096 == 0 &&
+      !String.fromCharCodes(b.take(5)).startsWith('vault');
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory docs;
@@ -1102,7 +1111,7 @@ void main() {
       expect(await w.app.createVault('246810'), isFalse);
       expect(w.host.entry, isNull);
       expect(w.store.metas['pub'], isNull);
-      expect(File(p.join(docs.path, 'halo_v.db')).existsSync(), isFalse);
+      expect(_noVaultFile(docs.path), isTrue);
       await expectLater(
         w.app.hideChats(people: [_h]),
         throwsA(isA<StateError>()),
@@ -1431,10 +1440,7 @@ void main() {
       expect(w.host.entry, isNot(oldKey));
       expect(w.store.inbox, isEmpty);
       expect(w.store.metas['pub'], 'pub-2');
-      expect(
-        File(p.join(docs.path, 'halo_v.db')).readAsStringSync(),
-        'vault 2',
-      );
+      expect(File(p.join(docs.path, 'k3.db')).readAsStringSync(), 'vault 2');
       expect(Directory(w.mediaV).existsSync(), isFalse);
       expect(
         Directory(p.join(docs.path, 'wallpapers_k3')).existsSync(),
@@ -1468,7 +1474,7 @@ void main() {
       expect(w.host.entry, isNull);
       expect(w.store.metas['pub'], isNull);
       expect(w.store.kinds(), {_h: kHiddenGone});
-      expect(File(p.join(docs.path, 'halo_v.db')).existsSync(), isFalse);
+      expect(_noVaultFile(docs.path), isTrue);
       await expectLater(w.app.hideChats(people: [_v]), throwsStateError);
     });
 
@@ -1535,7 +1541,7 @@ void main() {
       expect(w.store.kinds(), {'older-gone-one': kHiddenGone});
       expect(w.live.uids, {..._hUids, ..._g2Uids, ..._stayUids, 'in0'});
       expect(w.live.contact('accepted-inside')!['accepted'], 1);
-      expect(File(p.join(docs.path, 'halo_v.db')).existsSync(), isFalse);
+      expect(_noVaultFile(docs.path), isTrue);
       expect(Directory(w.mediaV).existsSync(), isFalse);
       expect(File(p.join(w.media, 'h1.jpg')).existsSync(), isTrue);
       expect(session.vault, isNull);

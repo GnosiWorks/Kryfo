@@ -5029,6 +5029,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Чаты, удалённые после создания этой копии, вернутся вместе с ней, и эти контакты могут увидеть, что ты заново настроил(а) Kryfo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Одноразовые комнаты могут несколько дней показывать удалённые сообщения.';
+
+  @override
   String get restoreMoveItHere => 'Перенести сюда';
 
   @override
@@ -12181,6 +12185,9 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get fileOpenWithNote =>
       'Другое приложение увидит этот файл. До тех пор Kryfo хранит его зашифрованным.';
+
+  @override
+  String get fileOtherAppKeepsCopy => 'Другое приложение сохранит его копию.';
 
   @override
   String fileFrom(String name) {
