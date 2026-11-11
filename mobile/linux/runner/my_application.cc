@@ -25,6 +25,13 @@ struct _MyApplication {
   guint hidden_timer;
   // said once, the first time closing the window hides kryfo to the tray
   gchar* tray_hint;
+  // the screen's lock as the inhibit portal's monitor says it: -1 until
+  // it answers, then 0 or 1
+  GDBusConnection* lock_bus;
+  gchar* lock_session;
+  guint lock_state_signal;
+  guint lock_response_signal;
+  int screen_locked;
 };
 
 // how long a hidden start waits for its tray icon before the window shows
@@ -543,6 +550,148 @@ static gboolean set_clip_picture(FlValue* args) {
   return TRUE;
 }
 
+// the screen's lock, for toasts without words while it is up. the inhibit
+// portal's monitor says screensaver-active, which is the lock screen on
+// gnome and kde. it needs no bus name beyond the portal: no flatpak
+// permission. logind's LockedHint would need the system bus. a portal
+// without the monitor leaves it unknown, and toasts as they were
+static const gchar* kPortal = "org.freedesktop.portal.Desktop";
+static const gchar* kPortalPath = "/org/freedesktop/portal/desktop";
+static const gchar* kInhibit = "org.freedesktop.portal.Inhibit";
+
+static void screen_lock_said(MyApplication* self, gboolean on) {
+  if (self->screen_locked == (on ? 1 : 0)) return;
+  self->screen_locked = on ? 1 : 0;
+  if (self->desktop_channel == nullptr) return;
+  g_autoptr(FlValue) v = fl_value_new_bool(on);
+  fl_method_channel_invoke_method(self->desktop_channel, "screenLock", v,
+                                  nullptr, nullptr, nullptr);
+}
+
+static void lock_state_cb(GDBusConnection* bus, const gchar*, const gchar*,
+                          const gchar*, const gchar*, GVariant* parameters,
+                          gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  if (!g_variant_is_of_type(parameters, G_VARIANT_TYPE("(oa{sv})"))) return;
+  const gchar* session = nullptr;
+  g_autoptr(GVariant) state = nullptr;
+  g_variant_get(parameters, "(&o@a{sv})", &session, &state);
+  if (g_strcmp0(session, self->lock_session) != 0) return;
+  gboolean active = FALSE;
+  if (g_variant_lookup(state, "screensaver-active", "b", &active)) {
+    screen_lock_said(self, active);
+  }
+  // query-end: the session asks before it ends. kryfo never holds it
+  guint32 phase = 0;
+  if (g_variant_lookup(state, "session-state", "u", &phase) && phase == 2) {
+    g_dbus_connection_call(bus, kPortal, kPortalPath, kInhibit,
+                           "QueryEndResponse", g_variant_new("(o)", session),
+                           nullptr, G_DBUS_CALL_FLAGS_NONE, -1, nullptr,
+                           nullptr, nullptr);
+  }
+}
+
+static void lock_response_cb(GDBusConnection* bus, const gchar*,
+                             const gchar*, const gchar*, const gchar*,
+                             GVariant* parameters, gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  if (self->lock_response_signal != 0) {
+    g_dbus_connection_signal_unsubscribe(bus, self->lock_response_signal);
+    self->lock_response_signal = 0;
+  }
+  guint32 response = 2;
+  g_autoptr(GVariant) results = nullptr;
+  g_variant_get(parameters, "(u@a{sv})", &response, &results);
+  if (response == 0) return;
+  // no monitor: unknown, as before
+  if (self->lock_state_signal != 0) {
+    g_dbus_connection_signal_unsubscribe(bus, self->lock_state_signal);
+    self->lock_state_signal = 0;
+  }
+}
+
+static void lock_called_cb(GObject* source, GAsyncResult* res,
+                           gpointer user_data) {
+  MyApplication* self = MY_APPLICATION(user_data);
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(GVariant) reply =
+      g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &error);
+  if (reply != nullptr || self->lock_bus == nullptr) {
+    g_object_unref(self);
+    return;
+  }
+  // an old portal or none at all: the screen's lock stays unknown
+  if (self->lock_state_signal != 0) {
+    g_dbus_connection_signal_unsubscribe(self->lock_bus,
+                                         self->lock_state_signal);
+    self->lock_state_signal = 0;
+  }
+  if (self->lock_response_signal != 0) {
+    g_dbus_connection_signal_unsubscribe(self->lock_bus,
+                                         self->lock_response_signal);
+    self->lock_response_signal = 0;
+  }
+  g_object_unref(self);
+}
+
+static void watch_screen_lock(MyApplication* self) {
+  self->screen_locked = -1;
+  g_autoptr(GError) error = nullptr;
+  self->lock_bus = g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error);
+  if (self->lock_bus == nullptr) return;
+  guint32 n = g_random_int();
+  g_autofree gchar* token = g_strdup_printf("kryfo_lock%u", n);
+  g_autofree gchar* session_token = g_strdup_printf("kryfo_lock_s%u", n);
+  g_autofree gchar* sender =
+      g_strdup(g_dbus_connection_get_unique_name(self->lock_bus) + 1);
+  g_strdelimit(sender, ".", '_');
+  g_autofree gchar* request = g_strdup_printf(
+      "/org/freedesktop/portal/desktop/request/%s/%s", sender, token);
+  // the session's path is known before the answer, so a state the portal
+  // sends at once is not missed
+  self->lock_session = g_strdup_printf(
+      "/org/freedesktop/portal/desktop/session/%s/%s", sender, session_token);
+  self->lock_state_signal = g_dbus_connection_signal_subscribe(
+      self->lock_bus, kPortal, kInhibit, "StateChanged", kPortalPath, nullptr,
+      G_DBUS_SIGNAL_FLAGS_NONE, lock_state_cb, self, nullptr);
+  self->lock_response_signal = g_dbus_connection_signal_subscribe(
+      self->lock_bus, kPortal, "org.freedesktop.portal.Request", "Response",
+      request, nullptr, G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE, lock_response_cb,
+      self, nullptr);
+  GVariantBuilder options;
+  g_variant_builder_init(&options, G_VARIANT_TYPE_VARDICT);
+  g_variant_builder_add(&options, "{sv}", "handle_token",
+                        g_variant_new_string(token));
+  g_variant_builder_add(&options, "{sv}", "session_handle_token",
+                        g_variant_new_string(session_token));
+  g_dbus_connection_call(
+      self->lock_bus, kPortal, kPortalPath, kInhibit, "CreateMonitor",
+      g_variant_new("(sa{sv})", "", &options), G_VARIANT_TYPE("(o)"),
+      G_DBUS_CALL_FLAGS_NONE, -1, nullptr, lock_called_cb, g_object_ref(self));
+}
+
+static void unwatch_screen_lock(MyApplication* self) {
+  if (self->lock_bus == nullptr) return;
+  if (self->lock_state_signal != 0) {
+    g_dbus_connection_signal_unsubscribe(self->lock_bus,
+                                         self->lock_state_signal);
+    self->lock_state_signal = 0;
+  }
+  if (self->lock_response_signal != 0) {
+    g_dbus_connection_signal_unsubscribe(self->lock_bus,
+                                         self->lock_response_signal);
+    self->lock_response_signal = 0;
+  }
+  if (self->lock_session != nullptr) {
+    g_dbus_connection_call(self->lock_bus, kPortal, self->lock_session,
+                           "org.freedesktop.portal.Session", "Close", nullptr,
+                           nullptr, G_DBUS_CALL_FLAGS_NONE, -1, nullptr,
+                           nullptr, nullptr);
+  }
+  g_clear_pointer(&self->lock_session, g_free);
+  g_clear_object(&self->lock_bus);
+}
+
 static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
                             gpointer user_data) {
   MyApplication* self = MY_APPLICATION(user_data);
@@ -591,6 +740,12 @@ static void desktop_call_cb(FlMethodChannel* channel, FlMethodCall* call,
     g_autoptr(FlValue) ok =
         fl_value_new_bool(set_clip_picture(fl_method_call_get_args(call)));
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(ok));
+  } else if (g_strcmp0(fl_method_call_get_name(call), "screenLocked") == 0) {
+    // null while the portal has not said
+    g_autoptr(FlValue) locked = self->screen_locked < 0
+                                    ? fl_value_new_null()
+                                    : fl_value_new_bool(self->screen_locked);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(locked));
   } else if (g_strcmp0(fl_method_call_get_name(call), "show") == 0) {
     show_window(self);
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
@@ -694,6 +849,7 @@ static void my_application_activate(GApplication* application) {
       "kryfo/desktop", FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(self->desktop_channel,
                                             desktop_call_cb, self, nullptr);
+  watch_screen_lock(self);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 
@@ -750,6 +906,7 @@ static void my_application_dispose(GObject* object) {
   }
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   g_clear_pointer(&self->tray_hint, g_free);
+  unwatch_screen_lock(self);
   g_clear_object(&self->desktop_channel);
   drop_indicator(self);
   g_clear_object(&self->tray);
@@ -765,7 +922,9 @@ static void my_application_class_init(MyApplicationClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = my_application_dispose;
 }
 
-static void my_application_init(MyApplication* self) {}
+static void my_application_init(MyApplication* self) {
+  self->screen_locked = -1;
+}
 
 // unique, so a second start raises the first. the flag's new name came in
 // glib 2.74; ubuntu 22.04 has 2.72
