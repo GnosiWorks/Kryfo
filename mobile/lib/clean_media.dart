@@ -21,7 +21,7 @@ import 'meta/meta_reader.dart';
 import 'mp4_strip.dart';
 import 'shred.dart';
 import 'desktop/desktop_mode.dart' show onDesktop, runIsolated;
-import 'picture_convert.dart' show cleanJpegOf, kConvertMost;
+import 'picture_convert.dart' show cleanJpegOf, kConvertMost, kDeskConvertMost;
 
 enum MediaClean { clean, notMedia, refused }
 
@@ -266,13 +266,13 @@ Future<ReadyCopy> copyForSend(
   }
 }
 
-// the picture at [path] as a clean jpeg; null where it cannot be drawn. a
-// computer has nothing to draw it with
+// the picture at [path] as a clean jpeg; null where it cannot be drawn
 Future<Uint8List?> _drawnClean(String path) async {
-  if (onDesktop) return null;
   try {
     final f = File(path);
-    if (await f.length() > kConvertMost) return null;
+    if (await f.length() > (onDesktop ? kDeskConvertMost : kConvertMost)) {
+      return null;
+    }
     return await cleanJpegOf(await f.readAsBytes());
   } catch (_) {
     return null;

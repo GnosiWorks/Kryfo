@@ -3224,5 +3224,14 @@
   "settingsShareMenu": "Afficher les discussions dans le menu de partage",
   "settingsShareMenuHint": "Vos discussions récentes apparaissent par leur nom quand vous partagez depuis une autre app.",
   "settingsShareMenuHintLocked": "Vos discussions récentes apparaissent par leur nom dans le menu de partage des autres apps uniquement quand Kryfo est déverrouillé.",
-  "settingsShareMenuDisguised": "Vos discussions restent hors du menu de partage tant que Kryfo porte une autre icône."
+  "settingsShareMenuDisguised": "Vos discussions restent hors du menu de partage tant que Kryfo porte une autre icône.",
+  "connCheckTitle": "Vérifier ma connexion",
+  "connCheckLine": "Voici tout ce qui serait partagé : comment Tor sort d’ici, combien de temps cela a pris et ce qui n’est pas passé. Pas d’adresse IP, pas de position, pas de lignes de pont, pas d’identifiants d’appareil. Rien ne part tant que vous ne le copiez pas ou ne l’envoyez pas.",
+  "connCheckEnglish": "Le rapport est en anglais, pour qu’il se lise partout de la même façon.",
+  "connCheckAgain": "Vérifier à nouveau",
+  "connCheckSend": "Envoyer à Marios",
+  "storyRow": "Partagez votre histoire",
+  "storyHint": "Pourquoi vous utilisez Kryfo, avec vos propres mots. Les histoires ne sont partagées qu’avec votre accord.",
+  "storyHintAnon": "Pourquoi vous utilisez Kryfo, avec vos propres mots. Vous pouvez écrire anonymement, et les histoires ne sont partagées qu’avec votre accord.",
+  "storyTemplate": "Pourquoi j’utilise Kryfo :\n\nCe qui est bloqué là où je vis :\n\nRégion (facultatif) :\n"
 }

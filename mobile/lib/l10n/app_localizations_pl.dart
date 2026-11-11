@@ -12511,4 +12511,36 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Twoje czaty zostają poza menu udostępniania, dopóki Kryfo ma inną ikonę.';
+
+  @override
+  String get connCheckTitle => 'Sprawdź moje połączenie';
+
+  @override
+  String get connCheckLine =>
+      'To wszystko, co zostałoby udostępnione: jak Tor wychodzi stąd, ile to trwało i co nie przeszło. Bez adresu IP, bez lokalizacji, bez linii mostków, bez identyfikatorów urządzenia. Nic nie wychodzi, dopóki tego nie skopiujesz lub nie wyślesz.';
+
+  @override
+  String get connCheckEnglish =>
+      'Raport jest po angielsku, żeby wszędzie czytał się tak samo.';
+
+  @override
+  String get connCheckAgain => 'Sprawdź ponownie';
+
+  @override
+  String get connCheckSend => 'Wyślij do Mariosa';
+
+  @override
+  String get storyRow => 'Opowiedz swoją historię';
+
+  @override
+  String get storyHint =>
+      'Dlaczego używasz Kryfo, własnymi słowami. Historie są udostępniane tylko za twoją zgodą.';
+
+  @override
+  String get storyHintAnon =>
+      'Dlaczego używasz Kryfo, własnymi słowami. Możesz pisać anonimowo, a historie są udostępniane tylko za twoją zgodą.';
+
+  @override
+  String get storyTemplate =>
+      'Dlaczego używam Kryfo:\n\nCo jest zablokowane tam, gdzie mieszkam:\n\nRegion (opcjonalnie):\n';
 }

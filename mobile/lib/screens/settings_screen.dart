@@ -63,7 +63,8 @@ import 'icon_screen.dart';
 import '../app_icon.dart' show AppFace, AppFaceWords, appFaceNow, readAppFace;
 import '../widgets/halo_rows.dart';
 import '../widgets/dev_avatar.dart' show DevRing;
-import 'dev_about_sheet.dart' show devChatOffered, writeToMarios;
+import 'dev_about_sheet.dart'
+    show devChatOffered, shareYourStory, storyHint, writeToMarios;
 import 'auto_get_screen.dart';
 import 'follow_section.dart';
 import 'linked_devices_screen.dart';
@@ -1230,6 +1231,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     label: l10n.settingsWriteToMarios,
                     hint: l10n.settingsWriteToMariosHint,
                     onTap: () => writeToMarios(context),
+                  ),
+                // a story for the people who fund Kryfo, in the person's words
+                // its line follows the chat's first send
+                if (devChatOffered && !linkedRole)
+                  ListenableBuilder(
+                    listenable: appState,
+                    builder: (context, _) => HaloRow(
+                      icon: Icons.auto_stories_outlined,
+                      label: l10n.storyRow,
+                      hint: storyHint(appState.devRow?.started ?? false),
+                      onTap: () => shareYourStory(context),
+                    ),
                   ),
                 HaloRow(
                   icon: Icons.flag_outlined,

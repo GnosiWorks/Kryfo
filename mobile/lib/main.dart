@@ -63,6 +63,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:ffi';
 import 'dart:io';
 import 'clean_media.dart' show kSaveCopies;
+import 'conn_check.dart' show connTrail;
 import 'shred.dart';
 import 'heal.dart';
 import 'identities.dart';

@@ -16,6 +16,7 @@ import '../widgets/press_scale.dart';
 import '../widgets/stagger_in.dart';
 import '../widgets/swap.dart';
 import '../widgets/unfold.dart';
+import 'conn_check_sheet.dart' show showConnCheck;
 import '../l10n/l10n.dart';
 import '../l10n/dates.dart';
 import '../delivery_mode.dart';
@@ -240,6 +241,11 @@ class TransportScreen extends StatelessWidget {
                         ),
 
                         const SizedBox(height: 28),
+                        HaloGhostButton(
+                          label: l10n.connCheckTitle,
+                          onTap: () => showConnCheck(context),
+                        ),
+                        const SizedBox(height: 10),
                         const _Flush(),
                       ]),
                     ),

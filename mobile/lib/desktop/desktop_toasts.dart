@@ -85,10 +85,26 @@ Future<void> readSessionLock(MethodChannel channel) async {
 /// the runner's word on a lock or an unlock
 void heardSessionLock(Object? locked) => sessionLocked.value = locked != false;
 
+/// the linux screen's lock, as the runner reads it from the inhibit
+/// portal. unknown reads as unlocked: a desktop whose portal cannot say
+/// keeps its toasts as they were
+final screenLocked = ValueNotifier<bool>(false);
+
+/// asks the linux runner whether the screen is locked now
+Future<void> readScreenLock(MethodChannel channel) async {
+  try {
+    final locked = await channel.invokeMethod<bool>('screenLocked');
+    if (locked != null) screenLocked.value = locked;
+  } catch (_) {}
+}
+
+/// the linux runner's word on a lock or an unlock
+void heardScreenLock(Object? locked) => screenLocked.value = locked == true;
+
 /// toasts and the session's lock. a toast with text shown before the lock
 /// stays in action center, readable on the lock screen: the lock clears
-/// kryfo's toasts when one may hold text
-@visibleForTesting
+/// kryfo's toasts when one may hold text. linux's notifications go the
+/// same way
 class ToastLock {
   ToastLock(this.locked, this.clear) {
     locked.addListener(_changed);

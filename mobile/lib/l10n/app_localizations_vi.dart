@@ -12267,4 +12267,36 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Các cuộc trò chuyện của bạn ở ngoài menu chia sẻ khi Kryfo dùng biểu tượng khác.';
+
+  @override
+  String get connCheckTitle => 'Kiểm tra kết nối của tôi';
+
+  @override
+  String get connCheckLine =>
+      'Đây là tất cả những gì sẽ được chia sẻ: Tor ra ngoài từ đây bằng cách nào, mất bao lâu và cách nào không qua được. Không có địa chỉ IP, không có vị trí, không có dòng cầu nối, không có mã nhận dạng thiết bị. Không có gì rời đi cho đến khi bạn sao chép hoặc gửi.';
+
+  @override
+  String get connCheckEnglish =>
+      'Bản kiểm tra bằng tiếng Anh để đọc giống nhau ở mọi nơi.';
+
+  @override
+  String get connCheckAgain => 'Kiểm tra lại';
+
+  @override
+  String get connCheckSend => 'Gửi cho Marios';
+
+  @override
+  String get storyRow => 'Chia sẻ câu chuyện của bạn';
+
+  @override
+  String get storyHint =>
+      'Vì sao bạn dùng Kryfo, bằng lời của chính bạn. Câu chuyện chỉ được chia sẻ khi bạn đồng ý.';
+
+  @override
+  String get storyHintAnon =>
+      'Vì sao bạn dùng Kryfo, bằng lời của chính bạn. Bạn có thể viết ẩn danh, và câu chuyện chỉ được chia sẻ khi bạn đồng ý.';
+
+  @override
+  String get storyTemplate =>
+      'Vì sao tôi dùng Kryfo:\n\nNhững gì bị chặn ở nơi tôi sống:\n\nKhu vực (không bắt buộc):\n';
 }

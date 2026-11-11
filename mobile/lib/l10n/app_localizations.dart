@@ -19644,6 +19644,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your chats stay out of the share menu while Kryfo wears another icon.'**
   String get settingsShareMenuDisguised;
+
+  /// screens/conn_check_sheet.dart and the transport page's button: a report on how Tor gets out on this network, which the person can copy or send to the developer themselves
+  ///
+  /// In en, this message translates to:
+  /// **'Check my connection'**
+  String get connCheckTitle;
+
+  /// screens/conn_check_sheet.dart: above the report. says the report shown below is everything that would be shared, and what it never holds
+  ///
+  /// In en, this message translates to:
+  /// **'This is everything that would be shared: how Tor gets out here, how long it took and what did not get through. No IP address, no location, no bridge lines, nothing that names your device. Nothing leaves until you copy or send it.'**
+  String get connCheckLine;
+
+  /// screens/conn_check_sheet.dart: under the report, which is always in English
+  ///
+  /// In en, this message translates to:
+  /// **'The check is in English, so it reads the same everywhere.'**
+  String get connCheckEnglish;
+
+  /// screens/conn_check_sheet.dart: builds the report again from what the app sees now
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get connCheckAgain;
+
+  /// screens/conn_check_sheet.dart: opens the chat with the developer with the report in the composer, for the person to send. Marios stays in Latin letters
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Marios'**
+  String get connCheckSend;
+
+  /// settings, about: opens the chat with the developer with a short template to tell why the person uses Kryfo
+  ///
+  /// In en, this message translates to:
+  /// **'Share your story'**
+  String get storyRow;
+
+  /// settings, about: the line under storyRow once the chat with the developer has started
+  ///
+  /// In en, this message translates to:
+  /// **'Why you use Kryfo, in your own words. Stories are shared only with your consent.'**
+  String get storyHint;
+
+  /// settings, about: the line under storyRow before the first message to the developer, while the chat can still be started anonymously
+  ///
+  /// In en, this message translates to:
+  /// **'Why you use Kryfo, in your own words. You can write anonymously, and stories are shared only with your consent.'**
+  String get storyHintAnon;
+
+  /// the words put in the developer chat's composer by storyRow, for the person to fill in, change or drop before sending. three prompts, each followed by an empty line to write on; keep the line breaks
+  ///
+  /// In en, this message translates to:
+  /// **'Why I use Kryfo:\n\nWhat is blocked where I live:\n\nRegion (optional):\n'**
+  String get storyTemplate;
 }
 
 class _AppLocalizationsDelegate

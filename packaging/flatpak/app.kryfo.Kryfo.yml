@@ -35,6 +35,9 @@ finish-args:
   #   keeps it in the app's own keyring file, so no org.freedesktop.secrets
   # - start with the computer: the background portal writes the autostart
   #   entry itself (runner, ask_portal)
+  # - the screen's lock, for notifications without words while it is up:
+  #   the inhibit portal's monitor (runner, watch_screen_lock), not logind
+  #   on the system bus
   # - the tray is gtk's status icon (xembed, x11 only), which needs no bus
   #   name. a statusnotifieritem tray would add
   #   --talk-name=org.kde.StatusNotifierWatcher

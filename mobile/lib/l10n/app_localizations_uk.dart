@@ -12467,4 +12467,36 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settingsShareMenuDisguised =>
       'Ваші чати залишаються поза меню «Поділитися», поки Kryfo має інший значок.';
+
+  @override
+  String get connCheckTitle => 'Перевірити зʼєднання';
+
+  @override
+  String get connCheckLine =>
+      'Це все, чим можна поділитися: як Tor виходить звідси, скільки це зайняло і що не пройшло. Без IP-адреси, без місцезнаходження, без рядків мостів, без ідентифікаторів пристрою. Нічого не піде, доки ви самі не скопіюєте чи не надішлете.';
+
+  @override
+  String get connCheckEnglish =>
+      'Звіт англійською, щоб усюди читався однаково.';
+
+  @override
+  String get connCheckAgain => 'Перевірити ще раз';
+
+  @override
+  String get connCheckSend => 'Надіслати Marios';
+
+  @override
+  String get storyRow => 'Поділіться своєю історією';
+
+  @override
+  String get storyHint =>
+      'Чому ви користуєтеся Kryfo, своїми словами. Історії поширюються лише з вашої згоди.';
+
+  @override
+  String get storyHintAnon =>
+      'Чому ви користуєтеся Kryfo, своїми словами. Можна писати анонімно, а історії поширюються лише з вашої згоди.';
+
+  @override
+  String get storyTemplate =>
+      'Чому я користуюся Kryfo:\n\nЩо заблоковано там, де я живу:\n\nРегіон (за бажанням):\n';
 }

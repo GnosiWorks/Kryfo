@@ -95,6 +95,8 @@ const _notSettings = {
   'bridge_share_sheet',
   // the tor project's ways to a private bridge, a block in the friend sheet
   'bridge_private_hint',
+  // check my connection: a report to copy or send, a sheet with no sections
+  'conn_check_sheet',
 };
 
 // what a title looks like and the gaps around it, as on every page
