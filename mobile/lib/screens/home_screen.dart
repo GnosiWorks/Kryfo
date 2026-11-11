@@ -25,6 +25,7 @@ import 'share_sheet.dart';
 import 'share_files_sheet.dart';
 import '../tools/tools_bridge.dart';
 import '../tools/desk_tools.dart';
+import '../desktop/row_drop.dart' show RowDrop;
 import '../desktop/attach_tray.dart' show clipboardFiles;
 import '../desktop/clip_picture.dart' show clipboardPicture;
 import '../desktop/drag_in.dart' show draggedFiles;
@@ -2443,7 +2444,21 @@ class _ContactListState extends State<_ContactList> {
     // the chat open in the desktop's pane is marked
     final marked = WideMark(
       id: g != null ? 'group:${g.groupId}' : d?.chatId ?? c!.haloId,
-      child: row,
+      // a computer: files dropped on the row wait in its chat
+      child: d != null
+          ? row
+          : RowDrop(
+              trayKey: g != null
+                  ? '${session.container.id}|group:${g.groupId}'
+                  : '${session.container.id}|${c!.haloId}',
+              most: () => g != null
+                  ? appState.fileLimitForGroup(g.groupId)
+                  : appState.fileLimitFor(c!.haloId),
+              open: g != null
+                  ? () => widget.onOpenGroup(g.groupId)
+                  : () => widget.onTap(c!.haloId),
+              child: row,
+            ),
     );
     // keyed, so a row that moves up on a new message slides there
     return ShiftInPlace(
