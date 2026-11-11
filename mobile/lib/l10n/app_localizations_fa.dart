@@ -7135,7 +7135,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get bridgesNothingGotThrough => 'هیچ راهی جواب نداد';
 
   @override
-  String get bridgesBridgeFromAFriend => 'پل از یک دوست';
+  String get bridgesPasteABridge => 'چسباندن پل';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7377,7 +7377,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'یک خط پل جای‌گذاری کنید. خط‌ها را از پروژه‌ی Tor یا از کسانی بگیرید که می‌شناسید.';
 
   @override
-  String get bridgesFromAFriendLower => 'از یک دوست';
+  String get bridgesPastedLower => 'چسبانده‌شده';
 
   @override
   String get bridgesAlmostThere => 'چیزی نمانده';

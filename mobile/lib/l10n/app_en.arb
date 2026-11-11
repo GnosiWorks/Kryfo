@@ -8968,7 +8968,7 @@
       }
     }
   },
-  "@bridgesFromAFriendLower": {
+  "@bridgesPastedLower": {
     "description": "screens/bridges_screen.dart"
   },
   "@bridgesAutomaticFindsAWay": {
@@ -8999,7 +8999,7 @@
     "description": "screens/bridges_screen.dart"
   },
   "bridgesNothingGotThrough": "Nothing got through",
-  "bridgesBridgeFromAFriend": "Bridge from a friend",
+  "bridgesPasteABridge": "Paste a bridge",
   "bridgesKryfoCanAskThe": "Kryfo can ask the Tor Project for a bridge to get around it.",
   "bridgesNotNeededRightNow": "Not needed right now",
   "bridgesBuiltInBridges": "Built-in bridges",
@@ -9157,7 +9157,7 @@
   "@bridgesObfs4BridgesThatCome": {
     "description": "screens/bridges_screen.dart"
   },
-  "@bridgesBridgeFromAFriend": {
+  "@bridgesPasteABridge": {
     "description": "screens/bridges_screen.dart"
   },
   "bridgesInUse": "In use",
@@ -9279,7 +9279,7 @@
   "@bridgesPasteTheLineTheyDesk": {
     "description": "bridgesPasteTheLineThey as a computer shows it (linux and windows)"
   },
-  "bridgesFromAFriendLower": "from a friend",
+  "bridgesPastedLower": "pasted",
   "bridgesAlmostThere": "Almost there",
   "@bridgesNothingGotThrough": {
     "description": "screens/bridges_screen.dart"

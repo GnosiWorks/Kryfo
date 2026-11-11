@@ -7264,7 +7264,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Пробиться не удалось';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Мост от друга';
+  String get bridgesPasteABridge => 'Вставить мост';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7508,7 +7508,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Вставь строку моста. Бери строки у проекта Tor или у тех, кого знаешь.';
 
   @override
-  String get bridgesFromAFriendLower => 'от друга';
+  String get bridgesPastedLower => 'вставленный';
 
   @override
   String get bridgesAlmostThere => 'Почти готово';

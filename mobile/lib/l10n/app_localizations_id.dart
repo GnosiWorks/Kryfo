@@ -7133,7 +7133,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Tidak ada yang tembus';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Jembatan dari teman';
+  String get bridgesPasteABridge => 'Tempel jembatan';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7374,7 +7374,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Tempel baris jembatan. Ambil baris dari Tor Project atau dari orang yang kamu kenal.';
 
   @override
-  String get bridgesFromAFriendLower => 'dari teman';
+  String get bridgesPastedLower => 'ditempel';
 
   @override
   String get bridgesAlmostThere => 'Sebentar lagi';

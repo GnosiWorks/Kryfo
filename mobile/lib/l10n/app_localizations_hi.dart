@@ -7137,7 +7137,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bridgesNothingGotThrough => 'कुछ भी नहीं पहुँचा';
 
   @override
-  String get bridgesBridgeFromAFriend => 'किसी दोस्त से मिला ब्रिज';
+  String get bridgesPasteABridge => 'ब्रिज पेस्ट करें';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7379,7 +7379,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'ब्रिज लाइन पेस्ट करें। लाइनें Tor Project से या जान-पहचान वालों से ही लें।';
 
   @override
-  String get bridgesFromAFriendLower => 'किसी दोस्त से';
+  String get bridgesPastedLower => 'पेस्ट किया गया';
 
   @override
   String get bridgesAlmostThere => 'बस पहुँचने वाले हैं';

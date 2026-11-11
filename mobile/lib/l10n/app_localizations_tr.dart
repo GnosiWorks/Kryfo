@@ -7155,7 +7155,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Hiçbiri geçemedi';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Arkadaştan köprü';
+  String get bridgesPasteABridge => 'Köprü yapıştır';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7397,7 +7397,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bir köprü satırı yapıştır. Satırları Tor Projesinden ya da tanıdığın kişilerden al.';
 
   @override
-  String get bridgesFromAFriendLower => 'bir arkadaştan';
+  String get bridgesPastedLower => 'yapıştırılan';
 
   @override
   String get bridgesAlmostThere => 'Az kaldı';

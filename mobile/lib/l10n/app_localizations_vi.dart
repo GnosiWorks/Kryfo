@@ -7118,7 +7118,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Không cách nào kết nối được';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Cầu nối từ bạn bè';
+  String get bridgesPasteABridge => 'Dán cầu nối';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7360,7 +7360,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dán một dòng cầu nối. Hãy lấy dòng từ Dự án Tor hoặc từ người bạn quen.';
 
   @override
-  String get bridgesFromAFriendLower => 'từ bạn bè';
+  String get bridgesPastedLower => 'đã dán';
 
   @override
   String get bridgesAlmostThere => 'Sắp xong rồi';

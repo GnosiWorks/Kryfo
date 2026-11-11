@@ -11422,8 +11422,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'Bridge from a friend'**
-  String get bridgesBridgeFromAFriend;
+  /// **'Paste a bridge'**
+  String get bridgesPasteABridge;
 
   /// screens/bridges_screen.dart
   ///
@@ -11830,8 +11830,8 @@ abstract class AppLocalizations {
   /// screens/bridges_screen.dart
   ///
   /// In en, this message translates to:
-  /// **'from a friend'**
-  String get bridgesFromAFriendLower;
+  /// **'pasted'**
+  String get bridgesPastedLower;
 
   /// screens/bridges_screen.dart
   ///

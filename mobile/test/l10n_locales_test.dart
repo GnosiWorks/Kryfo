@@ -2766,7 +2766,7 @@ final _calls = <_Call>[
   ('bridgesKryfoFindsAWay', [], (l) => l.bridgesKryfoFindsAWay),
   ('bridgesDirect', [], (l) => l.bridgesDirect),
   ('bridgesFastestWhereTorIsnt', [], (l) => l.bridgesFastestWhereTorIsnt),
-  ('bridgesBridgeFromAFriend', [], (l) => l.bridgesBridgeFromAFriend),
+  ('bridgesPasteABridge', [], (l) => l.bridgesPasteABridge),
   ('bridgesPasteOrScanALine', [], (l) => l.bridgesPasteOrScanALine),
   ('bridgesMore', [], (l) => l.bridgesMore),
   ('bridgesConnectingDots', [], (l) => l.bridgesConnectingDots),
@@ -2809,7 +2809,7 @@ final _calls = <_Call>[
   ('bridgesTorNoBridge', [], (l) => l.bridgesTorNoBridge),
   ('bridgesBuiltIn', [], (l) => l.bridgesBuiltIn),
   ('bridgesFromTheTorProjectLower', [], (l) => l.bridgesFromTheTorProjectLower),
-  ('bridgesFromAFriendLower', [], (l) => l.bridgesFromAFriendLower),
+  ('bridgesPastedLower', [], (l) => l.bridgesPastedLower),
   (
     'bridgesMethodFrom',
     ["⟨method⟩", "⟨from⟩"],

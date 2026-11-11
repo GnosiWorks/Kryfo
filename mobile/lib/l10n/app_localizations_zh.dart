@@ -6804,7 +6804,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bridgesNothingGotThrough => '都没能连上';
 
   @override
-  String get bridgesBridgeFromAFriend => '朋友给的网桥';
+  String get bridgesPasteABridge => '粘贴网桥';
 
   @override
   String get bridgesKryfoCanAskThe => 'Kryfo 可以向 Tor 项目索取网桥，绕过封锁。';
@@ -7029,7 +7029,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '粘贴一条网桥配置。网桥配置可以从 Tor 项目获取，或者找你认识的人拿。';
 
   @override
-  String get bridgesFromAFriendLower => '来自朋友';
+  String get bridgesPastedLower => '已粘贴';
 
   @override
   String get bridgesAlmostThere => '快好了';
@@ -18355,7 +18355,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get bridgesNothingGotThrough => '都沒能連上';
 
   @override
-  String get bridgesBridgeFromAFriend => '朋友給的橋接';
+  String get bridgesPasteABridge => '貼上橋接';
 
   @override
   String get bridgesKryfoCanAskThe => 'Kryfo 可以向 Tor 專案索取橋接，繞過封鎖。';
@@ -18580,7 +18580,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
       '貼上一條橋接設定。橋接設定可以從 Tor 專案取得，或者找你認識的人拿。';
 
   @override
-  String get bridgesFromAFriendLower => '來自朋友';
+  String get bridgesPastedLower => '已貼上';
 
   @override
   String get bridgesAlmostThere => '快好了';

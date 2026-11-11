@@ -7218,7 +7218,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get bridgesNothingGotThrough => 'Nichts kam durch';
 
   @override
-  String get bridgesBridgeFromAFriend => 'Brücke von Freunden';
+  String get bridgesPasteABridge => 'Brücke einfügen';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7463,7 +7463,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Füge eine Brückenzeile ein. Nimm Zeilen vom Tor-Projekt oder von Leuten, die du kennst.';
 
   @override
-  String get bridgesFromAFriendLower => 'von Freunden';
+  String get bridgesPastedLower => 'eingefügt';
 
   @override
   String get bridgesAlmostThere => 'Gleich geschafft';

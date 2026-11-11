@@ -589,7 +589,7 @@ void main() {
 
     testWidgets('a friend\'s card with no line asks for one first', (t) async {
       await _open(t);
-      await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
+      await t.tap(find.text(l10n.bridgesPasteABridge));
       await _in(t);
       expect(find.text(l10n.bridgesPasteTheLineThey), findsOneWidget);
       expect(appState.bridgeChoice, BridgeChoice.auto);
@@ -688,7 +688,7 @@ void main() {
   group('a friend\'s lines', () {
     Future<void> paste(WidgetTester t, String text) async {
       await _open(t);
-      await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
+      await t.tap(find.text(l10n.bridgesPasteABridge));
       await _in(t);
       await t.enterText(find.byType(TextField), text);
       await t.pump();
@@ -933,7 +933,7 @@ void main() {
       );
       expect(find.text(l10n.bridgesAutomatic), findsOneWidget);
       expect(find.text(l10n.bridgesDirect), findsNothing);
-      expect(find.text(l10n.bridgesBridgeFromAFriend), findsNothing);
+      expect(find.text(l10n.bridgesPasteABridge), findsNothing);
       expect(find.text(l10n.bridgesMore), findsNothing);
       expect(find.text(l10n.bridgesConnectingDots), findsOneWidget);
       expect(find.textContaining('192.0.2.1'), findsNothing);
@@ -1469,7 +1469,7 @@ void main() {
         },
       );
       await _open(t);
-      await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
+      await t.tap(find.text(l10n.bridgesPasteABridge));
       await _in(t);
       await t.tap(find.text(l10n.bridgesPasteFromClipboard));
       await _in(t);
@@ -1633,7 +1633,7 @@ void main() {
 
     testWidgets('the hint reads from the right in arabic', (t) async {
       await _open(t, locale: const Locale('ar'));
-      await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
+      await t.tap(find.text(l10n.bridgesPasteABridge));
       await _in(t);
       final tf = t.widget<TextField>(find.byType(TextField));
       expect(tf.decoration!.hintTextDirection, TextDirection.rtl);
@@ -1691,7 +1691,7 @@ void main() {
           await _in(t);
           await _done(t);
           await at();
-          await t.tap(find.text(l10n.bridgesBridgeFromAFriend));
+          await t.tap(find.text(l10n.bridgesPasteABridge));
           await _in(t);
           await _done(t);
           // a removed line and its undo
@@ -2068,7 +2068,7 @@ void main() {
         size: size,
         still: still,
       );
-      final card = find.text(l10n.bridgesBridgeFromAFriend);
+      final card = find.text(l10n.bridgesPasteABridge);
       await t.scrollUntilVisible(
         card,
         200,
@@ -2131,7 +2131,7 @@ void main() {
       lockState.inDecoy = true;
       await _open(t, status: failed);
       // a decoy has no friend card to open the sheet from
-      expect(find.text(l10n.bridgesBridgeFromAFriend), findsNothing);
+      expect(find.text(l10n.bridgesPasteABridge), findsNothing);
       expect(hint, findsNothing);
       await _done(t);
     });

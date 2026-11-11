@@ -7256,7 +7256,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bridgesNothingGotThrough => 'لم تنجح أي طريقة';
 
   @override
-  String get bridgesBridgeFromAFriend => 'جسر من صديق';
+  String get bridgesPasteABridge => 'الصق جسرًا';
 
   @override
   String get bridgesKryfoCanAskThe =>
@@ -7496,7 +7496,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'الصق سطر جسر. خذ الأسطر من مشروع Tor أو من أشخاص تعرفهم.';
 
   @override
-  String get bridgesFromAFriendLower => 'من صديق';
+  String get bridgesPastedLower => 'ملصوق';
 
   @override
   String get bridgesAlmostThere => 'اقتربنا';
