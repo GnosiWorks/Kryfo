@@ -2127,6 +2127,30 @@ void main() {
       await _done(t);
     });
 
+    testWidgets('a page that needs tor opens it with the hint', (t) async {
+      for (final decoy in [false, true]) {
+        lockState.inDecoy = decoy;
+        appState.setBridgeStatusForTest(BridgeStatus.none);
+        await t.pumpWidget(
+          devApp(
+            Builder(
+              builder: (c) => Center(
+                child: GestureDetector(
+                  onTap: () => showFriendLinesSheet(c, hint: true),
+                  child: const Text('handles'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await t.tap(find.text('handles'));
+        await _in(t);
+        // automatic never failed: shown all the same, never to a decoy
+        expect(hint, decoy ? findsNothing : findsOneWidget);
+        await _done(t);
+      }
+    });
+
     testWidgets('a decoy never sees it', (t) async {
       lockState.inDecoy = true;
       await _open(t, status: failed);

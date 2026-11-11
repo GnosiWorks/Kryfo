@@ -1927,11 +1927,12 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 			cuts := 0
 			// the next read was drawn in the round for our relay down
 			drawnDown := false
-			// an attempt on our relay failed, while tor could carry it
-			ownMiss := func() {
+			// an attempt on our relay, begun at began, failed, while tor
+			// could carry it
+			ownMiss := func(began time.Time) {
 				if ownEntry && !(modeNeedsTor() && !torReadyNow()) {
 					ownRelayFailed()
-					storeFailed(anchorKey)
+					storeFailed(anchorKey, began)
 				}
 			}
 			turn := subTurn{tag: tag, fresh: freshOf(ctx), own: ownEntry, lane: lane, spread: spreadFor(lane, ownEntry)}
@@ -2150,7 +2151,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if err != nil {
 					connDone()
 					log.Printf("nostr: subscribe-connect %s: %v", u, err)
-					ownMiss()
+					ownMiss(dialAt)
 					if relayAnswered(err) {
 						// turned away at the door, through a route that works
 						routeAliveOn(dialGen, u)
@@ -2255,7 +2256,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				if err != nil {
 					log.Printf("nostr: subscribe %s: %v", u, err)
 					connDone()
-					ownMiss()
+					ownMiss(dialAt)
 					relayFailed(u, dialAt)
 					nap(relayRetryAfter(u, retry, own))
 					continue
@@ -2452,7 +2453,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							r.close()
 							dropped = true
 							if !spoke {
-								ownMiss()
+								ownMiss(dialAt)
 							}
 							// the request itself was answered with CLOSED: a
 							// relay that hands over nothing owes nothing
@@ -2609,7 +2610,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 							continue
 						}
 						log.Printf("nostr: %s did not answer a probe, cycling the sub", u)
-						ownMiss()
+						ownMiss(dialAt)
 						stopKick()
 						r.drop(asked)
 						goto reconnect
@@ -2652,7 +2653,7 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 						}
 						log.Printf("nostr: %s kicked, reconnecting now", u)
 						turn.probed(false)
-						ownMiss()
+						ownMiss(dialAt)
 						idle.Stop()
 						r.drop(asked)
 						kicked = true

@@ -12583,6 +12583,60 @@ abstract class AppLocalizations {
   /// **'Handle search needs Tor. Add by QR or link meanwhile.'**
   String get handleSearchNeedsTor;
 
+  /// handle page: tor does not carry yet, so the registry is not asked. handles go over tor on every route
+  ///
+  /// In en, this message translates to:
+  /// **'Handles go over Tor.\nThey work once Tor connects.'**
+  String get handleNeedsTor;
+
+  /// handle page and adding by handle: the registry answered that it is at its limit for everyone
+  ///
+  /// In en, this message translates to:
+  /// **'The registry is busy.\nTry again in a minute.'**
+  String get handleRegistryBusy;
+
+  /// the registry refused a claim: it holds as many handles as it takes
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: it\'s full right now.'**
+  String get handleRefusedFull;
+
+  /// the registry refused a change signed before one it already has (a clock behind, or two devices)
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: it already has a newer change.\nCheck the clock and try again.'**
+  String get handleRefusedOlder;
+
+  /// the registry refused a claim: it could not read the invite
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: it couldn\'t read your invite.'**
+  String get handleRefusedBadInvite;
+
+  /// the registry refused a claim: the invite is not signed by this identity's key
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: the invite isn\'t from your key.'**
+  String get handleRefusedNotYourInvite;
+
+  /// the registry refused a claim from an app version it no longer takes
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no: this version of Kryfo is too old.\nUpdate Kryfo to use handles.'**
+  String get handleRefusedUpdate;
+
+  /// the registry refused for a reason the app has no line for
+  ///
+  /// In en, this message translates to:
+  /// **'The registry said no.'**
+  String get handleRefused;
+
+  /// handle page, under the line that tor is not up: opens the paste sheet with the ways to a private bridge
+  ///
+  /// In en, this message translates to:
+  /// **'Get a bridge'**
+  String get handleGetABridge;
+
   /// screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off
   ///
   /// In en, this message translates to:
@@ -18205,7 +18259,7 @@ abstract class AppLocalizations {
   /// **'Drop here to add'**
   String get chatDropHereToAdd;
 
-  /// screen reader label of the cross on a tray card
+  /// a computer: the x on a file waiting above the composer, said by a screen reader and on hover
   ///
   /// In en, this message translates to:
   /// **'Remove {name}'**
@@ -18258,6 +18312,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No speech in this message'**
   String get voiceNoSpeech;
+
+  /// under a voice message whose transcription could not start or stopped, because the phone is short of free memory; Try again follows
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough free memory right now'**
+  String get voiceTxNoMemory;
 
   /// what a screen reader says before the words of a voice message
   ///
@@ -19506,6 +19566,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On, a new request pops up with a sound. Off, it waits quietly in your notifications.'**
   String get notifRequestPopupsHint;
+
+  /// home group row: who wrote last and what
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {preview}'**
+  String homeGroupLine(String name, String preview);
+
+  /// in-app banner, screen reader: a tap opens the chat it is about (no name shown)
+  ///
+  /// In en, this message translates to:
+  /// **'Open the chat'**
+  String get bannerOpen;
+
+  /// in-app banner, screen reader: a tap opens the chat with this person or group
+  ///
+  /// In en, this message translates to:
+  /// **'Open the chat with {name}'**
+  String bannerOpenWith(String name);
+
+  /// in-app banner: several messages from the same chat in a row
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} new message} other{{count} new messages}}'**
+  String bannerNewMessages(int count);
+
+  /// held send button: the menu row that sends the message without sound or vibration on the receiver's phone
+  ///
+  /// In en, this message translates to:
+  /// **'Send without sound'**
+  String get composerSendSilent;
+
+  /// screen reader hint on the send button: holding it opens more ways to send
+  ///
+  /// In en, this message translates to:
+  /// **'Hold for more options'**
+  String get composerSendHoldHint;
+
+  /// home group row of a group that blocks screenshots, once read: says only that the last thing was a message, never whose or what
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get homeGroupShotsLine;
 
   /// automatic download screen: after the voice line. files never download by themselves
   ///

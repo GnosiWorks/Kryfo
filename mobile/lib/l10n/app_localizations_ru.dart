@@ -7981,6 +7981,39 @@ class AppLocalizationsRu extends AppLocalizations {
       'Поиску по имени пользователя нужен Tor. Пока добавляй по QR или ссылке.';
 
   @override
+  String get handleNeedsTor =>
+      'Имена пользователей идут через Tor.\nВсё заработает, как только Tor подключится.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Реестр сейчас занят.\nПопробуй через минуту.';
+
+  @override
+  String get handleRefusedFull => 'Реестр отказал: сейчас он заполнен.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Реестр отказал: у него уже есть более новое изменение.\nПроверь часы и попробуй снова.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Реестр отказал: не смог прочитать твоё приглашение.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Реестр отказал: приглашение не от твоего ключа.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Реестр отказал: эта версия Kryfo слишком старая.\nОбнови Kryfo, чтобы пользоваться именами.';
+
+  @override
+  String get handleRefused => 'Реестр отказал.';
+
+  @override
+  String get handleGetABridge => 'Получить мост';
+
+  @override
   String get handleCheckClock =>
       'Проверь дату и время на телефоне и попробуй ещё раз.';
 
@@ -11572,6 +11605,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceNoSpeech => 'В этом сообщении нет речи';
 
   @override
+  String get voiceTxNoMemory => 'Сейчас не хватает свободной памяти';
+
+  @override
   String get voiceTranscriptLabel => 'Текст сообщения';
 
   @override
@@ -12372,6 +12408,45 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Включено: новый запрос всплывает со звуком. Выключено: он тихо ждёт в уведомлениях.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Открыть чат';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Открыть чат: $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString нового сообщения',
+      many: '$countString новых сообщений',
+      few: '$countString новых сообщения',
+      one: '$countString новое сообщение',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Отправить без звука';
+
+  @override
+  String get composerSendHoldHint => 'Удерживайте для других вариантов';
+
+  @override
+  String get homeGroupShotsLine => 'Сообщение';
 
   @override
   String get autoGetFilesWait =>

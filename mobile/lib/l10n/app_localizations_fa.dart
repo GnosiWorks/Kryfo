@@ -7841,6 +7841,39 @@ class AppLocalizationsFa extends AppLocalizations {
       'جست‌وجوی نام کاربری به Tor نیاز دارد. تا آن موقع، با QR یا پیوند اضافه کنید.';
 
   @override
+  String get handleNeedsTor =>
+      'نام‌های کاربری از راه Tor می‌روند.\nوقتی Tor وصل شود کار می‌کنند.';
+
+  @override
+  String get handleRegistryBusy =>
+      'دفتر ثبت الان شلوغ است.\nیک دقیقهٔ دیگر دوباره امتحان کنید.';
+
+  @override
+  String get handleRefusedFull => 'دفتر ثبت نپذیرفت: الان پر است.';
+
+  @override
+  String get handleRefusedOlder =>
+      'دفتر ثبت نپذیرفت: تغییر تازه‌تری دارد.\nساعت را بررسی کنید و دوباره امتحان کنید.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'دفتر ثبت نپذیرفت: دعوت شما را نتوانست بخواند.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'دفتر ثبت نپذیرفت: این دعوت از کلید شما نیست.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'دفتر ثبت نپذیرفت: این نسخهٔ Kryfo خیلی قدیمی است.\nبرای نام کاربری، Kryfo را به‌روز کنید.';
+
+  @override
+  String get handleRefused => 'دفتر ثبت نپذیرفت.';
+
+  @override
+  String get handleGetABridge => 'گرفتن پل';
+
+  @override
   String get handleCheckClock =>
       'تاریخ و ساعت گوشی را بررسی کنید و دوباره امتحان کنید.';
 
@@ -11371,7 +11404,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String trayRemove(String name) {
-    return 'حذف $name';
+    return 'برداشتن $name';
   }
 
   @override
@@ -11399,6 +11432,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get voiceNoSpeech => 'در این پیام صحبتی نیست';
+
+  @override
+  String get voiceTxNoMemory => 'الان حافظهٔ آزاد کافی نیست';
 
   @override
   String get voiceTranscriptLabel => 'متن پیام';
@@ -12197,6 +12233,42 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'روشن: درخواست تازه با صدا نمایش داده می‌شود. خاموش: بی‌صدا در اعلان‌هایت می‌ماند.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: ⁨$preview⁩';
+  }
+
+  @override
+  String get bannerOpen => 'باز کردن گفتگو';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'باز کردن گفتگو با $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString پیام تازه',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'ارسال بی‌صدا';
+
+  @override
+  String get composerSendHoldHint => 'برای گزینه‌های بیشتر نگه دارید';
+
+  @override
+  String get homeGroupShotsLine => 'پیام';
 
   @override
   String get autoGetFilesWait => 'فایل‌ها وقتی رویشان بزنی دانلود می‌شوند.';

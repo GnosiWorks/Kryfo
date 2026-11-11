@@ -9858,6 +9858,42 @@
   "@handleSearchNeedsTor": {
     "description": "screens/search_screen.dart and adding by handle: tor cannot connect, so the registry is not asked. handle search never goes without tor"
   },
+  "handleNeedsTor": "Handles go over Tor.\nThey work once Tor connects.",
+  "@handleNeedsTor": {
+    "description": "handle page: tor does not carry yet, so the registry is not asked. handles go over tor on every route"
+  },
+  "handleRegistryBusy": "The registry is busy.\nTry again in a minute.",
+  "@handleRegistryBusy": {
+    "description": "handle page and adding by handle: the registry answered that it is at its limit for everyone"
+  },
+  "handleRefusedFull": "The registry said no: it's full right now.",
+  "@handleRefusedFull": {
+    "description": "the registry refused a claim: it holds as many handles as it takes"
+  },
+  "handleRefusedOlder": "The registry said no: it already has a newer change.\nCheck the clock and try again.",
+  "@handleRefusedOlder": {
+    "description": "the registry refused a change signed before one it already has (a clock behind, or two devices)"
+  },
+  "handleRefusedBadInvite": "The registry said no: it couldn't read your invite.",
+  "@handleRefusedBadInvite": {
+    "description": "the registry refused a claim: it could not read the invite"
+  },
+  "handleRefusedNotYourInvite": "The registry said no: the invite isn't from your key.",
+  "@handleRefusedNotYourInvite": {
+    "description": "the registry refused a claim: the invite is not signed by this identity's key"
+  },
+  "handleRefusedUpdate": "The registry said no: this version of Kryfo is too old.\nUpdate Kryfo to use handles.",
+  "@handleRefusedUpdate": {
+    "description": "the registry refused a claim from an app version it no longer takes"
+  },
+  "handleRefused": "The registry said no.",
+  "@handleRefused": {
+    "description": "the registry refused for a reason the app has no line for"
+  },
+  "handleGetABridge": "Get a bridge",
+  "@handleGetABridge": {
+    "description": "handle page, under the line that tor is not up: opens the paste sheet with the ways to a private bridge"
+  },
   "handleCheckClock": "Check the phone's date and time, then try again.",
   "@handleCheckClock": {
     "description": "screens/handle_screen.dart: the registry refused a change because the phone's clock is too far off"
@@ -14256,7 +14292,7 @@
   },
   "trayRemove": "Remove {name}",
   "@trayRemove": {
-    "description": "screen reader label of the cross on a tray card",
+    "description": "a computer: the x on a file waiting above the composer, said by a screen reader and on hover",
     "placeholders": {
       "name": {
         "type": "String"
@@ -14299,6 +14335,10 @@
   "voiceNoSpeech": "No speech in this message",
   "@voiceNoSpeech": {
     "description": "under a voice message that holds no speech, after its transcription ran"
+  },
+  "voiceTxNoMemory": "Not enough free memory right now",
+  "@voiceTxNoMemory": {
+    "description": "under a voice message whose transcription could not start or stopped, because the phone is short of free memory; Try again follows"
   },
   "voiceTranscriptLabel": "Transcription",
   "@voiceTranscriptLabel": {
@@ -15353,6 +15393,53 @@
   "notifRequestPopupsHint": "On, a new request pops up with a sound. Off, it waits quietly in your notifications.",
   "@notifRequestPopupsHint": {
     "description": "screens/notifications_screen.dart: under the request pop-ups switch"
+  },
+  "homeGroupLine": "{name}: {preview}",
+  "@homeGroupLine": {
+    "description": "home group row: who wrote last and what",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "preview": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerOpen": "Open the chat",
+  "@bannerOpen": {
+    "description": "in-app banner, screen reader: a tap opens the chat it is about (no name shown)"
+  },
+  "bannerOpenWith": "Open the chat with {name}",
+  "@bannerOpenWith": {
+    "description": "in-app banner, screen reader: a tap opens the chat with this person or group",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerNewMessages": "{count, plural, one{{count} new message} other{{count} new messages}}",
+  "@bannerNewMessages": {
+    "description": "in-app banner: several messages from the same chat in a row",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "composerSendSilent": "Send without sound",
+  "@composerSendSilent": {
+    "description": "held send button: the menu row that sends the message without sound or vibration on the receiver's phone"
+  },
+  "composerSendHoldHint": "Hold for more options",
+  "@composerSendHoldHint": {
+    "description": "screen reader hint on the send button: holding it opens more ways to send"
+  },
+  "homeGroupShotsLine": "Message",
+  "@homeGroupShotsLine": {
+    "description": "home group row of a group that blocks screenshots, once read: says only that the last thing was a message, never whose or what"
   },
   "autoGetFilesWait": "Files download when you tap them.",
   "@autoGetFilesWait": {

@@ -61,5 +61,7 @@ Future<String> wrapRedelivery(
     writtenAt: (row['sent_at'] as num?)?.toInt(),
     // or the far side screenshots what was sent as not to be
     secure: (row['secure'] as num?)?.toInt() == 1,
+    // or one sent without sound rings when it is tried again
+    silent: (row['silent'] as num?)?.toInt() == 1,
   );
 }

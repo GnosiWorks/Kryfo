@@ -7976,6 +7976,39 @@ class AppLocalizationsUk extends AppLocalizations {
       'Пошуку за ім’ям користувача потрібен Tor. Поки що додавай за QR або посиланням.';
 
   @override
+  String get handleNeedsTor =>
+      'Імена користувачів ідуть через Tor.\nУсе запрацює, щойно Tor під’єднається.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Реєстр зараз зайнятий.\nСпробуй за хвилину.';
+
+  @override
+  String get handleRefusedFull => 'Реєстр відмовив: зараз він заповнений.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Реєстр відмовив: у нього вже є новіша зміна.\nПеревір годинник і спробуй знову.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Реєстр відмовив: не зміг прочитати твоє запрошення.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Реєстр відмовив: запрошення не від твого ключа.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Реєстр відмовив: ця версія Kryfo застара.\nОнови Kryfo, щоб користуватися іменами.';
+
+  @override
+  String get handleRefused => 'Реєстр відмовив.';
+
+  @override
+  String get handleGetABridge => 'Отримати міст';
+
+  @override
   String get handleCheckClock =>
       'Перевір дату й час на телефоні та спробуй ще раз.';
 
@@ -11569,6 +11602,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voiceNoSpeech => 'У цьому повідомленні немає мовлення';
 
   @override
+  String get voiceTxNoMemory => 'Зараз бракує вільної пам\'яті';
+
+  @override
   String get voiceTranscriptLabel => 'Текст повідомлення';
 
   @override
@@ -12370,6 +12406,45 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Увімкнено: новий запит спливає зі звуком. Вимкнено: він тихо чекає в сповіщеннях.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Відкрити чат';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Відкрити чат: $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString нового повідомлення',
+      many: '$countString нових повідомлень',
+      few: '$countString нові повідомлення',
+      one: '$countString нове повідомлення',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Надіслати без звуку';
+
+  @override
+  String get composerSendHoldHint => 'Утримуйте, щоб побачити інші варіанти';
+
+  @override
+  String get homeGroupShotsLine => 'Повідомлення';
 
   @override
   String get autoGetFilesWait => 'Файли завантажуються, коли ви їх торкаєтесь.';

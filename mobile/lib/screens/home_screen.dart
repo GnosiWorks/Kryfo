@@ -40,6 +40,7 @@ import '../desktop/desktop_mode.dart' show canShareOut, computerLock, onDesktop;
 import '../wide/wide_home.dart';
 import '../wide/wide_pane.dart';
 import 'backup_screen.dart';
+import '../rooms.dart' show looksLikeRoomKey, roomTag;
 import '../widgets/room_countdown.dart';
 import '../widgets/room_join.dart';
 import '../widgets/kryfo_avatar.dart';
@@ -731,10 +732,15 @@ class GroupSummary {
   final bool hidden;
   // who ended it, null while it runs
   final String? endedBy;
+  // its last message as the row says it ("Name: text"), and when
+  final String? preview;
+  final DateTime? when;
   const GroupSummary({
     required this.groupId,
     required this.name,
     required this.memberCount,
+    this.preview,
+    this.when,
     this.unread = 0,
     this.mentioned = false,
     this.expiresAt,
@@ -744,6 +750,24 @@ class GroupSummary {
   });
   bool get isRoom => expiresAt != null;
   bool get ended => endedBy != null;
+}
+
+/// a group row's line: ours as "You: text", theirs as "Name: text" with the
+/// name kept apart from the words' direction, a group that blocks with no
+/// name at all. [from]: the writer's id, null for ours or a blocking group
+String? groupRowLine({
+  required String? body,
+  required bool out,
+  required String? from,
+  required Map<String, String> nicks,
+}) {
+  if (body == null) return null;
+  if (out) return l10n.appYou(body);
+  if (from == null) return body;
+  final name = nicks[from] ?? (looksLikeRoomKey(from) ? roomTag(from) : from);
+  // first strong isolates: an arabic name before english words, or the
+  // other way, stays in its own order
+  return l10n.homeGroupLine('\u2068$name\u2069', body);
 }
 
 // ---- date header ----
@@ -2869,6 +2893,24 @@ class _GroupRow extends StatelessWidget {
                               ),
                             ),
                             HiddenMark(on: g.hidden),
+                            // when its last message came, as a chat row says
+                            if (g.when case final at?) ...[
+                              const Spacer(),
+                              const SizedBox(width: 8),
+                              Text(
+                                _relTime(at),
+                                maxLines: 1,
+                                style: HaloType.mono(
+                                  size: 10.5,
+                                  color: g.unread > 0
+                                      ? HaloColors.amberText
+                                      : HaloColors.text2,
+                                  weight: g.unread > 0
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                         const SizedBox(height: 2),
@@ -2907,24 +2949,24 @@ class _GroupRow extends StatelessWidget {
                                       expiresAt: g.expiresAt!,
                                       size: 10,
                                     )
-                                  // a draft takes the count's place
+                                  // a draft wins over the last message
                                   : draft != null
                                   ? DraftLine(
                                       key: const ValueKey('draft'),
                                       text: draft,
                                     )
-                                  : g.mentioned
-                                  // your three words came up in there
+                                  : g.preview != null
+                                  // who wrote last, and what, as a chat row says it
                                   ? Text(
-                                      l10n.homeMentionedYou,
-                                      key: const ValueKey('mentioned'),
+                                      g.preview!,
+                                      key: ValueKey('line:${g.preview}'),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: HaloType.mono(
-                                        size: 10,
-                                        color: HaloColors.amberText,
-                                        weight: FontWeight.w600,
-                                        letter: 0.06,
+                                      style: HaloType.sans(
+                                        size: 12,
+                                        color: g.unread > 0
+                                            ? HaloColors.text
+                                            : HaloColors.text2,
                                       ),
                                     )
                                   : Text(
@@ -2943,14 +2985,76 @@ class _GroupRow extends StatelessWidget {
                       ],
                     ),
                   ),
+                  // your three words came up in there: an @ by the count
+                  MentionBadge(on: g.mentioned && !g.ended, lead: 8),
                   // pops in, rolls to each new count, pops away once read
-                  CountBadge(count: g.unread, lead: 8),
+                  CountBadge(count: g.unread, lead: 6),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// the @ by a group's count while someone wrote your three words in there:
+/// it pops in with the house spring, as the count does, and fades when the
+/// phone asks for no movement
+class MentionBadge extends StatelessWidget {
+  final bool on;
+  final double lead;
+  const MentionBadge({super.key, required this.on, this.lead = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    final badge = Semantics(
+      key: const ValueKey('at'),
+      label: l10n.homeMentionedYou,
+      child: ExcludeSemantics(
+        child: Container(
+          margin: EdgeInsetsDirectional.only(start: lead),
+          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: HaloColors.amber,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '@',
+            maxLines: 1,
+            style: HaloType.mono(
+              size: 11,
+              weight: FontWeight.w700,
+              color: HaloColors.onAmber,
+              letter: 0,
+            ).copyWith(height: 1.2),
+          ),
+        ),
+      ),
+    );
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: still ? 120 : 260),
+      reverseDuration: Duration(milliseconds: still ? 120 : 160),
+      transitionBuilder: (child, a) => still
+          ? FadeTransition(opacity: a, child: child)
+          : FadeTransition(
+              opacity: CurvedAnimation(parent: a, curve: Curves.easeOut),
+              child: ScaleTransition(
+                scale: Tween(begin: 0.4, end: 1.0).animate(
+                  CurvedAnimation(
+                    parent: a,
+                    curve: kHouseCurve,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                ),
+                child: child,
+              ),
+            ),
+      child: on ? badge : const SizedBox.shrink(key: ValueKey('no-at')),
     );
   }
 }

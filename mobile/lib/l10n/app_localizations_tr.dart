@@ -7860,6 +7860,39 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kullanıcı adı araması Tor gerektirir. Bu arada QR ya da bağlantıyla ekle.';
 
   @override
+  String get handleNeedsTor =>
+      'Kullanıcı adları Tor üzerinden gider.\nTor bağlanınca çalışır.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Kayıt defteri şu an meşgul.\nBir dakika sonra yeniden dene.';
+
+  @override
+  String get handleRefusedFull => 'Kayıt defteri reddetti: şu an dolu.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Kayıt defteri reddetti: zaten daha yeni bir değişikliği var.\nSaati kontrol edip yeniden dene.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Kayıt defteri reddetti: davetini okuyamadı.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Kayıt defteri reddetti: davet senin anahtarından değil.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Kayıt defteri reddetti: bu Kryfo sürümü çok eski.\nKullanıcı adları için Kryfo\'yu güncelle.';
+
+  @override
+  String get handleRefused => 'Kayıt defteri reddetti.';
+
+  @override
+  String get handleGetABridge => 'Köprü al';
+
+  @override
   String get handleCheckClock =>
       'Telefonun tarih ve saatini kontrol et, sonra yeniden dene.';
 
@@ -11382,7 +11415,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String trayRemove(String name) {
-    return '$name dosyasını kaldır';
+    return '$name öğesini kaldır';
   }
 
   @override
@@ -11410,6 +11443,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceNoSpeech => 'Bu mesajda konuşma yok';
+
+  @override
+  String get voiceTxNoMemory => 'Şu anda yeterli boş bellek yok';
 
   @override
   String get voiceTranscriptLabel => 'Mesajın metni';
@@ -12206,6 +12242,42 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Açıkken yeni bir istek sesle belirir. Kapalıyken bildirimlerinde sessizce bekler.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Sohbeti aç';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '$name ile sohbeti aç';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString yeni mesaj',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Sessiz gönder';
+
+  @override
+  String get composerSendHoldHint => 'Daha fazla seçenek için basılı tutun';
+
+  @override
+  String get homeGroupShotsLine => 'Mesaj';
 
   @override
   String get autoGetFilesWait => 'Dosyalar, onlara dokunduğunda iner.';

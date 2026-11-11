@@ -656,13 +656,17 @@ void _toastWhenOpen(
   }
 }
 
-/// the lock is going up: no toast stays on screen
+/// the in-app banner's own clear, set at start
+void Function()? haloClearBanner;
+
+/// the lock is going up: no toast or banner stays on screen
 void haloClearToasts() {
   _toastEntry = null;
   for (final e in List.of(_toastKeys.keys)) {
     _dropToast(e);
   }
   haloMessengerKey.currentState?.clearSnackBars();
+  haloClearBanner?.call();
 }
 
 void _showHaloToast(BuildContext? context, String message) {

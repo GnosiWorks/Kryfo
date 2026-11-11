@@ -7968,6 +7968,36 @@ class AppLocalizationsAr extends AppLocalizations {
       'يحتاج البحث باسم المستخدم إلى Tor. إلى ذلك الحين، أضِف عبر رمز QR أو رابط.';
 
   @override
+  String get handleNeedsTor =>
+      'تمر أسماء المستخدمين عبر Tor.\nستعمل حين يتصل Tor.';
+
+  @override
+  String get handleRegistryBusy => 'السجل مشغول الآن.\nحاول مجددًا بعد دقيقة.';
+
+  @override
+  String get handleRefusedFull => 'رفض السجل: إنه ممتلئ الآن.';
+
+  @override
+  String get handleRefusedOlder =>
+      'رفض السجل: لديه تغيير أحدث.\nتحقق من الساعة وحاول مجددًا.';
+
+  @override
+  String get handleRefusedBadInvite => 'رفض السجل: تعذّرت عليه قراءة دعوتك.';
+
+  @override
+  String get handleRefusedNotYourInvite => 'رفض السجل: الدعوة ليست من مفتاحك.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'رفض السجل: هذا الإصدار من Kryfo قديم جدًا.\nحدّث Kryfo لاستخدام أسماء المستخدمين.';
+
+  @override
+  String get handleRefused => 'رفض السجل.';
+
+  @override
+  String get handleGetABridge => 'احصل على جسر';
+
+  @override
   String get handleCheckClock => 'تحقّق من تاريخ الهاتف ووقته، ثم حاول مجددًا.';
 
   @override
@@ -11524,6 +11554,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceNoSpeech => 'لا كلام في هذه الرسالة';
 
   @override
+  String get voiceTxNoMemory => 'لا توجد ذاكرة متاحة كافية الآن';
+
+  @override
   String get voiceTranscriptLabel => 'النص المكتوب';
 
   @override
@@ -12318,6 +12351,47 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'عند التشغيل يظهر الطلب الجديد مع صوت. وعند الإيقاف ينتظر بهدوء في إشعاراتك.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: ⁨$preview⁩';
+  }
+
+  @override
+  String get bannerOpen => 'افتح المحادثة';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'افتح المحادثة مع $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString رسالة جديدة',
+      many: '$countString رسالة جديدة',
+      few: '$countString رسائل جديدة',
+      two: 'رسالتان جديدتان',
+      one: 'رسالة جديدة واحدة',
+      zero: 'لا رسائل جديدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'إرسال بدون صوت';
+
+  @override
+  String get composerSendHoldHint => 'اضغط مطولًا لمزيد من الخيارات';
+
+  @override
+  String get homeGroupShotsLine => 'رسالة';
 
   @override
   String get autoGetFilesWait => 'تُنزَّل الملفات عندما تنقر عليها.';

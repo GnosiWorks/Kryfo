@@ -3,12 +3,14 @@
 // words streaming in and kept beside the note, folded and opened again with
 // no model, one note at a time, nothing kept for a note that went or once
 // the app locked, the memory wiped behind the lock and on a session switch,
-// and every transcript gone when they are turned off
+// every transcript gone when they are turned off, and no run started or kept
+// going without the free memory for it
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/voice/chat_transcripts.dart';
 import 'package:kryfo/voice/transcript_store.dart';
 import 'package:kryfo/voice/voice_ffi.dart';
+import 'package:kryfo/voice/voice_memory.dart';
 
 import 'voice_tx_fakes.dart';
 
@@ -24,8 +26,12 @@ void main() {
   late VoiceFakes f;
   late ChatTranscripts c;
 
-  Future<void> make({bool installed = true, VoiceTxStore? store}) async {
-    f = fakeVoiceHub(installed: installed, store: store);
+  Future<void> make({
+    bool installed = true,
+    VoiceTxStore? store,
+    MemRoom? Function()? room,
+  }) async {
+    f = fakeVoiceHub(installed: installed, store: store, room: room);
     c = ChatTranscripts(f.hub, 'heron');
     await f.hub.ready();
     await _beats();
@@ -143,6 +149,131 @@ void main() {
     await _beats();
     c.hide('u2');
     expect(c.of('u2').phase, TxPhase.closed);
+  });
+
+  group('free memory', () {
+    const gb = 1 << 30;
+    const mb = 1 << 20;
+    // a 4 gb phone: 409 mb kept for the system, 160 for the run
+    MemRoom? now;
+
+    test('short: nothing starts, it says why, a tap tries again', () async {
+      now = const MemRoom(500 * mb, 4 * gb);
+      var freed = 0;
+      f = fakeVoiceHub(room: () => now, beforeRun: () => freed++);
+      c = ChatTranscripts(f.hub, 'heron');
+      await f.hub.ready();
+      await _beats();
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      expect(freed, 1);
+      expect(f.runner.jobs, isEmpty);
+      expect(c.of('u1').phase, TxPhase.failed);
+      expect(c.of('u1').noRoom, isTrue);
+      expect(await f.store.kept('heron'), isEmpty);
+      now = const MemRoom(2 * gb, 4 * gb);
+      await c.retry('u1', '/n/u1.ogg');
+      await _beats();
+      expect(f.runner.threads, [6]);
+      f.runner.jobs.single
+        ..say(' room now')
+        ..end();
+      await _beats();
+      expect(c.of('u1').text, 'room now');
+      expect(c.of('u1').noRoom, isFalse);
+    });
+
+    test('just enough: all the threads', () async {
+      now = const MemRoom(580 * mb, 4 * gb);
+      await make(room: () => now);
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      expect(f.runner.threads, [6]);
+    });
+
+    test('running out mid-run: it stops, keeps nothing, says why', () async {
+      now = const MemRoom(2 * gb, 4 * gb);
+      await make(room: () => now);
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      final j = f.runner.jobs.single..say(' half of');
+      await _beats();
+      now = const MemRoom(200 * mb, 4 * gb);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      await _beats();
+      expect(j.cancelled, isTrue);
+      expect(c.of('u1').phase, TxPhase.failed);
+      expect(c.of('u1').noRoom, isTrue);
+      expect(await f.store.kept('heron'), isEmpty);
+      // the next note starts once there is room again
+      now = const MemRoom(2 * gb, 4 * gb);
+      await c.open('u2', '/n/u2.ogg');
+      await _beats();
+      expect(f.runner.jobs, hasLength(2));
+    });
+
+    test('one low reading is no stop; the room a run started in is not '
+        'taken as running out', () async {
+      now = const MemRoom(580 * mb, 4 * gb);
+      await make(room: () => now);
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      final j = f.runner.jobs.single;
+      // the run took its 160 mb: under the start rule, over the floor
+      now = const MemRoom(420 * mb, 4 * gb);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      // one dip under the floor between good readings
+      now = const MemRoom(200 * mb, 4 * gb);
+      await Future<void>.delayed(const Duration(milliseconds: 15));
+      now = const MemRoom(420 * mb, 4 * gb);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(j.cancelled, isFalse);
+      j
+        ..say(' all of it')
+        ..end();
+      await _beats();
+      expect(c.of('u1').text, 'all of it');
+    });
+
+    test('the watch stops after a run and at the lock', () async {
+      var reads = 0;
+      now = const MemRoom(2 * gb, 4 * gb);
+      await make(
+        room: () {
+          reads++;
+          return now;
+        },
+      );
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(reads, greaterThan(2));
+      f.runner.jobs.single
+        ..say(' done')
+        ..end();
+      await _beats(20);
+      var was = reads;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(reads, was);
+      // a second run, stopped by the lock
+      await c.open('u2', '/n/u2.ogg');
+      await _beats();
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(reads, greaterThan(was));
+      f.hub.lockedOut();
+      await _beats(20);
+      expect(f.runner.jobs.last.cancelled, isTrue);
+      was = reads;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(reads, was);
+    });
+
+    test('not known (windows): runs as before', () async {
+      await make(room: () => null);
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      expect(f.runner.threads, [6]);
+    });
   });
 
   test('no speech: kept as none, never the model\'s own note', () async {

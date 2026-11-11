@@ -7821,6 +7821,39 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tìm theo tên người dùng cần Tor. Trong lúc chờ, hãy thêm bằng QR hoặc liên kết.';
 
   @override
+  String get handleNeedsTor =>
+      'Tên người dùng đi qua Tor.\nSẽ dùng được ngay khi Tor kết nối.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Nơi đăng ký đang bận.\nHãy thử lại sau một phút.';
+
+  @override
+  String get handleRefusedFull => 'Nơi đăng ký từ chối: hiện đã đầy.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Nơi đăng ký từ chối: đã có thay đổi mới hơn.\nHãy kiểm tra giờ rồi thử lại.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Nơi đăng ký từ chối: không đọc được lời mời của bạn.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Nơi đăng ký từ chối: lời mời không đến từ khóa của bạn.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Nơi đăng ký từ chối: phiên bản Kryfo này quá cũ.\nHãy cập nhật Kryfo để dùng tên người dùng.';
+
+  @override
+  String get handleRefused => 'Nơi đăng ký từ chối.';
+
+  @override
+  String get handleGetABridge => 'Lấy cầu nối';
+
+  @override
   String get handleCheckClock =>
       'Hãy kiểm tra ngày giờ trên điện thoại rồi thử lại.';
 
@@ -11344,7 +11377,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String trayRemove(String name) {
-    return 'Bỏ $name';
+    return 'Gỡ $name';
   }
 
   @override
@@ -11372,6 +11405,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get voiceNoSpeech => 'Không có lời nói trong tin nhắn này';
+
+  @override
+  String get voiceTxNoMemory => 'Hiện không đủ bộ nhớ trống';
 
   @override
   String get voiceTranscriptLabel => 'Bản chép lời';
@@ -12173,6 +12209,42 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Bật: yêu cầu mới hiện lên kèm âm thanh. Tắt: yêu cầu nằm yên trong thông báo của bạn.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Mở cuộc trò chuyện';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Mở cuộc trò chuyện với $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString tin nhắn mới',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Gửi không âm thanh';
+
+  @override
+  String get composerSendHoldHint => 'Nhấn giữ để xem thêm tùy chọn';
+
+  @override
+  String get homeGroupShotsLine => 'Tin nhắn';
 
   @override
   String get autoGetFilesWait => 'Tệp được tải về khi bạn chạm vào.';

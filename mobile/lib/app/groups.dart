@@ -119,7 +119,17 @@ class GroupPreview {
   // its screenshot block holds on this phone, and on every member's
   final bool shotsBlocking;
   final bool shotsForAll;
+  // its last message for the row: what it was in a row's words, whether it
+  // was ours, who wrote it (null for ours or a group that blocks), and when
+  final String? lastBody;
+  final bool lastOut;
+  final String? lastFrom;
+  final DateTime? lastAt;
   const GroupPreview({
+    this.lastBody,
+    this.lastOut = false,
+    this.lastFrom,
+    this.lastAt,
     required this.groupId,
     required this.name,
     required this.memberCount,

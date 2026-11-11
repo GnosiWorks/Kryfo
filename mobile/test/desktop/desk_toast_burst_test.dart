@@ -61,6 +61,7 @@ class _ToastIo extends ArrivalIo {
     Object? on,
     String? msgUid,
     int? burnAt,
+    bool silent = false,
     bool request = false,
   }) async {
     await toastBoundary(() async {
@@ -205,10 +206,7 @@ void main() {
     );
     await burst(5, 'b');
     expect(io.native, 10);
-    expect(
-      lines().where((l) => l == 'toast native back').length,
-      10,
-    );
+    expect(lines().where((l) => l == 'toast native back').length, 10);
   });
 
   group('the boundary', () {
@@ -316,9 +314,7 @@ void main() {
       ]);
     });
 
-    testWidgets('frames that come leave no line and no nudge', (
-      tester,
-    ) async {
+    testWidgets('frames that come leave no line and no nudge', (tester) async {
       var nudged = 0;
       final w = DeskFrameWatch(nudge: () async => nudged++);
       await tester.pumpWidget(const SizedBox());

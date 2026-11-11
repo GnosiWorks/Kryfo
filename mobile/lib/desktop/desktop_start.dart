@@ -604,6 +604,18 @@ Future<void> openSeal({
       p.join(docs, 'restore_hidden'),
     ]),
   );
+  // a move cut short in the last run: nothing of this one carries yet
+  final started = DateTime.now();
+  unawaited(() async {
+    await dropCarryLeft(docs, started, deep: false);
+    for (final d in [
+      support,
+      p.join(docs, 'restore_stage'),
+      p.join(docs, 'restore_hidden'),
+    ]) {
+      await dropCarryLeft(d, started);
+    }
+  }());
   makePlaceholders(docs);
   containersSwept = () => makePlaceholders(docs);
 

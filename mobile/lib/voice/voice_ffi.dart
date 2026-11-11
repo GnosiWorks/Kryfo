@@ -30,6 +30,8 @@ class VoiceError implements Exception {
   static const cancelled = 5;
   // the library did not load in the run's isolate, or the isolate died
   static const library = 90;
+  // not enough free memory to start, or it ran out while running
+  static const memory = 91;
 
   @override
   String toString() => 'VoiceError($code)';

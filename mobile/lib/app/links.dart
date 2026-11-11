@@ -146,6 +146,8 @@ Future<(String, bool)> handleHaloUriAdded(
             ? l10n.handleNobodyHasClaimed('@$h')
             : r.contains('not a handle')
             ? l10n.appInvalidUri
+            : r.contains('busy')
+            ? l10n.handleRegistryBusy
             : l10n.handleRegistryFailed,
         false,
       );

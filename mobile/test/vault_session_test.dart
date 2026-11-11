@@ -15,6 +15,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kryfo/widgets/shared_media.dart' show loadShared;
 import 'package:kryfo/album.dart' show AlbumTag;
+import 'package:kryfo/widgets/in_app_banner.dart' show BannerNote;
 import 'package:kryfo/container.dart';
 import 'package:kryfo/devices/history_open.dart';
 import 'package:kryfo/drafts.dart'
@@ -296,6 +297,13 @@ class _Io implements AppIo {
   }
 
   @override
+  Future<bool> banner(
+    BannerNote note, {
+    required bool hidden,
+    bool request = false,
+  }) async => false;
+
+  @override
   Future<void> notify({
     required String title,
     required String body,
@@ -303,6 +311,7 @@ class _Io implements AppIo {
     Object? on,
     String? msgUid,
     int? burnAt,
+    bool silent = false,
     bool request = false,
   }) async => rang.add(payload ?? title);
 

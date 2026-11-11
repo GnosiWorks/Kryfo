@@ -445,7 +445,7 @@ Future<int?> _postPlain({
   await notifPlugin.show(
     id: id,
     body: l10n.notifPlainLine,
-    notificationDetails: NotificationDetails(android: details),
+    notificationDetails: notifDetails(details, alert: !silent),
     // the tap opens the chat list: no chat is named anywhere in it
     payload: kListPayload,
   );
@@ -987,7 +987,7 @@ Future<void> _postShared({required bool alert}) async {
     id: _sharedId,
     title: title,
     body: body,
-    notificationDetails: NotificationDetails(android: details),
+    notificationDetails: notifDetails(details, alert: alert),
     payload: kListPayload,
   );
 }
@@ -997,6 +997,7 @@ Future<int?> _ringFold({
   required String tag,
   required _Line line,
   bool support = false,
+  bool silent = false,
   bool request = false,
 }) => _foldTurnOf<int?>(() async {
   // a decoy may have opened while this waited its turn
@@ -1006,6 +1007,7 @@ Future<int?> _ringFold({
     tag: tag,
     line: line,
     support: support,
+    silent: silent,
     request: request,
   );
 });
@@ -1015,6 +1017,7 @@ Future<int?> _ringFoldNow({
   required String tag,
   required _Line line,
   required bool support,
+  bool silent = false,
   bool request = false,
 }) async {
   final gen = _clearGen;
@@ -1061,7 +1064,7 @@ Future<int?> _ringFoldNow({
       _shownForMsg.remove(_shownForMsg.keys.first);
     }
   }
-  return await _postFold(fold, alert: true, stale: stale) ? fold.id : null;
+  return await _postFold(fold, alert: !silent, stale: stale) ? fold.id : null;
 }
 
 // a new chat's notification: the oldest chat's goes first when the shade
@@ -1217,7 +1220,7 @@ Future<bool> _postFold(
     id: fold.id,
     title: title,
     body: body,
-    notificationDetails: NotificationDetails(android: details),
+    notificationDetails: notifDetails(details, alert: alert),
     payload: fold.tag,
   );
   return true;
@@ -1261,6 +1264,20 @@ Future<void> cancelWithRetry(
   }
 }
 
+// one that must not sound says so to a computer's toast too: android's own
+// silent flag sits in [android]
+@visibleForTesting
+NotificationDetails notifDetails(
+  AndroidNotificationDetails android, {
+  required bool alert,
+}) => NotificationDetails(
+  android: android,
+  windows: alert
+      ? null
+      : WindowsNotificationDetails(audio: WindowsNotificationAudio.silent()),
+  linux: alert ? null : const LinuxNotificationDetails(suppressSound: true),
+);
+
 // [chat] is what this process knows it by; android sees only [tag]. the
 // notification's id, null when none was shown
 Future<int?> showMessageNotification({
@@ -1271,12 +1288,15 @@ Future<int?> showMessageNotification({
   String? msgUid,
   int? burnAt,
   bool hidden = false,
+  // sent without sound, or shown in the app already: posted with no sound,
+  // no buzz and no heads-up, still in the shade
+  bool silent = false,
   // from someone not added yet: rings only with its switch on
   bool request = false,
 }) async {
   // a decoy session is open: no notification at all
   if (await quietNow()) return null;
-  final ring = !request || await loadRequestPopups();
+  final ring = !silent && (!request || await loadRequestPopups());
   // plain wins over the preview setting: nothing of the message, or of
   // kryfo, in any field
   if (await loadNotifPlain()) {
@@ -1295,6 +1315,7 @@ Future<int?> showMessageNotification({
   return _ringFold(
     chat: chat,
     tag: tag,
+    silent: silent,
     line: _Line(
       uid: msgUid,
       title: title,

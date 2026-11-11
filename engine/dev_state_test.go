@@ -32,6 +32,7 @@ func devTestShim(t *testing.T) *kshim.Lib {
 	if err := devOpenShim(p); err != nil {
 		t.Fatal(err)
 	}
+	keepLinked(t)
 	devMu.Lock()
 	defer devMu.Unlock()
 	return devShim

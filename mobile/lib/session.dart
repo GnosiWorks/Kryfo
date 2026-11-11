@@ -836,6 +836,10 @@ class Session {
 
   Future<void> setPinned(String msgUid, bool pinned) async =>
       (await _ofUid(msgUid)).setPinned(msgUid, pinned);
+  Future<void> markSilent(String msgUid) async =>
+      (await _ofUid(msgUid)).markSilent(msgUid);
+  Future<bool> sentSilent(String msgUid) async =>
+      (await _ofUid(msgUid)).sentSilent(msgUid);
   Future<void> setPowNonce(String msgUid, int nonce) async =>
       (await _ofUid(msgUid)).setPowNonce(msgUid, nonce);
   Future<void> keepOpenerWire(String msgUid, String wire) async =>
@@ -905,6 +909,17 @@ class Session {
       for (final d in [primary, v])
         for (final e in (await d.lastMessages()).entries)
           if (identical(_ofPeer(e.key), d)) e.key: e.value,
+    };
+  }
+
+  // the newest row per group, from the container that holds the group
+  Future<Map<String, Map<String, Object?>>> lastGroupMessages() async {
+    final v = vault;
+    if (v == null) return primary.lastGroupMessages();
+    return {
+      for (final d in [primary, v])
+        for (final e in (await d.lastGroupMessages()).entries)
+          if (identical(_ofGroup(e.key), d)) e.key: e.value,
     };
   }
 

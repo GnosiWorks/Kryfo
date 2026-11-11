@@ -7832,6 +7832,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Handle search needs Tor. Add by QR or link meanwhile.';
 
   @override
+  String get handleNeedsTor =>
+      'Handles go over Tor.\nThey work once Tor connects.';
+
+  @override
+  String get handleRegistryBusy =>
+      'The registry is busy.\nTry again in a minute.';
+
+  @override
+  String get handleRefusedFull => 'The registry said no: it\'s full right now.';
+
+  @override
+  String get handleRefusedOlder =>
+      'The registry said no: it already has a newer change.\nCheck the clock and try again.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'The registry said no: it couldn\'t read your invite.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'The registry said no: the invite isn\'t from your key.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'The registry said no: this version of Kryfo is too old.\nUpdate Kryfo to use handles.';
+
+  @override
+  String get handleRefused => 'The registry said no.';
+
+  @override
+  String get handleGetABridge => 'Get a bridge';
+
+  @override
   String get handleCheckClock =>
       'Check the phone\'s date and time, then try again.';
 
@@ -11387,6 +11420,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceNoSpeech => 'No speech in this message';
 
   @override
+  String get voiceTxNoMemory => 'Not enough free memory right now';
+
+  @override
   String get voiceTranscriptLabel => 'Transcription';
 
   @override
@@ -12179,6 +12215,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'On, a new request pops up with a sound. Off, it waits quietly in your notifications.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Open the chat';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Open the chat with $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString new messages',
+      one: '$countString new message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Send without sound';
+
+  @override
+  String get composerSendHoldHint => 'Hold for more options';
+
+  @override
+  String get homeGroupShotsLine => 'Message';
 
   @override
   String get autoGetFilesWait => 'Files download when you tap them.';

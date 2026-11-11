@@ -153,6 +153,7 @@ final frameParams = <String, Object>{
   'album': const AlbumTag('0123456789abcdef', 4, 1),
   'spoiler': true,
   'gif': true,
+  'silent': true,
   'drop': DropFrame(
     host: kDropHost,
     id: 'ab' * 16,
@@ -228,6 +229,7 @@ Future<String> buildFrame(Set<String> on, {String m = 'hello marios'}) =>
       album: _param(on, 'album'),
       spoiler: on.contains('spoiler'),
       gif: on.contains('gif'),
+      silent: on.contains('silent'),
       drop: _param(on, 'drop'),
     );
 
@@ -388,5 +390,6 @@ Map<String, Object?> frameRead(String wrapped) {
     'fa': u.album?.files ?? false ? u.album!.toWire() : null,
     'sv': u.spoiler,
     'gf': u.gif,
+    'sl': u.silent,
   };
 }

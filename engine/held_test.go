@@ -209,6 +209,7 @@ func heldRun(t *testing.T, tag string, peer xid, rcv, ck string, how func(string
 
 func heldSetUp(t *testing.T) (*relayStandIn, xid, string, string, string) {
 	t.Helper()
+	phoneOnly(t)
 	relay := newRelayStandIn(t, 0)
 	useStandIns(t, modeFast, nil, relay)
 	pollHoldReset(t)
@@ -657,6 +658,22 @@ func TestAnUnlockMarkComesOnTheNextProbe(t *testing.T) {
 	}
 	if c, _ := reqs(); c != conns {
 		t.Fatalf("it reconnected: %d sockets, was %d", c, conns)
+	}
+}
+
+// a test before that left the main identity linked does not reach these
+func TestHeldSetUpIsThePhone(t *testing.T) {
+	identsMu.Lock()
+	linkedIdents[mainIdent] = linkedIdent{dev: 5}
+	identsMu.Unlock()
+	t.Cleanup(func() {
+		identsMu.Lock()
+		delete(linkedIdents, mainIdent)
+		identsMu.Unlock()
+	})
+	heldSetUp(t)
+	if isLinked(mainIdent) {
+		t.Fatal("the main identity is still a linked device's")
 	}
 }
 

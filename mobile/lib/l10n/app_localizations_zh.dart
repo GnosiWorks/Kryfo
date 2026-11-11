@@ -7471,6 +7471,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get handleSearchNeedsTor => '按用户名搜索需要 Tor。在此之前，可以用 QR 码或链接添加。';
 
   @override
+  String get handleNeedsTor => '用户名经由 Tor 处理。\nTor 连上后就能用。';
+
+  @override
+  String get handleRegistryBusy => '登记处现在很忙。\n请一分钟后再试。';
+
+  @override
+  String get handleRefusedFull => '登记处拒绝了：现在已满。';
+
+  @override
+  String get handleRefusedOlder => '登记处拒绝了：它已有更新的更改。\n请检查时钟后再试。';
+
+  @override
+  String get handleRefusedBadInvite => '登记处拒绝了：无法读取你的邀请。';
+
+  @override
+  String get handleRefusedNotYourInvite => '登记处拒绝了：这个邀请不是你的密钥发出的。';
+
+  @override
+  String get handleRefusedUpdate =>
+      '登记处拒绝了：这个版本的 Kryfo 太旧了。\n请更新 Kryfo 来使用用户名。';
+
+  @override
+  String get handleRefused => '登记处拒绝了。';
+
+  @override
+  String get handleGetABridge => '获取网桥';
+
+  @override
   String get handleCheckClock => '请检查手机的日期和时间，然后再试一次。';
 
   @override
@@ -10779,6 +10807,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceNoSpeech => '这条消息里没有说话声';
 
   @override
+  String get voiceTxNoMemory => '当前可用内存不足';
+
+  @override
   String get voiceTranscriptLabel => '文字内容';
 
   @override
@@ -11512,6 +11543,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notifRequestPopupsHint => '开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name：$preview';
+  }
+
+  @override
+  String get bannerOpen => '打开聊天';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '打开与 $name 的聊天';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 条新消息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => '静音发送';
+
+  @override
+  String get composerSendHoldHint => '长按查看更多选项';
+
+  @override
+  String get homeGroupShotsLine => '消息';
 
   @override
   String get autoGetFilesWait => '文件在你点按后才会下载。';
@@ -19155,6 +19222,34 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get handleSearchNeedsTor => '以使用者名稱搜尋需要 Tor。在此之前，可以用 QR 碼或連結新增。';
 
   @override
+  String get handleNeedsTor => '使用者名稱經由 Tor 處理。\nTor 連上後就能用。';
+
+  @override
+  String get handleRegistryBusy => '註冊處現在很忙。\n請一分鐘後再試。';
+
+  @override
+  String get handleRefusedFull => '註冊處拒絕了：現在已滿。';
+
+  @override
+  String get handleRefusedOlder => '註冊處拒絕了：它已有更新的變更。\n請檢查時鐘後再試。';
+
+  @override
+  String get handleRefusedBadInvite => '註冊處拒絕了：無法讀取你的邀請。';
+
+  @override
+  String get handleRefusedNotYourInvite => '註冊處拒絕了：這個邀請不是你的金鑰發出的。';
+
+  @override
+  String get handleRefusedUpdate =>
+      '註冊處拒絕了：這個版本的 Kryfo 太舊了。\n請更新 Kryfo 來使用使用者名稱。';
+
+  @override
+  String get handleRefused => '註冊處拒絕了。';
+
+  @override
+  String get handleGetABridge => '取得橋接';
+
+  @override
   String get handleCheckClock => '請檢查手機的日期和時間，然後再試一次。';
 
   @override
@@ -22339,6 +22434,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get voiceNoSpeech => '這則訊息裡沒有說話聲';
 
   @override
+  String get voiceTxNoMemory => '目前可用記憶體不足';
+
+  @override
   String get voiceTranscriptLabel => '文字內容';
 
   @override
@@ -23074,6 +23172,42 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get notifRequestPopupsHint => '開啟時，新請求會彈出並響鈴。關閉時，它會安靜地留在通知中。';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name：$preview';
+  }
+
+  @override
+  String get bannerOpen => '開啟聊天';
+
+  @override
+  String bannerOpenWith(String name) {
+    return '開啟與 $name 的聊天';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString 則新訊息',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => '靜音傳送';
+
+  @override
+  String get composerSendHoldHint => '長按查看更多選項';
+
+  @override
+  String get homeGroupShotsLine => '訊息';
 
   @override
   String get autoGetFilesWait => '檔案在你點按後才會下載。';

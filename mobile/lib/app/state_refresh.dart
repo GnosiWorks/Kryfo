@@ -27,6 +27,15 @@ extension AppStateRefresh on AppState {
   (String?, DateTime?) _lastLine(Map<String, Object?>? last) {
     if (last == null) return (null, null);
     final dir = last['direction'] as String?;
+    final (body, at) = _lastBody(last);
+    return (
+      body == null ? null : (dir == 'out' ? l10n.appYou(body) : body),
+      at,
+    );
+  }
+
+  // what the last message was, in a row's words, and when
+  (String?, DateTime?) _lastBody(Map<String, Object?> last) {
     final text = (last['plaintext'] as String?) ?? '';
     final media = last['media_path'] as String?;
     final fileName = last['file_name'] as String?;
@@ -38,6 +47,8 @@ extension AppStateRefresh on AppState {
     } else if (last['sticker'] != null) {
       // a sticker's text is its emoji; the row says what it is
       body = l10n.stickerLabel;
+    } else if (last['poll'] != null) {
+      body = l10n.pollPreview(text);
     } else if (text.isNotEmpty) {
       body = text;
     } else if (isVoiceName(fileName)) {
@@ -51,7 +62,7 @@ extension AppStateRefresh on AppState {
     }
     final at = last['written_at'] ?? last['sent_at'];
     return (
-      body.isEmpty ? null : (dir == 'out' ? l10n.appYou(body) : body),
+      body.isEmpty ? null : body,
       at is! num ? null : DateTime.fromMillisecondsSinceEpoch(at.toInt()),
     );
   }
@@ -154,6 +165,14 @@ extension AppStateRefresh on AppState {
 
   Future<List<GroupPreview>> _groupsOf(Session s) async {
     final rows = await s.loadGroups();
+    // last lines that will not read are no lines: home still shows the groups
+    Map<String, Map<String, Object?>> lasts;
+    try {
+      lasts = await s.lastGroupMessages();
+    } catch (e) {
+      dlog('group lines: $e');
+      lasts = const {};
+    }
     final list = <GroupPreview>[];
     for (final r in rows) {
       final gid = r['group_id'] as String;
@@ -163,6 +182,18 @@ extension AppStateRefresh on AppState {
           ? const <String>[]
           : await s.getGroupMembers(gid);
       final shots = GroupShots.ofRow(r, quiet: s.container.quiet);
+      final last = lasts[gid];
+      var (body, at) = last == null ? (null, null) : _lastBody(last);
+      // a group that blocks screenshots shows none of itself in the list:
+      // a new message while unread, then only that there was one
+      if (shots.blocking && body != null) {
+        body = (r['unread'] as int? ?? 0) > 0
+            ? l10n.notificationsNewMessage
+            : l10n.homeGroupShotsLine;
+      }
+      final from = last == null || last['direction'] == 'out'
+          ? null
+          : last['peer_id'] as String?;
       list.add(
         GroupPreview(
           groupId: gid,
@@ -180,6 +211,11 @@ extension AppStateRefresh on AppState {
           endedBy: groupEndOf(r)?.by,
           shotsBlocking: shots.blocking,
           shotsForAll: shots.forAll,
+          lastBody: body,
+          lastOut:
+              !shots.blocking && last != null && last['direction'] == 'out',
+          lastFrom: shots.blocking ? null : from,
+          lastAt: at,
         ),
       );
     }

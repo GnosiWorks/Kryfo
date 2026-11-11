@@ -7928,6 +7928,40 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Suche nach Benutzernamen braucht Tor. Bis dahin klappt das Hinzufügen per QR oder Link.';
 
   @override
+  String get handleNeedsTor =>
+      'Benutzernamen laufen über Tor.\nSie klappen, sobald Tor verbunden ist.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Das Verzeichnis ist gerade ausgelastet.\nVersuch es in einer Minute noch mal.';
+
+  @override
+  String get handleRefusedFull =>
+      'Das Verzeichnis sagt nein: Es ist gerade voll.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Das Verzeichnis sagt nein: Es hat schon eine neuere Änderung.\nPrüf die Uhrzeit und versuch es noch mal.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Das Verzeichnis sagt nein: Es konnte deine Einladung nicht lesen.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Das Verzeichnis sagt nein: Die Einladung stammt nicht von deinem Schlüssel.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Das Verzeichnis sagt nein: Diese Kryfo-Version ist zu alt.\nAktualisiere Kryfo, um Benutzernamen zu nutzen.';
+
+  @override
+  String get handleRefused => 'Das Verzeichnis sagt nein.';
+
+  @override
+  String get handleGetABridge => 'Brücke holen';
+
+  @override
   String get handleCheckClock =>
       'Prüf Datum und Uhrzeit des Handys und versuch es dann noch mal.';
 
@@ -11521,6 +11555,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceNoSpeech => 'In dieser Nachricht spricht niemand';
 
   @override
+  String get voiceTxNoMemory => 'Gerade nicht genug freier Arbeitsspeicher';
+
+  @override
   String get voiceTranscriptLabel => 'Transkript';
 
   @override
@@ -12325,6 +12362,43 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'An: Eine neue Anfrage erscheint mit Ton. Aus: Sie wartet leise in deinen Benachrichtigungen.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Chat öffnen';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Chat mit $name öffnen';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString neue Nachrichten',
+      one: '$countString neue Nachricht',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Ohne Ton senden';
+
+  @override
+  String get composerSendHoldHint => 'Gedrückt halten für mehr Optionen';
+
+  @override
+  String get homeGroupShotsLine => 'Nachricht';
 
   @override
   String get autoGetFilesWait =>

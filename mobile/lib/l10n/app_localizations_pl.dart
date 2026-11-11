@@ -7996,6 +7996,39 @@ class AppLocalizationsPl extends AppLocalizations {
       'Wyszukiwanie nazw wymaga Tor. W międzyczasie dodawaj przez QR albo link.';
 
   @override
+  String get handleNeedsTor =>
+      'Nazwy idą przez Tor.\nZadziałają, gdy Tor się połączy.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Rejestr jest teraz zajęty.\nSpróbuj za minutę.';
+
+  @override
+  String get handleRefusedFull => 'Rejestr odmówił: jest teraz pełny.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Rejestr odmówił: ma już nowszą zmianę.\nSprawdź zegar i spróbuj ponownie.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Rejestr odmówił: nie mógł odczytać twojego zaproszenia.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Rejestr odmówił: zaproszenie nie pochodzi od twojego klucza.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Rejestr odmówił: ta wersja Kryfo jest za stara.\nZaktualizuj Kryfo, żeby używać nazw.';
+
+  @override
+  String get handleRefused => 'Rejestr odmówił.';
+
+  @override
+  String get handleGetABridge => 'Zdobądź mostek';
+
+  @override
   String get handleCheckClock =>
       'Sprawdź datę i godzinę w telefonie i spróbuj ponownie.';
 
@@ -11610,6 +11643,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceNoSpeech => 'W tej wiadomości nikt nie mówi';
 
   @override
+  String get voiceTxNoMemory => 'Za mało wolnej pamięci w tej chwili';
+
+  @override
   String get voiceTranscriptLabel => 'Transkrypcja';
 
   @override
@@ -12414,6 +12450,45 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Włączone: nowa prośba pojawia się z dźwiękiem. Wyłączone: czeka cicho w powiadomieniach.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Otwórz czat';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Otwórz czat z $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString nowej wiadomości',
+      many: '$countString nowych wiadomości',
+      few: '$countString nowe wiadomości',
+      one: '$countString nowa wiadomość',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Wyślij bez dźwięku';
+
+  @override
+  String get composerSendHoldHint => 'Przytrzymaj, aby zobaczyć więcej opcji';
+
+  @override
+  String get homeGroupShotsLine => 'Wiadomość';
 
   @override
   String get autoGetFilesWait => 'Pliki pobierają się, gdy je stukniesz.';

@@ -41,12 +41,12 @@ void phone(WidgetTester t) {
   addTearDown(t.view.reset);
 }
 
-// the vertical offset the route's slide gives the page, in pixels
+// how far the route's rise has the page down, as a share of its height
 double pageRise(WidgetTester t, Finder page) {
-  final slide = t.widget<SlideTransition>(
-    find.ancestor(of: page, matching: find.byType(SlideTransition)).first,
+  final rise = t.widget<FractionalTranslation>(
+    find.ancestor(of: page, matching: find.byType(FractionalTranslation)).first,
   );
-  return slide.position.value.dy;
+  return rise.translation.dy;
 }
 
 class _Opener extends StatelessWidget {
@@ -83,15 +83,12 @@ void main() {
       await t.pump();
       await t.pump(const Duration(milliseconds: 60));
       expect(pageRise(t, find.text('the page')), 0);
-      final fade = t.widget<FadeTransition>(
+      final fade = t.widget<Opacity>(
         find
-            .ancestor(
-              of: find.text('the page'),
-              matching: find.byType(FadeTransition),
-            )
+            .ancestor(of: find.text('the page'), matching: find.byType(Opacity))
             .first,
       );
-      expect(fade.opacity.value, lessThan(1));
+      expect(fade.opacity, lessThan(1));
       await t.pump(const Duration(milliseconds: 300));
       expect(t.hasRunningAnimations, isFalse);
     });

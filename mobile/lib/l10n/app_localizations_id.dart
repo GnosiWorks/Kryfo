@@ -7835,6 +7835,39 @@ class AppLocalizationsId extends AppLocalizations {
       'Pencarian nama pengguna memerlukan Tor. Sementara itu, tambahkan lewat QR atau tautan.';
 
   @override
+  String get handleNeedsTor =>
+      'Nama pengguna lewat Tor.\nAkan berfungsi begitu Tor terhubung.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Registri sedang sibuk.\nCoba lagi semenit lagi.';
+
+  @override
+  String get handleRefusedFull => 'Registri menolak: saat ini sudah penuh.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Registri menolak: sudah ada perubahan yang lebih baru.\nPeriksa jam lalu coba lagi.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Registri menolak: undanganmu tidak bisa dibaca.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Registri menolak: undangan ini bukan dari kuncimu.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Registri menolak: versi Kryfo ini terlalu lama.\nPerbarui Kryfo untuk memakai nama pengguna.';
+
+  @override
+  String get handleRefused => 'Registri menolak.';
+
+  @override
+  String get handleGetABridge => 'Dapatkan jembatan';
+
+  @override
   String get handleCheckClock =>
       'Periksa tanggal dan jam di ponsel, lalu coba lagi.';
 
@@ -11391,6 +11424,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceNoSpeech => 'Tidak ada suara bicara di pesan ini';
 
   @override
+  String get voiceTxNoMemory => 'Memori yang tersedia tidak cukup saat ini';
+
+  @override
   String get voiceTranscriptLabel => 'Transkrip';
 
   @override
@@ -12184,6 +12220,42 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Aktif, permintaan baru muncul dengan suara. Nonaktif, permintaan menunggu tanpa suara di notifikasimu.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name: $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Buka obrolan';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Buka obrolan dengan $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString pesan baru',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Kirim tanpa suara';
+
+  @override
+  String get composerSendHoldHint => 'Tahan untuk opsi lainnya';
+
+  @override
+  String get homeGroupShotsLine => 'Pesan';
 
   @override
   String get autoGetFilesWait => 'File diunduh saat kamu mengetuknya.';

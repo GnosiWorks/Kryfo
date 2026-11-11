@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'back_preview.dart';
 import 'tick_mark.dart';
 import '../l10n/l10n.dart';
 import '../theme.dart' show HaloColors, HaloType, track, slant;
@@ -77,30 +78,17 @@ enum PrivacyMode { fast, normal, private }
 
 // the shared screen transition: a short rise and fade. with reduced motion
 // only the fade. one shape either way, so a page open when the setting
-// flips keeps its state
+// flips keeps its state. a back swipe on android 14 and on moves the page
+// with the finger (back_preview.dart)
 Route<T> haloRoute<T>(Widget page) {
   return PageRouteBuilder<T>(
     transitionDuration: const Duration(milliseconds: 280),
     reverseTransitionDuration: const Duration(milliseconds: 280),
     // a page with no scaffold of its own still gets plain text
     pageBuilder: (_, _, _) => TextGround(child: page),
-    transitionsBuilder: (context, anim, _, child) {
-      final curved = CurvedAnimation(
-        parent: anim,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween(
-            begin: motionStill(context) ? Offset.zero : const Offset(0, 0.035),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
+    // the rise and fade, and android's back swipe moving the page
+    transitionsBuilder: (context, anim, _, child) =>
+        BackPreview(animation: anim, child: child),
   );
 }
 

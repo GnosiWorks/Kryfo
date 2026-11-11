@@ -193,6 +193,7 @@ import 'devchat/support.dart';
 import 'screens/support_screen.dart' show askMoveIntoChats, openSupportTap;
 import 'stickers/sticker_pack.dart' show StickerLibrary;
 import 'stickers/sticker_wire.dart' show StickerWire, stickerText;
+import 'widgets/in_app_banner.dart';
 import 'widgets/motion.dart';
 import 'pair_flow.dart';
 import 'widgets/kryfo_link_text.dart'
@@ -326,6 +327,12 @@ void main() async {
   haloWhenOpen = (act) => lockGuard.afterUnlock(act);
   // toasts live in the root overlay, over every route and sheet
   haloToastOverlay = () => rootNavKey.currentState?.overlay;
+  // a banner for another chat drops there too, and opens it as its
+  // notification would; it goes with the toasts when the lock comes up
+  bannerOverlay = () => rootNavKey.currentState?.overlay;
+  bannerOpens = (chat) =>
+      lockGuard.afterUnlock(() => openNotifChat(chat, null), key: 'chat:$chat');
+  haloClearBanner = clearInAppBanner;
   // an unlock opens its session under the lock screen, before it lifts
   lockState.onOutcome = appState.sessionFor;
   lockState.sessionsReady = appState.containersReady;

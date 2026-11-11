@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../handle_repoint.dart' show handleRefusalLine;
-import '../main.dart' show appState, sessionQuiet, AppStateProfile;
+import '../main.dart'
+    show appState, sessionQuiet, AppStateProfile, AppStateSession;
+import 'bridge_sheets.dart' show showFriendLinesSheet;
 import '../handle_claim.dart';
 import '../theme.dart';
 import '../widgets/confirm_sheet.dart';
@@ -200,6 +202,9 @@ class _HandleScreenState extends State<HandleScreen> {
         slow: _slow,
         suggestion: _c.suggestion,
         onSuggestion: _c.useSuggestion,
+        onBridges: appState.inDecoyView
+            ? null
+            : () => showFriendLinesSheet(context, hint: true),
       ),
       const SizedBox(height: 18),
       HandleField(
@@ -261,7 +266,7 @@ class _ListingCardState extends State<_ListingCard> {
         on ? l10n.handleSearchOn(widget.handle) : l10n.handleSearchOff,
       );
     } else {
-      showHaloToast(context, l10n.handleRegistryFailed);
+      showHaloToast(context, handleRefusalLine(r, widget.handle));
     }
   }
 
@@ -522,7 +527,11 @@ class HandleAvailability extends StatelessWidget {
     this.slow = false,
     this.suggestion,
     this.onSuggestion,
+    this.onBridges,
   });
+
+  /// under the line that tor is not up: where a bridge comes from
+  final VoidCallback? onBridges;
 
   @override
   Widget build(BuildContext context) {
@@ -542,8 +551,9 @@ class HandleAvailability extends StatelessWidget {
       txt = l10n.handleNameRule;
       c = HaloColors.amberText;
     } else {
-      // a fixed line, whatever the engine or the registry said
-      txt = l10n.handleRegistryFailed;
+      // a fixed line, whatever the engine or the registry said: busy and
+      // no tor are said as such, anything else as out of reach
+      txt = handleRefusalLine(state, '');
       c = HaloColors.amberText;
     }
     // each answer rises in over the last as the name is typed; a longer
@@ -560,6 +570,17 @@ class HandleAvailability extends StatelessWidget {
                   ExcludeSemantics(child: TickMark(color: c)),
                   const SizedBox(width: 5),
                   Text(txt, style: HaloType.mono(size: 11, color: c)),
+                ],
+              )
+            : state == kNoTor && onBridges != null
+            ? Column(
+                key: ValueKey('$txt/bridges'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(txt, style: HaloType.mono(size: 11, color: c)),
+                  const SizedBox(height: 6),
+                  _BridgesLink(onTap: onBridges!),
                 ],
               )
             : state == 'taken' && suggestion != null
@@ -587,6 +608,41 @@ class HandleAvailability extends StatelessWidget {
       curve: Curves.easeOutCubic,
       alignment: AlignmentDirectional.topStart,
       child: line,
+    );
+  }
+}
+
+/// under the tor line: the paste sheet with the ways to a private bridge
+class _BridgesLink extends StatelessWidget {
+  const _BridgesLink({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: PressScale(
+        scale: 0.97,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Container(
+          key: const ValueKey('handle-bridges'),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: HaloColors.violet.withValues(alpha: 0.09),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: HaloColors.violet.withValues(alpha: 0.28),
+            ),
+          ),
+          child: Text(
+            l10n.handleGetABridge,
+            style: HaloType.mono(size: 11, color: HaloColors.text),
+          ),
+        ),
+      ),
     );
   }
 }

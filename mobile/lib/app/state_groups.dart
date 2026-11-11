@@ -460,6 +460,8 @@ extension AppStateGroups on AppState {
     String? sticker,
     // a retry passes when its row was written
     int? writtenAt,
+    // held send: the members' phones post it without sound
+    bool silent = false,
   }) async {
     // a group that ended, or was left or taken out of: nothing is kept
     if (!await session.groupExists(groupId)) return false;
@@ -485,7 +487,17 @@ extension AppStateGroups on AppState {
     // peer_id = self so we render it as outgoing. a retry passes the same
     // uid, and a second row breaks every uid-keyed widget key.
     // kept only with the group still here, in the same go
-    if (!await session.messageExists(msgUid) &&
+    final retry = await session.messageExists(msgUid);
+    // a retry goes as quietly as it first went. a row that will not say
+    // rings, as an older app does
+    if (retry && !silent) {
+      try {
+        silent = await session.sentSilent(msgUid);
+      } catch (e) {
+        dlog('grpsend: silent not read (${e.runtimeType})');
+      }
+    }
+    if (!retry &&
         !await session.saveInGroup(
           sessionId,
           plain,
@@ -503,6 +515,7 @@ extension AppStateGroups on AppState {
         )) {
       return false;
     }
+    if (!retry && silent) await session.markSilent(msgUid);
     // a quiet session keeps the row here, unsent: nothing leaves. one held
     // by a decoy goes from the outbox once it is left
     if (everydayHeld) {
@@ -536,6 +549,7 @@ extension AppStateGroups on AppState {
       poll: poll?.toWire(),
       sticker: sticker,
       writtenAt: written,
+      silent: silent,
     );
     dlog('grpsend group=$groupId members=$members me=$myId admin=$amAdmin');
     final d = _ownerOf(groupId);

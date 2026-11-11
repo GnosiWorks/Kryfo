@@ -211,6 +211,13 @@ void main() {
       useEngineForTest(_Engine());
       appState.myId = 'amber-river-lantern-x';
       appState.sendModeForTest = 'private';
+      // the registry is reached over tor: tor carries
+      appState.setTorStatusForTest(TorStatus.reachable);
+      appState.setRouteOKForTest(true);
+      addTearDown(() {
+        appState.setTorStatusForTest(TorStatus.off);
+        appState.setRouteOKForTest(false);
+      });
     });
 
     Future<PageController> toName(WidgetTester t) async {

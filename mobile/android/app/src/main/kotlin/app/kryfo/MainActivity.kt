@@ -41,6 +41,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.os.Bundle
+import androidx.activity.BackEventCompat
+import androidx.activity.OnBackPressedCallback
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
@@ -51,6 +53,41 @@ import io.flutter.plugin.common.StringCodec
 // open for KryfoActivity, the name the manifest gives the screen
 open class MainActivity : FlutterFragmentActivity() {
     private val tools = ToolsBridge(this)
+    // predictive back: the fragment's own callback only says "back" at the
+    // end. this one hands dart the swipe as it goes, as FlutterActivity does,
+    // and is on only while dart says it wants back (LockBack in
+    // lock_layer.dart, which keeps it while locked)
+    private var engine: FlutterEngine? = null
+    private var backStarted = false
+    private val backSwipe = object : OnBackPressedCallback(false) {
+        override fun handleOnBackStarted(backEvent: BackEventCompat) {
+            if (Build.VERSION.SDK_INT < 34) return
+            val ch = engine?.backGestureChannel ?: return
+            backStarted = true
+            ch.startBackGesture(backEvent.toBackEvent())
+        }
+
+        override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+            if (!backStarted || Build.VERSION.SDK_INT < 34) return
+            engine?.backGestureChannel?.updateBackGestureProgress(backEvent.toBackEvent())
+        }
+
+        override fun handleOnBackCancelled() {
+            if (!backStarted) return
+            backStarted = false
+            engine?.backGestureChannel?.cancelBackGesture()
+        }
+
+        override fun handleOnBackPressed() {
+            if (backStarted) {
+                backStarted = false
+                engine?.backGestureChannel?.commitBackGesture()
+            } else {
+                // a button, or an android without the swipe: plain back
+                engine?.navigationChannel?.popRoute()
+            }
+        }
+    }
     private var videos: VideoPlayers? = null
     private var pdfs: PdfPages? = null
     companion object {
@@ -362,6 +399,8 @@ open class MainActivity : FlutterFragmentActivity() {
         }
         shield.start(kept.first, kept.second)
         super.onCreate(savedInstanceState)
+        // added after the fragment's, so it is asked first while it is on
+        onBackPressedDispatcher.addCallback(this, backSwipe)
         underBars()
         AppIcon.describeTask(this)
         windowSeen = WindowWatch(this).also {
@@ -448,6 +487,19 @@ open class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         // hold on to it so the next activity attaches to this same engine
         FlutterEngineCache.getInstance().put(ENGINE_ID, flutterEngine)
+        engine = flutterEngine
+        // dart says when it wants back, with every setFrameworkHandlesBack
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/back")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "wants") {
+                    val on = call.arguments as? Boolean ?: false
+                    backSwipe.isEnabled = on
+                    if (!on) backStarted = false
+                    result.success(null)
+                } else {
+                    result.notImplemented()
+                }
+            }
         awayChannel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/window", StringCodec.INSTANCE)
         captures.channel = BasicMessageChannel(flutterEngine.dartExecutor.binaryMessenger, "kryfo/capture", StringCodec.INSTANCE)
         tools.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ToolsBridge.CHANNEL))
@@ -645,7 +697,19 @@ open class MainActivity : FlutterFragmentActivity() {
                         val am = applicationContext
                             .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                         val ok = try { am.clearApplicationUserData() } catch (e: Exception) { false }
-                        result.success(ok)
+                        if (ok) {
+                            result.success(true)
+                        } else {
+                            // refused: the keystore and the data folder by
+                            // hand, off the main thread
+                            Thread {
+                                try {
+                                    WipeFallback.run(applicationContext)
+                                } catch (e: Exception) {
+                                }
+                                runOnUiThread { result.success(false) }
+                            }.start()
+                        }
                     }
                     // the home screen's icon and name. android leaves the
                     // open screen up (DONT_KILL_APP), so kryfo closes and

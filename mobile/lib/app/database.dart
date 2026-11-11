@@ -250,6 +250,7 @@ class HaloDb
             album_n INTEGER,
             album_i INTEGER,
             spoiler INTEGER NOT NULL DEFAULT 0,
+            silent INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (peer_id) REFERENCES contacts(halo_id)
           )
         ''');
@@ -998,6 +999,12 @@ class HaloDb
     } catch (e) {
       dlog('devices: tables not made (${e.runtimeType})');
     }
+    // ours sent without sound: no version step, so any file gets it
+    try {
+      await silentColumnAtOpen(_db!);
+    } catch (e) {
+      dlog('silent: column not made (${e.runtimeType})');
+    }
     // folders by number and files under names that say nothing, before a
     // row is read; then the phone seals what is still plain
     try {
@@ -1352,6 +1359,17 @@ Future<void> spoilerColumn(DatabaseExecutor db) => addColumn(
 Future<void> chatBurnColumns(DatabaseExecutor db) async {
   await addColumn(db, 'ALTER TABLE contacts ADD COLUMN chat_burn INTEGER');
   await addColumn(db, 'ALTER TABLE groups ADD COLUMN chat_burn INTEGER');
+}
+
+// a row of ours sent without sound, so its retry goes quietly too. made at
+// open, not by a version step: a file of any number gets it once
+Future<void> silentColumnAtOpen(DatabaseExecutor db) async {
+  final cols = await db.rawQuery('PRAGMA table_info(messages)');
+  if (cols.any((c) => c['name'] == 'silent')) return;
+  await addColumn(
+    db,
+    'ALTER TABLE messages ADD COLUMN silent INTEGER NOT NULL DEFAULT 0',
+  );
 }
 
 Future<void> albumIndex(DatabaseExecutor db) => db.execute(

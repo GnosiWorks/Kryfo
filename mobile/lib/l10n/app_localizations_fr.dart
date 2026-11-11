@@ -7914,6 +7914,40 @@ class AppLocalizationsFr extends AppLocalizations {
       'La recherche de pseudo a besoin de Tor. En attendant, ajoutez par QR ou par lien.';
 
   @override
+  String get handleNeedsTor =>
+      'Les pseudos passent par Tor.\nIls marchent dès que Tor est connecté.';
+
+  @override
+  String get handleRegistryBusy =>
+      'Le registre est occupé.\nRéessayez dans une minute.';
+
+  @override
+  String get handleRefusedFull =>
+      'Le registre a dit non : il est plein pour le moment.';
+
+  @override
+  String get handleRefusedOlder =>
+      'Le registre a dit non : il a déjà une modification plus récente.\nVérifiez l’heure et réessayez.';
+
+  @override
+  String get handleRefusedBadInvite =>
+      'Le registre a dit non : il n’a pas pu lire votre invitation.';
+
+  @override
+  String get handleRefusedNotYourInvite =>
+      'Le registre a dit non : l’invitation ne vient pas de votre clé.';
+
+  @override
+  String get handleRefusedUpdate =>
+      'Le registre a dit non : cette version de Kryfo est trop ancienne.\nMettez Kryfo à jour pour utiliser les pseudos.';
+
+  @override
+  String get handleRefused => 'Le registre a dit non.';
+
+  @override
+  String get handleGetABridge => 'Obtenir un pont';
+
+  @override
   String get handleCheckClock =>
       'Vérifiez la date et l’heure du téléphone, puis réessayez.';
 
@@ -11510,6 +11544,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get voiceNoSpeech => 'Personne ne parle dans ce message';
 
   @override
+  String get voiceTxNoMemory => 'Pas assez de mémoire libre pour l\'instant';
+
+  @override
   String get voiceTranscriptLabel => 'Transcription';
 
   @override
@@ -12318,6 +12355,43 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notifRequestPopupsHint =>
       'Activé, une nouvelle demande s\'affiche avec un son. Désactivé, elle attend en silence dans tes notifications.';
+
+  @override
+  String homeGroupLine(String name, String preview) {
+    return '$name : $preview';
+  }
+
+  @override
+  String get bannerOpen => 'Ouvrir la discussion';
+
+  @override
+  String bannerOpenWith(String name) {
+    return 'Ouvrir la discussion avec $name';
+  }
+
+  @override
+  String bannerNewMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString nouveaux messages',
+      one: '$countString nouveau message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get composerSendSilent => 'Envoyer sans son';
+
+  @override
+  String get composerSendHoldHint => 'Maintenir pour plus d\'options';
+
+  @override
+  String get homeGroupShotsLine => 'Message';
 
   @override
   String get autoGetFilesWait =>

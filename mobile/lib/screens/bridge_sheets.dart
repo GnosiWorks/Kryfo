@@ -218,19 +218,23 @@ Future<void> showTorProjectConsentSheet(BuildContext context) async {
   if (yes == true) await appState.setBridgeConsent(true);
 }
 
-/// a friend's lines: pasted or scanned, read by the engine, used at once
-Future<void> showFriendLinesSheet(BuildContext context) => showHaloSheet<void>(
-  context,
-  builder: (_) => ShutOnLock(
-    guard: lockGuard,
-    child: _FriendSheet(host: context),
-  ),
-);
+/// a friend's lines: pasted or scanned, read by the engine, used at once.
+/// [hint]: where a private bridge comes from shows whatever automatic did,
+/// for a page that needs tor and sent the person here
+Future<void> showFriendLinesSheet(BuildContext context, {bool hint = false}) =>
+    showHaloSheet<void>(
+      context,
+      builder: (_) => ShutOnLock(
+        guard: lockGuard,
+        child: _FriendSheet(host: context, hint: hint),
+      ),
+    );
 
 class _FriendSheet extends StatefulWidget {
-  const _FriendSheet({required this.host});
+  const _FriendSheet({required this.host, this.hint = false});
   // the page under the sheet, where a note goes once it has closed
   final BuildContext host;
+  final bool hint;
 
   @override
   State<_FriendSheet> createState() => _FriendSheetState();
@@ -346,7 +350,9 @@ class _FriendSheetState extends State<_FriendSheet> {
             ListenableBuilder(
               listenable: appState,
               builder: (_, _) => PrivateBridgeHint(
-                show: !appState.inDecoyView && appState.bridgeStatus.autoFailed,
+                show:
+                    !appState.inDecoyView &&
+                    (widget.hint || appState.bridgeStatus.autoFailed),
               ),
             ),
             Container(
