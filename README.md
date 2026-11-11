@@ -83,6 +83,11 @@ server keeps and for how long.
 - **[kryfo.app/download](https://kryfo.app/download)** has all of them in one
   place
 
+only install kryfo from these places: google play, f-droid, the github
+releases page or kryfo.app. copies on other sites, like apk mirrors such as
+openapk.net, are not ours, even when they look the same. a real apk is
+signed with the certificate under verify below.
+
 new contacts need 0.6 on both phones. chats with people still on 0.5.3 keep
 working; ask them to update before you add each other.
 
