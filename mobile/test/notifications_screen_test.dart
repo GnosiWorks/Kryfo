@@ -17,7 +17,8 @@ import 'package:kryfo/main.dart'
         useEngineForTest,
         AppStateRoute,
         AppStateDelivery;
-import 'package:kryfo/notifications.dart' show forgetNotifPlain;
+import 'package:kryfo/notifications.dart'
+    show forgetNotifPlain, loadRequestPopups;
 import 'package:kryfo/screens/notifications_screen.dart';
 import 'package:kryfo/store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -110,6 +111,21 @@ void main() {
     );
     expect(find.text(l10n.gettingMessagesArriveInstantlyFast), findsOneWidget);
     appState.sendModeForTest = 'private';
+    await t.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('pop-ups for message requests: the switch is kept', (t) async {
+    await _open(t);
+    final row = find.byKey(const ValueKey('requestPopupsRow'));
+    await t.scrollUntilVisible(row, 200);
+    expect(find.text(l10n.notifRequestPopups), findsOneWidget);
+    final was = await loadRequestPopups();
+    await t.tap(row);
+    await t.pump(const Duration(milliseconds: 300));
+    expect(await loadRequestPopups(), !was);
+    await t.tap(row);
+    await t.pump(const Duration(milliseconds: 300));
+    expect(await loadRequestPopups(), was);
     await t.pumpWidget(const SizedBox());
   });
 

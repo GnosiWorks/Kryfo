@@ -1498,6 +1498,7 @@ extension AppStateArrivals on AppState {
     final bool suppress;
     // the face a banner in the app may show: none for a line naming no one
     String? face;
+    var request = false;
     final shownText = edited ?? env.message;
     // the name given to them here. android keeps titles in its history, so
     // with none given it says someone, never their id
@@ -1540,6 +1541,7 @@ extension AppStateArrivals on AppState {
       notifTitle = l10n.appNewRequest;
       notifBody = l10n.appSomeoneYouHaveNot;
       notifPayload = senderHaloId;
+      request = true;
       suppress = reading || await db.isMuted(senderHaloId);
     } else if (await _shotsBlock(db, senderHaloId)) {
       // a chat that blocks screenshots puts none of itself in the shade
@@ -1611,7 +1613,7 @@ extension AppStateArrivals on AppState {
           group: isGroup,
         ),
         hidden: to == RouteTo.vault,
-        request: !isGroup && !senderAccepted,
+        request: request,
       );
       await _io.notify(
         title: notifTitle,
@@ -1622,6 +1624,7 @@ extension AppStateArrivals on AppState {
         burnAt: burnFromArrival,
         // sent without sound, or said already by the banner
         silent: env.silent || shown,
+        request: request,
       );
     }
     return to;

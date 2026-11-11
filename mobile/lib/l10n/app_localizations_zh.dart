@@ -2454,28 +2454,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => '无法清理这个视频';
 
   @override
-  String get groupChat30Seconds => '30 秒';
-
-  @override
-  String get groupChat1Minute => '1 分钟';
-
-  @override
-  String get groupChat5Minutes => '5 分钟';
-
-  @override
-  String get groupChat1Hour => '1 小时';
-
-  @override
-  String get groupChat24Hours => '24 小时';
-
-  @override
-  String get groupChatBurnTimer => '限时消息';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      '新消息在被读后经过这段时间消失。你发出的从发送时开始计时。';
-
-  @override
   String get groupChatToday => '今天';
 
   @override
@@ -11493,6 +11471,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharedOpensLink => '在其他应用中打开链接';
 
   @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return '播放速度 $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at / $total';
+  }
+
+  @override
+  String get chatReactHeart => '用爱心回应';
+
+  @override
+  String get homeDraftLabel => '草稿：';
+
+  @override
+  String homeDraftA11y(String text) {
+    return '草稿：$text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle 可用，点此使用';
+  }
+
+  @override
+  String get notifRequestsChannel => '消息请求';
+
+  @override
+  String get notifRequestsChannelLine => '尚未添加的人发来的第一条消息';
+
+  @override
+  String get notifRequestPopups => '消息请求弹出通知';
+
+  @override
+  String get notifRequestPopupsHint => '开启时，新请求会弹出并响铃。关闭时，它会安静地留在通知里。';
+
+  @override
   String homeGroupLine(String name, String preview) {
     return '$name：$preview';
   }
@@ -13977,28 +13998,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupChatCouldNotCleanThatVideo => '無法清理那段影片';
-
-  @override
-  String get groupChat30Seconds => '30 秒';
-
-  @override
-  String get groupChat1Minute => '1 分鐘';
-
-  @override
-  String get groupChat5Minutes => '5 分鐘';
-
-  @override
-  String get groupChat1Hour => '1 小時';
-
-  @override
-  String get groupChat24Hours => '24 小時';
-
-  @override
-  String get groupChatBurnTimer => '限時訊息';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      '新訊息在被讀取後經過這段時間消失。你傳送的從傳送時開始計時。';
 
   @override
   String get groupChatToday => '今天';
@@ -22896,6 +22895,49 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sharedOpensLink => '在其他應用程式中開啟連結';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return '播放速度 $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at / $total';
+  }
+
+  @override
+  String get chatReactHeart => '用愛心回應';
+
+  @override
+  String get homeDraftLabel => '草稿：';
+
+  @override
+  String homeDraftA11y(String text) {
+    return '草稿：$text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle 可用，點此使用';
+  }
+
+  @override
+  String get notifRequestsChannel => '訊息請求';
+
+  @override
+  String get notifRequestsChannelLine => '尚未加入的人傳來的第一則訊息';
+
+  @override
+  String get notifRequestPopups => '訊息請求彈出通知';
+
+  @override
+  String get notifRequestPopupsHint => '開啟時，新請求會彈出並響鈴。關閉時，它會安靜地留在通知中。';
 
   @override
   String homeGroupLine(String name, String preview) {

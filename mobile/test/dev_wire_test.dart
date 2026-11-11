@@ -356,6 +356,7 @@ class _Io extends AppIo {
     String? msgUid,
     int? burnAt,
     bool silent = false,
+    bool request = false,
   }) async => rang.add((title, payload));
 
   @override

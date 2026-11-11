@@ -303,6 +303,7 @@ class _Io implements AppIo {
     String? msgUid,
     int? burnAt,
     bool silent = false,
+    bool request = false,
   }) async {
     rang.add(payload ?? title);
     ons.add(on);

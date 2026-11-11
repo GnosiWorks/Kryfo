@@ -38,6 +38,8 @@ const androidChannels = [
   // the pdf viewer is android's renderer; a computer opens pdfs outside
   'kryfo/pdf',
   'kryfo/transfers',
+  // android's back swipe; a computer has none
+  'kryfo/back',
 ];
 
 /// methods with a desktop answer on halo/platform. the rest say not here:

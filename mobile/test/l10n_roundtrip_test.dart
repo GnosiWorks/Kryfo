@@ -1179,16 +1179,6 @@ void main() {
     expect(l.groupChatGifTooBig8, "Gif too big · 8 mb max");
     expect(l.groupChatCouldNotCleanThat, "Could not clean that gif");
     expect(l.groupChatCouldNotCleanThatVideo, "Could not clean that video");
-    expect(l.groupChat30Seconds, "30 seconds");
-    expect(l.groupChat1Minute, "1 minute");
-    expect(l.groupChat5Minutes, "5 minutes");
-    expect(l.groupChat1Hour, "1 hour");
-    expect(l.groupChat24Hours, "24 hours");
-    expect(l.groupChatBurnTimer, "Timed messages");
-    expect(
-      l.groupChatNewMessagesDisappearOnceRead,
-      "New messages disappear this long after they're read. Yours count from when you send them.",
-    );
     expect(l.groupChatToday, "Today");
     expect(l.groupChatYesterday, "Yesterday");
     expect(l.groupChatYou2, "You");

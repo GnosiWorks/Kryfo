@@ -997,7 +997,7 @@ void main() {
 
       await t.longPress(find.bySemanticsLabel(l10n.groupChatTimedMessages));
       await t.pump(const Duration(seconds: 1));
-      await t.tap(find.text(l10n.groupChat5Minutes));
+      await t.tap(find.text(l10n.chat5Minutes));
       await t.pump();
       await t.pump(const Duration(seconds: 1));
       expect(_stripFactor(t), 1);
@@ -1010,7 +1010,11 @@ void main() {
       _use(t, _Db());
       await t.pumpWidget(app(const GroupChatScreen(groupId: _group)));
       await t.pump(const Duration(seconds: 1));
+      // the flame opens its picker; a time turns timed messages on
       await t.tap(find.bySemanticsLabel(l10n.groupChatTimedMessages));
+      await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.text(l10n.chat30Seconds));
       await t.pump();
       await t.pump(const Duration(milliseconds: 60));
       final f = _stripFactor(t);
@@ -1027,6 +1031,9 @@ void main() {
       await t.pump(const Duration(seconds: 1));
       await t.tap(find.bySemanticsLabel(l10n.groupChatTimedMessages));
       await t.pump();
+      await t.pump(const Duration(seconds: 1));
+      await t.tap(find.text(l10n.chat30Seconds));
+      await t.pump(const Duration(milliseconds: 400));
       await t.pump(const Duration(milliseconds: 20));
       expect(_stripFactor(t), 1);
       await _close(t);
@@ -1880,7 +1887,7 @@ void main() {
           const ContactScreen(haloId: _anna, avatarSeed: _anna, peerXPub: ''),
         ),
       );
-      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(seconds: 1));
       expect(find.text('Anna'), findsWidgets);
       expect(find.text(l10n.contactNothingSharedYet), findsNothing);
       db.gate!.complete();
@@ -2156,15 +2163,15 @@ void main() {
       final row = find.text(l10n.groupInfoEndGroup);
       await t.scrollUntilVisible(row, 200);
       await t.tap(row);
-      await t.pump(const Duration(milliseconds: 600));
-      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.groupInfoEndThisGroup), findsOneWidget);
       expect(find.text(l10n.groupInfoEndGroupLine), findsOneWidget);
       expect(find.text(l10n.groupInfoEndGroupDetail), findsOneWidget);
       expect(find.text(l10n.groupInfoEndGroup), findsNWidgets(2));
       await t.tap(find.text(l10n.commonCancel));
-      await t.pump(const Duration(milliseconds: 600));
-      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(seconds: 1));
+      await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.groupInfoEndThisGroup), findsNothing);
       // still running: its leave is a leave
       expect(find.text(l10n.groupInfoLeaveGroup2), findsOneWidget);
@@ -2216,7 +2223,7 @@ void main() {
       expect(find.text(l10n.groupInfoWallpaper), findsNothing);
       expect(find.text(l10n.commonAdd), findsNothing);
       await t.tap(find.text(l10n.groupInfoDeleteGroup));
-      await t.pump(const Duration(milliseconds: 600));
+      await t.pump(const Duration(seconds: 1));
       expect(find.text(l10n.groupInfoDeleteThisGroup), findsOneWidget);
       expect(find.text(l10n.groupInfoDeleteGroupLine), findsOneWidget);
       await _close(t);

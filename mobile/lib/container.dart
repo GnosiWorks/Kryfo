@@ -331,6 +331,8 @@ const containerKeys = {
   'kryfo.requests.popups',
   'sticker_recents',
   'notes_hold_told',
+  // how fast received voice notes play (voice_speed.dart)
+  'voice_speed',
   // drafts written down for a restart the person asked for, read back once
   'kept_drafts',
   // when this identity last handed a backup out (last_backup.dart)

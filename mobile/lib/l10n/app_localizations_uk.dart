@@ -2642,28 +2642,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'Не вдалося очистити це відео';
 
   @override
-  String get groupChat30Seconds => '30 секунд';
-
-  @override
-  String get groupChat1Minute => '1 хвилина';
-
-  @override
-  String get groupChat5Minutes => '5 хвилин';
-
-  @override
-  String get groupChat1Hour => '1 година';
-
-  @override
-  String get groupChat24Hours => '24 години';
-
-  @override
-  String get groupChatBurnTimer => 'Зникаючі повідомлення';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'Нові повідомлення зникатимуть через цей час після прочитання. Твої рахуються з моменту надсилання.';
-
-  @override
   String get groupChatToday => 'Сьогодні';
 
   @override
@@ -12347,6 +12325,51 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Відкриває посилання в іншому застосунку';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Швидкість відтворення $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at з $total';
+  }
+
+  @override
+  String get chatReactHeart => 'Відреагувати сердечком';
+
+  @override
+  String get homeDraftLabel => 'Чернетка:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Чернетка: $text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle вільне, обрати';
+  }
+
+  @override
+  String get notifRequestsChannel => 'Запити на листування';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Перші повідомлення від людей, яких ти ще не додав';
+
+  @override
+  String get notifRequestPopups => 'Спливні сповіщення про запити';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Увімкнено: новий запит спливає зі звуком. Вимкнено: він тихо чекає в сповіщеннях.';
 
   @override
   String homeGroupLine(String name, String preview) {

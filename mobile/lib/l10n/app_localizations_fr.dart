@@ -2613,28 +2613,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de nettoyer cette vidéo';
 
   @override
-  String get groupChat30Seconds => '30 secondes';
-
-  @override
-  String get groupChat1Minute => '1 minute';
-
-  @override
-  String get groupChat5Minutes => '5 minutes';
-
-  @override
-  String get groupChat1Hour => '1 heure';
-
-  @override
-  String get groupChat24Hours => '24 heures';
-
-  @override
-  String get groupChatBurnTimer => 'Messages éphémères';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'Les nouveaux messages disparaissent ce délai après leur lecture. Les vôtres comptent dès leur envoi.';
-
-  @override
   String get groupChatToday => 'Aujourd’hui';
 
   @override
@@ -12295,6 +12273,51 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Ouvre le lien dans une autre app';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Vitesse de lecture $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at sur $total';
+  }
+
+  @override
+  String get chatReactHeart => 'Réagir avec un cœur';
+
+  @override
+  String get homeDraftLabel => 'Brouillon :';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Brouillon : $text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle est libre, l\'utiliser';
+  }
+
+  @override
+  String get notifRequestsChannel => 'Demandes de message';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Premiers messages de personnes que tu n\'as pas encore ajoutées';
+
+  @override
+  String get notifRequestPopups => 'Pop-ups pour les demandes de message';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Activé, une nouvelle demande s\'affiche avec un son. Désactivé, elle attend en silence dans tes notifications.';
 
   @override
   String homeGroupLine(String name, String preview) {

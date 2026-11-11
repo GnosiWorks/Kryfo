@@ -2643,28 +2643,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'Не удалось очистить видео';
 
   @override
-  String get groupChat30Seconds => '30 секунд';
-
-  @override
-  String get groupChat1Minute => '1 минута';
-
-  @override
-  String get groupChat5Minutes => '5 минут';
-
-  @override
-  String get groupChat1Hour => '1 час';
-
-  @override
-  String get groupChat24Hours => '24 часа';
-
-  @override
-  String get groupChatBurnTimer => 'Исчезающие сообщения';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'Новые сообщения исчезнут через это время после прочтения. Твои считаются с момента отправки.';
-
-  @override
   String get groupChatToday => 'Сегодня';
 
   @override
@@ -12349,6 +12327,51 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Открывает ссылку в другом приложении';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Скорость воспроизведения $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at из $total';
+  }
+
+  @override
+  String get chatReactHeart => 'Отреагировать сердцем';
+
+  @override
+  String get homeDraftLabel => 'Черновик:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Черновик: $text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle свободно, выбрать';
+  }
+
+  @override
+  String get notifRequestsChannel => 'Запросы на переписку';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Первые сообщения от тех, кого ты ещё не добавил';
+
+  @override
+  String get notifRequestPopups => 'Всплывающие уведомления о запросах';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Включено: новый запрос всплывает со звуком. Выключено: он тихо ждёт в уведомлениях.';
 
   @override
   String homeGroupLine(String name, String preview) {

@@ -172,6 +172,8 @@ class ArrivalIo implements AppIo {
   final listened = <String>[];
   final sent = <(String, String)>[];
   final rang = <String>[];
+  // whether each ring was a message request
+  final requests = <bool>[];
 
   List<String> ticksFor(String uid) => [
     for (final (to, c) in sent)
@@ -341,7 +343,9 @@ class ArrivalIo implements AppIo {
     String? msgUid,
     int? burnAt,
     bool silent = false,
+    bool request = false,
   }) async {
+    requests.add(request);
     rang.add(payload ?? title);
     shown.add((title, body));
     burns.add(burnAt);

@@ -259,6 +259,9 @@ import '../translate/translate_menu.dart' show neverOffer;
 import '../voice_format.dart' show isVoiceName, kVoiceWav;
 import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
+import '../voice_speed.dart' show VoiceSpeed;
+import '../widgets/react_taps.dart';
+import '../widgets/burn_sheet.dart';
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
@@ -1533,6 +1536,8 @@ class _ChatScreenState extends State<ChatScreen>
           });
     }
     _reconcileSending();
+    // received notes play at this identity's speed
+    unawaited(VoiceSpeed.use(session.container));
     appState.loadGhostPref().then((p) {
       if (mounted) {
         setState(() {
@@ -3920,30 +3925,24 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
+  // the flame: a tap picks how long, and while one is set "Off" is on top.
+  // the choice stays until it is changed here
   Future<void> _pickBurnDuration() async {
-    final picked = await showChoiceSheet<int>(
+    final picked = await showBurnSheet(
       context,
-      title: l10n.chatGhostTimer,
-      line: l10n.chatHowLongAfterReading,
-      current: _burnSeconds,
-      choices: [
-        // an answer the phone sends lives an hour at least
-        if (!_viaPhone) ...[
-          SheetChoice(30, l10n.chat30Seconds),
-          SheetChoice(60, l10n.chat1Minute),
-          SheetChoice(300, l10n.chat5Minutes),
-        ],
-        SheetChoice(3600, l10n.chat1Hour),
-        SheetChoice(86400, l10n.chat24Hours),
-      ],
+      on: _ghost,
+      secs: _burnSeconds,
+      // an answer the phone sends lives an hour at least
+      short: !_viaPhone,
     );
     if (picked == null || !mounted) return;
+    final on = picked != kBurnOff;
     setState(() {
-      _burnSeconds = picked;
-      _ghost = true;
-      _lastBurnSeconds = picked;
-      _lastGhost = true;
-      appState.saveGhostPref(true, picked);
+      if (on) _burnSeconds = picked;
+      _ghost = on;
+      _lastBurnSeconds = _burnSeconds;
+      _lastGhost = on;
+      appState.saveGhostPref(on, _burnSeconds);
     });
     // the draft takes the chat's new clock
     _keepDraft(clock: true);
@@ -5925,6 +5924,7 @@ class _ChatScreenState extends State<ChatScreen>
           onStop: _stopSending,
           fromName: _fileFrom(m),
           soundsAfter: _soundsAfter,
+          voiceAfter: _voiceAfter,
           onRetry: run == null
               ? _tapRetry
               : (_) {
@@ -5952,6 +5952,16 @@ class _ChatScreenState extends State<ChatScreen>
                   final added = react.reactions[''] != e;
                   _toggleReaction(react, e);
                   if (added) _flashReaction(react);
+                },
+          onDoubleReact: m.welcome || !_canReact || making
+              ? null
+              : () {
+                  if (lockGuard.isLocked()) return false;
+                  final e = kDoubleTapReaction;
+                  final added = react.reactions[''] != e;
+                  _toggleReaction(react, e);
+                  if (added) _flashReaction(react);
+                  return added;
                 },
           secure: m.secure,
           kept: _keeps(m),
@@ -6688,6 +6698,23 @@ class _ChatScreenState extends State<ChatScreen>
             kept: _keeps(x),
           ),
     ];
+  }
+
+  // the voice note after [m] in the chat, by its bubble's key: it plays on.
+  // a timed one or one still on its way is passed over: a timer starts only
+  // with a tap
+  String? _voiceAfter(_Msg m) {
+    final at = _messages.indexOf(m);
+    if (at < 0) return null;
+    for (final x in _messages.skip(at + 1)) {
+      if (x.making != null || !isVoiceName(x.fileName) || x.filePath == null) {
+        continue;
+      }
+      if (x.burnAt != null || x.burnSecs != null) continue;
+      if (fileWaitOf(x.msgUid) != null) continue;
+      return _voiceKeyOf(x);
+    }
+    return null;
   }
 
   // who sent a file, for its viewer's head: theirs only
@@ -7865,17 +7892,7 @@ class _ChatScreenState extends State<ChatScreen>
                                         : l10n.chatPhotoProtectionOff,
                                   );
                                 },
-                                onToggleGhost: () {
-                                  setState(() {
-                                    _ghost = !_ghost;
-                                    _lastGhost = _ghost;
-                                    appState.saveGhostPref(
-                                      _ghost,
-                                      _burnSeconds,
-                                    );
-                                  });
-                                  _keepDraft(clock: true);
-                                },
+                                onToggleGhost: _pickBurnDuration,
                                 onPickBurn: _pickBurnDuration,
                                 burnSeconds: _burnSeconds,
                                 controller: _msgCtrl,
@@ -8888,6 +8905,9 @@ class _NavBtn extends StatelessWidget {
   }
 }
 
+// a voice note's bubble, by its message: the key play-on finds it by
+String _voiceKeyOf(_Msg m) => 'vb_${m.msgUid ?? m.filePath}';
+
 class _Bubble extends StatelessWidget {
   // uids whose entrance animation already played, so a list rebuild doesn't
   // replay it
@@ -8900,11 +8920,15 @@ class _Bubble extends StatelessWidget {
   final String? fromName;
   // a sound file: the sounds below it, which play after it
   final List<SoundItem> Function(_Msg)? soundsAfter;
+  // a voice note: the key of the one after it, which plays on
+  final String? Function(_Msg)? voiceAfter;
   final void Function(BuildContext)? onLongPress;
   // its photo, video or file opened, or its voice note played
   final VoidCallback? onAct;
   // a tap on a reaction chip: the same emoji from this phone, on or off
   final void Function(String emoji)? onReact;
+  // a double tap: the first quick reaction on or off, true when it went on
+  final bool Function()? onDoubleReact;
   final bool secure;
   final String? quotedText;
   final String? quotedAuthor;
@@ -8964,9 +8988,11 @@ class _Bubble extends StatelessWidget {
     this.onStop,
     this.fromName,
     this.soundsAfter,
+    this.voiceAfter,
     this.onLongPress,
     this.onAct,
     this.onReact,
+    this.onDoubleReact,
     this.secure = false,
     this.quotedText,
     this.quotedAuthor,
@@ -9129,11 +9155,15 @@ class _Bubble extends StatelessWidget {
         duration: Duration(milliseconds: isExpiring ? 440 : 250),
         curve: Curves.easeOut,
         opacity: dimmed ? 0.4 : 1.0,
-        child: GestureDetector(
+        child: ReactTaps(
           behavior: HitTestBehavior.opaque,
           onTap: (failedShown || parked) && onRetry != null
               ? () => onRetry!(msg)
               : onReveal,
+          // a failed bubble's retry is at once, and takes no reaction
+          onReact: (failedShown || parked) && onRetry != null
+              ? null
+              : onDoubleReact,
           onLongPress: onLongPress == null ? null : () => onLongPress!(context),
           // a right click on a computer opens the same menu
           onSecondaryTap: !onDesktop || onLongPress == null
@@ -9369,13 +9399,15 @@ class _Bubble extends StatelessWidget {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               VoiceBubble(
-                                                key: ValueKey(
-                                                  'vb_${msg.msgUid ?? msg.filePath}',
-                                                ),
+                                                key: ValueKey(_voiceKeyOf(msg)),
                                                 path: msg.filePath!,
                                                 isOut: isOut,
                                                 disguised: msg.voiceDisguised,
                                                 onPlay: onAct,
+                                                playKey: _voiceKeyOf(msg),
+                                                next: voiceAfter == null
+                                                    ? null
+                                                    : () => voiceAfter!(msg),
                                               ),
                                               VoiceTranscript(
                                                 chat: transcripts,
@@ -10133,8 +10165,9 @@ class _Bubble extends StatelessWidget {
         duration: Duration(milliseconds: isExpiring ? 440 : 250),
         curve: Curves.easeOut,
         opacity: dimmed ? 0.4 : 1.0,
-        child: GestureDetector(
+        child: ReactTaps(
           behavior: HitTestBehavior.opaque,
+          onReact: retry != null ? null : onDoubleReact,
           onLongPress: onLongPress == null ? null : () => onLongPress!(context),
           // a right click on a computer opens the same menu
           onSecondaryTap: !onDesktop || onLongPress == null

@@ -12,7 +12,8 @@
   "notesExportMarkdown",
   "qrBitcoin",
   "qrSms",
-  "qrWiFi"
+  "qrWiFi",
+  "voiceSpeedLabel"
  ],
  "de": [
   "sharedTabLinks",
@@ -106,7 +107,8 @@
   "videoBubbleMb",
   "videoBubbleVideo",
   "videoViewerPause",
-  "bridgesPrivateWebsite"
+  "bridgesPrivateWebsite",
+  "voiceSpeedLabel"
  ],
  "es": [
   "a11yVideoOn",
@@ -203,7 +205,8 @@
   "transportOk",
   "videoBubbleKb",
   "videoBubbleMb",
-  "videoBubbleVideo"
+  "videoBubbleVideo",
+  "voiceSpeedLabel"
  ],
  "fa": [
   "appTor",
@@ -218,7 +221,8 @@
   "notesExportMarkdown",
   "qrBitcoin",
   "qrSms",
-  "qrWiFi"
+  "qrWiFi",
+  "voiceSpeedLabel"
  ],
  "fr": [
   "a11yPhotoOn",
@@ -252,8 +256,6 @@
   "filePage",
   "filePages",
   "gifPoweredBy",
-  "groupChat1Minute",
-  "groupChat5Minutes",
   "groupChatMessage",
   "groupChatQuotedPhoto",
   "groupInfoAdmin",
@@ -300,6 +302,7 @@
   "transportTransport",
   "videoViewerPause",
   "voiceTranscriptLabel",
+  "voiceSpeedLabel",
   "homeGroupShotsLine"
  ],
  "hi": [
@@ -334,7 +337,8 @@
   "toolPartsMb",
   "transportMb",
   "videoBubbleKb",
-  "videoBubbleMb"
+  "videoBubbleMb",
+  "voiceSpeedLabel"
  ],
  "id": [
   "sharedTabMedia",
@@ -411,7 +415,8 @@
   "transportTransport",
   "videoBubbleKb",
   "videoBubbleMb",
-  "videoBubbleVideo"
+  "videoBubbleVideo",
+  "voiceSpeedLabel"
  ],
  "it": [
   "sharedTabMedia",
@@ -507,7 +512,8 @@
   "transportOnline",
   "videoBubbleKb",
   "videoBubbleMb",
-  "videoBubbleVideo"
+  "videoBubbleVideo",
+  "voiceSpeedLabel"
  ],
  "pl": [
   "albumQuoted",
@@ -526,7 +532,8 @@
   "settingsTransport",
   "transportOffline",
   "transportOnline",
-  "transportTransport"
+  "transportTransport",
+  "voiceSpeedLabel"
  ],
  "pt": [
   "sharedTabLinks",
@@ -611,7 +618,8 @@
   "transportOnline",
   "transportStatus",
   "videoBubbleKb",
-  "videoBubbleMb"
+  "videoBubbleMb",
+  "voiceSpeedLabel"
  ],
  "ru": [
   "appTor",
@@ -631,7 +639,8 @@
   "photoStoryF",
   "qrBitcoin",
   "qrSms",
-  "qrWiFi"
+  "qrWiFi",
+  "voiceSpeedLabel"
  ],
  "tr": [
   "a11yVideoOn",
@@ -680,7 +689,8 @@
   "transportMb",
   "videoBubbleKb",
   "videoBubbleMb",
-  "videoBubbleVideo"
+  "videoBubbleVideo",
+  "voiceSpeedLabel"
  ],
  "uk": [
   "appTor",
@@ -700,7 +710,8 @@
   "photoStoryF",
   "qrBitcoin",
   "qrSms",
-  "qrWiFi"
+  "qrWiFi",
+  "voiceSpeedLabel"
  ],
  "vi": [
   "a11yVideoOn",
@@ -762,7 +773,8 @@
   "transportOk",
   "videoBubbleKb",
   "videoBubbleMb",
-  "videoBubbleVideo"
+  "videoBubbleVideo",
+  "voiceSpeedLabel"
  ],
  "zh": [
   "appTor",
@@ -787,7 +799,8 @@
   "toolPartsKb",
   "toolPartsMb",
   "videoBubbleKb",
-  "videoBubbleMb"
+  "videoBubbleMb",
+  "voiceSpeedLabel"
  ],
  "zh_Hant": [
   "appTor",
@@ -822,6 +835,7 @@
   "toolPartsMb",
   "transportMb",
   "videoBubbleKb",
-  "videoBubbleMb"
+  "videoBubbleMb",
+  "voiceSpeedLabel"
  ]
 }

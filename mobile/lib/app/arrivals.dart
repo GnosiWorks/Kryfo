@@ -27,15 +27,6 @@ String notifMediaLine(String? fileName, String? mediaPath) {
   return fileName ?? (mediaPath != null ? l10n.appPhoto : '');
 }
 
-// "Pop-ups for message requests" (notifications.dart, kryfo.requests.popups):
-// read only here. a computer has no switch and shows them
-Future<bool> _requestPopupsOn() async {
-  if (onDesktop) return true;
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(HaloContainer.everyday.key('kryfo.requests.popups')) ??
-      true;
-}
-
 // what receiving and reaching someone ask of signal, the engine and
 // android, in one place so the paths through them can run on stand-ins
 class AppIo {
@@ -156,9 +147,11 @@ class AppIo {
     int? burnAt,
     // no sound, no buzz, no heads-up: still in the shade
     bool silent = false,
+    bool request = false,
   }) async {
     if (await quietNow()) return;
     final id = await showMessageNotification(
+      request: request,
       title: title,
       body: body,
       chat: payload,
@@ -189,7 +182,7 @@ class AppIo {
     bool request = false,
   }) async {
     // a message request pops up only with its switch on, here too
-    if (request && !await _requestPopupsOn()) return false;
+    if (request && !await loadRequestPopups()) return false;
     final fits = bannerFits(
       inFront:
           WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,

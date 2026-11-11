@@ -2615,28 +2615,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get groupChatCouldNotCleanThatVideo => 'Impossibile ripulire il video';
 
   @override
-  String get groupChat30Seconds => '30 secondi';
-
-  @override
-  String get groupChat1Minute => '1 minuto';
-
-  @override
-  String get groupChat5Minutes => '5 minuti';
-
-  @override
-  String get groupChat1Hour => '1 ora';
-
-  @override
-  String get groupChat24Hours => '24 ore';
-
-  @override
-  String get groupChatBurnTimer => 'Messaggi a tempo';
-
-  @override
-  String get groupChatNewMessagesDisappearOnceRead =>
-      'I nuovi messaggi spariscono dopo questo tempo dalla lettura. I tuoi contano da quando li invii.';
-
-  @override
   String get groupChatToday => 'Oggi';
 
   @override
@@ -12257,6 +12235,51 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sharedOpensLink => 'Apre il link in un\'altra app';
+
+  @override
+  String voiceSpeedLabel(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String voiceSpeedA11y(String speed) {
+    return 'Velocità di riproduzione $speed';
+  }
+
+  @override
+  String voiceSeekValue(String at, String total) {
+    return '$at di $total';
+  }
+
+  @override
+  String get chatReactHeart => 'Reagisci con un cuore';
+
+  @override
+  String get homeDraftLabel => 'Bozza:';
+
+  @override
+  String homeDraftA11y(String text) {
+    return 'Bozza: $text';
+  }
+
+  @override
+  String handleSuggestFree(String handle) {
+    return '@$handle è libero, usalo';
+  }
+
+  @override
+  String get notifRequestsChannel => 'Richieste di messaggi';
+
+  @override
+  String get notifRequestsChannelLine =>
+      'Primi messaggi da persone che non hai ancora aggiunto';
+
+  @override
+  String get notifRequestPopups => 'Pop-up per le richieste di messaggi';
+
+  @override
+  String get notifRequestPopupsHint =>
+      'Attivo, una nuova richiesta compare con un suono. Disattivo, aspetta in silenzio tra le notifiche.';
 
   @override
   String homeGroupLine(String name, String preview) {
