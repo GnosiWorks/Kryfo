@@ -1400,6 +1400,7 @@
   "restoreIfThePhoneThisDesk": "Nếu thiết bị tạo ra tệp này vẫn đang được dùng, hãy ngừng dùng Kryfo trên đó trước khi tiếp tục. Hai thiết bị dùng chung một Kryfo sẽ mất tin nhắn trên cả hai.",
   "restoreNotificationsNeedSettingUp": "Cần thiết lập lại thông báo trên thiết bị này.",
   "restoreDeletedComeBack": "Những cuộc trò chuyện bạn xóa sau khi tạo bản sao lưu này sẽ quay lại cùng nó, và những người đó có thể thấy bạn đã cài đặt lại Kryfo.",
+  "restoreRoomsMayShow": "Phòng tạm có thể hiện những tin nhắn đã bị xóa, trong vài ngày.",
   "restoreMoveItHere": "Chuyển sang đây",
   "restoreNotNow": "Để sau",
   "restoreRestore": "Khôi phục",

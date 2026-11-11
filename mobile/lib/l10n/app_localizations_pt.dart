@@ -4965,6 +4965,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'As conversas que você apagou depois deste backup voltam com ele, e esses contatos podem ver que você configurou o Kryfo de novo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Salas temporárias podem mostrar mensagens que foram removidas, por alguns dias.';
+
+  @override
   String get restoreMoveItHere => 'Trazer para cá';
 
   @override

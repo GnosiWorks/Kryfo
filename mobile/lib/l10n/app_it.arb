@@ -1400,6 +1400,7 @@
   "restoreIfThePhoneThisDesk": "Se il dispositivo da cui viene questo file è ancora in uso, smetti di usarci Kryfo prima di andare avanti. Due dispositivi con lo stesso Kryfo perdono messaggi entrambi.",
   "restoreNotificationsNeedSettingUp": "Le notifiche vanno riconfigurate su questo dispositivo.",
   "restoreDeletedComeBack": "Le chat che hai eliminato dopo questo backup tornano con esso, e quei contatti potrebbero vedere che hai configurato di nuovo Kryfo.",
+  "restoreRoomsMayShow": "Le stanze effimere possono mostrare messaggi rimossi, per qualche giorno.",
   "restoreMoveItHere": "Trasferiscilo qui",
   "restoreNotNow": "Non ora",
   "restoreRestore": "Ripristina",

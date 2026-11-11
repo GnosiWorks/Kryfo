@@ -6107,6 +6107,10 @@
   "@restoreDeletedComeBack": {
     "description": "screens/restore_screen.dart: a point under \"What doesn't\": chats deleted after the backup was made come back, and those contacts may see the \"set up Kryfo again\" line (chatHealRestored)"
   },
+  "restoreRoomsMayShow": "Burner rooms may show messages that were removed, for a few days.",
+  "@restoreRoomsMayShow": {
+    "description": "screens/restore_screen.dart: a point under \"What doesn't\": burner room messages removed after the backup can show again until the room's members send their removals again"
+  },
   "restoreMoveItHere": "Move it here",
   "@restoreMoveItHere": {
     "description": "screens/restore_screen.dart"

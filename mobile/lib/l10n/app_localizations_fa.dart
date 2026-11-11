@@ -4933,6 +4933,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'گفت‌وگوهایی که بعد از ساخت این نسخه‌ی پشتیبان پاک کرده‌اید همراه آن برمی‌گردند، و آن مخاطبان ممکن است ببینند که Kryfo را دوباره راه‌اندازی کرده‌اید.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'اتاق‌های یک‌بارمصرف ممکن است تا چند روز پیام‌هایی را نشان دهند که حذف شده بودند.';
+
+  @override
   String get restoreMoveItHere => 'انتقال به این‌جا';
 
   @override

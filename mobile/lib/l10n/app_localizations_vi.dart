@@ -4918,6 +4918,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Những cuộc trò chuyện bạn xóa sau khi tạo bản sao lưu này sẽ quay lại cùng nó, và những người đó có thể thấy bạn đã cài đặt lại Kryfo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Phòng tạm có thể hiện những tin nhắn đã bị xóa, trong vài ngày.';
+
+  @override
   String get restoreMoveItHere => 'Chuyển sang đây';
 
   @override

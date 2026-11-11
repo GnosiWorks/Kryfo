@@ -5040,6 +5040,10 @@ class AppLocalizationsPl extends AppLocalizations {
       'Czaty usunięte po zrobieniu tej kopii wrócą razem z nią, a te kontakty mogą zobaczyć, że Kryfo zostało u ciebie skonfigurowane od nowa.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Pokoje jednorazowe mogą przez kilka dni pokazywać usunięte wiadomości.';
+
+  @override
   String get restoreMoveItHere => 'Przenieś tutaj';
 
   @override

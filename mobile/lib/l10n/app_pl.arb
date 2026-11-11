@@ -1292,6 +1292,7 @@
   "restoreIfThePhoneThisDesk": "Jeśli urządzenie, z którego pochodzi ten plik, jest nadal używane, przestań używać na nim Kryfo, zanim przejdziesz dalej. Dwa urządzenia na jednym Kryfo gubią wiadomości na obu.",
   "restoreNotificationsNeedSettingUp": "Powiadomienia trzeba ponownie ustawić na tym urządzeniu.",
   "restoreDeletedComeBack": "Czaty usunięte po zrobieniu tej kopii wrócą razem z nią, a te kontakty mogą zobaczyć, że Kryfo zostało u ciebie skonfigurowane od nowa.",
+  "restoreRoomsMayShow": "Pokoje jednorazowe mogą przez kilka dni pokazywać usunięte wiadomości.",
   "restoreMoveItHere": "Przenieś tutaj",
   "restoreNotNow": "Nie teraz",
   "restoreRestore": "Przywróć",

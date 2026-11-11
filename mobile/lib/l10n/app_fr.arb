@@ -1400,6 +1400,7 @@
   "restoreIfThePhoneThisDesk": "Si l’appareil d’où vient ce fichier sert encore, arrêtez d’y utiliser Kryfo avant de continuer. Deux appareils sur un même Kryfo perdent des messages des deux côtés.",
   "restoreNotificationsNeedSettingUp": "Les notifications doivent être reconfigurées sur cet appareil.",
   "restoreDeletedComeBack": "Les discussions supprimées après cette sauvegarde reviennent avec elle, et ces contacts peuvent voir que vous avez de nouveau configuré Kryfo.",
+  "restoreRoomsMayShow": "Les salons éphémères peuvent afficher des messages retirés, pendant quelques jours.",
   "restoreMoveItHere": "Transférer ici",
   "restoreNotNow": "Pas maintenant",
   "restoreRestore": "Restaurer",

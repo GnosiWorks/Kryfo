@@ -4932,6 +4932,10 @@ class AppLocalizationsId extends AppLocalizations {
       'Obrolan yang kamu hapus setelah cadangan ini dibuat kembali bersamanya, dan kontak itu mungkin melihat bahwa kamu memasang Kryfo lagi.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Ruang sekali pakai mungkin menampilkan pesan yang sudah dihapus, selama beberapa hari.';
+
+  @override
   String get restoreMoveItHere => 'Pindahkan ke sini';
 
   @override

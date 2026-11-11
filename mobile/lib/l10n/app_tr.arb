@@ -1400,6 +1400,7 @@
   "restoreIfThePhoneThisDesk": "Bu dosyanın geldiği cihaz hâlâ kullanılıyorsa devam etmeden önce orada Kryfo’yu kullanmayı bırak. Tek bir Kryfo’yu kullanan iki cihazda da mesajlar kaybolur.",
   "restoreNotificationsNeedSettingUp": "Bildirimlerin bu cihazda yeniden ayarlanması gerekir.",
   "restoreDeletedComeBack": "Bu yedek oluşturulduktan sonra sildiğin sohbetler onunla geri gelir ve o kişiler Kryfo’yu yeniden kurduğunu görebilir.",
+  "restoreRoomsMayShow": "Geçici odalar birkaç gün boyunca kaldırılan mesajları gösterebilir.",
   "restoreMoveItHere": "Buraya taşı",
   "restoreNotNow": "Şimdi değil",
   "restoreRestore": "Geri yükle",

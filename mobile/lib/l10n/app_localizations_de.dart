@@ -4997,6 +4997,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Chats, die du nach diesem Backup gelöscht hast, kommen mit ihm zurück, und diese Kontakte sehen vielleicht, dass du Kryfo neu eingerichtet hast.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Wegwerf-Räume zeigen vielleicht ein paar Tage lang Nachrichten, die entfernt wurden.';
+
+  @override
   String get restoreMoveItHere => 'Hierher holen';
 
   @override

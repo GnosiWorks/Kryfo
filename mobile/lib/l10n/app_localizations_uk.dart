@@ -5021,6 +5021,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Чати, видалені після створення цієї копії, повернуться разом із нею, і ці контакти можуть побачити, що ти знову налаштував(-ла) Kryfo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Одноразові кімнати можуть кілька днів показувати вилучені повідомлення.';
+
+  @override
   String get restoreMoveItHere => 'Перенести сюди';
 
   @override

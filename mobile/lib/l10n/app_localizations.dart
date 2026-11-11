@@ -7879,6 +7879,12 @@ abstract class AppLocalizations {
   /// **'Chats you deleted after this backup was made come back with it, and those contacts may see that you set up Kryfo again.'**
   String get restoreDeletedComeBack;
 
+  /// screens/restore_screen.dart: a point under "What doesn't": burner room messages removed after the backup can show again until the room's members send their removals again
+  ///
+  /// In en, this message translates to:
+  /// **'Burner rooms may show messages that were removed, for a few days.'**
+  String get restoreRoomsMayShow;
+
   /// screens/restore_screen.dart
   ///
   /// In en, this message translates to:

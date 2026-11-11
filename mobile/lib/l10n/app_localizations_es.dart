@@ -4978,6 +4978,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los chats que borraste después de crear esta copia de seguridad vuelven con ella, y esos contactos pueden ver que configuraste Kryfo de nuevo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Las salas efímeras pueden mostrar mensajes que se quitaron, durante unos días.';
+
+  @override
   String get restoreMoveItHere => 'Traerlo aquí';
 
   @override

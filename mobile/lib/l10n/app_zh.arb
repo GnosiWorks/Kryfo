@@ -1400,6 +1400,7 @@
   "restoreIfThePhoneThisDesk": "如果这个文件来自的那台设备还在使用，请先在那台设备上停用 Kryfo，再继续。两台设备共用一个 Kryfo，两边都会丢消息。",
   "restoreNotificationsNeedSettingUp": "通知需要在这台设备上重新设置。",
   "restoreDeletedComeBack": "这个备份制作之后你删除的聊天会随它回来，那些联系人可能会看到你重新设置了 Kryfo。",
+  "restoreRoomsMayShow": "临时聊天室可能会在几天内显示已移除的消息。",
   "restoreMoveItHere": "迁移到这里",
   "restoreNotNow": "暂不",
   "restoreRestore": "恢复",

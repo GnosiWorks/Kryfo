@@ -4986,6 +4986,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les discussions supprimées après cette sauvegarde reviennent avec elle, et ces contacts peuvent voir que vous avez de nouveau configuré Kryfo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'Les salons éphémères peuvent afficher des messages retirés, pendant quelques jours.';
+
+  @override
   String get restoreMoveItHere => 'Transférer ici';
 
   @override

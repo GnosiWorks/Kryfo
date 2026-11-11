@@ -1400,6 +1400,7 @@
   "restoreIfThePhoneThisDesk": "Kalau perangkat asal file ini masih dipakai, berhenti memakai Kryfo di sana sebelum kamu lanjut. Dua perangkat dengan satu Kryfo kehilangan pesan di keduanya.",
   "restoreNotificationsNeedSettingUp": "Notifikasi perlu diatur ulang di perangkat ini.",
   "restoreDeletedComeBack": "Obrolan yang kamu hapus setelah cadangan ini dibuat kembali bersamanya, dan kontak itu mungkin melihat bahwa kamu memasang Kryfo lagi.",
+  "restoreRoomsMayShow": "Ruang sekali pakai mungkin menampilkan pesan yang sudah dihapus, selama beberapa hari.",
   "restoreMoveItHere": "Pindahkan ke sini",
   "restoreNotNow": "Nanti saja",
   "restoreRestore": "Pulihkan",

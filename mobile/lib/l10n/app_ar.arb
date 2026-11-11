@@ -1400,6 +1400,7 @@
   "restoreIfThePhoneThisDesk": "إن كان الجهاز الذي جاء منه هذا الملف ما زال مستخدمًا، فتوقف عن استخدام Kryfo عليه قبل أن تتابع. جهازان على Kryfo واحد يفقدان الرسائل كلاهما.",
   "restoreNotificationsNeedSettingUp": "يجب إعداد الإشعارات من جديد على هذا الجهاز.",
   "restoreDeletedComeBack": "المحادثات التي حذفتها بعد إنشاء هذه النسخة الاحتياطية تعود معها، وقد يرى أصحابها أنك أعدت إعداد Kryfo.",
+  "restoreRoomsMayShow": "قد تُظهر الغرف المؤقتة رسائل أُزيلت، لبضعة أيام.",
   "restoreMoveItHere": "نقله إلى هنا",
   "restoreNotNow": "ليس الآن",
   "restoreRestore": "استعادة",

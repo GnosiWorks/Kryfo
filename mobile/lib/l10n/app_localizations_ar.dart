@@ -5018,6 +5018,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'المحادثات التي حذفتها بعد إنشاء هذه النسخة الاحتياطية تعود معها، وقد يرى أصحابها أنك أعدت إعداد Kryfo.';
 
   @override
+  String get restoreRoomsMayShow =>
+      'قد تُظهر الغرف المؤقتة رسائل أُزيلت، لبضعة أيام.';
+
+  @override
   String get restoreMoveItHere => 'نقله إلى هنا';
 
   @override

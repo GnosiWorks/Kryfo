@@ -4933,6 +4933,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'इस बैकअप के बनने के बाद आपने जो चैट मिटाईं, वे इसके साथ लौट आती हैं, और उन संपर्कों को दिख सकता है कि आपने Kryfo फिर से सेट किया।';
 
   @override
+  String get restoreRoomsMayShow =>
+      'अस्थायी रूम कुछ दिनों तक वे मैसेज दिखा सकते हैं जो हटा दिए गए थे.';
+
+  @override
   String get restoreMoveItHere => 'इसे यहाँ लाएँ';
 
   @override

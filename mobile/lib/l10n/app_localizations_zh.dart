@@ -4668,6 +4668,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '这个备份制作之后你删除的聊天会随它回来，那些联系人可能会看到你重新设置了 Kryfo。';
 
   @override
+  String get restoreRoomsMayShow => '临时聊天室可能会在几天内显示已移除的消息。';
+
+  @override
   String get restoreMoveItHere => '迁移到这里';
 
   @override
@@ -16219,6 +16222,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String get restoreDeletedComeBack =>
       '這份備份建立之後你刪除的聊天會隨它回來，那些聯絡人可能會看到你重新設定了 Kryfo。';
+
+  @override
+  String get restoreRoomsMayShow => '臨時聊天室可能會在幾天內顯示已移除的訊息。';
 
   @override
   String get restoreMoveItHere => '搬到這裡';
