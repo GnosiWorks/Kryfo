@@ -3,8 +3,7 @@
 // settings and what each chat kept, in one place shared by every chat and
 // the settings page. everything happens on the phone: the model comes once
 // over tor from the pinned mirror, and nothing else reaches the network.
-// off until the model is packaged and measured; while off nothing here is
-// built and no screen shows any of it.
+// with the switch off nothing here is built and no screen shows any of it.
 
 import 'dart:async';
 import 'dart:ffi';
@@ -20,6 +19,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../desktop/desktop_mode.dart' show onDesktop;
 import '../engine_strings.dart';
+import '../l10n/app_locale.dart' show currentLanguage;
 import '../lock_state.dart' show lockState;
 import '../main.dart' show appState, session, sessionQuiet;
 import '../native_libs.dart';
@@ -31,9 +31,9 @@ import 'transcript_store.dart';
 import 'voice_audio.dart';
 import 'voice_ffi.dart';
 import 'voice_models.dart';
+import 'voice_text.dart';
 
-// off until the model is packaged, mirrored and measured on the phones
-const kVoiceTranscripts = false;
+const kVoiceTranscripts = true;
 
 /// the one model there is
 const kVoiceModelId = 'base';
@@ -49,9 +49,10 @@ abstract class TxJob {
   void cancel();
 }
 
-/// makes a job for the note at [path]: throws a [VoiceError] when the
-/// library, the model or the audio is not there
-typedef TxRunner = Future<TxJob> Function(String path);
+/// makes a job for the note at [path], heard in [lang] (a whisper code):
+/// throws a [VoiceError] when the library, the model or the audio is not
+/// there
+typedef TxRunner = Future<TxJob> Function(String path, String lang);
 
 class VoiceTranscripts extends ChangeNotifier {
   VoiceTranscripts({
@@ -61,8 +62,12 @@ class VoiceTranscripts extends ChangeNotifier {
     ModelDownloads? downloads,
     TxRunner? runner,
     String Function()? scope,
+    String Function()? appLang,
+    Future<HansChars> Function()? hans,
   }) : store = store ?? MemoryVoiceTxStore(),
-       scope = scope ?? (() => '') {
+       scope = scope ?? (() => ''),
+       appLang = appLang ?? (() => currentLanguage),
+       _hans = hans ?? HansChars.load {
     this.downloads =
         downloads ??
         ModelDownloads(
@@ -90,6 +95,18 @@ class VoiceTranscripts extends ChangeNotifier {
 
   // whose settings these are: an identity switch reads them again
   final String Function() scope;
+
+  /// the app's language, which the person's own notes are heard in
+  final String Function() appLang;
+
+  // chinese words into simplified characters
+  final Future<HansChars> Function() _hans;
+
+  /// the language a note is heard in: no detection, which costs a whole
+  /// pass of the model. a note of theirs in the language the chat's words
+  /// are in, when [theirs] knows it; the app's otherwise
+  String langFor({required bool mine, String? theirs}) =>
+      noteLang(mine: mine, theirs: theirs, app: appLang());
 
   VoiceTxSettings _settings = const VoiceTxSettings();
   VoiceTxSettings get settings => _settings;
@@ -244,8 +261,10 @@ class VoiceTranscripts extends ChangeNotifier {
   Future<void> _turn = Future.value();
   final Set<_Queued> _jobs = {};
 
-  /// the note at [path] transcribed, after the ones asked before it
-  TxJob transcribe(String path) {
+  /// the note at [path] transcribed in [lang], after the ones asked before
+  /// it. notes on sounds ("[BLANK_AUDIO]") are dropped, and chinese comes
+  /// in simplified characters
+  TxJob transcribe(String path, String lang) {
     final q = _Queued();
     _jobs.add(q);
     final before = _turn;
@@ -255,9 +274,15 @@ class VoiceTranscripts extends ChangeNotifier {
       try {
         await before;
         if (q.stopped) return;
+        if (lang == 'zh') {
+          try {
+            q.hans = await _hans();
+          } catch (_) {}
+          if (q.stopped) return;
+        }
         final TxJob job;
         try {
-          job = await _runner(path);
+          job = await _runner(path, lang);
         } catch (e) {
           q.fail(e is VoiceError ? e : const VoiceError(VoiceError.run));
           return;
@@ -283,7 +308,7 @@ class VoiceTranscripts extends ChangeNotifier {
     }
   }
 
-  Future<TxJob> _liveRunner(String path) async {
+  Future<TxJob> _liveRunner(String path, String lang) async {
     final lib = library();
     if (lib == null) throw const VoiceError(VoiceError.library);
     final model = await models.pathOf(kVoiceModelId);
@@ -295,7 +320,14 @@ class VoiceTranscripts extends ChangeNotifier {
     if (audio == null || audio.frames == 0) {
       throw const VoiceError(VoiceError.audio);
     }
-    return _RunJob(lib.transcribe(model: model, audio: audio));
+    return _RunJob(
+      lib.transcribe(
+        model: model,
+        audio: audio,
+        lang: lang,
+        threads: voiceThreads(),
+      ),
+    );
   }
 
   @override
@@ -332,6 +364,17 @@ class _Queued implements TxJob {
   final _done = Completer<VoiceResult>();
   TxJob? _job;
   bool stopped = false;
+  HansChars? hans;
+
+  // shown as it will be kept: null for a segment of sounds only, or one
+  // that says the one before it again (the model stuck in a loop)
+  String? _last;
+  VoiceSegment? _clean(VoiceSegment s) {
+    final t = cleanSegment(s.text, hans: hans);
+    if (t.isEmpty || t.trim() == _last) return null;
+    _last = t.trim();
+    return VoiceSegment(s.index, s.start, s.end, t);
+  }
 
   @override
   Stream<VoiceSegment> get segments => _segs.stream;
@@ -357,11 +400,14 @@ class _Queued implements TxJob {
   Future<void> follow(TxJob job) async {
     _job = job;
     final sub = job.segments.listen((s) {
-      if (!stopped && !_segs.isClosed) _segs.add(s);
+      final c = _clean(s);
+      if (c != null && !stopped && !_segs.isClosed) _segs.add(c);
     });
     try {
       final r = await job.done;
-      if (!_done.isCompleted) _done.complete(r);
+      _last = null;
+      final kept = [for (final s in r.segments) ?_clean(s)];
+      if (!_done.isCompleted) _done.complete(VoiceResult(r.lang, kept));
     } catch (e) {
       fail(e is VoiceError ? e : const VoiceError(VoiceError.run));
     } finally {

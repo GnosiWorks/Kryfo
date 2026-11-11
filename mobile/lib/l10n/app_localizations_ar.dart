@@ -11543,6 +11543,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'تعذّر تمييز الكلمات';
 
   @override
+  String get voiceNoSpeech => 'لا كلام في هذه الرسالة';
+
+  @override
   String get voiceTranscriptLabel => 'النص المكتوب';
 
   @override

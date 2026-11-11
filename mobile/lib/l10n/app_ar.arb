@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "إخفاء",
   "voiceShowOriginalOnly": "عرض الأصل فقط",
   "voiceCouldNotTranscribe": "تعذّر تمييز الكلمات",
+  "voiceNoSpeech": "لا كلام في هذه الرسالة",
   "voiceTranscriptLabel": "النص المكتوب",
   "voiceSettingsTitle": "تحويل الصوت إلى نص",
   "voiceOnRow": "تحويل الرسائل الصوتية إلى نص",

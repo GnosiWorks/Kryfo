@@ -214,9 +214,8 @@ void main() {
     await devClose(t);
   });
 
-  testWidgets('switched off: no link at all', (t) async {
-    VoiceTranscripts.instance = null;
-    expect(voiceTranscriptsIfOn(), isNull);
+  testWidgets('a build without the library: no link at all', (t) async {
+    VoiceTranscripts.instance = fakeVoiceHub(lib: false).hub;
     await open(t);
     expect(_rich(l10n.voiceSeeTranscription), findsNothing);
     await devClose(t);

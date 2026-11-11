@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// voice transcripts ship off: the switch is off, nothing is built behind
-// it, the screens reach it only through the switch, the engine side draws
-// nothing, and the android build does not package the library
+// voice transcripts ship on: the switch builds one hub, the screens reach
+// it only through the switch, the engine side draws nothing, and the
+// android build packages the library the release builds from the pin
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -15,16 +15,17 @@ Iterable<File> _dart(String dir) => Directory(dir)
     .where((f) => f.path.endsWith('.dart'));
 
 void main() {
-  test('the switch is off', () {
-    expect(kVoiceTranscripts, isFalse);
+  test('the switch is on', () {
+    expect(kVoiceTranscripts, isTrue);
   });
 
-  test('nothing is built while it is off', () {
+  test('the switch builds one hub and hands out the same one', () {
     VoiceTranscripts.instance = null;
-    expect(voiceTranscriptsIfOn(), isNull);
-    // a second ask does not build one either
-    expect(voiceTranscriptsIfOn(), isNull);
-    expect(VoiceTranscripts.instance, isNull);
+    addTearDown(() => VoiceTranscripts.instance = null);
+    final hub = voiceTranscriptsIfOn();
+    expect(hub, isNotNull);
+    expect(voiceTranscriptsIfOn(), same(hub));
+    expect(VoiceTranscripts.instance, same(hub));
   });
 
   test('a test can stand one in', () {
@@ -58,9 +59,11 @@ void main() {
       'lib/screens/chat_screen.dart: chat_transcripts.dart',
       'lib/screens/chat_screen.dart: ui/transcript_line.dart',
       'lib/screens/chat_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
+      'lib/screens/chat_screen.dart: voice_text.dart show theirWordsLang',
       'lib/screens/group_chat_screen.dart: chat_transcripts.dart',
       'lib/screens/group_chat_screen.dart: ui/transcript_line.dart',
       'lib/screens/group_chat_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
+      'lib/screens/group_chat_screen.dart: voice_text.dart show theirWordsLang',
       'lib/screens/licences_screen.dart: voice_transcripts.dart show kVoiceTranscripts',
       'lib/screens/settings_screen.dart: ui/voice_tx_screen.dart',
       'lib/screens/settings_screen.dart: voice_transcripts.dart show voiceTranscriptsIfOn',
@@ -82,7 +85,15 @@ void main() {
         reason: f.path,
       );
       expect(s, isNot(contains('AppLocalizations')), reason: f.path);
-      expect(s, isNot(contains('l10n')), reason: f.path);
+      // the app's language tag is no string of its own
+      expect(
+        s.replaceAll(
+          "import '../l10n/app_locale.dart' show currentLanguage;",
+          '',
+        ),
+        isNot(contains('l10n')),
+        reason: f.path,
+      );
     }
   });
 
@@ -106,7 +117,7 @@ void main() {
     }
   });
 
-  test('while off, the android build leaves the library out', () {
+  test('the android build leaves the library in once on', () {
     final hits = [
       for (final f
           in Directory('android')
@@ -127,7 +138,7 @@ void main() {
     expect(VoiceLibrary.hostBuilt, contains('build/host'));
   });
 
-  test('while off, no copy of the library sits in jniLibs', () {
+  test('while off, no copy of the library would sit in jniLibs', () {
     final jni = Directory('android/app/src/main/jniLibs');
     final hits = [
       if (jni.existsSync())
@@ -164,6 +175,23 @@ void main() {
     // its offline build keeps the tarball fetch-whisper.sh checks
     final release = File('../repro/release.sh').readAsStringSync();
     expect(release, contains('KV_DL=engine/voice/native/.third_party/dl'));
+    // a universal apk without the library is not released
+    final needs = RegExp(
+      r'for l in ([\w ]+); do',
+    ).allMatches(release).map((m) => m[1]!.split(' ')).expand((l) => l);
+    expect(needs, contains('libkryfo_voice'));
+    // nothing still says it is left out
+    for (final f in ['../RELEASING.md', '../repro/build-repro.sh']) {
+      expect(
+        File(f).readAsStringSync(),
+        isNot(
+          matches(
+            RegExp(r'(gradle leaves it out|only once voice transcripts)'),
+          ),
+        ),
+        reason: f,
+      );
+    }
     expect(release, contains('cp -a cache/whisper/. "\$WORK/src/\$KV_DL/"'));
     // the f-droid recipe takes the srclib at the pinned commit
     final lock = File('../engine/voice/native/whisper.lock').readAsStringSync();

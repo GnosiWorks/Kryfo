@@ -11431,6 +11431,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'Sözcükler anlaşılamadı';
 
   @override
+  String get voiceNoSpeech => 'Bu mesajda konuşma yok';
+
+  @override
   String get voiceTranscriptLabel => 'Mesajın metni';
 
   @override

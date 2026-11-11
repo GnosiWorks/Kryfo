@@ -11413,6 +11413,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'शब्द समझ नहीं आए';
 
   @override
+  String get voiceNoSpeech => 'इस संदेश में कोई बोल नहीं रहा';
+
+  @override
   String get voiceTranscriptLabel => 'लिखित रूप';
 
   @override

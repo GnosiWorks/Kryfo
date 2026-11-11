@@ -17,9 +17,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
+	"sync"
 	"time"
 
+	"github.com/halo/engine/translate"
 	"github.com/halo/engine/voice"
 )
 
@@ -33,8 +37,17 @@ var voiceTLS *tls.Config
 // the manifest built in; tests stand a small one in
 var voicePinned = voice.Pinned
 
-// one chunk of 1 MiB over a slow circuit, with room to spare
-const voiceChunkWait = 60 * time.Second
+// how a model download gets past a slow or cut circuit: as translation's
+// packs do (translateStall, translateChunkMax), over voiceLanes circuits.
+// a whole-request cap cut every chunk slower than 17 kB/s
+const voiceLanes = 3
+
+// tests make the waits short and stand in a network
+var (
+	voiceWait     = translate.Backoff
+	voiceGiveUp   = 10 * time.Minute
+	voiceNetReady = func() bool { return translateNetReady() }
+)
 
 var voiceJobs voice.Jobs
 
@@ -62,7 +75,6 @@ func voiceClient() (*http.Client, error) {
 			TLSHandshakeTimeout:   20 * time.Second,
 			ResponseHeaderTimeout: 30 * time.Second,
 		},
-		Timeout: voiceChunkWait,
 		CheckRedirect: func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
@@ -131,8 +143,7 @@ func voiceFetch(id, dir string) string {
 		return fmt.Sprintf("error: tor: %v", err)
 	}
 	voiceJobs.Start(id, func(ctx context.Context, prog voice.Progress) error {
-		defer c.CloseIdleConnections()
-		return voice.Fetch(ctx, voice.HTTPGetter(c), m, md, dir, prog)
+		return voice.FetchWith(ctx, voiceFetcher(c), m, md, dir, prog)
 	})
 	// a decoy that opened while this started missed the job
 	if !decoyClosed() {
@@ -217,4 +228,42 @@ func voiceRemove(id, dir string) string {
 	}
 	voiceJobs.Forget(id)
 	return "ok"
+}
+
+// the first lane takes first, already dialled; every other lane and every
+// fresh circuit gets a client of its own
+func voiceFetcher(first *http.Client) translate.Fetcher {
+	var lmu sync.Mutex
+	return translate.Fetcher{
+		Lanes:    voiceLanes,
+		Retry:    true,
+		Wait:     voiceWait,
+		Ready:    voiceNetReady,
+		GiveUp:   voiceGiveUp,
+		Stall:    translateStall,
+		ChunkMax: translateChunkMax,
+		Lane: func() (translate.Getter, func()) {
+			lmu.Lock()
+			c := first
+			first = nil
+			lmu.Unlock()
+			if c == nil {
+				var err error
+				if c, err = voiceClient(); err != nil {
+					return func(context.Context, string, int64, int64) (io.ReadCloser, int64, error) {
+						return nil, 0, err
+					}, nil
+				}
+			}
+			return translate.HTTPGetter(c), c.CloseIdleConnections
+		},
+		// the class of each stop, never the host or the model
+		Log: func(s translate.Stop) {
+			if s.Wait == 0 {
+				log.Printf("voice: download stopped (%s) at %d MiB, lane %d, try %d, ended", s.Why, s.At>>20, s.Lane, s.Try)
+				return
+			}
+			log.Printf("voice: download stopped (%s) at %d MiB, lane %d, try %d, again in %v", s.Why, s.At>>20, s.Lane, s.Try, s.Wait.Round(time.Second))
+		},
+	}
 }

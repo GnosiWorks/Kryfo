@@ -49,7 +49,9 @@ KV_API int32_t kv_open(const char *model_path, kv_model **out);
 
 // transcribes n frames of interleaved 16-bit pcm at rate hz with channels
 // channels. lang is a whisper language code, or null or "auto" to detect
-// it; the code used is written into lang_out (at least 8 bytes). the run
+// it (a whole extra pass: the app always names one); the code used is
+// written into lang_out (at least 8 bytes). the note is run in pieces cut
+// at quiet points, so segments come piece by piece and silence makes none. the run
 // stops with KV_CANCELLED once *cancel is nonzero, which another thread
 // may set at any time. one run per model at a time.
 KV_API int32_t kv_run(kv_model *m, const int16_t *pcm, int64_t frames,

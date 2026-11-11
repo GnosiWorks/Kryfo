@@ -337,8 +337,8 @@ void _work(_Job j) {
       return;
     }
     final m = out.value;
+    final native = arena<Int16>(pcm.isEmpty ? 1 : pcm.length);
     try {
-      final native = arena<Int16>(pcm.isEmpty ? 1 : pcm.length);
       native.asTypedList(pcm.length).setAll(0, pcm);
       final lang = j.lang == null
           ? nullptr
@@ -360,11 +360,20 @@ void _work(_Job j) {
       j.reply.send([1, rc, _shortString(langOut, 8)]);
     } finally {
       close(m);
+      // the voice goes from memory before the arena hands it back
+      wipePcm(native, pcm.length);
+      pcm.fillRange(0, pcm.length, 0);
     }
   } finally {
     onSegment.close();
     arena.releaseAll();
   }
+}
+
+/// [n] samples at [p] set to zero
+@visibleForTesting
+void wipePcm(Pointer<Int16> p, int n) {
+  if (n > 0) p.asTypedList(n).fillRange(0, n, 0);
 }
 
 // a nul-terminated string in a buffer of n bytes, read no further than n

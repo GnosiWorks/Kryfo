@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "收起",
   "voiceShowOriginalOnly": "只看原文",
   "voiceCouldNotTranscribe": "沒能聽出內容",
+  "voiceNoSpeech": "這則訊息裡沒有說話聲",
   "voiceTranscriptLabel": "文字內容",
   "voiceSettingsTitle": "語音轉文字",
   "voiceOnRow": "把語音訊息轉成文字",

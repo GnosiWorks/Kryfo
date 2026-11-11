@@ -245,11 +245,11 @@ void main() {
     expect(find.text(_heard), findsNothing);
   });
 
-  testWidgets('no words: said plainly, with try again', (t) async {
+  testWidgets('a broken run: said plainly, with try again', (t) async {
     final (f, _) = await open(t);
     await t.tap(_link());
     await step(t);
-    f.runner.jobs.single.end();
+    f.runner.jobs.single.fail();
     await t.pumpAndSettle();
     expect(_rich(l10n.voiceCouldNotTranscribe), findsOneWidget);
     expect(_rich(l10n.commonTryAgain), findsOneWidget);
@@ -258,6 +258,89 @@ void main() {
     expect(f.runner.jobs, hasLength(2));
     await hear(t, f, _heard);
     expect(find.text(_heard), findsOneWidget);
+  });
+
+  testWidgets('no speech: said so, never [BLANK_AUDIO], with try again', (
+    t,
+  ) async {
+    final (f, c) = await open(t);
+    await t.tap(_link());
+    await step(t);
+    f.runner.jobs.single
+      ..say(' [BLANK_AUDIO]')
+      ..end();
+    await t.pumpAndSettle();
+    expect(_rich(l10n.voiceNoSpeech), findsOneWidget);
+    expect(find.textContaining('BLANK'), findsNothing);
+    expect(_rich(l10n.commonTryAgain), findsOneWidget);
+    expect(
+      t.getSize(find.byKey(const ValueKey('vt-silent'))).height,
+      greaterThanOrEqualTo(kTxTapHeight),
+    );
+    // heard again: the answer goes, the words come this time
+    await t.tap(find.byKey(const ValueKey('vt-silent')));
+    await step(t);
+    expect(f.runner.jobs, hasLength(2));
+    await hear(t, f, _heard);
+    expect(find.text(_heard), findsOneWidget);
+    expect(_rich(l10n.voiceNoSpeech), findsNothing);
+    expect(c.of('u1').text, _heard);
+  });
+
+  testWidgets('no speech, right to left: the line starts on the right', (
+    t,
+  ) async {
+    setL10nLocale(const Locale('ar'));
+    addTearDown(() => setL10nLocale(const Locale('en')));
+    final (f, _) = await open(t, locale: const Locale('ar'));
+    await t.tap(_link());
+    await step(t);
+    f.runner.jobs.single
+      ..say(' [BLANK_AUDIO]')
+      ..end();
+    await t.pumpAndSettle();
+    final bubble = t.getRect(find.byKey(const ValueKey('bubble')));
+    final line = t.getRect(_rich(l10n.voiceNoSpeech));
+    expect(bubble.right - line.right, lessThan(20));
+    expect(line.left, greaterThanOrEqualTo(bubble.left));
+  });
+
+  testWidgets('words as they come: each new piece fades in, the earlier '
+      'ones stay; with reduced motion they just appear', (t) async {
+    for (final still in [false, true]) {
+      final (f, _) = await open(t, still: still);
+      await t.tap(_link());
+      await step(t);
+      final j = f.runner.jobs.last;
+      j.say(' Hello there.');
+      await t.pump();
+      await t.pump();
+      j.say(' See you soon.');
+      await t.pump();
+      await t.pump();
+      final words = find.byKey(const ValueKey('vt-words'));
+      final rich = find.descendant(of: words, matching: find.byType(RichText));
+      List<TextSpan> leaves() {
+        final out = <TextSpan>[];
+        t.widget<RichText>(rich.first).text.visitChildren((s) {
+          if (s is TextSpan && s.text != null) out.add(s);
+          return true;
+        });
+        return out;
+      }
+
+      if (still) {
+        expect(leaves().map((s) => s.text), ['Hello there. See you soon.']);
+      } else {
+        final kids = leaves();
+        expect(kids.map((s) => s.text), ['Hello there.', ' See you soon.']);
+        expect(kids.last.style!.color!.a, lessThan(0.5));
+        await t.pump(kTxTime);
+        expect(leaves().last.style!.color!.a, greaterThan(0.95));
+      }
+      j.end();
+      await t.pumpAndSettle();
+    }
   });
 
   testWidgets('words in another language: translated under the original, '

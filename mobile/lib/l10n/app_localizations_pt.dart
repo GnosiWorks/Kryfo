@@ -11491,6 +11491,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'Não deu para entender as palavras';
 
   @override
+  String get voiceNoSpeech => 'Ninguém fala nesta mensagem';
+
+  @override
   String get voiceTranscriptLabel => 'Transcrição';
 
   @override

@@ -11410,6 +11410,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'Kata-katanya tidak terdengar jelas';
 
   @override
+  String get voiceNoSpeech => 'Tidak ada suara bicara di pesan ini';
+
+  @override
   String get voiceTranscriptLabel => 'Transkrip';
 
   @override

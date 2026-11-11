@@ -11420,6 +11420,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'کلمه‌ها تشخیص داده نشد';
 
   @override
+  String get voiceNoSpeech => 'در این پیام صحبتی نیست';
+
+  @override
   String get voiceTranscriptLabel => 'متن پیام';
 
   @override

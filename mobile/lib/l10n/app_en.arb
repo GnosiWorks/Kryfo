@@ -14324,6 +14324,10 @@
   "@voiceCouldNotTranscribe": {
     "description": "a voice message with no words the phone could make out"
   },
+  "voiceNoSpeech": "No speech in this message",
+  "@voiceNoSpeech": {
+    "description": "under a voice message that holds no speech, after its transcription ran"
+  },
   "voiceTranscriptLabel": "Transcription",
   "@voiceTranscriptLabel": {
     "description": "what a screen reader says before the words of a voice message"

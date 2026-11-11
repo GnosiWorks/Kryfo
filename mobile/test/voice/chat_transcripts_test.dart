@@ -121,34 +121,110 @@ void main() {
     expect(f.runner.jobs, isEmpty);
   });
 
-  test('no words or a broken run: said, and tried again on a tap', () async {
+  test('a broken run: said, and tried again on a tap', () async {
     await make();
     await c.open('u1', '/n/u1.ogg');
     await _beats();
-    f.runner.jobs.single.end();
+    f.runner.jobs.single.fail();
     await _beats();
     expect(c.of('u1').phase, TxPhase.failed);
     expect(await f.store.kept('heron'), isEmpty);
     await c.retry('u1', '/n/u1.ogg');
     await _beats();
-    f.runner.jobs.last.fail();
-    await _beats();
-    expect(c.of('u1').phase, TxPhase.failed);
-    await c.retry('u1', '/n/u1.ogg');
-    await _beats();
     f.runner.jobs.last
-      ..say(' third time')
+      ..say(' second time')
       ..end();
     await _beats();
-    expect(c.of('u1').text, 'third time');
+    expect(c.of('u1').text, 'second time');
     // a failed one folds away too
     await c.open('u2', '/n/u2.ogg');
     await _beats();
-    f.runner.jobs.last.end();
+    f.runner.jobs.last.fail();
     await _beats();
     c.hide('u2');
     expect(c.of('u2').phase, TxPhase.closed);
   });
+
+  test('no speech: kept as none, never the model\'s own note', () async {
+    await make();
+    await c.open('u1', '/n/u1.ogg');
+    await _beats();
+    f.runner.jobs.single
+      ..say(' [BLANK_AUDIO]')
+      ..say(' (silence)')
+      ..end();
+    await _beats();
+    final n = c.of('u1');
+    expect(n.phase, TxPhase.shown);
+    expect(n.silent, isTrue);
+    expect(n.text, isEmpty);
+    expect((await f.store.kept('heron'))['u1']!.pieces, isEmpty);
+    // nothing to copy
+    expect(c.shownText('u1'), isNull);
+    // tried again: the empty answer goes and the note is heard again
+    await c.retry('u1', '/n/u1.ogg');
+    await _beats();
+    expect(f.runner.jobs, hasLength(2));
+    expect(c.of('u1').phase, TxPhase.working);
+    expect(await f.store.kept('heron'), isEmpty);
+    f.runner.jobs.last
+      ..say(' at last')
+      ..end();
+    await _beats();
+    expect(c.of('u1').text, 'at last');
+  });
+
+  test('notes on sounds go from the words as they come', () async {
+    await make();
+    await c.open('u1', '/n/u1.ogg');
+    await _beats();
+    final j = f.runner.jobs.single;
+    j.say(' [MUSIC]');
+    await _beats();
+    expect(c.of('u1').text, isEmpty);
+    j.say(' Hello [BLANK_AUDIO] there.');
+    await _beats();
+    expect(c.of('u1').phase, TxPhase.working);
+    expect(c.of('u1').text, 'Hello there.');
+    // the model stuck on one line: said once
+    j
+      ..say(' Hello there.')
+      ..say(' See you.')
+      ..end();
+    await _beats();
+    expect(c.of('u1').text, 'Hello there. See you.');
+  });
+
+  test(
+    'no detection: theirs in the chat\'s language, ours in the app\'s',
+    () async {
+      f = fakeVoiceHub(appLang: () => 'pt_BR');
+      c = ChatTranscripts(f.hub, 'heron', theirLang: () => 'de');
+      await f.hub.ready();
+      await _beats();
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      f.runner.jobs.last.end();
+      await _beats();
+      await c.open('u2', '/n/u2.ogg', mine: true);
+      await _beats();
+      f.runner.jobs.last.end();
+      await _beats();
+      expect(f.runner.langs, ['de', 'pt']);
+    },
+  );
+
+  test(
+    'no word from the chat: the app\'s language, english past that',
+    () async {
+      f = fakeVoiceHub(appLang: () => 'zh_Hant');
+      c = ChatTranscripts(f.hub, 'heron', theirLang: () => null);
+      await f.hub.ready();
+      await c.open('u1', '/n/u1.ogg');
+      await _beats();
+      expect(f.runner.langs, ['zh']);
+    },
+  );
 
   test('audio that cannot be read is a failure, not a crash', () async {
     await make();

@@ -109,8 +109,8 @@ KT_JNI_LIBS_DIR="$SRC/mobile/android/app/src/main/jniLibs" \
 
 echo
 echo "== voice library (all three abis)"
-# the same way, from the pinned whisper.cpp. packaged only once voice
-# transcripts are switched on (build.gradle.kts)
+# the same way, from the pinned whisper.cpp. voice transcripts are on,
+# so the apk carries it
 KV_JNI_LIBS_DIR="$SRC/mobile/android/app/src/main/jniLibs" \
   bash "$SRC/engine/voice/native/build.sh"
 

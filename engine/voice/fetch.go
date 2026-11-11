@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/halo/engine/translate"
 )
 
 var (
@@ -113,6 +115,44 @@ func Fetch(ctx context.Context, get Getter, m *Manifest, md Model, dir string, p
 		return err
 	}
 	return os.Rename(part, Path(dir, md))
+}
+
+// FetchWith puts md into dir as Fetch does, but the bytes come the way
+// translation's packs do: chunks over f's lanes, each stop waited out with
+// a backoff and asked again from the byte the part file holds, a fresh
+// circuit after two misses, until no chunk came for f.GiveUp. a cut
+// download goes on from its part file at the next call.
+func FetchWith(ctx context.Context, f translate.Fetcher, m *Manifest, md Model, dir string, prog Progress) error {
+	if err := AppDir(dir); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+	if err := Check(dir, md); err == nil {
+		if prog != nil {
+			prog(md.Size, md.Size)
+		}
+		return nil
+	}
+	part, got := Path(dir, md)+".part", Path(dir, md)+".got"
+	if err := f.FetchPlain(ctx, m.URL(md), md.Size, part, got, translate.Progress(prog)); err != nil {
+		return err
+	}
+	if err := checkFile(part, md); err != nil {
+		os.Remove(part)
+		os.Remove(got)
+		return err
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if err := os.Rename(part, Path(dir, md)); err != nil {
+		return err
+	}
+	os.Remove(got)
+	os.Remove(got + ".new")
+	return nil
 }
 
 func fetchPart(ctx context.Context, get Getter, url string, size int64, part string, prog Progress) error {
@@ -222,7 +262,8 @@ func Remove(dir string, md Model) error {
 	if err := AppDir(dir); err != nil {
 		return err
 	}
-	for _, p := range []string{Path(dir, md), Path(dir, md) + ".part"} {
+	at := Path(dir, md)
+	for _, p := range []string{at, at + ".part", at + ".got", at + ".got.new"} {
 		if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}

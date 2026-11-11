@@ -290,7 +290,7 @@ for f in "$OUT"/app-*.apk; do
       got=$(unzip -Z1 "$f" 'lib/*' | grep -v '/$' | cut -d/ -f2 | sort -u | tr '\n' ' ')
       [ "$got" = "arm64-v8a armeabi-v7a " ] || { echo "$f carries the abis $got" >&2; exit 1; }
       for a in arm64-v8a armeabi-v7a; do
-        for l in libflutter libapp libhalo libkryfo_signal; do
+        for l in libflutter libapp libhalo libkryfo_signal libkryfo_voice; do
           unzip -Z1 "$f" | grep -qx "lib/$a/$l.so" || { echo "$f has no lib/$a/$l.so" >&2; exit 1; }
         done
       done

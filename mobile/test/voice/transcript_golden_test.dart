@@ -115,6 +115,8 @@ void main() {
 
     testWidgets('$name: the states under a voice note', (t) async {
       sized(t);
+      // room for every state, the last one too
+      t.view.physicalSize = Size(size.width, 980);
       final store = MemoryVoiceTxStore();
       store.rows['heron'] = {
         'shown': _kept('see you at the station at three, bring the tickets'),
@@ -144,6 +146,7 @@ void main() {
                   _bubble('ours', true, c),
                   _bubble('zh', false, c, tr),
                   _bubble('failed', false, c),
+                  _bubble('silent', false, c),
                 ],
               ),
             ),
@@ -153,14 +156,20 @@ void main() {
       await t.pump();
       await c.open('failed', '/n/failed.ogg');
       await t.pump();
-      f.runner.jobs.single.end();
+      f.runner.jobs.single.fail();
+      await t.pump();
+      await c.open('silent', '/n/silent.ogg');
+      await t.pump();
+      f.runner.jobs.last
+        ..say(' [BLANK_AUDIO]')
+        ..end();
       await t.pump();
       await c.open('working', '/n/working.ogg');
       await t.pump();
       await t.pump();
       f.runner.jobs.last.say(' the train leaves');
       await t.pump();
-      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
       await t.tap(find.text(l10n.translateAction));
       await t.pump();
       await t.pump();

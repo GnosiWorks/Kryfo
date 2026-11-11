@@ -247,6 +247,7 @@ import '../lock_guard.dart' show LockDropped, lockGuard, onScreen;
 import '../translate/chat_translation.dart';
 import '../translate/hub_live.dart' show translationHubIfOn;
 import '../voice/chat_transcripts.dart';
+import '../voice/voice_text.dart' show theirWordsLang;
 import '../voice/ui/transcript_line.dart';
 import '../voice/voice_transcripts.dart' show voiceTranscriptsIfOn;
 import '../translate/lang_names.dart';
@@ -1376,7 +1377,14 @@ class _ChatScreenState extends State<ChatScreen>
   };
   // their voice notes and ours as words, made on the phone
   late final ChatTranscripts? _transcripts = switch (voiceTranscriptsIfOn()) {
-    final hub? => ChatTranscripts(hub, widget.peerHaloId),
+    final hub? => ChatTranscripts(
+      hub,
+      widget.peerHaloId,
+      theirLang: () => theirWordsLang([
+        for (final m in _messages.reversed)
+          if (m.direction == 'in' && m.text.isNotEmpty) m.text,
+      ]),
+    ),
     null => null,
   };
   // its row in this session's database, for when the chat was made

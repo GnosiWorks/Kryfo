@@ -11629,6 +11629,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceCouldNotTranscribe => 'Nie udało się rozpoznać słów';
 
   @override
+  String get voiceNoSpeech => 'W tej wiadomości nikt nie mówi';
+
+  @override
   String get voiceTranscriptLabel => 'Transkrypcja';
 
   @override

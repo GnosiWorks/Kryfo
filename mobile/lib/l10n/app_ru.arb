@@ -3000,6 +3000,7 @@
   "voiceHideTranscription": "Скрыть",
   "voiceShowOriginalOnly": "Только оригинал",
   "voiceCouldNotTranscribe": "Не удалось разобрать слова",
+  "voiceNoSpeech": "В этом сообщении нет речи",
   "voiceTranscriptLabel": "Текст сообщения",
   "voiceSettingsTitle": "Голос в текст",
   "voiceOnRow": "Распознавать голосовые",
