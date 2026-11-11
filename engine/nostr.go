@@ -1451,10 +1451,9 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 						for _, st := range missed {
 							topupAdd(st, lane, ev)
 						}
-						// on fast, a send our first store missed also goes to
-						// the public relays through tor, as a private sender's
-						// does: private readers and versions before the second
-						// store read the first store and those alone
+						// a send our first store missed also goes to the
+						// backups through tor: versions before the second store
+						// read the first store and the public relays alone
 						if containsStr(missed, storeFirst) && !public {
 							go publishToBackups(lane, ev, routeC)
 						}
@@ -1494,9 +1493,9 @@ func nostrPublishOn(ctx context.Context, lane string, ev nostr.Event, routeC <-c
 				result <- false
 				return
 			}
-			if !isBackup(u) {
-				routeAliveOn(gen, u)
-			}
+			// a backup answers through tor: on private that proves the route
+			// as any relay does, so our two servers down is not tor down
+			routeAliveOn(gen, u)
 			noteRelayMs(u, time.Since(began))
 			tookMu.Lock()
 			anyTook = true

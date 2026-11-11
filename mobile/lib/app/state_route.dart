@@ -72,34 +72,8 @@ extension AppStateRoute on AppState {
   // private goes through tor to everything. balanced, shown as fast, talks
   // plain tls to our two servers and nothing else, so only we see an ip.
   // the public relays are its backup while neither of ours answers, and
-  // only through tor, so they never do
-  static const _clearnetRelay = 'wss://relay.kryfo.app';
-  static const _secondRelay = 'wss://relay2.kryfo.app';
-  // one list. two copies drift, and the drift is invisible until someone
-  // cannot receive on one route.
-  static const _publicRelays =
-      'wss://nos.lol,wss://relay.primal.net,wss://nostr.mom,'
-      'wss://nostr.oxtr.dev';
-
-  // the engine takes the backups after a |
-  String relaysFor(String mode) {
-    switch (routeOf(mode)) {
-      case 'balanced':
-        return '$_clearnetRelay,$_secondRelay|$_publicRelays';
-      default:
-        // our relay's clearnet name rides along, dialled over tor like the
-        // rest, since a friend on an older relay mode publishes only there.
-        // the second server's onion comes right after the first's
-        return 'ws://z4waup3c6j6gknkjba72cqjjuffhgg6gtgqfu3vetzcvgoluvr42srid'
-            '.onion,${_privateSecond ? '$_secondOnion,' : ''}'
-            '$_clearnetRelay,$_publicRelays';
-    }
-  }
-
-  // the second server's onion on the private route, its own store as on fast
-  static const _privateSecond = true;
-  static const _secondOnion =
-      'ws://cvwpee5zgbargtxd5wtbtnc6lkbgzxj5byfig3e53ic4t7su7r45n4yd.onion';
+  // only through tor, so they never do. the lists are in relay_lists.dart
+  String relaysFor(String mode) => relayListFor(routeOf(mode));
 
   Future<void> setSendMode(String m) {
     m = routeOf(m);
