@@ -106,6 +106,18 @@ void main() {
       ]);
     });
 
+    test('a way put down for a decoy or a route without tor did not fail', () {
+      final t = ConnTrail();
+      final trying = _st('{"mode":"auto","phase":"trying","method":"obfs4"}');
+      t.noteBridge(trying, _st('{"mode":"auto","phase":"trying"}'));
+      t.noteBridge(
+        trying,
+        _st('{"mode":"auto","phase":"not_tor_mode","method":"direct"}'),
+      );
+      t.noteBridge(_st('{"phase":"not_tor_mode","method":"direct"}'), trying);
+      expect(t.steps, isEmpty);
+    });
+
     test('a connected way that moves on is no failure', () {
       final t = ConnTrail();
       t.noteBridge(
@@ -178,6 +190,28 @@ void main() {
       );
       expect(connTrail.steps, [(method: 'direct', why: 'timeout')]);
       expect(bootBucket(connTrail.lastBoot), '1 to 2 min');
+      connTrail.clear();
+    });
+
+    test('a try that ends on fast is not timed on tor later', () {
+      useEngineForTest(_Engine());
+      connTrail.clear();
+      final app = AppState()
+        ..sendModeForTest = 'private'
+        ..bridgeSetupForTest = const BridgeSetup();
+      final t0 = DateTime(2026, 11, 11, 10);
+      app.takeTorStatus('starting|5|0|0|0', now: t0);
+      app.sendModeForTest = 'balanced';
+      app.takeTorStatus(
+        'starting|9|0|0|0',
+        now: t0.add(const Duration(seconds: 5)),
+      );
+      app.sendModeForTest = 'private';
+      app.takeTorStatus(
+        'reachable|100|0|1|0',
+        now: t0.add(const Duration(minutes: 20)),
+      );
+      expect(bootBucket(connTrail.lastBoot), isNot('over 15 min'));
       connTrail.clear();
     });
   });

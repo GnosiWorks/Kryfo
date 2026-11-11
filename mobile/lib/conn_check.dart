@@ -28,6 +28,13 @@ class ConnTrail {
   /// the engine's status moved from [was] to [now]. a way left before it
   /// connected, or the last one given up on, failed
   void noteBridge(BridgeStatus was, BridgeStatus now) {
+    // no way at all now: a decoy's view, or a route that is not tor. the
+    // way before did not fail, it was put down
+    if (now.method.isEmpty ||
+        now.phase == 'not_tor_mode' ||
+        was.phase == 'not_tor_mode') {
+      return;
+    }
     final m = was.method;
     if (m.isNotEmpty && m != now.method && was.phase != 'connected') {
       _add(m, was.errorCode.isEmpty ? 'no_answer' : was.errorCode);
