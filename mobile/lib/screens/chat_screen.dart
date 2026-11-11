@@ -28,6 +28,7 @@ import 'share_files_sheet.dart' show askSendSharedFiles;
 import '../album.dart';
 import '../widgets/file_stack.dart';
 import '../show_in_chat.dart';
+import '../viewer_rules.dart';
 import '../widgets/file_bubble.dart' show kFilePreviewWidth;
 import '../widgets/composer_hint.dart';
 import '../widgets/desk_menu.dart';
@@ -532,6 +533,8 @@ class _Msg with WordLinks {
   // shown at once on send, while its photo or video is still cleaned:
   // not saved, not sent yet
   bool preparing = false;
+  // a photo sent as a spoiler: blurred until it is tapped
+  bool spoiler = false;
   _Msg(
     this.direction,
     this.text,
@@ -2612,11 +2615,7 @@ class _ChatScreenState extends State<ChatScreen>
               ? (fileOn
                     ? () {
                         dismiss(now: true);
-                        forwardFile(
-                          context,
-                          fileAt.filePath!,
-                          fileAt.fileName,
-                        );
+                        forwardFile(context, fileAt.filePath!, fileAt.fileName);
                       }
                     : null)
               : () {
@@ -3648,6 +3647,84 @@ class _ChatScreenState extends State<ChatScreen>
     final row = _messages.where((m) => m.msgUid == v.uid).firstOrNull;
     final lead = row == null ? null : _albums.runOf(row)?.lead;
     unawaited(_jumpToPin(lead?.msgUid ?? v.uid));
+  }
+
+  // a photo or video of the chat is one item, the oldest first: those the
+  // viewer can swipe through. a marked one, a timed one and one still to
+  // come stay out and open on their own
+  bool _swipes(_Msg m) =>
+      !m.preparing &&
+      !m.secure &&
+      !m.spoiler &&
+      m.burnSecs == null &&
+      m.sticker == null &&
+      fileWaitOf(m.msgUid) == null &&
+      (m.mediaPath != null ||
+          (m.filePath != null &&
+              !isVoiceName(m.fileName) &&
+              fileShapeNow(m.filePath, m.fileName) == FileShape.video));
+
+  // every photo and video of the chat in the viewer, from [m], with save,
+  // forward and unsend where the chat lets them leave (viewer_rules.dart)
+  bool _openChatMedia(BuildContext c, _Msg m, Object? tag) {
+    if (!_swipes(m)) return false;
+    final rows = [
+      for (final x in _messages)
+        if (_swipes(x)) x,
+    ];
+    final at = rows.indexOf(m);
+    if (at < 0) return false;
+    final hidden = session.isHidden(widget.peerHaloId);
+    bool leaves(_Msg x) => mayLeave(
+      blocking: _shots.blocking,
+      timed: x.burnSecs != null,
+      marked: x.secure,
+      spoiler: x.spoiler,
+      hidden: hidden,
+    );
+    openAlbum(
+      c,
+      [
+        for (final x in rows)
+          AlbumItem(
+            x.mediaPath ?? x.filePath!,
+            video: x.mediaPath == null,
+            fileName: x.fileName,
+            heroTag: identical(x, m) ? tag : null,
+          ),
+      ],
+      start: at,
+      secure: _shots.blocking,
+      actions: ViewerActions(
+        save: (i) {
+          final x = rows[i];
+          if (!leaves(x)) return null;
+          final path = x.mediaPath ?? x.filePath!;
+          return () => saveReceivedFile(
+            context,
+            path,
+            x.fileName ?? savedPhotoName(path, x.when),
+          );
+        },
+        forward: (i) {
+          final x = rows[i];
+          if (!leaves(x) || _isDev) return null;
+          return () => _forwardMessage(x);
+        },
+        unsend: (i) {
+          final x = rows[i];
+          if (x.direction != 'out' || x.sending || x.msgUid == null) {
+            return null;
+          }
+          return () {
+            Navigator.of(c).maybePop();
+            final run = _albums.runOf(x);
+            run != null ? _unsendAlbum(run) : _unsendMessage(x);
+          };
+        },
+      ),
+    );
+    return true;
   }
 
   void _jumpToUid(String uid) {
@@ -5927,6 +6004,7 @@ class _ChatScreenState extends State<ChatScreen>
         child: _Bubble(
           key: isMatch ? _matchKeys[hitAt] : null,
           msg: m,
+          openMedia: _openChatMedia,
           translation: _translation,
           transcripts: _transcripts,
           album: run,
@@ -8985,6 +9063,9 @@ class _Bubble extends StatelessWidget {
   final bool known;
   // an album: [msg] stands for all of it, and its grid is drawn
   final AlbumRun<_Msg>? album;
+  // a photo or a video opened in the viewer with the rest of the chat's,
+  // under [tag]: false when it opens on its own
+  final bool Function(BuildContext, _Msg, Object? tag)? openMedia;
   // a tile of the album held: the bubble's context and the tile
   final void Function(BuildContext, int)? onLongPressTile;
   // the chat's translations: theirs in another language offer one
@@ -8997,6 +9078,7 @@ class _Bubble extends StatelessWidget {
     this.translation,
     this.transcripts,
     this.album,
+    this.openMedia,
     this.onLongPressTile,
     this.stickers,
     this.stickerOrder = 0,
@@ -9519,14 +9601,23 @@ class _Bubble extends StatelessWidget {
                                           haptic: false,
                                           onTap: () {
                                             onAct?.call();
+                                            final tag = photoHeroTag(
+                                              msg.mediaPath!,
+                                              'chat',
+                                            );
+                                            if (openMedia?.call(
+                                                  context,
+                                                  msg,
+                                                  tag,
+                                                ) ??
+                                                false) {
+                                              return;
+                                            }
                                             _openFullImage(
                                               context,
                                               msg.mediaPath!,
                                               secure: msg.secure,
-                                              tag: photoHeroTag(
-                                                msg.mediaPath!,
-                                                'chat',
-                                              ),
+                                              tag: tag,
                                               radius: corner,
                                             );
                                           },
@@ -10163,6 +10254,8 @@ class _Bubble extends StatelessWidget {
       stamp: stamp,
       onOpen: (i) {
         onAct?.call();
+        final x = i < shown.length ? shown[i] : null;
+        if (x != null && (openMedia?.call(context, x, null) ?? false)) return;
         _openAlbumAt(context, shown, i);
       },
       onGet: appState.downloadNow,

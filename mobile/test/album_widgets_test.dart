@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kryfo/l10n/l10n.dart';
 import 'package:kryfo/lock_state.dart';
 import 'package:kryfo/widgets/album_grid.dart';
 import 'package:kryfo/widgets/album_viewer.dart';
@@ -152,6 +153,7 @@ void main() {
       bool still = false,
       TextDirection dir = TextDirection.ltr,
       List<String>? video,
+      ViewerActions? actions,
     }) async {
       phone(t);
       quiet(t, video: video);
@@ -163,7 +165,8 @@ void main() {
             builder: (ctx) => Scaffold(
               body: Center(
                 child: TextButton(
-                  onPressed: () => openAlbum(ctx, items, start: start),
+                  onPressed: () =>
+                      openAlbum(ctx, items, start: start, actions: actions),
                   child: const Text('open'),
                 ),
               ),
@@ -187,6 +190,50 @@ void main() {
       AlbumItem(photo('b')),
       AlbumItem(photo('c')),
     ];
+
+    testWidgets('the bar offers save, forward and unsend as each item '
+        'allows', (t) async {
+      final saved = <int>[];
+      await open(
+        t,
+        three(),
+        actions: ViewerActions(
+          save: (i) =>
+              () => saved.add(i),
+          forward: (i) => i == 0 ? () {} : null,
+          unsend: (i) => i == 2 ? () {} : null,
+        ),
+      );
+      expect(find.text(l10n.commonSave), findsOneWidget);
+      expect(find.text(l10n.chatForward), findsOneWidget);
+      expect(find.text(l10n.chatUnsend), findsNothing);
+      await t.tap(find.text(l10n.commonSave));
+      expect(saved, [0]);
+      await t.drag(find.byType(PageView), const Offset(-250, 0));
+      for (var i = 0; i < 6; i++) {
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      // the second: a forward is not for this one
+      expect(find.text(l10n.chatForward), findsNothing);
+      await t.drag(find.byType(PageView), const Offset(-250, 0));
+      for (var i = 0; i < 6; i++) {
+        await t.pump(const Duration(milliseconds: 200));
+      }
+      expect(find.text(l10n.chatUnsend), findsOneWidget);
+    });
+
+    testWidgets('with nothing allowed there is no bar', (t) async {
+      await open(
+        t,
+        three(),
+        actions: ViewerActions(
+          save: (_) => null,
+          forward: (_) => null,
+          unsend: (_) => null,
+        ),
+      );
+      expect(find.byKey(const ValueKey('viewer bar')), findsNothing);
+    });
 
     // a swipe past half the page: one page on
     Future<void> swipe(WidgetTester t, double dx) async {

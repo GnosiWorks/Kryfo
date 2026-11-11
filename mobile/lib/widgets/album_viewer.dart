@@ -33,7 +33,26 @@ class AlbumItem {
   final String path;
   final bool video;
   final String? fileName;
-  const AlbumItem(this.path, {this.video = false, this.fileName});
+  // the tag it flies under, when not its album tile's: a photo alone in
+  // the chat flies from its own bubble
+  final Object? heroTag;
+  const AlbumItem(this.path, {this.video = false, this.fileName, this.heroTag});
+}
+
+/// what the viewer's bar offers for the item at a place. null leaves the
+/// button out: a chat that blocks screenshots, a burner room, a timed or
+/// marked photo, a spoiler, and a hidden chat's save out (viewer_rules)
+class ViewerActions {
+  final VoidCallback? Function(int i) save;
+  final VoidCallback? Function(int i) forward;
+  final VoidCallback? Function(int i) unsend;
+  const ViewerActions({
+    required this.save,
+    required this.forward,
+    required this.unsend,
+  });
+
+  bool any(int i) => save(i) != null || forward(i) != null || unsend(i) != null;
 }
 
 // an album on its way up: a second tap opens nothing more
@@ -46,6 +65,7 @@ Future<void> openAlbum(
   List<AlbumItem> items, {
   int start = 0,
   bool secure = false,
+  ViewerActions? actions,
 }) async {
   if (_opening || items.isEmpty) return;
   FocusManager.instance.primaryFocus?.unfocus();
@@ -96,6 +116,7 @@ Future<void> openAlbum(
             start: at,
             route: anim,
             flight: !still,
+            actions: actions,
           ),
         ),
       ),
@@ -112,12 +133,15 @@ class AlbumViewer extends StatefulWidget {
   final Animation<double> route;
   // the item flies out of its tile and back
   final bool flight;
+  // save, forward and unsend in the bar at the foot
+  final ViewerActions? actions;
   const AlbumViewer({
     super.key,
     required this.items,
     required this.start,
     required this.route,
     this.flight = true,
+    this.actions,
   });
 
   @override
@@ -302,7 +326,7 @@ class AlbumViewerState extends State<AlbumViewer>
         // a swipe settles must not
         if (!widget.flight || i != _at) return page;
         return HaloHero(
-          tag: albumHeroTag(item.path),
+          tag: item.heroTag ?? albumHeroTag(item.path),
           flightShuttleBuilder: (_, a, _, _, _) =>
               albumFlight(a, item.path, video: item.video, radius: 4),
           child: page,
@@ -333,6 +357,7 @@ class AlbumViewerState extends State<AlbumViewer>
                 Positioned.fill(child: child!),
                 ..._top(pad, widget.route.value * (1 - pulled)),
                 ..._sides(widget.route.value * (1 - pulled)),
+                ..._bottom(pad, widget.route.value * (1 - pulled)),
               ],
             ),
           ),
@@ -348,6 +373,118 @@ class AlbumViewerState extends State<AlbumViewer>
       bindings: _keys(context),
       child: Focus(autofocus: true, child: viewer),
     );
+  }
+
+  // save, forward and unsend for the item in view, over a wash at the foot.
+  // a video draws its own controls there, so the bar sits above them
+  List<Widget> _bottom(EdgeInsets pad, double fade) {
+    final a = widget.actions;
+    if (a == null || !a.any(_at)) return const [];
+    final video = widget.items[_at].video;
+    final shown = _chrome && !_zoomed;
+    Widget button(
+      IconData icon,
+      String label,
+      VoidCallback? f, {
+      bool rose = false,
+    }) {
+      if (f == null) return const SizedBox.shrink();
+      return Expanded(
+        child: Semantics(
+          button: true,
+          label: label,
+          excludeSemantics: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              f();
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 22,
+                    color: rose ? HaloColors.rose : Colors.white,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textScaler: MediaQuery.textScalerOf(
+                      context,
+                    ).clamp(maxScaleFactor: 1.4),
+                    style: HaloType.sans(
+                      size: 12,
+                      weight: FontWeight.w600,
+                      color: rose ? HaloColors.rose : Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return [
+      Positioned(
+        left: 0,
+        right: 0,
+        bottom: video ? 96 + pad.bottom : 0,
+        child: IgnorePointer(
+          ignoring: !shown,
+          child: AnimatedOpacity(
+            opacity: shown ? fade.clamp(0.0, 1.0) : 0,
+            duration: motionStill(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 180),
+            child: Container(
+              key: const ValueKey('viewer bar'),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                20,
+                24,
+                (video ? 0 : pad.bottom) + 10,
+              ),
+              decoration: BoxDecoration(
+                gradient: video
+                    ? null
+                    : LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.5),
+                          Colors.black.withValues(alpha: 0),
+                        ],
+                      ),
+              ),
+              child: Row(
+                children: [
+                  button(Icons.download_rounded, l10n.commonSave, a.save(_at)),
+                  button(
+                    Icons.forward_rounded,
+                    l10n.chatForward,
+                    a.forward(_at),
+                  ),
+                  button(
+                    Icons.undo_rounded,
+                    l10n.chatUnsend,
+                    a.unsend(_at),
+                    rose: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 
   // the close button and the count, over a wash so they read on white

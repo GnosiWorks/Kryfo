@@ -23,6 +23,7 @@ import '../picked.dart';
 import '../album.dart';
 import '../widgets/file_stack.dart';
 import '../show_in_chat.dart';
+import '../viewer_rules.dart';
 import '../widgets/file_bubble.dart' show kFilePreviewWidth;
 import '../widgets/say.dart' show sayArrivals;
 import '../widgets/album_grid.dart';
@@ -1994,6 +1995,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                       transcripts: _transcripts,
                       translation: _translation,
                       album: run,
+                      openMedia: _openGroupMedia,
                       showSender: showSender,
                       kept: _keeps(m),
                       keptIn: _isRoom ? KeptIn.room : KeptIn.group,
@@ -4260,6 +4262,84 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     });
   }
 
+  // a photo or video of the group is one item, the oldest first: those the
+  // viewer can swipe through. a timed one, a spoiler and one still to come
+  // stay out and open on their own
+  bool _swipes(_GMsg m) =>
+      !m.preparing &&
+      !m.spoiler &&
+      m.burnSecs == null &&
+      m.sticker == null &&
+      m.poll == null &&
+      fileWaitOf(m.msgUid) == null &&
+      (m.mediaPath != null ||
+          (m.filePath != null &&
+              !isVoiceName(m.fileName) &&
+              fileShapeNow(m.filePath, m.fileName) == FileShape.video));
+
+  // every photo and video of the group in the viewer, from [m], with save,
+  // forward and unsend where the group lets them leave (viewer_rules.dart)
+  bool _openGroupMedia(BuildContext c, _GMsg m, Object? tag) {
+    if (!_swipes(m)) return false;
+    final rows = [
+      for (final x in _messages)
+        if (_swipes(x) && !_blocked.contains(x.sender)) x,
+    ];
+    final at = rows.indexOf(m);
+    if (at < 0) return false;
+    final hidden = session.isHidden(widget.groupId);
+    bool leaves(_GMsg x) => mayLeave(
+      blocking: _shots.blocking,
+      room: _isRoom,
+      timed: x.burnSecs != null,
+      spoiler: x.spoiler,
+      hidden: hidden,
+    );
+    openAlbum(
+      c,
+      [
+        for (final x in rows)
+          AlbumItem(
+            x.mediaPath ?? x.filePath!,
+            video: x.mediaPath == null,
+            fileName: x.fileName,
+            heroTag: identical(x, m) ? tag : null,
+          ),
+      ],
+      start: at,
+      secure: _isRoom || _shots.blocking,
+      actions: ViewerActions(
+        save: (i) {
+          final x = rows[i];
+          if (!leaves(x)) return null;
+          final path = x.mediaPath ?? x.filePath!;
+          return () => saveReceivedFile(
+            context,
+            path,
+            x.fileName ?? savedPhotoName(path, x.when),
+          );
+        },
+        forward: (i) {
+          final x = rows[i];
+          if (!leaves(x)) return null;
+          return () => _forwardGroupMessage(x);
+        },
+        unsend: (i) {
+          final x = rows[i];
+          if (x.direction != 'out' || x.sending || x.msgUid == null) {
+            return null;
+          }
+          return () {
+            Navigator.of(c).maybePop();
+            final run = _albums.runOf(x);
+            run != null ? _unsendGroupAlbum(run) : _unsendGroupMessage(x);
+          };
+        },
+      ),
+    );
+    return true;
+  }
+
   // the shared page asked for a message of this group: what is above the
   // chat goes, and the chat goes to it. an album's row stands for its own
   void _showAsked() {
@@ -5455,6 +5535,8 @@ class _GMsg with WordLinks {
   // shown at once on send, while its photo or video is still cleaned:
   // not saved, not sent yet
   bool preparing = false;
+  // a photo sent as a spoiler: blurred until it is tapped
+  bool spoiler = false;
   _GMsg({
     required this.sender,
     String? senderName,
@@ -6265,6 +6347,9 @@ class _GroupBubble extends StatelessWidget {
   final StickerWire? quotedSticker;
   // an album: [m] stands for all of it, and its grid is drawn
   final AlbumRun<_GMsg>? album;
+  // a photo or a video opened in the viewer with the rest of the group's,
+  // under [tag]: false when it opens on its own
+  final bool Function(BuildContext, _GMsg, Object? tag)? openMedia;
   // a row of a set of files: sent again, or stopped on its way
   final void Function(_GMsg)? onRetryRow;
   final void Function(_GMsg)? onStopRow;
@@ -6279,6 +6364,7 @@ class _GroupBubble extends StatelessWidget {
     this.transcripts,
     this.translation,
     this.album,
+    this.openMedia,
     this.onRetryRow,
     this.onStopRow,
     this.onLongPressTile,
@@ -6828,13 +6914,23 @@ class _GroupBubble extends StatelessWidget {
                                                         ? onRetry
                                                         : () {
                                                             onAct?.call();
+                                                            final tag =
+                                                                photoHeroTag(
+                                                                  m.mediaPath!,
+                                                                  'chat',
+                                                                );
+                                                            if (openMedia?.call(
+                                                                  context,
+                                                                  m,
+                                                                  tag,
+                                                                ) ??
+                                                                false) {
+                                                              return;
+                                                            }
                                                             openFullImage(
                                                               context,
                                                               m.mediaPath!,
-                                                              tag: photoHeroTag(
-                                                                m.mediaPath!,
-                                                                'chat',
-                                                              ),
+                                                              tag: tag,
                                                               radius: 10,
                                                             );
                                                           },
@@ -7428,6 +7524,10 @@ class _GroupBubble extends StatelessWidget {
       stampAtStart: isOut,
       onOpen: (i) {
         onAct?.call();
+        final held = i < shown.length ? shown[i] : null;
+        if (held != null && (openMedia?.call(context, held, null) ?? false)) {
+          return;
+        }
         // one still to come has nothing to show yet
         String? here(_GMsg? x) => x == null || fileWaitOf(x.msgUid) != null
             ? null
