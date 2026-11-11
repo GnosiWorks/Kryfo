@@ -147,10 +147,10 @@ bool _isPrompt(String t) {
 /// cores. the rest stay for the ui, its raster thread, the app's other work
 /// and the kernel's memory work: whisper's threads wait for each other at
 /// every step, so one that loses its core stalls them all. on the a12 (8
-/// a53s) a 60 s note took 16.9 s alone with 8 threads but 57 s in the app,
-/// with lmkd killing apps; 6 took 40 s in the app, 4 took 27 s with no
-/// pressure at all. [maxFreq] reads one core's top speed in khz, null when
-/// it cannot be read
+/// a53s) 8 threads ran a note 3.4x slower in the app than alone, and lmkd
+/// killed apps around it, then kryfo; 4 take about what they take alone (a
+/// 60 s note 44 s vs 41 s) and the phone stays calm. [maxFreq] reads one
+/// core's top speed in khz, null when it cannot be read
 int voiceThreads({int? cores, int? Function(int core)? maxFreq}) {
   final n = cores ?? Platform.numberOfProcessors;
   final read = maxFreq ?? _maxFreq;
