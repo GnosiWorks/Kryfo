@@ -154,6 +154,8 @@ const stopEvery = 50
 // says so. nil never stops
 func EncodeWavStop(in io.Reader, out io.Writer, stop func() bool) (Note, error) {
 	r := bufio.NewReaderSize(in, 64*1024)
+	// what passed through on its way is zeroed at the end, whatever the end
+	defer wipeReader(r)
 	head, err := readWavHead(r)
 	if err != nil {
 		return Note{}, err
@@ -177,6 +179,8 @@ func EncodeWavStop(in io.Reader, out io.Writer, stop func() bool) (Note, error) 
 	cw := &counter{w: out}
 	bw := bufio.NewWriterSize(cw, 32*1024)
 	o := &oggWriter{w: bw, serial: binary.LittleEndian.Uint32(serial[:])}
+	defer o.wipe()
+	defer wipeWriter(bw)
 
 	// OpusHead: version 1, one channel, family 0
 	oh := make([]byte, 19)
@@ -200,6 +204,8 @@ func EncodeWavStop(in io.Reader, out io.Writer, stop func() bool) (Note, error) 
 	ch := head.channels
 	raw := make([]byte, frame*2*ch)
 	pcm := make([]int16, frame)
+	defer clear(raw)
+	defer clear(pcm)
 	left := head.size
 	most := int64(maxNote) * int64(head.rate)
 	var n int64
@@ -275,6 +281,7 @@ func EncodeWavStop(in io.Reader, out io.Writer, stop func() bool) (Note, error) 
 // given: the padding of the last frame
 func Decode(in io.Reader, rate int, sink func([]int16) error) (Note, error) {
 	o := &oggReader{r: bufio.NewReaderSize(in, 64*1024)}
+	defer o.wipe()
 	if err := o.page(); err != nil {
 		return Note{}, ErrNotOpus
 	}
@@ -436,6 +443,8 @@ func DecodeFile(in, out string) (Note, error) {
 		}
 		bw := bufio.NewWriterSize(ws, 32*1024)
 		b := make([]byte, 0, 2*maxFrame)
+		defer wipeWriter(bw)
+		defer func() { clear(b[:cap(b)]) }()
 		total := 0
 		note, err := Decode(f, DecodeRate, func(pcm []int16) error {
 			b = b[:0]
