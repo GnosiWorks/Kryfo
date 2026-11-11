@@ -1955,21 +1955,35 @@ func nostrSubscribeRunnerAt(ctx context.Context, lane, tag string, rcvPk string,
 				}
 				sweeping = false
 				// a backup is read only while our first store is down and tor
-				// carries. the wait ends when either changes
+				// carries, or on private once in a slow round (slowBackupRead).
+				// the wait ends when either changes
 				if backup {
 					wake, torMoved := liveWakeChan(), torWakeChan()
 					if !backupsOn() {
-						t := time.NewTimer(backupLook)
-						select {
-						case <-ctx.Done():
-							t.Stop()
-							return
-						case <-wake:
-						case <-torMoved:
-						case <-t.C:
+						wait := backupLook
+						slow := slowBackupRead()
+						if slow {
+							now := ownClock()
+							if nextSweep == 0 {
+								nextSweep = now + firstSlowBackupDelay()
+							}
+							wait = min(nextSweep-now, backupLook)
 						}
-						t.Stop()
-						continue
+						if !slow || wait > 0 {
+							t := time.NewTimer(wait)
+							select {
+							case <-ctx.Done():
+								t.Stop()
+								return
+							case <-wake:
+							case <-torMoved:
+							case <-t.C:
+							}
+							t.Stop()
+							continue
+						}
+						// read to its end, then let go until the next round
+						sweeping = true
 					}
 				}
 				// both channels before the look, so a change of the round or

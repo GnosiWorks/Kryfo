@@ -210,3 +210,73 @@ func TestAWakeOpensNoBackupsOnPrivate(t *testing.T) {
 		t.Fatal("our first failing with no wake did not open the backups")
 	}
 }
+
+// while 0.5.x senders matter: with our first store up, private still reads
+// each backup once a round, so a copy an old sender left only there comes.
+// the read lets the backup go once caught up, and never runs off private
+// or with the reads turned off
+func TestPrivateReadsTheBackupsOnceARoundWhileOursAreUp(t *testing.T) {
+	a, b, p, socks := usePrivateOwn(t)
+	privateTorUp(t)
+	liveMu.Lock()
+	oldEvery := sweepEvery
+	sweepEvery = 600 * time.Millisecond
+	liveMu.Unlock()
+	t.Cleanup(func() {
+		liveMu.Lock()
+		sweepEvery = oldEvery
+		liveMu.Unlock()
+	})
+	peer := newXid(t)
+	tag := hex.EncodeToString(peer.pub[:])
+	rcv := mustRcv(t, peer)
+	// an old sender's copy that reached a public relay alone
+	p.store(wrapTo(t, peer, myXPub, "only on a backup"))
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go nostrSubscribeRunner(ctx, tag, mainPair(peer.pub), rcv)
+	waitFor(t, "both of ours listen", 15*time.Second, func() bool {
+		return len(a.snapshot()) > 0 && len(b.snapshot()) > 0
+	})
+	if firstStoreDown() {
+		t.Fatal("our first store counts as down")
+	}
+	waitFor(t, "the backup's copy", 15*time.Second, func() bool { return inboxHas(tag + "|only on a backup") })
+	allThroughSocks(t, p, socks)
+	// let go once caught up, read again the next round
+	waitFor(t, "the backup let go", 10*time.Second, func() bool {
+		for _, c := range p.snapshot() {
+			if !c.closed.IsZero() {
+				return true
+			}
+		}
+		return false
+	})
+	p.store(wrapTo(t, peer, myXPub, "the next round"))
+	waitFor(t, "the next round's read", 15*time.Second, func() bool { return inboxHas(tag + "|the next round") })
+	if n := len(p.snapshot()); n < 2 {
+		t.Fatalf("%d connections to the backup, want a read per round", n)
+	}
+}
+
+func TestNoSlowBackupReadOffPrivateOrTurnedOff(t *testing.T) {
+	usePrivateOwn(t)
+	privateTorUp(t)
+	if !slowBackupRead() {
+		t.Fatal("private with backups listed reads none")
+	}
+	slowBackupReads = false
+	if slowBackupRead() {
+		t.Fatal("read with the reads turned off")
+	}
+	slowBackupReads = true
+	setBackups(nil)
+	if slowBackupRead() {
+		t.Fatal("read with no backups listed: the switch is off")
+	}
+	setBackups([]string{"ws://backup.example"})
+	transportMode.Store(modeFast)
+	if slowBackupRead() {
+		t.Fatal("read off the private route")
+	}
+}
