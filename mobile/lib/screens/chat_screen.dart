@@ -4139,8 +4139,11 @@ class _ChatScreenState extends State<ChatScreen>
   // what goes into the chat, in one sheet: the gallery, the phone's
   // files, and files already in this container's chats
   Future<void> _showAttachSheet() async {
+    final most = await appState.fileLimitFor(widget.peerHaloId);
+    if (!mounted) return;
     final r = await showSendSheet(
       context,
+      most: most,
       to: _isDev ? l10n.devName : _nickname ?? widget.peerHaloId,
       pickGallery: galleryPicksForSheet,
       pickFiles: filePicksForSheet,

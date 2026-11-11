@@ -2985,7 +2985,7 @@
   "groupChatTapToRetryDesk": "! Tekrar için tıkla",
   "chatDropHereToSend": "Göndermek için buraya bırak",
   "chatDropHereToAdd": "Eklemek için buraya bırakın",
-  "trayRemove": "{name} öğesini kaldır",
+  "trayRemove": "{name} dosyasını kaldır",
   "trayReadyToSend": "Göndermeye hazır: {count}",
   "trayPastedPicture": "Yapıştırılan resim",
   "voiceSeeTranscription": "Metni gör",
@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "Dosyalar, onlara dokunduğunda iner.",
   "fileSetGetAll": "Tümünü al · {size}",
   "fileSetGetting": "{total} dosyadan {done} alındı",
-  "fileUntil": "{date} tarihine kadar"
+  "fileUntil": "{date} tarihine kadar",
+  "trayToSend": "{count, plural, other{Gönderilecek: {n}}}",
+  "trayHint": "Yeniden adlandırmak için bir dosyaya basılı tut. Her dosya gönderilmeden önce temizlenir.",
+  "trayTimeSoon": "Tor üzerinden bir dakikadan az",
+  "trayTimeMinutes": "Tor üzerinden yaklaşık {n} dk",
+  "trayMost": "dosya başına {size} kadar",
+  "trayTooBig": "Göndermek için çok büyük",
+  "trayRenameHint": "Yeniden adlandırmak için basılı tut",
+  "trayRenameTitle": "Dosyayı yeniden adlandır",
+  "traySpoiler": "Spoiler"
 }

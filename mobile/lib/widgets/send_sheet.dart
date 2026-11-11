@@ -28,6 +28,9 @@ import 'motion.dart' show kHouseCurve, motionStill;
 import 'pill_tabs.dart';
 import 'press_scale.dart';
 import 'sheet_handle.dart';
+import 'send_tray.dart';
+import 'confirm_sheet.dart' show showInputSheet;
+import '../file_drop.dart' show kFreeFileBytes;
 
 enum SendTab { gallery, files, recent }
 
@@ -46,6 +49,20 @@ class SendPick {
   final Future<void> Function()? release;
   // what the picker gave, for the photo preview
   final Object? source;
+
+  /// the same pick under another name: what the person typed for it
+  SendPick named(String to) => SendPick(
+    path: path,
+    name: to,
+    size: size,
+    from: from,
+    when: when,
+    media: media,
+    video: video,
+    release: release,
+    source: source,
+  );
+
   const SendPick({
     required this.path,
     required this.name,
@@ -63,7 +80,14 @@ class SendSheetResult {
   final List<SendPick> picks;
   final bool asFiles;
   final String caption;
-  const SendSheetResult(this.picks, {this.asFiles = false, this.caption = ''});
+  // the photos marked as spoilers, by their path: blurred until tapped
+  final Set<String> spoilers;
+  const SendSheetResult(
+    this.picks, {
+    this.asFiles = false,
+    this.caption = '',
+    this.spoilers = const {},
+  });
 
   /// what goes through the photo preview, in order
   List<SendPick> get media => asFiles
@@ -114,6 +138,8 @@ Future<SendSheetResult?> showSendSheet(
   SendTab start = SendTab.gallery,
   // the gallery tab's name: "Pictures" on a computer
   String? galleryLabel,
+  // the most one file may be, for the tray's line
+  int most = kFreeFileBytes,
 }) {
   HapticFeedback.selectionClick();
   return showHaloSheet<SendSheetResult>(
@@ -127,6 +153,7 @@ Future<SendSheetResult?> showSendSheet(
       shortcuts: shortcuts,
       start: start,
       galleryLabel: galleryLabel,
+      most: most,
     ),
   );
 }
@@ -139,6 +166,7 @@ class SendSheet extends StatefulWidget {
   final List<SendShortcut> shortcuts;
   final SendTab start;
   final String? galleryLabel;
+  final int most;
   const SendSheet({
     super.key,
     required this.to,
@@ -148,6 +176,7 @@ class SendSheet extends StatefulWidget {
     this.shortcuts = const [],
     this.start = SendTab.gallery,
     this.galleryLabel,
+    this.most = kFreeFileBytes,
   });
 
   @override
@@ -162,6 +191,9 @@ class SendSheetState extends State<SendSheet> {
   // chosen, in the order chosen
   final _chosen = <SendPick>[];
   bool _asFiles = false;
+  // names typed in the tray, and the photos marked as spoilers
+  final _names = <SendPick, String>{};
+  final _spoilers = <SendPick>{};
   bool _picking = false;
   bool _sent = false;
   final _caption = TextEditingController();
@@ -240,12 +272,68 @@ class SendSheetState extends State<SendSheet> {
     _sent = true;
     Navigator.of(context).pop(
       SendSheetResult(
-        List.of(_chosen),
+        [for (final p in _chosen) _names[p] == null ? p : p.named(_names[p]!)],
         asFiles: _asFiles,
         caption: _caption.text.trim(),
+        // a photo that goes as a file is no spoiler
+        spoilers: _asFiles
+            ? const {}
+            : {
+                for (final p in _spoilers)
+                  if (_chosen.contains(p)) p.path,
+              },
       ),
     );
   }
+
+  SendPick? _byKey(Object key) =>
+      _chosen.where((p) => identical(p, key)).firstOrNull;
+
+  void _remove(Object key) {
+    final p = _byKey(key);
+    if (p == null) return;
+    setState(() => _chosen.remove(p));
+  }
+
+  void _spoiler(Object key) {
+    final p = _byKey(key);
+    if (p == null) return;
+    setState(
+      () => _spoilers.contains(p) ? _spoilers.remove(p) : _spoilers.add(p),
+    );
+  }
+
+  // a file's name, typed again. its extension stays: what kind it is is
+  // read from its bytes and its name keeps saying so
+  Future<void> _rename(Object key) async {
+    final p = _byKey(key);
+    if (p == null) return;
+    final now = _names[p] ?? p.name;
+    final (stem, ext) = splitFileName(now);
+    final typed = await showInputSheet(
+      context,
+      title: l10n.trayRenameTitle,
+      initial: stem,
+      maxLength: 120,
+    );
+    final t = typed?.trim() ?? '';
+    if (!mounted || t.isEmpty) return;
+    setState(() => _names[p] = '$t$ext');
+  }
+
+  List<TrayCard> get _cards => [
+    for (final p in _chosen)
+      TrayCard(
+        key: p,
+        name: _names[p] ?? p.name,
+        size: p.size,
+        path: p.path,
+        photo: p.media && !p.video && !_asFiles,
+        video: p.video,
+        spoiler: _spoilers.contains(p),
+        tooBig: p.size > widget.most,
+      ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -339,6 +427,15 @@ class SendSheetState extends State<SendSheet> {
               ),
             ),
             _Foot(
+              tray: _chosen.isEmpty
+                  ? null
+                  : SendTray(
+                      cards: _cards,
+                      most: widget.most,
+                      onRemove: _remove,
+                      onRename: _rename,
+                      onSpoiler: _spoiler,
+                    ),
               count: _chosen.length,
               showAsFiles: anyMedia,
               asFiles: _asFiles,
@@ -679,6 +776,7 @@ class _Order extends StatelessWidget {
 }
 
 class _Foot extends StatelessWidget {
+  final Widget? tray;
   final int count;
   final bool showAsFiles;
   final bool asFiles;
@@ -686,6 +784,7 @@ class _Foot extends StatelessWidget {
   final TextEditingController caption;
   final VoidCallback onSend;
   const _Foot({
+    required this.tray,
     required this.count,
     required this.showAsFiles,
     required this.asFiles,
@@ -711,48 +810,74 @@ class _Foot extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (showAsFiles)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: MergeSemantics(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            onAsFiles(!asFiles);
-                          },
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l10n.sendSheetAsFile,
-                                      style: HaloType.sans(
-                                        size: 14.5,
-                                        weight: FontWeight.w600,
-                                        color: HaloColors.text,
+                  // the cards and the switch scroll when the text is large;
+                  // the caption and the send stay in view
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight:
+                          MediaQuery.sizeOf(context).height *
+                          (MediaQuery.textScalerOf(context).scale(10) > 13
+                              ? 0.16
+                              : 0.3),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (tray != null) ...[
+                            tray!,
+                            const SizedBox(height: 12),
+                          ],
+                          if (showAsFiles)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: MergeSemantics(
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    onAsFiles(!asFiles);
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              l10n.sendSheetAsFile,
+                                              style: HaloType.sans(
+                                                size: 14.5,
+                                                weight: FontWeight.w600,
+                                                color: HaloColors.text,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              l10n.sendSheetAsFileLine,
+                                              style: HaloType.sans(
+                                                size: 12.5,
+                                                color: HaloColors.text,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      l10n.sendSheetAsFileLine,
-                                      style: HaloType.sans(
-                                        size: 12.5,
-                                        color: HaloColors.text,
+                                      const SizedBox(width: 12),
+                                      HaloSwitch(
+                                        value: asFiles,
+                                        onChanged: onAsFiles,
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              HaloSwitch(value: asFiles, onChanged: onAsFiles),
-                            ],
-                          ),
-                        ),
+                            ),
+                        ],
                       ),
                     ),
+                  ),
                   Row(
                     children: [
                       Expanded(

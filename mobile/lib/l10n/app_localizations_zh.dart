@@ -11530,6 +11530,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String fileUntil(String date) {
     return '保留至 $date';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '待发送 $n 个',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint => '长按文件可重命名。每个文件在发送前都会被清理。';
+
+  @override
+  String get trayTimeSoon => '经 Tor 不到一分钟';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return '经 Tor 约 $n 分钟';
+  }
+
+  @override
+  String trayMost(String size) {
+    return '每个文件最多 $size';
+  }
+
+  @override
+  String get trayTooBig => '文件过大';
+
+  @override
+  String get trayRenameHint => '长按以重命名';
+
+  @override
+  String get trayRenameTitle => '重命名文件';
+
+  @override
+  String get traySpoiler => '剧透';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -22938,4 +22976,42 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String fileUntil(String date) {
     return '保留至 $date';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '待傳送 $n 個',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint => '長按檔案可重新命名。每個檔案在傳送前都會被清理。';
+
+  @override
+  String get trayTimeSoon => '經 Tor 不到一分鐘';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return '經 Tor 約 $n 分鐘';
+  }
+
+  @override
+  String trayMost(String size) {
+    return '每個檔案最多 $size';
+  }
+
+  @override
+  String get trayTooBig => '檔案過大';
+
+  @override
+  String get trayRenameHint => '長按以重新命名';
+
+  @override
+  String get trayRenameTitle => '重新命名檔案';
+
+  @override
+  String get traySpoiler => '劇透';
 }

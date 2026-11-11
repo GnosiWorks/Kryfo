@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "檔案在你點按後才會下載。",
   "fileSetGetAll": "全部取得 · {size}",
   "fileSetGetting": "已取得 {done}/{total}",
-  "fileUntil": "保留至 {date}"
+  "fileUntil": "保留至 {date}",
+  "trayToSend": "{count, plural, other{待傳送 {n} 個}}",
+  "trayHint": "長按檔案可重新命名。每個檔案在傳送前都會被清理。",
+  "trayTimeSoon": "經 Tor 不到一分鐘",
+  "trayTimeMinutes": "經 Tor 約 {n} 分鐘",
+  "trayMost": "每個檔案最多 {size}",
+  "trayTooBig": "檔案過大",
+  "trayRenameHint": "長按以重新命名",
+  "trayRenameTitle": "重新命名檔案",
+  "traySpoiler": "劇透"
 }

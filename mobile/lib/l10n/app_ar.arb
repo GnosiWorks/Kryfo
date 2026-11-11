@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "تُنزَّل الملفات عندما تنقر عليها.",
   "fileSetGetAll": "تنزيل الكل · {size}",
   "fileSetGetting": "جارٍ التنزيل: {done} من {total}",
-  "fileUntil": "حتى {date}"
+  "fileUntil": "حتى {date}",
+  "trayToSend": "{count, plural, other{{n} للإرسال}}",
+  "trayHint": "اضغط مطولًا على ملف لإعادة تسميته. يُنظَّف كل ملف قبل الإرسال.",
+  "trayTimeSoon": "أقل من دقيقة عبر Tor",
+  "trayTimeMinutes": "نحو {n} دقيقة عبر Tor",
+  "trayMost": "حتى {size} لكل ملف",
+  "trayTooBig": "أكبر من أن يُرسَل",
+  "trayRenameHint": "اضغط مطولًا لإعادة التسمية",
+  "trayRenameTitle": "إعادة تسمية الملف",
+  "traySpoiler": "مخفي"
 }

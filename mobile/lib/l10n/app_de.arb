@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "Dateien werden geladen, wenn du sie antippst.",
   "fileSetGetAll": "Alle laden · {size}",
   "fileSetGetting": "{done} von {total} geladen",
-  "fileUntil": "bis {date}"
+  "fileUntil": "bis {date}",
+  "trayToSend": "{count, plural, other{{n} zum Senden}}",
+  "trayHint": "Halte eine Datei gedrückt, um sie umzubenennen. Jede Datei wird vor dem Senden bereinigt.",
+  "trayTimeSoon": "unter einer Minute über Tor",
+  "trayTimeMinutes": "etwa {n} Min. über Tor",
+  "trayMost": "bis {size} pro Datei",
+  "trayTooBig": "Zu groß zum Senden",
+  "trayRenameHint": "Gedrückt halten zum Umbenennen",
+  "trayRenameTitle": "Datei umbenennen",
+  "traySpoiler": "Spoiler"
 }

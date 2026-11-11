@@ -11364,7 +11364,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String trayRemove(String name) {
-    return '$name हटाएँ';
+    return '$name हटाओ';
   }
 
   @override
@@ -12205,4 +12205,43 @@ class AppLocalizationsHi extends AppLocalizations {
   String fileUntil(String date) {
     return '$date तक';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'भेजने के लिए $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint =>
+      'नाम बदलने के लिए फ़ाइल को दबाकर रखो। हर फ़ाइल भेजने से पहले साफ़ की जाती है।';
+
+  @override
+  String get trayTimeSoon => 'Tor पर एक मिनट से कम';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return 'Tor पर लगभग $n मिनट';
+  }
+
+  @override
+  String trayMost(String size) {
+    return 'हर फ़ाइल $size तक';
+  }
+
+  @override
+  String get trayTooBig => 'भेजने के लिए बहुत बड़ी';
+
+  @override
+  String get trayRenameHint => 'नाम बदलने के लिए दबाकर रखो';
+
+  @override
+  String get trayRenameTitle => 'फ़ाइल का नाम बदलो';
+
+  @override
+  String get traySpoiler => 'स्पॉइलर';
 }

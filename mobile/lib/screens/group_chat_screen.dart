@@ -2516,8 +2516,11 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   Future<void> _showAttachSheet() async {
     if (_nobodyToRead()) return;
     FocusManager.instance.primaryFocus?.unfocus();
+    final most = await appState.fileLimitForGroup(widget.groupId);
+    if (!mounted) return;
     final r = await showSendSheet(
       context,
+      most: most,
       to: _groupName,
       pickGallery: galleryPicksForSheet,
       pickFiles: filePicksForSheet,

@@ -18205,7 +18205,7 @@ abstract class AppLocalizations {
   /// **'Drop here to add'**
   String get chatDropHereToAdd;
 
-  /// a computer: the x on a file waiting above the composer, said by a screen reader and on hover
+  /// screen reader label of the cross on a tray card
   ///
   /// In en, this message translates to:
   /// **'Remove {name}'**
@@ -19530,6 +19530,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'until {date}'**
   String fileUntil(String date);
+
+  /// sending sheet tray: how many picks go. n is count in the language's digits
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{n} to send}}'**
+  String trayToSend(int count, String n);
+
+  /// sending sheet tray: line under the cards
+  ///
+  /// In en, this message translates to:
+  /// **'Hold a file to rename it. Every file is cleaned before sending.'**
+  String get trayHint;
+
+  /// sending sheet tray: guess of upload time, under a minute
+  ///
+  /// In en, this message translates to:
+  /// **'under a minute over Tor'**
+  String get trayTimeSoon;
+
+  /// sending sheet tray: honest guess of the upload time in whole minutes (n in the language's digits)
+  ///
+  /// In en, this message translates to:
+  /// **'about {n} min over Tor'**
+  String trayTimeMinutes(String n);
+
+  /// sending sheet tray: the most one file may be (e.g. 50 MB)
+  ///
+  /// In en, this message translates to:
+  /// **'up to {size} per file'**
+  String trayMost(String size);
+
+  /// sending sheet tray: on a card whose file is bigger than one file may be
+  ///
+  /// In en, this message translates to:
+  /// **'Too big to send'**
+  String get trayTooBig;
+
+  /// screen reader hint on a tray card: holding it renames the file
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to rename'**
+  String get trayRenameHint;
+
+  /// sheet title: rename a file before sending (its extension stays)
+  ///
+  /// In en, this message translates to:
+  /// **'Rename file'**
+  String get trayRenameTitle;
+
+  /// tray card chip and photo mark: the photo stays blurred until tapped
+  ///
+  /// In en, this message translates to:
+  /// **'Spoiler'**
+  String get traySpoiler;
 }
 
 class _AppLocalizationsDelegate

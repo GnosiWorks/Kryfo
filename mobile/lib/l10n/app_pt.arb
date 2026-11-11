@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "Os arquivos são baixados quando você toca neles.",
   "fileSetGetAll": "Baixar tudo · {size}",
   "fileSetGetting": "Baixando {done} de {total}",
-  "fileUntil": "até {date}"
+  "fileUntil": "até {date}",
+  "trayToSend": "{count, plural, other{{n} para enviar}}",
+  "trayHint": "Toque e segure um arquivo para renomeá-lo. Cada arquivo é limpo antes do envio.",
+  "trayTimeSoon": "menos de um minuto pelo Tor",
+  "trayTimeMinutes": "cerca de {n} min pelo Tor",
+  "trayMost": "até {size} por arquivo",
+  "trayTooBig": "Grande demais",
+  "trayRenameHint": "Toque e segure para renomear",
+  "trayRenameTitle": "Renomear arquivo",
+  "traySpoiler": "Spoiler"
 }

@@ -12202,4 +12202,43 @@ class AppLocalizationsId extends AppLocalizations {
   String fileUntil(String date) {
     return 'sampai $date';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n akan dikirim',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint =>
+      'Tahan file untuk mengganti namanya. Setiap file dibersihkan sebelum dikirim.';
+
+  @override
+  String get trayTimeSoon => 'kurang dari semenit lewat Tor';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return 'sekitar $n menit lewat Tor';
+  }
+
+  @override
+  String trayMost(String size) {
+    return 'hingga $size per file';
+  }
+
+  @override
+  String get trayTooBig => 'Terlalu besar';
+
+  @override
+  String get trayRenameHint => 'Tahan untuk mengganti nama';
+
+  @override
+  String get trayRenameTitle => 'Ganti nama file';
+
+  @override
+  String get traySpoiler => 'Spoiler';
 }

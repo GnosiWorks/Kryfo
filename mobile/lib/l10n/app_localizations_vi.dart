@@ -11344,7 +11344,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String trayRemove(String name) {
-    return 'Gỡ $name';
+    return 'Bỏ $name';
   }
 
   @override
@@ -12191,4 +12191,43 @@ class AppLocalizationsVi extends AppLocalizations {
   String fileUntil(String date) {
     return 'đến $date';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n mục để gửi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint =>
+      'Nhấn giữ tệp để đổi tên. Mọi tệp đều được làm sạch trước khi gửi.';
+
+  @override
+  String get trayTimeSoon => 'dưới một phút qua Tor';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return 'khoảng $n phút qua Tor';
+  }
+
+  @override
+  String trayMost(String size) {
+    return 'tối đa $size mỗi tệp';
+  }
+
+  @override
+  String get trayTooBig => 'Quá lớn để gửi';
+
+  @override
+  String get trayRenameHint => 'Nhấn giữ để đổi tên';
+
+  @override
+  String get trayRenameTitle => 'Đổi tên tệp';
+
+  @override
+  String get traySpoiler => 'Ẩn';
 }

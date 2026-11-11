@@ -12388,4 +12388,43 @@ class AppLocalizationsUk extends AppLocalizations {
   String fileUntil(String date) {
     return 'до $date';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'До надсилання: $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint =>
+      'Утримуйте файл, щоб перейменувати його. Кожен файл очищується перед надсиланням.';
+
+  @override
+  String get trayTimeSoon => 'менше хвилини через Tor';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return 'близько $n хв через Tor';
+  }
+
+  @override
+  String trayMost(String size) {
+    return 'до $size на файл';
+  }
+
+  @override
+  String get trayTooBig => 'Завеликий';
+
+  @override
+  String get trayRenameHint => 'Утримуйте, щоб перейменувати';
+
+  @override
+  String get trayRenameTitle => 'Перейменувати файл';
+
+  @override
+  String get traySpoiler => 'Спойлер';
 }

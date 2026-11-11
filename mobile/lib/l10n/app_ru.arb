@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "Файлы скачиваются, когда вы на них нажимаете.",
   "fileSetGetAll": "Скачать все · {size}",
   "fileSetGetting": "Скачано {done} из {total}",
-  "fileUntil": "до {date}"
+  "fileUntil": "до {date}",
+  "trayToSend": "{count, plural, other{К отправке: {n}}}",
+  "trayHint": "Удерживайте файл, чтобы переименовать его. Каждый файл очищается перед отправкой.",
+  "trayTimeSoon": "меньше минуты через Tor",
+  "trayTimeMinutes": "около {n} мин через Tor",
+  "trayMost": "до {size} на файл",
+  "trayTooBig": "Слишком большой",
+  "trayRenameHint": "Удерживайте, чтобы переименовать",
+  "trayRenameTitle": "Переименовать файл",
+  "traySpoiler": "Спойлер"
 }

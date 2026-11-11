@@ -17,6 +17,8 @@ import 'package:kryfo/main.dart';
 import 'package:kryfo/recent_files.dart';
 import 'package:kryfo/theme.dart';
 import 'package:kryfo/widgets/send_sheet.dart';
+import 'package:kryfo/widgets/send_tray.dart';
+import 'package:kryfo/widgets/media_bubbles.dart' show humanFileSize;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'sqlite_channel.dart';
@@ -162,6 +164,8 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text(l10n.sendSheetAsFile), findsOneWidget);
     expect(find.text(l10n.sendSheetAsFileLine), findsOneWidget);
+    await t.ensureVisible(find.text(l10n.sendSheetAsFile));
+    await t.pumpAndSettle();
     await t.tap(find.text(l10n.sendSheetAsFile));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField), 'for the lease');
@@ -178,6 +182,84 @@ void main() {
     expect(released, ['z.mp4']);
     await r.release();
     expect(released, ['z.mp4', 'a.jpg']);
+  });
+
+  group('the tray', () {
+    testWidgets('a card per pick, the total and an honest time over Tor', (
+      t,
+    ) async {
+      final b = SendPick(
+        path: '/x/b.pdf',
+        name: 'b.pdf',
+        size: 41 * 1024 * 1024,
+        from: SendTab.files,
+      );
+      await open(t, files: [b, pick('c.py', SendTab.files)]);
+      await t.tap(find.text(l10n.sendSheetFiles));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.sendSheetBrowseFiles));
+      await t.pumpAndSettle();
+      expect(find.byType(SendTray), findsOneWidget);
+      expect(find.textContaining(l10n.trayToSend(2, '2')), findsOneWidget);
+      expect(find.text(l10n.trayHint), findsOneWidget);
+      // 41 MB at a careful pace is about three minutes
+      expect(
+        find.textContaining(l10n.trayTimeMinutes('3')),
+        findsOneWidget,
+      );
+      expect(find.textContaining(l10n.trayMost(humanFileSize(50 * 1024 * 1024))), findsOneWidget);
+    });
+
+    testWidgets('the cross takes a pick out', (t) async {
+      final sem = t.ensureSemantics();
+      final b = pick('b.pdf', SendTab.files);
+      final c = pick('c.py', SendTab.files);
+      await open(t, files: [b, c]);
+      await t.tap(find.text(l10n.sendSheetFiles));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.sendSheetBrowseFiles));
+      await t.pumpAndSettle();
+      await t.tap(find.bySemanticsLabel(l10n.trayRemove('b.pdf')));
+      await t.pumpAndSettle();
+      expect(sheet(t).chosen, [c]);
+      expect(find.bySemanticsLabel(l10n.trayRemove('b.pdf')), findsNothing);
+      sem.dispose();
+    });
+
+    testWidgets('a hold renames a file, its extension kept', (t) async {
+      final b = pick('b.pdf', SendTab.files);
+      await open(t, files: [b]);
+      await t.tap(find.text(l10n.sendSheetFiles));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.sendSheetBrowseFiles));
+      await t.pumpAndSettle();
+      await t.longPress(find.text('b.pdf').last);
+      await t.pumpAndSettle();
+      expect(find.text(l10n.trayRenameTitle), findsOneWidget);
+      await t.enterText(find.byType(TextField).last, 'lease draft');
+      await t.tap(find.text(l10n.confirmSheetSave));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.sendSheetSend(1, '1')));
+      await t.pumpAndSettle();
+      expect(result!.picks.single.name, 'lease draft.pdf');
+      expect(result!.picks.single.path, b.path);
+    });
+
+    testWidgets('a photo can be a spoiler, and as a file it is none', (
+      t,
+    ) async {
+      final sem = t.ensureSemantics();
+      final a = pick('a.jpg', SendTab.gallery, media: true);
+      await open(t, gallery: [a]);
+      await t.tap(find.text(l10n.sendSheetChoosePhotos));
+      await t.pumpAndSettle();
+      await t.tap(find.bySemanticsLabel(l10n.traySpoiler));
+      await t.pumpAndSettle();
+      await t.tap(find.text(l10n.sendSheetSend(1, '1')));
+      await t.pumpAndSettle();
+      expect(result!.spoilers, {a.path});
+      sem.dispose();
+    });
   });
 
   testWidgets('closed without a send, every pick goes', (t) async {
@@ -215,6 +297,12 @@ void main() {
     await t.tap(find.text(l10n.sendSheetBrowseFiles));
     await t.pumpAndSettle();
     expect(t.takeException(), isNull);
+    // the tray takes room at this size: the list scrolls to the pick
+    await t.scrollUntilVisible(
+      find.text('.docx'),
+      60,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('.docx'), findsOneWidget);
   });
 

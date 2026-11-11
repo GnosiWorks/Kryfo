@@ -2985,7 +2985,7 @@
   "groupChatTapToRetryDesk": "! برای تکرار کلیک کنید",
   "chatDropHereToSend": "برای فرستادن اینجا رها کنید",
   "chatDropHereToAdd": "برای افزودن اینجا رها کنید",
-  "trayRemove": "برداشتن {name}",
+  "trayRemove": "حذف {name}",
   "trayReadyToSend": "آماده فرستادن: {count}",
   "trayPastedPicture": "تصویر چسبانده‌شده",
   "voiceSeeTranscription": "دیدن متن",
@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "فایل‌ها وقتی رویشان بزنی دانلود می‌شوند.",
   "fileSetGetAll": "دریافت همه · {size}",
   "fileSetGetting": "در حال دریافت {done} از {total}",
-  "fileUntil": "تا {date}"
+  "fileUntil": "تا {date}",
+  "trayToSend": "{count, plural, other{{n} برای ارسال}}",
+  "trayHint": "برای تغییر نام، فایل را نگه دار. هر فایل پیش از ارسال پاک‌سازی می‌شود.",
+  "trayTimeSoon": "کمتر از یک دقیقه از طریق Tor",
+  "trayTimeMinutes": "حدود {n} دقیقه از طریق Tor",
+  "trayMost": "تا {size} برای هر فایل",
+  "trayTooBig": "برای ارسال خیلی بزرگ است",
+  "trayRenameHint": "برای تغییر نام نگه دار",
+  "trayRenameTitle": "تغییر نام فایل",
+  "traySpoiler": "پنهان"
 }

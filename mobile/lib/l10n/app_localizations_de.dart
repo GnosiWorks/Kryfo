@@ -12344,4 +12344,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String fileUntil(String date) {
     return 'bis $date';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n zum Senden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint =>
+      'Halte eine Datei gedrückt, um sie umzubenennen. Jede Datei wird vor dem Senden bereinigt.';
+
+  @override
+  String get trayTimeSoon => 'unter einer Minute über Tor';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return 'etwa $n Min. über Tor';
+  }
+
+  @override
+  String trayMost(String size) {
+    return 'bis $size pro Datei';
+  }
+
+  @override
+  String get trayTooBig => 'Zu groß zum Senden';
+
+  @override
+  String get trayRenameHint => 'Gedrückt halten zum Umbenennen';
+
+  @override
+  String get trayRenameTitle => 'Datei umbenennen';
+
+  @override
+  String get traySpoiler => 'Spoiler';
 }

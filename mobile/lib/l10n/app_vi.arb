@@ -2985,7 +2985,7 @@
   "groupChatTapToRetryDesk": "! Nhấp để thử lại",
   "chatDropHereToSend": "Thả vào đây để gửi",
   "chatDropHereToAdd": "Thả vào đây để thêm",
-  "trayRemove": "Gỡ {name}",
+  "trayRemove": "Bỏ {name}",
   "trayReadyToSend": "Sẵn sàng gửi: {count}",
   "trayPastedPicture": "Ảnh đã dán",
   "voiceSeeTranscription": "Xem bản chép lời",
@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "Tệp được tải về khi bạn chạm vào.",
   "fileSetGetAll": "Tải tất cả · {size}",
   "fileSetGetting": "Đang tải {done}/{total}",
-  "fileUntil": "đến {date}"
+  "fileUntil": "đến {date}",
+  "trayToSend": "{count, plural, other{{n} mục để gửi}}",
+  "trayHint": "Nhấn giữ tệp để đổi tên. Mọi tệp đều được làm sạch trước khi gửi.",
+  "trayTimeSoon": "dưới một phút qua Tor",
+  "trayTimeMinutes": "khoảng {n} phút qua Tor",
+  "trayMost": "tối đa {size} mỗi tệp",
+  "trayTooBig": "Quá lớn để gửi",
+  "trayRenameHint": "Nhấn giữ để đổi tên",
+  "trayRenameTitle": "Đổi tên tệp",
+  "traySpoiler": "Ẩn"
 }

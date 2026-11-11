@@ -11371,7 +11371,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String trayRemove(String name) {
-    return 'برداشتن $name';
+    return 'حذف $name';
   }
 
   @override
@@ -12215,4 +12215,43 @@ class AppLocalizationsFa extends AppLocalizations {
   String fileUntil(String date) {
     return 'تا $date';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n برای ارسال',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint =>
+      'برای تغییر نام، فایل را نگه دار. هر فایل پیش از ارسال پاک‌سازی می‌شود.';
+
+  @override
+  String get trayTimeSoon => 'کمتر از یک دقیقه از طریق Tor';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return 'حدود $n دقیقه از طریق Tor';
+  }
+
+  @override
+  String trayMost(String size) {
+    return 'تا $size برای هر فایل';
+  }
+
+  @override
+  String get trayTooBig => 'برای ارسال خیلی بزرگ است';
+
+  @override
+  String get trayRenameHint => 'برای تغییر نام نگه دار';
+
+  @override
+  String get trayRenameTitle => 'تغییر نام فایل';
+
+  @override
+  String get traySpoiler => 'پنهان';
 }

@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "Файли завантажуються, коли ви їх торкаєтесь.",
   "fileSetGetAll": "Завантажити все · {size}",
   "fileSetGetting": "Завантажено {done} з {total}",
-  "fileUntil": "до {date}"
+  "fileUntil": "до {date}",
+  "trayToSend": "{count, plural, other{До надсилання: {n}}}",
+  "trayHint": "Утримуйте файл, щоб перейменувати його. Кожен файл очищується перед надсиланням.",
+  "trayTimeSoon": "менше хвилини через Tor",
+  "trayTimeMinutes": "близько {n} хв через Tor",
+  "trayMost": "до {size} на файл",
+  "trayTooBig": "Завеликий",
+  "trayRenameHint": "Утримуйте, щоб перейменувати",
+  "trayRenameTitle": "Перейменувати файл",
+  "traySpoiler": "Спойлер"
 }

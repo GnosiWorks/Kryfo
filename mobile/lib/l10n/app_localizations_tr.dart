@@ -11382,7 +11382,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String trayRemove(String name) {
-    return '$name öğesini kaldır';
+    return '$name dosyasını kaldır';
   }
 
   @override
@@ -12224,4 +12224,43 @@ class AppLocalizationsTr extends AppLocalizations {
   String fileUntil(String date) {
     return '$date tarihine kadar';
   }
+
+  @override
+  String trayToSend(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Gönderilecek: $n',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trayHint =>
+      'Yeniden adlandırmak için bir dosyaya basılı tut. Her dosya gönderilmeden önce temizlenir.';
+
+  @override
+  String get trayTimeSoon => 'Tor üzerinden bir dakikadan az';
+
+  @override
+  String trayTimeMinutes(String n) {
+    return 'Tor üzerinden yaklaşık $n dk';
+  }
+
+  @override
+  String trayMost(String size) {
+    return 'dosya başına $size kadar';
+  }
+
+  @override
+  String get trayTooBig => 'Göndermek için çok büyük';
+
+  @override
+  String get trayRenameHint => 'Yeniden adlandırmak için basılı tut';
+
+  @override
+  String get trayRenameTitle => 'Dosyayı yeniden adlandır';
+
+  @override
+  String get traySpoiler => 'Spoiler';
 }

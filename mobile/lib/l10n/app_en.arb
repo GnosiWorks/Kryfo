@@ -14256,7 +14256,7 @@
   },
   "trayRemove": "Remove {name}",
   "@trayRemove": {
-    "description": "a computer: the x on a file waiting above the composer, said by a screen reader and on hover",
+    "description": "screen reader label of the cross on a tray card",
     "placeholders": {
       "name": {
         "type": "String"
@@ -15387,5 +15387,59 @@
         "type": "String"
       }
     }
+  },
+  "trayToSend": "{count, plural, other{{n} to send}}",
+  "@trayToSend": {
+    "description": "sending sheet tray: how many picks go. n is count in the language's digits",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "trayHint": "Hold a file to rename it. Every file is cleaned before sending.",
+  "@trayHint": {
+    "description": "sending sheet tray: line under the cards"
+  },
+  "trayTimeSoon": "under a minute over Tor",
+  "@trayTimeSoon": {
+    "description": "sending sheet tray: guess of upload time, under a minute"
+  },
+  "trayTimeMinutes": "about {n} min over Tor",
+  "@trayTimeMinutes": {
+    "description": "sending sheet tray: honest guess of the upload time in whole minutes (n in the language's digits)",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "trayMost": "up to {size} per file",
+  "@trayMost": {
+    "description": "sending sheet tray: the most one file may be (e.g. 50 MB)",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "trayTooBig": "Too big to send",
+  "@trayTooBig": {
+    "description": "sending sheet tray: on a card whose file is bigger than one file may be"
+  },
+  "trayRenameHint": "Hold to rename",
+  "@trayRenameHint": {
+    "description": "screen reader hint on a tray card: holding it renames the file"
+  },
+  "trayRenameTitle": "Rename file",
+  "@trayRenameTitle": {
+    "description": "sheet title: rename a file before sending (its extension stays)"
+  },
+  "traySpoiler": "Spoiler",
+  "@traySpoiler": {
+    "description": "tray card chip and photo mark: the photo stays blurred until tapped"
   }
 }

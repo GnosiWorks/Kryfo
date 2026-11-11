@@ -3205,5 +3205,14 @@
   "autoGetFilesWait": "文件在你点按后才会下载。",
   "fileSetGetAll": "全部获取 · {size}",
   "fileSetGetting": "已获取 {done}/{total}",
-  "fileUntil": "保留至 {date}"
+  "fileUntil": "保留至 {date}",
+  "trayToSend": "{count, plural, other{待发送 {n} 个}}",
+  "trayHint": "长按文件可重命名。每个文件在发送前都会被清理。",
+  "trayTimeSoon": "经 Tor 不到一分钟",
+  "trayTimeMinutes": "经 Tor 约 {n} 分钟",
+  "trayMost": "每个文件最多 {size}",
+  "trayTooBig": "文件过大",
+  "trayRenameHint": "长按以重命名",
+  "trayRenameTitle": "重命名文件",
+  "traySpoiler": "剧透"
 }
