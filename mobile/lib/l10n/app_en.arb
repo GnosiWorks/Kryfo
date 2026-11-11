@@ -15039,6 +15039,10 @@
   "@fileOpenWithNote": {
     "description": "under Open with…: what handing the file out means"
   },
+  "fileOtherAppKeepsCopy": "The other app keeps a copy.",
+  "@fileOtherAppKeepsCopy": {
+    "description": "under Open with…, the line after fileOpenWithNote: the app the file goes to keeps its own copy"
+  },
   "fileFrom": "From {name}",
   "@fileFrom": {
     "description": "file viewer head: who sent the file",

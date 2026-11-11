@@ -12150,6 +12150,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Другое приложение увидит этот файл. До тех пор Kryfo хранит его зашифрованным.';
 
   @override
+  String get fileOtherAppKeepsCopy => 'Другое приложение сохранит его копию.';
+
+  @override
   String fileFrom(String name) {
     return 'От $name';
   }

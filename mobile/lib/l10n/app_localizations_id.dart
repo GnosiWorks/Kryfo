@@ -11968,6 +11968,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Aplikasi lain bisa melihat file ini. Sampai saat itu Kryfo menyimpannya terenkripsi.';
 
   @override
+  String get fileOtherAppKeepsCopy => 'Aplikasi lain menyimpan salinannya.';
+
+  @override
   String fileFrom(String name) {
     return 'Dari $name';
   }

@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "Voir dans Kryfo",
   "fileOpenWith": "Ouvrir avec…",
   "fileOpenWithNote": "L’autre appli peut voir ce fichier. D’ici là, Kryfo le garde chiffré.",
+  "fileOtherAppKeepsCopy": "L’autre appli en garde une copie.",
   "fileFrom": "De {name}",
   "fileLines": "{count, plural, =1{{n} ligne} other{{n} lignes}}",
   "fileNotWords": "Ce fichier n’est pas du texte. Tu peux l’enregistrer ou l’ouvrir avec une autre appli.",

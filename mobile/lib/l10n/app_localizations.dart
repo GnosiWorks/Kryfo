@@ -19177,6 +19177,12 @@ abstract class AppLocalizations {
   /// **'The other app can see this file. Kryfo keeps it encrypted until then.'**
   String get fileOpenWithNote;
 
+  /// under Open with…, the line after fileOpenWithNote: the app the file goes to keeps its own copy
+  ///
+  /// In en, this message translates to:
+  /// **'The other app keeps a copy.'**
+  String get fileOtherAppKeepsCopy;
+
   /// file viewer head: who sent the file
   ///
   /// In en, this message translates to:

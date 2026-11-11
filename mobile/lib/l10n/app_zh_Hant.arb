@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "在 Kryfo 中檢視",
   "fileOpenWith": "開啟方式…",
   "fileOpenWithNote": "其他 App 可以看到此檔案。在那之前，Kryfo 會一直加密保存它。",
+  "fileOtherAppKeepsCopy": "其他 App 會保留一份副本。",
   "fileFrom": "來自 {name}",
   "fileLines": "{count, plural, other{{n} 行}}",
   "fileNotWords": "此檔案不是文字。你可以儲存它，或用其他 App 開啟。",

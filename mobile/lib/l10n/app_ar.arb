@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "عرض في Kryfo",
   "fileOpenWith": "فتح باستخدام…",
   "fileOpenWithNote": "يمكن للتطبيق الآخر رؤية هذا الملف. يبقيه Kryfo مشفّرًا حتى ذلك الحين.",
+  "fileOtherAppKeepsCopy": "يحتفظ التطبيق الآخر بنسخة منه.",
   "fileFrom": "من {name}",
   "fileLines": "{count, plural, =0{لا أسطر} =1{سطر واحد} =2{سطران} few{{n} أسطر} many{{n} سطرًا} other{{n} سطر}}",
   "fileNotWords": "هذا الملف ليس نصًا. يمكنك حفظه أو فتحه بتطبيق آخر.",

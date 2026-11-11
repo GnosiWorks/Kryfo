@@ -11988,6 +11988,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Diğer uygulama bu dosyayı görebilir. O ana kadar Kryfo onu şifreli tutar.';
 
   @override
+  String get fileOtherAppKeepsCopy => 'Diğer uygulama bir kopyasını saklar.';
+
+  @override
   String fileFrom(String name) {
     return '$name gönderdi';
   }

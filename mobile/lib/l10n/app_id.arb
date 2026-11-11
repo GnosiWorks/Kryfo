@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "Lihat di Kryfo",
   "fileOpenWith": "Buka dengan…",
   "fileOpenWithNote": "Aplikasi lain bisa melihat file ini. Sampai saat itu Kryfo menyimpannya terenkripsi.",
+  "fileOtherAppKeepsCopy": "Aplikasi lain menyimpan salinannya.",
   "fileFrom": "Dari {name}",
   "fileLines": "{count, plural, other{{n} baris}}",
   "fileNotWords": "File ini bukan teks. Kamu bisa menyimpannya atau membukanya dengan aplikasi lain.",

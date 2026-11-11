@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "Открыть в Kryfo",
   "fileOpenWith": "Открыть в…",
   "fileOpenWithNote": "Другое приложение увидит этот файл. До тех пор Kryfo хранит его зашифрованным.",
+  "fileOtherAppKeepsCopy": "Другое приложение сохранит его копию.",
   "fileFrom": "От {name}",
   "fileLines": "{count, plural, one{{n} строка} few{{n} строки} many{{n} строк} other{{n} строки}}",
   "fileNotWords": "Этот файл не текст. Его можно сохранить или открыть в другом приложении.",

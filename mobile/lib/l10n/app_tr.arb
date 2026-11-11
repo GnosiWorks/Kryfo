@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "Kryfo'da görüntüle",
   "fileOpenWith": "Birlikte aç…",
   "fileOpenWithNote": "Diğer uygulama bu dosyayı görebilir. O ana kadar Kryfo onu şifreli tutar.",
+  "fileOtherAppKeepsCopy": "Diğer uygulama bir kopyasını saklar.",
   "fileFrom": "{name} gönderdi",
   "fileLines": "{count, plural, other{{n} satır}}",
   "fileNotWords": "Bu dosya metin değil. Kaydedebilir ya da başka bir uygulamayla açabilirsin.",

@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "دیدن در Kryfo",
   "fileOpenWith": "باز کردن با…",
   "fileOpenWithNote": "برنامه دیگر می‌تواند این فایل را ببیند. Kryfo تا آن موقع آن را رمزگذاری‌شده نگه می‌دارد.",
+  "fileOtherAppKeepsCopy": "برنامه دیگر یک نسخه از آن را نگه می‌دارد.",
   "fileFrom": "از {name}",
   "fileLines": "{count, plural, =1{{n} خط} other{{n} خط}}",
   "fileNotWords": "این فایل متن نیست. می‌توانید آن را ذخیره کنید یا با برنامه دیگری باز کنید.",

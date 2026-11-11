@@ -11302,6 +11302,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fileOpenWithNote => '其他应用可以看到此文件。在此之前，Kryfo 会一直加密保存它。';
 
   @override
+  String get fileOtherAppKeepsCopy => '其他应用会保留一份副本。';
+
+  @override
   String fileFrom(String name) {
     return '来自 $name';
   }
@@ -22729,6 +22732,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get fileOpenWithNote => '其他 App 可以看到此檔案。在那之前，Kryfo 會一直加密保存它。';
+
+  @override
+  String get fileOtherAppKeepsCopy => '其他 App 會保留一份副本。';
 
   @override
   String fileFrom(String name) {

@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "Відкрити в Kryfo",
   "fileOpenWith": "Відкрити в…",
   "fileOpenWithNote": "Інший застосунок побачить цей файл. Доти Kryfo зберігає його зашифрованим.",
+  "fileOtherAppKeepsCopy": "Інший застосунок збереже його копію.",
   "fileFrom": "Від {name}",
   "fileLines": "{count, plural, one{{n} рядок} few{{n} рядки} many{{n} рядків} other{{n} рядка}}",
   "fileNotWords": "Цей файл не текст. Його можна зберегти або відкрити в іншому застосунку.",

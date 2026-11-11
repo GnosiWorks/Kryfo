@@ -11960,6 +11960,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'The other app can see this file. Kryfo keeps it encrypted until then.';
 
   @override
+  String get fileOtherAppKeepsCopy => 'The other app keeps a copy.';
+
+  @override
   String fileFrom(String name) {
     return 'From $name';
   }

@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "Kryfo में देखें",
   "fileOpenWith": "इससे खोलें…",
   "fileOpenWithNote": "दूसरा ऐप यह फ़ाइल देख सकता है. तब तक Kryfo इसे एन्क्रिप्ट करके रखता है.",
+  "fileOtherAppKeepsCopy": "दूसरा ऐप इसकी एक कॉपी रखता है.",
   "fileFrom": "{name} से",
   "fileLines": "{count, plural, =1{{n} पंक्ति} other{{n} पंक्तियाँ}}",
   "fileNotWords": "यह फ़ाइल टेक्स्ट नहीं है. आप इसे सेव कर सकते हैं या दूसरे ऐप से खोल सकते हैं.",

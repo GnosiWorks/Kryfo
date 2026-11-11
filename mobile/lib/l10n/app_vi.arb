@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "Xem trong Kryfo",
   "fileOpenWith": "Mở bằng…",
   "fileOpenWithNote": "Ứng dụng kia có thể thấy tệp này. Đến lúc đó Kryfo vẫn giữ nó được mã hóa.",
+  "fileOtherAppKeepsCopy": "Ứng dụng kia sẽ giữ một bản sao.",
   "fileFrom": "Từ {name}",
   "fileLines": "{count, plural, other{{n} dòng}}",
   "fileNotWords": "Tệp này không phải văn bản. Bạn có thể lưu hoặc mở nó bằng ứng dụng khác.",

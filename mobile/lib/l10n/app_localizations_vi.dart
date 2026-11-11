@@ -11953,6 +11953,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ứng dụng kia có thể thấy tệp này. Đến lúc đó Kryfo vẫn giữ nó được mã hóa.';
 
   @override
+  String get fileOtherAppKeepsCopy => 'Ứng dụng kia sẽ giữ một bản sao.';
+
+  @override
   String fileFrom(String name) {
     return 'Từ $name';
   }

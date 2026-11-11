@@ -12062,6 +12062,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'L’altra app può vedere questo file. Fino ad allora Kryfo lo tiene cifrato.';
 
   @override
+  String get fileOtherAppKeepsCopy => 'L’altra app ne tiene una copia.';
+
+  @override
   String fileFrom(String name) {
     return 'Da $name';
   }

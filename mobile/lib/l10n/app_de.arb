@@ -3147,6 +3147,7 @@
   "fileViewInKryfo": "In Kryfo ansehen",
   "fileOpenWith": "Öffnen mit…",
   "fileOpenWithNote": "Die andere App kann diese Datei sehen. Bis dahin hält Kryfo sie verschlüsselt.",
+  "fileOtherAppKeepsCopy": "Die andere App behält eine Kopie.",
   "fileFrom": "Von {name}",
   "fileLines": "{count, plural, =1{{n} Zeile} other{{n} Zeilen}}",
   "fileNotWords": "Diese Datei ist kein Text. Du kannst sie speichern oder mit einer anderen App öffnen.",
