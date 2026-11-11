@@ -259,6 +259,7 @@ import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../voice_speed.dart' show VoiceSpeed;
 import '../widgets/react_taps.dart';
+import '../widgets/burn_sheet.dart';
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../wide/read_width.dart';
 import '../wide/wide_pane.dart' show PaneBack, PaneFind;
@@ -3895,30 +3896,24 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
+  // the flame: a tap picks how long, and while one is set "Off" is on top.
+  // the choice stays until it is changed here
   Future<void> _pickBurnDuration() async {
-    final picked = await showChoiceSheet<int>(
+    final picked = await showBurnSheet(
       context,
-      title: l10n.chatGhostTimer,
-      line: l10n.chatHowLongAfterReading,
-      current: _burnSeconds,
-      choices: [
-        // an answer the phone sends lives an hour at least
-        if (!_viaPhone) ...[
-          SheetChoice(30, l10n.chat30Seconds),
-          SheetChoice(60, l10n.chat1Minute),
-          SheetChoice(300, l10n.chat5Minutes),
-        ],
-        SheetChoice(3600, l10n.chat1Hour),
-        SheetChoice(86400, l10n.chat24Hours),
-      ],
+      on: _ghost,
+      secs: _burnSeconds,
+      // an answer the phone sends lives an hour at least
+      short: !_viaPhone,
     );
     if (picked == null || !mounted) return;
+    final on = picked != kBurnOff;
     setState(() {
-      _burnSeconds = picked;
-      _ghost = true;
-      _lastBurnSeconds = picked;
-      _lastGhost = true;
-      appState.saveGhostPref(true, picked);
+      if (on) _burnSeconds = picked;
+      _ghost = on;
+      _lastBurnSeconds = _burnSeconds;
+      _lastGhost = on;
+      appState.saveGhostPref(on, _burnSeconds);
     });
     // the draft takes the chat's new clock
     _keepDraft(clock: true);
@@ -7844,17 +7839,7 @@ class _ChatScreenState extends State<ChatScreen>
                                         : l10n.chatPhotoProtectionOff,
                                   );
                                 },
-                                onToggleGhost: () {
-                                  setState(() {
-                                    _ghost = !_ghost;
-                                    _lastGhost = _ghost;
-                                    appState.saveGhostPref(
-                                      _ghost,
-                                      _burnSeconds,
-                                    );
-                                  });
-                                  _keepDraft(clock: true);
-                                },
+                                onToggleGhost: _pickBurnDuration,
                                 onPickBurn: _pickBurnDuration,
                                 burnSeconds: _burnSeconds,
                                 controller: _msgCtrl,

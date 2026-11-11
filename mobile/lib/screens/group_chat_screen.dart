@@ -201,6 +201,7 @@ import '../voice_length.dart' show voiceFileMs;
 import '../voice_opus.dart' show voiceForWire;
 import '../voice_speed.dart' show VoiceSpeed;
 import '../widgets/react_taps.dart';
+import '../widgets/burn_sheet.dart';
 import '../widgets/voice_parts.dart' show voiceFileFree, voicePeaksSame;
 import '../desktop/desktop_mode.dart' show canShareOut, onDesktop;
 import '../desktop/attach_tray.dart';
@@ -3450,97 +3451,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     await appState.reactInGroup(widget.groupId, target.msgUid!, newEmoji);
   }
 
-  void _showBurnPicker() {
-    FocusManager.instance.primaryFocus?.unfocus();
-    showHaloSheet(
-      context,
-      builder: (c) {
-        final options = [
-          (30, l10n.groupChat30Seconds),
-          (60, l10n.groupChat1Minute),
-          (300, l10n.groupChat5Minutes),
-          (3600, l10n.groupChat1Hour),
-          (86400, l10n.groupChat24Hours),
-        ];
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SheetHandle(),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.local_fire_department_outlined,
-                      size: 14,
-                      color: HaloColors.amber,
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        l10n.groupChatBurnTimer,
-                        style: HaloType.serif(
-                          size: 16,
-                          italic: true,
-                          color: HaloColors.text,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.groupChatNewMessagesDisappearOnceRead,
-                  style: HaloType.mono(size: 11, color: HaloColors.text),
-                ),
-                const SizedBox(height: 12),
-                for (final opt in options)
-                  InkWell(
-                    // picking a time is asking for timed messages
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() {
-                        _burnSeconds = opt.$1;
-                        _ghost = true;
-                      });
-                      appState.saveGhostPref(true, opt.$1);
-                      // the draft takes the group's new clock
-                      _keepDraft(clock: true);
-                      Navigator.pop(c);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              opt.$2,
-                              style: HaloType.sans(
-                                size: 14,
-                                color: opt.$1 == _burnSeconds
-                                    ? HaloColors.amberText
-                                    : HaloColors.text,
-                              ),
-                            ),
-                          ),
-                          if (opt.$1 == _burnSeconds)
-                            Icon(
-                              Icons.check_rounded,
-                              color: HaloColors.amber,
-                              size: 16,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  // the flame: a tap picks how long, and while one is set "Off" is on top.
+  // the choice stays until it is changed here
+  Future<void> _showBurnPicker() async {
+    final picked = await showBurnSheet(context, on: _ghost, secs: _burnSeconds);
+    if (picked == null || !mounted) return;
+    final on = picked != kBurnOff;
+    setState(() {
+      if (on) _burnSeconds = picked;
+      _ghost = on;
+    });
+    appState.saveGhostPref(on, _burnSeconds);
+    // the draft takes the group's new clock
+    _keepDraft(clock: true);
   }
 
   Future<void> _showEmojiPickerAt(
@@ -5284,11 +5207,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
                                 ghost: _ghost,
                                 burnSeconds: _burnSeconds,
                                 disguise: _disguise,
-                                onToggleGhost: () {
-                                  setState(() => _ghost = !_ghost);
-                                  appState.saveGhostPref(_ghost, _burnSeconds);
-                                  _keepDraft(clock: true);
-                                },
+                                onToggleGhost: _showBurnPicker,
                                 onLongPressGhost: _showBurnPicker,
                                 onSend: _send,
                                 onAttach: _showAttachSheet,
