@@ -16,6 +16,8 @@ import 'file_peek.dart' show forgetFirstLines;
 import 'pdf_pages.dart' show closeAllPdfs;
 import 'open_file.dart' show forgetVideoFrames;
 import 'photo_blur.dart' show forgetBlurs, stopBlurs;
+import 'widgets/archive_glance.dart' show forgetZipGlances;
+import 'widgets/file_bubble.dart' show forgetDocLines;
 
 /// true while the lock is up, and at a start until it first lifts
 final picturesShut = ValueNotifier<bool>(false);
@@ -92,6 +94,8 @@ void shutPictures() {
   if (shutFaultForTest case final f?) lockStep('test fault', f);
   lockStep('video frames', forgetVideoFrames);
   lockStep('first lines', forgetFirstLines);
+  lockStep('doc lines', forgetDocLines);
+  lockStep('zip glances', forgetZipGlances);
   lockStep('pdfs', closeAllPdfs);
   lockStep('blurs stop', stopBlurs);
   lockStep('blurs', forgetBlurs);

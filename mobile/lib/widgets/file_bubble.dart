@@ -1134,10 +1134,13 @@ Future<List<DocLine>?> docFirstLines(String path) async {
       if (b is DocPara && b.text.trim().isNotEmpty)
         (text: b.text.trim(), head: b.heading > 0),
   ].take(4).toList();
-  if (lines.isEmpty) return null;
+  if (lines.isEmpty || picturesShut.value) return null;
   if (_docLines.length > 24) _docLines.remove(_docLines.keys.first);
   return _docLines[path] = lines;
 }
 
 /// the lock lets go of every document's first lines
 void forgetDocLines() => _docLines.clear();
+
+/// [path] is going: its first lines with it
+void forgetDocLinesOf(String path) => _docLines.remove(path);
