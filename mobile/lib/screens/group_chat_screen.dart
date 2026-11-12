@@ -2647,9 +2647,19 @@ class _GroupChatScreenState extends State<GroupChatScreen>
             await shredPickedImages([for (final m in items) ?m.video]);
           }
         } else {
-          await _sendGroupFileSet([
-            for (final f in run.picks) (f.path, f.name),
-          ], caption);
+          await _sendGroupFileSet(
+            [
+              for (final f in run.picks)
+                (
+                  f.path,
+                  f.media && f.from == SendTab.gallery
+                      ? madeName(f.name, fallbackExt: f.video ? 'mp4' : 'jpg')
+                      : f.name,
+                ),
+            ],
+            caption,
+            spoilers: r.spoilers,
+          );
         }
         caption = '';
       }
@@ -2927,6 +2937,7 @@ class _GroupChatScreenState extends State<GroupChatScreen>
           sending: true,
           burnSecs: burn,
           album: album,
+          spoiler: ready.spoiler,
         )..fresh = true);
     album = m.album;
     caption = m.text;
@@ -3221,8 +3232,10 @@ class _GroupChatScreenState extends State<GroupChatScreen>
   // sets of up to kAlbumMax with the caption on the first
   Future<void> _sendGroupFileSet(
     List<(String, String)> files,
-    String caption,
-  ) async {
+    String caption, {
+    // the photos among them marked as spoilers, by their path
+    Set<String> spoilers = const {},
+  }) async {
     if (files.isEmpty) return;
     if (files.length == 1) {
       await _sendGroupFileFrom(
@@ -3235,7 +3248,13 @@ class _GroupChatScreenState extends State<GroupChatScreen>
     final ready = <_GReady>[];
     for (final (path, name) in files) {
       if (!mounted || lockState.locked) break;
-      if (await _readyGroupFile(path, name) case final r?) ready.add(r);
+      if (await _readyGroupFile(path, name) case final r?) {
+        ready.add(
+          spoilers.contains(path)
+              ? _GReady(r.uid, r.path, fileName: r.fileName, spoiler: true)
+              : r,
+        );
+      }
     }
     if (!mounted || lockState.locked) {
       for (final r in ready) {
@@ -5680,7 +5699,9 @@ class _GReady {
   final String uid;
   final String path;
   final String? fileName;
-  const _GReady(this.uid, this.path, {this.fileName});
+  // a photo inside a file set, blurred until tapped
+  final bool spoiler;
+  const _GReady(this.uid, this.path, {this.fileName, this.spoiler = false});
 }
 
 class _GMsg with WordLinks {
@@ -7763,6 +7784,7 @@ class _GroupBubble extends StatelessWidget {
       failed: isOut && x.looksFailed,
       onRetry: onRetryRow == null ? null : () => onRetryRow!(x),
       onLongPress: hold,
+      spoiler: x.spoiler,
       ready: () => path != null && shape == FileShape.video && !x.sending
           ? VideoBubble(
               key: ValueKey('vid_$path'),

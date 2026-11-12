@@ -12593,4 +12593,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get fileDocCut =>
       'La suite de ce document est trop longue pour s\'afficher ici.';
+
+  @override
+  String get mediaProgressPreparingNow => 'Préparation';
 }

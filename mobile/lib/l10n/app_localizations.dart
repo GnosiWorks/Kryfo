@@ -19914,6 +19914,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The rest of this document is too long to show here.'**
   String get fileDocCut;
+
+  /// send strip and file bubble: a send made ready, before its first byte goes
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing'**
+  String get mediaProgressPreparingNow;
 }
 
 class _AppLocalizationsDelegate

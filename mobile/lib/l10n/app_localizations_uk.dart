@@ -12645,4 +12645,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get fileDocCut => 'Решта документа задовга, щоб показати її тут.';
+
+  @override
+  String get mediaProgressPreparingNow => 'Підготовка';
 }

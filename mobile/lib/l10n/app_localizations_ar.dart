@@ -12592,4 +12592,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fileDocCut => 'بقية هذا المستند أطول من أن تُعرض هنا.';
+
+  @override
+  String get mediaProgressPreparingNow => 'جارٍ التحضير';
 }

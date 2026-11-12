@@ -120,14 +120,15 @@ class _FileCardState extends State<FileCard> {
     if (old.sendingUid != null && widget.sendingUid == null && !widget.failed) {
       _filling = !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);
       _tickTimer?.cancel();
-      _tickTimer = Timer(Duration(milliseconds: _filling ? 300 : 0), () {
+      // as long as the ring takes to reach full (FileSendRing's tween)
+      _tickTimer = Timer(Duration(milliseconds: _filling ? 460 : 0), () {
         if (!mounted) return;
         HapticFeedback.lightImpact();
         setState(() {
           _filling = false;
           _ticked = true;
         });
-        _tickTimer = Timer(const Duration(milliseconds: 700), () {
+        _tickTimer = Timer(const Duration(milliseconds: 1100), () {
           if (mounted) setState(() => _ticked = false);
         });
       });
@@ -330,18 +331,22 @@ class _FileCardState extends State<FileCard> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // the tick pops in a little; everything else, the
+                    // tile after it too, only cross-fades
                     AnimatedSwitcher(
                       duration: still
                           ? Duration.zero
-                          : const Duration(milliseconds: 220),
+                          : const Duration(milliseconds: 260),
                       switchInCurve: kHouseCurve,
                       switchOutCurve: Curves.easeInCubic,
                       transitionBuilder: (c, a) => FadeTransition(
                         opacity: a,
-                        child: ScaleTransition(
-                          scale: Tween(begin: 0.6, end: 1.0).animate(a),
-                          child: c,
-                        ),
+                        child: c.key == const ValueKey('tick')
+                            ? ScaleTransition(
+                                scale: Tween(begin: 0.8, end: 1.0).animate(a),
+                                child: c,
+                              )
+                            : c,
                       ),
                       child: mark,
                     ),
@@ -449,7 +454,7 @@ class _FileCardState extends State<FileCard> {
     if (v < 0) return l10n.chatWaitsToSend;
     // preparing until a byte goes, then sending: never "0 b" first
     if (mediaPreparing.contains(uid) || v == 0) {
-      return l10n.mediaProgressPreparing;
+      return l10n.mediaProgressPreparingNow;
     }
     final d = transferDetail(uid, v);
     return d == null ? percent(v) : '$d · ${percent(v)}';
@@ -559,23 +564,24 @@ class FileTextPreview extends StatefulWidget {
 }
 
 class _FileTextPreviewState extends State<FileTextPreview> {
-  late List<String>? _lines = widget.doc
-      ? _docLines[widget.path]
-      : firstLinesNow(widget.path);
+  late List<String>? _lines = widget.doc ? null : firstLinesNow(widget.path);
+  // a word document's first paragraphs, its headings marked
+  late List<DocLine>? _paras = widget.doc ? _docLines[widget.path] : null;
 
   @override
   void initState() {
     super.initState();
     picturesShut.addListener(_lock);
-    if (_lines == null) _read();
+    if (_lines == null && _paras == null) _read();
   }
 
   @override
   void didUpdateWidget(FileTextPreview old) {
     super.didUpdateWidget(old);
     if (old.path != widget.path) {
-      _lines = widget.doc ? _docLines[widget.path] : firstLinesNow(widget.path);
-      if (_lines == null) _read();
+      _lines = widget.doc ? null : firstLinesNow(widget.path);
+      _paras = widget.doc ? _docLines[widget.path] : null;
+      if (_lines == null && _paras == null) _read();
     }
   }
 
@@ -589,7 +595,12 @@ class _FileTextPreviewState extends State<FileTextPreview> {
     if (picturesShut.value) {
       forgetFirstLines();
       forgetDocLines();
-      if (mounted) setState(() => _lines = null);
+      if (mounted) {
+        setState(() {
+          _lines = null;
+          _paras = null;
+        });
+      }
     } else {
       _read();
     }
@@ -597,13 +608,82 @@ class _FileTextPreviewState extends State<FileTextPreview> {
 
   Future<void> _read() async {
     final p = widget.path;
-    final l = widget.doc ? await docFirstLines(p) : await firstLinesOf(p);
+    if (widget.doc) {
+      final d = await docFirstLines(p);
+      if (!mounted || p != widget.path || picturesShut.value) return;
+      if (d != null) setState(() => _paras = d);
+      return;
+    }
+    final l = await firstLinesOf(p);
     if (!mounted || p != widget.path || picturesShut.value) return;
     if (l != null) setState(() => _lines = l);
   }
 
+  // a word document as its reader sets it: headings bold, words wrapped,
+  // a few lines and a fade where it goes on
+  Widget _docGlance(BuildContext context, List<DocLine> paras) {
+    final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.4);
+    final body = HaloType.sans(size: 12, color: HaloColors.text, height: 1.35);
+    final head = HaloType.sans(
+      size: 13,
+      color: HaloColors.text,
+      weight: FontWeight.w700,
+      height: 1.3,
+    );
+    return Container(
+      width: kFilePreviewWidth,
+      height: docGlanceHeight(scaler),
+      padding: const EdgeInsets.fromLTRB(11, 9, 11, 0),
+      decoration: BoxDecoration(
+        color: HaloColors.ink,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ShaderMask(
+        blendMode: BlendMode.dstIn,
+        shaderCallback: (r) => const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF), Color(0x00FFFFFF)],
+          stops: [0, 0.66, 1],
+        ).createShader(r),
+        child: ClipRect(
+          child: OverflowBox(
+            alignment: Alignment.topCenter,
+            maxHeight: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final (i, l) in paras.indexed)
+                  Padding(
+                    padding: EdgeInsets.only(top: i == 0 ? 0 : 4),
+                    child: Text(
+                      l.text,
+                      maxLines: 4,
+                      overflow: TextOverflow.clip,
+                      textScaler: scaler,
+                      style: l.head ? head : body,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final paras = _paras;
+    if (widget.doc && paras != null) {
+      return TweenAnimationBuilder<double>(
+        tween: Tween(begin: motionStill(context) ? 1 : 0, end: 1),
+        duration: const Duration(milliseconds: 220),
+        builder: (_, v, c) => Opacity(opacity: v, child: c),
+        child: _docGlance(context, paras),
+      );
+    }
     final lines = _lines;
     // a glance, not the reader: it grows with the text size, only so far
     final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.4);
@@ -613,7 +693,9 @@ class _FileTextPreviewState extends State<FileTextPreview> {
     ).copyWith(height: 1.45);
     // the room four lines take is kept while they are read, so the bubble
     // does not jump when they fade in
-    final kept = scaler.scale(10.5) * 1.45 * 4 + 18;
+    final kept = widget.doc
+        ? docGlanceHeight(scaler)
+        : scaler.scale(10.5) * 1.45 * 4 + 18;
     return EaseSize(
       duration: const Duration(milliseconds: 220),
       alignment: AlignmentDirectional.topStart,
@@ -664,6 +746,23 @@ class _FileTextPreviewState extends State<FileTextPreview> {
 
 /// a pdf's first page on paper, its top in view, with how many pages it
 /// has. lines stand in for it while it is drawn; nothing when it cannot be
+// the first pages on screen, by file: where a viewer grows out of
+final Map<String, List<BuildContext>> _glancesShown = {};
+
+/// where [path]'s first page shows in a bubble on screen: the one inside
+/// [tapped] when there is one. null when none shows
+Rect? pdfGlanceRect(String path, Rect? tapped) {
+  Rect? any;
+  for (final c in _glancesShown[path] ?? const <BuildContext>[]) {
+    final b = c.findRenderObject();
+    if (b is! RenderBox || !b.attached || !b.hasSize) continue;
+    final r = b.localToGlobal(Offset.zero) & b.size;
+    if (tapped == null || tapped.overlaps(r)) return r;
+    any ??= r;
+  }
+  return tapped == null ? any : null;
+}
+
 class PdfFirstPage extends StatefulWidget {
   final String path;
   const PdfFirstPage({super.key, required this.path});
@@ -676,6 +775,8 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
   ui.Image? _image;
   int? _pages;
   bool _failed = false;
+  // drawn from its first frame: no paper, no fade, the page as it is
+  bool _hadIt = false;
 
   static const _height = 120.0;
 
@@ -685,6 +786,23 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
     pdfGlancesGone.addListener(_gone);
     picturesShut.addListener(_lock);
     _take(pdfGlanceNow(widget.path));
+    _hadIt = _image != null;
+    (_glancesShown[widget.path] ??= []).add(context);
+  }
+
+  @override
+  void didUpdateWidget(PdfFirstPage old) {
+    super.didUpdateWidget(old);
+    if (old.path != widget.path) {
+      _unshow(old.path);
+      (_glancesShown[widget.path] ??= []).add(context);
+    }
+  }
+
+  void _unshow(String path) {
+    final l = _glancesShown[path];
+    l?.remove(context);
+    if (l != null && l.isEmpty) _glancesShown.remove(path);
   }
 
   @override
@@ -697,6 +815,7 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
   void dispose() {
     pdfGlancesGone.removeListener(_gone);
     picturesShut.removeListener(_lock);
+    _unshow(widget.path);
     _image?.dispose();
     super.dispose();
   }
@@ -750,16 +869,17 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
           fit: StackFit.expand,
           children: [
             const ColoredBox(color: Color(0xFFFFFFFF)),
-            AnimatedOpacity(
-              opacity: img == null ? 1 : 0,
-              duration: still
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              child: const _PaperLines(),
-            ),
+            if (!_hadIt)
+              AnimatedOpacity(
+                opacity: img == null ? 1 : 0,
+                duration: still
+                    ? Duration.zero
+                    : const Duration(milliseconds: 220),
+                child: const _PaperLines(),
+              ),
             if (img != null)
               TweenAnimationBuilder<double>(
-                tween: Tween(begin: still ? 1 : 0, end: 1),
+                tween: Tween(begin: still || _hadIt ? 1 : 0, end: 1),
                 duration: const Duration(milliseconds: 240),
                 builder: (_, v, c) => Opacity(opacity: v, child: c),
                 child: RawImage(
@@ -860,6 +980,8 @@ Future<void> warmSentPreview(
     final facts = fileFactsOrName(path, name);
     if (textViewable(facts.ext)) {
       await firstLinesOf(path).timeout(most);
+    } else if (kDocViewExts.contains(facts.ext)) {
+      await docFirstLines(path).timeout(most);
     } else if (facts.kind == FileKind.pdf && pdfViewHere) {
       final px = (kFilePreviewWidth * MediaQuery.devicePixelRatioOf(context))
           .round();
@@ -871,17 +993,24 @@ Future<void> warmSentPreview(
 }
 
 // a document's first lines, kept like a text's, dropped at the lock
-final Map<String, List<String>> _docLines = {};
+final Map<String, List<DocLine>> _docLines = {};
+
+/// a paragraph of a document's glance
+typedef DocLine = ({String text, bool head});
+
+/// the glance's height: about four lines of body text, the last fading
+double docGlanceHeight(TextScaler scaler) => scaler.scale(12) * 1.35 * 4 + 12;
 
 /// the first four paragraphs with words of the document at [path]
-Future<List<String>?> docFirstLines(String path) async {
+Future<List<DocLine>?> docFirstLines(String path) async {
   final kept = _docLines[path];
   if (kept != null) return kept;
   final d = await readDocFile(path);
   if (d == null) return null;
-  final lines = <String>[
+  final lines = <DocLine>[
     for (final b in d.blocks)
-      if (b is DocPara && b.text.trim().isNotEmpty) b.text.trim(),
+      if (b is DocPara && b.text.trim().isNotEmpty)
+        (text: b.text.trim(), head: b.heading > 0),
   ].take(4).toList();
   if (lines.isEmpty) return null;
   if (_docLines.length > 24) _docLines.remove(_docLines.keys.first);

@@ -3269,5 +3269,6 @@
   "sendSheetDiscard": "放弃",
   "sendSheetKeep": "保留",
   "fileDocUnreadable": "这份文档无法在这里显示。你可以保存它，或用其他应用打开。",
-  "fileDocCut": "这份文档其余部分太长，无法在这里显示。"
+  "fileDocCut": "这份文档其余部分太长，无法在这里显示。",
+  "mediaProgressPreparingNow": "正在准备"
 }

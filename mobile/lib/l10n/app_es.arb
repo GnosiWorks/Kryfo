@@ -3269,5 +3269,6 @@
   "sendSheetDiscard": "Descartar",
   "sendSheetKeep": "Conservarlos",
   "fileDocUnreadable": "Este documento no se puede mostrar aquí. Puedes guardarlo o abrirlo con otra app.",
-  "fileDocCut": "El resto de este documento es demasiado largo para mostrarlo aquí."
+  "fileDocCut": "El resto de este documento es demasiado largo para mostrarlo aquí.",
+  "mediaProgressPreparingNow": "Preparando"
 }

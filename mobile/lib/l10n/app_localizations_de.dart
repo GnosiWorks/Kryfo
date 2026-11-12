@@ -12599,4 +12599,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fileDocCut =>
       'Der Rest dieses Dokuments ist zu lang für diese Ansicht.';
+
+  @override
+  String get mediaProgressPreparingNow => 'Wird vorbereitet';
 }

@@ -3269,5 +3269,6 @@
   "sendSheetDiscard": "تجاهل",
   "sendSheetKeep": "الاحتفاظ بها",
   "fileDocUnreadable": "لا يمكن عرض هذا المستند هنا. يمكنك حفظه أو فتحه بتطبيق آخر.",
-  "fileDocCut": "بقية هذا المستند أطول من أن تُعرض هنا."
+  "fileDocCut": "بقية هذا المستند أطول من أن تُعرض هنا.",
+  "mediaProgressPreparingNow": "جارٍ التحضير"
 }

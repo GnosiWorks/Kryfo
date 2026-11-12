@@ -19,6 +19,7 @@ import '../pdf_pages.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'file_actions.dart';
+import 'file_bubble.dart' show pdfGlanceRect;
 import 'ease_size.dart';
 import 'halo_buttons.dart' show HaloGhostButton;
 import 'file_viewer_parts.dart';
@@ -34,19 +35,26 @@ Future<void> openPdfFile(
   String? from,
   Object? heroTag,
   int? size,
-}) => openFileViewer(
-  context,
-  secure: kept,
-  (_) => PdfViewer(
-    path: path,
-    name: name,
-    facts: facts,
-    kept: kept,
-    from: from,
-    heroTag: heroTag,
-    size: size,
-  ),
-);
+}) {
+  // its first page in the viewer, grown out of the one its bubble shows
+  final landing = GlobalKey();
+  return openFileViewer(
+    context,
+    secure: kept,
+    shownAt: (tapped) => pdfGlanceRect(path, tapped),
+    landing: landing,
+    (_) => PdfViewer(
+      path: path,
+      name: name,
+      facts: facts,
+      kept: kept,
+      from: from,
+      heroTag: heroTag,
+      size: size,
+      landing: landing,
+    ),
+  );
+}
 
 const _gap = 12.0;
 const _side = 12.0;
@@ -65,6 +73,8 @@ class PdfViewer extends StatefulWidget {
   final String? from;
   final Object? heroTag;
   final int? size;
+  // the first page, for the way in and out of its bubble
+  final GlobalKey? landing;
   const PdfViewer({
     super.key,
     required this.path,
@@ -74,14 +84,14 @@ class PdfViewer extends StatefulWidget {
     this.from,
     this.heroTag,
     this.size,
+    this.landing,
   });
 
   @override
   State<PdfViewer> createState() => PdfViewerState();
 }
 
-class PdfViewerState extends State<PdfViewer>
-    with SingleTickerProviderStateMixin {
+class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
   PdfDoc? _doc;
   PdfTrouble? _trouble;
   // a pdf that took the app down gets one more try from here, by hand
@@ -92,6 +102,11 @@ class PdfViewerState extends State<PdfViewer>
     duration: const Duration(milliseconds: 260),
   );
   Animation<Matrix4>? _to;
+  // a page turned sideways: the pages slide out to one side, the next
+  // slides in from the other and lands exactly where the first one was
+  final _slide = ValueNotifier<double>(0);
+  late final AnimationController _turn = AnimationController(vsync: this);
+  int _turns = 0;
 
   // pages drawn, by page and how sharp: the newest few kept
   final Map<(int, int), ui.Image> _drawn = {};
@@ -141,6 +156,8 @@ class PdfViewerState extends State<PdfViewer>
     _pillOff?.cancel();
     _zoom.dispose();
     _ease.dispose();
+    _turn.dispose();
+    _slide.dispose();
     _words.dispose();
     _drop();
     unawaited(_doc?.close());
@@ -238,7 +255,62 @@ class PdfViewerState extends State<PdfViewer>
     final to = _page + (forward ? 1 : -1);
     if (to < 0 || to >= _tops.length) return;
     HapticFeedback.selectionClick();
-    jumpTo(to);
+    _turnTo(to, vx < 0 ? -1 : 1);
+  }
+
+  // the matrix that shows page [i] at the top, as the first one opens
+  Matrix4 _pageAt0(int i) {
+    final s = scale;
+    final t = _zoom.value.getTranslation();
+    return _clamped(
+      Matrix4.identity()
+        ..translateByDouble(t.x, -(_tops[i] - _gap) * s, 0, 1)
+        ..scaleByDouble(s, s, 1, 1),
+    );
+  }
+
+  Future<void> _slideTo(double to, int ms, Curve curve) async {
+    final from = _slide.value;
+    _turn.duration = Duration(milliseconds: ms);
+    final c = CurvedAnimation(parent: _turn, curve: curve);
+    void go() => _slide.value = from + (to - from) * c.value;
+    _turn.addListener(go);
+    try {
+      await _turn.forward(from: 0).orCancel;
+    } on TickerCanceled {
+      // overtaken by another turn or gone
+    } finally {
+      _turn.removeListener(go);
+      c.dispose();
+    }
+  }
+
+  // [dir]: the way the pages move on screen, -1 left, 1 right
+  Future<void> _turnTo(int i, double dir) async {
+    final mine = ++_turns;
+    final m = _pageAt0(i);
+    final w = _view.width;
+    if (motionStill(context) || w <= 0) {
+      _slide.value = 0;
+      _zoom.value = m;
+      return;
+    }
+    await _slideTo(dir * w, 150, Curves.easeInCubic);
+    if (!mounted || mine != _turns) return;
+    _zoom.value = m;
+    _slide.value = -dir * w;
+    await _slideTo(0, 240, kHouseCurve);
+  }
+
+  // a sideways drag that turned nothing goes back
+  void _settleSlide() {
+    if (_slide.value == 0) return;
+    ++_turns;
+    if (motionStill(context)) {
+      _slide.value = 0;
+      return;
+    }
+    _slideTo(0, 200, kHouseCurve);
   }
 
   int _pageAt(double y) {
@@ -287,14 +359,19 @@ class PdfViewerState extends State<PdfViewer>
     final exact = _drawn[(page, sharp)];
     if (exact != null) return exact;
     _ask(page, sharp);
-    // a softer one while the sharper one is drawn
-    for (var s = 3; s >= 0; s--) {
+    // a softer one while the sharper one is drawn, never the small one
+    // the strip below uses while anything sharper is there: once sharp,
+    // it stays sharp
+    for (var s = 3; s >= 1; s--) {
       final i = _drawn[(page, s)];
       if (i != null) return i;
     }
     // the first page as the bubble drew it, until this viewer's own is in
-    if (page == 0) return pdfGlanceNow(widget.path)?.image;
-    return null;
+    if (page == 0) {
+      final g = pdfGlanceNow(widget.path)?.image;
+      if (g != null) return g;
+    }
+    return _drawn[(page, 0)];
   }
 
   void _ask(int page, int sharp) {
@@ -455,8 +532,13 @@ class PdfViewerState extends State<PdfViewer>
     // going back: it closes on its first page, the one its bubble shows
     return PopScope(
       onPopInvokedWithResult: (popped, _) {
-        if (popped && _zoom.value != Matrix4.identity()) {
-          _zoom.value = Matrix4.identity();
+        if (popped) {
+          _turns++;
+          _turn.stop();
+          _slide.value = 0;
+          if (_zoom.value != Matrix4.identity()) {
+            _zoom.value = Matrix4.identity();
+          }
         }
       },
       child: ColoredBox(
@@ -607,7 +689,7 @@ class PdfViewerState extends State<PdfViewer>
           padding: const EdgeInsets.fromLTRB(_side, _gap, _side, 0),
           child: AspectRatio(
             aspectRatio: g.image.width / g.image.height,
-            child: _PageTile(index: 0, image: g.image),
+            child: _PageTile(key: widget.landing, index: 0, image: g.image),
           ),
         ),
       );
@@ -625,9 +707,18 @@ class PdfViewerState extends State<PdfViewer>
               // at full width a sideways swipe turns the page; up and down
               // still scroll, and once zoomed in the finger pans the page
               onHorizontalDragStart: s > 1.05 ? null : (_) => _sideways = 0,
+              // the pages follow the finger, a little held at either end
               onHorizontalDragUpdate: s > 1.05
                   ? null
-                  : (e) => _sideways += e.delta.dx,
+                  : (e) {
+                      _sideways += e.delta.dx;
+                      final rtl =
+                          Directionality.of(context) == TextDirection.rtl;
+                      final on = rtl ? _sideways > 0 : _sideways < 0;
+                      final end = on ? _page >= _tops.length - 1 : _page <= 0;
+                      if (_turn.isAnimating) return;
+                      _slide.value = _sideways * (end ? 0.25 : 0.6);
+                    },
               onHorizontalDragEnd: s > 1.05
                   ? null
                   : (e) {
@@ -638,64 +729,72 @@ class PdfViewerState extends State<PdfViewer>
                           : _sideways.abs() > 80
                           ? _sideways.sign * 600
                           : 0.0;
+                      final was = _turns;
                       pageBySwipe(
                         push,
                         0,
                         rtl: Directionality.of(context) == TextDirection.rtl,
                       );
+                      if (was == _turns) _settleSlide();
                     },
-              child: InteractiveViewer.builder(
-                transformationController: _zoom,
-                minScale: 1,
-                maxScale: _most,
-                boundaryMargin: EdgeInsets.zero,
-                onInteractionEnd: (e) {
-                  final v = e.velocity.pixelsPerSecond;
-                  pageBySwipe(
-                    v.dx,
-                    v.dy,
-                    rtl: Directionality.of(context) == TextDirection.rtl,
-                  );
-                  setState(() {});
-                },
-                builder: (context, q) {
-                  final top = math.min(
-                    math.min(q.point0.y, q.point1.y),
-                    math.min(q.point2.y, q.point3.y),
-                  );
-                  final bottom = math.max(
-                    math.max(q.point0.y, q.point1.y),
-                    math.max(q.point2.y, q.point3.y),
-                  );
-                  final pad = box.maxHeight;
-                  final near = <int>{};
-                  for (var i = 0; i < _tops.length; i++) {
-                    if (_tops[i] + _heights[i] >= top - pad &&
-                        _tops[i] <= bottom + pad) {
-                      near.add(i);
+              child: ValueListenableBuilder<double>(
+                valueListenable: _slide,
+                builder: (_, x, c) =>
+                    Transform.translate(offset: Offset(x, 0), child: c),
+                child: InteractiveViewer.builder(
+                  transformationController: _zoom,
+                  minScale: 1,
+                  maxScale: _most,
+                  boundaryMargin: EdgeInsets.zero,
+                  onInteractionEnd: (e) {
+                    final v = e.velocity.pixelsPerSecond;
+                    pageBySwipe(
+                      v.dx,
+                      v.dy,
+                      rtl: Directionality.of(context) == TextDirection.rtl,
+                    );
+                    setState(() {});
+                  },
+                  builder: (context, q) {
+                    final top = math.min(
+                      math.min(q.point0.y, q.point1.y),
+                      math.min(q.point2.y, q.point3.y),
+                    );
+                    final bottom = math.max(
+                      math.max(q.point0.y, q.point1.y),
+                      math.max(q.point2.y, q.point3.y),
+                    );
+                    final pad = box.maxHeight;
+                    final near = <int>{};
+                    for (var i = 0; i < _tops.length; i++) {
+                      if (_tops[i] + _heights[i] >= top - pad &&
+                          _tops[i] <= bottom + pad) {
+                        near.add(i);
+                      }
                     }
-                  }
-                  _near = near;
-                  return SizedBox(
-                    width: box.maxWidth,
-                    height: _total,
-                    child: Stack(
-                      children: [
-                        for (final i in near)
-                          Positioned(
-                            left: _side,
-                            top: _tops[i],
-                            width: box.maxWidth - _side * 2,
-                            height: _heights[i],
-                            child: _PageTile(
-                              index: i,
-                              image: _imageFor(i, sharp),
+                    _near = near;
+                    return SizedBox(
+                      width: box.maxWidth,
+                      height: _total,
+                      child: Stack(
+                        children: [
+                          for (final i in near)
+                            Positioned(
+                              left: _side,
+                              top: _tops[i],
+                              width: box.maxWidth - _side * 2,
+                              height: _heights[i],
+                              child: _PageTile(
+                                key: i == 0 ? widget.landing : null,
+                                index: i,
+                                image: _imageFor(i, sharp),
+                              ),
                             ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             // where you are, while you move
@@ -833,7 +932,7 @@ const kPdfBarRoom = 64.0;
 class _PageTile extends StatelessWidget {
   final int index;
   final ui.Image? image;
-  const _PageTile({required this.index, required this.image});
+  const _PageTile({super.key, required this.index, required this.image});
 
   @override
   Widget build(BuildContext context) => Semantics(

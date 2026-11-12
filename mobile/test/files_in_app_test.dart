@@ -913,18 +913,26 @@ void main() {
         1500,
       );
       await settle(t);
+      // the turn: out to one side, then in from the other
+      await t.pump(const Duration(milliseconds: 400));
       expect(v.page, 1);
       await t.fling(find.byType(InteractiveViewer), const Offset(300, 0), 1500);
       await settle(t);
+      // the turn: out to one side, then in from the other
+      await t.pump(const Duration(milliseconds: 400));
       expect(v.page, 0);
       // a slow sideways drag, or one mostly up and down, turns nothing
       v.pageBySwipe(-200, 0, rtl: false);
       v.pageBySwipe(-800, 1600, rtl: false);
       await settle(t);
+      // the turn: out to one side, then in from the other
+      await t.pump(const Duration(milliseconds: 400));
       expect(v.page, 0);
       // right to left: a swipe to the right goes on
       v.pageBySwipe(900, 0, rtl: true);
       await settle(t);
+      // the turn: out to one side, then in from the other
+      await t.pump(const Duration(milliseconds: 400));
       expect(v.page, 1);
       expect(kPdfBarRoom, greaterThanOrEqualTo(56));
     });

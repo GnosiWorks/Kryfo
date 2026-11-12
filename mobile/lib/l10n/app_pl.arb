@@ -3269,5 +3269,6 @@
   "sendSheetDiscard": "Odrzuć",
   "sendSheetKeep": "Zostaw",
   "fileDocUnreadable": "Tego dokumentu nie da się tu pokazać. Możesz go zapisać albo otworzyć w innej aplikacji.",
-  "fileDocCut": "Reszta tego dokumentu jest za długa, by ją tu pokazać."
+  "fileDocCut": "Reszta tego dokumentu jest za długa, by ją tu pokazać.",
+  "mediaProgressPreparingNow": "Przygotowuję"
 }

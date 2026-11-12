@@ -11773,6 +11773,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fileDocCut => '这份文档其余部分太长，无法在这里显示。';
+
+  @override
+  String get mediaProgressPreparingNow => '正在准备';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -23424,4 +23427,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get fileDocCut => '這份文件其餘部分太長，無法在這裡顯示。';
+
+  @override
+  String get mediaProgressPreparingNow => '正在準備';
 }

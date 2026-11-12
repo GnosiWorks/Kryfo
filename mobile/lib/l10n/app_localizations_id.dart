@@ -12453,4 +12453,7 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get fileDocCut =>
       'Sisa dokumen ini terlalu panjang untuk ditampilkan di sini.';
+
+  @override
+  String get mediaProgressPreparingNow => 'Menyiapkan';
 }

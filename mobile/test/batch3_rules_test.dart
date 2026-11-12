@@ -42,8 +42,8 @@ void main() {
     }
   });
 
-  test('a sheet send is one send: no second preview, one caption, in the '
-      'order picked', () {
+  test('a sheet send is one bubble: no second preview, one caption, '
+      'photos inside a file set', () {
     SendPick p(String n, {bool media = false}) => SendPick(
       path: '/x/$n',
       name: n,
@@ -57,11 +57,12 @@ void main() {
       p('c.zip'),
       p('d.jpg', media: true),
     ], caption: 'trip');
-    expect(r.runs.map((x) => (x.media, x.picks.length)), [
-      (true, 1),
-      (false, 2),
-      (true, 1),
+    expect(r.runs.map((x) => (x.media, x.picks.length)), [(false, 4)]);
+    final photos = SendSheetResult([
+      p('a.jpg', media: true),
+      p('d.jpg', media: true),
     ]);
+    expect(photos.runs.map((x) => (x.media, x.picks.length)), [(true, 2)]);
     final asFiles = SendSheetResult(r.picks, asFiles: true);
     expect(asFiles.runs.map((x) => (x.media, x.picks.length)), [(false, 4)]);
     for (final file in [

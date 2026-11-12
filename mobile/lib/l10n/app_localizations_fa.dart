@@ -12465,4 +12465,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get fileDocCut => 'بقیهٔ این سند برای نمایش اینجا خیلی طولانی است.';
+
+  @override
+  String get mediaProgressPreparingNow => 'در حال آماده‌سازی';
 }

@@ -3269,5 +3269,6 @@
   "sendSheetDiscard": "Verwerfen",
   "sendSheetKeep": "Behalten",
   "fileDocUnreadable": "Dieses Dokument lässt sich hier nicht anzeigen. Du kannst es speichern oder mit einer anderen App öffnen.",
-  "fileDocCut": "Der Rest dieses Dokuments ist zu lang für diese Ansicht."
+  "fileDocCut": "Der Rest dieses Dokuments ist zu lang für diese Ansicht.",
+  "mediaProgressPreparingNow": "Wird vorbereitet"
 }

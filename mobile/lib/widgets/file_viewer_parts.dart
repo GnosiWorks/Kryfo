@@ -4,6 +4,7 @@
 // that sends it on, saves it or, last and said plainly, hands it to
 // another app
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../file_kind.dart';
@@ -33,6 +34,10 @@ Future<void> openFileViewer(
   BuildContext context,
   WidgetBuilder page, {
   bool secure = false,
+  // what the bubble showed, found from where the tap was: the page grows
+  // out of it, [landing] (what it becomes in the viewer) scaled to it
+  Rect? Function(Rect? tapped)? shownAt,
+  GlobalKey? landing,
 }) async {
   if (_opening) return;
   _opening = true;
@@ -45,9 +50,11 @@ Future<void> openFileViewer(
     final nav = Navigator.of(context);
     // where it opens from: the bubble the tap was in, when it is on screen
     final box = context.findRenderObject();
-    final from = box is RenderBox && box.attached && box.hasSize
+    final tapped = box is RenderBox && box.attached && box.hasSize
         ? box.localToGlobal(Offset.zero) & box.size
         : null;
+    final shown = landing == null ? null : shownAt?.call(tapped);
+    final from = shown ?? tapped;
     _opening = false;
     await nav.push(
       PageRouteBuilder<void>(
@@ -61,7 +68,12 @@ Future<void> openFileViewer(
         ),
         transitionsBuilder: (ctx, a, _, child) => from == null
             ? _riseIn(a, child)
-            : GrowFromRect(animation: a, from: from, child: child),
+            : GrowFromRect(
+                animation: a,
+                from: from,
+                landing: shown == null ? null : landing,
+                child: child,
+              ),
       ),
     );
   } finally {
@@ -96,15 +108,22 @@ Widget _riseIn(Animation<double> a, Widget child) {
 /// and shrinks back into it on the way out. the page is laid out at its
 /// full size the whole time and only clipped, so nothing in it stretches;
 /// it fades up early on the way in and out late on the way back
+///
+/// with [landing], the part of the page that [from] showed (a pdf's first
+/// page) is scaled down onto [from] and grows from there to its own place,
+/// the way a photo grows out of its bubble, and shrinks back on the way
+/// out
 class GrowFromRect extends StatelessWidget {
   final Animation<double> animation;
   final Rect from;
+  final GlobalKey? landing;
   final Widget child;
   const GrowFromRect({
     super.key,
     required this.animation,
     required this.from,
     required this.child,
+    this.landing,
   });
 
   @override
@@ -121,6 +140,29 @@ class GrowFromRect extends StatelessWidget {
       // bubble, then gives way to it: no dark frame between
       reverseCurve: const Interval(0, 0.25, curve: Curves.easeIn),
     );
+    final landing = this.landing;
+    if (landing != null) {
+      // the page is there from the first frame, only small: it shows at
+      // once and goes at the very end of the way back
+      final seen = CurvedAnimation(
+        parent: animation,
+        curve: const Interval(0, 0.12),
+        reverseCurve: const Interval(0, 0.12),
+      );
+      return AnimatedBuilder(
+        animation: animation,
+        child: child,
+        builder: (context, page) => Opacity(
+          opacity: seen.value,
+          child: _Landing(
+            t: grow.value,
+            from: from,
+            landing: landing,
+            child: page,
+          ),
+        ),
+      );
+    }
     return LayoutBuilder(
       builder: (context, box) {
         final full = Offset.zero & box.biggest;
@@ -156,6 +198,110 @@ class GrowFromRect extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+// paints the page so that [landing] sits on [from] at t 0 and where it
+// belongs at t 1, clipped to a window that grows from [from] to the screen.
+// measured at paint, after layout, so the first frame is already right
+class _Landing extends SingleChildRenderObjectWidget {
+  final double t;
+  final Rect from;
+  final GlobalKey landing;
+  const _Landing({
+    required this.t,
+    required this.from,
+    required this.landing,
+    super.child,
+  });
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderLanding(t, from, landing);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderLanding r) {
+    r
+      ..t = t
+      ..from = from
+      ..landing = landing;
+  }
+}
+
+class _RenderLanding extends RenderProxyBox {
+  _RenderLanding(this._t, this.from, this.landing);
+  double _t;
+  set t(double v) {
+    if (v == _t) return;
+    _t = v;
+    markNeedsPaint();
+  }
+
+  Rect from;
+  GlobalKey landing;
+  final _clip = LayerHandle<ClipRRectLayer>();
+  final _move = LayerHandle<TransformLayer>();
+
+  @override
+  bool get alwaysNeedsCompositing => child != null;
+
+  @override
+  void dispose() {
+    _clip.layer = null;
+    _move.layer = null;
+    super.dispose();
+  }
+
+  Rect? _target() {
+    final ro = landing.currentContext?.findRenderObject();
+    if (ro is! RenderBox || !ro.attached || !ro.hasSize) return null;
+    try {
+      return MatrixUtils.transformRect(
+        ro.getTransformTo(this),
+        Offset.zero & ro.size,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final c = child;
+    if (c == null) return;
+    final full = Offset.zero & size;
+    final a = _target();
+    final t = _t;
+    final at = from.shift(-offset);
+    Matrix4 m;
+    if (a == null || a.width <= 0) {
+      m = Matrix4.identity();
+    } else {
+      final s0 = at.width / a.width;
+      final s = s0 + (1 - s0) * t;
+      final dx = (at.left - a.left * s0) * (1 - t);
+      final dy = (at.top - a.top * s0) * (1 - t);
+      m = Matrix4.identity()
+        ..translateByDouble(dx, dy, 0, 1)
+        ..scaleByDouble(s, s, 1, 1);
+    }
+    final window = Rect.lerp(at, full, t)!;
+    _clip.layer = context.pushClipRRect(
+      needsCompositing,
+      offset,
+      window,
+      RRect.fromRectAndRadius(window, Radius.circular(12 * (1 - t))),
+      (cx, o) {
+        _move.layer = cx.pushTransform(
+          needsCompositing,
+          o,
+          m,
+          (cy, p) => cy.paintChild(c, p),
+          oldLayer: _move.layer,
+        );
+      },
+      oldLayer: _clip.layer,
     );
   }
 }

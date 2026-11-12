@@ -156,6 +156,60 @@ Future<String?> showRenameSheet(
   ),
 );
 
+// what a person's page reads, read once
+typedef _InfoRead = ({
+  Map<String, Object?>? c,
+  List<Map<String, Object?>> vs,
+  SharedLists shared,
+  int? since,
+  bool held,
+  bool mine,
+  int? heal,
+});
+
+Future<_InfoRead> _readInfo(String id) async {
+  final results = await Future.wait([
+    session.getContact(id),
+    session.vouchesFor(id),
+    session.mediaFor(id),
+    session.firstMessageAt(id),
+    keyHeldShown(id),
+    appState.photosOfContact(id),
+    healHoldShown(id),
+  ]);
+  final held = results[4] as bool;
+  final photos =
+      results[5] as ({Uint8List? mine, Uint8List? theirs, int theirVer});
+  return (
+    c: results[0] as Map<String, Object?>?,
+    vs: results[1] as List<Map<String, Object?>>,
+    // a file that went missing draws as nothing; no stat per file up front
+    shared: await sortSharedSoon(results[2] as List<Map<String, Object?>>),
+    since: results[3] as int?,
+    held: held,
+    mine: photos.mine != null,
+    heal: held ? results[6] as int? : null,
+  );
+}
+
+// read just before the page slides in, taken by it on its first frame
+final Map<String, (_InfoRead, DateTime)> _infoWarm = {};
+
+/// a person's page read before it opens, so it is drawn as it is from its
+/// first frame and nothing on it moves after. given up on after [most]:
+/// the page then reads it itself
+Future<void> warmContactInfo(
+  String haloId, {
+  Duration most = const Duration(milliseconds: 450),
+}) async {
+  try {
+    final r = await _readInfo(haloId).timeout(most);
+    _infoWarm[haloId] = (r, DateTime.now());
+  } catch (_) {
+    // slow or unreadable: the page reads it as it opens
+  }
+}
+
 class ContactScreen extends StatefulWidget {
   final String haloId;
   final String avatarSeed;
@@ -219,6 +273,12 @@ class _ContactScreenState extends State<ContactScreen> {
     _shotsHold.want(appState.shotsBlocksChat(widget.haloId), now: true);
     _rev = appState.chatRevOf(widget.haloId);
     appState.addListener(_changed);
+    // read just before it opened: drawn whole from the first frame
+    final warm = _infoWarm.remove(widget.haloId);
+    if (warm != null &&
+        DateTime.now().difference(warm.$2) < const Duration(seconds: 3)) {
+      _apply(warm.$1);
+    }
     // read once the page is in: nothing it reads stalls the slide
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
@@ -267,41 +327,28 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Future<void> _load() async {
-    final results = await Future.wait([
-      session.getContact(widget.haloId),
-      session.vouchesFor(widget.haloId),
-      session.mediaFor(widget.haloId),
-      session.firstMessageAt(widget.haloId),
-      keyHeldShown(widget.haloId),
-      appState.photosOfContact(widget.haloId),
-      healHoldShown(widget.haloId),
-    ]);
-    final c = results[0] as Map<String, Object?>?;
-    final since = results[3] as int?;
-    final vs = results[1] as List<Map<String, Object?>>;
-    final rows = results[2] as List<Map<String, Object?>>;
-    final held = results[4] as bool;
-    final photos =
-        results[5] as ({Uint8List? mine, Uint8List? theirs, int theirVer});
-    // a file that went missing draws as nothing; no stat per file up front
-    final shared = await sortSharedSoon(rows);
-    final compare = await _compareOnce(c, held);
+    final r = await _readInfo(widget.haloId);
+    final compare = await _compareOnce(r.c, r.held);
     if (!mounted) return;
     setState(() {
-      _c = c;
+      _apply(r);
       if (compare) _compare = true;
-      _voucherNames = [
-        for (final v in vs)
-          (v['nickname'] as String?) ?? v['voucher_id'] as String,
-      ];
-      _shared = shared;
-      _since = since;
-      _held = held;
-      _healHold = held ? results[6] as int? : null;
-      _mine = photos.mine != null;
-      _loaded = true;
     });
     _shotsHold.want(_shots.blocking);
+  }
+
+  void _apply(_InfoRead r) {
+    _c = r.c;
+    _voucherNames = [
+      for (final v in r.vs)
+        (v['nickname'] as String?) ?? v['voucher_id'] as String,
+    ];
+    _shared = r.shared;
+    _since = r.since;
+    _held = r.held;
+    _healHold = r.heal;
+    _mine = r.mine;
+    _loaded = true;
   }
 
   // the first visit to the page of someone added by a code or a link, or

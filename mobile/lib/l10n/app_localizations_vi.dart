@@ -12442,4 +12442,7 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get fileDocCut =>
       'Phần còn lại của tài liệu quá dài để hiển thị tại đây.';
+
+  @override
+  String get mediaProgressPreparingNow => 'Đang chuẩn bị';
 }

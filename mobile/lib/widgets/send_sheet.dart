@@ -105,20 +105,15 @@ class SendSheetResult {
       if (asFiles || !p.media) p,
   ];
 
-  /// what goes, in the order picked: photos and videos next to each other
-  /// as one album, files next to each other as one set. the caption goes
-  /// with the first of them all
+  /// what goes, in the order picked. one send is one bubble: only photos
+  /// and videos go as an album, anything with a file in it goes as one
+  /// set, its photos rows inside it. the caption goes once
   List<({bool media, List<SendPick> picks})> get runs {
-    final out = <({bool media, List<SendPick> picks})>[];
-    for (final p in picks) {
-      final media = !asFiles && p.media;
-      if (out.isNotEmpty && out.last.media == media) {
-        out.last.picks.add(p);
-      } else {
-        out.add((media: media, picks: [p]));
-      }
-    }
-    return out;
+    if (picks.isEmpty) return const [];
+    final media = !asFiles && picks.every((p) => p.media);
+    return [
+      (media: media, picks: [...picks]),
+    ];
   }
 
   /// the copies let go, once the chat is done with them

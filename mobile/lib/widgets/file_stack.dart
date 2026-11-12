@@ -23,6 +23,7 @@ import 'file_wait.dart' show FileWaitMark, fileWaitLine;
 import 'media_bubbles.dart' show humanFileSize, splitFileName;
 import 'motion.dart' show kHouseCurve, motionStill;
 import 'press_scale.dart';
+import 'spoiler_cover.dart';
 
 /// a file kept on the files service: past this from when it was written it
 /// is not there to get any more
@@ -43,6 +44,8 @@ class FileStackRow {
   // the row as a file alone draws: its glance, ring and player
   final Widget Function() ready;
   final VoidCallback? onLongPress;
+  // a photo in the set sent as a spoiler: blurred until tapped
+  final bool spoiler;
   const FileStackRow({
     required this.id,
     required this.name,
@@ -52,6 +55,7 @@ class FileStackRow {
     this.onRetry,
     this.until,
     this.onLongPress,
+    this.spoiler = false,
   });
 }
 
@@ -191,7 +195,17 @@ class _RowState extends State<_Row> with SingleTickerProviderStateMixin {
         onRetry: r.onRetry,
       );
     } else {
-      child = KeyedSubtree(key: const ValueKey('here'), child: r.ready());
+      child = KeyedSubtree(
+        key: const ValueKey('here'),
+        child: r.spoiler
+            ? SpoilerCover(
+                uid: r.id,
+                on: true,
+                radius: BorderRadius.circular(12),
+                child: r.ready(),
+              )
+            : r.ready(),
+      );
     }
     return GestureDetector(
       behavior: HitTestBehavior.translucent,

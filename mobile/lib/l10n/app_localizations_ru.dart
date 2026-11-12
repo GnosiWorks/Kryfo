@@ -12649,4 +12649,7 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get fileDocCut =>
       'Остальная часть документа слишком длинная, чтобы показать её здесь.';
+
+  @override
+  String get mediaProgressPreparingNow => 'Подготовка';
 }

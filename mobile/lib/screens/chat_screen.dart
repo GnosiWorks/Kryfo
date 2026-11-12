@@ -472,7 +472,9 @@ class _Ready {
   final String uid;
   final String path;
   final String? fileName;
-  const _Ready(this.uid, this.path, {this.fileName});
+  // a photo inside a file set, blurred until tapped
+  final bool spoiler;
+  const _Ready(this.uid, this.path, {this.fileName, this.spoiler = false});
 }
 
 class _Msg with WordLinks {
@@ -4447,9 +4449,19 @@ class _ChatScreenState extends State<ChatScreen>
             await shredPickedImages([for (final m in items) ?m.video]);
           }
         } else {
-          await _sendFileSet([
-            for (final f in run.picks) (f.path, f.name),
-          ], caption);
+          await _sendFileSet(
+            [
+              for (final f in run.picks)
+                (
+                  f.path,
+                  f.media && f.from == SendTab.gallery
+                      ? madeName(f.name, fallbackExt: f.video ? 'mp4' : 'jpg')
+                      : f.name,
+                ),
+            ],
+            caption,
+            spoilers: r.spoilers,
+          );
         }
         caption = '';
       }
@@ -4785,8 +4797,10 @@ class _ChatScreenState extends State<ChatScreen>
   // has not accepted yet each goes alone
   Future<void> _sendFileSet(
     List<(String, String)> files,
-    String caption,
-  ) async {
+    String caption, {
+    // the photos among them marked as spoilers, by their path
+    Set<String> spoilers = const {},
+  }) async {
     if (files.isEmpty || _requestLocked || _sayMediaLater()) return;
     // one alone goes as a file always went
     if (files.length == 1) {
@@ -4796,7 +4810,13 @@ class _ChatScreenState extends State<ChatScreen>
     final ready = <_Ready>[];
     for (final (path, name) in files) {
       if (!mounted || lockState.locked) break;
-      if (await _readyFile(path, name) case final r?) ready.add(r);
+      if (await _readyFile(path, name) case final r?) {
+        ready.add(
+          spoilers.contains(path)
+              ? _Ready(r.uid, r.path, fileName: r.fileName, spoiler: true)
+              : r,
+        );
+      }
     }
     // the lock came while they were made ready: none of it goes
     if (!mounted || lockState.locked) {
@@ -4954,6 +4974,7 @@ class _ChatScreenState extends State<ChatScreen>
           burnAt: null,
           secure: wantSecure,
           album: album,
+          spoiler: ready.spoiler,
         );
     setState(() {
       msg
@@ -6747,8 +6768,18 @@ class _ChatScreenState extends State<ChatScreen>
 
   // the page for this person. the head taps land here, and the chat's own
   // state reloads on the way back since a nickname or block may have changed
+  bool _contactOpening = false;
   Future<void> _openContact() async {
     if (_isDev) return showDevAboutSheet(context);
+    // read first, so the page opens drawn; a second tap meanwhile is one
+    if (_contactOpening) return;
+    _contactOpening = true;
+    try {
+      await warmContactInfo(widget.peerHaloId);
+    } finally {
+      _contactOpening = false;
+    }
+    if (!mounted) return;
     await Navigator.of(context).push(
       haloRoute(
         ContactScreen(
@@ -10488,6 +10519,7 @@ class _Bubble extends StatelessWidget {
       failed: isOut && _sendLooksFailed(x),
       onRetry: onRetry == null ? null : () => onRetry!(x),
       onLongPress: hold,
+      spoiler: x.spoiler,
       ready: () => path != null && shape == FileShape.video && !x.sending
           ? VideoBubble(
               key: ValueKey('vid_$path'),

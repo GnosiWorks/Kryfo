@@ -340,11 +340,9 @@ class IncomingMediaBanner extends StatelessWidget {
     // preparing until the first byte of the send goes, then sending until
     // it is done: never back
     final line = sending && !_outBegun.contains(chatKey)
-        ? l10n.mediaProgressPreparing
+        ? l10n.mediaProgressPreparingNow
         : sending
-        ? detail == null
-              ? l10n.mediaProgressSendingKeepTheApp(percent(v))
-              : l10n.transferSending(detail)
+        ? l10n.transferSending(detail ?? percent(v))
         : stalled && count != null
         ? l10n.mediaProgressPausedOfWaitingFor(whole(count.$1), whole(count.$2))
         : detail == null

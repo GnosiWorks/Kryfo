@@ -15709,5 +15709,9 @@
   "fileDocCut": "The rest of this document is too long to show here.",
   "@fileDocCut": {
     "description": "document reader: the end of a very long document is not shown"
+  },
+  "mediaProgressPreparingNow": "Preparing",
+  "@mediaProgressPreparingNow": {
+    "description": "send strip and file bubble: a send made ready, before its first byte goes"
   }
 }

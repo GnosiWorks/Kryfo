@@ -307,13 +307,19 @@ void main() {
             find.byType(FileSendRing),
             still ? findsNothing : findsOneWidget,
           );
-          await t.pump(const Duration(milliseconds: 250));
+          await t.pump(const Duration(milliseconds: 400));
           await t.pump();
           expect(
             find.byIcon(Icons.check_rounded),
             still ? findsNothing : findsOneWidget,
           );
-          await t.pump(const Duration(milliseconds: 900));
+          // the tick stays a moment, then the tile cross-fades back
+          await t.pump(const Duration(milliseconds: 700));
+          expect(
+            find.byIcon(Icons.check_rounded),
+            still ? findsNothing : findsOneWidget,
+          );
+          await t.pump(const Duration(milliseconds: 500));
           await t.pump(const Duration(milliseconds: 300));
           expect(find.byIcon(Icons.check_rounded), findsNothing);
         });

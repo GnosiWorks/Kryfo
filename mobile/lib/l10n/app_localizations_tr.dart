@@ -12475,4 +12475,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get fileDocCut =>
       'Bu belgenin geri kalanı burada gösterilemeyecek kadar uzun.';
+
+  @override
+  String get mediaProgressPreparingNow => 'Hazırlanıyor';
 }
