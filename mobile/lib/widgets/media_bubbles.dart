@@ -111,7 +111,9 @@ Widget fileCard(
     }
   }
   final drawn = shape ?? fileShapeNow(filePath, fileName);
-  if (filePath != null && drawn == FileShape.picture) {
+  // in a set of files a photo is a row like the rest: its picture above,
+  // its ring, tick and tile beside its name (FileCard)
+  if (filePath != null && drawn == FileShape.picture && !queued) {
     // the card a picture that will not draw falls back to: its ring, its
     // cross and what the screen reader says of the send stay with it
     final fallback = FileCard(

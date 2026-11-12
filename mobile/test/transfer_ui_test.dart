@@ -183,7 +183,8 @@ void main() {
         ),
       );
       await t.pumpAndSettle();
-      expect(find.text('Sending · 2 KB of 4 KB'), findsOneWidget);
+      // ours says how far in a share, not bytes of bytes
+      expect(find.text('Sending · 50%'), findsOneWidget);
       expect(find.text(l10n.transferPause), findsNothing);
       await t.tap(find.text(l10n.commonCancel));
       expect(cancelled, ['s1']);

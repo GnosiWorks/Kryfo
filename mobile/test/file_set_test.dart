@@ -342,7 +342,10 @@ void main() {
       await t.pumpWidget(card('s2'));
       await t.pump();
       await t.pumpWidget(card(null));
+      // the ring fades straight to the tile: no fill, no tick
       await t.pump(const Duration(milliseconds: 100));
+      expect(find.byIcon(Icons.check_rounded), findsNothing);
+      await t.pump(const Duration(milliseconds: 300));
       expect(find.byType(FileSendRing), findsNothing);
       await t.pump(const Duration(milliseconds: 400));
       expect(find.byIcon(Icons.check_rounded), findsNothing);

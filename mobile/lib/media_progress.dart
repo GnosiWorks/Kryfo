@@ -333,10 +333,8 @@ class IncomingMediaBanner extends StatelessWidget {
     final pause = onPause;
     final stalled = !sending && incomingMediaStalled.contains(chatKey);
     final count = _incomingCount[chatKey];
-    final total = _outTotal[chatKey];
-    final detail = sending
-        ? (total == null || total <= 1 ? null : doneOfText(v, total))
-        : transferDetail(chatKey, v);
+    // ours says how far in a share, never bytes of bytes
+    final detail = sending ? null : transferDetail(chatKey, v);
     // preparing until the first byte of the send goes, then sending until
     // it is done: never back
     final line = sending && !_outBegun.contains(chatKey)

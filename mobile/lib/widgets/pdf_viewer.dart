@@ -19,7 +19,7 @@ import '../pdf_pages.dart';
 import '../picture_lock.dart' show picturesShut;
 import '../theme.dart';
 import 'file_actions.dart';
-import 'file_bubble.dart' show pdfGlanceRect;
+import 'file_bubble.dart' show PdfPagesPill, pdfGlanceRect;
 import 'ease_size.dart';
 import 'halo_buttons.dart' show HaloGhostButton;
 import 'file_viewer_parts.dart';
@@ -38,11 +38,14 @@ Future<void> openPdfFile(
 }) {
   // its first page in the viewer, grown out of the one its bubble shows
   final landing = GlobalKey();
+  final pages = pdfGlanceNow(path)?.pages;
   return openFileViewer(
     context,
     secure: kept,
     shownAt: (tapped) => pdfGlanceRect(path, tapped),
     landing: landing,
+    // on the way back the bubble's own pill is there as it shrinks
+    closingMark: pages == null ? null : PdfPagesPill(pages: pages),
     (_) => PdfViewer(
       path: path,
       name: name,
@@ -107,6 +110,13 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
   final _slide = ValueNotifier<double>(0);
   late final AnimationController _turn = AnimationController(vsync: this);
   int _turns = 0;
+  // the page coming in beside the one going, while a turn runs, and the
+  // side it comes from (1 right, -1 left)
+  int? _incoming;
+  double _incomingSide = 1;
+  bool _rtl = false;
+  // going back into the bubble: the page pill gives way to the bubble's
+  bool _closing = false;
 
   // pages drawn, by page and how sharp: the newest few kept
   final Map<(int, int), ui.Image> _drawn = {};
@@ -285,27 +295,41 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
     }
   }
 
-  // [dir]: the way the pages move on screen, -1 left, 1 right
+  // [dir]: the way the pages move on screen, -1 left, 1 right. the next
+  // page is there beside this one the whole way, already drawn, and lands
+  // where it stays: then the view moves to it under the finger's eye
   Future<void> _turnTo(int i, double dir) async {
     final mine = ++_turns;
     final m = _pageAt0(i);
     final w = _view.width;
     if (motionStill(context) || w <= 0) {
+      _incoming = null;
       _slide.value = 0;
       _zoom.value = m;
       return;
     }
-    await _slideTo(dir * w, 150, Curves.easeInCubic);
+    _incoming = i;
+    _incomingSide = -dir;
+    await _slideTo(dir * w, 260, kHouseCurve);
     if (!mounted || mine != _turns) return;
+    _incoming = null;
     _zoom.value = m;
-    _slide.value = -dir * w;
-    await _slideTo(0, 240, kHouseCurve);
+    _slide.value = 0;
+  }
+
+  // the page a sideways drag of [x] uncovers, if there is one
+  int? _neighbourFor(double x) {
+    if (x == 0) return null;
+    final forward = _rtl ? x > 0 : x < 0;
+    final to = _page + (forward ? 1 : -1);
+    return to < 0 || to >= _tops.length ? null : to;
   }
 
   // a sideways drag that turned nothing goes back
   void _settleSlide() {
     if (_slide.value == 0) return;
     ++_turns;
+    _incoming = null;
     if (motionStill(context)) {
       _slide.value = 0;
       return;
@@ -335,6 +359,10 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
     if (_tops.isEmpty) return;
     final seen = _seen();
     final p = _pageAt(seen.center.dy);
+    if (_closing) {
+      if (p != _page) setState(() => _page = p);
+      return;
+    }
     if (p != _page || !_pill) {
       setState(() {
         _page = p;
@@ -400,6 +428,7 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
         img.dispose();
         return;
       }
+      if (sharp == 0) keepPdfThumb(widget.path, page, img);
       setState(() {
         _drawn.remove(key)?.dispose();
         _drawn[key] = img;
@@ -535,6 +564,8 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
         if (popped) {
           _turns++;
           _turn.stop();
+          _incoming = null;
+          setState(() => _closing = true);
           _slide.value = 0;
           if (_zoom.value != Matrix4.identity()) {
             _zoom.value = Matrix4.identity();
@@ -699,6 +730,8 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
         _layout(box.biggest);
         final s = scale;
         final sharp = _sharp(s);
+        _rtl = Directionality.of(context) == TextDirection.rtl;
+        final w = box.maxWidth;
         return Stack(
           children: [
             GestureDetector(
@@ -739,8 +772,38 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
                     },
               child: ValueListenableBuilder<double>(
                 valueListenable: _slide,
-                builder: (_, x, c) =>
-                    Transform.translate(offset: Offset(x, 0), child: c),
+                // the page beside this one comes in with it, a gap of
+                // the viewer's own ground between them
+                builder: (_, x, c) {
+                  final n = _incoming ?? _neighbourFor(x);
+                  final side = _incoming != null
+                      ? _incomingSide
+                      : (x < 0 ? 1.0 : -1.0);
+                  return ClipRect(
+                    child: Transform.translate(
+                      offset: Offset(x, 0),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          c!,
+                          if (n != null && n < _heights.length)
+                            Positioned(
+                              left: _side + side * w,
+                              top: _gap,
+                              width: w - _side * 2,
+                              height: _heights[n],
+                              child: IgnorePointer(
+                                child: _PageTile(
+                                  index: n,
+                                  image: _imageFor(n, 1),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
                 child: InteractiveViewer.builder(
                   transformationController: _zoom,
                   minScale: 1,
@@ -771,6 +834,10 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
                           _tops[i] <= bottom + pad) {
                         near.add(i);
                       }
+                    }
+                    // the pages a sideways turn brings, drawn ahead
+                    for (final i in [_page - 1, _page + 1]) {
+                      if (i >= 0 && i < _tops.length) near.add(i);
                     }
                     _near = near;
                     return SizedBox(
@@ -805,8 +872,8 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
               child: IgnorePointer(
                 child: Center(
                   child: AnimatedOpacity(
-                    opacity: _pill ? 1 : 0,
-                    duration: still
+                    opacity: _pill && !_closing ? 1 : 0,
+                    duration: still || _closing
                         ? Duration.zero
                         : const Duration(milliseconds: 200),
                     child: _Pill(
@@ -916,13 +983,24 @@ class PdfViewerState extends State<PdfViewer> with TickerProviderStateMixin {
     ),
   );
 
+  // its own small page, or any this viewer drew, or one kept from an
+  // earlier look, or the bubble's: never a blank tile while it is drawn
   Widget _thumbImage(int i) {
-    final img = _drawn[(i, 0)] ?? _drawn[(i, 1)];
-    if (img == null) {
-      _ask(i, 0);
-      return const SizedBox.expand();
-    }
-    return RawImage(image: img, fit: BoxFit.cover);
+    final own = _drawn[(i, 0)];
+    if (own == null) _ask(i, 0);
+    final img =
+        own ??
+        _drawn[(i, 1)] ??
+        _drawn[(i, 2)] ??
+        _drawn[(i, 3)] ??
+        pdfThumbNow(widget.path, i) ??
+        (i == 0 ? pdfGlanceNow(widget.path)?.image : null);
+    if (img == null) return const SizedBox.expand();
+    return RawImage(
+      image: img,
+      fit: BoxFit.cover,
+      alignment: Alignment.topCenter,
+    );
   }
 }
 

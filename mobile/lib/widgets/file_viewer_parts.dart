@@ -38,6 +38,8 @@ Future<void> openFileViewer(
   // out of it, [landing] (what it becomes in the viewer) scaled to it
   Rect? Function(Rect? tapped)? shownAt,
   GlobalKey? landing,
+  // what the bubble shows in its corner, there as the page shrinks back
+  Widget? closingMark,
 }) async {
   if (_opening) return;
   _opening = true;
@@ -72,6 +74,7 @@ Future<void> openFileViewer(
                 animation: a,
                 from: from,
                 landing: shown == null ? null : landing,
+                closingMark: closingMark,
                 child: child,
               ),
       ),
@@ -117,6 +120,9 @@ class GrowFromRect extends StatelessWidget {
   final Animation<double> animation;
   final Rect from;
   final GlobalKey? landing;
+  // on the way back, drawn in the shrinking window's end corner where the
+  // bubble has it, so the bubble's own takes over without a jump
+  final Widget? closingMark;
   final Widget child;
   const GrowFromRect({
     super.key,
@@ -124,6 +130,7 @@ class GrowFromRect extends StatelessWidget {
     required this.from,
     required this.child,
     this.landing,
+    this.closingMark,
   });
 
   @override
@@ -149,17 +156,40 @@ class GrowFromRect extends StatelessWidget {
         curve: const Interval(0, 0.12),
         reverseCurve: const Interval(0, 0.12),
       );
-      return AnimatedBuilder(
-        animation: animation,
-        child: child,
-        builder: (context, page) => Opacity(
-          opacity: seen.value,
-          child: _Landing(
-            t: grow.value,
-            from: from,
-            landing: landing,
-            child: page,
-          ),
+      final mark = closingMark;
+      return LayoutBuilder(
+        builder: (context, box) => AnimatedBuilder(
+          animation: animation,
+          child: child,
+          builder: (context, page) {
+            final landed = Opacity(
+              opacity: seen.value,
+              child: _Landing(
+                t: grow.value,
+                from: from,
+                landing: landing,
+                child: page,
+              ),
+            );
+            // one tree all the way, so the page keeps its state
+            final back =
+                mark != null && animation.status == AnimationStatus.reverse;
+            final full = Offset.zero & box.biggest;
+            final r = Rect.lerp(from, full, grow.value)!;
+            final rtl = Directionality.of(context) == TextDirection.rtl;
+            return Stack(
+              children: [
+                Positioned.fill(child: landed),
+                if (back)
+                  Positioned(
+                    left: rtl ? r.left + 8 : null,
+                    right: rtl ? null : full.width - r.right + 8,
+                    bottom: full.height - r.bottom + 8,
+                    child: Opacity(opacity: seen.value, child: mark),
+                  ),
+              ],
+            );
+          },
         ),
       );
     }

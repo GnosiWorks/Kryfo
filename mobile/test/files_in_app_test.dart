@@ -190,12 +190,12 @@ void main() {
       HaloColors.setLight(true);
       expect(fileToneColor(FileTone.pdf), HaloColors.roseText);
       expect(fileToneColor(FileTone.sheet), HaloColors.greenText);
-      // the label is the outline's colour: the tile is never filled
+      // the label in the kind's colour, the tile a faint wash of it
       expect(onFileTone(FileTone.pdf), HaloColors.roseText);
     });
 
     for (final light in [false, true]) {
-      testWidgets('a thin outline, its label in the kind\'s colour, readable '
+      testWidgets('no outline, its label in the kind\'s colour, readable '
           '(${light ? 'light' : 'dark'})', (t) async {
         HaloColors.setLight(light);
         addTearDown(() => HaloColors.setLight(false));
@@ -243,12 +243,12 @@ void main() {
             )
             .map((c) => c.decoration! as BoxDecoration)
             .toList();
-        expect(boxes[0].color, isNull);
-        expect((boxes[0].border! as Border).top.width, 1.4);
-        // ours on the amber bubble: the bubble's dark ink, 1.2 px, readable
-        final ours = (boxes[1].border! as Border).top;
-        expect(ours.width, 1.2);
-        expect(ours.color, HaloColors.onAmber);
+        // no outline (mario 2026-11-12): a faint wash of the kind's colour
+        expect(boxes[0].border, isNull);
+        expect(boxes[0].color!.a, lessThan(0.2));
+        // ours on the amber bubble: a wash of the bubble's dark ink
+        expect(boxes[1].border, isNull);
+        expect(boxes[1].color, HaloColors.onAmber.withValues(alpha: 0.12));
         expect(
           contrast(HaloColors.onAmber, HaloColors.amber),
           greaterThanOrEqualTo(3),

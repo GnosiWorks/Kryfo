@@ -410,7 +410,7 @@ class _FailedRow extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: ink, width: 2),
+                color: ink.withValues(alpha: 0.12),
               ),
               child: Icon(Icons.refresh_rounded, size: 19, color: ink),
             ),
@@ -463,7 +463,13 @@ class _GetAll extends StatelessWidget {
       padding: const EdgeInsets.only(top: 10),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: HaloColors.line)),
+          // a faint divider, never a frame
+          border: Border(
+            top: BorderSide(
+              color: HaloColors.line.withValues(alpha: 0.6),
+              width: 0.5,
+            ),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.only(top: 8),

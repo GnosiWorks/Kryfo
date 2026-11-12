@@ -69,7 +69,7 @@ void main() {
   });
 
   test('a word document glance keeps about four lines of room', () {
-    expect(docGlanceHeight(TextScaler.noScaling), closeTo(76.8, 0.1));
+    expect(docGlanceHeight(TextScaler.noScaling), closeTo(82.8, 0.1));
     expect(
       docGlanceHeight(const TextScaler.linear(1.4)),
       greaterThan(docGlanceHeight(TextScaler.noScaling)),

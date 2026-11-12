@@ -380,6 +380,28 @@ Future<PdfGlance?> pdfGlance(String path, int width) {
   }();
 }
 
+// the viewer's small pages, by file then page, for the strip the next
+// time it opens: a few documents, gone at the lock with the first pages
+final LinkedHashMap<String, Map<int, ui.Image>> _thumbs = LinkedHashMap();
+
+/// page [i]'s small picture from an earlier look, if one is kept
+ui.Image? pdfThumbNow(String path, int i) => _thumbs[path]?[i];
+
+/// keeps a copy of page [i]'s small picture for the next look
+void keepPdfThumb(String path, int i, ui.Image img) {
+  if (picturesShut.value) return;
+  final m = _thumbs.remove(path) ?? <int, ui.Image>{};
+  _thumbs[path] = m;
+  if (m.length >= 60 && !m.containsKey(i)) return;
+  m.remove(i)?.dispose();
+  m[i] = img.clone();
+  while (_thumbs.length > 3) {
+    for (final x in _thumbs.remove(_thumbs.keys.first)!.values) {
+      x.dispose();
+    }
+  }
+}
+
 /// the lock is going up, or a file is going: no first page stays
 void forgetPdfPreviews() {
   _glanceGen++;
@@ -387,6 +409,12 @@ void forgetPdfPreviews() {
     g.image.dispose();
   }
   _glances.clear();
+  for (final m in _thumbs.values) {
+    for (final x in m.values) {
+      x.dispose();
+    }
+  }
+  _thumbs.clear();
   pdfGlancesGone.value++;
 }
 

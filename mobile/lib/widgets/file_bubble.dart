@@ -165,11 +165,13 @@ class _FileCardState extends State<FileCard> {
 
   @override
   Widget build(BuildContext context) {
-    final uid = widget.sendingUid;
-    if (uid == null) return _card(context, null);
+    // the same tree sending or not: the glance and the tick keep their
+    // state when the send ends, nothing is drawn again
     return ValueListenableBuilder<int>(
       valueListenable: mediaProgressTick,
       builder: (context, _, _) {
+        final uid = widget.sendingUid;
+        if (uid == null) return _card(context, null);
         final v = mediaSendProgress[uid];
         if (mediaQuiet(uid)) return _card(context, null);
         // one of a set waiting its turn: its ring is there, empty, so the
@@ -461,6 +463,10 @@ class _FileCardState extends State<FileCard> {
   }
 
   Widget? _previewFor(String path, FileFacts facts) {
+    // a photo among files: the picture itself above its row
+    if (widget.queued && facts.kind == FileKind.picture) {
+      return SetPicture(path: path);
+    }
     if (textViewable(facts.ext)) {
       return FileTextPreview(path: path, isOut: widget.isOut);
     }
@@ -473,6 +479,48 @@ class _FileCardState extends State<FileCard> {
       return PdfFirstPage(path: path);
     }
     return null;
+  }
+}
+
+/// the width a photo in a file set is decoded at, made ready at the same
+/// size before its bubble shows
+int setPicturePx(BuildContext context) =>
+    (kFilePreviewWidth * MediaQuery.devicePixelRatioOf(context)).round();
+
+/// a photo in a set of files, at the row's width. ours is on this phone and
+/// made ready first, so it is there sharp from the first frame; theirs
+/// fades up once read
+class SetPicture extends StatelessWidget {
+  final String path;
+  const SetPicture({super.key, required this.path});
+
+  static const height = 150.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final still = motionStill(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: kFilePreviewWidth,
+        height: height,
+        child: Image(
+          image: mediaImage(path, setPicturePx(context)),
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          filterQuality: FilterQuality.medium,
+          excludeFromSemantics: true,
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+          frameBuilder: (_, child, frame, sync) => sync || still
+              ? child
+              : AnimatedOpacity(
+                  opacity: frame == null ? 0 : 1,
+                  duration: const Duration(milliseconds: 200),
+                  child: child,
+                ),
+        ),
+      ),
+    );
   }
 }
 
@@ -567,6 +615,8 @@ class _FileTextPreviewState extends State<FileTextPreview> {
   late List<String>? _lines = widget.doc ? null : firstLinesNow(widget.path);
   // a word document's first paragraphs, its headings marked
   late List<DocLine>? _paras = widget.doc ? _docLines[widget.path] : null;
+  // there on the first frame: drawn at once, never faded in again
+  late final bool _hadIt = _lines != null || _paras != null;
 
   @override
   void initState() {
@@ -620,55 +670,83 @@ class _FileTextPreviewState extends State<FileTextPreview> {
   }
 
   // a word document as its reader sets it: headings bold, words wrapped,
-  // a few lines and a fade where it goes on
+  // about four lines, ending on a whole line that fades when more follows.
+  // on the bubble's own ground, no box around it
   Widget _docGlance(BuildContext context, List<DocLine> paras) {
     final scaler = MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.4);
-    final body = HaloType.sans(size: 12, color: HaloColors.text, height: 1.35);
+    final fg = widget.isOut ? HaloColors.onAmber : HaloColors.text;
+    final body = HaloType.sans(size: 12, color: fg, height: 1.35);
     final head = HaloType.sans(
       size: 13,
-      color: HaloColors.text,
+      color: fg,
       weight: FontWeight.w700,
       height: 1.3,
     );
     return Container(
       width: kFilePreviewWidth,
-      height: docGlanceHeight(scaler),
-      padding: const EdgeInsets.fromLTRB(11, 9, 11, 0),
+      padding: const EdgeInsets.fromLTRB(11, 9, 11, 9),
       decoration: BoxDecoration(
-        color: HaloColors.ink,
+        color: fg.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ShaderMask(
-        blendMode: BlendMode.dstIn,
-        shaderCallback: (r) => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF), Color(0x00FFFFFF)],
-          stops: [0, 0.66, 1],
-        ).createShader(r),
-        child: ClipRect(
-          child: OverflowBox(
-            alignment: Alignment.topCenter,
-            maxHeight: double.infinity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final (i, l) in paras.indexed)
-                  Padding(
-                    padding: EdgeInsets.only(top: i == 0 ? 0 : 4),
-                    child: Text(
-                      l.text,
-                      maxLines: 4,
-                      overflow: TextOverflow.clip,
-                      textScaler: scaler,
-                      style: l.head ? head : body,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final dir = Directionality.of(context);
+          var left = kDocGlanceLines;
+          var more = false;
+          final kids = <Widget>[];
+          for (final (i, l) in paras.indexed) {
+            if (left <= 0) {
+              more = true;
+              break;
+            }
+            final style = l.head ? head : body;
+            final tp = TextPainter(
+              text: TextSpan(text: l.text, style: style),
+              textDirection: dir,
+              textScaler: scaler,
+              maxLines: left,
+            )..layout(maxWidth: box.maxWidth);
+            final n = tp.computeLineMetrics().length;
+            final over = tp.didExceedMaxLines;
+            tp.dispose();
+            kids.add(
+              Padding(
+                padding: EdgeInsets.only(top: i == 0 ? 0 : 3),
+                child: Text(
+                  l.text,
+                  maxLines: left,
+                  // whole lines only: the last one ends where it ends
+                  overflow: TextOverflow.clip,
+                  textScaler: scaler,
+                  style: style,
+                ),
+              ),
+            );
+            left -= n;
+            if (over) {
+              more = true;
+              break;
+            }
+          }
+          if (kids.length < paras.length) more = true;
+          final text = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: kids,
+          );
+          if (!more) return text;
+          return ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (r) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF), Color(0x26FFFFFF)],
+              stops: [0, 0.72, 1],
+            ).createShader(r),
+            child: text,
+          );
+        },
       ),
     );
   }
@@ -678,7 +756,7 @@ class _FileTextPreviewState extends State<FileTextPreview> {
     final paras = _paras;
     if (widget.doc && paras != null) {
       return TweenAnimationBuilder<double>(
-        tween: Tween(begin: motionStill(context) ? 1 : 0, end: 1),
+        tween: Tween(begin: motionStill(context) || _hadIt ? 1 : 0, end: 1),
         duration: const Duration(milliseconds: 220),
         builder: (_, v, c) => Opacity(opacity: v, child: c),
         child: _docGlance(context, paras),
@@ -704,12 +782,18 @@ class _FileTextPreviewState extends State<FileTextPreview> {
               width: kFilePreviewWidth,
               height: kept,
               decoration: BoxDecoration(
-                color: HaloColors.ink.withValues(alpha: 0.5),
+                color: widget.doc
+                    ? (widget.isOut ? HaloColors.onAmber : HaloColors.text)
+                          .withValues(alpha: 0.06)
+                    : HaloColors.ink.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
               ),
             )
           : TweenAnimationBuilder<double>(
-              tween: Tween(begin: motionStill(context) ? 1 : 0, end: 1),
+              tween: Tween(
+                begin: motionStill(context) || _hadIt ? 1 : 0,
+                end: 1,
+              ),
               duration: const Duration(milliseconds: 220),
               builder: (_, v, c) => Opacity(opacity: v, child: c),
               child: Container(
@@ -742,6 +826,26 @@ class _FileTextPreviewState extends State<FileTextPreview> {
             ),
     );
   }
+}
+
+/// how many pages a pdf has, on its first page in the bubble
+class PdfPagesPill extends StatelessWidget {
+  final int pages;
+  const PdfPagesPill({super.key, required this.pages});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+    decoration: BoxDecoration(
+      color: const Color(0xD112100D),
+      borderRadius: BorderRadius.circular(99),
+    ),
+    child: Text(
+      l10n.filePages(pages, whole(pages)),
+      textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.3),
+      style: HaloType.mono(size: 9.5, color: const Color(0xFFF5F1EA)),
+    ),
+  );
 }
 
 /// a pdf's first page on paper, its top in view, with how many pages it
@@ -893,26 +997,7 @@ class _PdfFirstPageState extends State<PdfFirstPage> {
               PositionedDirectional(
                 end: 8,
                 bottom: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xD112100D),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    l10n.filePages(pages, whole(pages)),
-                    textScaler: MediaQuery.textScalerOf(
-                      context,
-                    ).clamp(maxScaleFactor: 1.3),
-                    style: HaloType.mono(
-                      size: 9.5,
-                      color: const Color(0xFFF5F1EA),
-                    ),
-                  ),
-                ),
+                child: PdfPagesPill(pages: pages),
               ),
           ],
         ),
@@ -978,7 +1063,14 @@ Future<void> warmSentPreview(
       return;
     }
     final facts = fileFactsOrName(path, name);
-    if (textViewable(facts.ext)) {
+    if (facts.kind == FileKind.picture) {
+      // as a row of a set draws it
+      await precacheImage(
+        mediaImage(path, setPicturePx(context)),
+        context,
+        onError: (_, _) {},
+      ).timeout(most);
+    } else if (textViewable(facts.ext)) {
       await firstLinesOf(path).timeout(most);
     } else if (kDocViewExts.contains(facts.ext)) {
       await docFirstLines(path).timeout(most);
@@ -999,7 +1091,11 @@ final Map<String, List<DocLine>> _docLines = {};
 typedef DocLine = ({String text, bool head});
 
 /// the glance's height: about four lines of body text, the last fading
-double docGlanceHeight(TextScaler scaler) => scaler.scale(12) * 1.35 * 4 + 12;
+double docGlanceHeight(TextScaler scaler) =>
+    scaler.scale(12) * 1.35 * kDocGlanceLines + 18;
+
+/// the lines a document's glance shows at most
+const kDocGlanceLines = 4;
 
 /// the first four paragraphs with words of the document at [path]
 Future<List<DocLine>?> docFirstLines(String path) async {

@@ -225,12 +225,11 @@ class FileWaitMark extends StatelessWidget {
             duration: morph,
             curve: kHouseCurve,
             decoration: BoxDecoration(
-              color: asks ? Colors.transparent : HaloColors.amberSoft,
+              // a faint wash, no outline (mario 2026-11-12)
+              color: asks
+                  ? HaloColors.amber.withValues(alpha: 0.14)
+                  : HaloColors.amberSoft,
               borderRadius: BorderRadius.circular(asks ? 11 : size / 2),
-              border: Border.all(
-                color: asks ? HaloColors.amber : Colors.transparent,
-                width: 2,
-              ),
             ),
           ),
           // the ring eases in and fills as the file comes
