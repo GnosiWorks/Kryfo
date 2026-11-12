@@ -607,6 +607,12 @@ final _pairs = <(String, _Get, _Get, _Get)>[
     (l) => l.gifPhoneTabDesk,
   ),
   (
+    'gifFavKept',
+    (l) => l.gifFavKeptShown,
+    (l) => l.gifFavKept,
+    (l) => l.gifFavKeptDesk,
+  ),
+  (
     'gifPhoneLine',
     (l) => l.gifPhoneLineShown,
     (l) => l.gifPhoneLine,

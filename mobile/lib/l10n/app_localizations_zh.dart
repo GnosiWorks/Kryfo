@@ -11626,6 +11626,62 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get storyTemplate => '我为什么使用 Kryfo：\n\n我所在的地方有哪些被封锁：\n\n地区（可选）：\n';
+
+  @override
+  String get chatFindingMessage => '正在查找消息';
+
+  @override
+  String get chatMessageGone => '该消息已不存在。';
+
+  @override
+  String get gifFavTab => '收藏';
+
+  @override
+  String get gifFavAdd => '添加到收藏';
+
+  @override
+  String get gifFavAdded => '已添加到收藏';
+
+  @override
+  String get gifFavCouldNotAdd => '无法添加到收藏，请重试。';
+
+  @override
+  String get gifFavRemove => '从收藏中移除';
+
+  @override
+  String get gifFavRemoved => '已从收藏中移除';
+
+  @override
+  String get gifFavEdit => '编辑收藏';
+
+  @override
+  String get gifFavEditTitle => '你的*收藏*';
+
+  @override
+  String get gifFavEditHint => '长按并拖动可调整顺序，点叉号可移除。';
+
+  @override
+  String get gifFavKept => '加密保存在这部手机上。关闭 GIF 搜索也能用。';
+
+  @override
+  String get gifFavKeptDesk => '加密保存在这台电脑上。关闭 GIF 搜索也能用。';
+
+  @override
+  String get gifFavEmptyTitle => '还没有收藏';
+
+  @override
+  String get gifFavEmptyLine => '在聊天或 GIF 中长按一个 GIF，即可添加到这里。';
+
+  @override
+  String get gifFavMoveEarlier => '前移';
+
+  @override
+  String get gifFavMoveLater => '后移';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return '收藏的 GIF $number';
+  }
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -23130,4 +23186,60 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get storyTemplate => '我為什麼使用 Kryfo：\n\n我所在的地方有哪些被封鎖：\n\n地區（可選）：\n';
+
+  @override
+  String get chatFindingMessage => '正在尋找訊息';
+
+  @override
+  String get chatMessageGone => '該訊息已不存在。';
+
+  @override
+  String get gifFavTab => '收藏';
+
+  @override
+  String get gifFavAdd => '加入收藏';
+
+  @override
+  String get gifFavAdded => '已加入收藏';
+
+  @override
+  String get gifFavCouldNotAdd => '無法加入收藏，請再試一次。';
+
+  @override
+  String get gifFavRemove => '從收藏中移除';
+
+  @override
+  String get gifFavRemoved => '已從收藏中移除';
+
+  @override
+  String get gifFavEdit => '編輯收藏';
+
+  @override
+  String get gifFavEditTitle => '你的*收藏*';
+
+  @override
+  String get gifFavEditHint => '長按並拖曳可調整順序，點叉號可移除。';
+
+  @override
+  String get gifFavKept => '加密保存在這支手機上。關閉 GIF 搜尋也能用。';
+
+  @override
+  String get gifFavKeptDesk => '加密保存在這台電腦上。關閉 GIF 搜尋也能用。';
+
+  @override
+  String get gifFavEmptyTitle => '還沒有收藏';
+
+  @override
+  String get gifFavEmptyLine => '在聊天或 GIF 中長按一個 GIF，即可加入這裡。';
+
+  @override
+  String get gifFavMoveEarlier => '往前移';
+
+  @override
+  String get gifFavMoveLater => '往後移';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return '收藏的 GIF $number';
+  }
 }

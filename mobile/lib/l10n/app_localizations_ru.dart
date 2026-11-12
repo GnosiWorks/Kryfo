@@ -12501,4 +12501,65 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get storyTemplate =>
       'Почему я пользуюсь Kryfo:\n\nЧто заблокировано там, где я живу:\n\nРегион (по желанию):\n';
+
+  @override
+  String get chatFindingMessage => 'Ищем сообщение';
+
+  @override
+  String get chatMessageGone => 'Этого сообщения больше нет.';
+
+  @override
+  String get gifFavTab => 'Избранное';
+
+  @override
+  String get gifFavAdd => 'Добавить в избранное';
+
+  @override
+  String get gifFavAdded => 'Добавлено в избранное';
+
+  @override
+  String get gifFavCouldNotAdd =>
+      'Не удалось добавить в избранное. Попробуй ещё раз.';
+
+  @override
+  String get gifFavRemove => 'Убрать из избранного';
+
+  @override
+  String get gifFavRemoved => 'Убрано из избранного';
+
+  @override
+  String get gifFavEdit => 'Изменить избранное';
+
+  @override
+  String get gifFavEditTitle => 'Твоё *избранное*';
+
+  @override
+  String get gifFavEditHint =>
+      'Удерживай и перетаскивай, чтобы поменять порядок. Нажми на крестик, чтобы убрать.';
+
+  @override
+  String get gifFavKept =>
+      'Хранится на этом телефоне, зашифровано. Работает без поиска GIF.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Хранится на этом компьютере, зашифровано. Работает без поиска GIF.';
+
+  @override
+  String get gifFavEmptyTitle => 'В избранном пока пусто';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Удерживай GIF в чате или во вкладке GIF, чтобы добавить его сюда.';
+
+  @override
+  String get gifFavMoveEarlier => 'Переместить раньше';
+
+  @override
+  String get gifFavMoveLater => 'Переместить позже';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'Избранный GIF $number';
+  }
 }

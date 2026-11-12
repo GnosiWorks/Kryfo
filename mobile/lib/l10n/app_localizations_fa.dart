@@ -12324,4 +12324,65 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get storyTemplate =>
       'چرا از Kryfo استفاده می‌کنم:\n\nچه چیزهایی جایی که زندگی می‌کنم مسدود است:\n\nمنطقه (اختیاری):\n';
+
+  @override
+  String get chatFindingMessage => 'در حال یافتن پیام';
+
+  @override
+  String get chatMessageGone => 'آن پیام دیگر وجود ندارد.';
+
+  @override
+  String get gifFavTab => 'برگزیده‌ها';
+
+  @override
+  String get gifFavAdd => 'افزودن به برگزیده‌ها';
+
+  @override
+  String get gifFavAdded => 'به برگزیده‌ها افزوده شد';
+
+  @override
+  String get gifFavCouldNotAdd =>
+      'افزودن به برگزیده‌ها نشد. دوباره امتحان کنید.';
+
+  @override
+  String get gifFavRemove => 'برداشتن از برگزیده‌ها';
+
+  @override
+  String get gifFavRemoved => 'از برگزیده‌ها برداشته شد';
+
+  @override
+  String get gifFavEdit => 'ویرایش برگزیده‌ها';
+
+  @override
+  String get gifFavEditTitle => '*برگزیده‌های* شما';
+
+  @override
+  String get gifFavEditHint =>
+      'برای تغییر ترتیب، نگه دارید و بکشید. برای برداشتن، روی ضربدر بزنید.';
+
+  @override
+  String get gifFavKept =>
+      'رمزگذاری‌شده روی این گوشی نگه داشته می‌شود. بدون جستجوی GIF هم کار می‌کند.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'رمزگذاری‌شده روی این رایانه نگه داشته می‌شود. بدون جستجوی GIF هم کار می‌کند.';
+
+  @override
+  String get gifFavEmptyTitle => 'هنوز برگزیده‌ای نیست';
+
+  @override
+  String get gifFavEmptyLine =>
+      'برای افزودن به اینجا، یک GIF را در گفتگو یا در GIFها نگه دارید.';
+
+  @override
+  String get gifFavMoveEarlier => 'جابه‌جایی به قبل';
+
+  @override
+  String get gifFavMoveLater => 'جابه‌جایی به بعد';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'GIF برگزیده $number';
+  }
 }

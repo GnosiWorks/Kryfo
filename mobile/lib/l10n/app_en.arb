@@ -15500,5 +15500,82 @@
   "storyTemplate": "Why I use Kryfo:\n\nWhat is blocked where I live:\n\nRegion (optional):\n",
   "@storyTemplate": {
     "description": "the words put in the developer chat's composer by storyRow, for the person to fill in, change or drop before sending. three prompts, each followed by an empty line to write on; keep the line breaks"
+  },
+  "chatFindingMessage": "Finding the message",
+  "@chatFindingMessage": {
+    "description": "screens/chat_screen.dart: under the in-chat search, while a hit far up the chat is loaded"
+  },
+  "chatMessageGone": "That message is gone.",
+  "@chatMessageGone": {
+    "description": "screens/chat_screen.dart: toast when a search hit, a quote or a pin points at a message that was unsent or burned"
+  },
+  "gifFavTab": "Favourites",
+  "@gifFavTab": {
+    "description": "stickers/sticker_sheet.dart: the picker tab of favourite gifs"
+  },
+  "gifFavAdd": "Add to favourites",
+  "@gifFavAdd": {
+    "description": "message menu and gif picker: keep this gif in the favourites"
+  },
+  "gifFavAdded": "Added to favourites",
+  "@gifFavAdded": {
+    "description": "toast after a gif was kept in the favourites"
+  },
+  "gifFavCouldNotAdd": "Couldn't add it to favourites. Try again.",
+  "@gifFavCouldNotAdd": {
+    "description": "toast when a gif could not be kept in the favourites"
+  },
+  "gifFavRemove": "Remove from favourites",
+  "@gifFavRemove": {
+    "description": "gifs/gif_fav_panel.dart: screen reader action that removes a favourite"
+  },
+  "gifFavRemoved": "Removed from favourites",
+  "@gifFavRemoved": {
+    "description": "gifs/gif_fav_panel.dart: said by the screen reader after a favourite was removed"
+  },
+  "gifFavEdit": "Edit favourites",
+  "@gifFavEdit": {
+    "description": "gifs/gif_fav_panel.dart: screen reader action that starts editing the favourites"
+  },
+  "gifFavEditTitle": "Your *favourites*",
+  "@gifFavEditTitle": {
+    "description": "gifs/gif_fav_panel.dart: heading while editing the favourites. the word between asterisks is set in amber italics"
+  },
+  "gifFavEditHint": "Hold and drag to reorder. Tap the cross to remove.",
+  "@gifFavEditHint": {
+    "description": "gifs/gif_fav_panel.dart: line under the grid while editing"
+  },
+  "gifFavKept": "Kept on this phone, encrypted. Works without GIF search.",
+  "@gifFavKept": {
+    "description": "gifs/gif_fav_panel.dart: line under the favourites grid"
+  },
+  "gifFavKeptDesk": "Kept on this computer, encrypted. Works without GIF search.",
+  "@gifFavKeptDesk": {
+    "description": "gifs/gif_fav_panel.dart: line under the favourites grid on a computer"
+  },
+  "gifFavEmptyTitle": "No favourites yet",
+  "@gifFavEmptyTitle": {
+    "description": "gifs/gif_fav_panel.dart: empty favourites tab, title"
+  },
+  "gifFavEmptyLine": "Hold a GIF in a chat or in GIFs to add it here.",
+  "@gifFavEmptyLine": {
+    "description": "gifs/gif_fav_panel.dart: empty favourites tab, how to add one"
+  },
+  "gifFavMoveEarlier": "Move earlier",
+  "@gifFavMoveEarlier": {
+    "description": "gifs/gif_fav_panel.dart: screen reader action, move a favourite one place earlier"
+  },
+  "gifFavMoveLater": "Move later",
+  "@gifFavMoveLater": {
+    "description": "gifs/gif_fav_panel.dart: screen reader action, move a favourite one place later"
+  },
+  "gifFavTileA11y": "Favourite GIF {number}",
+  "@gifFavTileA11y": {
+    "description": "gifs/gif_fav_panel.dart: screen reader label of a favourite in the grid. number is its place, already formatted",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
   }
 }

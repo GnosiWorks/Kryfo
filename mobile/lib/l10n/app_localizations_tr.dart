@@ -12332,4 +12332,64 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get storyTemplate =>
       'Kryfo’yu neden kullanıyorum:\n\nYaşadığım yerde neler engelli:\n\nBölge (isteğe bağlı):\n';
+
+  @override
+  String get chatFindingMessage => 'Mesaj aranıyor';
+
+  @override
+  String get chatMessageGone => 'O mesaj artık yok.';
+
+  @override
+  String get gifFavTab => 'Favoriler';
+
+  @override
+  String get gifFavAdd => 'Favorilere ekle';
+
+  @override
+  String get gifFavAdded => 'Favorilere eklendi';
+
+  @override
+  String get gifFavCouldNotAdd => 'Favorilere eklenemedi. Tekrar dene.';
+
+  @override
+  String get gifFavRemove => 'Favorilerden çıkar';
+
+  @override
+  String get gifFavRemoved => 'Favorilerden çıkarıldı';
+
+  @override
+  String get gifFavEdit => 'Favorileri düzenle';
+
+  @override
+  String get gifFavEditTitle => '*Favorilerin*';
+
+  @override
+  String get gifFavEditHint =>
+      'Sıralamak için basılı tutup sürükle. Çıkarmak için çarpıya dokun.';
+
+  @override
+  String get gifFavKept =>
+      'Bu telefonda şifreli saklanır. GIF araması kapalıyken de çalışır.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Bu bilgisayarda şifreli saklanır. GIF araması kapalıyken de çalışır.';
+
+  @override
+  String get gifFavEmptyTitle => 'Henüz favori yok';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Buraya eklemek için bir sohbette ya da GIF’lerde bir GIF’e basılı tut.';
+
+  @override
+  String get gifFavMoveEarlier => 'Öne al';
+
+  @override
+  String get gifFavMoveLater => 'Arkaya al';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'Favori GIF $number';
+  }
 }

@@ -11,6 +11,8 @@ import 'package:flutter/services.dart';
 
 import '../container.dart';
 import '../dlog.dart';
+import '../gifs/gif_fav_panel.dart';
+import '../gifs/gif_favs.dart';
 import '../gifs/gif_opt_in.dart';
 import '../gifs/gif_panel.dart';
 import '../gifs/gif_source.dart';
@@ -111,6 +113,7 @@ class GifTabs {
     required this.saveOn,
     required this.loadAsked,
     required this.markAsked,
+    this.favs,
   });
 
   // a quiet session's refuses every question: nothing reaches the network
@@ -121,6 +124,9 @@ class GifTabs {
   // the one question about turning it on, asked once per identity
   final Future<bool> Function() loadAsked;
   final Future<void> Function() markAsked;
+  // the favourites of the chat's side: the decoy's own, a hidden chat's in
+  // the vault. none in tests that do not ask for them
+  final GifFavStore? favs;
 }
 
 /// opens the picker. the pick comes back with the recents already updated;
@@ -171,8 +177,12 @@ class StickerSheetState extends State<StickerSheet>
   int _tab = 0;
   // where each section starts in the grid, one per tab
   List<double> _starts = const [];
-  // stickers, gifs or on this phone
-  _Kind _kind = _Kind.stickers;
+  // favourites, gifs, stickers or on this phone. it opens on the
+  // favourites, and goes to the stickers once they read as none
+  late _Kind _kind = _favOn ? _Kind.favourites : _Kind.stickers;
+  // the favourites, null until read
+  List<GifFav>? _favs;
+  bool _kindPicked = false;
   // null until read
   bool? _gifOn;
   bool? _gifAsked;
@@ -203,6 +213,7 @@ class StickerSheetState extends State<StickerSheet>
   void initState() {
     super.initState();
     _load();
+    _loadFavs();
     final g = widget.gifs;
     if (g != null) {
       Future.wait([g.loadOn(), g.loadAsked()]).then((v) {
@@ -220,13 +231,37 @@ class StickerSheetState extends State<StickerSheet>
   @visibleForTesting
   void showKind(int i) => _setKind(_kinds[i]);
 
+  bool get _favOn => widget.gifs?.favs != null;
+
   List<_Kind> get _kinds => [
-    _Kind.stickers,
+    if (_favOn) _Kind.favourites,
     if (widget.gifs != null) _Kind.gifs,
+    _Kind.stickers,
     _Kind.phone,
   ];
 
+  // read while the sheet rises: none, and the stickers take the place
+  Future<void> _loadFavs() async {
+    final store = widget.gifs?.favs;
+    if (store == null) return;
+    List<GifFav> got;
+    try {
+      got = await store.load();
+    } catch (e) {
+      dlog('gif favs: not read (${e.runtimeType})');
+      got = const [];
+    }
+    if (!mounted) return;
+    setState(() {
+      _favs = got;
+      if (got.isEmpty && !_kindPicked && _kind == _Kind.favourites) {
+        _kind = _Kind.stickers;
+      }
+    });
+  }
+
   void _setKind(_Kind k) {
+    _kindPicked = true;
     if (k == _kind) return;
     HapticFeedback.selectionClick();
     FocusManager.instance.primaryFocus?.unfocus();
@@ -280,6 +315,13 @@ class StickerSheetState extends State<StickerSheet>
 
   void _gifPicked(Uint8List b) {
     if (mounted) Navigator.of(context).pop(GifPick(b));
+  }
+
+  // a found gif held: kept in the favourites
+  Future<bool> _keepGif(Uint8List b) async {
+    final store = widget.gifs?.favs;
+    if (store == null) return false;
+    return store.add(b);
   }
 
   void _phonePicked() {
@@ -595,12 +637,23 @@ class StickerSheetState extends State<StickerSheet>
                 Expanded(
                   child: _FadeIn(
                     key: ValueKey(_kind),
-                    child: _kind == _Kind.phone
-                        ? GifPhonePanel(
-                            controller: controller,
-                            onChoose: _phonePicked,
-                          )
-                        : _gifBody(g!, controller),
+                    child: switch (_kind) {
+                      _Kind.phone => GifPhonePanel(
+                        controller: controller,
+                        onChoose: _phonePicked,
+                      ),
+                      _Kind.favourites =>
+                        _favs == null
+                            // a moment while they are read
+                            ? ListView(controller: controller)
+                            : GifFavPanel(
+                                store: g!.favs!,
+                                initial: _favs!,
+                                controller: controller,
+                                onPick: _gifPicked,
+                              ),
+                      _ => _gifBody(g!, controller),
+                    },
                   ),
                 ),
             ],
@@ -667,6 +720,7 @@ class StickerSheetState extends State<StickerSheet>
         route: g.route,
         onPick: _gifPicked,
         onSearchFocus: _searchFocused,
+        onFavourite: g.favs == null ? null : _keepGif,
       ),
     );
   }
@@ -714,22 +768,40 @@ class StickerSheetState extends State<StickerSheet>
                                 : HaloColors.line,
                           ),
                         ),
-                        child: Text(
-                          switch (k) {
-                            _Kind.stickers => l10n.stickerOpen,
-                            _Kind.gifs => l10n.gifTab,
-                            _Kind.phone => l10n.gifPhoneTabShown,
-                          },
-                          style: HaloType.sans(
-                            size: 14,
-                            height: 1.3,
-                            weight: k == _kind
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                            color: k == _kind
-                                ? HaloColors.amberText
-                                : HaloColors.text,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (k == _Kind.favourites) ...[
+                              Icon(
+                                Icons.star_rounded,
+                                size: 16,
+                                color: k == _kind
+                                    ? HaloColors.amber
+                                    : HaloColors.text2,
+                              ),
+                              const SizedBox(width: 5),
+                            ],
+                            Flexible(
+                              child: Text(
+                                switch (k) {
+                                  _Kind.favourites => l10n.gifFavTab,
+                                  _Kind.stickers => l10n.stickerOpen,
+                                  _Kind.gifs => l10n.gifTab,
+                                  _Kind.phone => l10n.gifPhoneTabShown,
+                                },
+                                style: HaloType.sans(
+                                  size: 14,
+                                  height: 1.3,
+                                  weight: k == _kind
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  color: k == _kind
+                                      ? HaloColors.amberText
+                                      : HaloColors.text,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -968,7 +1040,7 @@ class StickerSheetState extends State<StickerSheet>
   }
 }
 
-enum _Kind { stickers, gifs, phone }
+enum _Kind { favourites, stickers, gifs, phone }
 
 // a tab's content comes up over a few frames, or at once with reduced motion
 class _FadeIn extends StatelessWidget {

@@ -12310,4 +12310,65 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get storyTemplate =>
       'Kenapa aku memakai Kryfo:\n\nApa yang diblokir di tempatku:\n\nWilayah (opsional):\n';
+
+  @override
+  String get chatFindingMessage => 'Mencari pesan';
+
+  @override
+  String get chatMessageGone => 'Pesan itu sudah tidak ada.';
+
+  @override
+  String get gifFavTab => 'Favorit';
+
+  @override
+  String get gifFavAdd => 'Tambahkan ke favorit';
+
+  @override
+  String get gifFavAdded => 'Ditambahkan ke favorit';
+
+  @override
+  String get gifFavCouldNotAdd =>
+      'Tidak bisa menambahkan ke favorit. Coba lagi.';
+
+  @override
+  String get gifFavRemove => 'Hapus dari favorit';
+
+  @override
+  String get gifFavRemoved => 'Dihapus dari favorit';
+
+  @override
+  String get gifFavEdit => 'Ubah favorit';
+
+  @override
+  String get gifFavEditTitle => '*Favorit*mu';
+
+  @override
+  String get gifFavEditHint =>
+      'Tahan dan seret untuk mengurutkan. Ketuk tanda silang untuk menghapus.';
+
+  @override
+  String get gifFavKept =>
+      'Disimpan di ponsel ini, terenkripsi. Tetap jalan tanpa pencarian GIF.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Disimpan di komputer ini, terenkripsi. Tetap jalan tanpa pencarian GIF.';
+
+  @override
+  String get gifFavEmptyTitle => 'Belum ada favorit';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Tahan GIF di chat atau di GIF untuk menambahkannya di sini.';
+
+  @override
+  String get gifFavMoveEarlier => 'Pindah ke depan';
+
+  @override
+  String get gifFavMoveLater => 'Pindah ke belakang';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'GIF favorit $number';
+  }
 }

@@ -12299,4 +12299,63 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get storyTemplate =>
       'Vì sao tôi dùng Kryfo:\n\nNhững gì bị chặn ở nơi tôi sống:\n\nKhu vực (không bắt buộc):\n';
+
+  @override
+  String get chatFindingMessage => 'Đang tìm tin nhắn';
+
+  @override
+  String get chatMessageGone => 'Tin nhắn đó không còn nữa.';
+
+  @override
+  String get gifFavTab => 'Yêu thích';
+
+  @override
+  String get gifFavAdd => 'Thêm vào yêu thích';
+
+  @override
+  String get gifFavAdded => 'Đã thêm vào yêu thích';
+
+  @override
+  String get gifFavCouldNotAdd => 'Không thêm vào yêu thích được. Hãy thử lại.';
+
+  @override
+  String get gifFavRemove => 'Bỏ khỏi yêu thích';
+
+  @override
+  String get gifFavRemoved => 'Đã bỏ khỏi yêu thích';
+
+  @override
+  String get gifFavEdit => 'Sửa mục yêu thích';
+
+  @override
+  String get gifFavEditTitle => 'Mục *yêu thích* của bạn';
+
+  @override
+  String get gifFavEditHint => 'Giữ và kéo để sắp xếp. Chạm dấu chéo để bỏ.';
+
+  @override
+  String get gifFavKept =>
+      'Lưu trên điện thoại này, đã mã hóa. Dùng được khi tắt tìm GIF.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Lưu trên máy tính này, đã mã hóa. Dùng được khi tắt tìm GIF.';
+
+  @override
+  String get gifFavEmptyTitle => 'Chưa có mục yêu thích';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Giữ một GIF trong cuộc trò chuyện hoặc trong GIF để thêm vào đây.';
+
+  @override
+  String get gifFavMoveEarlier => 'Chuyển lên trước';
+
+  @override
+  String get gifFavMoveLater => 'Chuyển ra sau';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'GIF yêu thích $number';
+  }
 }

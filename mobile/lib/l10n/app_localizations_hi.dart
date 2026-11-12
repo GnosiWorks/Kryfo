@@ -12313,4 +12313,65 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get storyTemplate =>
       'मैं Kryfo क्यों इस्तेमाल करता/करती हूं:\n\nजहां मैं रहता/रहती हूं, वहां क्या ब्लॉक है:\n\nक्षेत्र (वैकल्पिक):\n';
+
+  @override
+  String get chatFindingMessage => 'मैसेज ढूँढ रहे हैं';
+
+  @override
+  String get chatMessageGone => 'वह मैसेज अब नहीं है।';
+
+  @override
+  String get gifFavTab => 'पसंदीदा';
+
+  @override
+  String get gifFavAdd => 'पसंदीदा में जोड़ें';
+
+  @override
+  String get gifFavAdded => 'पसंदीदा में जोड़ा गया';
+
+  @override
+  String get gifFavCouldNotAdd =>
+      'पसंदीदा में नहीं जुड़ सका। फिर से कोशिश करें।';
+
+  @override
+  String get gifFavRemove => 'पसंदीदा से हटाएँ';
+
+  @override
+  String get gifFavRemoved => 'पसंदीदा से हटाया गया';
+
+  @override
+  String get gifFavEdit => 'पसंदीदा बदलें';
+
+  @override
+  String get gifFavEditTitle => 'आपके *पसंदीदा*';
+
+  @override
+  String get gifFavEditHint =>
+      'क्रम बदलने के लिए दबाकर खींचें। हटाने के लिए क्रॉस पर टैप करें।';
+
+  @override
+  String get gifFavKept =>
+      'इस फ़ोन पर एन्क्रिप्ट करके रखे गए। GIF खोज बंद होने पर भी चलता है।';
+
+  @override
+  String get gifFavKeptDesk =>
+      'इस कंप्यूटर पर एन्क्रिप्ट करके रखे गए। GIF खोज बंद होने पर भी चलता है।';
+
+  @override
+  String get gifFavEmptyTitle => 'अभी कोई पसंदीदा नहीं';
+
+  @override
+  String get gifFavEmptyLine =>
+      'यहाँ जोड़ने के लिए किसी चैट में या GIF में किसी GIF को दबाकर रखें।';
+
+  @override
+  String get gifFavMoveEarlier => 'पहले ले जाएँ';
+
+  @override
+  String get gifFavMoveLater => 'बाद में ले जाएँ';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'पसंदीदा GIF $number';
+  }
 }

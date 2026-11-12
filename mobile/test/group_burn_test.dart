@@ -29,8 +29,8 @@ void main() {
 
   test('every way the group chat reads its rows reads the timer back', () {
     final rows = callsOf(screen, '_GMsg(').where((c) => c.contains("r['"));
-    // the first page, a full reload, the newest rows
-    expect(rows.length, 3);
+    // the first page, a full reload, the newest rows, a quote far up
+    expect(rows.length, 4);
     for (final r in rows) {
       expect(r, contains("burnSecs: (r['burn_secs'] as num?)?.toInt(),"));
     }

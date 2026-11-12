@@ -12402,4 +12402,65 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get storyTemplate =>
       'Por que uso o Kryfo:\n\nO que é bloqueado onde eu moro:\n\nRegião (opcional):\n';
+
+  @override
+  String get chatFindingMessage => 'Procurando a mensagem';
+
+  @override
+  String get chatMessageGone => 'Essa mensagem não existe mais.';
+
+  @override
+  String get gifFavTab => 'Favoritos';
+
+  @override
+  String get gifFavAdd => 'Adicionar aos favoritos';
+
+  @override
+  String get gifFavAdded => 'Adicionado aos favoritos';
+
+  @override
+  String get gifFavCouldNotAdd =>
+      'Não deu para adicionar aos favoritos. Tente de novo.';
+
+  @override
+  String get gifFavRemove => 'Remover dos favoritos';
+
+  @override
+  String get gifFavRemoved => 'Removido dos favoritos';
+
+  @override
+  String get gifFavEdit => 'Editar favoritos';
+
+  @override
+  String get gifFavEditTitle => 'Seus *favoritos*';
+
+  @override
+  String get gifFavEditHint =>
+      'Segure e arraste para reordenar. Toque no X para remover.';
+
+  @override
+  String get gifFavKept =>
+      'Guardados neste celular, criptografados. Funciona sem a busca de GIF.';
+
+  @override
+  String get gifFavKeptDesk =>
+      'Guardados neste computador, criptografados. Funciona sem a busca de GIF.';
+
+  @override
+  String get gifFavEmptyTitle => 'Nenhum favorito ainda';
+
+  @override
+  String get gifFavEmptyLine =>
+      'Segure um GIF em uma conversa ou em GIFs para adicionar aqui.';
+
+  @override
+  String get gifFavMoveEarlier => 'Mover para antes';
+
+  @override
+  String get gifFavMoveLater => 'Mover para depois';
+
+  @override
+  String gifFavTileA11y(String number) {
+    return 'GIF favorito $number';
+  }
 }
