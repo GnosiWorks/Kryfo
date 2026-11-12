@@ -205,6 +205,8 @@ void _mock(String channel, Future<Object?> Function(MethodCall c)? h) =>
 void main() {
   late MemDb mem;
   late Directory docs;
+  // the rows' clock: the expected times come from it, not a later minute
+  late int at;
 
   setUpAll(() async {
     final me = testKeyPair();
@@ -250,7 +252,7 @@ void main() {
       'accepted': 1,
       'back_paired': 1,
     });
-    final at = DateTime.now().millisecondsSinceEpoch;
+    at = DateTime.now().millisecondsSinceEpoch;
     var id = 0;
     Future<void> row(String dir, String text, int ago, String uid) =>
         mem.insert('messages', {
@@ -317,8 +319,8 @@ void main() {
     // keeps it on its short line
     expect(runs.length, 5);
     expect(runs.where((r) => r.inline).length, 4);
-    final now = DateTime.now();
-    String hm(int ago) => hourMinute(now.subtract(Duration(milliseconds: ago)));
+    String hm(int ago) =>
+        hourMinute(DateTime.fromMillisecondsSinceEpoch(at - ago));
     expect(find.text(hm(590000)), findsOneWidget);
     expect(find.text(hm(280000)), findsWidgets);
     await devClose(t);
