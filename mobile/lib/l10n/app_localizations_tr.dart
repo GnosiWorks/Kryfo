@@ -697,11 +697,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get appGettingNewMessages => 'Yeni mesajlar alınıyor';
 
   @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return 'Gönderiliyor · $v · uygulamayı açık tut';
-  }
-
-  @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
     return 'Duraklatıldı · $count/$count2 · kalanı bekleniyor';
   }
@@ -10002,9 +9997,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'Bugün çok sayıda büyük dosya gönderdin. Yarın tekrar dene.';
-
-  @override
-  String get mediaProgressPreparing => 'Hazırlanıyor · uygulamayı açık tut';
 
   @override
   String get groupShotsBlocksAll =>

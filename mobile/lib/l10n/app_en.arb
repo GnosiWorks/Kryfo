@@ -852,15 +852,6 @@
   "@appGettingNewMessages": {
     "description": "link_view.dart. the home pill at a start, once a relay answers, until the messages that came while kryfo was closed are in. keep it short"
   },
-  "mediaProgressSendingKeepTheApp": "Sending · {v} · keep the app open",
-  "@mediaProgressSendingKeepTheApp": {
-    "description": "media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)",
-    "placeholders": {
-      "v": {
-        "type": "Object"
-      }
-    }
-  },
   "mediaProgressPausedOfWaitingFor": "Paused · {count} of {count2} · waiting for the rest",
   "@mediaProgressPausedOfWaitingFor": {
     "description": "media_progress.dart",
@@ -12514,10 +12505,6 @@
   "fileDayLimit": "You have sent a lot of big files today. Try again tomorrow.",
   "@fileDayLimit": {
     "description": "chat and group: toast when this phone has sent its day of big files through the files service. calm, says when it works again"
-  },
-  "mediaProgressPreparing": "Preparing · keep the app open",
-  "@mediaProgressPreparing": {
-    "description": "the strip above the composer while a big file is made ready to go through the files service, before any of it is sent"
   },
   "groupShotsBlocksAll": "Blocks screenshots and screen recording on every phone in this group, and copying, forwarding or saving each other’s messages. It can’t stop apps allowed to read the screen, or a phone or app changed to get around it.",
   "@groupShotsBlocksAll": {

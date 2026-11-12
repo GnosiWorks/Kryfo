@@ -670,11 +670,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appGettingNewMessages => '正在接收新消息';
 
   @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return '正在发送 · $v · 请保持应用打开';
-  }
-
-  @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
     return '已暂停 · $count/$count2 · 正在等待其余部分';
   }
@@ -9465,9 +9460,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fileDayLimit => '你今天已经发送了很多大文件，请明天再试。';
 
   @override
-  String get mediaProgressPreparing => '正在准备 · 请保持应用打开';
-
-  @override
   String get groupShotsBlocksAll =>
       '在这个群组的每部手机上禁止截屏和录屏，也禁止复制、转发或保存彼此的消息。它挡不住获准读取屏幕的应用，或经过改动来绕过它的手机和应用。';
 
@@ -12442,11 +12434,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appGettingNewMessages => '正在接收新訊息';
-
-  @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return '傳送中 · $v · 請保持應用程式開啟';
-  }
 
   @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
@@ -21114,9 +21101,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get fileDayLimit => '你今天已經傳送了很多大檔案，請明天再試。';
-
-  @override
-  String get mediaProgressPreparing => '正在準備 · 請保持 App 開啟';
 
   @override
   String get groupShotsBlocksAll =>

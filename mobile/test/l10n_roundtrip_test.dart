@@ -422,10 +422,6 @@ void main() {
     expect(l.appTorReady, "Tor ready");
     expect(l.appConnecting2, "Connecting");
     expect(
-      l.mediaProgressSendingKeepTheApp("<v>"),
-      "Sending · <v> · keep the app open",
-    );
-    expect(
       l.mediaProgressPausedOfWaitingFor("<count>", "<count2>"),
       "Paused · <count> of <count2> · waiting for the rest",
     );

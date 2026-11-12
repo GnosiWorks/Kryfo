@@ -714,11 +714,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get appGettingNewMessages => 'Отримуємо нові повідомлення';
 
   @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return 'Надсилання · $v · не закривай застосунок';
-  }
-
-  @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
     return 'Пауза · $count з $count2 · чекаємо решту';
   }
@@ -10139,9 +10134,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'Сьогодні ти вже надіслав багато великих файлів. Спробуй завтра.';
-
-  @override
-  String get mediaProgressPreparing => 'Підготовка · не закривай застосунок';
 
   @override
   String get groupShotsBlocksAll =>

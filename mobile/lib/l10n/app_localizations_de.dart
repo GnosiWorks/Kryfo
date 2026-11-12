@@ -698,11 +698,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appGettingNewMessages => 'Lade neue Nachrichten';
 
   @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return 'Sende · $v · lass die App offen';
-  }
-
-  @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
     return 'Pausiert · $count von $count2 · warte auf den Rest';
   }
@@ -10091,9 +10086,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'Du hast heute schon viele große Dateien gesendet. Versuch es morgen wieder.';
-
-  @override
-  String get mediaProgressPreparing => 'Wird vorbereitet · lass die App offen';
 
   @override
   String get groupShotsBlocksAll =>

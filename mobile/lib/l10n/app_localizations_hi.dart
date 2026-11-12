@@ -696,11 +696,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appGettingNewMessages => 'नए संदेश आ रहे हैं';
 
   @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return 'भेजा जा रहा है · $v · ऐप खुला रखें';
-  }
-
-  @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
     return 'रुका हुआ · $count2 में से $count · बाक़ी का इंतज़ार';
   }
@@ -9983,9 +9978,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'आज आपने बहुत सारी बड़ी फ़ाइलें भेज दी हैं। कल फिर से कोशिश करें।';
-
-  @override
-  String get mediaProgressPreparing => 'तैयार हो रहा है · ऐप खुला रखें';
 
   @override
   String get groupShotsBlocksAll =>

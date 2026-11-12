@@ -1141,12 +1141,6 @@ abstract class AppLocalizations {
   /// **'Getting new messages'**
   String get appGettingNewMessages;
 
-  /// media_progress.dart. the placeholder is a percentage, already written the language's way (42%, 42 %, %42)
-  ///
-  /// In en, this message translates to:
-  /// **'Sending · {v} · keep the app open'**
-  String mediaProgressSendingKeepTheApp(Object v);
-
   /// media_progress.dart
   ///
   /// In en, this message translates to:
@@ -16026,12 +16020,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have sent a lot of big files today. Try again tomorrow.'**
   String get fileDayLimit;
-
-  /// the strip above the composer while a big file is made ready to go through the files service, before any of it is sent
-  ///
-  /// In en, this message translates to:
-  /// **'Preparing · keep the app open'**
-  String get mediaProgressPreparing;
 
   /// screens/group_info_screen.dart: the admin's switch while it is off: what it does
   ///

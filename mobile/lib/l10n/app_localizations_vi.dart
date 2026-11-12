@@ -688,11 +688,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appGettingNewMessages => 'Đang nhận tin nhắn mới';
 
   @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return 'Đang gửi · $v · hãy để ứng dụng mở';
-  }
-
-  @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
     return 'Tạm dừng · $count trên $count2 · đang chờ phần còn lại';
   }
@@ -9964,9 +9959,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'Hôm nay bạn đã gửi nhiều tệp lớn. Hãy thử lại vào ngày mai.';
-
-  @override
-  String get mediaProgressPreparing => 'Đang chuẩn bị · giữ ứng dụng mở';
 
   @override
   String get groupShotsBlocksAll =>

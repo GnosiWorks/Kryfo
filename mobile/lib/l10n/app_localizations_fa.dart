@@ -692,11 +692,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appGettingNewMessages => 'در حال دریافت پیام‌های تازه';
 
   @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return 'در حال ارسال · ⁨$v⁩ · برنامه را باز نگه دارید';
-  }
-
-  @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
     return 'متوقف · ⁨$count⁩ از ⁨$count2⁩ · در انتظار بقیه';
   }
@@ -9987,10 +9982,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'امروز فایل‌های بزرگ زیادی فرستاده‌ای. فردا دوباره امتحان کن.';
-
-  @override
-  String get mediaProgressPreparing =>
-      'در حال آماده‌سازی · برنامه را باز نگه دار';
 
   @override
   String get groupShotsBlocksAll =>

@@ -722,11 +722,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appGettingNewMessages => 'جارٍ جلب الرسائل الجديدة';
 
   @override
-  String mediaProgressSendingKeepTheApp(Object v) {
-    return 'جارٍ الإرسال · ⁨$v⁩ · أبقِ التطبيق مفتوحًا';
-  }
-
-  @override
   String mediaProgressPausedOfWaitingFor(Object count, Object count2) {
     return 'متوقف مؤقتًا · ⁨$count⁩ من ⁨$count2⁩ · بانتظار البقية';
   }
@@ -10103,9 +10098,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get fileDayLimit =>
       'أرسلت اليوم ملفات كبيرة كثيرة. حاول مرة أخرى غدًا.';
-
-  @override
-  String get mediaProgressPreparing => 'جارٍ التحضير · أبقِ التطبيق مفتوحًا';
 
   @override
   String get groupShotsBlocksAll =>

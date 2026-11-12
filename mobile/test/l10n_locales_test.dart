@@ -368,11 +368,6 @@ final _calls = <_Call>[
   ('appTorReady', [], (l) => l.appTorReady),
   ('appConnecting2', [], (l) => l.appConnecting2),
   (
-    'mediaProgressSendingKeepTheApp',
-    ["⟨v⟩"],
-    (l) => l.mediaProgressSendingKeepTheApp("⟨v⟩"),
-  ),
-  (
     'mediaProgressPausedOfWaitingFor',
     ["⟨count⟩", "⟨count2⟩"],
     (l) => l.mediaProgressPausedOfWaitingFor("⟨count⟩", "⟨count2⟩"),
