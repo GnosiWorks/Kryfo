@@ -1,0 +1,3 @@
+Mới: xem tin nhắn thoại dưới dạng chữ, nhận dạng ngay trên điện thoại. Tệp mở ngay trong Kryfo, nhiều tệp gửi thành một tin nhắn, và bạn có thể tìm trong cả cuộc trò chuyện. GIF yêu thích, tin nhắn thoại ở tốc độ 1,5x hoặc 2x, chạm hai lần để bày tỏ cảm xúc, giữ nút gửi để gửi không âm thanh, bản nháp trong danh sách trò chuyện.
+
+Tốt hơn: dịch nhiều ngôn ngữ cùng lúc, giờ và dấu tích ở dòng cuối, và Tor tự kết nối lại sau khi mất mạng.
