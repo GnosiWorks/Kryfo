@@ -151,7 +151,8 @@ void main() {
     File(from).copySync(p.join(docs.path, c.dbFile));
     FlutterSecureStorage.setMockInitialValues({
       'halo.db.passphrase': 'not asked for',
-      'halo.d.key': 'not asked for',
+      kOldDecoyKeyName: 'not asked for',
+      kDecoyKeyName: 'not asked for',
     });
     return keep(HaloDb(c).open());
   }
