@@ -7,3 +7,6 @@ template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart
 output-class: AppLocalizations
 nullable-getter: false
+# the generated files stay as gen-l10n writes them, unformatted: a newer
+# flutter formats them by default and rewrites every line
+format: false
