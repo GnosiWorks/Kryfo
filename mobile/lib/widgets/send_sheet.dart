@@ -37,6 +37,11 @@ import '../file_drop.dart' show kFreeFileBytes;
 
 enum SendTab { gallery, files, recent }
 
+/// whether the send lane cleans a pick's file, read from its bytes as the
+/// lane reads it
+@visibleForTesting
+Future<bool> Function(String path, String name) trayCleans = sendLaneCleans;
+
 /// one thing that may go: a pick's copy or a file already in a chat
 class SendPick {
   final String path;
@@ -233,6 +238,25 @@ class SendSheetState extends State<SendSheet> {
   List<SendPick>? _recent;
   // chosen, in the order chosen
   final _chosen = <SendPick>[];
+  // what the send lane does with each chosen file, by its path, once its
+  // bytes are read
+  final Map<String, bool> _cleans = {};
+  final Set<String> _reading = {};
+
+  void _readCleans() {
+    for (final p in _chosen) {
+      final k = p.path;
+      if (_cleans.containsKey(k) || !_reading.add(k)) continue;
+      trayCleans(p.path, p.name).catchError((_) => false).then((v) {
+        _reading.remove(k);
+        if (mounted) setState(() => _cleans[k] = v);
+      });
+    }
+  }
+
+  // "cleaned" said only once every chosen file's bytes said so
+  bool get _everyCleaned =>
+      _chosen.isNotEmpty && _chosen.every((p) => _cleans[p.path] == true);
   bool _asFiles = false;
   // names typed in the tray, and the photos marked as spoilers
   final _names = <SendPick, String>{};
@@ -392,6 +416,8 @@ class SendSheetState extends State<SendSheet> {
 
   @override
   Widget build(BuildContext context) {
+    _readCleans();
+    final every = _everyCleaned;
     final mq = MediaQuery.of(context);
     final still = motionStill(context);
     final full = mq.size.height * 0.86;
@@ -457,11 +483,17 @@ class SendSheetState extends State<SendSheet> {
                             ),
                           ),
                           const SizedBox(height: 4),
+                          // green only while it holds for every pick: a
+                          // zip goes as it is
                           Text(
-                            l10n.sendSheetCleaned,
+                            every
+                                ? l10n.sendSheetCleaned
+                                : l10n.sendSheetCleanedSome,
                             style: HaloType.mono(
                               size: 10,
-                              color: HaloColors.greenText,
+                              color: every
+                                  ? HaloColors.greenText
+                                  : HaloColors.text,
                             ),
                           ),
                         ],
@@ -510,6 +542,7 @@ class SendSheetState extends State<SendSheet> {
                 tray: _chosen.isEmpty
                     ? null
                     : SendTray(
+                        everyCleaned: every,
                         lifting: _leaving,
                         cards: _cards,
                         most: widget.most,

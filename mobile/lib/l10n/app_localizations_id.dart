@@ -11095,6 +11095,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get sendSheetCleaned => 'Dibersihkan sebelum dikirim';
 
   @override
+  String get sendSheetCleanedSome => 'Foto dan video dibersihkan';
+
+  @override
   String get sendSheetFiles => 'File';
 
   @override

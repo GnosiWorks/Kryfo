@@ -3173,6 +3173,7 @@
   "soundVoiceFrom": "{name} adlı kişiden sesli mesaj",
   "sendSheetTo": "Gönder:",
   "sendSheetCleaned": "Göndermeden önce temizlenir",
+  "sendSheetCleanedSome": "Fotoğraflar ve videolar temizlenir",
   "sendSheetFiles": "Dosyalar",
   "sendSheetRecent": "Son",
   "sendSheetChoosePhotos": "Fotoğraf ve video seç",

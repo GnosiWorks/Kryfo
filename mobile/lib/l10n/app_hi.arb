@@ -3173,6 +3173,7 @@
   "soundVoiceFrom": "{name} का वॉइस मैसेज",
   "sendSheetTo": "इन्हें भेजें:",
   "sendSheetCleaned": "भेजने से पहले साफ़ किया जाता है",
+  "sendSheetCleanedSome": "फ़ोटो और वीडियो साफ़ किए जाते हैं",
   "sendSheetFiles": "फ़ाइलें",
   "sendSheetRecent": "हाल के",
   "sendSheetChoosePhotos": "फ़ोटो और वीडियो चुनें",

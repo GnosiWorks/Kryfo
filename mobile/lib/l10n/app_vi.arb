@@ -3173,6 +3173,7 @@
   "soundVoiceFrom": "Tin nhắn thoại từ {name}",
   "sendSheetTo": "Gửi cho",
   "sendSheetCleaned": "Được làm sạch trước khi gửi",
+  "sendSheetCleanedSome": "Ảnh và video được làm sạch",
   "sendSheetFiles": "Tệp",
   "sendSheetRecent": "Gần đây",
   "sendSheetChoosePhotos": "Chọn ảnh và video",

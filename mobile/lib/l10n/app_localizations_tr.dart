@@ -11151,6 +11151,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sendSheetCleaned => 'Göndermeden önce temizlenir';
 
   @override
+  String get sendSheetCleanedSome => 'Fotoğraflar ve videolar temizlenir';
+
+  @override
   String get sendSheetFiles => 'Dosyalar';
 
   @override

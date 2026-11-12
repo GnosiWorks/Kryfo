@@ -3173,6 +3173,7 @@
   "soundVoiceFrom": "来自 {name} 的语音消息",
   "sendSheetTo": "发送给",
   "sendSheetCleaned": "发送前已清理",
+  "sendSheetCleanedSome": "照片和视频会被清理",
   "sendSheetFiles": "文件",
   "sendSheetRecent": "最近",
   "sendSheetChoosePhotos": "选择照片和视频",

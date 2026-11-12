@@ -279,6 +279,9 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text(l10n.trayHint), findsOneWidget);
       expect(find.text(l10n.trayHintSome), findsNothing);
+      // the green claim under the title holds, so it shows
+      expect(find.text(l10n.sendSheetCleaned), findsOneWidget);
+      expect(find.text(l10n.sendSheetCleanedSome), findsNothing);
     });
 
     testWidgets('every file is cleaned only when every card is a kind the '
@@ -308,6 +311,11 @@ void main() {
 
       await browse([a, b]);
       expect(find.text(l10n.trayHintSome), findsOneWidget);
+      // a zip goes as it is: no green claim under the title
+      expect(find.text(l10n.sendSheetCleaned), findsNothing);
+      expect(find.text(l10n.sendSheetCleanedSome), findsOneWidget);
+      final head = t.widget<Text>(find.text(l10n.sendSheetCleanedSome));
+      expect(head.style?.color, isNot(HaloColors.greenText));
       expect(find.text(l10n.trayHint), findsNothing);
       expect(
         l10n.trayHintSome,

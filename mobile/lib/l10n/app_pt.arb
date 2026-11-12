@@ -3173,6 +3173,7 @@
   "soundVoiceFrom": "Mensagem de voz de {name}",
   "sendSheetTo": "Enviar para",
   "sendSheetCleaned": "Limpo antes de enviar",
+  "sendSheetCleanedSome": "Fotos e vídeos são limpos",
   "sendSheetFiles": "Arquivos",
   "sendSheetRecent": "Recentes",
   "sendSheetChoosePhotos": "Escolher fotos e vídeos",

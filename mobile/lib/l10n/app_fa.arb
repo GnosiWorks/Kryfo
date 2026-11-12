@@ -3173,6 +3173,7 @@
   "soundVoiceFrom": "پیام صوتی از {name}",
   "sendSheetTo": "ارسال به",
   "sendSheetCleaned": "پیش از ارسال پاک‌سازی می‌شود",
+  "sendSheetCleanedSome": "عکس‌ها و ویدیوها پاک‌سازی می‌شوند",
   "sendSheetFiles": "فایل‌ها",
   "sendSheetRecent": "اخیر",
   "sendSheetChoosePhotos": "انتخاب عکس و ویدیو",

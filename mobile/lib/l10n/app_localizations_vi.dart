@@ -11095,6 +11095,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sendSheetCleaned => 'Được làm sạch trước khi gửi';
 
   @override
+  String get sendSheetCleanedSome => 'Ảnh và video được làm sạch';
+
+  @override
   String get sendSheetFiles => 'Tệp';
 
   @override

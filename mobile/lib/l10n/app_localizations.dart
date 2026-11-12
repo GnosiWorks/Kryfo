@@ -19330,6 +19330,12 @@ abstract class AppLocalizations {
   /// **'Cleaned before sending'**
   String get sendSheetCleaned;
 
+  /// sending sheet, under the title, in place of sendSheetCleaned while not every chosen file is a kind Kryfo cleans
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and videos are cleaned'**
+  String get sendSheetCleanedSome;
+
   /// sending sheet tab
   ///
   /// In en, this message translates to:

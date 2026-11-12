@@ -11156,6 +11156,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendSheetCleaned => 'Cleaned before sending';
 
   @override
+  String get sendSheetCleanedSome => 'Photos and videos are cleaned';
+
+  @override
   String get sendSheetFiles => 'Files';
 
   @override

@@ -11324,6 +11324,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get sendSheetCleaned => 'Czyszczone przed wysłaniem';
 
   @override
+  String get sendSheetCleanedSome => 'Zdjęcia i filmy są czyszczone';
+
+  @override
   String get sendSheetFiles => 'Pliki';
 
   @override

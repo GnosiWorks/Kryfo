@@ -11095,6 +11095,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendSheetCleaned => '发送前已清理';
 
   @override
+  String get sendSheetCleanedSome => '照片和视频会被清理';
+
+  @override
   String get sendSheetFiles => '文件';
 
   @override
@@ -22530,6 +22533,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sendSheetCleaned => '傳送前已清理';
+
+  @override
+  String get sendSheetCleanedSome => '照片和影片會被清理';
 
   @override
   String get sendSheetFiles => '檔案';

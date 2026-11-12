@@ -3173,6 +3173,7 @@
   "soundVoiceFrom": "Pesan suara dari {name}",
   "sendSheetTo": "Kirim ke",
   "sendSheetCleaned": "Dibersihkan sebelum dikirim",
+  "sendSheetCleanedSome": "Foto dan video dibersihkan",
   "sendSheetFiles": "File",
   "sendSheetRecent": "Terbaru",
   "sendSheetChoosePhotos": "Pilih foto dan video",

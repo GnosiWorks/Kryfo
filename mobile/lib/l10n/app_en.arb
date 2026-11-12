@@ -15153,6 +15153,10 @@
   "@sendSheetCleaned": {
     "description": "sending sheet, under the title: what the camera and the phone wrote into a file is taken out first"
   },
+  "sendSheetCleanedSome": "Photos and videos are cleaned",
+  "@sendSheetCleanedSome": {
+    "description": "sending sheet, under the title, in place of sendSheetCleaned while not every chosen file is a kind Kryfo cleans"
+  },
   "sendSheetFiles": "Files",
   "@sendSheetFiles": {
     "description": "sending sheet tab"

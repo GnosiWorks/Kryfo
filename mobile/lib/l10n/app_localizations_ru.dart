@@ -11290,6 +11290,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sendSheetCleaned => 'Очищается перед отправкой';
 
   @override
+  String get sendSheetCleanedSome => 'Фото и видео очищаются';
+
+  @override
   String get sendSheetFiles => 'Файлы';
 
   @override

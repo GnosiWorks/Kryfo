@@ -11150,6 +11150,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sendSheetCleaned => 'भेजने से पहले साफ़ किया जाता है';
 
   @override
+  String get sendSheetCleanedSome => 'फ़ोटो और वीडियो साफ़ किए जाते हैं';
+
+  @override
   String get sendSheetFiles => 'फ़ाइलें';
 
   @override

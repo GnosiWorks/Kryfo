@@ -11145,6 +11145,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sendSheetCleaned => 'پیش از ارسال پاک‌سازی می‌شود';
 
   @override
+  String get sendSheetCleanedSome => 'عکس‌ها و ویدیوها پاک‌سازی می‌شوند';
+
+  @override
   String get sendSheetFiles => 'فایل‌ها';
 
   @override

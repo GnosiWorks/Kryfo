@@ -11287,6 +11287,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sendSheetCleaned => 'Очищується перед надсиланням';
 
   @override
+  String get sendSheetCleanedSome => 'Фото й відео очищуються';
+
+  @override
   String get sendSheetFiles => 'Файли';
 
   @override

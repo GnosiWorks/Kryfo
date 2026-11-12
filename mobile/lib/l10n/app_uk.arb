@@ -3173,6 +3173,7 @@
   "soundVoiceFrom": "Голосове від {name}",
   "sendSheetTo": "Надіслати:",
   "sendSheetCleaned": "Очищується перед надсиланням",
+  "sendSheetCleanedSome": "Фото й відео очищуються",
   "sendSheetFiles": "Файли",
   "sendSheetRecent": "Нещодавні",
   "sendSheetChoosePhotos": "Вибрати фото й відео",
