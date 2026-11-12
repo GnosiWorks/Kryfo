@@ -256,9 +256,9 @@ void main() {
 
   testWidgets('one the native side refuses is saved, not shared', (t) async {
     openAnswer = 'refused';
-    final f = File('${tmp.path}/in_gh_notes.docx')
+    final f = File('${tmp.path}/in_gh_notes.odt')
       ..writeAsStringSync('nothing to see');
-    await tap(t, f.path, 'notes.docx');
+    await tap(t, f.path, 'notes.odt');
     expect(methods(), contains('openFile'));
     expect(methods(), isNot(contains('shareFile')));
     expect(methods(), contains('saveDocument'));

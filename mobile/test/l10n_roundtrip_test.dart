@@ -2913,9 +2913,9 @@ void main() {
       "Fetched over Tor · by their device",
     );
     expect(l.placeStubLocation, "Location");
-    expect(l.mediaBubblesB("<bytes>"), "<bytes> b");
-    expect(l.mediaBubblesKb("<bytes>"), "<bytes> kb");
-    expect(l.mediaBubblesMb("<bytes>"), "<bytes> mb");
+    expect(l.mediaBubblesB("<bytes>"), "<bytes> B");
+    expect(l.mediaBubblesKb("<bytes>"), "<bytes> KB");
+    expect(l.mediaBubblesMb("<bytes>"), "<bytes> MB");
     expect(l.mediaBubblesFile, "FILE");
     expect(l.mediaBubblesAudioUnavailable, "Audio unavailable");
     expect(l.mediaBubblesHidden, "Hidden");
