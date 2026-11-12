@@ -80,6 +80,13 @@ void main() {
       expect(readDocx(_docx(huge)), isNull);
     });
 
+    test('a tag that never closes reads in one pass', () {
+      final w = Stopwatch()..start();
+      docxBlocks('<a' * 200000);
+      docxBlocks('<${'a' * 400000}');
+      expect(w.elapsed, lessThan(const Duration(seconds: 2)));
+    });
+
     test('a word document opens in kryfo, never only outside', () {
       expect(
         fileViewOf(const FileFacts(FileKind.document, 'docx')),

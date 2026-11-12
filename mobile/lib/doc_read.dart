@@ -165,7 +165,8 @@ bool _same(List<int> a, List<int> b) {
   return true;
 }
 
-final _tag = RegExp(r'<(/?)([A-Za-z0-9_:.-]+)([^>]*?)(/?)>|([^<]+)');
+// attributes start with a space and stop at any '<': linear on a broken file
+final _tag = RegExp(r'<(/?)([A-Za-z0-9_:.-]+)((?:\s[^<>]*?)?)(/?)>|([^<]+)');
 final _val = RegExp(r'\bw:val="([^"]*)"');
 
 /// the blocks of a document.xml body
