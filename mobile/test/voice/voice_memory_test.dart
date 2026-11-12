@@ -42,7 +42,7 @@ void main() {
 
   test('a run stops under a floor below the start rule', () {
     const total = 3841192 * 1024;
-    // a12: starts from 535 mb, stops under 281 mb
+    // a 4 gb phone: starts from 535 mb, stops under 281 mb
     expect(memFloor(total), memReserve(total) * 3 ~/ 4);
     expect(memRunOut(const MemRoom(270 * _mb, total)), isTrue);
     // a run started with just enough room uses its 160 mb and goes on

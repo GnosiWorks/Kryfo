@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // room for a transcription. a run holds ~150 MB (the model and whisper's
-// buffers: +145 MB rss on the a12) and keeps the cores busy for a while.
-// on a phone already short of memory android then kills apps to make room,
-// and the app in front goes last but does go (the a12 killed kryfo with a
-// 60 s note on 2026-11-11). so a run starts only with room to spare and
-// stops itself before the phone runs out. fewer threads would not help: the
-// memory is the model's whatever the threads, and with half the cores free
-// the kernel has the cpu to reclaim (2 threads at 574 MB free took 17 s for
-// a 10 s note, with no memory pressure at all). where there is no
-// /proc/meminfo (windows) nothing is checked.
+// buffers) and keeps the cores busy for a while. on a phone short of memory
+// android then kills apps to make room, the one in front last. so a run
+// starts only with room to spare and stops itself before the phone runs
+// out. fewer threads would not help: the memory is the model's whatever the
+// threads, and with half the cores free the kernel has the cpu to reclaim.
+// where there is no /proc/meminfo (windows) nothing is checked.
 import 'dart:io' show File;
 import 'dart:math' show max;
 

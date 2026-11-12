@@ -326,8 +326,7 @@ func TestBundleGivesUpWithoutProgress(t *testing.T) {
 }
 
 // with lanes, chunks above one that will not come are kept for the next
-// try: only what is missing is asked again (translate-all run 2026-11-08,
-// three lanes kept 2 of 26 MB)
+// try: only what is missing is asked again
 func TestBundleResumeKeepsOtherLanesChunks(t *testing.T) {
 	bf := newBundleFix(t)
 	first := true
